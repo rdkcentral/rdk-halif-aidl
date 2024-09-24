@@ -1,0 +1,24 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/hal/FileContentIndex
+/.vs/hal/v17
+/.vs
+/.history
+*/h
+*/cpp
+**/x64
+**/aidl
+/audiodecoder/docs/html
+/audiodecoder/docs/latex
+.*sw*
+
+# CMake related files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Compiled aidl output per module
+*/gen/
