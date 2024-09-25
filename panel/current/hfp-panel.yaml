@@ -1,0 +1,243 @@
+# HAL Feature Profile for panel
+
+IPanelOutput:          # Component object begins
+  interfaceVersion: current
+  panelType:
+  frameRateMatchingSupported: true
+  fadeDisplaySupported: true
+  supportedPQParameters:
+    - BRIGHTNESS
+    - CONTRAST
+    - SHARPNESS
+    - SATURATION
+    - HUE
+    - MANUAL_BACKLIGHT
+    - GAMMA
+    - COLOR_TEMPERATURE
+    - DIMMING_MODE
+    - DIMMING_LEVEL
+    - LOW_LATENCY_STATE
+    - SATURATION_RED
+    - SATURATION_BLUE
+    - SATURATION_GREEN
+    - SATURATION_YELLOW
+    - SATURATION_CYAN
+    - SATURATION_MAGENTA
+    - HUE_RED
+    - HUE_BLUE
+    - HUE_GREEN
+    - HUE_YELLOW
+    - HUE_CYAN
+    - HUE_MAGENTA
+    - LUMA_RED
+    - LUMA_BLUE
+    - LUMA_GREEN
+    - LUMA_YELLOW
+    - LUMA_CYAN
+    - LUMA_MAGENTA
+    - MEMC
+    - DYNAMIC_CONTRAST_LEVEL
+    - LOCAL_CONTRAST_LEVEL
+    - LOCAL_DIMMING_ZONES_X
+    - LOCAL_DIMMING_ZONES_Y
+    - AI_PQ_ENGINE
+    - AMBIENT_LIGHT_SENSOR_CONTROL
+  supportedRefreshRatesHz:
+    - 48
+    - 49
+    - 50
+    - 51
+    - 52
+    - 53
+    - 54
+    - 55
+    - 56
+    - 57
+    - 58
+    - 59
+    - 60
+  pictureModeCapabilities:
+    - Entertainment:
+        - SDR:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+              - COMPOSITE_1
+        - HLG:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+        - HDR10:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+        - DOLBY_VISION:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+    - Dynamic:
+        - SDR:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+              - COMPOSITE_1
+        - HLG:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+        - HDR10:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+        - DOLBY_VISION:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+    - Dynamic2:
+        - SDR:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+              - COMPOSITE_1
+        - HLG:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+        - HDR10:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+        - DOLBY_VISION:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+    - Sports:
+        - SDR:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+              - COMPOSITE_1
+        - HLG:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+        - HDR10:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+        - DOLBY_VISION:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+    - Movie:
+        - SDR:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+              - COMPOSITE_1
+        - HLG:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+        - HDR10:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+        - DOLBY_VISION:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+    - Expert:
+        - SDR:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+              - COMPOSITE_1
+        - HLG:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+        - HDR10:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+        - DOLBY_VISION:
+            supportedAVSources:
+              - IP
+              - TUNER
+              - HDMI_1
+              - HDMI_2
+              - HDMI_3
+  colorTemperatureNames:
+    - Cool
+    - Normal
+    - Warm

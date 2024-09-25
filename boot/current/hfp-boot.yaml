@@ -1,0 +1,13 @@
+# HAL Feature Profile for boot
+
+IBoot:                 # Component object begins
+    interfaceVersion: current
+    supportedBootReasons:
+      - WATCHDOG
+      - SOFTWARE_RESET
+      - THERMAL_RESET
+      - WARM_RESET
+      - COLD_BOOT
+      - STR_AUTH_FAILURE
+    supportedResetTypes:
+      - FULL_SYSTEM_RESET

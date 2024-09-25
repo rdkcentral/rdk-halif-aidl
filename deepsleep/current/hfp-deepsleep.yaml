@@ -1,0 +1,19 @@
+# HAL Feature Profile for deepsleep
+
+IDeepSleep:                 # Component object begins
+    interfaceVersion: current
+    supportedTriggers:
+        - RCU_IR
+        - RCU_BT
+        - LAN
+        - WLAN
+        - TIMER
+        - FRONT_PANEL
+        - CEC
+        - PRESENCE
+        - VOICE
+    mandatoryTriggers:
+        - RCU_IR
+        - RCU_BT
+        - TIMER
+        - FRONT_PANEL
