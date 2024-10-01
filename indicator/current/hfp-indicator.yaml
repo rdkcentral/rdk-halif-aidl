@@ -1,0 +1,15 @@
+# HAL Feature Profile for indicator
+
+IIndicator:            # Component object begins
+  interfaceVersion: current
+  supportedStates:
+    - BOOT
+    - ACTIVE
+    - STANDBY
+    - OFF
+    - WPS_CONNECTING
+    - WPS_CONNECTED
+    - WPS_ERROR
+    - FULL_SYSTEM_RESET
+    - USB_UPGRADE
+    - SOFTWARE_DOWNLOAD_ERROR
