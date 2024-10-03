@@ -80,4 +80,4 @@ enum FlashImageResult
      * Flash image signature failed verification after writing.
      */
     ERROR_FLASH_VERIFY_SIGNATURE_FAILED = 8,
-};
+}
