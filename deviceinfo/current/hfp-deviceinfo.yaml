@@ -1,0 +1,24 @@
+# HAL Feature Profile for deviceinfo
+
+IDeviceInfo:                 # Component object begins
+    interfaceVersion: current
+    HALVersion:
+        major: 0
+        minor: 7
+        doc: 1
+    supportedProperties:
+        - KEY_MANUFACTURER
+        - KEY_MANUFACTURER_OUI
+        - KEY_MODELNAME
+        - KEY_PRODUCTCLASS
+        - KEY_SERIALNUMBER
+        - KEY_WIFIMAC
+        - KEY_BLUETOOTHMAC
+        - KEY_WPSPIN
+        - KEY_ETHERNETMAC
+        - KEY_RF4CEMAC
+        - KEY_IMAGENAME
+        - KEY_IMAGETYPE
+        - KEY_COUNTRYCODE
+        - KEY_LANGUAGECODE
+        - KEY_MANUFACTURERDATA

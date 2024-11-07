@@ -1,0 +1,10 @@
+# HAL Feature Profile for cdm
+
+cdm:
+  resources:
+    - PlayReady:
+        drmClientVersion: 4.4
+    - Widevine:
+        drmClientVersion: 16.0.0
+    - Fairplay:
+        drmClientVersion: 3.0

@@ -1,0 +1,4 @@
+# HAL Feature Profile for broadcast
+
+IBroadcastManager:     # Component object begins
+    interfaceVersion: current

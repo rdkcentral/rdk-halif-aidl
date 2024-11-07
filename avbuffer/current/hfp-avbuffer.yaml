@@ -1,0 +1,6 @@
+# HAL Feature Profile for avbuffer
+
+IAVBuffer:
+  interfaceVersion: current
+  nonSecureHeapBytes: 16000000
+  secureHeapBytes: 16000000

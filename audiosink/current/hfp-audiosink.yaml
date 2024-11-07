@@ -1,0 +1,12 @@
+# HAL Feature Profile for audiosink
+
+IAudioSinkManager:     # Component object begins
+    interfaceVersion: current
+    platformCapabilities:
+        supportsLowLatency: false
+        systemMixerSampleRateHz: 48000
+        systemMixerPCMFormat: S32BE
+        supportsPlanarFormat: false
+    IAudioSink:        # Resource list
+        - 0            # Resource object begins
+        - 1
