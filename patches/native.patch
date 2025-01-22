@@ -1,0 +1,515 @@
+#####################################################################
+Date: Thu Nov 2 13:57:44 2023 +0100
+From: ee3935f4c64d58f9f87ff6fac875cdad42f46038 Tue May 09 04:05:45 2023
+Source: Sky & Android OpenSource Project
+Subject: Fix the compilation issues in the Linux environment
+#####################################################################
+diff --git a/cmds/servicemanager/Access.cpp b/cmds/servicemanager/Access.cpp
+index b7e520f..d29e790 100644
+--- a/cmds/servicemanager/Access.cpp
++++ b/cmds/servicemanager/Access.cpp
+@@ -19,8 +19,10 @@
+ #include <android-base/logging.h>
+ #include <binder/IPCThreadState.h>
+ #include <log/log_safetynet.h>
++#ifdef __ANDROID__
+ #include <selinux/android.h>
+ #include <selinux/avc.h>
++#endif
+ 
+ namespace android {
+ 
+@@ -30,6 +32,7 @@ constexpr bool kIsVendor = true;
+ constexpr bool kIsVendor = false;
+ #endif
+ 
++#ifdef __ANDROID__
+ static std::string getPidcon(pid_t pid) {
+     android_errorWriteLog(0x534e4554, "121035042");
+ 
+@@ -78,8 +81,10 @@ static int auditCallback(void *data, security_class_t /*cls*/, char *buf, size_t
+         ad->tname->c_str());
+     return 0;
+ }
++#endif
+ 
+ Access::Access() {
++#ifdef __ANDROID__
+     union selinux_callback cb;
+ 
+     cb.func_audit = auditCallback;
+@@ -91,13 +96,17 @@ Access::Access() {
+     CHECK(selinux_status_open(true /*fallback*/) >= 0);
+ 
+     CHECK(getcon(&mThisProcessContext) == 0);
++#endif
+ }
+ 
+ Access::~Access() {
++#ifdef __ANDROID__
+     freecon(mThisProcessContext);
++#endif
+ }
+ 
+ Access::CallingContext Access::getCallingContext() {
++#ifdef __ANDROID__
+     IPCThreadState* ipc = IPCThreadState::self();
+ 
+     const char* callingSid = ipc->getCallingSid();
+@@ -108,6 +117,9 @@ Access::CallingContext Access::getCallingContext() {
+         .uid = ipc->getCallingUid(),
+         .sid = callingSid ? std::string(callingSid) : getPidcon(callingPid),
+     };
++#else
++    return CallingContext();
++#endif
+ }
+ 
+ bool Access::canFind(const CallingContext& ctx,const std::string& name) {
+@@ -124,6 +136,7 @@ bool Access::canList(const CallingContext& ctx) {
+ 
+ bool Access::actionAllowed(const CallingContext& sctx, const char* tctx, const char* perm,
+         const std::string& tname) {
++#ifdef __ANDROID__
+     const char* tclass = "service_manager";
+ 
+     AuditCallbackData data = {
+@@ -133,9 +146,13 @@ bool Access::actionAllowed(const CallingContext& sctx, const char* tctx, const c
+ 
+     return 0 == selinux_check_access(sctx.sid.c_str(), tctx, tclass, perm,
+         reinterpret_cast<void*>(&data));
++#else
++    return true;
++#endif
+ }
+ 
+ bool Access::actionAllowedFromLookup(const CallingContext& sctx, const std::string& name, const char *perm) {
++#ifdef __ANDROID__
+     char *tctx = nullptr;
+     if (selabel_lookup(getSehandle(), &tctx, name.c_str(), SELABEL_CTX_ANDROID_SERVICE) != 0) {
+         LOG(ERROR) << "SELinux: No match for " << name << " in service_contexts.\n";
+@@ -145,6 +162,9 @@ bool Access::actionAllowedFromLookup(const CallingContext& sctx, const std::stri
+     bool allowed = actionAllowed(sctx, tctx, perm, name);
+     freecon(tctx);
+     return allowed;
++#else
++    return true;
++#endif
+ }
+ 
+ }  // android
+diff --git a/cmds/servicemanager/ServiceManager.cpp b/cmds/servicemanager/ServiceManager.cpp
+index 3cfe529..e2e43d1 100644
+--- a/cmds/servicemanager/ServiceManager.cpp
++++ b/cmds/servicemanager/ServiceManager.cpp
+@@ -22,16 +22,24 @@
+ #include <binder/IPCThreadState.h>
+ #include <binder/ProcessState.h>
+ #include <binder/Stability.h>
++#ifdef __ANDROID__
+ #include <cutils/android_filesystem_config.h>
++#else
++#include <private/android_filesystem_config.h>
++#endif
+ #include <cutils/multiuser.h>
+ #include <thread>
+ 
+ #ifndef VENDORSERVICEMANAGER
++#ifdef __ANDROID__
+ #include <vintf/VintfObject.h>
++#endif
+ #ifdef __ANDROID_RECOVERY__
+ #include <vintf/VintfObjectRecovery.h>
+ #endif // __ANDROID_RECOVERY__
++#ifdef __ANDROID__
+ #include <vintf/constants.h>
++#endif
+ #endif  // !VENDORSERVICEMANAGER
+ 
+ using ::android::binder::Status;
+@@ -41,6 +49,7 @@ namespace android {
+ 
+ #ifndef VENDORSERVICEMANAGER
+ 
++#ifdef __ANDROID__
+ struct ManifestWithDescription {
+     std::shared_ptr<const vintf::HalManifest> manifest;
+     const char* description;
+@@ -196,6 +205,7 @@ static bool meetsDeclarationRequirements(const sp<IBinder>& binder, const std::s
+ 
+     return isVintfDeclared(name);
+ }
++#endif
+ #endif  // !VENDORSERVICEMANAGER
+ 
+ ServiceManager::ServiceManager(std::unique_ptr<Access>&& access) : mAccess(std::move(access)) {
+@@ -313,10 +323,12 @@ Status ServiceManager::addService(const std::string& name, const sp<IBinder>& bi
+     }
+ 
+ #ifndef VENDORSERVICEMANAGER
++#ifdef __ANDROID__
+     if (!meetsDeclarationRequirements(binder, name)) {
+         // already logged
+         return Status::fromExceptionCode(Status::EX_ILLEGAL_ARGUMENT, "VINTF declaration error");
+     }
++#endif
+ #endif  // !VENDORSERVICEMANAGER
+ 
+     // implicitly unlinked when the binder is removed
+@@ -441,7 +453,9 @@ Status ServiceManager::isDeclared(const std::string& name, bool* outReturn) {
+     *outReturn = false;
+ 
+ #ifndef VENDORSERVICEMANAGER
++#ifdef __ANDROID__
+     *outReturn = isVintfDeclared(name);
++#endif
+ #endif
+     return Status::ok();
+ }
+@@ -451,7 +465,9 @@ binder::Status ServiceManager::getDeclaredInstances(const std::string& interface
+ 
+     std::vector<std::string> allInstances;
+ #ifndef VENDORSERVICEMANAGER
++#ifdef __ANDROID__
+     allInstances = getVintfInstances(interface);
++#endif
+ #endif
+ 
+     outReturn->clear();
+@@ -480,7 +496,9 @@ Status ServiceManager::updatableViaApex(const std::string& name,
+     *outReturn = std::nullopt;
+ 
+ #ifndef VENDORSERVICEMANAGER
++#ifdef __ANDROID__
+     *outReturn = getVintfUpdatableApex(name);
++#endif
+ #endif
+     return Status::ok();
+ }
+@@ -496,7 +514,9 @@ Status ServiceManager::getConnectionInfo(const std::string& name,
+     *outReturn = std::nullopt;
+ 
+ #ifndef VENDORSERVICEMANAGER
++#ifdef __ANDROID__
+     *outReturn = getVintfConnectionInfo(name);
++#endif
+ #endif
+     return Status::ok();
+ }
+diff --git a/libs/binder/IMemory.cpp b/libs/binder/IMemory.cpp
+index c6b0cb7..6e3284e 100644
+--- a/libs/binder/IMemory.cpp
++++ b/libs/binder/IMemory.cpp
+@@ -17,7 +17,11 @@
+ #define LOG_TAG "IMemory"
+ 
+ #include <atomic>
++#if !defined(__linux__)
+ #include <stdatomic.h>
++#else
++using namespace std;
++#endif
+ 
+ #include <fcntl.h>
+ #include <stdint.h>
+diff --git a/libs/binder/IPCThreadState.cpp b/libs/binder/IPCThreadState.cpp
+index 3c97dca..f82baf1 100644
+--- a/libs/binder/IPCThreadState.cpp
++++ b/libs/binder/IPCThreadState.cpp
+@@ -42,6 +42,14 @@
+ #include "Static.h"
+ #include "binder_module.h"
+ 
++#ifdef __linux__
++// linux/android/binder.h defines this, but we don't want to include it here in order to
++// avoid exporting the kernel headers
++#ifndef TF_CLEAR_BUF
++#define TF_CLEAR_BUF 0x20
++#endif
++#endif
++
+ #if LOG_NDEBUG
+ 
+ #define IF_LOG_TRANSACTIONS() if (false)
+@@ -1046,7 +1054,7 @@ status_t IPCThreadState::talkWithDriver(bool doReceive)
+         IF_LOG_COMMANDS() {
+             alog << "About to read/write, write size = " << mOut.dataSize() << endl;
+         }
+-#if defined(__ANDROID__)
++#if defined(__ANDROID__) || defined(__linux__)
+         if (ioctl(mProcess->mDriverFD, BINDER_WRITE_READ, &bwr) >= 0)
+             err = NO_ERROR;
+         else
+@@ -1396,7 +1404,7 @@ void IPCThreadState::threadDestructor(void *st)
+         IPCThreadState* const self = static_cast<IPCThreadState*>(st);
+         if (self) {
+                 self->flushCommands();
+-#if defined(__ANDROID__)
++#if defined(__ANDROID__) || defined(__linux__)
+         if (self->mProcess->mDriverFD >= 0) {
+             ioctl(self->mProcess->mDriverFD, BINDER_THREAD_EXIT, 0);
+         }
+@@ -1412,7 +1420,7 @@ status_t IPCThreadState::getProcessFreezeInfo(pid_t pid, uint32_t *sync_received
+     binder_frozen_status_info info = {};
+     info.pid = pid;
+ 
+-#if defined(__ANDROID__)
++#if defined(__ANDROID__) || defined(__linux__)
+     if (ioctl(self()->mProcess->mDriverFD, BINDER_GET_FROZEN_INFO, &info) < 0)
+         ret = -errno;
+ #endif
+@@ -1431,7 +1439,7 @@ status_t IPCThreadState::freeze(pid_t pid, bool enable, uint32_t timeout_ms) {
+     info.timeout_ms = timeout_ms;
+ 
+ 
+-#if defined(__ANDROID__)
++#if defined(__ANDROID__) || defined(__linux__)
+     if (ioctl(self()->mProcess->mDriverFD, BINDER_FREEZE, &info) < 0)
+         ret = -errno;
+ #endif
+diff --git a/libs/binder/IServiceManager.cpp b/libs/binder/IServiceManager.cpp
+index fd2d868..2a7742c 100644
+--- a/libs/binder/IServiceManager.cpp
++++ b/libs/binder/IServiceManager.cpp
+@@ -18,6 +18,10 @@
+ 
+ #include <binder/IServiceManager.h>
+ 
++#ifdef __linux__
++#include <condition_variable>
++#include <mutex>
++#endif
+ #include <inttypes.h>
+ #include <unistd.h>
+ 
+diff --git a/libs/binder/LazyServiceRegistrar.cpp b/libs/binder/LazyServiceRegistrar.cpp
+index f66993f..da5ae27 100644
+--- a/libs/binder/LazyServiceRegistrar.cpp
++++ b/libs/binder/LazyServiceRegistrar.cpp
+@@ -14,6 +14,10 @@
+  * limitations under the License.
+  */
+ 
++#ifdef __linux__
++#include <mutex>
++#endif
++
+ #include "log/log_main.h"
+ #define LOG_TAG "AidlLazyServiceRegistrar"
+ 
+diff --git a/libs/binder/Parcel.cpp b/libs/binder/Parcel.cpp
+index 58b0b35..fc2bf5a 100644
+--- a/libs/binder/Parcel.cpp
++++ b/libs/binder/Parcel.cpp
+@@ -173,6 +173,24 @@ status_t Parcel::finishUnflattenBinder(
+     return OK;
+ }
+ 
++#ifdef __linux__
++// linux/android/binder.h defines this, but we don't want to include it here in order to
++// avoid exporting the kernel headers
++
++/**
++ * enum flat_binder_object_shifts: shift values for flat_binder_object_flags
++ * @FLAT_BINDER_FLAG_SCHED_POLICY_SHIFT: shift for getting scheduler policy.
++ *
++ */
++enum flat_binder_object_shifts {
++    FLAT_BINDER_FLAG_SCHED_POLICY_SHIFT = 9,
++};
++
++enum flat_binder_object_flags {
++    FLAT_BINDER_FLAG_INHERIT_RT = 0x800,
++};
++#endif
++
+ static constexpr inline int schedPolicyMask(int policy, int priority) {
+     return (priority & FLAT_BINDER_FLAG_PRIORITY_MASK) | ((policy & 3) << FLAT_BINDER_FLAG_SCHED_POLICY_SHIFT);
+ }
+@@ -671,6 +689,15 @@ void Parcel::updateWorkSourceRequestHeaderPosition() const {
+     }
+ }
+ 
++#ifdef __linux__
++// linux/android/binder.h defines this, but we don't want to include it here in order to
++// avoid exporting the kernel headers
++#ifndef B_PACK_CHARS
++#define B_PACK_CHARS(c1, c2, c3, c4) \
++    ((((c1)<<24)) | (((c2)<<16)) | (((c3)<<8)) | (c4))
++#endif  // B_PACK_CHARS
++#endif
++
+ #if defined(__ANDROID_VNDK__)
+ constexpr int32_t kHeader = B_PACK_CHARS('V', 'N', 'D', 'R');
+ #elif defined(__ANDROID_RECOVERY__)
+diff --git a/libs/binder/ProcessState.cpp b/libs/binder/ProcessState.cpp
+index 4a01d81..57d111a 100644
+--- a/libs/binder/ProcessState.cpp
++++ b/libs/binder/ProcessState.cpp
+@@ -511,7 +511,7 @@ ProcessState::ProcessState(const char* driver)
+         }
+     }
+ 
+-#ifdef __ANDROID__
++#if defined(__ANDROID__) || defined(__linux__)
+     LOG_ALWAYS_FATAL_IF(!opened.ok(), "Binder driver '%s' could not be opened. Terminating: %s",
+                         driver, opened.error().message().c_str());
+ #endif
+diff --git a/libs/binder/RpcSession.cpp b/libs/binder/RpcSession.cpp
+index d40778a..ab0e77e 100644
+--- a/libs/binder/RpcSession.cpp
++++ b/libs/binder/RpcSession.cpp
+@@ -47,9 +47,11 @@ extern "C" pid_t gettid();
+ #endif
+ 
+ #ifndef __ANDROID_RECOVERY__
++#ifdef __ANDROID__
+ #include <android_runtime/vm.h>
+ #include <jni.h>
+ #endif
++#endif
+ 
+ namespace android {
+ 
+@@ -322,6 +324,7 @@ RpcSession::PreJoinSetupResult RpcSession::preJoinSetup(
+     };
+ }
+ 
++#ifdef __ANDROID__
+ namespace {
+ #ifdef __ANDROID_RECOVERY__
+ class JavaThreadAttacher {};
+@@ -380,13 +383,16 @@ private:
+ };
+ #endif
+ } // namespace
++#endif
+ 
+ void RpcSession::join(sp<RpcSession>&& session, PreJoinSetupResult&& setupResult) {
+     sp<RpcConnection>& connection = setupResult.connection;
+ 
+     if (setupResult.status == OK) {
+         LOG_ALWAYS_FATAL_IF(!connection, "must have connection if setup succeeded");
++#ifdef __ANDROID__
+         [[maybe_unused]] JavaThreadAttacher javaThreadAttacher;
++#endif
+         while (true) {
+             status_t status = session->state()->getAndExecuteCommand(connection, session,
+                                                                      RpcState::CommandType::ANY);
+diff --git a/libs/binder/include/binder/BpBinder.h b/libs/binder/include/binder/BpBinder.h
+index 19ad5e6..3df8d68 100644
+--- a/libs/binder/include/binder/BpBinder.h
++++ b/libs/binder/include/binder/BpBinder.h
+@@ -22,6 +22,9 @@
+ #include <map>
+ #include <unordered_map>
+ #include <variant>
++#ifdef __linux__
++#include <optional>
++#endif
+ 
+ // ---------------------------------------------------------------------------
+ namespace android {
+diff --git a/libs/binder/include/binder/Parcel.h b/libs/binder/include/binder/Parcel.h
+index e2b2c51..a73685e 100644
+--- a/libs/binder/include/binder/Parcel.h
++++ b/libs/binder/include/binder/Parcel.h
+@@ -18,6 +18,11 @@
+ 
+ #include <array>
+ #include <map> // for legacy reasons
++#ifdef __linux__
++#include <limits>
++#include <memory>
++#include <optional>
++#endif
+ #include <string>
+ #include <type_traits>
+ #include <vector>
+@@ -255,9 +260,11 @@ public:
+     template<typename T, std::enable_if_t<std::is_enum_v<T> && std::is_same_v<typename std::underlying_type_t<T>,int8_t>, bool> = 0>
+     status_t            writeEnumVector(const std::optional<std::vector<T>>& val)
+             { return writeData(val); }
++#if !defined(__linux__)
+     template<typename T, std::enable_if_t<std::is_enum_v<T> && std::is_same_v<typename std::underlying_type_t<T>,int8_t>, bool> = 0>
+     status_t            writeEnumVector(const std::unique_ptr<std::vector<T>>& val) __attribute__((deprecated("use std::optional version instead")))
+             { return writeData(val); }
++#endif
+     // Write an Enum vector with underlying type != int8_t.
+     template<typename T, std::enable_if_t<std::is_enum_v<T> && !std::is_same_v<typename std::underlying_type_t<T>,int8_t>, bool> = 0>
+     status_t            writeEnumVector(const std::vector<T>& val)
+@@ -265,19 +272,23 @@ public:
+     template<typename T, std::enable_if_t<std::is_enum_v<T> && !std::is_same_v<typename std::underlying_type_t<T>,int8_t>, bool> = 0>
+     status_t            writeEnumVector(const std::optional<std::vector<T>>& val)
+             { return writeData(val); }
++#if !defined(__linux__)
+     template<typename T, std::enable_if_t<std::is_enum_v<T> && !std::is_same_v<typename std::underlying_type_t<T>,int8_t>, bool> = 0>
+     status_t            writeEnumVector(const std::unique_ptr<std::vector<T>>& val) __attribute__((deprecated("use std::optional version instead")))
+             { return writeData(val); }
++#endif
+ 
+     template<typename T>
+     status_t            writeParcelableVector(const std::optional<std::vector<std::optional<T>>>& val)
+             { return writeData(val); }
++#if !defined(__linux__)
+     template<typename T>
+     status_t            writeParcelableVector(const std::unique_ptr<std::vector<std::unique_ptr<T>>>& val) __attribute__((deprecated("use std::optional version instead")))
+             { return writeData(val); }
+     template<typename T>
+     status_t            writeParcelableVector(const std::shared_ptr<std::vector<std::unique_ptr<T>>>& val) __attribute__((deprecated("use std::optional version instead")))
+             { return writeData(val); }
++#endif
+     template<typename T>
+     status_t            writeParcelableVector(const std::shared_ptr<std::vector<std::optional<T>>>& val)
+             { return writeData(val); }
+@@ -411,9 +422,11 @@ public:
+     template<typename T, std::enable_if_t<std::is_enum_v<T> && std::is_same_v<typename std::underlying_type_t<T>,int8_t>, bool> = 0>
+     status_t            readEnumVector(std::vector<T>* val) const
+             { return readData(val); }
++#if !defined(__linux__)
+     template<typename T, std::enable_if_t<std::is_enum_v<T> && std::is_same_v<typename std::underlying_type_t<T>,int8_t>, bool> = 0>
+     status_t            readEnumVector(std::unique_ptr<std::vector<T>>* val) const __attribute__((deprecated("use std::optional version instead")))
+             { return readData(val); }
++#endif
+     template<typename T, std::enable_if_t<std::is_enum_v<T> && std::is_same_v<typename std::underlying_type_t<T>,int8_t>, bool> = 0>
+     status_t            readEnumVector(std::optional<std::vector<T>>* val) const
+             { return readData(val); }
+@@ -421,9 +434,11 @@ public:
+     template<typename T, std::enable_if_t<std::is_enum_v<T> && !std::is_same_v<typename std::underlying_type_t<T>,int8_t>, bool> = 0>
+     status_t            readEnumVector(std::vector<T>* val) const
+             { return readData(val); }
++#if !defined(__linux__)
+     template<typename T, std::enable_if_t<std::is_enum_v<T> && !std::is_same_v<typename std::underlying_type_t<T>,int8_t>, bool> = 0>
+     status_t            readEnumVector(std::unique_ptr<std::vector<T>>* val) const __attribute__((deprecated("use std::optional version instead")))
+             { return readData(val); }
++#endif
+     template<typename T, std::enable_if_t<std::is_enum_v<T> && !std::is_same_v<typename std::underlying_type_t<T>,int8_t>, bool> = 0>
+     status_t            readEnumVector(std::optional<std::vector<T>>* val) const
+             { return readData(val); }
+@@ -432,10 +447,12 @@ public:
+     status_t            readParcelableVector(
+                             std::optional<std::vector<std::optional<T>>>* val) const
+             { return readData(val); }
++#if !defined(__linux__)
+     template<typename T>
+     status_t            readParcelableVector(
+                             std::unique_ptr<std::vector<std::unique_ptr<T>>>* val) const __attribute__((deprecated("use std::optional version instead")))
+             { return readData(val); }
++#endif
+     template<typename T>
+     status_t            readParcelableVector(std::vector<T>* val) const
+             { return readData(val); }
+diff --git a/libs/binder/include/binder/RpcSession.h b/libs/binder/include/binder/RpcSession.h
+index a579442..47fb4c8 100644
+--- a/libs/binder/include/binder/RpcSession.h
++++ b/libs/binder/include/binder/RpcSession.h
+@@ -21,6 +21,9 @@
+ #include <utils/Errors.h>
+ #include <utils/RefBase.h>
+ 
++#ifdef __linux__
++#include <condition_variable>
++#endif
+ #include <map>
+ #include <optional>
+ #include <thread>

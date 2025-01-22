@@ -1,0 +1,160 @@
+#####################################################################
+Date: Thu Nov 2 15:45:32 2023 +0100
+From: 8436e04cfaa6c21be86b37e9599184d77c67faef Wed May 25 18:41:55 2022
+Source: Sky
+Subject: Fix the compilation issues in the Linux environment
+#####################################################################
+diff --git a/logging.cpp b/logging.cpp
+index e6c02ba..7a568ce 100644
+--- a/logging.cpp
++++ b/logging.cpp
+@@ -209,7 +209,11 @@ static std::recursive_mutex& TagLock() {
+ static std::string* gDefaultTag;
+ 
+ void SetDefaultTag(const std::string& tag) {
++#ifdef __linux__
++  if (true) {
++#else
+   if (__builtin_available(android 30, *)) {
++#endif
+     __android_log_set_default_tag(tag.c_str());
+   } else {
+     std::lock_guard<std::recursive_mutex> lock(TagLock());
+@@ -314,7 +318,11 @@ static void LogdLogChunk(LogId id, LogSeverity severity, const char* tag, const
+   int32_t lg_id = LogIdTolog_id_t(id);
+   int32_t priority = LogSeverityToPriority(severity);
+ 
++#ifdef __linux__
++  if (true) {
++#else
+   if (__builtin_available(android 30, *)) {
++#endif
+     __android_log_message log_message = {sizeof(__android_log_message),     lg_id, priority, tag,
+                                          static_cast<const char*>(nullptr), 0,     message};
+     __android_log_logd_logger(&log_message);
+@@ -396,7 +404,11 @@ LogFunction SetLogger(LogFunction&& logger) {
+   LogFunction old_logger = std::move(Logger());
+   Logger() = std::move(logger);
+ 
++#ifdef __linux__
++  if (true) {
++#else
+   if (__builtin_available(android 30, *)) {
++#endif
+     __android_log_set_logger([](const struct __android_log_message* log_message) {
+       auto log_id = log_id_tToLogId(log_message->buffer_id);
+       auto severity = PriorityToLogSeverity(log_message->priority);
+@@ -412,7 +424,11 @@ AbortFunction SetAborter(AbortFunction&& aborter) {
+   AbortFunction old_aborter = std::move(Aborter());
+   Aborter() = std::move(aborter);
+ 
++#ifdef __linux__
++  if (true) {
++#else
+   if (__builtin_available(android 30, *)) {
++#endif
+     __android_log_set_aborter([](const char* abort_message) { Aborter()(abort_message); });
+   }
+   return old_aborter;
+@@ -500,7 +516,11 @@ LogMessage::~LogMessage() {
+ 
+   // Abort if necessary.
+   if (data_->GetSeverity() == FATAL) {
++#ifdef __linux__
++    if (true) {
++#else
+     if (__builtin_available(android 30, *)) {
++#endif
+       __android_log_call_aborter(msg.c_str());
+     } else {
+       Aborter()(msg.c_str());
+@@ -515,7 +535,11 @@ std::ostream& LogMessage::stream() {
+ void LogMessage::LogLine(const char* file, unsigned int line, LogSeverity severity, const char* tag,
+                          const char* message) {
+   int32_t priority = LogSeverityToPriority(severity);
++#ifdef __linux__
++  if (true) {
++#else
+   if (__builtin_available(android 30, *)) {
++#endif
+     __android_log_message log_message = {
+         sizeof(__android_log_message), LOG_ID_DEFAULT, priority, tag, file, line, message};
+     __android_log_write_log_message(&log_message);
+@@ -534,7 +558,11 @@ void LogMessage::LogLine(const char* file, unsigned int line, LogSeverity severi
+ }
+ 
+ LogSeverity GetMinimumLogSeverity() {
++#ifdef __linux__
++  if (true) {
++#else
+   if (__builtin_available(android 30, *)) {
++#endif
+     return PriorityToLogSeverity(__android_log_get_minimum_priority());
+   } else {
+     return gMinimumLogSeverity;
+@@ -545,7 +573,11 @@ bool ShouldLog(LogSeverity severity, const char* tag) {
+   // Even though we're not using the R liblog functions in this function, if we're running on Q,
+   // we need to fall back to using gMinimumLogSeverity, since __android_log_is_loggable() will not
+   // take into consideration the value from SetMinimumLogSeverity().
++#ifdef __linux__
++  if (true) {
++#else
+   if (__builtin_available(android 30, *)) {
++#endif
+     int32_t priority = LogSeverityToPriority(severity);
+     return __android_log_is_loggable(priority, tag, ANDROID_LOG_INFO);
+   } else {
+@@ -554,7 +586,11 @@ bool ShouldLog(LogSeverity severity, const char* tag) {
+ }
+ 
+ LogSeverity SetMinimumLogSeverity(LogSeverity new_severity) {
++#ifdef __linux__
++  if (true) {
++#else
+   if (__builtin_available(android 30, *)) {
++#endif
+     int32_t priority = LogSeverityToPriority(new_severity);
+     return PriorityToLogSeverity(__android_log_set_minimum_priority(priority));
+   } else {
+diff --git a/logging_splitters.h b/logging_splitters.h
+index 2ec2b20..34b7d47 100644
+--- a/logging_splitters.h
++++ b/logging_splitters.h
+@@ -75,6 +75,7 @@ static void SplitByLogdChunks(LogId log_id, LogSeverity severity, const char* ta
+     chunk_position = 0;
+   };
+ 
++#ifdef __ANDROID__
+   auto write_to_logd_chunk = [&](const char* message, int length) {
+     int size_written = 0;
+     const char* new_line = chunk_position > 0 ? "\n" : "";
+@@ -93,6 +94,7 @@ static void SplitByLogdChunks(LogId log_id, LogSeverity severity, const char* ta
+     }
+     chunk_position += size_written;
+   };
++#endif
+ 
+   const char* newline = strchr(msg, '\n');
+   while (newline != nullptr) {
+@@ -101,9 +103,11 @@ static void SplitByLogdChunks(LogId log_id, LogSeverity severity, const char* ta
+       call_log_function();
+     }
+ 
++#ifdef __ANDROID__
+     // Otherwise, either the next line fits or we have any empty buffer and too large of a line to
+     // ever fit, in both cases, we add it to the buffer and continue.
+     write_to_logd_chunk(msg, newline - msg);
++#endif
+ 
+     msg = newline + 1;
+     newline = strchr(msg, '\n');
+@@ -113,7 +117,9 @@ static void SplitByLogdChunks(LogId log_id, LogSeverity severity, const char* ta
+   // then write the buffer.
+   if (chunk_position != 0 &&
+       chunk_position + static_cast<int>(strlen(msg)) + 1 + file_header_size <= max_size) {
++#ifdef __ANDROID__
+     write_to_logd_chunk(msg, -1);
++#endif
+     call_log_function();
+   } else {
+     // If the buffer is not empty and we can't fit the rest of msg into it, write its contents.

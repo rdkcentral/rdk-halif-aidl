@@ -1,0 +1,76 @@
+#####################################################################
+Date: Thu Nov 2 17:53:48 2023 +0100
+From: dc1275ca875479c6d1467e018d27e6a41c7d4069 Thu Apr 28 05:46:25 2022
+Source: Sky
+Subject: Fix the compilation issues in the Linux environment
+#####################################################################
+
+diff --git a/aidl_language.cpp b/aidl_language.cpp
+index 2663295d..42c291c3 100644
+--- a/aidl_language.cpp
++++ b/aidl_language.cpp
+@@ -250,7 +250,11 @@ AidlAnnotation::AidlAnnotation(const AidlLocation& location, const Schema& schem
+     : AidlNode(location, comments), schema_(schema), parameters_(std::move(parameters)) {}
+
+ struct ConstReferenceFinder : AidlVisitor {
++#ifdef __linux__
++  const AidlConstantReference* found = nullptr;
++#else
+   const AidlConstantReference* found;
++#endif
+   void Visit(const AidlConstantReference& ref) override {
+     if (!found) found = &ref;
+   }
+
+diff --git a/aidl_const_expressions.cpp b/aidl_const_expressions.cpp
+index afab3a2..b73d7eb 100644
+--- a/aidl_const_expressions.cpp
++++ b/aidl_const_expressions.cpp
+@@ -62,12 +62,20 @@ class OverflowGuard {
+ 
+   T operator+(T o) {
+     T out;
++#ifdef __linux__
++    mOverflowed = __builtin_add_overflow(mValue, o, reinterpret_cast<int*>(&out));
++#else
+     mOverflowed = __builtin_add_overflow(mValue, o, &out);
++#endif
+     return out;
+   }
+   T operator-(T o) {
+     T out;
++#ifdef __linux__
++    mOverflowed = __builtin_sub_overflow(mValue, o, reinterpret_cast<int*>(&out));
++#else
+     mOverflowed = __builtin_sub_overflow(mValue, o, &out);
++#endif
+     return out;
+   }
+   T operator*(T o) {
+@@ -79,8 +87,12 @@ class OverflowGuard {
+     // concerned about overflows elsewhere in the compiler in addition to
+     // those in interfaces.
+     out = mValue * o;
++#else
++#ifdef __linux__
++    mOverflowed = __builtin_mul_overflow(mValue, o, reinterpret_cast<int*>(&out));
+ #else
+     mOverflowed = __builtin_mul_overflow(mValue, o, &out);
++#endif
+ #endif
+     return out;
+   }
+diff --git a/location.h b/location.h
+index 9ccad24..e25d889 100644
+--- a/location.h
++++ b/location.h
+@@ -17,6 +17,9 @@
+ #pragma once
+ 
+ #include <iostream>
++#ifdef __linux__
++#include <memory>
++#endif
+ #include <string>
+ 
+ class AidlLocation {
