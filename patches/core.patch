@@ -1,7 +1,7 @@
 #####################################################################
 Date: Thu Nov 2 16:17:28 2023 +0100
 From: 8301b33dad51cafd9d08876fc91a7e5fa556dcd3 Fri Mar 24 15:59:07 2023
-Source: Sky & Android OpenSource Project
+Source: Comcast & Android OpenSource Project
 Subject: Fix the compilation issues in the Linux environment
 #####################################################################
 diff --git a/libcutils/ashmem-host.cpp b/libcutils/ashmem-host.cpp
