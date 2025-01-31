@@ -1,7 +1,7 @@
 #####################################################################
 Date: Thu Nov 2 13:57:44 2023 +0100
 From: ee3935f4c64d58f9f87ff6fac875cdad42f46038 Tue May 09 04:05:45 2023
-Source: Sky & Android OpenSource Project
+Source: Comcast & Android OpenSource Project
 Subject: Fix the compilation issues in the Linux environment
 #####################################################################
 diff --git a/cmds/servicemanager/Access.cpp b/cmds/servicemanager/Access.cpp
