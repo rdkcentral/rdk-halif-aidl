@@ -1,7 +1,7 @@
 #####################################################################
 Date: Thu Nov 2 11:23:41 2023 +0100
 From: ec3daa6f52131c87da38e1c7be6b374e3ccf6e0d Thu Jan 26 02:19:15
-Source: Sky & Android OpenSource Project
+Source: Comcast & Android OpenSource Project
 Subject: Fix the compilation issues in the Linux environment
 #####################################################################
 diff --git a/liblog/include/cutils/list.h b/liblog/include/cutils/list.h
