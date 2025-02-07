@@ -25,17 +25,17 @@ block-beta
 
 ![Vendor Layer](./Vendor%20Layer.drawio.svg)
 
-## Versions
+## Semantic Versioning
 
-Each HAL release is versioned as a major.minor.doc number and includes HAL services and components at different versions.
+Each HAL release follows **Semantic Versioning (SemVer)** principles and is versioned using the `major.minor.bugfix/doc` format, which applies to HAL services and components.
 
-The version should increment with:
+The version should increment as follows:
 
-**Major**: A non-backward compatible change to the API.
-**Minor**: A backward compatible change to the API. Defined as no change to the ABI exposed by the library that is used by the client.
-**Doc**: A change in the documentation. Since the documentation defines sematic operation, it is important as an interface header definition change. It is backward compatible because it does not change the ABI.
+- **Major:** Increased when making incompatible API changes.
+- **Minor:** Increased when adding functionality in a backwards-compatible manner.
+- **Bugfix/Doc:** Increased when making backwards-compatible bug fixes or documentation updates. Since the documentation defines semantic operation, it is as important as an interface header definition change but remains backward compatible.
 
-All HAL versions are listed separately in this section for reference.
+For more details, refer to [SemVer](https://www.semver.org).
 
 ## HAL Service Interfaces
 
@@ -48,7 +48,7 @@ The interface definitions are provided in AIDL files, which generate C++ sources
 A small number of HALs exist as libraries which are dynamically linked to RDK middleware processes.
 
 - Graphics: EGL, OpenGL ES, Vulkan graphics drivers
-- Wi-Fi: wpa_supplicant
+- Wi-Fi: wpa\_supplicant
 - Bluetooth: BlueZ
 - CDM: Content Decryption Modules for DRM
 

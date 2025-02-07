@@ -1,46 +1,85 @@
-site_name: Thunder
-site_url: https://rdkcentral.github.com/Thunder
+site_name: RDK AIDL HAL Interface
+site_url: https://www.github.com/rdkcentral/rdk-halif-aidl
 
-repo_name: rdkcentral/Thunder
-repo_url: https://github.com/rdkcentral/Thunder/
+repo_name: rdkcentral/rdk-halif-aidl
+repo_url: https://github.com/rdkcentral/rdk-halif-aidl
 
 nav:
-  - Home: index.md
-  - Introduction:
-    - What is rdk-halif_aidl: introduction/intro.md
-    - Key Concepts:
-      - AIDL and Binder: introduction/intro.md
-    - Getting Started:
-      - Versions: introduction/versions.md
-      - Build Lnux: introduction/build_linux.md
-    - Architecture:
-      - Overview: introduction/architecture/overview.md
-      - RPC Protocols:
-        - JSON-RPC: introduction/architecture/rpc/jsonrpc.md
-        - COM-RPC: introduction/architecture/rpc/comrpc.md
-    - Interfaces:
-      - audioDecoer: audiodecoder/audioDecoder.md
-      - audiosink: audiosink/intro.md
-      - avbuffer:
-      - avclock:
-      - boot:
-      - broadcast:
-      - cdm:
-      - cec:
-      - common:
-      - deepsleep:
-      - deviceinfo:
-      - flash:
-      - indicator:
-      - panel:
-      - planecontrol:
-      - videodecoder:
-      - videosink:
-
+  - Home: introduction/home.md
+  - Key Concepts:
+    - AIDL and Binder: introduction/aidl_and_binder.md
+    - HAL Feature Profiles: introduction/hal_feature_profile.md
+    - Building Lnux Binder: introduction/interface_generation.md
+  - HAL Interfaces:
+    - Overview: introduction/hal_interfaces.md
+    - AV Subsystem:
+      - Audio Decoder:
+        - Overview: halif/audio_decoder/audio_decoder_overview.md
+        - Current: halif/audio_decoder/current/audio_decoder.md
+        - v0.5: halif/audio_decoder/v0.5/audio_decoder.md
+      - Audio Mixer: 
+        - Current: halif/audio_mixer/current/intro.md
+      - Audio Sink: 
+        - Current: halif/audio_sink/current/audio_sink_overview.md
+      - AV Buffer: 
+        - Current: halif/av_buffer/current/av_buffer_overview.md
+      - AV Clock: 
+        - Current: halif/av_clock/current/intro.md
+      - Video Deocder: 
+        - Current: halif/video_decoder/current/video_decoder.md
+      - Video Sink: 
+        - Current: halif/video_sink/current/video_sink_overview.md
+    - boot: 
+        - Current: halif/boot/current/intro.md
+    - broadcast: 
+        - Current: halif/broadcast/current/intro.md
+    - cdm: 
+        - Current: halif/cdm/current/intro.md
+    - HDMI:
+      - HDMI CEC: 
+        - Current: halif/cec/current/intro.md
+      - HDMI Input: 
+        - Current: halif/hdmi_input/current/intro.md
+      - HDMI Output: 
+        - Current: halif/hdmi_output/current/intro.md
+    - Common: 
+        - Current: halif/common/current/intro.md
+    - Deep Sleep: 
+        - Current: halif/deep_sleep/current/intro.md
+    - Device Info: 
+        - Current: halif/device_info/current/intro.md
+    - Flash: 
+        - Current: halif/flash/current/intro.md
+    - Indicator: 
+        - Current: halif/indicator/current/intro.md
+    - Panel:
+      - Panel Output: 
+        - Current: halif/panel/current/intro.md
+      - Panel Output2: 
+        - Current: halif/panel_output/current/intro.md
+    - Plane Control: 
+        - Current: halif/plane_control/current/plane_control_overview.md
+    - Secure API: 
+        - Current: halif/sec_api/current/intro.md
+    - Senssor: 
+        - Current: halif/sensor/current/intro.md
+  - System Interfaces:
+    - Bluetooth: 
+        - Current: vsi/bluetooth/current/intro.md
+    - Graphics: 
+        - Current: vsi/graphics/current/intro.md
+    - Network Management: 
+        - Current: vsi/network_management/current/intro.md
+    - Power Management: 
+        - Current: vsi/power_management/current/intro.md
+    - Service Manager: 
+        - Current: vsi/service_manager/current/intro.md
+    - Wi-Fi: 
+        - Current: vsi/wifi/current/intro.md
   - Misc:
-    - Documentation: docs.md
+    - Documentation Guide: introduction/documentation_guide.md
     - References: references/references.md
-    - Filing an Issue: issuetemplate/issuetemplate.md
+    - Filing an Issue: external_content/ut-core-wiki/1.2.-Standards:-Issue-Description-Guideline.md
 
 
 markdown_extensions:
@@ -60,6 +99,9 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.min.js
 
 extra_css:
   - stylesheets/extra.css

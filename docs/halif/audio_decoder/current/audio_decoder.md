@@ -1,41 +1,58 @@
-# Overview
+# Audio Decoder
+
+## References
+
+!!! info "References"
+    |||
+    |-|-|
+    |**Interface Defination**|[audio_decoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiodecoder/current)|
+    |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
+    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/intro.md) - TBC hal-audiodecodermanager.service |
+    |**Reference Implmentation - TBC**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiodecoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiodecoder/current)|
+
+## Related Pages
+
+!!! tip "Related Pages"
+    - [Audio Sink](../../audio_sink/current/audio_sink_overview.md)
+    - [AV Buffer](../../av_buffer/current/av_buffer_overview.md)
+    - [Session State Management]()
 
 ## Implementation Requirements
 
-| Requirement | Comments |
-|---|---|
-| Starting and stopping audio streams shall never produce an audible click or pop artefact due to the audio waveform the audio streaming was started or stopped at. | HAL.AUDIODECODER.1 This requirement works in conjunction with the audio mixer. |
+| Requirement | ID | Comments |
+|---|---| ---- |
+| Starting and stopping audio streams shall never produce an audible click or pop artefact due to the audio waveform the audio streaming was started or stopped at. | HAL.AUDIODECODER.1 |This requirement works in conjunction with the audio mixer. |
 | An audio decoder shall indicate its support for secure audio processing through its resource capabilities. | HAL.AUDIODECODER.2 |
-| An audio decoder advertising the secure audio processing capability that receives a secure buffer of compressed audio shall output decoded audio to secure buffers either returned to the client or tunnelled to the mixer. | HAL.AUDIODECODER.3 Secure audio path must be maintained. |
+| An audio decoder advertising the secure audio processing capability that receives a secure buffer of compressed audio shall output decoded audio to secure buffers either returned to the client or tunnelled to the mixer. | HAL.AUDIODECODER.3 |Secure audio path must be maintained. |
 | An audio decoder can tunnel decoded audio to a mixer or the vendor audio sub-system for passthrough and/or return the decoded audio as PCM to the client. | HAL.AUDIODECODER.4 |
 | When the client enables the audio decoder low latency property and the audio decoder and platform support low latency audio then the audio frame metadata shall indicate low latency. | HAL.AUDIODECODER.5 |
 | Each audio decoder resource shall be presented by a unique ID. | HAL.AUDIODECODER.6 |
 | Each audio decoder resource shall provide an API to expose its capabilities for secure audio processing and supported codecs. | HAL.AUDIODECODER.7 |
 | Only 1 client connection shall be allowed to open and control an audio decoder resource. | HAL.AUDIODECODER.8 |
 | Multiple client connections shall be allowed to register for events from an audio decoder resource. | HAL.AUDIODECODER.9 |
-| Audio frame metadata shall be returned to a controlling client on the first audio frame decoded after an open or flush and then against not until the frame metadata changes. | HAL.AUDIODECODER.10 Not sent on every decoded audio frame buffer unless changed since previous. |
-| The audio frame output buffer from an audio decoder shall match the platform PCM audio format required for mixing. | HAL.AUDIODECODER.11 See com.rdk.hal.audiosink.PlatformCapabilities |
+| Audio frame metadata shall be returned to a controlling client on the first audio frame decoded after an open or flush and then against not until the frame metadata changes. | HAL.AUDIODECODER. | 10 Not sent on every decoded audio frame buffer unless changed since previous. |
+| The audio frame output buffer from an audio decoder shall match the platform PCM audio format required for mixing. | HAL.AUDIODECODER.11 | See com.rdk.hal.audiosink.PlatformCapabilities |
 | If a client process exits, the Audio Decoder server shall automatically stop and close any Audio Decoder instance controlled by that client. | HAL.AUDIODECODER.12 |
 
 ## Interface Definition
 
-### Interface Definition File
+The interface can be found by following this link [audiodecoder](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/audiodecoder)
 
-| Description |
-|---|
-| `IAudioDecoderManager.aidl` Audio Decoder Manager HAL which provides access to `IAudioDecoder` resource instances. |
-| `IAudioDecoder.aidl` Audio Decoder interface for a single audio decoder resource instance. |
-| `IAudioDecoderController.aidl` Controller interface for an `IAudioDecoder` resource instance. |
-| `IAudioDecoderControllerListener.aidl` Listener callbacks interface to clients from an `IAudioDecoderController`. |
-| `IAudioDecoderEventListener.aidl` Listener callbacks interface to clients from an `IAudioDecoder`. |
-| `Capabilities.aidl` Parcelable describing the capabilities of an `IAudioDecoder` resource instance. |
-| `ChannelType.aidl` Enum list of audio channel types. |
-| `Codec.aidl` Enum list of audio codecs. |
-| `CSDAudioFormat.aidl` Enum list of audio codec specific data formats. |
-| `ErrorCode.aidl` Enum list of audio decoder error codes. |
-| `FrameMetadata.aidl` Parcelable of audio frame metadata passed from the audio decoder. |
-| `PCMFormat.aidl` Enum list of PCM coding formats. |
-| `Property.aidl` Enum list of audio decoder properties. |
+| Interface | Description |
+|---| ----- |
+| `IAudioDecoderManager.aidl` | Audio Decoder Manager HAL which provides access to `IAudioDecoder` resource instances. |
+| `IAudioDecoder.aidl` | Audio Decoder interface for a single audio decoder resource instance. |
+| `IAudioDecoderController.aidl` | Controller interface for an `IAudioDecoder` resource instance. |
+| `IAudioDecoderControllerListener.aidl` | Listener callbacks interface to clients from an `IAudioDecoderController`. |
+| `IAudioDecoderEventListener.aidl` | Listener callbacks interface to clients from an `IAudioDecoder`. |
+| `Capabilities.aidl` | Parcelable describing the capabilities of an `IAudioDecoder` resource instance. |
+| `ChannelType.aidl` | Enum list of audio channel types. |
+| `Codec.aidl` | Enum list of audio codecs. |
+| `CSDAudioFormat.aidl` | Enum list of audio codec specific data formats. |
+| `ErrorCode.aidl` | Enum list of audio decoder error codes. |
+| `FrameMetadata.aidl` | Parcelable of audio frame metadata passed from the audio decoder. |
+| `PCMFormat.aidl` | Enum list of PCM coding formats. |
+| `Property.aidl` | Enum list of audio decoder properties. |
 
 ## Initialization
 
@@ -61,7 +78,56 @@ Typically an RDK middleware GStreamer audio decoder element will work with a sin
 
 The RDK middleware resource management system will examine the number of audio decoder resources and their capabilities, so they can be allocated to streaming sessions.
 
-![SystemContext](audioSystem.png)
+```mermaid
+flowchart TD
+    RDKClientComponent("RDKClientComponent")
+    subgraph Listeners["Listeners"]
+        IAudioDecoderEventListener("IAudioDecoderEventListener")
+        IAudioDecoderControllerListener("IAudioDecoderControllerListener")
+    end
+    subgraph IAudioDecoderHAL["Audio Decoder HAL"]
+        IAudioDecoderManager("IAudioDecoderManager <br>(Service)")
+        IAudioDecoder("IAudioDecoder <br>(Instance)")
+        IAudioDecoderController("IAudioDecoderController <br>(Instance)")
+    end
+    subgraph OutputComponents["Output"]
+        AudioFramePool("Audio Frame Pool")
+        PlatformDecoder["Platform Integrated Decoder/Mixer"]
+        AudioOutput["Audio Output Ports in passthrough"]
+    end
+    RDKClientComponent -- createAudioPool() <br> alloc() <br> free() <br> destroyPool() --> IAVBuffer
+    RDKClientComponent -- getIAudioDecoderIds() <br> getIAudioDecoder() --> IAudioDecoderManager
+    RDKClientComponent -- getCapabilities() <br> getState() <br> open() <br> close() --> IAudioDecoder
+    RDKClientComponent -- registerEventListener() / unregisterEventListener() --> IAudioDecoder
+    RDKClientComponent -- start() <br> stop() <br> setProperty() <br> decodeBuffer() <br> flush() <br> signalDiscontinuity() / signalEOS() / parseCodecSpecificData() --> IAudioDecoderController
+    IAudioDecoderManager --> IAudioDecoder --> IAudioDecoderController
+    IAudioDecoder -- onStateChanged() <br> onDecodeError() --> IAudioDecoderEventListener
+    IAudioDecoderEventListener --> RDKClientComponent
+    IAudioDecoderControllerListener --> RDKClientComponent
+    IAudioDecoderController -- onFrameOutput() --> IAudioDecoderControllerListener
+    IAudioDecoderController -- alloc --> AudioFramePool
+    IAudioDecoderManager -- free --> IAVBuffer
+    IAudioDecoderController -- tunneled audio --> PlatformDecoder
+    IAudioDecoderController -- tunneled audio <br>(passthrough) --> AudioOutput
+
+
+    RDKClientComponent:::blue
+    classDef background fill:#FFFFFF,stroke:none
+    classDef blue fill:#0000FF,stroke:#000,stroke-width:2px,color:#FFF
+    classDef lightGrey fill:#E0E0E0,stroke:#000,stroke-width:2px,color:#000
+    classDef wheat fill:#F5DEB3,stroke:#000,stroke-width:2px,color:#000
+    classDef green fill:#90EE90,stroke:#000,stroke-width:2px,color:#000
+    classDef default fill:#FFFFFF,stroke:#000,stroke-width:1px
+    IAudioDecoderManager:::wheat
+    IAudioDecoderController:::wheat
+    IAudioDecoder:::wheat
+    IAVBuffer:::green
+    IAudioDecoderControllerListener:::wheat
+    IAudioDecoderEventListener:::wheat
+    AudioFramePool:::green
+    PlatformDecoder:::green
+    AudioOutput:::green
+```
 
 ## Resource Management
 
@@ -73,29 +139,26 @@ To use an `IAudioDecoder` resource instance it must be opened by a client, which
 
 Any number of clients can access the `IAudioDecoderManager` service and get access to the `IAudioDecoder` sub-interfaces, but only 1 client can `open()` an `IAudioDecoder` and access its `IAudioDecoderController` sub-interface.
 
-The diagram below shows the relationship between the interfaces and resource instances.
+The diagram below shows the relationship between the Audio Decodeer HAL interfaces and resource instances.
 
 ```mermaid
 graph LR
 
     %% --- Encapsulating Everything Inside "Audio Decoder HAL" ---
-    subgraph ADHAL["Audio Decoder HAL"]
-        direction LR
-        ADMS("IAudioDecoderManager")
+    IAudioDecoderManager("IAudioDecoderManager")
 
-        %% --- Audio Decoder Manager Service Spawns Instances ---
-        ADMS --> ADI1("IAudioDecoder <br> ID = 0")
-        ADMS --> ADI2("IAudioDecoder <br> ID = 1")
-        ADMS --> ADI3("IAudioDecoder <br> ID = 2")
+    %% --- Audio Decoder Manager Service Spawns Instances ---
+    IAudioDecoderManager --> ADI1("IAudioDecoder <br> ID = 0")
+    IAudioDecoderManager --> ADI2("IAudioDecoder <br> ID = 1")
+    IAudioDecoderManager --> ADI3("IAudioDecoder <br> ID = 2")
 
-        %% --- Each Instance Has a Controller ---
-        ADI1 --> ADIC1("IAudioDecoderController")
-        ADI2 --> ADIC2("IAudioDecoderController")
-        ADI3 --> ADIC3("IAudioDecoderController")
-    end
+    %% --- Each Instance Has a Controller ---
+    ADI1 --> ADIC1("IAudioDecoderController")
+    ADI2 --> ADIC2("IAudioDecoderController")
+    ADI3 --> ADIC3("IAudioDecoderController")
 
     %% --- High Contrast Styling (Rounded Box Simulation) ---
-    classDef hal fill:#BBBBBB,stroke:#444444,stroke-width:2px,color:#000000;
+    classDef background fill:#FFFFFF,stroke:none
     classDef manager fill:#4CAF50,stroke:#2E7D32,stroke-width:2px,color:#FFFFFF;
     classDef instance1 fill:#FFD700,stroke:#AA8800,stroke-width:2px,color:#000000;
     classDef instance2 fill:#FFB347,stroke:#CC5500,stroke-width:2px,color:#000000;
@@ -103,8 +166,7 @@ graph LR
     classDef controller fill:#00CED1,stroke:#008B8B,stroke-width:2px,color:#000000;
 
     %% --- Apply Colors ---
-    class ADHAL hal;
-    class ADMS manager;
+    class IAudioDecoderManager manager;
     class ADI1 instance1;
     class ADI2 instance2;
     class ADI3 instance3;
@@ -133,18 +195,18 @@ Where a codec is optional for hardware/vendor support and is not implemented by 
 
 | Codec | Typical Use Case | Hardware/Vendor Support |
 |---|---|---|
-| MPEG-1/2 audio layer II | Broadcast streams, IP streams, files | Mandatory |
+| MPEG-1/2 audio layer II | Broadcast streams, IP streams, files | **Mandatory** |
 | MPEG-1/2 audio layer III | MP3 files | Optional |
-| AAC-LC | Broadcast streams, IP streams, files | Mandatory |
-| HE-AAC | Broadcast streams, IP streams, files | Mandatory |
-| HE-AAC v2 | Broadcast streams, IP streams, files | Mandatory |
+| AAC-LC | Broadcast streams, IP streams, files | **Mandatory** |
+| HE-AAC | Broadcast streams, IP streams, files | **Mandatory** |
+| HE-AAC v2 | Broadcast streams, IP streams, files | **Mandatory** |
 | exHE-AAC | Broadcast streams, IP streams, files | Optional |
 | AAC-ELD | Apple AirPlay | Optional |
 | Apple Lossless Audio Codec (ALAC) | Apple AirPlay | Optional |
-| Dolby AC-3 | Broadcast streams, IP streams, files | Mandatory (if platform is licensed) |
-| Dolby E-AC-3 | Broadcast streams, IP streams, files | Mandatory (if platform is licensed) |
-| Dolby E-AC-3+JOC (Atmos) | Broadcast streams, IP streams, files | Mandatory (if platform is licensed) |
-| Dolby AC-4 | Broadcast streams, IP streams | Mandatory (if platform is licensed) |
+| Dolby AC-3 | Broadcast streams, IP streams, files | **Mandatory** (if platform is licensed) |
+| Dolby E-AC-3 | Broadcast streams, IP streams, files | **Mandatory** (if platform is licensed) |
+| Dolby E-AC-3+JOC (Atmos) | Broadcast streams, IP streams, files | **Mandatory** (if platform is licensed) |
+| Dolby AC-4 | Broadcast streams, IP streams | **Mandatory** (if platform is licensed) |
 | USAC | IP streams | Optional |
 | SBC | Bluetooth | Optional |
 | FLAC | Amazon Music app, files | Optional |
@@ -281,69 +343,63 @@ When an Audio Decoder session enters a `FLUSHING` or `STOPPING` transitory state
 The sequence diagram below shows the behavior of the callbacks.
 
 
-```plantuml
-@startuml
+```mermaid
+sequenceDiagram
+    %% RDK Audio Decoder Box with contrasting text
+    box rgb(100,149,237)
+      participant Client as <font color="white"><b>RDK Client</b></font>
+      participant IAudioDecoderEventListener as <font color="white">IAudioDecoderEventListener</font>
+      participant IAudioDecoderControllerListener as <font color="white">IAudioDecoderControllerListener</font>
+    end
+    
+    %% Audio Decoder Server Box with contrasting text
+    box rgb(218,165,32)
+      participant ADC as <font color="black"><b>IAudioDecoder</b></font>
+      participant Controller as <font color="black">IAudioDecoderController</font>
+    end
+    
+    %% Audio AV Buffer Box with contrasting text
+    box rgb(60,179,113)
+      participant IAVBuffer as <font color="white">IAVBuffer</font>
+    end
 
-box RDK Audio Decoder #LightBlue
-  participant Client as "RDK Client"
-  participant IAudioDecoderEventListener
-  participant IAudioDecoderControllerListener
-endbox
-box Audio Decoder Server #Yellow
-  participant ADC as "IAudioDecoder"
-  participant Controller as "IAudioDecoderController"
-endbox
-box Audio AV Buffer #LightGreen
-  participant IAVBuffer as "IAVBuffer"
-endbox
+    Client->>ADC: registerEventListener(IAudioDecoderEventListener)
+    
+    Note over ADC: open() transitions from CLOSED → OPENING → READY
+    Client->>ADC: open(IAudioDecoderControllerListener)
+    ADC-->>IAudioDecoderEventListener: onStateChanged(CLOSED → OPENING)
+    ADC->>Controller: new
+    ADC-->>IAudioDecoderEventListener: onStateChanged(OPENING → READY)
+    ADC-->>Client: IAudioDecoderController
 
-  Client->ADC: registerEventListener(IAudioDecoderEventListener)
+    Note over ADC: start() transitions from READY → STARTING → STARTED
+    Client->>Controller: start()
+    ADC-->>IAudioDecoderEventListener: onStateChanged(READY → STARTING)
+    ADC-->>IAudioDecoderEventListener: onStateChanged(STARTING → STARTED)
 
-... open() transitions from CLOSED -> OPENING -> READY...
+    Note over Client: Client can now send AV buffers
+    Client->>Controller: decodeBuffer(pts, bufferHandle=1, trimStartNs=0, trimEndNs=0)
+    Client->>Controller: decodeBuffer(pts, bufferHandle=2, trimStartNs=0, trimEndNs=0)
+    Controller-->>IAudioDecoderControllerListener: onFrameOutput(pts, frameBufferHandle=1000, metadata)
+    Controller->>IAVBuffer: free(bufferHandle=1)
 
-  Client->ADC: open(IAudioDecoderControllerListener)
-  ADC-->IAudioDecoderEventListener: onStateChanged(CLOSED -> OPENING)
-  ADC->Controller **: new
-  ADC-->IAudioDecoderEventListener: onStateChanged(OPENING -> READY)
-  ADC-->Client: IAudioDecoderController
+    Note over ADC: flush() transitions from STARTED → FLUSHING → STARTED
+    Client->>Controller: flush()
+    ADC-->>IAudioDecoderEventListener: onStateChanged(STARTED → FLUSHING)
+    Controller->>IAVBuffer: free(bufferHandle=2)
+    ADC-->>IAudioDecoderEventListener: onStateChanged(FLUSHING → STARTED)
+    Client->>Controller: decodeBuffer(pts, bufferHandle=3, trimStartNs=0, trimEndNs=0)
 
-... start() transitions from READY -> STARTING -> STARTED...
- 
-  Client->Controller: start()
-  ADC-->IAudioDecoderEventListener: onStateChanged(READY -> STARTING)
-  ADC-->IAudioDecoderEventListener: onStateChanged(STARTING -> STARTED)
+    Note over ADC: stop() transitions from STARTED → STOPPING → READY
+    Client->>Controller: stop()
+    ADC-->>IAudioDecoderEventListener: onStateChanged(STARTED → STOPPING)
+    Controller->>IAVBuffer: free(bufferHandle=3)
+    ADC-->>IAudioDecoderEventListener: onStateChanged(STOPPING → READY)
 
-  Note over Client: Client can now\nsend AV buffers
-  
-  Client->Controller: decodeBuffer(pts, bufferHandle=1, trimStartNs=0, trimEndNs=0)
-  Client->Controller: decodeBuffer(pts, bufferHandle=2, trimStartNs=0, trimEndNs=0)
-  Controller-->IAudioDecoderControllerListener: onFrameOutput(pts, frameBufferHandle=1000, metadata)
-  Controller->IAVBuffer: free(bufferHandle=1)
-
-... flush() transitions from STARTED -> FLUSHING -> STARTED...
-
-  Client->Controller: flush()
-  ADC-->IAudioDecoderEventListener: onStateChanged(STARTED -> FLUSHING)
-  Controller->IAVBuffer: free(bufferHandle=2)
-  ADC-->IAudioDecoderEventListener: onStateChanged(FLUSHING -> STARTED)
- 
-  Client->Controller: decodeBuffer(pts, bufferHandle=3, trimStartNs=0, trimEndNs=0)
-
-... stop() transitions from STARTED -> STOPPING -> READY...
-
-  Client->Controller: stop()
-  ADC-->IAudioDecoderEventListener: onStateChanged(STARTED -> STOPPING)
-  Controller->IAVBuffer: free(bufferHandle=3)
-  ADC-->IAudioDecoderEventListener: onStateChanged(STOPPING -> READY)
- 
-... close() transitions from READY -> CLOSING -> CLOSED...
-
-  Client->ADC: close()
-  ADC-->IAudioDecoderEventListener: onStateChanged(READY -> CLOSING)
-  ADC->Controller !!: delete
-  ADC-->IAudioDecoderEventListener: onStateChanged(CLOSING -> CLOSED)
-
-  Client->ADC: unregisterEventListener(IAudioDecoderEventListener)
-
-@enduml
+    Note over ADC: close() transitions from READY → CLOSING → CLOSED
+    Client->>ADC: close()
+    ADC-->>IAudioDecoderEventListener: onStateChanged(READY → CLOSING)
+    ADC->>Controller: delete
+    ADC-->>IAudioDecoderEventListener: onStateChanged(CLOSING → CLOSED)
+    Client->>ADC: unregisterEventListener(IAudioDecoderEventListener)
 ```
