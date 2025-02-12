@@ -1,4 +1,4 @@
-# Audio Decoder Overview
+# Overview: Audio Decoder
 
 This document provides an overview of the Audio Decoder Hardware Abstraction Layer (HAL) service, which facilitates the decoding of compressed audio streams within the device. The HAL defines the interfaces through which the RDK (Reference Design Kit) middleware interacts with the vendor-specific audio decoding implementation.
 

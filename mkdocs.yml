@@ -1,4 +1,4 @@
-site_name: RDK AIDL HAL Interface
+site_name: RDK AIDL Hardware Porting Kit
 site_url: https://www.github.com/rdkcentral/rdk-halif-aidl
 
 repo_name: rdkcentral/rdk-halif-aidl
@@ -14,26 +14,34 @@ nav:
     - Overview: introduction/hal_interfaces.md
     - AV Subsystem:
       - Audio Decoder:
-        - Overview: halif/audio_decoder/audio_decoder_overview.md
-        - Current: halif/audio_decoder/current/audio_decoder.md
+        - Current: 
+          - Overview: halif/audio_decoder/current/audio_decoder_overview.md
+          - Specification: halif/audio_decoder/current/audio_decoder.md
         - v0.5: halif/audio_decoder/v0.5/audio_decoder.md
       - Audio Mixer: 
         - Current: halif/audio_mixer/current/intro.md
       - Audio Sink: 
-        - Current: halif/audio_sink/current/audio_sink_overview.md
+        - Current:
+          - Overview: halif/audio_sink/current/audio_sink_overview.md
+          - Specification: halif/audio_sink/current/audio_sink.md
+        - v0.5: halif/audio_sink/v0.5/audio_sink.md
       - AV Buffer: 
-        - Current: halif/av_buffer/current/av_buffer_overview.md
+        - Current: 
+          - Overview: halif/av_buffer/current/av_buffer_overview.md
+          - Specification: halif/av_buffer/current/av_buffer.md
       - AV Clock: 
-        - Current: halif/av_clock/current/intro.md
+        - Current: 
+          - Overview: halif/av_clock/current/av_clock_overview.md
+          - Specification: halif/av_clock/current/av_clock.md
       - Video Deocder: 
         - Current: halif/video_decoder/current/video_decoder.md
       - Video Sink: 
         - Current: halif/video_sink/current/video_sink_overview.md
-    - boot: 
+    - Boot: 
         - Current: halif/boot/current/intro.md
-    - broadcast: 
+    - Broadcast: 
         - Current: halif/broadcast/current/intro.md
-    - cdm: 
+    - CDM: 
         - Current: halif/cdm/current/intro.md
     - HDMI:
       - HDMI CEC: 
@@ -73,9 +81,18 @@ nav:
     - Power Management: 
         - Current: vsi/power_management/current/intro.md
     - Service Manager: 
-        - Current: vsi/service_manager/current/intro.md
+        - Current: 
+          - Overview: vsi/service_manager/current/service_manager_overview.md
+          - Specification: vsi/service_manager/current/service_manager.md
     - Wi-Fi: 
         - Current: vsi/wifi/current/intro.md
+  - Testing Framework:
+    - Test Driven Development: external_content/ut-core-wiki/3.1.-Standards:-Overview-of-Test‐Driven-Development.md
+    - Levels of Test: external_content/ut-core-wiki/3.-Standards:-Levels-of-Test-for-Vendor-Layer.md
+    - Feedback Loops: external_content/ut-core-wiki/3.0.1-Standards:-Testing-Feedback-Loops.md
+    - UT-Core Testing Framework: external_content/ut-core-wiki/FAQ:-UT-Core-Framework-Overview.md
+    - Requirements for Building: external_content/ut-core-wiki/3.2.-Standards:-Requirements-for-building-testing-suites.md
+    - System Interface Testing (VSI): external_content/ut-core-wiki/3.3.-Standards:-L4-‐-System-Interface-Testing.md
   - Misc:
     - Documentation Guide: introduction/documentation_guide.md
     - References: references/references.md

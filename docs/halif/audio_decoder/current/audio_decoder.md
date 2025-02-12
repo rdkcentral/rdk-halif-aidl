@@ -2,37 +2,39 @@
 
 ## References
 
-!!! info "References"
+!!! info References
     |||
     |-|-|
     |**Interface Defination**|[audio_decoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiodecoder/current)|
+    |**API Documentation**| *TBD* |
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
-    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/intro.md) - TBC hal-audiodecodermanager.service |
-    |**Reference Implmentation - TBC**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiodecoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiodecoder/current)|
+    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/intro.md) - **hal-audiodecodermanager.service** |
+    |**VTS Tests**| TBC |
+    |**Reference Implmentation - vComponent**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiodecoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiodecoder/current)|
 
 ## Related Pages
 
-!!! tip "Related Pages"
+!!! tip Related Pages
     - [Audio Sink](../../audio_sink/current/audio_sink_overview.md)
     - [AV Buffer](../../av_buffer/current/av_buffer_overview.md)
     - [Session State Management]()
 
 ## Implementation Requirements
 
-| Requirement | ID | Comments |
+|# | Requirement | Comments |
 |---|---| ---- |
-| Starting and stopping audio streams shall never produce an audible click or pop artefact due to the audio waveform the audio streaming was started or stopped at. | HAL.AUDIODECODER.1 |This requirement works in conjunction with the audio mixer. |
-| An audio decoder shall indicate its support for secure audio processing through its resource capabilities. | HAL.AUDIODECODER.2 |
-| An audio decoder advertising the secure audio processing capability that receives a secure buffer of compressed audio shall output decoded audio to secure buffers either returned to the client or tunnelled to the mixer. | HAL.AUDIODECODER.3 |Secure audio path must be maintained. |
-| An audio decoder can tunnel decoded audio to a mixer or the vendor audio sub-system for passthrough and/or return the decoded audio as PCM to the client. | HAL.AUDIODECODER.4 |
-| When the client enables the audio decoder low latency property and the audio decoder and platform support low latency audio then the audio frame metadata shall indicate low latency. | HAL.AUDIODECODER.5 |
-| Each audio decoder resource shall be presented by a unique ID. | HAL.AUDIODECODER.6 |
-| Each audio decoder resource shall provide an API to expose its capabilities for secure audio processing and supported codecs. | HAL.AUDIODECODER.7 |
-| Only 1 client connection shall be allowed to open and control an audio decoder resource. | HAL.AUDIODECODER.8 |
-| Multiple client connections shall be allowed to register for events from an audio decoder resource. | HAL.AUDIODECODER.9 |
-| Audio frame metadata shall be returned to a controlling client on the first audio frame decoded after an open or flush and then against not until the frame metadata changes. | HAL.AUDIODECODER. | 10 Not sent on every decoded audio frame buffer unless changed since previous. |
-| The audio frame output buffer from an audio decoder shall match the platform PCM audio format required for mixing. | HAL.AUDIODECODER.11 | See com.rdk.hal.audiosink.PlatformCapabilities |
-| If a client process exits, the Audio Decoder server shall automatically stop and close any Audio Decoder instance controlled by that client. | HAL.AUDIODECODER.12 |
+| HAL.AUDIODECODER.1 | Starting and stopping audio streams shall never produce an audible click or pop artefact due to the audio waveform the audio streaming was started or stopped at. |This requirement works in conjunction with the audio mixer. |
+| HAL.AUDIODECODER.2 | An audio decoder shall indicate its support for secure audio processing through its resource capabilities. |
+| HAL.AUDIODECODER.3 | An audio decoder advertising the secure audio processing capability that receives a secure buffer of compressed audio shall output decoded audio to secure buffers either returned to the client or tunnelled to the mixer.|Secure audio path must be maintained.|
+| HAL.AUDIODECODER.4 | An audio decoder can tunnel decoded audio to a mixer or the vendor audio sub-system for passthrough and/or return the decoded audio as PCM to the client. |
+| HAL.AUDIODECODER.5 | When the client enables the audio decoder low latency property and the audio decoder and platform support low latency audio then the audio frame metadata shall indicate low latency. |
+| HAL.AUDIODECODER.6 | Each audio decoder resource shall be presented by a unique ID. |
+| HAL.AUDIODECODER.7 | Each audio decoder resource shall provide an API to expose its capabilities for secure audio processing and supported codecs. |
+| HAL.AUDIODECODER.8 | Only 1 client connection shall be allowed to open and control an audio decoder resource. |
+| HAL.AUDIODECODER.9| Multiple client connections shall be allowed to register for events from an audio decoder resource.|
+| HAL.AUDIODECODER.10 | Audio frame metadata shall be returned to a controlling client on the first audio frame decoded after an open or flush and then against not until the frame metadata changes. | Not sent on every decoded audio frame buffer unless changed since previous. |
+| HAL.AUDIODECODER.11 | The audio frame output buffer from an audio decoder shall match the platform PCM audio format required for mixing. | See com.rdk.hal.audiosink.PlatformCapabilities |
+| HAL.AUDIODECODER.12 | If a client process exits, the Audio Decoder server shall automatically stop and close any Audio Decoder instance controlled by that client. |
 
 ## Interface Definition
 
@@ -56,11 +58,11 @@ The interface can be found by following this link [audiodecoder](https://github.
 
 ## Initialization
 
-The `systemd hal-audiodecodermanager.service` unit file is provided by the vendor layer to start the service and should include `Wants` or `Requires` directives to start any platform driver services it depends upon.
+The `systemd hal-audiodecodermanager.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
-The Audio Decoder Manager service depends on the Service Manager to register itself as a service.
+The Audio Decoder Manager service depends on the [Service Manager](../../../vsi/service_manager/current/service_manager.md) to register itself as a service.
 
-Upon starting, the service shall register the `IAudioDecoderManager` interface with the Service Manager using the String `IAudioDecoderManager.serviceName` and immediately become operational.
+Upon starting, the service shall register the `IAudioDecoderManager` interface with the [Service Manager](../../../vsi/service_manager/current/service_manager.md) using the String `IAudioDecoderManager.serviceName` and immediately become operational.
 
 ## Product Customization
 
@@ -346,20 +348,20 @@ The sequence diagram below shows the behavior of the callbacks.
 ```mermaid
 sequenceDiagram
     %% RDK Audio Decoder Box with contrasting text
-    box rgb(100,149,237)
+    box rgb(100,149,237) RDK Audio Decoder 
       participant Client as <font color="white"><b>RDK Client</b></font>
       participant IAudioDecoderEventListener as <font color="white">IAudioDecoderEventListener</font>
       participant IAudioDecoderControllerListener as <font color="white">IAudioDecoderControllerListener</font>
     end
     
     %% Audio Decoder Server Box with contrasting text
-    box rgb(218,165,32)
+    box rgb(218,165,32) Audio Decoder Server
       participant ADC as <font color="black"><b>IAudioDecoder</b></font>
       participant Controller as <font color="black">IAudioDecoderController</font>
     end
     
     %% Audio AV Buffer Box with contrasting text
-    box rgb(60,179,113)
+    box rgb(60,179,113) Audio AV Buffer
       participant IAVBuffer as <font color="white">IAVBuffer</font>
     end
 

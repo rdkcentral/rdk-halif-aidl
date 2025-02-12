@@ -17,17 +17,11 @@ python3 --version
 ### **Run the ****`install.sh`**** Script:**
 
 Navigate to the `docs` directory and run the script, which installs the virtual environment for Python 3, clones required repositories, and sets up the necessary directories.
+After running the script, activate the virtual environment:
 
 ```bash
 cd ./docs
 ./install.sh
-```
-
-### **Activate the Virtual Environment:**
-
-After running the script, activate the virtual environment:
-
-```bash
 source ./activate.sh
 ```
 
@@ -38,6 +32,7 @@ Now you can run the `build_docs.sh` script, which builds the documentation and r
 ```bash
 ./build_docs.sh
 ```
+
 Alternatively, you can directly use MkDocs:
 
 ```bash
@@ -65,7 +60,7 @@ To ensure consistency and maintainability across the `rdk-halif-aidl` repository
 !!! bad
     - `docs/audio-decoder/intro-information.md`
     - `docs/audiodecoder/introinformation.md`
-    - `docs/audiodecoder/introinformation.md`
+    - `docs/audiodecoder/introInformation.md`
 
 - **Consistency with unix-like Practices:**
   - This convention aligns with Unix-like system structures, ensuring smooth integration and ease of navigation.

@@ -1,13 +1,17 @@
 # HAL Interface Overview
 
-Status Used:
-✅ <span class="inline-success">Complete</span>,   📝 <span class="inline-draft">Draft</span>,   ⚠️ <span class="inline-warning">Incomplete</span>,   ❌ <span class="inline-danger">Not Started</span>
+| Status | Description |
+| ------- | ------| 
+|✅ <span class="inline-success">Complete</span>|
+|📝 <span class="inline-draft">Under Review</span>|
+|⚠️ <span class="inline-warning">Needs Work</span>|
+|❌ <span class="inline-danger">Needs work</span>|
 
 ## Components
 
 | HAL Component       | Device Profile | Description                                | Interface State | L1 Spec | L2 Spec | L3 Spec|
 | ------------------- | -------------- | ------------------------------------------ | ------ | ---|---|---|
-| [**Audio Decoder**](../halif/audio_decoder/audio_decoder_overview.md)   | All            | Audio decoder control.                     | **✅ Complete** |
+| [**Audio Decoder**](../halif/audio_decoder/audio_decoder_overview.md)   | All            | Audio decoder control.                     | **📝 Draft** | X | X | X |
 | [**Audio Sink**](../halif/audio_sink/audio_sink_overview.md)      | All            | Audio sink and rendering control.          | !!! warning "In Progress" |
 | [**Audio Mixer**](../halif/audio_mixer/intro.md)     | All            | Audio mixing and transcoding control.      | !!! info "Draft" |
 | [**AV Buffer**]../(halif/av_buffer/intro.md)       | All            | A/V buffer and pool control.               | !!! success "Complete" |

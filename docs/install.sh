@@ -4,7 +4,7 @@
 # * If not stated otherwise in this file or this component's LICENSE file the
 # * following copyright and licenses apply:
 # *
-# * Copyright 2023 RDK Management
+# * Copyright 2025 RDK Management
 # *
 # * Licensed under the Apache License, Version 2.0 (the "License");
 # * you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ function WARNING()
 function ERROR()
 {
     ECHO "${RED_BOLD}ERROR: ${RED}$*${NO_COLOR}" 
-    exit 1
+    return 1
 }
 
 install_pip_requirements() {
@@ -164,7 +164,7 @@ function setup_and_enable_venv()
         # Activate virtual environment
         ECHO "please run the following to ensure setup:"
         ECHO ${YELLOW}". ./activate_venv.sh"${NO_COLOR}
-        exit 1  # Exit the function if already in a venv
+        return 1  # Exit the function if already in a venv
     fi
 
     if [ -f "${VENV_DIR}/.installed" ]; then
