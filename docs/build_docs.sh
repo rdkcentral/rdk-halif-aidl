@@ -65,4 +65,4 @@ clone_repo "https://github.com/rdkcentral/ut-core.wiki.git" "docs/external_conte
 #... add more repo clones like this...
 
 # Run MkDocs in service mode
-mkdocs serve --host 0.0.0.0 --port 8000
+mkdocs serve
