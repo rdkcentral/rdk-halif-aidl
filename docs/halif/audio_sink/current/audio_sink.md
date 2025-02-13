@@ -18,7 +18,7 @@
     - [Audio Decoder](../../audio_decoder/current/audio_decoder_overview.md)
     - [AV Buffer](../../av_buffer/current/av_buffer_overview.md)
     - [AV Clock](../../av_clock/current/av_clock_overview.md)
-    - [Session State Management](../../introduction/session_state_management.md)
+    - [Session State Management](../../concepts/session_state_management/current/session_state_management.md)
 
 ## Implementation Requirements
 
@@ -80,7 +80,8 @@ Each `IAudioSink` resource instance is assigned a unique integer ID, which is us
 
 To use an `IAudioSink` resource instance it must be opened by a client, which returns an `IAudioSinkController` sub-interface to access buffer queuing and additional state controls.
 
-Any number of clients can access the `IAudioSinkManager` service and get access to the `IAudioSink` sub-interfaces, but only 1 client can `open()` an `IAudioSink` and access its `IAudioSinkController` sub-interface.
+!!! Important
+    Any number of clients can access the `IAudioSinkManager` service and get access to the `IAudioSink` sub-interfaces, but only 1 client can `open()` an `IAudioSink` and access its `IAudioSinkController` sub-interface.
 
 The diagram below shows the relationship between the interfaces and resource instances.
 

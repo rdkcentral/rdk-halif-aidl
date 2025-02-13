@@ -18,17 +18,17 @@ The RDK middleware GStreamer pipeline contains an RDK Audio Decoder element desi
 
 ||Requirement|Comments|
 |--|---------------|---------------|
-|**HAL.AUDIODECODER.1**	|Starting and stopping audio streams shall never produce an audible click or pop artefact due to the audio waveform the audio streaming was started or stopped at.|This requirement works in conjunction with the audio mixer.|
-|**HAL.AUDIODECODER.2**	|An audio decoder shall indicate its support for secure audio processing through its resource capabilities.|
-|**HAL.AUDIODECODER.3**	|An audio decoder advertising the secure audio processing capability that receives a secure buffer of compressed audio shall output decoded audio to secure buffers either returned to the client or tunnelled to the mixer.||Secure audio path must be maintained.|
-|**HAL.AUDIODECODER.4**	|An audio decoder can tunnel decoded audio to a mixer or the vendor audio sub-system for passthrough and/or return the decoded audio as PCM to the client.||
-|**HAL.AUDIODECODER.5**	|When the client enables the audio decoder low latency property and the audio decoder and platform support low latency audio then the audio frame metadata shall indicate low latency.|
-|**HAL.AUDIODECODER.6**	|Each audio decoder resource shall be presented by a unique ID.||
-|**HAL.AUDIODECODER.7**	|Each audio decoder resource shall provide an API to expose its capabilities for secure audio processing and supported codecs.||
-|**HAL.AUDIODECODER.8**	|Only 1 client connection shall be allowed to open and control an audio decoder resource.||
-|**HAL.AUDIODECODER.9**	|Multiple client connections shall be allowed to register for events from an audio decoder resource.||
-|**HAL.AUDIODECODER.10** |Audio frame metadata shall be returned to a controlling client on the first audio frame decoded after an open or flush and then against not until the frame metadata changes.|Not sent on every decoded audio frame buffer unless changed since previous.|
-|**HAL.AUDIODECODER.11**	|The audio frame output buffer from an audio decoder shall match the platform PCM audio format required for mixing.|See `com.rdk.hal.audiosink.PlatformCapabilities`|
+|**HAL.AUDIODECODER.1**|Starting and stopping audio streams shall never produce an audible click or pop artefact due to the audio waveform the audio streaming was started or stopped at.|This requirement works in conjunction with the audio mixer.|
+|**HAL.AUDIODECODER.2**|An audio decoder shall indicate its support for secure audio processing through its resource capabilities.|
+|**HAL.AUDIODECODER.3**|An audio decoder advertising the secure audio processing capability that receives a secure buffer of compressed audio shall output decoded audio to secure buffers either returned to the client or tunnelled to the mixer.|Secure audio path must be maintained.|
+|**HAL.AUDIODECODER.4**|An audio decoder can tunnel decoded audio to a mixer or the vendor audio sub-system for passthrough and/or return the decoded audio as PCM to the client.||
+|**HAL.AUDIODECODER.5**|When the client enables the audio decoder low latency property and the audio decoder and platform support low latency audio then the audio frame metadata shall indicate low latency.|
+|**HAL.AUDIODECODER.6**|Each audio decoder resource shall be presented by a unique ID.||
+|**HAL.AUDIODECODER.7**|Each audio decoder resource shall provide an API to expose its capabilities for secure audio processing and supported codecs.||
+|**HAL.AUDIODECODER.8**|Only 1 client connection shall be allowed to open and control an audio decoder resource.||
+|**HAL.AUDIODECODER.9**|Multiple client connections shall be allowed to register for events from an audio decoder resource.||
+|**HAL.AUDIODECODER.10**|Audio frame metadata shall be returned to a controlling client on the first audio frame decoded after an open or flush and then against not until the frame metadata changes.|Not sent on every decoded audio frame buffer unless changed since previous.|
+|**HAL.AUDIODECODER.11**|The audio frame output buffer from an audio decoder shall match the platform PCM audio format required for mixing.|See `com.rdk.hal.audiosink.PlatformCapabilities`|
 
 ## Interface Definition
 
@@ -220,7 +220,8 @@ The Audio Decoder also provides properties which allow for an override of the pl
 
 ## Audio Decoder States
 
-The Audio Decoder HAL follows the standard [Session State Management ](https://wiki.rdkcentral.com/pages/viewpage.action?spaceKey=RDKHAL&title=Session+State+Management)paradigm.
+The Audio Decoder HAL follows the standard [Session State Management](../../concepts/session_state_management/current/session_state_management.md)
+ paradigm.
 
 When an Audio Decoder session enters a FLUSHING or STOPPING transitory state it shall free any AV buffers it is holding.
 

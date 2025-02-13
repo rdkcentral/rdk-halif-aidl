@@ -23,6 +23,8 @@ block-beta
   style E fill:#007000,stroke:#000,color:#fff;
 ```
 
+**TBC: Static Image**
+
 ![Vendor Layer](./Vendor%20Layer.drawio.svg)
 
 ## Semantic Versioning

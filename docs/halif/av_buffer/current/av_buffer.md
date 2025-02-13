@@ -18,7 +18,7 @@
     - [Audio Decoder](../../audio_decoder/current/audio_decoder_overview.md)
     - [Audio Sink](../../audio_decoder/current/audio_sink_overview.md)
     - [AV Clock](../../av_clock/current/av_clock_overview.md)
-    - [Session State Management](../../introduction/session_state_management.md)
+    - [Session State Management](../../concepts/session_state_management/current/session_state_management.md)
     - [Video Decoder](../../video_decoder/current/video_decoder_overview.md)
 
 ## Implementation Requirements

@@ -50,13 +50,13 @@ function clone_repo
   fi
 }
 
-# Request that the user re-run this script from the vendor
+# Request that the user re-run this script from the vendorexit
 # Check if already inside a virtual environment
 if [[ ! -n "$VIRTUAL_ENV" ]]; then
     # Activate virtual environment
     ECHO "please run ${YELLOW}install.sh${NO_COLOR} to ensure setup:"
     ECHO ${YELLOW}"./install.sh"${NO_COLOR}
-    exit 1  # Exit the function if already in a venv
+    return 1  # Exit the function if already in a venv
 fi
 
 # Clone repositories (call the function directly)
@@ -65,4 +65,4 @@ clone_repo "https://github.com/rdkcentral/ut-core.wiki.git" "docs/external_conte
 #... add more repo clones like this...
 
 # Run MkDocs in service mode
-mkdocs serve
+mkdocs serve --host 0.0.0.0 --port 8000

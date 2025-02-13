@@ -72,7 +72,7 @@ check_sourced()
     if [[ "$SCRIPT_FILE" == "$0" ]]; then
         echo "Warning: This script should be sourced. Run it using:"
         echo "    source $SCRIPT_FILE"
-        exit 1
+        return 1
     fi
 }
 

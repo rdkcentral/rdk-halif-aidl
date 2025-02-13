@@ -17,7 +17,7 @@
 !!! tip Related Pages
     - [Audio Sink](../../audio_sink/current/audio_sink_overview.md)
     - [AV Buffer](../../av_buffer/current/av_buffer_overview.md)
-    - [Session State Management]()
+    - [Session State Management](../../concepts/session_state_management/current/session_state_management.md)
 
 ## Implementation Requirements
 
@@ -139,7 +139,8 @@ Each `IAudioDecoder` resource instance is assigned a unique integer ID, which is
 
 To use an `IAudioDecoder` resource instance it must be opened by a client, which returns an `IAudioDecoderController` sub-interface to access buffer decoding and additional state controls.
 
-Any number of clients can access the `IAudioDecoderManager` service and get access to the `IAudioDecoder` sub-interfaces, but only 1 client can `open()` an `IAudioDecoder` and access its `IAudioDecoderController` sub-interface.
+!!! Important
+    Any number of clients can access the `IAudioDecoderManager` service and get access to the `IAudioDecoder` sub-interfaces, but only 1 client can `open()` an `IAudioDecoder` and access its `IAudioDecoderController` sub-interface.
 
 The diagram below shows the relationship between the Audio Decodeer HAL interfaces and resource instances.
 
