@@ -4,7 +4,7 @@ project(Panel
 	LANGUAGES NONE
 	VERSION 1.0)
 
-if (NOT DEFINED AIDL_BIN)
+if (NOT COMMAND compile_aidl)
 	message(FATAL_ERROR "Do not invoke module level CMake directly!\nInvoke CMake at root level instead!")
 endif()
 
@@ -13,6 +13,7 @@ set(COMMON_VERSION "current")
 set(VIDEO_DECODER_VERSION "current")
 
 set(SRC_DIR com/rdk/hal/panel)
+set(COMMON_SRC_DIR ${COMMON_MODULE_PATH}/${COMMON_VERSION}/com/rdk/hal)
 
 set(SRC
 	${SRC_DIR}/Capabilities.aidl
@@ -26,28 +27,26 @@ set(SRC
 	${SRC_DIR}/PQParameterConfiguration.aidl
 	${SRC_DIR}/WhiteBalance2PointSettings.aidl
 	${SRC_DIR}/WhiteBalanceMultiPointSettings.aidl
-	../../common/${COMMON_VERSION}/com/rdk/hal/AVSource.aidl
+	${COMMON_SRC_DIR}/AVSource.aidl
 )
 
-set(INCLUDE_FLAGS
-	-I.
-	-I../../common/${COMMON_VERSION}
-	-I../../videodecoder/${VIDEO_DECODER_VERSION}
+set(INCLUDE_DIRECTORY
+	.
+	${COMMON_MODULE_PATH}/${COMMON_VERSION}
+	${VIDEO_DECODER_MODULE_PATH}/${VIDEO_DECODER_VERSION}
 )
 
-foreach(SRC_FILE IN ITEMS ${SRC})
-	message(STATUS "== ${SRC_FILE} ==")
-	execute_process(
-		COMMAND ${AIDL_BIN} ${AIDL_FLAGS} ${INCLUDE_FLAGS} ${SRC_FILE}
-		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-		OUTPUT_VARIABLE OUTPUT
-		ERROR_VARIABLE ERROR
-		RESULT_VARIABLE RESULT
-	)
+set(COMPILE_AIDL_ARGV "")
 
-	if(RESULT EQUAL 0)
-		message(STATUS "Command succeeded with output:\n${OUTPUT}")
-	else()
-		message(WARNING "Command failed with error:\n${ERROR}")
-	endif()
-endforeach()
+if (DEFINED AIDL_GEN_DIR)
+	list(APPEND COMPILE_AIDL_ARGV TARGET_DIRECTORY ${AIDL_GEN_DIR})
+endif()
+
+if (DEFINED AIDL_BIN)
+	list(APPEND COMPILE_AIDL_ARGV AIDL_BIN ${AIDL_BIN})
+endif()
+
+compile_aidl(${SRC}
+	INCLUDE_DIRECTORY ${INCLUDE_DIRECTORY}
+	${COMPILE_AIDL_ARGV}
+)
