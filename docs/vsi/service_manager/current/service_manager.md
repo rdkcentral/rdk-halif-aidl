@@ -1,16 +1,22 @@
 # Service Manager
 
+The **Service Manager** is a crucial **Binder service** included in the vendor layer. It is launched early in system initialization and serves as a **registry** for Binder service interfaces.
+
+- As each **HAL service** starts, it registers its **public Binder interface** with the **Service Manager**.
+- Registered interfaces are added to the Service Manager’s list, making them discoverable by clients.
+- Clients can retrieve a registered service interface by calling `getService()` with the corresponding service name.
+
 ## References
 
 !!! info References
     |||
     |-|-|
-    |**Interface Defination**|[service_manager/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/service_manager/current)|
+    |**Interface Definition**|[service_manager/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/service_manager/current)|
     | **API Documentation** | *TBD - Doxygen* |
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
     |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/intro.md) - **hal-service_manager.service** |
     |**VTS Tests**| TBC |
-    |**Reference Implmentation - vComponent**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/service_manager/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/service_manager/current)|
+    |**Reference Implementation - vComponent**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/service_manager/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/service_manager/current)|
 
 ## Related Pages
 
@@ -37,7 +43,7 @@ See [https://android.googlesource.com/platform/frameworks/native/+/android-13.0.
 
 ## Initialization
 
-The `systemd hal-service_manager.service` unit file is provided by the vendor layer to start the service.
+The [systemd](../../../vsi/systemd/current/intro.md) `hal-service_manager.service` unit file is provided by the vendor layer to start the service.
 
 The Service Manager depends on the kernel binder driver.
 

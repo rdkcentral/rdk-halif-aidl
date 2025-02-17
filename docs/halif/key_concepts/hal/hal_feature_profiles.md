@@ -5,7 +5,7 @@ The HAL Feature Profile (`HFP`) is a crucial declaration provided by the OEM whe
 - **Test Driver:** The `HFP` informs the vendor test suite, enabling it to conduct targeted testing based on the declared feature set.
 - **Capability Declaration:** The `HFP` lists all supported HAL features, allowing for verification against product requirements.
 
-### File Syntax and Schema
+## File Syntax and Schema
 
 The `HFP` is structured as a YAML file.  It resides within the vendor layer deliverables, typically in a designated configuration directory (e.g., `vendor/<vendor_name>/<platform>/config/hal_feature_profile.yaml`).
 
@@ -65,7 +65,7 @@ components:              # List of HAL components
     types: ["IR", "Bluetooth", "RF4CE"]
 ```
 
-### Mandatory and Optional HALs and Features
+## Mandatory and Optional HALs and Features
 
 The HFP explicitly lists all HAL components present in the vendor implementation.  While all listed components are considered *supported*, the HFP can also indicate whether a component or a specific feature within a component is *mandatory* or *optional*. This distinction is crucial for product compliance testing.  This can be achieved by adding properties to the component definition, for example:
 
@@ -81,15 +81,15 @@ The HFP explicitly lists all HAL components present in the vendor implementation
         optional: true # Widevine is optional
 ```
 
-### HFP Versioning
+## HFP Versioning
 
 The `hal_version` field in the HFP specifies the version of the HFP schema itself.  This allows for future evolution of the HFP structure while maintaining backward compatibility.  The versioning scheme should follow semantic versioning (major.minor.patch).
 
-### Tooling
+## Tooling
 
 Tools should be developed to parse and validate the HFP file.  This tooling will be essential for both the vendor test suite and for product requirements verification.  The tool should be able to:
 
-*   Validate the HFP against the schema.
-*   Check for mandatory components and features.
-*   Compare the HFP against product requirements.
-*   Generate reports summarizing the supported features.
+- Validate the HFP against the schema.
+- Check for mandatory components and features.
+- Compare the HFP against product requirements.
+- Generate reports summarizing the supported features.

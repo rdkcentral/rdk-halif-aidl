@@ -45,27 +45,7 @@ Access the documentation in your web browser at http://localhost:8000/rdkcentral
 
 The `mkdocs.yml` file, located at the root of the repository, is crucial for defining the documentation's structure and navigation. This file dictates the hierarchy of pages and how they are linked. **Any additions or removals of documentation pages require a corresponding update to ****`mkdocs.yml`**** to maintain proper navigation.**
 
-## Naming Conventions and Standards
-
-To ensure consistency and maintainability across the `rdk-halif-aidl` repository, we follow these naming conventions:
-
-- **Directory and File Naming:**
-  - All directory and file names should be **lowercase**.
-  - Use **underscores (`_`)** instead of hyphens (`-`) to separate words in directory and file names.
-  - Example:
-
-!!! good
-    - `docs/audio_decoder/introduction_information.md`
-
-!!! bad
-    - `docs/audio-decoder/intro-information.md`
-    - `docs/audiodecoder/introinformation.md`
-    - `docs/audiodecoder/introInformation.md`
-
-- **Consistency with unix-like Practices:**
-  - This convention aligns with Unix-like system structures, ensuring smooth integration and ease of navigation.
-
-By following these standards, we maintain uniformity and simplify automation processes, making it easier for contributors to work within the repository.
+See [For information on the the naming conventions used see:-](./hal_naming_conventions.md)
 
 ## Automatic Deployment
 

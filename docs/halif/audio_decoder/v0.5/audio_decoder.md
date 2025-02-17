@@ -10,7 +10,7 @@ The choice of whether audio is tunnelled or non-tunnelled has no impact on the o
 
 The audio decoder can choose whether to operate in tunnelled or non-tunnelled mode when it is opened for a specific codec and does not need to always use the same mode.
 
-PCM audio does not need decoding and therefore never passes into an audio decoder, but is routed to the [Audio Sink](https://wiki.rdkcentral.com/display/RDKHAL/Audio+Sink+Overview) for mixing.
+PCM audio does not need decoding and therefore never passes into an audio decoder, but is routed to the [Audio Sink](../../audio_sink/0.5) for mixing.
 
 The RDK middleware GStreamer pipeline contains an RDK Audio Decoder element designed specifically to work with the Audio Decoder HAL interface.
 
@@ -32,7 +32,7 @@ The RDK middleware GStreamer pipeline contains an RDK Audio Decoder element desi
 
 ## Interface Definition
 
-|Interface Defination File| Description|
+|Interface Definition File| Description|
 |--------------------------------|-------|
 |IAudioDecoderManager.aidl	|Audio Decoder Manager HAL which provides access to `IAudioDecoder` resource instances.|
 |IAudioDecoder.aidl|Audio Decoder interface for a single audio decoder resource instance.|
@@ -50,7 +50,7 @@ The RDK middleware GStreamer pipeline contains an RDK Audio Decoder element desi
 
 ## Initialization
 
-The `systemd hal-audiodecodermanager.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
+The [systemd](../../../vsi/systemd/current/intro.md) `hal-audio_decoder_manager.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
 The Audio Decoder Manager service depends on the [Service Manager](https://wiki.rdkcentral.com/display/RDKHAL/Service+Manager+Overview) to register itself as a service.
 
@@ -72,8 +72,56 @@ Typically an RDK middleware GStreamer audio decoder element will work with a sin
 
 The RDK middleware resource management system will examine the number of audio decoder resources and their capabilities, so they can be allocated to streaming sessions.
 
-![f32c8f4cf7887292e6d8d0d0a019165d.png](:/12c394d43bb94885afd659773f3911fb)
+```mermaid
+flowchart TD
+    RDKClientComponent("RDKClientComponent")
+    subgraph Listeners["Listeners"]
+        IAudioDecoderEventListener("IAudioDecoderEventListener")
+        IAudioDecoderControllerListener("IAudioDecoderControllerListener")
+    end
+    subgraph IAudioDecoderHAL["Audio Decoder HAL"]
+        IAudioDecoderManager("IAudioDecoderManager <br>(Service)")
+        IAudioDecoder("IAudioDecoder <br>(Instance)")
+        IAudioDecoderController("IAudioDecoderController <br>(Instance)")
+    end
+    subgraph OutputComponents["Output"]
+        AudioFramePool("Audio Frame Pool")
+        PlatformDecoder("Platform Integrated Decoder/Mixer")
+        AudioOutput("Audio Output Ports in passthrough")
+    end
+    RDKClientComponent -- createAudioPool() <br> alloc() <br> free() <br> destroyPool() --> IAVBuffer(IAVBuffer)
+    RDKClientComponent -- getIAudioDecoderIds() <br> getIAudioDecoder() --> IAudioDecoderManager
+    RDKClientComponent -- getCapabilities() <br> getState() <br> open() <br> close() --> IAudioDecoder
+    RDKClientComponent -- registerEventListener() / unregisterEventListener() --> IAudioDecoder
+    RDKClientComponent -- start() <br> stop() <br> setProperty() <br> decodeBuffer() <br> flush() <br> signalDiscontinuity() / signalEOS() / parseCodecSpecificData() --> IAudioDecoderController
+    IAudioDecoderManager --> IAudioDecoder --> IAudioDecoderController
+    IAudioDecoder -- onStateChanged() <br> onDecodeError() --> IAudioDecoderEventListener
+    IAudioDecoderEventListener --> RDKClientComponent
+    IAudioDecoderControllerListener --> RDKClientComponent
+    IAudioDecoderController -- onFrameOutput() --> IAudioDecoderControllerListener
+    IAudioDecoderController -- alloc() --> AudioFramePool
+    IAudioDecoderManager -- free() --> IAVBuffer
+    IAudioDecoderController -- tunneled audio --> PlatformDecoder
+    IAudioDecoderController -- tunneled audio <br>(passthrough) --> AudioOutput
 
+    classDef background fill:#121212,stroke:none,color:#E0E0E0;
+    classDef blue fill:#1565C0,stroke:#E0E0E0,stroke-width:2px,color:#E0E0E0;
+    classDef lightGrey fill:#616161,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
+    classDef wheat fill:#FFB74D,stroke:#424242,stroke-width:2px,color:#000000;
+    classDef green fill:#4CAF50,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
+    classDef default fill:#1E1E1E,stroke:#E0E0E0,stroke-width:1px,color:#E0E0E0;
+
+    RDKClientComponent:::blue
+    IAudioDecoderManager:::wheat
+    IAudioDecoderController:::wheat
+    IAudioDecoder:::wheat
+    IAVBuffer:::green
+    IAudioDecoderControllerListener:::wheat
+    IAudioDecoderEventListener:::wheat
+    AudioFramePool:::green
+    PlatformDecoder:::green
+    AudioOutput:::green
+```
 
 ## Resource Management
 
@@ -86,8 +134,6 @@ To use an IAudioDecoder resource instance it must be opened by a client, which r
 Any number of clients can access the IAudioDecoderManager service and get access to the IAudioDecoder sub-interfaces, but only 1 client can open() an `IAudioDecoder` and access its `IAudioDecoderController` sub-interface.
 
 The diagram below shows the relationship between the interfaces and resource instances.
-
-![7c61e3b0b5ef39396b21f9b4d3717234.png](:/7113d8989c0641d2bfd9b5cb61dd1fd4)
 
 ```mermaid
 graph LR
@@ -109,12 +155,12 @@ graph LR
     end
 
     %% --- High Contrast Styling (Rounded Box Simulation) ---
-    classDef hal fill:#BBBBBB,stroke:#444444,stroke-width:2px,color:#000000;
-    classDef manager fill:#4CAF50,stroke:#2E7D32,stroke-width:2px,color:#FFFFFF;
-    classDef instance1 fill:#FFD700,stroke:#AA8800,stroke-width:2px,color:#000000;
-    classDef instance2 fill:#FFB347,stroke:#CC5500,stroke-width:2px,color:#000000;
-    classDef instance3 fill:#FF6347,stroke:#CC2200,stroke-width:2px,color:#000000;
-    classDef controller fill:#00CED1,stroke:#008B8B,stroke-width:2px,color:#000000;
+    classDef background fill:#121212,stroke:none,color:#E0E0E0;
+    classDef manager fill:#388E3C,stroke:#1B5E20,stroke-width:2px,color:#FFFFFF;
+    classDef instance1 fill:#FFC107,stroke:#FF8F00,stroke-width:2px,color:#000000;
+    classDef instance2 fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#000000;
+    classDef instance3 fill:#F44336,stroke:#B71C1C,stroke-width:2px,color:#FFFFFF;
+    classDef controller fill:#00ACC1,stroke:#006064,stroke-width:2px,color:#000000;
 
     %% --- Apply Colors ---
     class ADHAL hal;
@@ -220,7 +266,7 @@ The Audio Decoder also provides properties which allow for an override of the pl
 
 ## Audio Decoder States
 
-The Audio Decoder HAL follows the standard [Session State Management](../../concepts/session_state_management/current/session_state_management.md)
+The Audio Decoder HAL follows the standard [Session State Management](../../key_concepts/hal/session_state_management.md)
  paradigm.
 
 When an Audio Decoder session enters a FLUSHING or STOPPING transitory state it shall free any AV buffers it is holding.

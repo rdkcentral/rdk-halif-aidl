@@ -5,38 +5,34 @@ repo_name: rdkcentral/rdk-halif-aidl
 repo_url: https://github.com/rdkcentral/rdk-halif-aidl
 
 nav:
-  - Home: introduction/home.md
-  - Key Concepts:
+  - Home: 
+    - Introduction: introduction/home.md
     - AIDL and Binder: introduction/aidl_and_binder.md
-    - HAL Feature Profiles: introduction/hal_feature_profile.md
-    - Building Lnux Binder: introduction/interface_generation.md
-  - HAL Interfaces:
-    - Overview: introduction/hal_interfaces.md
+    - Interface Generation: introduction/interface_generation.md
+    - Key Concepts:
+      - HAL Properties: halif/key_concepts/hal/hal_properties.md
+      - HAL Feature Profiles: halif/key_concepts/hal/hal_feature_profiles.md
+      - HAL Naming Conventions: halif/key_concepts/hal/hal_naming_conventions.md
+      - HAL Session State Management: halif/key_concepts/hal/hal_session_state_management.md
+  - HAL ADIL Interfaces:
+    - Overview: halif/key_concepts/hal/hal_interfaces.md
     - AV Subsystem:
       - Audio Decoder:
-        - Current: 
-          - Overview: halif/audio_decoder/current/audio_decoder_overview.md
-          - Specification: halif/audio_decoder/current/audio_decoder.md
+        - Current: halif/audio_decoder/current/audio_decoder.md
         - v0.5: halif/audio_decoder/v0.5/audio_decoder.md
       - Audio Mixer: 
         - Current: halif/audio_mixer/current/intro.md
       - Audio Sink: 
-        - Current:
-          - Overview: halif/audio_sink/current/audio_sink_overview.md
-          - Specification: halif/audio_sink/current/audio_sink.md
+        - Current: halif/audio_sink/current/audio_sink.md
         - v0.5: halif/audio_sink/v0.5/audio_sink.md
       - AV Buffer: 
-        - Current: 
-          - Overview: halif/av_buffer/current/av_buffer_overview.md
-          - Specification: halif/av_buffer/current/av_buffer.md
+        - Current: halif/av_buffer/current/av_buffer.md
       - AV Clock: 
-        - Current: 
-          - Overview: halif/av_clock/current/av_clock_overview.md
-          - Specification: halif/av_clock/current/av_clock.md
-      - Video Deocder: 
+        - Current: halif/av_clock/current/av_clock.md
+      - Video Decoder:
         - Current: halif/video_decoder/current/video_decoder.md
       - Video Sink: 
-        - Current: halif/video_sink/current/video_sink_overview.md
+        - Current: halif/video_sink/current/video_sink.md
     - Boot: 
         - Current: halif/boot/current/intro.md
     - Broadcast: 
@@ -66,12 +62,12 @@ nav:
       - Panel Output2: 
         - Current: halif/panel_output/current/intro.md
     - Plane Control: 
-        - Current: halif/plane_control/current/plane_control_overview.md
+        - Current: halif/plane_control/current/intro.md
     - Secure API: 
         - Current: halif/sec_api/current/intro.md
-    - Senssor: 
+    - Sensor: 
         - Current: halif/sensor/current/intro.md
-  - System Interfaces:
+  - HAL System Interfaces:
     - Bluetooth: 
         - Current: vsi/bluetooth/current/intro.md
     - Graphics: 
@@ -81,9 +77,7 @@ nav:
     - Power Management: 
         - Current: vsi/power_management/current/intro.md
     - Service Manager: 
-        - Current: 
-          - Overview: vsi/service_manager/current/service_manager_overview.md
-          - Specification: vsi/service_manager/current/service_manager.md
+        - Current: vsi/service_manager/current/service_manager.md
     - Wi-Fi: 
         - Current: vsi/wifi/current/intro.md
   - Testing Framework:
@@ -94,10 +88,9 @@ nav:
     - Requirements for Building: external_content/ut-core-wiki/3.2.-Standards:-Requirements-for-building-testing-suites.md
     - System Interface Testing (VSI): external_content/ut-core-wiki/3.3.-Standards:-L4-‐-System-Interface-Testing.md
   - Misc:
-    - Documentation Guide: introduction/documentation_guide.md
     - References: references/references.md
+    - Documentation Guide: introduction/documentation_guide.md
     - Filing an Issue: external_content/ut-core-wiki/1.2.-Standards:-Issue-Description-Guideline.md
-
 
 markdown_extensions:
   - admonition
@@ -117,11 +110,12 @@ markdown_extensions:
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
 
-extra_javascript:
-  - https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.min.js
-
 extra_css:
-  - stylesheets/extra.css
+  - stylesheets/extra.css  # Ensure this file exists
+
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.1/mermaid.min.js
+  - javascripts/mermaid-init.js
 
 theme:
   name: material

@@ -1,25 +1,33 @@
 # AV Buffer
 
+The **AV Buffer HAL** manages both secure and non-secure memory heaps and pools for the media pipeline and related A/V HAL components.
+
+- An **AV buffer** typically stores audio or video data, which may be in either encrypted or clear form.
+- **Secure memory buffers** handle decrypted data when DRM, conditional access, or other secure decryption mechanisms are used.
+- **Non-secure memory** is allocated for encrypted data from a media player source until it is decrypted into a secure memory buffer.
+- If a media player processes only clear (unencrypted) audio or video data, **non-secure memory buffers** can be used throughout from source to decoder.
+- AV memory buffers are referenced by **handles** as they move through the media pipeline and across HAL interfaces.
+
 ## References
 
 !!! info References
     |||
     |-|-|
-    |**Interface Defination**|[av_buffer/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_buffer/current)|
+    |**Interface Definition**|[av_buffer/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_buffer/current)|
     | **API Documentation** | *TBD - Doxygen* |
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
     |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/intro.md) - **hal-av_buffer.service** |
     |**VTS Tests**| TBC |
-    |**Reference Implmentation - vComponent**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_buffer/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_buffer/current)|
+    |**Reference Implementation - vComponent**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_buffer/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_buffer/current)|
 
 ## Related Pages
 
 !!! tip Related Pages
-    - [Audio Decoder](../../audio_decoder/current/audio_decoder_overview.md)
-    - [Audio Sink](../../audio_decoder/current/audio_sink_overview.md)
-    - [AV Clock](../../av_clock/current/av_clock_overview.md)
-    - [Session State Management](../../concepts/session_state_management/current/session_state_management.md)
-    - [Video Decoder](../../video_decoder/current/video_decoder_overview.md)
+    - [Audio Decoder](../../audio_decoder/current/audio_decoder.md)
+    - [Audio Sink](../../audio_decoder/current/audio_sink.md)
+    - [AV Clock](../../av_clock/current/av_clock.md)
+    - [Session State Management](../../key_concepts/hal/session_state_management.md)
+    - [Video Decoder](../../video_decoder/current/video_decoder.md)
 
 ## Implementation Requirements
 
@@ -47,9 +55,9 @@
 
 ## Initialization
 
-The systemd `hal-av_buffer.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
+The [systemd](../../../vsi/systemd/current/intro.md) `hal-av_buffer.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
-The AV Buffer service depends on the [Service Manager](../../../vsi/service_manager/current/service_manager_overview.md) to register itself as a service.
+The AV Buffer service depends on the [Service Manager](../../../vsi/service_manager/current/service_manager.md) to register itself as a service.
 
 Upon starting, the service shall register the IAVBuffer interface with the Service Manager using the String `IAVBuffer.serviceName` and immediately become operational.
 
@@ -174,23 +182,23 @@ Note: The diagram below does not show how multiple audio and video buffers may b
 
 ```mermaid
 sequenceDiagram
-    box "RDK GStreamer Pipeline"
-        participant c1 as "AppSource"
-        participant c2 as "CDM"
-        participant adc as "AudioDecoder"
-        participant vdc as "VideoDecoder"
+    box rgb(30,136,229) RDK GStreamer Pipeline
+        participant c1 as AppSource
+        participant c2 as CDM
+        participant adc as AudioDecoder
+        participant vdc as VideoDecoder
     end
 
-    box "AV Buffer Service" #lightgreen
-        participant avbm as ":IAVBuffer"
+    box rgb(249,168,37) AV Buffer Service
+        participant avbm as IAVBuffer
     end
 
-    box "AV Buffer Helper Library" #lightblue
-        participant avblib as "libavbufferhelper.so"
+    box rgb(67,160,71) AV Buffer Helper Library
+        participant avblib as libavbufferhelper.so
     end
 
-    box "Service Manager"
-        participant sm as "Service Manager"
+    box Service Manager
+        participant sm as Service Manager
     end
 
     c1 ->> sm: getService(IAVBuffer.serviceName)

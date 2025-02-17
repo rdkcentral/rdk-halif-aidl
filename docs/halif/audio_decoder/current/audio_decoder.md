@@ -1,23 +1,43 @@
 # Audio Decoder
 
+This document provides an overview of the Audio Decoder Hardware Abstraction Layer (HAL) service, which facilitates the decoding of compressed audio streams within the device. The HAL defines the interfaces through which the RDK (Reference Design Kit) middleware interacts with the vendor-specific audio decoding implementation.
+
 ## References
 
 !!! info References
     |||
     |-|-|
-    |**Interface Defination**|[audio_decoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiodecoder/current)|
+    |**Interface Definition**|[audio_decoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiodecoder/current)|
     |**API Documentation**| *TBD* |
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
-    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/intro.md) - **hal-audiodecodermanager.service** |
+    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/intro.md) - **hal-audio_decoder_manager.service** |
     |**VTS Tests**| TBC |
-    |**Reference Implmentation - vComponent**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiodecoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiodecoder/current)|
+    |**Reference Implementation - vComponent**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiodecoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiodecoder/current)|
 
 ## Related Pages
 
 !!! tip Related Pages
-    - [Audio Sink](../../audio_sink/current/audio_sink_overview.md)
-    - [AV Buffer](../../av_buffer/current/av_buffer_overview.md)
-    - [Session State Management](../../concepts/session_state_management/current/session_state_management.md)
+    - [Audio Sink](../../audio_sink/current/audio_sink.md)
+    - [AV Buffer](../../av_buffer/current/av_buffer.md)
+    - [Session State Management](../../key_concepts/hal/hal_session_state_management.md)
+
+## Functionality
+
+The Audio Decoder HAL service accepts compressed audio data as input. This data can be provided in secure buffers if the underlying vendor implementation supports secure audio processing. This is crucial for premium content protection.
+
+The decoded audio output can be delivered via two distinct paths:
+
+- **Non-Tunnelled Mode:** In this mode, the decoded audio, typically in Pulse Code Modulation (PCM) format, is returned to the RDK media pipeline as a frame buffer along with associated metadata (e.g., sample rate, bit depth, number of channels). This allows for further processing within the RDK middleware, such as volume control, audio effects, or synchronization with other media streams.
+
+- **Tunnelled Mode:** In this mode, the decoded audio is passed directly to the audio mixer through the vendor layer. This bypasses the RDK media pipeline for audio processing. Tunnelled mode is often preferred for performance reasons, especially in resource-constrained devices, as it reduces latency and CPU overhead. It's often used when the audio stream is simple, and the RDK post-processing isn't required.
+
+## Operational Modes
+
+The choice between tunnelled and non-tunnelled mode is made on a per-codec basis during the initialization of the audio decoder. This flexibility allows the system to optimize performance for different audio formats. It's important to note that the audio decoder can switch between these modes for different codec instances, but a single codec instance must operate in one mode or the other for the duration of its use. The operational mode of the audio decoder is independent of the video decoder's mode. This means that it is perfectly valid to have tunnelled video and non-tunnelled audio, or vice-versa.
+
+## PCM Handling
+
+Uncompressed PCM audio streams do not require decoding. Therefore, they bypass the Audio Decoder HAL entirely. Instead, they are routed directly to the [Audio Sink](../audio_sink/audio_sink.md) service for mixing and playback. This is an important distinction to make for clarity.
 
 ## Implementation Requirements
 
@@ -58,7 +78,7 @@ The interface can be found by following this link [audiodecoder](https://github.
 
 ## Initialization
 
-The `systemd hal-audiodecodermanager.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
+The [systemd](../../../vsi/systemd/current/intro.md) `hal-audio_decoder_manager.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
 The Audio Decoder Manager service depends on the [Service Manager](../../../vsi/service_manager/current/service_manager.md) to register itself as a service.
 
@@ -76,7 +96,7 @@ An audio decoder instance may support any number of audio codecs, but can only o
 
 The Audio Decoder HAL can provide functionality to multiple clients.
 
-Typically an RDK middleware GStreamer audio decoder element will work with a single `IAudioDecoder` instance and pass it AV Buffer handles for decode.
+Typically an RDK middleware GStreamer audio decoder element will work with a single `IAudioDecoder` instance and pass it [AV Buffer](../../av_buffer/current/av_buffer.md) handles for decode.
 
 The RDK middleware resource management system will examine the number of audio decoder resources and their capabilities, so they can be allocated to streaming sessions.
 
@@ -94,32 +114,32 @@ flowchart TD
     end
     subgraph OutputComponents["Output"]
         AudioFramePool("Audio Frame Pool")
-        PlatformDecoder["Platform Integrated Decoder/Mixer"]
-        AudioOutput["Audio Output Ports in passthrough"]
+        PlatformDecoder("Platform Integrated Decoder/Mixer")
+        AudioOutput("Audio Output Ports in passthrough")
     end
-    RDKClientComponent -- createAudioPool() <br> alloc() <br> free() <br> destroyPool() --> IAVBuffer
+    RDKClientComponent -- createAudioPool() <br> alloc() <br> free() <br> destroyPool() --> IAVBuffer(IAVBuffer)
     RDKClientComponent -- getIAudioDecoderIds() <br> getIAudioDecoder() --> IAudioDecoderManager
     RDKClientComponent -- getCapabilities() <br> getState() <br> open() <br> close() --> IAudioDecoder
-    RDKClientComponent -- registerEventListener() / unregisterEventListener() --> IAudioDecoder
-    RDKClientComponent -- start() <br> stop() <br> setProperty() <br> decodeBuffer() <br> flush() <br> signalDiscontinuity() / signalEOS() / parseCodecSpecificData() --> IAudioDecoderController
+    RDKClientComponent -- registerEventListener() <br> unregisterEventListener() --> IAudioDecoder
+    RDKClientComponent -- start() <br> stop() <br> setProperty() <br> decodeBuffer() <br> flush() <br> signalDiscontinuity() / signalEOS() <br> parseCodecSpecificData() --> IAudioDecoderController
     IAudioDecoderManager --> IAudioDecoder --> IAudioDecoderController
     IAudioDecoder -- onStateChanged() <br> onDecodeError() --> IAudioDecoderEventListener
     IAudioDecoderEventListener --> RDKClientComponent
     IAudioDecoderControllerListener --> RDKClientComponent
     IAudioDecoderController -- onFrameOutput() --> IAudioDecoderControllerListener
-    IAudioDecoderController -- alloc --> AudioFramePool
-    IAudioDecoderManager -- free --> IAVBuffer
-    IAudioDecoderController -- tunneled audio --> PlatformDecoder
-    IAudioDecoderController -- tunneled audio <br>(passthrough) --> AudioOutput
+    IAudioDecoderController -- alloc() --> AudioFramePool
+    IAudioDecoderManager -- free() --> IAVBuffer
+    IAudioDecoderController -. tunneled audio -.-> PlatformDecoder
+    IAudioDecoderController -. tunneled audio <br>(passthrough) -.-> AudioOutput
 
+    classDef background fill:#121212,stroke:none,color:#E0E0E0;
+    classDef blue fill:#1565C0,stroke:#E0E0E0,stroke-width:2px,color:#E0E0E0;
+    classDef lightGrey fill:#616161,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
+    classDef wheat fill:#FFB74D,stroke:#424242,stroke-width:2px,color:#000000;
+    classDef green fill:#4CAF50,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
+    classDef default fill:#1E1E1E,stroke:#E0E0E0,stroke-width:1px,color:#E0E0E0;
 
     RDKClientComponent:::blue
-    classDef background fill:#FFFFFF,stroke:none
-    classDef blue fill:#0000FF,stroke:#000,stroke-width:2px,color:#FFF
-    classDef lightGrey fill:#E0E0E0,stroke:#000,stroke-width:2px,color:#000
-    classDef wheat fill:#F5DEB3,stroke:#000,stroke-width:2px,color:#000
-    classDef green fill:#90EE90,stroke:#000,stroke-width:2px,color:#000
-    classDef default fill:#FFFFFF,stroke:#000,stroke-width:1px
     IAudioDecoderManager:::wheat
     IAudioDecoderController:::wheat
     IAudioDecoder:::wheat
@@ -161,12 +181,12 @@ graph LR
     ADI3 --> ADIC3("IAudioDecoderController")
 
     %% --- High Contrast Styling (Rounded Box Simulation) ---
-    classDef background fill:#FFFFFF,stroke:none
-    classDef manager fill:#4CAF50,stroke:#2E7D32,stroke-width:2px,color:#FFFFFF;
-    classDef instance1 fill:#FFD700,stroke:#AA8800,stroke-width:2px,color:#000000;
-    classDef instance2 fill:#FFB347,stroke:#CC5500,stroke-width:2px,color:#000000;
-    classDef instance3 fill:#FF6347,stroke:#CC2200,stroke-width:2px,color:#000000;
-    classDef controller fill:#00CED1,stroke:#008B8B,stroke-width:2px,color:#000000;
+    classDef background fill:#121212,stroke:none,color:#E0E0E0;
+    classDef manager fill:#388E3C,stroke:#1B5E20,stroke-width:2px,color:#FFFFFF;
+    classDef instance1 fill:#FFC107,stroke:#FF8F00,stroke-width:2px,color:#000000;
+    classDef instance2 fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#000000;
+    classDef instance3 fill:#F44336,stroke:#B71C1C,stroke-width:2px,color:#FFFFFF;
+    classDef controller fill:#00ACC1,stroke:#006064,stroke-width:2px,color:#000000;
 
     %% --- Apply Colors ---
     class IAudioDecoderManager manager;
@@ -235,7 +255,7 @@ If any audio decoder supports SAP in non-tunnelled mode then the Audio Sink HAL 
 
 PCM stream data can originate in the RDK media pipeline from multiple sources; from an application, from the RDK middleware or from a software audio decoder.  In these cases the PCM data does not enter an Audio Decoder and is passed directly to the Audio Sink HAL.
 
-Clear PCM audio is copied into a non-secure AV buffer and then queued at the Audio Sink where it is then mixed for audio output.
+Clear PCM audio is copied into a non-secure [AV Buffer](../../av_buffer/current/av_buffer.md) and then queued at the Audio Sink where it is then mixed for audio output.
 
 No buffer decryption or audio decode is required for clear PCM audio buffers.
 
@@ -289,7 +309,7 @@ Any metadata associated with the supplementary/primary audio mix levels is left 
 
 Where the client has knowledge of PTS discontinuities in the audio stream, it shall call `IAudioDecoderController.signalDiscontinuity()` between the AV buffers passed to `decodeBuffer()`.
 
-For the first input AV buffer audio frame passed in for decode after the discontinuity, it shall indicate the discontinuity in its next output `FrameMetadata`.
+For the first input [AV Buffer](../../av_buffer/current/av_buffer.md) audio frame passed in for decode after the discontinuity, it shall indicate the discontinuity in its next output `FrameMetadata`.
 
 ## End of Stream Signalling
 
@@ -303,7 +323,7 @@ The Audio Decoder shall emit a `FrameMetadata` with `endOfStream=true` after all
 
 Decoded audio frame buffers are only passed from the audio decoder to the client when operating in non-tunnelled mode.
 
-If the input AV buffer that contained the coded audio frame was passed in a secure buffer, then the corresponding decoded audio frame must be output in a secure audio frame buffer.
+If the input [AV Buffer](../../av_buffer/current/av_buffer.md) that contained the coded audio frame was passed in a secure buffer, then the corresponding decoded audio frame must be output in a secure audio frame buffer.
 
 Audio frame buffers are passed back as handles in the `IAudioDecoderControllerListener.onFrameOutput()` function `frameBufferHandle` parameter. If no frame buffer handle is available to pass but the call needs to be made to provide updated `FrameMetadata` then -1 shall be passed as the handle value.
 
@@ -319,7 +339,7 @@ If the frame buffer pool is empty then the audio decoder cannot output the next 
 
 The presentation time base units for audio frames is nanoseconds and passed in an int64 (long in AIDL definition) variable type. Video buffers shared the same time base units of nanoseconds.
 
-When coded audio frames are passed in through AV buffer handles to `IAudioDecoderController.decodeBuffer()` the `nsPresentationTime` parameter represents the audio frame presentation time.
+When coded audio frames are passed in through [AV Buffer](../../av_buffer/current/av_buffer.md) handles to `IAudioDecoderController.decodeBuffer()` the `nsPresentationTime` parameter represents the audio frame presentation time.
 
 Calls to `IVideoDecoderControllerListener.onFrameOutput()` with frame buffer handles (non-tunnelled mode) and/or frame metadata shall use the same `nsPresentationTime`.
 
@@ -345,25 +365,24 @@ When an Audio Decoder session enters a `FLUSHING` or `STOPPING` transitory state
 
 The sequence diagram below shows the behavior of the callbacks.
 
-
 ```mermaid
 sequenceDiagram
-    %% RDK Audio Decoder Box with contrasting text
-    box rgb(100,149,237) RDK Audio Decoder 
-      participant Client as <font color="white"><b>RDK Client</b></font>
-      participant IAudioDecoderEventListener as <font color="white">IAudioDecoderEventListener</font>
-      participant IAudioDecoderControllerListener as <font color="white">IAudioDecoderControllerListener</font>
+    %% --- RDK Audio Decoder ---
+    box rgb(30,136,229) RDK Audio Decoder 
+        participant Client as RDK Client
+        participant IAudioDecoderEventListener as IAudioDecoderEventListener
+        participant IAudioDecoderControllerListener as IAudioDecoderControllerListener
     end
     
-    %% Audio Decoder Server Box with contrasting text
-    box rgb(218,165,32) Audio Decoder Server
-      participant ADC as <font color="black"><b>IAudioDecoder</b></font>
-      participant Controller as <font color="black">IAudioDecoderController</font>
+    %% --- Audio Decoder Server ---
+    box rgb(249,168,37) Audio Decoder Server
+        participant ADC as IAudioDecoder
+        participant Controller as IAudioDecoderController
     end
     
-    %% Audio AV Buffer Box with contrasting text
-    box rgb(60,179,113) Audio AV Buffer
-      participant IAVBuffer as <font color="white">IAVBuffer</font>
+    %% --- Audio AV Buffer ---
+    box rgb(67,160,71) Audio AV Buffer
+        participant IAVBuffer as IAVBuffer
     end
 
     Client->>ADC: registerEventListener(IAudioDecoderEventListener)

@@ -1,16 +1,24 @@
 # AV Clock
 
+The AV Clock HAL service establishes synchronization between audio and video sinks, enabling lip-sync playback by driving them from a shared clock.
+
+In broadcast scenarios, the Program Clock Reference (PCR) is provided to the AV Clock HAL. This allows the local System Time Clock (STC) to be synchronized with the broadcast encoder's timing, crucial for preventing buffer underflow or overflow.
+
+For IP streaming, clients can manipulate the playback rate, facilitating pause functionality and fine-grained adjustments for clock synchronization with other devices or streams.
+
+Audio and video sinks associated with a given AV Clock instance comprise a synchronization group.  Members of a sync group share a common presentation clock.  The AV Clock HAL provides an interface for the application to define the composition of these sync groups, specifying the video sink and the associated audio sink(s).
+
 ## References
 
 !!! info References
     |||
     |-|-|
-    |**Interface Defination**|[av_clock/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_clock/current)|
+    |**Interface Definition**|[av_clock/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_clock/current)|
     | **API Documentation** | *TBD - Doxygen* |
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
     |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/intro.md) - **hal-av_clock.service** |
     |**VTS Tests**| TBC |
-    |**Reference Implmentation - vComponent**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_clock/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_clock/current)|
+    |**Reference Implementation - vComponent**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_clock/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_clock/current)|
 
 ## Related Pages
 
@@ -50,7 +58,7 @@
 
 ### Initialization
 
-The systemd `hal-av_clock_manager.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
+The [systemd](../../../vsi/systemd/current/intro.md) `hal-av_clock_manager.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
 The AV Clock Manager service depends on the [Service Manager](../../../vsi/service_manager/current/service_manager.md) to register itself as a service.
 
@@ -78,7 +86,53 @@ The AV clock is always linked to the timebase source it has been configured to u
 
 A PCR driven AV clock may wrap or jump at PCR discontinuities.
 
-![AV Clock Context](./avclock.png)
+```mermaid
+flowchart TD
+    RDKClientComponent("RDKClientComponent")
+    subgraph Listeners["Listeners"]
+        IAVClockEventListener("IAVClockEventListener")
+        IAVClockControllerListener("IAVClockControllerListener")
+    end
+    subgraph IAVClockHAL["Audio Clock HAL"]
+        IAVClockManager("IAVClockManager <br>(Service)")
+        IAVClock("IAVClock <br>(Instance)")
+        IAVClockController("IAVClockController <br>(Instance)")
+    end
+    subgraph SyncGroup["Sync Group"]
+        AudioFrameQueue("Audio Frame Queue")
+        VideoFrameQueue("Video Frame Queue")
+    end
+      platformAVSync("Platform AV Sync")
+    RDKClientComponent -- getIAVClockIds() <br> getIAVClock() --> IAVClockManager
+    RDKClientComponent -- getCapabilities() <br> getProperty() <br> getState() <br> open() <br> close() <br> registerEventListener() <br> unregisterEventListener() --> IAVClock
+    RDKClientComponent -- setAudioSink() <br> getAudioSink() setSupplementaryAudioSink() setSupplementaryAudioSink() <br> setVideoSink() <br> getVideoSink() <br> start() <br> stop() <br> setClockMode() <br> getClockMode() <br> notifyPCRSample() <br> getCurrentClockTime() <br> setPlaybackRate() <br> getPlaybackRate() --> IAVClockController
+    IAVClockManager --> IAVClock --> IAVClockController
+    IAVClock -- onStateChanged() --> IAVClockEventListener
+    IAVClockController -- onStateChanged() --> IAVClockControllerListener
+    IAVClockEventListener --> RDKClientComponent
+    IAVClockControllerListener --> RDKClientComponent
+    IAVClockController --> platformAVSync
+    %% Sync Group
+    AudioFrameQueue --> platformAVSync
+    VideoFrameQueue --> platformAVSync
+
+    classDef background fill:#121212,stroke:none,color:#E0E0E0;
+    classDef blue fill:#1565C0,stroke:#E0E0E0,stroke-width:2px,color:#E0E0E0;
+    classDef lightGrey fill:#616161,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
+    classDef wheat fill:#FFB74D,stroke:#424242,stroke-width:2px,color:#000000;
+    classDef green fill:#4CAF50,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
+    classDef default fill:#1E1E1E,stroke:#E0E0E0,stroke-width:1px,color:#E0E0E0;
+
+    RDKClientComponent:::blue
+    IAVClockManager:::wheat
+    IAVClockController:::wheat
+    IAVClock:::wheat
+    IAVClockControllerListener:::wheat
+    IAVClockEventListener:::wheat
+    platformAVSync:::green
+    AudioFrameQueue:::green
+    VideoFrameQueue:::green
+```
 
 ### Resource Management
 
@@ -110,12 +164,12 @@ graph LR
     ADI3 --> ADIC3("IAVClockController")
 
     %% --- High Contrast Styling (Rounded Box Simulation) ---
-    classDef background fill:#FFFFFF,stroke:none
-    classDef manager fill:#4CAF50,stroke:#2E7D32,stroke-width:2px,color:#FFFFFF;
-    classDef instance1 fill:#FFD700,stroke:#AA8800,stroke-width:2px,color:#000000;
-    classDef instance2 fill:#FFB347,stroke:#CC5500,stroke-width:2px,color:#000000;
-    classDef instance3 fill:#FF6347,stroke:#CC2200,stroke-width:2px,color:#000000;
-    classDef controller fill:#00CED1,stroke:#008B8B,stroke-width:2px,color:#000000;
+    classDef background fill:#121212,stroke:none,color:#E0E0E0;
+    classDef manager fill:#388E3C,stroke:#1B5E20,stroke-width:2px,color:#FFFFFF;
+    classDef instance1 fill:#FFC107,stroke:#FF8F00,stroke-width:2px,color:#000000;
+    classDef instance2 fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#000000;
+    classDef instance3 fill:#F44336,stroke:#B71C1C,stroke-width:2px,color:#FFFFFF;
+    classDef controller fill:#00ACC1,stroke:#006064,stroke-width:2px,color:#000000;
 
     %% --- Apply Colors ---
     class IAVClockManager manager;
@@ -133,6 +187,67 @@ graph LR
     linkStyle 1,4 stroke:#CC5500,stroke-width:2px;
     %% Red for Instance 2
     linkStyle 2,5 stroke:#CC2200,stroke-width:2px;
+```
+
+The diagram below shows the class relationships.
+
+```mermaid
+classDiagram
+    %% --- Class Definitions ---
+    class IAVClockManager {
+        +IAVClock.Id[] getAVClockIds()
+        +@nullable IAVClock getAVClock(IAVClock.Id avClockId)
+    }
+
+    class IAVClock {
+        +int RESOURCE_ID
+        +Capabilities getCapabilities()
+        +State getState()
+        +@nullable PropertyValue getProperty(Property property)
+        +boolean setProperty(Property property, PropertyValue propertyValue)
+        +@nullable IAVClockController open(IAVClockControllerListener avClockControllerListener)
+        +boolean close(IAVClockController avClockController)
+    }
+
+    class IAVClockController {
+        +void start()
+        +void stop()
+        +boolean setAudioSink(IAudioSink.Id audioSinkId)
+        +IAudioSink.Id getAudioSink()
+        +boolean setSupplementaryAudioSink(IAudioSink.Id supplementaryAudioSinkId)
+        +IAudioSink.Id getSupplementaryAudioSink()
+        +boolean setVideoSink(IVideoSink.Id videoSinkId)
+        +IVideoSink.Id getVideoSink()
+        +boolean setClockMode(ClockMode clockMode)
+        +ClockMode getClockMode()
+        +boolean notifyPCRSample(long pcrTimeNs, long sampleTimestampNs)
+        +ClockTime getCurrentClockTime()
+        +boolean setPlaybackRate(double rate)
+        +double getPlaybackRate()
+    }
+
+    class Client {
+        +requestClockManager(): IAVClockManager
+        +getAVClock(id): IAVClock
+        +boolean open(IAVClock)
+    }
+
+    %% --- Relationships ---
+    Client "0..*" --> "1" IAVClockManager : Accesses
+    IAVClockManager "1" --> "1..*" IAVClock : Provides
+    Client "1" --> "1" IAVClock : Can open()
+    IAVClock "1" --> "1" IAVClockController : Controls (if opened)
+
+    %% --- Apply Colors ---
+    classDef manager fill:#388E3C,stroke:#1B5E20,stroke-width:2px,color:white;
+    classDef clock fill:#FFC107,stroke:#FF8F00,stroke-width:2px,color:black;
+    classDef controller fill:#00ACC1,stroke:#006064,stroke-width:2px,color:black;
+    classDef client fill:#F44336,stroke:#B71C1C,stroke-width:2px,color:white;
+
+    %%class IAVClockManager manager
+    %%class IAVClock clock
+    %%class IAVClockController controller
+    %%class Client client
 ```
 
 ### AV Sources and Sync Groups
@@ -157,10 +272,10 @@ Audio and video master modes are expected to be used in special low latency use 
 
 | enum ClockMode | Description |
 |---|---|
-| AUTO | Auto will use AUDIO_MASTER if there is an audio sink linked otherwise VIDEO_MASTER. AUTO is the default clock mode. |
-| PCR | Use PCR samples as the clock source as provided in successive calls to `notifyPCRSample()`. PCR mode can only be used on live broadcasts and calls to `setPlaybackRate()` are not allowed. The AV Clock time is phase locked to the incoming PCR sample values. |
-| AUDIO_MASTER | Use an audio sink as the clock master. The AV Clock time is crash locked to the first audio sample PTS received for playback. The AV Clock timebase is linked to the audio subsystem clock of the platform. |
-| VIDEO_MASTER | Use the video sink source as the clock master. The AV Clock time is crash locked to the first video frame PTS received for playback. The AV Clock timebase is driven by the vendor implementation. |
+| **AUTO** | Auto will use AUDIO_MASTER if there is an audio sink linked otherwise VIDEO_MASTER. AUTO is the default clock mode. |
+| **PCR** | Use PCR samples as the clock source as provided in successive calls to `notifyPCRSample()`. PCR mode can only be used on live broadcasts and calls to `setPlaybackRate()` are not allowed. The AV Clock time is phase locked to the incoming PCR sample values. |
+| **AUDIO_MASTER** | Use an audio sink as the clock master. The AV Clock time is crash locked to the first audio sample PTS received for playback. The AV Clock timebase is linked to the audio subsystem clock of the platform. |
+| **VIDEO_MASTER** | Use the video sink source as the clock master. The AV Clock time is crash locked to the first video frame PTS received for playback. The AV Clock timebase is driven by the vendor implementation. |
 
 ### MPEG-2 Transport Stream Broadcast Timing with PCR Clock Mode
 
@@ -199,16 +314,15 @@ Broadcast stream sources are subject to behaviors unique to broadcast environmen
 
 | PCR Behavior | Description | Implementation Guidelines |
 |---|---|---|
-| Signal loss | Signal and data loss where multiple PCR samples may be lost and cannot be reported through `notifyPCRSample()`. | On gaps in the PCR delivery, it is expected that the vendor implementation continues to advance the STC at its latest calculated rate. |
-| Data corruption | Data corruption where the PCR sample reported through `notifyPCRSample()` may contain a bad PCR time. | The vendor implementation is responsible for determining that a single value is corrupt and not a discontinuity. After a few samples it can be detected that is it a true discontinuity. |
-| PCR discontinuities | Planned PCR discontinuities in the broadcast where the PCR sample value may jump unexpectedly. | Same as above. |
-| Test streams | Broadcast test stream playout wrapping where the PCR sample value may jump unexpectedly back to an earlier value as the test stream loops. | Same as above. |
-| PCR wrap | PCR value wrapping where the encoded bits for PCR can no longer increment the value and it needs to wrap around to 0. Wraps occur approximately every 26.5 hours if the PCR is incrementing continuously. | A wrap can be treated in the same way as a normal discontinuity. The vendor implement shall perform perfect AV presentation across the PCR wrap, without audio or video jitter or artefacts. |
+| **Signal loss** | Signal and data loss where multiple PCR samples may be lost and cannot be reported through `notifyPCRSample()`. | On gaps in the PCR delivery, it is expected that the vendor implementation continues to advance the STC at its latest calculated rate. |
+| **Data corruption** | Data corruption where the PCR sample reported through `notifyPCRSample()` may contain a bad PCR time. | The vendor implementation is responsible for determining that a single value is corrupt and not a discontinuity. After a few samples it can be detected that is it a true discontinuity. |
+| **PCR discontinuities** | Planned PCR discontinuities in the broadcast where the PCR sample value may jump unexpectedly. | Same as above. |
+| **Test streams** | Broadcast test stream playout wrapping where the PCR sample value may jump unexpectedly back to an earlier value as the test stream loops. | Same as above. |
+| **PCR wrap** | PCR value wrapping where the encoded bits for PCR can no longer increment the value and it needs to wrap around to 0. Wraps occur approximately every 26.5 hours if the PCR is incrementing continuously. | A wrap can be treated in the same way as a normal discontinuity. The vendor implement shall perform perfect AV presentation across the PCR wrap, without audio or video jitter or artefacts. |
 
 !!! TODO
-    : Define free-running mode when PCR and PTS are far apart.
-
-What is the AV sync behaviour we need to define?
+    - Define free-running mode when PCR and PTS are far apart.
+    - What is the AV sync behaviour we need to define?
 
 In all of these cases the AV Clock is responsible for handling these scenarios by relocking the STC clock on a new set of stable PCR clock values.
 
@@ -261,129 +375,120 @@ The sequence diagram below show typical use cases for AV Clock.
 
 ```mermaid
 sequenceDiagram
-    box "RDK GST Pipeline"
-      participant Client as "RDK Client"
-      participant Listener as "IAVClockControllerListener"
+    box rgb(30,136,229) RDK GST Pipeline
+      participant Client as RDK Client
+      participant Listener as IAVClockControllerListener
     end
-    box "AVClock HAL" #lightgreen
-      participant CLKMAN as "IAVClockManager"
-      participant CLK as "IAVClock"
-      participant CTRL as "IAVClockController"
+    box rgb(249,168,37) AVClock HAL
+      participant CLKMAN as IAVClockManager
+      participant CLK as IAVClock
+      participant CTRL as IAVClockController
     end
 
-    rect rgb(235, 235, 250)
-    note right of Client: Session for AV Playback over IP
-      Client->>CLKMAN: getAVClock(0)
-      Client->>CLK: open(IAVClockControllerListener)
-      CLK-->>Listener: onStateChanged(CLOSED, OPENING)
-      CLK->>CTRL: create
-      activate CTRL
-      CLK-->>Listener: onStateChanged(OPENING, READY)
-      CLK-->>Client: IAVClockController
-      note over CLK: Default clock mode is AUTO\nwhen session is opened.
-      Client->>CTRL: setAudioSink(0)
-      Client->>CTRL: setVideoSink(0)
-      Client->>CTRL: start()
-      CLK-->>Listener: onStateChanged(READY, STARTING)
-      CLK-->>Listener: onStateChanged(STARTING, STARTED)
-      loop while playback continues
-        Client->>CTRL: getCurrentClockTime()
-      end
-      Client->>CTRL: stop()
-      CLK-->>Listener: onStateChanged(STARTED, STOPPING)
-      CLK-->>Listener: onStateChanged(STOPPING, READY)
-      Client->>CLK: close(IAVClockController)
-      CLK-->>Listener: onStateChanged(READY, CLOSING)
-      CLK->>CTRL: destroy
-      CLK-->>Listener: onStateChanged(CLOSING, CLOSED)
+    Client->>CLKMAN: getAVClock(0)
+    Client->>CLK: open(IAVClockControllerListener)
+    CLK-->>Listener: onStateChanged(CLOSED, OPENING)
+    CLK->>CTRL: create
+    activate CTRL
+    CLK-->>Listener: onStateChanged(OPENING, READY)
+    CLK-->>Client: IAVClockController
+    note over CLK: Default clock mode is AUTO\nwhen session is opened.
+    Client->>CTRL: setAudioSink(0)
+    Client->>CTRL: setVideoSink(0)
+    Client->>CTRL: start()
+    CLK-->>Listener: onStateChanged(READY, STARTING)
+    CLK-->>Listener: onStateChanged(STARTING, STARTED)
+    loop while playback continues
+      Client->>CTRL: getCurrentClockTime()
     end
+    Client->>CTRL: stop()
+    CLK-->>Listener: onStateChanged(STARTED, STOPPING)
+    CLK-->>Listener: onStateChanged(STOPPING, READY)
+    Client->>CLK: close(IAVClockController)
+    CLK-->>Listener: onStateChanged(READY, CLOSING)
+    CLK->>CTRL: destroy
+    CLK-->>Listener: onStateChanged(CLOSING, CLOSED)
 ```
 
 ### Session for Radio Playback over IP
 
 ```mermaid
 sequenceDiagram
-    box "RDK GST Pipeline"
-      participant Client as "RDK Client"
-      participant Listener as "IAVClockControllerListener"
+    box rgb(30,136,229) RDK GST Pipeline
+      participant Client as RDK Client
+      participant Listener as IAVClockControllerListener
     end
-    box "AVClock HAL" #lightgreen
-      participant CLKMAN as "IAVClockManager"
-      participant CLK as "IAVClock"
-      participant CTRL as "IAVClockController"
+    box rgb(249,168,37) AVClock HAL
+      participant CLKMAN as IAVClockManager
+      participant CLK as IAVClock
+      participant CTRL as IAVClockController
     end
 
-    rect rgb(235, 235, 250)
-    note right of Client: Session for Radio Playback over IP
-      Client->>CLKMAN: getAVClock(0)
-      Client->>CLK: open(IAVClockControllerListener)
-      CLK-->>Listener: onStateChanged(CLOSED, OPENING)
-      CLK->>CTRL: create
-      activate CTRL
-      CLK-->>Listener: onStateChanged(OPENING, READY)
-      CLK-->>Client: IAVClockController
-      note over CLK: Default clock mode is AUTO\nwhen session is opened.
-      Client->>CTRL: setAudioSink(0)
-      Client->>CTRL: start()
-      CLK-->>Listener: onStateChanged(READY, STARTING)
-      CLK-->>Listener: onStateChanged(STARTING, STARTED)
-      loop while playback continues
-        Client->>CTRL: getCurrentClockTime()
-      end
-      Client->>CTRL: stop()
-      CLK-->>Listener: onStateChanged(STARTED, STOPPING)
-      CLK-->>Listener: onStateChanged(STOPPING, READY)
-      Client->>CLK: close(IAVClockController)
-      CLK-->>Listener: onStateChanged(READY, CLOSING)
-      CLK->>CTRL: destroy
-      CLK-->>Listener: onStateChanged(CLOSING, CLOSED)
+    Client->>CLKMAN: getAVClock(0)
+    Client->>CLK: open(IAVClockControllerListener)
+    CLK-->>Listener: onStateChanged(CLOSED, OPENING)
+    CLK->>CTRL: create
+    activate CTRL
+    CLK-->>Listener: onStateChanged(OPENING, READY)
+    CLK-->>Client: IAVClockController
+    note over CLK: Default clock mode is AUTO\nwhen session is opened.
+    Client->>CTRL: setAudioSink(0)
+    Client->>CTRL: start()
+    CLK-->>Listener: onStateChanged(READY, STARTING)
+    CLK-->>Listener: onStateChanged(STARTING, STARTED)
+    loop while playback continues
+      Client->>CTRL: getCurrentClockTime()
     end
+    Client->>CTRL: stop()
+    CLK-->>Listener: onStateChanged(STARTED, STOPPING)
+    CLK-->>Listener: onStateChanged(STOPPING, READY)
+    Client->>CLK: close(IAVClockController)
+    CLK-->>Listener: onStateChanged(READY, CLOSING)
+    CLK->>CTRL: destroy
+    CLK-->>Listener: onStateChanged(CLOSING, CLOSED)
 ```
 
 ### Session for AV Playback over Broadcast
 
 ```mermaid
 sequenceDiagram
-    box "RDK GST Pipeline"
-      participant Client as "RDK Client"
-      participant Listener as "IAVClockControllerListener"
+    box rgb(30,136,229) RDK GST Pipeline
+      participant Client as RDK Client
+      participant Listener as IAVClockControllerListener
     end
-    box "AVClock HAL" #lightgreen
-      participant CLKMAN as "IAVClockManager"
-      participant CLK as "IAVClock"
-      participant CTRL as "IAVClockController"
+    box rgb(249,168,37) AVClock HAL
+      participant CLKMAN as IAVClockManager
+      participant CLK as IAVClock
+      participant CTRL as IAVClockController
     end
 
-    rect rgb(235, 235, 250)
-    note right of Client: Session for AV Playback over Broadcast
-      Client->>CLKMAN: getAVClock(0)
-      Client->>CLK: open(IAVClockControllerListener)
-      CLK-->>Listener: onStateChanged(CLOSED, OPENING)
-      CLK->>CTRL: create
-      activate CTRL
-      CLK-->>Listener: onStateChanged(OPENING, READY)
-      CLK-->>Client: IAVClockController
-      note over CLK: Default clock mode is AUTO\nwhen session is opened.
-      Client->>CTRL: setClockMode(PCR)
-      Client->>CTRL: setAudioSink(0)
-      Client->>CTRL: setVideoSink(0)
-      Client->>CTRL: start()
-      CLK-->>Listener: onStateChanged(READY, STARTING)
-      CLK-->>Listener: onStateChanged(STARTING, STARTED)
-      loop while playback continues
-        note over Client: As PCR is filtered, it is delivered to AV Clock.
-        Client->>CTRL: notifyPCRSample()
-        note over Client: Periodically, we get clock time for use in subtitle sync with video.
-        Client->>CTRL: getCurrentClockTime()
-      end
-      Client->>CTRL: stop()
-      CLK-->>Listener: onStateChanged(STARTED, STOPPING)
-      CLK-->>Listener: onStateChanged(STOPPING, READY)
-      Client->>CLK: close(IAVClockController)
-      CLK-->>Listener: onStateChanged(READY, CLOSING)
-      CLK->>CTRL: destroy
-      CLK-->>Listener: onStateChanged(CLOSING, CLOSED)
+    Client->>CLKMAN: getAVClock(0)
+    Client->>CLK: open(IAVClockControllerListener)
+    CLK-->>Listener: onStateChanged(CLOSED, OPENING)
+    CLK->>CTRL: create
+    activate CTRL
+    CLK-->>Listener: onStateChanged(OPENING, READY)
+    CLK-->>Client: IAVClockController
+    note over CLK: Default clock mode is AUTO\nwhen session is opened.
+    Client->>CTRL: setClockMode(PCR)
+    Client->>CTRL: setAudioSink(0)
+    Client->>CTRL: setVideoSink(0)
+    Client->>CTRL: start()
+    CLK-->>Listener: onStateChanged(READY, STARTING)
+    CLK-->>Listener: onStateChanged(STARTING, STARTED)
+    loop while playback continues
+      note over Client: As PCR is filtered, it is delivered to AV Clock.
+      Client->>CTRL: notifyPCRSample()
+      note over Client: Periodically, we get clock time for use in subtitle sync with video.
+      Client->>CTRL: getCurrentClockTime()
     end
+    Client->>CTRL: stop()
+    CLK-->>Listener: onStateChanged(STARTED, STOPPING)
+    CLK-->>Listener: onStateChanged(STOPPING, READY)
+    Client->>CLK: close(IAVClockController)
+    CLK-->>Listener: onStateChanged(READY, CLOSING)
+    CLK->>CTRL: destroy
+    CLK-->>Listener: onStateChanged(CLOSING, CLOSED)
 ```
 
 ### Session for AV Playback with Supplementary Audio over Broadcast
@@ -391,91 +496,86 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    box "RDK GST Pipeline"
-      participant Client as "RDK Client"
-      participant Listener as "IAVClockControllerListener"
+    box rgb(30,136,229) RDK GST Pipeline
+      participant Client as RDK Client
+      participant Listener as IAVClockControllerListener
     end
-    box "AVClock HAL" #lightgreen
-      participant CLKMAN as "IAVClockManager"
-      participant CLK as "IAVClock"
-      participant CTRL as "IAVClockController"
+    box rgb(249,168,37) AVClock HAL
+      participant CLKMAN as IAVClockManager
+      participant CLK as IAVClock
+      participant CTRL as IAVClockController
     end
 
-    rect rgb(235, 235, 250)
-    note right of Client: Session for AV Playback with Supplementary Audio over Broadcast
-      Client->>CLKMAN: getAVClock(0)
-      Client->>CLK: open(IAVClockControllerListener)
-      CLK-->>Listener: onStateChanged(CLOSED, OPENING)
-      CLK->>CTRL: create
-      activate CTRL
-      CLK-->>Listener: onStateChanged(OPENING, READY)
-      CLK-->>Client: IAVClockController
-      note over CLK: Default clock mode is AUTO\nwhen session is opened.
-      Client->>CTRL: setClockMode(PCR)
-      Client->>CTRL: setAudioSink(0)
-      Client->>CTRL: setSupplementaryAudioSink(1)
-      Client->>CTRL: setVideoSink(0)
-      Client->>CTRL: start()
-      CLK-->>Listener: onStateChanged(READY, STARTING)
-      CLK-->>Listener: onStateChanged(STARTING, STARTED)
-      loop while playback continues
-        note over Client: As PCR is filtered, it is delivered to AV Clock.
-        Client->>CTRL: notifyPCRSample()
-        note over Client: Periodically, we get clock time for use in subtitle sync with video.
-        Client->>CTRL: getCurrentClockTime()
-      end
-      Client->>CTRL: stop()
-      CLK-->>Listener: onStateChanged(STARTED, STOPPING)
-      CLK-->>Listener: onStateChanged(STOPPING, READY)
-      Client->>CLK: close(IAVClockController)
-      CLK-->>Listener: onStateChanged(READY, CLOSING)
-      CLK->>CTRL: destroy
-      CLK-->>Listener: onStateChanged(CLOSING, CLOSED)
+    Client->>CLKMAN: getAVClock(0)
+    Client->>CLK: open(IAVClockControllerListener)
+    CLK-->>Listener: onStateChanged(CLOSED, OPENING)
+    CLK->>CTRL: create
+    activate CTRL
+    CLK-->>Listener: onStateChanged(OPENING, READY)
+    CLK-->>Client: IAVClockController
+    note over CLK: Default clock mode is AUTO\nwhen session is opened.
+    Client->>CTRL: setClockMode(PCR)
+    Client->>CTRL: setAudioSink(0)
+    Client->>CTRL: setSupplementaryAudioSink(1)
+    Client->>CTRL: setVideoSink(0)
+    Client->>CTRL: start()
+    CLK-->>Listener: onStateChanged(READY, STARTING)
+    CLK-->>Listener: onStateChanged(STARTING, STARTED)
+    loop while playback continues
+      note over Client: As PCR is filtered, it is delivered to AV Clock.
+      Client->>CTRL: notifyPCRSample()
+      note over Client: Periodically, we get clock time for use in subtitle sync with video.
+      Client->>CTRL: getCurrentClockTime()
     end
+    Client->>CTRL: stop()
+    CLK-->>Listener: onStateChanged(STARTED, STOPPING)
+    CLK-->>Listener: onStateChanged(STOPPING, READY)
+    Client->>CLK: close(IAVClockController)
+    CLK-->>Listener: onStateChanged(READY, CLOSING)
+    CLK->>CTRL: destroy
+    CLK-->>Listener: onStateChanged(CLOSING, CLOSED)
 ```
 
 ### Session for AV Playback over IP with Rate Control
 
 ```mermaid
 sequenceDiagram
-    box "RDK GST Pipeline"
-      participant Client as "RDK Client"
-      participant Listener as "IAVClockControllerListener"
-    end
-    box "AVClock HAL" #lightgreen
-      participant CLKMAN as "IAVClockManager"
-      participant CLK as "IAVClock"
-      participant CTRL as "IAVClockController"
+    box rgb(30,136,229) RDK GST Pipeline
+      participant Client as RDK Client
+      participant Listener as IAVClockControllerListener
     end
 
-    rect rgb(235, 235, 250)
-    note right of Client: Session for AV Playback over IP with Rate Control
-      Client->>CLKMAN: getAVClock(0)
-      Client->>CLK: open(IAVClockControllerListener)
-      CLK-->>Listener: onStateChanged(CLOSED, OPENING)
-      CLK->>CTRL: create
-      activate CTRL
-      CLK-->>Listener: onStateChanged(OPENING, READY)
-      CLK-->>Client: IAVClockController
-      note over CLK: Default clock mode is AUTO\nwhen session is opened.
-      Client->>CTRL: setAudioSink(0)
-      Client->>CTRL: setVideoSink(0)
-      Client->>CTRL: start()
-      CLK-->>Listener: onStateChanged(READY, STARTING)
-      CLK-->>Listener: onStateChanged(STARTING, STARTED)
-      note over Client: Playback starts in paused state.
-      Client->>CTRL: setPlaybackRate(0.0)
-      note over Client: AV data is buffered.
-      note over Client: Change playback rate to 1.0 to start playback.
-      Client->>CTRL: setPlaybackRate(1.0)
-      note over Client: Change playback rate to 2.0 after some time.
-      Client->>CTRL: setPlaybackRate(2.0)
-      Client->>CTRL: stop()
-      CLK-->>Listener: onStateChanged(STARTED, STOPPING)
-      CLK-->>Listener: onStateChanged(STOPPING, READY)
-      Client->>CLK: close(IAVClockController)
-      CLK-->>Listener: onStateChanged(READY, CLOSING)
-      CLK->>CTRL: destroy
-      CLK-->>Listener: onStateChanged(CLOSING, CLOSED)
+    box rgb(249,168,37) AVClock HAL
+      participant CLKMAN as IAVClockManager
+      participant CLK as IAVClock
+      participant CTRL as IAVClockController
     end
+
+    Client->>CLKMAN: getAVClock(0)
+    Client->>CLK: open(IAVClockControllerListener)
+    CLK-->>Listener: onStateChanged(CLOSED, OPENING)
+    CLK->>CTRL: create
+    activate CTRL
+    CLK-->>Listener: onStateChanged(OPENING, READY)
+    CLK-->>Client: IAVClockController
+    note over CLK: Default clock mode is AUTO\nwhen session is opened.
+    Client->>CTRL: setAudioSink(0)
+    Client->>CTRL: setVideoSink(0)
+    Client->>CTRL: start()
+    CLK-->>Listener: onStateChanged(READY, STARTING)
+    CLK-->>Listener: onStateChanged(STARTING, STARTED)
+    note over Client: Playback starts in paused state.
+    Client->>CTRL: setPlaybackRate(0.0)
+    note over Client: AV data is buffered.
+    note over Client: Change playback rate to 1.0 to start playback.
+    Client->>CTRL: setPlaybackRate(1.0)
+    note over Client: Change playback rate to 2.0 after some time.
+    Client->>CTRL: setPlaybackRate(2.0)
+    Client->>CTRL: stop()
+    CLK-->>Listener: onStateChanged(STARTED, STOPPING)
+    CLK-->>Listener: onStateChanged(STOPPING, READY)
+    Client->>CLK: close(IAVClockController)
+    CLK-->>Listener: onStateChanged(READY, CLOSING)
+    CLK->>CTRL: destroy
+    CLK-->>Listener: onStateChanged(CLOSING, CLOSED)
 ```

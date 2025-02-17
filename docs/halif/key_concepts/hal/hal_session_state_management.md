@@ -70,13 +70,10 @@ stateDiagram-v2
     READY --> CLOSING: close()
     CLOSING --> CLOSED: success
 
-    classDef NonTransitory fill:#0047AB, color:white, font-weight:bold;
-    classDef Transitory fill:#B0C4DE;
+    classDef NonTransitory fill:#1976D2, color:white, font-weight:bold;
+    classDef Transitory fill:#90CAF9, color:black, font-weight:bold;
     class CLOSED,READY,STARTED NonTransitory
     class UNKNOWN,OPENING,CLOSING,STARTING,STOPPING,FLUSHING Transitory
-
-    Transitory:::Transitory
-    Non_Transitory:::NonTransitory
 ```
 
 
@@ -88,11 +85,11 @@ Many HAL services allow for multiple callback listeners to be registered and eac
 
 ```mermaid
 sequenceDiagram
-    box LightBlue Client Component
+    box rgb(30,136,229) Client Component
         participant Client as Client to <br>HAL service
         participant Listener as Callback Listener
     end
-    box Yellow HAL Component
+    box rgb(249,168,37) HAL Component
         participant HAL as HAL Service
     end
 

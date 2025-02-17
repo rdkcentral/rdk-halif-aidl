@@ -1,25 +1,23 @@
 # AIDL and Binder for RDK HALs
 
-## Overview
-
 The 2023 RDK HAL study identified key design goals for a new HAL interface and implementation, focusing on the following aspects:
 
-### Design Goals
+## Design Goals
 
-*   **Clean Separation:** Clear division between middleware and vendor layers.
-*   **Process Isolation:** Middleware and vendor layers operate in separate processes and memory spaces.
-*   **Late Binding:** Decoupling of middleware from vendor HAL components at build time.
-*   **Versioning:** Versioned interfaces with forward and backward compatibility.
-*   **Performance:** High-performance Inter-Process Communication (IPC).
-*   **Testability:** Standalone testability for the vendor layer.
-*   **Debuggability:** Enhanced debugging tools.
+- **Clean Separation:** Clear division between middleware and vendor layers.
+- **Process Isolation:** Middleware and vendor layers operate in separate processes and memory spaces.
+- **Late Binding:** Decoupling of middleware from vendor HAL components at build time.
+- **Versioning:** Versioned interfaces with forward and backward compatibility.
+- **Performance:** High-performance Inter-Process Communication (IPC).
+- **Testability:** Standalone testability for the vendor layer.
+- **Debuggability:** Enhanced debugging tools.
 
 ## Binder
 
 Binder is the chosen Inter-Process Communication (IPC) mechanism for RDK HALs. It offers both synchronous and asynchronous calls, crucial for the diverse communication needs of subsystems like A/V.  Implementing HAL interfaces as Binder services provides:
 
-*   **Process and Memory Isolation:** Enhances stability, testability, and memory management.  HAL crashes are isolated and won't bring down the entire system.  This also improves security.
-*   **Late Binding:** Eliminates build-time dependencies on vendor HAL libraries, enabling independent delivery and updates of middleware and vendor layers.  This simplifies the build process and allows for more flexible deployments.
+- **Process and Memory Isolation:** Enhances stability, testability, and memory management.  HAL crashes are isolated and won't bring down the entire system.  This also improves security.
+- **Late Binding:** Eliminates build-time dependencies on vendor HAL libraries, enabling independent delivery and updates of middleware and vendor layers.  This simplifies the build process and allows for more flexible deployments.
 
 Binder is implemented as a Linux kernel driver that must be enabled during kernel compilation.
 
@@ -45,17 +43,17 @@ AIDL provides a structured and standardized way to define the interfaces between
 
 ## Key Concepts and Benefits
 
-*   **Interface Definition:** AIDL provides a structured, language-agnostic way to define the contract between the client and server.
-*   **Code Generation:** The AIDL compiler generates the necessary code for Binder communication.
-*   **Proxy/Stub:** Client-side proxies handle communication with the server, while server-side stubs receive and process requests.
-*   **Versioning:** Stable AIDL allows for interface evolution while preserving backward compatibility.
-*   **Process Isolation:** Binder services run in separate processes, improving system stability.
-*   **Late Binding:** Reduces dependencies and simplifies updates.
+- **Interface Definition:** AIDL provides a structured, language-agnostic way to define the contract between the client and server.
+- **Code Generation:** The AIDL compiler generates the necessary code for Binder communication.
+- **Proxy/Stub:** Client-side proxies handle communication with the server, while server-side stubs receive and process requests.
+- **Versioning:** Stable AIDL allows for interface evolution while preserving backward compatibility.
+- **Process Isolation:** Binder services run in separate processes, improving system stability.
+- **Late Binding:** Reduces dependencies and simplifies updates.
 
 ## Useful External Links
 
-*   **RDK HAL AIDL Git Repository:** [RDK HAL AIDL](https://github.com/rdkcentral/rdk-halif-aidl)
-*   **Kernel Binder Driver:** [Kernel Binder](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/drivers/android?h=v5.15.164)
+- **RDK HAL AIDL Git Repository:** [RDK HAL AIDL](https://github.com/rdkcentral/rdk-halif-aidl)
+- **Kernel Binder Driver:** [Kernel Binder](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/drivers/android?h=v5.15.164)
 
 ## AIDL Documentation
 
