@@ -45,7 +45,7 @@ Access the documentation in your web browser at http://localhost:8000/rdkcentral
 
 The `mkdocs.yml` file, located at the root of the repository, is crucial for defining the documentation's structure and navigation. This file dictates the hierarchy of pages and how they are linked. **Any additions or removals of documentation pages require a corresponding update to ****`mkdocs.yml`**** to maintain proper navigation.**
 
-See [For information on the the naming conventions used see:-](./hal_naming_conventions.md)
+See [For information on the the naming conventions used see:-](../halif/key_concepts/hal/hal_naming_conventions.md)
 
 ## Automatic Deployment
 

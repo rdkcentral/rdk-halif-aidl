@@ -30,7 +30,7 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 !!! tip Related Pages
     - [Video Sink](../../video_sink/current/video_sink.md)
     - [AV Buffer](../../av_buffer/current/av_buffer.md)
-    - [Session State Management](../../key_concepts/hal/session_state_management.md)
+    - [Session State Management](../../key_concepts/hal/hal_session_state_management.md)
 
 ## Implementation Requirements
 

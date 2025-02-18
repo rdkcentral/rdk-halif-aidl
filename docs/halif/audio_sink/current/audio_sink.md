@@ -34,7 +34,7 @@ The interaction between the RDK GStreamer Audio Sink element and the Audio Sink 
     - [Audio Decoder](../../audio_decoder/current/audio_decoder.md)
     - [AV Buffer](../../av_buffer/current/av_buffer.md)
     - [AV Clock](../../av_clock/current/av_clock.md)
-    - [Session State Management](../../key_concepts/hal/session_state_management.md)
+    - [Session State Management](../../key_concepts/hal/hal_session_state_management.md)
 
 ## Implementation Requirements
 
@@ -66,7 +66,7 @@ The interaction between the RDK GStreamer Audio Sink element and the Audio Sink 
 
 The [systemd](../../../vsi/systemd/current/intro.md) `hal-audios_sink_manager.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
-The Audio Sink Manager service depends on the [Service Manager](../introduction/session_state_management.md) to register itself as a service.
+The Audio Sink Manager service depends on the [Service Manager](../../key_concepts/hal/hal_session_state_management.md) to register itself as a service.
 
 Upon starting, the service shall register the `IAudioSinkManager` interface with the [Service Manager](../../../vsi/service_manager/current/service_manager.md) using the string `IAudioSinkManager.serviceName` and immediately become operational.
 
@@ -230,7 +230,7 @@ All audio frame buffers queued up in the Audio Sink are expected to continue to 
 
 ## Audio Sink States
 
-The Audio Sink HAL follows the standard [Session State Management](../../../introduction/session_state_management.md) paradigm.
+The Audio Sink HAL follows the standard [Session State Management](../../key_concepts/hal/hal_session_state_management.md) paradigm.
 
 When an Audio Sink session enters a `FLUSHING` or `STOPPING` transitory state it shall free any AV buffers it is holding.
 

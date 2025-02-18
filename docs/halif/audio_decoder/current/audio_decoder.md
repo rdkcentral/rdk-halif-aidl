@@ -37,7 +37,7 @@ The choice between tunnelled and non-tunnelled mode is made on a per-codec basis
 
 ## PCM Handling
 
-Uncompressed PCM audio streams do not require decoding. Therefore, they bypass the Audio Decoder HAL entirely. Instead, they are routed directly to the [Audio Sink](../audio_sink/audio_sink.md) service for mixing and playback. This is an important distinction to make for clarity.
+Uncompressed PCM audio streams do not require decoding. Therefore, they bypass the Audio Decoder HAL entirely. Instead, they are routed directly to the [Audio Sink](../../audio_sink/current/audio_sink.md) service for mixing and playback. This is an important distinction to make for clarity.
 
 ## Implementation Requirements
 

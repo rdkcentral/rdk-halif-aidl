@@ -10,7 +10,7 @@ The choice of whether audio is tunnelled or non-tunnelled has no impact on the o
 
 The audio decoder can choose whether to operate in tunnelled or non-tunnelled mode when it is opened for a specific codec and does not need to always use the same mode.
 
-PCM audio does not need decoding and therefore never passes into an audio decoder, but is routed to the [Audio Sink](../../audio_sink/0.5) for mixing.
+PCM audio does not need decoding and therefore never passes into an audio decoder, but is routed to the [Audio Sink](../../audio_sink/current/audio_sink.md) for mixing.
 
 The RDK middleware GStreamer pipeline contains an RDK Audio Decoder element designed specifically to work with the Audio Decoder HAL interface.
 
@@ -266,7 +266,7 @@ The Audio Decoder also provides properties which allow for an override of the pl
 
 ## Audio Decoder States
 
-The Audio Decoder HAL follows the standard [Session State Management](../../key_concepts/hal/session_state_management.md)
+The Audio Decoder HAL follows the standard [Session State Management](../../key_concepts/hal/hal_session_state_management.md)
  paradigm.
 
 When an Audio Decoder session enters a FLUSHING or STOPPING transitory state it shall free any AV buffers it is holding.

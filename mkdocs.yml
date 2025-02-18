@@ -24,7 +24,6 @@ nav:
         - Current: halif/audio_mixer/current/intro.md
       - Audio Sink: 
         - Current: halif/audio_sink/current/audio_sink.md
-        - v0.5: halif/audio_sink/v0.5/audio_sink.md
       - AV Buffer: 
         - Current: halif/av_buffer/current/av_buffer.md
       - AV Clock: 
