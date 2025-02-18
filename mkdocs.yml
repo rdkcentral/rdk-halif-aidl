@@ -59,10 +59,8 @@ nav:
     - Panel:
       - Panel Output: 
         - Current: halif/panel/current/intro.md
-      - Panel Output2: 
-        - Current: halif/panel_output/current/intro.md
     - Plane Control: 
-        - Current: halif/plane_control/current/intro.md
+        - Current: halif/plane_control/current/plane_control.md
     - Secure API: 
         - Current: halif/sec_api/current/intro.md
     - Sensor: 

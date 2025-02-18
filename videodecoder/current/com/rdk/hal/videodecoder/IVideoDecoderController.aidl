@@ -154,15 +154,15 @@ interface IVideoDecoderController
      * has been pre-filtered from the container or provided by the application.
      * When required this function must be called before video frame buffers are passed to `decodeBuffer()`.
      *
-	 * For H.264/AVC this is the AVCDecoderConfigurationRecord, starting with the configuration version byte.
+	 * For AVC_DECODER_CONFIGURATION_RECORD H.264/AVC this is the AVCDecoderConfigurationRecord, starting with the configuration version byte.
 	 * @see ISO/IEC 14496-15:2022, 5.3.3.1.2
 	 * @see https://www.iso.org/standard/83336.html
 	 * 
-	 * For H.265/HEVC video, this is the HEVCDecoderConfigurationRecord, starting with the configuration version byte.
+	 * For HEVC_DECODER_CONFIGURATION_RECORD H.265/HEVC video, this is the HEVCDecoderConfigurationRecord, starting with the configuration version byte.
      * @see ISO/IEC 23008-2
 	 * @see https://www.iso.org/standard/85457.html
 	 * 
-     * For AV1 video, this is the AV1CodecConfigurationRecord, starting with the first configuration version byte.
+     * For AV1_DECODER_CONFIGURATION_RECORD AV1 video, this is the AV1CodecConfigurationRecord, starting with the first configuration version byte.
      * @see https://aomediacodec.github.io/av1-isobmff/#av1codecconfigurationbox-section
      * 
      * @param[in] csdVideoFormat        Codec specific data format enum. Must match codec specified in `open()` call.

@@ -28,8 +28,21 @@ package com.rdk.hal.videodecoder;
 @VintfStability
 @Backing(type="int")
 enum CSDVideoFormat {
-	AVC_DECODER_CONFIGURATION_RECORD = 0,
-	HEVC_DECODER_CONFIGURATION_RECORD = 1,
-	AV1_DECODER_CONFIGURATION_RECORD = 2,
-	// DolbyVision?
+	/**
+	* For AVC_DECODER_CONFIGURATION_RECORD H.264/AVC this is the AVCDecoderConfigurationRecord, starting with the configuration version byte.
+	* @see ISO/IEC 14496-15:2022, 5.3.3.1.2
+	* @see https://www.iso.org/standard/83336.html
+	* 
+	* For HEVC_DECODER_CONFIGURATION_RECORD H.265/HEVC video, this is the HEVCDecoderConfigurationRecord, starting with the configuration version byte.
+	* @see ISO/IEC 23008-2
+	* @see https://www.iso.org/standard/85457.html
+	* 
+	* For AV1_DECODER_CONFIGURATION_RECORD AV1 video, this is the AV1CodecConfigurationRecord, starting with the first configuration version byte.
+	* @see https://aomediacodec.github.io/av1-isobmff/#av1codecconfigurationbox-section
+	**/
+	AVC_DECODER_CONFIGURATION_RECORD = 0,  /** H.264/AVC this is the AVCDecoderConfigurationRecord */
+	HEVC_DECODER_CONFIGURATION_RECORD = 1, /** H.265/HEVC video, this is the HEVCDecoderConfigurationRecord */
+	AV1_DECODER_CONFIGURATION_RECORD = 2   /** AV1 video, this is the AV1CodecConfigurationRecord */
 }
+
+

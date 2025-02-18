@@ -135,9 +135,6 @@ flowchart TD
     platformMixer:::green
 ```
 
-!!! Warning
-    iAudioSinkControllerListender & iAudioSiknEventListener is returning the same values, this needs reviewing?
-
 ## Resource Management
 
 The `IAudioSinkManager` provides access to one or more `IAudioSink` sub-interfaces which each represent an audio sink resource instance offered by the platform.
@@ -174,7 +171,6 @@ graph LR
     classDef instance2 fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#000000;
     classDef instance3 fill:#F44336,stroke:#B71C1C,stroke-width:2px,color:#FFFFFF;
     classDef controller fill:#00ACC1,stroke:#006064,stroke-width:2px,color:#000000;
-
 
     %% --- Apply Colors ---
     class IAudioSinkManager manager;
