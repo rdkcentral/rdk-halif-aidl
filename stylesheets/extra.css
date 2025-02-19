@@ -1,0 +1,33 @@
+/* Make page wider that default so tables etc fit better */
+.md-grid {
+    max-width: 70rem;
+}
+
+/* Slightly smaller than default */
+.md-typeset {
+    font-size: .75rem;
+}
+
+/* Enforce Mermaid colors in MkDocs */
+.mermaid .actor {
+    fill: #1E88E5 !important; /* RDK Audio Decoder */
+    stroke: #0D47A1 !important;
+    color: white !important;
+}
+
+.mermaid .participant {
+    fill: #F9A825 !important; /* Audio Decoder Server */
+    stroke: #F57F17 !important;
+    color: black !important;
+}
+
+.mermaid .messageLine0 {
+    stroke: #F57C00 !important; /* Ensures arrows stay visible */
+    stroke-width: 2px !important;
+}
+
+.mermaid .note {
+    fill: #43A047 !important; /* Audio AV Buffer */
+    stroke: #1B5E20 !important;
+    color: white !important;
+}
