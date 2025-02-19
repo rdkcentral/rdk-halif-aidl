@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
+         <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/</loc>
+         <lastmod>2025-02-19</lastmod>
+    </url>
+    <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/1.-Standards-%26-Development-Process-Flow/</loc>
          <lastmod>2025-02-19</lastmod>
     </url>
@@ -346,10 +350,6 @@
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/introduction/documentation_guide/</loc>
-         <lastmod>2025-02-19</lastmod>
-    </url>
-    <url>
-         <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/introduction/home/</loc>
          <lastmod>2025-02-19</lastmod>
     </url>
     <url>
