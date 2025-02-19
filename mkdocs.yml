@@ -32,7 +32,7 @@ nav:
         - Current: halif/video_decoder/current/video_decoder.md
       - Video Sink: 
         - Current: halif/video_sink/current/video_sink.md
-    - Boot: 
+    - Boot:
         - Current: halif/boot/current/intro.md
     - Broadcast: 
         - Current: halif/broadcast/current/intro.md
@@ -65,6 +65,7 @@ nav:
     - Sensor: 
         - Current: halif/sensor/current/intro.md
   - HAL System Interfaces:
+    - Overview: external_content/L4-‐-System-Interface-Testing-‐-Requirements
     - Bluetooth: 
         - Current: vsi/bluetooth/current/intro.md
     - Graphics: 
@@ -77,6 +78,8 @@ nav:
         - Current: vsi/service_manager/current/service_manager.md
     - Wi-Fi: 
         - Current: vsi/wifi/current/intro.md
+    - Kernel:
+        - Current: vsi/kernel/current/intro.md
   - Testing Framework:
     - Test Driven Development: external_content/ut-core-wiki/3.1.-Standards:-Overview-of-Test‐Driven-Development.md
     - Levels of Test: external_content/ut-core-wiki/3.-Standards:-Levels-of-Test-for-Vendor-Layer.md

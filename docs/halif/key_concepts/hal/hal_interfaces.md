@@ -67,10 +67,11 @@ The following
 | ------------------- | -------------- | ------------------------------------------ | ---------------|-------------------- |--------|
 | [**Bluetooth**](../../../vsi/bluetooth/current/intro.md)       | All            | Bluetooth device control.                  | ⚠️ <span class="inline-warning">Warning</span>| ⚠️ <span class="inline-warning">Warning</span> | X |
 | [**Filesystem**](../../../vsi/filesystem/current/intro.md)      | All            | Filesystem mounting.                       | ⚠️ <span class="inline-warning">Warning</span>| ⚠️ <span class="inline-warning">Warning</span> | X |
-| [**Graphics**](../../../vsi/graphics/current/intro.md)        | All            | EGL, OpenGL ES and Vulkan graphics.       | ⚠️ <span class="inline-warning">Warning</span> | ⚠️ <span class="inline-warning">Warning</span> | X |
+| [**Graphics**](../../../vsi/graphics/current/intro.md)        | All            | EGL, OpenGL ES and Vulkan graphics.       | ⚠️ <span class="inline-warning">Warning</span> | ⚠️ <span class="inline-warning">Warning</span> | [L4-vendor_system_tests](https://github.com/rdkcentral/L4-vendor_system_tests) |
 | [**Wi-Fi**](../../../vsi/wifi/current/intro.md)           | All            | Wi-Fi connection control.                  | ⚠️ <span class="inline-warning">Warning</span>| ⚠️ <span class="inline-warning">Warning</span>| X |
 | [**Power Management**](../../../vsi/power_management/current/intro.md) | All | Power and energy efficiency control. | ⚠️ <span class="inline-warning">Warning</span>| ⚠️ <span class="inline-warning">Warning</span> | X |
 | [**Network Management**](../../../vsi/network_management/current/intro.md) | All | Network configuration and monitoring. | ⚠️ <span class="inline-warning">Warning</span>| ⚠️ <span class="inline-warning">Warning</span> | X |
+| [**Kernel**](../../../vsi/kernal/current/intro.md) | All | Network configuration and monitoring. | ⚠️ <span class="inline-warning">Warning</span>| ⚠️ <span class="inline-warning">Warning</span> | X |
 
 
 

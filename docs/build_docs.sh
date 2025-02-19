@@ -61,6 +61,7 @@ fi
 
 # Clone repositories (call the function directly)
 clone_repo "https://github.com/rdkcentral/ut-core.wiki.git" "docs/external_content/ut-core-wiki"
+clone_repo "https://github.com/rdkcentral/L4-vendor_system_tests/wiki" "docs/external_content/L4-vendor_system_tests-wiki"
 #clone_repo "https://github.com/rdkcentral/another-repo.git" "docs/external_content/another-repo"  # Example
 #... add more repo clones like this...
 
