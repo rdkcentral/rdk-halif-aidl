@@ -1,6 +1,6 @@
 # HAL Interface Generation
 
-This document describes how to generate Hardware Abstraction Layer (HAL) interface definitions for RDK-E using the Android Interface Definition Language (AIDL).
+This document describes how to generate Hardware Abstraction Layer (HAL) interface definitions using the Android Interface Definition Language (AIDL).
 
 ## Prerequisites
 

@@ -64,7 +64,11 @@ clone_repo "https://github.com/rdkcentral/ut-core.wiki.git" "docs/external_conte
 }
 
 # Run MkDocs in service mode
+OPTIONS=build
+if [ "$1" != "" ]; then
+  OPTIONS="$@"
+fi
 cd ..
-mkdocs serve
+mkdocs ${OPTIONS}
 
 deactivate

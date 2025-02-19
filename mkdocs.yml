@@ -1,20 +1,21 @@
-site_name: RDK AIDL Hardware Porting Kit
+site_name: RDK Hardware Porting Kit
 site_url: https://www.github.com/rdkcentral/rdk-halif-aidl
+site_dir: site # Site directory
 
 repo_name: rdkcentral/rdk-halif-aidl
 repo_url: https://github.com/rdkcentral/rdk-halif-aidl
 
 nav:
-  - Home: 
-    - Introduction: introduction/home.md
-    - AIDL and Binder: introduction/aidl_and_binder.md
+  - Home: index.md
+  - Hardware Abstraction Layer:
+    - Introduction: introduction/aidl_and_binder.md
     - Interface Generation: introduction/interface_generation.md
     - Key Concepts:
       - HAL Properties: halif/key_concepts/hal/hal_properties.md
       - HAL Feature Profiles: halif/key_concepts/hal/hal_feature_profiles.md
       - HAL Naming Conventions: halif/key_concepts/hal/hal_naming_conventions.md
       - HAL Session State Management: halif/key_concepts/hal/hal_session_state_management.md
-  - HAL ADIL Interfaces:
+  - HAL Driver Interfaces (HDI):
     - Overview: halif/key_concepts/hal/hal_interfaces.md
     - AV Subsystem:
       - Audio Decoder:
@@ -64,8 +65,8 @@ nav:
         - Current: halif/sec_api/current/intro.md
     - Sensor: 
         - Current: halif/sensor/current/intro.md
-  - HAL System Interfaces:
-    - Overview: external_content/L4-‐-System-Interface-Testing-‐-Requirements
+  - Vendor System Interfaces (VSI):
+    - Overview: external_content/ut-core-wiki/3.3.-Standards:-L4-‐-System-Interface-Testing.md
     - Bluetooth: 
         - Current: vsi/bluetooth/current/intro.md
     - Graphics: 
@@ -81,14 +82,26 @@ nav:
     - Kernel:
         - Current: vsi/kernel/current/intro.md
   - Testing Framework:
-    - Test Driven Development: external_content/ut-core-wiki/3.1.-Standards:-Overview-of-Test‐Driven-Development.md
-    - Levels of Test: external_content/ut-core-wiki/3.-Standards:-Levels-of-Test-for-Vendor-Layer.md
-    - Feedback Loops: external_content/ut-core-wiki/3.0.1-Standards:-Testing-Feedback-Loops.md
-    - UT-Core Testing Framework: external_content/ut-core-wiki/FAQ:-UT-Core-Framework-Overview.md
-    - Requirements for Building: external_content/ut-core-wiki/3.2.-Standards:-Requirements-for-building-testing-suites.md
+    - Key Concepts:
+      - Test Driven Development: external_content/ut-core-wiki/3.1.-Standards:-Overview-of-Test‐Driven-Development.md
+      - Black Box Testing: external_content/ut-core-wiki/FAQ:-Black‐Box-Testing-and-Code-Coverage-Metrics.md
+      - Levels of Test: external_content/ut-core-wiki/3.-Standards:-Levels-of-Test-for-Vendor-Layer.md
+      - Feedback Loops: external_content/ut-core-wiki/3.0.1-Standards:-Testing-Feedback-Loops.md
+      - Requirements for Building: external_content/ut-core-wiki/3.2.-Standards:-Requirements-for-building-testing-suites.md
+      - UT-Core Test Framework: 
+        - UT-Core Overview: xternal_content/ut-core-wiki/Home.md
+        - System Overview: external_content/ut-core-wiki/FAQ:-UT-Core-Framework-Overview.md
     - System Interface Testing (VSI): external_content/ut-core-wiki/3.3.-Standards:-L4-‐-System-Interface-Testing.md
+  - Virtual Device:
+    - Overview: external_content/ut-core-wiki/5.0:-Standards:-vDevice-Overview.md
+    - Architecture Overview: external_content/ut-core-wiki/5.0.1:-Standards:-vDevice-Architecture-Overview.md
+    - Key Concepts: 
+      - Controller: external_content/ut-core-wiki/5.1.0:-Standards:-vDevice-Controller.md
+      - Control Plane: external_content/ut-core-wiki/5.1.1:-Standards:-vDevice-Control-Plane.md
   - Misc:
     - References: references/references.md
+    - FAQ:
+      - Python Development: external_content/ut-core-wiki/FAQ:-Comparing-Python-Development-Platforms.md
     - Documentation Guide: introduction/documentation_guide.md
     - Filing an Issue: external_content/ut-core-wiki/1.2.-Standards:-Issue-Description-Guideline.md
 

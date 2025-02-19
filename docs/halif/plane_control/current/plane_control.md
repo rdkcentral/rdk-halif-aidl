@@ -23,8 +23,6 @@ Each plane is configurable through a set of properties that clients can read or 
 !!! tip Related Pages
     - [Video Sink](../../video_sink/current/video_sink.md)
 
-# Overview
-
 ## Implementation Requirements
 
 |#|Requirement | Comments|
@@ -60,9 +58,11 @@ Upon starting, the service shall register the `IPlaneControl` interface with the
 
 ## Product Customization
 
-- The `IPlaneControl.getCapabilities()` returns an array of `Capabilities` parcelables to uniquely represent all of the plane resources supported by the vendor layer.
-  - Typically, the plane index (resource ID) value starts at 0 for the first video plane and increments by 1 for each additional video plane, followed by the graphic plane(s).
-- The `Capabilities` parcelable returned by the `IPlaneControl.getCapabilities()` function lists all capabilities supported by a plane resource.
+The `IPlaneControl.getCapabilities()` returns an array of `Capabilities` parcelables to uniquely represent all of the plane resources supported by the vendor layer.
+
+Typically, the plane index (resource ID) value starts at 0 for the first video plane and increments by 1 for each additional video plane, followed by the graphic plane(s).
+
+The `Capabilities` parcelable returned by the `IPlaneControl.getCapabilities()` function lists all capabilities supported by a plane resource.
 - Concurrent control of plane resources is allowed by multiple clients. The RDK middleware is responsible for ensuring only 1 controlling client is active at any given time.
 
 ## System Context
@@ -264,6 +264,8 @@ SourcePlaneMapping[] =
 
 When video is being stopped, the video source must also be unmapped from the plane.
 
+The plane unmapping can technically be performed before or after the video source is stopped.
+
 The `setVideoSourceDestinationPlaneMapping()` function can be used to unmap one or more video sources from planes.
 
 - Video sink 0 is unmapped from plane 0.
@@ -293,13 +295,29 @@ The diagram below shows a typical default plane resource configuration for 2 vid
 
 ## Compositor
 
-The compositor blends the raster in the visible planes using z-order and alpha settings to produce a single output display image.
+The compositor is a platform component responsible for blending the raster in the visible planes using z-order and alpha settings to produce a single output display image.
 
-For STB devices, the display image is scaled and output over HDMI, and for TV devices, it is scaled and displayed on the panel.
+For STB devices the display image is scaled and output over HDMI and for TV devices it is scaled and displayed on the panel.
+
+There is explicit HAL API exposed for the compositor as it is expected to be configured and managed privately by the vendor layer implementation based on the plane properties.
 
 ## Plane Dimensions & Geometry Control
 
 When properties affecting the plane geometry are changed by the client, they shall take immediate effect on the next available vsync.
+
+For video planes, if there is already a video frame displayed on a plane that remains visible, then it shall be updated to reflect the new geometry settings.
+
+The frameWidth and frameHeight in the Capabilities specify the pixel coordinate system of the plane reference frame, when used for positioning and scaling the plane.  The plane properties X, Y, WIDTH and HEIGHT are all defined in terms of the reference frame geometry.
+
+The maxWidth and maxHeight specify the maximum size the plane can be scaled to within the reference frame.
+
+While a primary video plane commonly supports full screen display (maxWidth=frameWidth and maxHeight=frameHeight), it may not always be the case for other video planes.
+
+If a plane has a size limitation (e.g. 1/4 screen) then the maxWidth and maxHeight must reflect this limitation. 
+
+There is no limitation on the positioning of a plane within its reference frame.
+
+![Plane Control Geometry](./plane_dimensions.png)
 
 ## Alpha Blending
 
@@ -308,3 +326,9 @@ Where a plane is configured to use a translucent alpha setting (`Property::ALPHA
 ## Plane Display Latency
 
 The `vsyncDisplayLatency` in `Capabilities` indicates the delay of video or graphics presentation changes before final output.
+
+For example, video planes may have latency incurred by vendor specific PQ pipelines or MEMC processing and graphics planes may have latency incurred by vendor specific double buffering or composition.
+
+Understanding the latencies for each plane is important when performing display synchronisation between different planes.
+
+For example, when subtitles on the graphics plane need to be displayed with a particular video frame the application rendering the subtitles needs to understand any latency difference between a video plane and the graphics plane to compensate for any differences.
