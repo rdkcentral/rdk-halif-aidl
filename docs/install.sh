@@ -162,9 +162,11 @@ function setup_and_enable_venv()
     # Check if already inside a virtual environment
     if [[ ! -n "$VIRTUAL_ENV" ]]; then
         # Activate virtual environment
-        ECHO "please run the following to ensure setup:"
-        ECHO ${YELLOW}". ./activate_venv.sh"${NO_COLOR}
-        return 1  # Exit the function if already in a venv
+        if [ $QUIET == 0 ]; then
+            ECHO "please run the following to ensure setup:"
+            ECHO ${YELLOW}". ./activate_venv.sh"${NO_COLOR}
+        fi
+        exit 0  # Exit the function if already in a venv
     fi
 
     if [ -f "${VENV_DIR}/.installed" ]; then
@@ -178,6 +180,10 @@ function setup_and_enable_venv()
     touch ${VENV_DIR}/.installed
 }
 
+QUIET=0
+if [ "$1" == "--quiet" ]; then
+    QUIET=1
+fi
 
 ## Setup and start venv
 setup_and_enable_venv
@@ -185,13 +191,15 @@ setup_and_enable_venv
 ### Clone required repos ###
 # Clone ut-core docs for reference material
 mkdir -p external_content
-clone_repo "https://github.com/rdkcentral/ut-core.wiki.git" "external_content/ut-core-wiki" "master"
+clone_repo "https://github.com/rdkcentral/ut-core.wiki.git" "external_content/ut-core-wiki" "main"
 
 # Setup Pip Env
 install_pip_requirements ${MY_DIR}/requirements.txt
 
 ## Install your own sub git repo's in here as required
 # 
-INFO "Run "${YELLOW}./build_docs.sh${NO_COLOR}" to generate the documentation"
+if [ ${QUIET} == 0 ]; then
+    INFO "Run "${YELLOW}./build_docs.sh${NO_COLOR}" to generate the documentation"
+fi
 
 
