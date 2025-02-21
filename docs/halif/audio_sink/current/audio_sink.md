@@ -86,8 +86,6 @@ Typically an RDK middleware GStreamer audio sink element will work with a single
 
 The RDK middleware resource management system will examine the number of audio sink resources and their capabilities, so they can be allocated to streaming sessions.
 
-![audioSink-context](./audioSink-context.png)
-
 ```mermaid
 flowchart TD
     RDKClientComponent("RDKClientComponent")

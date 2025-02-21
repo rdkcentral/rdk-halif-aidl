@@ -59,8 +59,8 @@ clone_repo "https://github.com/rdkcentral/ut-core.wiki.git" "docs/external_conte
 # Setup and run the install and the venv
 {
   cd ./docs
-  ${PWD}/install.sh --quiet
-  source ${PWD}/activate_venv.sh
+  ${PWD}/scripts/install.sh --quiet
+  source ${PWD}/scripts/activate_venv.sh
 }
 
 # Run MkDocs in service mode

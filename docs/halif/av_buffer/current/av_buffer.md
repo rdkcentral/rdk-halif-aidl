@@ -33,25 +33,25 @@ The **AV Buffer HAL** manages both secure and non-secure memory heaps and pools 
 
 |#|Requirement|Comments|
 |-|-----------|--------|
-|HAL.AVBUF.1|AV buffer handles shall be unique across all memory pools and heaps, including the vendor video frame pool and audio frame pool.|
-|HAL.AVBUF.2|Pool handles shall be unique across all memory pools and heaps.|
-|HAL.AVBUF.3|Buffer allocations from pools are made to fit a single video frame or audio frame.|
-|HAL.AVBUF.4|The last buffer allocated from a pool may be trimmed to reduce its allocated size down.|
-|HAL.AVBUF.5|Metrics on heap usage can be retrieved.|
-|HAL.AVBUF.6|Metrics on pool usage can be retrieved.|
-|HAL.AVBUF.7|Memory buffers allocated from a secure memory pool cannot be mapped into the address space of unprivileged processes and must meet secure video path or secure audio path requirements.| Only vendor layer trusted entities can access secure memory (e.g. TA or secure hardware peripheral).|
-|HAL.AVBUF.8|The size of the heaps and pools shall be determined by the vendor to meet the platform and product requirements for audio and video.|
-|HAL.AVBUF.9|A helper library shall be provided to allow middleware processes to map and unmap non-secure buffers, and copy data to secure and non-secure buffers.|
+|**HAL.AVBUF.1**|AV buffer handles shall be unique across all memory pools and heaps, including the vendor video frame pool and audio frame pool.|
+|**HAL.AVBUF.2**|Pool handles shall be unique across all memory pools and heaps.|
+|**HAL.AVBUF.3**|Buffer allocations from pools are made to fit a single video frame or audio frame.|
+|**HAL.AVBUF.4**|The last buffer allocated from a pool may be trimmed to reduce its allocated size down.|
+|**HAL.AVBUF.5**|Metrics on heap usage can be retrieved.|
+|**HAL.AVBUF.6**|Metrics on pool usage can be retrieved.|
+|**HAL.AVBUF.7**|Memory buffers allocated from a secure memory pool cannot be mapped into the address space of unprivileged processes and must meet secure video path or secure audio path requirements.| Only vendor layer trusted entities can access secure memory (e.g. TA or secure hardware peripheral).|
+|**HAL.AVBUF.8**|The size of the heaps and pools shall be determined by the vendor to meet the platform and product requirements for audio and video.|
+|**HAL.AVBUF.9**|A helper library shall be provided to allow middleware processes to map and unmap non-secure buffers, and copy data to secure and non-secure buffers.|
 
 ## Interface Definition
 
 |Interface Definition File|Description|
 |-------------------------|-----------|
-|IAVBuffer.aidl|AV Buffer HAL interface which provides the central API for buffer management.|
-|IAVBufferSpaceListener.aidl|Pool space listener callback interface.|
-|Pool.aidl|Pool handle parcelable definition.|
-|HeapMetrics.aidl|Heap metrics parcelable definition.|
-|PoolMetrics.aidl|Pool metrics parcelable definition.|
+|`IAVBuffer.aidl`|AV Buffer HAL interface which provides the central API for buffer management.|
+|`IAVBufferSpaceListener.aidl`|Pool space listener callback interface.|
+|`Pool.aidl`|Pool handle parcelable definition.|
+|`HeapMetrics.aidl`|Heap metrics parcelable definition.|
+|`PoolMetrics.aidl`|Pool metrics parcelable definition.|
 
 ## Initialization
 

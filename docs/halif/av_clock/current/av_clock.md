@@ -31,30 +31,30 @@ Audio and video sinks associated with a given AV Clock instance comprise a synch
 
 |#| Requirement | Comments |
 |--|---|---|
-| HAL.AVCLOCK.1 | A single client-server session shall manage a single AV clock instance and sync group. |
-| HAL.AVCLOCK.2 | Multiple AV clocks may operate concurrently. |
-| HAL.AVCLOCK.3 | Broadcast PCR samples shall be provided by the client to drive the AV clock instance in PCR mode. |
-| HAL.AVCLOCK.4 | PCR samples are based on a 27MHz clock from the MPEG standard but delivered in nanosecond units. |
-| HAL.AVCLOCK.5 | PCR samples can start at any value, contain discontinuities and may wrap according to broadcast encoding rules. |
-| HAL.AVCLOCK.6 | An AV clock shall support audio with video, video only or audio only. |
-| HAL.AVCLOCK.7 | Supplementary audio (e.g. audio description) shall be supported in addition to a main audio. |
-| HAL.AVCLOCK.8 | For non-PCR driven playback, the playback rate shall be adjustable between 0.0 and 2.0, where 0 is paused and 1.0 is normal speed. |YouTube requirement is to play between 0.5 and 2.0 with pitch correction.|
-| HAL.AVCLOCK.9 | A client shall be able to read the current AV clock time.|For PCR mode. It should return the "invalid" value until the first PCR is received. |
-| HAL.AVCLOCK.10 | If a client process exits, the AV Clock server shall automatically stop and close any AV Clock instance controlled by that client. |
+| **HAL.AVCLOCK.1** | A single client-server session shall manage a single AV clock instance and sync group. |
+| **HAL.AVCLOCK.2** | Multiple AV clocks may operate concurrently. |
+| **HAL.AVCLOCK.3** | Broadcast PCR samples shall be provided by the client to drive the AV clock instance in PCR mode. |
+| **HAL.AVCLOCK.4** | PCR samples are based on a 27MHz clock from the MPEG standard but delivered in nanosecond units. |
+| **HAL.AVCLOCK.5** | PCR samples can start at any value, contain discontinuities and may wrap according to broadcast encoding rules. |
+| **HAL.AVCLOCK.6** | An AV clock shall support audio with video, video only or audio only. |
+| **HAL.AVCLOCK.7** | Supplementary audio (e.g. audio description) shall be supported in addition to a main audio. |
+| **HAL.AVCLOCK.8** | For non-PCR driven playback, the playback rate shall be adjustable between 0.0 and 2.0, where 0 is paused and 1.0 is normal speed. |YouTube requirement is to play between 0.5 and 2.0 with pitch correction.|
+| **HAL.AVCLOCK.9** | A client shall be able to read the current AV clock time.|For PCR mode. It should return the "invalid" value until the first PCR is received. |
+| **HAL.AVCLOCK.10** | If a client process exits, the AV Clock server shall automatically stop and close any AV Clock instance controlled by that client. |
 
 ### Interface Definition
 
 | Interface Definition File | Description |
 |---|---|
-| IAVClockManager.aidl | AV Clock Manager HAL interface which provides access to IAVClock resource instances. |
-| IAVClock.aidl | AV Clock HAL interface for a single AV Clock resource instance. |
-| IAVClockController.aidl | Controller interface for an IAVClock resource instance. |
-| IAVClockControllerListener.aidl | Listener callbacks interface to clients from an IAVClockController. |
-| IAVClockEventListener.aidl | Listener callbacks interface to clients from an IAVClock. |
-| Capabilities.aidl | Parcelable describing the capabilities of an IAVClock resource instance. |
-| ClockMode.aidl | Enum list of clock modes. |
-| ClockTime.aidl | Parcelable holding a clock time. |
-| Property.aidl | Enum list of AV Clock properties. |
+| `IAVClockManager.aidl` | AV Clock Manager HAL interface which provides access to IAVClock resource instances. |
+| `IAVClock.aidl` | AV Clock HAL interface for a single AV Clock resource instance. |
+| `IAVClockController.aidl` | Controller interface for an IAVClock resource instance. |
+| `IAVClockControllerListener.aidl` | Listener callbacks interface to clients from an IAVClockController. |
+| `IAVClockEventListener.aidl` | Listener callbacks interface to clients from an IAVClock. |
+| `Capabilities.aidl` | Parcelable describing the capabilities of an IAVClock resource instance. |
+| `ClockMode.aidl` | Enum list of clock modes. |
+| `ClockTime.aidl` | Parcelable holding a clock time. |
+| `Property.aidl` | Enum list of AV Clock properties. |
 
 ### Initialization
 
@@ -187,67 +187,6 @@ graph LR
     linkStyle 1,4 stroke:#CC5500,stroke-width:2px;
     %% Red for Instance 2
     linkStyle 2,5 stroke:#CC2200,stroke-width:2px;
-```
-
-The diagram below shows the class relationships.
-
-```mermaid
-classDiagram
-    %% --- Class Definitions ---
-    class IAVClockManager {
-        +IAVClock.Id[] getAVClockIds()
-        +@nullable IAVClock getAVClock(IAVClock.Id avClockId)
-    }
-
-    class IAVClock {
-        +int RESOURCE_ID
-        +Capabilities getCapabilities()
-        +State getState()
-        +@nullable PropertyValue getProperty(Property property)
-        +boolean setProperty(Property property, PropertyValue propertyValue)
-        +@nullable IAVClockController open(IAVClockControllerListener avClockControllerListener)
-        +boolean close(IAVClockController avClockController)
-    }
-
-    class IAVClockController {
-        +void start()
-        +void stop()
-        +boolean setAudioSink(IAudioSink.Id audioSinkId)
-        +IAudioSink.Id getAudioSink()
-        +boolean setSupplementaryAudioSink(IAudioSink.Id supplementaryAudioSinkId)
-        +IAudioSink.Id getSupplementaryAudioSink()
-        +boolean setVideoSink(IVideoSink.Id videoSinkId)
-        +IVideoSink.Id getVideoSink()
-        +boolean setClockMode(ClockMode clockMode)
-        +ClockMode getClockMode()
-        +boolean notifyPCRSample(long pcrTimeNs, long sampleTimestampNs)
-        +ClockTime getCurrentClockTime()
-        +boolean setPlaybackRate(double rate)
-        +double getPlaybackRate()
-    }
-
-    class Client {
-        +requestClockManager(): IAVClockManager
-        +getAVClock(id): IAVClock
-        +boolean open(IAVClock)
-    }
-
-    %% --- Relationships ---
-    Client "0..*" --> "1" IAVClockManager : Accesses
-    IAVClockManager "1" --> "1..*" IAVClock : Provides
-    Client "1" --> "1" IAVClock : Can open()
-    IAVClock "1" --> "1" IAVClockController : Controls (if opened)
-
-    %% --- Apply Colors ---
-    classDef manager fill:#388E3C,stroke:#1B5E20,stroke-width:2px,color:white;
-    classDef clock fill:#FFC107,stroke:#FF8F00,stroke-width:2px,color:black;
-    classDef controller fill:#00ACC1,stroke:#006064,stroke-width:2px,color:black;
-    classDef client fill:#F44336,stroke:#B71C1C,stroke-width:2px,color:white;
-
-    %%class IAVClockManager manager
-    %%class IAVClock clock
-    %%class IAVClockController controller
-    %%class Client client
 ```
 
 ### AV Sources and Sync Groups

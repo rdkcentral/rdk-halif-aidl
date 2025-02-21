@@ -10,13 +10,13 @@
 
 /* Enforce Mermaid colors in MkDocs */
 .mermaid .actor {
-    fill: #1E88E5 !important; /* RDK Audio Decoder */
+    fill: #1E88E5 !important;
     stroke: #0D47A1 !important;
     color: white !important;
 }
 
 .mermaid .participant {
-    fill: #F9A825 !important; /* Audio Decoder Server */
+    fill: #F9A825 !important; 
     stroke: #F57F17 !important;
     color: black !important;
 }
@@ -27,7 +27,8 @@
 }
 
 .mermaid .note {
-    fill: #43A047 !important; /* Audio AV Buffer */
+    fill: #43A047 !important; 
     stroke: #1B5E20 !important;
     color: white !important;
 }
+

@@ -23,7 +23,9 @@
 MY_PATH="$(realpath ${BASH_SOURCE[0]})"
 MY_DIR="$(dirname ${MY_PATH})"
 VENV_NAME="python_venv"
-VENV_DIR="${MY_DIR}/${VENV_NAME}"  # Default virtual environment directory name
+DOCS_DIR="${MY_DIR}/.."
+VENV_DIR="${DOCS_DIR}/${VENV_NAME}"  # Default virtual environment directory name
+EXTERNAL_CONTENT_DIR="${DOCS_DIR}/external_content"
 
 NO_COLOR="\e[0m"
 RED="\e[0;31m"
@@ -190,11 +192,11 @@ setup_and_enable_venv
 
 ### Clone required repos ###
 # Clone ut-core docs for reference material
-mkdir -p external_content
-clone_repo "https://github.com/rdkcentral/ut-core.wiki.git" "external_content/ut-core-wiki" "main"
+mkdir -p ${EXTERNAL_CONTENT_DIR}
+clone_repo "https://github.com/rdkcentral/ut-core.wiki.git" "${EXTERNAL_CONTENT_DIR}/ut-core-wiki" "main"
 
 # Setup Pip Env
-install_pip_requirements ${MY_DIR}/requirements.txt
+install_pip_requirements ${DOCS_DIR}/requirements.txt
 
 ## Install your own sub git repo's in here as required
 # 

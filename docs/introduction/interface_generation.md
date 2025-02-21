@@ -33,7 +33,7 @@ sc docker run rdk-kirkstone /bin/bash
 
 The compiled `aidl` binary will be located in the `local/bin` directory within the `linux_binder_idl` project.  The full path might resemble:
 
-```
+```bash
 linux_binder_idl/local/bin/aidl
 ```
 

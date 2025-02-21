@@ -21,7 +21,7 @@ This list provides an overview of various HAL components, their device profiles,
 
 | HAL Component       | Device Profile | Description                                | Interface State (7/7)| Documentation State (6/7)|L1 Spec (0/7)|L2 Spec (0/7)|L3 Spec (0/7)|
 | ------------------- | -------------- | ------------------------------------------ | ---------------|-------------------- |--------|--------|--------|
-| [**Audio Decoder**](../../audio_decoder/current/audio_decoder.md)   | All            | Audio decoder control.               |✅ <span class="inline-success">Phase 1</span> [audio_decoder](/rdkcentral/rdk-halif-aidl/audiodecoder/current/com/rdk/hal/audiodecoder/)| **📝 Under Review** | X | X | X |
+| [**Audio Decoder**](../../audio_decoder/current/audio_decoder.md)   | All            | Audio decoder control.               |✅ <span class="inline-success">Phase 1</span> [audio_decoder](https://github.com/rdkcentral/rdk-halif-aidl/audiodecoder/current/com/rdk/hal/audiodecoder/)| **📝 Under Review** | X | X | X |
 | [**Audio Sink**](../../audio_sink/current/audio_sink.md)      | All            | Audio sink and rendering control.          |✅ <span class="inline-success">Phase 1</span> | **📝 Under Review** | X | X | X |
 | [**Audio Mixer**](../../audio_mixer/current/intro.md)     | All            | Audio mixing and transcoding control.      |✅ <span class="inline-success">Phase 1</span> | ❌"Not Started" | X | X | X |
 | [**AV Buffer**](../../av_buffer/current/av_buffer.md)       | All            | A/V buffer and pool control.               |✅ <span class="inline-success">Phase 1</span> | **📝 Under Review** | X | X | X |

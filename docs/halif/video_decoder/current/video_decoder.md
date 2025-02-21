@@ -36,41 +36,41 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 
 |#| Requirement | Comments |
 |---|---|---|
-| HAL.VIDEODECODER.1 | Video elementary stream data shall be passed to the video decoder to be decoded as frames.| Decontainerisation and demuxing are performed by the RDK AV pipeline before the video decoder. |
-| HAL.VIDEODECODER.2 | Encoded video data is passed one frame at a time to the video decoder in stream, file or broadcast delivered order. |
-| HAL.VIDEODECODER.3 | Decoded video frames are output from the decoder in presentation order. |
-| HAL.VIDEODECODER.4 | Only one video frame shall be output per output frame callback from the video decoder. |
-| HAL.VIDEODECODER.5 | Encoded video data shall be passed in shared memory buffers by handle and shall be in either secure or non-secure buffer types. |The pool implementation of memory buffers for secure and non-secure memory is implemented by the vendor. See [AV Buffer](../../av_buffer/current/av_buffer.md) for details. |
-| HAL.VIDEODECODER.6 | The video decoder shall support a secure video pipeline where encoded and decoded data in secure buffers shall not be exposed to any process outside of the secure video pipeline. Secure coded video input buffers to the video decoder shall always be output in secure decoded frame buffers. |
-| HAL.VIDEODECODER.8 | The video decoder shall operate in either a tunnelled or non-tunnelled operational mode. |Only one of these operational modes needs be supported by the video decoder. |
-| HAL.VIDEODECODER.9 | The video decoder may optionally operate in a textured video operational mode. |
-| HAL.VIDEODECODER.10 | The video decoder HAL shall report on the number of video decoder instances supported and their capabilities. |
-| HAL.VIDEODECODER.11 | An opened video decoder instance shall be configured to decode only a single codec type.| No dynamic video codec switching is supported while open.  A video decoder instance must be closed and reopened to change the codec type.|
-| HAL.VIDEODECODER.12 | The video decoder shall be able to decode back to back I-frames.| Used in I-frame trick modes. |
-| HAL.VIDEODECODER.13 | The video decoder shall discard any frames until the first reference frame has been received. |
-| HAL.VIDEODECODER.14 | If a client process exits, the Video Decoder server shall automatically stop and close any Video Decoder instance controlled by that client. |
+| **HAL.VIDEODECODER.1** | Video elementary stream data shall be passed to the video decoder to be decoded as frames.| Decontainerisation and demuxing are performed by the RDK AV pipeline before the video decoder. |
+| **HAL.VIDEODECODER.2** | Encoded video data is passed one frame at a time to the video decoder in stream, file or broadcast delivered order. |
+| **HAL.VIDEODECODER.3** | Decoded video frames are output from the decoder in presentation order. |
+| **HAL.VIDEODECODER.4** | Only one video frame shall be output per output frame callback from the video decoder. |
+| **HAL.VIDEODECODER.5** | Encoded video data shall be passed in shared memory buffers by handle and shall be in either secure or non-secure buffer types. |The pool implementation of memory buffers for secure and non-secure memory is implemented by the vendor. See [AV Buffer](../../av_buffer/current/av_buffer.md) for details. |
+| **HAL.VIDEODECODER.6** | The video decoder shall support a secure video pipeline where encoded and decoded data in secure buffers shall not be exposed to any process outside of the secure video pipeline. Secure coded video input buffers to the video decoder shall always be output in secure decoded frame buffers. |
+| **HAL.VIDEODECODER.7** | The video decoder shall operate in either a tunnelled or non-tunnelled operational mode. |Only one of these operational modes needs be supported by the video decoder. |
+| **HAL.VIDEODECODER.8** | The video decoder may optionally operate in a textured video operational mode. |
+| **HAL.VIDEODECODER.9** | The video decoder HAL shall report on the number of video decoder instances supported and their capabilities. |
+| **HAL.VIDEODECODER.10** | An opened video decoder instance shall be configured to decode only a single codec type.| No dynamic video codec switching is supported while open.  A video decoder instance must be closed and reopened to change the codec type.|
+| **HAL.VIDEODECODER.11** | The video decoder shall be able to decode back to back I-frames.| Used in I-frame trick modes. |
+| **HAL.VIDEODECODER.12** | The video decoder shall discard any frames until the first reference frame has been received. |
+| **HAL.VIDEODECODER.13** | If a client process exits, the Video Decoder server shall automatically stop and close any Video Decoder instance controlled by that client. |
 
 ## Interface Definition
 
 | Interface Definition File | Description |
 |---|---|
-| IVideoDecoderManager.aidl | Video Decoder Manager HAL which provides access to IVideoDecoder resource instances. |
-| IVideoDecoder.aidl | Video Decoder interface for a single video decoder resource instance. |
-| IVideoDecoderController.aidl | Controller interface for an IVideoDecoder resource instance. |
-| IVideoDecoderControllerListener.aidl | Listener callbacks interface to clients from an IVideoDecoderController. |
-| IVideoDecoderEventListener.aidl | Listener callbacks interface to clients from an IVideoDecoder. |
-| Capabilities.aidl | Parcelable describing the capabilities of an IVideoDecoder resource instance. |
-| Codec.aidl | Enum list of video codecs. |
-| CodecCapabilities.aidl | Parcelable describing the capabilities of a codec supported by an IVideoDecoder. |
-| CSDVideoFormat.aidl | Enum list of video codec specific data formats. |
-| DynamicRange.aidl | Enum list of dynamic ranges. |
-| ErrorCode.aidl | Enum list of video decoder error codes. |
-| FrameMetadata.aidl | Parcelable of video frame metadata passed from the video decoder. |
-| OperationalMode.aidl | Enum list of video decoder operational modes. |
-| PixelFormat.aidl | Enum list of video pixel formats. |
-| Property.aidl | Enum list of video decoder properties. |
-| PropertyKVPair.aidl | Parcelable of a Property and PropertyValue pair. |
-| ScanType.aidl | Enum list of video frame scan types. |
+| `IVideoDecoderManager.aidl` | Video Decoder Manager HAL which provides access to IVideoDecoder resource instances. |
+| `IVideoDecoder.aidl` | Video Decoder interface for a single video decoder resource instance. |
+| `IVideoDecoderController.aidl` | Controller interface for an IVideoDecoder resource instance. |
+| `IVideoDecoderControllerListener.aidl` | Listener callbacks interface to clients from an IVideoDecoderController. |
+| `IVideoDecoderEventListener.aidl` | Listener callbacks interface to clients from an IVideoDecoder. |
+| `Capabilities.aidl` | Parcelable describing the capabilities of an IVideoDecoder resource instance. |
+| `Codec.aidl` | Enum list of video codecs. |
+| `CodecCapabilities.aidl` | Parcelable describing the capabilities of a codec supported by an IVideoDecoder. |
+| `CSDVideoFormat.aidl` | Enum list of video codec specific data formats. |
+| `DynamicRange.aidl` | Enum list of dynamic ranges. |
+| `ErrorCode.aidl` | Enum list of video decoder error codes. |
+| `FrameMetadata.aidl` | Parcelable of video frame metadata passed from the video decoder. |
+| `OperationalMode.aidl` | Enum list of video decoder operational modes. |
+| `PixelFormat.aidl` | Enum list of video pixel formats. |
+| `Property.aidl` | Enum list of video decoder properties. |
+| `PropertyKVPair.aidl` | Parcelable of a Property and PropertyValue pair. |
+| `ScanType.aidl` | Enum list of video frame scan types. |
 
 ## Initialization
 

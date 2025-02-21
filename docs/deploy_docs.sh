@@ -22,7 +22,8 @@
 #* ******************************************************************************
 
 MY_PATH="$(realpath ${BASH_SOURCE[0]})"
-MY_DIR="$(dirname ${MY_PATH})"
+MY_DIR="$(dirname ${MY_PATH})/scripts"
+SCRIPTS_DIR="$(dirname ${MY_PATH})"
 GIT_ROOT="${MY_DIR}/../"
 
 # --- Configuration ---
@@ -45,8 +46,8 @@ log_error() {
 
 # --- Launch the pyenv ---
 {
-  ${PWD}/install.sh --quiet
-  source ${PWD}/activate_venv.sh
+  ${PWD}/scripts/install.sh --quiet
+  source ${PWD}/scripts/activate_venv.sh
 }
 
 # --- Main Script ---
