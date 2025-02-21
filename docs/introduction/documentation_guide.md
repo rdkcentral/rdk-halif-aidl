@@ -14,55 +14,82 @@ Ensure Python 3 is installed and accessible on your system. Verify by running:
 python3 --version
 ```
 
-### Building and Serving Documentation
+---
 
-To generate and serve the documentation locally, navigate to the `docs` directory and execute the `build_docs.sh` script. This script will:
+## Building and Serving Documentation
 
-- Set up a Python 3 virtual environment  
-- Clone the required repositories  
-- Configure necessary directories  
-- Build the documentation and launch a local web server  
+To simplify working with documentation, the `docs/build_docs.sh` script provides several subcommands:
 
-Run the following command:
+- **serve**: builds the documentation and starts a local server  
+- **build** (default if no subcommand is given): builds the documentation without serving  
+- **deploy**: builds the documentation and deploys it to GitHub Pages  
+- **help**: displays usage information
+
+### Serve the Documentation Locally
+
+To generate and serve the documentation on `localhost:8000`, run:
 
 ```bash
 ./build_docs.sh serve
 ```
 
-Once the process completes, you can access the documentation in your web browser at:
+Once the server is running, you can view the docs at:
 
 [http://localhost:8000/rdkcentral/rdk-halif-aidl/](http://localhost:8000/rdkcentral/rdk-halif-aidl/)
 
-The site will automatically reload when you modify Markdown files within the `docs` directory.
+Any changes to the Markdown files in the `docs` directory will automatically reload in the browser.
 
-#### Building Without Serving
+### Building Without Serving
 
-If you want to build the documentation without running the local web server, use:
+If you just want to build the static files (without starting a local server), run:
+
+```bash
+./build_docs.sh build
+```
+
+This generates the site into the `site` directory.
+
+---
+
+## Structuring the Documentation
+
+The file **`mkdocs.yml`**, located at the root of the repository, defines how your documentation is structured and navigated. Any additions, removals, or reorganizations of documentation pages require corresponding updates to **`mkdocs.yml`** to keep the site navigation current.
+
+For more information on naming conventions used, see [Key Concepts and Naming Conventions](../halif/key_concepts/hal/hal_naming_conventions.md).
+
+---
+
+## Deploying Documentation
+
+If you have the necessary permissions to deploy, follow these steps:
+
+Build the documentation and deploy to the `gh-pages` branch:
+
+```bash
+./build_docs.sh build
+./build_docs.sh deploy
+```
+
+The site will be published at:  
+[https://rdkcentral.github.io/rdk-halif-aidl/](https://rdkcentral.github.io/rdk-halif-aidl/)  
+
+> **Note**: The published site’s resides in the `gh-pages` branch of this repository.
+
+### Getting Help
+
+At any time, you can see a list of available subcommands and usage information by running:
 
 ```bash
 ./build_docs.sh
 ```
 
-## Structuring the Documentation
-
-The `mkdocs.yml` file, located at the root of the repository, is crucial for defining the documentation's structure and navigation. This file dictates the hierarchy of pages and how they are linked. **Any additions or removals of documentation pages require a corresponding update to ****`mkdocs.yml`**** to maintain proper navigation.**
-
-See [For information on the the naming conventions used see:-](../halif/key_concepts/hal/hal_naming_conventions.md)
-
-## Deploying Documentation
-
-If you have the required permissions to deploy the documentation, use the `deploy_docs.sh` script. This will:
-
-- Rebuild the documentation  
-- Deploy the latest version  
-
-Run the following command:
+or
 
 ```bash
-./deploy_docs.sh
+./build_docs.sh help
 ```
 
-The latest documentation will be deployed to GitHub Pages at [https://rdkcentral.github.io/rdk-halif-aidl/](https://rdkcentral.github.io/rdk-halif-aidl/). The website's source code resides in the `gh-pages` branch of the repository.
+---
 
 ## Writing Style and Guidelines
 

@@ -65,7 +65,7 @@ nav:
         - Current: halif/sec_api/current/intro.md
     - Sensor: 
         - Current: halif/sensor/current/intro.md
-  - Vendor System Interfaces (VSI):
+  - System Interfaces (VSI):
     - Bluetooth: 
         - Current: vsi/bluetooth/current/intro.md
     - Graphics: 
@@ -83,8 +83,8 @@ nav:
   - Vendor Tests:
     - Levels of Test: external_content/ut-core-wiki/3.-Standards:-Levels-of-Test-for-Vendor-Layer.md
     - Level 4:
-      - L4 System Interface Testing (VSI): external_content/ut-core-wiki/3.3.-Standards:-L4-‐-System-Interface-Testing.md
-      - L4 Vendor Full Stack (VSI): external_content/ut-core-wiki/3.4.-Standards:-L4:-Vendor-Full-Stack-‐-Video-‐-Smoke-Regression-Test.md
+      - L4 System Interface (VSI): external_content/ut-core-wiki/3.3.-Standards:-L4-‐-System-Interface-Testing.md
+      - L4 Smoke Test (VST): external_content/ut-core-wiki/3.4.-Standards:-L4:-Vendor-Full-Stack-‐-Video-‐-Smoke-Regression-Test.md
   - Testing Framework:
     - Framework Usage: external_content/ut-core-wiki/3.2.-Standards:-Requirements-for-building-testing-suites.md
     - Key Concepts:

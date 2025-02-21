@@ -23,12 +23,17 @@
 
 cd ..
 
+# ----------------------------------------------------------------------------
+# Function to enhance echo
+# ----------------------------------------------------------------------------
 function ECHO()
 {
     echo -e "$*"
 }
 
+# ----------------------------------------------------------------------------
 # Function to clone a repository if it doesn't have a.done file
+# ----------------------------------------------------------------------------
 function clone_repo
 {
   repo_url="$1"
@@ -50,25 +55,92 @@ function clone_repo
   fi
 }
 
+# ----------------------------------------------------------------------------
 # Clone repositories (call the function directly)
+# ----------------------------------------------------------------------------
 clone_repo "https://github.com/rdkcentral/ut-core.wiki.git" "docs/external_content/ut-core-wiki"
 #clone_repo "https://github.com/rdkcentral/L4-vendor_system_tests/wiki" "docs/external_content/L4-vendor_system_tests-wiki"
 #clone_repo "https://github.com/rdkcentral/another-repo.git" "docs/external_content/another-repo"  # Example
 #... add more repo clones like this...
 
+# ----------------------------------------------------------------------------
+# usage() : Print the help/usage text.
+# ----------------------------------------------------------------------------
+function usage() 
+{
+  cat <<EOF
+Usage: $0 [COMMAND] [OPTIONS]
+
+Commands:
+  serve        Serve the site locally (mkdocs serve).
+  build        Build the site into the "site" directory (mkdocs build).
+  deploy       Deploy the site to the "gh-pages" branch (mkdocs gh-deploy).
+  help         Show this help message.
+
+Options:
+  -h, --help   Show this help message.
+
+Examples:
+  $0 serve          Serve your MkDocs site on localhost:8000
+  $0 build          Build your MkDocs site into the 'site' directory
+  $0 deploy         Deploy your MkDocs site to GitHub Pages
+  $0 help           Show this help message
+EOF
+}
+
+# ----------------------------------------------------------------------------
+# main() : Main entry point. Handle command-line arguments, then run commands.
+# ----------------------------------------------------------------------------
+function main() 
+{
+  local CMD=$1
+  shift || true  # Shift off the first argument to allow further options
+
+  case "${CMD}" in
+    serve)
+      echo "[INFO] Serving MkDocs locally..."
+      mkdocs serve "$@"
+      ;;
+
+    build)
+      echo "[INFO] Building MkDocs site..."
+      mkdocs build "$@"
+      ;;
+
+    deploy)
+      echo "[INFO] Deploying MkDocs site to gh-pages..."
+      mkdocs gh-deploy "$@"
+      ;;
+
+    help|-h|--h|--help|"")
+      # If user typed 'help', '-h', '--help', or gave no args -> show usage
+      usage
+      ;;
+
+    *)
+      echo "[ERROR] Unknown command: '${CMD}'"
+      usage
+      exit 1
+      ;;
+  esac
+}
+
+# ----------------------------------------------------------------------------
 # Setup and run the install and the venv
+# ----------------------------------------------------------------------------
 {
   cd ./docs
   ${PWD}/scripts/install.sh --quiet
   source ${PWD}/scripts/activate_venv.sh
 }
 
-# Run MkDocs in service mode
-OPTIONS=build
-if [ "$1" != "" ]; then
-  OPTIONS="$@"
-fi
+# ----------------------------------------------------------------------------
+# Run main() with all script arguments.
+# ----------------------------------------------------------------------------
 cd ..
-mkdocs ${OPTIONS}
+main "$@"
 
+# ----------------------------------------------------------------------------
+# deactivate pyenv
+# ----------------------------------------------------------------------------
 deactivate
