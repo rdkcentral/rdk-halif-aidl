@@ -91,7 +91,6 @@ nav:
       - Test Driven Development: external_content/ut-core-wiki/3.1.-Standards:-Overview-of-Test‐Driven-Development.md
       - Black Box Testing: external_content/ut-core-wiki/FAQ:-Black‐Box-Testing-and-Code-Coverage-Metrics.md
       - Feedback Loops: external_content/ut-core-wiki/3.0.1-Standards:-Testing-Feedback-Loops.md
-      - Requirements for Building: external_content/ut-core-wiki/3.2.-Standards:-Requirements-for-building-testing-suites.md
     - UT-Core Test Framework:
       - UT-Core Overview: external_content/ut-core-wiki/Home.md
       - Level Actors: external_content/ut-core-wiki/FAQ:-UT-Core-Framework-Overview.md
