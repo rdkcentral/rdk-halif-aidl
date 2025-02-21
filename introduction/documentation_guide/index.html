@@ -2254,7 +2254,7 @@
             
   
   <span class="md-ellipsis">
-    Vendor System Interfaces (VSI)
+    System Interfaces (VSI)
     
   </span>
   
@@ -2265,7 +2265,7 @@
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
-            Vendor System Interfaces (VSI)
+            System Interfaces (VSI)
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -2864,7 +2864,7 @@
         
   
   <span class="md-ellipsis">
-    L4 System Interface Testing (VSI)
+    L4 System Interface (VSI)
     
   </span>
   
@@ -2886,7 +2886,7 @@
         
   
   <span class="md-ellipsis">
-    L4 Vendor Full Stack (VSI)
+    L4 Smoke Test (VST)
     
   </span>
   
@@ -3526,7 +3526,12 @@
   
 </li>
         
-          <li class="md-nav__item">
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#building-and-serving-documentation" class="md-nav__link">
     <span class="md-ellipsis">
       Building and Serving Documentation
@@ -3537,16 +3542,20 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#building-without-serving" class="md-nav__link">
+  <a href="#serve-the-documentation-locally" class="md-nav__link">
     <span class="md-ellipsis">
-      Building Without Serving
+      Serve the Documentation Locally
     </span>
   </a>
   
 </li>
         
-      </ul>
-    </nav>
+          <li class="md-nav__item">
+  <a href="#building-without-serving" class="md-nav__link">
+    <span class="md-ellipsis">
+      Building Without Serving
+    </span>
+  </a>
   
 </li>
         
@@ -3570,6 +3579,21 @@
       Deploying Documentation
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Deploying Documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#getting-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting Help
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3733,7 +3757,12 @@
   
 </li>
         
-          <li class="md-nav__item">
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#building-and-serving-documentation" class="md-nav__link">
     <span class="md-ellipsis">
       Building and Serving Documentation
@@ -3744,16 +3773,20 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#building-without-serving" class="md-nav__link">
+  <a href="#serve-the-documentation-locally" class="md-nav__link">
     <span class="md-ellipsis">
-      Building Without Serving
+      Serve the Documentation Locally
     </span>
   </a>
   
 </li>
         
-      </ul>
-    </nav>
+          <li class="md-nav__item">
+  <a href="#building-without-serving" class="md-nav__link">
+    <span class="md-ellipsis">
+      Building Without Serving
+    </span>
+  </a>
   
 </li>
         
@@ -3777,6 +3810,21 @@
       Deploying Documentation
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Deploying Documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#getting-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting Help
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3816,37 +3864,51 @@
 <p>Ensure Python 3 is installed and accessible on your system. Verify by running:</p>
 <div class="highlight"><pre><span></span><code>python3<span class="w"> </span>--version
 </code></pre></div>
-<h3 id="building-and-serving-documentation">Building and Serving Documentation</h3>
-<p>To generate and serve the documentation locally, navigate to the <code>docs</code> directory and execute the <code>build_docs.sh</code> script. This script will:</p>
+<hr />
+<h2 id="building-and-serving-documentation">Building and Serving Documentation</h2>
+<p>To simplify working with documentation, the <code>docs/build_docs.sh</code> script provides several subcommands:</p>
 <ul>
-<li>Set up a Python 3 virtual environment  </li>
-<li>Clone the required repositories  </li>
-<li>Configure necessary directories  </li>
-<li>Build the documentation and launch a local web server  </li>
+<li><strong>serve</strong>: builds the documentation and starts a local server  </li>
+<li><strong>build</strong> (default if no subcommand is given): builds the documentation without serving  </li>
+<li><strong>deploy</strong>: builds the documentation and deploys it to GitHub Pages  </li>
+<li><strong>help</strong>: displays usage information</li>
 </ul>
-<p>Run the following command:</p>
+<h3 id="serve-the-documentation-locally">Serve the Documentation Locally</h3>
+<p>To generate and serve the documentation on <code>localhost:8000</code>, run:</p>
 <div class="highlight"><pre><span></span><code>./build_docs.sh<span class="w"> </span>serve
 </code></pre></div>
-<p>Once the process completes, you can access the documentation in your web browser at:</p>
+<p>Once the server is running, you can view the docs at:</p>
 <p><a href="http://localhost:8000/rdkcentral/rdk-halif-aidl/">http://localhost:8000/rdkcentral/rdk-halif-aidl/</a></p>
-<p>The site will automatically reload when you modify Markdown files within the <code>docs</code> directory.</p>
-<h4 id="building-without-serving">Building Without Serving</h4>
-<p>If you want to build the documentation without running the local web server, use:</p>
+<p>Any changes to the Markdown files in the <code>docs</code> directory will automatically reload in the browser.</p>
+<h3 id="building-without-serving">Building Without Serving</h3>
+<p>If you just want to build the static files (without starting a local server), run:</p>
+<div class="highlight"><pre><span></span><code>./build_docs.sh<span class="w"> </span>build
+</code></pre></div>
+<p>This generates the site into the <code>site</code> directory.</p>
+<hr />
+<h2 id="structuring-the-documentation">Structuring the Documentation</h2>
+<p>The file <strong><code>mkdocs.yml</code></strong>, located at the root of the repository, defines how your documentation is structured and navigated. Any additions, removals, or reorganizations of documentation pages require corresponding updates to <strong><code>mkdocs.yml</code></strong> to keep the site navigation current.</p>
+<p>For more information on naming conventions used, see <a href="../../halif/key_concepts/hal/hal_naming_conventions/">Key Concepts and Naming Conventions</a>.</p>
+<hr />
+<h2 id="deploying-documentation">Deploying Documentation</h2>
+<p>If you have the necessary permissions to deploy, follow these steps:</p>
+<p>Build the documentation and deploy to the <code>gh-pages</code> branch:</p>
+<div class="highlight"><pre><span></span><code>./build_docs.sh<span class="w"> </span>build
+./build_docs.sh<span class="w"> </span>deploy
+</code></pre></div>
+<p>The site will be published at:<br />
+<a href="https://rdkcentral.github.io/rdk-halif-aidl/">https://rdkcentral.github.io/rdk-halif-aidl/</a>  </p>
+<blockquote>
+<p><strong>Note</strong>: The published site’s resides in the <code>gh-pages</code> branch of this repository.</p>
+</blockquote>
+<h3 id="getting-help">Getting Help</h3>
+<p>At any time, you can see a list of available subcommands and usage information by running:</p>
 <div class="highlight"><pre><span></span><code>./build_docs.sh
 </code></pre></div>
-<h2 id="structuring-the-documentation">Structuring the Documentation</h2>
-<p>The <code>mkdocs.yml</code> file, located at the root of the repository, is crucial for defining the documentation's structure and navigation. This file dictates the hierarchy of pages and how they are linked. <strong>Any additions or removals of documentation pages require a corresponding update to </strong><strong><code>mkdocs.yml</code></strong><strong> to maintain proper navigation.</strong></p>
-<p>See <a href="../../halif/key_concepts/hal/hal_naming_conventions/">For information on the the naming conventions used see:-</a></p>
-<h2 id="deploying-documentation">Deploying Documentation</h2>
-<p>If you have the required permissions to deploy the documentation, use the <code>deploy_docs.sh</code> script. This will:</p>
-<ul>
-<li>Rebuild the documentation  </li>
-<li>Deploy the latest version  </li>
-</ul>
-<p>Run the following command:</p>
-<div class="highlight"><pre><span></span><code>./deploy_docs.sh
+<p>or</p>
+<div class="highlight"><pre><span></span><code>./build_docs.sh<span class="w"> </span><span class="nb">help</span>
 </code></pre></div>
-<p>The latest documentation will be deployed to GitHub Pages at <a href="https://rdkcentral.github.io/rdk-halif-aidl/">https://rdkcentral.github.io/rdk-halif-aidl/</a>. The website's source code resides in the <code>gh-pages</code> branch of the repository.</p>
+<hr />
 <h2 id="writing-style-and-guidelines">Writing Style and Guidelines</h2>
 <p>When contributing to the documentation, please adhere to the following guidelines:</p>
 <ul>
