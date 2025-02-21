@@ -71,7 +71,7 @@ The following
 | [**Wi-Fi**](../../../vsi/wifi/current/intro.md)           | All            | Wi-Fi connection control.                  | ⚠️ <span class="inline-warning">Warning</span>| ⚠️ <span class="inline-warning">Warning</span>| X |
 | [**Power Management**](../../../vsi/power_management/current/intro.md) | All | Power and energy efficiency control. | ⚠️ <span class="inline-warning">Warning</span>| ⚠️ <span class="inline-warning">Warning</span> | X |
 | [**Network Management**](../../../vsi/network_management/current/intro.md) | All | Network configuration and monitoring. | ⚠️ <span class="inline-warning">Warning</span>| ⚠️ <span class="inline-warning">Warning</span> | X |
-| [**Kernel**](../../../vsi/kernal/current/intro.md) | All | Network configuration and monitoring. | ⚠️ <span class="inline-warning">Warning</span>| ⚠️ <span class="inline-warning">Warning</span> | X |
+| [**Kernel**](../../../vsi/kernel/current/intro.md) | All | Network configuration and monitoring. | ⚠️ <span class="inline-warning">Warning</span>| ⚠️ <span class="inline-warning">Warning</span> | X |
 
 
 

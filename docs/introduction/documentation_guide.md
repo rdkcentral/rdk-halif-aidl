@@ -6,7 +6,7 @@ This guide outlines the process for contributing to and maintaining the document
 
 To work on the documentation locally:
 
-### **Install Python 3:**
+### Install Python
 
 Ensure Python 3 is installed and accessible on your system. Verify by running:
 
@@ -14,32 +14,34 @@ Ensure Python 3 is installed and accessible on your system. Verify by running:
 python3 --version
 ```
 
-### **Run the ****`install.sh`**** Script:**
+### Building and Serving Documentation
 
-Navigate to the `docs` directory and run the script, which installs the virtual environment for Python 3, clones required repositories, and sets up the necessary directories.
-After running the script, activate the virtual environment:
+To generate and serve the documentation locally, navigate to the `docs` directory and execute the `build_docs.sh` script. This script will:
+
+- Set up a Python 3 virtual environment  
+- Clone the required repositories  
+- Configure necessary directories  
+- Build the documentation and launch a local web server  
+
+Run the following command:
 
 ```bash
-cd ./docs
-./install.sh
-source ./activate.sh
+./build_docs.sh serve
 ```
 
-### **Build and Serve Documentation:**
+Once the process completes, you can access the documentation in your web browser at:
 
-Now you can run the `build_docs.sh` script, which builds the documentation and runs the server:
+[http://localhost:8000/rdkcentral/rdk-halif-aidl/](http://localhost:8000/rdkcentral/rdk-halif-aidl/)
+
+The site will automatically reload when you modify Markdown files within the `docs` directory.
+
+#### Building Without Serving
+
+If you want to build the documentation without running the local web server, use:
 
 ```bash
 ./build_docs.sh
 ```
-
-Alternatively, you can directly use MkDocs:
-
-```bash
-mkdocs serve
-```
-
-Access the documentation in your web browser at http://localhost:8000/rdkcentral/rdk-halif-aidl/. The site will automatically reload when changes are made to the Markdown files in the `docs` directory.
 
 ## Structuring the Documentation
 
@@ -47,9 +49,20 @@ The `mkdocs.yml` file, located at the root of the repository, is crucial for def
 
 See [For information on the the naming conventions used see:-](../halif/key_concepts/hal/hal_naming_conventions.md)
 
-## Automatic Deployment
+## Deploying Documentation
 
-A GitHub Actions workflow is configured to automatically deploy the latest documentation to GitHub Pages at [https://rdkcentral.github.io/rdk-halif-aidl/](https://rdkcentral.github.io/rdk-halif-aidl/). The website's source code resides in the `gh-pages` branch of the repository.
+If you have the required permissions to deploy the documentation, use the `deploy_docs.sh` script. This will:
+
+- Rebuild the documentation  
+- Deploy the latest version  
+
+Run the following command:
+
+```bash
+./deploy_docs.sh
+```
+
+The latest documentation will be deployed to GitHub Pages at [https://rdkcentral.github.io/rdk-halif-aidl/](https://rdkcentral.github.io/rdk-halif-aidl/). The website's source code resides in the `gh-pages` branch of the repository.
 
 ## Writing Style and Guidelines
 
