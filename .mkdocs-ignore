@@ -1,0 +1,4 @@
+# .mkdocs-ignore
+
+docs/external_content/
+docs/python_venv/

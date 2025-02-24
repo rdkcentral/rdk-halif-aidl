@@ -32,7 +32,7 @@ import com.rdk.hal.PropertyValue;
 interface IVideoDecoderController
 {
     /**
-	 * Starts the Video Decoder.
+     * Starts the Video Decoder.
      * 
      * The Video Decoder must be in a `READY` state before it can be started.
      * If successful the Video Decoder transitions to a `STARTING` state and then a `STARTED` state.
@@ -46,7 +46,7 @@ interface IVideoDecoderController
     void start();
  
     /**
-	 * Stops the Video Decoder.
+     * Stops the Video Decoder.
      * 
      * The decoder enters the `STOPPING` state and then any input data buffers that have been passed for decode but have
      * not yet been decoded are automatically freed.  This is effectively the same as a flush.
@@ -75,7 +75,7 @@ interface IVideoDecoderController
     boolean setProperty(in Property property, in PropertyValue propertyValue);
 
     /**
-	 * Pass an encoded buffer of video elementary stream data to the Video Decoder.
+     * Pass an encoded buffer of video elementary stream data to the Video Decoder.
      * 
      * The Video Decoder must be in a `STARTED` state.
      * Buffers can be either non-secure or secure to support SVP.
@@ -97,7 +97,7 @@ interface IVideoDecoderController
     boolean decodeBuffer(in long nsPresentationTime, in long bufferHandle);
 
     /**
-	 * Starts a flush operation on the decoder.
+     * Starts a flush operation on the decoder.
      * 
      * The Video Decoder must be in a `STARTED` state.
      * Any input data buffers that have been passed for decode but have
@@ -106,7 +106,7 @@ interface IVideoDecoderController
      * Any pending decoded video frames due for callback are returned to the video frame buffer pool.
      * The internal Video Decoder state is optionally reset.
      *
-     * @param[in] reset     When true, the internal Video Decoder state is fully reset back to its opened `READY` state.
+     * @param[in] reset - When true, the internal Video Decoder state is fully reset back to its opened `READY` state.
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
@@ -115,7 +115,7 @@ interface IVideoDecoderController
     void flush(in boolean reset);
 
     /**
-	 * Signals a discontinuity in the video stream.
+     * Signals a discontinuity in the video stream.
      * 
      * The Video Decoder must be in a state of `STARTED`.
      * Buffers that follow this call passed in `decodeBuffer()` shall be regarded
@@ -125,16 +125,16 @@ interface IVideoDecoderController
      * 
      * @pre Resource is in State::STARTED state.
      */
-	void signalDiscontinuity();
+    void signalDiscontinuity();
 
     /**
-	 * Signals an end of stream condition after the last AV buffer has been passed for decode.
+     * Signals an end of stream condition after the last AV buffer has been passed for decode.
      * 
      * The Video Decoder must be in a state of `STARTED`.
      * Any frames held by the decoder should continue to be decoded and output.
      * 
      * No more AV buffers are expected to be delivered to the Video Decoder after
-	 * `signalEOS()` has been called unless the decoder is first flushed or stopped and started again.
+     * `signalEOS()` has been called unless the decoder is first flushed or stopped and started again.
      * 
      * An `IVideoDecoderControllerListener.onFrameOutput()` callback with `FrameMetadata.endOfStream`
      * must be set to true after all video frames have been output.
@@ -143,38 +143,46 @@ interface IVideoDecoderController
      * 
      * @pre Resource is in State::STARTED state.
      */
-	void signalEOS();
-	
+    void signalEOS();
+    
     /**
-     * Sends codec specific data to initialise the Video Decoder.
-     * 
-     * The Video Decoder must be in a state of `STARTED`.
-     * 
-     * Some video media requires out-of-band codec specific data to describe the video stream which
-     * has been pre-filtered from the container or provided by the application.
-     * When required this function must be called before video frame buffers are passed to `decodeBuffer()`.
-     *
-	 * For H.264/AVC this is the AVCDecoderConfigurationRecord, starting with the configuration version byte.
-	 * @see ISO/IEC 14496-15:2022, 5.3.3.1.2
-	 * @see https://www.iso.org/standard/83336.html
-	 * 
-	 * For H.265/HEVC video, this is the HEVCDecoderConfigurationRecord, starting with the configuration version byte.
-     * @see ISO/IEC 23008-2
-	 * @see https://www.iso.org/standard/85457.html
-	 * 
-     * For AV1 video, this is the AV1CodecConfigurationRecord, starting with the first configuration version byte.
-     * @see https://aomediacodec.github.io/av1-isobmff/#av1codecconfigurationbox-section
-     * 
-     * @param[in] csdVideoFormat        Codec specific data format enum. Must match codec specified in `open()` call.
-     * @param[in] codecData             Byte array of codec data.  Must not be empty.
-     * 
-     * @returns boolean
-     * @retval true     The codec data was successfully set.
-     * @retval false    Invalid parameter or empty codec data array.
-     *
-     * @exception binder::Status EX_ILLEGAL_STATE 
-     * 
-     * @pre Resource is in State::STARTED state.
-	 */
-	boolean parseCodecSpecificData(in CSDVideoFormat csdVideoFormat, in byte[] codecData);
+    * Sends codec specific data to initialise the Video Decoder.
+    *
+    * This function sends codec-specific data to the Video Decoder for initialisation.
+    * The Video Decoder must be in the `STARTED` state before calling this function.
+    *
+    * Some video media requires out-of-band codec-specific data to describe the video stream.
+    * This data is pre-filtered from the container or provided by the application. When
+    * required, this function must be called before video frame buffers are passed to
+    * `decodeBuffer()`.
+    *
+    * The format of the `codecData` parameter depends on the `csdVideoFormat`:
+    *
+    * For `AVC_DECODER_CONFIGURATION_RECORD` (H.264/AVC), this is the
+    * `AVCDecoderConfigurationRecord`, starting with the configuration version byte.
+    * See ISO/IEC 14496-15:2022, 5.3.3.1.2 and
+    * https://www.iso.org/standard/83336.html for more details.
+    *
+    * For `HEVC_DECODER_CONFIGURATION_RECORD` (H.265/HEVC), this is the
+    * `HEVCDecoderConfigurationRecord`, starting with the configuration version byte.
+    * See ISO/IEC 23008-2 and https://www.iso.org/standard/85457.html for
+    * further information.
+    *
+    * For `AV1_DECODER_CONFIGURATION_RECORD` (AV1 video), this is the
+    * `AV1CodecConfigurationRecord`, starting with the first configuration version byte.
+    * See https://aomediacodec.github.io/av1-isobmff/#av1codecconfigurationbox-section
+    * for more details.
+    *
+    * @param[in] csdVideoFormat The codec specific data format. This must match the codec specified in the `open()` call.
+    * @param[in] codecData      The byte array of codec data. This must not be empty.
+    *
+    * @returns boolean
+    * @retval true  The codec data was successfully set.
+    * @retval false Invalid parameter or empty codec data array.
+    *
+    * @throws binder::Status `EX_ILLEGAL_STATE` if the resource is not in the `STARTED` state.
+    *
+    * @pre The resource must be in the `STARTED` state.
+    */
+    boolean parseCodecSpecificData(in CSDVideoFormat csdVideoFormat, in byte codecData);
 }
