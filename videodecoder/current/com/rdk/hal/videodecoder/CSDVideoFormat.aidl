@@ -28,21 +28,29 @@ package com.rdk.hal.videodecoder;
 @VintfStability
 @Backing(type="int")
 enum CSDVideoFormat {
-	/**
-	* For AVC_DECODER_CONFIGURATION_RECORD H.264/AVC this is the AVCDecoderConfigurationRecord, starting with the configuration version byte.
-	* @see ISO/IEC 14496-15:2022, 5.3.3.1.2
-	* @see https://www.iso.org/standard/83336.html
-	* 
-	* For HEVC_DECODER_CONFIGURATION_RECORD H.265/HEVC video, this is the HEVCDecoderConfigurationRecord, starting with the configuration version byte.
-	* @see ISO/IEC 23008-2
-	* @see https://www.iso.org/standard/85457.html
-	* 
-	* For AV1_DECODER_CONFIGURATION_RECORD AV1 video, this is the AV1CodecConfigurationRecord, starting with the first configuration version byte.
-	* @see https://aomediacodec.github.io/av1-isobmff/#av1codecconfigurationbox-section
-	**/
-	AVC_DECODER_CONFIGURATION_RECORD = 0,  /** H.264/AVC this is the AVCDecoderConfigurationRecord */
-	HEVC_DECODER_CONFIGURATION_RECORD = 1, /** H.265/HEVC video, this is the HEVCDecoderConfigurationRecord */
-	AV1_DECODER_CONFIGURATION_RECORD = 2   /** AV1 video, this is the AV1CodecConfigurationRecord */
-}
+    /**
+    * Enum representing the video format for decoder configuration records.
+    *
+    * This enum defines the different video formats associated with decoder configuration records.
+    * Each enum value corresponds to a specific video codec and its corresponding
+    * configuration record structure.  The configuration record starts with a version byte.
+    *
+    * For AVC_DECODER_CONFIGURATION_RECORD (H.264/AVC), this represents the
+    * AVCDecoderConfigurationRecord.  See ISO/IEC 14496-15:2022, 5.3.3.1.2 and
+    * https://www.iso.org/standard/83336.html for more details.
+    *
+    * For HEVC_DECODER_CONFIGURATION_RECORD (H.265/HEVC), this represents the
+    * HEVCDecoderConfigurationRecord. See ISO/IEC 23008-2 and
+    * https://www.iso.org/standard/85457.html for further information.
+    *
+    * For AV1_DECODER_CONFIGURATION_RECORD (AV1 video), this represents the
+    * AV1CodecConfigurationRecord. See
+    * https://aomediacodec.github.io/av1-isobmff/#av1codecconfigurationbox-section
+    * for more details.
+    */
+    AVC_DECODER_CONFIGURATION_RECORD = 0, /**< This value represents the AVCDecoderConfigurationRecord for H.264/AVC video. */
+    HEVC_DECODER_CONFIGURATION_RECORD = 1, /**< This value represents the HEVCDecoderConfigurationRecord for H.265/HEVC video. */
+    AV1_DECODER_CONFIGURATION_RECORD = 2  /**< This value represents the AV1CodecConfigurationRecord for AV1 video. */
+};
 
 
