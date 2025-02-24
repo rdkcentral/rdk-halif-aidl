@@ -32,7 +32,7 @@ enum VIC
     /**
      * Unspecified VIC.
      */
-    VIC0_UNAVAILABLE = 0;
+    VIC0_UNAVAILABLE = 0,
 
     /** 
      * |Format                 |Field Rate     |Picture|Pixel Aspect Ratio

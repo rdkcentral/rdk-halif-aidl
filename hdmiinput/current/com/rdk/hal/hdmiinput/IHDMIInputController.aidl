@@ -18,6 +18,9 @@
  */
 package com.rdk.hal.hdmiinput;
 import com.rdk.hal.hdmiinput.Property;
+import com.rdk.hal.hdmiinput.PropertyKVPair;
+import com.rdk.hal.hdmiinput.HDCPProtocolVersion;
+import com.rdk.hal.hdmiinput.HDCPStatus;
 import com.rdk.hal.PropertyValue;
 
 /** 
@@ -70,7 +73,7 @@ interface IHDMIInputController
      *
      * @see IHDMIInputControllerListener.onConnectionStateChanged()
      */
-    bool getConnectionState();
+    boolean getConnectionState();
 
     /**
 	 * Starts the HDMI input.

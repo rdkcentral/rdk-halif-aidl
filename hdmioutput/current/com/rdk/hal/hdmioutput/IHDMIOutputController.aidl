@@ -16,9 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
-import com.rdk.hal.videodecoder.Property;
-import com.rdk.hal.videodecoder.CSDVideoFormat;
+package com.rdk.hal.hdmioutput;
+import com.rdk.hal.hdmioutput.Property;
+import com.rdk.hal.hdmioutput.PropertyKVPair;
+import com.rdk.hal.hdmioutput.SPDInfoFrame;
+import com.rdk.hal.hdmioutput.HDCPStatus;
+import com.rdk.hal.hdmioutput.HDCPProtocolVersion;
 import com.rdk.hal.PropertyValue;
 
 /** 

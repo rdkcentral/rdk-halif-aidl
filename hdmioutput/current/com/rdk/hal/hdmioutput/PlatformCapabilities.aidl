@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmioutput;
-package com.rdk.hal.hdmioutput.FreeSync;
+import com.rdk.hal.hdmioutput.FreeSync;
  
 /** 
  *  @brief     HDMI output platform capabilities definition.

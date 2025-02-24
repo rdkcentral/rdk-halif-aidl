@@ -32,27 +32,27 @@ enum ContentType
 	/**
 	 * AVI InfoFrame ITC=0
 	 */
-	UNSPECIFIED = -1;
+	UNSPECIFIED = -1,
 
 	/**
 	 * AVI InfoFrame ITC=1, CN=0
 	 */
-	GRAPHICS = 0;
+	GRAPHICS = 0,
 
 	/**
 	 * AVI InfoFrame ITC=1, CN=1
 	 */
-	PHOTO = 1;
+	PHOTO = 1,
 
 	/**
 	 * AVI InfoFrame ITC=1, CN=2
 	 * CINEMA is also used to declare FilmMaker mode.
 	 */
-	CINEMA = 2;
+	CINEMA = 2,
 
 	/**
 	 * AVI InfoFrame ITC=1, CN=3
 	 * GAME provides a hint to the connected TV to enter a low latency state and/or switch to a Game picture mode.
 	 */
-	GAME = 3;
+	GAME = 3
 }

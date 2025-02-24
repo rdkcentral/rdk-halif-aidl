@@ -19,6 +19,12 @@
 package com.rdk.hal.hdmioutput;
 import com.rdk.hal.hdmioutput.HDMIVersion;
 import com.rdk.hal.hdmioutput.VIC;
+import com.rdk.hal.hdmioutput.PixelFormat;
+import com.rdk.hal.hdmioutput.HDROutputMode;
+import com.rdk.hal.hdmioutput.HDCPProtocolVersion;
+import com.rdk.hal.hdmioutput.Colorimetry;
+import com.rdk.hal.hdmioutput.ExtendedColorimetry;
+import com.rdk.hal.hdmioutput.AdditionalColorimetryExtension;
  
 /** 
  *  @brief     HDMI output port device capabilities definition.

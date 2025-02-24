@@ -17,8 +17,10 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmiinput;
+import com.rdk.hal.hdmiinput.SignalState;
 import com.rdk.hal.hdmiinput.HDCPStatus;
 import com.rdk.hal.hdmiinput.HDCPProtocolVersion;
+import com.rdk.hal.hdmiinput.VIC;
 
 /** 
  *  @brief     Controller callbacks listener interface from HDMI input.

@@ -21,6 +21,7 @@ import com.rdk.hal.hdmiinput.Capabilities;
 import com.rdk.hal.hdmiinput.IHDMIInputController;
 import com.rdk.hal.hdmiinput.Property;
 import com.rdk.hal.hdmiinput.PropertyKVPair;
+import com.rdk.hal.hdmiinput.HDMIVersion;
 import com.rdk.hal.hdmiinput.IHDMIInputControllerListener;
 import com.rdk.hal.hdmiinput.IHDMIInputEventListener;
 import com.rdk.hal.PropertyValue;
@@ -127,7 +128,7 @@ interface IHDMIInput
      *
      * @see setEDID()
      */
-    boolean getEDID(out bytes[] edid);
+    boolean getEDID(out byte[] edid);
     
     /**
      * Gets the default EDID for the HDMI input port for a given HDMI version.
@@ -147,7 +148,7 @@ interface IHDMIInput
      *
      * @see setEDID(), getCapabilities()
      */
-    boolean getDefaultEDID(in HDMIVersion version, out bytes[] edid);
+    boolean getDefaultEDID(in HDMIVersion version, out byte[] edid);
 
     /**
 	 * Opens the HDMI input port instance.
