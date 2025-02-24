@@ -29,10 +29,28 @@ package com.rdk.hal.hdmioutput;
 @Backing(type = "int")
 enum HDROutputMode
 {
-    AUTO = 0,   // Default - switches based on primary video content or SDR if no video is playing.
+    /**
+     * Auto switches based on primary video content or outputs SDR if no video is playing.
+     */
+    AUTO = 0,
 
+    /**
+     * Output video is encoded as HLG HDR.
+     */
     HLG = 1,
+
+    /**
+     * Output video is encoded as HDR10 HDR.
+     */
     HDR10 = 2,
+
+    /**
+     * Output video is encoded as HDR10+ HDR.
+     */
     HDR10_PLUS = 3,
+
+    /**
+     * Output video is encoded as Dolby Vision HDR.
+     */
     DOLBY_VISION = 4,
 }

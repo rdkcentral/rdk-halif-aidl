@@ -48,9 +48,9 @@ interface IHDMIOutput
     }
 
     /**
-     * Gets the capabilities for this HDMI Output.
+     * Gets the capabilities for this HDMI output.
      * 
-     * This function can be called at any time and is not dependant on any HDMI Output state.
+     * This function can be called at any time and is not dependant on any HDMI output state.
      * The returned value is not allowed to change between calls.
      *
      * @returns Capabilities parcelable.
@@ -96,7 +96,7 @@ interface IHDMIOutput
     State getState();
  
     /**
-	 * Opens the HDMI Output port instance.
+	 * Opens the HDMI output port instance.
      * 
      * If successful the HDMI output transitions to an `OPENING` state and then a `READY` state
      * which is notified to any registered `IHDMIOutputEventListener` interfaces.
@@ -104,30 +104,33 @@ interface IHDMIOutput
      * Controller related callbacks are made through the `IHDMIOutputControllerListener`
      * passed into the call.
      * 
-     * The returned `IHDMIOutputController` interface is used by the client to feed data buffers
-     * for decode and manage the decoding flow.
-     *
+     * The `IHDMIOutputControllerListener.onHotPlugDetectStateChanged()` callback always fires
+     * during the `OPENING` state to reflect the current hot plug state.
+     * 
      * If the client that opened the `IHDMIOutputController` crashes,
-     * then the `IHDMIOutputController` has `stop()` and `close()` implicitly called to perform clean up.
+     * then the `IHDMIOutputController.stop()` and `close()` functions are implicitly called to perform clean up.
      *
      * @param[in] hdmiOutputControllerListener    Listener object for controller callbacks.
      *
-     * @returns IHDMIOutputController or null if the codec or the requested secure mode is not supported.
+     * @returns IHDMIOutputController or null if the parameter is invalid.
      * 
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
      * @pre Resource is in State::CLOSED state.
      * 
-     * @see IHDMIOutputController, IHDMIOutputController.close(), registerEventListener()
+     * @see IHDMIOutputController, close(), registerEventListener()
      */
     @nullable IHDMIOutputController open(in IHDMIOutputControllerListener hdmiOutputControllerListener);
 
     /**
-     * Closes the HDMI Output.
+     * Closes the HDMI output.
      *
-     * The HDMI Output must be in a `READY` state before it can be closed.
-     * If successful the video decoder transitions to a `CLOSING` state and then a `CLOSED` state.
+     * The HDMI output must be in a `READY` state before it can be closed.
+     * If successful the HDMI output transitions to a `CLOSING` state and then a `CLOSED` state.
      * Then `onStateChanged(CLOSING, CLOSED)` will be notified on any registered event listener interfaces.
+     *
+     * The `hdmiOutputController` parameter must be the same instance returned from the `open()` function
+     * otherwise `false` is returned.
      *
      * @param[in] hdmiOutputController     Instance of the IHDMIOutputController.
      *
@@ -142,7 +145,7 @@ interface IHDMIOutput
     boolean close(in IHDMIOutputController hdmiOutputController);
 
     /**
-	 * Registers a HDMI Output event listener.
+	 * Registers a HDMI output event listener.
      * 
      * An `IHDMIOutputEventListener` can only be registered once and will fail on subsequent
      * registration attempts.
@@ -158,7 +161,7 @@ interface IHDMIOutput
     boolean registerEventListener(in IHDMIOutputEventListener hdmiOutputEventListener);
 
     /**
-	 * Unregisters a HDMI Output event listener.
+	 * Unregisters a HDMI output event listener.
      * 
      * @param[in] hdmiOutputEventListener	    Listener object for event callbacks.
      *

@@ -26,7 +26,7 @@ package com.rdk.hal.hdmioutput;
  */
  
 @VintfStability
-@Backing(type = "int")
+@Backing(type = "byte")
 enum SPDSource
 {
     /**

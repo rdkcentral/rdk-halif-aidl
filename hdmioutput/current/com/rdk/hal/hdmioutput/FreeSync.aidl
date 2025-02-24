@@ -19,7 +19,7 @@
 package com.rdk.hal.hdmioutput;
  
 /** 
- *  @brief     HDMI AFD enum.
+ *  @brief     HDMI AMD FreeSync enum.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Amit Patel
@@ -27,30 +27,25 @@ package com.rdk.hal.hdmioutput;
  
 @VintfStability
 @Backing(type = "int")
-enum AFD
+enum FreeSync
 {
 	/**
-	 * Unspecified - AVI InfoFrame A0=0
+	 * No FreeSync support.
 	 */
-	UNSPECIFIED = -1,
+	UNSUPPORTED = 0,
 
 	/**
-	 * Unspecified - AVI InfoFrame A0=1, R=1000b
+	 * AMD FreeSync
 	 */
-	SAME_AS_PICTURE = 8,
+	FREESYNC = 1,
 
 	/**
-	 * Unspecified - AVI InfoFrame A0=1, R=1001b
+	 * AMD FreeSync Premium
 	 */
-	CENTER_4_3 = 9,
+	FREESYNC_PREMIUM = 2,
 
 	/**
-	 * Unspecified - AVI InfoFrame A0=1, R=1010b
+	 * AMD FreeSync Premium Pro
 	 */
-	CENTER_16_9 = 10,
-
-	/**
-	 * Unspecified - AVI InfoFrame A0=1, R=1011b
-	 */
-	CENTER_14_9 = 11,
+	FREESYNC_PREMIUM_PRO = 3
 }

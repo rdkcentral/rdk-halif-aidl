@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.hdmioutput;
+package com.rdk.hal.hdmiinput;
  
 /** 
  *  @brief     HDMI Input Signal State enumeration.
@@ -30,22 +30,35 @@ package com.rdk.hal.hdmioutput;
 enum SignalState
 {
     /**
-     * Unknown
+     * Unknown signal state.
      */
-    UNKNOWN = 0x00,
+    UNKNOWN = -1,
 
     /**
-     * @brief This enumeration defines the type of HDMI signal status.
+     * No signal detected.
+     * 
+     * HDMI source device may be disconnected, powered off or in standby.
      */
-    typedef enum _dsHdmiInSignalStatus_t
-{
-    dsHDMI_IN_SIGNAL_STATUS_NONE = -1,    /*!< HDMI input signal status NONE. Default state upon start up */
-    dsHDMI_IN_SIGNAL_STATUS_NOSIGNAL,     /*!< HDMI input No signal signal status. No device connected */
-    dsHDMI_IN_SIGNAL_STATUS_UNSTABLE,     /*!< HDMI input unstable signal status. This is normally a transitional state,  */
-    /*!< but can remain here due to some faults on HDMI Source / Cable */
-    dsHDMI_IN_SIGNAL_STATUS_NOTSUPPORTED, /*!< HDMI input not supported signal status */
-    /*!< e.g. The sink device does not support the incoming HDMI In signal from source */
-    dsHDMI_IN_SIGNAL_STATUS_STABLE,       /*!< HDMI input Stable signal status are presented on plane */
-    dsHDMI_IN_SIGNAL_STATUS_MAX           /*!< Out of range  */
-} dsHdmiInSignalStatus_t;
+    NO_SIGNAL = 0,
+
+    /**
+     * Unstable signal detected.
+     * 
+     * Potential problem with cable, cable connection, port or transitionally during start up.
+     */
+    UNSTABLE = 1,
+
+    /**
+     * Unsupported signal detected.
+     * 
+     * An aspect of the incoming signal is out of range of the HDMI port capabilities.
+     * e.g. resolution, color depth, frame rate.
+     */
+    NOT_SUPPORTED = 2,
+
+    /**
+     * A stable and supported signal is detected and locked.
+     */
+    LOCKED = 3,
+
 }

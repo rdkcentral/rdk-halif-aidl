@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.hdmioutput;
+package com.rdk.hal.hdmiinput;
  
 /** 
  *  @brief     HDCP status type enum.
@@ -35,10 +35,22 @@ enum HDCPStatus
 	UNKNOWN = -1,
 
 	/**
-	 *
+	 * The connection is unauthenticated.
 	 */
 	UNAUTHENTICATED = 0,
+
+	/**
+	 * HDCP authentication is in progress.
+	 */
 	AUTHENTICATION_IN_PROGRESS = 1,
-	AUTHENTICATION_FAILURE = 2,		// Revoked keys???  Timed out???   No HDCP support???
+	
+	/**
+	 * HDCP authentication failed.
+	 */
+	AUTHENTICATION_FAILURE = 2,
+	
+	/**
+	 * HDCP is successfully authenticated.
+	 */
 	AUTHENTICATED = 3,
 }

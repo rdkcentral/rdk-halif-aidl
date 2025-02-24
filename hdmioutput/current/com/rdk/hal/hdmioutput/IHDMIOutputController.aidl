@@ -32,19 +32,7 @@ import com.rdk.hal.PropertyValue;
 @VintfStability
 interface IHDMIOutputController
 {
-    /** FUNCTIONALITY TO BE INCLUDED
-     * 
-     * Configure port
-     * - aspect ratio setting from compositor
-     *   - fixed aspect ratio of the source video
-     *   - no stretching/zooming
-     *   - all pixels visible to fill frame
-     *   - HOW IS THIS USED on STBS???
-     * - audio - through IAudioOutputPort
-     * - AVI InfoFrame
-     * - HF-VSIF, DV-VSIF
-     * - Colorimetry+Pixel Format
-     * - AV Mute states based on HDCP auth - follow HDCP spec.
+    /** 
      * 
      * Host Information extracted by RDK MW
      *   - get entire EDID from HAL and parse in RDK MW
@@ -55,7 +43,7 @@ interface IHDMIOutputController
      * 
      * TODO: 1. Read HDCP spec to look for states listed.
      *       2. Create state diagram.
-     *		3. How recover from auth failure?   Customer can go in-out of standby.  RDK could close+reopen HDMI output.
+     *		 3. How recover from auth failure?   Customer can go in-out of standby.  RDK could close+reopen HDMI output.
      * 
      * TODO: Document in CEC how it uses the new HDMIOutput event onEDID() event.
      * What about HDCP events??? https://www.eetimes.com/the-nuts-and-bolts-of-hdcp/
@@ -66,18 +54,18 @@ interface IHDMIOutputController
 
     /**
      * Requirements
-     * 1. No re-auth expected on a VIC or color mode switch.
-     * 2. AVMUTE shall be asserted by HAL implementation, according the HDMI and HDCP specs.
-     * 3. When output to a 4:3 aspect ratio sink display (using a VIC code of 4:3 aspect ratio), 
-     *    the 16:9 composited graphics and video shall be letterboxed inside the 4:3 output frame.  
-     *    AFD code XXX shall be set to indicate 16:9 in 4:3 frame.
-     * 4. AUTO HDCP - immediately on device connection after open()
-     *    Define number of retries if negotiation protocol failures.
-     *    Define 2.x and 1.x negotation.
-     *    Always negotiate highest supported version.
-     * 5. Playback/decryption.
-     * 6. Key Revocation List for HDCP - vendor layer responsibility, updated only by firmware update. 
-     *    Handling SRMs delivered with content?
+     * HAL.HDMIOUTPUT.1. No re-auth expected on a VIC or color mode switch.
+     * HAL.HDMIOUTPUT.2. AVMUTE shall be asserted by HAL implementation, according the HDMI and HDCP specs.
+     * HAL.HDMIOUTPUT.3. When output to a 4:3 aspect ratio sink display (using a VIC code of 4:3 aspect ratio), 
+     *                   the 16:9 composited graphics and video shall be letterboxed inside the 4:3 output frame.  
+     *                   AFD code XXX shall be set to indicate 16:9 in 4:3 frame.
+     * HAL.HDMIOUTPUT.4. AUTO HDCP - immediately on device connection after open()
+     *                   Define number of retries if negotiation protocol failures.
+     *                   Define 2.x and 1.x negotation.
+     *                   Always negotiate highest supported version.
+     * HAL.HDMIOUTPUT.5. Playback/decryption.
+     * HAL.HDMIOUTPUT.6. Key Revocation List for HDCP - vendor layer responsibility, updated only by firmware update. 
+     *                   Handling SRMs delivered with content?
      */
 
     /**
@@ -92,7 +80,7 @@ interface IHDMIOutputController
      * 
      * @pre Resource is in State::READY state.
      * 
-     * @see IHDMIOutputController.stop(), IHDMIOutput.open(), IHDMIOutput.close()
+     * @see stop(), IHDMIOutput.open()
      */
     void start();
  
@@ -106,7 +94,7 @@ interface IHDMIOutputController
      * 
      * @pre Resource is in State::STARTED state.
      * 
-     * @see start()
+     * @see start(), IHDMIOutput.close()
      */
     void stop();
 
@@ -190,11 +178,30 @@ interface IHDMIOutputController
      */
     HDCPStatus getHDCPStatus();
     
-    // Can be set to null to remove SPD InfoFrame transmission.
-    // Not set after open().
+    /**
+     * Sets the source product description (SPD) InfoFrame data.
+     *
+     * If set to null, then no SPD InfoFrame is transmitted.
+     * The default is no SPD InfoFrame is defined or transmitted.
+     *
+     * @param[in] spdInfoFrame  SPD InfoFrame description.
+     *
+     * @pre The HDMI output must be in a `READY` or `STARTED` state.
+     * 
+     * @see getSPDInfoFrame()
+     */
     void setSPDInfoFrame(in @nullable SPDInfoFrame spdInfoFrame);
 
-    // Returns null if not set.
+    /**
+     * Gets the source product description (SPD) InfoFrame data.
+     *
+     * If null is returned, then no SPD InfoFrame is defined.
+     *
+     * @return SPDInfoFrame
+     *
+     * @pre The HDMI output must be in a `READY` or `STARTED` state.
+     *
+     * @see setSPDInfoFrame()
+     */
     @nullable SPDInfoFrame getSPDInfoFrame();
-
 }

@@ -16,10 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.hdmioutput;
+package com.rdk.hal.hdmiinput;
  
 /** 
- *  @brief     HDMI Colorimetry enum.
+ *  @brief     HDMI AMD FreeSync enum.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Amit Patel
@@ -27,26 +27,25 @@ package com.rdk.hal.hdmioutput;
  
 @VintfStability
 @Backing(type = "int")
-enum Colorimetry
+enum FreeSync
 {
 	/**
-	 * AVI InfoFrame C=0
+	 * No FreeSync support.
 	 */
-	NO_DATA = 0,
+	UNSUPPORTED = 0,
 
 	/**
-	 * AVI InfoFrame C=1
+	 * AMD FreeSync
 	 */
-	SMPTE_170M = 1,
+	FREESYNC = 1,
 
 	/**
-	 * AVI InfoFrame C=2
+	 * AMD FreeSync Premium
 	 */
-	ITU_R_BT709 = 2,
+	FREESYNC_PREMIUM = 2,
 
 	/**
-	 * AVI InfoFrame C=3
-	 * @see enum ExtendedColorimetry
+	 * AMD FreeSync Premium Pro
 	 */
-	EXTENDED_COLORIMETRY = 3,
+	FREESYNC_PREMIUM_PRO = 3
 }

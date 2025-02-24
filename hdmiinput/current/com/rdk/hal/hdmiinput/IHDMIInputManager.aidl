@@ -35,7 +35,7 @@ interface IHDMIInputManager
     const @utf8InCpp String serviceName = "HDMIInputManager";
 
     /**
-     * Gets the platform capabilities for HDMI Inputs.
+     * Gets the platform capabilities for HDMI inputs.
      *
      * This function can be called at any time.
      * The returned value is not allowed to change between calls.

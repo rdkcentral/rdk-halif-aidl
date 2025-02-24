@@ -16,8 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.hdmioutput;
- 
+package com.rdk.hal.hdmiinput;
+import com.rdk.hal.hdmiinput.FreeSync;
+
 /** 
  *  @brief     HDMI input platform capabilities definition.
  *  @author    Luc Kennedy-Lamb
@@ -29,7 +30,15 @@ package com.rdk.hal.hdmioutput;
 parcelable PlatformCapabilities
 {
 	/**
-	 * Defines the maximum number of HDMI input ports than can be open concurrently.
+	 * Defines the maximum number of HDMI input ports than can be concurrently started.
 	 */
-	int maxConcurrentOpenPorts;
+	int maximumConcurrentStartedPorts;
+
+	/**
+	 * Indicates type of AMD FreeSync supported by the platform.
+	 * `FreeSync.UNSUPPORTED` if not supported.
+	 * @see Capabilities.supportsFreeSync to identify which ports support FreeSync.
+	 */
+	FreeSync freeSync;
+
 }

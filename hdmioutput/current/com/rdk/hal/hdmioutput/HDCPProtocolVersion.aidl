@@ -30,17 +30,17 @@ package com.rdk.hal.hdmioutput;
 enum HDCPProtocolVersion
 {
 	/**
-	 * 
+	 * HDCP protocol is not supported or unknown.
 	 */
 	UNDEFINED = 0,
 
 	/**
-	 * 
+	 * HDCP protocol version 1.x
 	 */
 	VERSION_1_X = 1,
 
 	/**
-	 * 
+	 * HDCP protocol version 2.x
 	 */
 	VERSION_2_X = 2,
 }

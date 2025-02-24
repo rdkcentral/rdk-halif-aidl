@@ -16,9 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
-import com.rdk.hal.videodecoder.Property;
-import com.rdk.hal.videodecoder.CSDVideoFormat;
+package com.rdk.hal.hdmiinput;
+import com.rdk.hal.hdmiinput.Property;
 import com.rdk.hal.PropertyValue;
 
 /** 
@@ -32,38 +31,9 @@ import com.rdk.hal.PropertyValue;
 @VintfStability
 interface IHDMIInputController
 {
-    /** FUNCTIONALITY TO BE INCLUDED
-     * https://github.com/rdkcentral/rdk-halif-device_settings/blob/main/include/dsHdmiIn.h
+    /** 
      * 
-     * Configure port
-     * DONE - EDID HDMI version 1.4/2.1 (legacy switch) - change the EDID
-     * DONE - ALLM support - enable/disable in EDID
-     * DONE - VRR support - enable/disable in EDID
-     * DONE - ARC/eARC audio caps update to other HDMI ports. - check with Bijas.
-     * DONE - Dolby Audio signalling - check with Bijas
-     * DONE - ARC/eARC connections.
-     *      - ARC is detected over CEC by Thunder.
-     *      - eARC is detected by vendor layer and exposed as ARC/eARC audio port.
-     * 
-     *  DONE - aspect ratio setting from compositor
-     *   - fixed aspect ratio of the source video
-     *   - no stretching/zooming
-     *   - all pixels visible to fill frame
-     *   - HOW IS THIS USED on STBS???
-     * DONE - AVI InfoFrame
-     * DONE - HF-VSIF, DV-VSIF
-     * 
-     * Host Information extracted by RDK MW
-     *   - get entire EDID from HAL and parse in RDK MW
-     *   - includes getting host display video aspect ration/dimensions
-     *   - read HDR support
-     *   - read pixel formats, YUV/RGB/422/420/444 etc.
-     *   - HDMI/E-EDID version
-     * 
-     * TODO: 1. Create state diagram.
-     *		 2. How recover from auth failure?   Customer can go in-out of standby.  RDK could close+reopen HDMI output.
-     *       3. Refactor HDMI input/output to use a shared HDMI component with common definitions.
-     * 
+     * TODO: Create state diagrams for IHDMIInput and the HDCPStatus state machines.
      * TODO: Document in CEC how it uses the HDMIInput ports.
      * Diagram to show hot plug scenario - what events occurs and what action by RDK MW.
      * 
@@ -84,11 +54,11 @@ interface IHDMIInputController
 
     /**
      * Requirements
-     * 1. No re-auth expected on a VIC or color mode switch.
-     * 2. AVMUTE shall be adhered to by blanking the AV when asserted.
-     * 3. SVP when HDCP is engaged.
-     * 4. Starts in CLOSED state which is powered down, but CEC remains active.
-     * 5. Until an EDID is set, HPD is unasserted, port is unpowered and CEC is disabled.
+     * HAL.HDMIINPUT.1. No re-auth expected on a VIC or color mode switch.
+     * HAL.HDMIINPUT.2. AVMUTE shall be adhered to by blanking the AV when asserted.
+     * HAL.HDMIINPUT.3. SVP when HDCP is engaged.
+     * HAL.HDMIINPUT.4. Starts in CLOSED state which is powered down, but CEC remains active.
+     * HAL.HDMIINPUT.5. Until an EDID is set, HPD is unasserted, port is unpowered and CEC is disabled.
      */
 
     /**
@@ -110,11 +80,14 @@ interface IHDMIInputController
      * The HDMI input must be in a `READY` state before it can be started.
      * If successful the HDMI output transitions to a `STARTING` state and then a `STARTED` state.
      * 
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * The `IHDMIInputControllerListener.onSignalStateChanged()` callback is always fired during
+     * the `STARTING` state to indicate the current signal state.
+     *
+     * @exception binder::Status EX_ILLEGAL_STATE
      * 
      * @pre Resource is in State::READY state.
      * 
-     * @see IHDMIOutputController.stop(), IHDMIOutput.open(), IHDMIOutput.close()
+     * @see stop(), IHDMIInput.open()
      */
     void start();
  
@@ -125,7 +98,7 @@ interface IHDMIInputController
      * 
      * @pre Resource is in State::STARTED state.
      * 
-     * @see start()
+     * @see start(), IHDMIInput.close()
      */
     void stop();
 

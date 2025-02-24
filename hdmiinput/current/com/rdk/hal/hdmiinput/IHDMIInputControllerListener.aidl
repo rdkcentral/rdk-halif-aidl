@@ -36,9 +36,9 @@ oneway interface IHDMIInputControllerListener
      * Debouncing is peformed by the HAL and must be in a stable state before firing the event.
      * Always fires to reflect the current state during the `OPENING` state transition.
      *
-     * @param[in] state     Reflects the device connection state.
+     * @param[in] connectionState   Reflects the device connection state.
      */
-    void onConnectionStateChanged(in boolean state);
+    void onConnectionStateChanged(in boolean connectionState);
 
     /** 
      * Always fires to reflect the current signal state during the `STARTING` state transition.
@@ -106,32 +106,6 @@ oneway interface IHDMIInputControllerListener
     void onSPDInfoFrame(in byte[] data);
 
     /**
-     * MPEG Source (MS) InfoFrame event.
-     *
-     * The event fires on first received InfoFrame after the HDMI input port is in
-     * in a STARTED state, after a device connection or if the InfoFrame changes.
-     *
-     * @param[in] data  Array of data bytes holding the InfoFrame, starting with InfoFrame type code.
-     */
-    //void onMPEGSourceInfoFrame(in byte[] data); - TOO FAST as it can update on every frame.  Also not recommended.
-
-    /**
-     * NTSC VBI Source InfoFrame event.
-     *
-     * The event fires on first received InfoFrame after the HDMI input port is in
-     * in a STARTED state, after a device connection or if the InfoFrame changes.
-     *
-     * @param[in] data  Array of data bytes holding the InfoFrame, starting with InfoFrame type code.
-     */
-    // void onNTSCVBIInfoFrame(in byte[] data); -TOO FAST as it can update on every frame
-
-    /**
-     * DRMIF - Dynamic Range and Mastering InfoFrame
-     * Contains SDR/HDR EOTF and static metadata.
-     * Only fires on first received, on change to previous info frame or after a start().
-     */
-    
-    /**
      * Dynamic Range and Mastering (DRM) InfoFrame event.
      *
      * The event fires on first received InfoFrame after the HDMI input port is in
@@ -141,9 +115,6 @@ oneway interface IHDMIInputControllerListener
      */
     void onDRMInfoFrame(in byte[] data);
     
-    // void onHDRDynamicMetadataExtendedInfoFrame(in SPDInfoFrame spdInfoFrame); - TOO FAST as it can update on every frame.
-    // NOT NEEDED - void onGraphicsOverlayFlagExtendedInfoFrame(in SPDInfoFrame spdInfoFrame);
-
     /**
      * Vendor Specific InfoFrame (VSIF) event.
      *
@@ -158,7 +129,10 @@ oneway interface IHDMIInputControllerListener
     void onVendorSpecificInfoFrame(in byte[] data);
 
     /**
-     * Will be `HDCPProtocolVersion.UNDEFINED` protocol version until first authentication.
+     * HDCP status change event with protocol version information.
+     * 
+     * @param[in] hdcpStatus            The HDCP status.
+     * @param[in] hdcpProtocolVersion   The HDCP protocol version.
      */
     void onHDCPStatusChanged(in HDCPStatus hdcpStatus, in HDCPProtocolVersion hdcpProtocolVersion);
 }

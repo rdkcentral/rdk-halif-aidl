@@ -27,7 +27,7 @@ import com.rdk.hal.PropertyValue;
 import com.rdk.hal.State;
 
 /** 
- *  @brief     HDMI Input HAL interface.
+ *  @brief     HDMI Input HAL interface for a single port.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
@@ -50,7 +50,7 @@ interface IHDMIInput
     /**
      * Gets the capabilities for this HDMI input port.
      * 
-     * This function can be called at any time and is not dependant on any HDMI Input state.
+     * This function can be called at any time and is not dependant on any HDMI input state.
      * The returned value is not allowed to change between calls.
      *
      * @returns Capabilities parcelable.
@@ -64,7 +64,7 @@ interface IHDMIInput
      *
      * @returns PropertyValue or null if the property key is unknown.
      * 
-     * @see setProperty(), getPropertyMulti()
+     * @see IHDMIInputController.setProperty(), getPropertyMulti()
      */
     @nullable PropertyValue getProperty(in Property property);
  
@@ -78,7 +78,7 @@ interface IHDMIInput
      * 
      * @param[in,out] propertyKVList        Holds the properties to get and the values on return.
      *
-     * @returns boolean - true on success or false if any property keys are invalid.
+     * @returns boolean
      * @retval true     The property values were retrieved successfully.
      * @retval false    One or more property keys are invalid or the input array is empty.
      * 
@@ -158,23 +158,27 @@ interface IHDMIInput
      * Controller related callbacks are made through the `IHDMIInputControllerListener`
      * passed into the call.
      * 
+     * The `IHDMIInputControllerListener.onConnectionStateChanged()` callback is always fired during
+     * the `OPENING` state to indicate the current connected/disconnected state.
+     * 
      * The returned `IHDMIInputController` interface is used to control the HDMI input port interface
      * including starting and stopping the port for display.
      *
      * If the client that opened the `IHDMIInputController` crashes,
-     * then the `IHDMIInputController` has `stop()` and `close()` implicitly called to perform clean up.
+     * then the `IHDMIInputController.stop()` and `close()` functions are implicitly called to perform
+     * clean up.
      *
      * Once opened to a `READY` state the HDMI input port HPD line is asserted and CEC remains active.
      *
      * @param[in] hdmiInputControllerListener    Listener object for controller callbacks.
      *
-     * @returns IHDMIInputController or null if the port cannot be opened. e.g. No EDID set.
+     * @returns IHDMIInputController or null if the port cannot be opened - e.g. No EDID set.
      * 
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
      * @pre Resource is in State::CLOSED state.
      * 
-     * @see IHDMIInputController, IHDMIInputController.close(), registerEventListener()
+     * @see IHDMIInputController, close(), registerEventListener()
      */
     @nullable IHDMIInputController open(in IHDMIInputControllerListener hdmiInputControllerListener);
 
@@ -184,6 +188,9 @@ interface IHDMIInput
      * The HDMI input must be in a `READY` state before it can be closed.
      * If successful the HDMI input transitions to a `CLOSING` state and then a `CLOSED` state.
      * Then `onStateChanged(CLOSING, CLOSED)` will be notified on any registered event listener interfaces.
+     * 
+     * The `hdmiInputController` parameter must be the same instance returned from the `open()` function
+     * otherwise `false` is returned.
      * 
      * @param[in] hdmiInputController     Instance of the IHDMIInputController.
      *

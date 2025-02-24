@@ -16,12 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
-import com.rdk.hal.videodecoder.ErrorCode;
+package com.rdk.hal.hdmioutput;
 import com.rdk.hal.State;
 
 /** 
- *  @brief     Event callbacks listener interface from video decoder.
+ *  @brief     Event callbacks listener interface from HDMI output.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
@@ -37,6 +36,4 @@ oneway interface IHDMIOutputEventListener {
      * @param[in] newState              The new state that the decoder has transitioned to.
      */
     void onStateChanged(in State oldState, in State newState);
-
-TODO: add other listening events from controller lsitener.
 }

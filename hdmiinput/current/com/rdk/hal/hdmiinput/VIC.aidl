@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.hdmioutput;
+package com.rdk.hal.hdmiinput;
  
 /** 
  *  @brief     HDMI Video ID Code (VIC) enum.

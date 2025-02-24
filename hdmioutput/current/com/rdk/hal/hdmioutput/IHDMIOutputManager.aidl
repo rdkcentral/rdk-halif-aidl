@@ -17,9 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmioutput;
-import com.rdk.hal.hdmioutput.OperationalMode;
-import com.rdk.hal.hdmioutput.IHDMIOutput;
 import com.rdk.hal.hdmioutput.PlatformCapabilities;
+import com.rdk.hal.hdmioutput.IHDMIOutput;
 
 /** 
  *  @brief     HDMI Output Manager HAL interface.
@@ -35,7 +34,7 @@ interface IHDMIOutputManager
     const @utf8InCpp String serviceName = "HDMIOutputManager";
 
     /**
-     * Gets the platform capabilities for HDMI Outputs.
+     * Gets the platform capabilities for HDMI outputs.
      *
      * This function can be called at any time.
      * The returned value is not allowed to change between calls.
@@ -45,7 +44,7 @@ interface IHDMIOutputManager
     PlatformCapabilities getCapabilities();
 
     /**
-	 * Gets the platform list of HDMI Output IDs.
+	 * Gets the platform list of HDMI output IDs.
      * 
      * @returns IHDMIOutput.Id[]
      */
@@ -54,7 +53,7 @@ interface IHDMIOutputManager
     /**
 	 * Gets a HDMI output interface.
      *
-     * @param[in] hdmiOutputId	The ID of the video decoder.
+     * @param[in] hdmiOutputId	The ID of the HDMI output port instance.
      *
      * @returns IHDMIOutput or null if the ID is invalid.
      */

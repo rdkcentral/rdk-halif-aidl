@@ -35,10 +35,22 @@ enum HDCPStatus
 	UNKNOWN = -1,
 
 	/**
-	 *
+	 * The connection is unauthenticated.
 	 */
 	UNAUTHENTICATED = 0,
+
+	/**
+	 * HDCP authentication is in progress.
+	 */
 	AUTHENTICATION_IN_PROGRESS = 1,
-	AUTHENTICATION_FAILURE = 2,		// Revoked keys???  Timed out???   No HDCP support???
+
+	/**
+	 * HDCP authentication failed.
+	 */
+	AUTHENTICATION_FAILURE = 2,
+
+	/**
+	 * HDCP is successfully authenticated.
+	 */
 	AUTHENTICATED = 3,
 }

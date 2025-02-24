@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
+package com.rdk.hal.hdmioutput;
  
 /** 
  *  @brief     HDMI output properties used in property get/set functions.
@@ -50,7 +50,7 @@ enum Property
 	VIC = 1,
 
 	/**
-	 * Content type as defined by CTA861-G.
+	 * Content type as defined by CTA-861.
 	 * AVI InfoFrame ITC and CN0..1
 	 *
 	 * Type: Integer - enum ContentType value.

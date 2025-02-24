@@ -30,10 +30,27 @@ package com.rdk.hal.hdmioutput;
 enum PixelFormat
 {
 	/**
+	 * RGB 4:4:4 pixel format.
+	 * AVI InfoFrame Y=0
 	 */
-	RGB = 0;			// Y=0
-	YCBCR_422= 1;		// Y=1
-	YCBCR_444= 2;		// Y=2
-	YCBCR_420= 3;		// Y=3
+	RGB_444 = 0,
+
+	/**
+	 * YCbCr 4:2:2 pixel format.
+	 * AVI InfoFrame Y=1
+	 */
+	YCBCR_422 = 1,
+
+	/**
+	 * YCbCr 4:4:4 pixel format.
+	 * AVI InfoFrame Y=2
+	 */
+	YCBCR_444 = 2,
+
+	/**
+	 * YCbCr 4:2:0 pixel format.
+	 * AVI InfoFrame Y=3
+	 */
+	YCBCR_420 = 3
 }
 

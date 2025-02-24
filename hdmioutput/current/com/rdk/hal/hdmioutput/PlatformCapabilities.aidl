@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmioutput;
+package com.rdk.hal.hdmioutput.FreeSync;
  
 /** 
  *  @brief     HDMI output platform capabilities definition.
@@ -34,4 +35,11 @@ parcelable PlatformCapabilities
 	 * This can be 0.0 to remain undefined and determined by the app or RDK middleware.
 	 */
 	double nativeFrameRate;
+
+	/**
+	 * Indicates type of AMD FreeSync supported by the platform.
+	 * `FreeSync.UNSUPPORTED` if not supported.
+	 * @see Capabilities.supportsFreeSync to identify which ports support FreeSync.
+	 */
+	FreeSync freeSync;
 }

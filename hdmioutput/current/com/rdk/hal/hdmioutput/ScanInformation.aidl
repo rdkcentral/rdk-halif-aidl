@@ -29,8 +29,28 @@ package com.rdk.hal.hdmioutput;
 @Backing(type = "int")
 enum ScanInformation
 {
-    NO_DATA = 0,   // Default
+    /**
+     * No scan information.
+     * AVI InfoFrame S=0
+     */
+    NO_DATA = 0,
+
+    /**
+     * Composed for an overscanned display.
+     * AVI InfoFrame S=1
+     */
     OVERSCAN = 1,
+
+    /**
+     * Composed for an underscanned display.
+     * All active pixels and lines are displayed.
+     * AVI InfoFrame S=2
+     */
     UNDERSCAN = 2,
+
+    /**
+     * Reserved.
+     * AVI InfoFrame S=3
+     */
     RESERVED = 3
 }

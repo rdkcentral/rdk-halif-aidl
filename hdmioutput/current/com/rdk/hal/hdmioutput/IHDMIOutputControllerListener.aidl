@@ -31,50 +31,45 @@ import com.rdk.hal.hdmioutput.HDCPProtocolVersion;
 oneway interface IHDMIOutputControllerListener 
 {
     /** 
+     * Device hotplug state changed event.
+     * 
      * Always fires to reflect the state during `OPENING` state transition.
      * Fires on any HPD state change while `STARTED`.
      * Debouncing is peformed by HAL - must be in a stable state. 
      */
     void onHotPlugDetectStateChanged(in boolean state);
 
-    /** 
-     * Always fires to reflect the state during `OPENING` state transition.
-     * Fires on any RX sense state change while `STARTED`.
-     * Debouncing is peformed by HAL - must be in a stable state. 
-     * For PHY level detection of a connected sink device (can be used if HPD is unreliable)
-     * TODO: Consider using this under-the-hood in HAL, and wrap up into HPD state change. - AmitP is checking.
-     */
-//    void onRxSenseStateChanged(in boolean state);
-// Recommend that RxSense can be used to help drive EDID reading and HDCP negotiation.
-
     /**
-     * Fired AFTER the frame rate has been changed by a VIC code assignment.
-     * Used to event back to Netflix for FRM - see videoOutputStatusChanged and Native Frame Rate in Netflix docs. 
-     * Must be fired after the AVMUTE has been cleared after a VIC change.
+     * Frame rate changed event.
+     * 
+     * The callback fires after the frame rate has been changed on the HDMI output port.
+     * Also used to propogate an event back to Netflix for native frame rate support.
+     * Must be fired after the AVMUTE has been cleared after a frame rate change.
+     * @see videoOutputStatusChanged and Native Frame Rate in Netflix docs. 
      */
     void onFrameRateChanged();
 
     /**
-     * Will be `HDCPProtocolVersion.UNDEFINED` protocol version until first authentication.
+     * HDCP status change event with protocol version information.
+     *
+     * @param[in] hdcpStatus            The HDCP status.
+     * @param[in] hdcpProtocolVersion   The HDCP protocol version.
      */
     void onHDCPStatusChanged(in HDCPStatus hdcpStatus, in HDCPProtocolVersion hdcpProtocolVersion);
 
     /**
-     * Callback once the E-EDID of the connected HDMI sink device has been fully read.
+     * Event callback for the E-EDID of the connected HDMI sink device after it has been read.
      *
      * The HDMI output must be in a `READY` or `STARTED` state with a sink device connected.
-     * The E-EDID may be dynamically refreshed in response to XXXX while in a connected state.
+     * An E-EDID is expected to be read and provided in this callback after
+     * `onHotPlugDetectStateChanged(true)` has been reported.
      *
-     * @param[in] edid          Array of bytes representing the full list of E-EDID data blocks.
+     * @param[in] edid          Array of bytes representing the full set of E-EDID data blocks.
      *
      * @pre Resource is in State::READY or State::STARTED state.
      *
      * @see IHDMIOutput.open()
-     * @see CTA-861-I
-     */
-
-    /**
-     * Can be called at any time after `onHotPlugDetectStateChanged(true)`.
+     * @see CTA-861
      */
     void onEDID(in byte[] edid);
 

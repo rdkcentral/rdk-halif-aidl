@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
+package com.rdk.hal.hdmiinput;
  
 /** 
  *  @brief     HDMI input properties used in property get/set functions.
@@ -38,57 +38,12 @@ enum Property
 	RESOURCE_ID = 0,
 
 	/**
-	 * Video Identification Code (VIC).
-	 * AVI InfoFrame VIC0..7
-	 * The HDMI output signal is driven the specified VIC resolution, frame rate, etc.
-	 * The AVMUTE should be controlled according to HDMI spec on VIC changes.
-	 *
-	 * Type: Integer - enum VIC
-	 * Default: VIC.VIC0_UNAVAILABLE
-	 * Access: Read-write.
-	 */
-	VIC = 1,
-
-	/**
-	 * Content type as defined by CTA861-G.
-	 * AVI InfoFrame ITC and CN0..1
-	 *
-	 * Type: Integer - enum ContentType value.
-	 * Default: ContentType.UNSPECIFIED on open()
-	 * Access: Read-write.
-	 */
-	CONTENT_TYPE = 2,
-
-	/**
-	 * Active format description / active portion aspect ratio.
-	 * AVI InfoFrame A0 and R0..3
-	 *
-	 * Type: Integer - enum AFD value.
-	 * Default: AFD.UNSPECIFIED on open()
-	 * Access: Read-write.
-	 */
-	AFD = 3,
-
-	/**
-	 * HDR output mode.
-	 * Allows the HDR output format signalling to be fixed and the video content to be converted to the output format.
-	 *
-	 * Type: Integer - enum HDROutputMode value.
-	 * Default: HDROutputMode.AUTO on open()
-	 * Access: Read-write.
-	 */
-	HDR_OUTPUT_MODE = 4,
-
-
-	/**
 	 * Count of HDMI packet errors detected, since being started.
-	 * This metric is reset on open() and flush() calls.
+	 * This metric is reset on open() calls.
 	 *
 	 * Type: Integer
 	 *  -1 means this metric is not yet implemented by the vendor.
 	 * Access: Read-only.
 	 */
 	METRIC_PACKET_ERRORS = 1000,
-
-	symbol loss?? See BCM HDMI input.
 }

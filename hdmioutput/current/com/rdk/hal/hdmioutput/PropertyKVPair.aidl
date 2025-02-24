@@ -16,12 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
-import com.rdk.hal.videodecoder.Property;
+package com.rdk.hal.hdmioutput;
+import com.rdk.hal.hdmioutput.Property;
 import com.rdk.hal.PropertyValue;
  
 /** 
- *  @brief     Key-value pair for video decoder properties.
+ *  @brief     Key-value pair for HDMI output properties.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler

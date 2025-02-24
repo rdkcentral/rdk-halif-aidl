@@ -19,6 +19,7 @@
 package com.rdk.hal.hdmiinput;
 import com.rdk.hal.hdmiinput.HDMIVersion;
 import com.rdk.hal.hdmiinput.VIC;
+import com.rdk.hal.hdmiinput.HDCPProtocolVersion;
  
 /** 
  *  @brief     HDMI input port device capabilities definition.
@@ -32,7 +33,7 @@ parcelable Capabilities
 {
 	/**
 	 * The array of HDMI versions the port supports.
-	 * Specifying more than one HDMI version indictaes support for switching between versions.
+	 * Specifying more than one HDMI version indicates support for switching between versions.
 	 */
 	HDMIVersion[] supportedVersions;
 
@@ -42,52 +43,53 @@ parcelable Capabilities
 	VIC[] supportedVICs;
 
 	/**
-	 * The array of HDCP protocol versions the HDMI output port supports.
+	 * The array of HDCP protocol versions the HDMI input port supports.
 	 */
 	HDCPProtocolVersion[] supportedHDCPProtocolVersions;
 
 	/**
-	 * Indicates support for stereo video.
+	 * Indicates support for stereo (3D) video.
 	 */
 	boolean supports3D;
 
 	/**
-	 * Indicates support for fixed rate link.
+	 * Indicates support for fixed rate link (FRL).
 	 */
 	boolean supportsFRL;
 
 	/**
-	 * Indicates support for HDMI variable refresh rate.
+	 * Indicates support for variable refresh rate (VRR).
 	 */
 	boolean supportsVRR;
 
 	/**
 	 * Indicates support for AMD FreeSync.
+	 * @see PlatformCapabilities.freeSync to determine the type of FreeSync.
 	 */
 	boolean supportsFreeSync;
 
 	/**
-	 * Indicates support quick media switching (VRR with M_CONST).
+	 * Indicates support quick media switching (QMS is VRR with M_CONST).
 	 */
 	boolean supportsQMS;
 
 	/**
-	 * Indicates support for automatic low latency mode.
+	 * Indicates support for automatic low latency mode (ALLM).
 	 */
 	boolean supportsALLM;
 
 	/**
-	 * Indicates support for quick frame transport (Fast VActive).
+	 * Indicates support for quick frame transport (QFT is aka Fast VActive).
 	 */
 	boolean supportsQFT;
 
 	/**
-	 * Indicates support for audio return channel.
+	 * Indicates support for audio return channel (ARC).
 	 */
 	boolean supportsARC;
 
 	/**
-	 * Indicates support for enhanced audio return channel.
+	 * Indicates support for enhanced audio return channel (eARC).
 	 */
 	boolean supportsEARC;
 }

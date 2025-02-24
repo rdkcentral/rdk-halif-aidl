@@ -84,15 +84,38 @@ parcelable Capabilities
 	PixelFormat[] supportedPixelFormats;
 
 	/**
-	 * Whether the port supports RX sense to detect whether a HDMI sink is connected.
-	 * Can be used as an alternative to hot plug detect (HPD) if unreliable.
+	 * Indicates support for stereo (3D) video.
 	 */
-	boolean supportsRXSense;
+	boolean supports3D;
 
-    boolean supports3D;     // 3D video formats
-    boolean supportsFRL;    // Fixed rate link
-	boolean supportsVRR;	// Variable refresh rate
-	boolean supportsQMS;    // Quick media switching (VRR with M_CONST)
-	boolean supportsFVA;	// Fast Vactive (Quick frame transport)
-    boolean supportsALLM;   // Auto low latency mode
+	/**
+	 * Indicates support for fixed rate link (FRL).
+	 */
+	boolean supportsFRL;
+
+	/**
+	 * Indicates support for variable refresh rate (VRR).
+	 */
+	boolean supportsVRR;
+
+	/**
+	 * Indicates support for AMD FreeSync.
+	 * @see PlatformCapabilities.freeSync to determine the type of FreeSync.
+	 */
+	boolean supportsFreeSync;
+
+	/**
+	 * Indicates support quick media switching (QMS is VRR with M_CONST).
+	 */
+	boolean supportsQMS;
+
+	/**
+	 * Indicates support for automatic low latency mode (ALLM).
+	 */
+	boolean supportsALLM;
+
+	/**
+	 * Indicates support for quick frame transport (QFT is Fast VActive).
+	 */
+	boolean supportsQFT;
 }
