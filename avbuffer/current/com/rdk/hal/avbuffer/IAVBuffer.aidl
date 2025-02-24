@@ -54,8 +54,6 @@ interface IAVBuffer
     /**
      * Creates a video memory buffer pool of a secure or non-secure type from which allocations can be made.
      * 
-     * The size must be a multiple of 8 bytes.
-     * 
      * If the `videoDecoderId` is invalid then the `EX_ILLEGAL_ARGUMENT` exception status is returned.
      * 
      * It the platform has exhausted all available memory from the requested heap then the exception status
@@ -63,6 +61,7 @@ interface IAVBuffer
      *
      * @param[in] secureHeap            Indicates if the pool is secure.
      * @param[in] videoDecoderIndex     The index of the video decoder resource.
+     * @param[in] listener              Listener for space available callbacks.
      * 
      * @returns Pool
      *
@@ -84,13 +83,12 @@ interface IAVBuffer
      * It the platform has exhausted all available memory from the requested heap then the exception status
      * `EX_SERVICE_SPECIFIC` with `HALError::OUT_OF_MEMORY` is returned.
      * 
-     * The size must be a multiple of 8 bytes.
-     * 
      * If the `audioDecoderId` is invalid then the `EX_ILLEGAL_ARGUMENT` exception status is returned.
      *
      * @param[in] secureHeap            Indicates if the pool is secure.
      * @param[in] audioDecoderId        The ID of the audio decoder resource.
-     * 
+     * @param[in] listener              Listener for space available callbacks.
+     *
      * @returns Pool
      *
      * @exception binder::Status EX_ILLEGAL_ARGUMENT

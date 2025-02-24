@@ -16,23 +16,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
+package com.rdk.hal.hdmioutput;
  
 /** 
- *  @brief     Video decoder codec type definitions.
+ *  @brief     HDMI pixel format enum.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
- *  @author    Douglas Adler
+ *  @author    Amit Patel
  */
  
 @VintfStability
-@Backing(type="int")
-enum Codec {   
-    MPEG = 1,
-    H264 = 2,
-    H265 = 3,
-    VP9 = 4,
-    AV1 = 5, 
-
-    // TODO: add profile and level where relevant   
+@Backing(type = "int")
+enum PixelFormat
+{
+	/**
+	 */
+	RGB = 0;			// Y=0
+	YCBCR_422= 1;		// Y=1
+	YCBCR_444= 2;		// Y=2
+	YCBCR_420= 3;		// Y=3
 }
+

@@ -17,22 +17,26 @@
  * limitations under the License.
  */
 package com.rdk.hal.videodecoder;
- 
+import com.rdk.hal.videodecoder.ErrorCode;
+import com.rdk.hal.State;
+
 /** 
- *  @brief     Video decoder codec type definitions.
+ *  @brief     Event callbacks listener interface from video decoder.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
  
 @VintfStability
-@Backing(type="int")
-enum Codec {   
-    MPEG = 1,
-    H264 = 2,
-    H265 = 3,
-    VP9 = 4,
-    AV1 = 5, 
+oneway interface IHDMIOutputEventListener {
+ 
+    /**
+	 * Callback when the HDMI output has transitioned to a new state.
+     *
+     * @param[in] oldState	            The state that the decoder has transitioned from.
+     * @param[in] newState              The new state that the decoder has transitioned to.
+     */
+    void onStateChanged(in State oldState, in State newState);
 
-    // TODO: add profile and level where relevant   
+TODO: add other listening events from controller lsitener.
 }

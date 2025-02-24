@@ -16,23 +16,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
+package com.rdk.hal.hdmioutput;
+import com.rdk.hal.hdmioutput.SPDSource;
  
 /** 
- *  @brief     Video decoder codec type definitions.
+ *  @brief     Source product description (SPD) InfoFrame
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
- *  @author    Douglas Adler
+ *  @author    Amit Patel
  */
- 
-@VintfStability
-@Backing(type="int")
-enum Codec {   
-    MPEG = 1,
-    H264 = 2,
-    H265 = 3,
-    VP9 = 4,
-    AV1 = 5, 
 
-    // TODO: add profile and level where relevant   
+@VintfStability
+parcelable SPDInfoFrame
+{
+    // 7-bit ASCII - null unused bytes
+    byte[8] vendorName;
+
+    // 7-bit ASCII - null unused bytes
+    byte[16] productDescription;
+
+    SPDSource spdSourceInformation;
 }

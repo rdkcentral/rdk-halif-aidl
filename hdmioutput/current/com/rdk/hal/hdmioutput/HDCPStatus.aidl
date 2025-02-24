@@ -16,23 +16,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
+package com.rdk.hal.hdmioutput;
  
 /** 
- *  @brief     Video decoder codec type definitions.
+ *  @brief     HDCP status type enum.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
- *  @author    Douglas Adler
+ *  @author    Amit Patel
  */
  
 @VintfStability
-@Backing(type="int")
-enum Codec {   
-    MPEG = 1,
-    H264 = 2,
-    H265 = 3,
-    VP9 = 4,
-    AV1 = 5, 
+@Backing(type = "int")
+enum HDCPStatus
+{
+	/**
+	 * Not connected, not powered.
+	 */
+	UNKNOWN = -1,
 
-    // TODO: add profile and level where relevant   
+	/**
+	 *
+	 */
+	UNAUTHENTICATED = 0,
+	AUTHENTICATION_IN_PROGRESS = 1,
+	AUTHENTICATION_FAILURE = 2,		// Revoked keys???  Timed out???   No HDCP support???
+	AUTHENTICATED = 3,
 }

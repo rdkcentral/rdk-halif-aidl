@@ -17,22 +17,22 @@
  * limitations under the License.
  */
 package com.rdk.hal.videodecoder;
+import com.rdk.hal.videodecoder.Property;
+import com.rdk.hal.PropertyValue;
  
 /** 
- *  @brief     Video decoder codec type definitions.
+ *  @brief     Key-value pair for video decoder properties.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
-@VintfStability
-@Backing(type="int")
-enum Codec {   
-    MPEG = 1,
-    H264 = 2,
-    H265 = 3,
-    VP9 = 4,
-    AV1 = 5, 
 
-    // TODO: add profile and level where relevant   
+@VintfStability
+parcelable PropertyKVPair{
+ 
+    /* Property enum key. */
+    Property property;  
+ 
+    /* Property value. */
+    PropertyValue propertyValue;
 }

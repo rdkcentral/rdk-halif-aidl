@@ -99,6 +99,9 @@ interface IAudioSinkController {
      * The audio sink may refuse the buffer if its internal resource usage means it cannot accept it at that time.
      * All buffers passed into `queueAudioFrame()` are the responsibility of the Audio Sink to free once they are
      * no longer required.
+     * 
+     * If an audio frame is passed to `queueAudioFrame()` after EOS, then the `EX_ILLEGAL_STATE` exception
+     * is raised.  The audio sink must be stopped and re-started or flushed to accept new buffers.
      *
      * @param[in] nsPresentationTime	The presentation time of the audio frame in nanoseconds.
      * @param[in] bufferHandle			A handle to the AV buffer containing the audio frame.

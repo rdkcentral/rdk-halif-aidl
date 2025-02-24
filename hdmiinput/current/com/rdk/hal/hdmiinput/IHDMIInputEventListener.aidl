@@ -16,23 +16,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
- 
+package com.rdk.hal.hdmiinput;
+import com.rdk.hal.State;
+
 /** 
- *  @brief     Video decoder codec type definitions.
+ *  @brief     Event callbacks listener interface from HDMI input.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
  
 @VintfStability
-@Backing(type="int")
-enum Codec {   
-    MPEG = 1,
-    H264 = 2,
-    H265 = 3,
-    VP9 = 4,
-    AV1 = 5, 
-
-    // TODO: add profile and level where relevant   
+oneway interface IHDMIInputEventListener {
+ 
+    /**
+	 * Callback when the HDMI input has transitioned to a new state.
+     *
+     * @param[in] oldState      The state that the port has transitioned from.
+     * @param[in] newState      The new state that the port has transitioned to.
+     */
+    void onStateChanged(in State oldState, in State newState);
 }

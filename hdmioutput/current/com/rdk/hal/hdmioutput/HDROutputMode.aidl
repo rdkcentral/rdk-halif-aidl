@@ -16,23 +16,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
+package com.rdk.hal.hdmioutput;
  
 /** 
- *  @brief     Video decoder codec type definitions.
+ *  @brief     HDMI HDR output mode enum.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
- *  @author    Douglas Adler
+ *  @author    Amit Patel
  */
  
 @VintfStability
-@Backing(type="int")
-enum Codec {   
-    MPEG = 1,
-    H264 = 2,
-    H265 = 3,
-    VP9 = 4,
-    AV1 = 5, 
+@Backing(type = "int")
+enum HDROutputMode
+{
+    AUTO = 0,   // Default - switches based on primary video content or SDR if no video is playing.
 
-    // TODO: add profile and level where relevant   
+    HLG = 1,
+    HDR10 = 2,
+    HDR10_PLUS = 3,
+    DOLBY_VISION = 4,
 }

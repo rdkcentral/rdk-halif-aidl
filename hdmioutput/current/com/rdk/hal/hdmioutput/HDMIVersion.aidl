@@ -19,20 +19,29 @@
 package com.rdk.hal.videodecoder;
  
 /** 
- *  @brief     Video decoder codec type definitions.
+ *  @brief     HDMI standard version.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
- *  @author    Douglas Adler
+ *  @author    Amit Patel
  */
  
 @VintfStability
-@Backing(type="int")
-enum Codec {   
-    MPEG = 1,
-    H264 = 2,
-    H265 = 3,
-    VP9 = 4,
-    AV1 = 5, 
+@Backing(type = "int")
+enum HDMIVersion
+{
+	/**
+	 *
+	 */
+	HDMI_1_4 = 0;
 
-    // TODO: add profile and level where relevant   
+	/**
+	 *
+	 */
+	HDMI_2_0 = 1;
+
+	/**
+	 *
+	 */
+	HDMI_2_1 = 2;
+
 }

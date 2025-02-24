@@ -16,23 +16,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
+package com.rdk.hal.hdmioutput;
  
 /** 
- *  @brief     Video decoder codec type definitions.
+ *  @brief     HDMI input platform capabilities definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
  
 @VintfStability
-@Backing(type="int")
-enum Codec {   
-    MPEG = 1,
-    H264 = 2,
-    H265 = 3,
-    VP9 = 4,
-    AV1 = 5, 
-
-    // TODO: add profile and level where relevant   
+parcelable PlatformCapabilities
+{
+	/**
+	 * Defines the maximum number of HDMI input ports than can be open concurrently.
+	 */
+	int maxConcurrentOpenPorts;
 }

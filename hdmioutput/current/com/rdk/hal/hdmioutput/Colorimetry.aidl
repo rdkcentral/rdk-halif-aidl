@@ -16,23 +16,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
+package com.rdk.hal.hdmioutput;
  
 /** 
- *  @brief     Video decoder codec type definitions.
+ *  @brief     HDMI Colorimetry enum.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
- *  @author    Douglas Adler
+ *  @author    Amit Patel
  */
  
 @VintfStability
-@Backing(type="int")
-enum Codec {   
-    MPEG = 1,
-    H264 = 2,
-    H265 = 3,
-    VP9 = 4,
-    AV1 = 5, 
+@Backing(type = "int")
+enum Colorimetry
+{
+	/**
+	 * AVI InfoFrame C=0
+	 */
+	NO_DATA = 0,
 
-    // TODO: add profile and level where relevant   
+	/**
+	 * AVI InfoFrame C=1
+	 */
+	SMPTE_170M = 1,
+
+	/**
+	 * AVI InfoFrame C=2
+	 */
+	ITU_R_BT709 = 2,
+
+	/**
+	 * AVI InfoFrame C=3
+	 * @see enum ExtendedColorimetry
+	 */
+	EXTENDED_COLORIMETRY = 3,
 }

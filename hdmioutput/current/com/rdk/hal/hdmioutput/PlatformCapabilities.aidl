@@ -16,23 +16,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
+package com.rdk.hal.hdmioutput;
  
 /** 
- *  @brief     Video decoder codec type definitions.
+ *  @brief     HDMI output platform capabilities definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
  
 @VintfStability
-@Backing(type="int")
-enum Codec {   
-    MPEG = 1,
-    H264 = 2,
-    H265 = 3,
-    VP9 = 4,
-    AV1 = 5, 
-
-    // TODO: add profile and level where relevant   
+parcelable PlatformCapabilities
+{
+	/**
+	 * The territory specific native frame rate for HDMI output.
+	 * This should be selected as the default frame rate for HDMI outputs.
+	 * This can be 0.0 to remain undefined and determined by the app or RDK middleware.
+	 */
+	double nativeFrameRate;
 }

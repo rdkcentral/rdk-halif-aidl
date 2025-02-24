@@ -16,23 +16,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
+package com.rdk.hal.hdmioutput;
  
 /** 
- *  @brief     Video decoder codec type definitions.
+ *  @brief     HDMI AFD enum.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
- *  @author    Douglas Adler
+ *  @author    Amit Patel
  */
  
 @VintfStability
-@Backing(type="int")
-enum Codec {   
-    MPEG = 1,
-    H264 = 2,
-    H265 = 3,
-    VP9 = 4,
-    AV1 = 5, 
+@Backing(type = "int")
+enum AFD
+{
+	/**
+	 * Unspecified - AVI InfoFrame A0=0
+	 */
+	UNSPECIFIED = -1,
 
-    // TODO: add profile and level where relevant   
+	/**
+	 * Unspecified - AVI InfoFrame A0=1, R=1000b
+	 */
+	SAME_AS_PICTURE = 8,
+
+	/**
+	 * Unspecified - AVI InfoFrame A0=1, R=1001b
+	 */
+	CENTER_4_3 = 9,
+
+	/**
+	 * Unspecified - AVI InfoFrame A0=1, R=1010b
+	 */
+	CENTER_16_9 = 10,
+
+	/**
+	 * Unspecified - AVI InfoFrame A0=1, R=1011b
+	 */
+	CENTER_14_9 = 11,
 }

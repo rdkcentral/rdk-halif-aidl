@@ -16,23 +16,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
+package com.rdk.hal.hdmioutput;
  
 /** 
- *  @brief     Video decoder codec type definitions.
+ *  @brief     HDMI content type enum.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
- *  @author    Douglas Adler
+ *  @author    Amit Patel
  */
  
 @VintfStability
-@Backing(type="int")
-enum Codec {   
-    MPEG = 1,
-    H264 = 2,
-    H265 = 3,
-    VP9 = 4,
-    AV1 = 5, 
+@Backing(type = "int")
+enum ContentType
+{
+	/**
+	 * AVI InfoFrame ITC=0
+	 */
+	UNSPECIFIED = -1;
 
-    // TODO: add profile and level where relevant   
+	/**
+	 * AVI InfoFrame ITC=1, CN=0
+	 */
+	GRAPHICS = 0;
+
+	/**
+	 * AVI InfoFrame ITC=1, CN=1
+	 */
+	PHOTO = 1;
+
+	/**
+	 * AVI InfoFrame ITC=1, CN=2
+	 * CINEMA is also used to signal FilmMaker mode.
+	 */
+	CINEMA = 2;
+
+	/**
+	 * AVI InfoFrame ITC=1, CN=3
+	 * GAME provides a hint to the TV to enter a low latency state and/or switch to a Game picture mode.
+	 */
+	GAME = 3;
 }

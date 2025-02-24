@@ -16,23 +16,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
+package com.rdk.hal.hdmioutput;
  
 /** 
- *  @brief     Video decoder codec type definitions.
+ *  @brief     HDMI AVI InfoFrame Scan Information enum.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
- *  @author    Douglas Adler
+ *  @author    Amit Patel
  */
  
 @VintfStability
-@Backing(type="int")
-enum Codec {   
-    MPEG = 1,
-    H264 = 2,
-    H265 = 3,
-    VP9 = 4,
-    AV1 = 5, 
-
-    // TODO: add profile and level where relevant   
+@Backing(type = "int")
+enum ScanInformation
+{
+    NO_DATA = 0,   // Default
+    OVERSCAN = 1,
+    UNDERSCAN = 2,
+    RESERVED = 3
 }

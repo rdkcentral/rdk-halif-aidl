@@ -16,23 +16,59 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
+package com.rdk.hal.hdmioutput;
  
 /** 
- *  @brief     Video decoder codec type definitions.
+ *  @brief     HDMI extended colorimetry enum.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
- *  @author    Douglas Adler
+ *  @author    Amit Patel
  */
  
 @VintfStability
-@Backing(type="int")
-enum Codec {   
-    MPEG = 1,
-    H264 = 2,
-    H265 = 3,
-    VP9 = 4,
-    AV1 = 5, 
+@Backing(type = "int")
+enum ExtendedColorimetry
+{
+	/**
+	 * AVI InfoFrame C=3, EC=0
+	 */
+	XV_YCC_601 = 0,
 
-    // TODO: add profile and level where relevant   
+	/**
+	 * AVI InfoFrame C=3, EC=1
+	 */
+	XV_YCC_709 = 1,
+
+	/**
+	 * AVI InfoFrame C=3, EC=2
+	 */
+	S_YCC_601 = 2,
+
+	/**
+	 * AVI InfoFrame C=3, EC=3
+	 */
+	OP_YCC_601 = 3,
+
+	/**
+	 * AVI InfoFrame C=3, EC=4
+	 */
+	OP_RGB = 4,
+
+	/**
+	 * AVI InfoFrame C=3, EC=5
+	 */
+	BT2020_C_YCC = 5,
+
+	/**
+	 * AVI InfoFrame C=3, EC=6
+	 * RGB when Y=0
+	 * YCC when Y=1, 2 or 3
+	 */
+	BT2020_RGB_YCC = 6,
+
+	/**
+	 * AVI InfoFrame EC=7
+	 * @see enum AdditionalColorimetryExtension
+	 */
+	ADDITIONAL_COLORIMETRY_EXTENSION = 7,
 }

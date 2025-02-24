@@ -58,7 +58,8 @@ enum Property {
 	RENDER_LATENCY_NS = 2,
 	
 	/**
-	 * The queue depth of the audio output path.
+	 * The queue depth of the audio output path in nanoseconds.
+	 * TODO: *** ADD DETAIL ABOUT WHAT THIS REPRESENTS ***
 	 *
 	 * Type: Integer
 	 * Access: Read-only.
