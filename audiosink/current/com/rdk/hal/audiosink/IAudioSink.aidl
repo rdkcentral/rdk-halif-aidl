@@ -21,6 +21,7 @@ import com.rdk.hal.audiosink.IAudioSinkController;
 import com.rdk.hal.audiosink.IAudioSinkControllerListener; 
 import com.rdk.hal.audiosink.IAudioSinkEventListener; 
 import com.rdk.hal.audiosink.Capabilities; 
+import com.rdk.hal.audiosink.ContentType;
 import com.rdk.hal.audiosink.Property;
 import com.rdk.hal.PropertyValue;
 import com.rdk.hal.State;
@@ -110,7 +111,7 @@ interface IAudioSink
      * 
      * @see close()
      */
-    @nullable IAudioSinkController open(in IAudioSinkControllerListener audioSinkControllerListener);
+    @nullable IAudioSinkController open(in ContentType contentType, in IAudioSinkControllerListener audioSinkControllerListener);
 
     /**
      * Closes the audio sink.
