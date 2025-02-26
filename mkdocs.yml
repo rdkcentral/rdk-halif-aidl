@@ -1,0 +1,168 @@
+site_name: RDK Hardware Porting Kit
+site_url: https://www.github.com/rdkcentral/rdk-halif-aidl
+site_dir: site # Site directory
+
+repo_name: rdkcentral/rdk-halif-aidl
+repo_url: https://github.com/rdkcentral/rdk-halif-aidl
+
+nav:
+  - Home: index.md
+  - Hardware Abstraction Layer:
+    - Introduction: introduction/aidl_and_binder.md
+    - Key Concepts:
+      - HAL Properties: halif/key_concepts/hal/hal_properties.md
+      - HAL Feature Profiles: halif/key_concepts/hal/hal_feature_profiles.md
+      - HAL Naming Conventions: halif/key_concepts/hal/hal_naming_conventions.md
+      - HAL Session State Management: halif/key_concepts/hal/hal_session_state_management.md
+  - HAL Driver Interfaces (HDI):
+    - Overview: halif/key_concepts/hal/hal_interfaces.md
+    - Interface Generation: introduction/interface_generation.md
+    - AV Subsystem:
+      - Audio Decoder:
+        - Current: halif/audio_decoder/current/audio_decoder.md
+        - v0.5: halif/audio_decoder/v0.5/audio_decoder.md
+      - Audio Mixer: 
+        - Current: halif/audio_mixer/current/intro.md
+      - Audio Sink: 
+        - Current: halif/audio_sink/current/audio_sink.md
+      - AV Buffer: 
+        - Current: halif/av_buffer/current/av_buffer.md
+      - AV Clock: 
+        - Current: halif/av_clock/current/av_clock.md
+      - Video Decoder:
+        - Current: halif/video_decoder/current/video_decoder.md
+      - Video Sink: 
+        - Current: halif/video_sink/current/video_sink.md
+    - Boot:
+        - Current: halif/boot/current/intro.md
+    - Broadcast: 
+        - Current: halif/broadcast/current/intro.md
+    - CDM: 
+        - Current: halif/cdm/current/intro.md
+    - HDMI:
+      - HDMI CEC: 
+        - Current: halif/cec/current/intro.md
+      - HDMI Input: 
+        - Current: halif/hdmi_input/current/intro.md
+      - HDMI Output: 
+        - Current: halif/hdmi_output/current/intro.md
+    - Common: 
+        - Current: halif/common/current/intro.md
+    - Deep Sleep: 
+        - Current: halif/deep_sleep/current/intro.md
+    - Device Info: 
+        - Current: halif/device_info/current/intro.md
+    - Flash: 
+        - Current: halif/flash/current/intro.md
+    - Indicator: 
+        - Current: halif/indicator/current/intro.md
+    - Panel:
+      - Panel Output: 
+        - Current: halif/panel/current/intro.md
+    - Plane Control: 
+        - Current: halif/plane_control/current/plane_control.md
+    - Secure API: 
+        - Current: halif/sec_api/current/intro.md
+    - Sensor: 
+        - Current: halif/sensor/current/intro.md
+  - System Interfaces (VSI):
+    - Bluetooth: 
+        - Current: vsi/bluetooth/current/intro.md
+    - Graphics: 
+        - Current: vsi/graphics/current/intro.md
+    - Network Management: 
+        - Current: vsi/network_management/current/intro.md
+    - Power Management: 
+        - Current: vsi/power_management/current/intro.md
+    - Service Manager: 
+        - Current: vsi/service_manager/current/service_manager.md
+    - Wi-Fi: 
+        - Current: vsi/wifi/current/intro.md
+    - Kernel:
+        - Current: vsi/kernel/current/intro.md
+  - Vendor Tests:
+    - Levels of Test: external_content/ut-core-wiki/3.-Standards:-Levels-of-Test-for-Vendor-Layer.md
+    - Level 4:
+      - L4 System Interface (VSI): external_content/ut-core-wiki/3.3.-Standards:-L4-‐-System-Interface-Testing.md
+      - L4 Smoke Test (VST): external_content/ut-core-wiki/3.4.-Standards:-L4:-Vendor-Full-Stack-‐-Video-‐-Smoke-Regression-Test.md
+  - Testing Framework:
+    - Framework Usage: external_content/ut-core-wiki/3.2.-Standards:-Requirements-for-building-testing-suites.md
+    - Key Concepts:
+      - Test Driven Development: external_content/ut-core-wiki/3.1.-Standards:-Overview-of-Test‐Driven-Development.md
+      - Black Box Testing: external_content/ut-core-wiki/FAQ:-Black‐Box-Testing-and-Code-Coverage-Metrics.md
+      - Feedback Loops: external_content/ut-core-wiki/3.0.1-Standards:-Testing-Feedback-Loops.md
+    - UT-Core Test Framework:
+      - UT-Core Overview: external_content/ut-core-wiki/Home.md
+      - Level Actors: external_content/ut-core-wiki/FAQ:-UT-Core-Framework-Overview.md
+  - Virtual Device:
+    - What is the vDevice: external_content/ut-core-wiki/5.0:-Standards:-vDevice-Overview.md
+    - Architecture Overview: external_content/ut-core-wiki/5.0.1:-Standards:-vDevice-Architecture-Overview.md
+    - Key Concepts: 
+      - Controller: external_content/ut-core-wiki/5.1.0:-Standards:-vDevice-Controller.md
+      - Control Plane: external_content/ut-core-wiki/5.1.1:-Standards:-vDevice-Control-Plane.md
+  - Misc:
+    - References: references/references.md
+    - Documentation Guide: introduction/documentation_guide.md
+    - Filing an Issue: external_content/ut-core-wiki/1.2.-Standards:-Issue-Description-Guideline.md
+    - FAQ:
+      - Python Development: external_content/ut-core-wiki/FAQ:-Comparing-Python-Development-Platforms.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - def_list
+  - footnotes
+  - attr_list
+  - md_in_html
+  - toc:
+      toc_depth: 4
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+extra_css:
+  - stylesheets/extra.css  # Ensure this file exists
+
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.1/mermaid.min.js
+  - javascripts/mermaid-init.js
+
+theme:
+  name: material
+  features:
+    - navigation.footer
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    #- navigation.tabs
+    - navigation.instant  # New feature
+    - toc.follow
+    - content.code.copy
+    - content.code.annotate
+    - content.tooltips  # New feature  icon:
+    - content.print.stylesheet
+    - search.highlight
+    - search.suggest
+    - search.share
+    - header.autohide
+    - announce.dismiss
+  repo: fontawesome/brands/github
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode

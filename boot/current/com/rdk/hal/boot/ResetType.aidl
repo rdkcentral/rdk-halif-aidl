@@ -30,8 +30,19 @@ package com.rdk.hal.boot;
 enum ResetType {
 
     /** 
-     * Upon restart, the system shall come up and delete all persistent data partitions and recreates them.
+     * Upon restart, the system shall come up and delete all persistent data partitions and recreate them.
      */
     FULL_SYSTEM_RESET = 0,
+
+    /** 
+     * Upon restart, the current application image is invalidated and will be selected for loading on the next boot.
+     * If the platform supports multiple application image banks then the other bank should be selected.
+     */
+    INVALIDATE_CURRENT_APPLICATION_IMAGE = 1,
+
+    /** 
+     * Upon restart, the system shall enter disaster recovery mode.
+     */
+    FORCE_DISASTER_RECOVERY = 2,
 
 }

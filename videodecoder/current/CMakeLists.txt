@@ -33,6 +33,7 @@ set(SRC
 	${SRC_DIR}/ScanType.aidl
 	../../common/${COMMON_VERSION}/com/rdk/hal/PropertyValue.aidl
 	../../common/${COMMON_VERSION}/com/rdk/hal/AVSource.aidl
+	../../common/${COMMON_VERSION}/com/rdk/hal/State.aidl
 )
 
 set(INCLUDE_FLAGS
