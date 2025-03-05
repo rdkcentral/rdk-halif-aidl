@@ -25,6 +25,8 @@ To simplify working with documentation, the `docs/build_docs.sh` script provides
 - **deploy**: builds the documentation and deploys it to GitHub Pages  
 - **help**: displays usage information
 
+This follows the documentation in git approach See :- [documentation in git](../whitepapers/documentation_in_git.md)
+
 ### Serve the Documentation Locally
 
 To generate and serve the documentation on `localhost:8000`, run:
@@ -70,8 +72,7 @@ Build the documentation and deploy to the `gh-pages` branch:
 ./build_docs.sh deploy
 ```
 
-The site will be published at:  
-[https://rdkcentral.github.io/rdk-halif-aidl/](https://rdkcentral.github.io/rdk-halif-aidl/)  
+The site will be published at: [https://rdkcentral.github.io/rdk-halif-aidl/](https://rdkcentral.github.io/rdk-halif-aidl/)  
 
 > **Note**: The published site’s resides in the `gh-pages` branch of this repository.
 
@@ -113,7 +114,8 @@ def example_function():
 ```
 
 ```javascript
-function exampleFunction() {
+function exampleFunction() 
+{
     console.log("Hello, world!");
 }
 ```

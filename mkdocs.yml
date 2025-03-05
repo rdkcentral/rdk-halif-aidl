@@ -7,6 +7,7 @@ repo_url: https://github.com/rdkcentral/rdk-halif-aidl
 
 nav:
   - Home: index.md
+  - The Software Stack: introduction/the_software_stack.md
   - Hardware Abstraction Layer:
     - Introduction: introduction/aidl_and_binder.md
     - Key Concepts:
@@ -14,6 +15,8 @@ nav:
       - HAL Feature Profiles: halif/key_concepts/hal/hal_feature_profiles.md
       - HAL Naming Conventions: halif/key_concepts/hal/hal_naming_conventions.md
       - HAL Session State Management: halif/key_concepts/hal/hal_session_state_management.md
+    - Standards:
+      - Developer Tiers: external_content/ut-core-wiki/1.-Standards-&-Development-Process-Flow.md
   - HAL Driver Interfaces (HDI):
     - Overview: halif/key_concepts/hal/hal_interfaces.md
     - Interface Generation: introduction/interface_generation.md
@@ -103,6 +106,10 @@ nav:
   - Misc:
     - References: references/references.md
     - Documentation Guide: introduction/documentation_guide.md
+    - White Papers:
+      - Documentation in Git: whitepapers/documentation_in_git.md
+      - Branching Strategies : whitepapers/branching_strategies.md 
+      - Doxygen Code Documentation: whitepapers/doxygen_code_documentation.md
     - Filing an Issue: external_content/ut-core-wiki/1.2.-Standards:-Issue-Description-Guideline.md
     - FAQ:
       - Python Development: external_content/ut-core-wiki/FAQ:-Comparing-Python-Development-Platforms.md
@@ -127,10 +134,15 @@ markdown_extensions:
 
 extra_css:
   - stylesheets/extra.css  # Ensure this file exists
+#  - stylesheets/version.css
+
+#plugins:
+  #- version:
+  # version_file: docs/version.txt  (Defaults to docs/version.txt)
 
 extra_javascript:
   - https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.1/mermaid.min.js
-  - javascripts/mermaid-init.js
+  - javascript/mermaid-init.js
 
 theme:
   name: material
