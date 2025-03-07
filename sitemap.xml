@@ -2,458 +2,438 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/1.-Standards-%26-Development-Process-Flow/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/1.0.-Standards%3A-Tier-1-Operator-Guide%3A-Branching-for-Direct-Contributions/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/1.0.1-Standards%3A-Tier-2-Operator-Guide%3A-Forking-for-External-Contributions/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/1.1.-Standards%3A-Principles-from-Code-Complete/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/1.2.-Standards%3A-Issue-Description-Guideline/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/1.3.-Standards%3A-Milestone-Description-Guideline/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/1.4.-Standards%3A-Commit-Message%3A-The-50%E2%80%9072-Rule%3A-A-Simple-Guide/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/1.5.-Standards%3A-Semantic-Versioning-and-Testing-Suite-Alignment/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/2.-Standards%3A-Single-Source-of-Truth-%E2%80%90-HAL-Interfaces-and-Testing-Suites/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/2.1.-Standards%3A-Doxygen%3A-Crafting-Excellent-Documentation/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/2.2.-Standards%3A-Forking-And-Branching/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/2.3.-Standards%3A-Performing-Changes-to-an-interface/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/2.4.-Standards%3A-Repository-Access-and-Branch-Protection-Policy/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/2.5.-Standards%3A-Feature-Branch-Workflow/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/3.-Standards%3A-Levels-of-Test-for-Vendor-Layer/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/3.0.1-Standards%3A-Testing-Feedback-Loops/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/3.1.-Standards%3A-Overview-of-Test%E2%80%90Driven-Development/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/3.2.-Standards%3A-Requirements-for-building-testing-suites/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/3.2.1%3A-Standards%3A-Phased-Delivery-with-Checkpoints/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/3.3.-Standards%3A-L4-%E2%80%90-System-Interface-Testing/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/3.4.-Standards%3A-L4%3A-Vendor-Full-Stack-%E2%80%90-Video-%E2%80%90-Smoke-Regression-Test/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/4.-Standards%3A-Dynamic-Library-Loading-for-Vendor-Abstraction/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/4.0.1%3A-Standards%3A-Dynamic-Library-Search-Order/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/4.1.-Standards%3A-Dynamically-Installable-Plugins-In-C/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/5.0.1%3A-Standards%3A-vDevice-Architecture-Overview/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/5.0%3A-Standards%3A-vDevice-Overview/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/5.1.0%3A-Standards%3A-vDevice-Controller/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/5.1.1%3A-Standards%3A-vDevice-Control-Plane/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/FAQ%3A--QEMU-vs-Vagrant/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/FAQ%3A--Video-and-Audio-Playback-Performance-Metrics/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/FAQ%3A-Black%E2%80%90Box-Testing-and-Code-Coverage-Metrics/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/FAQ%3A-Buildroot-vs.-Yocto-Project-vs.-Bob-the-Builder/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/FAQ%3A-C-Macro-that-prints-structure-fields/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/FAQ%3A-C-macro-that-prints-the-function-name%2C-parameter-names-with-values/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/FAQ%3A-Choosing-GHEC%E2%80%90ORG-or-RDKCentral/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/FAQ%3A-Comparing-Python-Development-Platforms/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/FAQ%3A-Git-Flow-Support-for-Multiple-mainlines/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/FAQ%3A-Git%E2%80%90Flow%3A-Developers-Branching-Model/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/FAQ%3A-Migrating-Binaries-to-%60Git-LFS%60/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/FAQ%3A-RDK-Docker-Toolchain/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/FAQ%3A-Release-Engineers%3A-Performing-a-release-with-git-flow/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/FAQ%3A-Sign-up-for-RDK-Central-%E2%80%90-Tier-1-Registration/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/FAQ%3A-Software-Post-Release-Development-Cycle/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/FAQ%3A-UT-Core-Framework-Overview/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/FAQ%3A-Vagrant%3A-Setting-Up-and-Managing-Your-Vagrant-VM/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/Home/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/T1%3A-Training%3A-CODEOWNERS%3A-Ensuring-Code-Quality-and-Governance/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/UT-Core-Building-using-Docker-or-Vagrant/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/UTCore%3A-Test-Group-Support/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/UT%E2%80%90Core%3A-Concept-Overview%3A-UT%E2%80%90Core-and-Engineering-Suites-Integration/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/UT%E2%80%90Core%3A-How-to-Build-and-Run-a-HAL-Testing-Suite/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/autogenerate.sh%3A-Running-the-Framework-Generation-Script/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/ut_kvp%3A-A-Flexible-Key%E2%80%90Value-Pair-Framework/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/ut_kvp_profile%3A-Key%E2%80%90Value-Pair-Assertions-for-Unit-Testing/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/external_content/ut-core-wiki/vDevice%3A-Overview/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/audio_decoder/current/audio_decoder/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/audio_decoder/v0.5/audio_decoder/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/audio_mixer/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/audio_sink/current/audio_sink/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/av_buffer/current/av_buffer/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/av_clock/current/av_clock/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/boot/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/broadcast/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/cdm/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/cec/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/common/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/composite_input/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/deep_sleep/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/device_info/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/ffv/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/flash/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/hdmi_input/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/hdmi_output/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/indicator/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/key_concepts/hal/hal_feature_profiles/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/key_concepts/hal/hal_interfaces/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/key_concepts/hal/hal_naming_conventions/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/key_concepts/hal/hal_properties/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/key_concepts/hal/hal_session_state_management/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/panel/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/plane_control/current/plane_control/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/sec_api/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/sensor/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/video_decoder/current/video_decoder/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/halif/video_sink/current/video_sink/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/introduction/aidl_and_binder/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/introduction/build_binder_tools/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/introduction/documentation_guide/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/introduction/interface_generation/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/introduction/the_software_stack/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
-         <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/python_venv/lib/python3.12/site-packages/Markdown-3.7.dist-info/LICENSE/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/python_venv/lib/python3.13/site-packages/Markdown-3.7.dist-info/LICENSE/</loc>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
-         <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/python_venv/lib/python3.12/site-packages/idna-3.10.dist-info/LICENSE/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/python_venv/lib/python3.13/site-packages/idna-3.10.dist-info/LICENSE/</loc>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
-         <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/python_venv/lib/python3.12/site-packages/mkdocs_get_deps-0.2.0.dist-info/licenses/LICENSE/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/python_venv/lib/python3.13/site-packages/mkdocs_get_deps-0.2.0.dist-info/licenses/LICENSE/</loc>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
-         <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/python_venv/lib/python3.12/site-packages/mkdocs_material_extensions-1.3.1.dist-info/licenses/LICENSE/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/python_venv/lib/python3.13/site-packages/mkdocs_material_extensions-1.3.1.dist-info/licenses/LICENSE/</loc>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
-         <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/python_venv/lib/python3.12/site-packages/pymdown_extensions-10.14.3.dist-info/licenses/LICENSE/</loc>
-         <lastmod>2025-03-05</lastmod>
-    </url>
-    <url>
-         <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/python_venv/lib64/python3.12/site-packages/Markdown-3.7.dist-info/LICENSE/</loc>
-         <lastmod>2025-03-05</lastmod>
-    </url>
-    <url>
-         <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/python_venv/lib64/python3.12/site-packages/idna-3.10.dist-info/LICENSE/</loc>
-         <lastmod>2025-03-05</lastmod>
-    </url>
-    <url>
-         <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/python_venv/lib64/python3.12/site-packages/mkdocs_get_deps-0.2.0.dist-info/licenses/LICENSE/</loc>
-         <lastmod>2025-03-05</lastmod>
-    </url>
-    <url>
-         <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/python_venv/lib64/python3.12/site-packages/mkdocs_material_extensions-1.3.1.dist-info/licenses/LICENSE/</loc>
-         <lastmod>2025-03-05</lastmod>
-    </url>
-    <url>
-         <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/python_venv/lib64/python3.12/site-packages/pymdown_extensions-10.14.3.dist-info/licenses/LICENSE/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/python_venv/lib/python3.13/site-packages/pymdown_extensions-10.14.3.dist-info/licenses/LICENSE/</loc>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/references/references/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/vsi/bluetooth/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/vsi/filesystem/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/vsi/graphics/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/vsi/kernel/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/vsi/network_management/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/vsi/power_management/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/vsi/service_manager/current/service_manager/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/vsi/systemd/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/vsi/wifi/current/intro/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/whitepapers/branching_strategies/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/whitepapers/documentation_in_git/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
     <url>
          <loc>https://www.github.com/rdkcentral/rdk-halif-aidl/whitepapers/doxygen_code_documentation/</loc>
-         <lastmod>2025-03-05</lastmod>
+         <lastmod>2025-03-07</lastmod>
     </url>
 </urlset>
