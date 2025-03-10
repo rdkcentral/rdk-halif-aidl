@@ -50,7 +50,7 @@ The RDK middleware GStreamer pipeline contains an RDK Audio Decoder element desi
 
 ## Initialization
 
-The [systemd](../../../vsi/systemd/current/intro.md) `hal-audio_decoder_manager.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
+The [systemd](../../../vsi/systemd/current/systemd.md) `hal-audio_decoder_manager.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
 The Audio Decoder Manager service depends on the [Service Manager](https://wiki.rdkcentral.com/display/RDKHAL/Service+Manager+Overview) to register itself as a service.
 
