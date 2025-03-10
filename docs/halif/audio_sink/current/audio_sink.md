@@ -26,7 +26,7 @@ The interaction between the RDK GStreamer Audio Sink element and the Audio Sink 
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
     |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/intro.md) - **hal-audio_sink.service** |
     |**VTS Tests**| TBC |
-    |**Reference Implementation - vComponent**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiosink/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiosink/current)|
+    |**Reference Implementation - vComponent**|**TBD**|
 
 ## Related Pages
 

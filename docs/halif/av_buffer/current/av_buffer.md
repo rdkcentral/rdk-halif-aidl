@@ -18,7 +18,7 @@ The **AV Buffer HAL** manages both secure and non-secure memory heaps and pools 
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
     |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/intro.md) - **hal-av_buffer.service** |
     |**VTS Tests**| TBC |
-    |**Reference Implementation - vComponent**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_buffer/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_buffer/current)|
+    |**Reference Implementation - vComponent**|**TBD**|
 
 ## Related Pages
 

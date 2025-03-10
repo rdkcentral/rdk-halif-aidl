@@ -36,6 +36,7 @@ For More detailed information see [Testing Suite Levels](../../../external_conte
 ### Testing Suite Phases
 
 **Each phase requires an engineering & architecture sign-off and review before proceeding to the next stage.**
+
 - Target Information is listed in the with the status. e.g. **M3/25**, **Q2/25**, **H2/25**, for moving to the next phase.
 
 | **Development Phase** | **Goal** | **Description** |
@@ -57,7 +58,8 @@ For More detailed information see [Testing Suite Levels](../../../external_conte
 | **vDevice** | Virtual Vendor Layer |
 | **vComponent** | Independent Virtual component part of the vDevice |
 
-**Each phase requires an engineering & architecture sign-off and review before proceeding to the next stage.** 
+**Each phase requires an engineering & architecture sign-off and review before proceeding to the next stage.**
+
 - Target Information is listed in the with the status. e.g. **M3/25**, **Q2/25**, **H2/25**, for moving to the next phase.
 
 
@@ -77,7 +79,7 @@ This list provides an overview of various HAL components, their device profiles,
 | -------------------                                               |--------------------            |                            --|                            -|                             -|----------|
 | [**Audio Decoder**](../../audio_decoder/current/audio_decoder.md) | [🟢🟢🟢🟢⚪⚪](https://github.com/rdkcentral/rdk-halif-aidl/issues/35) (4/6)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | 🟡⚪⚪⚪⚪ (1/5)<br> **Q2** | 🟡⚪⚪⚪⚪ (1/5)<br> **Q2** | 🟡⚪⚪⚪⚪ (1/5)<br> **Q2**|
 | [**Audio Sink**](../../audio_sink/current/audio_sink.md)          | [🟢🟢🟢🟢⚪⚪](https://github.com/rdkcentral/rdk-halif-aidl/issues/35) (4/6)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | 🟡⚪⚪⚪⚪ (1/5)<br> **Q2** | 🟡⚪⚪⚪⚪ (1/5)<br> **Q2** | 🟡⚪⚪⚪⚪ (1/5)<br> **Q2**|
-| [**Audio Mixer**](../../audio_mixer/current/intro.md)             | [🟡⚪⚪⚪⚪⚪](https://github.com/rdkcentral/rdk-halif-aidl/issues/35) (2/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2**|
+| [**Audio Mixer**](../../audio_mixer/current/audio_mixer.md)       | [🟡⚪⚪⚪⚪⚪](https://github.com/rdkcentral/rdk-halif-aidl/issues/35) (2/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2**|
 | [**AV Buffer**](../../av_buffer/current/av_buffer.md)             | [🟢🟢🟢🟢⚪⚪](https://github.com/rdkcentral/rdk-halif-aidl/issues/35) (4/6)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | 🟡⚪⚪⚪⚪ (1/5)<br> **Q2** | 🟡⚪⚪⚪⚪ (1/5)<br> **Q2** | 🟡⚪⚪⚪⚪ (1/5)<br> **Q2**|
 | [**AV Clock**](../../av_clock/current/av_clock.md)                | [🟢🟢🟢🟢⚪⚪](https://github.com/rdkcentral/rdk-halif-aidl/issues/35) (4/6)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2**|
 | [**Video Decoder**](../../video_decoder/current/video_decoder.md) | [🟢🟢🟢🟢⚪⚪](https://github.com/rdkcentral/rdk-halif-aidl/issues/35) (4/6)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | 🟡⚪⚪⚪⚪ (1/5)<br> **Q2** | 🟡⚪⚪⚪⚪ (1/5)<br> **Q2** | 🟡⚪⚪⚪⚪ (1/5)<br> **Q2**|
@@ -94,28 +96,27 @@ This list provides an overview of various HAL components, their device profiles,
 | HAL Component                                                                  | Interface                      | L1                           | L2                           | L3                          | vComponent | 
 | -------------------                                                            |-------------------             |                            --|--                            |--                           |------------|
 | [**Plane Control**](../../plane_control/current/plane_control.md)              | 🟢🟢🟢🟢⚪⚪ (4/6)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
-| [**Composite Input**](../../composite_input/current/intro.md)                  | 🟡⚪⚪⚪⚪⚪ (1/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
-| [**HDMI CEC**](../../cec/current/intro.md)                                     | 🟡🟡⚪⚪⚪⚪ (2/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
-| [**HDMI Input**](../../hdmi_input/current/intro.md)                            | [🟡🟠⚪⚪⚪⚪](https://github.com/rdkcentral/rdk-halif-aidl/issues/43) (1/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
-| [**HDMI Output**](../../hdmi_output/current/intro.md)                          | [🟡🟠⚪⚪⚪⚪](https://github.com/rdkcentral/rdk-halif-aidl/issues/43) (1/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Composite Input**](../../composite_input/current/composite_input.md)        | 🟡⚪⚪⚪⚪⚪ (1/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
+| [**HDMI CEC**](../../cec/current/cec.md)                                       | 🟡🟡⚪⚪⚪⚪ (2/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
+| [**HDMI Input**](../../hdmi_input/current/hdmi_input.md)                       | [🟡🟠⚪⚪⚪⚪](https://github.com/rdkcentral/rdk-halif-aidl/issues/43) (1/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
+| [**HDMI Output**](../../hdmi_output/current/hdmi_output.md)                    | [🟡🟠⚪⚪⚪⚪](https://github.com/rdkcentral/rdk-halif-aidl/issues/43) (1/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
 | [**Service Manager**](../../../vsi/service_manager/current/service_manager.md) | 🟢🟢🟢🟢⚪⚪ (4/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
-| [**Boot**](../../boot/current/intro.md)                                        | 🟡⚪⚪⚪⚪⚪ (1/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
-| [**Broadcast**](../../broadcast/current/intro.md)                              | 🟡🟡⚪⚪⚪⚪ (2/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
-| [**Common**](../../common/current/intro.md)                                    | 🟡⚪⚪⚪⚪⚪ (1/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
-| [**Deep Sleep**](../../deep_sleep/current/intro.md)                            | 🟠🟠🟠⚪⚪⚪ (3/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
-| [**Device Info**](../../device_info/current/intro.md)                          | 🟠🟠🟠⚪⚪⚪ (3/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
-| [**Indicator**](../../indicator/current/intro.md)                              | 🟠🟠🟠⚪⚪⚪ (3/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
-| [**Panel Output**](../../panel/current/intro.md)                               | 🟠🟠🟠⚪⚪⚪ (3/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
-| [**Sensor**](../../sensor/current/intro.md)                                    | 🟡⚪⚪⚪⚪⚪ (1/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
-| [**Linux Input Device**](../../sensor/current/intro.md)                        | 🟡⚪⚪⚪⚪⚪ (1/6)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Boot**](../../boot/current/boot.md)                                         | 🟡⚪⚪⚪⚪⚪ (1/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Broadcast**](../../broadcast/current/broadcast.md)                          | 🟡🟡⚪⚪⚪⚪ (2/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Common**](../../common/current/common.md)                                   | 🟡⚪⚪⚪⚪⚪ (1/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Deep Sleep**](../../deep_sleep/current/deep_sleep.md)                       | 🟠🟠🟠⚪⚪⚪ (3/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Device Info**](../../device_info/current/device_info.md)                    | 🟠🟠🟠⚪⚪⚪ (3/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Indicator**](../../indicator/current/indicator.md)                          | 🟠🟠🟠⚪⚪⚪ (3/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Panel**](../../panel/current/panel.md)                                      | 🟠🟠🟠⚪⚪⚪ (3/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Sensor**](../../sensor/current/sensor.md)                                   | 🟡⚪⚪⚪⚪⚪ (1/6)<br> **Q1** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
 
 ### Non AV Components TBD
 
 | HAL Component                                                                  | Interface                      | L1                | L2                | L3               | vComponent | Comments|
 | -------------------                                                            |-------------------             |                 --|--                 |--                |------------| --- |
-| [**CDM**](../../cdm/current/intro.md)                                          | ⚪⚪⚪⚪⚪⚪ (X/6)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x 5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | Needs to reviewed in light of non-standard integration for vendors|
-| [**Secapi**](../../sec_api/current/intro.md)                                   | ⚪⚪⚪⚪⚪⚪ (X/6)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | Used for crypto, needs rationalisation  with TEE |
-| [**FFV**](../../ffv/current/intro.md)                                          | ⚪⚪⚪⚪⚪⚪ (x/6)<br> **Qx** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) | Need to define the business case, DSP|
+| [**CDM**](../../cdm/current/cdm.md)                                            | ⚪⚪⚪⚪⚪⚪ (X/6)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x 5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | Needs to reviewed in light of non-standard integration for vendors|
+|  **Secapi**                                                                    | ⚪⚪⚪⚪⚪⚪ (X/6)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | Used for crypto, needs rationalisation  with TEE |
+| [**FFV**](../../ffv/current/ffv.md)                                            | ⚪⚪⚪⚪⚪⚪ (x/6)<br> **Qx** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) | Need to define the business case, DSP|
 
 ## Vendor System Interfaces (VSI)
 
@@ -123,14 +124,15 @@ The following smaller subset of HALs function as in-process libraries, collectiv
 
 | HAL Component                                                                 | Interface                    | L4                         | vDevice           | Comment |
 | -------------------                                                           | ----------                   |----                        |-----------        | ------ |
-| [**Bluetooth**](../../../vsi/bluetooth/current/intro.md)                      | 🟠🟠🟠⚪⚪⚪ (3/6)<br> **Q2** | 🟠🟠🟠⚪⚪ (3/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) | |
-| [**Graphics (OpenGLES, EGL)**](../../../vsi/graphics/current/intro.md)        | 🟠🟠🟠⚪⚪⚪ (3/6)<br> **Q2** | 🟢🟢🟢🟢⚪ (4/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) | |
-| [**Wi-Fi**](../../../vsi/wifi/current/intro.md)                               | 🟠🟠🟠⚪⚪⚪ (3/6)<br> **Q2** | 🟢🟢🟢🟢⚪ (4/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) | |
-| [**Kernel**](../../../vsi/kernel/current/intro.md)                            | 🟠🟠🟠⚪⚪⚪ (3/6)<br> **Q2** | 🟢🟢🟢🟢⚪ (4/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) | |
-| [**Filesystem**](../../../vsi/filesystem/current/intro.md)                    | 🟠⚪⚪⚪⚪⚪ (1/6)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) | TBD: /opt. eCryptFS, /sysfs. /procfs, (resilience) abstracted filing system|
+| [**Bluetooth**](../../../vsi/bluetooth/current/bluetooth.md)                  | 🟠🟠🟠⚪⚪⚪ (3/6)<br> **Q2** | 🟠🟠🟠⚪⚪ (3/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) | |
+| [**Graphics (OpenGLES, EGL)**](../../../vsi/graphics/current/graphics.md)     | 🟠🟠🟠⚪⚪⚪ (3/6)<br> **Q2** | 🟢🟢🟢🟢⚪ (4/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) | |
+| [**Wi-Fi**](../../../vsi/wifi/current/wifi.md)                                | 🟠🟠🟠⚪⚪⚪ (3/6)<br> **Q2** | 🟢🟢🟢🟢⚪ (4/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) | |
+| [**Kernel**](../../../vsi/kernel/current/kernel.md)                           | 🟠🟠🟠⚪⚪⚪ (3/6)<br> **Q2** | 🟢🟢🟢🟢⚪ (4/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) | |
+| [**Filesystem**](../../../vsi/filesystem/current/file_system.md)              | 🟠⚪⚪⚪⚪⚪ (1/6)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) | TBD: /opt. eCryptFS, /sysfs. /procfs, (resilience) abstracted filing system|
+| [**Linux Input Device**](../../../vsi/linux_input/current/linux_input.md)     | 🟡⚪⚪⚪⚪⚪ (1/6)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
 
 ### Vendor System Interfaces (VSI) TBD
 
-| HAL Component       | L4 | Comments |
-| ------------------- |----| ----- |
-| [**Graphics Display**](../../../vsi/graphics/current/intro.md)                | ⚪⚪⚪⚪⚪ (x/5) | Integrated with the display, EGL & Plane Control (Benchmarks) (Wayland), Composition |
+| HAL Component                                                                 | L4               | Comments |
+| -------------------                                                           |----              | ----- |
+| [**Graphics Display**](../../../vsi/graphics/current/graphics.md)             | ⚪⚪⚪⚪⚪ (x/5) | Integrated with the display, EGL & Plane Control (Benchmarks) (Wayland), Composition |
