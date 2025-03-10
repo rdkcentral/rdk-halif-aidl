@@ -2705,7 +2705,7 @@
 </tr>
 <tr>
 <td><strong>Initialization - TBC</strong></td>
-<td><a href="../../../vsi/systemd/current/intro.md">systemd</a> - <strong>hal-audio_sink.service</strong></td>
+<td><a href="../../../../vsi/systemd/current/systemd/">systemd</a> - <strong>hal-audio_sink.service</strong></td>
 </tr>
 <tr>
 <td><strong>VTS Tests</strong></td>
@@ -2821,7 +2821,7 @@
 </tbody>
 </table>
 <h2 id="initialization">Initialization</h2>
-<p>The <a href="../../../vsi/systemd/current/intro.md">systemd</a> <code>hal-audios_sink_manager.service</code> unit file is provided by the vendor layer to start the service and should include <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=">Wants</a> or <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=">Requires</a> directives to start any platform driver services it depends upon.</p>
+<p>The <a href="../../../../vsi/systemd/current/systemd/">systemd</a> <code>hal-audios_sink_manager.service</code> unit file is provided by the vendor layer to start the service and should include <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=">Wants</a> or <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=">Requires</a> directives to start any platform driver services it depends upon.</p>
 <p>The Audio Sink Manager service depends on the <a href="../../../key_concepts/hal/hal_session_state_management/">Service Manager</a> to register itself as a service.</p>
 <p>Upon starting, the service shall register the <code>IAudioSinkManager</code> interface with the <a href="../../../../vsi/service_manager/current/service_manager/">Service Manager</a> using the string <code>IAudioSinkManager.serviceName</code> and immediately become operational.</p>
 <h2 id="product-customization">Product Customization</h2>

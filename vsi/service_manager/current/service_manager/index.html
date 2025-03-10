@@ -2625,7 +2625,7 @@
 </tr>
 <tr>
 <td><strong>Initialization - TBC</strong></td>
-<td><a href="../../../vsi/systemd/current/intro.md">systemd</a> - <strong>hal-service_manager.service</strong></td>
+<td><a href="../../../systemd/current/systemd/">systemd</a> - <strong>hal-service_manager.service</strong></td>
 </tr>
 <tr>
 <td><strong>VTS Tests</strong></td>
@@ -2680,7 +2680,7 @@
 <p>HAL binder services register an interface by calling the <code>publishAndJoinThreadPool()</code> static method on their interface class.</p>
 <p>See <a href="https://android.googlesource.com/platform/frameworks/native/+/android-13.0.0_r74/libs/binder/include/binder/BinderService.h">https://android.googlesource.com/platform/frameworks/native/+/android-13.0.0_r74/libs/binder/include/binder/BinderService.h</a></p>
 <h2 id="initialization">Initialization</h2>
-<p>The <a href="../../../vsi/systemd/current/intro.md">systemd</a> <code>hal-service_manager.service</code> unit file is provided by the vendor layer to start the service.</p>
+<p>The <a href="../../../systemd/current/systemd/">systemd</a> <code>hal-service_manager.service</code> unit file is provided by the vendor layer to start the service.</p>
 <p>The Service Manager depends on the kernel binder driver.</p>
 <h2 id="product-customization">Product Customization</h2>
 <p>The Service Manager is universal code that must be compiled and delivered as part of the vendor layer.</p>

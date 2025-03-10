@@ -2678,7 +2678,7 @@
 </tr>
 <tr>
 <td><strong>Initialization - TBC</strong></td>
-<td><a href="../../../vsi/systemd/current/intro.md">systemd</a> - <strong>hal-video_sink.service</strong></td>
+<td><a href="../../../../vsi/systemd/current/systemd/">systemd</a> - <strong>hal-video_sink.service</strong></td>
 </tr>
 <tr>
 <td><strong>VTS Tests</strong></td>
@@ -2798,7 +2798,7 @@
 </tbody>
 </table>
 <h2 id="initialization">Initialization</h2>
-<p>The <a href="../../../vsi/systemd/current/intro.md">systemd</a> <code>hal-video_sink_manager.service</code> unit file is provided by the vendor layer to start the service and should include Wants or Requires directives to start any platform driver services it depends upon.</p>
+<p>The <a href="../../../../vsi/systemd/current/systemd/">systemd</a> <code>hal-video_sink_manager.service</code> unit file is provided by the vendor layer to start the service and should include Wants or Requires directives to start any platform driver services it depends upon.</p>
 <p>The Video Sink Manager service depends on the Service Manager to register itself as a service.</p>
 <p>Upon starting, the service shall register the <code>IVideoSinkManager</code> interface with the Service Manager using the String <code>IVideoSinkManager.serviceName</code> and immediately become operational.</p>
 <h2 id="product-customization">Product Customization</h2>
