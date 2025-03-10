@@ -4,25 +4,14 @@ project(Hal
 	LANGUAGES NONE
 	VERSION 1.0)
 
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules)
+
+include(CompileAidl)
+
 if (DEFINED AIDL_BIN)
 	get_filename_component(AIDL_BIN ${AIDL_BIN} ABSOLUTE)
-	if (NOT EXISTS ${AIDL_BIN} OR (EXISTS ${AIDL_BIN} AND IS_DIRECTORY ${AIDL_BIN}))
-		unset(AIDL_BIN CACHE)
-		unset(AIDL_BIN)
-	endif()
+	message(STATUS "AIDL_BIN set to ${AIDL_BIN}")
 endif()
-
-if (NOT AIDL_BIN)
-	# NOTE: For some reason while using cmake in docker, the `find_program()` will always
-	# locate the `aidl` file/binary at the current directory first, even '.' is not in the
-	# PATH variable. The behaviour is different from outside of docker
-	find_program(AIDL_BIN "aidl")
-endif()
-
-if (NOT AIDL_BIN)
-	message(FATAL_ERROR "`aidl` not found")
-endif()
-message(STATUS "AIDL_BIN set to ${AIDL_BIN}")
 
 if (NOT DEFINED AIDL_TARGET)
 	message(FATAL_ERROR "AIDL_TARGET must be defined")
@@ -43,16 +32,14 @@ if (NOT DEFINED AIDL_GEN_DIR)
 endif()
 message(STATUS "AIDL_GEN_DIR set to ${AIDL_GEN_DIR}")
 
-set(AIDL_FLAGS
-	--min_sdk_version=33
-	--lang=cpp
-	--structured
-	--stability=vintf
-	-h ${AIDL_GEN_DIR}/h
-	-o ${AIDL_GEN_DIR}/cpp
-)
-
 if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${AIDL_TARGET}/${AIDL_SRC_VERSION}/CMakeLists.txt)
 	message(FATAL_ERROR "${AIDL_TARGET} does not have version `${AIDL_SRC_VERSION}`")
 endif()
+
+set(COMMON_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/common)
+set(AUDIO_DECODER_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/audiodecoder)
+set(AUDIO_SINK_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/audiosink)
+set(VIDEO_DECODER_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/videodecoder)
+set(VIDEO_SINK_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/videosink)
+
 add_subdirectory(${AIDL_TARGET}/${AIDL_SRC_VERSION})
