@@ -17,7 +17,7 @@ nav:
       - HAL Session State Management: halif/key_concepts/hal/hal_session_state_management.md
     - Standards:
       - Developer Tiers: external_content/ut-core-wiki/1.-Standards-&-Development-Process-Flow.md
-  - HAL Driver Interfaces (HDI):
+  - Vendor HAL Interfaces (VHI):
     - Overview: halif/key_concepts/hal/hal_interfaces.md
     - Interface Generation: introduction/interface_generation.md
     - AV Subsystem:
@@ -44,14 +44,14 @@ nav:
     - Plane Control: halif/plane_control/current/plane_control.md
     - Secure API: halif/sec_api/current/sec_api.md
     - Sensor: halif/sensor/current/sensor.md
-  - System Interfaces (VSI):
+  - Vendor System Interfaces (VSI):
     - Bluetooth: vsi/bluetooth/current/bluetooth.md
     - Graphics: vsi/graphics/current/graphics.md
     - Service Manager: vsi/service_manager/current/service_manager.md
     - Wi-Fi: vsi/wifi/current/wifi.md
     - Systemd: vsi/systemd/current/systemd.md
     - Kernel: vsi/kernel/current/kernel.md
-  - Vendor Tests:
+  - Vendor Tests Suites (VTS):
     - Levels of Test: external_content/ut-core-wiki/3.-Standards:-Levels-of-Test-for-Vendor-Layer.md
     - Level 4:
       - L4 System Interface (VSI): external_content/ut-core-wiki/3.3.-Standards:-L4-‐-System-Interface-Testing.md
