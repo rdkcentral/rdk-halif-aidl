@@ -51,6 +51,6 @@ enum CSDVideoFormat {
     AVC_DECODER_CONFIGURATION_RECORD = 0, /**< This value represents the AVCDecoderConfigurationRecord for H.264/AVC video. */
     HEVC_DECODER_CONFIGURATION_RECORD = 1, /**< This value represents the HEVCDecoderConfigurationRecord for H.265/HEVC video. */
     AV1_DECODER_CONFIGURATION_RECORD = 2  /**< This value represents the AV1CodecConfigurationRecord for AV1 video. */
-};
+}
 
 
