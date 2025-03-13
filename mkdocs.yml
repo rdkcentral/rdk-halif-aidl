@@ -84,17 +84,25 @@ nav:
 
 markdown_extensions:
   - admonition
-  - pymdownx.details
   - def_list
   - footnotes
+  - abbr
   - attr_list
   - md_in_html
+  - pymdownx.details
+  - pymdownx.snippets
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences  
   - toc:
       toc_depth: 4
-  - pymdownx.emoji:
+  - pymdownx.emoji: # Enable Extended Emoji if required
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
-  - pymdownx.superfences:
+  - pymdownx.superfences: # Enable mermaid
       custom_fences:
         - name: mermaid
           class: mermaid

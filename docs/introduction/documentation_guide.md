@@ -100,10 +100,19 @@ When contributing to the documentation, please adhere to the following guideline
 - **Proofreading:** Thoroughly proofread all content for spelling, grammar, and punctuation errors before submitting changes.
 - **Admonitions for Emphasis:** Use admonitions to highlight key information, warnings, notes, or tips. Material for MkDocs provides various admonition styles: [https://squidfunk.github.io/mkdocs-material/reference/admonitions/](https://squidfunk.github.io/mkdocs-material/reference/admonitions/)
 
-!!! note "Helpful Tip"
+!!! note Note
     This is an example of a note admonition.
 
-!!! warning "Important Consideration"
+!!! info Info
+    This is an example of a info admonition.
+
+!!! tip Tip
+    This is an example of a tip admonition.
+
+!!! example Example
+    This is an example
+
+!!! warning Important Consideration
     This is a warning!
 
 - **Code Blocks with Syntax Highlighting:** Always use code blocks for code examples and specify the language for syntax highlighting:

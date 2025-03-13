@@ -1,11 +1,12 @@
 # HAL Interface Overview
 
-Interfaces must progress through multiple stages before a static version can be approved for AIDL usage. If the design remains untested or requires major changes, the first interface version cannot be approved.
+Interfaces / Testing Suites / Component code must progress through multiple stages before a stable interface version can be realised. The first interface version will only be finalized at Phase 6, ensuring that it has been thoroughly tested and refined. Until the interface reaches this phase the interface is subject to change and cannot be considered stable.
+
+!!! tip
+    - Each phase requires an engineering & architecture sign-off and review before proceeding to the next stage.
+    - Target Information is listed in the with the status. e.g. **M3/25**, **Q2/25**, **H2/25**, for moving to the next phase.
 
 ## Interface Phases
-
-- Each phase requires an engineering & architecture sign-off and review before proceeding to the next stage.
-- Target Information is listed in the with the status. e.g. **M3/25**, **Q2/25**, **H2/25**, for moving to the next phase.
 
 | **Development Phase** | **Goal** | **Description** |
 | --- | --- | --- |
@@ -29,15 +30,12 @@ Interfaces must progress through multiple stages before a static version can be 
 | **Level 3 (L3)** | Component Stimulus Testing | Pre-commit testing using external stimuli to validate component responses and adherence to requirements |
 | **Level 4 (L4)** | System Interface Testing (VSI) | Validate interactions with external interfaces and devices, including Bluetooth, WiFi, graphics, and kernel interfaces |
 
-**Note:** Not all components will undergo every testing phase, as some require interaction with other component groups to operate effectively.
+!!! note
+    - Not all components will undergo every testing phase, as some require interaction with other component groups to operate effectively.
 
 For More detailed information see [Testing Suite Levels](../../../external_content/ut-core-wiki/3.-Standards:-Levels-of-Test-for-Vendor-Layer.md)
 
 ### Testing Suite Phases
-
-**Each phase requires an engineering & architecture sign-off and review before proceeding to the next stage.**
-
-- Target Information is listed in the with the status. e.g. **M3/25**, **Q2/25**, **H2/25**, for moving to the next phase.
 
 | **Development Phase** | **Goal** | **Description** |
 | --- | --- | --- |
@@ -47,7 +45,8 @@ For More detailed information see [Testing Suite Levels](../../../external_conte
 | **Phase 4**<br>🟢🟢🟢🟢⚪<br>(4/5) | Hardware & Architecture Validation | Validation of interface functionality and architecture design on both the vDevice and lead hardware platform using testing suites. |
 | **Phase 5**<br>🟢🟢🟢🟢🟢<br>(5/5)| Integrate and Test | Integrate the module into the broader system and conduct rigorous testing using the developed testing suites. This phase ensures correct module functionality within the overall system architecture and verifies that it meets defined requirements. |
 
-**Testing suites must prioritize MVP bring-up and ensure the first-phase delivery of core features.**  
+!!! warning
+    Testing suites must prioritize MVP bring-up and ensure the first-phase delivery of core features.
 
 ---
 
@@ -58,10 +57,7 @@ For More detailed information see [Testing Suite Levels](../../../external_conte
 | **vDevice** | Virtual Vendor Layer |
 | **vComponent** | Independent Virtual component part of the vDevice |
 
-**Each phase requires an engineering & architecture sign-off and review before proceeding to the next stage.**
-
-- Target Information is listed in the with the status. e.g. **M3/25**, **Q2/25**, **H2/25**, for moving to the next phase.
-
+For more information on the Virtual device please see [vDevice Overview](../../../external_content/ut-core-wiki/5.0:-Standards:-vDevice-Overview.md)
 
 | **Development Phase** | **Goal** | **Description** |
 | --- | --- | --- |
@@ -71,7 +67,54 @@ For More detailed information see [Testing Suite Levels](../../../external_conte
 | **Phase 4** <br>🟢🟢🟢🟢⚪<br>(4/5)| Develop vComponent Implementation | Implement a **phased delivery** of the **vComponent module** based on the vComponent specification. This module integrates with the **vDevice vendor layer**, enabling validation against the **testing suite** and ensuring conformance to interface specifications. (Can work with 3rd Parties on implementation) |
 | **Phase 5**<br>🟢🟢🟢🟢🟢<br>(5/5)| Integration & Testing | Integrate the **vComponent** into the broader **vDevice** system and perform rigorous testing against the defined **testing suites**. Incorporate feedback to refine the implementation, update test cases as needed, and verify compliance with all specified requirements. |
 
-## AV Components
+## Phase Relationships
+
+The flowchart below shows the relationships and flows between the phases.
+
+!!! info note
+    Once the interface reaches "Phase 4: Feedback & Refinement" 🟢🟢🟢🟢, then "Testing Suite: Phase 1" & "vComponent: Phase 1" can commence.
+
+```mermaid
+flowchart TD
+    %% Dummy node to enforce left alignment
+    X[ Start ] -.-> Interface_Phases
+
+    subgraph vComponent_Phases
+        V1[P1: Interface Foundation Confidence<br>🟡] --> V2[P2: Define vComponent Requirements🟡🟡]
+        V2 --> V3[P3: Control Plane Requirements Definition<br>🟠🟠🟠]
+        V3 --> V4[P4: Develop vComponent Implementation<br>🟢🟢🟢🟢]
+        V4 --> V5[P5: Integration & Testing<br>🟢🟢🟢🟢🟢]
+    end
+
+    subgraph Testing_Suite_Phases
+        T1[P1: Define Testing Specification <br>🟡] --> T2[P2: Generate Testing Suite <br>🟡🟡]
+        T2 --> T3[P3: Validate Testing Suite<br>🟠🟠🟠]
+        T3 --> T4[P4: Hardware & Architecture Validation<br>🟢🟢🟢🟢]
+        T4 --> T5[P5: Integrate and Test<br>🟢🟢🟢🟢🟢]
+    end
+
+    subgraph Interface_Phases
+        P1[P1: Define High-Level Requirements <br>🟡] --> P2[P2: Define HAL AIDL Interface<br>🟡🟡]
+        P2 --> P3[P3: Develop Detailed Module Specification<br>🟠🟠🟠]
+        P3 --> P4[P4: Feedback & Refinement<br>🟢🟢🟢🟢]
+        P4 <--> |Feedback/Refine | P5[P5: Hardware & Architecture Validation<br>🟢🟢🟢🟢🟢]
+        P5 --> P6[P6: Interface Freeze & Versioning<br>🟢🟢🟢🟢🟢🟢]
+    end
+
+    P4 --> |Feedback loop | P2
+    P4 <--> |Foundation/Feedback| V1
+    P4 --> |Testing/Feedback| T1
+    T4 <--> |Testing loop| V4
+    T2 <--> |Feedback loop| T3
+    T4 <--> | Feedback loop | P5
+    V5 <--> | Feedback loop | P5
+    T5 <--> | Feedback loop | P5
+
+```
+
+## Interface / Testing / vComponent Status
+
+### AV Components
 
 This list provides an overview of various HAL components, their device profiles, and functionality within the system.
 
@@ -89,7 +132,7 @@ This list provides an overview of various HAL components, their device profiles,
 | ------------------ |---|------------|
 | **Generic A/V Tests**      | 🟡⚪⚪⚪⚪ (1/5)<br>**Q3** | 🟡⚪⚪⚪⚪ (1/5)<br>**Q3** |
 
-## Non AV Components
+### Non AV Components
 
 This list provides an overview of various HAL components, their device profiles, and functionality within the system.
 
@@ -118,7 +161,7 @@ This list provides an overview of various HAL components, their device profiles,
 |  **Secapi**                                                                    | ⚪⚪⚪⚪⚪⚪ (X/6)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | Used for crypto, needs rationalisation  with TEE |
 | [**FFV**](../../ffv/current/ffv.md)                                            | ⚪⚪⚪⚪⚪⚪ (x/6)<br> **Qx** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) | Need to define the business case, DSP|
 
-## Vendor System Interfaces (VSI)
+### Vendor System Interfaces (VSI)
 
 The following smaller subset of HALs function as in-process libraries, collectively referred to as the Vendor System Interface (VSI). They are dynamically linked to the RDK Middleware, commonly used for:
 
@@ -131,7 +174,7 @@ The following smaller subset of HALs function as in-process libraries, collectiv
 | [**Filesystem**](../../../vsi/filesystem/current/file_system.md)              | 🟠⚪⚪⚪⚪⚪ (1/6)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) | TBD: /opt. eCryptFS, /sysfs. /procfs, (resilience) abstracted filing system|
 | [**Linux Input Device**](../../../vsi/linux_input/current/linux_input.md)     | 🟡⚪⚪⚪⚪⚪ (1/6)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5)<br> **Q2** | ⚪⚪⚪⚪⚪ (x/5) |
 
-### Vendor System Interfaces (VSI) TBD
+#### Vendor System Interfaces (VSI) TBD
 
 | HAL Component                                                                 | L4               | Comments |
 | -------------------                                                           |----              | ----- |
