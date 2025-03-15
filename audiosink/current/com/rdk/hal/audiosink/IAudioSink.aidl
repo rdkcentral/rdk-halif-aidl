@@ -90,27 +90,28 @@ interface IAudioSink
     State getState();
  
     /**
-	 * Opens the audio sink.
-     * 
-     * If successful the audio sink transitions to an OPENING state and then a READY state.
-     * The following guarantees are made on an opened audio sink:
-     *  - Volume is set to the default of 1.0 and unmuted.
-     *  - The linked Audio Decoder is set to IAudioDecoder.Id.UNDEFINED.
-     *  - All `Property` values are set to defaults.
-     *
-     * If the client that opened the `IAudioSinkController` crashes,
-     * then the `IAudioSinkController` has stop() and close() implicitly called to perform clean up.
-     *
-     * @param[in] audioSinkControllerListener       Callback listener for controller events.
-     * 
-     * @exception binder::Status EX_ILLEGAL_STATE
-     * 
-     * @returns IAudioSinkController or null on error.
-     * 
-     * @pre Resource is in State::CLOSED state.
-     * 
-     * @see close()
-     */
+    * Opens the audio sink.
+    *
+    * If successful, the audio sink transitions to an OPENING state and then a READY state.
+    * The following guarantees are made for an opened audio sink:
+    *  - Volume is set to the default of 1.0 and unmuted.
+    *  - The linked Audio Decoder is set to IAudioDecoder.Id.UNDEFINED.
+    *  - All `Property` values are set to their defaults.
+    *
+    * If the client that opened the `IAudioSinkController` crashes,
+    * then `stop()` and `close()` are implicitly called on the `IAudioSinkController` to perform cleanup.
+    *
+    * @param[in] contentType                     The content type of the audio sink.
+    * @param[in] audioSinkControllerListener     Callback listener for controller events.
+    *
+    * @returns IAudioSinkController or null On error
+    *
+    * @throws binder::Status EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
+    *
+    * @pre The resource must be in the CLOSED state.
+    *
+    * @see close()
+    */
     @nullable IAudioSinkController open(in ContentType contentType, in IAudioSinkControllerListener audioSinkControllerListener);
 
     /**
