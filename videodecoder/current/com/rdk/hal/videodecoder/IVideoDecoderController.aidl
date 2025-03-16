@@ -180,7 +180,7 @@ interface IVideoDecoderController
     * @retval true  The codec data was successfully set.
     * @retval false Invalid parameter or empty codec data array.
     *
-    * @throws binder::Status `EX_ILLEGAL_STATE` if the resource is not in the `STARTED` state.
+    * @exception binder::Status EX_ILLEGAL_STATE if the resource is not in the `STARTED` state.
     *
     * @pre The resource must be in the `STARTED` state.
     */

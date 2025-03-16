@@ -91,29 +91,31 @@ interface IAudioSinkController {
     void stop();
  
     /**
-	 * Queues an audio frame for mixing.
-     * 
-     * The audio sink must be in a `STARTED` state.
-     * Buffers can be either non-secure or secure to support SAP.
-     * Each call shall reference a single audio frame with a presentation timestamp.
-     * The audio sink may refuse the buffer if its internal resource usage means it cannot accept it at that time.
-     * All buffers passed into `queueAudioFrame()` are the responsibility of the Audio Sink to free once they are
-     * no longer required.
-     * 
-     * If an audio frame is passed to `queueAudioFrame()` after EOS, then the `EX_ILLEGAL_STATE` exception
-     * is raised.  The audio sink must be stopped and re-started or flushed to accept new buffers.
-     *
-     * @param[in] nsPresentationTime	The presentation time of the audio frame in nanoseconds.
-     * @param[in] bufferHandle			A handle to the AV buffer containing the audio frame.
-     * @param[in] metadata				A FrameMetadata parcelable describing the audio frame.
-     *
-     * @returns boolean - true on success or false if the buffer is full.
-     * 
-     * @exception binder::Status EX_ILLEGAL_STATE 
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT
-     * 
-     * @pre Resource is in State::STARTED state.
-     */
+    * Queues an audio frame for mixing.
+    *
+    * The audio sink must be in the `STARTED` state.
+    * Buffers can be either non-secure or secure to support SAP.
+    * Each call shall reference a single audio frame with a presentation timestamp.
+    * The audio sink may refuse the buffer if its internal resource usage prevents it from accepting it at that time.
+    * All buffers passed into `queueAudioFrame()` are the responsibility of the Audio Sink to free once they are
+    * no longer required.
+    *
+    * If an audio frame is passed to `queueAudioFrame()` after EOS, then the `binder::Status EX_ILLEGAL_STATE` exception
+    * is raised. The audio sink must be stopped and restarted or flushed to accept new buffers.
+    *
+    * @param[in] nsPresentationTime The presentation time of the audio frame in nanoseconds.
+    * @param[in] bufferHandle       A handle to the AV buffer containing the audio frame.
+    * @param[in] metadata           A FrameMetadata parcelable describing the audio frame.
+    *
+    * @returns boolean
+    * @retval true  On success.
+    * @retval false If the buffer is full.
+    *
+    * @exception binder::Status EX_ILLEGAL_STATE    If the resource is not in the `STARTED` state or an audio frame is passed after EOS.
+    * @exception binder::Status EX_ILLEGAL_ARGUMENT If an invalid argument is provided.
+    *
+    * @pre The resource must be in the `STARTED` state.
+    */
     boolean queueAudioFrame(in long nsPresentationTime, in long bufferHandle, in FrameMetadata metadata);
     
     /**

@@ -106,7 +106,7 @@ interface IAudioSink
     *
     * @returns IAudioSinkController or null On error
     *
-    * @throws binder::Status EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
+    * @exception binder::Status EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
     *
     * @pre The resource must be in the CLOSED state.
     *

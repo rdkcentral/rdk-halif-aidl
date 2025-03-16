@@ -61,15 +61,17 @@ oneway interface IAudioSinkControllerListener {
     void onEndOfStream(in long nsPresentationTime);
    
     /**
-     * Callback to indicate a audio frame buffer underflow condition.
-     * 
-     * This occurs if the frame queue is empty at the AV sync clock based presentation time.
-     * The callback occurs only once when the queue becomes empty.
-     * The onAudioResumed() callback informs the client when audio playback restarts, 
-     * which allows the onAudioUnderflow() to occur again.
-     * 
-     * *** ADD WORDING AROUND HAVE BUFFERS BUT NOTHING TO PRESENT AT PTS.
-     */
+    * Callback to indicate an audio frame buffer underflow condition.
+    *
+    * This occurs when the frame queue is empty, or when buffers are present but none
+    * are available for presentation at the AV sync clock based presentation time.
+    *
+    * The callback occurs only once when this condition is met.
+    *
+    * The `onAudioResumed()` callback informs the client when audio playback restarts,
+    * which allows the `onAudioUnderflow()` callback to occur again if a subsequent
+    * underflow occurs.
+    */
     void onAudioUnderflow();
   
     /**
