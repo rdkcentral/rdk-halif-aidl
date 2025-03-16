@@ -81,7 +81,7 @@ interface IHDMIOutputController
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::READY state.
+     * @pre The resource must be in State::READY.
      * 
      * @see stop(), IHDMIOutput.open()
      */
@@ -95,7 +95,7 @@ interface IHDMIOutputController
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      * 
      * @see start(), IHDMIOutput.close()
      */

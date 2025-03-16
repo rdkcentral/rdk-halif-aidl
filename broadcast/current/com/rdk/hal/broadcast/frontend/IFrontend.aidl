@@ -92,7 +92,7 @@ interface IFrontend {
      * 
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::CLOSED state.
+     * @pre The resource must be in State::CLOSED.
      * 
      * @see IFrontendController, IFrontendController.close(), registerListener()
      */

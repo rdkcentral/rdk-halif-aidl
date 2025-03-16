@@ -44,7 +44,7 @@ interface IFrontendController {
      *
      * @exception binder::Status EX_ILLEGAL_STATE
      * 
-     * @pre Resource is in State::READY state.
+     * @pre The resource must be in State::READY.
      * 
      * @see IFrontend.open(), tune()
      */
@@ -58,7 +58,7 @@ interface IFrontendController {
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::READY or State::STARTED state.
+     * @pre The resource must be in State::READY or State::STARTED.
      * 
      * @see stopTune(), close()
      *
@@ -72,7 +72,7 @@ interface IFrontendController {
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::READY or State::STARTED state.
+     * @pre The resource must be in State::READY or State::STARTED.
      * 
      * @see tune()
      */

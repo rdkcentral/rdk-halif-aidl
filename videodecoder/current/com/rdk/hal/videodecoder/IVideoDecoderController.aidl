@@ -39,7 +39,7 @@ interface IVideoDecoderController
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::READY state.
+     * @pre The resource must be in State::READY.
      * 
      * @see IVideoDecoder.open(), IVideoDecoder.stop()
      */
@@ -54,7 +54,7 @@ interface IVideoDecoderController
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      * 
      * @see start()
      */
@@ -92,7 +92,7 @@ interface IVideoDecoderController
      * @exception binder::Status EX_ILLEGAL_STATE
      * @exception binder::Status EX_ILLEGAL_ARGUMENT
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      */
     boolean decodeBuffer(in long nsPresentationTime, in long bufferHandle);
 
@@ -110,7 +110,7 @@ interface IVideoDecoderController
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      */
     void flush(in boolean reset);
 
@@ -123,7 +123,7 @@ interface IVideoDecoderController
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      */
     void signalDiscontinuity();
 
@@ -141,7 +141,7 @@ interface IVideoDecoderController
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      */
     void signalEOS();
     

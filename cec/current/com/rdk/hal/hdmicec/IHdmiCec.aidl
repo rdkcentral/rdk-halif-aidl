@@ -80,7 +80,7 @@ interface IHdmiCec
      * 
      * @returns IHdmiCecController or null on error.
      * 
-     * @pre Resource is in State::CLOSED state.
+     * @pre The resource must be in State::CLOSED.
      * 
      * @see close()
      */
@@ -102,7 +102,7 @@ interface IHdmiCec
      * @retval true     Successfully closed.
      * @retval false    Invalid state or unrecognised parameter.
      *
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      *
      * @see open()
      */

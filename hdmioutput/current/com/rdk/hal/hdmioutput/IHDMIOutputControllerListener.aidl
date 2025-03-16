@@ -66,7 +66,7 @@ oneway interface IHDMIOutputControllerListener
      *
      * @param[in] edid          Array of bytes representing the full set of E-EDID data blocks.
      *
-     * @pre Resource is in State::READY or State::STARTED state.
+     * @pre The resource must be in State::READY or State::STARTED.
      *
      * @see IHDMIOutput.open()
      * @see CTA-861

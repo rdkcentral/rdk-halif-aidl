@@ -119,7 +119,7 @@ interface IVideoDecoder
      * 
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::CLOSED state.
+     * @pre The resource must be in State::CLOSED.
      * 
      * @see IVideoDecoderController, IVideoDecoderController.close(), registerEventListener()
      */
@@ -138,7 +138,7 @@ interface IVideoDecoder
      * @retval true     Successfully closed.
      * @retval false    Invalid state or unrecognised parameter.
      *
-     * @pre Resource is in State::READY state.
+     * @pre The resource must be in State::READY.
      *
      * @see open()
      */

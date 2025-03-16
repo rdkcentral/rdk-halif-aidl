@@ -44,7 +44,7 @@ interface IAudioSinkController {
      * 
      * @returns boolean - true on success or false if the ID is invalid or not IAudioDecoder.Id.UNDEFINED.
      * 
-     * @pre Resource is in State::READY state.
+     * @pre The resource must be in State::READY.
      * 
      * @see getAudioDecoder(), IAudioDecoderManager.getAudioDecoderIds()
 	 */
@@ -57,7 +57,7 @@ interface IAudioSinkController {
      * 
      * @exception binder::Status EX_ILLEGAL_STATE
      * 
-     * @pre Resource is in State::READY or State::STARTED state.
+     * @pre The resource must be in State::READY or State::STARTED.
      * 
      * @see setAudioDecoder()
 	 */
@@ -71,7 +71,7 @@ interface IAudioSinkController {
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::READY state.
+     * @pre The resource must be in State::READY.
      * 
      * @see stop(), close()
      */
@@ -84,7 +84,7 @@ interface IAudioSinkController {
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      * 
      * @see start()
      */
@@ -127,7 +127,7 @@ interface IAudioSinkController {
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      * 
      * @see IAudioSinkControllerListener.onFlushComplete()
      */
@@ -140,7 +140,7 @@ interface IAudioSinkController {
      * 
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::READY or State::STARTED state.
+     * @pre The resource must be in State::READY or State::STARTED.
      */
     Volume getVolume();
  
@@ -153,7 +153,7 @@ interface IAudioSinkController {
      * 
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::READY or State::STARTED state.
+     * @pre The resource must be in State::READY or State::STARTED.
      */
     boolean setVolume(in Volume volume);
      
@@ -178,7 +178,7 @@ interface IAudioSinkController {
      * 
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      */
     boolean setVolumeRamp(in double targetVolume, in int overMs, in VolumeRamp volumeRamp);
 

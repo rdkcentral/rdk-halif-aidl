@@ -127,7 +127,7 @@ interface IAudioSink
      * @retval true     Successfully closed.
      * @retval false    Invalid state or unrecognised parameter.
      * 
-     * @pre Resource is in State::READY state.
+     * @pre The resource must be in State::READY.
      *
      * @see open()
      */

@@ -76,7 +76,7 @@ interface IHDMIInputController
     boolean getConnectionState();
 
     /**
-	 * Starts the HDMI input.
+     * Starts the HDMI input.
      * 
      * When started, video from the HDMI input port can be mapped to a video plane and audio is mixed.
      * 
@@ -88,21 +88,21 @@ interface IHDMIInputController
      *
      * @exception binder::Status EX_ILLEGAL_STATE
      * 
-     * @pre Resource is in State::READY state.
+     * @pre The resource must be in State::READY.
      * 
      * @see stop(), IHDMIInput.open()
      */
     void start();
  
     /**
-	 * Stops the HDMI input.
-     * 
-     * @exception binder::Status EX_ILLEGAL_STATE 
-     * 
-     * @pre Resource is in State::STARTED state.
-     * 
-     * @see start(), IHDMIInput.close()
-     */
+    * Stops the HDMI input.
+    *
+    * @exception binder::Status EX_ILLEGAL_STATE If the resource is not in the `STARTED` state.
+    *
+    * @pre The resource must be in the `STARTED` state.
+    *
+    * @see start(), IHDMIInput.close()
+    */
     void stop();
 
     /**
