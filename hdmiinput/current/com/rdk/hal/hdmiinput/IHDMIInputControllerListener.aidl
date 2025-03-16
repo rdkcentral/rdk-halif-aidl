@@ -33,13 +33,14 @@ import com.rdk.hal.hdmiinput.VIC;
 oneway interface IHDMIInputControllerListener
 {
     /**
-     * Device connection state event notification.
-     * 
-     * Debouncing is peformed by the HAL and must be in a stable state before firing the event.
-     * Always fires to reflect the current state during the `OPENING` state transition.
-     *
-     * @param[in] connectionState   Reflects the device connection state.
-     */
+    * Device connection state event notification.
+    *
+    * Debouncing is performed by the HAL, ensuring a stable state before firing the event.
+    * The event always fires to reflect the current state during the `OPENING` state transition,
+    * and during a hot plug of an HDMI source device.
+    *
+    * @param[in] connectionState `true` if the device is connected, `false` otherwise.
+    */
     void onConnectionStateChanged(in boolean connectionState);
 
     /** 
