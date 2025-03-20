@@ -2279,9 +2279,9 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#abstract" class="md-nav__link">
+  <a href="#executive-summary" class="md-nav__link">
     <span class="md-ellipsis">
-      Abstract
+      Executive Summary
     </span>
   </a>
   
@@ -2306,13 +2306,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#requirement-breakdown-structure" class="md-nav__link">
+  <a href="#requirements-breakdown" class="md-nav__link">
     <span class="md-ellipsis">
-      Requirement Breakdown Structure
+      Requirements Breakdown
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Requirement Breakdown Structure">
+    <nav class="md-nav" aria-label="Requirements Breakdown">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2322,8 +2322,7 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Epics (Internal, JIRA-Based)">
-      <ul class="md-nav__list">
+</li>
         
           <li class="md-nav__item">
   <a href="#example" class="md-nav__link">
@@ -2331,11 +2330,6 @@
       Example
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
         
@@ -2653,9 +2647,9 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#abstract" class="md-nav__link">
+  <a href="#executive-summary" class="md-nav__link">
     <span class="md-ellipsis">
-      Abstract
+      Executive Summary
     </span>
   </a>
   
@@ -2680,13 +2674,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#requirement-breakdown-structure" class="md-nav__link">
+  <a href="#requirements-breakdown" class="md-nav__link">
     <span class="md-ellipsis">
-      Requirement Breakdown Structure
+      Requirements Breakdown
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Requirement Breakdown Structure">
+    <nav class="md-nav" aria-label="Requirements Breakdown">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2696,8 +2690,7 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Epics (Internal, JIRA-Based)">
-      <ul class="md-nav__list">
+</li>
         
           <li class="md-nav__item">
   <a href="#example" class="md-nav__link">
@@ -2705,11 +2698,6 @@
       Example
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
         
@@ -2905,17 +2893,19 @@
   
 
 
-<h1 id="white-paper-achieving-engineering-goals-and-defining-requirements-for-features-and-tasks">White Paper: Achieving Engineering Goals and Defining Requirements for Features and Tasks</h1>
-<h2 id="abstract">Abstract</h2>
+<h1 id="white-paper-achieving-engineering-goals-and-defining-requirements-for-features-and-tasks"><strong>White Paper: Achieving Engineering Goals and Defining Requirements for Features and Tasks</strong></h1>
+<h2 id="executive-summary"><strong>Executive Summary</strong></h2>
 <p>Effective goal setting and requirements definition are crucial for delivering high-quality, scalable, and maintainable software in an open-source community-driven development model. This white paper presents a structured methodology for defining features, tasks, and issues using GitHub, while ensuring visibility and alignment with long-term engineering objectives. While internal tracking tools such as JIRA may be used for high-level business goals, compliance, and reporting, the core development efforts remain transparent and community-accessible.</p>
-<h2 id="introduction">Introduction</h2>
+<hr />
+<h2 id="introduction"><strong>Introduction</strong></h2>
 <p>Community-driven software development, such as the one fostered within RDK Central, requires clear goal-setting mechanisms that ensure transparency, accountability, and effective collaboration among multiple contributing companies. The RDK Central development ecosystem is structured around <strong>Tier 1</strong> and <strong>Tier 2</strong> development teams, each with defined roles and contribution processes:</p>
 <ul>
 <li><strong>Tier 1 Developers</strong> – These teams are responsible for core platform contributions and work collaboratively across multiple companies to define, develop, and maintain foundational components. Their work is closely tracked, with direct contributions managed following structured branching workflows. For more details, refer to the <a href="https://github.com/rdkcentral/ut-core/wiki/1.0.-Standards:-Tier-1-Operator-Guide:-Branching-for-Direct-Contributions">Tier-1 Operator Guide: Branching for Direct Contributions</a>.</li>
 <li><strong>Tier 2 Developers</strong> – These contributors typically focus on feature development, customization, and extensions for specific deployments. They operate by extending or integrating components from Tier 1, ensuring that their contributions align with core platform developments. Contributions from Tier 2 developers follow a forking model for external contributions. For more details, refer to the <a href="https://github.com/rdkcentral/ut-core/wiki/1.0.1-Standards:-Tier-2-Operator-Guide:-Forking-for-External-Contributions">Tier-2 Operator Guide: Forking for External Contributions</a>.</li>
 </ul>
 <p>This paper outlines a standardized process for tracking engineering work, documenting requirements, and structuring project management workflows using GitHub Issues, Milestones, and JIRA for high-level business tracking. These practices are actively in use within RDK Central to maintain visibility and collaboration across all development tiers.</p>
-<h2 id="engineering-oriented-goal-setting">Engineering-Oriented Goal Setting</h2>
+<hr />
+<h2 id="engineering-oriented-goal-setting"><strong>Engineering-Oriented Goal Setting</strong></h2>
 <p>Drawing inspiration from <em>Management in 10 Words</em>, this methodology reframes business goals into engineering-centric principles:</p>
 <ol>
 <li><strong>Trust</strong> – Enable transparency and accountability in development.</li>
@@ -2929,8 +2919,9 @@
 <li><strong>Standards</strong> – Follow industry best practices for consistency and compliance.</li>
 <li><strong>Excellence</strong> – Strive for high reliability and maintainability.</li>
 </ol>
-<h2 id="requirement-breakdown-structure">Requirement Breakdown Structure</h2>
-<h3 id="epics-internal-jira-based">Epics (Internal, JIRA-Based)</h3>
+<hr />
+<h2 id="requirements-breakdown"><strong>Requirements Breakdown</strong></h2>
+<h3 id="epics-internal-jira-based"><strong>Epics (Internal, JIRA-Based)</strong></h3>
 <p>All work is driven <strong>business requirements</strong> which in turn generates <strong>development work</strong>. To manage this effectively, we categorize work into two distinct types:  </p>
 <ol>
 <li>
@@ -2964,7 +2955,7 @@
 <li><strong>Direct traceability between tasks, issues, and features</strong>, as every commit, pull request, and merge request is linked with URLs and full version history.  </li>
 </ul>
 <p>This structure enforces <strong>GitHub as the single source of truth</strong> for all development tracking, ensuring transparency, efficiency, and seamless collaboration across internal and external teams.  </p>
-<h4 id="example">Example</h4>
+<h3 id="example"><strong>Example</strong></h3>
 <p><strong>Overall Business (Jira Epic): Enable Personalized Bluetooth LE Audio Broadcast</strong></p>
 <ul>
 <li><strong>Goal:</strong> Deliver a feature enabling users to connect multiple Bluetooth LE Audio headphones with personalized audio streams for an enhanced viewing experience.</li>
@@ -3004,74 +2995,76 @@
 </ul>
 </li>
 </ul>
-<h2 id="feature-requests-bug-reporting-and-task-tracking">Feature Requests, Bug Reporting, and Task Tracking</h2>
+<hr />
+<h2 id="feature-requests-bug-reporting-and-task-tracking"><strong>Feature Requests, Bug Reporting, and Task Tracking</strong></h2>
 <p>All feature requests, bug reports, and tasks are tracked in <strong>GitHub Issues</strong> within the <strong>RDK Central open tracking system</strong>. This ensures complete visibility of work progress, fosters collaboration among contributors, and aligns with the community-driven development model. These GitHub-based tracking mechanisms are publicly accessible and help maintain transparency across all contributions.</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>The following templates are already enabled in RDK Central</p>
 </div>
-<h3 id="features">Features</h3>
+<h3 id="features"><strong>Features</strong></h3>
 <p>Feature requests should be well-defined to ensure clarity in their purpose, scope, and impact. The following feature request template is actively used within RDK Central:</p>
-<h4 id="feature-request-template">Feature Request Template</h4>
+<h4 id="feature-request-template"><strong>Feature Request Template</strong></h4>
 <ul>
 <li><strong>Title Format:</strong> <code>Feature:&lt;Short summary of the problem&gt;</code></li>
 <li><strong>Issue Type:</strong> Set as <code>FEATURE</code></li>
 <li><strong>Labels:</strong> Apply relevant labels such as <code>Documentation</code>, <code>Enhancement</code>, <code>Bug</code>, etc.</li>
 <li><strong>Project Field:</strong> Assign to an appropriate project. Example project templates can be found <a href="https://github.com/orgs/rdkcentral/projects/28/views/1">here</a></li>
 </ul>
-<h4 id="description">Description</h4>
+<h4 id="description"><strong>Description</strong></h4>
 <ul>
 <li><strong>Problem/Opportunity:</strong> Describe the user need or problem this feature solves/improves.</li>
 <li><strong>Proposed Solution:</strong> Explain your idea for the feature and how it addresses the problem/opportunity.</li>
 </ul>
-<h4 id="acceptance-criteria-optional">Acceptance Criteria (Optional)</h4>
+<h4 id="acceptance-criteria-optional"><strong>Acceptance Criteria (Optional)</strong></h4>
 <ul>
 <li>Specific condition 1</li>
 <li>Specific condition 2</li>
 <li>...</li>
 </ul>
-<h4 id="additional-notes-optional">Additional Notes (Optional)</h4>
+<h4 id="additional-notes-optional"><strong>Additional Notes (Optional)</strong></h4>
 <ul>
 <li>Mockups, sketches, wireframes, etc.</li>
 </ul>
-<h3 id="tasks">Tasks</h3>
+<h3 id="tasks"><strong>Tasks</strong></h3>
 <p>Tasks encompass all actionable work within GitHub Issues, including feature development, improvements, maintenance, and refactoring. To align with RDK Central's best practices, tasks should follow the recommended template, which is already in use within the community:</p>
-<h4 id="task-template">Task Template</h4>
+<h4 id="task-template"><strong>Task Template</strong></h4>
 <ul>
 <li><strong>Title Format:</strong> <code>Task:&lt;Short summary of the problem&gt;</code></li>
 <li><strong>Issue Type:</strong> Set as <code>TASK</code></li>
 <li><strong>Labels:</strong> Apply relevant labels, such as <code>documentation</code> or <code>enhancement</code></li>
 <li><strong>Project Field:</strong> Assign to an appropriate project. Example project templates can be found <a href="https://github.com/orgs/rdkcentral/projects/28/views/1">here</a></li>
 </ul>
-<h4 id="description_1">Description</h4>
+<h4 id="description_1"><strong>Description</strong></h4>
 <ul>
 <li>Clearly state the goal of the task for better understanding and traceability.</li>
 </ul>
-<h4 id="notes-optional">Notes (Optional)</h4>
+<h4 id="notes-optional"><strong>Notes (Optional)</strong></h4>
 <ul>
 <li>Include any helpful information, such as environment details or relevant links.</li>
 </ul>
-<h3 id="bug-reporting">Bug Reporting</h3>
+<h3 id="bug-reporting"><strong>Bug Reporting</strong></h3>
 <p>Bugs should be reported following a standardized format to ensure clarity, traceability, and reproducibility. The following bug template is actively used within RDK Central:</p>
-<h4 id="bug-template">Bug Template</h4>
+<h4 id="bug-template"><strong>Bug Template</strong></h4>
 <ul>
 <li><strong>Title Format:</strong> <code>Bug:&lt;Short summary of the problem&gt;</code></li>
 <li><strong>Issue Type:</strong> Set as <code>BUG</code></li>
 <li><strong>Labels:</strong> Apply relevant labels, such as <code>Bug</code></li>
 <li><strong>Project Field:</strong> Assign to an appropriate project. Example project templates can be found <a href="https://github.com/orgs/rdkcentral/projects/28/views/1">here</a></li>
 </ul>
-<h4 id="description_2">Description</h4>
+<h4 id="description_2"><strong>Description</strong></h4>
 <ul>
 <li><strong>Problem:</strong> Clearly stating the problem upfront is crucial for understanding the issue.</li>
 <li><strong>Steps to Reproduce:</strong> If applicable, this is essential for bugs, allowing others to replicate the problem and verify solutions.</li>
 <li><strong>Expected Behaviour:</strong> Explain what should happen instead of the current behaviour.</li>
 <li><strong>Actual Behaviour:</strong> Describe what is currently happening, highlighting the discrepancy with the expected behaviour.</li>
 </ul>
-<h4 id="notes-optional_1">Notes (Optional)</h4>
+<h4 id="notes-optional_1"><strong>Notes (Optional)</strong></h4>
 <ul>
 <li>Include any helpful information, such as environment details, links, screenshots, error messages, console logs, or relevant code snippets.</li>
 </ul>
-<h2 id="why-attach-a-github-project-to-tasks">Why Attach a GitHub Project to Tasks?</h2>
+<hr />
+<h2 id="why-attach-a-github-project-to-tasks"><strong>Why Attach a GitHub Project to Tasks?</strong></h2>
 <p>Attaching a GitHub Project to tasks provides a structured approach to tracking development progress, status control, and workflow automation. GitHub Projects are used to:</p>
 <ul>
 <li><strong>Track the development of features</strong> in use in GitHub, ensuring clear visibility of work status.</li>
@@ -3080,9 +3073,14 @@
 <li><strong>Support timeframes, estimates, and planning</strong>, ensuring that work is executed within expected delivery schedules.</li>
 </ul>
 <p>More information on GitHub Projects can be found <a href="https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/about-projects">here</a>.</p>
-<h2 id="conclusion">Conclusion</h2>
+<hr />
+<h2 id="conclusion"><strong>Conclusion</strong></h2>
 <p>By structuring work in an open, organized, and transparent manner, engineering teams can achieve long-term scalability, reduce maintenance overhead, and manage technical debt effectively. This approach fosters a sustainable development model while maintaining alignment with broader business and compliance goals.</p>
 <p>This white paper aims to guide community-driven open-source software development efforts, ensuring efficient goal setting, transparent progress tracking, and effective collaboration.</p>
+<hr />
+<p><strong>Author</strong>: <em>Gerald Weatherup</em><br />
+<strong>Date</strong>: <em>20 March 2025</em></p>
+<p>For questions or suggestions on implementing branching strategies, please contact the Architecture team.</p>
 
 
 
