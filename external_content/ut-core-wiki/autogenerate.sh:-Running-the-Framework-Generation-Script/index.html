@@ -2216,6 +2216,28 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../whitepapers/engineering_goals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Achieving Engineering Goal
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2459,8 +2481,8 @@
 <hr />
 <h4 id="autogen-command">Autogen Command</h4>
 <p>To run the autogen script, use:</p>
-<div class="highlight"><pre><span></span><code>./autogenerate.sh<span class="w"> </span>&lt;api-def-repo-url/-c/-clean/-b/-branch/-h/-help&gt;
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>./autogenerate.sh<span class="w"> </span>&lt;api-def-repo-url/-c/-clean/-b/-branch/-h/-help&gt;
+</span></code></pre></div>
 <hr />
 <h4 id="autogen-options-explained">Autogen Options Explained</h4>
 <table>
@@ -2500,8 +2522,8 @@
 </tbody>
 </table>
 <p><strong>Note</strong>: To include debug statements, set the environment variable <code>AGT_DEBUG</code> before running the script:</p>
-<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">AGT_DEBUG</span><span class="o">=</span><span class="m">1</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">AGT_DEBUG</span><span class="o">=</span><span class="m">1</span>
+</span></code></pre></div>
 <hr />
 <h4 id="use-cases-supported-by-autogeneratesh">Use Cases Supported by autogenerate.sh</h4>
 <p>The <code>autogenerate.sh</code> script supports various use cases for generating test frameworks, providing flexibility for repository URLs, user-specified directories, and custom header file locations.</p>
@@ -2509,10 +2531,10 @@
 <li>
 <p><strong>API Definition Repository URL</strong><br />
    The API definition URL can be any accessible Git repository URL or directory path. Example commands:
-   <div class="highlight"><pre><span></span><code>./autogenerate.sh<span class="w"> </span>git@github.com:rdkcentral/rdk-halif-device_settings.git
-./autogenerate.sh<span class="w"> </span>https://github.com/rdkcentral/RdkWanManager.git
-./autogenerate.sh<span class="w"> </span>/home/user/workspace/RdkWanManager
-</code></pre></div></p>
+   <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>./autogenerate.sh<span class="w"> </span>git@github.com:rdkcentral/rdk-halif-device_settings.git
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>./autogenerate.sh<span class="w"> </span>https://github.com/rdkcentral/RdkWanManager.git
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>./autogenerate.sh<span class="w"> </span>/home/user/workspace/RdkWanManager
+</span></code></pre></div></p>
 </li>
 <li>
 <p><strong>Unit Test Directory</strong><br />
@@ -2522,12 +2544,12 @@
 <li>Specified as an absolute directory path by the user.  </li>
 </ol>
 <p>When prompted, enter the URL or absolute path, or leave blank to skip:
-   <div class="highlight"><pre><span></span><code><span class="c1"># URL input example</span>
-Please<span class="w"> </span>input<span class="w"> </span>the<span class="w"> </span>URL<span class="w"> </span><span class="o">(</span>or<span class="w"> </span>leave<span class="w"> </span>blank<span class="w"> </span>to<span class="w"> </span>skip<span class="o">)</span>:<span class="w"> </span>https://github.com/comcast-sky/skysr213-platform-hal.git
-
-<span class="c1"># Absolute path input example</span>
-Please<span class="w"> </span>input<span class="w"> </span>the<span class="w"> </span>directory<span class="w"> </span><span class="o">(</span>absolute<span class="o">)</span><span class="w"> </span>path<span class="w"> </span><span class="o">(</span>or<span class="w"> </span>leave<span class="w"> </span>blank<span class="w"> </span>to<span class="w"> </span>skip<span class="o">)</span>:<span class="w">    </span>/home/user/workspace/RdkWanManager
-</code></pre></div></p>
+   <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># URL input example</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>Please<span class="w"> </span>input<span class="w"> </span>the<span class="w"> </span>URL<span class="w"> </span><span class="o">(</span>or<span class="w"> </span>leave<span class="w"> </span>blank<span class="w"> </span>to<span class="w"> </span>skip<span class="o">)</span>:<span class="w"> </span>https://github.com/comcast-sky/skysr213-platform-hal.git
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Absolute path input example</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>Please<span class="w"> </span>input<span class="w"> </span>the<span class="w"> </span>directory<span class="w"> </span><span class="o">(</span>absolute<span class="o">)</span><span class="w"> </span>path<span class="w"> </span><span class="o">(</span>or<span class="w"> </span>leave<span class="w"> </span>blank<span class="w"> </span>to<span class="w"> </span>skip<span class="o">)</span>:<span class="w">    </span>/home/user/workspace/RdkWanManager
+</span></code></pre></div></p>
 <ol>
 <li><strong>Header File Location</strong><br />
    The script can generate tests for header files located within the <code>include</code> folder or any other location within the API Definition directory cloned or copied by the script.</li>
@@ -2538,26 +2560,26 @@ Please<span class="w"> </span>input<span class="w"> </span>the<span class="w"> <
 <li><strong>Generate Test Framework</strong><br />
    Generates L1 and L2 test frameworks for the <code>deepsleepmanager</code> repo, including template directories and files in the API definition and <code>ut</code> directories, and skeletons if needed:</li>
 </ol>
-<div class="highlight"><pre><span></span><code>./autogenerate.sh<span class="w"> </span>git@github.com:rdkcentral/hal-deepsleepmanager.git
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>./autogenerate.sh<span class="w"> </span>git@github.com:rdkcentral/hal-deepsleepmanager.git
+</span></code></pre></div>
 <ol>
 <li><strong>Generate Test Framework on Specific Branch</strong><br />
    Generates the L1 and L2 test frameworks for <code>deepsleepmanager</code> on the <code>hal-review</code> branch of the API definition repo:</li>
 </ol>
-<div class="highlight"><pre><span></span><code>./autogenerate.sh<span class="w"> </span>git@github.com:rdkcentral/hal-deepsleepmanager.git<span class="w"> </span>-b<span class="w"> </span>hal-review
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>./autogenerate.sh<span class="w"> </span>git@github.com:rdkcentral/hal-deepsleepmanager.git<span class="w"> </span>-b<span class="w"> </span>hal-review
+</span></code></pre></div>
 <ol>
 <li><strong>Delete Workspace Directory</strong><br />
    Deletes the workspace directory if it exists:</li>
 </ol>
-<div class="highlight"><pre><span></span><code>./autogenerate.sh<span class="w"> </span>git@github.com:rdkcentral/hal-powermanager.git<span class="w"> </span>-c
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>./autogenerate.sh<span class="w"> </span>git@github.com:rdkcentral/hal-powermanager.git<span class="w"> </span>-c
+</span></code></pre></div>
 <ol>
 <li><strong>Display Script Usage</strong><br />
    Shows the usage information for the autogen script:</li>
 </ol>
-<div class="highlight"><pre><span></span><code>./autogenerate.sh<span class="w"> </span>-h
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>./autogenerate.sh<span class="w"> </span>-h
+</span></code></pre></div>
 <hr />
 <h4 id="terminology-index">Terminology Index</h4>
 <table>

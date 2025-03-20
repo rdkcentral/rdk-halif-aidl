@@ -2216,6 +2216,28 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../whitepapers/engineering_goals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Achieving Engineering Goal
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2395,122 +2417,122 @@
 
 <h1 id="overview">Overview</h1>
 <p>Test suite grouping in UT Core enables efficient and targeted testing. It allows developers to organise tests by level enabling them to run only relevant tests, saving time and resources. This improves organisation, supports phased testing, simplifies regression testing, and facilitates test automation, ultimately leading to higher quality software and faster development.</p>
-<div class="highlight"><pre><span></span><code><span class="k">typedef</span><span class="w"> </span><span class="k">enum</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">UT_TESTS_L1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">     </span><span class="cm">/*!&lt; Level 1 basic tests are expected to be in this group */</span>
-<span class="w">    </span><span class="n">UT_TESTS_L2</span><span class="p">,</span><span class="w">         </span><span class="cm">/*!&lt; Level 2 advanced tests are expected to be in this group */</span>
-<span class="w">    </span><span class="n">UT_TESTS_L3</span><span class="p">,</span><span class="w">         </span><span class="cm">/*!&lt; Level 3 module tests are expected to be in this group */</span>
-<span class="w">    </span><span class="n">UT_TESTS_L4</span><span class="p">,</span><span class="w">         </span><span class="cm">/*!&lt; Level 4 module control functions (e.g., start/stop module), not part of a testing suite */</span>
-<span class="w">    </span><span class="n">UT_TESTS_HUMAN_L2</span><span class="p">,</span><span class="w">   </span><span class="cm">/*!&lt; Level 2 suite requires human interaction */</span>
-<span class="w">    </span><span class="n">UT_TESTS_HUMAN_L3</span><span class="p">,</span><span class="w">   </span><span class="cm">/*!&lt; Level 3 suite requires human interaction */</span>
-<span class="w">    </span><span class="n">UT_TESTS_HUMAN_L4</span><span class="p">,</span><span class="w">   </span><span class="cm">/*!&lt; Level 4 suite requires human interaction */</span>
-<span class="w">    </span><span class="n">UT_TESTS_VDEVICE</span><span class="p">,</span><span class="w">    </span><span class="cm">/*!&lt; Level 3 suite for setup-specific tests, not runnable on a real device */</span>
-<span class="w">    </span><span class="n">UT_TESTS_UNKNOWN</span><span class="p">,</span><span class="w">    </span><span class="cm">/*!&lt; Placeholder for existing suites */</span>
-<span class="w">    </span><span class="n">UT_TESTS_MAX</span><span class="w">         </span><span class="cm">/*!&lt; Out-of-range marker (not a valid status) */</span>
-<span class="p">}</span><span class="w"> </span><span class="n">UT_groupID_t</span><span class="p">;</span>
-</code></pre></div>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">typedef</span><span class="w"> </span><span class="k">enum</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="p">{</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="n">UT_TESTS_L1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">     </span><span class="cm">/*!&lt; Level 1 basic tests are expected to be in this group */</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="n">UT_TESTS_L2</span><span class="p">,</span><span class="w">         </span><span class="cm">/*!&lt; Level 2 advanced tests are expected to be in this group */</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="n">UT_TESTS_L3</span><span class="p">,</span><span class="w">         </span><span class="cm">/*!&lt; Level 3 module tests are expected to be in this group */</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="n">UT_TESTS_L4</span><span class="p">,</span><span class="w">         </span><span class="cm">/*!&lt; Level 4 module control functions (e.g., start/stop module), not part of a testing suite */</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="n">UT_TESTS_HUMAN_L2</span><span class="p">,</span><span class="w">   </span><span class="cm">/*!&lt; Level 2 suite requires human interaction */</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="n">UT_TESTS_HUMAN_L3</span><span class="p">,</span><span class="w">   </span><span class="cm">/*!&lt; Level 3 suite requires human interaction */</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="n">UT_TESTS_HUMAN_L4</span><span class="p">,</span><span class="w">   </span><span class="cm">/*!&lt; Level 4 suite requires human interaction */</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="n">UT_TESTS_VDEVICE</span><span class="p">,</span><span class="w">    </span><span class="cm">/*!&lt; Level 3 suite for setup-specific tests, not runnable on a real device */</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">    </span><span class="n">UT_TESTS_UNKNOWN</span><span class="p">,</span><span class="w">    </span><span class="cm">/*!&lt; Placeholder for existing suites */</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">    </span><span class="n">UT_TESTS_MAX</span><span class="w">         </span><span class="cm">/*!&lt; Out-of-range marker (not a valid status) */</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="p">}</span><span class="w"> </span><span class="n">UT_groupID_t</span><span class="p">;</span>
+</span></code></pre></div>
 <p>With this feature, users can register a suite under a specific group and enable/disable groups at runtime using command-line switches:</p>
-<div class="highlight"><pre><span></span><code>-d<span class="w"> </span>to<span class="w"> </span>disable<span class="w"> </span>a<span class="w"> </span>group
--e<span class="w"> </span>to<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>a<span class="w"> </span>group
-
-For<span class="w"> </span>example,<span class="w"> </span>to<span class="w"> </span>disable<span class="w"> </span>a<span class="w"> </span><span class="nb">test</span><span class="w"> </span>group:
-
-&lt;binary&gt;<span class="w"> </span>-d<span class="w"> </span><span class="m">1</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>-d<span class="w"> </span>to<span class="w"> </span>disable<span class="w"> </span>a<span class="w"> </span>group
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>-e<span class="w"> </span>to<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>a<span class="w"> </span>group
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>For<span class="w"> </span>example,<span class="w"> </span>to<span class="w"> </span>disable<span class="w"> </span>a<span class="w"> </span><span class="nb">test</span><span class="w"> </span>group:
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>&lt;binary&gt;<span class="w"> </span>-d<span class="w"> </span><span class="m">1</span>
+</span></code></pre></div>
 <p>Since UT Core supports both C and C++ (CPP) variants, the registration process differs slightly for each. The details for both are provided below.</p>
 <h2 id="c-variant">C Variant</h2>
 <p>Registering a Test Suite in C</p>
 <p>The following example demonstrates how to register a test suite with a group in the C variant:</p>
-<div class="highlight"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string.h&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;ut.h&gt;</span>
-
-<span class="kt">void</span><span class="w"> </span><span class="nf">test_l1_function1</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">UT_FAIL</span><span class="p">(</span><span class="s">&quot;Need to implement&quot;</span><span class="p">);</span>
-<span class="w">    </span><span class="cm">/* Positive */</span>
-<span class="w">    </span><span class="cm">/* Negative */</span>
-<span class="p">}</span><span class="w"> </span>
-
-<span class="kt">void</span><span class="w"> </span><span class="nf">test_l1_function2</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">UT_FAIL</span><span class="p">(</span><span class="s">&quot;Need to implement&quot;</span><span class="p">);</span>
-<span class="w">    </span><span class="cm">/* Positive */</span>
-<span class="w">    </span><span class="cm">/* Negative */</span>
-<span class="p">}</span><span class="w"> </span>
-
-<span class="k">static</span><span class="w"> </span><span class="n">UT_test_suite_t</span><span class="w"> </span><span class="o">*</span><span class="n">pSuite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-
-<span class="cm">/**</span>
-<span class="cm"> * @brief Register the main tests for this module</span>
-<span class="cm"> * </span>
-<span class="cm"> * @return int - 0 on success, otherwise failure</span>
-<span class="cm"> */</span>
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">UT_init</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">);</span>
-
-<span class="w">    </span><span class="cm">/* Add a suite to the registry with a group ID */</span>
-<span class="w">    </span><span class="n">pSuite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UT_add_suite_withGroupID</span><span class="p">(</span><span class="s">&quot;[L1 test_Example]&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="n">UT_TESTS_L1</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">pSuite</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span><span class="w"> </span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="n">UT_add_test</span><span class="p">(</span><span class="n">pSuite</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;blah_level1_test_function&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">test_l1_function1</span><span class="p">);</span>
-<span class="w">    </span><span class="n">UT_add_test</span><span class="p">(</span><span class="n">pSuite</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;blah_level1_test_function&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">test_l1_function2</span><span class="p">);</span>
-
-<span class="w">    </span><span class="n">UT_run_tests</span><span class="p">();</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string.h&gt;</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;ut.h&gt;</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="kt">void</span><span class="w"> </span><span class="nf">test_l1_function1</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">{</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="n">UT_FAIL</span><span class="p">(</span><span class="s">&quot;Need to implement&quot;</span><span class="p">);</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="cm">/* Positive */</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="cm">/* Negative */</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">}</span><span class="w"> </span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="kt">void</span><span class="w"> </span><span class="nf">test_l1_function2</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="p">{</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">    </span><span class="n">UT_FAIL</span><span class="p">(</span><span class="s">&quot;Need to implement&quot;</span><span class="p">);</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">    </span><span class="cm">/* Positive */</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">    </span><span class="cm">/* Negative */</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="p">}</span><span class="w"> </span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="k">static</span><span class="w"> </span><span class="n">UT_test_suite_t</span><span class="w"> </span><span class="o">*</span><span class="n">pSuite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="cm">/**</span>
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="cm"> * @brief Register the main tests for this module</span>
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="cm"> * </span>
+</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="cm"> * @return int - 0 on success, otherwise failure</span>
+</span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="cm"> */</span>
+</span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+</span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="p">{</span>
+</span><span id="__span-2-28"><a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="w">    </span><span class="n">UT_init</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">);</span>
+</span><span id="__span-2-29"><a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>
+</span><span id="__span-2-30"><a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a><span class="w">    </span><span class="cm">/* Add a suite to the registry with a group ID */</span>
+</span><span id="__span-2-31"><a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a><span class="w">    </span><span class="n">pSuite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UT_add_suite_withGroupID</span><span class="p">(</span><span class="s">&quot;[L1 test_Example]&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="n">UT_TESTS_L1</span><span class="p">);</span>
+</span><span id="__span-2-32"><a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>
+</span><span id="__span-2-33"><a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">pSuite</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span><span class="w"> </span>
+</span><span id="__span-2-34"><a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-2-35"><a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+</span><span id="__span-2-36"><a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-2-37"><a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>
+</span><span id="__span-2-38"><a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a><span class="w">    </span><span class="n">UT_add_test</span><span class="p">(</span><span class="n">pSuite</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;blah_level1_test_function&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">test_l1_function1</span><span class="p">);</span>
+</span><span id="__span-2-39"><a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a><span class="w">    </span><span class="n">UT_add_test</span><span class="p">(</span><span class="n">pSuite</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;blah_level1_test_function&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">test_l1_function2</span><span class="p">);</span>
+</span><span id="__span-2-40"><a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a>
+</span><span id="__span-2-41"><a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a><span class="w">    </span><span class="n">UT_run_tests</span><span class="p">();</span>
+</span><span id="__span-2-42"><a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a>
+</span><span id="__span-2-43"><a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-2-44"><a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a><span class="p">}</span>
+</span></code></pre></div>
 <h2 id="cpp-variant">CPP Variant</h2>
 <p>Registering a Test Suite in C++</p>
 <p>The following example demonstrates how to register a test suite with a group in the C++ variant:</p>
-<div class="highlight"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;ut.h&gt;</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">TestL1Example</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">UTCore</span>
-<span class="p">{</span>
-<span class="k">public</span><span class="o">:</span>
-<span class="w">    </span><span class="n">TestL1Example</span><span class="p">()</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">UTCore</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span>
-
-<span class="w">    </span><span class="o">~</span><span class="n">TestL1Example</span><span class="p">()</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">default</span><span class="p">;</span>
-
-<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">SetUp</span><span class="p">()</span><span class="w"> </span><span class="k">override</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="c1">// Code to set up resources before each test</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">TearDown</span><span class="p">()</span><span class="w"> </span><span class="k">override</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="c1">// Code to clean up resources after each test</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">};</span>
-
-<span class="c1">// Automatically register the test suite before execution</span>
-<span class="n">UT_ADD_TEST_TO_GROUP</span><span class="p">(</span><span class="n">TestL1Example</span><span class="p">,</span><span class="w"> </span><span class="n">UT_TESTS_L1</span><span class="p">)</span>
-
-<span class="n">UT_ADD_TEST</span><span class="p">(</span><span class="n">TestL1Example</span><span class="p">,</span><span class="w"> </span><span class="n">TestL1Equal</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">UT_ASSERT_EQUAL</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w"> </span><span class="c1">// Basic test case</span>
-<span class="p">}</span>
-
-<span class="n">UT_ADD_TEST</span><span class="p">(</span><span class="n">TestL1Example</span><span class="p">,</span><span class="w"> </span><span class="n">TestL1NotEqual</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">UT_ASSERT_NOT_EQUAL</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
-<span class="p">}</span>
-</code></pre></div>
+<div class="language-c++ highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;ut.h&gt;</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">TestL1Example</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">UTCore</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="p">{</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="n">TestL1Example</span><span class="p">()</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">UTCore</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="o">~</span><span class="n">TestL1Example</span><span class="p">()</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">default</span><span class="p">;</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">SetUp</span><span class="p">()</span><span class="w"> </span><span class="k">override</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">        </span><span class="c1">// Code to set up resources before each test</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">TearDown</span><span class="p">()</span><span class="w"> </span><span class="k">override</span>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="w">        </span><span class="c1">// Code to clean up resources after each test</span>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="p">};</span>
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="c1">// Automatically register the test suite before execution</span>
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a><span class="n">UT_ADD_TEST_TO_GROUP</span><span class="p">(</span><span class="n">TestL1Example</span><span class="p">,</span><span class="w"> </span><span class="n">UT_TESTS_L1</span><span class="p">)</span>
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>
+</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a><span class="n">UT_ADD_TEST</span><span class="p">(</span><span class="n">TestL1Example</span><span class="p">,</span><span class="w"> </span><span class="n">TestL1Equal</span><span class="p">)</span>
+</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a><span class="p">{</span>
+</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a><span class="w">    </span><span class="n">UT_ASSERT_EQUAL</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w"> </span><span class="c1">// Basic test case</span>
+</span><span id="__span-3-27"><a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a><span class="p">}</span>
+</span><span id="__span-3-28"><a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>
+</span><span id="__span-3-29"><a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a><span class="n">UT_ADD_TEST</span><span class="p">(</span><span class="n">TestL1Example</span><span class="p">,</span><span class="w"> </span><span class="n">TestL1NotEqual</span><span class="p">)</span>
+</span><span id="__span-3-30"><a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a><span class="p">{</span>
+</span><span id="__span-3-31"><a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a><span class="w">    </span><span class="n">UT_ASSERT_NOT_EQUAL</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+</span><span id="__span-3-32"><a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a><span class="p">}</span>
+</span></code></pre></div>
 <h2 id="enablingdisabling-test-groups-at-runtime">Enabling/Disabling Test Groups at Runtime</h2>
 <p>After compilation, users can enable or disable test groups using command-line arguments.</p>
 <p>For example, to disable a test group:</p>
-<div class="highlight"><pre><span></span><code>&lt;binary&gt;<span class="w"> </span>-d<span class="w"> </span><span class="m">1</span>
-
-This<span class="w"> </span>will<span class="w"> </span>disable:
-<span class="w">    </span>•<span class="w">   </span>C<span class="w"> </span>Variant:<span class="w"> </span><span class="o">[</span>L1<span class="w"> </span>test_Example<span class="o">]</span><span class="w"> </span>suite
-<span class="w">    </span>•<span class="w">   </span>CPP<span class="w"> </span>Variant:<span class="w"> </span>TestL1Example<span class="w"> </span>suite
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>&lt;binary&gt;<span class="w"> </span>-d<span class="w"> </span><span class="m">1</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>This<span class="w"> </span>will<span class="w"> </span>disable:
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>•<span class="w">   </span>C<span class="w"> </span>Variant:<span class="w"> </span><span class="o">[</span>L1<span class="w"> </span>test_Example<span class="o">]</span><span class="w"> </span>suite
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span>•<span class="w">   </span>CPP<span class="w"> </span>Variant:<span class="w"> </span>TestL1Example<span class="w"> </span>suite
+</span></code></pre></div>
 <p>All other test suites will continue to run when the executable is launched.</p>
 <p>Note : by default all tests are enabled </p>
 

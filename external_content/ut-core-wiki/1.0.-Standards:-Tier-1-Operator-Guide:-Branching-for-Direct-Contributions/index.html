@@ -2216,6 +2216,28 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../whitepapers/engineering_goals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Achieving Engineering Goal
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2526,18 +2548,18 @@
 <h3 id="getting-started-with-git-collaboration">Getting Started with Git Collaboration</h3>
 <h4 id="1-clone-the-repository">1. <strong>Clone the Repository</strong></h4>
 <p>To start, clone the repository to your local machine:
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/rdkcentral/ut-core.git
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/rdkcentral/ut-core.git
+</span></code></pre></div></p>
 <h4 id="2-set-up-git-flow">2. <strong>Set Up Git Flow</strong></h4>
 <p>We use the Git Flow branching model for managing branches. If you're new to Git Flow, please review this <a href="https://github.com/petervanderdoes/gitflow-avh">guide</a>:</p>
 <p><strong>Example of initialising git flow:</strong></p>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>flow<span class="w"> </span>init<span class="w"> </span>-d
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>git<span class="w"> </span>flow<span class="w"> </span>init<span class="w"> </span>-d
+</span></code></pre></div>
 <h4 id="3-create-a-feature-branch">3. <strong>Create a Feature Branch</strong></h4>
 <p>Create a new feature branch from the 'develop' branch for both new features and bug fixes, adhering to the naming convention: feature/gh<issue-number>_<brief-description>. The <brief-description> should briefly summarize the branch's purpose.</p>
 <p><strong>Example of creating a feature branch:</strong></p>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>flow<span class="w"> </span>feature<span class="w"> </span>start<span class="w"> </span>gh123_add-logging-enhancements
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>git<span class="w"> </span>flow<span class="w"> </span>feature<span class="w"> </span>start<span class="w"> </span>gh123_add-logging-enhancements
+</span></code></pre></div>
 <p><strong>Compliance Notice:</strong> All contributors must strictly follow our Git branching guidelines. Every branch must be accurately named using the corresponding issue ID from our issue tracker, ensuring traceability and upholding automated workflow integrity. Incorrectly named or untraceable branches will fall under a retention policy, allowing for correction within 30 days before removal. This policy is crucial for maintaining the clarity and reliability of our project management processes.</p>
 <h4 id="4-implement-changes">4. <strong>Implement Changes</strong></h4>
 <p>Make changes according to the project’s coding guidelines.</p>
@@ -2546,26 +2568,26 @@
 - <strong>Summary:</strong> Start with an imperative verb, include the GitHub issue ID, and succinctly describe the change.
 - <strong>Body:</strong> Optionally, provide a detailed explanation, keeping lines to 72 characters.</p>
 <p><strong>Example of a Commit Message:</strong></p>
-<div class="highlight"><pre><span></span><code>Fix #123: Update error handling in authentication module
-
-This commit enhances error detection and adds comprehensive logging to address frequent issues reported by users.
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Fix #123: Update error handling in authentication module
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>This commit enhances error detection and adds comprehensive logging to address frequent issues reported by users.
+</span></code></pre></div>
 <h4 id="6-push-changes">6. <strong>Push Changes</strong></h4>
 <p>Push your changes to the repository:
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>feature/gh123_add-logging-enhancements
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>feature/gh123_add-logging-enhancements
+</span></code></pre></div></p>
 <h4 id="7-open-a-pull-request">7. <strong>Open a Pull Request</strong></h4>
 <p>Create a pull request from your branch to the <code>develop</code> branch. It will be automatically assigned for review based on the <code>CODEOWNERS</code> file.</p>
 <h4 id="8-merge-the-pull-request">8. <strong>Merge the Pull Request</strong></h4>
 <p>Once approved, merge your branch using Git Flow:
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>flow<span class="w"> </span>feature<span class="w"> </span>finish<span class="w"> </span>gh123_add-logging-enhancements
-</code></pre></div></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>git<span class="w"> </span>flow<span class="w"> </span>feature<span class="w"> </span>finish<span class="w"> </span>gh123_add-logging-enhancements
+</span></code></pre></div></p>
 <h4 id="9-code-ownership-and-releases">9. <strong>Code Ownership and Releases</strong></h4>
 <p><code>CODEOWNERS</code> are responsible for reviewing and approving changes. They also manage the release and tagging of components according to the project’s schedule.</p>
 <p><strong>Example of the CODEOWNERS file:</strong>
-<div class="highlight"><pre><span></span><code># Default owners for everything in the repo
-*       @rdkcentral/ut-core_codeowner
-</code></pre></div></p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a># Default owners for everything in the repo
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>*       @rdkcentral/ut-core_codeowner
+</span></code></pre></div></p>
 <h3 id="requirements-for-contributions">Requirements for Contributions</h3>
 <p>Please ensure your contributions meet the following:
 - <strong>Adherence to Git Flow</strong>

@@ -2216,6 +2216,28 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../whitepapers/engineering_goals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Achieving Engineering Goal
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2445,8 +2467,8 @@
 <p>Looking forward, the engineering suites are expected to be delivered as binaries, enabling installation via package managers such as <code>opkg</code>. This approach will allow teams to easily install specific versions of testing suites to match the version of each component, reducing manual dependency management and ensuring compatibility. </p>
 <h2 id="component-version-control-and-build-automation">Component Version Control and Build Automation</h2>
 <p>Component versions are managed through automated builds. Engineers can clone the required header files and trigger the build with a simple command:</p>
-<div class="highlight"><pre><span></span><code><span class="w"> </span>./build_ut.sh<span class="w"> </span><span class="nv">TARGET</span><span class="o">=</span>arm
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="w"> </span>./build_ut.sh<span class="w"> </span><span class="nv">TARGET</span><span class="o">=</span>arm
+</span></code></pre></div>
 <p>This process automatically pulls the correct versions of dependencies and components, creating a consistent and compatible build environment without requiring manual version tracking.</p>
 
 

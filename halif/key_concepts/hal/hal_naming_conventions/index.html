@@ -2325,6 +2325,28 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../whitepapers/engineering_goals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Achieving Engineering Goal
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2546,14 +2568,14 @@
 <p>Documentation will be located under the <code>docs</code> directory, split into interfaces <code>hal</code>. <code>vsi</code>, then split my module, following the convention below.</p>
 <h3 id="examples">Examples</h3>
 <p><strong>Good:</strong></p>
-<div class="highlight"><pre><span></span><code>docs/audio_decoder/introduction_information.md
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>docs/audio_decoder/introduction_information.md
+</span></code></pre></div>
 <p><strong>Bad:</strong></p>
-<div class="highlight"><pre><span></span><code>docs/audio-decoder/intro-information.md<span class="w">       </span><span class="o">(</span>Hyphen<span class="w"> </span>used<span class="o">)</span>
-docs/audiodecoder/introinformation.md<span class="w">         </span><span class="o">(</span>No<span class="w"> </span>separator<span class="o">)</span>
-docs/audiodecoder/introInformation.md<span class="w">         </span><span class="o">(</span>Camel<span class="w"> </span><span class="k">case</span><span class="w"> </span>used<span class="o">)</span>
-docs/AudioDecoder/intro_information.md<span class="w">        </span><span class="o">(</span>Incorrect<span class="w"> </span><span class="k">case</span><span class="w"> </span><span class="k">in</span><span class="w"> </span>directory<span class="o">)</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>docs/audio-decoder/intro-information.md<span class="w">       </span><span class="o">(</span>Hyphen<span class="w"> </span>used<span class="o">)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>docs/audiodecoder/introinformation.md<span class="w">         </span><span class="o">(</span>No<span class="w"> </span>separator<span class="o">)</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>docs/audiodecoder/introInformation.md<span class="w">         </span><span class="o">(</span>Camel<span class="w"> </span><span class="k">case</span><span class="w"> </span>used<span class="o">)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>docs/AudioDecoder/intro_information.md<span class="w">        </span><span class="o">(</span>Incorrect<span class="w"> </span><span class="k">case</span><span class="w"> </span><span class="k">in</span><span class="w"> </span>directory<span class="o">)</span>
+</span></code></pre></div>
 <h2 id="directory-and-file-naming-for-interfaces">Directory and File Naming for Interfaces</h2>
 <ul>
 <li><strong>Case:</strong> All directory and file names MUST be lowercase.</li>
@@ -2562,22 +2584,22 @@ docs/AudioDecoder/intro_information.md<span class="w">        </span><span class
 </ul>
 <p>Source code will be located under the <code>src</code> directory, then split my module, following the convention below.</p>
 <p><strong>Good:</strong></p>
-<div class="highlight"><pre><span></span><code>src/audiodecoder/IAudioDecoderInterface.aidl
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>src/audiodecoder/IAudioDecoderInterface.aidl
+</span></code></pre></div>
 <p><strong>Bad:</strong></p>
-<div class="highlight"><pre><span></span><code>srcs/audio-decoder/intro-information.md<span class="w">      </span><span class="o">(</span>Hyphen<span class="w"> </span>used<span class="o">)</span>
-src/audiodecoder/introinformation.md<span class="w">         </span><span class="o">(</span>All<span class="w"> </span>lower<span class="w"> </span><span class="k">case</span><span class="o">)</span>
-src/audiodecoder/introInformation.md<span class="w">         </span><span class="o">(</span>Camel<span class="w"> </span><span class="k">case</span><span class="w"> </span>used,<span class="w"> </span>but<span class="w"> </span>first<span class="w"> </span>letter<span class="w"> </span>of<span class="w"> </span>filename<span class="w"> </span>not<span class="w"> </span>capitals<span class="o">)</span>
-src/AudioDecoder/intro_information.md<span class="w">        </span><span class="o">(</span>Underscore<span class="w"> </span>used<span class="o">)</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>srcs/audio-decoder/intro-information.md<span class="w">      </span><span class="o">(</span>Hyphen<span class="w"> </span>used<span class="o">)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>src/audiodecoder/introinformation.md<span class="w">         </span><span class="o">(</span>All<span class="w"> </span>lower<span class="w"> </span><span class="k">case</span><span class="o">)</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>src/audiodecoder/introInformation.md<span class="w">         </span><span class="o">(</span>Camel<span class="w"> </span><span class="k">case</span><span class="w"> </span>used,<span class="w"> </span>but<span class="w"> </span>first<span class="w"> </span>letter<span class="w"> </span>of<span class="w"> </span>filename<span class="w"> </span>not<span class="w"> </span>capitals<span class="o">)</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>src/AudioDecoder/intro_information.md<span class="w">        </span><span class="o">(</span>Underscore<span class="w"> </span>used<span class="o">)</span>
+</span></code></pre></div>
 <h2 id="interface-naming">Interface Naming</h2>
-<div class="highlight"><pre><span></span><code><span class="kr">interface</span><span class="w"> </span><span class="nx">IAudioSinkManager</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="cm">/** The service name to publish. To be returned by getServiceName() in the derived class. */</span>
-<span class="w">    </span><span class="kd">const</span>
-<span class="w">    </span><span class="err">@</span><span class="nx">utf8InCpp</span><span class="w"> </span><span class="nb">String</span><span class="w"> </span><span class="nx">serviceName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;AudioSinkManager&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
+<div class="language-javascript highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kr">interface</span><span class="w"> </span><span class="nx">IAudioSinkManager</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="p">{</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="cm">/** The service name to publish. To be returned by getServiceName() in the derived class. */</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="kd">const</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="err">@</span><span class="nx">utf8InCpp</span><span class="w"> </span><span class="nb">String</span><span class="w"> </span><span class="nx">serviceName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;AudioSinkManager&quot;</span><span class="p">;</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">}</span>
+</span></code></pre></div>
 <h2 id="systemd-naming-of-launch">Systemd Naming of Launch</h2>
 <p>Naming convention for <a href="../../../../vsi/systemd/current/systemd/">systemd</a> services follows the convention for documentation i.e. <code>hal-audio_decoder_manager.service</code></p>
 <h2 id="additional-considerations">Additional Considerations</h2>

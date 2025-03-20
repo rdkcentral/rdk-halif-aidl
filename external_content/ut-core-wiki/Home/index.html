@@ -2382,6 +2382,28 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../whitepapers/engineering_goals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Achieving Engineering Goal
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2715,43 +2737,43 @@
 <p>To execute your tests using the <code>ut-core</code> framework, the main argument features will be linked into your test. This executable provides various command-line switches to customize how your tests are run:</p>
 <h3 id="example-of-the-unit-test">Example of the unit test</h3>
 <p>The unit tests are also a combined binary with ut-core, therefore it also has the switches.</p>
-<div class="highlight"><pre><span></span><code><span class="p">.</span><span class="o">/</span><span class="n">tests</span><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">ut</span><span class="o">-</span><span class="n">test</span><span class="w"> </span><span class="o">-</span><span class="n">h</span>
-<span class="n">Help</span>
-<span class="o">-</span><span class="n">a</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Automated</span><span class="w"> </span><span class="n">Mode</span>
-<span class="o">-</span><span class="n">b</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Basic</span><span class="w"> </span><span class="n">Mode</span>
-<span class="o">-</span><span class="n">f</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="o">&lt;</span><span class="n">filename</span><span class="o">&gt;</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">set</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">output</span><span class="w"> </span><span class="n">filename</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">automated</span><span class="w"> </span><span class="n">mode</span>
-<span class="o">-</span><span class="n">t</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">List</span><span class="w"> </span><span class="n">all</span><span class="w"> </span><span class="n">tests</span><span class="w"> </span><span class="n">run</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">file</span>
-<span class="o">-</span><span class="n">l</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Set</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">log</span><span class="w"> </span><span class="n">Path</span>
-<span class="o">-</span><span class="n">p</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="o">&lt;</span><span class="n">profile_filename</span><span class="o">&gt;</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">specify</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">profile</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">load</span><span class="w"> </span><span class="n">YAML</span><span class="w"> </span><span class="n">or</span><span class="w"> </span><span class="n">JSON</span><span class="p">,</span><span class="w"> </span><span class="n">also</span><span class="w"> </span><span class="n">used</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">kvp_profile</span>
-<span class="o">-</span><span class="n">h</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Help</span>
-</code></pre></div>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">.</span><span class="o">/</span><span class="n">tests</span><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">ut</span><span class="o">-</span><span class="n">test</span><span class="w"> </span><span class="o">-</span><span class="n">h</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">Help</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="o">-</span><span class="n">a</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Automated</span><span class="w"> </span><span class="n">Mode</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="o">-</span><span class="n">b</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Basic</span><span class="w"> </span><span class="n">Mode</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="o">-</span><span class="n">f</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="o">&lt;</span><span class="n">filename</span><span class="o">&gt;</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">set</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">output</span><span class="w"> </span><span class="n">filename</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">automated</span><span class="w"> </span><span class="n">mode</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="o">-</span><span class="n">t</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">List</span><span class="w"> </span><span class="n">all</span><span class="w"> </span><span class="n">tests</span><span class="w"> </span><span class="n">run</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">file</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="o">-</span><span class="n">l</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Set</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">log</span><span class="w"> </span><span class="n">Path</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="o">-</span><span class="n">p</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="o">&lt;</span><span class="n">profile_filename</span><span class="o">&gt;</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">specify</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">profile</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">load</span><span class="w"> </span><span class="n">YAML</span><span class="w"> </span><span class="n">or</span><span class="w"> </span><span class="n">JSON</span><span class="p">,</span><span class="w"> </span><span class="n">also</span><span class="w"> </span><span class="n">used</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">kvp_profile</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="o">-</span><span class="n">h</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Help</span>
+</span></code></pre></div>
 <h3 id="using-the-p-profile_filename-switch">Using the <code>-p profile_filename</code> switch</h3>
 <ul>
 <li>
 <p>hdmiProfile.yml
-<div class="highlight"><pre><span></span><code><span class="nt">hdmicec</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">config</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">extendedEnumsSupported</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-</code></pre></div></p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">hdmicec</span><span class="p">:</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">config</span><span class="p">:</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">extendedEnumsSupported</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</span></code></pre></div></p>
 </li>
 <li>
 <p>Passing a profile into the testing suite
-<div class="highlight"><pre><span></span><code><span class="p">.</span><span class="o">/</span><span class="n">hdmi_cec</span><span class="w"> </span><span class="o">-</span><span class="n">p</span><span class="w"> </span><span class="n">hdmiProfile</span><span class="p">.</span><span class="n">yml</span>
-</code></pre></div></p>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">.</span><span class="o">/</span><span class="n">hdmi_cec</span><span class="w"> </span><span class="o">-</span><span class="n">p</span><span class="w"> </span><span class="n">hdmiProfile</span><span class="p">.</span><span class="n">yml</span>
+</span></code></pre></div></p>
 </li>
 </ul>
 <p>then in the testing code you would perform</p>
-<div class="highlight"><pre><span></span><code><span class="kt">bool</span><span class="w"> </span><span class="n">extendedEnumsSupported</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UT_KVP_PROFILE_GET_BOOL</span><span class="p">(</span><span class="w"> </span><span class="s">&quot;hdmicec/config/extendedEnumsSupported&quot;</span><span class="w"> </span><span class="p">);</span><span class="w"> </span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">extendedEnumsSupported</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">   </span><span class="cm">/* Complete suite is disabled due to supportExtendedEnums == false */</span>
-<span class="w">    </span><span class="n">pSuite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UT_add_suite</span><span class="p">(</span><span class="s">&quot;test extended functions &quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="w"> </span><span class="p">);</span>
-
-<span class="w">    </span><span class="n">UT_add_test</span><span class="p">(</span><span class="n">pSuite</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;test extended bool&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">test_bool</span><span class="p">);</span>
-<span class="w">    </span><span class="n">UT_add_test</span><span class="p">(</span><span class="n">pSuite</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;test extended string&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">test_string</span><span class="p">);</span>
-<span class="w">    </span><span class="n">UT_add_test</span><span class="p">(</span><span class="n">pSuite</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;test extended uint32&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">test_uint32</span><span class="p">);</span>
-<span class="p">}</span>
-</code></pre></div>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kt">bool</span><span class="w"> </span><span class="n">extendedEnumsSupported</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UT_KVP_PROFILE_GET_BOOL</span><span class="p">(</span><span class="w"> </span><span class="s">&quot;hdmicec/config/extendedEnumsSupported&quot;</span><span class="w"> </span><span class="p">);</span><span class="w"> </span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">extendedEnumsSupported</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="p">)</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="p">{</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">   </span><span class="cm">/* Complete suite is disabled due to supportExtendedEnums == false */</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="n">pSuite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UT_add_suite</span><span class="p">(</span><span class="s">&quot;test extended functions &quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="w"> </span><span class="p">);</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="n">UT_add_test</span><span class="p">(</span><span class="n">pSuite</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;test extended bool&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">test_bool</span><span class="p">);</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="n">UT_add_test</span><span class="p">(</span><span class="n">pSuite</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;test extended string&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">test_string</span><span class="p">);</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">    </span><span class="n">UT_add_test</span><span class="p">(</span><span class="n">pSuite</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;test extended uint32&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">test_uint32</span><span class="p">);</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="p">}</span>
+</span></code></pre></div>
 <p>Refer to the documentation for more information <a href="https://github.com/rdkcentral/ut-core/wiki/ut_kvp_profile:-Key%E2%80%90Value-Pair-Assertions-for-Unit-Testing">ut_kvp_profile: Key Value Pair Assertions for Unit Testing</a></p>
 <h2 id="contributing">Contributing</h2>
 <p>We welcome contributions to ut-core! If you have ideas for new features, bug fixes, or improvements to the documentation, please open an issue or submit a pull request on our GitHub repository.</p>

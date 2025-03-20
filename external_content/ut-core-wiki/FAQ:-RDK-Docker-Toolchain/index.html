@@ -2216,6 +2216,28 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../whitepapers/engineering_goals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Achieving Engineering Goal
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2421,8 +2443,8 @@
 <p>This manual guides you through the process of using the RDK Docker Toolchain to build projects targeted for ARM architecture, using Docker.</p>
 <p><em><strong>Note: At the time of writing this has yet to be published opensource, but will be soon</strong></em></p>
 <p>To start the Docker container and open a bash shell within it, use the following command:</p>
-<div class="highlight"><pre><span></span><code>sc<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>&lt;docker&gt;<span class="w"> </span>/bin/bash
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sc<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>&lt;docker&gt;<span class="w"> </span>/bin/bash
+</span></code></pre></div>
 <h3 id="expected-dockers">Expected Dockers</h3>
 <ul>
 <li>rdk-dunfell</li>
@@ -2433,36 +2455,36 @@
 <ol>
 <li>Navigate to the toolchain directory:</li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>/opt/toolchains/rdk-glibc-x86_64-arm-toolchain/
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">cd</span><span class="w"> </span>/opt/toolchains/rdk-glibc-x86_64-arm-toolchain/
+</span></code></pre></div>
 <ol>
 <li>Source &amp; Activate the environment setup for ARMv7:</li>
 </ol>
-<div class="highlight"><pre><span></span><code>.<span class="w"> </span>environment-setup-armv7at2hf-neon-oe-linux-gnueabi
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>.<span class="w"> </span>environment-setup-armv7at2hf-neon-oe-linux-gnueabi
+</span></code></pre></div>
 <ol>
 <li>To verify that the compiler (CC) is set correctly in the environment, execute:</li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="nv">$CC</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">echo</span><span class="w"> </span><span class="nv">$CC</span>
+</span></code></pre></div>
 <p>The output should start with <code>arm-oe-linux-gnueabi-gcc</code> followed by various compiler switches.</p>
 <h2 id="building-the-project">Building the Project</h2>
 <p>To build your project using the ARM toolchain, follow these steps:</p>
 <ul>
 <li>Change to your project directory (replace <project> with your actual project directory name):</li>
 </ul>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>&lt;project&gt;
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nb">cd</span><span class="w"> </span>&lt;project&gt;
+</span></code></pre></div>
 <ul>
 <li>Start the build process by specifying the target:</li>
 </ul>
-<div class="highlight"><pre><span></span><code>make<span class="w"> </span><span class="nv">TARGET</span><span class="o">=</span>arm
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>make<span class="w"> </span><span class="nv">TARGET</span><span class="o">=</span>arm
+</span></code></pre></div>
 <h2 id="optional-single-command-execution">Optional Single Command Execution</h2>
 <p>Alternatively, you can combine all the steps into a single command to set up the environment and build your project directly. Here’s how:</p>
 <p>e.g.</p>
-<div class="highlight"><pre><span></span><code>sc<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>rdk-dunfell<span class="w"> </span><span class="s2">&quot;/bin/bash -c &#39;. /opt/toolchains/rdk-glibc-x86_64-arm-toolchain/environment-setup-armv7at2hf-neon-oe-linux-gnueabi; cd &lt;project&gt;; make TARGET=arm&#39;&quot;</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>sc<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>rdk-dunfell<span class="w"> </span><span class="s2">&quot;/bin/bash -c &#39;. /opt/toolchains/rdk-glibc-x86_64-arm-toolchain/environment-setup-armv7at2hf-neon-oe-linux-gnueabi; cd &lt;project&gt;; make TARGET=arm&#39;&quot;</span>
+</span></code></pre></div>
 <p>Make sure to replace <project> with your actual project directory. This command facilitates running everything in one go inside the Docker container.</p>
 
 

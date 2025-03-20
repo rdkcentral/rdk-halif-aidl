@@ -2216,6 +2216,28 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../whitepapers/engineering_goals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Achieving Engineering Goal
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2542,13 +2564,13 @@
 <p>First, navigate to the directory containing the header file you want to test.</p>
 <p><strong>For example:</strong></p>
 <p>If you want to run the testing suite against the <code>rdk-halif-hdmi_cec</code> repository, you would first clone the repository and then navigate into the newly created directory:</p>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:rdkcentral/rdk-halif-hdmi_cec.git
-<span class="nb">cd</span><span class="w"> </span>rdk-halif-hdmi_cec<span class="w"> </span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:rdkcentral/rdk-halif-hdmi_cec.git
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">cd</span><span class="w"> </span>rdk-halif-hdmi_cec<span class="w"> </span>
+</span></code></pre></div>
 <h2 id="2-build-the-testing-suite">2. Build the Testing Suite</h2>
 <p>From this directory, execute the following command in your terminal:</p>
-<div class="highlight"><pre><span></span><code>build_ut.sh<span class="w"> </span><span class="nv">TARGET</span><span class="o">=</span>arm
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>build_ut.sh<span class="w"> </span><span class="nv">TARGET</span><span class="o">=</span>arm
+</span></code></pre></div>
 <p>This script will create a new directory named <code>ut</code> where your testing suite will be created. </p>
 <p><strong>Note:</strong> Running <code>build_ut.sh</code> without specifying a target will build a Linux version of the testing suite, which can be useful for debugging the structure of your tests.</p>
 <p>All binaries to be transferred to the platform will be created under <code>ut/bin</code></p>
@@ -2563,8 +2585,8 @@
         hal_ut }|--o{ ut_core: uses</code></pre>
 <h2 id="4-core-ut-framework">4. Core UT Framework</h2>
 <p>The unit testing core subsystem can be cloned from:</p>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:rdkcentral/ut-core
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:rdkcentral/ut-core
+</span></code></pre></div>
 <p><strong>Recommended Reading:</strong></p>
 <ul>
 <li><a href="https://github.com/rdkcentral/ut-core/blob/master/README.md">https://github.com/rdkcentral/ut-core/blob/master/README.md</a></li>
@@ -2572,24 +2594,24 @@
 </ul>
 <p><strong>Note: C++ Support is available after Version 4.0.0</strong></p>
 <p>The <code>ut-core</code> directory structure is as follows:</p>
-<div class="highlight"><pre><span></span><code>.
-├──<span class="w"> </span>docs
-│<span class="w">   </span>└──<span class="w"> </span>pages
-│<span class="w">       </span>└──<span class="w"> </span>images
-├──<span class="w"> </span>framework
-│<span class="w">   </span>└──<span class="w"> </span>cunit
-│<span class="w">       </span>├──<span class="w"> </span>arm-rdk-linux-gnueabi<span class="w"> </span>-&gt;<span class="w"> </span>Arm<span class="w"> </span>prebuild<span class="w"> </span>version<span class="w"> </span>of<span class="w"> </span>cunit.so
-│<span class="w">       </span>└──<span class="w"> </span>i686-pc-linux-gnu<span class="w"> </span>-&gt;<span class="w"> </span>-&gt;<span class="w"> </span>Linux<span class="w"> </span>prebuild<span class="w"> </span>version<span class="w"> </span>of<span class="w"> </span>cunit.so
-│<span class="w">   </span>└──<span class="w"> </span>xxx<span class="w"> </span>-&gt;<span class="w"> </span>Other<span class="w"> </span>framework<span class="w"> </span>as<span class="w"> </span>required
-├──<span class="w"> </span>include<span class="w"> </span>-&gt;<span class="w"> </span>ut-core<span class="w"> </span>header<span class="w"> </span>files
-├──<span class="w"> </span>src<span class="w">     </span>-&gt;<span class="w"> </span>ut-core<span class="w"> </span><span class="nb">source</span><span class="w"> </span>files
-├──<span class="w"> </span>template
-│<span class="w">   </span>├──<span class="w"> </span>hal_template<span class="w"> </span>-&gt;<span class="w"> </span>example<span class="w"> </span>files<span class="w"> </span><span class="k">for</span><span class="w"> </span>the<span class="w"> </span>top<span class="w"> </span>level<span class="w"> </span>hal<span class="w"> </span>directories
-│<span class="w">   </span>└──<span class="w"> </span>ut_template<span class="w"> </span>-&gt;<span class="w"> </span>example<span class="w"> </span>files<span class="w"> </span><span class="k">for</span><span class="w"> </span>the<span class="w"> </span>ut<span class="w"> </span>directories
-└──<span class="w"> </span>tools
-<span class="w">    </span>├──<span class="w"> </span>libs<span class="w"> </span>-&gt;<span class="w"> </span><span class="o">(</span>Vendor<span class="w"> </span>.so<span class="o">)</span>
-<span class="w">    </span>└──<span class="w"> </span>Makefile
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>.
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>├──<span class="w"> </span>docs
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>│<span class="w">   </span>└──<span class="w"> </span>pages
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>│<span class="w">       </span>└──<span class="w"> </span>images
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>├──<span class="w"> </span>framework
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>│<span class="w">   </span>└──<span class="w"> </span>cunit
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>│<span class="w">       </span>├──<span class="w"> </span>arm-rdk-linux-gnueabi<span class="w"> </span>-&gt;<span class="w"> </span>Arm<span class="w"> </span>prebuild<span class="w"> </span>version<span class="w"> </span>of<span class="w"> </span>cunit.so
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>│<span class="w">       </span>└──<span class="w"> </span>i686-pc-linux-gnu<span class="w"> </span>-&gt;<span class="w"> </span>-&gt;<span class="w"> </span>Linux<span class="w"> </span>prebuild<span class="w"> </span>version<span class="w"> </span>of<span class="w"> </span>cunit.so
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>│<span class="w">   </span>└──<span class="w"> </span>xxx<span class="w"> </span>-&gt;<span class="w"> </span>Other<span class="w"> </span>framework<span class="w"> </span>as<span class="w"> </span>required
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>├──<span class="w"> </span>include<span class="w"> </span>-&gt;<span class="w"> </span>ut-core<span class="w"> </span>header<span class="w"> </span>files
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>├──<span class="w"> </span>src<span class="w">     </span>-&gt;<span class="w"> </span>ut-core<span class="w"> </span><span class="nb">source</span><span class="w"> </span>files
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>├──<span class="w"> </span>template
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>│<span class="w">   </span>├──<span class="w"> </span>hal_template<span class="w"> </span>-&gt;<span class="w"> </span>example<span class="w"> </span>files<span class="w"> </span><span class="k">for</span><span class="w"> </span>the<span class="w"> </span>top<span class="w"> </span>level<span class="w"> </span>hal<span class="w"> </span>directories
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>│<span class="w">   </span>└──<span class="w"> </span>ut_template<span class="w"> </span>-&gt;<span class="w"> </span>example<span class="w"> </span>files<span class="w"> </span><span class="k">for</span><span class="w"> </span>the<span class="w"> </span>ut<span class="w"> </span>directories
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>└──<span class="w"> </span>tools
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">    </span>├──<span class="w"> </span>libs<span class="w"> </span>-&gt;<span class="w"> </span><span class="o">(</span>Vendor<span class="w"> </span>.so<span class="o">)</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="w">    </span>└──<span class="w"> </span>Makefile
+</span></code></pre></div>
 <h2 id="5-vendor-or-developer-requirements">5.  Vendor or Developer Requirements</h2>
 <p>Vendors or developers must provide one of the following:</p>
 <ol>
@@ -2601,21 +2623,21 @@
 <h2 id="7-toolchain">7. Toolchain</h2>
 <p>The toolchain is provided by the vendor or through an SDK built with the Yocto build system. It's recommended to install the toolchain in the <code>./tools/2.0</code> directory.</p>
 <h3 id="71-how-to-use-the-sdk-toolchain">7.1. How to Use the SDK Toolchain</h3>
-<div class="highlight"><pre><span></span><code>./rdk-glibc-x86_64-arm-toolchain-2.0.sh
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>./rdk-glibc-x86_64-arm-toolchain-2.0.sh
+</span></code></pre></div>
 <p>This script installs the toolchain and <code>sysroots</code> (typically in <code>/opt/rdk/2.0</code>, but it's recommended to change this to <code>${PWD}../2.0</code>).</p>
 <p>To use the cross-development toolchain, source the environment setup script:</p>
-<div class="highlight"><pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>/opt/rdk/2.0/environment-setup-cortexa9t2-vfp-rdk-linux-gnueabi
-<span class="nb">source</span><span class="w"> </span>/opt/rdk/2.0/environment-setup-cortexa9t2-vfp-rdk-linux-gnueabi
-<span class="nb">echo</span><span class="w"> </span><span class="nv">$CC</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>chmod<span class="w"> </span>+x<span class="w"> </span>/opt/rdk/2.0/environment-setup-cortexa9t2-vfp-rdk-linux-gnueabi
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nb">source</span><span class="w"> </span>/opt/rdk/2.0/environment-setup-cortexa9t2-vfp-rdk-linux-gnueabi
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nb">echo</span><span class="w"> </span><span class="nv">$CC</span>
+</span></code></pre></div>
 <h3 id="72-docker-based-toolchain">7.2. Docker Based Toolchain</h3>
 <p>The tool-chain and common environment can be launched by the following <code>sc</code> commands see :- <a href="https://github.com/rdkcentral/ut-core/wiki/FAQ:-RDK-Docker-Toolchain">FAQ:-RDK-Docker-Toolchain</a></p>
-<div class="highlight"><pre><span></span><code>sc<span class="w"> </span>docker<span class="w"> </span>rdk-dunfell<span class="w"> </span>/bin/bash
-.<span class="w"> </span>/opt/toolchains/rdk-glibc-x86_64-arm-toolchain/environment-setup-armv7at2hf-neon-oe-linux-gnueabi
-</code></pre></div>
-<div class="highlight"><pre><span></span><code>sc<span class="w"> </span>docker<span class="w"> </span>list
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>sc<span class="w"> </span>docker<span class="w"> </span>rdk-dunfell<span class="w"> </span>/bin/bash
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>.<span class="w"> </span>/opt/toolchains/rdk-glibc-x86_64-arm-toolchain/environment-setup-armv7at2hf-neon-oe-linux-gnueabi
+</span></code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>sc<span class="w"> </span>docker<span class="w"> </span>list
+</span></code></pre></div>
 <p>will list out the environments available (from outside the docker).</p>
 <h2 id="8-testing-environment-and-making-the-code">8. Testing Environment and Making the Code</h2>
 <p>There are two platform targets:</p>
@@ -2624,32 +2646,32 @@
 <li><code>arm</code> (<code>TARGET=arm</code>): Builds all tests and the test application for the target.</li>
 </ul>
 <h2 id="9-build-the-linux-environment-with-c-language">9. Build the <code>linux</code> environment with C language</h2>
-<div class="highlight"><pre><span></span><code>make
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>make
+</span></code></pre></div>
 <p>This builds the <code>src/*.c</code> files, core functions from <code>ut-core/src/c_source</code>, and links against libraries in <code>ut-core/framework</code>. The <code>skeletons/src</code> directory is included for stub compilation.</p>
 <h2 id="10-build-the-target-arm-environment-with-c-language">10. Build the target <code>arm</code> environment with C language</h2>
 <p>Ensure the toolchain is sourced.</p>
-<div class="highlight"><pre><span></span><code>make<span class="w"> </span><span class="nv">TARGET</span><span class="o">=</span>arm
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>make<span class="w"> </span><span class="nv">TARGET</span><span class="o">=</span>arm
+</span></code></pre></div>
 <p>This builds the <code>src/*.c</code> files, core functions from <code>ut-core/src/c_source</code>, links against libraries in <code>ut-core/framework</code>, and links against libraries in the <code>libs</code> directory or the SDK <code>sysroot</code>. The final binary (<code>hal_test</code>) is located in the <code>bin</code> directory.</p>
 <h2 id="11-build-the-linux-environment-with-cpp-language">11. Build the <code>linux</code> environment with CPP language</h2>
-<p><div class="highlight"><pre><span></span><code>make<span class="w"> </span><span class="nv">VARIANT</span><span class="o">=</span>CPP
-</code></pre></div>
+<p><div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>make<span class="w"> </span><span class="nv">VARIANT</span><span class="o">=</span>CPP
+</span></code></pre></div>
 This builds the <code>src/*.c</code> files, core functions from <code>ut-core/src/cpp_source</code>, and links against libraries in <code>ut-core/framework</code>. The <code>skeletons/src</code> directory is included for stub compilation.</p>
 <h2 id="12-build-the-target-arm-environment-with-cpp-language">12. Build the target <code>arm</code> environment with CPP language</h2>
 <p>Ensure the toolchain is sourced.</p>
-<p><div class="highlight"><pre><span></span><code>make<span class="w"> </span><span class="nv">VARIANT</span><span class="o">=</span>CPP<span class="w"> </span><span class="nv">TARGET</span><span class="o">=</span>arm
-</code></pre></div>
+<p><div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>make<span class="w"> </span><span class="nv">VARIANT</span><span class="o">=</span>CPP<span class="w"> </span><span class="nv">TARGET</span><span class="o">=</span>arm
+</span></code></pre></div>
 This builds the <code>src/*.c</code> files, core functions from <code>ut-core/src/cpp_source</code>, links against libraries in <code>ut-core/framework</code>, and links against libraries in the <code>libs</code> directory or the SDK <code>sysroot</code>. The final binary (<code>hal_test</code>) is located in the <code>bin</code> directory.</p>
 <h2 id="13-running-on-the-target">13. Running on the Target</h2>
 <p>Copy the files from the <code>bin</code> directory to the target.</p>
 <p>On the target, set the <code>LD_LIBRARY_PATH</code> environment variable:</p>
-<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>/usr/lib:/lib:/home/root:./
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>/usr/lib:/lib:/home/root:./
+</span></code></pre></div>
 <p>Alternatively, use the <code>run.sh</code> script in the <code>bin</code> directory.</p>
 <p>Execute the <code>hal_test</code> application:</p>
-<div class="highlight"><pre><span></span><code>./hal_test<span class="w"> </span>-h<span class="w"> </span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>./hal_test<span class="w"> </span>-h<span class="w"> </span>
+</span></code></pre></div>
 <h2 id="14-modes-of-operation">14. Modes of Operation</h2>
 <p>The following flags will only work in C Mode</p>
 <ul>
@@ -2659,25 +2681,25 @@ This builds the <code>src/*.c</code> files, core functions from <code>ut-core/sr
 </ul>
 <h2 id="15-source-tree-ut-unit-test-directory">15. Source Tree <code>UT</code> Unit Test Directory</h2>
 <p>The tests follow the structure defined in <code>template/ut_template/</code>:</p>
-<div class="highlight"><pre><span></span><code>├──<span class="w"> </span>bin
-│<span class="w">   </span>└──<span class="w"> </span>run.sh
-├──<span class="w"> </span>build.sh
-├──<span class="w"> </span>docs
-│<span class="w">   </span>├──<span class="w"> </span>generate_docs.sh
-│<span class="w">   </span>└──<span class="w"> </span>pages
-│<span class="w">       </span>├──<span class="w"> </span>L1_TestSpecification.md
-│<span class="w">       </span>├──<span class="w"> </span>L2_TestSpecification.md
-│<span class="w">       </span>└──<span class="w"> </span>README.md<span class="w"> </span>-&gt;<span class="w"> </span>../../README.md
-├──<span class="w"> </span>Makefile
-├──<span class="w"> </span>README.md
-├──<span class="w"> </span>skeletons
-│<span class="w">   </span>└──<span class="w"> </span>src
-├──<span class="w"> </span>src
-│<span class="w">   </span>├──<span class="w"> </span>main.c
-│<span class="w">   </span>├──<span class="w"> </span>test_l1_test_example.c
-│<span class="w">   </span>└──<span class="w"> </span>test_l2_tests_example.c
-└──<span class="w"> </span>tools
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>├──<span class="w"> </span>bin
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>│<span class="w">   </span>└──<span class="w"> </span>run.sh
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>├──<span class="w"> </span>build.sh
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>├──<span class="w"> </span>docs
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>│<span class="w">   </span>├──<span class="w"> </span>generate_docs.sh
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>│<span class="w">   </span>└──<span class="w"> </span>pages
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>│<span class="w">       </span>├──<span class="w"> </span>L1_TestSpecification.md
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>│<span class="w">       </span>├──<span class="w"> </span>L2_TestSpecification.md
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>│<span class="w">       </span>└──<span class="w"> </span>README.md<span class="w"> </span>-&gt;<span class="w"> </span>../../README.md
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>├──<span class="w"> </span>Makefile
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>├──<span class="w"> </span>README.md
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>├──<span class="w"> </span>skeletons
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>│<span class="w">   </span>└──<span class="w"> </span>src
+</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>├──<span class="w"> </span>src
+</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>│<span class="w">   </span>├──<span class="w"> </span>main.c
+</span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a>│<span class="w">   </span>├──<span class="w"> </span>test_l1_test_example.c
+</span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a>│<span class="w">   </span>└──<span class="w"> </span>test_l2_tests_example.c
+</span><span id="__span-14-18"><a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a>└──<span class="w"> </span>tools
+</span></code></pre></div>
 <p>The <code>main.c</code> file in the <code>src</code> directory is the main launch point for the test application.</p>
 <h2 id="16-choosing-a-major-version-of-the-ut-core">16. Choosing a Major Version of the UT-Core</h2>
 <p>Since the ut-core interfaces will change over time, and in order to be consistant when creating tests engineers should select the major release they wish to fixed too. (Although it's recommended to periodically upgrade to a later revision )</p>
@@ -2687,52 +2709,52 @@ This builds the <code>src/*.c</code> files, core functions from <code>ut-core/sr
 <p>This is selected via <code>UT_CORE_PROJECT_VERSION</code> variable as an input in the default build script for the tests suite e.g. <code>ut/build.sh UT_CORE_PROJECT_VERSION=2.0.0</code> or by changing the fixed version set in your unit testing <code>build.sh</code> trigger script.</p>
 <p>For best practice and receive bug fixes define <code>UT_PROJECT_MAJOR_VERSION</code> in <code>ut/build.sh</code> to choose the major revision that the testing suite should compile against.
 <code>ut-core</code> will assure backwards compatibility in major versions. This means that the bugfixes and minor changes you will automatically acquire on the next test run.</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Change this to upgrade your UT-Core Major versions. Non ABI Changes 1.x.x are supported, between major revisions</span>
-<span class="nv">UT_PROJECT_MAJOR_VERSION</span><span class="o">=</span><span class="s2">&quot;1.&quot;</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Change this to upgrade your UT-Core Major versions. Non ABI Changes 1.x.x are supported, between major revisions</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="nv">UT_PROJECT_MAJOR_VERSION</span><span class="o">=</span><span class="s2">&quot;1.&quot;</span>
+</span></code></pre></div>
 <h2 id="17-example-of-registering-test-functions">17. Example of Registering Test Functions</h2>
 <p>The main test app will register all the tests and kick off the framework.</p>
-<div class="highlight"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string.h&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span>
-
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;ut.h&gt;</span>
-
-<span class="kt">void</span><span class="w"> </span><span class="nf">test_l1_function1</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">  </span><span class="n">UT_FAIL</span><span class="p">(</span><span class="s">&quot;Need to implement&quot;</span><span class="p">);</span>
-<span class="w">  </span><span class="cm">/* Positive */</span>
-<span class="w">  </span><span class="cm">/* Negative */</span>
-<span class="p">}</span><span class="w"> </span>
-
-<span class="kt">void</span><span class="w"> </span><span class="nf">test_l1_function2</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">  </span><span class="n">UT_FAIL</span><span class="p">(</span><span class="s">&quot;Need to implement&quot;</span><span class="p">);</span>
-<span class="w">  </span><span class="cm">/* Positive */</span>
-<span class="w">  </span><span class="cm">/* Negative */</span>
-<span class="p">}</span><span class="w"> </span>
-
-<span class="k">static</span><span class="w"> </span><span class="n">UT_test_suite_t</span><span class="w"> </span><span class="o">*</span><span class="n">pSuite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-
-<span class="cm">/**</span>
-<span class="cm"> * @brief Register the main tests for this module</span>
-<span class="cm"> * </span>
-<span class="cm"> * @return int - 0 on success, otherwise failure</span>
-<span class="cm"> */</span>
-<span class="kt">int</span><span class="w"> </span><span class="nf">test_l1_register</span><span class="p">(</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="cm">/* add a suite to the registry */</span>
-<span class="w">    </span><span class="n">pSuite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UT_add_suite</span><span class="p">(</span><span class="s">&quot;[L1 test_Example]&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">NULL</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">pSuite</span><span class="p">)</span><span class="w"> </span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="n">UT_add_test</span><span class="p">(</span><span class="w"> </span><span class="n">pSuite</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;blah_level1_test_function&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">test_l1_function1</span><span class="p">);</span>
-<span class="w">    </span><span class="n">UT_add_test</span><span class="p">(</span><span class="w"> </span><span class="n">pSuite</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;blah_level1_test_function&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">test_l1_function2</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string.h&gt;</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;ut.h&gt;</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="kt">void</span><span class="w"> </span><span class="nf">test_l1_function1</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="p">{</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="w">  </span><span class="n">UT_FAIL</span><span class="p">(</span><span class="s">&quot;Need to implement&quot;</span><span class="p">);</span>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="w">  </span><span class="cm">/* Positive */</span>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="w">  </span><span class="cm">/* Negative */</span>
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a><span class="p">}</span><span class="w"> </span>
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>
+</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a><span class="kt">void</span><span class="w"> </span><span class="nf">test_l1_function2</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span id="__span-16-14"><a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a><span class="p">{</span>
+</span><span id="__span-16-15"><a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a><span class="w">  </span><span class="n">UT_FAIL</span><span class="p">(</span><span class="s">&quot;Need to implement&quot;</span><span class="p">);</span>
+</span><span id="__span-16-16"><a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a><span class="w">  </span><span class="cm">/* Positive */</span>
+</span><span id="__span-16-17"><a id="__codelineno-16-17" name="__codelineno-16-17" href="#__codelineno-16-17"></a><span class="w">  </span><span class="cm">/* Negative */</span>
+</span><span id="__span-16-18"><a id="__codelineno-16-18" name="__codelineno-16-18" href="#__codelineno-16-18"></a><span class="p">}</span><span class="w"> </span>
+</span><span id="__span-16-19"><a id="__codelineno-16-19" name="__codelineno-16-19" href="#__codelineno-16-19"></a>
+</span><span id="__span-16-20"><a id="__codelineno-16-20" name="__codelineno-16-20" href="#__codelineno-16-20"></a><span class="k">static</span><span class="w"> </span><span class="n">UT_test_suite_t</span><span class="w"> </span><span class="o">*</span><span class="n">pSuite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+</span><span id="__span-16-21"><a id="__codelineno-16-21" name="__codelineno-16-21" href="#__codelineno-16-21"></a>
+</span><span id="__span-16-22"><a id="__codelineno-16-22" name="__codelineno-16-22" href="#__codelineno-16-22"></a><span class="cm">/**</span>
+</span><span id="__span-16-23"><a id="__codelineno-16-23" name="__codelineno-16-23" href="#__codelineno-16-23"></a><span class="cm"> * @brief Register the main tests for this module</span>
+</span><span id="__span-16-24"><a id="__codelineno-16-24" name="__codelineno-16-24" href="#__codelineno-16-24"></a><span class="cm"> * </span>
+</span><span id="__span-16-25"><a id="__codelineno-16-25" name="__codelineno-16-25" href="#__codelineno-16-25"></a><span class="cm"> * @return int - 0 on success, otherwise failure</span>
+</span><span id="__span-16-26"><a id="__codelineno-16-26" name="__codelineno-16-26" href="#__codelineno-16-26"></a><span class="cm"> */</span>
+</span><span id="__span-16-27"><a id="__codelineno-16-27" name="__codelineno-16-27" href="#__codelineno-16-27"></a><span class="kt">int</span><span class="w"> </span><span class="nf">test_l1_register</span><span class="p">(</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="p">)</span>
+</span><span id="__span-16-28"><a id="__codelineno-16-28" name="__codelineno-16-28" href="#__codelineno-16-28"></a><span class="p">{</span>
+</span><span id="__span-16-29"><a id="__codelineno-16-29" name="__codelineno-16-29" href="#__codelineno-16-29"></a><span class="w">    </span><span class="cm">/* add a suite to the registry */</span>
+</span><span id="__span-16-30"><a id="__codelineno-16-30" name="__codelineno-16-30" href="#__codelineno-16-30"></a><span class="w">    </span><span class="n">pSuite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UT_add_suite</span><span class="p">(</span><span class="s">&quot;[L1 test_Example]&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
+</span><span id="__span-16-31"><a id="__codelineno-16-31" name="__codelineno-16-31" href="#__codelineno-16-31"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">NULL</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">pSuite</span><span class="p">)</span><span class="w"> </span>
+</span><span id="__span-16-32"><a id="__codelineno-16-32" name="__codelineno-16-32" href="#__codelineno-16-32"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-16-33"><a id="__codelineno-16-33" name="__codelineno-16-33" href="#__codelineno-16-33"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+</span><span id="__span-16-34"><a id="__codelineno-16-34" name="__codelineno-16-34" href="#__codelineno-16-34"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-16-35"><a id="__codelineno-16-35" name="__codelineno-16-35" href="#__codelineno-16-35"></a>
+</span><span id="__span-16-36"><a id="__codelineno-16-36" name="__codelineno-16-36" href="#__codelineno-16-36"></a><span class="w">    </span><span class="n">UT_add_test</span><span class="p">(</span><span class="w"> </span><span class="n">pSuite</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;blah_level1_test_function&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">test_l1_function1</span><span class="p">);</span>
+</span><span id="__span-16-37"><a id="__codelineno-16-37" name="__codelineno-16-37" href="#__codelineno-16-37"></a><span class="w">    </span><span class="n">UT_add_test</span><span class="p">(</span><span class="w"> </span><span class="n">pSuite</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;blah_level1_test_function&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">test_l1_function2</span><span class="p">);</span>
+</span><span id="__span-16-38"><a id="__codelineno-16-38" name="__codelineno-16-38" href="#__codelineno-16-38"></a>
+</span><span id="__span-16-39"><a id="__codelineno-16-39" name="__codelineno-16-39" href="#__codelineno-16-39"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-16-40"><a id="__codelineno-16-40" name="__codelineno-16-40" href="#__codelineno-16-40"></a><span class="p">}</span>
+</span></code></pre></div>
 <p>Each module has a optional <code>init</code> and <code>clean</code> function, which can be setup via UT_add_suite(), in the above example these are defaulted to <code>NULL</code>, since in this example case they are not used.</p>
 
 

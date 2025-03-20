@@ -2216,6 +2216,28 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../whitepapers/engineering_goals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Achieving Engineering Goal
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2465,30 +2487,30 @@
 <li>Use <code>git push</code> to push the develop branch</li>
 </ul>
 <h3 id="example">Example</h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Start the release</span>
-git<span class="w"> </span>flow<span class="w"> </span>release<span class="w"> </span>start<span class="w"> </span><span class="m">1</span>.2.0<span class="w"> </span>
-
-<span class="c1"># Work on the release (fix bugs, update docs, etc.)</span>
-<span class="c1"># ...</span>
-
-<span class="c1">## Generate a change log see (https://github.com/cookpete/auto-changelog)</span>
-autochange-log<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.2.0
-git<span class="w"> </span>add<span class="w"> </span>CHANGELOG.md
-git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Bumped CHANGELOG.md for release&quot;</span>
-
-<span class="c1"># Finish the release</span>
-git<span class="w"> </span>flow<span class="w"> </span>release<span class="w"> </span>finish<span class="w"> </span><span class="m">1</span>.2.0
-
-<span class="c1"># Code should be merged to both develop &amp; main</span>
-<span class="c1"># If successful &amp; not merge errors the branch will be `develop`</span>
-<span class="c1"># If merge errors, follow instructions and re-run etc.</span>
-
-<span class="c1"># Merge has occurred to develop</span>
-git<span class="w"> </span>push<span class="w">  </span><span class="c1"># pushes develop</span>
-git<span class="w"> </span>push<span class="w"> </span>--tags<span class="w"> </span><span class="c1"># pushes the tags</span>
-git<span class="w"> </span>checkout<span class="w"> </span>main<span class="w"> </span><span class="c1"># swaps branch to main</span>
-git<span class="w"> </span>push<span class="w"> </span><span class="c1"># pushes main</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Start the release</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>git<span class="w"> </span>flow<span class="w"> </span>release<span class="w"> </span>start<span class="w"> </span><span class="m">1</span>.2.0<span class="w"> </span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Work on the release (fix bugs, update docs, etc.)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># ...</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1">## Generate a change log see (https://github.com/cookpete/auto-changelog)</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>autochange-log<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.2.0
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>git<span class="w"> </span>add<span class="w"> </span>CHANGELOG.md
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Bumped CHANGELOG.md for release&quot;</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1"># Finish the release</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>git<span class="w"> </span>flow<span class="w"> </span>release<span class="w"> </span>finish<span class="w"> </span><span class="m">1</span>.2.0
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="c1"># Code should be merged to both develop &amp; main</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="c1"># If successful &amp; not merge errors the branch will be `develop`</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="c1"># If merge errors, follow instructions and re-run etc.</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="c1"># Merge has occurred to develop</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>git<span class="w"> </span>push<span class="w">  </span><span class="c1"># pushes develop</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>git<span class="w"> </span>push<span class="w"> </span>--tags<span class="w"> </span><span class="c1"># pushes the tags</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>git<span class="w"> </span>checkout<span class="w"> </span>main<span class="w"> </span><span class="c1"># swaps branch to main</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>git<span class="w"> </span>push<span class="w"> </span><span class="c1"># pushes main</span>
+</span></code></pre></div>
 <h2 id="benefits-of-using-git-flow-release">Benefits of Using Git Flow Release</h2>
 <ul>
 <li><strong>Clear Structure:</strong> Provides a well-defined workflow for managing releases.</li>

@@ -718,6 +718,25 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#phase-relationships" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase Relationships
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interface-testing-vcomponent-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interface / Testing / vComponent Status
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Interface / Testing / vComponent Status">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#av-components" class="md-nav__link">
     <span class="md-ellipsis">
       AV Components
@@ -725,16 +744,15 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#non-av-components" class="md-nav__link">
     <span class="md-ellipsis">
       Non AV Components
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Non AV Components">
-      <ul class="md-nav__list">
+</li>
         
           <li class="md-nav__item">
   <a href="#non-av-components-tbd" class="md-nav__link">
@@ -745,12 +763,7 @@
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
+          <li class="md-nav__item">
   <a href="#vendor-system-interfaces-vsi" class="md-nav__link">
     <span class="md-ellipsis">
       Vendor System Interfaces (VSI)
@@ -766,6 +779,11 @@
       Vendor System Interfaces (VSI) TBD
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -2371,6 +2389,28 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../whitepapers/engineering_goals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Achieving Engineering Goal
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2554,6 +2594,25 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#phase-relationships" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase Relationships
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interface-testing-vcomponent-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interface / Testing / vComponent Status
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Interface / Testing / vComponent Status">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#av-components" class="md-nav__link">
     <span class="md-ellipsis">
       AV Components
@@ -2561,16 +2620,15 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#non-av-components" class="md-nav__link">
     <span class="md-ellipsis">
       Non AV Components
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Non AV Components">
-      <ul class="md-nav__list">
+</li>
         
           <li class="md-nav__item">
   <a href="#non-av-components-tbd" class="md-nav__link">
@@ -2581,12 +2639,7 @@
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
+          <li class="md-nav__item">
   <a href="#vendor-system-interfaces-vsi" class="md-nav__link">
     <span class="md-ellipsis">
       Vendor System Interfaces (VSI)
@@ -2602,6 +2655,11 @@
       Vendor System Interfaces (VSI) TBD
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -2630,12 +2688,15 @@
 
 
 <h1 id="hal-interface-overview">HAL Interface Overview</h1>
-<p>Interfaces must progress through multiple stages before a static version can be approved for AIDL usage. If the design remains untested or requires major changes, the first interface version cannot be approved.</p>
-<h2 id="interface-phases">Interface Phases</h2>
+<p>Interfaces / Testing Suites / Component code must progress through multiple stages before a stable interface version can be realised. The first interface version will only be finalized at Phase 6, ensuring that it has been thoroughly tested and refined. Until the interface reaches this phase the interface is subject to change and cannot be considered stable.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
 <ul>
 <li>Each phase requires an engineering &amp; architecture sign-off and review before proceeding to the next stage.</li>
 <li>Target Information is listed in the with the status. e.g. <strong>M3/25</strong>, <strong>Q2/25</strong>, <strong>H2/25</strong>, for moving to the next phase.</li>
 </ul>
+</div>
+<h2 id="interface-phases">Interface Phases</h2>
 <table>
 <thead>
 <tr>
@@ -2711,13 +2772,14 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Note:</strong> Not all components will undergo every testing phase, as some require interaction with other component groups to operate effectively.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul>
+<li>Not all components will undergo every testing phase, as some require interaction with other component groups to operate effectively.</li>
+</ul>
+</div>
 <p>For More detailed information see <a href="../../../../external_content/ut-core-wiki/3.-Standards%3A-Levels-of-Test-for-Vendor-Layer/">Testing Suite Levels</a></p>
 <h3 id="testing-suite-phases">Testing Suite Phases</h3>
-<p><strong>Each phase requires an engineering &amp; architecture sign-off and review before proceeding to the next stage.</strong></p>
-<ul>
-<li>Target Information is listed in the with the status. e.g. <strong>M3/25</strong>, <strong>Q2/25</strong>, <strong>H2/25</strong>, for moving to the next phase.</li>
-</ul>
 <table>
 <thead>
 <tr>
@@ -2754,7 +2816,10 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Testing suites must prioritize MVP bring-up and ensure the first-phase delivery of core features.</strong>  </p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Testing suites must prioritize MVP bring-up and ensure the first-phase delivery of core features.</p>
+</div>
 <hr />
 <h2 id="vcomponent-phases">vComponent Phases</h2>
 <table>
@@ -2775,10 +2840,7 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Each phase requires an engineering &amp; architecture sign-off and review before proceeding to the next stage.</strong></p>
-<ul>
-<li>Target Information is listed in the with the status. e.g. <strong>M3/25</strong>, <strong>Q2/25</strong>, <strong>H2/25</strong>, for moving to the next phase.</li>
-</ul>
+<p>For more information on the Virtual device please see <a href="../../../../external_content/ut-core-wiki/5.0%3A-Standards%3A-vDevice-Overview/">vDevice Overview</a></p>
 <table>
 <thead>
 <tr>
@@ -2815,7 +2877,49 @@
 </tr>
 </tbody>
 </table>
-<h2 id="av-components">AV Components</h2>
+<h2 id="phase-relationships">Phase Relationships</h2>
+<p>The flowchart below shows the relationships and flows between the phases.</p>
+<div class="admonition info note">
+<p class="admonition-title">Info</p>
+<p>Once the interface reaches "Phase 4: Feedback &amp; Refinement" 🟢🟢🟢🟢, then "Testing Suite: Phase 1" &amp; "vComponent: Phase 1" can commence.</p>
+</div>
+<pre class="mermaid"><code>flowchart TD
+    %% Dummy node to enforce left alignment
+    X[ Start ] -.-&gt; Interface_Phases
+
+    subgraph vComponent_Phases
+        V1[P1: Interface Foundation Confidence&lt;br&gt;🟡] --&gt; V2[P2: Define vComponent Requirements🟡🟡]
+        V2 --&gt; V3[P3: Control Plane Requirements Definition&lt;br&gt;🟠🟠🟠]
+        V3 --&gt; V4[P4: Develop vComponent Implementation&lt;br&gt;🟢🟢🟢🟢]
+        V4 --&gt; V5[P5: Integration &amp; Testing&lt;br&gt;🟢🟢🟢🟢🟢]
+    end
+
+    subgraph Testing_Suite_Phases
+        T1[P1: Define Testing Specification &lt;br&gt;🟡] --&gt; T2[P2: Generate Testing Suite &lt;br&gt;🟡🟡]
+        T2 --&gt; T3[P3: Validate Testing Suite&lt;br&gt;🟠🟠🟠]
+        T3 --&gt; T4[P4: Hardware &amp; Architecture Validation&lt;br&gt;🟢🟢🟢🟢]
+        T4 --&gt; T5[P5: Integrate and Test&lt;br&gt;🟢🟢🟢🟢🟢]
+    end
+
+    subgraph Interface_Phases
+        P1[P1: Define High-Level Requirements &lt;br&gt;🟡] --&gt; P2[P2: Define HAL AIDL Interface&lt;br&gt;🟡🟡]
+        P2 --&gt; P3[P3: Develop Detailed Module Specification&lt;br&gt;🟠🟠🟠]
+        P3 --&gt; P4[P4: Feedback &amp; Refinement&lt;br&gt;🟢🟢🟢🟢]
+        P4 &lt;--&gt; |Feedback/Refine | P5[P5: Hardware &amp; Architecture Validation&lt;br&gt;🟢🟢🟢🟢🟢]
+        P5 --&gt; P6[P6: Interface Freeze &amp; Versioning&lt;br&gt;🟢🟢🟢🟢🟢🟢]
+    end
+
+    P4 --&gt; |Feedback loop | P2
+    P4 &lt;--&gt; |Foundation/Feedback| V1
+    P4 --&gt; |Testing/Feedback| T1
+    T4 &lt;--&gt; |Testing loop| V4
+    T2 &lt;--&gt; |Feedback loop| T3
+    T4 &lt;--&gt; | Feedback loop | P5
+    V5 &lt;--&gt; | Feedback loop | P5
+    T5 &lt;--&gt; | Feedback loop | P5
+</code></pre>
+<h2 id="interface-testing-vcomponent-status">Interface / Testing / vComponent Status</h2>
+<h3 id="av-components">AV Components</h3>
 <p>This list provides an overview of various HAL components, their device profiles, and functionality within the system.</p>
 <table>
 <thead>
@@ -2903,7 +3007,7 @@
 </tr>
 </tbody>
 </table>
-<h2 id="non-av-components">Non AV Components</h2>
+<h3 id="non-av-components">Non AV Components</h3>
 <p>This list provides an overview of various HAL components, their device profiles, and functionality within the system.</p>
 <table>
 <thead>
@@ -3074,7 +3178,7 @@
 </tr>
 </tbody>
 </table>
-<h2 id="vendor-system-interfaces-vsi">Vendor System Interfaces (VSI)</h2>
+<h3 id="vendor-system-interfaces-vsi">Vendor System Interfaces (VSI)</h3>
 <p>The following smaller subset of HALs function as in-process libraries, collectively referred to as the Vendor System Interface (VSI). They are dynamically linked to the RDK Middleware, commonly used for:</p>
 <table>
 <thead>
@@ -3131,7 +3235,7 @@
 </tr>
 </tbody>
 </table>
-<h3 id="vendor-system-interfaces-vsi-tbd">Vendor System Interfaces (VSI) TBD</h3>
+<h4 id="vendor-system-interfaces-vsi-tbd">Vendor System Interfaces (VSI) TBD</h4>
 <table>
 <thead>
 <tr>

@@ -2216,6 +2216,28 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../whitepapers/engineering_goals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Achieving Engineering Goal
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2438,11 +2460,11 @@
 <ol>
 <li><strong>Create a Configuration File:</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="nt">test_case_1</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">expected_result</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="nt">test_case_2</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">expected_result</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">12345</span>
-</code></pre></div>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">test_case_1</span><span class="p">:</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">expected_result</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nt">test_case_2</span><span class="p">:</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">expected_result</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">12345</span>
+</span></code></pre></div>
 <ol>
 <li>
 <p><strong>Start the test and specify the profile file</strong></p>
@@ -2451,23 +2473,23 @@
 <p>Passing a profile into the testing suite, will automatically open the profile</p>
 </li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="p">.</span><span class="o">/</span><span class="n">hdmi_cec</span><span class="w"> </span><span class="o">-</span><span class="n">p</span><span class="w"> </span><span class="n">hdmi_one_port_no_extendedEnums</span><span class="p">.</span><span class="n">yml</span>
-</code></pre></div>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">.</span><span class="o">/</span><span class="n">hdmi_cec</span><span class="w"> </span><span class="o">-</span><span class="n">p</span><span class="w"> </span><span class="n">hdmi_one_port_no_extendedEnums</span><span class="p">.</span><span class="n">yml</span>
+</span></code></pre></div>
 <ol>
 <li><strong>Use Assertions:</strong></li>
 </ol>
 <p>Macro's are now active and available for use in the test suite.</p>
-<div class="highlight"><pre><span></span><code><span class="kt">bool</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">my_function</span><span class="p">();</span>
-<span class="n">UT_ASSERT_EQUAL_KVP_PROFILE_BOOL</span><span class="p">(</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;test_case_1/expected_result&quot;</span><span class="p">);</span>
-</code></pre></div>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kt">bool</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">my_function</span><span class="p">();</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">UT_ASSERT_EQUAL_KVP_PROFILE_BOOL</span><span class="p">(</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;test_case_1/expected_result&quot;</span><span class="p">);</span>
+</span></code></pre></div>
 <h2 id="detail-on-how-it-works">Detail on how it works.</h2>
 <h3 id="integration-with-ut_log">Integration with ut_log</h3>
 <p>The <code>ut_kvp_profile</code> module seamlessly integrates with the <code>ut_log</code> module to provide informative logging upon assertion failures. For example, the following code:</p>
-<div class="highlight"><pre><span></span><code><span class="n">UT_ASSERT_EQUAL_KVP_PROFILE_BOOL</span><span class="p">(</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;test_case_1/expected_result&quot;</span><span class="p">);</span>
-</code></pre></div>
+<div class="language-c highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">UT_ASSERT_EQUAL_KVP_PROFILE_BOOL</span><span class="p">(</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;test_case_1/expected_result&quot;</span><span class="p">);</span>
+</span></code></pre></div>
 <p>would result in a log message similar to:</p>
-<div class="highlight"><pre><span></span><code>Assertion failed: test_case_1/expected_result (expected: true, actual: false)
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Assertion failed: test_case_1/expected_result (expected: true, actual: false)
+</span></code></pre></div>
 <h2 id="assertion-macros">Assertion Macros</h2>
 <p>The header defines several macros for common assertion types:</p>
 <ul>

@@ -2211,6 +2211,28 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../whitepapers/engineering_goals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Achieving Engineering Goal
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2371,23 +2393,23 @@
 <p><strong>Track File Types:</strong> Tell Git LFS which file types to track. Create or update your <code>.gitattributes</code> file in the root of your repository:</p>
 </li>
 </ol>
-<p><div class="highlight"><pre><span></span><code>*.jpg filter=lfs diff=lfs merge=lfs -text
-*.png filter=lfs diff=lfs merge=lfs -text
-*.zip filter=lfs diff=lfs merge=lfs -text
-</code></pre></div>
+<p><div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>*.jpg filter=lfs diff=lfs merge=lfs -text
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>*.png filter=lfs diff=lfs merge=lfs -text
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>*.zip filter=lfs diff=lfs merge=lfs -text
+</span></code></pre></div>
    (Replace the examples with your specific binary file types)</p>
 <ol>
 <li><strong>Migrate Existing Files:</strong>  </li>
 </ol>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>lfs<span class="w"> </span>migrate<span class="w"> </span>import<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.jpg&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.png&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.zip&quot;</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>git<span class="w"> </span>lfs<span class="w"> </span>migrate<span class="w"> </span>import<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.jpg&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.png&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.zip&quot;</span>
+</span></code></pre></div>
 <p>(Replace the examples with the file types you want to migrate)</p>
 <ol>
 <li><strong>Commit Changes:</strong> </li>
 </ol>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>add<span class="w"> </span>.gitattributes
-git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Migrate binaries to LFS&quot;</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>git<span class="w"> </span>add<span class="w"> </span>.gitattributes
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Migrate binaries to LFS&quot;</span>
+</span></code></pre></div>
 <ol>
 <li><strong>Push to Remote:</strong> Push your changes, including the updated <code>.gitattributes</code> file, to your remote repository.</li>
 </ol>
@@ -2400,8 +2422,8 @@ git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </sp
 <p><strong>Large Repositories:</strong> If you have a very large repository, the migration might take some time.  You can use the <code>--verbose</code> flag to see progress:</p>
 </li>
 </ul>
-<div class="highlight"><pre><span></span><code><span class="w"> </span>git<span class="w"> </span>lfs<span class="w"> </span>migrate<span class="w"> </span>import<span class="w"> </span>--verbose<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.jpg&quot;</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="w"> </span>git<span class="w"> </span>lfs<span class="w"> </span>migrate<span class="w"> </span>import<span class="w"> </span>--verbose<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.jpg&quot;</span>
+</span></code></pre></div>
 <ul>
 <li>
 <p><strong>File Locking:</strong> Consider using Git LFS file locking (<code>git lfs locks</code>) if you have large binary files that are often edited concurrently by multiple people. This can prevent merge conflicts.</p>
@@ -2412,10 +2434,10 @@ git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </sp
 </ul>
 <p><strong>Example: Migrating a Single File</strong></p>
 <p>If you only want to migrate a single file from the current tip of your branch, you can use:</p>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>lfs<span class="w"> </span>track<span class="w"> </span><span class="s2">&quot;your_file.bin&quot;</span><span class="w"> </span>
-git<span class="w"> </span>add<span class="w"> </span>your_file.bin
-git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Add your_file.bin to LFS&quot;</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>git<span class="w"> </span>lfs<span class="w"> </span>track<span class="w"> </span><span class="s2">&quot;your_file.bin&quot;</span><span class="w"> </span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>git<span class="w"> </span>add<span class="w"> </span>your_file.bin
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Add your_file.bin to LFS&quot;</span>
+</span></code></pre></div>
 
 
 
