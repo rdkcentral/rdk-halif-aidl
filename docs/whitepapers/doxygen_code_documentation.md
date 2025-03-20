@@ -208,3 +208,10 @@ In this example, the function is thoroughly explained:
 ## **7. Conclusion**
 
 This governance manual underscores the importance of thorough, consistent, and accurate documentation using Doxygen. By standardizing the way comments are written covering everything from function purpose to error handling teams can drastically enhance collaboration, reduce onboarding time, and boost overall code maintainability. Developers, QA engineers, and even stakeholders benefit from a robust, automated system that keeps code and documentation aligned.
+
+---
+
+**Author**: *Gerald Weatherup*  
+**Date**: *03 March 2025*
+
+For questions or suggestions on implementing branching strategies, please contact the Architecture team.
