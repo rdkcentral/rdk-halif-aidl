@@ -18,14 +18,20 @@
 # * limitations under the License.
 # *
 
-# The purpose of this file is used to give a worse case scenario example of the max configuration used for the vComponent and for the testing suites.
-# Based on the platform these details will be configured specifically as required. The platform specific details start by using this reference and re-defining the requirements based on platform.
-# During the testing, this file is used ( the platform specific version ), to check the capabilities of the interface are being returned correctly for the given platform.
-# The internal state machine will control the behaviour of the interface.
+# HAL Feature Profile (HFP) - Far Field Voice (FFV) Maximum Configuration Reference
+#  This file establishes the baseline maximum configuration for the Far Field Voice (FFV) component, serving as a worst-case scenario reference for test suite execution.
+#  Platform-specific FFV configurations, tailored to unique hardware and software requirements, are derived from this reference. 
+#     During testing, these platform-specific HFP files are used to validate accurate reporting of supported FFV capabilities by the interface.
+#  The FFV interface's runtime behavior is managed by an internal state machine, ensuring adherence to the declared configurations.
 
-components:
-  ffv:
-    microphone_channel_count: 1 # microphoneChannelCount 
-    power_state: "FULL_POWER" # FULL_POWER, STANDBY, DEEP_SLEEP
-    privacy_mode: false # false/true
-    hardware_failure: false # false/true, flag used for interface testing of the upper stack
+hal:
+  components:
+    far_field_voice:
+      microphone_channel_count: 1 # channels
+      power_state: "FULL_POWER" # Enum: FULL_POWER, STANDBY, DEEP_SLEEP
+      privacy_mode: false
+      hardware_failure: false
+      noise_reduction: true # Indicates noise reduction support
+      beamforming: true # Indicates beamforming support
+      beamforming_type: "fixed" # Optional: fixed, adaptive, etc.
+      noise_reduction_type: "spectral" # Optional: spectral, etc.
