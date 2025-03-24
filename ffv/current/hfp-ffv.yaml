@@ -1,0 +1,31 @@
+
+# *
+# * If not stated otherwise in this file or this component's LICENSE file the
+# * following copyright and licenses apply:
+# *
+# * Copyright 2025 RDK Management
+# *
+# * Licensed under the Apache License, Version 2.0 (the "License");
+# * you may not use this file except in compliance with the License.
+# * You may obtain a copy of the License at
+# *
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing, software
+# * distributed under the License is distributed on an "AS IS" BASIS,
+# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# * See the License for the specific language governing permissions and
+# * limitations under the License.
+# *
+
+# The purpose of this file is used to give a worse case scenario example of the max configuration used for the vComponent and for the testing suites.
+# Based on the platform these details will be configured specifically as required. The platform specific details start by using this reference and re-defining the requirements based on platform.
+# During the testing, this file is used ( the platform specific version ), to check the capabilities of the interface are being returned correctly for the given platform.
+# The internal state machine will control the behaviour of the interface.
+
+components:
+  ffv:
+    microphone_channel_count: 1 # microphoneChannelCount 
+    power_state: "FULL_POWER" # FULL_POWER, STANDBY, DEEP_SLEEP
+    privacy_mode: false # false/true
+    hardware_failure: false # false/true, flag used for interface testing of the upper stack
