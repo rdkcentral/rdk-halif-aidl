@@ -19,7 +19,7 @@
 package com.rdk.hal.audiosink; 
 import com.rdk.hal.audiosink.Volume;
 import com.rdk.hal.audiosink.VolumeRamp;
-import com.rdk.hal.audiodecoder.IAudioDecoder; 
+import com.rdk.hal.audiodecoder.IAudioDecoder;
 import com.rdk.hal.audiodecoder.FrameMetadata;
 
 /** 
