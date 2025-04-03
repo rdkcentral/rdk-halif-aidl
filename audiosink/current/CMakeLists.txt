@@ -18,6 +18,7 @@ set(AUDIO_DECODER_SRC_DIR ${AUDIO_DECODER_MODULE_PATH}/${AUDIO_DECODER_VERSION}/
 
 set(SRC
 	${SRC_DIR}/Capabilities.aidl
+	${SRC_DIR}/ContentType.aidl
 	${SRC_DIR}/ErrorCode.aidl
 	${SRC_DIR}/IAudioSink.aidl
 	${SRC_DIR}/IAudioSinkController.aidl
@@ -30,8 +31,7 @@ set(SRC
 	${SRC_DIR}/VolumeRamp.aidl
 	${AUDIO_DECODER_SRC_DIR}/FrameMetadata.aidl
 	${AUDIO_DECODER_SRC_DIR}/Codec.aidl
-	${COMMON_SRC_DIR}/HALError.aidl
-	${COMMON_SRC_DIR}/PropertyValue.aidl
+	${COMMON_SRC_DIR}/PropertyValue.aidl	#TODO: Remove common fields.
 )
 
 set(INCLUDE_DIRECTORY

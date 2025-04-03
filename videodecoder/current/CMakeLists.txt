@@ -18,6 +18,8 @@ set(SRC
 	${SRC_DIR}/Capabilities.aidl
 	${SRC_DIR}/Codec.aidl
 	${SRC_DIR}/CodecCapabilities.aidl
+	${SRC_DIR}/CodecLevel.aidl
+	${SRC_DIR}/CodecProfile.aidl
 	${SRC_DIR}/CSDVideoFormat.aidl
 	${SRC_DIR}/DynamicRange.aidl
 	${SRC_DIR}/ErrorCode.aidl

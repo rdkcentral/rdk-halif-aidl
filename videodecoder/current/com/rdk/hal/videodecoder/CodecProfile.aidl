@@ -28,7 +28,7 @@ package com.rdk.hal.videodecoder;
  
 @VintfStability
 @Backing(type="int")
-enum Profile {
+enum CodecProfile {
     // MPEG-2 Profiles
     MPEG2_SIMPLE = 1, // Used in legacy digital broadcasting
     MPEG2_MAIN = 2,   // Most common for digital TV broadcasting

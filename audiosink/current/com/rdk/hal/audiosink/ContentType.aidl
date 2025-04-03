@@ -16,36 +16,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.planecontrol;
-  
-/**
- *  @brief     Video plane sources definition.
+package com.rdk.hal.audiosink;
+ 
+/** 
+ *  @brief     audio Sink contentType used in the open function.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
- *  @author    Douglas Adler
+ *  @author    Amit Patel
+ *  @author    Gerald Weatherup
  */
-
+ 
+/**
+ * @VintfStability
+ *
+ * Enumerates the different content types for audio streams.
+ */
 @VintfStability
+/**
+ * Specifies the underlying integer type for this enum.
+ */
 @Backing(type="int")
-enum SourceType
-{
-    /** 
-     *  No video source is set for the video plane. Default value for all planes. 
+enum ContentType {
+    /**
+     * Unknown or undefined audio content type.
      */
-    NONE = 0,
- 
-    /** 
-     *  A video sink is set as the source for the video plane. 
+    UNKNOWN = 0,
+    /**
+     * Audio content primarily consisting of speech.
      */
-    VIDEO_SINK = 1, 
-     
-    /** 
-     *  A HDMI input is set as the source for the video plane. 
+    SPEECH = 1,
+    /**
+     * Audio content primarily consisting of music.
      */
-    HDMI = 2,   
- 
-    /** 
-     * A composite input is set as the source for the video plane. 
+    MUSIC = 2,
+    /**
+     * Audio content associated with movies or video.
      */
-    COMPOSITE = 3
+    MOVIE = 3,
+    /**
+     * Audio content used to represent data or information through sound (also known as audibilization).
+     */
+    SONIFICATION = 4
 }

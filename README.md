@@ -7,6 +7,7 @@ Designed for embedded platforms, **RDK-HALIF-AIDL** ensures efficient hardware i
 ## Documentation
 
 All documentation and build instructions for **RDK Hardware Porting Kit** can be found here: [Documentation](https://rdkcentral.github.io/rdk-halif-aidl/)
+To build the interface please follow this [link](https://rdkcentral.github.io/rdk-halif-aidl/introduction/interface_generation/)
 
 ## Copyright and License
 

@@ -75,4 +75,4 @@ enum DynamicRange {
      * @see Dolby Laboratories Specification
      */
     DOLBY_VISION = 5
-};
+}

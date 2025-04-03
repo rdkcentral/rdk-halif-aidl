@@ -18,6 +18,7 @@
  */
 package com.rdk.hal.planecontrol;
 import com.rdk.hal.planecontrol.PlaneType;
+import com.rdk.hal.planecontrol.SourceType;
 import com.rdk.hal.videodecoder.PixelFormat;
 import com.rdk.hal.videodecoder.DynamicRange;
  

@@ -28,7 +28,7 @@ package com.rdk.hal.videodecoder;
  
 @VintfStability
 @Backing(type="int")
-enum Level {
+enum CodecLevel {
     // MPEG-2 Levels
     MPEG2_LEVEL_LOW = 1,
     MPEG2_LEVEL_MAIN = 2,
