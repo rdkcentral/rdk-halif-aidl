@@ -45,4 +45,4 @@ enum PixelFormat
      * and the plane control HAL input.
      */
     NATIVE = 100,
-};
+}
