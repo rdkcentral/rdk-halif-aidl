@@ -24,7 +24,12 @@
 
 IPanelOutput:          # Component object begins
   interfaceVersion: current
-  panelType:
+  panelType: LCD # LCD = 0, QLED = 1, OLED = 2, MINI_LED = 3,
+  pixelWidth:  3840 # UHD Panel Example
+  pixelHeight: 2160
+  # 96.5x53.3cm=43 inc panel , 111.8x63.5cm=50 inch panel, 124.5x71.1cm=55 inch panel, 144.8x81.3cm=65 inch panel, 165.1x94cm=75 inch panel
+  widthCm: 124  # 55 inch
+  heightCm: 71
   frameRateMatchingSupported: true
   fadeDisplaySupported: true
   supportedPQParameters:
@@ -78,10 +83,17 @@ IPanelOutput:          # Component object begins
     - 58
     - 59
     - 60
-  pictureModeCapabilities:
-    - Entertainment:
-        - SDR:
-            supportedAVSources:
+    - 75
+    - 85
+    - 100
+    - 120
+    - 144
+    - 165
+    - 240
+  pictureModeCapabilities: # PictureModeCapabilities
+    - Entertainment: # pictureMode
+        - SDR: # videoFormat
+            supportedAVSources: # AVSource
               - IP
               - TUNER
               - HDMI_1
@@ -259,7 +271,7 @@ IPanelOutput:          # Component object begins
               - HDMI_1
               - HDMI_2
               - HDMI_3
-  colorTemperatureNames:
+  colorTemperatureNames: #colorTemperatureNames
     - Cool
     - Normal
     - Warm

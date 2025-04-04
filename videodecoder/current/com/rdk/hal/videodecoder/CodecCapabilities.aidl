@@ -61,17 +61,4 @@ parcelable CodecCapabilities
 	 * The maximum frame height (pixels) supported for decode for this Codec. 
 	 */
     int maxFrameHeight;
-
-    /**
-     * Maximum supported bitrate (in kbps).
-     * Defines the highest bit-rate that the decoder can handle.
-     */
-    int maxBitrate;
-
-    /**
-     * Indicates whether the decoder is hardware-accelerated.
-     * - `true`: Uses dedicated hardware (GPU/ASIC).
-     * - `false`: Uses CPU-based software decoding.
-     */
-    boolean hardwareAccelerated;
 }
