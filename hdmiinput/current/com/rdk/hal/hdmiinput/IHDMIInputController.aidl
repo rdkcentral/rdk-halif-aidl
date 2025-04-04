@@ -136,7 +136,7 @@ interface IHDMIInputController
      *
      * @see setProperty(), getProperty()
      */
-    boolean setPropertyMulti(in PropertyKVPair propertyKVList);
+    boolean setPropertyMulti(in PropertyKVPair[] propertyKVList);
 
     /**
      * Gets the current authenticated HDCP version which was negotiated with the HDMI source device (HDCP transmitter).
