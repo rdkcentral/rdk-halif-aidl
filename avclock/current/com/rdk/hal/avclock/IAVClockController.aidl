@@ -203,7 +203,7 @@ interface IAVClockController {
 	 * It is important that the sampleTimestamp is recorded as soon as possible when the PCR
 	 * is seen in the broadcast stream to reduce sample jitter.
      * 
-     * If the AV clock is not `STARTED` or not in `PCR` clock mode then the `EX_ILLEGAL_STATE` exception
+     * If the AV clock is not `STARTED` or not in `PCR` clock mode then the `binder::Status EX_ILLEGAL_STATE` exception
      * is returned.
 	 *
 	 * @param[in] pcrTimeNs			    The PCR time converted to nanoseconds.
@@ -262,7 +262,7 @@ interface IAVClockController {
 	/**
 	 * Gets the playback rate.
      * 
-	 * Not valid for `ClockMode::PCR` mode driven clocks, which shall return EX_ILLEGAL_STATE.
+	 * Not valid for `ClockMode::PCR` mode driven clocks, which shall return `binder::Status EX_ILLEGAL_STATE`.
 	 *
   	 * @returns double representing the playback rate where 1.0 is normal speed.
 	 *

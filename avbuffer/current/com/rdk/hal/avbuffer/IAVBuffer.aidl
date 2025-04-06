@@ -54,15 +54,14 @@ interface IAVBuffer
     /**
      * Creates a video memory buffer pool of a secure or non-secure type from which allocations can be made.
      * 
-     * The size must be a multiple of 8 bytes.
-     * 
-     * If the `videoDecoderId` is invalid then the `EX_ILLEGAL_ARGUMENT` exception status is returned.
+     * If the `videoDecoderId` is invalid then the `binder::Status EX_ILLEGAL_ARGUMENT` exception status is returned.
      * 
      * It the platform has exhausted all available memory from the requested heap then the exception status
-     * `EX_SERVICE_SPECIFIC` with `HALError::OUT_OF_MEMORY` is returned.
+     * `binder::Status EX_SERVICE_SPECIFIC` with `HALError::OUT_OF_MEMORY` is returned.
      *
      * @param[in] secureHeap            Indicates if the pool is secure.
      * @param[in] videoDecoderIndex     The index of the video decoder resource.
+     * @param[in] listener              Listener for space available callbacks.
      * 
      * @returns Pool
      *
@@ -82,15 +81,14 @@ interface IAVBuffer
      * (e.g. system audio PCM) then the ID must be IAudioDecoder.Id.UNDEFINED.
      * 
      * It the platform has exhausted all available memory from the requested heap then the exception status
-     * `EX_SERVICE_SPECIFIC` with `HALError::OUT_OF_MEMORY` is returned.
+     * `binder::Status EX_SERVICE_SPECIFIC` with `HALError::OUT_OF_MEMORY` is returned.
      * 
-     * The size must be a multiple of 8 bytes.
-     * 
-     * If the `audioDecoderId` is invalid then the `EX_ILLEGAL_ARGUMENT` exception status is returned.
+     * If the `audioDecoderId` is invalid then the `binder::Status EX_ILLEGAL_ARGUMENT` exception status is returned.
      *
      * @param[in] secureHeap            Indicates if the pool is secure.
      * @param[in] audioDecoderId        The ID of the audio decoder resource.
-     * 
+     * @param[in] listener              Listener for space available callbacks.
+     *
      * @returns Pool
      *
      * @exception binder::Status EX_ILLEGAL_ARGUMENT
@@ -107,7 +105,7 @@ interface IAVBuffer
      * Destroys a memory buffer pool previously created with createVideoPool() or createAudioPool().
      * 
      * The AV buffer pool must be empty, with all previously allocated buffers from the pool freed.
-     * If any buffer allocations are outstanding then the exception status `EX_SERVICE_SPECIFIC` with `HALError::NOT_EMPTY`
+     * If any buffer allocations are outstanding then the exception status `binder::Status EX_SERVICE_SPECIFIC` with `HALError::NOT_EMPTY`
      * is returned.
      *
      * @param[in] poolHandle      Pool handle.
@@ -128,7 +126,7 @@ interface IAVBuffer
     /**
      * Gets the number of used/total bytes in a memory pool.
      *
-     * If the pool handle is invalid then the `EX_ILLEGAL_ARGUMENT` exception status is returned.
+     * If the pool handle is invalid then the `binder::Status EX_ILLEGAL_ARGUMENT` exception status is returned.
      * 
      * @param[in] poolHandle        Pool handle.
      * 
@@ -160,7 +158,7 @@ interface IAVBuffer
      * The output handle is valid when the returned result is >= 0.
      * The handle must eventually be used in a call to `free()` to release the memory block.
      * 
-     * If the allocation fails due to an out of memory condition then `EX_SERVICE_SPECIFIC` with `HALError::OUT_OF_MEMORY`
+     * If the allocation fails due to an out of memory condition then `binder::Status EX_SERVICE_SPECIFIC` with `HALError::OUT_OF_MEMORY`
      * is returned and the client can call `notifyWhenSpaceAvailable()` to be notified when space becomes available.
      *
      * @param[in] poolHandle    Pool handle.
@@ -199,7 +197,7 @@ interface IAVBuffer
     /**
      * Trims the size of the last alloc() block from a pool to a smaller size.
      * 
-     * If the buffer handle passed is not the last allocated from a pool then EX_ILLEGAL_STATE is returned.
+     * If the buffer handle passed is not the last allocated from a pool then `binder::Status EX_ILLEGAL_STATE` is returned.
      *
      * @param[in] bufferHandle  Memory buffer handle.
      * @param[in] newSize       New size of the memory block in bytes.  Must be > 0 and <= original size.
@@ -246,7 +244,7 @@ interface IAVBuffer
     /**
      * Gets the allocated list of memory buffers from a pool.
      * 
-     * If the pool handle is invalid then the `EX_ILLEGAL_ARGUMENT` exception status is returned.
+     * If the pool handle is invalid then the `binder::Status EX_ILLEGAL_ARGUMENT` exception status is returned.
      * 
      * This API is intended for debug purposes and not general use.
      *
@@ -266,10 +264,10 @@ interface IAVBuffer
      * Note: This is only available in developer/debug/vbn builds and never in production builds.
      * This aids in testing the decrypted output from DRM/CDM.
      * 
-     * If the `bufferHandle` passed is invalid, then the `EX_ILLEGAL_ARGUMENT` exception status is returned.
+     * If the `bufferHandle` passed is invalid, then the `binder::Status EX_ILLEGAL_ARGUMENT` exception status is returned.
      *
      * Implementing this function is optional and if not implemented the function must return
-     * the `EX_UNSUPPORTED_OPERATION` exception status if called.
+     * the `binder::Status EX_UNSUPPORTED_OPERATION` exception status if called.
      * 
      * @param[in] bufferHandle              Memory buffer handle.
      * 

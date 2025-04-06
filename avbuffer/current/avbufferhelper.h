@@ -32,6 +32,8 @@ namespace avbuffer {
 
 /**
  * Map a non-secure AV buffer handle to a process-local pointer for read/write access.
+ * 
+ * The returned mapped memory is held in a single contiguous memory block inside the process.
  *
  * @param handle  Buffer handle.
  * @param pptr    Double pointer that receives the mapped memory address on success.
