@@ -1,0 +1,7 @@
+aidl_interface:
+  name: com.rdk.hal.videodecoder
+  srcs:
+    - com/rdk/hal/videodecoder/*.aidl
+  stability: vintf
+  imports:
+    - com.rdk.hal
