@@ -1,0 +1,5 @@
+aidl_interface:
+  name: com.rdk.hal
+  srcs:
+    - com/rdk/hal/*.aidl
+  stability: vintf

@@ -25,6 +25,7 @@
 MY_PATH="$(realpath ${BASH_SOURCE[0]})"
 MY_DIR="$(dirname ${MY_PATH})"
 REPO_URL="https://github.com/rdkcentral/linux_binder_idl"
+REPO_BRANCH="feature/CPESP-5462_AIDL_Versioning_for_RDK-E_HAL"
 INSTALL_DIR="$MY_DIR/build-tools"
 CLONE_DIR="${BUILD_DIR}"
 BINDER_BIN_DIR="$INSTALL_DIR/linux_binder_idl"
@@ -39,7 +40,7 @@ clone_repo()
     else
         echo "Cloning Binder tools repository..."
         mkdir -p ${INSTALL_DIR}
-        git clone "$REPO_URL" "$INSTALL_DIR/linux_binder_idl"
+        git clone -b ${REPO_BRANCH} "$REPO_URL" "$INSTALL_DIR/linux_binder_idl"
     fi
 }
 
