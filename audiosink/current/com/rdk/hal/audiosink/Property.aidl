@@ -29,79 +29,83 @@ package com.rdk.hal.audiosink;
 @Backing(type="int")
 enum Property {
 
-	/**
-	 * Unique 0 based index per audio sink resource instance.
-	 *
-	 * Type: Integer
-	 * Access: Read-only.
-	 */
-	RESOURCE_ID = 0,
-	
-	/**
-	 * dB reference level of the audio stream.
-	 * The default reference level for an audio sink session is -31dB.
-	 *
-	 * Type: Integer
-	 *  -31 is default on open
-	 * Access: Read-write.
-	 * Write in states: READY
-	 */
-	REFERENCE_LEVEL = 1,
-	
-	/**
-	 * The render output latency in nanoseconds.
-	 * This is the time from an audio frame being rendered from the queue to being output (HDMI/ARC/BT/internal speakers).
-	 *
-	 * Type: Integer
-	 * Access: Read-only.
-	 */
-	RENDER_LATENCY_NS = 2,
-	
-	/**
-	 * The queue depth of the audio output path.
-	 *
-	 * Type: Integer
-	 * Access: Read-only.
-	 */
-	QUEUE_DEPTH_NS = 3,
+    /**
+     * Unique 0 based index per audio sink resource instance.
+     *
+     * Type: Integer
+     * Access: Read-only.
+     */
+    RESOURCE_ID = 0,
+    
+    /**
+     * dB reference level of the audio stream.
+     * The default reference level for an audio sink session is -31dB.
+     *
+     * Type: Integer
+     *  -31 is default on open
+     * Access: Read-write.
+     * Write in states: READY
+     */
+    REFERENCE_LEVEL = 1,
+    
+    /**
+     * The render output latency in nanoseconds.
+     * This is the time from an audio frame being rendered from the queue to being output (HDMI/ARC/BT/internal speakers).
+     *
+     * Type: Integer
+     * Access: Read-only.
+     */
+    RENDER_LATENCY_NS = 2,
+    
+    /**
+    * The queue depth of the audio output path in nanoseconds.
+    *
+    * This value represents the total amount of audio data, measured in nanoseconds,
+    * that is currently buffered and queued for playback in the audio output path.
+    *
+    * Type: Integer
+    * Access: Read-only.
+    */
+    QUEUE_DEPTH_NS = 3,
 
-	/**
-	 * The index of the audio mixer that the audio sink is input to.
-	 *
-	 * Type: Integer
-	 *  0 is the default system mixer. (default on open)
-	 * Access: Read-write.
-	 * Write in states: READY
-	 */
-	MIXER_ID = 4,
+    /**
+     * The index of the audio mixer that the audio sink is input to.
+     *
+     * Type: Integer
+     *  0 is the default system mixer. (default on open)
+     * Access: Read-write.
+     * Write in states: READY
+     */
+    MIXER_ID = 4,
 
-	/**
-	 * Set by the client to specify the AV source of the stream.  
-	 * The AVSource is also set inside the FrameMetadata when output by a decoder.
-	 *
-	 * Type: Integer
-	 *  0 - AVUNKNOWN (default on open)
-	 * @see enum AVSource for possible values.
-	 * Access: Read-write.
-	 * Write in states: READY
-	 */
-	AV_SOURCE = 5,
+    /**
+     * Set by the client to specify the AV source of the stream.  
+     * The AVSource is also set inside the FrameMetadata when output by a decoder.
+     *
+     * Type: Integer
+     *  0 - AVUNKNOWN (default on open)
+     * @see enum AVSource for possible values.
+     * Access: Read-write.
+     * Write in states: READY
+     */
+    AV_SOURCE = 5,
 
-	/**
-	 * When enabled, Dolby Atmos output is locked on audio ports (where possible).
-	 * This originated as a Netflix feature to avoid audio artefacts when starting and stopping Atmos stream content.
-	 * See https://docs.netflixpartners.com/docs/nrdp/nrdp2024/content-playback/audio-content/dolby-ms12-partner-guidance?selectednrdpRelease=NRDP+2024.1#atmos-locking
-	 *
-	 * Type: Integer
-	 *  0 - disabled (default on open)
-	 *  1 - enabled
-	 * Access: Read-write.
-	 * Write in states: READY
-	 */
-	DOLBY_ATMOS_LOCK = 6,
+    /**
+     * When enabled, Dolby Atmos output is locked on audio ports (where possible).
+     * This originated as a Netflix feature to avoid audio artefacts when starting and stopping Atmos stream content.
+     * See https://docs.netflixpartners.com/docs/nrdp/nrdp2024/content-playback/audio-content/dolby-ms12-partner-guidance?selectednrdpRelease=NRDP+2024.1#atmos-locking
+     *
+     * Type: Integer
+     *  0 - disabled (default on open)
+     *  1 - enabled
+     * Access: Read-write.
+     * Write in states: READY
+     */
+    DOLBY_ATMOS_LOCK = 6,
 
-	/**
-	 *
-	 */
-	METRIC_xxxx = 1000,
+    /**
+     *
+     */
+    METRIC_xxxx = 1000,
 }
+

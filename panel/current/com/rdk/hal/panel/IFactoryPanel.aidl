@@ -48,11 +48,11 @@ interface IFactoryPanel
     /**
      * Sets the panel ID in the factory area persistent storage.
      * 
-     * @param[in] panelId		The unique panel identifier.
+     * @param[in] panelId       The unique panel identifier.
      * 
      * @return boolean
-     * @retval true		The configuration data was successfully written.
-     * @retval false	Write error or invalid parameter.
+     * @retval true     The configuration data was successfully written.
+     * @retval false    Write error or invalid parameter.
      */
     boolean setFactoryPanelConfiguration(in int panelId); 
 
@@ -66,13 +66,13 @@ interface IFactoryPanel
     /**
      * Sets the white balance calibration for a color temperature preset in the factory area persistent storage.
      * 
-     * @param[in] colorTemperature	Color temperature index.
-     * @param[in] whiteBalance		2-point white balance settings.
+     * @param[in] colorTemperature  Color temperature index.
+     * @param[in] whiteBalance      2-point white balance settings.
      * @param[in] saveTo            Where to save the factory settings to.
      *
      * @return boolean
-     * @retval true		The calibration data was successfully written.
-     * @retval false	Write error or invalid parameter.
+     * @retval true     The calibration data was successfully written.
+     * @retval false    Write error or invalid parameter.
      * 
      * @see getFactoryWhiteBalanceCalibration()
      */
@@ -94,15 +94,15 @@ interface IFactoryPanel
      *
      * TODO: define what the valid range is - or provide an API for it.
      *
-     * @param[in] colorTemperature	Color temperature index.
+     * @param[in] colorTemperature  Color temperature index.
      * @param[in] red               Array of red gamma values.
      * @param[in] green             Array of green gamma values.
      * @param[in] blue              Array of blue gamma values.
      * @param[in] saveTo            Where to save the factory settings to.
      *
      * @return boolean
-     * @retval true		The calibration data was successfully written.
-     * @retval false	Write error or invalid parameter.
+     * @retval true     The calibration data was successfully written.
+     * @retval false    Write error or invalid parameter.
      *
      * @see getFactoryGammaTable()
      */
@@ -111,14 +111,14 @@ interface IFactoryPanel
     /**
      * Gets the RGB gamma table for a color temperature preset from display saved settings.
      *
-     * @param[in] colorTemperature	Color temperature index.
+     * @param[in] colorTemperature  Color temperature index.
      * @param[out] red              Array which receives the red gamma values.
      * @param[out] green            Array which receives the green gamma values.
      * @param[out] blue             Array which receives the blue gamma values.
      *
      * @return boolean
-     * @retval true		The calibration data was successfully written.
-     * @retval false	Write error or invalid parameter.
+     * @retval true     The calibration data was successfully written.
+     * @retval false    Write error or invalid parameter.
      *
      * @see setFactoryGammaTable()
      */
@@ -127,12 +127,12 @@ interface IFactoryPanel
     /**
      * Sets the peak brightness.
      *
-     * @param[in] dimmingLevel	    Dimming level.  Same value used in `PQParameter.DIMMING_LEVEL`.
+     * @param[in] dimmingLevel      Dimming level.  Same value used in `PQParameter.DIMMING_LEVEL`.
      * @param[in] nits              The peak brightness level in nits.
      *
      * @return boolean
-     * @retval true		The peak brightness data was successfully written.
-     * @retval false	    Write error or invalid parameter.
+     * @retval true     The peak brightness data was successfully written.
+     * @retval false        Write error or invalid parameter.
      *
      * @see getFactoryPeakBrightness()
      */
@@ -141,7 +141,7 @@ interface IFactoryPanel
     /**
      * Gets the peak brightness.
      *
-     * @param[in] dimmingLevel	    Dimming level.  Same value used in `PQParameter.DIMMING_LEVEL`.
+     * @param[in] dimmingLevel      Dimming level.  Same value used in `PQParameter.DIMMING_LEVEL`.
      *
      * @return int      The peak brightness level in nits.
      *
@@ -180,13 +180,13 @@ interface IFactoryPanel
      * A new call to `setFactoryLocalDimming()` before the duration has expired will replace the existing pattern
      * with the new pattern and restart the duration timer.
      *
-     * @param[in] zones	 		Each element is the coordinate and illumination level for a zone. 
-     *							Any zones not listed shall be set off.
-     * @param[in] durationMs	The duration to hold the illumination pattern in milliseconds.
+     * @param[in] zones         Each element is the coordinate and illumination level for a zone. 
+     *                          Any zones not listed shall be set off.
+     * @param[in] durationMs    The duration to hold the illumination pattern in milliseconds.
      * 
      * @return boolean
-     * @retval true		The illumination pattern was presented and the duration timer started.
-     * @retval false	Invalid parameter(s) or hardware fault.
+     * @retval true     The illumination pattern was presented and the duration timer started.
+     * @retval false    Invalid parameter(s) or hardware fault.
      */
     boolean setFactoryLocalDimming(in LocalDimmingZone[] zones, in int durationMs);
 
@@ -198,11 +198,11 @@ interface IFactoryPanel
      * test mode with the new one and restart the duration timer.
      *
      * @param[in] mode          The test mode.
-     * @param[in] durationMs	The duration to hold the illumination pattern in milliseconds.
+     * @param[in] durationMs    The duration to hold the illumination pattern in milliseconds.
      *
      * @return boolean
-     * @retval true		The test mode was run and the duration timer started.
-     * @retval false	Invalid parameter(s) or hardware fault.
+     * @retval true     The test mode was run and the duration timer started.
+     * @retval false    Invalid parameter(s) or hardware fault.
      */
     boolean setFactoryLocalDimmingTestMode(in int mode, in int durationMs);
 
@@ -212,8 +212,8 @@ interface IFactoryPanel
      * @param[in] enabled   The enabled state.
      *
      * @return boolean
-     * @retval true		The setting was successfully changed.
-     * @retval false	Driver or hardware error.
+     * @retval true     The setting was successfully changed.
+     * @retval false    Driver or hardware error.
      * 
      * @see getFactoryLocalDimmingPixelCompensation()
      */
@@ -223,8 +223,8 @@ interface IFactoryPanel
      * Gets the state of the local dimming pixel compensation.
      *
      * @return boolean
-     * @retval true		Local dimming pixel compensation is enabled.
-     * @retval false	Local dimming pixel compensation is disabled.
+     * @retval true     Local dimming pixel compensation is enabled.
+     * @retval false    Local dimming pixel compensation is disabled.
      * 
      * @see setFactoryLocalDimmingPixelCompensation()
      */

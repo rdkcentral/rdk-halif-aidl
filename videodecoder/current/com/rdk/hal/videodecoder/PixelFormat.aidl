@@ -27,14 +27,22 @@ package com.rdk.hal.videodecoder;
  
 @VintfStability
 @Backing(type="int")
-enum PixelFormat {
+/**
+ * Enumeration defining the supported pixel formats.
+ */
+enum PixelFormat 
+{
+    /**< YCbCr 4:2:2 pixel format. */
     YCBCR422 = 1,
+    /**< YCbCr 4:4:4 pixel format. */
     YCBCR444 = 2,
+    /**< YCbCr 4:2:0 pixel format. */
     YCBCR420 = 3,
+    /**< Red, Green, Blue pixel format. */
     RGB = 4,
 
-	/* Pixel format is native and only understood as an output format
-	 * of the video decoder HAL and input format to the plane control HAL.
-	 */
-	NATIVE = 100,
+    /**< Native pixel format. This format is specific to the video decoder HAL output
+     * and the plane control HAL input.
+     */
+    NATIVE = 100,
 }

@@ -103,7 +103,7 @@ interface IAudioDecoder
      * 
      * @returns IAudioDecoderController or null if the codec or secure is not supported if requested.
      * 
-     * @pre Resource is in State::CLOSED state.
+     * @pre The resource must be in State::CLOSED.
      * 
      * @see IAudioDecoderController, IAudioDecoderController.close(), registerEventListener()
      */
@@ -122,7 +122,7 @@ interface IAudioDecoder
      * @retval true     Successfully closed.
      * @retval false    Invalid state or unrecognised parameter.
      *
-     * @pre Resource is in State::READY state.
+     * @pre The resource must be in State::READY.
      *
      * @see open()
      */
