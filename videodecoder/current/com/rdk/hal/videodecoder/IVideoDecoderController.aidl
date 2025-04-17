@@ -184,5 +184,5 @@ interface IVideoDecoderController
     *
     * @pre The resource must be in the `STARTED` state.
     */
-    boolean parseCodecSpecificData(in CSDVideoFormat csdVideoFormat, in byte codecData);
+    boolean parseCodecSpecificData(in CSDVideoFormat csdVideoFormat, in byte[] codecData);
 }
