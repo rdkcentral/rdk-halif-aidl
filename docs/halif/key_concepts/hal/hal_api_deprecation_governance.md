@@ -10,17 +10,17 @@ This document defines the governance process for managing the lifecycle of HAL A
 
 #### **Header Annotation**
 
-   - Move API declaration to a clearly marked **Deprecated APIs** section in HAL header files.  
-   - Use Doxygen `@deprecated` tag with:
-     - Deprecation date (e.g. `@deprecated Deprecated since 2025-04-01`)
-     - Replacement API if available (e.g. `Use NewHALAPI_DoTask() instead.`)
-   - Example:
-      ```c
-      /**
-      * @deprecated Deprecated since 2025-04-01. Use NewHALAPI_DoTask() instead.
-      */
-      void OldHALAPI_DoTask();
-      ```
+- Move API declaration to a clearly marked **Deprecated APIs** section in HAL header files.  
+- Use Doxygen `@deprecated` tag with:
+      - Deprecation date (e.g. `@deprecated Deprecated since 2025-04-01`)
+      - Replacement API if available (e.g. `Use NewHALAPI_DoTask() instead.`)
+      - Example:
+         ```c
+         /**
+         * @deprecated Deprecated since 2025-04-01. Use NewHALAPI_DoTask() instead.
+         */
+         void OldHALAPI_DoTask();
+         ```
    - This allows IDEs (such as VSCode) to highlight deprecated APIs automatically. Recommended VSCode extensions:
      - **Doxygen Documentation Generator**
      - **Better C++ Syntax**
@@ -28,17 +28,22 @@ This document defines the governance process for managing the lifecycle of HAL A
 
 #### **Compiler Warning**
 
-   - Wrap deprecated function in a deprecation macro to trigger warnings in builds:
-      ```
-      WARNING: DEPRECATED FUNCTION <API> USED. Please migrate.
-      ```
+- Wrap deprecated function in a deprecation macro to trigger warnings in builds:
+   ```
+   WARNING: DEPRECATED FUNCTION <API> USED. Please migrate.
+   ```
 
 #### **Runtime Logging**
 
-   - Log usage at runtime:
-      ```
-      ERROR: DEPRECATED FUNCTION <API> USED.
-      ```
+- Log usage at runtime:
+   ```
+   ERROR: DEPRECATED FUNCTION <API> USED.
+   ```
+
+#### **Module Documentation**
+
+- Review and update any related Markdown documentation for the HAL module to reflect the deprecation status.
+- Ensure deprecated APIs are clearly marked and guidance on replacements is provided.
 
 ---
 
@@ -46,19 +51,21 @@ This document defines the governance process for managing the lifecycle of HAL A
 
 ### **VTS Adjustment**  
 
-- Remove deprecated API from HAL Validation Test Suite (VTS).
+- When an API is marked deprecated, its function tests must continue to exist and be executed until the API is fully removed.
+- Removal of function tests from the HAL Validation Test Suite (VTS) may only occur once the header file version without the deprecated API has been released.
+- The new header file version must not be consumed or published externally until the corresponding VTS version is also ready and aligned.
 - Document the deprecated API in VTS documentation for reference.
-- Create a dedicated **Deprecated APIs Section** in VTS Release Notes that lists:
-- API Name
-- Deprecation Date
-- Replacement API (if available)
+- Create a dedicated Deprecated APIs Section in VTS Release Notes that lists:
+      - API Name
+      - Deprecation Date
+      - Replacement API (if available)
 
 ### **HAL Release Notes**  
 
 - Create a dedicated **Deprecated APIs Section** in the HAL Release Notes that lists:
-- API Name
-- Deprecation Date
-- Replacement API (if available)
+      - API Name
+      - Deprecation Date
+      - Replacement API (if available)
 
 ### **Communicate Deprecation**  
 
@@ -89,28 +96,32 @@ This document defines the governance process for managing the lifecycle of HAL A
 
 ### **Major Version Bump**
 
-   - Increment HAL major version to signal breaking change (e.g. v5.0.0 → v6.0.0).
-   - Document removal in unified Release Notes, and update the Deprecated APIs sections accordingly.
+- Increment HAL major version to signal breaking change (e.g. v5.0.0 → v6.0.0).
+- Document removal in unified Release Notes, and update the Deprecated APIs sections accordingly.
 
 ### **Code & Test Cleanup**
 
-   - Fully remove declaration, implementation, and related HAL tests.
+- Fully remove declaration, implementation, and related HAL tests.
 
 ### **Verification**
 
-   - HAL CI and build/test pass criteria validated post-removal.
+- HAL CI and build/test pass criteria validated post-removal.
+
+### Module Documentation
+
+- Ensure all relevant Markdown documentation is updated to remove references to the deprecated API.
 
 ---
 
 ## **Step 5: Final Verification & Ticket Closure**
 
-### **Verification**
+### **Final Verification**
 
-   - Ensure HAL layer builds and passes validation.
+- Ensure HAL layer builds and passes validation.
 
 ### **Ticket Resolution**
 
-   - Close the Deprecation Ticket upon verification.
+- Close the Deprecation Ticket upon verification.
 
 ---
 
