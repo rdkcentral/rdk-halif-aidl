@@ -142,3 +142,56 @@ If urgent removal is necessary (e.g. security risks):
 | HAL Vendor Team    | Soft deprecation, warnings/logging, version bump, final removal and verification |
 | QA/Test Team      | Update VTS/tests, enforce build/test pass criteria, maintain Deprecated APIs sections in release notes |
 | Architecture & PM | Approve plan/changes, manage exceptions, track deprecation through ticketing     |
+
+## Checklists Lists for Pasting into PR reviews
+
+---
+
+```markdown
+### **HAL API Deprecation Ticket Checklist (Soft Removal)**
+
+- [ ] API declaration moved to `Deprecated APIs` section in HAL header file
+- [ ] `@deprecated` Doxygen tag added with date and replacement API
+- [ ] Compiler deprecation macro implemented to generate warnings
+- [ ] Runtime logging added to capture deprecated API usage
+- [ ] HAL module Markdown documentation updated to reflect deprecation
+- [ ] HAL Release Notes updated with Deprecated APIs section
+- [ ] Relevant engineering teams notified
+```
+
+---
+
+```markdown
+### **HAL API Deprecation Ticket Checklist (Hard Removal)**
+
+- [ ] At least one release cycle (or defined period) with no active consumers completed
+- [ ] HAL header file version without deprecated API released
+- [ ] HAL major version incremented to signal breaking change
+- [ ] API removed from HAL header and implementation
+- [ ] HAL module Markdown documentation updated to remove API references
+- [ ] HAL Release Notes updated to remove API
+- [ ] HAL CI build and test verification completed
+- [ ] Deprecation Ticket closed
+```
+
+---
+
+```markdown
+### **VTS Ticket Checklist (Soft Removal)**
+
+- [ ] Deprecated API tests retained in VTS
+- [ ] VTS Release Notes updated with Deprecated APIs section
+- [ ] VTS Markdown documentation updated with deprecation notice
+- [ ] VTS Doxygen updated with deprecation notice
+```
+
+---
+
+```markdown
+### **VTS Ticket Checklist (Hard Removal)**
+
+- [ ] Deprecated API tests removed from VTS (aligned with HAL header removal)
+- [ ] VTS Markdown documentation updated to reflect API removal
+- [ ] VTS Doxygen updated to reflect API removal
+- [ ] VTS Release Notes updated to remove Deprecated APIs section entry
+```
