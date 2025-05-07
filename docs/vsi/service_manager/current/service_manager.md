@@ -63,16 +63,16 @@ The list of registered binder interfaces builds up during boot.
 
 To build the Service Manager from source, use the links to the source repository and patch repository below. The patch is required to build it for RDK.
 
-For details on building the executable, see [https://github.com/rdk-e/linux_binder_idl/tree/main?tab=readme-ov-file#additional-build-options](https://github.com/rdk-e/linux_binder_idl/tree/main?tab=readme-ov-file#additional-build-options).
+For details on building the executable, see [https://github.com/rdkcentral/linux_binder_idl/tree/main?tab=readme-ov-file#additional-build-options](https://github.com/rdkcentral/linux_binder_idl/tree/main?tab=readme-ov-file#additional-build-options).
 
-|Description | RDK-E Repository | Alternate Repository|
-|------------|------------------|---------------------|
-|**Service Manager** |[https://github.com/rdk-e/native_frameworks_platform-android/tree/master/cmds/servicemanager(https://github.com/rdk-e/native_frameworks_platform-android/tree/master/cmds/servicemanager) | [https://android.googlesource.com/platform/frameworks/native/+/refs/tags/android-13.0.0_r74/cmds/servicemanager/](https://android.googlesource.com/platform/frameworks/native/+/refs/tags/android-13.0.0_r74/cmds/servicemanager/)|
-|**RDK patch** |[ttps://github.com/rdk-e/linux_binder_idl/blob/main/patches/native.patch](https://github.com/rdk-e/linux_binder_idl/blob/main/patches/native.patch) | [https://github.com/rdkcentral/linux_binder_idl/blob/main/patches/native.patch)](https://github.com/rdkcentral/linux_binder_idl/blob/main/patches/native.patch)|
+|Description | Repository |
+|------------|------------------|
+|**Service Manager** |TODO: Review Required: [https://android.googlesource.com/platform/frameworks/native/+/refs/tags/android-13.0.0_r74/cmds/servicemanager/](https://android.googlesource.com/platform/frameworks/native/+/refs/tags/android-13.0.0_r74/cmds/servicemanager/)|
+|**RDK patch** |[https://github.com/rdkcentral/linux_binder_idl/blob/main/patches/native.patch)](https://github.com/rdkcentral/linux_binder_idl/blob/main/patches/native.patch)|
 
 ## Client Access to Service Manager
 
-For sample code, see [https://github.com/rdk-e/linux_binder_idl/tree/main/example](https://github.com/rdk-e/linux_binder_idl/tree/main/example).
+For sample code, see [https://github.com/rdkcentral/linux_binder_idl/tree/main/example](https://github.com/rdkcentral/linux_binder_idl/tree/main/example).
 
 The `IServiceManager.h` file can be found here: [https://android.googlesource.com/platform/frameworks/native/+/android-13.0.0_r74/libs/binder/include/binder/IServiceManager.h](https://android.googlesource.com/platform/frameworks/native/+/android-13.0.0_r74/libs/binder/include/binder/IServiceManager.h)
 
