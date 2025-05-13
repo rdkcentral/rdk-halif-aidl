@@ -26,6 +26,7 @@ set(SRC
 
 set(INCLUDE_FLAGS
 	-I.
+)
 
 
 foreach(SRC_FILE IN ITEMS ${SRC})
