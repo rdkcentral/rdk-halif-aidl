@@ -64,7 +64,7 @@ interface IHdmiCec
      * send CEC message buffers over the CEC bus.
      * An IHdmiCecControllerListener must be provided to receive incoming CEC message and state change events.
      * 
-     * Only a single instance can be opened. Attempts to open again, by this or another process will fail with EX_ILLEGAL_STATE.
+     * Only a single instance can be opened. Attempts to open again, by this or another process will fail with `binder::Status EX_ILLEGAL_STATE`.
      * On opening all necessary logical addresses will be required to be added by the client.
      *
      * For a source HDMI device; on detecting the de-assertion of HPD, the Controller Client must close an opened 
@@ -80,7 +80,7 @@ interface IHdmiCec
      * 
      * @returns IHdmiCecController or null on error.
      * 
-     * @pre Resource is in State::CLOSED state.
+     * @pre The resource must be in State::CLOSED.
      * 
      * @see close()
      */
@@ -102,7 +102,7 @@ interface IHdmiCec
      * @retval true     Successfully closed.
      * @retval false    Invalid state or unrecognised parameter.
      *
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      *
      * @see open()
      */

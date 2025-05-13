@@ -47,5 +47,5 @@ enum SourceType
     /** 
      * A composite input is set as the source for the video plane. 
      */
-    COMPOSITE = 3,
+    COMPOSITE = 3
 }

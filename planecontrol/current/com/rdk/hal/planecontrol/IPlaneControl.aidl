@@ -100,7 +100,7 @@ interface IPlaneControl
      * 
      * If a source type and source index appear multiple times in the mapping list then the call fails.
      * If a plane index appears multiple times in the mapping list then the call fails.
-     * If a plane index is already mapped to a source, then the exception status `EX_ILLEGAL_STATE` is returned.
+     * If a plane index is already mapped to a source, then the exception status ``binder::Status EX_ILLEGAL_STATE`` is returned.
      *
      * @param[in] listSourcePlaneMapping    An array of video source to video plane mappings.
      *

@@ -39,7 +39,7 @@ interface IVideoDecoderController
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::READY state.
+     * @pre The resource must be in State::READY.
      * 
      * @see IVideoDecoder.open(), IVideoDecoder.stop()
      */
@@ -54,7 +54,7 @@ interface IVideoDecoderController
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      * 
      * @see start()
      */
@@ -92,7 +92,7 @@ interface IVideoDecoderController
      * @exception binder::Status EX_ILLEGAL_STATE
      * @exception binder::Status EX_ILLEGAL_ARGUMENT
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      */
     boolean decodeBuffer(in long nsPresentationTime, in long bufferHandle);
 
@@ -110,7 +110,7 @@ interface IVideoDecoderController
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      */
     void flush(in boolean reset);
 
@@ -123,7 +123,7 @@ interface IVideoDecoderController
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      */
     void signalDiscontinuity();
 
@@ -141,7 +141,7 @@ interface IVideoDecoderController
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      */
     void signalEOS();
     
@@ -180,9 +180,9 @@ interface IVideoDecoderController
     * @retval true  The codec data was successfully set.
     * @retval false Invalid parameter or empty codec data array.
     *
-    * @throws binder::Status `EX_ILLEGAL_STATE` if the resource is not in the `STARTED` state.
+    * @exception binder::Status EX_ILLEGAL_STATE if the resource is not in the `STARTED` state.
     *
     * @pre The resource must be in the `STARTED` state.
     */
-    boolean parseCodecSpecificData(in CSDVideoFormat csdVideoFormat, in byte codecData);
+    boolean parseCodecSpecificData(in CSDVideoFormat csdVideoFormat, in byte[] codecData);
 }

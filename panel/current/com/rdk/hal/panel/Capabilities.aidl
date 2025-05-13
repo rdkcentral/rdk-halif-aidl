@@ -35,6 +35,12 @@ parcelable Capabilities
      */
     PanelType panelType;
 
+    int pixelWidth;
+    int pixelHeight;
+
+    int widthCm;    // centimeters
+    int heightCm;
+
     /**
      * Whether frame rate matching is supported by the device.
      */

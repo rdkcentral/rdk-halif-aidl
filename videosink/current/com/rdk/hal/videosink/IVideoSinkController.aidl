@@ -60,7 +60,7 @@ interface IVideoSinkController
      * @retval true     The Video Decoder ID was set successfully.
      * @retval false    Invalid Video Decoder ID.
      *
-     * @pre Resource is in State::READY state.
+     * @pre The resource must be in State::READY.
      *
      * @see getVideoDecoder(), IVideoDecoderManager.getVideoDecoderIds()
      */
@@ -73,7 +73,7 @@ interface IVideoSinkController
      *
      * @exception binder::Status EX_ILLEGAL_STATE
      *
-     * @pre Resource is in State::READY or State::STARTED state.
+     * @pre The resource must be in State::READY or State::STARTED.
      *
      * @see setVideoDecoder()
      */
@@ -87,7 +87,7 @@ interface IVideoSinkController
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::READY state.
+     * @pre The resource must be in State::READY.
      * 
      * @see stop(), IVideoSink.open()
      */
@@ -100,7 +100,7 @@ interface IVideoSinkController
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      * 
      * @see start(), IVideoSink.close()
      */
@@ -129,7 +129,7 @@ interface IVideoSinkController
      * @exception binder::Status EX_ILLEGAL_STATE 
      * @exception binder::Status EX_ILLEGAL_ARGUMENT
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      */
     boolean queueVideoFrame(in long nsPresentationTime, in long frameBufferHandle, in FrameMetadata metadata);
    
@@ -146,7 +146,7 @@ interface IVideoSinkController
      * 
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      * 
      * @see discardFramesUntil(), IVideoSinkControllerListener.onFlushComplete()
      */
@@ -167,7 +167,7 @@ interface IVideoSinkController
      * 
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      * 
      * @see flush()
      */

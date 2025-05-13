@@ -28,24 +28,25 @@ package com.rdk.hal;
 @VintfStability
 parcelable PropertyValue 
 {
-	/**
-	 * Union Value type.
-	 */
-	@VintfStability
-	union Value
-	{
-        boolean booleanValue;
-        byte byteValue;
-        char charValue;
-        int intValue;
-        long longValue;
-        float floatValue;
-        double doubleValue;
-        String stringValue;
-	}
+    /**
+    * Union Value type.
+    */
+    @VintfStability
+    union Value
+    {
+        boolean booleanValue; /**< Boolean value. */
+        byte byteValue;       /**< 8-bit integer value. */
+        char charValue;       /**< 16-bit Unicode character value. */
+        int intValue;         /**< 32-bit signed integer value. */
+        long longValue;       /**< 64-bit signed integer value. */
+        float floatValue;     /**< 32-bit floating-point value. */
+        double doubleValue;   /**< 64-bit floating-point value. */
+        String stringValue;   /**< String value. */
 
-	/**
-	 * Value of property or null if not defined.
-	 */
-	@nullable Value value;
+    }
+
+    /**
+    * Value of property or null if not defined.
+    */
+    @nullable Value value;
 }

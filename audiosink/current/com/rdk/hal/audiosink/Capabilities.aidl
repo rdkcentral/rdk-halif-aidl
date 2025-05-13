@@ -28,5 +28,9 @@ package com.rdk.hal.audiosink;
 @VintfStability
 parcelable Capabilities
 {
-
+	/**
+	 * Indicates if this audio sink instance can work in secure audio path (SAP) mode.
+	 * @see Property.SECURE_AUDIO
+	 */
+	boolean supportsSecure;
 }

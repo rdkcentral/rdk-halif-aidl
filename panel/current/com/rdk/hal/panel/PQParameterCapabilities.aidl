@@ -55,6 +55,13 @@ parcelable PQParameterCapabilities
     int maxValue;
 
     /**
+     * The list of specific values ranging from minValue to maxValue inclusive, which are supported.
+     * This array of values only needs to be specified if not all integer values
+     * between minValue and maxValue are supported.  e.g. From an enum list of values.
+     */
+    int[] values;
+
+    /**
      * Nested PQ parameter picture mode capabilities definition.
      */
     parcelable PQParamPictureModeCapabilities

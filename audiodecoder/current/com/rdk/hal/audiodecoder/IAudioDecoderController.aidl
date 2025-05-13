@@ -54,7 +54,7 @@ interface IAudioDecoderController {
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::READY state.
+     * @pre The resource must be in State::READY.
      * 
      * @see open(), stop()
      */
@@ -69,7 +69,7 @@ interface IAudioDecoderController {
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      * 
      * @see start()
      */
@@ -92,7 +92,7 @@ interface IAudioDecoderController {
      * @exception binder::Status EX_ILLEGAL_STATE 
      * @exception binder::Status EX_ILLEGAL_ARGUMENT
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      */
     boolean decodeBuffer(in long nsPresentationTime, in long bufferHandle, in int trimStartNs, in int trimEndNs);
 
@@ -108,7 +108,7 @@ interface IAudioDecoderController {
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      */
 	void flush(in boolean reset);
 
@@ -121,7 +121,7 @@ interface IAudioDecoderController {
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      */
     void signalDiscontinuity();
 
@@ -138,7 +138,7 @@ interface IAudioDecoderController {
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      */
 	void signalEOS();
 
@@ -162,7 +162,7 @@ interface IAudioDecoderController {
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
-     * @pre Resource is in State::STARTED state.
+     * @pre The resource must be in State::STARTED.
      */
     boolean parseCodecSpecificData(in CSDAudioFormat csdAudioFormat, in byte[] codecData);
 }

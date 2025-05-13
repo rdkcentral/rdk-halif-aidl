@@ -31,7 +31,7 @@ import com.rdk.hal.State;
 oneway interface IAudioSinkControllerListener {
   
     /**
-	 * Callback when the sink has transitioned to a new state.
+     * Callback when the sink has transitioned to a new state.
      *
      * @param[in] oldState	            The state transitioned from.
      * @param[in] newState              The new state transitioned to.
@@ -61,19 +61,23 @@ oneway interface IAudioSinkControllerListener {
     void onEndOfStream(in long nsPresentationTime);
    
     /**
-     * Callback to indicate a audio frame buffer underflow condition.
-     * 
-     * This occurs if the frame queue is empty at the AV sync clock based presentation time.
-	 * The callback occurs only once when the queue becomes empty.
-	 * The onAudioResumed() callback informs the client when video playback restarts, 
-	 * which allows the onAudioUnderflow() to occur again.
-     */
+    * Callback to indicate an audio frame buffer underflow condition.
+    *
+    * This occurs when the frame queue is empty, or when buffers are present but none
+    * are available for presentation at the AV sync clock based presentation time.
+    *
+    * The callback occurs only once when this condition is met.
+    *
+    * The `onAudioResumed()` callback informs the client when audio playback restarts,
+    * which allows the `onAudioUnderflow()` callback to occur again if a subsequent
+    * underflow occurs.
+    */
     void onAudioUnderflow();
   
     /**
      * Callback to indicate that audio has resumed after an audio underflow event.
      * 
-	 * The onAudioUnderflow() can occur again after onAudioResumed() has been called.
+     * The onAudioUnderflow() can occur again after onAudioResumed() has been called.
      * 
      * @param[in] nsPresentationTime	The presentation time of the audio frame in nanoseconds.
      */

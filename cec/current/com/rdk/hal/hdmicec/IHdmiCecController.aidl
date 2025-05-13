@@ -46,7 +46,7 @@ interface IHdmiCecController {
     *
     * @returns true if successfully added or false if the logical addresses have not been added.
     * 
-    * @pre Resource is in State::STARTED state.
+    * @pre The resource must be in State::STARTED.
     *
     * @see IHdmiCec.getLogicalAddresses(), removeLogicalAddresses(), IHdmiCecEventListener.onMessageReceived()
     */
@@ -62,7 +62,7 @@ interface IHdmiCecController {
     * 
     * @param[in] logicalAddresses   An array of logical addresses to be removed.
     *
-    * @pre Resource is in State::STARTED state.
+    * @pre The resource must be in State::STARTED.
     *
     * @returns true on successfully removing and false if one or more logical addresses have not been previously added.
     * 
