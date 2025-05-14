@@ -1,0 +1,54 @@
+This component contains software that is Copyright (c) 2024 RDK Management.
+The component is licensed to you under the Apache License, Version 2.0 (the "License").
+You may not use the component except in compliance with the License.
+
+The component may include material which is licensed under other licenses / copyrights as
+listed below.  Your use of this material within the component is also subject to the terms and
+conditions of these licenses.  The LICENSE file contains the text of all the licenses which apply
+within this component.
+
+---
+
+This project includes setup and build scripts that clone or install third-party dependencies
+at build or documentation time. These dependencies are not distributed as part of this repository.
+
+---
+
+Third-Party Components (Cloned via Script):
+
+1. linux_binder_idl  
+   - Source: https://github.com/rdkcentral/linux_binder_idl  
+   - License: Apache License 2.0  
+   - Copyright (C) RDK Management
+
+2. ut-core.wiki  
+   - Source: https://github.com/rdkcentral/ut-core.wiki.git  
+   - License: [Check original repo – likely Apache 2.0]
+
+---
+
+Python Dependencies:
+
+Python packages listed in `docs/requirements.txt` are installed in a virtual environment using `pip`.
+These are not included in the repository but are required for documentation or tooling.
+
+To audit these dependencies and their licenses:
+
+```bash
+pip install pip-licenses
+pip-licenses --from=mixed --with-authors --with-license-file --with-urls
+```
+
+CMake Usage:
+
+This project uses CMake as its build system. It may reference system-installed or user-provided third-party CMake modules or packages, depending on the environment.
+
+This may include packages such as:
+
+- libssl (OpenSSL) – [Apache License 2.0 or OpenSSL License]
+- zlib – [zlib License]
+- libffi – [MIT]
+- pthreads, dl, m – [system libraries]
+
+These are detected at build time using find_package() or similar mechanisms and are not included in this repository.
+Please refer to your system's package manager for exact licensing details for system packages.
