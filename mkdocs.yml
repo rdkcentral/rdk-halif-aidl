@@ -36,6 +36,7 @@ nav:
       - HAL Feature Profiles: halif/key_concepts/hal/hal_feature_profiles.md
       - HAL Naming Conventions: halif/key_concepts/hal/hal_naming_conventions.md
       - HAL Session State Management: halif/key_concepts/hal/hal_session_state_management.md
+      - HAL AIDL Versioning: halif/key_concepts/hal/hal_aidl_versioning.md
   - HAL Driver Interfaces (HDI):
     - Overview: halif/key_concepts/hal/hal_interfaces.md
     - Interface Generation: introduction/interface_generation.md
