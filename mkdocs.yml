@@ -16,7 +16,8 @@ nav:
       - HAL Naming Conventions: halif/key_concepts/hal/hal_naming_conventions.md
       - HAL Session State Management: halif/key_concepts/hal/hal_session_state_management.md
     - Standards:
-      - Developer Tiers: external_content/ut-core-wiki/1.-Standards-&-Development-Process-Flow.md
+      - Core Development Guide: standards/direct_branching.md
+      - Fork-Based Contribution Guide: standards/forked_based_branching.md
   - Vendor HAL Interfaces (VHI):
     - Overview: halif/key_concepts/hal/hal_interfaces.md
     - Interface Generation: introduction/interface_generation.md
@@ -79,6 +80,7 @@ nav:
       - Branching Strategies : whitepapers/branching_strategies.md 
       - Doxygen Code Documentation: whitepapers/doxygen_code_documentation.md
       - Achieving Engineering Goal: whitepapers/engineering_goals.md
+      - Commit Message Standards: whitepapers/standardizing_git_commit_messages.md
     - Filing an Issue: external_content/ut-core-wiki/1.2.-Standards:-Issue-Description-Guideline.md
     - FAQ:
       - Python Development: external_content/ut-core-wiki/FAQ:-Comparing-Python-Development-Platforms.md

@@ -8,12 +8,21 @@ Effective goal setting and requirements definition are crucial for delivering hi
 
 ## **Introduction**
 
-Community-driven software development, such as the one fostered within RDK Central, requires clear goal-setting mechanisms that ensure transparency, accountability, and effective collaboration among multiple contributing companies. The RDK Central development ecosystem is structured around **Tier 1** and **Tier 2** development teams, each with defined roles and contribution processes:
+Community-driven software development, such as the one fostered within RDK Central, requires clear goal-setting mechanisms that ensure transparency, accountability, and effective collaboration among multiple contributing companies. The RDK Central development ecosystem is structured around **Core Development Teams** and **Fork-Based Contribution Teams**, each with defined roles and contribution processes based on how they interact with the codebase:
 
-- **Tier 1 Developers** – These teams are responsible for core platform contributions and work collaboratively across multiple companies to define, develop, and maintain foundational components. Their work is closely tracked, with direct contributions managed following structured branching workflows. For more details, refer to the [Tier-1 Operator Guide: Branching for Direct Contributions](https://github.com/rdkcentral/ut-core/wiki/1.0.-Standards:-Tier-1-Operator-Guide:-Branching-for-Direct-Contributions).
-- **Tier 2 Developers** – These contributors typically focus on feature development, customization, and extensions for specific deployments. They operate by extending or integrating components from Tier 1, ensuring that their contributions align with core platform developments. Contributions from Tier 2 developers follow a forking model for external contributions. For more details, refer to the [Tier-2 Operator Guide: Forking for External Contributions](https://github.com/rdkcentral/ut-core/wiki/1.0.1-Standards:-Tier-2-Operator-Guide:-Forking-for-External-Contributions).
+* **Core Development Teams** – These teams are responsible for core platform contributions and have direct commit access to shared repositories. They work collaboratively across multiple companies to define, develop, and maintain foundational components. Their contributions follow structured branching workflows. For more details, refer to the [Core Development Guide: Branching for Direct Contributions](../standards/direct_branching.md).
 
-This paper outlines a standardized process for tracking engineering work, documenting requirements, and structuring project management workflows using GitHub Issues, Milestones, and JIRA for high-level business tracking. These practices are actively in use within RDK Central to maintain visibility and collaboration across all development tiers.
+* **Fork-Based Contribution Teams** – These contributors focus on feature development, customization, and deployment-specific enhancements. They operate via forks of the core repositories, submitting changes through pull requests. Their work builds on or extends the core platform while ensuring alignment through review and merge processes. For more details, refer to the [Fork-Based Contribution Guide](../standards/forked_based_branching.md).
+
+### **Why This Approach Matters**
+
+While this paper focuses primarily on the "what" and "how" of engineering work, it is underpinned by a clear "why": to create a scalable, transparent, and sustainable development process that empowers both internal and external teams. By aligning open-source collaboration with structured engineering practices, we ensure that every contribution supports long-term platform stability, shared innovation, and collective technical advancement.
+
+### **On Terminology: Product vs. Program Management**
+
+This document uses “Program Management” as a practical label for cross-functional coordination of development work. However, we recognize that the definition of “what” and “why” typically aligns with **Product Management** responsibilities in many organizations. Here, the term “Program Management” is used to reflect the planning and coordination mechanisms in JIRA, though the responsibilities may encompass what some consider product-level strategy.
+
+This paper outlines a standardized process for tracking engineering work, documenting requirements, and structuring project management workflows using GitHub Issues, Milestones, and JIRA for high-level business tracking. These practices are actively in use within RDK Central to maintain visibility and collaboration across all development teams.
 
 ---
 
@@ -38,7 +47,8 @@ Drawing inspiration from *Management in 10 Words*, this methodology reframes bus
 
 ### **Epics (Internal, JIRA-Based)**
 
-All work is driven **business requirements** which in turn generates **development work**. To manage this effectively, we categorize work into two distinct types:  
+While most work is driven by **business requirements**, which in turn generate **development work**, we also account for engineering-led initiatives such as addressing technical debt. 
+To manage this effectively, we categorize work into two distinct types.
 
 1. **Program Management Epics (JIRA - Business-Driven)**
     - Define the **"what"** in product development, originating from business requirements.  
@@ -198,5 +208,3 @@ This white paper aims to guide community-driven open-source software development
 
 **Author**: *Gerald Weatherup*  
 **Date**: *20 March 2025*
-
-For questions or suggestions on implementing branching strategies, please contact the Architecture team.
