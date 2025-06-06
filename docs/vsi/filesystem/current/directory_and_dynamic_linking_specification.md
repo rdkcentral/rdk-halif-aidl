@@ -1,5 +1,16 @@
 # Directory and Dynamic Linking Specification
 
+## Document History
+
+|Date|Author|Comments|
+|----|------|--------|
+|21 May 2025|G.Weatherup|Draft Revision|
+
+## Related Pages
+
+!!! tip Related Pages
+    - [HALIF Logging System Design](../../logging/current/directory_and_dynamic_linking_specification.md)
+
 ## Purpose
 
 This document defines the file placement and dynamic linking policies. It ensures modularity, maintainability, and reliable integration of vendor and third-party components.
@@ -24,9 +35,10 @@ Each vendor module should follow the directory convention:
 ├── data/         # Optional runtime or persistent module data
 ├── app_armor/    # Optional AppArmor profiles for the module
 ├── systemd/      # Optional systemd service files
-├── memory/       # Static resource usage declarations
+├── memory/       # Static guide to resource usage declarations
 ├── logs/ -> /var/log/vendor/<module>/   # Writable logs symlink
 ├── ld.so.conf.d/ # Optional linker path configuration for symlink
+├── VERSION       # Optional module version information
 ```
 
 ## Integration Requirements
@@ -98,12 +110,13 @@ To activate the profile, a symbolic link will be created at install time:
 ### Filesystem Access Policy
 
 * `/vendor` is **read-only** at runtime.
-* `/vendor/<module>/log` is the designated **writable** path for runtime data, logs, and override configurations, this is a symlogic link from `/var/log/vendor/<module>/`
+* `/vendor/<module>/log` is the designated **writable** path for runtime data, logs, and override configurations, this is a symbolic link from `/var/log/vendor/<module>/`
 * Vendor modules must not write to `/etc`, `/usr`, or other immutable parts of the root filesystem.
 
 ### Memory Footprint Declarations
 
 * Each module must include a `memory/usage.conf` file declaring expected heap, stack, and static memory usage.
+
 * Format:
 
   ```bash
@@ -123,78 +136,117 @@ To activate the profile, a symbolic link will be created at install time:
   /etc/systemd/system/vendor-<module>.service -> /vendor/<module>/systemd/vendor-<module>.service
   ```
 
-* Services must declare dependencies using `After=`, `Requires=`, and optionally `WatchdogSec=` for health monitoring.
+* Services must declare dependencies using `After=`, `Requires=`, and optionally `WatchdogSec=` for health monitoring. **The vendor layer does not specify modules to be installed `After=` but milestone points to refer too.**
 
 ### Log Management
 
-* A symbolic link must be created from:
+* Logs must be written to:
 
-  ```bash
-  /vendor/<module>/log -> /var/log/vendor/<module>/
-  ```
+`/vendor/<module>/log/`
 
-* All logs must be written to `/vendor/<module>/log/`.
-* Each module may include a log rotation policy file at:
+* This path must be a symbolic link to:
 
-  ```bash
-  /vendor/<module>/etc/logrotation.conf
-  ```
+`/var/log/vendor/<module>/`
 
-* This file is not part of standard Linux logrotate. A platform-specific log manager must parse and enforce these rules.
-* Example format:
+Logs will be written too `/vendor/<module>/log/`.
 
-  ````bash
-  max_size=10MB
-  max_files=5
-  compress=true
-  /vendor/<module>/etc/logrotation.conf
-  ````
+#### Log File Rotation Integration
 
-* This file is not part of standard Linux logrotate. A platform-specific log manager must parse and enforce these rules.
-* Example format:
+Each module may provide a standard logrotate config file:
 
-  ```bash
-  max_size=10MB
-  max_files=5
-  compress=true
-  ```
+```c
+/vendor/<module>/etc/logrotation.conf
+```
 
-* The system must use this policy to govern log file rotation, retention, and compression.
+This file can be symlinked to or copied too `/etc/logrotate.d/<module>` from `/vendor/<module>/etc/module_logrotate.conf` to integrate with the system logrotate process.
 
-### Logging Configuration
+```c
+/vendor/<module>/log/<module>.log { 
+  size 100k
+  rotate 5
+  compress
+  delaycompress
+  missingok
+  notifempty
+  copytruncate
+}
+```
 
-* Build time Logging level is configured via:
+This configuration ensures:
 
-  ```bash
-  /vendor/<module>/etc/loglevel.conf
-  ```
+Logs are rotated once they exceed 100 KB.
 
-* Format:
+Up to 5 old logs are kept.
 
-  ```bash
-  loglevel=info
-  ```
+Old logs are compressed to save space.
 
-* This is copied at runtime into `/vendor/<module>/log/loglevel.conf`.
+Logging continues uninterrupted via copytruncate.
 
-* Modules must read from this writable file at runtime to allow dynamic log level adjustment.
+### Log Configuration
 
-  ```bash
-  /vendor/<module>/log/loglevel.conf
-  ```
+Build-time log level configuration is defined in:
 
-* Format:
+`/vendor/<module>/etc/loglevel.conf`
 
-  ```bash
-  loglevel=info
-  ```
+Format:
+
+`loglevel=error`
+
+The default log level must be set to error.
+
+### Startup Configuration Application:
+
+During system startup, the vendor platform layer is responsible for applying this syslog configuration settings for each of the modules.
+
+This is platform-specific and may involve setting log levels in drivers, kernel modules, or components using platform-appropriate mechanisms.
+
+The vendor layer team ensures this file is parsed and its value applied according to the SoC’s logging configuration method.
+
+At runtime, a copy of the configuration is made to a writable location:
+
+`/vendor/<module>/log/loglevel.conf`
+
+Wrapper modules will read the log level from the runtime configuration file to support dynamic log level adjustments without requiring a reboot or rebuild.
+
+Supported log levels (ordered by severity, highest to lowest):
+
+* **fatal** – Critical errors causing immediate termination.
+* **error** – Operational failures requiring attention.
+* **warn** – Recoverable anomalies or warnings.
+* **info** – General informational messages.
+* **debug** – Development-level diagnostics.
+* **trace** – Highly granular tracing for deep debugging.
+
+### Logging Mechanism
+
+### Syslog Usage:-
+
+Vendor modules are expected to use syslog for log message emission wherever platform support allows.
+
+This ensures logs are centrally accessible and manageable through standard tools (e.g., logread, journalctl, or remote syslog sinks).
+
+Wrapper Requirement:
+
+Direct usage of `syslog()` is not permitted.
+
+Vendors are expected to use the logging wrapper APIs provided by the HAL (Hardware Abstraction Layer).
+
+These wrappers:
+
+Read and cache the active log level (as configured by the platform during startup).
+
+Filter messages based on severity.
+
+Format and dispatch logs appropriately to syslog or other targets.
 
 ### Version Declaration (Optional)
 
 * Each module may include a file `/vendor/<module>/VERSION` with contents akin to:
 
   ```bash
-  version=1.2.3
-  build=20250101
-  hash=sha256:<value>
+  version=MAJOR.MINOR.PATCH
+  build_date=YYYYMMDD
+  build_sha=sha256:<value>
   ```
+
+* Version should be Semantic Versioning (SemVer).

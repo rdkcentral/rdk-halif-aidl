@@ -104,6 +104,7 @@ nav:
         - Current: vsi/kernel/current/intro.md
     - File Systems:
       - Directory And Dynamic Linking: vsi/filesystem/current/directory_and_dynamic_linking_specification.md
+      - Logging: vsi/logging/current/halif_logging_system_design.md
   - Vendor Tests:
     - Levels of Test: external_content/ut-core-wiki/3.-Standards:-Levels-of-Test-for-Vendor-Layer.md
     - Level 4:
