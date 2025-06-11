@@ -29,6 +29,7 @@ repo_url: https://github.com/rdkcentral/rdk-halif-aidl
 
 nav:
   - Home: index.md
+  - The Software Stack: introduction/the_software_stack.md
   - Hardware Abstraction Layer:
     - Introduction: introduction/aidl_and_binder.md
     - Key Concepts:
@@ -36,73 +37,44 @@ nav:
       - HAL Feature Profiles: halif/key_concepts/hal/hal_feature_profiles.md
       - HAL Naming Conventions: halif/key_concepts/hal/hal_naming_conventions.md
       - HAL Session State Management: halif/key_concepts/hal/hal_session_state_management.md
-  - HAL Driver Interfaces (HDI):
+    - Standards:
+      - Core Development Guide: standards/direct_branching.md
+      - Fork-Based Contribution Guide: standards/forked_based_branching.md
+  - Vendor HAL Interfaces (VHI):
     - Overview: halif/key_concepts/hal/hal_interfaces.md
     - Interface Generation: introduction/interface_generation.md
     - AV Subsystem:
-      - Audio Decoder:
-        - Current: halif/audio_decoder/current/audio_decoder.md
-        - v0.5: halif/audio_decoder/v0.5/audio_decoder.md
-      - Audio Mixer: 
-        - Current: halif/audio_mixer/current/intro.md
-      - Audio Sink: 
-        - Current: halif/audio_sink/current/audio_sink.md
-      - AV Buffer: 
-        - Current: halif/av_buffer/current/av_buffer.md
-      - AV Clock: 
-        - Current: halif/av_clock/current/av_clock.md
-      - Video Decoder:
-        - Current: halif/video_decoder/current/video_decoder.md
-      - Video Sink: 
-        - Current: halif/video_sink/current/video_sink.md
-    - Boot:
-        - Current: halif/boot/current/intro.md
-    - Broadcast: 
-        - Current: halif/broadcast/current/intro.md
-    - CDM: 
-        - Current: halif/cdm/current/intro.md
+      - Audio Decoder: halif/audio_decoder/current/audio_decoder.md
+      - Audio Mixer: halif/audio_mixer/current/audio_mixer.md
+      - Audio Sink: halif/audio_sink/current/audio_sink.md
+      - AV Buffer: halif/av_buffer/current/av_buffer.md
+      - AV Clock: halif/av_clock/current/av_clock.md
+      - Video Decoder: halif/video_decoder/current/video_decoder.md
+      - Video Sink: halif/video_sink/current/video_sink.md
+    - Boot: halif/boot/current/boot.md
+    - Broadcast: halif/broadcast/current/broadcast.md
+    - CDM: halif/cdm/current/cdm.md
     - HDMI:
-      - HDMI CEC: 
-        - Current: halif/cec/current/intro.md
-      - HDMI Input: 
-        - Current: halif/hdmi_input/current/intro.md
-      - HDMI Output: 
-        - Current: halif/hdmi_output/current/intro.md
-    - Common: 
-        - Current: halif/common/current/intro.md
-    - Deep Sleep: 
-        - Current: halif/deep_sleep/current/intro.md
-    - Device Info: 
-        - Current: halif/device_info/current/intro.md
-    - Flash: 
-        - Current: halif/flash/current/intro.md
-    - Indicator: 
-        - Current: halif/indicator/current/intro.md
-    - Panel:
-      - Panel Output: 
-        - Current: halif/panel/current/intro.md
-    - Plane Control: 
-        - Current: halif/plane_control/current/plane_control.md
-    - Secure API: 
-        - Current: halif/sec_api/current/intro.md
-    - Sensor: 
-        - Current: halif/sensor/current/intro.md
-  - System Interfaces (VSI):
-    - Bluetooth: 
-        - Current: vsi/bluetooth/current/intro.md
-    - Graphics: 
-        - Current: vsi/graphics/current/intro.md
-    - Network Management: 
-        - Current: vsi/network_management/current/intro.md
-    - Power Management: 
-        - Current: vsi/power_management/current/intro.md
-    - Service Manager: 
-        - Current: vsi/service_manager/current/service_manager.md
-    - Wi-Fi: 
-        - Current: vsi/wifi/current/intro.md
-    - Kernel:
-        - Current: vsi/kernel/current/intro.md
-  - Vendor Tests:
+      - HDMI CEC: halif/cec/current/cec.md
+      - HDMI Input: halif/hdmi_input/current/hdmi_input.md
+      - HDMI Output: halif/hdmi_output/current/hdmi_output.md
+    - Common: halif/common/current/common.md
+    - Deep Sleep: halif/deep_sleep/current/deep_sleep.md
+    - Device Info: halif/device_info/current/device_info.md
+    - Flash: halif/flash/current/flash.md
+    - Indicator: halif/indicator/current/indicator.md
+    - Panel: halif/panel/current/panel.md
+    - Plane Control: halif/plane_control/current/plane_control.md
+    - Secure API: halif/sec_api/current/sec_api.md
+    - Sensor: halif/sensor/current/sensor.md
+  - Vendor System Interfaces (VSI):
+    - Bluetooth: vsi/bluetooth/current/bluetooth.md
+    - Graphics: vsi/graphics/current/graphics.md
+    - Service Manager: vsi/service_manager/current/service_manager.md
+    - Wi-Fi: vsi/wifi/current/wifi.md
+    - Systemd: vsi/systemd/current/systemd.md
+    - Kernel: vsi/kernel/current/kernel.md
+  - Vendor Tests Suites (VTS):
     - Levels of Test: external_content/ut-core-wiki/3.-Standards:-Levels-of-Test-for-Vendor-Layer.md
     - Level 4:
       - L4 System Interface (VSI): external_content/ut-core-wiki/3.3.-Standards:-L4-‐-System-Interface-Testing.md
@@ -125,23 +97,37 @@ nav:
   - Misc:
     - References: references/references.md
     - Documentation Guide: introduction/documentation_guide.md
+    - White Papers:
+      - Documentation in Git: whitepapers/documentation_in_git.md
+      - Branching Strategies : whitepapers/branching_strategies.md 
+      - Doxygen Code Documentation: whitepapers/doxygen_code_documentation.md
+      - Achieving Engineering Goal: whitepapers/engineering_goals.md
+      - Commit Message Standards: whitepapers/standardizing_git_commit_messages.md
     - Filing an Issue: external_content/ut-core-wiki/1.2.-Standards:-Issue-Description-Guideline.md
     - FAQ:
       - Python Development: external_content/ut-core-wiki/FAQ:-Comparing-Python-Development-Platforms.md
 
 markdown_extensions:
   - admonition
-  - pymdownx.details
   - def_list
   - footnotes
+  - abbr
   - attr_list
   - md_in_html
+  - pymdownx.details
+  - pymdownx.snippets
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences  
   - toc:
       toc_depth: 4
-  - pymdownx.emoji:
+  - pymdownx.emoji: # Enable Extended Emoji if required
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
-  - pymdownx.superfences:
+  - pymdownx.superfences: # Enable mermaid
       custom_fences:
         - name: mermaid
           class: mermaid
@@ -149,10 +135,15 @@ markdown_extensions:
 
 extra_css:
   - stylesheets/extra.css  # Ensure this file exists
+#  - stylesheets/version.css
+
+#plugins:
+  #- version:
+  # version_file: docs/version.txt  (Defaults to docs/version.txt)
 
 extra_javascript:
   - https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.1/mermaid.min.js
-  - javascripts/mermaid-init.js
+  - javascript/mermaid-init.js
 
 theme:
   name: material

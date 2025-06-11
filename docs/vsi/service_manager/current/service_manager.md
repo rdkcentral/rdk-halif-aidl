@@ -8,19 +8,14 @@ The **Service Manager** is a crucial **Binder service** included in the vendor l
 
 ## References
 
-!!! info References
+!!! info
     |||
     |-|-|
-    |**Interface Definition**|[service_manager/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/service_manager/current)|
+    |**Interface Definition**|[IServiceManager](https://android.googlesource.com/platform/frameworks/native/+/android-13.0.0_r74/libs/binder/include/binder/IServiceManager.h)|
     | **API Documentation** | *TBD - Doxygen* |
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
-    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/intro.md) - **hal-service_manager.service** |
+    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/systemd.md) - **hal-service_manager.service** |
     |**VTS Tests**| TBC |
-    |**Reference Implementation - vComponent**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/service_manager/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/service_manager/current)|
-
-## Related Pages
-
-!!! tip Related Pages
 
 ## Implementation Requirements
 
@@ -43,7 +38,7 @@ See [https://android.googlesource.com/platform/frameworks/native/+/android-13.0.
 
 ## Initialization
 
-The [systemd](../../../vsi/systemd/current/intro.md) `hal-service_manager.service` unit file is provided by the vendor layer to start the service.
+The [systemd](../../../vsi/systemd/current/systemd.md) `hal-service_manager.service` unit file is provided by the vendor layer to start the service.
 
 The Service Manager depends on the kernel binder driver.
 

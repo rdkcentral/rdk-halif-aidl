@@ -16,9 +16,9 @@ Audio and video sinks associated with a given AV Clock instance comprise a synch
     |**Interface Definition**|[av_clock/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_clock/current)|
     | **API Documentation** | *TBD - Doxygen* |
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
-    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/intro.md) - **hal-av_clock.service** |
+    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/systemd.md) - **hal-av_clock.service** |
     |**VTS Tests**| TBC |
-    |**Reference Implementation - vComponent**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_clock/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_clock/current)|
+    |**Reference Implementation - vComponent**|**TBD**|
 
 ## Related Pages
 
@@ -58,7 +58,7 @@ Audio and video sinks associated with a given AV Clock instance comprise a synch
 
 ### Initialization
 
-The [systemd](../../../vsi/systemd/current/intro.md) `hal-av_clock_manager.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
+The [systemd](../../../vsi/systemd/current/systemd.md) `hal-av_clock_manager.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
 The AV Clock Manager service depends on the [Service Manager](../../../vsi/service_manager/current/service_manager.md) to register itself as a service.
 

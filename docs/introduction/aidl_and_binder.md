@@ -1,4 +1,4 @@
-# RDK Hardware Abstraction Layer (HAL)
+# RDK Hardware Abstraction Layer and Binder
 
 The 2023 RDK HAL study identified key design goals for a new HAL interface and implementation, focusing on the following aspects:
 
