@@ -14,7 +14,7 @@
         <link rel="prev" href="../doxygen_code_documentation/">
       
       
-        <link rel="next" href="../../external_content/ut-core-wiki/1.2.-Standards%3A-Issue-Description-Guideline/">
+        <link rel="next" href="../standardizing_git_commit_messages/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -539,11 +539,33 @@
   
   
     <li class="md-nav__item">
-      <a href="../../external_content/ut-core-wiki/1.-Standards-%26-Development-Process-Flow/" class="md-nav__link">
+      <a href="../../standards/direct_branching/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Developer Tiers
+    Core Development Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standards/forked_based_branching/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Fork-Based Contribution Guide
     
   </span>
   
@@ -2294,6 +2316,30 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Introduction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-this-approach-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why This Approach Matters
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#on-terminology-product-vs-program-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      On Terminology: Product vs. Program Management
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2515,6 +2561,28 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../standardizing_git_commit_messages/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Commit Message Standards
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2661,6 +2729,30 @@
       Introduction
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Introduction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-this-approach-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why This Approach Matters
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#on-terminology-product-vs-program-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      On Terminology: Product vs. Program Management
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2898,12 +2990,20 @@
 <p>Effective goal setting and requirements definition are crucial for delivering high-quality, scalable, and maintainable software in an open-source community-driven development model. This white paper presents a structured methodology for defining features, tasks, and issues using GitHub, while ensuring visibility and alignment with long-term engineering objectives. While internal tracking tools such as JIRA may be used for high-level business goals, compliance, and reporting, the core development efforts remain transparent and community-accessible.</p>
 <hr />
 <h2 id="introduction"><strong>Introduction</strong></h2>
-<p>Community-driven software development, such as the one fostered within RDK Central, requires clear goal-setting mechanisms that ensure transparency, accountability, and effective collaboration among multiple contributing companies. The RDK Central development ecosystem is structured around <strong>Tier 1</strong> and <strong>Tier 2</strong> development teams, each with defined roles and contribution processes:</p>
+<p>Community-driven software development, such as the one fostered within RDK Central, requires clear goal-setting mechanisms that ensure transparency, accountability, and effective collaboration among multiple contributing companies. The RDK Central development ecosystem is structured around <strong>Core Development Teams</strong> and <strong>Fork-Based Contribution Teams</strong>, each with defined roles and contribution processes based on how they interact with the codebase:</p>
 <ul>
-<li><strong>Tier 1 Developers</strong> – These teams are responsible for core platform contributions and work collaboratively across multiple companies to define, develop, and maintain foundational components. Their work is closely tracked, with direct contributions managed following structured branching workflows. For more details, refer to the <a href="https://github.com/rdkcentral/ut-core/wiki/1.0.-Standards:-Tier-1-Operator-Guide:-Branching-for-Direct-Contributions">Tier-1 Operator Guide: Branching for Direct Contributions</a>.</li>
-<li><strong>Tier 2 Developers</strong> – These contributors typically focus on feature development, customization, and extensions for specific deployments. They operate by extending or integrating components from Tier 1, ensuring that their contributions align with core platform developments. Contributions from Tier 2 developers follow a forking model for external contributions. For more details, refer to the <a href="https://github.com/rdkcentral/ut-core/wiki/1.0.1-Standards:-Tier-2-Operator-Guide:-Forking-for-External-Contributions">Tier-2 Operator Guide: Forking for External Contributions</a>.</li>
+<li>
+<p><strong>Core Development Teams</strong> – These teams are responsible for core platform contributions and have direct commit access to shared repositories. They work collaboratively across multiple companies to define, develop, and maintain foundational components. Their contributions follow structured branching workflows. For more details, refer to the <a href="../../standards/direct_branching/">Core Development Guide: Branching for Direct Contributions</a>.</p>
+</li>
+<li>
+<p><strong>Fork-Based Contribution Teams</strong> – These contributors focus on feature development, customization, and deployment-specific enhancements. They operate via forks of the core repositories, submitting changes through pull requests. Their work builds on or extends the core platform while ensuring alignment through review and merge processes. For more details, refer to the <a href="../../standards/forked_based_branching/">Fork-Based Contribution Guide</a>.</p>
+</li>
 </ul>
-<p>This paper outlines a standardized process for tracking engineering work, documenting requirements, and structuring project management workflows using GitHub Issues, Milestones, and JIRA for high-level business tracking. These practices are actively in use within RDK Central to maintain visibility and collaboration across all development tiers.</p>
+<h3 id="why-this-approach-matters"><strong>Why This Approach Matters</strong></h3>
+<p>While this paper focuses primarily on the "what" and "how" of engineering work, it is underpinned by a clear "why": to create a scalable, transparent, and sustainable development process that empowers both internal and external teams. By aligning open-source collaboration with structured engineering practices, we ensure that every contribution supports long-term platform stability, shared innovation, and collective technical advancement.</p>
+<h3 id="on-terminology-product-vs-program-management"><strong>On Terminology: Product vs. Program Management</strong></h3>
+<p>This document uses “Program Management” as a practical label for cross-functional coordination of development work. However, we recognize that the definition of “what” and “why” typically aligns with <strong>Product Management</strong> responsibilities in many organizations. Here, the term “Program Management” is used to reflect the planning and coordination mechanisms in JIRA, though the responsibilities may encompass what some consider product-level strategy.</p>
+<p>This paper outlines a standardized process for tracking engineering work, documenting requirements, and structuring project management workflows using GitHub Issues, Milestones, and JIRA for high-level business tracking. These practices are actively in use within RDK Central to maintain visibility and collaboration across all development teams.</p>
 <hr />
 <h2 id="engineering-oriented-goal-setting"><strong>Engineering-Oriented Goal Setting</strong></h2>
 <p>Drawing inspiration from <em>Management in 10 Words</em>, this methodology reframes business goals into engineering-centric principles:</p>
@@ -2922,7 +3022,8 @@
 <hr />
 <h2 id="requirements-breakdown"><strong>Requirements Breakdown</strong></h2>
 <h3 id="epics-internal-jira-based"><strong>Epics (Internal, JIRA-Based)</strong></h3>
-<p>All work is driven <strong>business requirements</strong> which in turn generates <strong>development work</strong>. To manage this effectively, we categorize work into two distinct types:  </p>
+<p>While most work is driven by <strong>business requirements</strong>, which in turn generate <strong>development work</strong>, we also account for engineering-led initiatives such as addressing technical debt. 
+To manage this effectively, we categorize work into two distinct types.</p>
 <ol>
 <li>
 <p><strong>Program Management Epics (JIRA - Business-Driven)</strong></p>
@@ -3080,7 +3181,6 @@
 <hr />
 <p><strong>Author</strong>: <em>Gerald Weatherup</em><br />
 <strong>Date</strong>: <em>20 March 2025</em></p>
-<p>For questions or suggestions on implementing branching strategies, please contact the Architecture team.</p>
 
 
 
@@ -3133,13 +3233,13 @@
         
         
           
-          <a href="../../external_content/ut-core-wiki/1.2.-Standards%3A-Issue-Description-Guideline/" class="md-footer__link md-footer__link--next" aria-label="Next: Filing an Issue">
+          <a href="../standardizing_git_commit_messages/" class="md-footer__link md-footer__link--next" aria-label="Next: Commit Message Standards">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Filing an Issue
+                Commit Message Standards
               </div>
             </div>
             <div class="md-footer__button md-icon">

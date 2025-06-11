@@ -539,11 +539,33 @@
   
   
     <li class="md-nav__item">
-      <a href="../../external_content/ut-core-wiki/1.-Standards-%26-Development-Process-Flow/" class="md-nav__link">
+      <a href="../../standards/direct_branching/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Developer Tiers
+    Core Development Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standards/forked_based_branching/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Fork-Based Contribution Guide
     
   </span>
   
@@ -2339,6 +2361,28 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../whitepapers/standardizing_git_commit_messages/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Commit Message Standards
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2551,36 +2595,36 @@
 <p><strong>Minimum Required GCC Version:</strong> 9.4.0</p>
 <p>Using the <code>rdk-kirkstone</code> Docker image is highly recommended.</p>
 <p><strong>Clone the <code>linux_binder_idl</code> repository:</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>clone<span class="w"> </span>-b<span class="w"> </span>main<span class="w"> </span>https://github.com/rdkcentral/linux_binder_idl.git
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:rdkcentral/linux_binder_idl.git
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">cd</span><span class="w"> </span>linux_binder_idl
 </span></code></pre></div>
 <p><strong>Build <code>aidl</code>:</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">cd</span><span class="w"> </span>linux_binder_idl
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># Optional: Run inside the Docker container</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>sc<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>rdk-kirkstone<span class="w"> </span>/bin/bash
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>./build-aidl-generator-tool.sh
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Optional: Run inside the Docker container</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>sc<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>rdk-kirkstone<span class="w"> </span>/bin/bash
+</span></code></pre></div>
+<p>Then build the aidl tool.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>./build-aidl-generator-tool.sh
 </span></code></pre></div>
 <p><strong>Locate the <code>aidl</code> binary:</strong></p>
 <p>The compiled <code>aidl</code> binary will be located in the <code>local/bin</code> directory within the <code>linux_binder_idl</code> project.  The full path might resemble:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>linux_binder_idl/local/bin/aidl
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>linux_binder_idl/local/bin/aidl
 </span></code></pre></div>
 <p>For more detailed information, refer to the <a href="https://github.com/rdkcentral/linux_binder_idl">github.com/rdkcentral/linux_binder_idl.git</a> repository.</p>
 <h2 id="generating-aidl-proxy-and-native-interfaces">Generating AIDL Proxy and Native Interfaces</h2>
 <p><strong>Clone the <code>hal</code> repository:</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>git<span class="w"> </span>clone<span class="w"> </span>-b<span class="w"> </span>develop<span class="w"> </span>https://github.com/rdkcentral/rdk-halif-aidl.git
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:rdkcentral/rdk-halif-aidl.git
 </span></code></pre></div>
 <p><strong>Generate the AIDL proxy and native interfaces:</strong></p>
 <p>The following example demonstrates generating interfaces for the <code>audiodecoder</code> module. Adapt the <code>AIDL_TARGET</code> CMake variable for other modules.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nb">cd</span><span class="w"> </span>hal
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># Optional: Run inside the Docker container</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>sc<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>rdk-kirkstone<span class="w"> </span>/bin/bash
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1"># Optional: Set AIDL binary path if not in system PATH.  Replace with the actual path from the previous step.</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$PATH</span>:/path/to/linux_binder_idl/local/bin
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>cmake<span class="w"> </span>-DAIDL_TARGET<span class="o">=</span>audiodecoder<span class="w"> </span>.
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nb">cd</span><span class="w"> </span>hal
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># Optional: Run inside the Docker container</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>sc<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>rdk-kirkstone<span class="w"> </span>/bin/bash
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="c1"># Optional: Set AIDL binary path if not in system PATH.  Replace with the actual path from the previous step.</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$PATH</span>:/path/to/linux_binder_idl/local/bin
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>cmake<span class="w"> </span>-DAIDL_TARGET<span class="o">=</span>audiodecoder<span class="w"> </span>.
 </span></code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -2588,19 +2632,19 @@
 </div>
 <p><strong>Locate the generated files:</strong></p>
 <p>The generated proxy and interface files will be placed under <code>audiodecoder/gen/&lt;version&gt;</code>.  For example:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>hal/audiodecoder/gen/current/cpp/com/rdk/hal/audiodecoder/...  (C++ files)
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>hal/audiodecoder/gen/current/h/com/rdk/hal/audiodecoder/...   (Header files)
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>hal/audiodecoder/current/com/rdk/hal/audiodecoder/...        (AIDL files)
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>hal/audiodecoder/gen/current/cpp/com/rdk/hal/audiodecoder/...  (C++ files)
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>hal/audiodecoder/gen/current/h/com/rdk/hal/audiodecoder/...   (Header files)
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>hal/audiodecoder/current/com/rdk/hal/audiodecoder/...        (AIDL files)
 </span></code></pre></div>
 <h2 id="example-cmake-commands">Example CMake Commands</h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Use a custom path to the `aidl` binary</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>cmake<span class="w"> </span>-DAIDL_TARGET<span class="o">=</span>audiodecoder<span class="w"> </span>-DAIDL_BIN<span class="o">=</span>/home/example/bin/aidl<span class="w"> </span>.
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># Specify a specific AIDL interface version (e.g., version 2)</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>cmake<span class="w"> </span>-DAIDL_TARGET<span class="o">=</span>audiodecoder<span class="w"> </span>-DAIDL_SRC_VERSION<span class="o">=</span><span class="m">2</span><span class="w"> </span>.
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="c1"># Specify a custom output directory for generated files</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>cmake<span class="w"> </span>-DAIDL_TARGET<span class="o">=</span>audiodecoder<span class="w"> </span>-DAIDL_GEN_DIR<span class="o">=</span>/home/example/example_out<span class="w"> </span>.
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Use a custom path to the `aidl` binary</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>cmake<span class="w"> </span>-DAIDL_TARGET<span class="o">=</span>audiodecoder<span class="w"> </span>-DAIDL_BIN<span class="o">=</span>/home/example/bin/aidl<span class="w"> </span>.
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># Specify a specific AIDL interface version (e.g., version 2)</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>cmake<span class="w"> </span>-DAIDL_TARGET<span class="o">=</span>audiodecoder<span class="w"> </span>-DAIDL_SRC_VERSION<span class="o">=</span><span class="m">2</span><span class="w"> </span>.
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># Specify a custom output directory for generated files</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>cmake<span class="w"> </span>-DAIDL_TARGET<span class="o">=</span>audiodecoder<span class="w"> </span>-DAIDL_GEN_DIR<span class="o">=</span>/home/example/example_out<span class="w"> </span>.
 </span></code></pre></div>
 <h2 id="cmake-variables">CMake Variables</h2>
 <table>
