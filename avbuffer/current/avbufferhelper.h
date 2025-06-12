@@ -16,87 +16,161 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef AVBUFFERHELPER_H
-#define AVBUFFERHELPER_H
+
+#ifndef _AVBUFFERHELPER_H_
+#define _AVBUFFERHELPER_H_
+
 #include <stdint.h>
-#include "../h/com/rdk/hal/HALError.h"
+#include <mutex>
 
-namespace com {
-namespace rdk {
-namespace hal {
-namespace avbuffer {
+#ifdef __cplusplus
+    extern "C"
+{
+#endif
 
-/**********************************************************************************/
-/**********************************************************************************/
-/**********************************************************************************/
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
-/**
- * Map a non-secure AV buffer handle to a process-local pointer for read/write access.
- * 
- * The returned mapped memory is held in a single contiguous memory block inside the process.
- *
- * @param handle  Buffer handle.
- * @param pptr    Double pointer that receives the mapped memory address on success.
- *
- * @returns HALError::SUCCESS               Memory buffer was mapped to process at ptr location.
- * @returns HALError::INVALID_ARGUMENT      Invalid buffer handle, secure buffer handle or NULL pptr.
- */
-com::rdk::hal::HALError mapHandle(int64_t handle, void** pptr);
+using namespace std;
+using namespace com::rdk::hal;
+using namespace com::rdk::hal::avbuffer;
 
 /**
- * Unmap a memory AV buffer pointer previously mapped by a call to mapHandle().
- *
- * @param handle Pointer to Handle structure.
- * @param ptr    Pointer that was previously mapped.
- * 
- * @returns HALError::SUCCESS               Memory buffer was unmapped.
- * @returns HALError::INVALID_ARGUMENT      Invalid buffer handle or pointer.
+ * @class RDKAVBufferHelper
+ * @brief Provides helper functions for mapping and unmapping memory from handles,
+ * and for writing and copying data within secure buffer regions.
  */
-com::rdk::hal::HALError unmapHandle(int64_t handle, void* ptr);
+class RDKAVBufferHelper
+{
+public:
+    /**
+     * @struct CopyMap
+     * @brief Defines the offsets and size for a memory copy operation.
+     */
+    struct CopyMap
+    {
+        uint32_t src_offset; /**< The offset from the source handle where copying begins. */
+        uint32_t dst_offset; /**< The offset in the destination handle where data will be copied. */
+        uint32_t size;       /**< The amount of data to copy, in bytes. */
+    };
 
-/**********************************************************************************/
-/**********************************************************************************/
-/**********************************************************************************/
+    /**
+     * @brief Constructs an `RDKAVBufferHelper` object.
+     */
+    RDKAVBufferHelper();
 
-/**
- * Writes a block of data to a memory block at a given offset.
- *
- * @param handle                Memory buffer handle.
- * @param targetBufferOffset    Byte offset into the memory buffer.
- * @param sourceData            Pointer to source data.
- * @param sourceDataBytes       Number of bytes to write.
- *
- * @retval HALError::SUCCESS            The write was successful.
- * @retval HALError::INVALID_ARGUMENT   Invalid memory buffer handle.
- * @retval HALError::OUT_OF_BOUNDS      The offset and/or data array size are out of bounds of the memory buffer.
- */
-com::rdk::hal::HALError write(int64_t handle, size_t targetBufferOffset, void* sourceData, size_t sourceDataBytes);
+    /**
+     * @brief Destroys the `RDKAVBufferHelper` object.
+     */
+    virtual ~RDKAVBufferHelper();
 
-/**
- * AV buffer offset and length range description structure type.
- */
-typedef struct {
-    size_t offset;
-    size_t length;
-} BufferRange_t;
+    /**
+     * @brief Retrieves the singleton instance of `RDKAVBufferHelper`.
+     *
+     * @returns A pointer to the `RDKAVBufferHelper` instance.
+     */
+    static RDKAVBufferHelper *getInstance();
 
-/**
- * Copies one or more ranges of bytes between memory buffers.
- *
- * @param destinationHandle     Memory buffer handle.
- * @param sourceHandle          Memory buffer handle.
- * @param pBufferRanges         Pointer to array of offset and length range description objects.
- * @param arrSize               Array size.
- *
- * @retval HALError::SUCCESS            The copy was successful.
- * @retval HALError::INVALID_ARGUMENT   One or more invalid memory buffer handles.
- * @retval HALError::OUT_OF_BOUNDS      The offset and/or size are out of bounds of a memory buffer.
- */
-com::rdk::hal::HALError copyWithMap(int64_t destinationHandle, int64_t sourceHandle, BufferRange_t* pBufferRanges, size_t arrSize);
+    /**
+     * @brief Maps memory from a given handle.
+     *
+     * This function is used by client code outside the `LinearBufferMgr` class to
+     * map memory from a specified handle.
+     *
+     * @param[in] handle The handle to map memory from.
+     * @param[out] size A pointer to a `uint32_t` that will be populated with the size of the mapped data.
+     *
+     * @returns A pointer to the mapped memory address, or `nullptr` if the mapping fails.
+     */
+    void *mapHandle(uint64_t handle, uint32_t *size);
 
-}  // namespace avbuffer
-}  // namespace hal
-}  // namespace rdk
-}  // namespace com
+    /**
+     * @brief Unmaps memory from a given handle.
+     *
+     * @param[in] handle The handle to unmap memory from.
+     *
+     * @retval true If the memory was successfully unmapped.
+     * @retval false If the memory could not be unmapped (e.g., invalid handle).
+     */
+    bool unmapHandle(uint64_t handle);
 
-#endif // AVBUFFERHELPER_H
+    /**
+     * @brief Writes data from unsecure memory into a secure buffer.
+     *
+     * @param[in] handle The handle of the secure buffer to write data into.
+     * @param[in] data A pointer to the unsecure data to write.
+     * @param[in] size The size of the data to write, in bytes.
+     *
+     * @retval true If the data was successfully written.
+     * @retval false If the data could not be written (e.g., invalid handle, insufficient space).
+     */
+    bool writeSecureHandle(uint64_t handle, void *data, uint32_t size);
+
+    /**
+     * @brief Copies data from one secure buffer to another.
+     *
+     * @param[in] handleTo The handle of the destination secure buffer.
+     * @param[in] handleFrom The handle of the source secure buffer.
+     * @param[in] map The `CopyMap` structure specifying the offsets and size for the copy operation.
+     * @param[in] mapSize The number of indexes in the map.
+     *
+     * @retval true If the data was successfully copied.
+     * @retval false If the data could not be copied (e.g., invalid handles, overlapping regions).
+     */
+    bool copySecureHandleWithMap(uint64_t handleTo, uint64_t handleFrom, CopyMap map, uint32_t mapSize);
+
+private:
+    /**
+     * @brief Sends a request message over a socket.
+     *
+     * @param[in] sockfd The socket file descriptor.
+     * @param[in] pMessage A pointer to the message to send.
+     *
+     * @retval true If the message was successfully sent.
+     * @retval false If an error occurred during sending.
+     */
+    bool sendRequest(int sockfd, void *pMessage);
+
+    /**
+     * @brief Retrieves a response message from a socket.
+     *
+     * @param[in] sockfd The socket file descriptor.
+     * @param[out] pMessage A pointer to the buffer to store the received message.
+     *
+     * @retval true If the response was successfully received.
+     * @retval false If an error occurred during reception.
+     */
+    bool getResponse(int sockfd, void *pMessage);
+
+    /**
+     * @brief Retrieves the offset associated with a given handle.
+     *
+     * @param[in] handle The handle for which to retrieve the offset.
+     *
+     * @returns The offset of the handle, or `0` if the handle is invalid.
+     */
+    uint32_t getHandleOffset(uint64_t handle);
+
+    /**
+     * @brief Retrieves the size associated with a given handle.
+     *
+     * @param[in] handle The handle for which to retrieve the size.
+     *
+     * @returns The size of the handle, or `0` if the handle is invalid.
+     */
+    uint32_t getHandleSize(uint64_t handle);
+
+    /**
+     * @brief Retrieves the base address of the shared memory region.
+     *
+     * @returns A pointer to the base address of the shared memory region, or `nullptr` if
+     * the region is not mapped.
+     */
+    void *getSharedMemoryRegionAddr();
+
+    void *_shm_addr;            /**< @brief Stores the local address of the mapped shared memory region. */
+    std::recursive_mutex m_mtx; /**< @brief Mutex to protect access to shared resources within the helper. */
+};
+
+#endif // _AVBUFFERHELPER_H_
