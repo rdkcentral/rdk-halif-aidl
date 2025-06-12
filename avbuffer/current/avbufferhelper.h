@@ -21,18 +21,16 @@
 #define _AVBUFFERHELPER_H_
 
 #include <stdint.h>
-#include <mutex>
 
-using namespace std;
 using namespace com::rdk::hal;
 using namespace com::rdk::hal::avbuffer;
 
 /**
- * @class RDKAVBufferHelper
+ * @class AVBufferHelper
  * @brief Provides helper functions for mapping and unmapping memory from handles,
  * and for writing and copying data within secure buffer regions.
  */
-class RDKAVBufferHelper
+class AVBufferHelper
 {
 public:
     /**
@@ -47,21 +45,21 @@ public:
     };
 
     /**
-     * @brief Constructs an `RDKAVBufferHelper` object.
+     * @brief Constructs an `AVBufferHelper` object.
      */
-    RDKAVBufferHelper();
+    AVBufferHelper();
 
     /**
-     * @brief Destroys the `RDKAVBufferHelper` object.
+     * @brief Destroys the `AVBufferHelper` object.
      */
-    virtual ~RDKAVBufferHelper();
+    virtual ~AVBufferHelper();
 
     /**
-     * @brief Retrieves the singleton instance of `RDKAVBufferHelper`.
+     * @brief Retrieves the singleton instance of `AVBufferHelper`.
      *
-     * @returns A pointer to the `RDKAVBufferHelper` instance.
+     * @returns A pointer to the `AVBufferHelper` instance.
      */
-    static RDKAVBufferHelper *getInstance();
+    static AVBufferHelper *getInstance();
 
     /**
      * @brief Maps memory from a given handle.
@@ -110,58 +108,6 @@ public:
      * @retval false If the data could not be copied (e.g., invalid handles, overlapping regions).
      */
     bool copySecureHandleWithMap(uint64_t handleTo, uint64_t handleFrom, CopyMap map, uint32_t mapSize);
-
-private:
-    /**
-     * @brief Sends a request message over a socket.
-     *
-     * @param[in] sockfd The socket file descriptor.
-     * @param[in] pMessage A pointer to the message to send.
-     *
-     * @retval true If the message was successfully sent.
-     * @retval false If an error occurred during sending.
-     */
-    bool sendRequest(int sockfd, void *pMessage);
-
-    /**
-     * @brief Retrieves a response message from a socket.
-     *
-     * @param[in] sockfd The socket file descriptor.
-     * @param[out] pMessage A pointer to the buffer to store the received message.
-     *
-     * @retval true If the response was successfully received.
-     * @retval false If an error occurred during reception.
-     */
-    bool getResponse(int sockfd, void *pMessage);
-
-    /**
-     * @brief Retrieves the offset associated with a given handle.
-     *
-     * @param[in] handle The handle for which to retrieve the offset.
-     *
-     * @returns The offset of the handle, or `0` if the handle is invalid.
-     */
-    uint32_t getHandleOffset(uint64_t handle);
-
-    /**
-     * @brief Retrieves the size associated with a given handle.
-     *
-     * @param[in] handle The handle for which to retrieve the size.
-     *
-     * @returns The size of the handle, or `0` if the handle is invalid.
-     */
-    uint32_t getHandleSize(uint64_t handle);
-
-    /**
-     * @brief Retrieves the base address of the shared memory region.
-     *
-     * @returns A pointer to the base address of the shared memory region, or `nullptr` if
-     * the region is not mapped.
-     */
-    void *getSharedMemoryRegionAddr();
-
-    void *_shm_addr;            /**< @brief Stores the local address of the mapped shared memory region. */
-    std::recursive_mutex m_mtx; /**< @brief Mutex to protect access to shared resources within the helper. */
 };
 
 #endif // _AVBUFFERHELPER_H_
