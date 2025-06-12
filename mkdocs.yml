@@ -67,6 +67,7 @@ nav:
     - Plane Control: halif/plane_control/current/plane_control.md
     - Secure API: halif/sec_api/current/sec_api.md
     - Sensor: halif/sensor/current/sensor.md
+    - Thermal: halif/thermal/current/thermal.md
   - Vendor System Interfaces (VSI):
     - Bluetooth: vsi/bluetooth/current/bluetooth.md
     - Graphics: vsi/graphics/current/graphics.md
