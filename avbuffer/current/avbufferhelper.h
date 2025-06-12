@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 
-#ifndef _AVBUFFERHELPER_H_
-#define _AVBUFFERHELPER_H_
+#ifndef _IAVBUFFERHELPER_H_
+#define _IAVBUFFERHELPER_H_
 
 #include <stdint.h>
 
@@ -26,11 +26,38 @@ using namespace com::rdk::hal;
 using namespace com::rdk::hal::avbuffer;
 
 /**
- * @class AVBufferHelper
- * @brief Provides helper functions for mapping and unmapping memory from handles,
- * and for writing and copying data within secure buffer regions.
+ * @class IAVBufferHelper
+ * @brief Pure virtual interface for AV buffer helpers.
+ *
+ * This interface defines the API contract for managing buffer handles
+ * in AV pipelines where memory is shared between processes.
+ * It is typically used in pipelines where pipeline elements
+ * are implemented as AIDL HAL components communicating across process boundaries.
+ *
+ * Implementations of this interface are responsible for:
+ *   - Mapping a memory handle into process address space
+ *   - Unmapping a previously mapped handle
+ *   - Writing data into secure buffers
+ *   - Copying data between secure buffers
+ *
+ * Vendors must provide an implementation of this interface appropriate
+ * to their platform. Depending on the architecture, this may involve:
+ *   - Interacting with a buffer manager service (via AIDL, sockets, or vendor-specific transport)
+ *   - Using platform-specific buffer types (DMABUF, ION, TEE-secure buffers)
+ *   - Enforcing security / DRM constraints when writing or copying buffers
+ *
+ * A default implementation (`AVBufferHelper`) is typically provided as reference.
+ * Vendors can choose to subclass `AVBufferHelper` or provide a fully custom
+ * implementation of `IAVBufferHelper`.
+ *
+ * NOTE ON SINGLETON ACCESS:
+ *   - The interface itself does not provide a static getInstance().
+ *   - The default implementation (`AVBufferHelper`) provides a static getInstance()
+ *     to simplify usage in typical pipeline nodes.
+ *   - If a vendor supplies a custom implementation, they should provide their own
+ *     singleton access mechanism or factory registration as appropriate.
  */
-class AVBufferHelper
+class IAVBufferHelper
 {
 public:
     /**
@@ -45,21 +72,9 @@ public:
     };
 
     /**
-     * @brief Constructs an `AVBufferHelper` object.
+     * @brief Destroys the `IAVBufferHelper` object.
      */
-    AVBufferHelper();
-
-    /**
-     * @brief Destroys the `AVBufferHelper` object.
-     */
-    virtual ~AVBufferHelper();
-
-    /**
-     * @brief Retrieves the singleton instance of `AVBufferHelper`.
-     *
-     * @returns A pointer to the `AVBufferHelper` instance.
-     */
-    static AVBufferHelper *getInstance();
+    virtual ~IAVBufferHelper() {}
 
     /**
      * @brief Maps memory from a given handle.
@@ -72,7 +87,7 @@ public:
      *
      * @returns A pointer to the mapped memory address, or `nullptr` if the mapping fails.
      */
-    void *mapHandle(uint64_t handle, uint32_t *size);
+    virtual void *mapHandle(uint64_t handle, uint32_t *size) = 0;
 
     /**
      * @brief Unmaps memory from a given handle.
@@ -82,7 +97,7 @@ public:
      * @retval true If the memory was successfully unmapped.
      * @retval false If the memory could not be unmapped (e.g., invalid handle).
      */
-    bool unmapHandle(uint64_t handle);
+    virtual bool unmapHandle(uint64_t handle) = 0;
 
     /**
      * @brief Writes data from unsecure memory into a secure buffer.
@@ -94,7 +109,7 @@ public:
      * @retval true If the data was successfully written.
      * @retval false If the data could not be written (e.g., invalid handle, insufficient space).
      */
-    bool writeSecureHandle(uint64_t handle, void *data, uint32_t size);
+    virtual bool writeSecureHandle(uint64_t handle, void *data, uint32_t size) = 0;
 
     /**
      * @brief Copies data from one secure buffer to another.
@@ -107,7 +122,7 @@ public:
      * @retval true If the data was successfully copied.
      * @retval false If the data could not be copied (e.g., invalid handles, overlapping regions).
      */
-    bool copySecureHandleWithMap(uint64_t handleTo, uint64_t handleFrom, CopyMap map, uint32_t mapSize);
+    virtual bool copySecureHandleWithMap(uint64_t handleTo, uint64_t handleFrom, CopyMap map, uint32_t mapSize) = 0;
 };
 
-#endif // _AVBUFFERHELPER_H_
+#endif // _IAVBUFFERHELPER_H_
