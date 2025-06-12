@@ -23,15 +23,6 @@
 #include <stdint.h>
 #include <mutex>
 
-#ifdef __cplusplus
-    extern "C"
-{
-#endif
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
-
 using namespace std;
 using namespace com::rdk::hal;
 using namespace com::rdk::hal::avbuffer;
