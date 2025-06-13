@@ -99,7 +99,7 @@ function main()
   case "${CMD}" in
     serve)
       echo "[INFO] Serving MkDocs locally..."
-      mkdocs serve "$@"
+      mkdocs serve -a 0.0.0.0:8000 "$@"
       ;;
 
     build)
