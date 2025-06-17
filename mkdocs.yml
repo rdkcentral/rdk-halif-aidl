@@ -96,7 +96,9 @@ nav:
       - Control Plane: external_content/ut-core-wiki/5.1.1:-Standards:-vDevice-Control-Plane.md
   - Misc:
     - References: references/references.md
-    - Documentation Guide: introduction/documentation_guide.md
+    - Documentation Standards: 
+      - Getting Started: introduction/documentation_getting_started.md
+      - Interface Template: standards/interface_template.md
     - White Papers:
       - Documentation in Git: whitepapers/documentation_in_git.md
       - Branching Strategies : whitepapers/branching_strategies.md 
