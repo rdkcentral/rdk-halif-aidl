@@ -42,14 +42,24 @@ oneway interface IVideoDecoderControllerListener {
     void onFrameOutput(in long nsPresentationTime, in long frameBufferHandle, in @nullable FrameMetadata metadata);
 
     /**
-	 * Callback which delivers the picture user data from a frame.
-	 * The userData byte array starts from (and includes) the user_identifier field (TBC).
-	 * The output video frame can be delivered before or after the onUserDataOutput().
-	 * The user data must be delivered in the same frame presentation order as the output frames.
-     *
-     * @param[in] nsPresentationTime	The presentation time.
-     * @param[in] userData				Array of bytes containing the picture user data.
-     */
+    * Callback which delivers the picture user data from a frame.
+    * The userData byte array starts from (and includes) the user_identifier field (typically 'GA94').
+    * The output video frame can be delivered before or after the onUserDataOutput().
+    * The user data must be delivered in the same frame presentation order as the output frames.
+    *
+    * The userData byte array contains SEI NAL data, typically conforming to the "user_data_registered_itu_t_t35" structure, used for captioning:
+    * - Begins with the ITU-T T.35 country_code (0xB5 for USA)
+    * - Followed by provider_code (0x0031 for ATSC)
+    * - Includes a user_identifier string (usually 'GA94')
+    * - Contains a user_data_type_code (0x03 for CEA-608/708)
+    * - Followed by one or more CC data packets (cc_valid, cc_type, and data bytes)
+    *
+    * The RDK media pipeline must parse this data to extract embedded CEA-608 or CEA-708 caption packets.
+    * Each `onUserDataOutput()` call corresponds to a single decoded video frame and maintains AV sync for captions.
+    * This approach standardises the delivery of caption-related data across all platforms supporting embedded SEI in compressed video streams.
+    *
+    * @param[in] nsPresentationTime  The presentation time.
+    * @param[in] userData            Array of bytes containing the SEI user data (e.g., ATSC A/72 caption payload).
+    */
     void onUserDataOutput(in long nsPresentationTime, in byte[] userData);
- 
-}
+    }
