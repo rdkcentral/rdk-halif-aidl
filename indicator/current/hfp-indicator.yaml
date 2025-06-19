@@ -22,7 +22,14 @@
 
 # HAL Feature Profile for indicator
 
-IIndicator:            # Component object begins
+# **
+# * HAL Feature Profile for the indicator service.
+# *
+# * This section defines the feature profile for the indicator Hardware Abstraction Layer (HAL).
+# * It specifies the interface version and the list of supported states for the indicator component.
+# * This is a reference file and is expected to be used to define the platform specific requirements
+# *
+IIndicator:
   interfaceVersion: current
   supportedStates:
     - BOOT
@@ -35,3 +42,10 @@ IIndicator:            # Component object begins
     - FULL_SYSTEM_RESET
     - USB_UPGRADE
     - SOFTWARE_DOWNLOAD_ERROR
+    - DEEP_SLEEP
+    - PSU_FAILURE
+    - WPS_SES_OVERLAP
+    - WIFI_ERROR
+    - IP_ACQUIRED
+    - NO_IP
+    - RCU_COMMAND
