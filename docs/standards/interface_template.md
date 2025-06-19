@@ -6,25 +6,22 @@ Describe the role of this HAL service. Outline its responsibilities, how it abst
 
 ---
 
-## References
-
 !!! info References
 |||
 |-|-|
 |**Interface Definition**|[path-to-aidl-version](link)|
 |**API Documentation**| TBD |
-|**HAL Interface Type**| [AIDL and Binder](link) |
-|**Initialization Unit**| [systemd service](link) |
+|**HAL Interface Type**       | [AIDL and Binder](../../../introduction/aidl_and_binder.md)                           |
+|**Initialization Unit**      | [systemd service](../../../vsi/systemd/current/systemd.md)                                                                                |
 |**VTS Tests**| TBD |
 |**Reference Implementation**| \[GitHub/Repo link] |
 
 ---
 
-## Related Pages
-
 !!! tip Related Pages
+- [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
+- [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
 - [Other HALs or Framework Components](link)
-- [Shared Concepts (Buffer Management, Session State)](link)
 
 ---
 
