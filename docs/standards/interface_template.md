@@ -6,7 +6,7 @@ Describe the role of this HAL service. Outline its responsibilities, how it abst
 
 ---
 
-## References Pages
+## References
 
 !!! info References
 |||
@@ -16,7 +16,7 @@ Describe the role of this HAL service. Outline its responsibilities, how it abst
 |**HAL Interface Type**       | [AIDL and Binder](../../../introduction/aidl_and_binder.md)                           |
 |**Initialization Unit**      | [systemd service](../../../vsi/systemd/current/systemd.md)                                                                                |
 |**VTS Tests**| TBD |
-|**Reference Implementation**| \[GitHub/Repo link] |
+|**Reference Implementation**| TBD |
 
 ---
 
