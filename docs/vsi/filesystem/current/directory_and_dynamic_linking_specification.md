@@ -255,15 +255,9 @@ Format and dispatch logs appropriately to syslog or other targets.
 
 This section provides a concrete example of how a vendor module can integrate with the `/vendor/sysint/${sysconfdir}` structure in compliance with the directory and dynamic linking policies described above.
 
-## Appendix: Example Integration with Alternate Install Root
-
-This section provides a concrete example of how a vendor module can integrate with the `/vendor/sysint/${sysconfdir}` structure in compliance with the directory and dynamic linking policies described above.
-
-## Example: `sysinit` Vendor Module
-
 ### Overview
 
-This module is installed under the path `/vendor/sysint`, with all configuration, systemd, logging, and dynamic linker artifacts scoped within this directory. Integration points such as AppArmor and ld.so.conf.d use symbolic links into `/etc/` to preserve system-wide access.
+This module is installed under the path `/vendor/sysint`, with all configuration, systemd, logging, versioning, and dynamic linker artifacts scoped within this directory. Integration points such as AppArmor and ld.so.conf.d use symbolic links into `/etc/` to preserve system-wide access.
 
 ### Directory Structure
 
@@ -288,54 +282,69 @@ This module is installed under the path `/vendor/sysint`, with all configuration
 ### Installation Snippet (Yocto-style `do_install()`)
 
 ```bash
-do_install() {
-  INSTALL_ROOT="/vendor/sysint"
-  install -d ${D}${INSTALL_ROOT}${sysconfdir}
-  install -d ${D}${INSTALL_ROOT}${sysconfdir}/rfcdefaults
-  install -d ${D}${INSTALL_ROOT}${base_libdir}/rdk
-  install -d ${D}${INSTALL_ROOT}${systemd_unitdir}/system
-  install -d ${D}/etc/ld.so.conf.d
-  install -d ${D}/etc/apparmor.d
-  install -d ${D}/etc/systemd/system
-  install -d ${D}/etc/logrotate.d
+INSTALL_ROOT="/vendor/sysint"
+install -d ${D}${INSTALL_ROOT}${sysconfdir}
+install -d ${D}${INSTALL_ROOT}${sysconfdir}/rfcdefaults
+install -d ${D}${INSTALL_ROOT}${base_libdir}/rdk
+install -d ${D}${INSTALL_ROOT}${systemd_unitdir}/system
+install -d ${D}/etc/ld.so.conf.d
+install -d ${D}/etc/apparmor.d
+install -d ${D}/etc/systemd/system
+install -d ${D}/etc/logrotate.d
 
-  # Config and Binary Placement
-  install -m 0644 ${S}/etc/partners_defaults_device.json ${D}${INSTALL_ROOT}${sysconfdir}
-  install -m 0755 ${S}/etc/device-vendor.properties ${D}${INSTALL_ROOT}${sysconfdir}
-  install -m 0755 ${S}/lib/rdk/* ${D}${INSTALL_ROOT}${base_libdir}/rdk
-  install -m 0644 ${S}/systemd_units/start-up-scripts.service ${D}${INSTALL_ROOT}${systemd_unitdir}/system
+# Config and Binary Placement
+install -m 0644 ${S}/etc/partners_defaults_device.json ${D}${INSTALL_ROOT}${sysconfdir}
+install -m 0755 ${S}/etc/device-vendor.properties ${D}${INSTALL_ROOT}${sysconfdir}
+install -m 0755 ${S}/lib/rdk/* ${D}${INSTALL_ROOT}${base_libdir}/rdk
+install -m 0644 ${S}/systemd_units/start-up-scripts.service ${D}${INSTALL_ROOT}${systemd_unitdir}/system
 
-  # Clean Up Pre-existing Keys
-  sed -i '/MODEL_NUM/d' ${D}${INSTALL_ROOT}${sysconfdir}/device-vendor.properties
-  sed -i '/FW_VERSION_TAG1/d' ${D}${INSTALL_ROOT}${sysconfdir}/device-vendor.properties
-  sed -i '/FW_VERSION_TAG2/d' ${D}${INSTALL_ROOT}${sysconfdir}/device-vendor.properties
-  sed -i '/MANUFACTURE/d' ${D}${INSTALL_ROOT}${sysconfdir}/device-vendor.properties
-  sed -i '/FRIENDLY_ID/d' ${D}${INSTALL_ROOT}${sysconfdir}/device-vendor.properties
-  sed -i '/USB_POWER_GPIO_NUMBER/d' ${D}${INSTALL_ROOT}${sysconfdir}/device-vendor.properties
-  sed -i '/USB_A_POWER_GPIO_NUMBER/d' ${D}${INSTALL_ROOT}${sysconfdir}/device-vendor.properties
-  sed -i '/MFG_NAME/d' ${D}${INSTALL_ROOT}${sysconfdir}/device-vendor.properties
+# Clean Up Pre-existing Keys
+for key in MODEL_NUM FW_VERSION_TAG1 FW_VERSION_TAG2 MANUFACTURE FRIENDLY_ID USB_POWER_GPIO_NUMBER USB_A_POWER_GPIO_NUMBER MFG_NAME; do
+  sed -i "/$key/d" ${D}${INSTALL_ROOT}${sysconfdir}/device-vendor.properties
+  echo "$key=<default_or_variable_value>" >> ${D}${INSTALL_ROOT}${sysconfdir}/device-vendor.properties
+done
 
-  # AppArmor
-  install -d ${D}${INSTALL_ROOT}/app_armor
-  install -m 0644 ${S}/etc/apparmor/vendor-sysint.profile ${D}${INSTALL_ROOT}/app_armor/
-  ln -sf ${INSTALL_ROOT}/app_armor/vendor-sysint.profile ${D}/etc/apparmor.d/vendor-sysint.profile
+# AppArmor
+install -d ${D}${INSTALL_ROOT}/app_armor
+install -m 0644 ${S}/etc/apparmor/vendor-sysint.profile ${D}${INSTALL_ROOT}/app_armor/
+ln -sf ${INSTALL_ROOT}/app_armor/vendor-sysint.profile ${D}/etc/apparmor.d/vendor-sysint.profile
 
-  # Dynamic Linker Configuration
-  install -d ${D}${INSTALL_ROOT}/ld.so.conf.d
-  echo "${INSTALL_ROOT}/lib" > ${D}${INSTALL_ROOT}/ld.so.conf.d/vendor-sysint.conf
-  ln -sf ${INSTALL_ROOT}/ld.so.conf.d/vendor-sysint.conf ${D}/etc/ld.so.conf.d/vendor-sysint.conf
+# Dynamic Linker Configuration
+install -d ${D}${INSTALL_ROOT}/ld.so.conf.d
+echo "${INSTALL_ROOT}/lib" > ${D}${INSTALL_ROOT}/ld.so.conf.d/vendor-sysint.conf
+ln -sf ${INSTALL_ROOT}/ld.so.conf.d/vendor-sysint.conf ${D}/etc/ld.so.conf.d/vendor-sysint.conf
 
-  # Logrotate
-  install -m 0644 ${S}/etc/module_logrotate.conf ${D}${INSTALL_ROOT}${sysconfdir}/logrotation.conf
-  ln -sf ${INSTALL_ROOT}${sysconfdir}/logrotation.conf ${D}/etc/logrotate.d/sysint
+# Logrotate
+install -m 0644 ${S}/etc/module_logrotate.conf ${D}${INSTALL_ROOT}${sysconfdir}/logrotation.conf
+ln -sf ${INSTALL_ROOT}${sysconfdir}/logrotation.conf ${D}/etc/logrotate.d/sysint
 
-  # Systemd
-  ln -sf ${INSTALL_ROOT}${systemd_unitdir}/system/start-up-scripts.service ${D}/etc/systemd/system/vendor-sysint.service
-}
+# Systemd
+ln -sf ${INSTALL_ROOT}${systemd_unitdir}/system/start-up-scripts.service ${D}/etc/systemd/system/vendor-sysint.service
+
+# Version Metadata
+mkdir -p ${D}${INSTALL_ROOT}
+echo "src_version=$(cd ${S} && git describe --tags --always || echo unknown)" > ${D}${INSTALL_ROOT}/VERSION
+echo "build_date=$(date '+%Y-%m-%d %H:%M:%S %Z')" >> ${D}${INSTALL_ROOT}/VERSION
+
+# This version reflects the git-describe version of the recipe itself (.bb file)
+echo "recipe_version=$(cd $(dirname ${BBPATH})/../.. && git describe --tags --always 2>/dev/null || echo unknown)" >> ${D}${INSTALL_ROOT}/VERSION
+
+# If other includes are referenced (e.g., sysint-oem.inc), optionally record their version too:
+echo "sysint-oem.inc_version=$(cd ${LAYERDIR}/recipes-extended/sysint && git describe --tags --always sysint-oem.inc 2>/dev/null || echo unknown)" >> ${D}${INSTALL_ROOT}/VERSION
+```
+
+### Example `VERSION` File
+
+```ini
+src_version=2.5.0-123-gabcde12
+build_date=2025-06-20 14:45:30 UTC
+recipe_version=2.5.0-123-gabcde12
+sysint-oem.inc_version=sysint-oem-1.3.2-45-gabcdef1
 ```
 
 ### Compliance Notes
 
 * All artifacts are scoped to the module directory under `/vendor/sysint`.
 * Global system directories are only modified via symlinks into expected locations.
+* The `VERSION` file provides build provenance including Git tag of the recipe and any referenced include.
 * This supports modular updates and ensures the system remains maintainable, verifiable, and secure.
