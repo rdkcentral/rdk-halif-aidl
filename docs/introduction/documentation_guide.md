@@ -25,6 +25,8 @@ To simplify working with documentation, the `docs/build_docs.sh` script provides
 - **deploy**: builds the documentation and deploys it to GitHub Pages  
 - **help**: displays usage information
 
+This follows the documentation in git approach See :- [documentation in git](../whitepapers/documentation_in_git.md)
+
 ### Serve the Documentation Locally
 
 To generate and serve the documentation on `localhost:8000`, run:
@@ -70,8 +72,7 @@ Build the documentation and deploy to the `gh-pages` branch:
 ./build_docs.sh deploy
 ```
 
-The site will be published at:  
-[https://rdkcentral.github.io/rdk-halif-aidl/](https://rdkcentral.github.io/rdk-halif-aidl/)  
+The site will be published at: [https://rdkcentral.github.io/rdk-halif-aidl/](https://rdkcentral.github.io/rdk-halif-aidl/)  
 
 > **Note**: The published site’s resides in the `gh-pages` branch of this repository.
 
@@ -99,10 +100,19 @@ When contributing to the documentation, please adhere to the following guideline
 - **Proofreading:** Thoroughly proofread all content for spelling, grammar, and punctuation errors before submitting changes.
 - **Admonitions for Emphasis:** Use admonitions to highlight key information, warnings, notes, or tips. Material for MkDocs provides various admonition styles: [https://squidfunk.github.io/mkdocs-material/reference/admonitions/](https://squidfunk.github.io/mkdocs-material/reference/admonitions/)
 
-!!! note "Helpful Tip"
+!!! note Note
     This is an example of a note admonition.
 
-!!! warning "Important Consideration"
+!!! info Info
+    This is an example of a info admonition.
+
+!!! tip Tip
+    This is an example of a tip admonition.
+
+!!! example Example
+    This is an example
+
+!!! warning Important Consideration
     This is a warning!
 
 - **Code Blocks with Syntax Highlighting:** Always use code blocks for code examples and specify the language for syntax highlighting:
@@ -113,7 +123,8 @@ def example_function():
 ```
 
 ```javascript
-function exampleFunction() {
+function exampleFunction() 
+{
     console.log("Hello, world!");
 }
 ```
