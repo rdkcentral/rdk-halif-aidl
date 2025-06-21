@@ -99,17 +99,38 @@ function main()
   case "${CMD}" in
     serve)
       echo "[INFO] Serving MkDocs locally..."
-      mkdocs serve "$@"
+      mike serve "$@"
       ;;
 
     build)
       echo "[INFO] Building MkDocs site..."
-      mkdocs build "$@"
+      # Check if the second argument (the version) is provided
+      # "$#" is the number of positional parameters
+      # If "$2" is empty, it means no version was provided after "deploy"
+      VERSION_TO_DEPLOY="$1"      
+      echo VERSION:[$VERSION_TO_DEPLOY] @:{$@}
+      if [ -z "$VERSION_TO_DEPLOY" ]; then
+          echo "[ERROR] Missing version argument for 'deploy'. Usage: $0 deploy <version> [alias...]"
+          exit 1 # Exit with an error code
+      fi
+      mike deploy "${VERSION_TO_DEPLOY}"
+      mike set-default ${VERSION_TO_DEPLOY}
       ;;
 
     deploy)
       echo "[INFO] Deploying MkDocs site to gh-pages..."
-      mkdocs gh-deploy "$@"
+      # Check if the second argument (the version) is provided
+      # "$#" is the number of positional parameters
+      # If "$2" is empty, it means no version was provided after "deploy"
+      VERSION_TO_DEPLOY="$1"      
+      echo VERSION:[$VERSION_TO_DEPLOY] @:{$@}
+      if [ -z "$VERSION_TO_DEPLOY" ]; then
+          echo "[ERROR] Missing version argument for 'deploy'. Usage: $0 deploy <version> [alias...]"
+          exit 1 # Exit with an error code
+      fi
+      # Extract the version from the arguments
+      mike deploy "${@:VERSION_TO_DEPLOY}" --push
+      mike set-default ${VERSION_TO_DEPLOY} --push
       ;;
 
     help|-h|--h|--help|"")
