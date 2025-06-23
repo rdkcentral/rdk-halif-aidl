@@ -1,95 +1,179 @@
 # HAL Feature Profile (`HFP`)
 
-The HAL Feature Profile (`HFP`) is a crucial declaration provided by the OEM when delivering a vendor layer implementation. It serves two primary purposes:
+The **HAL Feature Profile (HFP)** is a structured, YAML-based declaration provided by OEMs to define the supported feature set for their vendor layer implementation. It serves as both a **machine-readable contract** and **validation reference** between the platform and RDK middleware.
 
-- **Test Driver:** The `HFP` informs the vendor test suite, enabling it to conduct targeted testing based on the declared feature set.
-- **Capability Declaration:** The `HFP` lists all supported HAL features, allowing for verification against product requirements.
+---
 
-## File Syntax and Schema
+## Document Version Information
 
-The `HFP` is structured as a YAML file.  It resides within the vendor layer deliverables, typically in a designated configuration directory (e.g., `vendor/<vendor_name>/<platform>/config/hal_feature_profile.yaml`).
+| Version | Date        | Author       | Comment         |
+| ------- | ----------- | ------------ | --------------- |
+| 1.2     | 23 Jun 2025 | G. Weatherup | Improved format |
+| 1.1     | 24 Mar 2025 | G. Weatherup | Added clarity   |
+| 1.0     | 17 Feb 2025 | G. Weatherup | First revision  |
+
+---
+
+## Purpose and Runtime Role
+
+The HAL Feature Profile (HFP) defines the platform's supported HAL interfaces and capabilities in a structured, machine-readable format. It plays a foundational role in platform validation, runtime capability discovery, and certification.
+
+### Key Functions
+
+* **Test Driver Configuration**
+  Guides the Vendor Test Suite (VTS) in dynamically tailoring test coverage. Declared resources, capabilities, and constraints drive targeted validation based on the actual platform configuration.
+
+* **Interface Capability Declaration**
+  Serves as a machine-readable contract between the platform vendor and RDK middleware. Enables runtime introspection of supported features using methods such as `getCapabilities()` and `getPlatformCapabilities()`.
+
+* **Operational Semantics and Return Values**
+  Clarifies expected runtime behaviours, especially where AIDL definitions return abstract or variable feature sets. For example, codec support or event types may be enumerated here even if not explicitly codified in the interface.
+
+* **Compliance and Certification**
+  Acts as the authoritative reference for determining mandatory versus optional feature support. Used by QA and certification pipelines to assert conformance with product requirements.
+
+Maintaining the HFP in sync with the actual HAL implementation and runtime behaviour is essential for reliable system integration, middleware compatibility, and accurate feature negotiation.
+
+---
+
+## HFP Location and Delivery
+
+Each platform is expected to define and maintain its own HAL Feature Profile (`HFP`) tailored to its **driver configuration** and **hardware capabilities**. The responsibility for creating and updating the HFP lies with the **OEM or platform integrator**.
+
+The examples provided in the HAL repository serve as **reference templates** only. They illustrate the expected **format**, **schema**, and **field usage**, but are not exhaustive or mandatory definitions.
+
+### Standard File Locations
+
+```text
+vendor/<vendor_name>/<platform>/config/hal_feature_profile.yaml
+```
+
+Component-level fragments may be stored in:
+
+```text
+vendor/<vendor_name>/<platform>/config/components/<component>.yaml
+```
+
+These may be merged via include directives, YAML anchors, or pre-processing scripts.
+
+---
+
+## File Structure
+
+The HFP consists of:
+
+* A **top-level metadata block** (`hal`) with platform and schema version
+* A **list of HAL components**, either embedded or included
+* **Per-component declarations** that define interface versions, resources, and feature sets
+
+### Parent File Example
 
 ```yaml
-hal_profile: "TV"        # Product/Platform identifier
-hal_version: "1.0.0"     # HFP schema version
-components:              # List of HAL components
+hal:
+  profile: "TV"
+  platform: "Sky Glass"
+  schema_version: "1.2.0"
 
-  - name: "kernel"        # Component name
-    version: "5.15.164"  # Version of the component
-
-  - name: "avbuffer"      # Component name
-    aidl_version: 1       # AIDL interface version
-    non_secure_heap_bytes: 1048576 # Example: 1MB non-secure heap
-    secure_heap_bytes: 524288   # Example: 512KB secure heap
-
-  - name: "videodecoder"  # Component name
-    aidl_version: 1       # AIDL interface version
-    resources:            # Resource-specific information
-      - id: 0             # Resource identifier
-        codecs: ["H264", "HEVC"] # Supported codecs for this resource
-      - id: 1             # Resource identifier
-        codecs: ["MPEG2", "AV1"]  # Supported codecs for this resource
-
-  - name: "cdm"           # Component name (Content Decryption Module)
-    resources:            # Supported CDMs and their versions
-      - name: "PlayReady"
-        version: "4.4"
-      - name: "Widevine"
-        version: "L3" # Example: Security Level
-      - name: "Fairplay"
-        version: "4.0" # Example Version
-
-  - name: "audio_decoder"
-    aidl_version: 2
-    supported_formats: ["AAC", "MP3", "AC3"]
-
-  - name: "tuner"
-    type: "dvb-c" # Example: Cable tuner
-    frequency_range: "50-860 MHz"
-
-  - name: "display"
-    resolution: "1920x1080"
-    hdr_support: true
-    interfaces: ["HDMI", "DisplayPort"]
-
-  - name: "network"
-    interfaces: ["Ethernet", "WiFi"]
-    wifi_standards: ["802.11a/b/g/n/ac/ax"]
-
-  - name: "bluetooth"
-    version: "5.2"
-    profiles: ["A2DP", "HFP", "AVRCP"]
-
-  - name: "input"
-    devices: ["Remote Control", "Keyboard"]
-    types: ["IR", "Bluetooth", "RF4CE"]
+  components:
+    - include: "audio_decoder.yaml"
+    - include: "videodecoder.yaml"
+    - include: "panel.yaml"
 ```
+
+---
+
+## Component Schema
+
+Each HAL component follows a consistent and extensible structure:
+
+```yaml
+<component_name>:                  # e.g., videodecoder, audiosink
+  interfaceVersion: current        # AIDL interface version
+
+  - id: 0                          # Resource ID (multi-instance support)
+    <field1>: <value>              # E.g., supportsSecure: true
+    <field2>:                      # Optional list field
+      - VALUE_A
+      - VALUE_B
+
+  platformCapabilities:            # Optional key-value metadata
+    systemMixerSampleRateHz: 48000
+
+  events:                          # Event callbacks supported by listener
+    - onStarted
+    - onError
+```
+
+### Example: `videodecoder.yaml`
+
+```yaml
+videodecoder:
+  interfaceVersion: current
+
+  - id: 0
+    supportedCodecs:
+      - H264
+      - HEVC
+    supportsSecure: true
+
+  - id: 1
+    supportedCodecs:
+      - MPEG2
+      - AV1
+    supportsSecure: false
+
+  platformCapabilities:
+    maxResolution: "4K"
+    maxFramerate: 60
+
+  events:
+    - onDecoderError
+    - onFrameReady
+```
+
+---
 
 ## Mandatory and Optional HALs and Features
 
-The HFP explicitly lists all HAL components present in the vendor implementation.  While all listed components are considered *supported*, the HFP can also indicate whether a component or a specific feature within a component is *mandatory* or *optional*. This distinction is crucial for product compliance testing.  This can be achieved by adding properties to the component definition, for example:
+The HFP must explicitly list all supported HAL components. Each HAL or resource block can be marked as `mandatory: true` or `optional: true`.
+
+Fields that are not supported may be omitted, but explicit negation is recommended for clarity:
 
 ```yaml
-  - name: "cdm"
-    mandatory: true # CDM is a mandatory component
-    resources:
-      - name: "PlayReady"
-        version: "4.4"
-        mandatory: true # PlayReady is mandatory
-      - name: "Widevine"
-        version: "L3"
-        optional: true # Widevine is optional
+cdm:
+  interfaceVersion: current
+  mandatory: true
+
+  - id: 0
+    name: "PlayReady"
+    version: "4.4"
+    mandatory: true
+
+  - id: 1
+    name: "Widevine"
+    version: "L3"
+    optional: true
 ```
 
-## HFP Versioning
+---
 
-The `hal_version` field in the HFP specifies the version of the HFP schema itself.  This allows for future evolution of the HFP structure while maintaining backward compatibility.  The versioning scheme should follow semantic versioning (major.minor.patch).
+## Tooling and Automation
 
-## Tooling
+Tooling for HFP consumption and validation should support:
 
-Tools should be developed to parse and validate the HFP file.  This tooling will be essential for both the vendor test suite and for product requirements verification.  The tool should be able to:
+* **YAML Schema Validation**: Ensure integrity of the file structure
+* **Test Vector Generation**: Generate test coverage based on capability matrix
+* **Gap Detection**: Report missing mandatory components or undeclared features
+* **Compliance Reporting**: Output summaries for QA, integrators, or certification
 
-- Validate the HFP against the schema.
-- Check for mandatory components and features.
-- Compare the HFP against product requirements.
-- Generate reports summarizing the supported features.
+---
+
+## Versioning and Schema Evolution
+
+The `schema_version` field under the `hal` root must follow [semantic versioning](https://semver.org):
+
+* **MAJOR** – Breaking changes to the schema or logic
+* **MINOR** – Backwards-compatible enhancements or field additions
+* **PATCH** – Minor metadata updates or clarifications
+
+This ensures that both platform teams and automation tooling can safely track and adopt schema changes over time.
