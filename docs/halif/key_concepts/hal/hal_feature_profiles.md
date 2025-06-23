@@ -7,27 +7,9 @@ The HAL Feature Profile (HFP) is a YAML-based declaration provided by OEMs to de
 
 Each HAL component defines its own `hfp_xxx.yaml` within the vendor layer deliverables, typically located in a configuration directory (e.g., `vendor/<vendor_name>/<platform>/config/`).
 
-## Role in HFP Files
-
-Each platform is expected to define and maintain its own HAL Feature Profile (HFP) YAML file for the indicator component, tailored to its specific hardware and software configuration. The HFP plays a critical role in three areas:
-
-### Test Configuration Input
-
-The HFP informs the HAL compliance and validation framework about which features and states are supported. Test suites dynamically adjust coverage based on the declared capabilities, ensuring accurate and meaningful validation.
-
-### Interface Capability Declaration
-
-The HFP acts as a machine-readable contract between the platform vendor and RDK middleware. It indicates which parts of the AIDL interface are implemented, and allows middleware to query feature support during runtime or setup.
-
-### Operational Semantics and Return Values
-
-For interfaces like `getCapabilities()` that return a list of platform-supported features, the HFP provides the authoritative source of truth. It defines what capabilities are expected to appear in the returned list—even when they are not explicitly defined in the AIDL schema. Developers and testers use the HFP to understand expected return values, implementation constraints, and platform-specific extensions.
-
-Maintaining the HFP in sync with the actual implementation and runtime behaviour is essential for consistent integration, accurate testing, and correct feature negotiation between system components.
-
 ## File Syntax and Schema
 
-The HFP utilizes YAML syntax for structured data representation. This is an example format; actual formats are defined per component.
+The HFP utilizes YAML syntax for structured data representation, this is an example format the actual format is defined with the components.
 
 ```yaml
 hal:
@@ -148,7 +130,7 @@ hal:
 
 ## Mandatory and Optional HALs and Features
 
-The HFP explicitly lists all supported HAL components. Components or specific features within them can be marked as `mandatory` to indicate their requirement status. Any field not defined can be assumed to be `false` but for clarity can also be stated explicitly:
+The HFP explicitly lists all supported HAL components. Components or specific features within them can be marked as `mandatory` to indicate their requirement status. Any field not defined can be assumed to be `false` but for clarity can also be stated e.g. `mandatory: false`.
 
 ```yaml
 hal:
@@ -170,7 +152,7 @@ The `schema_version` field adheres to semantic versioning (major.minor.patch) to
 
 ## Tooling
 
-Dedicated tools are essential for creating and validating the HFP:
+Dedicated tools are essential for creating and validating the HFP will be created:
 
 * **Schema Validation:** Implements robust validation against a defined schema (e.g., JSON Schema).
 * **HFP Generator:** Tool to help create HFP files.
