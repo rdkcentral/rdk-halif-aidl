@@ -144,27 +144,30 @@ interface IAudioDecoderController {
 	void signalEOS();
 
     /**
-     * Sends codec specific data to initialise the audio decoder.
+     * Sends codec-specific data to initialise the audio decoder.
+     *
+     * Some audio formats require out-of-band codec-specific data describing the audio stream,
+     * which has been filtered from the container or provided by the application.
+     * This must be invoked before any audio frame buffers are passed to `decodeBuffer()`.
+     *
+     * For example, MPEG-4 Audio requires the AudioSpecificConfig, beginning with the audio object type.
      * 
-     * Some audio media requires out-of-band codec specific data to describe the audio stream which
-     * has been pre-filtered from the container or provided by the application.
-     * When required this function must be called before audio frame buffers are passed to `decodeBuffer()`.
-     * 
-     * For MPEG4 Audio this is the AudioSpecificConfig, starting with the audio object type.
-     * @see ISO/IEC 14496-3:2019 
+     * The accepted `CSDAudioFormat` values align with DVB, ISDB, HLS, and DASH broadcast/streaming standards.
+     *
+     * @see ISO/IEC 14496-3:2019
      * @see https://www.iso.org/standard/76383.html
      *
-     * @param[in] csdAudioFormat        Codec specific data format enum.
-     * @param[in] codecData             Byte array of codec data.
-     * 
+     * @param[in] csdAudioFormat   Codec-specific data format enum.
+     * @param[in] codecData        Byte array containing the codec-specific data.
+     *
      * @returns boolean
      * @retval true     The codec data was successfully set.
      * @retval false    Invalid parameter or empty codec data array.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
-     * 
-     * @pre The resource must be in State::STARTED.
+     * @exception binder::Status EX_ILLEGAL_STATE
+     *           Thrown if the resource is not in State::STARTED.
+     *
+     * @pre The decoder resource must be in State::STARTED.
      */
     boolean parseCodecSpecificData(in CSDAudioFormat csdAudioFormat, in byte[] codecData);
 }
- 
