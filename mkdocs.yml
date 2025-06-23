@@ -23,6 +23,7 @@
 site_name: RDK Hardware Porting Kit
 site_url: https://www.github.com/rdkcentral/rdk-halif-aidl
 site_dir: site # Site directory
+docs_dir: docs
 
 repo_name: rdkcentral/rdk-halif-aidl
 repo_url: https://github.com/rdkcentral/rdk-halif-aidl

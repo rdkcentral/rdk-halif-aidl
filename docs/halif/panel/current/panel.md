@@ -16,8 +16,8 @@ To declare the static feature set and ensure alignment between implementation an
 
 |                              |                                                                                                                                                                |
 | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Interface Definition**     | [panel/current/com/rdk/hal/panel/](../../../src_link/panel |
-| **HAL Feature Profile**      | [`hfp-panel.yaml`](../../../src_link/panel/current/hfp-panel.yaml) – [Learn more](../../key_concepts/hal/hal_feature_profiles.md) |
+| **Interface Definition**     | [panel/current/com/rdk/hal/panel](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/panel/current/com/rdk/hal/panel)|
+| **HAL Feature Profile**      | [`hfp-panel.yaml`](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/panel/current/hfp-panel.yaml) – [Learn more](../../key_concepts/hal/hal_feature_profiles.md) |
 | **API Documentation**        | TBD                                                                                                                                                            |
 | **HAL Interface Type**       | [AIDL and Binder](../../../introduction/aidl_and_binder.md)                                                                                                    |
 | **Initialization Unit**      | [systemd](../../../vsi/systemd/current/systemd.md) – **hal-panel.service**                                                                                     |
