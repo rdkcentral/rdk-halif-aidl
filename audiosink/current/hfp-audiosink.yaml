@@ -9,7 +9,6 @@
 # * you may not use this file except in compliance with the License.
 # * You may obtain a copy of the License at
 # *
-# *
 # * http://www.apache.org/licenses/LICENSE-2.0
 # *
 # * Unless required by applicable law or agreed to in writing, software
@@ -18,17 +17,29 @@
 # * See the License for the specific language governing permissions and
 # * limitations under the License.
 # *
-#** ******************************************************************************
+#** *****************************************************************************
 
 # HAL Feature Profile for audiosink
+audiosink:
+  interfaceVersion: current
 
-IAudioSinkManager:     # Component object begins
-    interfaceVersion: current
-    platformCapabilities:
-        supportsLowLatency: false
-        systemMixerSampleRateHz: 48000
-        systemMixerPCMFormat: S32BE
-        supportsPlanarFormat: false
-    IAudioSink:        # Resource list
-        - 0            # Resource object begins
-        - 1
+  IAudioSink:
+    - id: 0
+      supportsSecure: true
+      supportedContentTypes:
+        - UNKNOWN
+        - SPEECH
+        - MUSIC
+        - MOVIE
+        - SONIFICATION
+    - id: 1
+      supportsSecure: false
+      supportedContentTypes:
+        - SPEECH
+        - MUSIC
+
+  platformCapabilities:
+    supportsLowLatency: false
+    systemMixerSampleRateHz: 48000
+    systemMixerPCMFormat: S32BE
+    supportsPlanarFormat: false

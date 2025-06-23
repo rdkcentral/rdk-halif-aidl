@@ -22,8 +22,10 @@
 
 # HAL Feature Profile for videosink
 
-IVideoSinkManager:          # Component object begins
+videosink:
   interfaceVersion: current
-  IVideoSink:               # Resource list
-    - 0
-    - 1
+
+  IVideoSink:
+    - id: 0
+    - id: 1
+
