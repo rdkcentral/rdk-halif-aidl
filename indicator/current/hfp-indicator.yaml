@@ -29,7 +29,7 @@
 # * It specifies the interface version and the list of supported states for the indicator component.
 # * This is a reference file and is expected to be used to define the platform specific requirements
 # *
-IIndicator:
+indicator:
   interfaceVersion: current
   supportedStates:
     - BOOT
