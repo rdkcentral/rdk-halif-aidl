@@ -32,7 +32,7 @@ IPanelOutput:          # IPanelOutput.aidl :: Main resource
   frameRateMatchingSupported: true  # Enables dynamic panel refresh rate matching to video source
   fadeDisplaySupported: true        # Enables smooth fade-to-black display transitions
   supportedPQParameters:  # PQParameter.aidl :: Enum of all PQ parameters
-    - !include hfp-panel/supportedPQParameters.yaml  # Full list of supported PQParameters on this platform
+    - include hfp-panel/supportedPQParameters.yaml  # Full list of supported PQParameters on this platform
   supportedRefreshRatesHz:  # IPanelOutput.aidl :: List of supported panel refresh rates in Hz
     - 48    # Common for film content
     - 49
@@ -55,48 +55,48 @@ IPanelOutput:          # IPanelOutput.aidl :: Main resource
     - 165
     - 240   # Ultra high refresh for specialist use (e.g., gaming monitors)
   pictureModeCapabilities: # Capabilities.aidl :: PictureModeCapabilities
-    - !include hfp_panel/pictureModeCapabilities/Entertainment.yaml
-    - !include hfp_panel/pictureModeCapabilities/Dynamic.yaml
-    - !include hfp_panel/pictureModeCapabilities/Expert.yaml
-    - !include hfp_panel/pictureModeCapabilities/Sports.yaml
-    - !include hfp_panel/pictureModeCapabilities/Standard.yaml
+    - include hfp_panel/pictureModeCapabilities/Entertainment.yaml
+    - include hfp_panel/pictureModeCapabilities/Dynamic.yaml
+    - include hfp_panel/pictureModeCapabilities/Expert.yaml
+    - include hfp_panel/pictureModeCapabilities/Sports.yaml
+    - include hfp_panel/pictureModeCapabilities/Standard.yaml
   colorTemperatureNames: #colorTemperatureNames
     - Cool
     - Normal
     - Warm
   pqParameterCapabilities: # PQParameterCapabilities.aidl :: pqParameterCapabilities
-    - !include hfp_panel/pqParameterCapabilities/BRIGHTNESS.yaml
-    - !include hfp_panel/pqParameterCapabilities/CONTRAST.yaml
-    - !include hfp_panel/pqParameterCapabilities/SHARPNESS.yaml
-    - !include hfp_panel/pqParameterCapabilities/SATURATION.yaml
-    - !include hfp_panel/pqParameterCapabilities/HUE.yaml
-    - !include hfp_panel/pqParameterCapabilities/MANUAL_BACKLIGHT.yaml
-    - !include hfp_panel/pqParameterCapabilities/SDR_GAMMA.yaml
-    - !include hfp_panel/pqParameterCapabilities/COLOR_TEMPERATURE.yaml
-    - !include hfp_panel/pqParameterCapabilities/DIMMING_MODE.yaml
-    - !include hfp_panel/pqParameterCapabilities/DIMMING_LEVEL.yaml
-    - !include hfp_panel/pqParameterCapabilities/LOW_LATENCY_STATE.yaml
-    - !include hfp_panel/pqParameterCapabilities/SATURATION_RED.yaml
-    - !include hfp_panel/pqParameterCapabilities/SATURATION_BLUE.yaml
-    - !include hfp_panel/pqParameterCapabilities/SATURATION_GREEN.yaml
-    - !include hfp_panel/pqParameterCapabilities/SATURATION_YELLOW.yaml
-    - !include hfp_panel/pqParameterCapabilities/SATURATION_CYAN.yaml
-    - !include hfp_panel/pqParameterCapabilities/SATURATION_MAGENTA.yaml
-    - !include hfp_panel/pqParameterCapabilities/HUE_RED.yaml
-    - !include hfp_panel/pqParameterCapabilities/HUE_BLUE.yaml
-    - !include hfp_panel/pqParameterCapabilities/HUE_GREEN.yaml
-    - !include hfp_panel/pqParameterCapabilities/HUE_YELLOW.yaml
-    - !include hfp_panel/pqParameterCapabilities/HUE_CYAN.yaml
-    - !include hfp_panel/pqParameterCapabilities/HUE_MAGENTA.yaml
-    - !include hfp_panel/pqParameterCapabilities/LUMA_RED.yaml
-    - !include hfp_panel/pqParameterCapabilities/LUMA_BLUE.yaml
-    - !include hfp_panel/pqParameterCapabilities/LUMA_GREEN.yaml
-    - !include hfp_panel/pqParameterCapabilities/LUMA_YELLOW.yaml
-    - !include hfp_panel/pqParameterCapabilities/LUMA_CYAN.yaml
-    - !include hfp_panel/pqParameterCapabilities/LUMA_MAGENTA.yaml
-    - !include hfp_panel/pqParameterCapabilities/MEMC.yaml
-    - !include hfp_panel/pqParameterCapabilities/LOCAL_CONTRAST_LEVEL.yaml
-    - !include hfp_panel/pqParameterCapabilities/MPEG_NOISE_REDUCTION.yaml
-    - !include hfp_panel/pqParameterCapabilities/NOISE_REDUCTION.yaml
-    - !include hfp_panel/pqParameterCapabilities/AI_PQ_ENGINE.yaml
-    - !include hfp_panel/pqParameterCapabilities/AMBIENT_LIGHT_SENSOR_CONTROL.yaml
+    - include hfp_panel/pqParameterCapabilities/BRIGHTNESS.yaml
+    - include hfp_panel/pqParameterCapabilities/CONTRAST.yaml
+    - include hfp_panel/pqParameterCapabilities/SHARPNESS.yaml
+    - include hfp_panel/pqParameterCapabilities/SATURATION.yaml
+    - include hfp_panel/pqParameterCapabilities/HUE.yaml
+    - include hfp_panel/pqParameterCapabilities/MANUAL_BACKLIGHT.yaml
+    - include hfp_panel/pqParameterCapabilities/SDR_GAMMA.yaml
+    - include hfp_panel/pqParameterCapabilities/COLOR_TEMPERATURE.yaml
+    - include hfp_panel/pqParameterCapabilities/DIMMING_MODE.yaml
+    - include hfp_panel/pqParameterCapabilities/DIMMING_LEVEL.yaml
+    - include hfp_panel/pqParameterCapabilities/LOW_LATENCY_STATE.yaml
+    - include hfp_panel/pqParameterCapabilities/SATURATION_RED.yaml
+    - include hfp_panel/pqParameterCapabilities/SATURATION_BLUE.yaml
+    - include hfp_panel/pqParameterCapabilities/SATURATION_GREEN.yaml
+    - include hfp_panel/pqParameterCapabilities/SATURATION_YELLOW.yaml
+    - include hfp_panel/pqParameterCapabilities/SATURATION_CYAN.yaml
+    - include hfp_panel/pqParameterCapabilities/SATURATION_MAGENTA.yaml
+    - include hfp_panel/pqParameterCapabilities/HUE_RED.yaml
+    - include hfp_panel/pqParameterCapabilities/HUE_BLUE.yaml
+    - include hfp_panel/pqParameterCapabilities/HUE_GREEN.yaml
+    - include hfp_panel/pqParameterCapabilities/HUE_YELLOW.yaml
+    - include hfp_panel/pqParameterCapabilities/HUE_CYAN.yaml
+    - include hfp_panel/pqParameterCapabilities/HUE_MAGENTA.yaml
+    - include hfp_panel/pqParameterCapabilities/LUMA_RED.yaml
+    - include hfp_panel/pqParameterCapabilities/LUMA_BLUE.yaml
+    - include hfp_panel/pqParameterCapabilities/LUMA_GREEN.yaml
+    - include hfp_panel/pqParameterCapabilities/LUMA_YELLOW.yaml
+    - include hfp_panel/pqParameterCapabilities/LUMA_CYAN.yaml
+    - include hfp_panel/pqParameterCapabilities/LUMA_MAGENTA.yaml
+    - include hfp_panel/pqParameterCapabilities/MEMC.yaml
+    - include hfp_panel/pqParameterCapabilities/LOCAL_CONTRAST_LEVEL.yaml
+    - include hfp_panel/pqParameterCapabilities/MPEG_NOISE_REDUCTION.yaml
+    - include hfp_panel/pqParameterCapabilities/NOISE_REDUCTION.yaml
+    - include hfp_panel/pqParameterCapabilities/AI_PQ_ENGINE.yaml
+    - include hfp_panel/pqParameterCapabilities/AMBIENT_LIGHT_SENSOR_CONTROL.yaml

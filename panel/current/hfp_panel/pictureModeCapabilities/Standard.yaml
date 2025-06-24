@@ -24,7 +24,7 @@
 pictureMode: Standard
 videoFormatCapabilities:
 - videoFormat: SDR
-  supportedAVSources: &id001
+  supportedAVSources: &standardAVSrc
   - AUTO
   - UNKNOWN
   - IP
@@ -41,10 +41,10 @@ videoFormatCapabilities:
   - COMPOSITE_4
   - COMPOSITE_5
 - videoFormat: HLG
-  supportedAVSources: *id001
+  supportedAVSources: *standardAVSrc
 - videoFormat: HDR10
-  supportedAVSources: *id001
+  supportedAVSources: *standardAVSrc
 - videoFormat: HDR10PLUS
-  supportedAVSources: *id001
+  supportedAVSources: *standardAVSrc
 - videoFormat: DOLBY_VISION
-  supportedAVSources: *id001
+  supportedAVSources: *standardAVSrc

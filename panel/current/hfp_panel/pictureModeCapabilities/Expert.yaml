@@ -24,7 +24,7 @@
 pictureMode: Expert
 videoFormatCapabilities:
 - videoFormat: SDR
-  supportedAVSources: &id001
+  supportedAVSources: &expertAVSrc
   - AUTO
   - UNKNOWN
   - IP
@@ -41,10 +41,10 @@ videoFormatCapabilities:
   - COMPOSITE_4
   - COMPOSITE_5
 - videoFormat: HLG
-  supportedAVSources: *id001
+  supportedAVSources: *expertAVSrc
 - videoFormat: HDR10
-  supportedAVSources: *id001
+  supportedAVSources: *expertAVSrc
 - videoFormat: HDR10PLUS
-  supportedAVSources: *id001
+  supportedAVSources: *expertAVSrc
 - videoFormat: DOLBY_VISION
-  supportedAVSources: *id001
+  supportedAVSources: *expertAVSrc
