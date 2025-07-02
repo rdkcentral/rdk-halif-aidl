@@ -18,7 +18,7 @@
  */
 package com.rdk.hal;
 
-/** 
+/**
  * @brief       RDK HAL common property value variant type.
  * @author      Luc Kennedy-Lamb
  * @author      Peter Stieglitz
@@ -26,7 +26,7 @@ package com.rdk.hal;
  */
 
 @VintfStability
-parcelable PropertyValue 
+parcelable PropertyValue
 {
     /**
     * Union Value type.
@@ -42,6 +42,7 @@ parcelable PropertyValue
         float floatValue;     /**< 32-bit floating-point value. */
         double doubleValue;   /**< 64-bit floating-point value. */
         String stringValue;   /**< String value. */
+        int[] intArrayValue; // for arrays of enums */
     }
 
     /**
