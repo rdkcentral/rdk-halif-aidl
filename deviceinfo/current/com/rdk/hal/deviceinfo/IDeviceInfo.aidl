@@ -20,6 +20,7 @@ package com.rdk.hal.deviceinfo;
 import com.rdk.hal.deviceinfo.Capabilities;
 import com.rdk.hal.deviceinfo.HALVersion;
 import com.rdk.hal.deviceinfo.SetPropertyResult;
+import com.rdk.hal.deviceinfo.Property;
 
 /** 
  *  @brief     Device Information HAL interface.
@@ -29,6 +30,7 @@ import com.rdk.hal.deviceinfo.SetPropertyResult;
  *  @author    Amit Patel
  *  @author    Milorad Neskovic
  *  @author    Tijo Thomas
+ *  @author    Gerald Weatherup
  */
 
 @VintfStability
@@ -103,133 +105,6 @@ interface IDeviceInfo
      * @see SetPropertyResult
      */
     SetPropertyResult setProperty(in String propertyKey, in String value);
-
-    /**
-     * \defgroup IDeviceInfoKeys IDeviceInfo Generic Property Keys
-     * @{
-     */
-
-     /**
-      * Name of the device manufacturer.
-      *
-      * Format: ASCII string.
-      * Mandatory: Yes.
-      */
-    const @utf8InCpp String KEY_MANUFACTURER = "KEY_MANUFACTURER";
-
-    /**
-     * Device manufacturer IEEE OUI.
-     *
-     * @see https://standards.ieee.org/products-programs/regauth/oui/
-     *
-     * Format: Hex string of 3 bytes.
-     * Mandatory: Yes.
-     */
-    const @utf8InCpp String KEY_MANUFACTURER_OUI = "KEY_MANUFACTURER_OUI";
-
-    /**
-     * Device model name.
-     *
-     * Format: ASCII string.
-     * Mandatory: Yes.
-     */
-    const @utf8InCpp String KEY_MODELNAME = "KEY_MODELNAME";
-
-    /**
-     * Product class.
-     *
-     * Format: ASCII string.
-     * Mandatory: Yes.
-     */
-    const @utf8InCpp String KEY_PRODUCTCLASS = "KEY_PRODUCTCLASS";
-
-    /**
-     * Device serial number.
-     *
-     * Format: ASCII string.
-     * Mandatory: Yes.
-     */
-    const @utf8InCpp String KEY_SERIALNUMBER = "KEY_SERIALNUMBER";
-
-    /**
-     * Wi-Fi MAC address.
-     *
-     * Format: ASCII string in "XX:XX:XX:XX:XX:XX" format.
-     * Mandatory: Yes if Wi-Fi adapter is present.
-     */
-    const @utf8InCpp String KEY_WIFIMAC = "KEY_WIFIMAC";
-
-    /**
-     * Bluetooth MAC address.
-     *
-     * Format: ASCII string in "XX:XX:XX:XX:XX:XX" format.
-     * Mandatory: Yes if Bluetooth is present.
-     */
-    const @utf8InCpp String KEY_BLUETOOTHMAC = "KEY_BLUETOOTHMAC";
-
-    /**
-     * Wi-Fi Protected Setup (WPS) Pin.
-     *
-     * Format: ASCII string of 8 decimal digits.
-     * Mandatory: No.
-     */
-    const @utf8InCpp String KEY_WPSPIN = "KEY_WPSPIN";
-
-    /**
-     * Ethernet MAC address.
-     *
-     * Format: ASCII string in "XX:XX:XX:XX:XX:XX" format.
-     * Mandatory: Yes if Ethernet adapter is present.
-     */
-    const @utf8InCpp String KEY_ETHERNETMAC = "KEY_ETHERNETMAC";
-
-    /**
-     * RF4CE MAC address.
-     *
-     * Format: ASCII string in "XX:XX:XX:XX:XX:XX" format.
-     * Mandatory: Yes if RF4CE is present.
-     */
-    const @utf8InCpp String KEY_RF4CEMAC = "KEY_RF4CEMAC";
-
-    /**
-     * Application image name.
-     *
-     * Format: ASCII string.
-     * Mandatory: Yes.
-     */
-    const @utf8InCpp String KEY_IMAGENAME = "KEY_IMAGENAME";
-
-    /**
-     * Application image type.
-     *
-     * Format: ASCII string.
-     * Mandatory: Yes.
-     */
-    const @utf8InCpp String KEY_IMAGETYPE = "KEY_IMAGETYPE";
-
-    /**
-     * Country code.
-     *
-     * Format: ASCII string.
-     * Mandatory: No.
-     */
-    const @utf8InCpp String KEY_COUNTRYCODE = "KEY_COUNTRYCODE";
-
-    /**
-     * Language code.
-     *
-     * Format: ASCII string.
-     * Mandatory: No.
-     */
-    const @utf8InCpp String KEY_LANGUAGECODE = "KEY_LANGUAGECODE";
-
-    /**
-     * Manufacturer private data store.
-     *
-     * Format: ASCII string.
-     * Mandatory: No.
-     */
-    const @utf8InCpp String KEY_MANUFACTURERDATA = "KEY_MANUFACTURERDATA";
 
     /** @} */
 }
