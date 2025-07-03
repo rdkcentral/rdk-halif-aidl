@@ -36,6 +36,7 @@ set(SRC
 	${SRC_DIR}/IDeviceInfo.aidl
 	${SRC_DIR}/HALVersion.aidl
 	${SRC_DIR}/SetPropertyResult.aidl
+	${SRC_DIR}/Property.aidl
 )
 
 set(INCLUDE_DIRECTORY
