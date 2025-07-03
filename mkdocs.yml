@@ -23,6 +23,7 @@
 site_name: RDK Hardware Porting Kit
 site_url: https://www.github.com/rdkcentral/rdk-halif-aidl
 site_dir: site # Site directory
+docs_dir: docs
 
 repo_name: rdkcentral/rdk-halif-aidl
 repo_url: https://github.com/rdkcentral/rdk-halif-aidl
@@ -142,9 +143,9 @@ extra_css:
   - stylesheets/extra.css  # Ensure this file exists
 #  - stylesheets/version.css
 
-#plugins:
-  #- version:
-  # version_file: docs/version.txt  (Defaults to docs/version.txt)
+extra:
+  version:
+    provider: mike # This enables mike integration for the version selector
 
 extra_javascript:
   - https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.1/mermaid.min.js
@@ -163,7 +164,7 @@ theme:
     - content.code.copy
     - content.code.annotate
     - content.tooltips  # New feature  icon:
-    - content.print.stylesheet
+    - content.print.stylesheet  
     - search.highlight
     - search.suggest
     - search.share
