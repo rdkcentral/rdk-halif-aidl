@@ -165,7 +165,7 @@ theme:
     - content.code.copy
     - content.code.annotate
     - content.tooltips  # New feature  icon:
-    - content.print.stylesheet  
+    - content.print.stylesheet
     - search.highlight
     - search.suggest
     - search.share

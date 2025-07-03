@@ -1,6 +1,7 @@
 ﻿################################################################################
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
+python_venv
 .lastlogin
 gen
 .DS_Store
