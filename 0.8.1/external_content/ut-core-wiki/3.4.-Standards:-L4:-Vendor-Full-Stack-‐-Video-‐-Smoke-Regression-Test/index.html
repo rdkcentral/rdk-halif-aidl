@@ -1,0 +1,4011 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://www.github.com/rdkcentral/rdk-halif-aidl/0.8.1/external_content/ut-core-wiki/3.4.-Standards%3A-L4%3A-Vendor-Full-Stack-%E2%80%90-Video-%E2%80%90-Smoke-Regression-Test/">
+      
+      
+        <link rel="prev" href="../3.3.-Standards%3A-L4-%E2%80%90-System-Interface-Testing/">
+      
+      
+        <link rel="next" href="../3.2.-Standards%3A-Requirements-for-building-testing-suites/">
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.2">
+    
+    
+      
+        <title>L4 Smoke Test (VST) - RDK Hardware Porting Kit</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.d7758b05.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#overview-vst" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="RDK Hardware Porting Kit" class="md-header__button md-logo" aria-label="RDK Hardware Porting Kit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            RDK Hardware Porting Kit
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              L4 Smoke Test (VST)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/rdkcentral/rdk-halif-aidl" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rdkcentral/rdk-halif-aidl
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="RDK Hardware Porting Kit" class="md-nav__button md-logo" aria-label="RDK Hardware Porting Kit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    RDK Hardware Porting Kit
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/rdkcentral/rdk-halif-aidl" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rdkcentral/rdk-halif-aidl
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../introduction/the_software_stack/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    The Software Stack
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Hardware Abstraction Layer
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Hardware Abstraction Layer
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../introduction/aidl_and_binder/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Key Concepts
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Key Concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/key_concepts/hal/hal_properties/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HAL Properties
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/key_concepts/hal/hal_feature_profiles/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HAL Feature Profiles
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/key_concepts/hal/hal_naming_conventions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HAL Naming Conventions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/key_concepts/hal/hal_session_state_management/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HAL Session State Management
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Standards
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Standards
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../standards/direct_branching/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Core Development Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../standards/forked_based_branching/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Fork-Based Contribution Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Vendor HAL Interfaces (VHI)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Vendor HAL Interfaces (VHI)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/key_concepts/hal/hal_interfaces/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../introduction/interface_generation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Interface Generation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    AV Subsystem
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            AV Subsystem
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/audio_decoder/current/audio_decoder/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audio Decoder
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/audio_mixer/current/audio_mixer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audio Mixer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/audio_sink/current/audio_sink/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audio Sink
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/av_buffer/current/av_buffer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AV Buffer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/av_clock/current/av_clock/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AV Clock
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/video_decoder/current/video_decoder/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Video Decoder
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/video_sink/current/video_sink/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Video Sink
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/boot/current/boot/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Boot
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/broadcast/current/broadcast/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Broadcast
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/cdm/current/cdm/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CDM
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    HDMI
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            HDMI
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/cec/current/cec/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HDMI CEC
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/hdmi_input/current/hdmi_input/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HDMI Input
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/hdmi_output/current/hdmi_output/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HDMI Output
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/common/current/common/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Common
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/deep_sleep/current/deep_sleep/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Deep Sleep
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/device_info/current/device_info/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Device Info
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/flash/current/flash/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Flash
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/indicator/current/indicator/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Indicator
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/panel/current/panel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Panel
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/plane_control/current/plane_control/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Plane Control
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/sec_api/current/sec_api/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Secure API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../halif/sensor/current/sensor/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sensor
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Vendor System Interfaces (VSI)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Vendor System Interfaces (VSI)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_1" id="__nav_5_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    File System
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            File System
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../vsi/filesystem/current/directory_and_dynamic_linking_specification/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Directory And Dynamic Linking
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../vsi/filesystem/current/halif_logging_system_design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Logging
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../vsi/bluetooth/current/bluetooth/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bluetooth
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../vsi/graphics/current/graphics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Graphics
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../vsi/service_manager/current/service_manager/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Service Manager
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../vsi/wifi/current/wifi/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Wi-Fi
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../vsi/systemd/current/systemd/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Systemd
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../vsi/kernel/current/kernel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Kernel
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Vendor Tests Suites (VTS)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Vendor Tests Suites (VTS)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../3.-Standards%3A-Levels-of-Test-for-Vendor-Layer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Levels of Test
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6_2" id="__nav_6_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Level 4
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            Level 4
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../3.3.-Standards%3A-L4-%E2%80%90-System-Interface-Testing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    L4 System Interface (VSI)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    L4 Smoke Test (VST)
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    L4 Smoke Test (VST)
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview-vst" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview (VST)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-suites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Test Suites
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Test Suites">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-linear-channels-vod" class="md-nav__link">
+    <span class="md-ellipsis">
+      A. Linear Channels &amp; VOD
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-apps-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      B. Apps Testing
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-switching-between-apps" class="md-nav__link">
+    <span class="md-ellipsis">
+      C. Switching Between Apps
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#d-wi-fi-ethernet-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      D. Wi-Fi / Ethernet Test
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e-motion-deep-sleep-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      E. Motion &amp; Deep Sleep Test
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#f-led-behaviour-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      F. LED Behaviour Test
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#g-remote-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      G. Remote Test
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#h-ffv-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      H. FFV Test
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#i-hdmi-source-firetv-chromecast-appletv" class="md-nav__link">
+    <span class="md-ellipsis">
+      I. HDMI Source - FireTV / Chromecast / AppleTV
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#j-hdmi-audio-device" class="md-nav__link">
+    <span class="md-ellipsis">
+      J. HDMI Audio Device
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#k-bt-audio-device" class="md-nav__link">
+    <span class="md-ellipsis">
+      K. BT Audio Device
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#l-dtt-channels" class="md-nav__link">
+    <span class="md-ellipsis">
+      L. DTT Channels
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-boot-up-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      M. Boot Up Time
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Testing Framework
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Testing Framework
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../3.2.-Standards%3A-Requirements-for-building-testing-suites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Framework Usage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_2" id="__nav_7_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Key Concepts
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_2">
+            <span class="md-nav__icon md-icon"></span>
+            Key Concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../3.1.-Standards%3A-Overview-of-Test%E2%80%90Driven-Development/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Test Driven Development
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FAQ%3A-Black%E2%80%90Box-Testing-and-Code-Coverage-Metrics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Black Box Testing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../3.0.1-Standards%3A-Testing-Feedback-Loops/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Feedback Loops
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_3" id="__nav_7_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    UT-Core Test Framework
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_3">
+            <span class="md-nav__icon md-icon"></span>
+            UT-Core Test Framework
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Home/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    UT-Core Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FAQ%3A-UT-Core-Framework-Overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Level Actors
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Virtual Device
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Virtual Device
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../5.0%3A-Standards%3A-vDevice-Overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    What is the vDevice
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../5.0.1%3A-Standards%3A-vDevice-Architecture-Overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_8_3" id="__nav_8_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Key Concepts
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_3">
+            <span class="md-nav__icon md-icon"></span>
+            Key Concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../5.1.0%3A-Standards%3A-vDevice-Controller/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Controller
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../5.1.1%3A-Standards%3A-vDevice-Control-Plane/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Control Plane
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Misc
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            Misc
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../references/references/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    References
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_9_2" id="__nav_9_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Documentation Standards
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9_2">
+            <span class="md-nav__icon md-icon"></span>
+            Documentation Standards
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../introduction/documentation_getting_started/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../standards/interface_template/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Interface Template
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_9_3" id="__nav_9_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    White Papers
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9_3">
+            <span class="md-nav__icon md-icon"></span>
+            White Papers
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../whitepapers/documentation_in_git/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Documentation in Git
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../whitepapers/branching_strategies/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Branching Strategies
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../whitepapers/doxygen_code_documentation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Doxygen Code Documentation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../whitepapers/engineering_goals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Achieving Engineering Goal
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../whitepapers/standardizing_git_commit_messages/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Commit Message Standards
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../1.2.-Standards%3A-Issue-Description-Guideline/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Filing an Issue
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_9_5" id="__nav_9_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    FAQ
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9_5">
+            <span class="md-nav__icon md-icon"></span>
+            FAQ
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FAQ%3A-Comparing-Python-Development-Platforms/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Python Development
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../src_link/CHANGELOG/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ChangeLog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview-vst" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview (VST)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-suites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Test Suites
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Test Suites">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-linear-channels-vod" class="md-nav__link">
+    <span class="md-ellipsis">
+      A. Linear Channels &amp; VOD
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-apps-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      B. Apps Testing
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-switching-between-apps" class="md-nav__link">
+    <span class="md-ellipsis">
+      C. Switching Between Apps
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#d-wi-fi-ethernet-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      D. Wi-Fi / Ethernet Test
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e-motion-deep-sleep-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      E. Motion &amp; Deep Sleep Test
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#f-led-behaviour-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      F. LED Behaviour Test
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#g-remote-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      G. Remote Test
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#h-ffv-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      H. FFV Test
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#i-hdmi-source-firetv-chromecast-appletv" class="md-nav__link">
+    <span class="md-ellipsis">
+      I. HDMI Source - FireTV / Chromecast / AppleTV
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#j-hdmi-audio-device" class="md-nav__link">
+    <span class="md-ellipsis">
+      J. HDMI Audio Device
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#k-bt-audio-device" class="md-nav__link">
+    <span class="md-ellipsis">
+      K. BT Audio Device
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#l-dtt-channels" class="md-nav__link">
+    <span class="md-ellipsis">
+      L. DTT Channels
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#m-boot-up-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      M. Boot Up Time
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+  <h1>L4 Smoke Test (VST)</h1>
+
+<h2 id="overview-vst">Overview (VST)</h2>
+<p>This document outlines the automated test plan for L4 (Vendor Full Stack) testing of RDK Video releases. These tests focus on verifying the stability and functionality of the RDK Video stack by testing the integration of the vendor, application (APP), and middleware (MW) layers.</p>
+<p><strong>Goal:</strong> To automate the execution of smoke and regression tests that are currently performed manually, improving efficiency and reducing testing time.</p>
+<p><strong>Scope:</strong> These tests are designed as "big ticket" checks, focusing on core functionality:</p>
+<ul>
+<li><strong>Is video running?</strong></li>
+<li><strong>Is audio running?</strong></li>
+<li><strong>Is video/audio sync operating correctly?</strong></li>
+<li><strong>Are trick modes operational?</strong> (Including checks for black screens, display movement, and errors) </li>
+</ul>
+<p>These tests are <strong>not</strong> intended to be deep-dive device analysis tests. Those are covered by other testing activities. The focus here is on smoke testing to validate that main functionality is still operational after:</p>
+<ul>
+<li><strong>Integrating a new vendor layer with the existing APP/MW.</strong></li>
+<li><strong>Integrating a new APP/MW layer with the existing vendor layer.</strong></li>
+</ul>
+<p>This ensures that any new layer introduced does not break the core functionality of the stack.</p>
+<p><strong>Framework:</strong> <code>python_raft</code> will be used to automate these tests, enabling engineers and Jenkins to trigger them as needed.</p>
+<p><strong>Test Approach:</strong></p>
+<ul>
+<li><strong>Build:</strong> A full stack image is created using the relevant combination of  APP/MW and Vendor layers.</li>
+<li><strong>Automation:</strong> <code>python_raft</code> scripts will be developed to automate the test cases described below.</li>
+<li><strong>Execution:</strong> Tests can be triggered by engineers or integrated into the Jenkins CI/CD pipeline.</li>
+<li><strong>Reporting:</strong> <code>python_raft</code> will provide test results and logs for analysis.</li>
+</ul>
+<p><strong>Important:</strong> These tests are designed as a pre-release quality gate, ensuring no regressions are introduced before a new layer (vendor, APP, or MW) is released.</p>
+<p><strong>Target Environment Assumptions:</strong></p>
+<ul>
+<li><strong>Full Stack Image:</strong> The testing suite can assume that the target device has been programmed with a valid full stack image (vendor, middleware, and application layers).</li>
+<li><strong>System Ready:</strong> Tests should wait for the system to be fully operational before commencing. <code>python_raft</code> already provides mechanisms to achieve this (e.g., by monitoring system logs or specific services, see <code>waitForBoot()</code> ).</li>
+</ul>
+<p><strong>Configuration and Platform Independence:</strong></p>
+<ul>
+<li><strong>Configuration-driven:</strong> The testing suites will be driven by configuration information on the CPE and the image that's running. This includes details about the platform, software version, and available features. To be clear <code>python_raft</code> already supports this, and has methods to extend based on requirements.</li>
+<li><strong>Platform Abstraction:</strong> Tests should prioritize launching applications from the command line whenever possible. This approach offers several advantages:<ul>
+<li><strong>Consistency:</strong> Command-line interfaces tend to be more stable across platforms and software versions compared to graphical interfaces and remote control key sequences.</li>
+<li><strong>Speed:</strong> Launching applications from the command line is generally faster than navigating through menus using a remote control.</li>
+<li><strong>Reliability:</strong>  Command-line launching eliminates potential issues with IR/Bluetooth signal interference or key sequence misinterpretations.</li>
+</ul>
+</li>
+<li><strong>Key Playback Classes (for specific scenarios):</strong> While command-line launching is preferred, there might be scenarios where using IR/Bluetooth keys is unavoidable. In such cases:<ul>
+<li>Wrap platform-specific key sequences in key playback classes. These classes will abstract the underlying key sequences, providing a consistent interface for test scripts.</li>
+<li>Drive the testing suites by <code>versioned profiles</code> based on the platform. These profiles will contain the necessary configuration data for each platform and software version, ensuring that the correct key sequences and navigation paths are used.</li>
+</ul>
+</li>
+</ul>
+<p>By prioritizing command-line application launching and utilizing key playback classes and versioned profiles when necessary, the testing suite can achieve a high degree of platform independence and resilience to changes in the user interface and remote control configurations.</p>
+<p><strong>Requirements:</strong></p>
+<ol>
+<li><strong>Integration with L4-wide Validation Classes:</strong> The L4 testing suite shall integrate with common L4-wide classes that perform validation checks. These classes will abstract the underlying validation mechanisms, allowing for a phased approach to automation:</li>
+<li><strong>Phase 1: Human-assisted Validation:</strong> Initially, these classes may prompt a human tester with a simple yes/no question to confirm the expected behaviour.</li>
+<li>
+<p><strong>Phase 2: Automated Validation:</strong>  These classes will be progressively upgraded to perform automated validation by directly interacting with the system, e.g., checking proc files for decoder activity, analysing log output, or querying system states. This allows for a gradual transition from manual to automated testing.</p>
+</li>
+<li>
+<p><strong>Engineering-focused Debugging:</strong> This test suite is primarily intended for use by engineers. When test failures occur, the framework should facilitate debugging by:</p>
+</li>
+<li><strong>Single-stepping through Python Orchestration:</strong>  Engineers should be able to easily single-step through the <code>python_raft</code> scripts to understand the test flow and pinpoint the failing steps.</li>
+<li><strong>Seamless Access to Target Device:</strong> The framework should provide mechanisms for engineers to readily access the target device (e.g., via SSH) for debugging purposes. This allows them to analyse C code, examine driver data, and inspect system logs in parallel with the test execution.</li>
+</ol>
+<p>By adhering to these requirements, the L4 automated testing suite will not only provide a robust quality gate but also empower engineers to efficiently identify and resolve issues across the entire stack.</p>
+<h2 id="test-suites">Test Suites</h2>
+<h3 id="a-linear-channels-vod">A. Linear Channels &amp; VOD</h3>
+<table>
+<thead>
+<tr>
+<th>Test Case</th>
+<th>Description</th>
+<th>Status (Pass/Fail)</th>
+<th>Remarks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A1</td>
+<td>General Sanity on APP Playchannels: Play channels for 5 minutes, changing channels via remote.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>A2</td>
+<td>Sanity on Linear SDR Channel: Test channel 101/501.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>A3</td>
+<td>Sanity on Linear UHD Channel: Test channel 406.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>A4</td>
+<td>Sanity on Linear Channel Requiring PIN: Test channels 301, 302.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>A5</td>
+<td>Sanity on VOD (SDR): Test SDR VOD content.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>A6</td>
+<td>Sanity on VOD (UHD): Test UHD VOD content.</td>
+<td> </td>
+<td> </td>
+</tr>
+</tbody>
+</table>
+<h3 id="b-apps-testing">B. Apps Testing</h3>
+<table>
+<thead>
+<tr>
+<th>Test Case</th>
+<th>Description</th>
+<th>Status (Pass/Fail)</th>
+<th>Remarks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B1</td>
+<td>APPS - YouTube - SDR: Test YouTube with SDR content.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>B2</td>
+<td>APPS - YouTube - HLG: Test YouTube with HLG content.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>B3</td>
+<td>APPS - YouTube - HDR10: Test YouTube with HDR10 content.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>B4</td>
+<td>APPS - Netflix - SDR: Test Netflix with SDR content.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>B5</td>
+<td>APPS - Netflix - DV: Test Netflix with Dolby Vision content.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>B6</td>
+<td>APPS - Disney+ - SDR: Test Disney+ with SDR content.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>B7</td>
+<td>APPS - Disney+ - DV: Test Disney+ with Dolby Vision content.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>B8</td>
+<td>APPS - Amazon Prime - SDR: Test Amazon Prime with SDR content.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>B9</td>
+<td>APPS - Amazon Prime - HDR10: Test Amazon Prime with HDR10 content.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>B10</td>
+<td>APPS - Amazon Prime - DV: Test Amazon Prime with Dolby Vision content.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>B11</td>
+<td>APPS - Apple TV - DV: Test Apple TV with Dolby Vision content.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>B12</td>
+<td>APPS - Paramount+ - SDR: Test Paramount+ with SDR content.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>B13</td>
+<td>APPS - YouTube Kids - SDR: Test YouTube Kids with SDR content.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>B14</td>
+<td>APPS - BBC iPlayer - SDR: Test BBC iPlayer with SDR content.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>B15</td>
+<td>APP - Peacock: Test Peacock app.</td>
+<td> </td>
+<td> </td>
+</tr>
+</tbody>
+</table>
+<h3 id="c-switching-between-apps">C. Switching Between Apps</h3>
+<table>
+<thead>
+<tr>
+<th>Test Case</th>
+<th>Description</th>
+<th>Status</th>
+<th>Remarks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td>YouTube to: Netflix, Amazon Prime, Disney+, Apple TV, Paramount+, YouTube Kids, Peacock.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>C2</td>
+<td>Netflix to: YouTube, Amazon Prime, Disney+, Apple TV, Paramount+, YouTube Kids, Peacock.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>C3</td>
+<td>Disney+ to: YouTube, Amazon Prime, Netflix, Apple TV, Paramount+, YouTube Kids, Peacock.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>C4</td>
+<td>Apple TV to: YouTube, Amazon Prime, Netflix, Disney+, Paramount+, YouTube Kids, Peacock.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>C5</td>
+<td>Paramount+ to: YouTube, Amazon Prime, Netflix, Disney+, Apple TV, YouTube Kids, Peacock.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>C6</td>
+<td>YouTube Kids to: YouTube, Amazon Prime, Netflix, Disney+, Apple TV, Paramount+, Peacock.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>C7</td>
+<td>Peacock to: YouTube, Amazon Prime, Netflix, Disney+, Apple TV, Paramount+, YouTube Kids.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>C8</td>
+<td>Amazon Prime to: YouTube, Netflix, Disney+, Apple TV, Paramount+, YouTube Kids, Peacock.</td>
+<td> </td>
+<td> </td>
+</tr>
+</tbody>
+</table>
+<h3 id="d-wi-fi-ethernet-test">D. Wi-Fi / Ethernet Test</h3>
+<table>
+<thead>
+<tr>
+<th>Test Case</th>
+<th>Description</th>
+<th>Status(Pass/Fail)</th>
+<th>Remarks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D1</td>
+<td>Factory Reset and Connect: Factory reset the panel and connect to 5GHz/2.4GHz SSID during setup.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>D2</td>
+<td>Connect Ethernet: Connect Ethernet while the panel is on 5GHz/2.4GHz Wi-Fi.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>D3</td>
+<td>Disconnect Ethernet: Disconnect Ethernet and check if it resumes the last Wi-Fi connection.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>D4</td>
+<td>Verify IP Address: Check if the panel's IP address matches the one assigned by the router.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>D5</td>
+<td>Play/Stream Videos: Play/stream 4K/HDR/UHD videos on 5GHz/2.4GHz network.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>D6</td>
+<td>Soft Reboot (Wi-Fi): Soft reboot the panel while connected to 5GHz/2.4GHz and ensure reconnection.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>D7</td>
+<td>Boot Up Time (Wi-Fi): Check boot-up time when connected to 5GHz/2.4GHz.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>D8</td>
+<td>Hard Reboot (Wi-Fi): Hard reboot the panel while connected to 5GHz/2.4GHz and ensure reconnection.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>D9</td>
+<td>Boot Up Time (Wi-Fi): Check boot-up time when connected to 5GHz/2.4GHz.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>D10</td>
+<td>Reset Network: Reset the network while the panel is on 5GHz/2.4GHz.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>D11</td>
+<td>Soft Reboot (No Internet): Soft reboot after network reset and ensure the panel boots with no internet.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>D12</td>
+<td>Boot Up Time (No Internet): Check boot-up time with no internet.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>D13</td>
+<td>Hard Reboot (No Internet): Hard reboot after network reset and ensure the panel boots with no internet.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>D14</td>
+<td>Boot Up Time (No Internet): Check boot-up time with no internet.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>D15</td>
+<td>Disable Wi-Fi: Disable Wi-Fi via settings and ensure the "no internet" screen appears.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>D16</td>
+<td>Hard Reboot (No Internet): Hard reboot and ensure the panel boots with no internet.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>D17</td>
+<td>Disable Wi-Fi: Disable Wi-Fi via settings and ensure the "no internet" screen appears.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>D18</td>
+<td>Soft Reboot (No Internet): Soft reboot and ensure the panel boots with no internet.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>D19</td>
+<td>Enable Wi-Fi: Enable Wi-Fi and ensure the panel connects to the last Wi-Fi connection.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>D20</td>
+<td>Power Cycle Router: While connected to 5GHz/2.4GHz, power cycle the router and ensure the panel reconnects.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+</tbody>
+</table>
+<h3 id="e-motion-deep-sleep-test">E. Motion &amp; Deep Sleep Test</h3>
+<table>
+<thead>
+<tr>
+<th>Test Case</th>
+<th>Description</th>
+<th>Status (Pass/Fail)</th>
+<th>Remarks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td>Verify Motion Events: Verify motion events are detected.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>E2</td>
+<td>HDMI Content and Motion: Play HDMI content and verify motion events.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>E3</td>
+<td>Linear Channel and Motion: Play linear channels and verify motion events.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>E4</td>
+<td>Apps and Motion: Play apps like YouTube/Netflix/Disney+ and verify motion events.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>E5</td>
+<td>Power Cycle and Motion: Power cycle the panel and check motion events.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>E6</td>
+<td>Standby and Motion: Put the panel in standby, wake it up, and check motion events.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>E7</td>
+<td>Deepsleep and Motion: Put the panel in deep sleep, wake it up, and check motion events.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>E8</td>
+<td>Auto-Standby: Ensure the panel enters standby mode after 50 minutes of inactivity.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>E9</td>
+<td>Banner Removal: Check if the banner is removed by generating</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>motion at the 51st minute.</td>
+<td> </td>
+<td> </td>
+<td></td>
+</tr>
+<tr>
+<td>E10</td>
+<td>Linear Channel and No Banner: Ensure no banner appears after 50 minutes of activity on linear channels.</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+</tbody>
+</table>
+<h3 id="f-led-behaviour-test">F. LED Behaviour Test</h3>
+<table>
+<thead>
+<tr>
+<th>Test Case</th>
+<th>Description</th>
+<th>Status (Pass/Fail)</th>
+<th>Remarks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F1</td>
+<td>Checking LED behaviour on power cycle from ON state</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>F2</td>
+<td>Checking LED behaviour on power cycle from standby mode state</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>F3</td>
+<td>Checking LED behaviour on power cycle from Deepsleep mode state</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>F4</td>
+<td>Checking LED behaviour on Soft reboot the panel from ON state</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>F5</td>
+<td>Checking LED behaviour on Soft reboot the panel from standby state</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+</tbody>
+</table>
+<h3 id="g-remote-test">G. Remote Test</h3>
+<table>
+<thead>
+<tr>
+<th>Test Case</th>
+<th>Description</th>
+<th>Status (Pass/Fail)</th>
+<th>Remarks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G1</td>
+<td>Wake panel via IR remote --HOME button</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>G2</td>
+<td>Wake panel via IR remote --Power button</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>G3</td>
+<td>Wake panel via IR remote --PRIME Button</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>G4</td>
+<td>Wake panel via IR remote -NETFLIX button</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>G5</td>
+<td>Navigate the EPG page, try trick modes &amp; different buttons on remote (IR)</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>G6</td>
+<td>Pair the remote on BT</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>G7</td>
+<td>Unpair the remote &amp; pair it again</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>G8</td>
+<td>Navigate the EPG page, try trick modes &amp; different buttons on remote (BT)</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>G9</td>
+<td>Wake panel from standby mode via BT remote --HOME button</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>G10</td>
+<td>Wake panel from standby mode via BT remote --Power button</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>G11</td>
+<td>Wake panel from deep sleep mode via BT remote --HOME button</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>G12</td>
+<td>Wake panel from deep sleep mode via BT remote --Power button</td>
+<td> </td>
+<td> </td>
+</tr>
+</tbody>
+</table>
+<h3 id="h-ffv-test">H. FFV Test</h3>
+<table>
+<thead>
+<tr>
+<th>Test Case</th>
+<th>Description</th>
+<th>Status (Pass/Fail)</th>
+<th>Remarks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H1</td>
+<td>Mic enable via side button - Launch channel, apps, volume etc via FFV</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>H2</td>
+<td>Mic enable via side button - Put panel in standby via FFV</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>H3</td>
+<td>Mic enable via side button - Wake panel via FFV from standby</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>H4</td>
+<td>Mic enable via side button - Put panel in deep sleep &amp; wake it via FFV</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>H5</td>
+<td>Mic enable via side button - Soft reboot panel &amp; check if MIC status remains persistent</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>H6</td>
+<td>Mic enable via side button - Hard reboot panel &amp; check if MIC status remains persistent</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>H7</td>
+<td>Mic disable via side button - Launch channel, apps, volume etc via FFV</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>H8</td>
+<td>Mic disable via side button - Put panel in standby via FFV</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>H9</td>
+<td>Mic disable via side button - Wake panel via FFV from standby</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>H10</td>
+<td>Mic disable via side button - Put panel in deep sleep &amp; wake it via FFV</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>H11</td>
+<td>Mic disable via side button - Soft reboot panel &amp; check if MIC status remains persistent</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>H12</td>
+<td>Mic disable via side button - Hard reboot panel &amp; check if MIC status remains persistent</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+</tbody>
+</table>
+<h3 id="i-hdmi-source-firetv-chromecast-appletv">I. HDMI Source - FireTV / Chromecast / AppleTV</h3>
+<table>
+<thead>
+<tr>
+<th>Test Case</th>
+<th>Description</th>
+<th>Status (Pass/Fail)</th>
+<th>Remarks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I1</td>
+<td>Launch HDMI source via HDMI Source remote</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>I2</td>
+<td>Play any content on HDMI source &amp; check AV</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>I3</td>
+<td>Change different resolution on HDMI source</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>I4</td>
+<td>When panel is in standby, wake panel via HDMI source</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>I5</td>
+<td>When panel in deep sleep, wake panel via HDMI source</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>I6</td>
+<td>Hot plug HDMI source</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>I7</td>
+<td>Switch between HDMI source, APPS</td>
+<td> </td>
+<td> </td>
+</tr>
+</tbody>
+</table>
+<h3 id="j-hdmi-audio-device">J. HDMI Audio Device</h3>
+<table>
+<thead>
+<tr>
+<th>Test Case</th>
+<th>Description</th>
+<th>Status (Pass/Fail)</th>
+<th>Remarks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>J1</td>
+<td>Connect HDMI speaker on HDMI &amp; check sound coming from speakers</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>J2</td>
+<td>Hot plug HDMI speakers &amp; make sure Audio switches back properly</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>J3</td>
+<td>Check any AV sync issue</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>J4</td>
+<td>Check audio for contents on HDMI source when HDMI speakers connected</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>J5</td>
+<td>Put panel in standby &amp; wake it up, check the audio coming from HDMI speakers</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>J6</td>
+<td>Put panel in deep sleep &amp; wake it up, check the audio coming from HDMI speakers</td>
+<td> </td>
+<td> </td>
+</tr>
+</tbody>
+</table>
+<h3 id="k-bt-audio-device">K. BT Audio Device</h3>
+<table>
+<thead>
+<tr>
+<th>Test Case</th>
+<th>Description</th>
+<th>Status (Pass/Fail)</th>
+<th>Remarks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>K1</td>
+<td>Pair BT speakers &amp; check sound coming from speakers</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>K2</td>
+<td>Check any AV sync issue on BT speakers while playing apps, HDMI, linear channel</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>K3</td>
+<td>Check audio for contents on HDMI source when BT speakers connected</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>K4</td>
+<td>Change the output of audio via quick menu</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>K5</td>
+<td>Put panel in standby &amp; wake it up, check the audio coming from BT speakers</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>K6</td>
+<td>Put panel in deep sleep &amp; wake it up, check the audio coming from BT speakers</td>
+<td> </td>
+<td> </td>
+</tr>
+</tbody>
+</table>
+<h3 id="l-dtt-channels">L. DTT Channels</h3>
+<table>
+<thead>
+<tr>
+<th>Test Case</th>
+<th>Description</th>
+<th>Status (Pass/Fail)</th>
+<th>Remarks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L1</td>
+<td>Checking AV of DTT channel (SD &amp; HD channels)</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>L2</td>
+<td>Scanning DTT channels</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>L3</td>
+<td>Switch between DTT channels &amp; HDMI source</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>L4</td>
+<td>Browsing TV guide, signal information, audio etc in DTT channels option</td>
+<td> </td>
+<td> </td>
+</tr>
+</tbody>
+</table>
+<h3 id="m-boot-up-time">M. Boot Up Time</h3>
+<table>
+<thead>
+<tr>
+<th>Test Case</th>
+<th>Description</th>
+<th>Status (Pass/Fail)</th>
+<th>Remarks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M1</td>
+<td>Hard reboot (power cycle) 1</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>M2</td>
+<td>Hard reboot (power cycle) 2</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>M3</td>
+<td>Hard reboot (power cycle) 3</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>M4</td>
+<td>Soft reboot (/rebootNow.sh) 1</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>M5</td>
+<td>Soft reboot (/rebootNow.sh) 2</td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>M6</td>
+<td>Soft reboot (/rebootNow.sh) 3</td>
+<td> </td>
+<td> </td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../3.3.-Standards%3A-L4-%E2%80%90-System-Interface-Testing/" class="md-footer__link md-footer__link--prev" aria-label="Previous: L4 System Interface (VSI)">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                L4 System Interface (VSI)
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../3.2.-Standards%3A-Requirements-for-building-testing-suites/" class="md-footer__link md-footer__link--next" aria-label="Next: Framework Usage">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Framework Usage
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.footer", "navigation.sections", "navigation.top", "navigation.tracking", "navigation.instant", "toc.follow", "content.code.copy", "content.code.annotate", "content.tooltips", "content.print.stylesheet", "search.highlight", "search.suggest", "search.share", "header.autohide", "announce.dismiss"], "search": "../../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.f13b1293.min.js"></script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.1/mermaid.min.js"></script>
+      
+        <script src="../../../javascript/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>
