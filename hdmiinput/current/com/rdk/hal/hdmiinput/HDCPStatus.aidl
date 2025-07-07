@@ -23,6 +23,7 @@ package com.rdk.hal.hdmiinput;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Amit Patel
+ *  @author    Gerald Weatherup
  */
  
 @VintfStability
@@ -31,6 +32,8 @@ enum HDCPStatus
 {
 	/**
 	 * Not connected, not powered.
+	 *
+	 * Indicates the state is not yet determined or the operation is not applicable. Clients should poll or retry later.
 	 */
 	UNKNOWN = -1,
 

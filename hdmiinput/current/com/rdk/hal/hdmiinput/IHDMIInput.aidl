@@ -29,6 +29,9 @@ import com.rdk.hal.State;
 
 /** 
  *  @brief     HDMI Input HAL interface for a single port.
+ *  State Transitions:
+ *    CLOSED -> OPENING -> READY -> STARTING -> STARTED -> FLUSHING/STOPPING -> READY/CLOSED
+ *  See "State Machine / Lifecycle" section for full call sequence.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
@@ -63,7 +66,7 @@ interface IHDMIInput
      *
      * @param[in] property              The key of a property from the Property enum.
      *
-     * @returns PropertyValue or null if the property key is unknown.
+     * @returns PropertyValue or null if the property key is unknown or unavailable for this port.
      * 
      * @see IHDMIInputController.setProperty(), getPropertyMulti()
      */
@@ -105,11 +108,11 @@ interface IHDMIInput
      * The RDK middleware is responsible for providing an EDID that only reflects the
      * known capabilities of this HDMI input port.
      * 
-     * @param[in] edid      The EDID data.
+     * @param[in] edid  EDID data as a byte array. Must be valid and standards-compliant (typically 128 or 256 bytes).
      * 
      * @return boolean
-     * @retval true         The EDID was set successfully.
-     * @retval boolean      The EDID was not set.
+     * @retval true     The EDID was set successfully.
+     * @retval false    Indicates an error condition (e.g., resource not available, invalid state, or parameter validation failure).
      *
      * @see getEDID(), getCapabilities()
      */
@@ -123,8 +126,8 @@ interface IHDMIInput
      * @param[out] edid     The EDID data.
      * 
      * @return boolean
-     * @retval true         The EDID was retrieved successfully.
-     * @retval boolean      The EDID was not available.
+     * @retval true     The EDID was retrieved successfully.
+     * @retval false    Indicates an error condition (e.g., resource not available, invalid state, or parameter validation failure).
      *
      * @see setEDID()
      */
@@ -144,7 +147,7 @@ interface IHDMIInput
      *
      * @return boolean
      * @retval true         The EDID was retrieved successfully.
-     * @retval boolean      The EDID was not available.
+     * @retval false        The EDID was not available.
      *
      * @see setEDID(), getCapabilities()
      */
@@ -173,7 +176,7 @@ interface IHDMIInput
      *
      * @param[in] hdmiInputControllerListener    Listener object for controller callbacks.
      *
-     * @returns IHDMIInputController or null if the port cannot be opened - e.g. No EDID set.
+     * @returns IHDMIInputController, or null if the port cannot be opened (e.g., no EDID set or invalid state).
      * 
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
@@ -208,8 +211,7 @@ interface IHDMIInput
     /**
 	 * Registers a HDMI input event listener.
      * 
-     * An `IHDMIInputEventListener` can only be registered once and will fail on subsequent
-     * registration attempts.
+     * Only one event listener may be registered per port at a time. Attempting to register a second listener will return false.
      *
      * @param[in] hdmiInputEventListener	    Listener object for event callbacks.
      *

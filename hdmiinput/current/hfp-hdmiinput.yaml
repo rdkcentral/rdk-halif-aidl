@@ -1,0 +1,82 @@
+#** *****************************************************************************
+# *
+# * If not stated otherwise in this file or this component's LICENSE file the
+# * following copyright and licenses apply:
+# *
+# * Copyright 2025 RDK Management
+# *
+# * Licensed under the Apache License, Version 2.0 (the "License");
+# * you may not use this file except in compliance with the License.
+# * You may obtain a copy of the License at
+# *
+# *
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing, software
+# * distributed under the License is distributed on an "AS IS" BASIS,
+# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# * See the License for the specific language governing permissions and
+# * limitations under the License.
+# *
+#** ******************************************************************************
+
+# HDMI Input HAL Feature Profile (HFP)
+#
+# This file describes platform support for the HDMI Input HAL only.
+# All field and enum names match the AIDL API exactly.
+
+hdmiinput:
+  interfaceVersion: current
+
+  ports:
+    - id: 0
+      supportedVersions:
+        - HDMI_1_3
+        - HDMI_1_4
+        - HDMI_2_0
+        - HDMI_2_1
+      supportedVICs:
+        - VIC1_640_480_P_60_4_3
+        - VIC16_1920_1080_P_60_16_9
+        - VIC97_3840_2160_P_60_16_9
+        - VIC118_3840_2160_P_120_16_9
+      supportedHDCPProtocolVersions:
+        - VERSION_1_X
+        - VERSION_2_X
+      supports3D: true
+      supportsFRL: true
+      supportsVRR: true
+      supportsFreeSync: true       # Only meaningful if supportsVRR is true
+      supportsQMS: true            # Requires supportsVRR to be true
+      supportsALLM: true
+      supportsQFT: true
+      supportsARC: true
+      supportsEARC: true
+
+    - id: 1
+      supportedVersions:
+        - HDMI_1_4
+        - HDMI_2_0
+      supportedVICs:
+        - VIC4_1280_720_P_60_16_9
+        - VIC16_1920_1080_P_60_16_9
+      supportedHDCPProtocolVersions:
+        - VERSION_1_X
+      supports3D: false
+      supportsFRL: false
+      supportsVRR: false
+      supportsFreeSync: false
+      supportsQMS: false
+      supportsALLM: false
+      supportsQFT: false
+      supportsARC: true
+      supportsEARC: false
+
+  platformCapabilities:
+    maximumConcurrentStartedPorts: 2
+    freeSync: FREESYNC_PREMIUM_PRO   # Platform-wide FreeSync support level
+
+  # Notes:
+  # - Only declare fields that are actually supported; omit or set to false otherwise.
+  # - supportedVICs must reflect actual hardware support, not full HDMI spec range.
+  # - Enum values must match those declared in the AIDL exactly (e.g., HDMI_2_1, VERSION_2_X).
