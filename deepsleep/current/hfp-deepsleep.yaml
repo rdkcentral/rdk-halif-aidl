@@ -20,9 +20,9 @@
 # *
 #** ******************************************************************************
 
-# HAL Feature Profile for deepsleep
+# HAL Feature Profile for deep_sleep
 
-IDeepSleep:                 # Component object begins
+deep_sleep:                 # Component object begins
     interfaceVersion: current
     supportedTriggers:
         - RCU_IR
@@ -34,7 +34,7 @@ IDeepSleep:                 # Component object begins
         - CEC
         - PRESENCE
         - VOICE
-    mandatoryTriggers:
+    preconfiguredTriggers:
         - RCU_IR
         - RCU_BT
         - TIMER
