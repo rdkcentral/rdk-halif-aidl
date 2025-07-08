@@ -1,39 +1,56 @@
-# Indicator HAL 
+# HAL Indicator
 
 ## Overview
 
-The Indicator interface abstracts the control of physical device indicator states such as LEDs or light panels. It enables consistent interaction with platform-specific indicator hardware by exposing a set of standardised states and control methods. This abstraction allows upper layers of the stack, such as RDK services or UI components, to interact with indicators without requiring platform-specific logic.
+The **Indicator** interface abstracts control of persistent device indicator states—typically backed by hardware elements such as LEDs or front-panel displays. It allows higher-level components, such as middleware and system services, to reflect the system's current status to the user using a set of standardised states.
 
-The interface supports querying supported indicator states and managing the current state using a simple get/set API. Only one active state is permitted at a time, simplifying logic and promoting readability.
+The abstraction hides all platform-specific details. Each vendor is responsible for implementing these states in a manner consistent with their product design. The HAL implementation must reflect each state via hardware-controlled visual indicators (e.g., colours, blink patterns, panel brightness), but **upper layers remain unaware of any physical wiring, LED models, or mapping logic.**
 
-This HAL excludes support for complex LED animation patterns or simultaneous state composition, focusing instead on discrete system states (e.g., boot, WPS, error).
+This decoupling ensures consistency across devices while allowing flexibility for OEM-specific behaviour.
+
+The interface supports:
+
+* A **single active state** at any time, managed via `set(State)` and read via `get()`
+* Discovery of supported states via `getCapabilities()`, aligned with the HFP file
+* **No support for transient triggers** like momentary LED flashes; these are handled independently
 
 ---
+
+## References
 
 !!! info References
+      | Component                    | Reference                                                                                                         |
+      | ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+      | **Interface Definition**     | [indicator/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/indicator/current)                     |
+      | **API Documentation**        | TBD                                                                                                               |
+      | **HAL Interface Type**       | [AIDL and Binder](../../../introduction/aidl_and_binder.md)                                                       |
+      | **Initialization Unit**      | [systemd service](../../../vsi/systemd/current/systemd.md)                                                        |
+      | **VTS Tests**                | TBD                                                                                                               |
+      | **Reference Implementation** | TBD                                                                                                               |
+      | **HAL Feature Profile**      | [hfp-indicator.yaml](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/indicator/current/hfp-indicator.yaml) |
 
-|                              |                                                                                                                   |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| **Interface Definition**     | [indicator/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/indicator/current)                     |
-| **API Documentation**        | TBD                                                                                                               |
-| **HAL Interface Type**       | [AIDL and Binder](../../../introduction/aidl_and_binder.md)                           |
-| **Initialization Unit**      | [systemd service](../../../vsi/systemd/current/systemd.md)                                                                                |
-| **VTS Tests**                | TBD                                                                                                               |
-| **Reference Implementation** | TBD                                                                                                               |
-| **HAL Feature Profile**      | [hfp-indicator.yaml](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/indicator/current/hfp-indicator.yaml) |
-
----
+## Related Pages
 
 !!! tip Related Pages
-
-* [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
-* [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
+   - [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
+   - [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
+   - [Other HALs or Framework Components](link)
 
 ---
 
 ## Functional Overview
 
-Indicator provides platform abstraction for controlling system indicator elements (typically LEDs). It offers a limited, discrete set of states representing common system conditions such as power states, connectivity status (e.g., WPS), and error conditions. Clients can use this interface to reflect the current system state to the user through indicator hardware.
+The Indicator HAL defines a discrete and finite set of **persistent system states**, each representing an observable operational condition (e.g., `ACTIVE`, `WPS_CONNECTING`, `SOFTWARE_DOWNLOAD_ERROR`). These are:
+
+* **Long-lived**: The state persists until explicitly changed
+* **Mutually exclusive**: Only one state can be active at a time
+* **User-visible**: Each state should correspond to a user-facing behaviour (e.g., LED colour/pattern)
+
+Clients interact using the following flow:
+
+1. `getCapabilities()` to retrieve the list of supported states
+2. `set(State)` to enter a new persistent indicator state
+3. `get()` to retrieve the currently active state
 
 ---
 
@@ -45,128 +62,79 @@ Indicator provides platform abstraction for controlling system indicator element
 | HAL.INDICATOR.2 | The service shall return the current state via `get()`            | Must reflect latest successfully set value |
 | HAL.INDICATOR.3 | The platform shall advertise supported states via `Capabilities`  | Validated against `hfp-indicator.yaml`     |
 | HAL.INDICATOR.4 | States not listed in `Capabilities` shall not be settable         | Invalid `set()` calls must fail gracefully |
-| HAL.INDICATOR.5 | `ERROR_UNKNOWN` and `BOOT` must be read-only states               | Cannot be explicitly set by clients        |
+| HAL.INDICATOR.5 | `ERROR_UNKNOWN` and `BOOT` must be read-only states               | `BOOT` is platform-initialised only        |
 
 ---
 
 ## Interface Definitions
 
-| AIDL File         | Description                                      |
-| ----------------- | ------------------------------------------------ |
-| [IIndicator.aidl](../../../../indicator/current/com/rdk/hal/indicator/IIndicator.aidl)   | Main resource control interface                  |
-| [Capabilities.aidl](../../../../indicator/current/com/rdk/hal/indicator/Capabilities.aidl)   | Parcelable describing supported indicator states |
-| [State.aidl](../../../../indicator/current/com/rdk/hal/indicator/State.aidl)         | Enum of all defined indicator states             |
-
----
-
-## Initialization
-
-On system startup, the HAL.INDICATOR service is instantiated by its systemd unit and registers with the Service Manager under the name `Indicator.service`. The default state is typically `BOOT`, which is not settable and may be initiated by the bootloader. The HAL must be ready before client attempts to query or change states.
-
----
-
-## Product Customization
-
-* Supported states are defined per platform in `hfp-indicator.yaml`.
-* Clients may use `getCapabilities()` to query runtime support.
-* Platforms may omit states not relevant to their hardware (e.g., `WIFI_ERROR` on wired-only devices).
-
----
-
-## System Context
-
-```mermaid
-flowchart TD
-    Client["RDKClientComponent"] -->|set State| HAL["IIndicator HAL"]
-    Client -->|getCapabilities| HAL
-
-    classDef background fill:#121212,stroke:none,color:#E0E0E0;
-    classDef blue fill:#1565C0,stroke:#E0E0E0,stroke-width:2px,color:#E0E0E0;
-    classDef lightGrey fill:#616161,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
-    classDef wheat fill:#FFB74D,stroke:#424242,stroke-width:2px,color:#000000;
-    classDef green fill:#4CAF50,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
-    classDef default fill:#1E1E1E,stroke:#E0E0E0,stroke-width:1px,color:#E0E0E0;
-
-    Client:::blue
-    HAL:::wheat
-```
-
----
-
-## Resource Management
-
-This HAL does not allocate or manage complex resources. It tracks the currently active indicator state. Clients set or query this state, and the HAL is responsible for translating it into the appropriate hardware control logic.
-
----
-
-## Operation and Data Flow
-
-1. Client queries `getCapabilities()` → receives list of supported states.
-2. Client calls `set(State)` → HAL validates state and sets indicator.
-3. Client calls `get()` → HAL returns last set state.
-4. Any unsupported states will result in a rejected operation.
-
----
-
-## Modes of Operation
-
-There are no runtime operational modes. The interface is stateless apart from the current active indicator state. Platform behaviour may differ for each state, but the API contract remains uniform.
-
----
-
-## Event Handling
-
-This HAL is synchronous and does not emit events or notifications. Client polling or state management must be implemented outside the HAL if needed.
-
----
-
-## State Machine / Lifecycle
-
-The indicator maintains a single state at any time:
-
----
-
-## Data Format / Protocol Support
-
-Not applicable.
+| AIDL File           | Description                                      |
+| ------------------- | ------------------------------------------------ |
+| `IIndicator.aidl`   | Primary interface for querying and setting state |
+| `Capabilities.aidl` | Parcelable describing supported states           |
+| `State.aidl`        | Enum of valid indicator states                   |
 
 ---
 
 ## Platform Capabilities
 
-Supported states are be declared in the [hfp-indicator.yaml](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/indicator/current/hfp-indicator.yaml) file per platform. 
+The platform-specific file `hfp-indicator.yaml` defines the subset of states supported by each device. This must be kept in sync with the runtime implementation and used for:
 
-A typical platform might support the following subset of indicator states:
+* Runtime validation (`getCapabilities()`)
+* Automated testing (VTS test case selection)
+* Middleware introspection
 
-| State            | Description                                                                |
-| ---------------- | -------------------------------------------------------------------------- |
-| `BOOT`           | The system is in an initial state during startup, prior to full readiness. |
-| `ACTIVE`         | The device is in normal operational mode.                                  |
-| `STANDBY`        | The device is powered but in a low-activity or user-idle state.            |
-| `OFF`            | All indicators are off; this is typically used in deep standby or screen-off modes.  |
-| `WPS_CONNECTING` | Wi-Fi Protected Setup (WPS) is actively negotiating a connection.          |
-| `WPS_CONNECTED`  | WPS successfully completed; device is now associated with the network.     |
-| `WPS_ERROR`      | WPS negotiation failed (e.g., timeout or invalid PIN).                     |
+### Enum Value Groupings
 
-### Role in HFP Files
+The `State` enum uses **explicit, grouped integer values** to simplify vendor extension and downstream parsing. For example:
 
-Each platform is expected to **define and maintain its own HAL Feature Profile (HFP) YAML file** for the `indicator` component, tailored to its specific hardware and software configuration. The HFP plays a critical role in three areas:
+| Group         | Value Range | Examples                      |
+| ------------- | ----------- | ----------------------------- |
+| General       | 0–99        | `BOOT`, `ACTIVE`, `OFF`       |
+| WPS           | 100–199     | `WPS_CONNECTING`, `WPS_ERROR` |
+| Network       | 200–299     | `IP_ACQUIRED`, `NO_IP`        |
+| System Events | 300–399     | `USB_UPGRADE`, `PSU_FAILURE`  |
+| Vendor        | 1000+       | `USER_DEFINED_*`              |
 
-1. **Test Configuration Input:**
-   It informs the HAL compliance and validation framework about which features and states are supported. Test suites dynamically adjust coverage based on the declared capabilities, ensuring accurate and meaningful validation.
+These ranges are not enforced by the interface but are recommended for clarity and HFP alignment.
 
-2. **Interface Capability Declaration:**
-   The HFP acts as a machine-readable contract between the platform vendor and RDK middleware. It indicates which parts of the AIDL interface are implemented, and allows middleware to query feature support during runtime or setup.
+---
 
-3. **Operational Semantics and Return Values:**
-   For interfaces like `getCapabilities()` that return a list of platform-supported features, the HFP provides the authoritative source of truth. It defines what capabilities are expected to appear in the returned list—even when they are not explicitly defined in the AIDL schema. Developers and testers use the HFP to understand expected return values, implementation constraints, and platform-specific extensions.
+### Supported State Subset (Example)
 
-Maintaining the HFP in sync with the actual implementation and runtime behaviour is essential for consistent integration, accurate testing, and correct feature negotiation between system components.
+```yaml
+supportedStates:
+  - BOOT
+  - ACTIVE
+  - STANDBY
+  - OFF
+  - WPS_CONNECTING
+  - WPS_CONNECTED
+  - WPS_ERROR
+  - WIFI_ERROR
+  - IP_ACQUIRED
+  - FULL_SYSTEM_RESET
+  - PSU_FAILURE
+```
+
+---
+
+### Platform-Specific Extensions
+
+Platforms may define new persistent states beginning at `USER_DEFINED_BASE = 1000`. These must:
+
+* Follow the same semantics (persistent, exclusive, not transient)
+* Be defined in the HFP YAML under `supportedStates`
+* Be documented for test coverage and integration
 
 ---
 
 ## Error Handling
 
-* Invalid `set(State)` calls must return `false` and not affect hardware state.
-* `get()` must always return a valid state, defaulting to `ERROR_UNKNOWN` if not previously set.
-* The HAL must prevent transitions to non-supported states.
+| Condition                  | Expected Behaviour                          |
+| -------------------------- | ------------------------------------------- |
+| Invalid `set(State)` call  | Must fail cleanly and leave state unchanged |
+| `set()` on read-only state | Rejected (`BOOT`, `ERROR_UNKNOWN`)          |
+| Unsupported enum value     | Rejected if not listed in `Capabilities`    |
+| `get()` before any `set()` | Returns `ERROR_UNKNOWN`                     |
+
