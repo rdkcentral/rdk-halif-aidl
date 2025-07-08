@@ -19,7 +19,7 @@ The interface supports:
 ## References
 
 !!! info References
-      | Component                    | Reference                                                                                                         |
+      |                     |                                                                                                          |
       | ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
       | **Interface Definition**     | [indicator/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/indicator/current)                     |
       | **API Documentation**        | TBD                                                                                                               |
@@ -32,9 +32,9 @@ The interface supports:
 ## Related Pages
 
 !!! tip Related Pages
-   - [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
-   - [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
-   - [Other HALs or Framework Components](link)
+      - [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
+      - [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
+      - [Other HALs or Framework Components](link)
 
 ---
 
@@ -58,11 +58,11 @@ Clients interact using the following flow:
 
 | #               | Requirement                                                       | Comments                                   |
 | --------------- | ----------------------------------------------------------------- | ------------------------------------------ |
-| HAL.INDICATOR.1 | The service shall expose a single active state using `set(State)` | Only one state is active at a time         |
-| HAL.INDICATOR.2 | The service shall return the current state via `get()`            | Must reflect latest successfully set value |
-| HAL.INDICATOR.3 | The platform shall advertise supported states via `Capabilities`  | Validated against `hfp-indicator.yaml`     |
-| HAL.INDICATOR.4 | States not listed in `Capabilities` shall not be settable         | Invalid `set()` calls must fail gracefully |
-| HAL.INDICATOR.5 | `ERROR_UNKNOWN` and `BOOT` must be read-only states               | `BOOT` is platform-initialised only        |
+| **HAL.INDICATOR.1** | The service shall expose a single active state using `set(State)` | Only one state is active at a time         |
+| **HAL.INDICATOR.2** | The service shall return the current state via `get()`            | Must reflect latest successfully set value |
+| **HAL.INDICATOR.3** | The platform shall advertise supported states via `Capabilities`  | Validated against `hfp-indicator.yaml`     |
+| **HAL.INDICATOR.4** | States not listed in `Capabilities` shall not be settable         | Invalid `set()` calls must fail gracefully |
+| **HAL.INDICATOR.5** | `ERROR_UNKNOWN` and `BOOT` must be read-only states               | `BOOT` is platform-initialised only        |
 
 ---
 
