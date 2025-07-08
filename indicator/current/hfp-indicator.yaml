@@ -9,7 +9,6 @@
 # * you may not use this file except in compliance with the License.
 # * You may obtain a copy of the License at
 # *
-# *
 # * http://www.apache.org/licenses/LICENSE-2.0
 # *
 # * Unless required by applicable law or agreed to in writing, software
@@ -18,7 +17,7 @@
 # * See the License for the specific language governing permissions and
 # * limitations under the License.
 # *
-#** ******************************************************************************
+#** *****************************************************************************
 
 # HAL Feature Profile for indicator
 
@@ -27,25 +26,36 @@
 # *
 # * This section defines the feature profile for the indicator Hardware Abstraction Layer (HAL).
 # * It specifies the interface version and the list of supported states for the indicator component.
-# * This is a reference file and is expected to be used to define the platform specific requirements
+# * This is a reference file and is expected to be used to define the platform specific requirements.
+# * It is also consumed by automated test systems and middleware components to determine
+# * the valid set of states for the indicator service on a given device.
 # *
+
 indicator:
   interfaceVersion: current
   supportedStates:
+    # General system states
     - BOOT
     - ACTIVE
     - STANDBY
     - OFF
+    - DEEP_SLEEP
+
+    # WPS-related states
     - WPS_CONNECTING
     - WPS_CONNECTED
     - WPS_ERROR
-    - FULL_SYSTEM_RESET
-    - USB_UPGRADE
-    - SOFTWARE_DOWNLOAD_ERROR
-    - DEEP_SLEEP
-    - PSU_FAILURE
     - WPS_SES_OVERLAP
+
+    # Network and connectivity states
     - WIFI_ERROR
     - IP_ACQUIRED
     - NO_IP
-    - RCU_COMMAND
+
+    # System operation and maintenance
+    - FULL_SYSTEM_RESET
+    - USB_UPGRADE
+    - SOFTWARE_DOWNLOAD_ERROR
+
+    # Fault or diagnostics
+    - PSU_FAILURE

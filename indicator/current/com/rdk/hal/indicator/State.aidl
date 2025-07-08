@@ -19,36 +19,63 @@
 package com.rdk.hal.indicator;
 
 /**
- * /**
- * * @brief Indicator states.
- * *
- * * Defines the various states for a system indicator.
- * * @author Luc Kennedy-Lamb
- * * @author Peter Stieglitz
- * * @author Douglas Adler
- * * @author Gerald Weatherup
- * */
-
+ * @brief Indicator states.
+ *
+ * Represents the persistent, mutually exclusive states that the system indicator can be in.
+ * These states reflect the current condition of the device (e.g., booting, active, error)
+ * and remain in effect until explicitly changed. The HAL implementation is expected to
+ * reflect these states via hardware-controlled visual indicators (e.g., LEDs, panels).
+ *
+ * ### Key Characteristics:
+ * - Each state describes a long-lived condition, not a short-lived event.
+ * - Only one state should be active at a time; transitions must be explicitly managed.
+ * - Transient signals like "blink on RCU press" are **not** indicator states and must be
+ *   handled independently in vendor logic—they should not be represented in this enum.
+ *
+ * ### Platform-Specific Extensions:
+ * Vendors may define additional persistent states by extending the enum starting from
+ * `USER_DEFINED_BASE = 1000`. These must follow the same semantics (i.e., persistent state)
+ * and be documented in the HAL Feature Profile (HFP) for discoverability and testability.
+ *
+ * @author Luc Kennedy-Lamb
+ * @author Peter Stieglitz
+ * @author Douglas Adler
+ * @author Gerald Weatherup
+ */
 @VintfStability
 @Backing(type="int")
 enum State
 {
+    // General and boot-related states
     ERROR_UNKNOWN = -1, /**< The current state cannot be determined. This state cannot be set. */
-    BOOT = 0, /**< Initial state at indicator service initialization, typically set by the bootloader. This state cannot be set. */
-    ACTIVE = 1, /**< Active power state. */
-    STANDBY = 2, /**< Active standby. */
-    OFF = 3, /**< All indicators are off. Used for dark standby state. */
-    WPS_CONNECTING = 4, /**< Connecting via WPS state. */
-    WPS_CONNECTED = 5, /**< WPS has connected state. */
-    WPS_ERROR = 6, /**< WPS error state. */
-    FULL_SYSTEM_RESET = 7, /**< Full system reset (also known as FSR or factory reset) state. */
-    USB_UPGRADE = 8, /**< USB upgrading state. */
-    SOFTWARE_DOWNLOAD_ERROR = 9, /**< Software download error state. */
-    DEEP_SLEEP = 10, /**< Deep sleep state. */
-    PSU_FAILURE = 11, /**< Power supply failure state. */
-    WPS_SES_OVERLAP = 12, /**< WPS session overlap detected. */
-    WIFI_ERROR = 13, /**< Wi-Fi error state. */
-    IP_ACQUIRED = 14, /**< Device acquired an IP address. */
-    NO_IP = 15, /**< Device did not get any IP address assigned. */
-    RCU_COMMAND = 16 /**< RCU command received by the device. */
+    BOOT = 0,           /**< Initial state at indicator service initialization, typically set by the bootloader. This state cannot be set. */
+    ACTIVE = 1,         /**< Normal operational state. */
+    STANDBY = 2,        /**< System is in standby mode. */
+    OFF = 3,            /**< All indicators are off. Used for dark standby or screen-off states. */
+    DEEP_SLEEP = 4,     /**< Deep sleep state (lower power mode). */
+
+    // WPS-related states
+    WPS_CONNECTING = 100,  /**< Wi-Fi Protected Setup (WPS) in progress. */
+    WPS_CONNECTED = 101,   /**< WPS connection successfully established. */
+    WPS_ERROR = 102,       /**< WPS process failed (e.g., timeout, bad PIN). */
+    WPS_SES_OVERLAP = 103, /**< WPS session overlap detected. */
+
+    // Network and IP states
+    WIFI_ERROR = 200,    /**< Wi-Fi hardware or configuration error. */
+    IP_ACQUIRED = 201,   /**< Device successfully obtained an IP address. */
+    NO_IP = 202,         /**< Device failed to obtain an IP address. */
+
+    // System and maintenance states
+    FULL_SYSTEM_RESET = 300,       /**< Factory reset or full system reset in progress. */
+    USB_UPGRADE = 301,             /**< Firmware/software being upgraded via USB. */
+    SOFTWARE_DOWNLOAD_ERROR = 302, /**< Download error during update process. */
+    PSU_FAILURE = 303,             /**< Power supply unit failure or voltage anomaly. */
+
+    /**
+     * Reserved base value for platform- or product-specific persistent indicator states.
+     * These must behave like the other states in this enum—persistent, mutually exclusive,
+     * and clearly reflecting a system condition. They must not be used for transient events
+     * such as remote control presses or button flashes.
+     */
+    USER_DEFINED_BASE = 1000
 }
