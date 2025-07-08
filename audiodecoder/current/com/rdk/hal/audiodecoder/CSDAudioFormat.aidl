@@ -34,40 +34,36 @@ package com.rdk.hal.audiodecoder;
  */
 @VintfStability
 @Backing(type="int")
-enum CSDAudioFormat {
+enum CSDAudioFormat 
+{
     /**
-     * MPEG-4 AudioSpecificConfig (used with AAC in fMP4 containers).
-     * Used in DASH, HLS fMP4, and DVB-DASH.
+     * AAC AudioSpecificConfig (ASC) per ISO/IEC 14496-3.
+     * Used for AAC-LC, HE-AAC, HE-AAC v2 in MP4/fMP4.
+     * Required in encrypted DASH, HLS fMP4, CMAF.
      */
     MP4_AUDIO_SPECIFIC_CONFIG = 0,
 
     /**
-     * AAC in ADTS format. Typical in HLS MPEG-2 TS streams and broadcast systems.
+     * MPEG-4 ALS AudioSpecificConfig (14496-3 subpart 11).
+     * Rare, but valid in ISOBMFF with encryption.
      */
-    AAC_ADTS_HEADER = 1,
+    ALS_SPECIFIC_CONFIG = 1,
 
     /**
-     * AAC in LATM/LOAS format. Used primarily in ISDB-T and occasionally in DVB-T2.
+     * Apple Lossless Audio Codec (ALAC), codec_data from 'alac' atom.
+     * Used in MP4; decoder expects this for both clear/encrypted tracks.
      */
-    LATM_MPEG4_CONFIG = 2,
+    ALAC_SPECIFIC_CONFIG = 2,
 
     /**
-     * MPEG-1 Layer II audio configuration (commonly used in DVB systems).
+     * Dolby Digital Plus (E-AC-3) with 'dec3' box and possible proprietary config.
+     * Used in ISOBMFF with encryption for HLS/DASH and HDMI passthrough.
      */
-    MPEG1_LAYER2_CONFIG = 3,
+    EAC3_SPECIFIC_CONFIG = 3,
 
     /**
-     * Dolby Digital AC-3 specific header. Used in DVB, ISDB, HDMI passthrough.
+     * Dolby AC-4 with 'dac4' box per ETSI TS 103 190.
+     * Used in fMP4 and CMAF for DVB-I and ATSC 3.0 systems.
      */
-    AC3_SPECIFIC_CONFIG = 4,
-
-    /**
-     * Dolby Digital Plus (E-AC-3) specific header. Used in DVB-DASH, HLS, HDMI.
-     */
-    EAC3_SPECIFIC_CONFIG = 5,
-
-    /**
-     * MPEG-4 ALS (Audio Lossless Coding). Rare, but used in some ISDB profiles.
-     */
-    ALS_SPECIFIC_CONFIG = 6
+    AC4_SPECIFIC_CONFIG = 4
 }
