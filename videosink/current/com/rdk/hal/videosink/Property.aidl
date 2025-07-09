@@ -23,93 +23,126 @@ package com.rdk.hal.videosink;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *  @author    Gerald Weatherup
  */
  
+/**
+ * @brief Video Sink properties definition.
+ *
+ * These properties are used to configure or query the state of a video sink resource.
+ * Each property has a defined type and access mode (Read-only or Read/Write).
+ */
 @VintfStability
 @Backing(type="int")
 enum Property
 {
-	/**
-	 * Unique 0 based index per video sink resource instance.
-	 */
-	RESOURCE_ID = 0,
-
-	/**
-	 * The number of frames in the video sink that are queued for display.
-	 * This property must give a correct value in both tunnelled and non-tunnelled modes.
-	 */
-	SINK_QUEUE_DEPTH = 1,
-
-	/**
-	 * Set by the client to specify the AV source of the stream.  
-	 * The AVSource is also set inside the FrameMetadata when output by a decoder.
-	 * Default is 0 - AVUNKNOWN.
-	 * @see enum AVSource for possible values.
-	 */
-	AV_SOURCE = 2,
-
-	/**
-	 * Set by the client to specify whether the first frame is rendered ahead of full playback.
-	 * 
-	 * The AV Clock linked to the Video Sink can be in a playing or paused state.
-	 * If the first frame is ahead of the AV Clock time then it will still display but subsequent
-	 * frames will not display until the AV Clock time matches its presentation time.
-	 * 
-	 * Type: boolean
-	 *  0 - First frame is not rendered (default)
-	 *  1 - First frame is rendered
-	 */
-	RENDER_FIRST_FRAME = 3,
-
+    /**
+     * Unique 0 based index per video sink resource instance.
+     *
+     * Type: Integer  
+     * Access: Read-only.
+     */
+    RESOURCE_ID = 0,
 
     /**
-	 * Metrics 
-	 */
-    
+     * The number of frames in the video sink that are queued for display.
+     * This property must give a correct value in both tunnelled and non-tunnelled modes.
+     *
+     * Type: Integer  
+     * Access: Read-only.
+     */
+    SINK_QUEUE_DEPTH = 1,
+
     /**
-	 * Count of frames received.  Not necessarily displayed.
-	 * -1 means this metric is not yet implemented by the vendor.
-	 */  
-	METRIC_FRAMES_RECEIVED = 1000,
-    
+     * Set by the client to specify the AV source of the stream.
+     * The AVSource is also set inside the FrameMetadata when output by a decoder.
+     * Default is 0 - AVUNKNOWN.
+     * @see AVSource
+     *
+     * Type: Integer (enum AVSource)  
+     * Access: Read/Write.
+     */
+    AV_SOURCE = 2,
+
     /**
-	 * Count of frames presented.
-	 * -1 means this metric is not yet implemented by the vendor.
-	 */  
-	METRIC_FRAMES_PRESENTED = 1001,
-	
+     * Specifies whether the first frame is rendered ahead of full playback.
+     *
+     * The AV Clock linked to the Video Sink can be in a playing or paused state.
+     * If the first frame is ahead of the AV Clock time, it will display but subsequent
+     * frames will not display until their presentation times match the AV Clock.
+     *
+     * Type: Boolean (0 = don't render, 1 = render)  
+     * Access: Read/Write.
+     */
+    RENDER_FIRST_FRAME = 3,
+
+    /** Metrics */
+
     /**
-	 * Count of frames dropped, received but never displayed due to late delivery.
-	 * Not relevant for graphics plane.
-	 * -1 means this metric is not yet implemented by the vendor.
-	 */  
+     * Count of frames received. Not necessarily displayed.
+     * -1 means this metric is not yet implemented by the vendor.
+     *
+     * Type: Integer  
+     * Access: Read-only.
+     */
+    METRIC_FRAMES_RECEIVED = 1000,
+
+    /**
+     * Count of frames presented to the display.
+     * -1 means this metric is not yet implemented by the vendor.
+     *
+     * Type: Integer  
+     * Access: Read-only.
+     */
+    METRIC_FRAMES_PRESENTED = 1001,
+
+    /**
+     * Count of frames dropped due to late delivery (missed presentation deadline).
+     * Not relevant for graphics plane.
+     * -1 means this metric is not yet implemented by the vendor.
+     *
+     * Type: Integer  
+     * Access: Read-only.
+     */
     METRIC_FRAMES_DROPPED_LATE = 1002,
-	
+
     /**
-	 * Count of frames dropped, due to frame rate conversion.
-	 * Not relevant for graphics plane.
-	 * -1 means this metric is not yet implemented by the vendor.
-	 */  
+     * Count of frames dropped as part of frame rate conversion logic.
+     * Not relevant for graphics plane.
+     * -1 means this metric is not yet implemented by the vendor.
+     *
+     * Type: Integer  
+     * Access: Read-only.
+     */
     METRIC_FRAMES_DROPPED_FRC = 1003,
-	
+
     /**
-	 * Count of frames repeated, due to frame rate conversion.
-	 * Not relevant for graphics plane.
-	 * -1 means this metric is not yet implemented by the vendor.
-	 */  
+     * Count of frames repeated due to frame rate conversion.
+     * Not relevant for graphics plane.
+     * -1 means this metric is not yet implemented by the vendor.
+     *
+     * Type: Integer  
+     * Access: Read-only.
+     */
     METRIC_FRAMES_REPEATED_FRC = 1004,
-	
+
     /**
-	 * Count of frames repeated, due to a missing frame at expected presentation time.
-	 * Not relevant for graphics plane.
-	 * -1 means this metric is not yet implemented by the vendor.
-	 */  
+     * Count of frames repeated because of missing input at expected presentation time.
+     * Not relevant for graphics plane.
+     * -1 means this metric is not yet implemented by the vendor.
+     *
+     * Type: Integer  
+     * Access: Read-only.
+     */
     METRIC_FRAMES_REPEATED_MISSING_FRAME = 1005,
-	
+
     /**
-	 * Count of underflow events, due to empty frame queue at expected presentation time.
-	 * Not relevant for graphics plane.
-	 * -1 means this metric is not yet implemented by the vendor.
-	 */  
+     * Count of underflow events due to empty frame queue at time of presentation.
+     * Not relevant for graphics plane.
+     * -1 means this metric is not yet implemented by the vendor.
+     *
+     * Type: Integer  
+     * Access: Read-only.
+     */
     METRIC_UNDERFLOWED = 1006,
 }

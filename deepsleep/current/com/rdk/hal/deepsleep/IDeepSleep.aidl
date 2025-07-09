@@ -47,7 +47,7 @@ interface IDeepSleep
      * The function will block until it resumes from standby and then returns the triggers that occured to wake up the device.
      * Upon return, the system clock has been adjusted to closely represent the actual elapsed time spent in deep sleep.
      *
-     * The `mandatoryTriggers[]` reported in the `Capabilities` are always enabled as trigger sources.
+     * The `preconfiguredTriggers[]` reported in the `Capabilities` are always enabled as trigger sources.
      * If they are not explicitly specified in the `triggersToWakeUpon[]` array then they are implicitly added.
      *
      * @param[in] triggersToWakeUpon    Array of wake up trigger events to wake upon after entering deep sleep.
@@ -68,6 +68,9 @@ interface IDeepSleep
      *
      * The timer starts when `enterDeepSleep()` is called and `WakeUpTrigger.TIMER` is listed in the `triggersToWakeUpon[]` array.
      * The timer must support at least 7 days.
+     *
+     * The platform is expected to wake the device within ±/- 5 seconds of the programmed period.
+     * The actual wake time could be adjusted for clock drift and resume latency where applicable.
      *
      * @param[in] seconds   The timer period in seconds which must be > 0.
      *
