@@ -1,0 +1,3568 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://www.github.com/rdkcentral/rdk-halif-aidl/0.10.0/halif/av_buffer/current/av_buffer/">
+      
+      
+        <link rel="prev" href="../../../audio_sink/current/audio_sink/">
+      
+      
+        <link rel="next" href="../../../av_clock/current/av_clock/">
+      
+      
+      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.2">
+    
+    
+      
+        <title>AV Buffer - RDK Hardware Porting Kit</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.d7758b05.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#av-buffer" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="RDK Hardware Porting Kit" class="md-header__button md-logo" aria-label="RDK Hardware Porting Kit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            RDK Hardware Porting Kit
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              AV Buffer
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/rdkcentral/rdk-halif-aidl" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rdkcentral/rdk-halif-aidl
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="RDK Hardware Porting Kit" class="md-nav__button md-logo" aria-label="RDK Hardware Porting Kit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    RDK Hardware Porting Kit
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/rdkcentral/rdk-halif-aidl" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rdkcentral/rdk-halif-aidl
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../introduction/the_software_stack/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    The Software Stack
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Hardware Abstraction Layer
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Hardware Abstraction Layer
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../introduction/aidl_and_binder/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Key Concepts
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Key Concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../key_concepts/hal/hal_properties/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HAL Properties
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../key_concepts/hal/hal_feature_profiles/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HAL Feature Profiles
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../key_concepts/hal/hal_naming_conventions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HAL Naming Conventions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../key_concepts/hal/hal_session_state_management/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HAL Session State Management
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Standards
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Standards
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../standards/direct_branching/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Core Development Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../standards/forked_based_branching/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Fork-Based Contribution Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Vendor HAL Interfaces (VHI)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Vendor HAL Interfaces (VHI)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../key_concepts/hal/hal_interfaces/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../introduction/interface_generation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Interface Generation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    AV Subsystem
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            AV Subsystem
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../audio_decoder/current/audio_decoder/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audio Decoder
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../audio_mixer/current/audio_mixer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audio Mixer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../audio_sink/current/audio_sink/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audio Sink
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    AV Buffer
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    AV Buffer
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      References
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Pages
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Implementation Requirements
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interface-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interface Definition
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#initialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Initialization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#product-customization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Product Customization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      System Context
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-heaps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Memory Heaps
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-pools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Memory Pools
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Memory Pools">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pool-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pool Lifecycle
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pool-handles" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pool Handles
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pool-implementation-recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pool Implementation Recommendation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#av-buffers" class="md-nav__link">
+    <span class="md-ellipsis">
+      AV Buffers
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AV Buffers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#buffer-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      Buffer Lifecycle
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#buffer-handles" class="md-nav__link">
+    <span class="md-ellipsis">
+      Buffer Handles
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#handling-out-of-memory-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Handling Out of Memory Conditions
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audio-video-frame-pools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Audio &amp; Video Frame Pools
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Audio & Video Frame Pools">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#media-pipeline-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      Media Pipeline Example
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fragmentation-in-memory-pools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fragmentation in Memory Pools
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buffer-trimming-for-broadcast-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      Buffer Trimming for Broadcast Sources
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-mapping-in-processes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Memory Mapping in Processes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buffer-mapping-helper-library-libavbufferhelperso" class="md-nav__link">
+    <span class="md-ellipsis">
+      Buffer Mapping Helper Library - libavbufferhelper.so
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../av_clock/current/av_clock/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AV Clock
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../video_decoder/current/video_decoder/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Video Decoder
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../video_sink/current/video_sink/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Video Sink
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../boot/current/boot/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Boot
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../broadcast/current/broadcast/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Broadcast
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../cdm/current/cdm/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CDM
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    HDMI
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            HDMI
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../cec/current/cec/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HDMI CEC
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../hdmi_input/current/hdmi_input/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HDMI Input
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../hdmi_output/current/hdmi_output/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HDMI Output
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../common/current/common/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Common
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../deep_sleep/current/deep_sleep/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Deep Sleep
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../device_info/current/device_info/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Device Info
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../flash/current/flash/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Flash
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../indicator/current/indicator/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Indicator
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../panel/current/panel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Panel
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../plane_control/current/plane_control/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Plane Control
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../sec_api/current/sec_api/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Secure API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../sensor/current/sensor/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sensor
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Vendor System Interfaces (VSI)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Vendor System Interfaces (VSI)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_1" id="__nav_5_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    File System
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            File System
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vsi/filesystem/current/directory_and_dynamic_linking_specification/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Directory And Dynamic Linking
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vsi/filesystem/current/halif_logging_system_design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Logging
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vsi/bluetooth/current/bluetooth/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bluetooth
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vsi/graphics/current/graphics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Graphics
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vsi/service_manager/current/service_manager/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Service Manager
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vsi/wifi/current/wifi/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Wi-Fi
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vsi/systemd/current/systemd/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Systemd
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../vsi/kernel/current/kernel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Kernel
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Vendor Tests Suites (VTS)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Vendor Tests Suites (VTS)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../external_content/ut-core-wiki/3.-Standards%3A-Levels-of-Test-for-Vendor-Layer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Levels of Test
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_2" id="__nav_6_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Level 4
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            Level 4
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../external_content/ut-core-wiki/3.3.-Standards%3A-L4-%E2%80%90-System-Interface-Testing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    L4 System Interface (VSI)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../external_content/ut-core-wiki/3.4.-Standards%3A-L4%3A-Vendor-Full-Stack-%E2%80%90-Video-%E2%80%90-Smoke-Regression-Test/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    L4 Smoke Test (VST)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Testing Framework
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Testing Framework
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../external_content/ut-core-wiki/3.2.-Standards%3A-Requirements-for-building-testing-suites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Framework Usage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_2" id="__nav_7_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Key Concepts
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_2">
+            <span class="md-nav__icon md-icon"></span>
+            Key Concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../external_content/ut-core-wiki/3.1.-Standards%3A-Overview-of-Test%E2%80%90Driven-Development/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Test Driven Development
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../external_content/ut-core-wiki/FAQ%3A-Black%E2%80%90Box-Testing-and-Code-Coverage-Metrics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Black Box Testing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../external_content/ut-core-wiki/3.0.1-Standards%3A-Testing-Feedback-Loops/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Feedback Loops
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_3" id="__nav_7_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    UT-Core Test Framework
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_3">
+            <span class="md-nav__icon md-icon"></span>
+            UT-Core Test Framework
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../external_content/ut-core-wiki/Home/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    UT-Core Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../external_content/ut-core-wiki/FAQ%3A-UT-Core-Framework-Overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Level Actors
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Virtual Device
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Virtual Device
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../external_content/ut-core-wiki/5.0%3A-Standards%3A-vDevice-Overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    What is the vDevice
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../external_content/ut-core-wiki/5.0.1%3A-Standards%3A-vDevice-Architecture-Overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_8_3" id="__nav_8_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Key Concepts
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_3">
+            <span class="md-nav__icon md-icon"></span>
+            Key Concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../external_content/ut-core-wiki/5.1.0%3A-Standards%3A-vDevice-Controller/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Controller
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../external_content/ut-core-wiki/5.1.1%3A-Standards%3A-vDevice-Control-Plane/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Control Plane
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Misc
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            Misc
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../references/references/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    References
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_9_2" id="__nav_9_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Documentation Standards
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9_2">
+            <span class="md-nav__icon md-icon"></span>
+            Documentation Standards
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../introduction/documentation_getting_started/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../standards/interface_template/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Interface Template
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_9_3" id="__nav_9_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    White Papers
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9_3">
+            <span class="md-nav__icon md-icon"></span>
+            White Papers
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../whitepapers/documentation_in_git/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Documentation in Git
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../whitepapers/branching_strategies/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Branching Strategies
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../whitepapers/doxygen_code_documentation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Doxygen Code Documentation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../whitepapers/engineering_goals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Achieving Engineering Goal
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../whitepapers/standardizing_git_commit_messages/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Commit Message Standards
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../external_content/ut-core-wiki/1.2.-Standards%3A-Issue-Description-Guideline/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Filing an Issue
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_9_5" id="__nav_9_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    FAQ
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9_5">
+            <span class="md-nav__icon md-icon"></span>
+            FAQ
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../external_content/ut-core-wiki/FAQ%3A-Comparing-Python-Development-Platforms/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Python Development
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../src_link/CHANGELOG/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ChangeLog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      References
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Pages
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Implementation Requirements
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interface-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interface Definition
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#initialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Initialization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#product-customization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Product Customization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      System Context
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-heaps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Memory Heaps
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-pools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Memory Pools
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Memory Pools">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pool-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pool Lifecycle
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pool-handles" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pool Handles
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pool-implementation-recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pool Implementation Recommendation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#av-buffers" class="md-nav__link">
+    <span class="md-ellipsis">
+      AV Buffers
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AV Buffers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#buffer-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      Buffer Lifecycle
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#buffer-handles" class="md-nav__link">
+    <span class="md-ellipsis">
+      Buffer Handles
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#handling-out-of-memory-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Handling Out of Memory Conditions
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audio-video-frame-pools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Audio &amp; Video Frame Pools
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Audio & Video Frame Pools">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#media-pipeline-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      Media Pipeline Example
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fragmentation-in-memory-pools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fragmentation in Memory Pools
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buffer-trimming-for-broadcast-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      Buffer Trimming for Broadcast Sources
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-mapping-in-processes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Memory Mapping in Processes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buffer-mapping-helper-library-libavbufferhelperso" class="md-nav__link">
+    <span class="md-ellipsis">
+      Buffer Mapping Helper Library - libavbufferhelper.so
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="av-buffer">AV Buffer</h1>
+<p>The <strong>AV Buffer HAL</strong> manages both secure and non-secure memory heaps and pools for the media pipeline and related A/V HAL components.</p>
+<ul>
+<li>An <strong>AV buffer</strong> typically stores audio or video data, which may be in either encrypted or clear form.</li>
+<li><strong>Secure memory buffers</strong> handle decrypted data when DRM, conditional access, or other secure decryption mechanisms are used.</li>
+<li><strong>Non-secure memory</strong> is allocated for encrypted data from a media player source until it is decrypted into a secure memory buffer.</li>
+<li>If a media player processes only clear (unencrypted) audio or video data, <strong>non-secure memory buffers</strong> can be used throughout from source to decoder.</li>
+<li>AV memory buffers are referenced by <strong>handles</strong> as they move through the media pipeline and across HAL interfaces.</li>
+</ul>
+<h2 id="references">References</h2>
+<div class="admonition info references">
+<p class="admonition-title">Info</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Interface Definition</strong></td>
+<td><a href="https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_buffer/current">av_buffer/current</a></td>
+</tr>
+<tr>
+<td><strong>API Documentation</strong></td>
+<td><em>TBD - Doxygen</em></td>
+</tr>
+<tr>
+<td><strong>HAL Interface Type</strong></td>
+<td><a href="../../../../introduction/aidl_and_binder/">AIDL and Binder</a></td>
+</tr>
+<tr>
+<td><strong>Initialization - TBC</strong></td>
+<td><a href="../../../../vsi/systemd/current/systemd/">systemd</a> - <strong>hal-av_buffer.service</strong></td>
+</tr>
+<tr>
+<td><strong>VTS Tests</strong></td>
+<td>TBC</td>
+</tr>
+<tr>
+<td><strong>Reference Implementation - vComponent</strong></td>
+<td><strong>TBD</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="related-pages">Related Pages</h2>
+<div class="admonition tip related pages">
+<p class="admonition-title">Tip</p>
+<ul>
+<li><a href="../../../audio_decoder/current/audio_decoder/">Audio Decoder</a></li>
+<li><a href="../../../audio_sink/current/audio_sink/">Audio Sink</a></li>
+<li><a href="../../../av_clock/current/av_clock/">AV Clock</a></li>
+<li><a href="../../../key_concepts/hal/hal_session_state_management/">Session State Management</a></li>
+<li><a href="../../../video_decoder/current/video_decoder/">Video Decoder</a></li>
+</ul>
+</div>
+<h2 id="implementation-requirements">Implementation Requirements</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Requirement</th>
+<th>Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>HAL.AVBUF.1</strong></td>
+<td>AV buffer handles shall be unique across all memory pools and heaps, including the vendor video frame pool and audio frame pool.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.AVBUF.2</strong></td>
+<td>Pool handles shall be unique across all memory pools and heaps.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.AVBUF.3</strong></td>
+<td>Buffer allocations from pools are made to fit a single video frame or audio frame.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.AVBUF.4</strong></td>
+<td>The last buffer allocated from a pool may be trimmed to reduce its allocated size down.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.AVBUF.5</strong></td>
+<td>Metrics on heap usage can be retrieved.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.AVBUF.6</strong></td>
+<td>Metrics on pool usage can be retrieved.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.AVBUF.7</strong></td>
+<td>Memory buffers allocated from a secure memory pool cannot be mapped into the address space of unprivileged processes and must meet secure video path or secure audio path requirements.</td>
+<td>Only vendor layer trusted entities can access secure memory (e.g. TA or secure hardware peripheral).</td>
+</tr>
+<tr>
+<td><strong>HAL.AVBUF.8</strong></td>
+<td>The size of the heaps and pools shall be determined by the vendor to meet the platform and product requirements for audio and video.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.AVBUF.9</strong></td>
+<td>A helper library shall be provided to allow middleware processes to map and unmap non-secure buffers, and copy data to secure and non-secure buffers.</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="interface-definition">Interface Definition</h2>
+<table>
+<thead>
+<tr>
+<th>Interface Definition File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>IAVBuffer.aidl</code></td>
+<td>AV Buffer HAL interface which provides the central API for buffer management.</td>
+</tr>
+<tr>
+<td><code>IAVBufferSpaceListener.aidl</code></td>
+<td>Pool space listener callback interface.</td>
+</tr>
+<tr>
+<td><code>Pool.aidl</code></td>
+<td>Pool handle parcelable definition.</td>
+</tr>
+<tr>
+<td><code>HeapMetrics.aidl</code></td>
+<td>Heap metrics parcelable definition.</td>
+</tr>
+<tr>
+<td><code>PoolMetrics.aidl</code></td>
+<td>Pool metrics parcelable definition.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="initialization">Initialization</h2>
+<p>The <a href="../../../../vsi/systemd/current/systemd/">systemd</a> <code>hal-av_buffer.service</code> unit file is provided by the vendor layer to start the service and should include <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=">Wants</a> or <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=">Requires</a> directives to start any platform driver services it depends upon.</p>
+<p>The AV Buffer service depends on the <a href="../../../../vsi/service_manager/current/service_manager/">Service Manager</a> to register itself as a service.</p>
+<p>Upon starting, the service shall register the IAVBuffer interface with the Service Manager using the String <code>IAVBuffer.serviceName</code> and immediately become operational.</p>
+<h2 id="product-customization">Product Customization</h2>
+<p>AV Buffer provides pools of memory for audio and video decoders, for both compressed and uncompressed data in secure and non-secure forms.</p>
+<p>The size of the memory pools allocated for the decoders is chosen by the HAL implementation where it is calculated according to the capabilities of the platform decoders, the requirements of the platform and the product requirements.</p>
+<p>The method of providing secure memory for secure video path and secure audio path is left to the vendor layer to implement, where it can choose the technology best suited for the SoC and platform drivers.  All memory buffers are referenced by a handle and a helper library is provided by the vendor layer for the RDK middleware to perform map, unmap and copy operations on the memory buffers.</p>
+<h2 id="system-context">System Context</h2>
+<p>The AV Buffer service provides functionality to multiple clients which exist both inside the RDK middleware and the vendor layer.</p>
+<p>Applications that stream A/V utilise a GStreamer pipeline in the RDK middleware which understands how to operate the A/V HALs to perform playback.</p>
+<p>When A/V data flows from the application it gets copied as early as possible into memory buffers allocated from AV Buffer service pools.</p>
+<p>The video and audio frame pools are managed entirely by the vendor layer, but it is important that any handles representing frame allocations share the same handle space as pool allocations made by applications, so that a handle of any type can be passed to IAVBuffer.free() to be returned to its original pool.</p>
+<p>Where A/V data frames are encrypted, they are decrypted by the a CDM, which will make a memory buffer allocation from a secure pool (if supported) for the output data.</p>
+<p><img alt="av Buffer" src="../avbuffer.png" /></p>
+<h2 id="memory-heaps">Memory Heaps</h2>
+<p>Heaps are blocks of memory managed by the vendor layer that clients can create pools from and are global in the system.</p>
+<p>Heaps must support the creation of pools by the client which are targeted for use by a specific audio or video decoder instance.</p>
+<p>Typically a media pipeline client shall create one or more pools from the heaps to make buffer allocations from for audio and video data frames.</p>
+<p>The platform shall implement 2 heaps which offer secure and non-secure memory.</p>
+<table>
+<thead>
+<tr>
+<th>Heap Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>secureHeap=false</strong></td>
+<td>The non-secure heap shall be used for audio and video data that is encrypted or does not need to meet secure audio path or secure video path requirements. The heap shall be large enough to handle concurrent decode of all audio and video decoders or the requirements of a given product specification.</td>
+</tr>
+<tr>
+<td><strong>secureHeap=true</strong></td>
+<td>The secure heap must be secure SOC memory and cannot be mapped into a non-secure process (i.e. not in any RDK middleware or unprivileged process) and can only be passed by handle between middleware processes.</td>
+</tr>
+</tbody>
+</table>
+<p>The heap shall be large enough to handle concurrent decode of all audio and video decoders or the requirements of a given product specification.</p>
+<p>It is mandatory for the AV buffer manager to support both heap types in the APIs but it may report a 0 byte size if a heap is not implemented.</p>
+<p>The <code>getHeapMetrics()</code> function allows the middleware to interrogate the heap usage data for a specified heap type and it returns a HeapMetrics parcelable with the bytes used out of the bytes total.</p>
+<h2 id="memory-pools">Memory Pools</h2>
+<p>A memory pool is created by a client to make buffer allocations from either the secure or non-secure heap by calling <code>createAudioPool()</code> or <code>createVideoPool()</code> with the audio or video resource ID it plans to use if for.</p>
+<h3 id="pool-lifecycle">Pool Lifecycle</h3>
+<p>The size of the memory pool is determined by the vendor layer implementation when the client passes a video or audio resource ID in to <code>createVideoPool()</code> or <code>createAudioPool()</code>.</p>
+<p>Once a pool is created it is referenced by an Pool handle. When the client has finished with a pool it calls destroyPool() with the Pool handle.</p>
+<h3 id="pool-handles">Pool Handles</h3>
+<p>Pool handles are assigned by the AV buffer manager as positive integers (int8_t) and must be globally unique in the system across all heaps and all client connections.</p>
+<p>The immediate re-use of pool handles after they have been destroyed is discouraged as this could lead to stale pool handles held in the client being used in error and cause unexpected behaviour.</p>
+<p>The recommended vendor implementation for pool handle assignment is to start at 0 and increment by 1 for each pool allocation made across all of the clients.  When pool handle 127 has been allocated, the next handle value can wrap back around to 0 or the next unused pool handle integer value.</p>
+<h3 id="pool-implementation-recommendation">Pool Implementation Recommendation</h3>
+<p>Allocations made from a memory pool for video and audio data shall typically be freed in the same order, but no guarantees are made.</p>
+<p>It is recommended that the vendor implements a circular buffer for allocations to be made from but allow flexibility in the order of the buffer frees.</p>
+<h2 id="av-buffers">AV Buffers</h2>
+<p>AV buffers are allocated by the client to typically hold a frame of audio or video data.  The data may be coded, decoded, encrypted or in the clear, but the AV Buffer Manager has no understanding of the data contents.</p>
+<p>Only AV buffers that are allocated from a pool created from the non-secure heap can be directly mapped inside an RDK middleware client process for read-write access.  </p>
+<h3 id="buffer-lifecycle">Buffer Lifecycle</h3>
+<p>A client can allocate a new AV buffer from a pool by calling the <code>IAVBuffer.alloc()</code> function with the Pool handle to allocate from and the buffer size.</p>
+<p>On success, the buffer is returned to the client as an integer handle (int64_t) which must be globally unique in the system across all pools and all client connections.</p>
+<p>The client can pass ownership of the AV buffer handle to a HAL component (e.g. <code>IAudioDecoderController.decodeBuffer()</code> or <code>IAudioSinkController.queueAudioFrame()</code>) where it will eventually be freed otherwise it must call <code>IAVBuffer.free()</code> itself.</p>
+<p>If a HAL component (e.g. a decoder or sink) has finished with a buffer that it has taken ownership of then it must be freed and the buffer is returned to its original pool.  This can be achieved by calling the public HAL API <code>IAVBuffer.free()</code> or by a private internal call inside the vendor layer which has the same effect.</p>
+<p>It is important that buffer allocations can be allocated and freed through any client session connection with the AV Buffer Manager service and not restricted to a single client session.</p>
+<h3 id="buffer-handles">Buffer Handles</h3>
+<p>Similar to pool handles, the immediate re-use of AV buffer handles after they have been freed is discouraged as this could lead to stale AV buffer handles held in the client being used in error and cause unexpected behaviour.</p>
+<h3 id="handling-out-of-memory-conditions">Handling Out of Memory Conditions</h3>
+<p>Pools have finite memory resources to allocate from and when its limits are reached it will return an out of memory status on <code>IAVBuffer.alloc()</code> requests.</p>
+<p>The client can request to be notified when enough space or resources become available for an allocation of a specific size from a pool by calling <code>notifyWhenSpaceAvailable()</code>.</p>
+<p>The AV Buffer Manager shall make a callback to <code>onSpaceAvailable()</code> on the <code>IAVBufferSpaceListener</code> interface passed in the <code>createAudioPool()</code> or <code>createVideoPool()</code> call when the pool was created.</p>
+<p>The client must guarantee that its <code>IAVBufferSpaceListener</code> interface instance remains available for the lifetime of the memory pool it was intended for and can only be destroyed after the related <code>destroyPool()</code> call has returned.</p>
+<h2 id="audio-video-frame-pools">Audio &amp; Video Frame Pools</h2>
+<p>The audio and video frame pools are allocated from privately inside the vendor layer by the audio and video decoders.</p>
+<p>In tunnelled mode the frame buffer allocations are automatically freed when they are no longer needed by the downstream AV pipeline vendor components.</p>
+<p>In non-tunnelled mode the client is passed these handles back from the decoder and may still be in possession of them when an AV pipeline is being stopped or flushed. In this case the client must free the frame buffer handles by calling IAVBuffer.free().</p>
+<h3 id="media-pipeline-example">Media Pipeline Example</h3>
+<p>The sequence diagram below provides an example of a secure media pipeline implementation.</p>
+<p>The AppSource is delivered encrypted audio and video frames and it creates 2 non-secure memory pools for these types of frames.</p>
+<p>The CDM is handed the non-secure encrypted audio and video frame buffers and decrypts them into secure buffers of the same size.  It uses 2 secure memory pools for audio and video decrypted frames.</p>
+<p>After the media pipeline has a secure buffer decoded by an audio or video decoder it can free the buffer.</p>
+<p>Note: The diagram below does not show how multiple audio and video buffers may be allocated at once, to allow for buffering points along the media pipeline.</p>
+<pre class="mermaid"><code>sequenceDiagram
+    box rgb(30,136,229) RDK GStreamer Pipeline
+        participant c1 as AppSource
+        participant c2 as CDM
+        participant adc as AudioDecoder
+        participant vdc as VideoDecoder
+    end
+
+    box rgb(249,168,37) AV Buffer Service
+        participant avbm as IAVBuffer
+    end
+
+    box rgb(67,160,71) AV Buffer Helper Library
+        participant avblib as libavbufferhelper.so
+    end
+
+    box Service Manager
+        participant sm as Service Manager
+    end
+
+    c1 -&gt;&gt; sm: getService(IAVBuffer.serviceName)
+
+    Note over c1: AppSource in media pipeline&lt;br/&gt;creates non-secure pools for &lt;br/&gt;encrypted A/V data frames.
+
+    c1 -&gt;&gt; avbm: nonsec-pool-audio = createAudioPool(false, IVideoAudioDecoder.Id=0, spaceListener)
+    c1 -&gt;&gt; avbm: nonsec-pool-video = createVideoPool(false, IVideoVideoDecoder.Id=0, spaceListener)
+
+    Note over c1: Create secure pools&lt;br/&gt;for decrypted A/V data frames.
+
+    c1 -&gt;&gt; avbm: sec-pool-audio = createAudioPool(true, IVideoAudioDecoder.Id=0, spaceListener)
+    c1 -&gt;&gt; avbm: sec-pool-video = createVideoPool(true, IVideoVideoDecoder.Id=0, spaceListener)
+
+    loop while media pipeline is playing
+        Note over c1: Encrypted A/V frames are &lt;br/&gt;loaded into AV buffers.
+
+        Note over c1: Process new audio frame
+        c1 -&gt;&gt; avbm: nonsec-a-handle = alloc(nonsec-pool-audio, audiodata-size)
+        c1 -&gt;&gt; avblib: mapHandle(nonsec-a-handle, &amp;ptr)
+        c1 -&gt;&gt; c1: memcpy(ptr, audiodata, audiodata-size)
+        c1 -&gt;&gt; avblib: unmapHandle(nonsec-a-handle, ptr)
+
+        c1 -&gt;&gt; c2: nonsec-a-handle
+        c2 -&gt;&gt; avbm: sec-a-handle = alloc(sec-pool-audio, audiodata-size)
+        c2 -&gt;&gt; c2: decrypt(sec-a-handle, nonsec-a-handle, audiodata-size)
+        c2 -&gt;&gt; avbm: free(nonsec-a-handle)
+        c2 -&gt;&gt; adc: sec-a-handle
+        adc -&gt;&gt; adc: decodeBuffer(sec-a-handle)
+        adc -&gt;&gt; avbm: free(sec-a-handle)
+
+        Note over c1: Process new video frame
+        c1 -&gt;&gt; avbm: nonsec-v-handle = alloc(nonsec-pool-video, videodata-size)
+        c1 -&gt;&gt; avblib: mapHandle(nonsec-v-handle, &amp;ptr)
+        c1 -&gt;&gt; c1: memcpy(ptr, videodata, videodata-size)
+        c1 -&gt;&gt; avblib: unmapHandle(nonsec-v-handle, ptr)
+        c1 -&gt;&gt; c2: nonsec-v-handle
+
+        c2 -&gt;&gt; avbm: sec-v-handle = alloc(sec-pool-video, videodata-size)
+        c2 -&gt;&gt; c2: decrypt(sec-v-handle, nonsec-v-handle, videodata-size)
+        c2 -&gt;&gt; avbm: free(nonsec-v-handle)
+        c2 -&gt;&gt; vdc: sec-v-handle
+        vdc -&gt;&gt; vdc: decodeBuffer(sec-v-handle)
+        vdc -&gt;&gt; avbm: free(sec-v-handle)
+    end
+
+    Note over c1: When pipeline has finished, the client cleans up&lt;br/&gt;Any buffers held in the media pipeline or in HAL services are freed&lt;br/&gt;Then the pools are destroyed.
+
+    c1 -&gt;&gt; avbm: destroyPool(sec-pool-audio)
+    c1 -&gt;&gt; avbm: destroyPool(sec-pool-video)
+    c1 -&gt;&gt; avbm: destroyPool(nonsec-pool-audio)
+    c1 -&gt;&gt; avbm: destroyPool(nonsec-pool-video)</code></pre>
+<h3 id="fragmentation-in-memory-pools">Fragmentation in Memory Pools</h3>
+<p>There is no guarantee that the IAVBuffer.alloc() and IAVBuffer.free() calls for a pool are in the same order, so the vendor implementation must allow for out-of-order free() calls to be made.</p>
+<p>The table below shows an example sequence of calls made to allocate and free 3 buffers in an order that should be supported by the AV Buffer Manager service.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Buffer 1</th>
+<th>Buffer 2</th>
+<th>Buffer 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>alloc()</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td></td>
+<td>alloc()</td>
+<td></td>
+</tr>
+<tr>
+<td>3</td>
+<td></td>
+<td>free()</td>
+<td></td>
+</tr>
+<tr>
+<td>4</td>
+<td></td>
+<td></td>
+<td>alloc()</td>
+</tr>
+<tr>
+<td>5</td>
+<td>free()</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>6</td>
+<td></td>
+<td></td>
+<td>free()</td>
+</tr>
+</tbody>
+</table>
+<h2 id="buffer-trimming-for-broadcast-sources">Buffer Trimming for Broadcast Sources</h2>
+<p>MPEG-2 transport stream broadcast sources may load frames progressively as data emerges from TS packet filters and PES filters.</p>
+<p>For this reason an oversized buffer may be allocated for the incoming audio or video data and once the frame boundary has been determined the buffer is trimmed to its actual size.</p>
+<p>Only the last allocated memory buffer is capable of being trimmed, which helps manage the pool memory in a circular buffer.</p>
+<h2 id="memory-mapping-in-processes">Memory Mapping in Processes</h2>
+<p>The non-secure shared memory buffers must be mapped inside processes so they can be access for read/write operations.</p>
+<p>Mapping provides a local process pointer to the memory which cannot be meaningfully shared across processes.</p>
+<p>The <code>mapHandle()</code> and <code>unmapHandle()</code> functions are provided by a library to provide process-local mapping.</p>
+<h2 id="buffer-mapping-helper-library-libavbufferhelperso">Buffer Mapping Helper Library - libavbufferhelper.so</h2>
+<p>The libavbufferhelper.so user space library is provided by the vendor layer to perform memory mapping/unmapping and copy operations on non-secure AV buffers.</p>
+<p>RDK middleware processes use the API to copy data into AV buffers represented by a handle.</p>
+<p>The library <code>mapHandle()</code> function is used to map a non-secure AV buffer handle into a concrete process mapped pointer which allows for data read/write access.</p>
+<p>The library <code>unmapHandle()</code> function is used to unmap a non-secure AV buffer handle and pointer pair.</p>
+<p>The library <code>write()</code> function is used to write data from system memory to buffer and works for both secure or non-secure AV buffers.</p>
+<p>The library <code>copyWithMap()</code> function is used to copy one or more ranges of byte from a source buffer to a destination buffer and works for both secure or non-secure AV buffers.</p>
+<div class="admonition hint implementation hint">
+<p class="admonition-title">Hint</p>
+<p>When mapping non-secure handles there is an possible optimisation to map the entire pool space into the process space only once on the first call and subsequent calls to <code>mapHandle()</code> simply provide an offset into the mapped memory.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../../../audio_sink/current/audio_sink/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Audio Sink">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Audio Sink
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../../av_clock/current/av_clock/" class="md-footer__link md-footer__link--next" aria-label="Next: AV Clock">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                AV Clock
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../../..", "features": ["navigation.footer", "navigation.sections", "navigation.top", "navigation.tracking", "navigation.instant", "toc.follow", "content.code.copy", "content.code.annotate", "content.tooltips", "content.print.stylesheet", "search.highlight", "search.suggest", "search.share", "header.autohide", "announce.dismiss"], "search": "../../../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.f13b1293.min.js"></script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.1/mermaid.min.js"></script>
+      
+        <script src="../../../../javascript/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>
