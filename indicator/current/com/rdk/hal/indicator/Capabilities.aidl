@@ -19,16 +19,19 @@
 package com.rdk.hal.indicator;
 import com.rdk.hal.indicator.State;
 
-/** 
- *  @brief     Indicator service capabilities definition.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Douglas Adler
- */
+/**
+ * /**
+ * * @brief Indicator service capabilities definition.
+ * *
+ * * Defines the capabilities of the indicator service, including supported states.
+ * * @author Luc Kennedy-Lamb
+ * * @author Peter Stieglitz
+ * * @author Douglas Adler
+ * * @author Gerald Weatherup
+ * */
 
 @VintfStability
 parcelable Capabilities
 {
-    /** Array of states supported by the indicator service. */
-    State[] supportedStates;
+    State[] supportedStates; /**< Array of states supported by the indicator service. */
 }
