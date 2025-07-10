@@ -17,25 +17,36 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmioutput;
- 
-/** 
- *  @brief     HDMI additional colorimetry extension enum.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Amit Patel
+
+/**
+ * HDMI Additional Colorimetry Extension Enum.
+ *
+ * Specifies additional colorimetry metadata values used in HDMI AVI InfoFrames.
+ * These values correspond to the ACE (Additional Colorimetry Extension) field,
+ * used when Colorimetry = 3 and Extended Colorimetry = 7 (C=3, EC=7).
+ *
+ * This enum supports distinguishing between different DCI-P3 RGB profiles.
+ *
+ * Reference: HDMI Specification – AVI InfoFrame, Colorimetry Extensions.
+ *
+ * @author Luc Kennedy-Lamb
+ * @author Peter Stieglitz
+ * @author Amit Patel
+ * @author Gerald Weatherup
  */
- 
 @VintfStability
 @Backing(type = "int")
-enum AdditionalColorimetryExtension
+enum AdditionalColorimetryExtension 
 {
-	/**
-	 * AVI InfoFrame C=3, EC=7, ACE=0
-	 */
-	DCI_P3_RGB_D65 = 0,
+    /**
+     * DCI-P3 RGB with D65 white point.
+     * HDMI AVI InfoFrame: C=3, EC=7, ACE=0
+     */
+    DCI_P3_RGB_D65 = 0,
 
-	/**
-	 * AVI InfoFrame C=3, EC=7, ACE=1
-	 */
-	DCI_P3_RGB_THEATER = 1,
+    /**
+     * DCI-P3 RGB for theatrical presentation.
+     * HDMI AVI InfoFrame: C=3, EC=7, ACE=1
+     */
+    DCI_P3_RGB_THEATER = 1
 }
