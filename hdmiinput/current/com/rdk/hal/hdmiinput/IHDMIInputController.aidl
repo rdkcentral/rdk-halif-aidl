@@ -62,6 +62,8 @@ interface IHDMIInputController
      * HAL.HDMIINPUT.3. SVP when HDCP is engaged.
      * HAL.HDMIINPUT.4. Starts in CLOSED state which is powered down, but CEC remains active.
      * HAL.HDMIINPUT.5. Until an EDID is set, HPD is unasserted, port is unpowered and CEC is disabled.
+     *
+     * Methods must be called in appropriate states; see each method's @pre for details.
      */
 
     /**
@@ -108,15 +110,16 @@ interface IHDMIInputController
     /**
      * Sets a property.
      * 
-     * Properties may be set in the `READY` state to take effect once started or in the `STARTED` state
-     * where they are dynamically applied to the HDMI input port.
+     * If set in an invalid state, the change is ignored and false is returned.
+     * Properties set in READY state apply at next start; those set in STARTED are applied immediately.
      *
-     * @param[in] property              The key of a property from the Property enum.
-     * @param[in] propertyValue         Holds the value to set.
+     * @param[in] property       The key of a property from the Property enum.
+     * @param[in] propertyValue  The value to set. Must be of the expected type for the given property key (see @Property documentation).
      *
      * @returns boolean
      * @retval true     The property was successfully set.
-     * @retval false    Invalid property key or value.
+     * @retval false    Indicates an error condition (e.g., resource not available, invalid state, or parameter validation failure).
+     *  
      *
      * @see setPropertyMulti(), getProperty()
      */
@@ -154,6 +157,8 @@ interface IHDMIInputController
      *
      * If HDCP is not in use, then `HDCPStatus.UNKNOWN` is returned.
      *
+     * In case of persistent error (e.g., repeated authentication failure), client should close and re-open the session to reset the state.
+     *
      * @returns HDCPStatus
      *
      * @see getHDCPCurrentVersion(), IHDMIInputControllerListener.onHDCPStatusChanged()
@@ -163,7 +168,9 @@ interface IHDMIInputController
     /**
      * Gets the last received source product description (SPD) InfoFrame.
      *
-     * @returns InfoFrame data byte array or empty array if no InfoFrame has been received since the last device was connected or started.
+     * For InfoFrame payload, starting with the InfoFrame type code. See HDMI Specification 2.0, Section 8.x for layout.
+     *
+     * @returns InfoFrame data byte array, or empty array if no InfoFrame has been received since last device connection or start.
      *
      * @see IHDMIInputControllerListener.onSPDInfoFrame()
      */
