@@ -22,55 +22,67 @@
 
 # HAL Feature Profile for planecontrol
 
-IPlaneControl:              # Component object begins
-  interfaceVersion: current
-  planes:                   # Resource list
-    - 0:                    # Resource object begins
-        type: VIDEO
-        pixelFormats:
-          - NATIVE
-        maxWidth: 3840
-        maxHeight: 2160
-        frameWidth: 3840
-        frameHeight: 2160
-        supportedDynamicRanges:
-          - SDR
-          - HLG
-          - HDR10
-          - HDR10PLUS
-          - DOLBY_VISION
-        colorDepth: 12
-        maxFrameRate: 60
-        supportsAlpha: true
-        supportsZOrder: true
-        vsyncDisplayLatency: 3
-    - 1:                    # Resource object begins
-        type: VIDEO
-        pixelFormats:
-          - NATIVE
-        maxWidth: 3840
-        maxHeight: 2160
-        frameWidth: 3840
-        frameHeight: 2160
-        supportedDynamicRanges:
-          - SDR
-        colorDepth: 10
-        maxFrameRate: 60
-        supportsAlpha: true
-        supportsZOrder: true
-        vsyncDisplayLatency: 3
-    - 2:                    # Resource object begins
-        type: GRAPHICS
-        pixelFormats:
-          - RGB
-        maxWidth: 1920
-        maxHeight: 1080
-        frameWidth: 1920
-        frameHeight: 1080
-        supportedDynamicRanges:
-          - SDR
-        colorDepth: 8
-        maxFrameRate: 60
-        supportsAlpha: true
-        supportsZOrder: false
-        vsyncDisplayLatency: 1
+planecontrol:
+  interfaceVersion: current  # Interface version string (typically 'current')
+
+  planes:
+  - planeIndex: 0  # Unique index for this plane resource; must match AIDL Capabilities.planeIndex
+    type: VIDEO  # Type of plane: VIDEO or GRAPHICS (enum PlaneType)
+    pixelFormats:  # Supported pixel formats for this plane (enum PixelFormat)
+    - NATIVE
+    sourceTypes:  # Supported source types for this plane (enum SourceType)
+    - VIDEO_SINK
+    - HDMI
+    - COMPOSITE
+    maxWidth: 3840  # Maximum display width this plane supports (in pixels)
+    maxHeight: 2160  # Maximum display height this plane supports (in pixels)
+    frameWidth: 3840  # Width of the full frame reference coordinate system
+    frameHeight: 2160  # Height of the full frame reference coordinate system
+    supportedDynamicRanges:  # Dynamic ranges supported by this plane (enum DynamicRange)
+    - SDR
+    - HLG
+    - HDR10
+    - HDR10PLUS
+    - DOLBY_VISION
+    colorDepth: 12  # Bit depth of supported pixel formats (e.g. 8, 10, 12)
+    maxFrameRate: 60  # Maximum supported refresh rate in Hz (e.g. 60fps)
+    supportsAlpha: true  # Whether ALPHA property is supported (transparency blending)
+    supportsZOrder: true  # Whether ZORDER property is supported (for plane stacking)
+    vsyncDisplayLatency: 3  # Display latency in vsync periods
+
+  - planeIndex: 1
+    type: VIDEO
+    pixelFormats:
+    - NATIVE
+    sourceTypes:
+    - VIDEO_SINK
+    - HDMI
+    - COMPOSITE
+    maxWidth: 3840
+    maxHeight: 2160
+    frameWidth: 3840
+    frameHeight: 2160
+    supportedDynamicRanges:
+    - SDR
+    colorDepth: 10
+    maxFrameRate: 60
+    supportsAlpha: true
+    supportsZOrder: true
+    vsyncDisplayLatency: 3
+
+  - planeIndex: 2
+    type: GRAPHICS
+    pixelFormats:
+    - RGB
+    sourceTypes: []  # Graphics planes do not support video source mapping
+    maxWidth: 1920
+    maxHeight: 1080
+    frameWidth: 1920
+    frameHeight: 1080
+    supportedDynamicRanges:
+    - SDR
+    colorDepth: 8
+    maxFrameRate: 60
+    supportsAlpha: true
+    supportsZOrder: false  # Primary graphics plane typically has fixed z-order
+    vsyncDisplayLatency: 1
