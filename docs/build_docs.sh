@@ -102,7 +102,7 @@ function main()
     serve)
       ${PWD}/docs/scripts/sync_src.sh  --quiet
       echo "[INFO] Serving MkDocs locally..."
-      mkdocs serve "$@"
+      mkdocs serve -a 0.0.0.0:8000 "$@"
       ;;
 
     build)
