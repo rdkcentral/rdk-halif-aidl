@@ -16,36 +16,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.audiodecoder;
+ package com.rdk.hal.audiodecoder;
+
 import com.rdk.hal.audiodecoder.Codec;
- 
-/** 
- *  @brief     Audio decoder resource definition.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Douglas Adler
-*   @author    Gerald Weatherup
- */
-
-package com.rdk.hal.audiodecoder;
-
-import com.rdk.hal.audiodecoder.CodecSupport;
+import com.rdk.hal.audiodecoder.Profile;
 
 @VintfStability
 /**
- * @brief Represents system-wide audio decoder capabilities.
+ * @brief Describes platform support for a specific codec and its profile variants.
  */
-parcelable Capabilities {
-
-	/**
-	 * List of supported codecs and their associated profiles.
-	 */
-    CodecSupport[] codecSupportList; 
-
-	/**
-	 * Indicates if this decoder instance can work in secure audio path (SAP) mode. 
-	 * @see Property.SECURE_AUDIO
-	 */
-    boolean supportsSecure;	
+parcelable CodecSupport {
+    Codec codec;            /**< The codec type (e.g., AAC, Dolby AC-3). */
+    Profile[] profiles;     /**< List of supported profiles. Empty if the codec has no profiles. */
+    int maxSampleRate;      /**< Max supported sample rate in Hz (e.g., 48000). */
+    int maxChannels;        /**< Max number of supported channels (e.g., 2, 6, 8). */
 }
-
