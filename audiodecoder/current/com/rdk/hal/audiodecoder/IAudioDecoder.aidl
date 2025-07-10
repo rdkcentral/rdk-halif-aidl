@@ -86,39 +86,41 @@ interface IAudioDecoder
     State getState();
 
     /**
-	 * Opens the specified audio decoder resource index to decode the specified codec.
+     * Opens the specified audio decoder resource to decode the requested codec and profile.
      * 
-     * If successful the audio decoder transitions to an `OPENING` state and then a `READY` state
-     * which is notified to any registered `IAudioDecoderEventListener` interfaces.
+     * On success, the decoder transitions to the `OPENING` state, then the `READY` state. These
+     * transitions are notified to registered `IAudioDecoderEventListener` listeners.
      * 
-     * Controller related callbacks are made through the `IAudioDecoderControllerListener`
-     * passed into the call.
+     * If the `secure` flag is set to `true`, but the decoder's reported capabilities (via
+     * `IAudioDecoder.getCapabilities().supportsSecure`) are false, this method fails and returns `null`.
      * 
-     * The returned `IAudioDecoderController` interface is used by the client to feed data buffers
-     * for decode and manage the decoding flow.
+     * A successful call returns an `IAudioDecoderController` instance. This controller interface
+     * enables clients to feed audio buffers and control the decoding session.
+     * 
+     * If the client process that owns the `IAudioDecoderController` crashes or exits unexpectedly,
+     * the controller is automatically stopped and closed by the HAL implementation.
      *
-     * If `secure` is requested (true) and the `Capabilties.supportsSecure` is false then the `open()`
-     * fails with a null return.
-     *
-     * If the client that opened the `IAudioDecoderController` crashes,
-     * then the `IAudioDecoderController` has `stop()` and `close()` implicitly called to perform clean up.
-
-     * @param[in] codec					            The codec to configure the audio decoder for.
-     * @param[in] secure                            The audio decoder secure audio path mode.
-     * @param[in] audioDecoderControllerListener    Listener object for controller callbacks.
-     *
+     * @param codec                          The codec to configure the decoder for.
+     * @param profile                        The profile variant for the selected codec.
+     * @param secure                         Whether to enable secure audio path mode.
+     * @param audioDecoderControllerListener Listener for controller lifecycle callbacks.
+     * 
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in CLOSED state.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
-     * 
-     * @returns IAudioDecoderController or null if the codec or secure is not supported if requested.
-     * 
-     * @pre The resource must be in State::CLOSED.
-     * 
+     *
+     * @returns A configured `IAudioDecoderController`, or `null` if the codec/profile or secure
+     *          mode is unsupported.
+     *
+     * @pre Decoder must be in the `CLOSED` state before calling this method.
+     *
      * @see IAudioDecoderController, IAudioDecoderController.close(), registerEventListener()
      */
-    @nullable IAudioDecoderController open(in Codec codec, in boolean secure, in IAudioDecoderControllerListener audioDecoderControllerListener);
+    @nullable IAudioDecoderController open( in Codec codec,
+                                            in Profile profile,
+                                            in boolean secure,
+                                            in IAudioDecoderControllerListener audioDecoderControllerListener );
 
     /**
      * Closes the audio decoder.

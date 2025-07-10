@@ -17,35 +17,18 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiodecoder;
-import com.rdk.hal.audiodecoder.Codec;
- 
-/** 
- *  @brief     Audio decoder resource definition.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Douglas Adler
-*   @author    Gerald Weatherup
- */
 
-package com.rdk.hal.audiodecoder;
-
-import com.rdk.hal.audiodecoder.CodecSupport;
+import com.rdk.hal.audiodecoder.AACProfile;
+import com.rdk.hal.audiodecoder.DolbyAC3Profile;
+import com.rdk.hal.audiodecoder.DolbyMATProfile;
 
 @VintfStability
 /**
- * @brief Represents system-wide audio decoder capabilities.
+ * @brief Union of codec-specific profiles.
+ * Only one field may be set at a time, matching the associated codec.
  */
-parcelable Capabilities {
-
-	/**
-	 * List of supported codecs and their associated profiles.
-	 */
-    CodecSupport[] codecSupportList; 
-
-	/**
-	 * Indicates if this decoder instance can work in secure audio path (SAP) mode. 
-	 * @see Property.SECURE_AUDIO
-	 */
-    boolean supportsSecure;	
+union Profile {
+    AACProfile aac;
+    DolbyAC3Profile dolbyAc3;
+    DolbyMATProfile dolbyMat;
 }
-

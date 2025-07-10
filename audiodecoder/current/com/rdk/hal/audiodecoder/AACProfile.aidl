@@ -17,35 +17,16 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiodecoder;
-import com.rdk.hal.audiodecoder.Codec;
- 
-/** 
- *  @brief     Audio decoder resource definition.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Douglas Adler
-*   @author    Gerald Weatherup
- */
-
-package com.rdk.hal.audiodecoder;
-
-import com.rdk.hal.audiodecoder.CodecSupport;
 
 @VintfStability
+@Backing(type="int")
 /**
- * @brief Represents system-wide audio decoder capabilities.
+ * @brief Enumeration of profiles for the AAC codec (Codec.AAC).
  */
-parcelable Capabilities {
-
-	/**
-	 * List of supported codecs and their associated profiles.
-	 */
-    CodecSupport[] codecSupportList; 
-
-	/**
-	 * Indicates if this decoder instance can work in secure audio path (SAP) mode. 
-	 * @see Property.SECURE_AUDIO
-	 */
-    boolean supportsSecure;	
-}
-
+enum AACProfile {
+    LC = 0,            /**< Low Complexity AAC. */
+    HE_V1 = 1,         /**< High Efficiency AAC v1. */
+    HE_V2 = 2,         /**< High Efficiency AAC v2. */
+    ELD = 3,           /**< Enhanced Low Delay AAC. */
+    X_HE = 4           /**< Extended HE-AAC (exHE-AAC). */
+} 

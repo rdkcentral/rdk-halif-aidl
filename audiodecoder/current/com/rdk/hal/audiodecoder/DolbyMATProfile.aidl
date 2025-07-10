@@ -16,36 +16,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.audiodecoder;
-import com.rdk.hal.audiodecoder.Codec;
- 
-/** 
- *  @brief     Audio decoder resource definition.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Douglas Adler
-*   @author    Gerald Weatherup
- */
-
-package com.rdk.hal.audiodecoder;
-
-import com.rdk.hal.audiodecoder.CodecSupport;
+ package com.rdk.hal.audiodecoder;
 
 @VintfStability
+@Backing(type="int")
 /**
- * @brief Represents system-wide audio decoder capabilities.
+ * @brief Enumeration of profiles for Dolby MAT codec (Codec.DOLBY_MAT).
  */
-parcelable Capabilities {
-
-	/**
-	 * List of supported codecs and their associated profiles.
-	 */
-    CodecSupport[] codecSupportList; 
-
-	/**
-	 * Indicates if this decoder instance can work in secure audio path (SAP) mode. 
-	 * @see Property.SECURE_AUDIO
-	 */
-    boolean supportsSecure;	
+enum DolbyMATProfile {
+    V1 = 0,            /**< Dolby MAT version 1. */
+    V2 = 1             /**< Dolby MAT version 2. */
 }
-
