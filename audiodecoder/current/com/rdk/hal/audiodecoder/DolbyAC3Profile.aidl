@@ -16,36 +16,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.audiodecoder;
-import com.rdk.hal.audiodecoder.Codec;
- 
-/** 
- *  @brief     Audio decoder resource definition.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Douglas Adler
-*   @author    Gerald Weatherup
- */
-
-package com.rdk.hal.audiodecoder;
-
-import com.rdk.hal.audiodecoder.CodecSupport;
+ package com.rdk.hal.audiodecoder;
 
 @VintfStability
+@Backing(type="int")
 /**
- * @brief Represents system-wide audio decoder capabilities.
+ * @brief Enumeration of profiles for Dolby AC-3 codec (Codec.DOLBY_AC3).
  */
-parcelable Capabilities {
-
-	/**
-	 * List of supported codecs and their associated profiles.
-	 */
-    CodecSupport[] codecSupportList; 
-
-	/**
-	 * Indicates if this decoder instance can work in secure audio path (SAP) mode. 
-	 * @see Property.SECURE_AUDIO
-	 */
-    boolean supportsSecure;	
+enum DolbyAC3Profile {
+    STANDARD = 0,      /**< Dolby AC-3. */
+    PLUS = 1,          /**< Dolby Digital Plus (E-AC-3). */
+    PLUS_JOC = 2       /**< Dolby Digital Plus with JOC (Atmos). */
 }
-
