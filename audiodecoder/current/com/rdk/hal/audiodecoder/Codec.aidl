@@ -23,34 +23,46 @@ package com.rdk.hal.audiodecoder;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *  @author    Gerald Weatherup
  */
 
 @VintfStability
 @Backing(type="int")
-/** @brief Enumeration defining different audio codecs. */
-enum Codec {
-    PCM = 0,             /**< Pulse Coded Modulation. */
-    AAC_LC = 1,          /**< Advanced Audio Coding Low Complexity. */
-    HE_AAC = 2,          /**< High Efficiency Advanced Audio Coding. */
-    HE_AAC2 = 3,         /**< High Efficiency Advanced Audio Coding v2. */
-    AAC_ELD = 4,         /**< Advanced Audio Coding Enhanced Low Delay. */
-    DOLBY_AC3 = 5,       /**< Dolby AC-3. */
-    DOLBY_AC3_PLUS = 6,  /**< Dolby AC-3+ (E-AC-3). */
-    DOLBY_AC3_PLUS_JOC = 7, /**< Dolby AC-3+ (E-AC-3) with Joint Object Coding. */
-    DOLBY_AC4 = 8,       /**< Dolby AC-4. */
-    DOLBY_MAT = 9,       /**< Dolby MAT. */
-    DOLBY_MAT2 = 10,      /**< Dolby MAT2. */
-    DOLBY_TRUEHD = 11,   /**< Dolby TrueHD. */
-    MPEG2 = 12,          /**< MPEG-1/2 audio layer II. */
-    MP3 = 13,            /**< MPEG-1/2 audio layer III. */
-    FLAC = 14,           /**< Free Lossless Audio Codec. */
-    VORBIS = 15,         /**< Vorbis. */
-    DTS = 16,            /**< Digital Theater Systems. */
-    OPUS = 17,           /**< Opus. */
-    WMA = 18,            /**< Windows Media Audio. */
-    REALAUDIO = 19,      /**< RealAudio. */
-    USAC = 20,           /**< Unified Speech and Audio Coding. */
-    X_HE_AAC = 21,       /**< AAC speech codec. */
-    SBC = 22,            /**< SBC Bluetooth codec. */
-    AVS = 23             /**< Audio Video Standard codec. */
+/**
+ * @brief Enumeration of supported audio codecs.
+ * 
+ * ID ranges are used to indicate implementation support expectations:
+ * - 0–99:     Mandatory support
+ * - 100–199:  Conditionally mandatory (e.g., licensed codecs)
+ * - 200–255:  Optional codecs
+ */
+enum Codec
+{
+    // === Mandatory (0–99) ===
+
+    PCM = 0,               /**< Pulse Code Modulation. Used in raw LPCM streams. */
+    AAC = 1,               /**< Advanced Audio Coding base codec. Used in broadcast, IP streams, and files. */
+    MPEG_AUDIO = 2,        /**< MPEG-1/2 Layer II. Used in broadcast and file-based delivery. */
+    MP3 = 3,               /**< MPEG-1/2 Layer III (MP3). Common in file-based playback. */
+    AAC_ELD = 4,           /**< Enhanced Low Delay AAC. Used in Apple AirPlay and low-latency scenarios. */
+    ALAC = 5,              /**< Apple Lossless Audio Codec. Used in Apple AirPlay. */
+    SBC = 6,               /**< Subband Codec. Used in Bluetooth A2DP audio streaming. */
+
+    // === Conditionally Mandatory / Licensed (100–199) ===
+
+    DOLBY_AC3 = 100,       /**< Dolby AC-3. Requires Dolby license. */
+    DOLBY_AC4 = 101,       /**< Dolby AC-4. Requires Dolby license. */
+    DOLBY_MAT = 102,       /**< Dolby MAT. Typically used for HDMI bitstreams. Requires Dolby license. */
+    DOLBY_TRUEHD = 103,    /**< Dolby TrueHD. Lossless format used in Blu-ray. Requires Dolby license. */
+
+    // === Optional (200+) ===
+
+    FLAC = 200,            /**< Free Lossless Audio Codec. Used in Amazon Music, file-based playback. */
+    VORBIS = 201,          /**< Vorbis. Used in WebM containers and open streaming platforms. */
+    OPUS = 202,            /**< Opus. Real-time streaming and WebRTC applications. */
+    WMA = 203,             /**< Windows Media Audio. Legacy Microsoft ecosystem support. */
+    REALAUDIO = 204,       /**< RealAudio. Historical streaming format. */
+    USAC = 205,            /**< Unified Speech and Audio Coding. Emerging IP streaming codec. */
+    DTS = 206,             /**< Digital Theater Systems codec. Home theatre and disc-based media. */
+    AVS = 207              /**< Audio Video Standard codec (China). Used in regional broadcast and files. */
 }
