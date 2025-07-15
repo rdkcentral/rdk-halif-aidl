@@ -168,7 +168,7 @@ function setup_and_enable_venv()
             ECHO "please run the following to ensure setup:"
             ECHO ${YELLOW}". ./activate_venv.sh"${NO_COLOR}
         fi
-        exit 0  # Exit the function if already in a venv
+        return 0  # Exit the function if already in a venv
     fi
 
     if [ -f "${VENV_DIR}/.installed" ]; then
