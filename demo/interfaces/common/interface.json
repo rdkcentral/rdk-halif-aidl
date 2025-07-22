@@ -1,0 +1,28 @@
+{
+    "aidl_interface": {
+        "name": "com.demo.hal.common",
+        "srcs": [
+            "com/demo/hal/common/*.aidl"
+        ],
+        "dump_api": "enabled",
+        "stability": "vintf",
+        "versions_with_info": [
+            {
+                "version": "1",
+                "imports": []
+            },
+            {
+                "version": "2",
+                "imports": []
+            },
+            {
+                "version": "3",
+                "imports": []
+            },
+            {
+                "version": "4",
+                "imports": []
+            }
+        ]
+    }
+}
