@@ -20,12 +20,16 @@ package com.rdk.hal.indicator;
 import com.rdk.hal.indicator.State;
 import com.rdk.hal.indicator.Capabilities;
 
-/** 
- *  @brief     Indicator HAL interface.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Douglas Adler
- */
+/**
+ * /**
+ * * @brief Indicator HAL interface.
+ * *
+ * * Defines the Hardware Abstraction Layer (HAL) interface for indicator services.
+ * * @author Luc Kennedy-Lamb
+ * * @author Peter Stieglitz
+ * * @author Douglas Adler
+ * * @author Gerald Weatherup
+ * */
 
 @VintfStability
 interface IIndicator
@@ -36,23 +40,22 @@ interface IIndicator
     /**
      * Gets the capabilities of the indicator service.
      *
-     * @returns Capabilities parcelable.
+     * @returns Capabilities The capabilities parcelable of the indicator service.
      */
     Capabilities getCapabilities();
 
     /**
      * Sets a new indicator state.
-     * 
-     * @param[in] state     An indicator state.
-     * 
-     * @returns boolean - true if successful or false if the state could not be set.
+     *
+     * @param[in] state An indicator state to be set.
+     * @returns boolean Returns `true` if the state was set successfully, `false` otherwise.
      */
     boolean set(in State state);
 
     /**
      * Gets the current indicator state.
-     * 
-     * @returns State     The indicator state.
+     *
+     * @returns State The current indicator state.
      */
-	State get();
+    State get();
 }

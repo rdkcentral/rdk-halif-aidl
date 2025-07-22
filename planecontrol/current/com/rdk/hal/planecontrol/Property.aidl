@@ -23,7 +23,6 @@ package com.rdk.hal.planecontrol;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
- *  @copyright 
  */
  
 @VintfStability

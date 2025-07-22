@@ -65,7 +65,7 @@ interface IAudioSinkManager
 
 ## Systemd Naming of Launch
 
-Naming convention for [systemd](../../../vsi/systemd/current/intro.md) services follows the convention for documentation i.e. `hal-audio_decoder_manager.service`
+Naming convention for [systemd](../../../vsi/systemd/current/systemd.md) services follows the convention for documentation i.e. `hal-audio_decoder_manager.service`
 
 ## Additional Considerations
 

@@ -15,17 +15,20 @@ Using the `rdk-kirkstone` Docker image is highly recommended.
 **Clone the `linux_binder_idl` repository:**
 
 ```bash
-git clone -b main https://github.com/rdkcentral/linux_binder_idl.git
+git clone git@github.com:rdkcentral/linux_binder_idl.git
+cd linux_binder_idl
 ```
 
 **Build `aidl`:**
 
 ```bash
-cd linux_binder_idl
-
 # Optional: Run inside the Docker container
 sc docker run rdk-kirkstone /bin/bash
+```
 
+Then build the aidl tool.
+
+```bash
 ./build-aidl-generator-tool.sh
 ```
 
@@ -44,7 +47,7 @@ For more detailed information, refer to the [github.com/rdkcentral/linux_binder_
 **Clone the `hal` repository:**
 
 ```bash
-git clone -b develop https://github.com/rdkcentral/rdk-halif-aidl.git
+git clone git@github.com:rdkcentral/rdk-halif-aidl.git
 ```
 
 **Generate the AIDL proxy and native interfaces:**

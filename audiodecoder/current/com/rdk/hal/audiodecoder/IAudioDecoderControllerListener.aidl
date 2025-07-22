@@ -28,22 +28,20 @@ import com.rdk.hal.audiodecoder.FrameMetadata;
 
 @VintfStability
 oneway interface IAudioDecoderControllerListener {
- 
     /**
-	 * Callback when an audio frame has been decoded and/or the frame metadata needs to be notified.
-     * 
-     * The frame buffer handle can be -1 to indicate no decoded PCM audio is returned because audio is being
-     * tunnelled inside the vendor layer.
-     * 
-     * The metadata must be non-null on the first frame after start() or flush() call or
-     * when the metadata changes in the stream. 
-     * It can only be null if the contents have not changed since the last callback.
-     *
-     * @param[in] nsPresentationTime	The presentation time
-     * @param[in] frameBufferHandle		Handle to audio frame buffer.
-     * @param[in] metadata				A FrameMetadata parcelable of metadata related to the audio frame.
-     * 
-     * @see IAudioDecoderController.decodeBuffer()
-     */
+    * Called when an audio frame has been decoded or when frame metadata needs notification.
+    * 
+    * In tunneled mode, audio data is consumed by the vendor layer, so no PCM buffer is returned.
+    * 
+    * Otherwise, {@code frameBufferHandle} is a valid handle to a decoded PCM buffer,
+    * and {@code metadata} is non-null for the first frame after {@code State::START} or {@code State::FLUSHING},
+    * or whenever stream metadata changes. Metadata may be null if unchanged since the last callback.
+    *
+    * @param[in] nsPresentationTime  The presentation timestamp in nanoseconds.
+    * @param[in] frameBufferHandle   Handle to the decoded audio frame buffer, or -1 in tunneled mode.
+    * @param[in] metadata            FrameMetadata for the audio frame, or null in tunneled mode or if unchanged.
+    *
+    * @see IAudioDecoderController.decodeBuffer()
+    */
     void onFrameOutput(in long nsPresentationTime, in long frameBufferHandle, in @nullable FrameMetadata metadata);
 }

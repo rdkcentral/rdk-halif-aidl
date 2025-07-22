@@ -16,87 +16,113 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef AVBUFFERHELPER_H
-#define AVBUFFERHELPER_H
+
+#ifndef _IAVBUFFERHELPER_H_
+#define _IAVBUFFERHELPER_H_
+
 #include <stdint.h>
-#include "../h/com/rdk/hal/HALError.h"
 
-namespace com {
-namespace rdk {
-namespace hal {
-namespace avbuffer {
-
-/**********************************************************************************/
-/**********************************************************************************/
-/**********************************************************************************/
+using namespace com::rdk::hal;
+using namespace com::rdk::hal::avbuffer;
 
 /**
- * Map a non-secure AV buffer handle to a process-local pointer for read/write access.
- * 
- * The returned mapped memory is held in a single contiguous memory block inside the process.
+ * @class IAVBufferHelper
+ * @brief Pure virtual interface for AV buffer helpers.
  *
- * @param handle  Buffer handle.
- * @param pptr    Double pointer that receives the mapped memory address on success.
+ * This interface defines the API contract for managing buffer handles
+ * in AV pipelines where memory is shared between processes.
+ * It is typically used in pipelines where pipeline elements
+ * are implemented as AIDL HAL components communicating across process boundaries.
  *
- * @returns HALError::SUCCESS               Memory buffer was mapped to process at ptr location.
- * @returns HALError::INVALID_ARGUMENT      Invalid buffer handle, secure buffer handle or NULL pptr.
+ * Implementations of this interface are responsible for:
+ *   - Mapping a memory handle into process address space
+ *   - Unmapping a previously mapped handle
+ *   - Writing data into secure buffers
+ *   - Copying data between secure buffers
+ *
+ * Vendors must provide an implementation of this interface appropriate
+ * to their platform. Depending on the architecture, this may involve:
+ *   - Interacting with a buffer manager service (via AIDL, sockets, or vendor-specific transport)
+ *   - Using platform-specific buffer types (DMABUF, ION, TEE-secure buffers)
+ *   - Enforcing security / DRM constraints when writing or copying buffers
+ *
+ * A default implementation (`AVBufferHelper`) is typically provided as reference.
+ * Vendors can choose to subclass `AVBufferHelper` or provide a fully custom
+ * implementation of `IAVBufferHelper`.
+ *
+ * NOTE ON SINGLETON ACCESS:
+ *   - The interface itself does not provide a static getInstance().
+ *   - The default implementation (`AVBufferHelper`) provides a static getInstance()
+ *     to simplify usage in typical pipeline nodes.
+ *   - If a vendor supplies a custom implementation, they should provide their own
+ *     singleton access mechanism or factory registration as appropriate.
  */
-com::rdk::hal::HALError mapHandle(int64_t handle, void** pptr);
+class IAVBufferHelper
+{
+public:
+    /**
+     * @struct CopyMap
+     * @brief Defines the offsets and size for a memory copy operation.
+     */
+    struct CopyMap
+    {
+        uint32_t src_offset; /**< The offset from the source handle where copying begins. */
+        uint32_t dst_offset; /**< The offset in the destination handle where data will be copied. */
+        uint32_t size;       /**< The amount of data to copy, in bytes. */
+    };
 
-/**
- * Unmap a memory AV buffer pointer previously mapped by a call to mapHandle().
- *
- * @param handle Pointer to Handle structure.
- * @param ptr    Pointer that was previously mapped.
- * 
- * @returns HALError::SUCCESS               Memory buffer was unmapped.
- * @returns HALError::INVALID_ARGUMENT      Invalid buffer handle or pointer.
- */
-com::rdk::hal::HALError unmapHandle(int64_t handle, void* ptr);
+    /**
+     * @brief Destroys the `IAVBufferHelper` object.
+     */
+    virtual ~IAVBufferHelper() {}
 
-/**********************************************************************************/
-/**********************************************************************************/
-/**********************************************************************************/
+    /**
+     * @brief Maps memory from a given handle.
+     *
+     * This function is used by client code outside the `LinearBufferMgr` class to
+     * map memory from a specified handle.
+     *
+     * @param[in] handle The handle to map memory from.
+     * @param[out] size A pointer to a `uint32_t` that will be populated with the size of the mapped data.
+     *
+     * @returns A pointer to the mapped memory address, or `nullptr` if the mapping fails.
+     */
+    virtual void *mapHandle(uint64_t handle, uint32_t *size) = 0;
 
-/**
- * Writes a block of data to a memory block at a given offset.
- *
- * @param handle                Memory buffer handle.
- * @param targetBufferOffset    Byte offset into the memory buffer.
- * @param sourceData            Pointer to source data.
- * @param sourceDataBytes       Number of bytes to write.
- *
- * @retval HALError::SUCCESS            The write was successful.
- * @retval HALError::INVALID_ARGUMENT   Invalid memory buffer handle.
- * @retval HALError::OUT_OF_BOUNDS      The offset and/or data array size are out of bounds of the memory buffer.
- */
-com::rdk::hal::HALError write(int64_t handle, size_t targetBufferOffset, void* sourceData, size_t sourceDataBytes);
+    /**
+     * @brief Unmaps memory from a given handle.
+     *
+     * @param[in] handle The handle to unmap memory from.
+     *
+     * @retval true If the memory was successfully unmapped.
+     * @retval false If the memory could not be unmapped (e.g., invalid handle).
+     */
+    virtual bool unmapHandle(uint64_t handle) = 0;
 
-/**
- * AV buffer offset and length range description structure type.
- */
-typedef struct {
-    size_t offset;
-    size_t length;
-} BufferRange_t;
+    /**
+     * @brief Writes data from unsecure memory into a secure buffer.
+     *
+     * @param[in] handle The handle of the secure buffer to write data into.
+     * @param[in] data A pointer to the unsecure data to write.
+     * @param[in] size The size of the data to write, in bytes.
+     *
+     * @retval true If the data was successfully written.
+     * @retval false If the data could not be written (e.g., invalid handle, insufficient space).
+     */
+    virtual bool writeSecureHandle(uint64_t handle, void *data, uint32_t size) = 0;
 
-/**
- * Copies one or more ranges of bytes between memory buffers.
- *
- * @param destinationHandle     Memory buffer handle.
- * @param sourceHandle          Memory buffer handle.
- * @param pBufferRanges         Pointer to array of offset and length range description objects.
- * @param arrSize               Array size.
- *
- * @retval HALError::SUCCESS            The copy was successful.
- * @retval HALError::INVALID_ARGUMENT   One or more invalid memory buffer handles.
- * @retval HALError::OUT_OF_BOUNDS      The offset and/or size are out of bounds of a memory buffer.
- */
-com::rdk::hal::HALError copyWithMap(int64_t destinationHandle, int64_t sourceHandle, BufferRange_t* pBufferRanges, size_t arrSize);
+    /**
+     * @brief Copies data from one secure buffer to another.
+     *
+     * @param[in] handleTo The handle of the destination secure buffer.
+     * @param[in] handleFrom The handle of the source secure buffer.
+     * @param[in] map The `CopyMap` structure specifying the offsets and size for the copy operation.
+     * @param[in] mapSize The number of indexes in the map.
+     *
+     * @retval true If the data was successfully copied.
+     * @retval false If the data could not be copied (e.g., invalid handles, overlapping regions).
+     */
+    virtual bool copySecureHandleWithMap(uint64_t handleTo, uint64_t handleFrom, CopyMap map, uint32_t mapSize) = 0;
+};
 
-}  // namespace avbuffer
-}  // namespace hal
-}  // namespace rdk
-}  // namespace com
-
-#endif // AVBUFFERHELPER_H
+#endif // _IAVBUFFERHELPER_H_

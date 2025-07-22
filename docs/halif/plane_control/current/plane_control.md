@@ -14,7 +14,7 @@ Each plane is configurable through a set of properties that clients can read or 
     |**Interface Definition**|[planecontrol/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/planecontrol/current)|
     | **API Documentation** | *TBD - Doxygen* |
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
-    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/intro.md) - **hal-plane_control.service** |
+    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/systemd.md) - **hal-plane_control.service** |
     |**VTS Tests**| [https://github.com/rdkcentral/rdk-halif-binder-test-planecontrol](https://github.com/rdkcentral/rdk-halif-binder-test-planecontrol) |
     |**Reference Implementation - vComponent**|**TBC**|
 
@@ -50,7 +50,7 @@ Each plane is configurable through a set of properties that clients can read or 
 
 ## Initialization
 
-The [systemd](../../../vsi/systemd/current/intro.md) `hal-plane_control.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=)  directives to start any platform driver services it depends upon.
+The [systemd](../../../vsi/systemd/current/systemd.md) `hal-plane_control.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=)  directives to start any platform driver services it depends upon.
 
 The Plane Control service depends on the Service Manager to register itself as a service.
 
