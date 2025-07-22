@@ -45,9 +45,14 @@ def make_api_dump_as_version(aidl_intf,
     if creating_new_version:
         copy_cmd = "if [ \"$(cat %s)\" = \"1\" ]; then " %(has_development)
         copy_cmd = copy_cmd + "mkdir -p %s && " %(target_dir)
-        copy_cmd = copy_cmd + "cp -rf %s/. %s; fi" %(dump.api_dir, target_dir)
+        copy_cmd = copy_cmd + "cp -rf %s/. %s;" %(dump.api_dir, target_dir)
+        if not aidl_intf.dump_api:
+            # When dump_api is disabled, need to remove the interface definition file
+            copy_cmd = copy_cmd + "rm -f %s/interface.yaml %s/interface.json;" %(target_dir, target_dir)
+        copy_cmd = copy_cmd + "fi"
         logger.verbose(copy_cmd)
         subprocess.call(copy_cmd, shell=True)
+
 
         change_message = "There is change between ToT version and the latest stable version. Freezing %s-V%s." \
                 %(aidl_intf.base_name, version)
@@ -121,10 +126,10 @@ def dependecies_check_for_freeze(aidl_intf, aidl_intfs):
         assert False, "Dependencies are not fullfilled"
 
 def update_hash_for_current_api(aidl_intf):
-    version = aidl_interface.version_for_hashgen(aidl_intf.next_version())
+    hashgen_version = aidl_interface.version_for_hashgen(aidl_intf.next_version())
     api_dump_dir = aidl_interface.get_versioned_dir(aidl_intf, CURRENT_VERSION)
     hash_file = path.join(api_dump_dir, ".hash")
-    hash_gen_cmd = [CMD_AIDL_HASH_GEN, api_dump_dir, version, hash_file]
+    hash_gen_cmd = [CMD_AIDL_HASH_GEN, api_dump_dir, hashgen_version, hash_file]
     subprocess.call(hash_gen_cmd)
 
 
@@ -139,6 +144,7 @@ def create_api_dump_from_source(aidl_intf, aidl_intfs, is_freeze_api=False):
         Return:
             tot_api_dump: API dump details
     """
+    version = aidl_intf.next_version()
 
     if not path.exists(aidl_intf.intf_api_dir_out):
         os.makedirs(aidl_intf.intf_api_dir_out)
@@ -149,7 +155,7 @@ def create_api_dump_from_source(aidl_intf, aidl_intfs, is_freeze_api=False):
     os.makedirs(api_dump_dir)
 
     hash_file = path.join(aidl_intf.intf_api_dir_out, "dump", ".hash")
-    version = aidl_interface.version_for_hashgen(aidl_intf.next_version())
+    hashgen_version = aidl_interface.version_for_hashgen(version)
 
     # Get Input Files
     srcs = aidl_interface.get_path_for_files(aidl_intf.intf_root,
@@ -166,7 +172,7 @@ def create_api_dump_from_source(aidl_intf, aidl_intfs, is_freeze_api=False):
 
     # get dependent preprocessed interfaces from imports
     deps, imports, _ = aidl_interface.get_dependencies(aidl_intf,
-            aidl_intfs, aidl_intf.next_version(), is_freeze_api)
+            aidl_intfs, version, is_freeze_api)
     logger.verbose("Dependencies for %s: deps: %s, imports: %s" \
             %(aidl_intf.base_name, deps, imports))
     if len(deps) > 0:
@@ -182,7 +188,7 @@ def create_api_dump_from_source(aidl_intf, aidl_intfs, is_freeze_api=False):
             api_dump_dir]
     dump_cmd.extend(optional_flags)
     dump_cmd.extend(srcs)
-    hash_gen_cmd = [CMD_AIDL_HASH_GEN, api_dump_dir, version, hash_file]
+    hash_gen_cmd = [CMD_AIDL_HASH_GEN, api_dump_dir, hashgen_version, hash_file]
 
     logger.verbose("Dump API Command: %s" %(dump_cmd))
     logger.verbose("Hash Gen Command: %s" %(hash_gen_cmd))
@@ -345,8 +351,8 @@ def aidl_api(
         logger.fatal("Interface %s is not defined in the provided locations " % (intf_name))
 
 
-    if operation is "update_api":
+    if operation == "update_api":
         handle_update_api(intf_name, aidl_intfs)
-    elif operation is "freeze_api":
+    elif operation == "freeze_api":
         handle_freeze_api(intf_name, aidl_intfs)
  
