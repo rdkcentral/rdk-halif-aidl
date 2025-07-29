@@ -21,7 +21,7 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
     |**Interface Definition**|[video_decoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videodecoder/current)|
     |**API Documentation**| *TBD* |
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
-    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/intro.md) - **hal-video_decoder.service** |
+    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/systemd.md) - **hal-video_decoder.service** |
     |**VTS Tests**| TBC |
     |**Reference Implementation - vComponent**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videodecoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videodecoder/current)|
 
@@ -74,7 +74,7 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 
 ## Initialization
 
-The [systemd](../../../vsi/systemd/current/intro.md) `hal-video_decoder_manager.service` unit file is provided by the vendor layer to start the service and should include  [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
+The [systemd](../../../vsi/systemd/current/systemd.md) `hal-video_decoder_manager.service` unit file is provided by the vendor layer to start the service and should include  [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
 The Video Decoder Manager service depends on the Service Manager to register itself as a service.
 

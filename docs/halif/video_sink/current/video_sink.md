@@ -14,7 +14,7 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
     |**Interface Definition**|[video_sink/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videosink/current)|
     | **API Documentation** | *TBD - Doxygen* |
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
-    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/intro.md) - **hal-video_sink.service** |
+    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/systemd.md) - **hal-video_sink.service** |
     |**VTS Tests**| TBC |
     |**Reference Implementation - vComponent**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videosink/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videosink/current)|
 
@@ -30,15 +30,15 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
 
 |#| Requirement | Comments |
 |-|---|---|
-| **HAL.VIDEOSINK.1** | Shall manage a queue of video frames delivered from the client and held ready for presentation, often requiring AV lip sync. |
-| **HAL.VIDEOSINK.2** | Shall support flushing of the internal queue of video frames and notify the client when a flush operation has completed. |
-| **HAL.VIDEOSINK.3** | Shall internally manage the release of video frame handles back to the internal pool after they have finished being presented or during a flush. |
-| **HAL.VIDEOSINK.4** | Shall notify the client when the first frame is presented in the session once opened or after a flush operation. |
+| **HAL.VIDEOSINK.1** | Shall manage a queue of video frames delivered from the client and held ready for presentation, often requiring AV lip sync. ||
+| **HAL.VIDEOSINK.2** | Shall support flushing of the internal queue of video frames and notify the client when a flush operation has completed. ||
+| **HAL.VIDEOSINK.3** | Shall internally manage the release of video frame handles back to the internal pool after they have finished being presented or during a flush. ||
+| **HAL.VIDEOSINK.4** | Shall notify the client when the first frame is presented in the session once opened or after a flush operation. ||
 | **HAL.VIDEOSINK.5** | Shall notify the client when a video underflow occurs.| A video underflow condition is met if an expected frame is not queued in time for display. |
-| **HAL.VIDEOSINK.6** | Shall provide an API to expose the video sink resources for the client to discover. |
-| **HAL.VIDEOSINK.7** |  |
+| **HAL.VIDEOSINK.6** | Shall provide an API to expose the video sink resources for the client to discover. ||
+| **HAL.VIDEOSINK.7** |  ||
 | **HAL.VIDEOSINK.8** | Video frames decoupled from video planes (destination plane -1) shall continue to be delivered and remain in sync with audio.  When coupled to a video plane they shall immediately become visible and be in lip sync. |To ensure if/when a video sink source is assigned to a video plane it appears in sync with audio. |
-| **HAL.VIDEOSINK.9** | If a client process exits, the Video Sink server shall automatically stop and close any `IVideoSink` instance controlled by that client. |
+| **HAL.VIDEOSINK.9** | If a client process exits, the Video Sink server shall automatically stop and close any `IVideoSink` instance controlled by that client. ||
 
 ## Interface Definition
 
@@ -54,7 +54,7 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
 
 ## Initialization
 
-The [systemd](../../../vsi/systemd/current/intro.md) `hal-video_sink_manager.service` unit file is provided by the vendor layer to start the service and should include Wants or Requires directives to start any platform driver services it depends upon.
+The [systemd](../../../vsi/systemd/current/systemd.md) `hal-video_sink_manager.service` unit file is provided by the vendor layer to start the service and should include Wants or Requires directives to start any platform driver services it depends upon.
 
 The Video Sink Manager service depends on the Service Manager to register itself as a service.
 

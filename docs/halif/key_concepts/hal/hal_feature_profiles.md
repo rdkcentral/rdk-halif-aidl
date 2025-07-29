@@ -1,95 +1,158 @@
-# HAL Feature Profile (`HFP`)
+# HAL Feature Profile (HFP)
 
-The HAL Feature Profile (`HFP`) is a crucial declaration provided by the OEM when delivering a vendor layer implementation. It serves two primary purposes:
+The HAL Feature Profile (HFP) is a YAML-based declaration provided by OEMs to define the capabilities of their vendor layer implementation. It serves critical functions:
 
-- **Test Driver:** The `HFP` informs the vendor test suite, enabling it to conduct targeted testing based on the declared feature set.
-- **Capability Declaration:** The `HFP` lists all supported HAL features, allowing for verification against product requirements.
+* **Test Driver Configuration:** Enables the vendor test suite to perform targeted testing based on the declared feature set.
+* **Capability Declaration:** Provides a comprehensive list of supported HAL features for verification against product requirements.
+
+Each HAL component defines its own `hfp_xxx.yaml` within the vendor layer deliverables, typically located in a configuration directory (e.g., `vendor/<vendor_name>/<platform>/config/`).
 
 ## File Syntax and Schema
 
-The `HFP` is structured as a YAML file.  It resides within the vendor layer deliverables, typically in a designated configuration directory (e.g., `vendor/<vendor_name>/<platform>/config/hal_feature_profile.yaml`).
+The HFP utilizes YAML syntax for structured data representation, this is an example format the actual format is defined with the components.
 
 ```yaml
-hal_profile: "TV"        # Product/Platform identifier
-hal_version: "1.0.0"     # HFP schema version
-components:              # List of HAL components
+hal:
+  profile: "TV" # Profile Type
+  platform: "Sky Glass" # Platform Identifier
+  schema_version: "1.2.0" # HFP Schema Version
 
-  - name: "kernel"        # Component name
-    version: "5.15.164"  # Version of the component
+  components:
+    kernel:
+      version: "5.15.164"
 
-  - name: "avbuffer"      # Component name
-    aidl_version: 1       # AIDL interface version
-    non_secure_heap_bytes: 1048576 # Example: 1MB non-secure heap
-    secure_heap_bytes: 524288   # Example: 512KB secure heap
+    av_buffer:
+      non_secure_heap_bytes: 1048576 # 1MB
+      secure_heap_bytes: 524288 # 512KB
 
-  - name: "videodecoder"  # Component name
-    aidl_version: 1       # AIDL interface version
-    resources:            # Resource-specific information
-      - id: 0             # Resource identifier
-        codecs: ["H264", "HEVC"] # Supported codecs for this resource
-      - id: 1             # Resource identifier
-        codecs: ["MPEG2", "AV1"]  # Supported codecs for this resource
+    video_decoder:
+      resources:
+        - id: 0
+          codecs: ["H264", "HEVC"]
+          max_resolution: "4K"
+          max_fps: 60
+          bit_depth: 10
+        - id: 1
+          codecs: ["MPEG2", "AV1"]
+          max_resolution: "1080p"
+          max_fps: 30
+          bit_depth: 8
 
-  - name: "cdm"           # Component name (Content Decryption Module)
-    resources:            # Supported CDMs and their versions
-      - name: "PlayReady"
-        version: "4.4"
-      - name: "Widevine"
-        version: "L3" # Example: Security Level
-      - name: "Fairplay"
-        version: "4.0" # Example Version
+    cdm:
+      mandatory: true
+      resources:
+        PlayReady:
+          version: "4.4"
+          mandatory: true
+          secure_storage: true
+          concurrent_sessions: 2
+        WideVine:
+          version: "L3"
+          mandatory: false
+          secure_storage: false
+          concurrent_sessions: 1
+        FairPlay:
+          version: "4.0"
+          mandatory: false
 
-  - name: "audio_decoder"
-    aidl_version: 2
-    supported_formats: ["AAC", "MP3", "AC3"]
+    audio_decoder:
+      supported_formats: ["AAC", "MP3", "AC3", "DTS", "Dolby Digital"]
+      max_channels: 8
+      sample_rate: 192000
 
-  - name: "tuner"
-    type: "dvb-c" # Example: Cable tuner
-    frequency_range: "50-860 MHz"
+    tuner:
+      type: "dvb-c"
+      frequency_range: "50-860 MHz"
+      modulation: ["QAM16", "QAM64", "QAM256"]
+      bandwidth: 8
 
-  - name: "display"
-    resolution: "1920x1080"
-    hdr_support: true
-    interfaces: ["HDMI", "DisplayPort"]
+    display:
+      resolution: "1920x1080"
+      hdr_support: true
+      interfaces: ["HDMI", "DisplayPort"]
+      refresh_rate: 60
+      color_space: "BT.2020"
 
-  - name: "network"
-    interfaces: ["Ethernet", "WiFi"]
-    wifi_standards: ["802.11a/b/g/n/ac/ax"]
+    network:
+      interfaces: ["Ethernet", "WiFi"]
+      wifi_standards: ["802.11a", "802.11b", "802.11g", "802.11n", "802.11ac", "802.11ax"]
+      ethernet_speed: "1Gbps"
+      ipv6_support: true
 
-  - name: "bluetooth"
-    version: "5.2"
-    profiles: ["A2DP", "HFP", "AVRCP"]
+    bluetooth:
+      version: "5.2"
+      profiles: ["A2DP", "HFP", "AVRCP", "BLE"]
+      le_coded_phy: true
 
-  - name: "input"
-    devices: ["Remote Control", "Keyboard"]
-    types: ["IR", "Bluetooth", "RF4CE"]
+    input:
+      devices:
+        - name: "Remote Control"
+          types: ["IR", "Bluetooth", "RF4CE"]
+          features: ["Voice Control", "Navigation"]
+        - name: "Keyboard"
+          types: ["Bluetooth"]
+          features: ["Text Input"]
+
+    camera:
+      resolution: "1920x1080"
+      fps: 30
+      auto_focus: true
+      hdr: true
+
+    mic:
+      channels: 2
+      noise_cancellation: true
+      echo_cancellation: true
+
+    graphics_compositor:
+      layers: 4
+      alpha_blending: true
+      scaling: true
+      rotation: true
+
+    power_management:
+      states: ["On", "Standby", "Deep Sleep"]
+      wake_sources: ["Remote", "Network", "Timer"]
+      power_consumption:
+        standby: "0.5W"
+        deep_sleep: "0.1W"
+
+    telemetry:
+      supported_metrics: ["CPU Usage", "Memory Usage", "Network Throughput", "Temperature"]
+      reporting_interval: 60 # seconds
+      logging_levels: ["Error", "Warning", "Info", "Debug"]
+
+    drm_session_management:
+      max_concurrent_sessions: 4
+      secure_storage_types: ["TEE", "Secure Flash"]
+      persistent_sessions: true
 ```
 
 ## Mandatory and Optional HALs and Features
 
-The HFP explicitly lists all HAL components present in the vendor implementation.  While all listed components are considered *supported*, the HFP can also indicate whether a component or a specific feature within a component is *mandatory* or *optional*. This distinction is crucial for product compliance testing.  This can be achieved by adding properties to the component definition, for example:
+The HFP explicitly lists all supported HAL components. Components or specific features within them can be marked as `mandatory` to indicate their requirement status. Any field not defined can be assumed to be `false` but for clarity can also be stated e.g. `mandatory: false`.
 
 ```yaml
-  - name: "cdm"
-    mandatory: true # CDM is a mandatory component
-    resources:
-      - name: "PlayReady"
-        version: "4.4"
-        mandatory: true # PlayReady is mandatory
-      - name: "Widevine"
-        version: "L3"
-        optional: true # Widevine is optional
+hal:
+  components:
+    cdm:
+      mandatory: true
+      resources:
+        PlayReady:
+          version: "4.4"
+          mandatory: true
+        WideVine:
+          version: "L3"
+          mandatory: false
 ```
 
 ## HFP Versioning
 
-The `hal_version` field in the HFP specifies the version of the HFP schema itself.  This allows for future evolution of the HFP structure while maintaining backward compatibility.  The versioning scheme should follow semantic versioning (major.minor.patch).
+The `schema_version` field adheres to semantic versioning (major.minor.patch) to ensure backward compatibility as the HFP schema evolves.
 
 ## Tooling
 
-Tools should be developed to parse and validate the HFP file.  This tooling will be essential for both the vendor test suite and for product requirements verification.  The tool should be able to:
+Dedicated tools are essential for creating and validating the HFP will be created:
 
-- Validate the HFP against the schema.
-- Check for mandatory components and features.
-- Compare the HFP against product requirements.
-- Generate reports summarizing the supported features.
+* **Schema Validation:** Implements robust validation against a defined schema (e.g., JSON Schema).
+* **HFP Generator:** Tool to help create HFP files.

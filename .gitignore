@@ -1,8 +1,11 @@
 ﻿################################################################################
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
+python_venv
+src_link
 .lastlogin
 gen
+.DS_Store
 site/
 linux_binder_idl/
 /.vs/hal/FileContentIndex
