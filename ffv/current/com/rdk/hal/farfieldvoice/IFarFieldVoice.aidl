@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.farfieldvoice;
-import com.rdk.hal.farfieldvoice.State;
+import com.rdk.hal.State;
 import com.rdk.hal.farfieldvoice.Capabilities;
 import com.rdk.hal.farfieldvoice.Status;
 import com.rdk.hal.farfieldvoice.IFarFieldVoiceEventListener;
