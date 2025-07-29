@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.farfieldvoice;
 import com.rdk.hal.farfieldvoice.PowerMode;
-import com.rdk.hal.farfieldvoice.KeywordDetectData;
+import com.rdk.hal.farfieldvoice.KeywordDetectInfo;
 
 /**
  *  @brief     Far Field Voice service status.
@@ -48,29 +48,14 @@ parcelable Status
     boolean keywordChannelOpen;
 
     /**
-     * Indicates if the Keyword channel has been started.
-     */
-    boolean keywordChannelStarted;
-
-    /**
      * Indicates if the Continual channel has been opened.
      */
     boolean continualChannelOpen;
 
     /**
-     * Indicates if the Continual channel has been started.
-     */
-    boolean continualChannelStarted;
-
-    /**
      * Indicates if the Microphone channels has been opened.
      */
     boolean microphoneChannelsOpen;
-
-    /**
-     * Indicates if the Microphone channels has been started.
-     */
-    boolean microphoneChannelsStarted;
 
     /**
      * Indicates if a keyword was detected on the Keyword channel.
@@ -80,7 +65,7 @@ parcelable Status
     /**
      * Keyword detect information (applicable only if keywordDetected is true).
      */
-    KeywordDetectData keywordDetectData;
+    KeywordDetectInfo keywordDetectInfo;
 
     /**
      * Indicates if privacy state is active.
@@ -121,11 +106,4 @@ parcelable Status
      * This is for information only and useful to log if an error condition occurs.
      */
     long vendorErrorCode;
-
-    /**
-     * Vendor specific error text to indicate an error condition.
-     *
-     * This is for information only and useful to log if an error condition occurs.
-     */
-    @utf8InCpp String vendorErrorText;
 }

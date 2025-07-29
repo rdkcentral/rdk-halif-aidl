@@ -9,25 +9,27 @@ if (NOT DEFINED AIDL_BIN)
 endif()
 
 # version of other modules that `farfieldvoice` depends on
+set(COMMON_VERSION "current")
+
 set(SRC_DIR com/rdk/hal/farfieldvoice)
 
 set(SRC
 	${SRC_DIR}/Capabilities.aidl
 	${SRC_DIR}/PowerMode.aidl
-	${SRC_DIR}/KeywordDetectData.aidl
+	${SRC_DIR}/KeywordDetectInfo.aidl
 	${SRC_DIR}/Status.aidl
 	${SRC_DIR}/FailureCode.aidl
 	${SRC_DIR}/IFarFieldVoice.aidl
 	${SRC_DIR}/IFarFieldVoiceController.aidl
 	${SRC_DIR}/IFarFieldVoiceEventListener.aidl
 	${SRC_DIR}/IFarFieldVoiceControllerListener.aidl
-	${SRC_DIR}/State.aidl
+	../../common/${COMMON_VERSION}/com/rdk/hal/State.aidl
 )
 
 set(INCLUDE_FLAGS
 	-I.
+	-I../../common/${COMMON_VERSION}
 )
-
 
 foreach(SRC_FILE IN ITEMS ${SRC})
 	message(STATUS "== ${SRC_FILE} ==")

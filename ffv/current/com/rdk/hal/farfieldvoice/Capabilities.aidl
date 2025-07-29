@@ -31,4 +31,9 @@ parcelable Capabilities
      * Number of microphone inputs.
 	 */
     int microphoneChannelCount;
+
+	/**
+     * Indicates if the Continual channel is supported.
+	 */
+    bool continualChannelSupported;
 }
