@@ -29,18 +29,23 @@ package com.rdk.hal.farfieldvoice;
 
 enum PowerMode
 {
+   /**
+     * Power mode never set or power mode change in progress (not ready).
+     */
+	NONE = 0,
+
     /**
      * Full Power.
      */
-    FULL_POWER = 0,
+	FULL_POWER = 1,
 
     /**
      * Standby.
      */
-    STANDBY = 1,
+	STANDBY = 2,
 
     /**
-     * Standby.
+     * Deep Sleep.
      */
-    DEEP_SLEEP = 2
+	DEEP_SLEEP = 3,
 }
