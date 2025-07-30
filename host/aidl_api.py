@@ -29,8 +29,22 @@ logger = Logger(_LOG_TAG, _LOG_LEVEL)
 def make_api_dump_as_version(aidl_intf,
                                 dump,
                                 version,
-                                latest_version_dump,
                                 has_development=""):
+    """
+    Make versioned API dump.
+    If the version is current version, the api dump is carried during
+    update api
+    If the version is not the current version, the api dump is carried
+    during freeze api
+
+    Args:
+        aidl_intf: AIDL interface for which api dump is required
+        dump: API dump which will be versioned
+        version: version for which API dump is required
+        has_development: Path for the file to check if the interface is updated
+        before freezing the version
+    """
+
     creating_new_version = version != CURRENT_VERSION
     target_dir = aidl_interface.get_versioned_dir(aidl_intf, version)
     # We are asked to create a new version. But before doing that, check if the given
@@ -71,6 +85,15 @@ def make_api_dump_as_version(aidl_intf,
 
 
 def append_version(aidl_intf, aidl_intfs, version):
+    """
+    Append the frozen version in the version_with_info field while freezing
+    the api.
+
+    Args:
+        aidl_intf: AIDL interface for which version needs to be appended
+        aidl_intfs: List of all AIDL interfaces
+        version: version to append
+    """
     imports = ""
 
     # TODO: update versioned imports
@@ -90,6 +113,15 @@ def append_version(aidl_intf, aidl_intfs, version):
 
 
 def dependecies_check_for_freeze(aidl_intf, aidl_intfs):
+    """
+    Validates the dependencies before freezing of the AIDL interface API.
+    Generates preprocessed AIDLs to validate dependecies.
+
+    Args:
+        aidl_intf: AIDL Interface for which check is required
+        aidl_intfs: list of all AIDL interfaces
+    """
+
     deps, imports, _ = aidl_interface.get_dependencies(aidl_intf,
             aidl_intfs, aidl_intf.next_version(), True)
 
@@ -125,7 +157,19 @@ def dependecies_check_for_freeze(aidl_intf, aidl_intfs):
     if not aidl_interface.exec_cmd(preprocess_gen_cmd):
         assert False, "Dependencies are not fullfilled"
 
+
 def update_hash_for_current_api(aidl_intf):
+    """
+    Create a .hash file capturing the hash value for the given given interface
+    and the next version which is being frozen.
+
+    The version for the hash gen command is taken from aidl_interface which is
+    not same as the frozen version. This is done to add bit more complexity while
+    generating hash so that the hash value is not modified manually.
+
+    Args:
+        aidl_intf: AIDL interface for which hash is being generated
+    """
     hashgen_version = aidl_interface.version_for_hashgen(aidl_intf.next_version())
     api_dump_dir = aidl_interface.get_versioned_dir(aidl_intf, CURRENT_VERSION)
     hash_file = path.join(api_dump_dir, ".hash")
@@ -134,15 +178,18 @@ def update_hash_for_current_api(aidl_intf):
 
 
 def create_api_dump_from_source(aidl_intf, aidl_intfs, is_freeze_api=False):
-    """ Creates api dump from the sources at the ToT (top of tree)
+    """
+    Creates api dump from the sources at the ToT (top of tree)
 
-        Args:
-            aidl_intf: AIDL interface for which api dump needs
-                to be created.
-            aidl_intfs: All available interfaces
+    This API dump will be used for validations and other operations
 
-        Return:
-            tot_api_dump: API dump details
+    Args:
+        aidl_intf: AIDL interface for which api dump needs
+            to be created.
+        aidl_intfs: All available interfaces
+
+    Return:
+        tot_api_dump: API dump details
     """
     version = aidl_intf.next_version()
 
@@ -317,9 +364,9 @@ def handle_freeze_api(intf_name, aidl_intfs):
 
     # API dump from source is frozen as the next stable version. Triggered by `m <name>-freeze-api`
     if aidl_intf.dump_api:
-        make_api_dump_as_version(aidl_intf, tot_api_dump, aidl_intf.next_version(), latest_version_dump, has_development)
+        make_api_dump_as_version(aidl_intf, tot_api_dump, aidl_intf.next_version(), has_development)
     else:
-        make_api_dump_as_version(aidl_intf, current_api_dump, aidl_intf.next_version(), latest_version_dump, has_development)
+        make_api_dump_as_version(aidl_intf, current_api_dump, aidl_intf.next_version(), has_development)
     append_version(aidl_intf, aidl_intfs, aidl_intf.next_version())
 
 

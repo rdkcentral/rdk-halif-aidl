@@ -1,21 +1,34 @@
 #!/usr/bin/env python3
 
 """
--add-literal value
-    a literal to add
--m value
-    comma or whitespace separated list of modules on which to operate
--parameter name
-    alias to -property=name
--property name
-    fully qualified name of property to modify (default "deps")
--remove-property
-    remove the property
--w  write result to (source) file instead of stdout
+Update the AIDL interface definition.
+intf-update [OPTION]... INPUT...
+
+OPTIONS:
+    --add-literal value
+        a literal to add. The value should be in the format it is expected by
+        modifying parameter
+    -m value
+        comma or whitespace separated list of modules on which to operate
+    --parameter name
+        alias to -property=name
+    --property name
+        fully qualified name of property to modify (default "deps")
+    --remove-property
+        remove the property
+    -w  write result to (source) file instead of stdout
+
+INPUT:
+    comma or whitespace separated list of path of files defining AIDL interfaces
+    without the extenstion on which the update is required.
+
 """
+
+
 # ASSUMPTIONS:
 #   1. Each interface.json will have only one aidl Interface Defined.
 #
+
 
 import sys
 import os
@@ -30,6 +43,7 @@ from collections import OrderedDict
 from copy import deepcopy
 
 import aidl_interface
+
 
 yaml = YAML()
 yaml.preserve_quotes = True
@@ -51,6 +65,7 @@ MODULE_KEY_STABILITY = "stability"
 MODULE_KEY_VERSIONSWITHINFO = "versions_with_info"
 MODULE_KEY_VERSION = "version"
 MODULE_KEY_IMPORTS = "imports"
+
 
 def update_versions_with_info(versionWithInfo, addLiteral):
     """ updare the versions_with_info field with the provided addLiteral.
@@ -80,6 +95,12 @@ def update_versions_with_info(versionWithInfo, addLiteral):
 
 
 def process_file(file):
+    """
+    Process the interface definition file and modify requested field.
+
+    Args:
+        file: Path of the AIDL interface definition file
+    """
     #if  len(aidl_interface.validate_interface(file)) == 0:
     #    print("Invalid Interface Definition" %(file))
     #    return
@@ -131,6 +152,7 @@ def process_file(file):
             json.dump(data, file_fd, indent=4)
         elif file_type == "yaml":
             yaml.dump(data, file_fd)
+
 
 def main(argv):
 

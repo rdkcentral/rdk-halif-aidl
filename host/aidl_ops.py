@@ -43,7 +43,6 @@ import getopt
 import os
 from os import path
 
-
 from logger import Logger
 import aidl_api
 import aidl_gen_rule
@@ -80,6 +79,7 @@ _intf_name = None
 _operation = None
 _intfs_roots = []
 
+
 # Degault out Directory:
 # workdir
 # ├── host
@@ -101,6 +101,7 @@ def handle_aidl_api():
 
 
 def handle_aidl_gen_rule():
+    logger.verbose("handle %s" %(_operation))
     aidl_gen_rule.aidl_gen_rule(
             _intf_name,
             _intfs_roots,
@@ -111,6 +112,7 @@ def handle_aidl_gen_rule():
 
 
 def handle_aidl_gen_deps():
+    logger.verbose("handle %s" %(_operation))
     aidl_gen_rule.aidl_gen_deps(
             _intfs_roots,
             _out_dir
@@ -195,29 +197,39 @@ def main(argv):
             logger.error("Invalide argument, %s" %(o))
             sys.exit(1)
 
+    if _operation is None:
+        logger.error("No AIDL operation provided")
+        sys.exit(1)
+
+    if error == 1:
+        logger.error("More than one AIDL operation provided")
+        sys.exit(1)
+
+    # exactly one interface should be provided in all all operations
+    # except while generating dependencies
     if _operation != "generate_deps":
         if len(args) == 1:
             _intf_name = args[0]
         else:
             logger.fatal("No or more than one interfaces are provided")
-            sys.exit(2)
+            sys.exit(1)
 
+    # check if aidl tool is available. If not generate it.
+    if not path.exists(CMD_AIDL):
+        logger.info("AIDL tool not found, Installation Script: %s" %(CMD_GEN_AIDL))
+        exec_cmd([CMD_GEN_AIDL])
+
+    if not path.exists(CMD_AIDL):
+        logger.error("Could not generate AIDL tool")
+        sys.exit(1)
+    else:
+        logger.info("Installed aidl at %s" %(CMD_AIDL))
 
     logger.debug("aidl_ops:")
     logger.debug  ("\tOperation        = %s" %(_operation))
     logger.debug  ("\tInterface Name   = %s" %(_intf_name))
     logger.verbose("\tInterfaces Roots = %s" %(_intfs_roots))
     logger.verbose("\tOutput Directory = %s" %(_out_dir))
-
-    if not path.exists(CMD_AIDL):
-        logger.info("Installed aidl at %s" %(CMD_AIDL))
-        logger.info("Installation Script: %s" %(CMD_GEN_AIDL))
-        exec_cmd([CMD_GEN_AIDL])
-
-    # TODO:
-    #   1. Check for Error Codes
-    #   2. Check if Interface Name is provided
-    #   3. Warn about _gen_dir in case of update_api and freeze_api
 
     if _operation == "update_api" or _operation == "freeze_api":
         handle_aidl_api()
@@ -227,10 +239,6 @@ def main(argv):
         handle_aidl_gen_rule()
     elif _operation == "generate_deps":
         handle_aidl_gen_deps()
-    else:
-        logger.error("unknown operation")
-        sys.exit(2)
-
 
 
 if __name__ == '__main__':

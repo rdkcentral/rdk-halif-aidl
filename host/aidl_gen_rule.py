@@ -25,6 +25,21 @@ logger = Logger(_LOG_TAG, _LOG_LEVEL)
 
 
 def get_imports_file(search_src, search_srcs, imports_dir, imports_dir_tot, import_files, import_files_tot):
+    """
+    Get all AIDL files as mentioned in the import statement.
+
+    This is required while generating stubs and proxies and we don't want to generate the seperate library
+    imported interfaces.
+
+    Args:
+    search_src: Source directory in which AIDLs needs to be searched
+    search_srcs: List of all source directories where AIDLs might available
+    imports_dir: Import Directory
+    imports_dir_tot: Top-of-Tree Import directory
+    import_files: All imported AIDLs. Found AIDL files will be saved in this list recursively.
+    import_files_tot: All imported AIDLs from Top-of-tree
+
+    """
     pattern = r'import\s+([\w\.]+);'
     lines = []
     imports = []
@@ -86,7 +101,21 @@ def get_imports_file(search_src, search_srcs, imports_dir, imports_dir_tot, impo
     logger.verbose("Import Files: %s" %(import_files))
     logger.verbose("Import Files ToT: %s" %(import_files_tot))
 
+
 def get_aidl_files_for_imports(aidl_intf, aidl_intfs, imports_dir, import_intfs, srcs):
+    """
+    Extract all import statements from AIDL Interfaces and find AIDL sources for them.
+
+    This is required while generating stubs and proxies and we don't want to generate the seperate library
+    imported interfaces.
+
+    Args:
+        aidl_intf: AIDL interface for which imported AIDLs need to be extracted
+        aidl_intfs: List of all AIDL interfaces
+        imports_dir: Location of all Imports
+        import_intfs: List of Imported interfaces
+        srcs: List of AIDL sources from which imports need to be extracted
+    """
     srcs_imports = []
     import_files = []
     import_files_tot = []
@@ -127,6 +156,20 @@ def gen_cpp_sources(intf_name,
         out_dir,
         gen_dir=None,
         gen_version=None):
+    """
+    Generate CPP stubs and proxies sources for the given aidl interface and version.
+    If version is not provided, sources will be generated for the current version.
+
+    Args:
+        intf_name: Name of the interface for which sources are need to be generated
+        aidl_intfs: List of all aidl interface objects
+        out_dir: Out directory for intermediate files
+        gen_dir=None: Location at which to save sources.
+                        If not given, a directory will be generated inside out directory
+        gen_version=None: Version of the aidl interface for which sources needs to be generated.
+                        If not given, sources will be generated for current the version
+
+    """
     logger.verbose("Interface Name: %s, gen_dir=%s, gen_version=%s" %(intf_name, gen_dir, gen_version))
 
     aidl_intf = aidl_intfs[intf_name]
@@ -220,6 +263,22 @@ def handle_source_gen(intf_name,
         out_dir,
         gen_dir=None,
         gen_version=None):
+    """
+    Handle Generation of CPP stubs and proxies sources for the given aidl interface and version.
+    Validates the interface before generating sources.
+
+    If version is not provided, sources will be generated for the current version.
+
+    Args:
+        intf_name: Name of the interface for which sources are need to be generated
+        aidl_intfs: List of all aidl interface objects
+        out_dir: Out directory for intermediate files
+        gen_dir=None: Location at which to save sources.
+                        If not given, a directory will be generated inside out directory
+        gen_version=None: Version of the aidl interface for which sources needs to be generated.
+                        If not given, sources will be generated for current the version
+
+    """
     logger.verbose("Interface Name: %s" %(intf_name))
 
     aidl_intf = aidl_intfs[intf_name]

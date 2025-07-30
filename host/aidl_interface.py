@@ -76,6 +76,19 @@ def topological_sort(dependencies):
 
 
 def generate_libraries_dependencies(aidl_intfs, out_dir):
+    """ Generates list of versioned interface libraries and thier dependencies
+    as per versions mentioned from all available interfaces.
+    The list will be in a topological order so that the dependent libraries are
+    in the beginning of the list.
+
+    This is required to determine the order in which libraries must be included
+    in the build
+
+    Args:
+        aidl_intfs: List of all AIDL interfaces
+        out_dir: Location of the directory where the list must be placed
+
+    """
 
     dep_file = path.join(out_dir, LIBRARIES_DEPENDECIES_FILE)
     if path.exists(dep_file):
@@ -99,10 +112,14 @@ def generate_libraries_dependencies(aidl_intfs, out_dir):
     libs_sorted = topological_sort(lib_deps_dict)
 
     for lib in libs_sorted:
+        logger.verbose("%s: %s" %(lib, " ".join(lib_deps_dict[lib])))
         with open(dep_file, 'a') as file:
             file.write("%s: %s"
                     %(lib, " ".join(lib_deps_dict[lib])))
             file.write('\n')
+
+    if path.exists(dep_file):
+        logger.info("Library dependencies file generated at %s" %(dep_file))
 
 
 def load_interfaces(intfs_roots, out_dir, gen_dir=None, gen_lib_deps=False):
@@ -150,6 +167,12 @@ def validate_interface(aidl_intf, aidl_intfs):
         3. srcs are defined and exist(atlease one)
         4. if unstable, versions_with_info should not be defined
         5. versions_with_info has all versions defined as per frozen versions
+
+    Args
+        aidl_intf: The interface to validate
+        aidl_intfs: list of all loaded interfaces
+    Returns
+        api_dumps: API dump of all versions of the given interface.
     """
 
     current_api_dir = get_versioned_dir(aidl_intf,
@@ -201,7 +224,19 @@ def validate_interface(aidl_intf, aidl_intfs):
     return api_dumps
 
 
-def get_path_for_files(src, pattern, rec=False, skip_dir=None):
+def get_path_for_files(src, pattern, rec=False):
+    """
+    Search and create a list of files with the given pattern.
+    This list is required to find all aidl files available in the source directory.
+
+    Args:
+        src: Root directory to look for files
+        pattern: pattern of file name. This could be directory structure or file
+            extensions
+        rec: Whether to search for files recursively.
+    Return:
+        file_paths: list of all files found as per give pattern.
+    """
     file_paths = []
     if rec:
         for root, dirs, files in os.walk(src):
@@ -214,6 +249,14 @@ def get_path_for_files(src, pattern, rec=False, skip_dir=None):
 
 
 def get_versioned_dir(interface, version):
+    """
+    Get the location of versioned interface API for the given version.
+    Args:
+        interface: Interface of which versioned directory is required
+        version: Version of the interface.
+    Return:
+        version_dir: location of the versioned Interface API
+    """
     version_dir = ""
     if interface.dump_api:
         version_dir = path.join(interface.intf_root, AIDL_API_DIR,
@@ -236,6 +279,23 @@ def get_preprocessed_dir(aidl_intf, version):
 
 
 def get_dependencies(aidl_intf, aidl_intfs, version, is_freeze_api=False):
+    """
+    Get the list of versioned interfaces on which the given interface is dependant
+    directly or indirectly.
+
+    Args:
+        aidl_intf: Interface for which dependencies are requested
+        aidl_intfs: All available interfaces
+        version: Version of the interface for which dependencies are requested
+        is_freeze_api: If the dependencies are requested while freezing the
+            interface.
+
+    Return:
+        deps: List of preprocessed aidl of dependant interfaces
+        imports: List of versiones Imports
+        import_intfs: List of interfaces from Imports
+
+    """
     logger.verbose("Interface Name: %s" %(aidl_intf.base_name))
 
     # API version to look for in imports
@@ -272,6 +332,21 @@ def get_dependencies(aidl_intf, aidl_intfs, version, is_freeze_api=False):
 
 rec_counter = 0
 def process_imports(aidl_intf, aidl_intfs, api_deps):
+    """
+    Process imports for a particular version of the given interface.
+    It travels through all the imports and identifies all the dependecies
+
+    It will be called recursively to get all the indirect dependencies
+
+    Args:
+        aidl_intf: Interface for which imports needs be processed
+        aidl_intfs: List of all interfaces
+        api_deps: object of ApiDependencies in which all dependencies captured
+            recursively. It holds the interface name, version info.
+    Return:
+        api_deps: object of ApiDependencies in which all dependencies captured
+            recursively. It holds the interface name, version info.
+    """
     global rec_counter
     rec_counter += 1
     logger.verbose("Interface Name: %s, Version: %s, Recursion Count: %s" %(aidl_intf.base_name, api_deps.version, rec_counter))
@@ -323,6 +398,7 @@ def process_imports(aidl_intf, aidl_intfs, api_deps):
 
     rec_counter -= 1
     return api_deps
+
 
 class ApiDependencies:
 
@@ -404,6 +480,7 @@ class ApiDependencies:
     def append_generated(self, generated):
         self.generated.append(generated)
 
+
 def show_dep_error(intf_name):
     logger.error("The dependency resolution failed for %s" %(intf_name))
     logger.error("If this is not the interface you are processing, It must be directly or indirectly imported in your interface")
@@ -415,6 +492,16 @@ def show_dep_error(intf_name):
 
 
 def aidl_gen_preprocessed(aidl_intf, version, api_deps):
+    """
+    Generates preprocessed AIDL file for given version which is required
+    while resolving dependencies during aidl operations(Update API, Freeze API,
+    and Generating sources)
+
+    Args:
+        aidl_intf: aidl inerfaces
+        version: Version of the aidl Interface
+        api_deps: API dependencies
+    """
     logger.verbose("Interface Name: %s, Version: %s, Dependencies: %s" \
             %(aidl_intf.base_name, version, api_deps))
 
@@ -484,6 +571,18 @@ def version_for_hashgen(ver):
 
 def check_api(aidl_intf, aidl_intfs, oldDump, newDump, checkApiLevel,
         messageFile):
+    """
+    Compares two API and checks for equality or compatibility as per given
+    argument.
+    Aborts the operation in case of failure.
+
+    Args:
+        aidl_intf: AIDL Interface for which check is required
+        aidl_intfs: list of all all aidl interfaces
+        oldDump: API dump of the old version
+        newDump: API dump of new version
+        checkApiLevel: type of check to carry out (equal or compatible)
+    """
     newVersion = path.basename(newDump.api_dir)
     # TODO: Find: how these timestampfiles are used and whether they
     # are required
@@ -523,6 +622,9 @@ def check_api(aidl_intf, aidl_intfs, oldDump, newDump, checkApiLevel,
 
 
 def check_equality(aidl_intf, aidl_intfs, oldDump, newDump):
+    """
+    Compare two api dumps for the equality.
+    """
     messageFile = path.join(get_host_dir(),
             "message_check_equality.txt")
     formattedMessageFile = path.join(aidl_intf.intf_api_dir_out,
@@ -538,6 +640,11 @@ def check_equality(aidl_intf, aidl_intfs, oldDump, newDump):
 
 
 def check_integrity(aidl_intf, api_dump):
+    """
+    Check the integrity of the given api dump of the versioned interface
+
+    Generates the hash for the aidl
+    """
     version = path.basename(api_dump.api_dir)
     # TODO: Find: how these timestampfiles are used and whether they are
     # required
@@ -597,7 +704,6 @@ def check_for_development(aidl_intf, aidl_intfs, latest_version_dump, tot_dump):
     subprocess.call(has_development_cmd, shell=True)
 
     return has_dev_path
-
 
 
 class ApiDump:
