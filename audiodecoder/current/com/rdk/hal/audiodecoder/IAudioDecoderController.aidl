@@ -43,6 +43,9 @@ interface IAudioDecoderController {
      * @retval false    Invalid property key or value.
      *
      * @see getProperty()
+     *
+     * @exception binder::Status EX_NONE for success.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT for invalid property and propertyValue.
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);
 

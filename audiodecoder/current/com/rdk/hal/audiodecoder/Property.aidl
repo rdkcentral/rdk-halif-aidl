@@ -34,6 +34,9 @@ enum Property {
 	 * 
 	 * Type: Integer
 	 * Access: Read-only.
+	 *
+	 * @exception binder::Status EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
 	 */
 	RESOURCE_ID = 0,
 	
@@ -46,6 +49,9 @@ enum Property {
 	 *  1 - on (only if supported)
 	 * Access: Read-write.
 	 * Write in states: READY
+	 *
+	 * @exception binder::Status EX_ILLEGAL_STATE if try to modify in non READY state.
+	 *
 	 */
 	LOW_LATENCY_MODE = 1,
 
@@ -58,6 +64,9 @@ enum Property {
 	 * Access: Read-write.
 	 * Write in states: READY
 	 * @see enum AVSource for possible values.
+	 *
+	 * @exception binder::Status EX_ILLEGAL_STATE if try to modify in non READY state.
+	 *
 	 */
 	AV_SOURCE = 3,
 
@@ -69,6 +78,9 @@ enum Property {
 	 *  1 - on (only if supported)
 	 * Access: Read-only.
 	 * @see Capabilities.supportsSecure IAudioDecoder.open()
+	 *
+	 * @exception binder::Status EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
 	 */
 	SECURE_AUDIO = 4,
 
@@ -160,6 +172,9 @@ enum Property {
 	 * Type: Integer
 	 *  -1 means this metric is not yet implemented by the vendor.
 	 * Access: Read-only.
+	 *
+	 * @exception binder::Status EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
 	 */
 	METRIC_FRAMES_DECODED = 1000,
 
@@ -170,6 +185,9 @@ enum Property {
 	 * Type: Integer
 	 *  -1 means this metric is not yet implemented by the vendor.
 	 * Access: Read-only.
+	 *
+	 * @exception binder::Status EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
 	 */
 	METRIC_DECODE_ERRORS = 1001,
 
@@ -182,6 +200,9 @@ enum Property {
 	 * Type: Integer
 	 *  -1 means this metric is not yet implemented by the vendor.
 	 * Access: Read-only.
+	 *
+	 * @exception binder::Status EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
 	 */
 	METRIC_FRAMES_DROPPED = 1002,
 }

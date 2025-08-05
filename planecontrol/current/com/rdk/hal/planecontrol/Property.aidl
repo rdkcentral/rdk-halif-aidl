@@ -34,6 +34,9 @@ enum Property
 	 *
 	 * Type: Integer
 	 * Access: Read-only.
+	 *
+	 * @exception binder::Status EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
 	 */
 	RESOURCE_ID = 0,
 

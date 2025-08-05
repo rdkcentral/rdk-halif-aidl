@@ -143,7 +143,7 @@ interface IPlaneControl
      * @returns PropertyValue or null on invalid parameter.
      *
      * @exception binder::Status EX_NONE for success.
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT for invalid value. 
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT for invalid parameter value.
      *
      * @see setProperty(), getPropertyMulti()
      */
