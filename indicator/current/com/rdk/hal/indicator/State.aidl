@@ -18,8 +18,6 @@
  */
 package com.rdk.hal.indicator;
 
-package com.rdk.hal.indicator;
-
 @VintfStability
 @Backing(type="int")
 /**
@@ -71,29 +69,29 @@ package com.rdk.hal.indicator;
 enum State
 {
     // General and boot-related states
-    ERROR_UNKNOWN = -1 /**< The current state cannot be determined. This state cannot be set by clients. */
-    BOOT = 0 /**< Initial bootloader-defined state. Read-only and set internally at HAL startup. */
-    ACTIVE = 1 /**< System is fully operational. */
-    STANDBY = 2 /**< Low-power idle state. Device remains partially responsive. */
-    OFF = 3 /**< All indicators are off. Used for deep standby or energy-saving modes. */
-    DEEP_SLEEP = 4 /**< Deep sleep mode with minimal system activity. */
+    ERROR_UNKNOWN = -1, 	/**< The current state cannot be determined. This state cannot be set by clients. */
+    BOOT = 0, 			/**< Initial bootloader-defined state. Read-only and set internally at HAL startup. */
+    ACTIVE = 1,			/**< System is fully operational. */
+    STANDBY = 2, 		/**< Low-power idle state. Device remains partially responsive. */
+    OFF = 3, 			/**< All indicators are off. Used for deep standby or energy-saving modes. */
+    DEEP_SLEEP = 4, 		/**< Deep sleep mode with minimal system activity. */
 
     // WPS-related states
-    WPS_CONNECTING = 100 /**< Wi-Fi Protected Setup is currently active. */
-    WPS_CONNECTED = 101 /**< WPS connection successfully completed. */
-    WPS_ERROR = 102 /**< WPS session failed (e.g., timeout, authentication error). */
-    WPS_SES_OVERLAP = 103 /**< Multiple WPS sessions detected; requires user intervention. */
+    WPS_CONNECTING = 100, 	/**< Wi-Fi Protected Setup is currently active. */
+    WPS_CONNECTED = 101, 	/**< WPS connection successfully completed. */
+    WPS_ERROR = 102, 		/**< WPS session failed (e.g., timeout, authentication error). */
+    WPS_SES_OVERLAP = 103,	/**< Multiple WPS sessions detected; requires user intervention. */
 
     // Network states
-    WIFI_ERROR = 200 /**< Wi-Fi hardware or configuration fault. */
-    IP_ACQUIRED = 201 /**< IP address successfully assigned. */
-    NO_IP = 202 /**< IP assignment failed; no address obtained. */
+    WIFI_ERROR = 200, 		/**< Wi-Fi hardware or configuration fault. */
+    IP_ACQUIRED = 201, 		/**< IP address successfully assigned. */
+    NO_IP = 202, 		/**< IP assignment failed; no address obtained. */
 
     // System operations
-    FULL_SYSTEM_RESET = 300 /**< Factory reset or system restore in progress. */
-    USB_UPGRADE = 301 /**< Firmware upgrade in progress via USB. */
-    SOFTWARE_DOWNLOAD_ERROR = 302 /**< Software update failed during download or installation. */
-    PSU_FAILURE = 303 /**< Power supply fault detected. */
+    FULL_SYSTEM_RESET = 300, 		/**< Factory reset or system restore in progress. */
+    USB_UPGRADE = 301, 			/**< Firmware upgrade in progress via USB. */
+    SOFTWARE_DOWNLOAD_ERROR = 302, 	/**< Software update failed during download or installation. */
+    PSU_FAILURE = 303, 			/**< Power supply fault detected. */
 
     /**
      * Reserved base for vendor-defined persistent states.
