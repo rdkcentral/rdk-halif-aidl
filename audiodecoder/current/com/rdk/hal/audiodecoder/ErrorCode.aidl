@@ -40,6 +40,4 @@ enum ErrorCode {
     OUT_OF_BOUNDS = 6,      /*!< Operation attempted to access data out of valid bounds. */
     NOT_EMPTY = 7,          /*!< Expected container is not empty when it should be. */
     INVALID_ARGUMENT = 8,   /*!< An invalid argument was passed to the function. */
-};
-
-
+}

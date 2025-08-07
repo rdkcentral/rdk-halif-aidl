@@ -53,4 +53,4 @@ enum Codec {
     X_HE_AAC = 21,       /**< AAC speech codec. */
     SBC = 22,            /**< SBC Bluetooth codec. */
     AVS = 23,            /**< Audio Video Standard codec. */
-};
+}

@@ -61,4 +61,4 @@ enum PCMFormat {
     U16BE = 27, /**< 16-bit unsigned integer, big-endian. */
     S8 = 28, /**< 8-bit signed integer. */
     U8 = 29, /**< 8-bit unsigned integer. */
-};
+}
