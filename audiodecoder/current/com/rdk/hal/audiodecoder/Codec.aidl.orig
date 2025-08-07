@@ -52,5 +52,5 @@ enum Codec {
     USAC = 20,           /**< Unified Speech and Audio Coding. */
     X_HE_AAC = 21,       /**< AAC speech codec. */
     SBC = 22,            /**< SBC Bluetooth codec. */
-    AVS = 23             /**< Audio Video Standard codec. */
+    AVS = 23,            /**< Audio Video Standard codec. */
 }
