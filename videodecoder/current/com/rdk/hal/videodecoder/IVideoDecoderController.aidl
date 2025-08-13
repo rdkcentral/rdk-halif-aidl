@@ -37,7 +37,7 @@ interface IVideoDecoderController
      * The Video Decoder must be in a `READY` state before it can be started.
      * If successful the Video Decoder transitions to a `STARTING` state and then a `STARTED` state.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::READY.
      * 
@@ -52,7 +52,7 @@ interface IVideoDecoderController
      * not yet been decoded are automatically freed.  This is effectively the same as a flush.
      * Once buffers are freed and the internal Video Decoder state is reset, the decoder enters the `READY` state.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.
      * 
@@ -89,8 +89,8 @@ interface IVideoDecoderController
      * 
      * @returns true on success or false if the decode buffer is full.
      * 
-     * @exception binder::Status EX_ILLEGAL_STATE
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      * 
      * @pre The resource must be in State::STARTED.
      */
@@ -108,7 +108,7 @@ interface IVideoDecoderController
      *
      * @param[in] reset - When true, the internal Video Decoder state is fully reset back to its opened `READY` state.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.
      */
@@ -121,7 +121,7 @@ interface IVideoDecoderController
      * Buffers that follow this call passed in `decodeBuffer()` shall be regarded
      * as PTS discontinuous to any video frames past or already held in the Video Decoder.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.
      */
@@ -139,7 +139,7 @@ interface IVideoDecoderController
      * An `IVideoDecoderControllerListener.onFrameOutput()` callback with `FrameMetadata.endOfStream`
      * must be set to true after all video frames have been output.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.
      */
@@ -180,7 +180,7 @@ interface IVideoDecoderController
     * @retval true  The codec data was successfully set.
     * @retval false Invalid parameter or empty codec data array.
     *
-    * @exception binder::Status EX_ILLEGAL_STATE if the resource is not in the `STARTED` state.
+    * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the `STARTED` state.
     *
     * @pre The resource must be in the `STARTED` state.
     */

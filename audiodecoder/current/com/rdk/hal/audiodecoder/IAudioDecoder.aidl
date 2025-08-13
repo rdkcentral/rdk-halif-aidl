@@ -67,8 +67,8 @@ interface IAudioDecoder
      * 
      * @see setProperty()
      *
-     * @exception binder::Status EX_NONE for success.
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT for invalid property value.
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value.
      *
      */
     @nullable PropertyValue getProperty(in Property property);
@@ -104,10 +104,10 @@ interface IAudioDecoder
      * @param[in] secure                            The audio decoder secure audio path mode.
      * @param[in] audioDecoderControllerListener    Listener object for controller callbacks.
      *
-     * @exception binder::Status EX_NONE for success.
-     * @exception binder::Status EX_ILLEGAL_STATE If instance is not in CLOSED state.
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT for invalid parameters.
-     * @exception binder::Status EX_NULL_POINTER for Null object.
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in CLOSED state.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      * 
      * @returns IAudioDecoderController or null if the codec or secure is not supported if requested.
      * 
@@ -132,9 +132,9 @@ interface IAudioDecoder
      *
      * @pre The resource must be in State::READY.
      *
-     * @exception binder::Status EX_NONE for success.
-     * @exception binder::Status EX_ILLEGAL_STATE If instance is not in OPENED State.
-     * @exception binder::Status EX_NULL_POINTER for Null object.
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in OPENED State.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      * @see open()
      */
@@ -152,8 +152,8 @@ interface IAudioDecoder
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
      *
-     * @exception binder::Status EX_NONE for success.
-     * @exception binder::Status EX_NULL_POINTER for Null object.
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      * @see unregisterEventListener()
      */
@@ -168,8 +168,8 @@ interface IAudioDecoder
      * @retval true     The event listener was unregistered.
      * @retval false    The event listener was not found registered.
      *
-     * @exception binder::Status EX_NONE for success.
-     * @exception binder::Status EX_NULL_POINTER for Null object.
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      * @see registerEventListener()
      */

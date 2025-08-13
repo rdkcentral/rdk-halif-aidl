@@ -35,7 +35,7 @@ enum Property {
      * Type: Integer
      * Access: Read-only.
      *
-	 * @exception binder::Status EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
      */
     RESOURCE_ID = 0,
@@ -49,7 +49,7 @@ enum Property {
      * Access: Read-write.
      * Write in states: READY
      *
-	 * @exception binder::Status EX_ILLEGAL_STATE if try to modify in non READY state.
+	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
 	 *
      */
     REFERENCE_LEVEL = 1,
@@ -61,7 +61,7 @@ enum Property {
      * Type: Integer
      * Access: Read-only.
      *
-	 * @exception binder::Status EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
      */
     RENDER_LATENCY_NS = 2,
@@ -75,7 +75,7 @@ enum Property {
     * Type: Integer
     * Access: Read-only.
     *
-	* @exception binder::Status EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	* @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	*
     */
     QUEUE_DEPTH_NS = 3,
@@ -88,7 +88,7 @@ enum Property {
      * Access: Read-write.
      * Write in states: READY
      *
-	 * @exception binder::Status EX_ILLEGAL_STATE if try to modify in non READY state.
+	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
 	 *
      */
     MIXER_ID = 4,
@@ -103,7 +103,7 @@ enum Property {
      * Access: Read-write.
      * Write in states: READY
      *
-	 * @exception binder::Status EX_ILLEGAL_STATE if try to modify in non READY state.
+	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
 	 *
      */
     AV_SOURCE = 5,
@@ -119,7 +119,7 @@ enum Property {
      * Access: Read-write.
      * Write in states: READY
      *
-	 * @exception binder::Status EX_ILLEGAL_STATE if try to modify in non READY state.
+	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
 	 *
      */
     DOLBY_ATMOS_LOCK = 6,

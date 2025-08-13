@@ -72,8 +72,8 @@ interface IAVClock
      *
      * @returns PropertyValue or null if property is invalid.
      * 
-     * @exception binder::Status EX_NONE for success.
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT for invalid property value.
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value.
      *
      * @see setProperty()
      */
@@ -89,8 +89,8 @@ interface IAVClock
      * @retval true     Property was successfully set.
      * @retval false    A parameter is invalid.
      *
-     * @exception binder::Status EX_NONE for success.
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT for invalid parameters. 
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters. 
      *
      * @see getProperty()
      */
@@ -117,10 +117,10 @@ interface IAVClock
      *
      * @returns IAVClockController interface or null on internal error.
      * 
-     * @exception binder::Status EX_NONE for success.
-     * @exception binder::Status EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT for invalid parameters.
-     * @exception binder::Status EX_NULL_POINTER for Null object.
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      * 
      * @pre AV Clock is in State::CLOSED state.
      * 
@@ -141,9 +141,9 @@ interface IAVClock
      * @retval true     Successfully closed.
      * @retval false    Invalid state or unrecognised parameter.
      *
-     * @exception binder::Status EX_NONE for success.
-     * @exception binder::Status EX_ILLEGAL_STATE If instance is not in OPENED State.
-     * @exception binder::Status EX_NULL_POINTER for Null object. 
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in OPENED State.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
      *
      * @pre AV Clock has been successfully opened and is in the State::READY state.
      *
@@ -164,8 +164,8 @@ interface IAVClock
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
      *
-     * @exception binder::Status EX_NONE for success.
-     * @exception binder::Status EX_NULL_POINTER for Null object.
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      * @see unregisterEventListener()
      */
@@ -180,8 +180,8 @@ interface IAVClock
      * @retval true     The event listener was unregistered.
      * @retval false    The event listener was not found registered.
      *
-     * @exception binder::Status EX_NONE for success.
-     * @exception binder::Status EX_NULL_POINTER for Null object.
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      * @see registerEventListener()
      */

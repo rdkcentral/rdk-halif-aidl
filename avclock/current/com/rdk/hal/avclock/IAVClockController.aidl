@@ -84,7 +84,7 @@ interface IAVClockController {
      * 
      * @returns IAudioSink.Id which can be `IAudioSink.Id.UNDEFINED`.
      * 
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre AV Clock is in State::READY or State::STARTED state.
      * 
@@ -108,7 +108,7 @@ interface IAVClockController {
      * @retval true     Successfully set the supplementary audio sink.
      * @retval false    The ID is invalid or not `IAudioSink.Id.UNDEFINED`.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre AV Clock is in State::READY or State::STARTED state.
      * 
@@ -121,7 +121,7 @@ interface IAVClockController {
      * 
      * @returns IAudioSink.Id which can be `IAudioSink.Id.UNDEFINED`.
      * 
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre AV Clock is in State::READY or State::STARTED state.
      * 
@@ -141,7 +141,7 @@ interface IAVClockController {
      * @retval true     Successfully set the video sink.
      * @retval false    The ID is invalid or not `IVideoSink.Id.UNDEFINED`.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre AV Clock is in State::READY or State::STARTED state.
      * 
@@ -154,7 +154,7 @@ interface IAVClockController {
      * 
      * @returns IVideoSink.Id which can be `IVideoSink.Id.UNDEFINED`.
      * 
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre AV Clock is in State::READY or State::STARTED state.
      * 
@@ -173,7 +173,7 @@ interface IAVClockController {
      * @retval true     Successfully set the clock mode.
      * @retval false    The clock mode is invalid.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre AV Clock is in State::READY state.
      * 
@@ -186,7 +186,7 @@ interface IAVClockController {
      * 
      * @returns	ClockMode
      * 
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre AV Clock is in State::READY or State::STARTED state.
      * 
@@ -213,7 +213,7 @@ interface IAVClockController {
      * @retval true     Successfully notified the PCR sample.
      * @retval false    One or more invalid parameters.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre AV Clock is in State::STARTED state and in PCR clock mode.
      * 
@@ -230,7 +230,7 @@ interface IAVClockController {
 	 *
   	 * @returns ClockTime
 	 *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre AV Clock is in State::STARTED state.
      */  
@@ -251,7 +251,7 @@ interface IAVClockController {
      * @retval true     Successfully set the playback state.
      * @retval false    Invalid rate parameter.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre AV Clock is in State::READY or State::STARTED state and clock mode is not ClockMode::PCR.
      * 
@@ -266,7 +266,7 @@ interface IAVClockController {
 	 *
   	 * @returns double representing the playback rate where 1.0 is normal speed.
 	 *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre AV Clock is in State::READY or State::STARTED state and mode is not ClockMode::PCR.
      */  

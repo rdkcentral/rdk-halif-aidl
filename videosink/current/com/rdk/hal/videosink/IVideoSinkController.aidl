@@ -54,7 +54,7 @@ interface IVideoSinkController
      *
      * @param[in] videoDecoderId		The ID of the Video Decoder source.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
      * @returns boolean
      * @retval true     The Video Decoder ID was set successfully.
@@ -71,7 +71,7 @@ interface IVideoSinkController
      *
      * @returns IVideoDecoder.Id which can be IVideoDecoder.Id.UNDEFINED.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
      * @pre The resource must be in State::READY or State::STARTED.
      *
@@ -85,7 +85,7 @@ interface IVideoSinkController
      * The Video Sink must be in a READY state before it can be started.
      * If successful the Video Sink transitions to a `STARTING` state and then a `STARTED` state.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::READY.
      * 
@@ -98,7 +98,7 @@ interface IVideoSinkController
      * 
      * The sink enters the `STOPPING` state and then the sink enters the `READY` state.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.
      * 
@@ -126,8 +126,8 @@ interface IVideoSinkController
      * @retval true     The video frame buffer was queued successfully.
      * @retval false    The video sink queue is full.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      * 
      * @pre The resource must be in State::STARTED.
      */
@@ -144,7 +144,7 @@ interface IVideoSinkController
      *
      * @param[in] holdLastFrame         If true then the current displayed video frame is held.
      * 
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.
      * 
@@ -165,7 +165,7 @@ interface IVideoSinkController
      *
      * @param[in] nsPresentationTime    The earliest presentation time of a video frame to display.
      * 
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.
      * 

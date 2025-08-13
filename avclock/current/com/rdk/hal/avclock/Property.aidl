@@ -35,7 +35,7 @@ enum Property {
 	 * Type: Integer
 	 * Access: Read-only.
 	 *
-	 * @exception binder::Status EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
 	 */
 	RESOURCE_ID = 0,
@@ -57,7 +57,7 @@ enum Property {
 	 *  -1 means this metric is not yet implemented by the vendor.
 	 * Access: Read-only.
 	 *
-	 * @exception binder::Status EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
 	 */
 	METRIC_AV_SYNC_ACCURACY_MS = 1000,
@@ -71,7 +71,7 @@ enum Property {
 	 *  -1 means this metric is not yet implemented by the vendor.
 	 * Access: Read-only.
 	 *
-	 * @exception binder::Status EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
 	 */
 	METRIC_AV_RESYNC_COUNT = 1001,
