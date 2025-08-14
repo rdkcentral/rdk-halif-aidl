@@ -35,6 +35,7 @@ enum Property {
 	 * Type: Integer
 	 * Access: Read-only.
 	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
 	 */
@@ -57,6 +58,7 @@ enum Property {
 	 *  -1 means this metric is not yet implemented by the vendor.
 	 * Access: Read-only.
 	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
 	 */
@@ -71,6 +73,7 @@ enum Property {
 	 *  -1 means this metric is not yet implemented by the vendor.
 	 * Access: Read-only.
 	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
 	 */

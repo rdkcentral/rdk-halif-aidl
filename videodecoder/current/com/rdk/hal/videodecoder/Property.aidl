@@ -34,6 +34,7 @@ enum Property {
 	 * Type: Integer
 	 * Access: Read-only.
 	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
 	 */
@@ -46,6 +47,7 @@ enum Property {
 	 * Type: Integer
 	 * Access: Read-only.
 	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
 	 */
@@ -58,6 +60,7 @@ enum Property {
 	 * Type: Integer
 	 * Access: Read-only
 	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *.
 	 */
@@ -78,6 +81,7 @@ enum Property {
 	 * Access: Read-write.
 	 * Write in states: READY, STARTED
 	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state or non STARTED state.
 	 *
 	 */
@@ -97,6 +101,7 @@ enum Property {
 	 * Access: Read-write.
 	 * Write in states: READY
 	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
 	 *
 	 */
@@ -111,6 +116,7 @@ enum Property {
 	 * Access: Read-write.
 	 * Write in states: READY
 	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
 	 *
 	 */
@@ -126,6 +132,7 @@ enum Property {
 	 * Access: Read-write.
 	 * Write in states: READY
 	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
 	 *
 	 */
@@ -142,6 +149,7 @@ enum Property {
 	 * Access: Read-write.
 	 * Write in states: READY, STARTED
 	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state or non STARTED state.
 	 *
 	 */
@@ -156,6 +164,7 @@ enum Property {
 	 * Access: Read-only.
 	 * @see Capabilities.supportsSecure IVideoDecoder.open()
 	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
 	 */
@@ -169,6 +178,7 @@ enum Property {
 	 *  -1 means this metric is not yet implemented by the vendor.
 	 * Access: Read-only.
 	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
 	 */
@@ -182,6 +192,7 @@ enum Property {
 	 *  -1 means this metric is not yet implemented by the vendor.
 	 * Access: Read-only.
 	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
 	 */
@@ -198,6 +209,7 @@ enum Property {
 	 *  -1 means this metric is not yet implemented by the vendor.
 	 * Access: Read-only.
 	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
 	 */
