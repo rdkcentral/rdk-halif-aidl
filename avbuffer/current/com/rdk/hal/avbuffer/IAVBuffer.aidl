@@ -65,6 +65,7 @@ interface IAVBuffer
      * 
      * @returns Pool
      *
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, HALError::OUT_OF_MEMORY
      * 
@@ -91,6 +92,7 @@ interface IAVBuffer
      *
      * @returns Pool
      *
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, HALError::OUT_OF_MEMORY
      * 
@@ -114,6 +116,7 @@ interface IAVBuffer
      * @retval true     The pool handle is valid.
      * @retval false    The pool handle is invalid.
      *
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, HALError::NOT_EMPTY
      * 
      * @pre A pool handle must have been obtained from `createVideoPool()` or `createAudioPool()`.
@@ -132,6 +135,7 @@ interface IAVBuffer
      * 
      * @returns PoolMetrics
      *
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      * 
      * @pre A pool handle must have been obtained from `createVideoPool()` or `createAudioPool()`.
@@ -166,7 +170,8 @@ interface IAVBuffer
      *
      * @returns long            The handle of the new buffer allocation.
      * @retval INVALID_HANDLE   The pool handle is invalid or the size is > the pool size.
-     * 
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, HALError::OUT_OF_MEMORY
      * 
      * @pre A pool handle must have been obtained from `createVideoPool()` or `createAudioPool()`.
@@ -202,6 +207,7 @@ interface IAVBuffer
      * @param[in] bufferHandle  Memory buffer handle.
      * @param[in] newSize       New size of the memory block in bytes.  Must be > 0 and <= original size.
      *
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @returns boolean
@@ -251,7 +257,8 @@ interface IAVBuffer
      * @param[in] poolHandle    Pool handle.
      *
      * @returns long[] array of buffer handles.
-     * 
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      * 
      * @see alloc(), createVideoPool(), createAudioPool()
@@ -272,7 +279,8 @@ interface IAVBuffer
      * @param[in] bufferHandle              Memory buffer handle.
      * 
      * @returns byte[] SHA-1 result buffer.
-     * 
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION
      */

@@ -40,6 +40,7 @@ interface IAudioSinkController {
 	 *
  	 * @param[in] audioDecoderId		The ID of the audio decoder source.
 	 *
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      * 
      * @returns boolean - true on success or false if the ID is invalid or not IAudioDecoder.Id.UNDEFINED.
@@ -54,7 +55,8 @@ interface IAudioSinkController {
 	 * Gets the audio decoder ID linked to this audio sink.
 	 *
      * @returns IAudioDecoder.Id which can be `IAudioDecoder.Id.UNDEFINED`.
-     * 
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      * 
      * @pre The resource must be in State::READY or State::STARTED.
@@ -69,6 +71,7 @@ interface IAudioSinkController {
      * The audio sink must be in a `READY` state before it can be started.
      * If successful the audio sink transitions to a `STARTING` state and then a `STARTED` state.
      *
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::READY.
@@ -111,6 +114,7 @@ interface IAudioSinkController {
     * @retval true  On success.
     * @retval false If the buffer is full.
     *
+    * @exception binder::Status::Exception::EX_NONE for success
     * @exception binder::Status::Exception::EX_ILLEGAL_STATE    If the resource is not in the `STARTED` state or an audio frame is passed after EOS.
     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT If an invalid argument is provided.
     *
@@ -125,6 +129,7 @@ interface IAudioSinkController {
      * Any data buffers that have been passed for mixing but have
      * not yet been processed are freed by the audio sink.
      *
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.
@@ -138,6 +143,7 @@ interface IAudioSinkController {
      * 
      * @returns Volume parcelable.
      * 
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::READY or State::STARTED.
@@ -150,7 +156,8 @@ interface IAudioSinkController {
      * @param[in] volume    Volume parcelable.
      *
      * @returns boolean - true if the volume was successfully set or false if the Volume parcelable was invalid.
-     * 
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::READY or State::STARTED.
@@ -175,7 +182,8 @@ interface IAudioSinkController {
      * @param[in] volumeRamp    	    The curve type for the ramp.
      *
      * @returns boolean - true if the volume ramp is started or false if any parameters are invalid.
-     * 
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.

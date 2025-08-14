@@ -93,6 +93,7 @@ interface IAudioDecoderController {
      *
      * @returns true on success or false if the decode buffer is full.
      * 
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      * 
@@ -110,6 +111,7 @@ interface IAudioDecoderController {
      *
      * @param[in] reset     When true, the internal audio decoder state is fully reset back to its opened READY state.
      *
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.
@@ -123,6 +125,7 @@ interface IAudioDecoderController {
      * Buffers that follow this call passed in `decodeBuffer()` shall be regarded
      * as PTS discontinuous to any audio frames previously passed.
      *
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.
@@ -140,6 +143,7 @@ interface IAudioDecoderController {
 	 * An `IAudioDecoderControllerListener.onFrameOutput()` callback with `FrameMetadata.endOfStream` 
      * must be set to true after all audio frames have been output.
      *
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.
@@ -167,6 +171,7 @@ interface IAudioDecoderController {
      * @retval true     The codec data was successfully set.
      * @retval false    Invalid parameter or empty codec data array.
      *
+     * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *           Thrown if the resource is not in State::STARTED.
      *
