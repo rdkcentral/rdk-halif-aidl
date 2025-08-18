@@ -51,6 +51,8 @@ interface IVideoSink
      * This function can be called at any time and is not dependant on any Video Sink state.
      * The returned value is not allowed to change between calls.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @returns Capabilities parcelable.
      */
     Capabilities getCapabilities();
@@ -74,6 +76,8 @@ interface IVideoSink
      *
      * @returns State enum value.
 	 *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @see IVideoSinkListener.onStateChanged().
      */  
     State getState();

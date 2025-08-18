@@ -85,6 +85,7 @@ interface IAudioSinkController {
      * 
      * The sink enters the `STOPPING` state and then the `READY` state.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.

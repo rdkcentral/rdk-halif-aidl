@@ -54,6 +54,8 @@ interface IVideoDecoder
      * This function can be called at any time and is not dependant on any Video Decoder state.
      * The returned value is not allowed to change between calls.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @returns Capabilities parcelable.
      */
     Capabilities getCapabilities();
@@ -99,6 +101,8 @@ interface IVideoDecoder
      *
      * @returns State enum value.
 	 *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @see IVideoDecoderEventListener.onStateChanged().
      */  
     State getState();

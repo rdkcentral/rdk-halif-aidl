@@ -47,6 +47,8 @@ interface IAVBuffer
      * 
      * @returns HeapMetrics
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @see createVideoPool(), createAudioPool(), destroyPool()
      */  
     HeapMetrics getHeapMetrics(in boolean secureHeap);
@@ -150,6 +152,8 @@ interface IAVBuffer
      * @param[in] secureHeap    Specifies the heap type - true is secure, false is non-secure.
      * 
      * @returns PoolMetrics[] array is sized to cover all created pools.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
      * 
      * @see alloc(), free(), createVideoPool(), createAudioPool()
      */
@@ -230,6 +234,8 @@ interface IAVBuffer
      * @retval true     The free was successful.
      * @retval false    The bufferHandle was invalid.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @see alloc()
      */
     boolean free(in long bufferHandle);
@@ -242,6 +248,8 @@ interface IAVBuffer
      * @returns boolean
      * @retval true     The handle is valid.
      * @retval false    The handle is invalid.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @see alloc(), free()
      */

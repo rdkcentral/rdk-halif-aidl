@@ -54,6 +54,8 @@ interface IAudioDecoder
      * 
      * The returned value is not allowed to change between calls.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @returns Capabilities parcelable.
      */
     Capabilities getCapabilities();
@@ -78,6 +80,8 @@ interface IAudioDecoder
      *
      * @returns State enum value.
 	 *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @see IAudioDecoderListener.onStateChanged().
      */  
     State getState();

@@ -69,6 +69,9 @@ enum Property
      *
      * Type: Integer (enum AVSource)  
      * Access: Read/Write.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     *
      */
     AV_SOURCE = 2,
 
@@ -81,6 +84,9 @@ enum Property
      *
      * Type: Boolean (0 = don't render, 1 = render)  
      * Access: Read/Write.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     *
      */
     RENDER_FIRST_FRAME = 3,
 

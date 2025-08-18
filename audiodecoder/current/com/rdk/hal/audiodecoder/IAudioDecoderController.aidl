@@ -56,6 +56,7 @@ interface IAudioDecoderController {
      * The audio decoder must be in a ready state before it can be started.
      * If successful the audio decoder transitions to a `STARTING` state and then a `STARTED` state.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::READY.
@@ -71,6 +72,7 @@ interface IAudioDecoderController {
      * not yet been decoded are freed automatically.  This is effectively the same as a flush.
      * Once buffers are freed and the internal audio decoder state is reset, the decoder enters the `READY` state.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.

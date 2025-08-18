@@ -42,6 +42,8 @@ interface IVideoSinkController
      * @retval true     The property was successfully set.
      * @retval false    Invalid property key or value.
      *
+     * @exception binder::Status::Exception::EX_NONE for success
+     *
      * @see getProperty()
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);

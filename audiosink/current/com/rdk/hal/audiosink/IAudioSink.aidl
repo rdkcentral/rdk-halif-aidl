@@ -53,6 +53,8 @@ interface IAudioSink
      * This function can be called at any time and is not dependant on any audio sink state.
      * The returned value is not allowed to change between calls.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @returns Capabilities parcelable.
      */
     Capabilities getCapabilities();
@@ -90,6 +92,8 @@ interface IAudioSink
 	 * Gets the current audio sink state.
      * 
      * @returns State enum value.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
      * 
      * @see IAudioSinkEventListener.onStateChanged().
      */  

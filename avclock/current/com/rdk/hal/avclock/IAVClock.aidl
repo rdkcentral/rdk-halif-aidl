@@ -52,6 +52,8 @@ interface IAVClock
      * This function can be called at any time and is not dependant on any AV Clock state.
      * The returned value is not allowed to change between calls.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @returns Capabilities parcelable.
      */
     Capabilities getCapabilities();
@@ -60,7 +62,9 @@ interface IAVClock
 	 * Gets the current AV Clock state.
      *
      * @returns State enum value.
-     * 
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @see IAVClockEventListener.onStateChanged(),  IAVClockControllerListener.onStateChanged().
      */  
     State getState();
