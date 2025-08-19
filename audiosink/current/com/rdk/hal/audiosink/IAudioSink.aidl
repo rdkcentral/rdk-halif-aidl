@@ -53,6 +53,8 @@ interface IAudioSink
      * This function can be called at any time and is not dependant on any audio sink state.
      * The returned value is not allowed to change between calls.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @returns Capabilities parcelable.
      */
     Capabilities getCapabilities();
@@ -64,6 +66,9 @@ interface IAudioSink
      *
      * @returns PropertyValue or null if the property key is unknown.
      * 
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value.
+     *
      * @see setProperty()
      */
     @nullable PropertyValue getProperty(in Property property);
@@ -75,6 +80,9 @@ interface IAudioSink
      * @param[in] propertyValue         Holds the value to set.
      *
      * @returns true if the property was successfully set, otherwise false on error.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
      * 
      * @see getProperty()
      */
@@ -84,6 +92,8 @@ interface IAudioSink
 	 * Gets the current audio sink state.
      * 
      * @returns State enum value.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
      * 
      * @see IAudioSinkEventListener.onStateChanged().
      */  
@@ -106,7 +116,10 @@ interface IAudioSink
     *
     * @returns IAudioSinkController or null On error
     *
-    * @exception binder::Status EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
+    * @exception binder::Status::Exception::EX_NONE for success.
+    * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
+    * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
+    * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
     *
     * @pre The resource must be in the CLOSED state.
     *
@@ -129,6 +142,10 @@ interface IAudioSink
      * 
      * @pre The resource must be in State::READY.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in OPENED State.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.     
+     *
      * @see open()
      */
     boolean close(in IAudioSinkController audioSinkController);
@@ -145,6 +162,9 @@ interface IAudioSink
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
      * @see unregisterEventListener()
      */
     boolean registerEventListener(in IAudioSinkEventListener audioSinkEventListener);
@@ -157,6 +177,9 @@ interface IAudioSink
      * @return boolean
      * @retval true     The event listener was unregistered.
      * @retval false    The event listener was not found registered.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      * @see registerEventListener()
      */

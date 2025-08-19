@@ -41,6 +41,10 @@ enum Property
      *
      * Type: Integer  
      * Access: Read-only.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
      */
     RESOURCE_ID = 0,
 
@@ -50,6 +54,10 @@ enum Property
      *
      * Type: Integer  
      * Access: Read-only.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
      */
     SINK_QUEUE_DEPTH = 1,
 
@@ -61,6 +69,9 @@ enum Property
      *
      * Type: Integer (enum AVSource)  
      * Access: Read/Write.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     *
      */
     AV_SOURCE = 2,
 
@@ -73,6 +84,9 @@ enum Property
      *
      * Type: Boolean (0 = don't render, 1 = render)  
      * Access: Read/Write.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     *
      */
     RENDER_FIRST_FRAME = 3,
 
@@ -84,6 +98,10 @@ enum Property
      *
      * Type: Integer  
      * Access: Read-only.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
      */
     METRIC_FRAMES_RECEIVED = 1000,
 
@@ -93,6 +111,10 @@ enum Property
      *
      * Type: Integer  
      * Access: Read-only.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
      */
     METRIC_FRAMES_PRESENTED = 1001,
 
@@ -103,6 +125,10 @@ enum Property
      *
      * Type: Integer  
      * Access: Read-only.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
      */
     METRIC_FRAMES_DROPPED_LATE = 1002,
 
@@ -113,6 +139,10 @@ enum Property
      *
      * Type: Integer  
      * Access: Read-only.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
      */
     METRIC_FRAMES_DROPPED_FRC = 1003,
 
@@ -123,6 +153,10 @@ enum Property
      *
      * Type: Integer  
      * Access: Read-only.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
      */
     METRIC_FRAMES_REPEATED_FRC = 1004,
 
@@ -133,6 +167,10 @@ enum Property
      *
      * Type: Integer  
      * Access: Read-only.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
      */
     METRIC_FRAMES_REPEATED_MISSING_FRAME = 1005,
 
@@ -143,6 +181,10 @@ enum Property
      *
      * Type: Integer  
      * Access: Read-only.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
      */
     METRIC_UNDERFLOWED = 1006,
 }

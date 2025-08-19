@@ -54,6 +54,8 @@ interface IVideoDecoder
      * This function can be called at any time and is not dependant on any Video Decoder state.
      * The returned value is not allowed to change between calls.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @returns Capabilities parcelable.
      */
     Capabilities getCapabilities();
@@ -64,7 +66,10 @@ interface IVideoDecoder
      * @param[in] property              The key of a property from the Property enum.
      *
      * @returns PropertyValue or null if the property key is unknown.
-     * 
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value. 
+     *
      * @see setProperty(), getPropertyMulti()
      */
     @nullable PropertyValue getProperty(in Property property);
@@ -82,7 +87,11 @@ interface IVideoDecoder
      * @returns boolean - true on success or false if any property keys are invalid.
      * @retval true     The property values were retrieved successfully.
      * @retval false    One or more property keys are invalid or the input array is empty.
-     * 
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
+     *
      * @see getProperty()
      */
     boolean getPropertyMulti(inout PropertyKVPair[] propertyKVList);
@@ -92,6 +101,8 @@ interface IVideoDecoder
      *
      * @returns State enum value.
 	 *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @see IVideoDecoderEventListener.onStateChanged().
      */  
     State getState();
@@ -117,7 +128,10 @@ interface IVideoDecoder
      *
      * @returns IVideoDecoderController or null if the codec or the requested secure mode is not supported.
      * 
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      * 
      * @pre The resource must be in State::CLOSED.
      * 
@@ -138,6 +152,10 @@ interface IVideoDecoder
      * @retval true     Successfully closed.
      * @retval false    Invalid state or unrecognised parameter.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in OPENED State.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
      * @pre The resource must be in State::READY.
      *
      * @see open()
@@ -156,6 +174,9 @@ interface IVideoDecoder
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
      * @see unregisterEventListener()
      */
     boolean registerEventListener(in IVideoDecoderEventListener videoDecoderEventListener);
@@ -168,6 +189,9 @@ interface IVideoDecoder
      * @return boolean
      * @retval true     The event listener was unregistered.
      * @retval false    The event listener was not found registered.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      * @see registerEventListener()
      */

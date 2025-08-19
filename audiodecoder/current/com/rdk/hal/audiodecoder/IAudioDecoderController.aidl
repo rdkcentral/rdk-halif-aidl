@@ -43,6 +43,9 @@ interface IAudioDecoderController {
      * @retval false    Invalid property key or value.
      *
      * @see getProperty()
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property and propertyValue.
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);
 
@@ -53,6 +56,7 @@ interface IAudioDecoderController {
      * The audio decoder must be in a ready state before it can be started.
      * If successful the audio decoder transitions to a `STARTING` state and then a `STARTED` state.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::READY.
@@ -68,7 +72,8 @@ interface IAudioDecoderController {
      * not yet been decoded are freed automatically.  This is effectively the same as a flush.
      * Once buffers are freed and the internal audio decoder state is reset, the decoder enters the `READY` state.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.
      * 
@@ -90,8 +95,9 @@ interface IAudioDecoderController {
      *
      * @returns true on success or false if the decode buffer is full.
      * 
-     * @exception binder::Status EX_ILLEGAL_STATE 
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      * 
      * @pre The resource must be in State::STARTED.
      */
@@ -107,7 +113,8 @@ interface IAudioDecoderController {
      *
      * @param[in] reset     When true, the internal audio decoder state is fully reset back to its opened READY state.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.
      */
@@ -120,7 +127,8 @@ interface IAudioDecoderController {
      * Buffers that follow this call passed in `decodeBuffer()` shall be regarded
      * as PTS discontinuous to any audio frames previously passed.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.
      */
@@ -137,7 +145,8 @@ interface IAudioDecoderController {
 	 * An `IAudioDecoderControllerListener.onFrameOutput()` callback with `FrameMetadata.endOfStream` 
      * must be set to true after all audio frames have been output.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.
      */
@@ -164,7 +173,8 @@ interface IAudioDecoderController {
      * @retval true     The codec data was successfully set.
      * @retval false    Invalid parameter or empty codec data array.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *           Thrown if the resource is not in State::STARTED.
      *
      * @pre The decoder resource must be in State::STARTED.
