@@ -41,7 +41,7 @@ union SignalInfoValue {
     boolean isRfLocked;
 
     /** RF signal level in dbm */
-    int rfLevel;
+    float rfLevel;
 
     /** Carrier to noise ratio in dB (float) */
     float cnr;

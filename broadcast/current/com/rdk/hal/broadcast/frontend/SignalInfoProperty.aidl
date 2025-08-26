@@ -60,11 +60,11 @@ enum SignalInfoProperty {
     PLP_IDS,
     /** DVB-T2 System Id */
     T2_SYSTEM_ID,
-    /** The used modulation / submodulation. @ref Modulation */
+    /** The used modulation / sub modulation. @ref Modulation */
     MODULATION,
     /** The used guard interval. @ref GuardInterval */
     GUARD_INTERVAL,
-    /** The used tranmission mode. @ref TransmissionMode */
+    /** The used transmission mode. @ref TransmissionMode */
     TRANSMISSION_MODE,
     /** Bandwidth */
     BANDWIDTH,
