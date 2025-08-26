@@ -31,7 +31,7 @@ enum TuneStatus {
     UNDEFINED = 0,
     /** The frontend is currently idle */
     IDLE,
-    /** The frontend is trying to optain lock */
+    /** The frontend is trying to obtain lock */
     TUNING,
     /** The frontend was not able to lock to the requested tune parameters */
     NO_SIGNAL,

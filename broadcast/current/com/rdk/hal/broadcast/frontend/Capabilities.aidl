@@ -19,6 +19,7 @@
 package com.rdk.hal.broadcast.frontend;
 import com.rdk.hal.broadcast.frontend.DvbTCapabilities;
 import com.rdk.hal.broadcast.frontend.DvbCCapabilities;
+import com.rdk.hal.broadcast.frontend.DvbSCapabilities;
 import com.rdk.hal.broadcast.frontend.AtscCapabilities;
 import com.rdk.hal.broadcast.frontend.SignalInfoProperty;
 
@@ -57,8 +58,9 @@ parcelable Capabilities {
         DvbTCapabilities dvbTCapabilities;
         DvbCCapabilities dvbCCapabilities;
         AtscCapabilities atscCapabilities;        
+        DvbSCapabilities dvbSCapabilities;
     }
 
-    /** Reserverd for future use */
+    /** Reserved for future use */
     ParcelableHolder extension;
 }
