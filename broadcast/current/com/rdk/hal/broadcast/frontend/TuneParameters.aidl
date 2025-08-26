@@ -20,7 +20,7 @@ package com.rdk.hal.broadcast.frontend;
 import com.rdk.hal.broadcast.frontend.AtscTuneParameters;
 import com.rdk.hal.broadcast.frontend.DvbCTuneParameters;
 import com.rdk.hal.broadcast.frontend.DvbTTuneParameters;
-//import com.rdk.hal.broadcast.frontend.DvbSTuneParameters;
+import com.rdk.hal.broadcast.frontend.DvbSTuneParameters;
 //import com.rdk.hal.broadcast.frontend.Atsc3TuneParameters;
 //import com.rdk.hal.broadcast.frontend.IsdbTTuneParameters;
 
@@ -30,22 +30,23 @@ import com.rdk.hal.broadcast.frontend.DvbTTuneParameters;
  *  @author    Christian George
  *  @author    Philipp Trommler 
  */
-
+ 
 @VintfStability
-union TuneParameters {
-    /** Tune parameters for tuning ATSC tuners */
-    AtscTuneParameters atscTuneParameters;
-    /** Tune parameters for tuning DVB-T tuners */
-    DvbTTuneParameters dvbTTuneParameters;
-    /** Tune parameters for tuning DVB-C tuners */
-    DvbCTuneParameters dvbCTuneParameters;
+parcelable TuneParameters {
+    SignalDetectMode signalDetectMode;
 
-    /** TODO */
-    /** Tune parameters for tuning ATSC3 tuners */
-    //Atsc3TuneParameters atscTuneParameters;
-    /** Tune parameters for tuning DVB-S tuners */
-    //DvbSTuneParameters dvbSTuneParameters;
-    /** Tune parameters for tuning ISDB-T tuners */
-    //IsdbTTuneParameters isdbTTuneParameters;
+    @VintfStability
+    union SpecificTuneParameters {
+        /** Tune parameters for tuning ATSC tuners */
+        AtscTuneParameters atscTuneParameters;
+        /** Tune parameters for tuning DVB-T tuners */
+        DvbTTuneParameters dvbTTuneParameters;
+        /** Tune parameters for tuning DVB-C tuners */
+        DvbCTuneParameters dvbCTuneParameters;
+        /** Tune parameters for tuning DVB-S tuners */
+        DvbSTuneParameters dvbSTuneParameters;
+    }
 
+    /** Reserved for future use */
+    ParcelableHolder extension;
 }

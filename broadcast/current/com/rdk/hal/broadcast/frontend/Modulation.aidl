@@ -60,8 +60,6 @@ enum Modulation {
     QAM_128,
     /** QAM_256 */
     QAM_256,
-    /** QAM_AUTO */
-    QAM_AUTO,
     /** VSB_8 */
     VSB_8,
     /** VSB_16 */
