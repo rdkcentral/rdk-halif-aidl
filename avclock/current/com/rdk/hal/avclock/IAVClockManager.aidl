@@ -36,6 +36,9 @@ interface IAVClockManager
 	 * Gets the list of platform AV Clock IDs.
      * 
      * @returns IAVClock.Id[]       Array of IDs.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      */
 	IAVClock.Id[] getAVClockIds();   
 
@@ -43,6 +46,8 @@ interface IAVClockManager
      * Gets the AV Clock interface for a given ID.
      *
      * @param[in] avClockId	        The ID of the AV clock.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns IAVClock or null if the `avClockId` is invalid.
      */

@@ -42,7 +42,9 @@ interface IPlaneControl
      * 
      * This function can be called at any time and is not dependant on any Plane Control state.
      * The returned value is not allowed to change between calls.
-     * 
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @returns Capabilities[] array of plane resource instance capabilities.
      */
     Capabilities[] getCapabilities();
@@ -57,7 +59,8 @@ interface IPlaneControl
      * 
      * @returns Native graphics window handle.
      * 
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      * 
      * @see releaseNativeGraphicsWindowHandle()
      */
@@ -69,7 +72,8 @@ interface IPlaneControl
      * @param[in] planeResourceIndex    The plane resource index.
      * @param[in] nativeWindowHandle    A native window handle.
      * 
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      * 
      * @see getNativeGraphicsWindowHandle()
      */
@@ -85,6 +89,9 @@ interface IPlaneControl
      * @returns boolean
      * @retval true     The flip was performed successfully.
      * @retval false    Invalid graphics plane resource index.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      *
      * @see getNativeGraphicsWindowHandle()
      */
@@ -108,7 +115,8 @@ interface IPlaneControl
      * @retval true     The mapping was updated.
      * @retval false    One or more mappings were invalid.
      * 
-     * @exception binder::Status EX_ILLEGAL_STATE
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      *
      * @see getVideoSourceDestinationPlaneMapping()
      */
@@ -122,6 +130,8 @@ interface IPlaneControl
      * 
      * @returns SourcePlaneMapping[]    An array of video source to video plane mappings.
      * 
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @see setVideoSourceDestinationPlaneMapping()
      */
     SourcePlaneMapping[] getVideoSourceDestinationPlaneMapping();
@@ -133,7 +143,10 @@ interface IPlaneControl
      * @param[in] property              Property enum.
      * 
      * @returns PropertyValue or null on invalid parameter.
-     * 
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameter value.
+     *
      * @see setProperty(), getPropertyMulti()
      */
     @nullable PropertyValue getProperty(in int planeResourceIndex, in Property property);
@@ -148,7 +161,10 @@ interface IPlaneControl
      * @returns boolean
      * @retval true     Property was set successfully.
      * @retval false    Invalid plane index, property or property value parameter.
-     * 
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value. 
+     *
      * @see getProperty(), setPropertyMultiAtomic()
      */
     boolean setProperty(in int planeResourceIndex, in Property property, in PropertyValue propertyValue);
@@ -166,7 +182,11 @@ interface IPlaneControl
      * @returns boolean
      * @retval true     Properties were returned successfully.
      * @retval false    Invalid parameter.
-     * 
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
+     *
      * @see getProperty(), setPropertyMultiAtomic()
      */
     boolean getPropertyMulti(in int planeResourceIndex, inout PropertyKVPair[] propertyKVList);
@@ -184,6 +204,10 @@ interface IPlaneControl
      * @retval true     Properties were set successfully.
      * @retval false    Invalid plane index, property or property value parameter.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
+     * @exception binder::Statu::Exception::EX_NULL_POINTER for Null object. 
+     *
      * @see setProperty(), getPropertyMulti()
      */
     boolean setPropertyMultiAtomic(in int planeResourceIndex, in PropertyKVPair[] propertyKVList);
@@ -199,7 +223,10 @@ interface IPlaneControl
      * @return boolean
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
-     * 
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
+     *
      * @see unregisterListener()
      */
     boolean registerListener(in IPlaneControlListener listener);
@@ -212,6 +239,9 @@ interface IPlaneControl
      * @return boolean
      * @retval true     The event listener was unregistered.
      * @retval false    The event listener was not found registered.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      * @see registerListener()
      */

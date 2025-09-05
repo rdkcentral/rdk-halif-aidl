@@ -40,6 +40,8 @@ interface IAudioDecoderManager
      * The list of audio decoders is static in the system and does not change
      * between calls.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @returns IAudioDecoder.Id[]
      */
     IAudioDecoder.Id[] getAudioDecoderIds();
@@ -48,6 +50,8 @@ interface IAudioDecoderManager
 	 * Gets an audio decoder resource index interface.
      *
      * @param[in] decoderResourceId     The ID of the audio decoder resource.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns IAudioDecoder which can be null if the resource index is invalid.
      */

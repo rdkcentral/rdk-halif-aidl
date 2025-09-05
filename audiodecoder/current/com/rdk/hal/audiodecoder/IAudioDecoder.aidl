@@ -24,7 +24,7 @@ import com.rdk.hal.audiodecoder.Capabilities;
 import com.rdk.hal.audiodecoder.Property;
 import com.rdk.hal.audiodecoder.Codec;
 import com.rdk.hal.audiodecoder.CSDAudioFormat;
-import com.rdk.hal.audiodecoder.State;
+import com.rdk.hal.State;
 
 import com.rdk.hal.PropertyValue;
  
@@ -54,6 +54,8 @@ interface IAudioDecoder
      * 
      * The returned value is not allowed to change between calls.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @returns Capabilities parcelable.
      */
     Capabilities getCapabilities();
@@ -66,6 +68,10 @@ interface IAudioDecoder
      * @returns PropertyValue or null if the property key is unknown.
      * 
      * @see setProperty()
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value.
+     *
      */
     @nullable PropertyValue getProperty(in Property property);
  
@@ -74,6 +80,8 @@ interface IAudioDecoder
      *
      * @returns State enum value.
 	 *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @see IAudioDecoderListener.onStateChanged().
      */  
     State getState();
@@ -100,7 +108,10 @@ interface IAudioDecoder
      * @param[in] secure                            The audio decoder secure audio path mode.
      * @param[in] audioDecoderControllerListener    Listener object for controller callbacks.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in CLOSED state.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      * 
      * @returns IAudioDecoderController or null if the codec or secure is not supported if requested.
      * 
@@ -125,6 +136,10 @@ interface IAudioDecoder
      *
      * @pre The resource must be in State::READY.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in OPENED State.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
      * @see open()
      */
     boolean close(in IAudioDecoderController audioDecoderController);
@@ -141,6 +156,9 @@ interface IAudioDecoder
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
      * @see unregisterEventListener()
      */
     boolean registerEventListener(in IAudioDecoderEventListener audioDecoderEventListener);
@@ -153,6 +171,9 @@ interface IAudioDecoder
      * @return boolean
      * @retval true     The event listener was unregistered.
      * @retval false    The event listener was not found registered.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      * @see registerEventListener()
      */
