@@ -11,14 +11,14 @@ aidl_interface:
   versions_with_info:
     - version: '1'
       imports:
-        - common-V1
-        - vehicle-V1
+        - common-v1
+        - vehicle-v1
     - version: '2'
       imports:
-        - common-V2
-        - vehicle-V1
+        - common-v2
+        - vehicle-v1
     - version: '3'
       imports:
-        - common-V4
-        - vehicle-V2
-        - dashboard-V1
+        - common-v4
+        - vehicle-v2
+        - dashboard-v1

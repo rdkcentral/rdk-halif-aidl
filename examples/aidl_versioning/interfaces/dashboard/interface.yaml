@@ -9,4 +9,4 @@ aidl_interface:
   versions_with_info:
     - version: '1'
       imports:
-        - common-V4
+        - common-v4

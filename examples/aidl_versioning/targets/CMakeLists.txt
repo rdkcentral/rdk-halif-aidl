@@ -25,12 +25,22 @@ else()
     file(REAL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../build-tools/linux_binder_idl/" LINUX_BINDER_AIDL_ROOT BASE_DIRECTORY ${WORKING_DIR})
 endif()
 
+# Set the root directory to look for AIDL Interfaces
 if (NOT DEFINED INTERFACES_ROOT_DIRS)
     file(REAL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../" INTERFACES_ROOT_DIRS BASE_DIRECTORY ${WORKING_DIR})
 endif()
 
-
 include(${LINUX_BINDER_AIDL_ROOT}/CMakeLists.inc)
 
-add_subdirectory(car_service_ver_2)
-add_subdirectory(car_service_ver_3)
+#if (NOT DEFINED INTERFACE_TARGET)
+#    set(INTERFACE_TARGET "ALL")
+#endif()
+#
+#if (NOT DEFINED INTERFACE_VERSION)
+#    set (INTERFACE_VERSION "ALL")
+#endif()
+
+message(STATUS "Interface Target: ${INTERFACE_TARGET} Version: ${INTERFACE_VERSION}")
+
+#target_build_interfaces_libraries(${INTERFACE_TARGET} ${INTERFACE_VERSION})
+target_build_interfaces_libraries()
