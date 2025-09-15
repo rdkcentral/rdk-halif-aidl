@@ -1,7 +1,0 @@
-aidl_interface:
-  name: com.rdk.hal.audiodecoder
-  srcs:
-    - com/rdk/hal/audiodecoder/*.aidl
-  stability: vintf
-  imports:
-    - com.rdk.hal

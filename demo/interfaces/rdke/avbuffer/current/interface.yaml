@@ -1,9 +1,0 @@
-aidl_interface:
-  name: com.rdk.hal.avbuffer
-  srcs:
-    - com/rdk/hal/avbuffer/*.aidl
-  stability: vintf
-  imports:
-    - com.rdk.hal
-    - com.rdk.hal.audiodecoder
-    - com.rdk.hal.videodecoder

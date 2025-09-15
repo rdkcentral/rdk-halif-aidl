@@ -1,0 +1,12 @@
+aidl_interface:
+  name: dashboard
+  srcs:
+    - com/demo/hal/dashboard/*.aidl
+  imports:
+    - common
+  dump_api: enabled
+  stability: vintf
+  versions_with_info:
+    - version: '1'
+      imports:
+        - common-V4

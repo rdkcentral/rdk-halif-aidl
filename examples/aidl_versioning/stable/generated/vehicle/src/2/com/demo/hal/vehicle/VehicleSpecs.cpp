@@ -1,0 +1,94 @@
+#include <com/demo/hal/vehicle/VehicleSpecs.h>
+
+namespace com {
+namespace demo {
+namespace hal {
+namespace vehicle {
+::android::status_t VehicleSpecs::readFromParcel(const ::android::Parcel* _aidl_parcel) {
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  size_t _aidl_start_pos = _aidl_parcel->dataPosition();
+  int32_t _aidl_parcelable_raw_size = 0;
+  _aidl_ret_status = _aidl_parcel->readInt32(&_aidl_parcelable_raw_size);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  if (_aidl_parcelable_raw_size < 4) return ::android::BAD_VALUE;
+  size_t _aidl_parcelable_size = static_cast<size_t>(_aidl_parcelable_raw_size);
+  if (_aidl_start_pos > SIZE_MAX - _aidl_parcelable_size) return ::android::BAD_VALUE;
+  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
+    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->readParcelable(&engineSpecs);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
+    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->readInt32(&numberOfWheels);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
+    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->readFloat(&length);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
+    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->readFloat(&width);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
+    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->readFloat(&height);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
+  return _aidl_ret_status;
+}
+::android::status_t VehicleSpecs::writeToParcel(::android::Parcel* _aidl_parcel) const {
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  auto _aidl_start_pos = _aidl_parcel->dataPosition();
+  _aidl_parcel->writeInt32(0);
+  _aidl_ret_status = _aidl_parcel->writeParcelable(engineSpecs);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->writeInt32(numberOfWheels);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->writeFloat(length);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->writeFloat(width);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->writeFloat(height);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  auto _aidl_end_pos = _aidl_parcel->dataPosition();
+  _aidl_parcel->setDataPosition(_aidl_start_pos);
+  _aidl_parcel->writeInt32(_aidl_end_pos - _aidl_start_pos);
+  _aidl_parcel->setDataPosition(_aidl_end_pos);
+  return _aidl_ret_status;
+}
+}  // namespace vehicle
+}  // namespace hal
+}  // namespace demo
+}  // namespace com
