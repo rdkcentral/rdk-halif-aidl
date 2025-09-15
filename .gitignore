@@ -22,6 +22,8 @@ linux_binder_idl/
 /audiodecoder/docs/html
 /audiodecoder/docs/latex
 .*sw*
+aidl_ops
+**/out
 
 # CMake related files
 CMakeCache.txt

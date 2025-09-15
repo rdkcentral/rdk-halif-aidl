@@ -26,6 +26,8 @@ set(
 
 add_executable(CarServiceVer2 ${CarService_Sources})
 
+# Link the interface library against your module.
+# Ensure that correct name and the version provided and provided version is available
 target_link_interfaces_libraries(CarServiceVer2
     car-v2-cpp
     )

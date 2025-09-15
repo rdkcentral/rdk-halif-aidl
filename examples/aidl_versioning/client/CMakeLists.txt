@@ -16,20 +16,27 @@
 # * SPDX-License-Identifier: Apache-2.0
 # */
 
-
 cmake_minimum_required(VERSION 3.8)
 
 execute_process(COMMAND pwd OUTPUT_VARIABLE WORKING_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+# Set the root directory where all interfaces are located.
+# This directory should include
+#   1. All interfaces definitions
+#   2. Stable directory containing generated sources and versioned AIDL.
+#
+# This setting is must before we include the Linux Binder AIDL Tool configuration 
+if (NOT DEFINED INTERFACES_ROOT_DIRS)
+    file(REAL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../" INTERFACES_ROOT_DIRS BASE_DIRECTORY ${WORKING_DIR})
+endif()
+
+
+# Include CMake configuration of Linux Biner AIDL tool in your project.
 if (DEFINED LINUX_BINDER_AIDL_ROOT)
     file(REAL_PATH ${LINUX_BINDER_AIDL_ROOT} LINUX_BINDER_AIDL_ROOT BASE_DIRECTORY ${WORKING_DIR})
 else()
     file(REAL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../build-tools/linux_binder_idl/" LINUX_BINDER_AIDL_ROOT BASE_DIRECTORY ${WORKING_DIR})
 endif()
-
-if (NOT DEFINED INTERFACES_ROOT_DIRS)
-    file(REAL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../" INTERFACES_ROOT_DIRS BASE_DIRECTORY ${WORKING_DIR})
-endif()
-
 include(${LINUX_BINDER_AIDL_ROOT}/CMakeLists.inc)
 
 add_subdirectory(car_client_ver_1)
