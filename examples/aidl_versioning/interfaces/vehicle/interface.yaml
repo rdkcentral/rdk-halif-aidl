@@ -26,10 +26,10 @@ aidl_interface:
   versions_with_info:
     - version: '1'
       imports:
-        - common-V1
+        - common-v1
     - version: '2'
       imports:
-        - common-V2
+        - common-v2
     - version: '3'
       imports:
-        - common-V4
+        - common-v4
