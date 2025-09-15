@@ -1,0 +1,24 @@
+aidl_interface:
+  name: car
+  srcs:
+    - com/demo/hal/car/*.aidl
+  imports:
+    - common
+    - vehicle
+    - dashboard
+  dump_api: enabled
+  stability: vintf
+  versions_with_info:
+    - version: '1'
+      imports:
+        - common-V1
+        - vehicle-V1
+    - version: '2'
+      imports:
+        - common-V2
+        - vehicle-V1
+    - version: '3'
+      imports:
+        - common-V4
+        - vehicle-V2
+        - dashboard-V1
