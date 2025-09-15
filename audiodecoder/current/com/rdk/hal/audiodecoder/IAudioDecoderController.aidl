@@ -87,7 +87,10 @@ interface IAudioDecoderController {
      * The audio decoder must be in a `STARTED` state.
      * Buffers can be either non-secure or secure to support SAP.
      * Each call shall reference a single audio frame with a presentation timestamp.
-     * 
+     *
+     * When the decoder has finished with the buffer, it is automatically freed by the decoder and returned
+     * to the AV Buffer Manager.
+     *
      * @param[in] nsPresentationTime	The presentation time of the audio frame in nanoseconds.
      * @param[in] bufferHandle			A handle to the AV buffer containing the encoded audio frame.
      * @param[in] trimStartNs			The time to trim from the start of the decoded audio in nanoseconds.
