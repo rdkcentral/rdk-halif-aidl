@@ -1,15 +1,11 @@
 #!/usr/bin/env bash
-#** *****************************************************************************
-# *
-# * If not stated otherwise in this file or this component's LICENSE file the
-# * following copyright and licenses apply:
-# *
-# * Copyright 2025 RDK Management
+
+#/**
+# * Copyright 2024 Comcast Cable Communications Management, LLC
 # *
 # * Licensed under the Apache License, Version 2.0 (the "License");
 # * you may not use this file except in compliance with the License.
 # * You may obtain a copy of the License at
-# *
 # *
 # * http://www.apache.org/licenses/LICENSE-2.0
 # *
@@ -19,12 +15,14 @@
 # * See the License for the specific language governing permissions and
 # * limitations under the License.
 # *
-#** ******************************************************************************
+# * SPDX-License-Identifier: Apache-2.0
+# */
 
 # Define repository and installation paths
 MY_PATH="$(realpath ${BASH_SOURCE[0]})"
 MY_DIR="$(dirname ${MY_PATH})"
 REPO_URL="https://github.com/rdkcentral/linux_binder_idl"
+REPO_BRANCH="feature/CPESP-5462_AIDL_Versioning_for_RDK-E_HAL"
 INSTALL_DIR="$MY_DIR/build-tools"
 CLONE_DIR="${BUILD_DIR}"
 BINDER_BIN_DIR="$INSTALL_DIR/linux_binder_idl"
@@ -39,7 +37,7 @@ clone_repo()
     else
         echo "Cloning Binder tools repository..."
         mkdir -p ${INSTALL_DIR}
-        git clone "$REPO_URL" "$INSTALL_DIR/linux_binder_idl"
+        git clone -b ${REPO_BRANCH} "$REPO_URL" "$INSTALL_DIR/linux_binder_idl"
     fi
 }
 
