@@ -25,6 +25,8 @@ set(
 
 add_executable(CarClientVer1 ${CarClient_Sources})
 
+# Link the interface library against your module.
+# Ensure that correct name and the version provided and provided version is available
 target_link_interfaces_libraries(CarClientVer1
     car-v1-cpp
     )
