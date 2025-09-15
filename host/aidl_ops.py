@@ -1,5 +1,23 @@
 #!/usr/bin/env python3
 
+#/**
+# * Copyright 2024 Comcast Cable Communications Management, LLC
+# *
+# * Licensed under the Apache License, Version 2.0 (the "License");
+# * you may not use this file except in compliance with the License.
+# * You may obtain a copy of the License at
+# *
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing, software
+# * distributed under the License is distributed on an "AS IS" BASIS,
+# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# * See the License for the specific language governing permissions and
+# * limitations under the License.
+# *
+# * SPDX-License-Identifier: Apache-2.0
+# */
+
 """
     aidl_ops -u|--update_api [OPTION]... INPUT...
         Performs update api for the given Interface
@@ -75,9 +93,9 @@ def get_host_dir():
             path.realpath(__file__))
 
 
-_intf_name = None
+_interface_name = None
 _operation = None
-_intfs_roots = []
+_interfaces_roots = []
 
 
 # Degault out Directory:
@@ -94,17 +112,17 @@ _gen_deps = False
 def handle_aidl_api():
     logger.verbose("handle %s" %(_operation))
     aidl_api.aidl_api(
-            _intf_name,
+            _interface_name,
             _operation,
-            _intfs_roots,
+            _interfaces_roots,
             _out_dir)
 
 
 def handle_aidl_gen_rule():
     logger.verbose("handle %s" %(_operation))
     aidl_gen_rule.aidl_gen_rule(
-            _intf_name,
-            _intfs_roots,
+            _interface_name,
+            _interfaces_roots,
             _out_dir,
             _gen_dir,
             _gen_version
@@ -114,22 +132,20 @@ def handle_aidl_gen_rule():
 def handle_aidl_gen_deps():
     logger.verbose("handle %s" %(_operation))
     aidl_gen_rule.aidl_gen_deps(
-            _intfs_roots,
+            _interfaces_roots,
             _out_dir
             )
 
 
 def main(argv):
     error = 0
-    global _intf_name
+    global _interface_name
     global _operation
-    global _intfs_roots
+    global _interfaces_roots
     global _out_dir
     global _gen_dir
     global _gen_version
     global _gen_deps
-
-    _intfs_roots.append(os.getcwd())
 
     opts, args = parse_options(argv, __doc__,
             "r:ufgad:v:o:h",
@@ -148,10 +164,10 @@ def main(argv):
         if o == "-r" or o == "--interfaces_roots":
             for p in a.split(";"):
                 if path.exists(path.realpath(p)):
-                    _intfs_roots.append(path.realpath(p))
+                    _interfaces_roots.append(path.realpath(p))
                 else:
-                    logger.warning(
-                            "Provided path, %s, for interfaces doesn't exist." % (p))
+                    logger.error(
+                            "Provided path, %s, for interfaces doesn't exist." %(p))
 
         elif o == "-u" or o == "--update_api":
             if _operation is None:
@@ -184,7 +200,9 @@ def main(argv):
             _gen_dir = a
 
         elif o == "-v" or o == "--version":
-            _gen_version = a
+            # Convert the given value to int and then to string.
+            # This is required in case the version is given along with the space.
+            _gen_version = str(int(a))
 
         elif o == "-o" or o == "--out_dir":
             _out_dir = a
@@ -196,6 +214,11 @@ def main(argv):
         else:
             logger.error("Invalide argument, %s" %(o))
             sys.exit(1)
+
+    if not _interfaces_roots:
+        logger.warning("No root directory for AIDL interfaces is provided.")
+        logger.info("setting it to %s" %(os.getcwd()))
+        _interfaces_roots.append(os.getcwd())
 
     if _operation is None:
         logger.error("No AIDL operation provided")
@@ -209,7 +232,7 @@ def main(argv):
     # except while generating dependencies
     if _operation != "generate_deps":
         if len(args) == 1:
-            _intf_name = args[0]
+            _interface_name = args[0]
         else:
             logger.fatal("No or more than one interfaces are provided")
             sys.exit(1)
@@ -227,8 +250,8 @@ def main(argv):
 
     logger.debug("aidl_ops:")
     logger.debug  ("\tOperation        = %s" %(_operation))
-    logger.debug  ("\tInterface Name   = %s" %(_intf_name))
-    logger.verbose("\tInterfaces Roots = %s" %(_intfs_roots))
+    logger.debug  ("\tInterface Name   = %s" %(_interface_name))
+    logger.verbose("\tInterfaces Roots = %s" %(_interfaces_roots))
     logger.verbose("\tOutput Directory = %s" %(_out_dir))
 
     if _operation == "update_api" or _operation == "freeze_api":

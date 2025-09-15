@@ -1,5 +1,23 @@
 #!/usr/bin/env python3
 
+#/**
+# * Copyright 2024 Comcast Cable Communications Management, LLC
+# *
+# * Licensed under the Apache License, Version 2.0 (the "License");
+# * you may not use this file except in compliance with the License.
+# * You may obtain a copy of the License at
+# *
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing, software
+# * distributed under the License is distributed on an "AS IS" BASIS,
+# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# * See the License for the specific language governing permissions and
+# * limitations under the License.
+# *
+# * SPDX-License-Identifier: Apache-2.0
+# */
+
 import os
 from os import path
 import json
@@ -49,7 +67,7 @@ CMD_GEN_AIDL = path.realpath(
         )
 # TODO compile aidl_hash_gen in out directory
 CMD_AIDL_HASH_GEN = path.join(get_host_dir(), "aidl_hash_gen")
-CMD_INTF_DEF_UPDATE = path.join(get_host_dir(), "intf-update")
+CMD_INTERFACE_DEF_UPDATE = path.join(get_host_dir(), "interface-update")
 
 
 def topological_sort(dependencies):
@@ -75,7 +93,7 @@ def topological_sort(dependencies):
         raise ValueError("Cycle detected in dependencies")
 
 
-def generate_libraries_dependencies(aidl_intfs, out_dir):
+def generate_libraries_dependencies(interfaces, out_dir):
     """ Generates list of versioned interface libraries and thier dependencies
     as per versions mentioned from all available interfaces.
     The list will be in a topological order so that the dependent libraries are
@@ -85,7 +103,7 @@ def generate_libraries_dependencies(aidl_intfs, out_dir):
     in the build
 
     Args:
-        aidl_intfs: List of all AIDL interfaces
+        interfaces: List of all AIDL interfaces
         out_dir: Location of the directory where the list must be placed
 
     """
@@ -95,18 +113,18 @@ def generate_libraries_dependencies(aidl_intfs, out_dir):
         os.remove(dep_file)
 
     lib_deps_dict = defaultdict(list)
-    for intf_name in list(aidl_intfs.keys()):
-        aidl_intf = aidl_intfs[intf_name]
+    for interface_name in list(interfaces.keys()):
+        interface = interfaces[interface_name]
         # For frozen version
-        for ver in list(aidl_intf.versions_with_info.keys()):
+        for ver in list(interface.versions_with_info.keys()):
             lib_deps = [lib + "-cpp"
-                    for lib in aidl_intf.versions_with_info[ver]]
-            lib_deps_dict["%s-V%s-cpp" %(intf_name, ver)] = lib_deps
+                    for lib in interface.versions_with_info[ver]]
+            lib_deps_dict["%s-v%s-cpp" %(interface_name, ver)] = lib_deps
         # For Current version
-        imports = aidl_intf.get_imports(aidl_intf.next_version())
-        lib_deps = [imprt + "-V%s-cpp" %(aidl_intfs[imprt].next_version())
+        imports = interface.get_imports(interface.next_version())
+        lib_deps = [imprt + "-vcurrent-cpp"
                 for imprt in list(imports.keys())]
-        lib_deps_dict["%s-V%s-cpp" %(intf_name, aidl_intf.next_version())] = lib_deps
+        lib_deps_dict["%s-vcurrent-cpp" %(interface_name)] = lib_deps
 
 
     libs_sorted = topological_sort(lib_deps_dict)
@@ -122,27 +140,42 @@ def generate_libraries_dependencies(aidl_intfs, out_dir):
         logger.info("Library dependencies file generated at %s" %(dep_file))
 
 
-def load_interfaces(intfs_roots, out_dir, gen_dir=None, gen_lib_deps=False):
+def load_interfaces(interfaces_roots, out_dir, gen_dir=None, gen_lib_deps=False):
     """ Loads defined interfaces from provided directories
 
     Args:
-        intfs_roots: list of directory paths to look for interfaces
+        interfaces_roots: list of directory paths to look for interfaces
 
     Returns:
         List of AidlInterface Objects
     """
 
-    intf_locations = []
-    for intfs_root in intfs_roots:
-        for root, dirs, files in os.walk(intfs_root):
+    # check if any directory needs to be skipped while looking for interfaces.
+    # The environment variable will be set to the multiple directories seperated
+    # by ","
+    skip_dirs_raw = os.getenv("AIDL_VERSIONING_SKIP_DIR", "")
+    if skip_dirs_raw == "":
+        skip_dirs_raw = "examples"
+    else:
+        skip_dirs_raw += ",examples"
+    interface_locations = []
+    for interfaces_root in interfaces_roots:
+        skip_paths = [path.join(interfaces_root, skip_dir) \
+                for skip_dir in skip_dirs_raw.split(",")]
+        logger.info("Skipping Interfaces from the path %s" %(skip_paths))
+        for root, dirs, files in os.walk(interfaces_root):
+            dirs[:] = [d for d in dirs \
+                    if path.join(root, d) not in skip_paths]
             if INTERFACE_DEF_JSON in files:
-                intf_locations.append(path.join(root, INTERFACE_DEF_JSON))
+                interface_locations.append(path.join(root, INTERFACE_DEF_JSON))
             elif INTERFACE_DEF_YAML in files:
-                intf_locations.append(path.join(root, INTERFACE_DEF_YAML))
+                interface_locations.append(path.join(root, INTERFACE_DEF_YAML))
 
+    logger.debug("Interfaces found at %s" %(interface_locations))
     aidl_interfaces = {}
-    for intf_loc in intf_locations:
-        aidl_interface = AidlInterface(path.dirname(intf_loc), out_dir, gen_dir)
+    for interface_loc in interface_locations:
+        aidl_interface = AidlInterface(interfaces_roots, path.dirname(interface_loc),
+                out_dir, gen_dir)
         if aidl_interface is not None:
             aidl_interfaces[aidl_interface.base_name] = aidl_interface
 
@@ -155,11 +188,11 @@ def load_interfaces(intfs_roots, out_dir, gen_dir=None, gen_lib_deps=False):
 
 
 def has_version_suffix(moduleName):
-    hasVersionSuffix = re.compile("-V\\d+$").match(moduleName)
+    hasVersionSuffix = re.compile("-v\\d+$").match(moduleName)
     return hasVersionSuffix
 
 
-def validate_interface(aidl_intf, aidl_intfs):
+def validate_interface(interface, interfaces):
     """ Validate if the given interface file has valid interface defined
     Validations:
         1. aidl_interface is defined
@@ -169,17 +202,17 @@ def validate_interface(aidl_intf, aidl_intfs):
         5. versions_with_info has all versions defined as per frozen versions
 
     Args
-        aidl_intf: The interface to validate
-        aidl_intfs: list of all loaded interfaces
+        interface: The interface to validate
+        interfaces: list of all loaded interfaces
     Returns
         api_dumps: API dump of all versions of the given interface.
     """
 
-    current_api_dir = get_versioned_dir(aidl_intf,
+    current_api_dir = get_versioned_dir(interface,
             CURRENT_VERSION)
     if path.exists(current_api_dir):
         current_api_dump = ApiDump(
-                aidl_intf.next_version(),
+                interface.next_version(),
                 current_api_dir,
                 get_path_for_files(current_api_dir,
                     "*.aidl", True),
@@ -187,8 +220,8 @@ def validate_interface(aidl_intf, aidl_intfs):
                 )
 
     api_dumps = []
-    for ver in aidl_intf.versions:
-        api_dir = get_versioned_dir(aidl_intf, ver)
+    for ver in interface.versions:
+        api_dir = get_versioned_dir(interface, ver)
         if path.exists(api_dir):
             hash_file_path = path.join(api_dir, ".hash")
             dump = ApiDump(
@@ -210,7 +243,7 @@ def validate_interface(aidl_intf, aidl_intfs):
         logger.verbose("api dump for version %s is %s" %(api_dumps[i].version, vars(api_dumps[i])))
 
         if path.exists(api_dumps[i].hash_file):
-            checkHashTimestamp = check_integrity(aidl_intf, api_dumps[i])
+            checkHashTimestamp = check_integrity(interface, api_dumps[i])
         elif i != (len(api_dumps) - 1):
             # Only the current version will not have the hash file.
             assert False, "No hash file(%s) found for the frozen version %s" \
@@ -219,7 +252,7 @@ def validate_interface(aidl_intf, aidl_intfs):
         if i == 0:
             continue
 
-        checked = check_compatibility(aidl_intf, aidl_intfs, api_dumps[i-1], api_dumps[i])
+        checked = check_compatibility(interface, interfaces, api_dumps[i-1], api_dumps[i])
 
     return api_dumps
 
@@ -259,33 +292,32 @@ def get_versioned_dir(interface, version):
     """
     version_dir = ""
     if interface.dump_api:
-        version_dir = path.join(interface.intf_root, AIDL_API_DIR,
-                interface.base_name, version)
+        version_dir = path.join(interface.interface_root_stable, version)
     else:
         if version is CURRENT_VERSION:
-            version_dir = interface.intf_root
+            version_dir = interface.interface_root
         else:
             version_dir = path.realpath(
-                    path.join(interface.intf_root, "..", version)
+                    path.join(interface.interface_root, "..", version)
                     )
-    logger.verbose("Directory for the version \"%s\" is %s" \
-            %(version, version_dir))
+    logger.debug("Directory for the version \"%s\" of \"%s\" is %s" \
+            %(version, interface.base_name, version_dir))
     return version_dir
 
 
-def get_preprocessed_dir(aidl_intf, version):
-    return path.join(aidl_intf.intf_root_out,
-            aidl_intf.base_name + AIDL_PREPROCESSED_SUFFIX, version)
+def get_preprocessed_dir(interface, version):
+    return path.join(interface.interface_root_out,
+            interface.base_name + AIDL_PREPROCESSED_SUFFIX, version)
 
 
-def get_dependencies(aidl_intf, aidl_intfs, version, is_freeze_api=False):
+def get_dependencies(interface, interfaces, version, is_freeze_api=False):
     """
     Get the list of versioned interfaces on which the given interface is dependant
     directly or indirectly.
 
     Args:
-        aidl_intf: Interface for which dependencies are requested
-        aidl_intfs: All available interfaces
+        interface: Interface for which dependencies are requested
+        interfaces: All available interfaces
         version: Version of the interface for which dependencies are requested
         is_freeze_api: If the dependencies are requested while freezing the
             interface.
@@ -293,10 +325,10 @@ def get_dependencies(aidl_intf, aidl_intfs, version, is_freeze_api=False):
     Return:
         deps: List of preprocessed aidl of dependant interfaces
         imports: List of versiones Imports
-        import_intfs: List of interfaces from Imports
+        import_interfaces: List of interfaces from Imports
 
     """
-    logger.verbose("Interface Name: %s" %(aidl_intf.base_name))
+    logger.verbose("Interface Name: %s" %(interface.base_name))
 
     # API version to look for in imports
     # Values:
@@ -305,7 +337,7 @@ def get_dependencies(aidl_intf, aidl_intfs, version, is_freeze_api=False):
     #       frozen: frozen version
     import_ver_type = ""
 
-    if version == aidl_intf.next_version():
+    if version == interface.next_version():
         # In case of a freeze_api, always use the latest version of
         # Imports.
         # This way we can make sure that the imported interface is
@@ -322,16 +354,16 @@ def get_dependencies(aidl_intf, aidl_intfs, version, is_freeze_api=False):
     else:
         import_ver_type = "frozen"
 
-    api_deps = ApiDependencies(aidl_intf.base_name, import_ver_type, version)
-    logger.verbose("API Deps for %s: %s & %s" %(api_deps.intf_name, api_deps.import_ver_type, api_deps.version))
-    api_deps = process_imports(aidl_intf, aidl_intfs, api_deps)
+    api_deps = ApiDependencies(interface.base_name, import_ver_type, version)
+    logger.verbose("API Deps for %s: %s & %s" %(api_deps.interface_name, api_deps.import_ver_type, api_deps.version))
+    api_deps = process_imports(interface, interfaces, api_deps)
 
-    deps, imports, import_intfs = list_dependencies(api_deps.api_dependecies)
+    deps, imports, import_interfaces = list_dependencies(api_deps.api_dependecies)
 
-    return deps, imports, import_intfs
+    return deps, imports, import_interfaces
 
 rec_counter = 0
-def process_imports(aidl_intf, aidl_intfs, api_deps):
+def process_imports(interface, interfaces, api_deps):
     """
     Process imports for a particular version of the given interface.
     It travels through all the imports and identifies all the dependecies
@@ -339,8 +371,8 @@ def process_imports(aidl_intf, aidl_intfs, api_deps):
     It will be called recursively to get all the indirect dependencies
 
     Args:
-        aidl_intf: Interface for which imports needs be processed
-        aidl_intfs: List of all interfaces
+        interface: Interface for which imports needs be processed
+        interfaces: List of all interfaces
         api_deps: object of ApiDependencies in which all dependencies captured
             recursively. It holds the interface name, version info.
     Return:
@@ -349,52 +381,52 @@ def process_imports(aidl_intf, aidl_intfs, api_deps):
     """
     global rec_counter
     rec_counter += 1
-    logger.verbose("Interface Name: %s, Version: %s, Recursion Count: %s" %(aidl_intf.base_name, api_deps.version, rec_counter))
+    logger.verbose("Interface Name: %s, Version: %s, Recursion Count: %s" %(interface.base_name, api_deps.version, rec_counter))
 
     switch_version = False
-    intf_version = api_deps.version
+    interface_version = api_deps.version
     imports = {}
     if api_deps.import_ver_type == "next":
-        imports = aidl_intf.get_imports(aidl_intf.next_version())
+        imports = interface.get_imports(interface.next_version())
         for imp in list(imports.keys()):
-            imp_intf = aidl_intfs[imp]
-            api_deps.set_version(imp_intf.next_version())
-            api_deps.set_name(imp_intf.base_name)
-            api_deps = process_imports(imp_intf, aidl_intfs, api_deps)
+            imp_interface = interfaces[imp]
+            api_deps.set_version(imp_interface.next_version())
+            api_deps.set_name(imp_interface.base_name)
+            api_deps = process_imports(imp_interface, interfaces, api_deps)
 
     elif api_deps.import_ver_type == "latest":
         if rec_counter == 1:
             # List of direct dependencies
-            imports = aidl_intf.get_imports(aidl_intf.next_version())
+            imports = interface.get_imports(interface.next_version())
         else:
             # List of indirect dependencies (dependencies of direct dependant interfaces)
             # get imports from latest frozen version
-            imports = aidl_intf.get_imports(aidl_intf.latest_version())
+            imports = interface.get_imports(interface.latest_version())
 
         for imp in list(imports.keys()):
-            imp_intf = aidl_intfs[imp]
+            imp_interface = interfaces[imp]
             # Set version as per thier frozen versions
             # in case of unknown(case of direct dependencies), set it to the latest
             if imports[imp] == "unknown":
-                api_deps.set_version(imp_intf.latest_version())
+                api_deps.set_version(imp_interface.latest_version())
             else:
                 api_deps.set_version(imports[imp])
-            api_deps.set_name(imp_intf.base_name)
-            api_deps = process_imports(imp_intf, aidl_intfs, api_deps)
+            api_deps.set_name(imp_interface.base_name)
+            api_deps = process_imports(imp_interface, interfaces, api_deps)
 
     elif api_deps.import_ver_type == "frozen":
-        imports = aidl_intf.get_imports(intf_version)
+        imports = interface.get_imports(interface_version)
         for imp in list(imports.keys()):
-            imp_intf = aidl_intfs[imp]
+            imp_interface = interfaces[imp]
             api_deps.set_version(imports[imp])
-            api_deps.set_name(imp_intf.base_name)
-            api_deps = process_imports(imp_intf, aidl_intfs, api_deps)
+            api_deps.set_name(imp_interface.base_name)
+            api_deps = process_imports(imp_interface, interfaces, api_deps)
 
     if rec_counter != 1:
-        logger.verbose("Addind Dependency %s-V%s" %(aidl_intf.base_name, intf_version))
-        api_deps.add_dependency(aidl_intf, intf_version)
-        api_deps.set_version(intf_version)
-        api_deps.set_name(aidl_intf.base_name)
+        logger.verbose("Addind Dependency %s-v%s" %(interface.base_name, interface_version))
+        api_deps.add_dependency(interface, interface_version)
+        api_deps.set_version(interface_version)
+        api_deps.set_name(interface.base_name)
 
     rec_counter -= 1
     return api_deps
@@ -403,7 +435,7 @@ def process_imports(aidl_intf, aidl_intfs, api_deps):
 class ApiDependencies:
 
     # Name of the interface for which dependencies need to be evaluated
-    intf_name = ""
+    interface_name = ""
 
     # Version of the interface for which dependencies need to be evaluated
     version = ""
@@ -418,7 +450,7 @@ class ApiDependencies:
     # List of all dependencies saved in dictionary format for easy access
     # key: Interface Name
     # Value: Dependency Info
-    # Example:  {"intf_name":
+    # Example:  {"interface_name":
     #               {"version"     :"",
     #                "preprocessed":"",
     #                "import"      :"",
@@ -428,13 +460,13 @@ class ApiDependencies:
     api_dependecies = {}
 
     def __init__(self,
-            intf_name,
+            interface_name,
             import_ver_type,
             version=None,
             ):
         if import_ver_type == "frozen" and not version:
             assert False, "version needs to be provided"
-        self.intf_name = intf_name
+        self.interface_name = interface_name
         self.version = version
         self.import_ver_type = import_ver_type
         self.api_dependecies = {}
@@ -442,30 +474,30 @@ class ApiDependencies:
     def set_version(self, version):
         self.version = version
 
-    def set_name(self, intf_name):
-        self.intf_name = intf_name
+    def set_name(self, interface_name):
+        self.interface_name = interface_name
 
-    def add_dependency(self, aidl_intf, version):
+    def add_dependency(self, interface, version):
         logger.verbose("Dependency for: %s, Import: %s, Version: %s" \
-                %(aidl_intf.base_name, aidl_intf.base_name, version))
+                %(interface.base_name, interface.base_name, version))
 
-        if aidl_intf.base_name in list(self.api_dependecies.keys()):
-            if int(self.api_dependecies[aidl_intf.base_name]["version"]) >= int(version):
-                logger.debug("Dependency already exist for %s" %(aidl_intf.base_name))
+        if interface.base_name in list(self.api_dependecies.keys()):
+            if int(self.api_dependecies[interface.base_name]["version"]) >= int(version):
+                logger.debug("Dependency already exist for %s" %(interface.base_name))
                 return
             else:
-                del self.api_dependecies[aidl_intf.base_name]
+                del self.api_dependecies[interface.base_name]
 
         imprt = ""
-        if version == aidl_intf.next_version():
-            imprt = get_versioned_dir(aidl_intf, CURRENT_VERSION)
+        if version == interface.next_version():
+            imprt = get_versioned_dir(interface, CURRENT_VERSION)
         else:
-            imprt = get_versioned_dir(aidl_intf, version)
-        preprocessed = get_preprocessed_dir(aidl_intf, version)
+            imprt = get_versioned_dir(interface, version)
+        preprocessed = get_preprocessed_dir(interface, version)
 
-        aidl_gen_preprocessed(aidl_intf, version, self.api_dependecies)
+        aidl_gen_preprocessed(interface, version, self.api_dependecies)
 
-        self.api_dependecies[aidl_intf.base_name] = {
+        self.api_dependecies[interface.base_name] = {
                 "version" : version,
                 "preprocessed": preprocessed,
                 "import": imprt
@@ -481,8 +513,8 @@ class ApiDependencies:
         self.generated.append(generated)
 
 
-def show_dep_error(intf_name):
-    logger.error("The dependency resolution failed for %s" %(intf_name))
+def show_dep_error(interface_name):
+    logger.error("The dependency resolution failed for %s" %(interface_name))
     logger.error("If this is not the interface you are processing, It must be directly or indirectly imported in your interface")
 
     logger.error("Firstly, make sure that the interface definition includes all direct dependant interfaces in it's imports")
@@ -491,42 +523,42 @@ def show_dep_error(intf_name):
     logger.error("\tIf you are generating sources, Please check your interface definition and make sure that the version with info is not modified manually.")
 
 
-def aidl_gen_preprocessed(aidl_intf, version, api_deps):
+def aidl_gen_preprocessed(interface, version, api_deps):
     """
     Generates preprocessed AIDL file for given version which is required
     while resolving dependencies during aidl operations(Update API, Freeze API,
     and Generating sources)
 
     Args:
-        aidl_intf: aidl inerfaces
+        interface: aidl inerfaces
         version: Version of the aidl Interface
         api_deps: API dependencies
     """
     logger.verbose("Interface Name: %s, Version: %s, Dependencies: %s" \
-            %(aidl_intf.base_name, version, api_deps))
+            %(interface.base_name, version, api_deps))
 
     srcs_versioned_dir = ""
-    if aidl_intf.next_version() == version:
-        srcs_versioned_dir = get_versioned_dir(aidl_intf, CURRENT_VERSION)
+    if interface.next_version() == version:
+        srcs_versioned_dir = get_versioned_dir(interface, CURRENT_VERSION)
     else:
-        srcs_versioned_dir = get_versioned_dir(aidl_intf, version)
+        srcs_versioned_dir = get_versioned_dir(interface, version)
 
-    srcs = get_path_for_files(srcs_versioned_dir, aidl_intf.srcs)
-    preprocessed = path.join(get_preprocessed_dir(aidl_intf, version), "preprocessed.aidl")
+    srcs = get_path_for_files(srcs_versioned_dir, interface.srcs)
+    preprocessed = path.join(get_preprocessed_dir(interface, version), "preprocessed.aidl")
 
     imprt = ""
-    if version == aidl_intf.next_version():
-        imprt = get_versioned_dir(aidl_intf, CURRENT_VERSION)
+    if version == interface.next_version():
+        imprt = get_versioned_dir(interface, CURRENT_VERSION)
     else:
-        imprt = get_versioned_dir(aidl_intf, version)
+        imprt = get_versioned_dir(interface, version)
     if not path.exists(imprt):
         logger.error("The import directory %s, does not exist." %(imprt))
-        show_dep_error(aidl_intf.base_name)
+        show_dep_error(interface.base_name)
         assert False, "Failed with the above error."
 
     optional_flags = ""
-    if aidl_intf.stability != "unstable":
-        optional_flags = optional_flags + "--stability=%s " %(aidl_intf.stability)
+    if interface.stability != "unstable":
+        optional_flags = optional_flags + "--stability=%s " %(interface.stability)
     deps, _, _ = list_dependencies(api_deps)
     if len(deps) > 0:
         optional_flags = optional_flags + " ".join([f'-p{dep}' for dep in deps]) + " "
@@ -543,20 +575,20 @@ def aidl_gen_preprocessed(aidl_intf, version, api_deps):
 
     logger.verbose("Command to generate Preprocessed AIDL: %s" %(preprocess_gen_cmd))
     if not exec_cmd(preprocess_gen_cmd):
-        show_dep_error(aidl_intf.base_name)
+        show_dep_error(interface.base_name)
         assert False, "Command failed"
 
 
 def list_dependencies(api_deps):
     deps = []
     imprts = []
-    import_intfs = []
-    for intf in list(api_deps.keys()):
-        deps.append(path.join(api_deps[intf]["preprocessed"], "preprocessed.aidl"))
-        imprts.append(api_deps[intf]["import"])
-        import_intfs.append("%s-V%s" %(intf, api_deps[intf]["version"]))
+    import_interfaces = []
+    for interface in list(api_deps.keys()):
+        deps.append(path.join(api_deps[interface]["preprocessed"], "preprocessed.aidl"))
+        imprts.append(api_deps[interface]["import"])
+        import_interfaces.append("%s-v%s" %(interface, api_deps[interface]["version"]))
 
-    return deps, imprts, import_intfs
+    return deps, imprts, import_interfaces
 
 
 def version_for_hashgen(ver):
@@ -569,7 +601,7 @@ def version_for_hashgen(ver):
         return "latest-version"
 
 
-def check_api(aidl_intf, aidl_intfs, oldDump, newDump, checkApiLevel,
+def check_api(interface, interfaces, oldDump, newDump, checkApiLevel,
         messageFile):
     """
     Compares two API and checks for equality or compatibility as per given
@@ -577,8 +609,8 @@ def check_api(aidl_intf, aidl_intfs, oldDump, newDump, checkApiLevel,
     Aborts the operation in case of failure.
 
     Args:
-        aidl_intf: AIDL Interface for which check is required
-        aidl_intfs: list of all all aidl interfaces
+        interface: AIDL Interface for which check is required
+        interfaces: list of all all aidl interfaces
         oldDump: API dump of the old version
         newDump: API dump of new version
         checkApiLevel: type of check to carry out (equal or compatible)
@@ -586,19 +618,19 @@ def check_api(aidl_intf, aidl_intfs, oldDump, newDump, checkApiLevel,
     newVersion = path.basename(newDump.api_dir)
     # TODO: Find: how these timestampfiles are used and whether they
     # are required
-    timestampFile = path.join(aidl_intf.intf_api_dir_out,
+    timestampFile = path.join(interface.interface_api_dir_out,
             "checkapi_"+newVersion+".timestamp")
 
     # check_api
     optional_flags = []
-    if aidl_intf.stability not in ["", "unstable"]:
-        optional_flags.append("--stability=%s" %(aidl_intf.stability))
+    if interface.stability not in ["", "unstable"]:
+        optional_flags.append("--stability=%s" %(interface.stability))
 
     # get dependent preprocessed interfaces from imports
-    deps, imports, _ = get_dependencies(aidl_intf,
-            aidl_intfs, newDump.version)
+    deps, imports, _ = get_dependencies(interface,
+            interfaces, newDump.version)
     logger.verbose("Dependencies for %s: deps: %s, imports: %s" \
-            %(aidl_intf.base_name, deps, imports))
+            %(interface.base_name, deps, imports))
     if len(deps) > 0:
         optional_flags.extend([f'-p {dep}' for dep in deps])
 
@@ -621,25 +653,25 @@ def check_api(aidl_intf, aidl_intfs, oldDump, newDump, checkApiLevel,
     return timestampFile
 
 
-def check_equality(aidl_intf, aidl_intfs, oldDump, newDump):
+def check_equality(interface, interfaces, oldDump, newDump):
     """
     Compare two api dumps for the equality.
     """
     messageFile = path.join(get_host_dir(),
             "message_check_equality.txt")
-    formattedMessageFile = path.join(aidl_intf.intf_api_dir_out,
+    formattedMessageFile = path.join(interface.interface_api_dir_out,
             "message_check_equality.txt")
     logger.verbose("messageFile = %s\nformattedMessageFile = %s" \
             %(messageFile, formattedMessageFile))
-    sed_cmd = ["sed", "s/%s/"+aidl_intf.base_name+"/g", messageFile]
+    sed_cmd = ["sed", "s/%s/"+interface.base_name+"/g", messageFile]
     file_ = open(formattedMessageFile, "w")
     subprocess.Popen(sed_cmd, stdout=file_)
 
-    return check_api(aidl_intf, aidl_intfs, oldDump, newDump, "equal",
+    return check_api(interface, interfaces, oldDump, newDump, "equal",
             formattedMessageFile)
 
 
-def check_integrity(aidl_intf, api_dump):
+def check_integrity(interface, api_dump):
     """
     Check the integrity of the given api dump of the versioned interface
 
@@ -648,7 +680,7 @@ def check_integrity(aidl_intf, api_dump):
     version = path.basename(api_dump.api_dir)
     # TODO: Find: how these timestampfiles are used and whether they are
     # required
-    timestampFile = path.join(aidl_intf.intf_api_dir_out,
+    timestampFile = path.join(interface.interface_api_dir_out,
             "checkhash_"+version+".timestamp")
     messageFile = path.join(get_host_dir(),
             "message_check_integrity.txt")
@@ -670,28 +702,28 @@ def check_integrity(aidl_intf, api_dump):
     return timestampFile
 
 
-def check_compatibility(aidl_intf, aidl_intfs, oldDump, newDump):
+def check_compatibility(interface, interfaces, oldDump, newDump):
     messageFile = path.join(get_host_dir(), "message_check_compatibility.txt")
-    return check_api(aidl_intf, aidl_intfs, oldDump, newDump, "compatible", messageFile)
+    return check_api(interface, interfaces, oldDump, newDump, "compatible", messageFile)
 
 
-def check_for_development(aidl_intf, aidl_intfs, latest_version_dump, tot_dump):
-    logger.verbose("Interface Name: %s" %(aidl_intf.base_name))
-    has_dev_path = path.join(aidl_intf.intf_api_dir_out, "has_development")
+def check_for_development(interface, interfaces, latest_version_dump, tot_dump):
+    logger.verbose("Interface Name: %s" %(interface.base_name))
+    has_dev_path = path.join(interface.interface_api_dir_out, "has_development")
     rmCmd = ["rm", "-f", has_dev_path]
 
     has_development_cmd = ""
     if latest_version_dump != None:
         # genetaye optional flags
         optional_flags = []
-        if aidl_intf.stability not in ["", "unstable"]:
-            optional_flags.append("--stability=%s" %(aidl_intf.stability))
+        if interface.stability not in ["", "unstable"]:
+            optional_flags.append("--stability=%s" %(interface.stability))
 
         # get dependent preprocessed interfaces from imports
-        deps, imports, _ = get_dependencies(aidl_intf,
-                aidl_intfs, tot_dump.version)
+        deps, imports, _ = get_dependencies(interface,
+                interfaces, tot_dump.version)
         logger.verbose("Dependencies for %s: deps: %s, imports: %s" \
-                %(aidl_intf.base_name, deps, imports))
+                %(interface.base_name, deps, imports))
         if len(deps) > 0:
             optional_flags.extend([f'-p {dep}' for dep in deps])
 
@@ -721,53 +753,91 @@ class ApiDump:
 class AidlInterface:
     base_name = ""
     srcs = []
-    intf_root = ""
+    # The directory where AIDL interfaces are being modified
+    interface_root = ""
+    # The directory where the stable version of AIDL interfaces are located.
+    # location: <interfaces root directory>/stable/versioned_aidl/<interface-name>/
+    interface_root_stable = ""
+    # The directory where stubs and proxies of stable AIDL interfaces are located.
+    # location: <interfaces root directory>/stable/generated/<interface-name>/
+    interface_gen_dir = ""
+    # list of AIDL interfaces on which this interface depends upon.
     imports = []
+    # list of frozen/stable versions  
     versions = []
     # key: version
     # value: list of versioned interfaces
     versions_with_info = {}
     stability = ""
+    # Handle generating raw api for versioning
+    # If enabled, written AIDL interfaces will be dumped in a raw format at the 
+    # versioned location.
+    # If Disabled, written APIs will be copied as it is. This skips interfaces 
+    # verification for syntax.
     dump_api = False
-    intf_root_out = ""
-    intf_api_dir_out = ""
-    intf_gen_dir_out = ""
+    # location of frozen APIs: set the location where all frozen APIs must be kept
+    # after freezing them.
+    # values:
+    #   stable: frozen versions will be kept at the root directory where all interfaces are
+    #       locatted. A "stable/versioned_aidl" directory will be created to keep frozen versions.
+    #       The interfaces root directory should be the first in the list of root directories
+    #       provided in "interfaces_roots" field.
+    #   interface: frozen versions will be kept along with the AIDL interface.
+    # This field cannot be changed once the first version is created.
+    frozen_location = "stable"
+    # Locations of directories required for intermediatory operations
+    interface_root_out = ""
+    interface_api_dir_out = ""
 
 
-    def __init__(self, intf_root, out_dir, gen_dir=None):
-        """ Initializes aidl interface defined in intf_root path.
-        It parses the interface.json defined in intf_root path and loads
+    def __init__(self, interfaces_roots, interface_root, out_dir, gen_dir=None):
+        """ Initializes aidl interface defined in interface_root path.
+        It parses the interface.json defined in interface_root path and loads
         interface properties.
 
         These properties will be used while computing -freeze-api and -update-api
 
         args:
-            intf_root:     path where aidl interface is defined.
-            intf_root_out: Out directory for Interface intermediate files
-            intf_gen_out:  Directory to keep generated sources. If not provided,
-                            intf_root_out will be used.
+            interfaces_roots:   list of paths where all aidl interfaces are located.
+            interface_root:     path where aidl interface is defined.
+            interface_root_out: Out directory for Interface intermediate files
+            interface_gen_out:  Directory to keep generated sources. If not provided,
+                            interface_root_out will be used.
         """
-        self.intf_root = path.realpath(intf_root)
-        self._load_interface(out_dir, gen_dir)
+        self.interface_root = path.realpath(interface_root)
+        self._load_interface(interfaces_roots, out_dir, gen_dir)
 
 
-    def _load_interface(self, out_dir, gen_dir):
-        # TODO Added comments
+    def _load_interface(self, interfaces_roots, out_dir, gen_dir):
+        # TODO Add comments
         """
         """
-        logger.verbose("Location:" + self.intf_root)
+        logger.verbose("Location:" + self.interface_root)
         data = None
-        if path.exists(path.join(self.intf_root, INTERFACE_DEF_JSON)):
-            with open(path.join(self.intf_root, INTERFACE_DEF_JSON), "r") as json_data:
+        if path.exists(path.join(self.interface_root, INTERFACE_DEF_JSON)):
+            with open(path.join(self.interface_root, INTERFACE_DEF_JSON), "r") as json_data:
                 data = json.load(json_data)
-        elif path.exists(path.join(self.intf_root, INTERFACE_DEF_YAML)):
-            with open(os.path.join(self.intf_root, INTERFACE_DEF_YAML), "r") as yaml_data:
+        elif path.exists(path.join(self.interface_root, INTERFACE_DEF_YAML)):
+            with open(os.path.join(self.interface_root, INTERFACE_DEF_YAML), "r") as yaml_data:
                 data = yaml.safe_load(yaml_data)
         else:
-            logger.error("No interface is defined at %s" %(self.intf_root))
+            logger.error("No interface is defined at %s" %(self.interface_root))
             return
 
         self.base_name = data.get("aidl_interface").get("name")
+
+
+        self.frozen_location = data.get("aidl_interface").get("frozen_location", "stable")
+        if self.frozen_location == "stable":
+            # First directory in the list of interface root directory should
+            # have the stable directory
+            self.interface_root_stable = path.join(interfaces_roots[0], "stable/versioned_aidl", self.base_name)
+            self.interface_gen_dir = path.join(interfaces_roots[0], "stable/generated", self.base_name)
+        elif self.frozen_location == "interface":
+            self.interface_root_stable = path.join(self.interface_root, "aidl_api")
+            # TODO Needs to be updated
+            self.interface_gen_dir = path.join(interfaces_roots[0], "stable/generated", self.base_name)
+
         self.srcs = data.get("aidl_interface").get("srcs")
         self.imports = data.get("aidl_interface").get("imports")
         if self.imports is None:
@@ -789,19 +859,20 @@ class AidlInterface:
 
         logger.verbose("Interface Found: %s" %(self.base_name))
         logger.verbose("\tSources       = %s" %(self.srcs))
-        logger.verbose("\tLocation      = %s" %(self.intf_root))
+        logger.verbose("\tLocation      = %s" %(self.interface_root))
+        logger.verbose("\tStable Location = %s" %(self.interface_root_stable))
         logger.verbose("\tImports       = %s" %(self.imports))
         logger.verbose("\tVersions      = %s" %(self.versions))
         logger.verbose("\tVersionsInfo  = %s" %(self.versions_with_info))
         logger.verbose("\tStability     = %s" %(self.stability))
 
-        self.intf_root_out = path.join(out_dir, path.relpath(self.intf_root, start="/"))
-        if not path.exists(self.intf_root_out):
-            os.makedirs(self.intf_root_out)
+        self.interface_root_out = path.join(out_dir, path.relpath(self.interface_root, start="/"))
+        if not path.exists(self.interface_root_out):
+            os.makedirs(self.interface_root_out)
 
-        self.intf_api_dir_out = path.join(self.intf_root_out, self.base_name+AIDL_API_SUFFIX)
-        if not path.exists(self.intf_api_dir_out):
-            os.makedirs(self.intf_api_dir_out)
+        self.interface_api_dir_out = path.join(self.interface_root_out, self.base_name+AIDL_API_SUFFIX)
+        if not path.exists(self.interface_api_dir_out):
+            os.makedirs(self.interface_api_dir_out)
 
 
     def get_imports(self, version):
@@ -831,7 +902,7 @@ class AidlInterface:
 
         versioned_imports = self.versions_with_info[str(version)]
         for ver_imp in versioned_imports:
-            name, _, ver = ver_imp.partition("-V")
+            name, _, ver = ver_imp.partition("-v")
             imports[name] = ver
 
         logger.verbose("Interface: %s, Version: %s, Imports: %s" %(self.base_name, version, imports))
@@ -862,7 +933,7 @@ class AidlInterface:
         """
         """
 
-        return "%s-V%s" %(self.base_name, version)
+        return "%s-v%s" %(self.base_name, version)
 
 
 def exec_cmd(cmd):
