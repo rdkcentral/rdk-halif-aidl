@@ -49,7 +49,7 @@ set(SRC
 	${SRC_DIR}/IAudioDecoderManager.aidl
 	${SRC_DIR}/PCMFormat.aidl
 	${SRC_DIR}/Property.aidl
-	${COMMON_SRC_DIR}/State.aidl
+	${SRC_DIR}/State.aidl
 	${COMMON_SRC_DIR}/PropertyValue.aidl
 	${COMMON_SRC_DIR}/AVSource.aidl
 	${COMMON_SRC_DIR}/HALError.aidl
