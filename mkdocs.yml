@@ -104,7 +104,6 @@ nav:
       - Getting Started: introduction/documentation_getting_started.md
       - Interface Template: standards/interface_template.md
     - Governance:
-      - AIDL Client Versioning: governance/aidl_client_versioning.md
       - RDK-X Documentation Structure: governance/rdk-release-documenation-structure.md
     - White Papers:
       - Documentation in Git: whitepapers/documentation_in_git.md
