@@ -2,83 +2,85 @@
 
 ## 1. Introduction
 
-This document is a **technical specification** for the RDK AIDL HAL interface versioning mechanism. It defines normative requirements—metadata formats, runtime behaviors, and implementation obligations—that implementers must follow to ensure safe, compatible evolution of AIDL interfaces.
+This document is a **technical specification** for the RDK AIDL HAL interface versioning mechanism. It defines normative requirements—such as metadata formats, runtime behaviours, and implementation obligations—that implementers must follow to ensure safe and compatible evolution of AIDL interfaces.
 
-Below are the steps must be followed to write versioned aidl interfaces
+The following steps must be followed to write versioned AIDL interfaces
 1. Define the AIDL interface in the prescribed format. (See [Interface Definition](#3-interface-definition) section)
-2. Write interface definition purely in AIDL.
+2. Write the interface definition purely in AIDL.
 3. Perform [**Update API**](#1-update-api) on the defined interface.
-4. Review and Test the interface
-5. Perform [**Freeze API**](#2-freeze-api) on the defined interface.
-6. Repeat steps 3, 4, and 6 for next versions.
+4. Generate sources for updated interface. (see [Generating Sources](#6-generating-sources))
+5. Review and Test the interface.
+6. Perform the [**Freeze API**](#2-freeze-api) on the defined interface.
+7. Generate sources for frozen interface. (see [Generating Sources](#6-generating-sources))
+6. Repeat steps 3, to 7 for subsequent versions.
 
 ## 2. Versioning Metadata
 
-Each AIDL interface carries two metadata fields embedded in the generated stub classes:
+Each AIDL interface includes two metadata fields embedded in the generated stub classes:
 
 - **Version Number** (`int INTERFACE_VERSION`)
-    - Incremented **every time** the AIDL file is modified (method added/modified, annotation changed).
-    - Exposed at runtime as a constant field.
+    - This is incremented **each time** the AIDL file is modified (e.g. when a method is added or changed, or an annotation updated).
+    - It is exposed at runtime as a constant field.
 
 - **Interface Hash** (`String INTERFACE_HASH`)
-    - SHA‑256 digest computed over the **canonical form** of the AIDL (see Section 3).
-    - Ignores formatting/comments so that only signature changes affect the hash.
+    - This is aSHA‑256 digest computed over the **canonical form** of the AIDL.
+    - It ignores formatting and comments, so only changes to the interface signature affect the hash.
 
-### Freeze Version vs. Current Version
+### Frozen Version vs. Current Version
 
 - **Frozen Versions**:
-  - The list version numbers recorded in the [interface definition](#3-interface-definition);
-  - It represents the last published interface states.
-  - Location of the Interface: `stable/aidl/<interface-name>/<stable-version>`
-  - Each frozen version has it's hash associated with it stored at `stable/aidl/<interface-name>/<stable-version>/.hash`
+  - These are the list version numbers recorded in the [interface definition](#3-interface-definition);
+  - They represent the last published state of the interface.
+  - Location of the Interface:  `stable/versioned_aidl/<interface-name>/<stable-version>`
+  - Each frozen version has it's hash associated with it stored at `stable/versioned_aidl/<interface-name>/<stable-version>/.hash`
 - **Current/Next Version**:
-  - The version for the AIDL interface under development.
-  - The version value will be the `last frozen version + 1`
-  - Location of the Interface: `stable/aidl/<interface-name>/current`
-  - As this version is under development, it won't have the corresponding hash value. 
+  - This refers to the version of the AIDL interface currently under development.
+  - Its version value is `current`
+  - Location of the Interface: `stable/versioned_aidl/<interface-name>/current`
+  - As this version is in development, it does not yet have a corresponding hash value. 
 
-Both values ensure that any new change starts from a known, immutable baseline and that the code version aligns with the published snapshot.
+Both the frozen and current version values ensure that any new changes begin from a known, immutable baseline, and that the code version aligns with the published snapshot.
 
 ## 3. Interface Validation
-The versioning mechanism validates the given AIDL interfaces before it performs any operation on it. It checks for the valid interface definition, backward-compatibility, integrity etc.
+The versioning mechanism validates the given AIDL interfaces before performing any operations on them. It checks for a valid interface definition, backward-compatibility, integrity, and other essential criteria.
 
-The validation of the interface will be done by the versioning mechanism on its owm. Implementors don't have to do it explicitly. In case required, running update api will carry out the interface validation.
+Validation is carried out automatically by the versioning mechanism. Implementers do not need to perform it explicitly. If required, running **update api** will trigger the interface validation.
 
 1. **Valid Interface Definition**:
-    - Check if the syntax of interface definition is correct
-    - All the imports are defined
-    - Essential at the time of update api
+    - Ensures the syntax of interface definition is correct
+    - Verifies that all imports are properly defined.
+    - This check is essential during the **Update API** operation.
 2. **Integrity**:
-    - Check if the frozen interfaces has not been modified after they were frozen.
-    - Compute the hash value and compare it with the hash value from the file(.hash, captured along with frozen API)
+    - Ensures that frozen interfaces have not been modified after being frozen.
+    - Computes the hash value and compares it with the stored .hash file captured during the freeze.
     - Must be checked whenever interface is being modifed and used.
 3. **Compatibility**:
-    - Check if the all the versions(current/next and frozen) of interface are backward compatible
-    - Each version will be checked agains the previouse version
-    - Must be checked whenever interface is being modifed and used.
+    - Verifies that all versions (current/next and frozen) of the interface are backward compatible.
+    - Each version is checked against the previous one.
+    - Must be checked whenever the interface is modified or used.
 4. **Equality**:
-    - Checks if the interface from the top of tree(ToT), i.e. the workspace where implementers write interface definition, is eual to the updated one.
-    - Must be checked at the time of freeze api
+    - Compares the interface from the top-of-tree (ToT)—i.e. the workspace where implementers write the interface definition—with the updated version.
+    - Must be checked during the **Freeze API** operation.
 5. **Updated**:
-    - Checks if the interface from the current/next version is updated after the last frozen version
-    - Must be checked at the time of freeze api
+    - Checks whether the current/next version of the interface has been updated since the last frozen version.
+    - Must be checked during the **Freeze API** operation.
 
-All or few of the above checks will be done as per the requirement whenever the interface validation is carried out
+All or a subset of these checks will be performed as required whenever interface validation is carried out.
 
 ## 4. Interface Definition
 
-Each interface must be defined in the YAML or JSON format. The name of the file should be **interface.yaml** or **interface.json**.
+Each interface must be defined in either YAML or JSON format. The file should be named interface.yaml **interface.yaml**.
 
 * **Fields in the AIDL Definition:**
-    - **aidl_interface**: Defines the definition of the AIDL Interface.
-    - **name**: Unique name of the AIDL Interface.
-    - **srcs**: A list of AIDL sources for the Interface.
-    - **stability**: Stability of the AIDL Interface. Currently, only vintf is supported.
-    - **dump_api**: Enables gated APIs location for the AIDL Interface.
-        -   It creates a separate directory, aidl_api, to store the current and frozen APIS.
-    - **imports**: a list of imports on which the defined AIDL Interface is dependent.
-    - **version_with_info**: a list of frozen versions associated with the list of dependent interfaces and their versions.
-        - **Only the versioning framework should update this field**.
+    - **aidl_interface**: Defines the structure of the AIDL interface.
+    - **name**: A unique name identifying the AIDL interface.
+    - **srcs**: A list of AIDL source files associated with the interface.
+    - **stability**: Indicates the stability level of the AIDL interface. *Currently, only vintf is supported.*
+    - **dump_api**: Enables or Disables gated APIs location for the AIDL Interface.
+        -   It creates a separate directory at `stable/versioned_aidl`, to store both current and frozen APIs.
+    - **imports**: A list of imported interfaces or dependencies required by the defined AIDL interface.
+    - **version_with_info**: A list of frozen versions, each associated with its dependent interfaces and their respective versions.
+        - **This field should only be updated by the versioning framework.**
 
 * **Example Definition of AIDL interface in YAML**
     ```yaml
@@ -106,48 +108,6 @@ Each interface must be defined in the YAML or JSON format. The name of the file 
             - vehicle-V3
             - dashboard-V1    
     ```
-* **Example Definition of AIDL interface in JSON**
-    ```json
-    {
-      "aidl_interface": {
-        "name": "car",
-        "srcs": [
-          "com/demo/hal/car/*.aidl"
-        ],
-        "imports": [
-          "common",
-          "vehicle",
-          "dashboard"
-        ],
-        "dump_api": "enabled",
-        "stability": "vintf",
-        "versions_with_info": [
-          {
-            "version": "1",
-            "imports": [
-              "vehicle-V1"
-            ]
-          },
-          {
-            "version": "2",
-
-            "imports": [
-              "common-V2",
-              "vehicle-V1"
-            ]
-          },
-          {
-            "version": "3",
-            "imports": [
-              "common-V4",
-              "vehicle-V3",
-              "dashboard-V1"
-            ]
-          }
-        ]
-      }
-    }    
-    ```
 
 ## **5. Versioning AIDL Interface**
 The versioning of an AIDL interface is done in two steps, [Update API](#1-update-api) and [Freeze API](#2-freeze-api). These steps are essential while writing/defining the AIDL interface only.
@@ -155,12 +115,12 @@ The versioning of an AIDL interface is done in two steps, [Update API](#1-update
 * Update API must be performed on the interface whenever it is modified.
 * **Command:** `aidl_ops -u <interface-name>`
   ```bash
-  ./build-tools/linux_binder_idl/host/aidl_ops –u car
+  aidl_ops –u car
   ```
 * **Actions carried out:**
-  * Validates Interface Definition from the workspace ([Check 1](#3-interface-validation)) and Updates `stable/aidl/<interface-name>/current` with the modified interface.
+  * Validates Interface Definition from the workspace ([Check 1](#3-interface-validation)) and Updates `stable/versioned_aidl/<interface-name>/current` with the modified interface.
   * Validates the interface for [integrity and compatibility](#3-interface-validation).
-  * The updated interface (i.e. `stable/aidl/<interface-name>/current`) must be reviewed and finzalized for freezing
+  * The updated interface (i.e. `stable/versioned_aidl/<interface-name>/current`) must be reviewed and finzalized for freezing
 * **Notes:**
     1. Imported interfaces must be updated first in case those are also modified.
     2. The backward compatibilty will be checked after updating the interface. If the modified API is not backward compatible, it won't be reverted.
@@ -170,12 +130,12 @@ The versioning of an AIDL interface is done in two steps, [Update API](#1-update
 * Freeze Version will be `Last frozen/stable version + 1`
 * **Command** `aidl_ops -f <interface-name>`
     ```bash
-    ./build-tools/linux_binder_idl/host/aidl_ops –f car
+    aidl_ops –f car
     ```
 * **Actions carried out:**
   * Validates the interface for [Equality, Integrity, Compatibility and updated](#3-interface-validation)
-  * If all checks are passed the updated API from current location (`stable/aidl/<interface-name>/current`) will be copied to the freeze location (`stable/aidl/<interface-name>/<next-version>`).
-  * Computes hash by considering AIDL files and version and stores in `stable/aidl/<interface-name>/<next-version>/.hash` file
+  * If all checks are passed the updated API from current location (`stable/versioned_aidl/<interface-name>/current`) will be copied to the freeze location (`stable/versioned_aidl/<interface-name>/<next-version>`).
+  * Computes hash by considering AIDL files and version and stores in `stable/versioned_aidl/<interface-name>/<next-version>/.hash` file
   *  Updates the  field `version_with_info` in the [interface definition](#4-interface-definition)
 * **Notes:**
   1. Imported interfaces must be freezed first in case those are also updated.
@@ -183,13 +143,17 @@ The versioning of an AIDL interface is done in two steps, [Update API](#1-update
 
 ## **6. Generating Sources**
 
-As per the section, [CMake Configuration to handle Interface library generation](#6-cmake-configuration-to-handle-interface-library-generation), the versioning framework provides support to generate interface libraries. In case the requirment is only to generate the sources of stubs and proxies of the interface, the below command can be used,
+As outlined in the section, [CMake Configuration to handle Interface library generation](#6-cmake-configuration-to-handle-interface-library-generation), the versioning framework provides support for generating interface libraries via CMake.
+
+If the requirement is only to generate the stub and proxy sources for the interface, the following command can be used:
 
   ```bash
-  ./build-tools/linux_binder_idl/host/aidl_ops –g -v 2 car
+  aidl_ops –g -v 2 car
   ```
 
-The generated sources can be used in your code directly or can be used to generate the library. Note that, it won't generate sourced for imported interfaces and it needs to be done seperately.
+The generated sources can either be used directly in your code or utilised to generate an interface library.
+
+Note: These sources do not include those for imported interfaces. Any required imported interfaces must be generated separately.
 
 ## **7. Directory Structure of AIDL interfaces
 
@@ -208,7 +172,7 @@ Once AIDL interfaces are stabilized, the following directory structure is adopte
 │       ├── com/demo/hal/common/*.aidl
 │       └── interface.json
 └── stable
-    ├── aidl
+    ├── versioned_aidl
     │   ├── car
     │   │   ├── 1
     │   │   │   └── com/demo/hal/car/*.aidl
@@ -228,12 +192,12 @@ Once AIDL interfaces are stabilized, the following directory structure is adopte
         │   ├── include
         │   │   ├── 1
         │   │   │   └── com/demo/hal/car/*.h
-        │   │   └── 2
+        │   │   └── current
         │   │       └── com/demo/hal/car/*.h
         │   └── src
         │       ├── 1
         │       │   └── com/demo/hal/car/*.cpp
-        │       └── 2
+        │       └── current
         │           └── com/demo/hal/car/*.cpp
         └── common
             ├── include
@@ -241,32 +205,33 @@ Once AIDL interfaces are stabilized, the following directory structure is adopte
             │   │   └── com/demo/hal/common/*.h
             │   ├── 2
             │   │   └── com/demo/hal/common/*.h
-            │   └── 3
+            │   └── current
             │       └── com/demo/hal/common/*.h
             └── src
                 ├── 1
                 │   └── com/demo/hal/common/*.cpp
                 ├── 2
                 │   └── com/demo/hal/common/*.cpp
-                └── 3
+                └── current
                     └── com/demo/hal/common/*.cpp
 ```
 
 ## **8. CMake Configuration to handle Interface library generation**
 
-CMake configuration is provided along with the versioning framework to handle the interface linking with the HAL service or the client. It adds the Interface library targets along with their dependencies in the build system as required by the particular module.
+CMake configuration is provided as part of the versioning framework to manage the linking of AIDL interfaces with HAL services or client modules. It automatically adds the required interface library targets and their dependencies to the build system, based on the needs of each module.
 
-It Provides seamless integration of the AIDL Interfaces as developers don’t have to consider, 
-* The Interface Dependencies and Imports
-* Different versions of these imports
-* AIDL Sources and their Locations in the build system
-* Managing the source code of the generated stubs and proxies
+This enables seamless integration of AIDL interfaces, relieving developers from having to manage:
+* Interface dependencies and imports
+* Different versions of imported interfaces
+* AIDL source files and their locations within the build system
+* Source code for generated stubs and proxies
 
-It can be integrate with Yocto, and CMake based build systems. (Support for the Make build system will also be provided)
+The framework supports integration with Yocto and CMake-based build systems.
+Support for the Make build system will also be provided.
 
 ### Steps to include the CMake Configuration and link the interface libraries
 
-1. **Define the `INTFS_ROOT_DIR`:**
+1. **Define the `INTERFACES_ROOT_DIR`:**
     *  This variable is used get the location root directory where all interfaces are located.
     * If this variable is not set, the versioning framework considers the directory from where the cmake is executed as the root directory.
 2. **Include Versioning Framework's CMake configuration include file:**
@@ -276,7 +241,7 @@ It can be integrate with Yocto, and CMake based build systems. (Support for the 
     The variable, `LINUX_BINDER_AIDL_ROOT`, is the directory location where `linux-binder-aidl` repository is checked out.
 3. **Link the Interface Library:**
     ```cmake
-    target_link_intfs_libraries(CarClientVer3
+    target_link_interfaces_libraries(CarClientVer3
         car-V3-cpp
     )
     ```
@@ -285,7 +250,7 @@ It can be integrate with Yocto, and CMake based build systems. (Support for the 
     ```cmake
     target_include_directories(CarServiceVer2
         PRIVATE
-        ${INTFS_ROOT_DIR}/stable/generated/car/include/
+        ${INTERFACES_ROOT_DIR}/stable/generated/car/include/
     )
     ```
 
@@ -295,7 +260,7 @@ It can be integrate with Yocto, and CMake based build systems. (Support for the 
 
     # Set the aidl interfaces root directory where all interfaces are
     # located along with stable versions.  
-    set(INTFS_ROOT_DIR path/to/interfaces_root_directory)
+    set(INTERFACES_ROOT_DIR path/to/interfaces_root_directory)
 
     # Include the versioning Framework's CMake
     set(LINUX_BINDER_AIDL_ROOT path/to/linux_binder_aidl)
@@ -306,14 +271,14 @@ It can be integrate with Yocto, and CMake based build systems. (Support for the 
     add_executable(CarClientVer3 ${CarClient_Sources})
     
     # Link the aidl interface stubs & proxies library
-    target_link_intfs_libraries(CarClientVer3
+    target_link_interfaces_libraries(CarClientVer3
         car-V3-cpp
         )
   
     # Configure the include directory
     target_include_directories(CarServiceVer2
         PRIVATE
-        ${INTFS_ROOT_DIR}/stable/generated/car/include/
+        ${INTERFACES_ROOT_DIR}/stable/generated/car/include/
     )
     
     target_link_libraries(CarClientVer3 PRIVATE log)
@@ -459,7 +424,7 @@ All AIDL changes **must** be updated locally **before** opening a pull request:
 
 - **Interface Validation**:
     ```bash
-    ./build-tools/linux_binder_idl/host/aidl_ops –u car
+    ./aidl_ops –u car
     ```
     - Verifies that the value in `.hash` matches with the hash computed using the current state of aidl files
     - Verifies that all the frozen versions are backward compatible
