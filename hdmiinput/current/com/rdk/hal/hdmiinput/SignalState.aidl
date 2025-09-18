@@ -31,6 +31,8 @@ enum SignalState
 {
     /**
      * Unknown signal state.
+     *
+     * Indicates the state is not yet determined or the operation is not applicable. Clients should poll or retry later.
      */
     UNKNOWN = -1,
 
