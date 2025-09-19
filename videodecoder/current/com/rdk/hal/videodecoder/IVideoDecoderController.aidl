@@ -85,8 +85,9 @@ interface IVideoDecoderController
      * Buffers can be either non-secure or secure to support SVP.
      * Each call shall reference a single video frame with a presentation timestamp.
      * 
-     * When the decoder has finished with the buffer it is automatically freed by the decoder and returned
-     * to the AV Buffer Manager.
+     * Once the decoder has finished processing the buffer, it is automatically released
+     * and returned to the AV Buffer Manager. The caller must not modify or free the
+     * buffer after submission.
      * 
      * @param[in] nsPresentationTime	The presentation time of the video frame in nanoseconds.
      * @param[in] bufferHandle			A handle to the AV buffer containing the encoded video frame.
