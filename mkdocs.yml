@@ -104,7 +104,7 @@ nav:
       - Getting Started: introduction/documentation_getting_started.md
       - Interface Template: standards/interface_template.md
     - Governance:
-      - RDK-X Documentation Structure: governance/rdk-release-documenation-structure.md
+      - RDK Documentation Structure: governance/rdk-release-documenation-structure.md
     - White Papers:
       - Documentation in Git: whitepapers/documentation_in_git.md
       - Branching Strategies : whitepapers/branching_strategies.md 

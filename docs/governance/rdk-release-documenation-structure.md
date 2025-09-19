@@ -1,5 +1,11 @@
 # Architecture Governance: RDK Release Documentation Structure
 
+## **Document History**
+
+|Version|Author|Date|Comment|
+|-------|------|----|-------|
+|0.1.0 (Draft)| G. Weatherup | 15 July 2025 | Draft Revision|
+
 ## **Audience and Scope**
 
 This document defines the governance model for how RDK Release documentation is structured, owned, and maintained across layers, subsystems, and component boundaries. It outlines the architectural principles and tooling standards (e.g., `mk_docs.yaml`) that ensure consistency, traceability, and reuse of documentation throughout the development and release lifecycle.
@@ -19,9 +25,9 @@ This governance standard outlines the structured use of `mk_docs.yaml` files wit
 * Clear documentation ownership
 * Consistent documentation build and release processes
 * Layer-based documentation composition and reuse
-* A unified "Start Here" entry point for RDK Release X
+* A unified "Start Here" entry point for RDK Release
 
-## **Top-Level Documentation (` RDK Release X`)**
+## **Top-Level Documentation (`RDK Release`)**
 
 ### **Purpose**
 
@@ -139,8 +145,3 @@ This governance standard ensures modular, reusable, and up-to-date documentation
 * Real-world-aligned grouping and tagging for sub-layers and subsystems
 * Support for post-release fixes via branching
 
-## **Document History**
-
-|Version|Author|Date|Comment|
-|-------|------|----|-------|
-|0.1.0 (Draft)| G. Weatherup | 15 July 2025 | Draft Revision|
