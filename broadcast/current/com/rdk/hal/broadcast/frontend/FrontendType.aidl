@@ -29,15 +29,9 @@ package com.rdk.hal.broadcast.frontend;
 enum FrontendType {
     /** Clean value when default initialized */
     UNDEFINED = 0,
-    ANALOG,
     ATSC,
-    ATSC3,
     DVB_C,
     DVB_S,
     DVB_T,
-    ISDB_S,
-    ISDB_S3,
     ISDB_T,
-    DTMB,
-    IPTV,
 }

@@ -31,24 +31,21 @@ package com.rdk.hal.broadcast.frontend;
  * intervals from the frontend before using any of them.
  */
 @VintfStability
-enum GuardInterval {
+enum RollOff {
     /** Clean value when default initialized */
     UNDEFINED = 0,
-    /** Auto-selected guard interval */
+    /** @brief Auto-selected */
     AUTO,
-    /** 1/4 */
-    GI_1_4,
-    /** 1/8 */
-    GI_1_8,
-    /** 1/16 */
-    GI_1_16,
-    /** 1/32 */
-    GI_1_32,
-    /** 1/128 */
-    GI_1_128,
-    /** 19/128 */
-    GI_19_128,
-    /** 19/256 */
-    GI_19_256,
-
+    /** @brief Roll off value 0.35 used by DVB-S2 and DVB-S2X */
+    ROLL_OFF_0_35,
+    /** @brief Roll off value 0.25 used by DVB-S2 and DVB-S2X */
+    ROLL_OFF_0_25,
+    /** @brief Roll off value 0.20 used by DVB-S2 and DVB-S2X */
+    ROLL_OFF_0_20,
+    /** @brief Roll off value 0.15 used by DVB-S2X */
+    ROLL_OFF_0_15,
+    /** @brief Roll off value 0.10 used by DVB-S2X */
+    ROLL_OFF_0_10,
+    /** @brief Roll off value 0.05 used by DVB-S2X */
+    ROLL_OFF_0_05,
 }
