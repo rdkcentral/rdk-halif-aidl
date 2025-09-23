@@ -68,6 +68,7 @@ nav:
     - Plane Control: halif/plane_control/current/plane_control.md
     - Secure API: halif/sec_api/current/sec_api.md
     - Sensor: halif/sensor/current/sensor.md
+    - Thermal: halif/thermal/current/thermal.md
   - Vendor System Interfaces (VSI):
     - File System:
         - Directory And Dynamic Linking: vsi/filesystem/current/directory_and_dynamic_linking_specification.md
