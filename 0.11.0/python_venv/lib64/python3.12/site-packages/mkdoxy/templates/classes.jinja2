@@ -1,0 +1,14 @@
+{% filter indent(config.get('indent_level', 0), True) %}
+# Class Index
+
+{% for letter, children in dictionary.items() %}
+## {{letter}}
+
+{% for node in children|sort(attribute='name_short') -%}
+* [**{{node.name_short}}**]({{node.url}})
+{% if node.parent.is_language -%}
+ ([**{{node.parent.name_long}}**]({{node.parent.url}}))
+{% endif -%}
+{% endfor %}
+{% endfor %}
+{% endfilter %}
