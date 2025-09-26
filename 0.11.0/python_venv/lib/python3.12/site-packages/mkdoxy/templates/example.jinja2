@@ -1,8 +1,0 @@
-{% filter indent(config.get('indent_level', 0), True) %}
-# {{node.title}}
-
-{{node.details | use_code_language(node.code_language)}}
-
-{{node.programlisting | use_code_language(node.code_language)}}
-
-{% endfilter %}
