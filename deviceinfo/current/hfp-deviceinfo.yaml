@@ -22,7 +22,7 @@
 
 # HAL Feature Profile for deviceinfo
 
-IDeviceInfo:                 # Component object begins
+DeviceInfo:                 # Component object begins
     interfaceVersion: current
     HALVersion:
         major: 0
