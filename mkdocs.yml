@@ -103,16 +103,19 @@ nav:
     - Documentation Standards: 
       - Getting Started: introduction/documentation_getting_started.md
       - Interface Template: standards/interface_template.md
+    - Governance:
+      - RDK Documentation Structure: governance/rdk-release-documenation-structure.md
     - White Papers:
       - Documentation in Git: whitepapers/documentation_in_git.md
       - Branching Strategies : whitepapers/branching_strategies.md 
       - Doxygen Code Documentation: whitepapers/doxygen_code_documentation.md
       - Achieving Engineering Goal: whitepapers/engineering_goals.md
       - Commit Message Standards: whitepapers/standardizing_git_commit_messages.md
+      - Interface Version Alignment: whitepapers/interface_version_alignment.md
     - Filing an Issue: external_content/ut-core-wiki/1.2.-Standards:-Issue-Description-Guideline.md
     - FAQ:
       - Python Development: external_content/ut-core-wiki/FAQ:-Comparing-Python-Development-Platforms.md
-    - ChangeLog: src_link/CHANGELOG.md
+    - ChangeLog: CHANGELOG.md
 
 markdown_extensions:
   - admonition
