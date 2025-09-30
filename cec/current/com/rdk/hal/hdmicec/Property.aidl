@@ -29,6 +29,9 @@ enum Property {
      * The value complies with the encoding used by the [CEC Version] CEC operand described in the appropriate HDMI specification.
      *
      * Please note that this value is NOT transmitted or obtained over the CEC bus. It is statically defined by the implementation.
+     *
+  	 * Type: Byte - 8-bit integer value.
+	 * Access: Read-only.
 	 */
 	HAL_CEC_VERSION = 0,
 
@@ -37,6 +40,10 @@ enum Property {
      * -1 means this metric is not yet implemented by the vendor.
      * 
      * If this property is read in the CLOSED state it will report 0.
+     *
+  	 * Type: Int - 32-bit signed integer value.
+	 * Access: Read-only.
+     *
 	 */
     METRIC_DIRECTED_MESSAGES_SENT = 1000,
 
@@ -45,6 +52,10 @@ enum Property {
      * -1 means this metric is not yet implemented by the vendor.
      * 
      * If this property is read in the CLOSED state it will report 0.
+     *
+  	 * Type: Int - 32-bit signed integer value.
+	 * Access: Read-only.
+     *
 	 */
     METRIC_BROADCAST_MESSAGES_SENT = 1001,
 
@@ -53,6 +64,10 @@ enum Property {
      * -1 means this metric is not yet implemented by the vendor.
      * 
      * If this property is read in the CLOSED state it will report 0.
+     *
+  	 * Type: Int - 32-bit signed integer value.
+	 * Access: Read-only.
+     *
 	 */
     METRIC_DIRECTED_MESSAGES_SENT_AND_ACKED = 1002,
 
@@ -62,6 +77,10 @@ enum Property {
      * -1 means this metric is not yet implemented by the vendor.
      * 
      * If this property is read in the CLOSED state it will report 0.
+     *
+  	 * Type: Int - 32-bit signed integer value.
+	 * Access: Read-only.
+     *
 	 */
     METRIC_BROADCAST_MESSAGE_SENT_AND_ACKED = 1003,
 
@@ -70,6 +89,10 @@ enum Property {
      * -1 means this metric is not yet implemented by the vendor.
      * 
      * If this property is read in the CLOSED state it will report 0.
+     *
+  	 * Type: Int - 32-bit signed integer value.
+	 * Access: Read-only.
+     *
 	 */
     METRIC_ARBITRATION_FAILURES = 1004
 
