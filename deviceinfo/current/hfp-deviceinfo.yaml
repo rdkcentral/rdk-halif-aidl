@@ -29,18 +29,18 @@ IDeviceInfo:                 # Component object begins
         minor: 7
         doc: 1
     supportedProperties:
-        - KEY_MANUFACTURER
-        - KEY_MANUFACTURER_OUI
-        - KEY_MODELNAME
-        - KEY_PRODUCTCLASS
-        - KEY_SERIALNUMBER
-        - KEY_WIFIMAC
-        - KEY_BLUETOOTHMAC
-        - KEY_WPSPIN
-        - KEY_ETHERNETMAC
-        - KEY_RF4CEMAC
-        - KEY_IMAGENAME
-        - KEY_IMAGETYPE
-        - KEY_COUNTRYCODE
-        - KEY_LANGUAGECODE
-        - KEY_MANUFACTURERDATA
+        - KEY_MANUFACTURER: "TestTech Inc."
+        - KEY_MANUFACTURER_OUI: "ABCDEF"  # Hex string representing 3 bytes
+        - KEY_MODELNAME: "STB-X1000"
+        - KEY_PRODUCTCLASS: "Hybrid4K-STB"
+        - KEY_SERIALNUMBER: "TTX1000SN12345678"
+        - KEY_WIFIMAC: "A4:B2:C1:11:22:33"
+        - KEY_BLUETOOTHMAC: "A4:B2:C1:44:55:66"
+        - KEY_WPSPIN: "48273615"
+        - KEY_ETHERNETMAC: "A4:B2:C1:77:88:99"
+        - KEY_RF4CEMAC: "A4:B2:C1:AA:BB:CC"
+        - KEY_IMAGENAME: "stb_x1000_v1.2.3.img"
+        - KEY_IMAGETYPE: "firmware"
+        - KEY_COUNTRYCODE: "US"
+        - KEY_LANGUAGECODE: "en"
+        - KEY_MANUFACTURERDATA: "Test data block for validation - 0xDEADBEEF"
