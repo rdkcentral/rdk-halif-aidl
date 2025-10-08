@@ -101,4 +101,9 @@ parcelable FrameMetadata {
 	 * Private extension for future use. 
 	 */
     ParcelableHolder extension;
+
+        /**
+        * Proprietary metadata passed from Decoder HAL to Sink HAL
+        */
+     byte[] SoCPrivate;
 }
