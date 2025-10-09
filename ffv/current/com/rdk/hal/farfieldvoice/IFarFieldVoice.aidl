@@ -117,14 +117,14 @@ interface IFarFieldVoice
      *
      * If the client that opened the `IFarFieldVoiceController` crashes,
      * then `close()` is implicitly called to perform clean up.
+     * 
+     * @pre Resource is in State::CLOSED state.
      *
      * @param[in] controllerListener    Listener object for controller callbacks.
      *
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
      * @returns IFarFieldVoiceController or null if not in the CLOSED state.
-     * 
-     * @pre Resource is in State::CLOSED state.
      * 
      * @see IFarFieldVoiceController, close(), registerEventListener()
      */
@@ -139,13 +139,13 @@ interface IFarFieldVoice
      * `onStateChanged(CLOSING, CLOSED)` will be notified on any registered
      * listener interface.
      *
+     * @pre Resource is in State::READY state.
+     *
      * @param[in] controller    Instance of IFarFieldVoiceController returned by open().
      *
      * @return boolean
      * @retval true     Successfully closed.
      * @retval false    Invalid state or unrecognised parameter.
-     *
-     * @pre Resource is in State::READY state.
      *
      * @see open()
      */
