@@ -202,6 +202,28 @@ interface IDeviceInfo
      */
     const @utf8InCpp String KEY_MANUFACTURERDATA = "KEY_MANUFACTURERDATA";
 
+    /**
+     * Device type.
+     *
+     * Format: string (TV, STB, OTT).
+     * Mandatory: Yes.
+     *
+     * STB: Device with a tuner and demodulator for non-IP-based video services; no integrated display.
+     * OTT: Device without a tuner and designed solely to connect to the internet; no integrated display.
+     * TV:  Device with an integrated display.
+     */
+    const @utf8InCpp String KEY_DEVICE_TYPE = "KEY_DEVICE_TYPE";
+
+    /**
+     * Unique chipset identifier.
+     *
+     * Format: string.
+     * Mandatory: Yes.
+     *
+     * Represents the unique Chipset ID returned from the SoC.
+     */
+    const @utf8InCpp String KEY_CHIPSETID = "KEY_CHIPSETID";
+
     /** @} */
 }
 

@@ -29,18 +29,24 @@ IDeviceInfo:                 # Component object begins
         minor: 7
         doc: 1
     supportedProperties:
-        - KEY_MANUFACTURER: "TestTech Inc."
-        - KEY_MANUFACTURER_OUI: "ABCDEF"  # Hex string representing 3 bytes
-        - KEY_MODELNAME: "STB-X1000"
-        - KEY_PRODUCTCLASS: "Hybrid4K-STB"
-        - KEY_SERIALNUMBER: "TTX1000SN12345678"
-        - KEY_WIFIMAC: "A4:B2:C1:11:22:33"
-        - KEY_BLUETOOTHMAC: "A4:B2:C1:44:55:66"
-        - KEY_WPSPIN: "48273615"
-        - KEY_ETHERNETMAC: "A4:B2:C1:77:88:99"
-        - KEY_RF4CEMAC: "A4:B2:C1:AA:BB:CC"
-        - KEY_IMAGENAME: "stb_x1000_v1.2.3.img"
-        - KEY_IMAGETYPE: "firmware"
-        - KEY_COUNTRYCODE: "US"
-        - KEY_LANGUAGECODE: "en"
-        - KEY_MANUFACTURERDATA: "Test data block for validation - 0xDEADBEEF"
+        - KEY_MANUFACTURER            # Device manufacturer name (ASCII, mandatory)
+        - KEY_MANUFACTURER_OUI        # Manufacturer IEEE OUI, 3-byte hex string (mandatory)
+        - KEY_MODELNAME               # Device model name (ASCII, mandatory)
+        - KEY_PRODUCTCLASS            # Product class (ASCII, mandatory)
+        - KEY_SERIALNUMBER            # Device serial number (ASCII, mandatory)
+        - KEY_WIFIMAC                 # Wi-Fi MAC, format XX:XX:XX:XX:XX:XX (mandatory if Wi-Fi present)
+        - KEY_BLUETOOTHMAC            # Bluetooth MAC, format XX:XX:XX:XX:XX:XX (mandatory if Bluetooth present)
+        - KEY_WPSPIN                  # WPS PIN, 8-digit ASCII string (optional)
+        - KEY_ETHERNETMAC             # Ethernet MAC, format XX:XX:XX:XX:XX:XX (mandatory if Ethernet present)
+        - KEY_RF4CEMAC                # RF4CE MAC, format XX:XX:XX:XX:XX:XX (mandatory if RF4CE present)
+        - KEY_IMAGENAME               # Application image name (ASCII, mandatory)
+        - KEY_IMAGETYPE               # Application image type (ASCII, mandatory)
+        - KEY_COUNTRYCODE             # Country code (ASCII, optional)
+        - KEY_LANGUAGECODE            # Language code (ASCII, optional)
+        - KEY_MANUFACTURERDATA        # Manufacturer private data (ASCII, optional)
+        - KEY_DEVICE_TYPE             # Device type (string, mandatory)
+                                      # Allowed values:
+                                      #   - STB: tuner/demodulator, no display
+                                      #   - OTT: no tuner, internet-only, no display
+                                      #   - TV: integrated display device
+        - KEY_CHIPSETID               # Unique SoC chipset ID (string, mandatory)
