@@ -76,35 +76,6 @@ interface IDeviceInfo
     @nullable String getProperty(in String propertyKey);
 
     /**
-     * Sets and persists a device property.
-     * 
-     * The new value is written and verified before the function returns.
-     * 
-     * Usually only the factory needs to set these properties.
-     * 
-     * All ASCII hex values must be in upper case.
-     * All MAC addresses must be in "XX:XX:XX:XX:XX:XX" format.
-     * 
-     * Property key strings should be one of the define KEY_nnn strings
-     * or can be a custom product KEY_OEM_nnn string.
-     *
-     * @param[in] propertyKey           The key string of a property.
-     * @param[in] value                 The new value of the property.
-     *
-     * @returns SetPropertyResult
-     * @retval SUCCESS                      Success
-     * @retval ERROR_INVALID_PARAM          Parameter passed to this function is invalid
-     * @retval ERROR_MEMORY_EXHAUSTED       Memory allocation failure
-     * @retval ERROR_FAILED_CRC_CHECK       CRC check failed
-     * @retval ERROR_WRITE_FLASH_FAILED     Flash write failed
-     * @retval ERROR_FLASH_READ_FAILED      Flash read failed
-     * @retval ERROR_FLASH_VERIFY_FAILED    Flash verification failed
-     * 
-     * @see SetPropertyResult
-     */
-    SetPropertyResult setProperty(in String propertyKey, in String value);
-
-    /**
      * \defgroup IDeviceInfoKeys IDeviceInfo Generic Property Keys
      * @{
      */
@@ -230,6 +201,28 @@ interface IDeviceInfo
      * Mandatory: No.
      */
     const @utf8InCpp String KEY_MANUFACTURERDATA = "KEY_MANUFACTURERDATA";
+
+    /**
+     * Device type.
+     *
+     * Format: string (TV, STB, OTT).
+     * Mandatory: Yes.
+     *
+     * STB: Device with a tuner and demodulator for non-IP-based video services; no integrated display.
+     * OTT: Device without a tuner and designed solely to connect to the internet; no integrated display.
+     * TV:  Device with an integrated display.
+     */
+    const @utf8InCpp String KEY_DEVICE_TYPE = "KEY_DEVICE_TYPE";
+
+    /**
+     * Unique chipset identifier.
+     *
+     * Format: string.
+     * Mandatory: Yes.
+     *
+     * Represents the unique Chipset ID returned from the SoC.
+     */
+    const @utf8InCpp String KEY_CHIPSETID = "KEY_CHIPSETID";
 
     /** @} */
 }
