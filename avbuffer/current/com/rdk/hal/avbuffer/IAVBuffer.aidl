@@ -65,7 +65,8 @@ interface IAVBuffer
      * @param[in] videoDecoderIndex     The index of the video decoder resource.
      * @param[in] listener              Listener for space available callbacks.
      * 
-     * @returns Pool
+     * @returns A new `Pool` object. On success, the handle will be valid.
+     *             On failure, the handle will be set to `INVALID_HANDLE`.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
@@ -92,7 +93,8 @@ interface IAVBuffer
      * @param[in] audioDecoderId        The ID of the audio decoder resource.
      * @param[in] listener              Listener for space available callbacks.
      *
-     * @returns Pool
+    * @returns A new `Pool` object. On success, the handle will be valid.
+     *             On failure, the handle will be set to `INVALID_HANDLE`.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
