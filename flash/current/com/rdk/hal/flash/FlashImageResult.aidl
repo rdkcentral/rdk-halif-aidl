@@ -75,9 +75,4 @@ enum FlashImageResult
      * Flash read verify operation failed.
      */
     ERROR_FLASH_VERIFY_FAILED = 7,
-
-    /**
-     * Flash image signature failed verification after writing.
-     */
-    ERROR_FLASH_VERIFY_SIGNATURE_FAILED = 8,
 }
