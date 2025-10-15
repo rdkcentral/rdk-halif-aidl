@@ -66,7 +66,7 @@ interface IAVBuffer
      * @param[in] listener              Listener for space available callbacks.
      * 
      * @returns A new `Pool` object. On success, the handle will be valid.
-     *             On failure, the handle will be set to `INVALID_HANDLE`.
+     *             On failure, the handle will be set to `Pool::handle = Pool::INVALID_POOL`.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
@@ -94,7 +94,7 @@ interface IAVBuffer
      * @param[in] listener              Listener for space available callbacks.
      *
     * @returns A new `Pool` object. On success, the handle will be valid.
-     *             On failure, the handle will be set to `INVALID_HANDLE`.
+     *             On failure, the handle will be set to `Pool::handle = Pool::INVALID_POOL`.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
