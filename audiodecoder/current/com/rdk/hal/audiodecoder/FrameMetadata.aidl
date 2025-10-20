@@ -36,7 +36,7 @@ parcelable FrameMetadata {
  	/**
 	 * The original source codec of the audio frame.
 	 */
-    Codec sourceCodec;
+        Codec sourceCodec;
 
 	/**
 	 * The buffer contains Dolby Atmos audio and metadata.
@@ -52,17 +52,17 @@ parcelable FrameMetadata {
 	 * Array of ChannelType enum values.
 	 * The array size should match the number of channels.
 	 */
-    ChannelType[] channelTypes;
+        ChannelType[] channelTypes;
 
  	/**
 	 * Sample rate in samples/second.
 	 */
-    int sampleRate;
+        int sampleRate;
 
  	/**
 	 * Format of the output PCM data.
 	 */
-    PCMFormat format;
+        PCMFormat format;
 
  	/**
 	 * Indicated whether the audio data buffer is in planar format.
@@ -70,11 +70,11 @@ parcelable FrameMetadata {
 	 */
 	boolean planarFormat;
 
-    /**
-     * Audio trimming to use on presentation.
-     */
-    int trimStartNs;
-    int trimEndNs;
+        /**
+        * Audio trimming to use on presentation.
+        */
+        int trimStartNs;
+        int trimEndNs;
 
 	/**
 	 * Indicates if the audio should be delivered in low latency mode.
@@ -100,10 +100,10 @@ parcelable FrameMetadata {
 	/**
 	 * Private extension for future use. 
 	 */
-    ParcelableHolder extension;
+        ParcelableHolder extension;
 
         /**
         * Proprietary metadata passed from Decoder HAL to Sink HAL
         */
-     byte[] SoCPrivate;
+        byte[] SoCPrivate;
 }
