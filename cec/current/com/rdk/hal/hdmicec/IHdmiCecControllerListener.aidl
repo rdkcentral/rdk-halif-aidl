@@ -20,7 +20,7 @@ package com.rdk.hal.hdmicec;
 import com.rdk.hal.hdmicec.SendMessageStatus;
 import com.rdk.hal.State;
 
-/** 
+/**
  *  @brief     HDMI CEC Event Listener HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -29,51 +29,9 @@ import com.rdk.hal.State;
 
 @VintfStability
 oneway interface IHdmiCecControllerListener {
- 
+
     /**
 	 * Callback to be invoked for each frame arrival.
-     * 
-     * The frame contained in the buffer will follow this format 
-     *     (ref <HDMI Specification 1-4> Section <CEC 6.1>) :
-     * 
-     * complete frame  = header block + data block@n
-     * header block    = destination logical address (4-bit) + source address (4-bit)@n
-     * data block      = opcode block (8-bit) + operand block (N-bytes)
-     *
-     * @code
-     * |------------------------------------------------
-     * | header block  |          data blocks          |
-     * |------------------------------------------------
-     * |3|2|1|0|3|2|1|0|7|6|5|4|3|2|1|0|7|6|5|4|3|2|1|0|  
-     * |------------------------------------------------
-     * | Dest  |  src  |  opcode block | operand block |
-     * |------------------------------------------------
-     * @endcode
-     *
-     * The HAL implementation must remove the EOM and ACK bits in the returned buffer.
-     *
-     * @param[in] message	A variable length message conforming to format described above.
-     */
-    void onMessageReceived(in byte[] message);
-
-    /**
-	 * Callback when the CEC interface has transitioned to a new state.
-     *
-     * @param[in] oldState	            The state transitioned from.
-     * @param[in] newState              The new state transitioned to.
-     * 
-     * @see IHdmiCec.getState()
-     */
-    void onStateChanged(in State oldState, in State newState);
-
-    /**
-     * Callback to be invoked for each frame sent by the Controller through IHdmiCecController.sendMessage().
-     *
-     * When registered the HAL invokes this callback after sending, or attempting to send a message.
-     * The message's send status allows the listener to know the result of the message transmission.
-     *
-     * The intention of this listener is to allow diagnostic tools to monitor CEC traffic between the CEC Controller Client
-     * and the HAL.
      *
      * The frame contained in the buffer will follow this format
      *     (ref <HDMI Specification 1-4> Section <CEC 6.1>) :
@@ -92,13 +50,20 @@ oneway interface IHdmiCecControllerListener {
      * |------------------------------------------------
      * @endcode
      *
-     * The message buffer should be identical to the IHdmiCecController.sendMessage() call.
+     * The HAL implementation must remove the EOM and ACK bits in the returned buffer.
      *
      * @param[in] message	A variable length message conforming to format described above.
-     * @param[in] status    The status of the sent message
-     *
-     * @see IHdmiCecController.sendMessage()
      */
-    void onMessageSent(in byte[] message, SendMessageStatus status);
+    void onMessageReceived(in byte[] message);
+
+    /**
+	 * Callback when the CEC interface has transitioned to a new state.
+     *
+     * @param[in] oldState	            The state transitioned from.
+     * @param[in] newState              The new state transitioned to.
+     *
+     * @see IHdmiCec.getState()
+     */
+    void onStateChanged(in State oldState, in State newState);
 
 }
