@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.videodecoder;
- 
-/** 
+
+/**
  *  @brief     Video decoder error code definitions.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -27,7 +27,7 @@ package com.rdk.hal.videodecoder;
 
 @VintfStability
 @Backing(type="int")
-enum ErrorCode {   
+enum ErrorCode {
     xxxx = 1,
-    
+
 }

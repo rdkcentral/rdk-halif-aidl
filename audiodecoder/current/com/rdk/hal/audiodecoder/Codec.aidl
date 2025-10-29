@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.audiodecoder;
 
-/** 
+/**
  *  @brief     Audio codec definitions.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz

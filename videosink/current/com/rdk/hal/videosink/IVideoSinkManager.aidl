@@ -18,8 +18,8 @@
  */
 package com.rdk.hal.videosink;
 import com.rdk.hal.videosink.IVideoSink;
- 
-/** 
+
+/**
  *  @brief     Video Sink Manager HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -32,7 +32,7 @@ import com.rdk.hal.videosink.IVideoSink;
  *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
  *    The caller must ignore any output variables.
  */
- 
+
 @VintfStability
 interface IVideoSinkManager
 {

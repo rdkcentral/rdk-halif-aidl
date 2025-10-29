@@ -19,7 +19,7 @@
 package com.rdk.hal.audiodecoder;
 import com.rdk.hal.audiodecoder.FrameMetadata;
 
-/** 
+/**
  *  @brief     Callbacks listener interface from audio decoder controller.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -30,9 +30,9 @@ import com.rdk.hal.audiodecoder.FrameMetadata;
 oneway interface IAudioDecoderControllerListener {
     /**
     * Called when an audio frame has been decoded or when frame metadata needs notification.
-    * 
+    *
     * In tunneled mode, audio data is consumed by the vendor layer, so no PCM buffer is returned.
-    * 
+    *
     * Otherwise, {@code frameBufferHandle} is a valid handle to a decoded PCM buffer,
     * and {@code metadata} is non-null for the first frame after {@code State::START} or {@code State::FLUSHING},
     * or whenever stream metadata changes. Metadata may be null if unchanged since the last callback.

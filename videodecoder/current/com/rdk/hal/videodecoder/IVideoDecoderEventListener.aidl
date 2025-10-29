@@ -20,16 +20,16 @@ package com.rdk.hal.videodecoder;
 import com.rdk.hal.videodecoder.ErrorCode;
 import com.rdk.hal.State;
 
-/** 
+/**
  *  @brief     Event callbacks listener interface from video decoder.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
+
 @VintfStability
 oneway interface IVideoDecoderEventListener {
- 
+
     /**
 	 * Callback when the decoder has raised an error.
      *
@@ -37,7 +37,7 @@ oneway interface IVideoDecoderEventListener {
      * @param[in] vendorErrorCode  	    A vendor specific error code.
      */
     void onDecodeError(in ErrorCode errorCode, in int vendorErrorCode);
- 
+
     /**
 	 * Callback when the decoder has transitioned to a new state.
      *

@@ -20,7 +20,7 @@ package com.rdk.hal.videodecoder;
 import com.rdk.hal.videodecoder.OperationalMode;
 import com.rdk.hal.videodecoder.IVideoDecoder;
 
-/** 
+/**
  *  @brief     Video Decoder Manager HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -49,14 +49,14 @@ interface IVideoDecoderManager
      *
      */
 	IVideoDecoder.Id[] getVideoDecoderIds();
- 
+
     /**
 	 * Gets the operational modes supported by the video decoders on the platform.
-     * 
+     *
      * The platform must support either tunnelled or non-tunnelled.  Both are not required to be supported.
      * Each video decoder resource must share the same operational mode(s) as all other video decoder resources.
      * Graphics texture support is optional.
-     * 
+     *
      * This function can be called at any time and is not dependant on any Video Decoder state.
      * The returned value is not allowed to change between calls.
      *
@@ -64,7 +64,6 @@ interface IVideoDecoderManager
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
-     * 
      * @see enum OperationalMode
      */
     OperationalMode[] getSupportedOperationalModes();
