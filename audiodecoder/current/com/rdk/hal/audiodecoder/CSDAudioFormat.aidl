@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.audiodecoder;
 
-/** 
+/**
  *  @brief     Audio codec specific data formats.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -34,7 +34,7 @@ package com.rdk.hal.audiodecoder;
  */
 @VintfStability
 @Backing(type="int")
-enum CSDAudioFormat 
+enum CSDAudioFormat
 {
     /**
      * AAC AudioSpecificConfig (ASC) per ISO/IEC 14496-3.

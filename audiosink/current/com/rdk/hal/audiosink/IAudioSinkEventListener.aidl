@@ -20,7 +20,7 @@ package com.rdk.hal.audiosink;
 import com.rdk.hal.audiosink.ErrorCode;
 import com.rdk.hal.State;
 
-/** 
+/**
  *  @brief     Callbacks listener interface from audio sink.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -29,7 +29,7 @@ import com.rdk.hal.State;
 
 @VintfStability
 oneway interface IAudioSinkEventListener {
-  
+
     /**
 	 * Callback when the sink has transitioned to a new state.
      *
@@ -37,44 +37,44 @@ oneway interface IAudioSinkEventListener {
      * @param[in] newState              The new state transitioned to.
      */
     void onStateChanged(in State oldState, in State newState);
- 
+
     /**
      * Callback when the first audio frame has started to be mixed.
-     * 
+     *
      * The behaviour is the same for tunnelled and non-tunnelled audio.
      * This occurs on the first audio frame in the session or after a flush() call.
      * The frame may not immediately be heard due to the audio pipeline output latency.
-     * 
+     *
      * @param[in] nsPresentationTime	The presentation time of the audio frame in nanoseconds.
      */
     void onFirstFrameRendered(in long nsPresentationTime);
-   
+
     /**
      * Callback when the last audio frame has been completely passed to the mixer.
-     * 
+     *
      * The behaviour is the same for tunnelled and non-tunnelled audio.
      * This occurs on the last frame mixed in the session.
      * The audio may not immediately be heard due to audio mixer and output latencies.
-     * 
+     *
      * @param[in] nsPresentationTime	The presentation time of the audio frame in nanoseconds.
      */
     void onEndOfStream(in long nsPresentationTime);
-   
+
     /**
      * Callback to indicate a audio frame buffer underflow condition.
-     * 
+     *
      * This occurs if the frame queue is empty at the AV sync clock based presentation time.
 	 * The callback occurs only once when the queue becomes empty.
-	 * The onAudioResumed() callback informs the client when video playback restarts, 
+	 * The onAudioResumed() callback informs the client when video playback restarts,
 	 * which allows the onAudioUnderflow() to occur again.
      */
     void onAudioUnderflow();
-  
+
     /**
      * Callback to indicate that audio has resumed after an audio underflow event.
-     * 
+     *
 	 * The onAudioUnderflow() can occur again after onAudioResumed() has been called.
-     * 
+     *
      * @param[in] nsPresentationTime	The presentation time of the audio frame in nanoseconds.
      */
     void onAudioResumed(in long nsPresentationTime);

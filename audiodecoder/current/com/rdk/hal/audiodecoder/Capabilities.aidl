@@ -18,8 +18,8 @@
  */
 package com.rdk.hal.audiodecoder;
 import com.rdk.hal.audiodecoder.Codec;
- 
-/** 
+
+/**
  *  @brief     Audio decoder resource definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -30,12 +30,12 @@ import com.rdk.hal.audiodecoder.Codec;
 parcelable Capabilities
 {
 	/**
-	 * Array of Codec enum values supported by this audio decoder instance. 
+	 * Array of Codec enum values supported by this audio decoder instance.
 	 */
     Codec[] supportedCodecs;
-	
+
 	/**
-	 * Indicates if this decoder instance can work in secure audio path (SAP) mode. 
+	 * Indicates if this decoder instance can work in secure audio path (SAP) mode.
 	 * @see Property.SECURE_AUDIO
 	 */
     boolean supportsSecure;

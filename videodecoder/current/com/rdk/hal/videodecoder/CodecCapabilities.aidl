@@ -20,15 +20,15 @@ package com.rdk.hal.videodecoder;
 import com.rdk.hal.videodecoder.Codec;
 import com.rdk.hal.videodecoder.CodecProfile;
 import com.rdk.hal.videodecoder.CodecLevel;
- 
-/** 
+
+/**
  *  @brief     Codec capability definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  *  @author    Gerald Weatherup
  */
- 
+
 @VintfStability
 parcelable CodecCapabilities
 {
@@ -41,24 +41,24 @@ parcelable CodecCapabilities
      * Defines the profile for this Codec.
      */
     CodecProfile profile;
-    
+
     /**
      * Defines the level for this Codec.
      */
-    CodecLevel level;	
+    CodecLevel level;
 	/**
-	 * The maximum frame rate (FPS) supported for decode for this Codec. 
+	 * The maximum frame rate (FPS) supported for decode for this Codec.
 	 * e.g. 25, 30, 50, 60, 120.
 	 */
     int maxFrameRate;
-	
+
 	/**
-	 * The maximum frame width (pixels) supported for decode for this Codec. 
+	 * The maximum frame width (pixels) supported for decode for this Codec.
 	 */
     int maxFrameWidth;
 
 	/**
-	 * The maximum frame height (pixels) supported for decode for this Codec. 
+	 * The maximum frame height (pixels) supported for decode for this Codec.
 	 */
     int maxFrameHeight;
 }

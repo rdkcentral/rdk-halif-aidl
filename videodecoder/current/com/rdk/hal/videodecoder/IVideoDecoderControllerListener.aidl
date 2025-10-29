@@ -19,20 +19,20 @@
 package com.rdk.hal.videodecoder;
 import com.rdk.hal.videodecoder.FrameMetadata;
 
-/** 
+/**
  *  @brief     Controller callbacks listener interface from video decoder.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
+
 @VintfStability
 oneway interface IVideoDecoderControllerListener {
- 
+
     /**
 	 * Callback when a full video frame has been decoded or the frame metadata needs to be notified.
      * The metadata must be non-null on the first frame after start() or flush() call or
-     * when the metadata changes in the stream. 
+     * when the metadata changes in the stream.
      * It can only be null if the contents have not changed since the last callback.
      *
      * @param[in] nsPresentationTime	The presentation time or -1 if only metadata is being returned.
@@ -51,5 +51,5 @@ oneway interface IVideoDecoderControllerListener {
      * @param[in] userData				Array of bytes containing the picture user data.
      */
     void onUserDataOutput(in long nsPresentationTime, in byte[] userData);
- 
+
 }

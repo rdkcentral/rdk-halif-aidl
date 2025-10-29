@@ -16,10 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.audiodecoder; 
+package com.rdk.hal.audiodecoder;
 import com.rdk.hal.audiodecoder.IAudioDecoder;
- 
-/** 
+
+/**
  *  @brief     Audio Decoder Manager HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -36,7 +36,7 @@ interface IAudioDecoderManager
 
     /**
 	 * Get all audio decoder resource IDs.
-     * 
+     *
      * The list of audio decoders is static in the system and does not change
      * between calls.
      *

@@ -24,14 +24,14 @@ import com.rdk.hal.videosink.IVideoSinkEventListener;
 import com.rdk.hal.videosink.Property;
 import com.rdk.hal.PropertyValue;
 import com.rdk.hal.State;
- 
-/** 
+
+/**
  *  @brief     Video Sink HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
+
 @VintfStability
 interface IVideoSink
 {
@@ -47,7 +47,7 @@ interface IVideoSink
 
     /**
      * Gets the capabilities for this Video Sink.
-     * 
+     *
      * This function can be called at any time and is not dependant on any Video Sink state.
      * The returned value is not allowed to change between calls.
      *
@@ -65,7 +65,7 @@ interface IVideoSink
      * @returns PropertyValue or null if the property key is unknown.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value. 
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value.
      *
      * @see setProperty()
      */
@@ -79,27 +79,27 @@ interface IVideoSink
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @see IVideoSinkListener.onStateChanged().
-     */  
+     */
     State getState();
 
     /**
 	 * Opens the Video Sink.
-     * 
+     *
      * If successful the Video Sink transitions to an OPENING state and then a READY state.
-     * 
-     * If the client that opened the `IVideoSinkController` crashes, 
+     *
+     * If the client that opened the `IVideoSinkController` crashes,
      * then the `IVideoSinkController` has `stop()` and `close()` implicitly called to perform clean up.
-     * 
+     *
      * @param[in] videoSinkControllerListener       Callback listener for controller events.
-     * 
+     *
      * @returns IVideoSinkController or null on error.
-     * 
+     *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
-     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
-     * 
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
      * @pre The resource must be in State::CLOSED.
-     * 
+     *
      * @see close(), IVideoSinkController.start()
      */
     @nullable IVideoSinkController open(in IVideoSinkControllerListener videoSinkControllerListener);
@@ -126,12 +126,12 @@ interface IVideoSink
 
     /**
 	 * Registers a Video Sink event listener.
-     * 
+     *
      * An `IVideoSinkEventListener` can only be registered once and will fail on subsequent
      * registration attempts.
-     * 
+     *
      * @param[in] videoSinkEventListener	    Listener object for callbacks.
-     * 
+     *
      * @return boolean
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
@@ -145,7 +145,7 @@ interface IVideoSink
 
     /**
 	 * Unregisters a Video Sink event listener.
-     * 
+     *
      * @param[in] videoSinkEventListener	    Listener object for callbacks.
      *
      * @return boolean

@@ -23,7 +23,7 @@ import com.rdk.hal.audiodecoder.Codec;
 
 import com.rdk.hal.AVSource;
 
-/** 
+/**
  *  @brief     Audio frame metadata.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -98,7 +98,7 @@ parcelable FrameMetadata {
 	AVSource source;
 
 	/**
-	 * Private extension for future use. 
+	 * Private extension for future use.
 	 */
 	ParcelableHolder extension;
 

@@ -17,14 +17,14 @@
  * limitations under the License.
  */
 package com.rdk.hal.videodecoder;
- 
-/** 
+
+/**
  *  @brief     Video decoder properties used in property get/set functions.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
+
 @VintfStability
 @Backing(type="int")
 enum Property {
@@ -68,12 +68,12 @@ enum Property {
 
 	/**
 	 * The current selected operational mode.
-	 * 
+	 *
 	 * Only modes returned by `IVideoDecoderManager.getSupportedOperationalModes()` can be set.
 	 * The default must be either `OperationalMode::TUNNELLED` or `OperationalMode::NON_TUNNELLED`
 	 * which is chosen by the OEM/vendor.
 	 * `OperationalMode::TUNNELLED` and `OperationalMode::NON_TUNNELLED` are mutually exclusive.
-	 * If `OperationalMode::GRAPHICS_TEXTURE` is supported, it can be set on its own or ORed with 
+	 * If `OperationalMode::GRAPHICS_TEXTURE` is supported, it can be set on its own or ORed with
 	 * `OperationalMode::TUNNELLED` or `OperationalMode::NON_TUNNELLED`
 	 *
 	 * Type: Integer
@@ -89,7 +89,7 @@ enum Property {
 
 	/**
 	 * Low latency mode sets the expectation that no B-frames will be delivered in
-	 * the video stream or B-frames can be skipped over and the decoder should 
+	 * the video stream or B-frames can be skipped over and the decoder should
 	 * output decoded frames as soon as possible.
 	 * Low latency video is often combined with low latency audio decoder/sink
 	 * operation for gaming and casting applications.
@@ -142,7 +142,7 @@ enum Property {
 	 * Set by the client to request SHA-1 calculation for the decoded video frame.
 	 * Scans pixel locations from the top left, along lines and down all rows.
 	 * The SHA-1 is returned in the frame metadata.
-	 * 
+	 *
 	 * Type: Integer
 	 *  0 - off (default on open)
 	 *  1 - on
@@ -200,7 +200,7 @@ enum Property {
 
 	/**
 	 * Count of frames dropped.
-	 * No frame was output due to corruption or decode error that could not 
+	 * No frame was output due to corruption or decode error that could not
 	 * deliver a frame suitable for display.
 	 * This count includes any frames received before the first reference frame.
 	 * This metric is reset on open() and flush() calls.

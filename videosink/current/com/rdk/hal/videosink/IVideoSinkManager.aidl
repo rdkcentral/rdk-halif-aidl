@@ -18,14 +18,14 @@
  */
 package com.rdk.hal.videosink;
 import com.rdk.hal.videosink.IVideoSink;
- 
-/** 
+
+/**
  *  @brief     Video Sink Manager HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
+
 @VintfStability
 interface IVideoSinkManager
 {

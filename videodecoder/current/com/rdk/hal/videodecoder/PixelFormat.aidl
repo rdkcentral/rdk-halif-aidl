@@ -18,19 +18,19 @@
  */
 package com.rdk.hal.videodecoder;
 
-/** 
+/**
  *  @brief     Video frame pixel data formats.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
+
 @VintfStability
 @Backing(type="int")
 /**
  * Enumeration defining the supported pixel formats.
  */
-enum PixelFormat 
+enum PixelFormat
 {
     /**< YCbCr 4:2:2 pixel format. */
     YCBCR422 = 1,

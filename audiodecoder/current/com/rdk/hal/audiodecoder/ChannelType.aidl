@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.audiodecoder;
 
-/** 
+/**
  *  @brief     Channel Types.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -28,11 +28,11 @@ package com.rdk.hal.audiodecoder;
 @VintfStability
 @Backing(type="int")
 enum ChannelType {
-	MONO = 0, 
-	FRONT_LEFT = 1, 
-	FRONT_RIGHT = 2, 
- 	FRONT_CENTER = 3,  
- 	LFE = 4, 
+	MONO = 0,
+	FRONT_LEFT = 1,
+	FRONT_RIGHT = 2,
+	FRONT_CENTER = 3,
+	LFE = 4,
 	SIDE_LEFT = 5,
 	SIDE_RIGHT = 6,
 	UP_LEFT = 7,

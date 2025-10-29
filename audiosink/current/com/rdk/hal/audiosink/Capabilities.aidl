@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiosink;
- 
-/** 
+
+/**
  *  @brief     Audio Sink capabilities parcelable definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz

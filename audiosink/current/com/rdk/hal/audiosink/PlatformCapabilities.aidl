@@ -18,8 +18,8 @@
  */
 package com.rdk.hal.audiosink;
 import com.rdk.hal.audiodecoder.PCMFormat;
- 
-/** 
+
+/**
  *  @brief     Audio sink platform capabilities definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -32,20 +32,20 @@ parcelable PlatformCapabilities {
     /**
      * Indicates the platform support for low latency audio.
      */
-    boolean supportsLowLatency;  
- 
+    boolean supportsLowLatency;
+
     /**
      * The native sample rate of system mixer.
      * PCM audio must be delivered at this sample rate.
      */
     int systemMixerSampleRateHz;
- 
+
     /**
      * The PCM format of the system mixer.
      * PCM audio must be delivered in this format.
      */
     PCMFormat systemMixerPCMFormat;
- 
+
     /**
      * Indicated support for planar format of audio data buffers
      * where the audio samples for each channel are delivered
