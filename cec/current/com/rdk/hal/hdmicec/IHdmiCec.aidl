@@ -39,13 +39,13 @@ interface IHdmiCec
 
 
     /**
-	 * @brief Gets the current state of the HDMI CEC interface.
+     * @brief Gets the current state of the HDMI CEC interface.
      *
      * The HDMI CEC follows the standard HAL-E AV Session State Management.
      * Only CLOSED and STARTED are reported.
      *
      * @returns State enum value.
-	 *
+     *
      * @see IHdmiCecEventListener.onStateChanged().
      */  
     State getState();
@@ -74,7 +74,7 @@ interface IHdmiCec
     int[] getLogicalAddresses();
 
     /**
-	 * @brief Opens the HDMI CEC interface for control.
+     * @brief Opens the HDMI CEC interface for control.
      * 
      * If successful the HDMI CEC interface transitions directly to the STARTED state.
      * Before logical addresses are added all broadcast messages will be processed and callbacks generated. 
@@ -128,7 +128,7 @@ interface IHdmiCec
 
 
     /**
-	 * Registers a CEC event listener.
+     * Registers a CEC event listener.
      * 
      * This allows a client, other than the Controlling client, to receive messages and monitor the state for diagnostic purposes.
      * 
@@ -146,7 +146,7 @@ interface IHdmiCec
     boolean registerEventListener(in IHdmiCecEventListener cecEventListener);
 
     /**
-	 * Unregisters a CEC event listener.
+     * Unregisters a CEC event listener.
      * 
      * @param[in] cecEventListener	    Listener object for event callbacks.
      *

@@ -31,7 +31,7 @@ import com.rdk.hal.State;
 oneway interface IHdmiCecControllerListener {
 
     /**
-	 * Callback to be invoked for each frame arrival.
+     * Callback to be invoked for each frame arrival.
      *
      * The frame contained in the buffer will follow this format
      *     (ref <HDMI Specification 1-4> Section <CEC 6.1>) :
@@ -57,7 +57,7 @@ oneway interface IHdmiCecControllerListener {
     void onMessageReceived(in byte[] message);
 
     /**
-	 * Callback when the CEC interface has transitioned to a new state.
+     * Callback when the CEC interface has transitioned to a new state.
      *
      * @param[in] oldState	            The state transitioned from.
      * @param[in] newState              The new state transitioned to.
