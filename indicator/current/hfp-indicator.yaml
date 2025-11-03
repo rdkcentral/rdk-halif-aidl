@@ -31,7 +31,7 @@
 # * the valid set of states for the indicator service on a given device.
 # *
 
-indicator:
+IIndicator:
   interfaceVersion: current
   supportedStates:
     # General system states

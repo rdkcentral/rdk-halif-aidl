@@ -33,10 +33,10 @@ import com.rdk.hal.AVSource;
 @VintfStability
 parcelable FrameMetadata {
 
- 	/**
+	/**
 	 * The original source codec of the audio frame.
 	 */
-    Codec sourceCodec;
+	Codec sourceCodec;
 
 	/**
 	 * The buffer contains Dolby Atmos audio and metadata.
@@ -48,33 +48,33 @@ parcelable FrameMetadata {
 	 */
 	int numChannels;
 
-   	/**
+	/**
 	 * Array of ChannelType enum values.
 	 * The array size should match the number of channels.
 	 */
-    ChannelType[] channelTypes;
+	ChannelType[] channelTypes;
 
- 	/**
+	/**
 	 * Sample rate in samples/second.
 	 */
-    int sampleRate;
+	int sampleRate;
 
- 	/**
+	/**
 	 * Format of the output PCM data.
 	 */
-    PCMFormat format;
+	PCMFormat format;
 
- 	/**
+	/**
 	 * Indicated whether the audio data buffer is in planar format.
 	 * If false, the data is interleaved with other channels.
 	 */
 	boolean planarFormat;
 
-    /**
-     * Audio trimming to use on presentation.
-     */
-    int trimStartNs;
-    int trimEndNs;
+	/**
+	 * Audio trimming to use on presentation.
+	 */
+	int trimStartNs;
+	int trimEndNs;
 
 	/**
 	 * Indicates if the audio should be delivered in low latency mode.
@@ -85,7 +85,7 @@ parcelable FrameMetadata {
 	 * End of stream indicator.
 	 */
 	boolean endOfStream;
-	
+
 	/**
 	 * Discontinuity indicator where the PTS for this frame is likely to be discontinuous to the previous.
 	 */
@@ -100,5 +100,10 @@ parcelable FrameMetadata {
 	/**
 	 * Private extension for future use. 
 	 */
-    ParcelableHolder extension;
+	ParcelableHolder extension;
+
+	/**
+	 * Proprietary metadata passed from Decoder HAL to Sink HAL
+	 */
+	byte[] SoCPrivate;
 }
