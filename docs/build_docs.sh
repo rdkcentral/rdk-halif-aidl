@@ -125,7 +125,7 @@ function main()
       fi
       # Extract the version from the arguments
       mike deploy "${VERSION_TO_DEPLOY}" --push
-      mike set-default ${VERSION_TO_DEPLOY} --push
+#      mike set-default ${VERSION_TO_DEPLOY} --push
       ;;
 
     set-default)
