@@ -14,7 +14,6 @@ The **Service Manager** is a crucial **Binder service** included in the vendor l
     |**Interface Definition**|[IServiceManager](https://android.googlesource.com/platform/frameworks/native/+/android-13.0.0_r74/libs/binder/include/binder/IServiceManager.h)|
     | **API Documentation** | *TBD - Doxygen* |
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
-    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/systemd.md) - **hal-service_manager.service** |
     |**VTS Tests**| TBC |
 
 ## Implementation Requirements
