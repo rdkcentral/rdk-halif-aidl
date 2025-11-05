@@ -30,8 +30,8 @@ package com.rdk.hal.broadcast.frontend;
 enum LnbTone {
     /** Clean value when default initialized */
     UNDEFINED = 0,
-    /** No tone is send to the Lnb */
+    /** No tone is sent to the Lnb */
     NONE,
-    /** A continuous tone of 22 Hz is send to the Lnb */
+    /** A continuous tone of 22 kHz is sent to the Lnb */
     CONTINUOUS,
 }

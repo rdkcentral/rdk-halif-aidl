@@ -21,7 +21,7 @@
 # ** ******************************************************************************
 cmake_minimum_required(VERSION 3.8)
 
-# TODO: `demux` module is still referecing Android related code and IBroadcastManager relays on `demux`
+# TODO: `demux` module is still referencing Android related code and IBroadcastManager relies on `demux`
 message(FATAL_ERROR "`Broadcast` module is not ready yet. Do not use it!")
 
 project(Broadcast
