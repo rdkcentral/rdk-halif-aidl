@@ -32,6 +32,7 @@ package com.rdk.hal.broadcast.frontend;
  * from the frontend before using any of them.
  */
 @VintfStability
+@Backing(type="int")
 enum CodingRate {
     /** Clean value when default initialized */
     UNDEFINED = 0,

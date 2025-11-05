@@ -26,6 +26,7 @@ package com.rdk.hal.broadcast.frontend;
  */
 
 @VintfStability
+@Backing(type="int")
 enum FrontendType {
     /** Clean value when default initialized */
     UNDEFINED = 0,

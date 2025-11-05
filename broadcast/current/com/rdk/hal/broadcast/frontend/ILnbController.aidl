@@ -17,25 +17,37 @@
  * limitations under the License.
  */
 package com.rdk.hal.broadcast.frontend;
+import com.rdk.hal.broadcast.frontend.LnbTone;
+import com.rdk.hal.broadcast.frontend.LnbVoltage;
 
 /**
- *  @brief     TuneStatus enum
- *  @author    Jan Pedersen
- *  @author    Christian George
- *  @author    Philipp Trommler 
+ * @brief LNB Controller interface
+ * @author Jan Pedersen
+ * @author Christian George
+ * @author Philipp Trommler
  */
 
 @VintfStability
-@Backing(type="int")
-enum TuneStatus {
-    /** Clean value when default initialized */
-    UNDEFINED = 0,
-    /** The frontend is currently idle */
-    IDLE,
-    /** The frontend is trying to optain lock */
-    TUNING,
-    /** The frontend was not able to lock to the requested tune parameters */
-    NO_SIGNAL,
-    /** The frontend is locked to a signal */
-    LOCKED,
+interface ILnbController {
+    /**
+     * Set the LNB voltage
+     *
+     * @param[in] voltage The voltage to set
+     */
+    void setVoltage(in LnbVoltage voltage);
+
+    /**
+     * Set the LNB tone
+     *
+     * @param[in] tone The tone to set
+     */
+    void setTone(in LnbTone tone);
+
+    /**
+     * Close the LNB controller
+     * 
+     * Cleanup all attached (hardware) resources and brings the lnb controller back into a state
+     * where it can be opened again.
+     */
+    void close();
 }
