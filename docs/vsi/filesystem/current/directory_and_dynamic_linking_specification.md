@@ -8,7 +8,7 @@
 
 ## Related Pages
 
-!!! tip Related Pages
+!!! tip "Related Pages"
     - [HALIF Logging System Design](halif_logging_system_design.md)
 
 ## Purpose
