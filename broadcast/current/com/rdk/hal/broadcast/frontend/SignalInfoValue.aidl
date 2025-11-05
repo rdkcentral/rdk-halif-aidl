@@ -21,6 +21,8 @@ import com.rdk.hal.broadcast.frontend.Modulation;
 import com.rdk.hal.broadcast.frontend.GuardInterval;
 import com.rdk.hal.broadcast.frontend.TransmissionMode;
 import com.rdk.hal.broadcast.frontend.Bandwidth;
+import com.rdk.hal.broadcast.frontend.DvbTStandard;
+import com.rdk.hal.broadcast.frontend.DvbSStandard;
 
 /**
  *  @brief     SignalInfo values
@@ -86,5 +88,11 @@ union SignalInfoValue {
     Bandwidth bandwidth;
      
     /** Symbols per second */
-    int symbolRate;   
+    int symbolRate;
+
+    /** DVB-T Standard */
+    DvbTStandard dvbTStandard;
+
+    /** DVB-S Standard */
+    DvbSStandard dvbSStandard;
 }

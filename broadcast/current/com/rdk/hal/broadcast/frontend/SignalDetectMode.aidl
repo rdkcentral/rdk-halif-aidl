@@ -19,23 +19,21 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- *  @brief     TuneStatus enum
- *  @author    Jan Pedersen
- *  @author    Christian George
- *  @author    Philipp Trommler 
+ * @brief Signal Detect Mode enumeration
+ * @author Jan Pedersen
+ * @author Christian George
+ * @author Philipp Trommler
  */
 
 @VintfStability
 @Backing(type="int")
-enum TuneStatus {
+enum SignalDetectMode {
     /** Clean value when default initialized */
     UNDEFINED = 0,
-    /** The frontend is currently idle */
-    IDLE,
-    /** The frontend is trying to optain lock */
-    TUNING,
-    /** The frontend was not able to lock to the requested tune parameters */
-    NO_SIGNAL,
-    /** The frontend is locked to a signal */
-    LOCKED,
+    /** Normal signal detect */
+    NORMAL,
+    /** Do signal detect optimized for sweeping */
+    SWEEP_OPTIMIZED,
+    /** Do signal detect optimized for searching */
+    SEARCH_OPTIMIZED,
 }
