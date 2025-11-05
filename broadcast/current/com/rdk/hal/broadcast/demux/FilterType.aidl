@@ -26,6 +26,7 @@ package com.rdk.hal.broadcast.demux;
  */
 
 @VintfStability
+@Backing(type="int")
 enum FilterType {
     /** Clean value when default initialized */
     UNDEFINED = 0,

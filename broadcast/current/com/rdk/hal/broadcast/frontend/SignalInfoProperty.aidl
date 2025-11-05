@@ -31,6 +31,7 @@ package com.rdk.hal.broadcast.frontend;
  * properties from the frontend before using any of them.
  */
 @VintfStability
+@Backing(type="int")
 enum SignalInfoProperty {
     /** Clean value when default initialized */
     UNDEFINED = 0,
@@ -60,14 +61,18 @@ enum SignalInfoProperty {
     PLP_IDS,
     /** DVB-T2 System Id */
     T2_SYSTEM_ID,
-    /** The used modulation / submodulation. @ref Modulation */
+    /** The used modulation / sub-modulation. @ref Modulation */
     MODULATION,
     /** The used guard interval. @ref GuardInterval */
     GUARD_INTERVAL,
-    /** The used tranmission mode. @ref TransmissionMode */
+    /** The used transmission mode. @ref TransmissionMode */
     TRANSMISSION_MODE,
     /** Bandwidth */
     BANDWIDTH,
     /** Symbol Rate */
     SYMBOL_RATE,
+    /** DVB-T Standard */
+    DVB_T_STANDARD,
+    /** DVB-S Standard */
+    DVB_S_STANDARD,
 }

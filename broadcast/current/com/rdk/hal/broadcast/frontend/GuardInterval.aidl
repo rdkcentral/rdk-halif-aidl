@@ -31,6 +31,7 @@ package com.rdk.hal.broadcast.frontend;
  * intervals from the frontend before using any of them.
  */
 @VintfStability
+@Backing(type="int")
 enum GuardInterval {
     /** Clean value when default initialized */
     UNDEFINED = 0,
