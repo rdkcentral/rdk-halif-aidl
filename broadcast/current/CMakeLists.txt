@@ -1,4 +1,4 @@
-#** *****************************************************************************
+# ** *****************************************************************************
 # *
 # * If not stated otherwise in this file or this component's LICENSE file the
 # * following copyright and licenses apply:
@@ -18,7 +18,7 @@
 # * See the License for the specific language governing permissions and
 # * limitations under the License.
 # *
-#** ******************************************************************************
+# ** ******************************************************************************
 cmake_minimum_required(VERSION 3.8)
 
 # 1. Define the Interface Identity
