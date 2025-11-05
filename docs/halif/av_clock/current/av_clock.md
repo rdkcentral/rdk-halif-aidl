@@ -22,7 +22,7 @@ Audio and video sinks associated with a given AV Clock instance comprise a synch
 
 ## Related Pages
 
-!!! tip Related Pages
+!!! tip "Related Pages"
     - [Audio Sink](../../audio_sink/current/audio_sink.md)
     - [Video Sink](../../video_sink/current/video_sink.md)
     - [Plane Control](../../plane_control/current/plane_control.md)
