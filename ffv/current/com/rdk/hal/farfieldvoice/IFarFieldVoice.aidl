@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.farfieldvoice;
-import com.rdk.hal.State;
+import com.rdk.hal.farfieldvoice.State;
 import com.rdk.hal.farfieldvoice.Capabilities;
 import com.rdk.hal.farfieldvoice.Status;
 import com.rdk.hal.farfieldvoice.IFarFieldVoiceEventListener;
@@ -50,12 +50,16 @@ interface IFarFieldVoice
     /**
      * Get the capabilities of the Far Field Voice service.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @returns Capabilities parcelable.
      */
     Capabilities getCapabilities();
 
 	/**
 	 * Gets the current state of the Far Field Voice service.
+	 *
+     * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns State enum value.
 	 *
@@ -65,6 +69,8 @@ interface IFarFieldVoice
 
     /**
      * Get the current status of the Far Field Voice service.
+	 *
+     * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns Status parcelable.
      */
@@ -78,7 +84,10 @@ interface IFarFieldVoice
      *
      * The listener is notified when a Far Field Voice event occurs.
      *
-     * @param[in] listener          Listener object for callbacks.
+     * @param[in] farFieldVoiceEventListener    Listener object for callbacks.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      * @return boolean
      * @retval true     The event listener was registered.
@@ -86,12 +95,15 @@ interface IFarFieldVoice
      *
      * @see unregisterEventListener()
      */
-    boolean registerEventListener(in IFarFieldVoiceEventListener listener);
+    boolean registerEventListener(in IFarFieldVoiceEventListener farFieldVoiceEventListener);
 
     /**
      * Unregister a Far Field Voice event listener.
      *
-     * @param[in] listener	        Listener object for callbacks.
+     * @param[in] farFieldVoiceEventListener    Listener object for callbacks.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      * @return boolean
      * @retval true     The event listener was unregistered.
@@ -99,7 +111,7 @@ interface IFarFieldVoice
      *
      * @see registerEventListener()
      */
-    boolean unregisterEventListener(in IFarFieldVoiceEventListener listener);
+    boolean unregisterEventListener(in IFarFieldVoiceEventListener farFieldVoiceEventListener);
 
     /**
 	 * Open the Far Field Voice service.
@@ -118,17 +130,19 @@ interface IFarFieldVoice
      * If the client that opened the `IFarFieldVoiceController` crashes,
      * then `close()` is implicitly called to perform clean up.
      * 
-     * @pre Resource is in State::CLOSED state.
+     * @pre The resource must be in State::CLOSED.
      *
-     * @param[in] controllerListener    Listener object for controller callbacks.
+     * @param[in] farFieldVoiceControllerListener   Listener object for controller callbacks.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if instance is not in State::CLOSED state.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      * 
-     * @returns IFarFieldVoiceController or null if not in the CLOSED state.
+     * @returns IFarFieldVoiceController or null if not in the State::CLOSED state.
      * 
      * @see IFarFieldVoiceController, close(), registerEventListener()
      */
-    @nullable IFarFieldVoiceController open(in IFarFieldVoiceControllerListener controllerListener);
+    @nullable IFarFieldVoiceController open(in IFarFieldVoiceControllerListener farFieldVoiceControllerListener);
 
     /**
      * Close the Far Field Voice service.
@@ -139,9 +153,13 @@ interface IFarFieldVoice
      * `onStateChanged(CLOSING, CLOSED)` will be notified on any registered
      * listener interface.
      *
-     * @pre Resource is in State::READY state.
+     * @pre The resource must be in State::READY.
      *
-     * @param[in] controller    Instance of IFarFieldVoiceController returned by open().
+     * @param[in] farFieldVoiceController    Instance of IFarFieldVoiceController returned by open().
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in OPENED State.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      * @return boolean
      * @retval true     Successfully closed.
@@ -149,5 +167,5 @@ interface IFarFieldVoice
      *
      * @see open()
      */
-    boolean close(in IFarFieldVoiceController controller);
+    boolean close(in IFarFieldVoiceController farFieldVoiceController);
 }
