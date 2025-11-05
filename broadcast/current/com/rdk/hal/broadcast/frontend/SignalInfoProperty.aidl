@@ -31,6 +31,7 @@ package com.rdk.hal.broadcast.frontend;
  * properties from the frontend before using any of them.
  */
 @VintfStability
+@Backing(type="int")
 enum SignalInfoProperty {
     /** Clean value when default initialized */
     UNDEFINED = 0,

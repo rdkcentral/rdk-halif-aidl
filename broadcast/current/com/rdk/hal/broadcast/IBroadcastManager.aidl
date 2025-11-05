@@ -20,6 +20,8 @@ package com.rdk.hal.broadcast;
 
 import com.rdk.hal.broadcast.demux.IDemux;
 import com.rdk.hal.broadcast.frontend.IFrontend;
+import com.rdk.hal.broadcast.Version;
+import com.rdk.hal.broadcast.ImplementationVersion;
 
 /**
  *  @brief     BroadcastManager HAL interface.
@@ -32,6 +34,20 @@ import com.rdk.hal.broadcast.frontend.IFrontend;
 interface IBroadcastManager {
     /** The service name to publish. To be returned by getServiceName() in the derived class. */
     const @utf8InCpp String serviceName = "BroadcastManager";
+
+    /**
+     * The HAL API Version that the vendor layer was compiled against.
+     *
+     * @returns Version structure containing major and minor version numbers
+     */
+    Version getVersion();
+
+    /**
+     * Gets the HAL implementation version.
+     *
+     * @returns ImplementationVersion structure containing name and version
+     */
+    ImplementationVersion getImplVersion();
 
     /**
 	 * Gets the platform list of frontend IDs.
@@ -49,12 +65,19 @@ interface IBroadcastManager {
      */
     @nullable IFrontend getFrontend(in IFrontend.Id frontendId);
 
-    /*
-     * Open a instance of Demux.
+    /**
+     * Gets the list of demux IDs available on this platform
      *
-     * The opened demux can afterwards be used on a tuner or a software input
-     *
-     * @returns IDemux or null if we are out of demux resources.
+     * @returns IDemux.Id array
      */
-    @nullable IDemux openDemux();
+    IDemux.Id[] getDemuxIds();
+
+    /**
+     * Get the demux interface for the given ID
+     *
+     * @param[in] demuxId    The ID of the demux.
+     *
+     * @returns IDemux or null if the ID is invalid.
+     */
+    @nullable IDemux getDemux(in IDemux.Id demuxId);
 }

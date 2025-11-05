@@ -17,10 +17,9 @@
  * limitations under the License.
  */
 package com.rdk.hal.broadcast.demux;
-import com.rdk.hal.broadcast.demux.FilterType;
-import com.rdk.hal.broadcast.demux.IFilter;
-import com.rdk.hal.broadcast.demux.SoftwareSource;
-import com.rdk.hal.broadcast.frontend.IFrontend;
+import com.rdk.hal.broadcast.demux.DemuxCapabilities;
+import com.rdk.hal.broadcast.demux.IDemuxDataProvider;
+import com.rdk.hal.broadcast.demux.IDemuxController;
 
 /**
  *  @brief     Interface for a demux. 
@@ -32,31 +31,58 @@ import com.rdk.hal.broadcast.frontend.IFrontend;
 
 @VintfStability
 interface IDemux {
-    /**
-     * The IDemux interface shall be a light-weight wrapper for a demux. Either connected to a hardware
-     * frontend or a demux for software write.
-     *
-     * Before this can be operational a source must be set by calling @ref IDemux::setSource().
-     */ 
-    
+
+    /** Demux resource ID type */
     @VintfStability
-    union SourceType {
-        /** A vendor-layer frontend as the source */
-        IFrontend frontendSource;
-        /** A pure software source, fed by the userspace code */
-        SoftwareSource softwareSource;
+    parcelable Id {
+        /** The undefined ID value. */
+        const long UNDEFINED = -1;
+
+        /** The actual resource ID */
+        long value;
     }
 
-    /** Set the specified source type as the source for this demux */
-    void setSource(in SourceType sourceType);
-
-    /** Create a filter of the specified type */
-    IFilter openFilter(in FilterType filterType);
+    /**
+     * Get the ID of this demux
+     *
+     * @returns Id the unique identifier for this demux
+     */
+    Id getId();
 
     /**
-     * Close the demux
+     * Check whether this demux is already connected
      *
-     * After calling this the demux is no longer valid.
+     * @returns boolean true if connected, false otherwise
      */
-    void close();
+    boolean isConnected();
+
+    /**
+     * Get the supported capabilities
+     *
+     * @returns DemuxCapabilities the capabilities of this demux
+     */
+    DemuxCapabilities getCapabilities();
+
+    /**
+     * Connect this Demux to a DemuxDataProvider
+     *
+     * Each Demux might only be connected to one DemuxDataProvider. The connected Demux represented
+     * by the DemuxController can be used to set up multiple filters, depending on the Capabilities.
+     *
+     * @param[in] provider The DemuxDataProvider to connect the Demux to
+     *
+     * @returns IDemuxController or null on failure (e.g. already connected)
+     */
+    @nullable IDemuxController connect(in IDemuxDataProvider provider);
+
+    /**
+     * Disconnect this Demux from a DemuxDataProvider.
+     *
+     * The DemuxController object will be invalidated.
+     *
+     * @param[in] controller non-null DemuxController obtained from connect() on the same Demux
+     *
+     * @returns IDemuxDataProvider the provider instance passed to connect()
+     */
+    @nullable IDemuxDataProvider disconnect(in IDemuxController controller);
 }
