@@ -31,6 +31,7 @@ package com.rdk.hal.broadcast.frontend;
  * from the frontend before using any of them.
  */
 @VintfStability
+@Backing(type="int")
 enum Modulation {
     /** Clean value when default initialized */
     UNDEFINED = 0,

@@ -16,26 +16,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.broadcast.frontend;
+package com.rdk.hal.broadcast;
 
 /**
- *  @brief     TuneStatus enum
- *  @author    Jan Pedersen
- *  @author    Christian George
- *  @author    Philipp Trommler 
+ * @brief HAL API Version structure
+ * @author Jan Pedersen
+ * @author Christian George
+ * @author Philipp Trommler
  */
 
 @VintfStability
-@Backing(type="int")
-enum TuneStatus {
-    /** Clean value when default initialized */
-    UNDEFINED = 0,
-    /** The frontend is currently idle */
-    IDLE,
-    /** The frontend is trying to optain lock */
-    TUNING,
-    /** The frontend was not able to lock to the requested tune parameters */
-    NO_SIGNAL,
-    /** The frontend is locked to a signal */
-    LOCKED,
+parcelable Version {
+    /** Major version number */
+    int major;
+    /** Minor version number */
+    int minor;
 }

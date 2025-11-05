@@ -19,23 +19,19 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- *  @brief     TuneStatus enum
- *  @author    Jan Pedersen
- *  @author    Christian George
- *  @author    Philipp Trommler 
+ * @brief LNB Tone enumeration
+ * @author Jan Pedersen
+ * @author Christian George
+ * @author Philipp Trommler
  */
 
 @VintfStability
 @Backing(type="int")
-enum TuneStatus {
+enum LnbTone {
     /** Clean value when default initialized */
     UNDEFINED = 0,
-    /** The frontend is currently idle */
-    IDLE,
-    /** The frontend is trying to optain lock */
-    TUNING,
-    /** The frontend was not able to lock to the requested tune parameters */
-    NO_SIGNAL,
-    /** The frontend is locked to a signal */
-    LOCKED,
+    /** No tone is sent to the Lnb */
+    NONE,
+    /** A continuous tone of 22 kHz is sent to the Lnb */
+    CONTINUOUS,
 }
