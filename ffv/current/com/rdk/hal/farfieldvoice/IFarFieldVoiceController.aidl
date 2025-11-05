@@ -35,7 +35,7 @@ interface IFarFieldVoiceController {
      * If successful, creates and returns a pipe for passing the specified channel type audio to the
      * client and the specified channel type is in the open state.
      *
-     * If the channel type is Keyword:
+     * If channelType is ChannelType::KEYWORD
      *
      *  Keyword channel audio processing is initialized and keyword detection is started. Upon keyword
      *  detection, audio samples are written to the Keyword channel's pipe.
@@ -59,14 +59,14 @@ interface IFarFieldVoiceController {
      *
      *  @pre The Keyword channel must be in the closed state.
      *  @pre The Microphones channel must be in the closed state.
-     *  @pre The power mode must be Full Power or Standby.
+     *  @pre The power mode must be PowerMode::FULL_POWER or PowerMode::STANDBY.
      *
-     *  @exception binder::Status EX_ILLEGAL_ARGUMENT   Invalid channel type.
-     *  @exception binder::Status EX_ILLEGAL_STATE      The Keyword channel is already open, or the
-     *                                                  Microphones channel is open, or power state is
-     *                                                  not Standby or Full Power.
+     *  @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT   Invalid channel type.
+     *  @exception binder::Status::Exception::EX_ILLEGAL_STATE      The Keyword channel is already open, or the
+     *                                                              Microphones channel is open, or power state is
+     *                                                              not PowerMode::FULL_POWER or PowerMode::STANDBY.
      *
-     * If the channel type is Continual:
+     * If channelType is ChannelType::CONTINUAL
      *
      *  Continual channel audio processing is initialized and audio samples are written to the Continual
      *  channel's pipe at 16kHz sampling rate. Audio data is signed 16 bits per sample. The endian order
@@ -74,15 +74,15 @@ interface IFarFieldVoiceController {
      *
      *  @pre The Continual channel must be in the closed state.
      *  @pre The Microphones channel must be in the closed state.
-     *  @pre The power mode must be Full Power.
+     *  @pre The power mode must be PowerMode::FULL_POWER.
      *
-     *  @exception binder::Status EX_ILLEGAL_ARGUMENT   Invalid channel type or the Continual channel
-     *                                                  is not supported.
-     *  @exception binder::Status EX_ILLEGAL_STATE      The Continual channel is already open, or the
-     *                                                  Microphones channel is open, or power state is
-     *                                                  not Full Power.
+     *  @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT   Invalid channel type or the Continual channel
+     *                                                              is not supported.
+     *  @exception binder::Status::Exception::EX_ILLEGAL_STATE      The Continual channel is already open, or the
+     *                                                              Microphones channel is open, or power state is
+     *                                                              not PowerMode::FULL_POWER.
      *
-     * If the channel type is Microphones:
+     * If channelType is ChannelType::MICROPHONES
      *
      *  Raw microphone data is written to the Microphones channel's pipe at 16kHz sampling rate. Sample
      *  values are signed 32 bits per sample. The endian order of each sample value is that of the host
@@ -93,18 +93,19 @@ interface IFarFieldVoiceController {
      *  @pre The Microphones channel must be in the closed state.
      *  @pre The Keyword channel must be in the closed state.
      *  @pre The Continual channel must be in the closed state.
-     *  @pre The power mode must be Full Power.
+     *  @pre The power mode must be PowerMode::FULL_POWER.
      *
-     *  @exception binder::Status EX_ILLEGAL_ARGUMENT   Invalid channel type.
-     *  @exception binder::Status EX_ILLEGAL_STATE      The Microphones channel is already open, or
-     *                                                  Keyword or Continual channels are open, or power
-     *                                                  mode is not Full Power.
+     *  @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT   Invalid channel type.
+     *  @exception binder::Status::Exception::EX_ILLEGAL_STATE      The Microphones channel is already open, or
+     *                                                              Keyword or Continual channels are open, or power
+     *                                                              mode is not PowerMode::FULL_POWER.
      *
      * Common to all channel types:
      *
-     *  @exception binder::Status EX_NULL_POINTER       Pipe create failed.
-     *
      * @param[in] channelType       Selected channel type.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER        Pipe create failed.
      * 
      * @returns ParcelFileDescriptor or null if an exception occurs.
      * 
@@ -122,8 +123,9 @@ interface IFarFieldVoiceController {
      *
      * @param[in] channelType       Selected channel type.
      *
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT    Invalid channel type.
-     * @exception binder::Status EX_ILLEGAL_STATE       Channel type is not open.
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT   Invalid channel type.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE      Channel type is not open.
      * 
      * @see openChannel()
      */
@@ -136,6 +138,8 @@ interface IFarFieldVoiceController {
      * All audio input will use actual input when privacy state is inactive.
      *
      * @param[in] activate      true = activate privacy, false = deactivate privacy
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
      */
     void setPrivacyState(in boolean activate);
 
@@ -146,11 +150,12 @@ interface IFarFieldVoiceController {
      *
      * @pre All audio channels must be in the closed state.
      *
-     * @param[in] channelType       Selected channel type.
+     * @param[in] powerMode       Selected power mode.
      *
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT    Invalid power mode.
-     * @exception binder::Status EX_ILLEGAL_STATE       All audio channels must be in the closed state.
-     * @exception binder::Status EX_NULL_POINTER        Power mode initialization failed.
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT    Invalid power mode.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE       All audio channels must be in the closed state.
+     * @exception binder::Status::Exception::EX_NULL_POINTER        Power mode initialization failed.
      *
      * @see IFarFieldVoiceEventListener.onEnteredPowerMode(), IFarFieldVoiceEventListener.onHardwareFailed()
      */
@@ -166,13 +171,16 @@ interface IFarFieldVoiceController {
      * @param[in] fileNamePrefix    File name prefix (path and base file name).
      * @param[in] audioSelect       Selected audio to capture (vendor specific code).
      *
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT     Unknown audio selection.
-     * @exception binder::Status EX_NULL_POINTER         File create failed.
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT     Unknown audio selection.
+     * @exception binder::Status::Exception::EX_NULL_POINTER         File create failed.
      */
     void startAudioRecording(in @utf8InCpp String fileNamePrefix, in long audioSelect);
 
     /**
      * Stop recording audio.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
      */
     void stopAudioRecording();
 
@@ -182,6 +190,8 @@ interface IFarFieldVoiceController {
      * Performs a vendor specific test command for test and debug purposes.
      *
      * @param[in] command       Test command.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns string - Response to command.
      */
