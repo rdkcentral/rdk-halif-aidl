@@ -43,22 +43,7 @@ parcelable Status
     PowerMode powerMode;
 
     /**
-     * Indicates if the Keyword channel has been opened.
-     */
-    boolean keywordChannelOpen;
-
-    /**
-     * Indicates if the Continual channel has been opened.
-     */
-    boolean continualChannelOpen;
-
-    /**
-     * Indicates if the Microphone channels has been opened.
-     */
-    boolean microphoneChannelsOpen;
-
-    /**
-     * Indicates if a keyword was detected on the Keyword channel.
+     * Indicates if a keyword was detected on the "KEYWORD" channel.
      */
     boolean keywordDetected;
 
@@ -71,33 +56,6 @@ parcelable Status
      * Indicates if privacy state is active.
      */
     boolean privacyStateActive;
-
-    /**
-     * Total number of keyword channel samples lost due to buffer overflow.
-     *
-     * This is for information only and useful to log at the end of a session.
-     * Non zero values may indicate inadequate CPU time or buffer space and
-     * be a reason for poor voice quality and false negative keyword detects.
-     */
-    long keywordChannelSamplesLost;
-
-    /**
-     * Total number of continual channel samples lost due to buffer overflow.
-     *
-     * This is for information only and useful to log at the end of a session.
-     * Non zero values may indicate inadequate CPU time or buffer space and
-     * be a reason for poor voice quality.
-     */
-    long continualChannelSamplesLost;
-
-    /**
-     * Total number of microphone channels samples lost due to buffer overflow.
-     *
-     * This is for information only and useful to log at the end of a session.
-     * Non zero values may indicate inadequate CPU time or buffer space and
-     * be a reason for erroneous microphone data.
-     */
-    long microphoneChannelsSamplesLost;
 
     /**
      * Vendor specific error code to indicate an error condition. A value of
