@@ -12,12 +12,10 @@ Additionally, the Thermal HAL supports optional temperature telemetry reporting,
 
 ---
 
-## References
-
 !!! info "References"
     |||
     |-|-|
-    |**Interface Definition**|[sensor/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/sensor/current)|
+    |**Interface Definition**|[sensor/current/thermal](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/sensor/current/thermal)|
     |**API Documentation**| *TBD* |
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
     |**Initialization - TBC**| [systemd](../../../vsi/systemd/current/systemd.md) - **hal-sensor-thermal.service** |
@@ -25,10 +23,9 @@ Additionally, the Thermal HAL supports optional temperature telemetry reporting,
 
 ---
 
-## Related Pages
-
 !!! tip "Related Pages"
-    - TBC
+    - [Sensor Motion HAL](../motion/motion_sensor.md)
+    - [Sensor Light HAL](../light/light_sensor.md)
 
 ---
 
@@ -90,29 +87,37 @@ The HAL abstracts away the diversity of hardware implementations and thermal pol
 
 ### Design Principles
 
-* **Vendor controls policy** → MW does not own thresholds.  
-* **HAL emits `ThermalActionEvent`** → consistent and portable signals to MW.  
-* **MW acts on events** → UX, apps, telemetry, graceful shutdowns.  
-* **Telemetry optional** → MW may query temperatures for backend analytics.  
-* **Future cooling technologies supported** → extensible action model.  
-* **Explicit shutdown signalling** → supports compliance & UX clarity.
+- **Vendor controls policy** → MW does not own thresholds.  
+- **HAL emits `ThermalActionEvent`** → consistent and portable signals to MW.  
+- **MW acts on events** → UX, apps, telemetry, graceful shutdowns.  
+- **Telemetry optional** → MW may query temperatures for backend analytics.  
+- **Future cooling technologies supported** → extensible action model.  
+- **Explicit shutdown signalling** → supports compliance & UX clarity.
 
 ```mermaid
-graph TD
-    subgraph Hardware
-        A1[SoC Thermal Sensors] --> B1[Vendor Thermal Policy Engine]
+graph RL
+    subgraph HAL
+      B1[Vendor Thermal Policy Engine] --> C1[Thermal HAL Layer]
+    end
+    C1 --> D1[RDK Middleware]
+    subgraph "Vendor / Hardware"
+        A1[SoC Thermal Sensors] --> B1
         A2[External Sensors: DDR, USB, PMIC] --> B1
         A3[Cooling Devices: Fan, TEC, Heatsink] --> B1
     end
 
-    B1 --> C1[Thermal HAL Layer]
+    classDef background fill:#121212,stroke:none,color:#E0E0E0;
+    classDef blue fill:#1565C0,stroke:#E0E0E0,stroke-width:2px,color:#E0E0E0;
+    classDef wheat fill:#FFB74D,stroke:#424242,stroke-width:2px,color:#000000;
+    classDef green fill:#4CAF50,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
 
-    subgraph Software Stack
-        C1 --> D1[RDK Middleware Thermal Listener]
-        D1 --> E1[Applications]
-        D1 --> F1[Telemetry Pipeline]
-    end
-````
+    D1:::blue
+    C1:::wheat
+    A1:::green
+    A2:::green
+    A3:::green
+    B1:::wheat
+```
 
 ---
 

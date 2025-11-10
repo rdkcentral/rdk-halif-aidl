@@ -69,7 +69,10 @@ nav:
     - Panel: halif/panel/current/panel.md
     - Plane Control: halif/plane_control/current/plane_control.md
     - Secure API: halif/sec_api/current/sec_api.md
-    - Sensor: halif/sensor/current/sensor.md
+    - Sensor:
+      - Light: halif/sensor/current/light/light_sensor.md
+      - Motion: halif/sensor/current/motion/motion_sensor.md
+      - Thermal: halif/sensor/current/thermal/thermal_sensor.md
   - Vendor System Interfaces (VSI):
     - File System:
         - System Architecture: vsi/filesystem/current/file_system_architecture.md
