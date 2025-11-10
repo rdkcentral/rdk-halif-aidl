@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 package com.rdk.hal.farfieldvoice;
-import com.rdk.hal.farfieldvoice.ChannelType;
 import com.rdk.hal.farfieldvoice.PowerMode;
 
 /**
@@ -35,10 +34,10 @@ interface IFarFieldVoiceController {
      * If successful, creates and returns a pipe for passing the specified channel type audio to the
      * client and the specified channel type is in the open state.
      *
-     * If channelType is ChannelType::KEYWORD
+     * If channelType is "KEYWORD"
      *
      *  Keyword channel audio processing is initialized and keyword detection is started. Upon keyword
-     *  detection, audio samples are written to the Keyword channel's pipe.
+     *  detection, audio samples are written to the channel's pipe.
      *
      *  Audio data is signed 16 bits per sample at 16kHz sampling rate. The endian order of each sample
      *  value is that of the host processor's native endian order.
@@ -54,64 +53,45 @@ interface IFarFieldVoiceController {
      *   onEndOfCommand()
      *
      *  The sample offset values provided in 'onKeywordDetected' and 'onEndOfCommand' are the relative
-     *  sample number with respect to the audio samples written to the Keyword channel's pipe. A sample
-     *  offset value of zero corresponds to the first sample written after opening the Keyword channel.
+     *  sample number with respect to the audio samples written to the channel's pipe. A sample offset
+     *  value of zero corresponds to the first sample written after opening the channel.
      *
-     *  @pre The Keyword channel must be in the closed state.
-     *  @pre The Microphones channel must be in the closed state.
+     *  @pre The "KEYWORD" channel must be in the closed state.
+     *  @pre The "MICROPHONES" channel must be in the closed state.
      *  @pre The power mode must be PowerMode::FULL_POWER or PowerMode::STANDBY.
      *
-     *  @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT   Invalid channel type.
-     *  @exception binder::Status::Exception::EX_ILLEGAL_STATE      The Keyword channel is already open, or the
-     *                                                              Microphones channel is open, or power state is
+     *  @exception binder::Status::Exception::EX_ILLEGAL_STATE      The "KEYWORD" channel is already open, or the
+     *                                                              "MICROPHONES" channel is open, or power mode is
      *                                                              not PowerMode::FULL_POWER or PowerMode::STANDBY.
      *
-     * If channelType is ChannelType::CONTINUAL
+     * If channelType is "MICROPHONES"
      *
-     *  Continual channel audio processing is initialized and audio samples are written to the Continual
-     *  channel's pipe at 16kHz sampling rate. Audio data is signed 16 bits per sample. The endian order
-     *  of each sample value is that of the host processor's native endian order.
+     *  Raw microphone data is written to the channel's pipe at 16kHz sampling rate. Sample values are signed 32 bits
+     *  per sample. The endian order of each sample value is that of the host processor's native endian order.
+     *  Multiple microphones are interleaved by sample with the number of microphones being equal to the
+     *  microphoneChannelCount field in the FFVhalCapabilities_t structure provided by FFVhal_GetCapabilities.
      *
-     *  @pre The Continual channel must be in the closed state.
-     *  @pre The Microphones channel must be in the closed state.
+     *  @pre The "MICROPHONES" channel must be in the closed state.
+     *  @pre The "KEYWORD" channel must be in the closed state.
      *  @pre The power mode must be PowerMode::FULL_POWER.
      *
-     *  @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT   Invalid channel type or the Continual channel
-     *                                                              is not supported.
-     *  @exception binder::Status::Exception::EX_ILLEGAL_STATE      The Continual channel is already open, or the
-     *                                                              Microphones channel is open, or power state is
+     *  @exception binder::Status::Exception::EX_ILLEGAL_STATE      The "MICROPHONES" channel is already open, or
+     *                                                              the "KEYWORD" channel is open, or power mode is
      *                                                              not PowerMode::FULL_POWER.
-     *
-     * If channelType is ChannelType::MICROPHONES
-     *
-     *  Raw microphone data is written to the Microphones channel's pipe at 16kHz sampling rate. Sample
-     *  values are signed 32 bits per sample. The endian order of each sample value is that of the host
-     *  processor's native endian order. Multiple microphones are interleaved by sample with the number
-     *  of microphones being equal to the microphoneChannelCount field in the FFVhalCapabilities_t structure
-     *  provided by FFVhal_GetCapabilities.
-     *
-     *  @pre The Microphones channel must be in the closed state.
-     *  @pre The Keyword channel must be in the closed state.
-     *  @pre The Continual channel must be in the closed state.
-     *  @pre The power mode must be PowerMode::FULL_POWER.
-     *
-     *  @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT   Invalid channel type.
-     *  @exception binder::Status::Exception::EX_ILLEGAL_STATE      The Microphones channel is already open, or
-     *                                                              Keyword or Continual channels are open, or power
-     *                                                              mode is not PowerMode::FULL_POWER.
      *
      * Common to all channel types:
      *
      * @param[in] channelType       Selected channel type.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT    Invalid channel type.
      * @exception binder::Status::Exception::EX_NULL_POINTER        Pipe create failed.
      * 
      * @returns ParcelFileDescriptor or null if an exception occurs.
      * 
      * @see closeChannel()
      */
-    @nullable ParcelFileDescriptor openChannel(in ChannelType channelType);
+    @nullable ParcelFileDescriptor openChannel(in @utf8InCpp String channelType);
 
     /**
      * Close an audio channel.
@@ -129,7 +109,7 @@ interface IFarFieldVoiceController {
      * 
      * @see openChannel()
      */
-    void closeChannel(in ChannelType channelType);
+    void closeChannel(in @utf8InCpp String channelType);
 
     /**
      * Set (activate or deactivate) privacy state.
