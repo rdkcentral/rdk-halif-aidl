@@ -27,13 +27,16 @@ package com.rdk.hal.farfieldvoice;
 @VintfStability
 parcelable Capabilities
 {
+    /**
+     * Array of channel types supported.
+     *   "KEYWORD" = Keyword channel
+     *   "MICROPHONES" = Raw microphones channel
+     *   others are vendor defined
+     */
+    @utf8InCpp String[] channelTypes;
+
 	/**
      * Number of microphone inputs.
 	 */
     int microphoneChannelCount;
-
-	/**
-     * Indicates if the Continual channel is supported.
-	 */
-    bool continualChannelSupported;
 }

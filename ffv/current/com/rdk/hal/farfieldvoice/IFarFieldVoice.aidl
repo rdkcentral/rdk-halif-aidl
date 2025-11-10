@@ -20,6 +20,7 @@ package com.rdk.hal.farfieldvoice;
 import com.rdk.hal.farfieldvoice.State;
 import com.rdk.hal.farfieldvoice.Capabilities;
 import com.rdk.hal.farfieldvoice.Status;
+import com.rdk.hal.farfieldvoice.ChannelStatus;
 import com.rdk.hal.farfieldvoice.IFarFieldVoiceEventListener;
 import com.rdk.hal.farfieldvoice.IFarFieldVoiceController;
 import com.rdk.hal.farfieldvoice.IFarFieldVoiceControllerListener;
@@ -36,9 +37,9 @@ import com.rdk.hal.farfieldvoice.IFarFieldVoiceControllerListener;
  *  the HAL detects a voice command in the stream and reports it's occurrence to the client.
  *  This stream is referred to as the Keyword channel.
  *
- *  The Far Field Voice HAL may optionally provide a second stream of audio to the client
- *  that is continual in nature. There is no keyword or voice command detection. A typical
- *  use is for a VOIP application. This stream is referred to as the Continual channel.
+ *  The Far Field Voice HAL also provides a stream of raw microphone data to the client
+ *  that is continual in nature. There is no keyword or voice command detection. This stream
+ *  is referred to as the Microphones channel.
  *
  *  Multiple clients may obtain information from the service but only one client at a time
  *  may control the service.
@@ -75,6 +76,18 @@ interface IFarFieldVoice
      * @returns Status parcelable.
      */
     Status getStatus();
+
+    /**
+     * Get the current status of a Far Field Voice channel.
+	 *
+     * @param[in] channelType       Selected channel type.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT    Invalid channel type.
+     *
+     * @returns ChannelStatus parcelable or null if the channel type is invalid.
+     */
+    @nullable ChannelStatus getChannelStatus(in @utf8InCpp String channelType);
 
     /**
      * Register a Far Field Voice event listener.

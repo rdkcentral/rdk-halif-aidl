@@ -19,27 +19,23 @@
 package com.rdk.hal.farfieldvoice;
 
 /**
- *  @brief     Far Field Voice channel type definitions.
+ *  @brief     Far Field Voice channel status.
  *  @author    Philip Stick
  */
 
 @VintfStability
-@Backing(type="int")
-
-enum ChannelType
+parcelable ChannelStatus
 {
-   /**
-     * Keyword.
+    /**
+     * Indicates if the channel has been opened.
      */
-	KEYWORD = 0,
+    boolean channelIsOpen;
 
     /**
-     * Continual.
+     * Total number of samples lost due to buffer overflow.
+     *
+     * This is for information only and useful to log at the end of a session.
+     * Non zero values may indicate inadequate CPU time or buffer space.
      */
-	CONTINUAL = 1,
-
-    /**
-     * Microphones.
-     */
-	MICROPHONES = 2,
+    long samplesLost;
 }
