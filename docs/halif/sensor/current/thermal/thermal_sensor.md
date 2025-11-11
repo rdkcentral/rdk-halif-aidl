@@ -60,7 +60,7 @@ The Thermal HAL allows RDK Middleware to receive high-level **thermal action eve
 
 | Interface Definition File | Description |
 | -------------------------- | ------------ |
-| `com/rdk/hal/sensor/thermal/IThermal.aidl` | Main service interface for registering listeners and querying state/telemetry. |
+| `com/rdk/hal/sensor/thermal/IThermalSensor.aidl` | Main service interface for registering listeners and querying state/telemetry. |
 | `com/rdk/hal/sensor/thermal/IThermalEventListener.aidl` | One-way callback for `ThermalActionEvent`s. |
 | `com/rdk/hal/sensor/thermal/ActionType.aidl` | Enumeration of high-level thermal actions (`ENTERING_CRITICAL_SHUTDOWN`, `CRITICAL_TEMPERATURE_EXCEEDED`, etc.). |
 | `com/rdk/hal/sensor/thermal/ActionEvent.aidl` | Parcelable event payload, including `action`, `timestampMonotonicMs`, `originSensorId`, `vendorInfo`. |
@@ -74,7 +74,7 @@ The Thermal HAL allows RDK Middleware to receive high-level **thermal action eve
 The [systemd](../../../vsi/systemd/current/systemd.md) `hal-sensor-thermal.service` unit file is provided by the vendor layer to start the service and should include  
 [`Wants`](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [`Requires`](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
-Upon starting, the service shall register the `IThermal` interface with the Service Manager using the string `IThermal.serviceName` and immediately become operational.
+Upon starting, the service shall register the `IThermalSensor` interface with the Service Manager using the string `IThermalSensor.serviceName` and immediately become operational.
 
 ---
 

@@ -28,9 +28,10 @@
  */
 package com.rdk.hal.sensor.motion;
 
-import com.rdk.hal.sensor.motion.IMotionSensor.State;
-import com.rdk.hal.sensor.motion.IMotionSensor.Capabilities;
+import com.rdk.hal.sensor.motion.State;
+import com.rdk.hal.sensor.motion.Capabilities;
 import com.rdk.hal.sensor.motion.IMotionSensorEventListener;
+import com.rdk.hal.sensor.motion.OperationalMode;
 
 interface IMotionSensor {
 

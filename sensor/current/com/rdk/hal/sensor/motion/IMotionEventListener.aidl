@@ -23,7 +23,7 @@
  */
 package com.rdk.hal.sensor.motion;
 
-import
+import  com.rdk.hal.sensor.motion.OperationalMode;
 
 oneway interface IMotionSensorEventListener {
     /**
