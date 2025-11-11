@@ -21,7 +21,7 @@
 #** ******************************************************************************
 cmake_minimum_required(VERSION 3.8)
 
-project(ffv
+project(farfieldvoice
 	LANGUAGES NONE
 	VERSION 1.0)
 
@@ -29,11 +29,11 @@ if (NOT COMMAND compile_aidl)
 	message(FATAL_ERROR "Do not invoke module level CMake directly!\nInvoke CMake at root level instead!")
 endif()
 
-# version of other modules that `ffv` depends on
+# version of other modules that `farfieldvoice` depends on
 set(COMMON_VERSION "current")
 set(FFV_VERSION "current")
 
-set(SRC_DIR com/rdk/hal/ffv)
+set(SRC_DIR com/rdk/hal/farfieldvoice)
 set(COMMON_SRC_DIR ${COMMON_MODULE_PATH}/${COMMON_VERSION}/com/rdk/hal)
 
 set(SRC
