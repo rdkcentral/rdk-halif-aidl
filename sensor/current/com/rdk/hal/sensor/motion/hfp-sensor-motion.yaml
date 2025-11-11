@@ -18,23 +18,24 @@
 # One entry per physical/logical sensor on the platform.
 # Populate from Capabilities for each ILightSensor instance.
 
-sensor-motion:
-  - id: 0                      # IMotionSensor.Id.value
-    name: "PIR-Front-1"        # Capabilities.sensorName
-    sensitivity_range:
-      min: 1                   # Capabilities.minSensitivity
-      max: 10                  # Capabilities.maxSensitivity
-    supports_deep_sleep_autonomy: true  # Capabilities.supportsDeepSleepAutonomy
-    operational_modes:
-      - MOTION
-      - NO_MOTION
-    default_mode: MOTION
-    timing:
-      no_motion_seconds: 5     # Default inactivity window before NO_MOTION event
-      active_start_seconds: 0  # Activation delay after start()
-      active_stop_seconds: 0   # Continuous monitoring until stop()
-    requirements:
-      min_reaction_time_ms: 500  # Minimum reaction time to motion events
-    notes:
-      - "Front-facing PIR motion detector."
-      - "Supports autonomous operation during deep sleep."
+sensor:
+  motion:
+    - id: 0                      # IMotionSensor.Id.value
+      sensorName: "PIR-Front-1"        # Capabilities.sensorName
+      sensitivity_range:
+        minSensitivity: 1                   # Capabilities.minSensitivity
+        maxSensitivity: 10                  # Capabilities.maxSensitivity
+      supportsDeepSleepAutonomy: true       # Capabilities.supportsDeepSleepAutonomy
+      operational_modes:
+        - MOTION
+        - NO_MOTION
+      default_mode: MOTION
+      timing:
+        no_motion_seconds: 5     # Default inactivity window before NO_MOTION event
+        active_start_seconds: 0  # Activation delay after start()
+        active_stop_seconds: 0   # Continuous monitoring until stop()
+      requirements:
+        min_reaction_time_ms: 500  # Minimum reaction time to motion events
+      notes:
+        - "Front-facing PIR motion detector."
+        - "Supports autonomous operation during deep sleep."

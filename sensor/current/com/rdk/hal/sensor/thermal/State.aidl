@@ -31,14 +31,16 @@ enum State {
     NORMAL = 0,
 
     /**
-     * @brief Deep sleep transition is imminent due to thermal policy.
-     */
-    DEEPSLEEP_IMMINENT = 1,
+    * @brief Temperate has exceeded a critical threshold.
+    *  Platform will be in active mitigation if possible.
+    */
+    CRITICAL_TEMPERATURE_EXCEEDED = 1,
 
     /**
-     * @brief Reboot is imminent due to critical thermal breach.
-     */
-    CRITICAL_REBOOT_IMMINENT = 2,
+    * @brief Temperate has recovered from a critical event.
+    *  Platform will return to normal state
+    */
+    CRITICAL_TEMPERATURE_RECOVERED =2,
 
     /**
      * @brief Shutdown is imminent due to critical thermal breach.

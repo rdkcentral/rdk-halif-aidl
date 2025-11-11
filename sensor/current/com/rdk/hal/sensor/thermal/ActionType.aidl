@@ -31,28 +31,15 @@ enum ActionType {
     /** @brief No action. */
     NONE = 0,
 
-    // --- Power / critical paths ---
-    /** @brief Entering deep sleep due to thermal policy. */
-    ENTERING_DEEPSLEEP = 10,
-
-    /** @brief Critical thermal breach leading to imminent reboot. */
-    ENTERING_CRITICAL_REBOOT = 11,
-
-    /** @brief Critical thermal breach leading to imminent full shutdown. */
-    ENTERING_CRITICAL_SHUTDOWN = 12,
-
-    // --- Cooling device hints (optional) ---
-    /** @brief Cooling increased (e.g., fan speed up). */
-    FAN_SPEED_INCREASED = 20,
-
-    /** @brief Cooling returned to nominal. */
-    FAN_SPEED_NORMAL = 21,
+    /** @brief Critical temperature threshold exceeded,
+     *  If supported on the platform thermal migration will be active
+     */
+    CRITICAL_TEMPERATURE_EXCEEDED = 1,
 
     // --- Recovery ---
     /** @brief System has thermally recovered to normal operating conditions. */
-    THERMAL_RECOVERY_NORMAL = 30,
+    CRITICAL_TEMPERATURE_RECOVERED = 2,
 
-    // --- Vendor extension hook ---
-    /** @brief Vendor-specific action; use with vendor fields in ActionEvent. */
-    OTHER = 0x7FFF
+    /** @brief Critical thermal breach leading to imminent full shutdown. */
+    ENTERING_CRITICAL_SHUTDOWN = 3
 }

@@ -18,17 +18,18 @@
 # One entry per physical/logical sensor on the platform.
 # Populate from Capabilities for each ILightSensor instance.
 
-sensor-light:
-  - id: 0               # ILightSensor.Id.value
-    name: "ALS-Front-1" # Capabilities.sensorName
-    location: FRONT     # Location enum
-    lux_range:
-      min: 1            # Capabilities.minLux
-      max: 20000        # Capabilities.maxLux
-    raw_range:
-      min: 0            # Capabilities.minRaw
-      max: 4095         # Capabilities.maxRaw
-    requirements:
-      min_effective_rate_hz: 6
-    notes:
-      - "Front-facing ALS suitable for EntOS ALS / IQ."
+sensor:
+  light:
+    - id: 0               # ILightSensor.Id.value
+      sensorName: "ALS-Front-1" # Capabilities.sensorName
+      location: FRONT           # LCapabilities.location
+      lux_range:
+        minLux: 1            # Capabilities.minLux
+        maxLux: 20000        # Capabilities.maxLux
+      raw_range:
+        minRaw: 0            # Capabilities.minRaw
+        maxRaw: 4095         # Capabilities.maxRaw
+      requirements:
+        min_effective_rate_hz: 6
+      notes:
+        - "Front-facing ALS suitable for EntOS ALS / IQ."
