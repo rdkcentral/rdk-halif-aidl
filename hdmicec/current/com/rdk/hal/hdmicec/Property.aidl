@@ -30,7 +30,7 @@ enum Property
      *
      * Please note that this value is NOT transmitted or obtained over the CEC bus. It is statically defined by the implementation.
      *
-       * Type: Byte - 8-bit integer value.
+     * Type: Byte - 8-bit integer value.
      * Access: Read-only.
      */
     HAL_CEC_VERSION = 0,
@@ -41,7 +41,7 @@ enum Property
      * 
      * If this property is read in the CLOSED state it will report 0.
      *
-       * Type: Int - 32-bit signed integer value.
+     * Type: Int - 32-bit signed integer value.
      * Access: Read-only.
      *
      */
@@ -53,7 +53,7 @@ enum Property
      * 
      * If this property is read in the CLOSED state it will report 0.
      *
-       * Type: Int - 32-bit signed integer value.
+     * Type: Int - 32-bit signed integer value.
      * Access: Read-only.
      *
      */
@@ -65,7 +65,7 @@ enum Property
      * 
      * If this property is read in the CLOSED state it will report 0.
      *
-       * Type: Int - 32-bit signed integer value.
+     * Type: Int - 32-bit signed integer value.
      * Access: Read-only.
      *
      */
@@ -78,7 +78,7 @@ enum Property
      * 
      * If this property is read in the CLOSED state it will report 0.
      *
-       * Type: Int - 32-bit signed integer value.
+     * Type: Int - 32-bit signed integer value.
      * Access: Read-only.
      *
      */
@@ -90,7 +90,7 @@ enum Property
      * 
      * If this property is read in the CLOSED state it will report 0.
      *
-       * Type: Int - 32-bit signed integer value.
+     * Type: Int - 32-bit signed integer value.
      * Access: Read-only.
      *
      */
