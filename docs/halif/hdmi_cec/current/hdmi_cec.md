@@ -27,7 +27,6 @@ The HDMI-CEC HAL provides low-level bus access for Consumer Electronics Control 
     | **NACK**     | Negative Acknowledge — absence of ACK for a direct message, or explicit rejection of a broadcast message. |
     | **Tx**       | Transmit — sending a CEC message on the bus.                                                              |
     | **Rx**       | Receive — receiving a CEC message from the bus.                                                           |
-    | **PA**       | Physical Address — hierarchical address derived from HDMI topology/EDID.                                  |
     | **VTS**      | Vendor Test Suite — conformance test suite for HAL validation.                                            |
 
 This document serves as a **placeholder**.
