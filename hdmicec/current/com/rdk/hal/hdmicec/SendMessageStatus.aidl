@@ -27,10 +27,13 @@ package com.rdk.hal.hdmicec;
  
 @VintfStability
 @Backing(type="int")
-enum SendMessageStatus {
+enum SendMessageStatus 
+{
     /**
      * The SendMessageStatus indicates the state of the message transmission by reporting
      * CEC line arbitration and, if successful, the state of the ACK bit for last header/data block transmission.
+     * To understand the meaning of the SendMessageStatus values, please refer to
+     * HDMI Specification 1.4b, Section CEC 6.1.2 "ACK (Acknowledge)".
      */
 
     /**

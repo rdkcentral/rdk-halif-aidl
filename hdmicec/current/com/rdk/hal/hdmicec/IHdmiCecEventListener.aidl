@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.hdmicec;
 import com.rdk.hal.hdmicec.SendMessageStatus;
-import com.rdk.hal.State;
+import com.rdk.hal.hdmicec.State;
 
 /**
  *  @brief     HDMI CEC Event Listener HAL interface.
@@ -28,8 +28,8 @@ import com.rdk.hal.State;
  */
 
 @VintfStability
-oneway interface IHdmiCecEventListener {
-
+oneway interface IHdmiCecEventListener 
+{
     /**
 	 * Callback to be invoked for each frame arrival.
      *
@@ -100,5 +100,4 @@ oneway interface IHdmiCecEventListener {
      * @see IHdmiCecController.sendMessage()
      */
     void onMessageSent(in byte[] message, SendMessageStatus status);
-
 }

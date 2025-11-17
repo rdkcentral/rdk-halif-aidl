@@ -20,8 +20,8 @@ package com.rdk.hal.hdmicec;
 
 @VintfStability
 @Backing(type="int")
-enum Property {
-
+enum Property 
+{
     /**
      * CEC version supported by the HAL and HW.
      *
@@ -95,5 +95,4 @@ enum Property {
      *
      */
     METRIC_ARBITRATION_FAILURES = 1004
-
 }
