@@ -1,0 +1,7 @@
+aidl_interface:
+  name: deviceinfo
+  srcs:
+    - com/rdk/hal/deviceinfo/*.aidl
+  imports: []
+  dump_api: enabled
+  stability: vintf

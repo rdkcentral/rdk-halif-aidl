@@ -1,0 +1,7 @@
+aidl_interface:
+  name: indicator
+  srcs:
+    - com/rdk/hal/indicator/*.aidl
+  imports: []
+  dump_api: enabled
+  stability: vintf

@@ -1,0 +1,8 @@
+aidl_interface:
+  name: cec
+  srcs:
+    - com/rdk/hal/hdmicec/*.aidl
+  imports:
+    - common
+  dump_api: enabled
+  stability: vintf
