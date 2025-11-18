@@ -7,6 +7,9 @@ listed below.  Your use of this material within the component is also subject to
 conditions of these licenses.  The LICENSE file contains the text of all the licenses which apply
 within this component.
 
+Copyright 2024 Comcast Cable Communications Management, LLC
+Licensed under the Apache License, Version 2.0
+
 ---
 
 This project includes setup and build scripts that clone or install third-party dependencies
@@ -52,9 +55,6 @@ This may include packages such as:
 
 These are detected at build time using find_package() or similar mechanisms and are not included in this repository.
 Please refer to your system's package manager for exact licensing details for system packages.
-
-Copyright 2024 Comcast Cable Communications Management, LLC
-Licensed under the Apache License, Version 2.0
 
 This product includes the AIDL framework developed as part of
 The Android Open Source Project (http://source.android.com).
