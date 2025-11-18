@@ -1,0 +1,7 @@
+aidl_interface:
+  name: boot
+  srcs:
+    - com/rdk/hal/boot/*.aidl
+  imports: []
+  dump_api: enabled
+  stability: vintf

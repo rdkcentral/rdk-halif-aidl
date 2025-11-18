@@ -1,0 +1,8 @@
+aidl_interface:
+  name: audiodecoder
+  srcs:
+    - com/rdk/hal/audiodecoder/*.aidl
+  imports:
+    - common
+  dump_api: enabled
+  stability: vintf

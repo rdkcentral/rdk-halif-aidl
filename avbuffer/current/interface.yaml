@@ -1,0 +1,9 @@
+aidl_interface:
+  name: avbuffer
+  srcs:
+    - com/rdk/hal/avbuffer/*.aidl
+  imports:
+    - audiodecoder
+    - videodecoder
+  dump_api: enabled
+  stability: vintf

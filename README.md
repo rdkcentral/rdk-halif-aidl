@@ -9,6 +9,25 @@ Designed for embedded platforms, **RDK-HALIF-AIDL** ensures efficient hardware i
 All documentation and build instructions for **RDK Hardware Porting Kit** can be found here: [Documentation](https://rdkcentral.github.io/rdk-halif-aidl/)
 To build the interface please follow this [link](https://rdkcentral.github.io/rdk-halif-aidl/introduction/interface_generation/)
 
+## Usage Steps
+
+```bash
+# 1. Initial build (will fail initially as .cpp files are not generated)
+./build_interfaces.sh
+
+# 2. Activate Python virtual environment
+source docs/python_venv/bin/activate
+
+# 3. Modify AIDL files if needed
+# (Make necessary changes before proceeding)
+
+# 4. Update and freeze APIs
+./update_and_freeze_apis.sh
+
+# 5. Final build (libraries will be created in targets/out)
+./build_interfaces.sh
+```
+
 ## Copyright and License
 
 **RDK-HALIF-AIDL** is Copyright 2024 RDK Management and licensed under the Apache License, Version 2.0. See the LICENSE and NOTICE files in the top-level directory for further details.

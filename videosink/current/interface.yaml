@@ -1,0 +1,9 @@
+aidl_interface:
+  name: videosink
+  srcs:
+    - com/rdk/hal/videosink/*.aidl
+  imports:
+    - common
+    - videodecoder
+  dump_api: enabled
+  stability: vintf
