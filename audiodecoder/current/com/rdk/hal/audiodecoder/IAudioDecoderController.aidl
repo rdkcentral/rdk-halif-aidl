@@ -89,35 +89,24 @@ interface IAudioDecoderController {
      * Each call shall reference a single audio frame with a presentation timestamp.
      *
      * Buffer Ownership: All buffers passed into decodeBuffer() become the responsibility
-     * of the Audio Decoder HAL service to free. Buffers are typically freed after
+     * of the Audio Decoder HAL to free. Buffers are typically freed after
      * successful decoding and output, or immediately during flush/stop operations.
      * The caller must not access the buffer after this call returns true.
      *
      * @param[in] nsPresentationTime	The presentation time of the audio frame in nanoseconds.
-     *                                  Must be >= 0. Negative values will result in EX_ILLEGAL_ARGUMENT.
-     * @param[in] bufferHandle			A valid handle to the AV buffer containing the encoded audio frame.
-     *                                  Must reference a properly allocated buffer. Invalid handles
-     *                                  will result in EX_ILLEGAL_ARGUMENT.
+     * @param[in] bufferHandle			A handle to the AV buffer containing the encoded audio frame.
      * @param[in] trimStartNs			The time to trim from the start of the decoded audio in nanoseconds.
-     *                                  Must be >= 0. Values greater than frame duration are clamped to frame duration.
      * @param[in] trimEndNs  			The time to trim from the end of the decoded audio in nanoseconds.
-     *                                  Must be >= 0. Values greater than frame duration are clamped to frame duration.
      *
      * @returns boolean
-     * @retval true   Buffer successfully queued for decoding. Buffer ownership transfers to HAL service.
-     * @retval false  Internal decode buffer queue is full. Caller should retry after a brief delay.
-     *                Buffer ownership remains with caller.
+     * @retval true   Buffer successfully queued for decoding. Buffer ownership transfers to HAL.
+     * @retval false  Internal decode buffer queue is full. Buffer ownership remains with caller.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if decoder is not in STARTED state
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if any parameter is invalid:
-     *           - nsPresentationTime < 0
-     *           - bufferHandle is invalid or null
-     *           - trimStartNs < 0 or trimEndNs < 0
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      *
      * @pre The resource must be in State::STARTED.
-     * @post On success (return true), the buffer ownership transfers to the HAL service.
-     *       On failure (return false), the caller retains buffer ownership and should retry.
      */
     boolean decodeBuffer(in long nsPresentationTime, in long bufferHandle, in int trimStartNs, in int trimEndNs);
 

@@ -103,36 +103,26 @@ interface IAudioSinkController {
      * The audio sink may refuse the buffer if its internal resource usage prevents it from accepting it at that time.
      *
      * Buffer Ownership: All buffers passed into `queueAudioFrame()` become the responsibility of the
-     * Audio Sink HAL service to free once they are no longer required. Buffers are typically freed after
+     * Audio Sink HAL to free once they are no longer required. Buffers are typically freed after
      * successful mixing and output, or immediately during flush/stop operations. The caller must not
      * access the buffer after this call returns true.
      *
-     * EOS Handling: If an audio frame is passed to `queueAudioFrame()` after EOS has been signaled,
-     * the audio sink must be stopped and restarted or flushed to accept new buffers.
+     * If an audio frame is passed to `queueAudioFrame()` after EOS, then the `binder::Status EX_ILLEGAL_STATE` exception
+     * is raised. The audio sink must be stopped and restarted or flushed to accept new buffers.
      *
      * @param[in] nsPresentationTime The presentation time of the audio frame in nanoseconds.
-     *                               Must be >= 0. Negative values will result in EX_ILLEGAL_ARGUMENT.
-     * @param[in] bufferHandle       A valid handle to the AV buffer containing the audio frame.
-     *                               Must reference a properly allocated buffer. Invalid handles
-     *                               will result in EX_ILLEGAL_ARGUMENT.
-     * @param[in] metadata           A FrameMetadata parcelable describing the audio frame properties.
-     *                               Must be properly initialized. Invalid metadata will result in EX_ILLEGAL_ARGUMENT.
+     * @param[in] bufferHandle       A handle to the AV buffer containing the audio frame.
+     * @param[in] metadata           A FrameMetadata parcelable describing the audio frame.
      *
      * @returns boolean
-     * @retval true  Buffer successfully queued for mixing. Buffer ownership transfers to HAL service.
-     * @retval false Buffer queue is full. Caller should retry after a brief delay. Buffer ownership remains with caller.
+     * @retval true  Buffer successfully queued for mixing. Buffer ownership transfers to HAL.
+     * @retval false Buffer queue is full. Buffer ownership remains with caller.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the `STARTED` state
-     *           or an audio frame is passed after EOS has been signaled.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if any parameter is invalid:
-     *           - nsPresentationTime < 0
-     *           - bufferHandle is invalid or null
-     *           - metadata is invalid or improperly initialized
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE    If the resource is not in the `STARTED` state or an audio frame is passed after EOS.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT If an invalid argument is provided.
      *
      * @pre The resource must be in the `STARTED` state.
-     * @post On success (return true), the buffer ownership transfers to the HAL service.
-     *       On failure (return false), the caller retains buffer ownership and should retry.
      */
     boolean queueAudioFrame(in long nsPresentationTime, in long bufferHandle, in FrameMetadata metadata);
 

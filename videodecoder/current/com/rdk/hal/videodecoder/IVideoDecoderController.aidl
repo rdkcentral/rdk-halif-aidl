@@ -86,30 +86,22 @@ interface IVideoDecoderController
      * Each call shall reference a single video frame with a presentation timestamp.
      *
      * Buffer Ownership: All buffers passed into decodeBuffer() become the responsibility
-     * of the Video Decoder HAL service to free. Once the decoder has finished processing
+     * of the Video Decoder HAL to free. Once the decoder has finished processing
      * the buffer, it is automatically released and returned to the AV Buffer Manager.
      * The caller must not modify or access the buffer after this call returns true.
      *
      * @param[in] nsPresentationTime	The presentation time of the video frame in nanoseconds.
-     *                                  Must be >= 0. Negative values will result in EX_ILLEGAL_ARGUMENT.
-     * @param[in] bufferHandle			A valid handle to the AV buffer containing the encoded video frame.
-     *                                  Must reference a properly allocated buffer. Invalid handles
-     *                                  will result in EX_ILLEGAL_ARGUMENT.
+     * @param[in] bufferHandle			A handle to the AV buffer containing the encoded video frame.
      *
      * @returns boolean
-     * @retval true   Buffer successfully queued for decoding. Buffer ownership transfers to HAL service.
-     * @retval false  Internal decode buffer queue is full. Caller should retry after a brief delay.
-     *                Buffer ownership remains with caller.
+     * @retval true   Buffer successfully queued for decoding. Buffer ownership transfers to HAL.
+     * @retval false  Internal decode buffer queue is full. Buffer ownership remains with caller.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if decoder is not in STARTED state
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if any parameter is invalid:
-     *           - nsPresentationTime < 0
-     *           - bufferHandle is invalid or null
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      *
      * @pre The resource must be in State::STARTED.
-     * @post On success (return true), the buffer ownership transfers to the HAL service.
-     *       On failure (return false), the caller retains buffer ownership and should retry.
      */
     boolean decodeBuffer(in long nsPresentationTime, in long bufferHandle);
 

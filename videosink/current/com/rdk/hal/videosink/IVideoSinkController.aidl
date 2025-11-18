@@ -115,43 +115,36 @@ interface IVideoSinkController
     /**
      * Queues a video frame for display.
      *
-     * When the presentation time occurs for the video frame, the current mapped video plane is used
-     * to render the video frame. The presentation time of the video frame is controlled by the AV Clock
+     * When the presentation time occurs for the video frame the current mapped video plane is used
+     * to render the video frame.
+     *
+     * The presentation time of the video frame is controlled by the AV Clock
      * and will be lip synced with an Audio Sink delivered stream if linked.
      *
-     * The video sink may refuse the frame if its internal resource usage prevents it from accepting it at that time.
      *
      * Buffer Ownership: All frame buffers passed into `queueVideoFrame()` become the responsibility of the
-     * Video Sink HAL service to free once they are no longer required. Buffers are typically freed after
+     * Video Sink HAL to free once they are no longer required. Buffers are typically freed after
      * successful display and output, or immediately during flush/stop operations. The caller must not
      * access the buffer after this call returns true.
      *
-     * EOS Handling: If a video frame is passed to `queueVideoFrame()` after EOS has been signaled,
-     * the video sink must be stopped and restarted or flushed to accept new frames.
+     *
+     * If an video frame is passed to `queueVideoFrame()` after EOS, then the `binder::Status EX_ILLEGAL_STATE` exception
+     * is raised. The video sink must be stopped and restarted or flushed to accept new buffers.
+     *
      *
      * @param[in] nsPresentationTime    The presentation time of the video frame in nanoseconds.
-     *                                  Must be >= 0. Negative values will result in EX_ILLEGAL_ARGUMENT.
-     * @param[in] frameBufferHandle     A valid handle to the video frame buffer.
-     *                                  Must reference a properly allocated buffer. Invalid handles
-     *                                  will result in EX_ILLEGAL_ARGUMENT.
+     * @param[in] frameBufferHandle     A handle to the video frame buffer.
      * @param[in] metadata              A FrameMetadata object with metadata relating to the video frame.
-     *                                  Must be properly initialized. Invalid metadata will result in EX_ILLEGAL_ARGUMENT.
      *
      * @returns boolean
-     * @retval true  Frame successfully queued for display. Buffer ownership transfers to HAL service.
-     * @retval false Video sink queue is full. Caller should retry after a brief delay. Buffer ownership remains with caller.
+     * @retval true  Frame successfully queued for display. Buffer ownership transfers to HAL.
+     * @retval false Video sink queue is full. Buffer ownership remains with caller.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the `STARTED` state
-     *           or a video frame is passed after EOS has been signaled.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if any parameter is invalid:
-     *           - nsPresentationTime < 0
-     *           - frameBufferHandle is invalid or null
-     *           - metadata is invalid or improperly initialized
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      *
      * @pre The resource must be in State::STARTED.
-     * @post On success (return true), the buffer ownership transfers to the HAL service.
-     *       On failure (return false), the caller retains buffer ownership and should retry.
      */
     boolean queueVideoFrame(in long nsPresentationTime, in long frameBufferHandle, in FrameMetadata metadata);
 
