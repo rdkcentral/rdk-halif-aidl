@@ -85,9 +85,9 @@ interface IFarFieldVoice
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT    Invalid channel type.
      *
-     * @returns ChannelStatus parcelable or null if the channel type is invalid.
+     * @returns ChannelStatus parcelable.
      */
-    @nullable ChannelStatus getChannelStatus(in @utf8InCpp String channelType);
+    ChannelStatus getChannelStatus(in @utf8InCpp String channelType);
 
     /**
      * Register a Far Field Voice event listener.

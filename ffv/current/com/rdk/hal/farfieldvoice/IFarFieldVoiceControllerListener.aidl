@@ -41,5 +41,5 @@ oneway interface IFarFieldVoiceControllerListener {
      * @param[in] sampleOffset      "KEYWORD" channel sample offset to the end of voice command.
      * @param[in] timedOut          Indicates if timed out detecting end of command.
      */
-    void onEndOfCommand(in long sampleOffset, bool timedOut);
+    void onEndOfCommand(in long sampleOffset, boolean timedOut);
 }
