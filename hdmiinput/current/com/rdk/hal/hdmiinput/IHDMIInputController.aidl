@@ -106,39 +106,6 @@ interface IHDMIInputController
     void stop();
 
     /**
-     * Sets a property.
-     * 
-     * Properties may be set in the `READY` state to take effect once started or in the `STARTED` state
-     * where they are dynamically applied to the HDMI input port.
-     *
-     * @param[in] property              The key of a property from the Property enum.
-     * @param[in] propertyValue         Holds the value to set.
-     *
-     * @returns boolean
-     * @retval true     The property was successfully set.
-     * @retval false    Invalid property key or value.
-     *
-     * @see setPropertyMulti(), getProperty()
-     */
-    boolean setProperty(in Property property, in PropertyValue propertyValue);
-
-    /**
-     * Sets multiple properties.
-     * 
-     * Properties may be set in the `READY` state to take effect once started or in the `STARTED` state
-     * where they are dynamically applied to the HDMI input port.
-     *
-     * @param[in] propertyKVList        Array of key value pairs of properties.
-     *
-     * @returns boolean
-     * @retval true     The property was successfully set.
-     * @retval false    Invalid property key or value.
-     *
-     * @see setProperty(), getProperty()
-     */
-    boolean setPropertyMulti(in PropertyKVPair[] propertyKVList);
-
-    /**
      * Gets the current authenticated HDCP version which was negotiated with the HDMI source device (HDCP transmitter).
      *
      * If HDCP has not yet been authenticated then `HDCPProtocolVersion.UNDEFINED` is returned.
@@ -162,6 +129,8 @@ interface IHDMIInputController
     
     /**
      * Gets the last received source product description (SPD) InfoFrame.
+     *
+     * Spec Info : CTA 861 standards
      *
      * @returns InfoFrame data byte array or empty array if no InfoFrame has been received since the last device was connected or started.
      *

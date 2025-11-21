@@ -99,6 +99,8 @@ interface IHDMIInput
     /**
      * Sets the EDID for the HDMI input port.
      *
+     * Spec Info : CTA 861 standards
+     *
      * The EDID defined in `edid` is set for the HDMI input port.
      * The HPD line is toggled if in the `STARTED` state.
      * 
@@ -109,7 +111,7 @@ interface IHDMIInput
      * 
      * @return boolean
      * @retval true         The EDID was set successfully.
-     * @retval boolean      The EDID was not set.
+     * @retval false        The EDID was not set.
      *
      * @see getEDID(), getCapabilities()
      */
@@ -118,13 +120,15 @@ interface IHDMIInput
     /**
      * Gets the current EDID set for the HDMI input port.
      *
+     * Spec Info : CTA 861 standards
+     *
      * The EDID returned in `edid` is set for the HDMI input port.
      *
      * @param[out] edid     The EDID data.
      * 
      * @return boolean
      * @retval true         The EDID was retrieved successfully.
-     * @retval boolean      The EDID was not available.
+     * @retval false        The EDID was not available.
      *
      * @see setEDID()
      */
@@ -133,6 +137,8 @@ interface IHDMIInput
     /**
      * Gets the default EDID for the HDMI input port for a given HDMI version.
      * 
+     * Spec Info : CTA 861 standards
+     *
      * A default EDID is defined for each HDMIVersion listed as as supported in the
      * `Capabilities.supportedVersions[]`.
      * 
@@ -144,7 +150,7 @@ interface IHDMIInput
      *
      * @return boolean
      * @retval true         The EDID was retrieved successfully.
-     * @retval boolean      The EDID was not available.
+     * @retval false        The EDID was not available.
      *
      * @see setEDID(), getCapabilities()
      */

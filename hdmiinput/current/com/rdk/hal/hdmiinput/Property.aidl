@@ -30,7 +30,7 @@ package com.rdk.hal.hdmiinput;
 enum Property
 {
 	/**
-	 * Unique ID per decoder resource instance.
+	 * Unique ID per HDMI input port.
 	 *
 	 * Type: Integer
 	 * Access: Read-only.
