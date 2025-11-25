@@ -18,7 +18,6 @@
  */
 package com.rdk.hal.farfieldvoice;
 import com.rdk.hal.farfieldvoice.PowerMode;
-import com.rdk.hal.farfieldvoice.KeywordDetectInfo;
 
 /**
  *  @brief     Far Field Voice service status.
@@ -43,14 +42,9 @@ parcelable Status
     PowerMode powerMode;
 
     /**
-     * Indicates if a keyword was detected on the "KEYWORD" channel.
+     * Indicates if a keyword was detected on the Keyword channel.
      */
     boolean keywordDetected;
-
-    /**
-     * Keyword detect information (applicable only if keywordDetected is true).
-     */
-    KeywordDetectInfo keywordDetectInfo;
 
     /**
      * Indicates if privacy state is active.
