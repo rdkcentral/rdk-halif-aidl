@@ -57,11 +57,11 @@ This document serves as a **placeholder**.
 
 ## Interface Definitions
 
-The latest interface can be found by following this [hdmi cec link](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/cec)
+The latest interface can be found by following this [hdmi cec link](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/hdmi_cec)
 
 | Interface                        | Description                                                                                                                             |
 | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `IHdmiCec.aidl`                   | HAL service interface, will be initialsed by `systemd` vendor layer initialisation.                                                    |
+| `IHdmiCec.aidl`                   | HAL service interface, will be initialised by `systemd` vendor layer initialisation.                                                    |
 | `IHdmiCecController.aidl`         | Main control plane: `open/close`, `addLogicalAddress/removeLogicalAddress`, `sendMessage`, state queries, event listener registration. |
 | `IHdmiCecEventListener.aidl`      | Event notifications for watcher/diagnostic clients (read-only message and state observation).                                          |
 | `Property.aidl`                   | Key/value pairs for querying device or HAL properties.                                                                                 |
@@ -72,7 +72,7 @@ The latest interface can be found by following this [hdmi cec link](https://gith
 
 ## Initialization
 
-As part of the vendor layer initialisatition the `hdmicec` interface will be started. It should include `Wants` or `Requires` directives to ensure that any platform driver services it depends on are started first.
+As part of the vendor layer initialisation the `hdmicec` interface will be started. It should include `Wants` or `Requires` directives to ensure that any platform driver services it depends on are started first.
 
 The CEC HAL service depends on the Service Manager to register itself as a service.
 
