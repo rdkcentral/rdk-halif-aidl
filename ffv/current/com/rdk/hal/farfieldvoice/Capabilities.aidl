@@ -28,10 +28,7 @@ package com.rdk.hal.farfieldvoice;
 parcelable Capabilities
 {
     /**
-     * Array of channel types supported.
-     *   "KEYWORD" = Keyword channel
-     *   "MICROPHONES" = Raw microphones channel
-     *   others are vendor defined
+     * Array of vendor/product defined channel types supported (e.g. "KEYWORD" = Keyword channel).
      */
     @utf8InCpp String[] channelTypes;
 

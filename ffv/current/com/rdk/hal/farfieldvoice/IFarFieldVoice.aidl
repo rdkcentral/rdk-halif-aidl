@@ -35,11 +35,11 @@ import com.rdk.hal.farfieldvoice.IFarFieldVoiceControllerListener;
  *  The Far Field Voice HAL provides a stream of far field audio input to the client
  *  upon detection of a keyword in the audio stream. Following detection of the keyword,
  *  the HAL detects a voice command in the stream and reports it's occurrence to the client.
- *  This stream is referred to as the Keyword channel.
+ *  This stream is referred to as the Keyword channel. This stream is typically forwarded to
+ *  a voice recognition server for interpretation of user intent.
  *
- *  The Far Field Voice HAL also provides a stream of raw microphone data to the client
- *  that is continual in nature. There is no keyword or voice command detection. This stream
- *  is referred to as the Microphones channel.
+ *  The Far Field Voice HAL may also provide other vendor/product specific streams of audio
+ *  to the client. These streams are typically forwarded to feature dependent end points.
  *
  *  Multiple clients may obtain information from the service but only one client at a time
  *  may control the service.
@@ -88,6 +88,33 @@ interface IFarFieldVoice
      * @returns ChannelStatus parcelable.
      */
     ChannelStatus getChannelStatus(in @utf8InCpp String channelType);
+
+    /**
+     * Get keyword detect meta data.
+     *
+     * @param[out] metaData     Keyword detect meta data or empty array if the keyword wasn't detected.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     * 
+     * @return boolean
+     * @retval true     The keyword was detected and meta data is returned.
+     * @retval false    The keyword was not detected and meta data is empty.
+     */
+    boolean getKeywordMetaData(out byte[] metaData);
+
+    /**
+     * Set vendor defined configuration.
+     *
+     * @param[in] configuration     Vendor defined configuration.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * 
+     * @return boolean
+     * @retval true     The configuration was successfully set.
+     * @retval false    The configuration is invalid or empty.
+     */
+    boolean setConfiguration(in byte[] configuration);
 
     /**
      * Register a Far Field Voice event listener.

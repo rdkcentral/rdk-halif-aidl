@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 package com.rdk.hal.farfieldvoice;
-import com.rdk.hal.farfieldvoice.KeywordDetectInfo;
 
 /**
  *  @brief     Callbacks listener interface from Far Field Voice controller.
@@ -29,16 +28,14 @@ import com.rdk.hal.farfieldvoice.KeywordDetectInfo;
 oneway interface IFarFieldVoiceControllerListener {
 
     /**
-	 * Callback when a keyword is detected on the "KEYWORD" channel.
-     *
-     * @param[in] keywordDetectInfo     Keyword detect information.
+	 * Callback when a keyword is detected on the Keyword channel.
      */
-    void onKeywordDetected(in KeywordDetectInfo keywordDetectInfo);
+    void onKeywordDetected();
 
     /**
-	 * Callback when an End of voice command is detected on the "KEYWORD" channel following the keyword.
+	 * Callback when an End of voice command is detected on the Keyword channel following the keyword.
      *
-     * @param[in] sampleOffset      "KEYWORD" channel sample offset to the end of voice command.
+     * @param[in] sampleOffset      Keyword channel sample offset to the end of voice command.
      * @param[in] timedOut          Indicates if timed out detecting end of command.
      */
     void onEndOfCommand(in long sampleOffset, boolean timedOut);
