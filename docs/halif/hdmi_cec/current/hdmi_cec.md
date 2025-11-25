@@ -102,8 +102,8 @@ flowchart TD
     CECControllerClient -- open() </br> close() --> IHdmiCEC
     CECControllerClient -- addLogicalAddress() </br> removeLogicalAddress() </br> sendMessage() --> IHdmiCECController
     CECWatcherClient -- getState() <br> getProperty() <br> getLogicalAddresses()  <br> registerEventListener() <br> unregisterEventListener() --> IHdmiCEC
-    IHdmiCecEventListener -- onMessageRecieved() <br> OnStateChanged() <br> OnMessageSent() --> CECWatcherClient
-    IHdmiCecEventListener -- onMessageRecieved() <br> OnStateChanged() <br> OnMessageSent() --> CECControllerClient
+    IHdmiCecEventListener -- onMessageReceived() <br> OnStateChanged() <br> OnMessageSent() --> CECWatcherClient
+    IHdmiCecEventListener -- onMessageReceived() <br> OnStateChanged() <br> OnMessageSent() --> CECControllerClient
 
     %% Class assignments
     classDef background fill:#121212,stroke:none,color:#E0E0E0;
