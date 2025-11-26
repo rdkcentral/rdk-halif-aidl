@@ -31,6 +31,13 @@ BINDER_BIN_DIR="$INSTALL_DIR/linux_binder_idl"
 PROFILE_FILE="$HOME/.bashrc"
 SCRIPT_FILE="$BASH_SOURCE"
 
+
+# Minimal ANSI colour vars (why: standard, portable)
+RED="\033[0;31m"
+YELLOW="\033[1;33m"
+GREEN="\033[0;32m"
+RESET="\033[0m"
+
 # Function to check if the repository is already cloned
 clone_repo() 
 {
@@ -43,26 +50,50 @@ clone_repo()
     fi
 }
 
-# Function to check if the binary path is already in PATH
-setup_path() 
-{
-    if [[ ":$PATH:" == *":$BINDER_BIN_DIR:"* ]]; then
-        echo "Binder tools path is already set up."
+# Detect shell & profile file (why: correct file for correct user shell)
+detect_profile() {
+    if [ -n "$ZSH_VERSION" ]; then
+        echo "$HOME/.zshrc"
+    elif [ -n "$BASH_VERSION" ]; then
+        echo "$HOME/.bashrc"
     else
-        echo "Binder tools path is not in the environment PATH."
-        echo "To add it permanently, run the following command:"
-        echo "    echo 'export PATH="$BINDER_BIN_DIR:\$PATH"' >> "$PROFILE_FILE""
-        echo "Then restart your terminal or run 'source $PROFILE_FILE' to apply changes."
+        echo "$HOME/.profile"
     fi
+}
+
+PROFILE_FILE="$(detect_profile)"
+EXPORT_LINE="export PATH=\"$BINDER_BIN_DIR:\$PATH\""
+
+setup_path_auto() {
+    mkdir -p "$BINDER_BIN_DIR"
+
+    if grep -Fxq "$EXPORT_LINE" "$PROFILE_FILE"; then
+        echo -e "${GREEN}Binder tool path is already in PATH.${RESET}"
+        return
+    fi
+
+    echo -e "${YELLOW}Adding Binder tool path to PATH automatically...${RESET}"
+    {
+        echo ""
+        echo "# Added by Binder setup script"
+        echo "$EXPORT_LINE"
+    } >> "$PROFILE_FILE"
+
+    # Apply immediately (why: user doesn’t need to restart shell)
+    # shellcheck disable=SC1090
+    source "$PROFILE_FILE"
+
+    echo -e "${GREEN}Binder tool path added successfully!${RESET}"
+    echo -e "${YELLOW}Profile updated: $PROFILE_FILE${RESET}"
 }
 
 # Function to verify installation
 verify_installation() 
 {
-    if command -v binder &> /dev/null; then
+    if command -v aidl_ops &> /dev/null; then
         echo "Binder tools installation successful."
     else
-        echo "Installation failed or binder command not found. Ensure the path is correctly set."
+        echo "Installation failed or aidl_ops tool not found. Ensure the path is correctly set."
     fi
 }
 
@@ -79,7 +110,7 @@ check_sourced()
 # Execute functions
 check_sourced
 clone_repo
-setup_path
+setup_path_auto
 verify_installation
 
 echo "Binder tools setup complete."
