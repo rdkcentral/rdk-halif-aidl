@@ -18,14 +18,14 @@ To build the interface please follow this [link](https://rdkcentral.github.io/rd
 # 2. Source your bashrc, so that linux binder repo path is updated in $PATH
 source ~/.bashrc
 
-# 3. Activate Python virtual environment
-source docs/python_venv/bin/activate
+# 3. Activate Python virtual environment and install dependencies
+cd docs; ./build_docs.sh; source docs/python_venv/bin/activate; pip install -r docs/requirements.txt
 
 # 4. Modify AIDL files if needed
 # (Make necessary changes before proceeding)
 
 # 5. Update and freeze APIs
-./update_and_freeze_apis.sh --dry-run=false
+cd ../; ./update_and_freeze_apis.sh --dry-run=false
 
 # 6. Final build (libraries will be created in targets/out)
 ./build_interfaces.sh
