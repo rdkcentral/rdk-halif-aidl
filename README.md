@@ -19,7 +19,7 @@ To build the interface please follow this [link](https://rdkcentral.github.io/rd
 source ~/.bashrc
 
 # 3. Activate Python virtual environment and install dependencies
-cd docs; ./build_docs.sh; source docs/python_venv/bin/activate; pip install -r docs/requirements.txt
+cd docs; ./build_docs.sh; source python_venv/bin/activate; pip install -r requirements.txt
 
 # 4. Modify AIDL files if needed
 # (Make necessary changes before proceeding)
