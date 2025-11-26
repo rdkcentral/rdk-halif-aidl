@@ -11,7 +11,7 @@ Git-Flow is a branching model that facilitates parallel development and support 
 * `feature/*`: for new features; merged into `develop`.
 * `release/*`: prepares for a production release; merged into `main` and `develop`.
 * `hotfix/*`: used for emergency fixes on production; merged into `develop`, or `support` if branched from a support line.
-* `support/*`: added in AVH to support older release lines; hotfixes are branched from here.
+* `support/*`: added in AVH to support older release lines; hotfixes can are branched from and to here.
 
 ### **Git-Flow Lifecycle (Visualized)**
 
@@ -43,13 +43,17 @@ gitGraph
 
 ## **2. Git Flow Initialization**
 
-To start using Git-Flow, initialize it in your repository:
+To start using **Git Flow**, you first need to initialize it in your repository. This sets up the standard branch model and naming conventions used to manage development, releases, and hotfixes.
+
+### Initialize Git Flow
+
+Run the following command inside your repository:
 
 ```bash
 git flow init
 ```
 
-You will be prompted to define naming conventions for branches. Defaults usually suffice:
+You will then be prompted to define the naming conventions for different branch types. The defaults are generally recommended and widely used:
 
 ```text
 Branch name for production releases: main
@@ -61,33 +65,70 @@ Support branches? [support/]
 Version tag prefix? []
 ```
 
-This sets up the Git configuration to manage the branching model consistently.
+### Use Defaults Automatically
+
+If you want to skip the interactive prompts and accept the defaults directly, use:
+
+```bash
+git flow init -d
+```
+
+This will configure the repository with the **main/develop** base branches and the standard prefixes for feature, release, and hotfix branches.
 
 ## **3. Support Branches**
 
 ### **Purpose**
 
-Support branches maintain older release lines (e.g., 2.16.x) indefinitely, enabling future hotfixes without affecting ongoing development.
+Support branches are used to **maintain older release lines** (e.g., `2.16.x`) beyond their initial release. They allow teams to deliver critical hotfixes or security patches **without impacting ongoing development** on `develop` or future releases on `main`.
+
+Typical use cases:
+
+* Customers locked to a specific release series
+* Long-term maintenance of older product versions
+* Security patching of legacy branches
+
+---
 
 ### **Creation**
 
-AVH provides a `git flow support` subcommand:
+AVH Git Flow provides a dedicated subcommand to create support branches. Example:
 
 ```bash
 git checkout tags/2.16.0
 git flow support start 2.16.x
 ```
 
-This creates and checks out `support/2.16.x`. To publish:
+This creates and checks out `support/2.16.x`.
+
+To share it with remote:
 
 ```bash
 git flow support publish 2.16.x
 ```
 
+---
+
 ### **Maintenance**
 
-* Use hotfix branches for patches: `git flow hotfix start 2.16.1`
-* Merges will target `support/2.16.x` only (not `main` when using support branches)
+Support branches behave like other long-lived branches (`main`, `develop`):
+
+* **Hotfixing**
+
+  Create hotfixes from the support branch, not from `main`:
+
+  ```bash
+  git flow hotfix start 2.16.1 support/2.16.x
+  ```
+
+  After fixing and finishing the hotfix:
+
+  * The hotfix branch is merged back into `support/2.16.x`.
+  * The version is tagged (e.g., `2.16.1`).
+  * The changes remain isolated from `main` or `develop`.
+
+* **No automatic merging to `main`/`develop`**
+
+  Support branches are standalone maintenance lines. They do **not** receive merges back into `main` or `develop` unless explicitly needed.
 
 ## **4. Hotfix Branches**
 
@@ -148,7 +189,7 @@ git flow feature finish login-page
 
 ```bash
 git flow release start 2.17.0
-# QA and test
+# Bump changelog
 git flow release finish 2.17.0
 ```
 
