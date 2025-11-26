@@ -43,8 +43,39 @@ set -euo pipefail
 # User settings
 ############################################
 EXCLUDE_DIRS=("examples")   # Add more dirs if needed
-DRY_RUN=false               # Set to true to only print actions
+
+# No default — user *must* pass a value
+DRY_RUN=""
+
+# Parse arguments
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run=true)
+      DRY_RUN=true
+      ;;
+    --dry-run=false)
+      DRY_RUN=false
+      ;;
+    *)
+      echo "Unknown or missing argument: $arg"
+      echo "Usage: $0 --dry-run=true|false"
+      exit 1
+      ;;
+  esac
+done
+
+# Check if user forgot required argument
+if [[ -z "$DRY_RUN" ]]; then
+  echo "Error: --dry-run=true|false is required"
+  exit 1
+fi
 ############################################
+
+# Operating on common and videodecoder as other interfaces may be dependent on this
+aidl_ops -u common
+aidl_ops -f common
+aidl_ops -u videodecoder
+aidl_ops -f videodecoder
 
 # Build prune arguments for find
 PRUNE_ARGS=()

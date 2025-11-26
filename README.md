@@ -22,7 +22,7 @@ source docs/python_venv/bin/activate
 # (Make necessary changes before proceeding)
 
 # 4. Update and freeze APIs
-./update_and_freeze_apis.sh
+./update_and_freeze_apis.sh --dry-run=false
 
 # 5. Final build (libraries will be created in targets/out)
 ./build_interfaces.sh
