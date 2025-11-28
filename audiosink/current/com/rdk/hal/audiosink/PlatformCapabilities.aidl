@@ -52,4 +52,26 @@ parcelable PlatformCapabilities {
      * together in one plane, rather than interleaved with all other channels.
      */
     boolean supportsPlanarFormat;
+
+    /**
+     * Indicated support a SoC propritary audio data format.
+     * The Audio decoder can output a completely propriatary audio format that is opaque to the MW. 
+     * Where this is the case the SoCPropriatary boolean will be set in the FrameMeta returned by the Audio decoder
+     * and the frames should be queued on the sink with the same metadata flag set.
+     * When SoCPropriatary is set the Audio decoder HAL passes audio metadata to the Audio sink HAL using propriatary methods.
+     * For convenience the SoC HAL implementation can use the SoCPrivate field in the FrameMetadata to pass opaque metadata between decoder and sink.
+     * 
+     * The MW need only pass the AVBuffer to the sink and must assume that the data format is compatible between decoder and sink. 
+     */
+    boolean supportsSoCPropriatary;
+
+    /**
+	 * Indicates the maximum number of channels that can be supported by the Audio sink
+	 */
+	int maxNumChannels;
+
+    /**
+	 * Indicates support for Dolby Atmos audio and metadata.
+	 */
+	boolean supportsDolbyAtmos;
 }

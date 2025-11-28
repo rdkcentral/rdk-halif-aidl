@@ -17,11 +17,10 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiodecoder;
-import com.rdk.hal.audiodecoder.ChannelType;
-import com.rdk.hal.audiodecoder.PCMFormat;
+import com.rdk.hal.audiodecoder.PCMMetadata;
 import com.rdk.hal.audiodecoder.Codec;
-
 import com.rdk.hal.AVSource;
+import com.rdk.hal.FrameType;
 
 /** 
  *  @brief     Audio frame metadata.
@@ -34,6 +33,11 @@ import com.rdk.hal.AVSource;
 parcelable FrameMetadata {
 
 	/**
+	 * The type of audio data output by the decoder
+	 */
+	FrameType type;
+
+	/**
 	 * The original source codec of the audio frame.
 	 */
 	Codec sourceCodec;
@@ -42,34 +46,7 @@ parcelable FrameMetadata {
 	 * The buffer contains Dolby Atmos audio and metadata.
 	 */
 	boolean isDolbyAtmos;
-
-	/**
-	 * Number of audio channels.
-	 */
-	int numChannels;
-
-	/**
-	 * Array of ChannelType enum values.
-	 * The array size should match the number of channels.
-	 */
-	ChannelType[] channelTypes;
-
-	/**
-	 * Sample rate in samples/second.
-	 */
-	int sampleRate;
-
-	/**
-	 * Format of the output PCM data.
-	 */
-	PCMFormat format;
-
-	/**
-	 * Indicated whether the audio data buffer is in planar format.
-	 * If false, the data is interleaved with other channels.
-	 */
-	boolean planarFormat;
-
+	
 	/**
 	 * Audio trimming to use on presentation.
 	 */
@@ -98,12 +75,20 @@ parcelable FrameMetadata {
 	AVSource source;
 
 	/**
+	 * If the frame is PCM audio data this parcelable contains the PCM metadata.
+	 * Else metadata is null.
+	 */
+	@nullable PCMMetadata metadata;
+
+	/**
+	 * Proprietary metadata passed from Decoder HAL to Sink HAL.
+	 * When the frame type is SOC_PROPRIETARY SoCPrivate MAY contain indicated by a non-sero length.
+	 * opaque HAL metadata that is is used by the Audio Sink and MUST be passed to the Audio Sink.
+	 */
+	byte[] SoCPrivate;
+
+	/**
 	 * Private extension for future use. 
 	 */
 	ParcelableHolder extension;
-
-	/**
-	 * Proprietary metadata passed from Decoder HAL to Sink HAL
-	 */
-	byte[] SoCPrivate;
 }
