@@ -27,7 +27,7 @@ package com.rdk.hal.audiodecoder;
  
 @VintfStability
 @Backing(type="byte")
-enum Property FrameType {
+enum FrameType {
     /**
      * The decoded audio data is PCM
      * The PCMMetadata in FrameMetadata is valid 
