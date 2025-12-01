@@ -30,35 +30,35 @@ import com.rdk.hal.audiodecoder.PCMFormat;
 @VintfStability
 parcelable PCMMetadata {
 
-	/**
-	 * Number of audio channels.
-	 */
-	int numChannels;
+    /**
+     * Number of audio channels.
+     */
+    int numChannels;
 
-	/**
-	 * Array of ChannelType enum values.
-	 * The array size should match the number of channels.
-	 */
-	ChannelType[] channelTypes;
+    /**
+     * Array of ChannelType enum values.
+     * The array size should match the number of channels.
+     */
+    ChannelType[] channelTypes;
 
-	/**
-	 * Sample rate in samples/second.
-	 */
-	int sampleRate;
+    /**
+     * Sample rate in samples/second.
+     */
+    int sampleRate;
 
-	/**
-	 * Format of the output PCM data.
-	 */
-	PCMFormat format;
+    /**
+     * Format of the output PCM data.
+     */
+    PCMFormat format;
 
-	/**
-	 * Indicated whether the audio data buffer is in planar format.
-	 * If false, the data is interleaved with other channels.
-	 */
-	boolean planarFormat;
+    /**
+     * Indicated whether the audio data buffer is in planar format.
+     * If false, the data is interleaved with other channels.
+     */
+    boolean planarFormat;
 
-   	/**
-	 * Private extension for future use. 
-	 */
-	ParcelableHolder extension;
+    /**
+     * Private extension for future use. 
+     */
+    ParcelableHolder extension;
 }
