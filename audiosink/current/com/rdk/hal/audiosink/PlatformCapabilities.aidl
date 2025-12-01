@@ -54,7 +54,7 @@ parcelable PlatformCapabilities {
     boolean supportsPlanarFormat;
 
     /**
-     * Indicated support a SoC proprietary audio data format.
+     * Indicates support for a SoC proprietary audio data format.
      * The Audio decoder can output a completely proprietary audio format that is opaque to the MW. 
      * Where this is the case the SoCProprietary boolean will be set in the FrameMeta returned by the Audio decoder
      * and the frames should be queued on the sink with the same metadata flag set.
