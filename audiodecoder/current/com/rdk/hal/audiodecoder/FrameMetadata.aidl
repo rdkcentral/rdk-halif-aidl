@@ -82,8 +82,7 @@ parcelable FrameMetadata {
 
 	/**
 	 * Proprietary metadata passed from Decoder HAL to Sink HAL.
-	 * When the frame type is SOC_PROPRIETARY SoCPrivate MAY contain indicated by a non-sero length.
-	 * opaque HAL metadata that is is used by the Audio Sink and MUST be passed to the Audio Sink.
+	 * When the frame type is SOC_PROPRIETARY, SoCPrivate MAY contain opaque HAL metadata (indicated by non-zero length) that is used by the Audio Sink and MUST be passed to the Audio Sink.
 	 */
 	byte[] SoCPrivate;
 
