@@ -33,7 +33,7 @@ endif()
 set(COMMON_VERSION "current")
 
 set(SRC_DIR com/rdk/hal/hdmiinput)
-
+set(COMMON_SRC_DIR ${COMMON_MODULE_PATH}/${COMMON_VERSION}/com/rdk/hal)
 set(SRC
 	${SRC_DIR}/Capabilities.aidl
 	${SRC_DIR}/FreeSync.aidl
@@ -50,6 +50,8 @@ set(SRC
 	${SRC_DIR}/PropertyKVPair.aidl
 	${SRC_DIR}/SignalState.aidl
 	${SRC_DIR}/VIC.aidl
+	${COMMON_SRC_DIR}/State.aidl
+	${COMMON_SRC_DIR}/PropertyValue.aidl
 )
 
 set(INCLUDE_DIRECTORY
