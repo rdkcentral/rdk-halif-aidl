@@ -66,12 +66,12 @@ parcelable PlatformCapabilities {
     boolean supportsSoCProprietary;
 
     /**
-	 * Indicates the maximum number of channels that can be supported by the Audio sink
-	 */
-	int maxNumChannels;
+    * Indicates the maximum number of channels that can be supported by the Audio sink
+    */
+    int maxNumChannels;
 
     /**
-	 * Indicates support for Dolby Atmos audio and metadata.
-	 */
-	boolean supportsDolbyAtmos;
+    * Indicates support for Dolby Atmos audio and metadata.
+    */
+    boolean supportsDolbyAtmos;
 }
