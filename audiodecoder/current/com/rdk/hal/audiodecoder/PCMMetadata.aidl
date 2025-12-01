@@ -52,7 +52,7 @@ parcelable PCMMetadata {
     PCMFormat format;
 
     /**
-     * Indicated whether the audio data buffer is in planar format.
+     * Indicates whether the audio data buffer is in planar format.
      * If false, the data is interleaved with other channels.
      */
     boolean planarFormat;
