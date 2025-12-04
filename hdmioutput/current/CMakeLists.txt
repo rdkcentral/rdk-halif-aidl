@@ -33,6 +33,7 @@ endif()
 set(COMMON_VERSION "current")
 
 set(SRC_DIR com/rdk/hal/hdmioutput)
+set(COMMON_SRC_DIR ${COMMON_MODULE_PATH}/${COMMON_VERSION}/com/rdk/hal)
 
 set(SRC
 	${SRC_DIR}/AdditionalColorimetryExtension.aidl
@@ -41,6 +42,7 @@ set(SRC
 	${SRC_DIR}/Colorimetry.aidl
 	${SRC_DIR}/ContentType.aidl
 	${SRC_DIR}/ExtendedColorimetry.aidl
+	${SRC_DIR}/FreeSync.aidl
 	${SRC_DIR}/HDCPProtocolVersion.aidl
 	${SRC_DIR}/HDCPStatus.aidl
 	${SRC_DIR}/HDMIVersion.aidl
@@ -56,7 +58,10 @@ set(SRC
 	${SRC_DIR}/PropertyKVPair.aidl
 	${SRC_DIR}/SPDInfoFrame.aidl
 	${SRC_DIR}/SPDSource.aidl
+	${SRC_DIR}/ScanInformation.aidl
 	${SRC_DIR}/VIC.aidl
+	${COMMON_SRC_DIR}/State.aidl
+	${COMMON_SRC_DIR}/PropertyValue.aidl
 )
 
 set(INCLUDE_DIRECTORY
