@@ -20,7 +20,7 @@ package com.rdk.hal.hdmiinput;
 import com.rdk.hal.hdmiinput.HDMIVersion;
 import com.rdk.hal.hdmiinput.VIC;
 import com.rdk.hal.hdmiinput.HDCPProtocolVersion;
- 
+
 /** 
  *  @brief     HDMI input port device capabilities definition.
  *  @author    Luc Kennedy-Lamb

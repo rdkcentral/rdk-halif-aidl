@@ -46,7 +46,7 @@ enum HDCPStatus
 	 * HDCP authentication is in progress.
 	 */
 	AUTHENTICATION_IN_PROGRESS = 1,
-	
+
 	/**
 	 * HDCP authentication failed.
 	 */

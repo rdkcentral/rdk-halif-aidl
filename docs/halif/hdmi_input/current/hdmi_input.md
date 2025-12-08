@@ -2,17 +2,15 @@
 
 ## Overview
 
-The HDMI Input HAL provides control and monitoring of HDMI input ports on the platform. It abstracts hardware-specific HDMI behaviours, such as EDID negotiation, HDCP authentication, signal detection, and InfoFrame processing, into a uniform interface for use by middleware or applications.
+The HDMI Input HAL provides control and monitoring of HDMI input ports on the platform. It abstracts hardware-specific HDMI behaviours, such as EDID delivery, HDCP authentication, signal detection, and InfoFrame processing, into a uniform interface for use by middleware or applications.
 
 This interface is intended to be used by the HDMI input management components in the RDK platform. It supports multiple HDMI ports, each with its own capabilities, state machine, and controller interface.
 
-This HAL excludes HDMI-CEC and video plane attachment logic, which are managed elsewhere.
+This HAL excludes HDMI_CEC and video plane attachment logic, which are managed by [plane_control](../../plane_control/current/plane_control.md) and [HDMI_CEC](../../cec/current/cec.md).
 
 ---
 
-### References
-
-!!! info References
+!!! info "References"
     |||
     |-|-|
     | **Interface Definition**     | [hdmiinput](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/hdmiinput/current/com/rdk/hal/hdmiinput)                                     |
@@ -24,9 +22,7 @@ This HAL excludes HDMI-CEC and video plane attachment logic, which are managed e
 
 ---
 
-### Related Pages
-
-!!! tip Related Pages
+!!! tip "Related Pages"
     - [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
     - [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
     - [HAL HDMI Output](../../hdmi_output/current/hdmi_output.md)
@@ -37,7 +33,7 @@ Each HDMI input port is exposed as an `IHDMIInput` interface. Clients can:
 
 * Query static `Capabilities`
 * Open the port to acquire an `IHDMIInputController`
-* Start or stop the signal
+* Start or stop the HDMI Input signal
 * Set or retrieve the EDID
 * Receive notifications about InfoFrames, signal format changes, and HDCP status via callbacks
 
@@ -51,9 +47,9 @@ The `IHDMIInputManager` provides discovery of port IDs and exposes global `Platf
 | ------------------- | --------------------------------------------------------- | ------------------------------------- |
 | **HAL.HDMIINPUT.1** | AVMUTE shall be handled internally to blank AV            | Mandatory for HDCP silence periods    |
 | **HAL.HDMIINPUT.2** | No HDCP re-auth should occur on VIC or colour mode change | For seamless format switching         |
-| **HAL.HDMIINPUT.3** | Must enforce SVP when HDCP is engaged                     | Secure Video Path required            |
+| **HAL.HDMIINPUT.3** | Must enforce SVP when HDCP 2.2 is engaged                 | Secure Video Path required            |
 | **HAL.HDMIINPUT.4** | CEC remains active even in CLOSED state                   | Required for hotplug detection        |
-| **HAL.HDMIINPUT.5** | HPD must be unasserted until EDID is set                  | Avoid false negotiation before config |
+| **HAL.HDMIINPUT.5** | HPD is unasserted until `STARTED` state                   | Avoid false negotiation before config |
 
 ---
 
@@ -71,6 +67,8 @@ The `IHDMIInputManager` provides discovery of port IDs and exposes global `Platf
 | `Property.aidl`                                                                                | Supported key/value property enum                |
 | `PropertyKVPair.aidl`                                                                          | Key/value property parcelable (to be deprecated) |
 | `HDMIVersion.aidl`, `VIC.aidl`, `HDCPProtocolVersion.aidl`, `HDCPStatus.aidl`, `FreeSync.aidl` | Enums and constants used throughout              |
+| `State.aidl`                                                                                   | State machine for HDMI input lifecycle           |
+| `SignalState.aidl`                                                                             | HDMI signal state enum                           |
 
 ---
 
@@ -78,10 +76,10 @@ The `IHDMIInputManager` provides discovery of port IDs and exposes global `Platf
 
 * On startup, the HAL registers the HDMI Input Manager service with the service manager (`IHDMIInputManager`).
 * Middleware discovers available HDMI input ports using `getHDMIInputIds()`.
-* For each port:
+* For each port (if the default EDID is not suitable):
   * Get default EDID for version from `getDefaultEDID()`
-  * Modify and apply via `setEDID()`
   * Open the port via `open()`, receiving an `IHDMIInputController`
+  * Modify and apply via `setEDID()`
 * Attach video to a plane when needed, then call `start()`
 * To stop, call `stop()` then detach video source
 
@@ -110,9 +108,9 @@ sequenceDiagram
     App->>Middleware: Request HDMI input on port 0
     Middleware->>HDMIInputManager: getHDMIInput(0)
     HDMIInputManager-->>Middleware: IHDMIInput
-    Middleware->>HDMIInput: setEDID()
     Middleware->>HDMIInput: open(listener)
     HDMIInput-->>Middleware: IHDMIInputController
+    Middleware->>HDMIInput: setEDID()
     Middleware->>HDMIInputController: start()
     HDMIInputController-->>Middleware: signal change events
 ```
@@ -122,10 +120,10 @@ sequenceDiagram
 ## Resource Management
 
 * A port must be opened via `open()` before use.
-* A valid EDID must be set before open.
+* If a custom EDID is not set before opening, the default EDID will be used.
+    * To change the EDID, the interface must be in the READY state (i.e., stopped).
 * Only one client can hold the controller.
 * `close()` is required to release the resource.
-* Crashed clients are automatically cleaned up.
 
 ---
 
@@ -146,17 +144,28 @@ sequenceDiagram
 
 ---
 
-## Event Handling
+## Controller Event Listener (IHDMIInputControllerListener)
 
-| Event                                          | Description                                  |
-| ---------------------------------------------- | -------------------------------------------- |
-| `onStateChanged(old, new)`                     | Lifecycle transition of the HDMI input state |
-| `onConnectionStateChanged()`                   | Fired during OPENING or hotplug              |
-| `onSignalStateChanged()`                       | Fired during STARTING to indicate AV signal  |
-| `onVideoFormatChanged(vic)`                    | When source changes VIC format               |
-| `onVRRChanged(...)`                            | VRR metadata events                          |
-| `onHDCPStatusChanged()`                        | Status changes in authentication             |
-| `onAVIInfoFrame()`, `onAudioInfoFrame()`, etc. | HDMI InfoFrame reception                     |
+| Event                              | Description                                                        |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `onConnectionStateChanged(state)`  | HDMI device connection state change (hotplug, opening)             |
+| `onSignalStateChanged(state)`      | HDMI signal state change (e.g., during STARTING/STOPPING)          |
+| `onVideoFormatChanged(vic)`        | Video format (VIC) change from source                              |
+| `onVRRChanged(...)`                | Variable Refresh Rate/Frame rate/VTEM event                        |
+| `onAVIInfoFrame(data)`             | HDMI Auxiliary Video InfoFrame received                            |
+| `onAudioInfoFrame(data)`           | HDMI Audio InfoFrame received                                      |
+| `onSPDInfoFrame(data)`             | HDMI Source Product Description InfoFrame received                 |
+| `onDRMInfoFrame(data)`             | HDMI Dynamic Range and Mastering InfoFrame received                |
+| `onVendorSpecificInfoFrame(data)`  | HDMI Vendor Specific InfoFrame (VSIF) received                     |
+| `onHDCPStatusChanged(status,ver)`  | HDCP status and protocol version change                            |
+| `onEDIDChange(edid)`               | EDID changed via setEDID()                                         |
+
+## Input Event Listener (IHDMIInputEventListener)
+
+| Event                              | Description                                                        |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `onStateChanged(old, new)`         | HDMI input state transition                                        |
+| `onEDIDChange(edid)`               | EDID changed via setEDID()                                         |
 
 ---
 
@@ -168,9 +177,7 @@ graph TD
     OPENING --> READY
     READY --> STARTING
     STARTING --> STARTED
-    STARTED --> FLUSHING
     STARTED --> STOPPING
-    FLUSHING --> STARTED
     STOPPING --> READY
     READY --> CLOSING
     CLOSING --> CLOSED
@@ -199,3 +206,75 @@ This information is critical for:
 Each platform variant must define its own HFP file, updated to reflect the actual feature set and hardware capabilities of the deployment.
 
 ---
+
+## Example HAL Feature Profile (HFP) YAML
+
+Below is an example of a HAL Feature Profile (HFP) YAML file for HDMI Input. This file defines the HDMI input ports, their capabilities, supported HDMI and HDCP versions, and platform-wide constraints. Each field is annotated to show its corresponding AIDL API field. Each platform should provide its own HFP file reflecting the actual hardware and feature set.
+
+```yaml
+# HDMI Input HAL Feature Profile (HFP)
+#
+# This file describes platform support for the HDMI Input HAL only.
+# All field and enum names match the AIDL API exactly.
+
+hdmiinput:
+  interfaceVersion: current  # (optional) Version of the interface definition
+
+  ports:
+    - id: 0  # IHDMIInput.Id
+      supportedVersions:     # Capabilities.supportedVersions[]
+        - HDMI_1_3
+        - HDMI_1_4
+        - HDMI_2_0
+        - HDMI_2_1
+      supportedVICs:        # Capabilities.supportedVICs[]
+        - VIC1_640_480_P_60_4_3
+        - VIC16_1920_1080_P_60_16_9
+        - VIC97_3840_2160_P_60_16_9
+        - VIC118_3840_2160_P_120_16_9
+      supportedHDCPProtocolVersions:  # Capabilities.supportedHDCPProtocolVersions[]
+        - VERSION_1_X
+        - VERSION_2_X
+      supports3D: true      # Capabilities.supports3D
+      supportsFRL: true     # Capabilities.supportsFRL
+      supportsVRR: true     # Capabilities.supportsVRR
+      supportsFreeSync: true # Capabilities.supportsFreeSync (only meaningful if supportsVRR is true)
+      supportsQMS: true     # Capabilities.supportsQMS (requires supportsVRR to be true)
+      supportsALLM: true    # Capabilities.supportsALLM
+      supportsQFT: true     # Capabilities.supportsQFT
+      supportsARC: true     # Capabilities.supportsARC
+      supportsEARC: true    # Capabilities.supportsEARC
+
+    - id: 1  # IHDMIInput.Id
+      supportedVersions:
+        - HDMI_1_4
+        - HDMI_2_0
+      supportedVICs:
+        - VIC4_1280_720_P_60_16_9
+        - VIC16_1920_1080_P_60_16_9
+      supportedHDCPProtocolVersions:
+        - VERSION_1_X
+      supports3D: false
+      supportsFRL: false
+      supportsVRR: false
+      supportsFreeSync: false
+      supportsQMS: false
+      supportsALLM: false
+      supportsQFT: false
+      supportsARC: true
+      supportsEARC: false
+
+  platformCapabilities:
+    maximumConcurrentStartedPorts: 2  # PlatformCapabilities.maximumConcurrentStartedPorts
+    freeSync: FREESYNC_PREMIUM_PRO    # PlatformCapabilities.freeSync
+
+# Notes:
+# - Only declare fields that are actually supported; omit or set to false otherwise.
+# - supportedVICs must reflect actual hardware support, not full HDMI spec range.
+# - Enum values must match those declared in the AIDL exactly (e.g., HDMI_2_1, VERSION_2_X).
+```
+
+This example declares two HDMI input ports, each with their own supported video formats (VICs), HDCP protocol versions, HDMI versions, and feature flags. The `platformCapabilities` section sets global constraints, such as the maximum number of concurrently started ports and FreeSync support level. Comments in the YAML show the mapping to the AIDL API.
+
+For more details, see the Capabilities and PlatformCapabilities AIDL definitions and the YAML schema documentation.
+
