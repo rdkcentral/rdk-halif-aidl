@@ -29,8 +29,6 @@ The HDMI-CEC HAL provides low-level bus access for Consumer Electronics Control 
     | **Rx**       | Receive — receiving a CEC message from the bus.                                                           |
     | **VTS**      | Vendor Test Suite — conformance test suite for HAL validation.                                            |
 
-This document serves as a **placeholder**.
-
 - **Scope:** CEC *link layer* and *frame I/O* per HDMI-CEC 1.4b (electricals, timings, ACK/NAK, arbitration, retries). MW owns CEC high-level protocol.
 - **Tx model:** Synchronous `sendMessage()`; HAL blocks until ACK sampled or timeout after HAL-internal retry policy; returns final status. Queueing is **not** provided by HAL (MW queues).
 - **Rx model:**

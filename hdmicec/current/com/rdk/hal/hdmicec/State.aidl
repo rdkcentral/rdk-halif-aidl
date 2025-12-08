@@ -29,13 +29,13 @@ package com.rdk.hal.hdmicec;
 @Backing(type="int")
 enum State 
 {
-	/** 
-	 * Initial state and default.
-	 */
+    /** 
+    * Initial state and default.
+    */
     CLOSED = 0,
-	
-	/** 
-	 * The HAL server component session is started. 
-	 */
+
+    /** 
+    * The HAL server component session is started. 
+    */
     STARTED = 1
 }
