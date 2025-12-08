@@ -3,7 +3,9 @@
 ################################################################################
 build
 src_link
+__pycache__/
 python_venv
+src_link
 .lastlogin
 gen
 .DS_Store

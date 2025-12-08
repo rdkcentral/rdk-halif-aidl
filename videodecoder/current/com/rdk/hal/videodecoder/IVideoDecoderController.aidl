@@ -37,7 +37,8 @@ interface IVideoDecoderController
      * The Video Decoder must be in a `READY` state before it can be started.
      * If successful the Video Decoder transitions to a `STARTING` state and then a `STARTED` state.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::READY.
      * 
@@ -52,7 +53,8 @@ interface IVideoDecoderController
      * not yet been decoded are automatically freed.  This is effectively the same as a flush.
      * Once buffers are freed and the internal Video Decoder state is reset, the decoder enters the `READY` state.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.
      * 
@@ -70,6 +72,8 @@ interface IVideoDecoderController
      * @retval true     The property was successfully set.
      * @retval false    Invalid property key or value.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @see getProperty()
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);
@@ -81,16 +85,18 @@ interface IVideoDecoderController
      * Buffers can be either non-secure or secure to support SVP.
      * Each call shall reference a single video frame with a presentation timestamp.
      * 
-     * When the decoder has finished with the buffer it is automatically freed by the decoder and returned
-     * to the AV Buffer Manager.
+     * Once the decoder has finished processing the buffer, it is automatically released
+     * and returned to the AV Buffer Manager. The caller must not modify or free the
+     * buffer after submission.
      * 
      * @param[in] nsPresentationTime	The presentation time of the video frame in nanoseconds.
      * @param[in] bufferHandle			A handle to the AV buffer containing the encoded video frame.
      * 
      * @returns true on success or false if the decode buffer is full.
-     * 
-     * @exception binder::Status EX_ILLEGAL_STATE
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      * 
      * @pre The resource must be in State::STARTED.
      */
@@ -108,7 +114,8 @@ interface IVideoDecoderController
      *
      * @param[in] reset - When true, the internal Video Decoder state is fully reset back to its opened `READY` state.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.
      */
@@ -121,7 +128,8 @@ interface IVideoDecoderController
      * Buffers that follow this call passed in `decodeBuffer()` shall be regarded
      * as PTS discontinuous to any video frames past or already held in the Video Decoder.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.
      */
@@ -139,7 +147,8 @@ interface IVideoDecoderController
      * An `IVideoDecoderControllerListener.onFrameOutput()` callback with `FrameMetadata.endOfStream`
      * must be set to true after all video frames have been output.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @pre The resource must be in State::STARTED.
      */
@@ -180,7 +189,8 @@ interface IVideoDecoderController
     * @retval true  The codec data was successfully set.
     * @retval false Invalid parameter or empty codec data array.
     *
-    * @exception binder::Status EX_ILLEGAL_STATE if the resource is not in the `STARTED` state.
+    * @exception binder::Status::Exception::EX_NONE for success
+    * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the `STARTED` state.
     *
     * @pre The resource must be in the `STARTED` state.
     */

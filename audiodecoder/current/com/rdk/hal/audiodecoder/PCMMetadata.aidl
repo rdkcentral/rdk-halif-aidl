@@ -16,39 +16,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videosink;
-import com.rdk.hal.videosink.IVideoSink;
- 
+package com.rdk.hal.audiodecoder;
+import com.rdk.hal.audiodecoder.ChannelType;
+import com.rdk.hal.audiodecoder.PCMFormat;
+
 /** 
- *  @brief     Video Sink Manager HAL interface.
+ *  @brief     PCM Audio frame metadata.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
+
 @VintfStability
-interface IVideoSinkManager
-{
-    /** The service name to publish. To be returned by getServiceName() in the derived class. */
-    const @utf8InCpp String serviceName = "VideoSinkManager";
+parcelable PCMMetadata {
 
     /**
-     * Gets the list of platform Video Sink IDs.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     *
-     * @returns IVideoSink.Id[]
+     * Number of audio channels.
      */
-    IVideoSink.Id[] getVideoSinkIds();
+    int numChannels;
 
     /**
-	 * Gets a Video Sink interface.
-     *
-     * @param[in] videoSinkId	    The ID of the Video Sink.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     *
-     * @returns IVideoSink or null if the ID is invalid.
+     * Array of ChannelType enum values.
+     * The array size should match the number of channels.
      */
-    @nullable IVideoSink getVideoSink(in IVideoSink.Id videoSinkId);
+    ChannelType[] channelTypes;
+
+    /**
+     * Sample rate in samples/second.
+     */
+    int sampleRate;
+
+    /**
+     * Format of the output PCM data.
+     */
+    PCMFormat format;
+
+    /**
+     * Indicates whether the audio data buffer is in planar format.
+     * If false, the data is interleaved with other channels.
+     */
+    boolean planarFormat;
+
+    /**
+     * Private extension for future use. 
+     */
+    ParcelableHolder extension;
 }

@@ -16,21 +16,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.avbuffer;
- 
+package com.rdk.hal.audiodecoder;
+
 /** 
- *  @brief     AV buffer pool definition.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Douglas Adler
+ * @brief	Different frame types the Audio Decoder can output	
+ * @author	Luc Kennedy-Lamb
+ * @author	Peter Stieglitz
+ * @author	Douglas Adler
  */
+ 
+@VintfStability
+@Backing(type="byte")
+enum FrameType {
+    /**
+     * The decoded audio data is PCM
+     * The PCMMetadata in FrameMetadata is valid 
+     *
+     */
+    PCM = 0,
 
-@VintfStability 
-parcelable Pool
-{
-    /** Invalid Pool handle */
-    const byte INVALID_POOL = -1;
+    /**
+     * The decoded audio data is an opaque proprietary format.
+     * The PCMMetadata in FrameMetadata is not valid 
+     * The FrameMetadata contains a SoCPrivate field that if of 
+     * non-zero length is used by the HAL implementation to pass 
+     * SoC HAL specific opaque metadata. 
+     *
+     */
+    SOC_PROPRIETARY = 1,
 
-    /** Handle for the pool. */
-    byte handle;
 }

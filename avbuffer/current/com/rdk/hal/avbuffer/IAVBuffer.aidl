@@ -47,6 +47,8 @@ interface IAVBuffer
      * 
      * @returns HeapMetrics
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @see createVideoPool(), createAudioPool(), destroyPool()
      */  
     HeapMetrics getHeapMetrics(in boolean secureHeap);
@@ -57,16 +59,18 @@ interface IAVBuffer
      * If the `videoDecoderId` is invalid then the `binder::Status EX_ILLEGAL_ARGUMENT` exception status is returned.
      * 
      * It the platform has exhausted all available memory from the requested heap then the exception status
-     * `binder::Status EX_SERVICE_SPECIFIC` with `HALError::OUT_OF_MEMORY` is returned.
+     * `binder::Status::Exception::EX_SERVICE_SPECIFIC` with `HALError::OUT_OF_MEMORY` is returned.
      *
      * @param[in] secureHeap            Indicates if the pool is secure.
      * @param[in] videoDecoderIndex     The index of the video decoder resource.
      * @param[in] listener              Listener for space available callbacks.
      * 
-     * @returns Pool
+     * @returns A new `Pool` object. On success, the handle will be valid.
+     *             On failure, the handle will be set to `Pool::handle = Pool::INVALID_POOL`.
      *
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT
-     * @exception binder::Status EX_SERVICE_SPECIFIC, HALError::OUT_OF_MEMORY
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
+     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, HALError::OUT_OF_MEMORY
      * 
      * @pre The IVideoDecoder.Id must have been obtained from IVideoDecoderManager.getVideoDecoderIds()
      * 
@@ -81,7 +85,7 @@ interface IAVBuffer
      * (e.g. system audio PCM) then the ID must be IAudioDecoder.Id.UNDEFINED.
      * 
      * It the platform has exhausted all available memory from the requested heap then the exception status
-     * `binder::Status EX_SERVICE_SPECIFIC` with `HALError::OUT_OF_MEMORY` is returned.
+     * `binder::Status::Exception::EX_SERVICE_SPECIFIC` with `HALError::OUT_OF_MEMORY` is returned.
      * 
      * If the `audioDecoderId` is invalid then the `binder::Status EX_ILLEGAL_ARGUMENT` exception status is returned.
      *
@@ -89,10 +93,12 @@ interface IAVBuffer
      * @param[in] audioDecoderId        The ID of the audio decoder resource.
      * @param[in] listener              Listener for space available callbacks.
      *
-     * @returns Pool
+    * @returns A new `Pool` object. On success, the handle will be valid.
+     *             On failure, the handle will be set to `Pool::handle = Pool::INVALID_POOL`.
      *
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT
-     * @exception binder::Status EX_SERVICE_SPECIFIC, HALError::OUT_OF_MEMORY
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
+     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, HALError::OUT_OF_MEMORY
      * 
      * @pre The IAudioDecoder.Id must have been obtained from IAudioDecoderManager.getAudioDecoderIds()
      *      or IAudioDecoder.Id.UNDEFINED must be used.
@@ -114,7 +120,8 @@ interface IAVBuffer
      * @retval true     The pool handle is valid.
      * @retval false    The pool handle is invalid.
      *
-     * @exception binder::Status EX_SERVICE_SPECIFIC, HALError::NOT_EMPTY
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, HALError::NOT_EMPTY
      * 
      * @pre A pool handle must have been obtained from `createVideoPool()` or `createAudioPool()`.
      * @pre The pool must have all allocations freed.
@@ -132,7 +139,8 @@ interface IAVBuffer
      * 
      * @returns PoolMetrics
      *
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      * 
      * @pre A pool handle must have been obtained from `createVideoPool()` or `createAudioPool()`.
      * 
@@ -146,6 +154,8 @@ interface IAVBuffer
      * @param[in] secureHeap    Specifies the heap type - true is secure, false is non-secure.
      * 
      * @returns PoolMetrics[] array is sized to cover all created pools.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
      * 
      * @see alloc(), free(), createVideoPool(), createAudioPool()
      */
@@ -166,8 +176,9 @@ interface IAVBuffer
      *
      * @returns long            The handle of the new buffer allocation.
      * @retval INVALID_HANDLE   The pool handle is invalid or the size is > the pool size.
-     * 
-     * @exception binder::Status EX_SERVICE_SPECIFIC, HALError::OUT_OF_MEMORY
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, HALError::OUT_OF_MEMORY
      * 
      * @pre A pool handle must have been obtained from `createVideoPool()` or `createAudioPool()`.
      * 
@@ -202,7 +213,8 @@ interface IAVBuffer
      * @param[in] bufferHandle  Memory buffer handle.
      * @param[in] newSize       New size of the memory block in bytes.  Must be > 0 and <= original size.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * 
      * @returns boolean
      * @retval true     The trim was successful.
@@ -224,6 +236,8 @@ interface IAVBuffer
      * @retval true     The free was successful.
      * @retval false    The bufferHandle was invalid.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @see alloc()
      */
     boolean free(in long bufferHandle);
@@ -236,6 +250,8 @@ interface IAVBuffer
      * @returns boolean
      * @retval true     The handle is valid.
      * @retval false    The handle is invalid.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @see alloc(), free()
      */
@@ -251,8 +267,9 @@ interface IAVBuffer
      * @param[in] poolHandle    Pool handle.
      *
      * @returns long[] array of buffer handles.
-     * 
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      * 
      * @see alloc(), createVideoPool(), createAudioPool()
      */
@@ -272,9 +289,10 @@ interface IAVBuffer
      * @param[in] bufferHandle              Memory buffer handle.
      * 
      * @returns byte[] SHA-1 result buffer.
-     * 
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT
-     * @exception binder::Status EX_UNSUPPORTED_OPERATION
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION
      */
     byte[] calculateSHA1(in long bufferHandle);
 }
