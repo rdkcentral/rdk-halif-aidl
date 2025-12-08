@@ -56,7 +56,7 @@ nav:
     - Broadcast: halif/broadcast/current/broadcast.md
     - CDM: halif/cdm/current/cdm.md
     - HDMI:
-      - HDMI CEC: halif/cec/current/cec.md
+      - HDMI CEC: halif/hdmi_cec/current/hdmi_cec.md
       - HDMI Input: halif/hdmi_input/current/hdmi_input.md
       - HDMI Output: halif/hdmi_output/current/hdmi_output.md
     - Common: halif/common/current/common.md

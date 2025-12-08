@@ -27,7 +27,8 @@ import com.rdk.hal.hdmicec.SendMessageStatus;
  */
 
 @VintfStability
-interface IHdmiCecController {
+interface IHdmiCecController 
+{
     /**
     * @brief Adds one or more Logical Addresses to be message filtered by the host device.
     *
