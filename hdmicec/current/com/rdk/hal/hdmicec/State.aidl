@@ -16,31 +16,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.hdmiinput;
-
+package com.rdk.hal.hdmicec;
+ 
 /** 
- *  @brief     HDCP version enum.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Amit Patel
+ * @brief     HAL component states.
+ * @author    Luc Kennedy-Lamb
+ * @author    Peter Stieglitz
+ * @author    Douglas Adler
  */
  
 @VintfStability
-@Backing(type = "int")
-enum HDCPProtocolVersion
+@Backing(type="int")
+enum State 
 {
-	/**
-	 * HDCP protocol is not supported or unknown.
-	 */
-	UNDEFINED = 0,
+    /** 
+    * Initial state and default.
+    */
+    CLOSED = 0,
 
-	/**
-	 * HDCP protocol version 1.x
-	 */
-	VERSION_1_X = 1,
-
-	/**
-	 * HDCP protocol version 2.x
-	 */
-	VERSION_2_X = 2,
+    /** 
+    * The HAL server component session is started. 
+    */
+    STARTED = 1
 }

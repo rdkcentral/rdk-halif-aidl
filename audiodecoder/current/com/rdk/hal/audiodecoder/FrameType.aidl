@@ -16,33 +16,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.hdmiinput;
-import com.rdk.hal.hdmiinput.State;
+package com.rdk.hal.audiodecoder;
 
 /** 
- *  @brief     Event callbacks listener interface from HDMI input.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Douglas Adler
+ * @brief	Different frame types the Audio Decoder can output	
+ * @author	Luc Kennedy-Lamb
+ * @author	Peter Stieglitz
+ * @author	Douglas Adler
  */
  
 @VintfStability
-oneway interface IHDMIInputEventListener {
- 
+@Backing(type="byte")
+enum FrameType {
     /**
-     Callback when the HDMI input has transitioned to a new state.
+     * The decoded audio data is PCM
+     * The PCMMetadata in FrameMetadata is valid 
      *
-     * @param[in] oldState      The state that the port has transitioned from.
-     * @param[in] newState      The new state that the port has transitioned to.
      */
-    void onStateChanged(in State oldState, in State newState);
+    PCM = 0,
 
     /**
-     * EDID change notification.
+     * The decoded audio data is an opaque proprietary format.
+     * The PCMMetadata in FrameMetadata is not valid 
+     * The FrameMetadata contains a SoCPrivate field that if of 
+     * non-zero length is used by the HAL implementation to pass 
+     * SoC HAL specific opaque metadata. 
      *
-     * Fires when the EDID for the HDMI input port is changed via setEDID().
-     *
-     * @param[in] edid  The new EDID data as a byte array.
      */
-    void onEDIDChange(in byte[] edid);    
+    SOC_PROPRIETARY = 1,
+
 }

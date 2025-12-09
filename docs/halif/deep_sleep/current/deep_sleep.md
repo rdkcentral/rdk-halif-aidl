@@ -27,7 +27,7 @@ It manages entry into **DeepSleep**:
 
 ## Related Pages
 
-!!! tip Related Pages
+!!! tip "Related Pages"
     * [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
     * [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
 

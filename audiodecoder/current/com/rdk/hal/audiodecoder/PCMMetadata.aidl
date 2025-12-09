@@ -16,33 +16,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.hdmiinput;
-import com.rdk.hal.hdmiinput.State;
+package com.rdk.hal.audiodecoder;
+import com.rdk.hal.audiodecoder.ChannelType;
+import com.rdk.hal.audiodecoder.PCMFormat;
 
 /** 
- *  @brief     Event callbacks listener interface from HDMI input.
+ *  @brief     PCM Audio frame metadata.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
+
 @VintfStability
-oneway interface IHDMIInputEventListener {
- 
-    /**
-     Callback when the HDMI input has transitioned to a new state.
-     *
-     * @param[in] oldState      The state that the port has transitioned from.
-     * @param[in] newState      The new state that the port has transitioned to.
-     */
-    void onStateChanged(in State oldState, in State newState);
+parcelable PCMMetadata {
 
     /**
-     * EDID change notification.
-     *
-     * Fires when the EDID for the HDMI input port is changed via setEDID().
-     *
-     * @param[in] edid  The new EDID data as a byte array.
+     * Number of audio channels.
      */
-    void onEDIDChange(in byte[] edid);    
+    int numChannels;
+
+    /**
+     * Array of ChannelType enum values.
+     * The array size should match the number of channels.
+     */
+    ChannelType[] channelTypes;
+
+    /**
+     * Sample rate in samples/second.
+     */
+    int sampleRate;
+
+    /**
+     * Format of the output PCM data.
+     */
+    PCMFormat format;
+
+    /**
+     * Indicates whether the audio data buffer is in planar format.
+     * If false, the data is interleaved with other channels.
+     */
+    boolean planarFormat;
+
+    /**
+     * Private extension for future use. 
+     */
+    ParcelableHolder extension;
 }

@@ -10,7 +10,7 @@ This document defines the architecture and API design for the HALIF logging syst
 
 ## Related Pages
 
-!!! tip Related Pages
+!!! tip "Related Pages"
     - [Directory And Dynamic Linking Specification](directory_and_dynamic_linking_specification.md)
 
 ## 1. Overview
