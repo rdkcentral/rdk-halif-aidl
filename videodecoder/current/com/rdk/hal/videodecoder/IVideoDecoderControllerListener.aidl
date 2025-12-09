@@ -43,12 +43,39 @@ oneway interface IVideoDecoderControllerListener {
 
     /**
 	 * Callback which delivers the picture user data from a frame.
-	 * The userData byte array starts from (and includes) the user_identifier field (TBC).
+	 * 
+	 * The userData is extracted from SEI (Supplemental Enhancement Information) messages 
+	 * in the video bitstream as defined by ITU-T H.264 (AVC) and ITU-T H.265 (HEVC) standards.
+	 * 
+	 * SEI User Data Structure:
+	 * The userData byte array contains the complete SEI user_data_unregistered() payload 
+	 * with the following structure:
+	 * 
+	 * For H.264/AVC (ITU-T H.264 Annex D.1.6):
+	 * +-----------------------+------------------+
+	 * | uuid_iso_iec_11578    | 16 bytes (UUID)  |
+	 * +-----------------------+------------------+
+	 * | user_data_payload_byte| variable length  |
+	 * +-----------------------+------------------+
+	 * 
+	 * For H.265/HEVC (ITU-T H.265 Annex D.2.6):
+	 * +-----------------------+------------------+
+	 * | uuid_iso_iec_11578    | 16 bytes (UUID)  |
+	 * +-----------------------+------------------+
+	 * | user_data_payload_byte| variable length  |
+	 * +-----------------------+------------------+
+	 * 
+	 * The uuid_iso_iec_11578 is a 16-byte (128-bit) UUID that identifies the 
+	 * syntax and semantics of the user_data_payload_byte data. Common UUIDs include
+	 * those for closed captions (CEA-608/CEA-708), AFD (Active Format Description),
+	 * and bar data.
+	 * 
 	 * The output video frame can be delivered before or after the onUserDataOutput().
 	 * The user data must be delivered in the same frame presentation order as the output frames.
      *
      * @param[in] nsPresentationTime	The presentation time.
-     * @param[in] userData				Array of bytes containing the picture user data.
+     * @param[in] userData				Array of bytes containing the complete SEI user data payload
+     *                                  including the 16-byte UUID and user data payload bytes.
      */
     void onUserDataOutput(in long nsPresentationTime, in byte[] userData);
  
