@@ -17,21 +17,17 @@
  * limitations under the License.
  */
 package com.rdk.hal.deviceinfo;
- 
-/** 
- *  @brief     HAL version definition.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Douglas Adler
- */
 
+/**
+ * @brief Enum for property types in DeviceInfo HAL.
+ */
 @VintfStability
-parcelable HALVersion
-{
-    /**
-     * A HAL major.minor.doc version.
-     */
-    int major;
-    int minor;
-    int doc;
+enum PropertyType {
+    STRING,        /**< Generic string value */
+    MAC,           /**< MAC address, format XX:XX:XX:XX:XX:XX, uppercase */
+    NUMERIC,       /**< Numeric string, e.g., PIN codes */
+    ISO3166,       /**< ISO 3166 country code, 2 characters */
+    ISO639,        /**< ISO 639 language code, 2 characters */
+    UPPERCASEHEX,  /**< Uppercase hexadecimal string */
+    SEMANTICVERSION /**< Semantic version string, e.g., 1.0.0 */
 }

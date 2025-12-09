@@ -23,86 +23,99 @@
 # HAL Feature Profile for deviceinfo
 
 IDeviceInfo:
-  interfaceVersion: current
-  HALVersion:
-    major: 0
-    minor: 7
-    doc: 1
-
-  supportedProperties:
-    - MANUFACTURER
-    - MANUFACTURER_OUI
-    - MODELNAME
-    - PRODUCTCLASS
-    - SERIALNUMBER
-    - WIFIMAC
-    - BLUETOOTHMAC
-    - WPSPIN
-    - ETHERNETMAC
-    - RF4CEMAC
-    - IMAGENAME
-    - IMAGETYPE
-    - COUNTRYCODE
-    - LANGUAGECODE
-    - MANUFACTURERDATA
-
   properties:
-    MANUFACTURER:
-      value: "RDK Inc."
-      access: "read-only"
+    - HAL_VERSION:
+        value: "1.0.0"
+        format: SemanticVersion
+        max_size: 32
+        zero_terminated: true
 
-    MANUFACTURER_OUI:
-      value: "AA:BB:CC"
-      access: "read-only"
+    - MANUFACTURER:
+        value: "RDK Inc."
+        format: String
+        max_size: 32
+        zero_terminated: true
 
-    MODELNAME:
-      value: "RDK-STB-200"
-      access: "read-only"
+    - MANUFACTURER_OUI:
+        value: "AA:BB:CC"
+        format: MAC_OUI
+        max_size: 8
+        zero_terminated: true
 
-    PRODUCTCLASS:
-      value: "STB"
-      access: "read-only"
+    - MODELNAME:
+        value: "RDK-STB-200"
+        format: String
+        max_size: 32
+        zero_terminated: true
 
-    SERIALNUMBER:
-      value: "RDK123456789"
-      access: "read-only"
+    - PRODUCTCLASS:
+        value: "STB"
+        format: String
+        max_size: 16
+        zero_terminated: true
 
-    WIFIMAC:
-      value: "00:11:22:33:44:55"
-      access: "read-only"
+    - SERIALNUMBER:
+        value: "RDK123456789"
+        format: String
+        max_size: 32
+        zero_terminated: true
 
-    BLUETOOTHMAC:
-      value: "11:22:33:44:55:66"
-      access: "read-only"
+    - WIFIMAC:
+        value: "00:11:22:33:44:55"
+        format: MAC
+        max_size: 16
+        zero_terminated: false
 
-    WPSPIN:
-      value: "12345670"
-      access: "read-write"
+    - BLUETOOTHMAC:
+        value: "11:22:33:44:55:66"
+        format: MAC
+        max_size: 16
+        zero_terminated: false
 
-    ETHERNETMAC:
-      value: "AA:BB:CC:DD:EE:FF"
-      access: "read-only"
+    - WPSPIN:
+        value: "12345670"
+        format: Numeric
+        max_size: 8
+        zero_terminated: true
 
-    RF4CEMAC:
-      value: "22:33:44:55:66:77"
-      access: "read-only"
+    - ETHERNETMAC:
+        value: "AA:BB:CC:DD:EE:FF"
+        format: MAC
+        max_size: 16
+        zero_terminated: false
 
-    IMAGENAME:
-      value: "rdk-main"
-      access: "read-only"
+    - RF4CEMAC:
+        value: "22:33:44:55:66:77"
+        format: MAC
+        max_size: 16
+        zero_terminated: false
 
-    IMAGETYPE:
-      value: "release"
-      access: "read-only"
+    - IMAGENAME:
+        value: "rdk-main"
+        format: String
+        max_size: 32
+        zero_terminated: true
 
-    COUNTRYCODE:
-      value: "US"
-      access: "read-write"
+    - IMAGETYPE:
+        value: "release"
+        format: String
+        max_size: 16
+        zero_terminated: true
 
-    LANGUAGECODE:
-      value: "en"
-      access: "read-write"
+    - COUNTRYCODE:
+        value: "US"
+        format: ISO3166
+        max_size: 2
+        zero_terminated: false
 
-    MANUFACTURERDATA:
-      value: "OEM_TAG_1234"
-      access: "read-write"
+    - LANGUAGECODE:
+        value: "en"
+        format: ISO639
+        max_size: 2
+        zero_terminated: false
+
+    - MANUFACTURERDATA:
+        value: "OEM_TAG_1234"
+        format: String
+        max_size: 64
+        zero_terminated: true
