@@ -34,36 +34,6 @@ import com.rdk.hal.PropertyValue;
 @VintfStability
 interface IHDMIInputController
 {
-    /** 
-     * 
-     * TODO: Create state diagrams for IHDMIInput and the HDCPStatus state machines.
-     * TODO: Document in CEC how it uses the HDMIInput ports.
-     * Diagram to show hot plug scenario - what events occurs and what action by RDK MW.
-     * 
-     * Diagram on RDK MW init
-     *   1. Get all IHDMIInput interfaces.
-     *   2. For each port, get the default EDID, modify and setEDID().
-     *   3. For each port, open(...) to get controller interface.
-     *   4. When it needs to be viewed
-     *      4.1 Attach HDMI input as video source to video plane.
-     *      4.2 Call IHDMIInputController.start() for AV to flow.
-     *   5. When it needs to be stopped viewed
-     *      5.1 Call IHDMIInputController.stop() for AV to flow.
-     *      5.1 Deattach HDMI input as video source from video plane.
-     *   6. Switching HDMI version.
-     *   7. Add/remove ALLM support.
-     *   7. Add/remove VRR support.
-     */
-
-    /**
-     * Requirements
-     * HAL.HDMIINPUT.1. No re-auth expected on a VIC or color mode switch.
-     * HAL.HDMIINPUT.2. AVMUTE shall be adhered to by blanking the AV when asserted.
-     * HAL.HDMIINPUT.3. SVP when HDCP is engaged.
-     * HAL.HDMIINPUT.4. Starts in CLOSED state which is powered down, but CEC remains active.
-     * HAL.HDMIINPUT.5. Until an EDID is set, HPD is unasserted, port is unpowered and CEC is disabled.
-     */
-
     /**
      * Gets the current connection state for a device attached to the HDMI input port.
      *
@@ -77,46 +47,60 @@ interface IHDMIInputController
 
     /**
      * Starts the HDMI input.
-     * 
-     * When started, video from the HDMI input port can be mapped to a video plane and audio is mixed.
-     * 
+     *
+     * When started, video from the HDMI input port can be mapped to a video plane and the
+     * associated audio can be mixed into the system audio path.
+     *
      * The HDMI input must be in a `READY` state before it can be started.
-     * If successful the HDMI output transitions to a `STARTING` state and then a `STARTED` state.
-     * 
-     * The `IHDMIInputControllerListener.onSignalStateChanged()` callback is always fired during
-     * the `STARTING` state to indicate the current signal state.
+     * If successful, the HDMI input transitions to a `STARTING` state and then to a `STARTED` state.
+     *
+     * During the `STARTING` state, the `IHDMIInputControllerListener.onSignalStateChanged()`
+     * callback is always fired at least once to indicate the current HDMI signal state
+     * (e.g. no signal, unstable, locked).
+     *
+     * When the HDMI input is in the `STARTED` state and a valid sink configuration is present,
+     * the HPD line for the corresponding HDMI input port is asserted towards the source.
      *
      * @exception binder::Status EX_ILLEGAL_STATE
-     * 
+     *     Thrown if the resource is not in State::READY.
+     *
      * @pre The resource must be in State::READY.
-     * 
+     *
      * @see stop(), IHDMIInput.open()
      */
     void start();
  
     /**
-    * Stops the HDMI input.
-    *
-    * @exception binder::Status EX_ILLEGAL_STATE If the resource is not in the `STARTED` state.
-    *
-    * @pre The resource must be in the `STARTED` state.
-    *
-    * @see start(), IHDMIInput.close()
-    */
+     * Stops the HDMI input.
+     *
+     * The HDMI input must be in the `STARTED` state before it can be stopped.
+     * If successful, the HDMI input transitions to a `STOPPING` state and then to a `READY` state.
+     *
+     * During the `STOPPING` state, the `IHDMIInputControllerListener.onSignalStateChanged()`
+     * callback may be fired to indicate signal changes as the port is being stopped.
+     *
+     * @exception binder::Status EX_ILLEGAL_STATE If the resource is not in the `STARTED` state.
+     *
+     * @pre The resource must be in the `STARTED` state.
+     *
+     * @see start(), IHDMIInput.close()
+     */
     void stop();
 
     /**
      * Sets a property.
      * 
-     * Properties may be set in the `READY` state to take effect once started or in the `STARTED` state
-     * where they are dynamically applied to the HDMI input port.
+     * If set in an invalid state, the change is ignored and false is returned.
+     * Properties set in `READY` state apply at next start; those set in `STARTED` are applied immediately.
      *
-     * @param[in] property              The key of a property from the Property enum.
-     * @param[in] propertyValue         Holds the value to set.
+     * @param[in] property       The key of a property from the Property enum.
+     * @param[in] propertyValue  The value to set. Must be of the expected type for the given property key (see @Property documentation).
      *
      * @returns boolean
      * @retval true     The property was successfully set.
-     * @retval false    Invalid property key or value.
+     * @retval false    Indicates an error condition (e.g., resource not available, invalid state, or parameter validation failure).
+     * 
+     * @exception binder::Status EX_ILLEGAL_STATE If the resource is not in the `STARTED` or `READY` state.
      *
      * @see setPropertyMulti(), getProperty()
      */
@@ -134,39 +118,31 @@ interface IHDMIInputController
      * @retval true     The property was successfully set.
      * @retval false    Invalid property key or value.
      *
+     * @exception binder::Status EX_ILLEGAL_STATE If the resource is not in the `STARTED` or `READY` state.
+     *
      * @see setProperty(), getProperty()
      */
     boolean setPropertyMulti(in PropertyKVPair[] propertyKVList);
 
     /**
-     * Gets the current authenticated HDCP version which was negotiated with the HDMI source device (HDCP transmitter).
+     * Sets the EDID for the HDMI input port.
      *
-     * If HDCP has not yet been authenticated then `HDCPProtocolVersion.UNDEFINED` is returned.
+     * The EDID defined in `edid` is set for the HDMI input port.
+     * This function can only be called when the interface is open and in the `READY` state.
+     * 
+     * The RDK middleware is responsible for providing an EDID that only reflects the
+     * known capabilities of this HDMI input port.
      *
-     * @returns HDCPProtocolVersion
+     * @exception binder::Status EX_ILLEGAL_STATE
+     *     Thrown if the resource is not in State::READY
+     * 
+     * @param[in] edid  EDID data as a byte array. Must be valid and standards-compliant (typically 128 or 256 bytes).
+     * 
+     * @return boolean
+     * @retval true     The EDID was set successfully.
+     * @retval false    Indicates an error condition (e.g., resource not available, invalid state, or parameter validation failure).
      *
-     * @see getHDCPStatus(), IHDMIInputControllerListener.onHDCPStatusChanged()
+     * @see getEDID(), getCapabilities()
      */
-    HDCPProtocolVersion getHDCPCurrentVersion();
-
-    /**
-     * Gets the HDCP status.
-     *
-     * If HDCP is not in use, then `HDCPStatus.UNKNOWN` is returned.
-     *
-     * @returns HDCPStatus
-     *
-     * @see getHDCPCurrentVersion(), IHDMIInputControllerListener.onHDCPStatusChanged()
-     */
-    HDCPStatus getHDCPStatus();
-    
-    /**
-     * Gets the last received source product description (SPD) InfoFrame.
-     *
-     * @returns InfoFrame data byte array or empty array if no InfoFrame has been received since the last device was connected or started.
-     *
-     * @see IHDMIInputControllerListener.onSPDInfoFrame()
-     */
-    byte[] getSPDInfoFrame();
-
+    boolean setEDID(in byte[] edid);
 }

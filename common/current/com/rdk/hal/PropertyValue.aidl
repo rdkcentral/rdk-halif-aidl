@@ -42,7 +42,6 @@ parcelable PropertyValue
         float floatValue;     /**< 32-bit floating-point value. */
         double doubleValue;   /**< 64-bit floating-point value. */
         String stringValue;   /**< String value. */
-
     }
 
     /**

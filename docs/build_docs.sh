@@ -102,7 +102,7 @@ function main()
     serve)
       ${PWD}/docs/scripts/sync_src.sh  --quiet
       echo "[INFO] Serving MkDocs locally..."
-      mkdocs serve "$@"
+      mkdocs serve -a 0.0.0.0:8000 "$@"
       ;;
 
     build)
@@ -125,7 +125,6 @@ function main()
       fi
       # Extract the version from the arguments
       mike deploy "${VERSION_TO_DEPLOY}" --push
-#      mike set-default ${VERSION_TO_DEPLOY} --push
       ;;
 
     set-default)

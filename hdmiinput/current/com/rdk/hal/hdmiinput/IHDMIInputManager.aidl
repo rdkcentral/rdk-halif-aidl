@@ -54,7 +54,7 @@ interface IHDMIInputManager
     /**
 	 * Gets a HDMI input interface.
      *
-     * @param[in] hdmiInputId	The ID of the HDMI input port.
+     * @param[in] hdmiInputId  The HDMI input port ID, must be one of the values returned by getHDMIInputIds().
      *
      * @returns IHDMIInput or null if the ID is invalid.
      */
