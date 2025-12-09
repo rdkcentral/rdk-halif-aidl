@@ -20,57 +20,79 @@ package com.rdk.hal.hdmicec;
 
 @VintfStability
 @Backing(type="int")
-enum Property {
-
-	/**
-	 * CEC version supported by the HAL and HW.
+enum Property 
+{
+    /**
+     * CEC version supported by the HAL and HW.
      *
      * A byte value representing the CEC version supported by the HW and SW HAL implementation.
      * The value complies with the encoding used by the [CEC Version] CEC operand described in the appropriate HDMI specification.
      *
      * Please note that this value is NOT transmitted or obtained over the CEC bus. It is statically defined by the implementation.
-	 */
-	HAL_CEC_VERSION = 0,
+     *
+     * Type: Byte - 8-bit integer value.
+     * Access: Read-only.
+     */
+    HAL_CEC_VERSION = 0,
 
     /**
-	 * Returns the total number of Directed CEC messages sent since open.
+     * Returns the total number of Directed CEC messages sent since open.
      * -1 means this metric is not yet implemented by the vendor.
      * 
      * If this property is read in the CLOSED state it will report 0.
-	 */
+     *
+     * Type: Int - 32-bit signed integer value.
+     * Access: Read-only.
+     *
+     */
     METRIC_DIRECTED_MESSAGES_SENT = 1000,
 
     /**
-	 * Returns the number of Broadcast CEC messages sent since open.
+     * Returns the number of Broadcast CEC messages sent since open.
      * -1 means this metric is not yet implemented by the vendor.
      * 
      * If this property is read in the CLOSED state it will report 0.
-	 */
+     *
+     * Type: Int - 32-bit signed integer value.
+     * Access: Read-only.
+     *
+     */
     METRIC_BROADCAST_MESSAGES_SENT = 1001,
 
     /**
-	 * Returns the total number of Directed CEC messages sent and acknowledged since open.
+     * Returns the total number of Directed CEC messages sent and acknowledged since open.
      * -1 means this metric is not yet implemented by the vendor.
      * 
      * If this property is read in the CLOSED state it will report 0.
-	 */
+     *
+     * Type: Int - 32-bit signed integer value.
+     * Access: Read-only.
+     *
+     */
     METRIC_DIRECTED_MESSAGES_SENT_AND_ACKED = 1002,
 
     /**
-	 * Returns the total number of Broadcast CEC messages sent and acknowledged since open.
+     * Returns the total number of Broadcast CEC messages sent and acknowledged since open.
      * An acknowledgement implies a NACK in accordance with the inverted sense described in CEC specification.
      * -1 means this metric is not yet implemented by the vendor.
      * 
      * If this property is read in the CLOSED state it will report 0.
-	 */
+     *
+     * Type: Int - 32-bit signed integer value.
+     * Access: Read-only.
+     *
+     */
     METRIC_BROADCAST_MESSAGE_SENT_AND_ACKED = 1003,
 
     /**
-	 * Returns the total number of arbitration failures since open.
+     * Returns the total number of arbitration failures since open.
      * -1 means this metric is not yet implemented by the vendor.
      * 
      * If this property is read in the CLOSED state it will report 0.
-	 */
+     *
+     * Type: Int - 32-bit signed integer value.
+     * Access: Read-only.
+     *
+     */
     METRIC_ARBITRATION_FAILURES = 1004
-
 }

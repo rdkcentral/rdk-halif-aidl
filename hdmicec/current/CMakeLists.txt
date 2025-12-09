@@ -38,11 +38,10 @@ set(COMMON_SRC_DIR ${COMMON_MODULE_PATH}/${COMMON_VERSION}/com/rdk/hal)
 set(SRC
 	${SRC_DIR}/IHdmiCec.aidl
 	${SRC_DIR}/IHdmiCecController.aidl
-	${SRC_DIR}/IHdmiCecControllerListener.aidl
 	${SRC_DIR}/IHdmiCecEventListener.aidl
 	${SRC_DIR}/Property.aidl
 	${SRC_DIR}/SendMessageStatus.aidl
-	${COMMON_SRC_DIR}/State.aidl
+	${SRC_DIR}/State.aidl
 	${COMMON_SRC_DIR}/PropertyValue.aidl
 )
 

@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,33 +17,42 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmiinput;
- 
-/** 
- *  @brief     HDMI input properties used in property get/set functions.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Amit Patel
+
+/**
+ * @brief HDMI input properties used in property get/set functions.
+ *
+ * These keys are used in conjunction with getProperty(), setProperty(), and related
+ * functions. Each key defines a known attribute or metric of the HDMI input resource.
+ *
+ * @author Luc Kennedy-Lamb
+ * @author Peter Stieglitz
+ * @author Amit Patel
+ * @author Gerald Weatherup
  */
- 
 @VintfStability
 @Backing(type="int")
-enum Property
+enum Property 
 {
-	/**
-	 * Unique ID per HDMI input port.
-	 *
-	 * Type: Integer
-	 * Access: Read-only.
-	 */
-	RESOURCE_ID = 0,
+    /**
+     * Unique ID for the HDMI input port.
+     *
+     * Type: Integer
+     * Access: Read-only
+     */
+    RESOURCE_ID = 0,
 
-	/**
-	 * Count of HDMI packet errors detected, since being started.
-	 * This metric is reset on open() calls.
-	 *
-	 * Type: Integer
-	 *  -1 means this metric is not yet implemented by the vendor.
-	 * Access: Read-only.
-	 */
-	METRIC_PACKET_ERRORS = 1000,
+    /**
+     * Count of HDMI packet errors detected since the port was started.
+     * This value is reset on each open().
+     *
+     * Type: Integer
+     * Special Value: -1 if not implemented by the vendor.
+     * Access: Read-only
+     */
+    METRIC_PACKET_ERRORS = 1000
+
+    /**
+     * Additional keys may be introduced in future revisions.
+     * Clients must tolerate unknown keys gracefully.
+     */
 }
