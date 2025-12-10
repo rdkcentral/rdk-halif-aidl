@@ -1,16 +1,16 @@
 # Logging System
 
-This document defines how modules should use the **syslog-ng** service provided by the vendor layer for all runtime logging. It establishes a **common logging framework**, build-time verbosity controls, and clear usage policy for log levels in production and debug environments.
-
-The design removes the need for a custom logging subsystem — all modules interact with syslog-ng directly through the standard POSIX `syslog()` API.
-
----
-
 ## Document History
 
 | Date        | Author             | Comments                                              |
 | ----------- | ------------------ | ----------------------------------------------------- |
 | 25 Sept 2025 | G. Weatherup | Upgraded to full syslog-ng concepts |
+
+---
+
+This document defines how modules should use the **syslog-ng** service provided by the vendor layer for all runtime logging. It establishes a **common logging framework**, build-time verbosity controls, and clear usage policy for log levels in production and debug environments.
+
+The design removes the need for a custom logging subsystem — all modules interact with syslog-ng directly through the standard POSIX `syslog()` API.
 
 ---
 
@@ -36,6 +36,9 @@ This implementation provides a **common and consistent logging method** for HAL 
     - Allow smooth coexistence with existing vendor logging — for example, a HAL wrapper may log both via syslog-ng (for system-wide visibility) and via the vendor’s internal mechanism (for component diagnostics).
 
     Vendors are **not required to adopt** the syslog-ng–based logging macros within their proprietary HAL implementations. Instead, they may continue to use their preferred internal frameworks, provided that the **interface layers exposed to RDK** follow this standardized logging structure.
+
+!!! note "**Governance**"
+    - The logging interface, conventions, and requirements described here are managed at the system level, with governance and rules discussed and agreed globally across the RDK ecosystem. These are not per-vendor or per-component decisions, but are established as part of the platform-wide architecture.
 
 ### Key Principles
 
@@ -70,22 +73,18 @@ Log levels are aligned with syslog-ng priority semantics. The table defines when
 
 ---
 
-## Common Logging Framework for Module Inclusion
+## Systemd Startup and Ordering Requirements
 
-A shared header provides consistent macros for all modules.
-This header does **not** redefine syslog constants or handle initialization — each module still calls `openlog()`/`closelog()` locally.
+The syslog-ng service **must be started by systemd at the `early` target**, before any vendor layer or component is initialized. This ensures that all logging from RDK HAL interface layers and wrappers is available from the earliest point in system startup.
 
-> File: `rdk_logging.h`
+System-wide logging will be capped by file size and data throughput. The detailed policy for log rotation, file size limits, and throughput constraints is **TBD** and will be defined in a future revision.
+
+## Example Logging Macros for Module Inclusion
+
+The following is provided as a **conceptual example** for engineers. It illustrates how you can use macros to control logging output in your module. Each module should still call `openlog()`/`closelog()` and may consider to adapt these macros as needed.
 
 ```c
-#pragma once
 #include <syslog.h>
-
-/* ---- Always-on severities ---- */
-#define LOGF_CRITICAL(fmt, ...) syslog(LOG_CRIT,    fmt, ##__VA_ARGS__)
-#define LOGF_ERROR(fmt, ...)    syslog(LOG_ERR,     fmt, ##__VA_ARGS__)
-#define LOGF_WARNING(fmt, ...)  syslog(LOG_WARNING, fmt, ##__VA_ARGS__)
-#define LOGF_NOTICE(fmt, ...)   syslog(LOG_NOTICE,  fmt, ##__VA_ARGS__)
 
 /* ---- Optional severities (build controlled) ---- */
 #ifdef ENABLE_LOG_INFO
@@ -100,6 +99,21 @@ This header does **not** redefine syslog constants or handle initialization — 
   #define LOGF_DEBUG(fmt, ...)  do {} while (0)
 #endif
 ```
+
+### Build-Time Disabling of INFO/DEBUG
+
+If you want to **disable INFO and DEBUG logging at build time** (to reduce binary size or runtime overhead in production), you can use compiler flags to exclude these macros. For example:
+
+```make
+# Production build (default)
+# Only CRITICAL, ERROR, WARNING, NOTICE are included
+# No flags required.
+
+# Debug Engineering build (adds INFO + DEBUG)
+CFLAGS += -DENABLE_LOG_INFO -DENABLE_LOG_DEBUG
+```
+
+This approach ensures that INFO and DEBUG logging code is compiled out of production binaries, while always-on severities (CRITICAL, ERROR, WARNING, NOTICE) remain available for essential diagnostics.
 
 ### Characteristics
 
@@ -137,6 +151,20 @@ CFLAGS += -DENABLE_LOG_INFO -DENABLE_LOG_DEBUG
 
 ---
 
+## Integration with 3rd Party Logging Systems
+
+For 3rd party HALs or external code, integration with the RDK logging system should be achieved by **simple redirection** methods, without modifying the 3rd party system itself. Recommended approaches include:
+
+- Capturing output from `printf` or similar functions and redirecting it to a file or socket monitored by syslog-ng.
+- Re-sourcing or redirecting standard error (stderr) to syslog-ng using system-level configuration.
+- Using syslog-ng's file or program source to ingest external logs and route them according to severity and program name.
+
+Direct modification of 3rd party code (such as replacing its logging system) is discouraged. Instead, use non-invasive filtering or forwarding to ensure relevant logs are pushed into syslog-ng for unified system-wide visibility and diagnostics.
+
+This approach ensures that all critical, error, and diagnostic information from 3rd party components is available through the standard RDK logging pipeline, supporting consistent monitoring and troubleshooting, while preserving the integrity of external systems.
+
+---
+
 ## Example Module Usage
 
 ```c
@@ -147,8 +175,8 @@ int tuner_init(void)
 {
     openlog("TUNER_HAL", LOG_PID, LOG_USER);
 
-    LOGF_NOTICE("Tuner HAL initialization complete");
-    LOGF_WARNING("Using fallback configuration");
+    syslog(LOG_NOTICE,"Tuner HAL initialization complete");
+    syslog(LOG_WARNING,"Using fallback configuration");
 
     LOGF_INFO("DSP firmware version %s", dsp_version());
     LOGF_DEBUG("PLL lock value=0x%x bias=%d", read_pll(), read_bias());
@@ -159,21 +187,21 @@ int tuner_init(void)
 
 void tuner_deinit(void)
 {
-    LOGF_NOTICE("Tuner HAL shutdown");
+    syslog(LOG_NOTICE,"Tuner HAL shutdown");
 }
 ```
 
 ### Example Output (Production)
 
-```log
+```syslog
 Oct 25 10:44:02 TUNER_HAL[1021]: Tuner HAL initialization complete
 Oct 25 10:44:02 TUNER_HAL[1021]: Using fallback configuration
 Oct 25 10:45:11 TUNER_HAL[1021]: Tuner HAL shutdown
 ```
 
-### Example Output (Engineering Build)
+On engineering builds extra information is output
 
-```log
+```syslog
 Oct 25 10:44:02 TUNER_HAL[1021]: DSP firmware version 1.02.07
 Oct 25 10:44:02 TUNER_HAL[1021]: [tuner_init:47] PLL lock value=0x32 bias=9
 ```
@@ -198,4 +226,4 @@ log { source(s_sys); filter(f_tuner); filter(f_runtime); destination(d_tuner_fil
 ```
 
 !!! warning "Filtering / Routing Control"
-    Modules **do not modify syslog-ng** configuration; any routing or filtering changes are handled by the vendor integration layer. Although these can be overriden (but must never be commited), during development.
+    Modules **do not modify syslog-ng** configuration; any routing or filtering changes are expected to controlled at a system level. Although these can be overriden during development.
