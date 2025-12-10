@@ -22,31 +22,87 @@
 
 # HAL Feature Profile for deviceinfo
 
-IDeviceInfo:                 # Component object begins
-    interfaceVersion: current
-    HALVersion:
-        major: 0
-        minor: 7
-        doc: 1
-    supportedProperties:
-        - KEY_MANUFACTURER            # Device manufacturer name (ASCII, mandatory)
-        - KEY_MANUFACTURER_OUI        # Manufacturer IEEE OUI, 3-byte hex string (mandatory)
-        - KEY_MODELNAME               # Device model name (ASCII, mandatory)
-        - KEY_PRODUCTCLASS            # Product class (ASCII, mandatory)
-        - KEY_SERIALNUMBER            # Device serial number (ASCII, mandatory)
-        - KEY_WIFIMAC                 # Wi-Fi MAC, format XX:XX:XX:XX:XX:XX (mandatory if Wi-Fi present)
-        - KEY_BLUETOOTHMAC            # Bluetooth MAC, format XX:XX:XX:XX:XX:XX (mandatory if Bluetooth present)
-        - KEY_WPSPIN                  # WPS PIN, 8-digit ASCII string (optional)
-        - KEY_ETHERNETMAC             # Ethernet MAC, format XX:XX:XX:XX:XX:XX (mandatory if Ethernet present)
-        - KEY_RF4CEMAC                # RF4CE MAC, format XX:XX:XX:XX:XX:XX (mandatory if RF4CE present)
-        - KEY_IMAGENAME               # Application image name (ASCII, mandatory)
-        - KEY_IMAGETYPE               # Application image type (ASCII, mandatory)
-        - KEY_COUNTRYCODE             # Country code (ASCII, optional)
-        - KEY_LANGUAGECODE            # Language code (ASCII, optional)
-        - KEY_MANUFACTURERDATA        # Manufacturer private data (ASCII, optional)
-        - KEY_DEVICE_TYPE             # Device type (string, mandatory)
-                                      # Allowed values:
-                                      #   - STB: tuner/demodulator, no display
-                                      #   - OTT: no tuner, internet-only, no display
-                                      #   - TV: integrated display device
-        - KEY_CHIPSETID               # Unique SoC chipset ID (string, mandatory)
+IDeviceInfo:
+  interfaceVersion: current
+  HALVersion:
+    major: 0
+    minor: 7
+    doc: 1
+
+  supportedProperties:
+    - MANUFACTURER
+    - MANUFACTURER_OUI
+    - MODELNAME
+    - PRODUCTCLASS
+    - SERIALNUMBER
+    - WIFIMAC
+    - BLUETOOTHMAC
+    - WPSPIN
+    - ETHERNETMAC
+    - RF4CEMAC
+    - IMAGENAME
+    - IMAGETYPE
+    - COUNTRYCODE
+    - LANGUAGECODE
+    - MANUFACTURERDATA
+
+  properties:
+    MANUFACTURER:
+      value: "RDK Inc."
+      access: "read-only"
+
+    MANUFACTURER_OUI:
+      value: "AA:BB:CC"
+      access: "read-only"
+
+    MODELNAME:
+      value: "RDK-STB-200"
+      access: "read-only"
+
+    PRODUCTCLASS:
+      value: "STB"
+      access: "read-only"
+
+    SERIALNUMBER:
+      value: "RDK123456789"
+      access: "read-only"
+
+    WIFIMAC:
+      value: "00:11:22:33:44:55"
+      access: "read-only"
+
+    BLUETOOTHMAC:
+      value: "11:22:33:44:55:66"
+      access: "read-only"
+
+    WPSPIN:
+      value: "12345670"
+      access: "read-write"
+
+    ETHERNETMAC:
+      value: "AA:BB:CC:DD:EE:FF"
+      access: "read-only"
+
+    RF4CEMAC:
+      value: "22:33:44:55:66:77"
+      access: "read-only"
+
+    IMAGENAME:
+      value: "rdk-main"
+      access: "read-only"
+
+    IMAGETYPE:
+      value: "release"
+      access: "read-only"
+
+    COUNTRYCODE:
+      value: "US"
+      access: "read-write"
+
+    LANGUAGECODE:
+      value: "en"
+      access: "read-write"
+
+    MANUFACTURERDATA:
+      value: "OEM_TAG_1234"
+      access: "read-write"
