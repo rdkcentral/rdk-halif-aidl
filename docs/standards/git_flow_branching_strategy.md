@@ -2,7 +2,13 @@
 
 This document outlines the usage of support and hotfix branches in a Git-Flow AVH (A Vincent Driessen Git-Flow AVH extension) model, especially when maintaining long-term support from specific release tags. It emphasizes using the `git flow` command-line tool to streamline operations and maintain consistency.
 
-## **1. Overview of Git-Flow Workflow**
+## Document History
+
+|Date|Author|Version|Comment|
+|----|-------|------|-------|
+|1st July 2025 | G. Weatherup| 1.0.0 | Initial Revision|
+
+## **Overview of Git-Flow Workflow**
 
 Git-Flow is a branching model that facilitates parallel development and support of stable release lines. The key branches are:
 
@@ -41,7 +47,7 @@ gitGraph
 
 ```
 
-## **2. Git Flow Initialization**
+## **Git Flow Initialization**
 
 To start using **Git Flow**, you first need to initialize it in your repository. This sets up the standard branch model and naming conventions used to manage development, releases, and hotfixes.
 
@@ -75,7 +81,7 @@ git flow init -d
 
 This will configure the repository with the **main/develop** base branches and the standard prefixes for feature, release, and hotfix branches.
 
-## **3. Support Branches**
+## **Support Branches**
 
 ### **Purpose**
 
@@ -128,9 +134,12 @@ Support branches behave like other long-lived branches (`main`, `develop`):
 
 * **No automatic merging to `main`/`develop`**
 
-  Support branches are standalone maintenance lines. They do **not** receive merges back into `main` or `develop` unless explicitly needed.
+Support branches are standalone maintenance lines. They do **not** receive merges back into `main` or `develop` unless explicitly needed.
 
-## **4. Hotfix Branches**
+!!! warning "Critical Fixes"
+      For critical, non-regression fixes created on a support/* branch, teams must manually cherry-pick the hotfix commit into the develop branch if the fix is needed in future releases.
+
+## **Hotfix Branches**
 
 ### **Purpose**
 
@@ -172,7 +181,7 @@ gitGraph
    merge hotfix/2.16.1 tag: "2.16.1"
 ```
 
-## **5. Feature and Release Branches**
+## **Feature and Release Branches**
 
 ### **Feature**
 
@@ -216,12 +225,12 @@ gitGraph
    merge release/2.17.0 tag: "Back-merge release"
 ```
 
-## **6. Conclusion**
+## **Conclusion**
 
 Git-Flow AVH extends traditional Git-Flow by supporting long-term maintenance via support branches. This approach is particularly well-suited for projects that must continue maintaining older release lines while simultaneously advancing new features. Support branches allow you to isolate hot-fixes and patches without interfering with current development or production versions. The diagrams included in this document help visualize these flows clearly, reinforcing consistent usage across teams.
 This makes it ideal for large-scale software that requires patching older versions while still moving forward with new features. Using Git-Flow commands enforces structure and minimizes branching errors. The visual diagrams assist in understanding the flow of changes across branches.
 
-## **7. References**
+## **References**
 
 The following references provide background on Git-Flow and its common workflows:
 
@@ -231,4 +240,5 @@ The following references provide background on Git-Flow and its common workflows
 * [Git Flow by Jeff Kreeftmeijer](https://jeffkreeftmeijer.com/git-flow/)
 * [Gitflow-AVH README (GitHub)](https://github.com/petervanderdoes/gitflow-avh?tab=readme-ov-file)
 
-> Note: While these references describe the standard Git-Flow model and the AVH implementation, **none of them fully address the enhanced support flow**. Specifically, they typically assume hotfixes always merge into `main`, which is **not the case when using support branches properly**. If you are using `support/*` branches, hotfixes should only merge back into their respective support line to maintain version isolation and avoid regression conflicts.
+!!! note "Note"
+      While these references describe the standard Git-Flow model and the AVH implementation, **none of them fully address the enhanced support flow**. Specifically, they typically assume `hotfix/*` always merge into `main`, which is **not the case when using support branches properly**. If you are using `support/*` branches, hotfixes should only merge back into their respective support line to maintain version isolation and avoid regression conflicts.
