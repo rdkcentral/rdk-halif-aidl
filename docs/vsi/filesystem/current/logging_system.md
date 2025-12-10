@@ -35,7 +35,7 @@ This implementation provides a **common and consistent logging method** for HAL 
     - Ensure messages from these wrapper layers conform to common RDK syslog-ng formatting and severity conventions.
     - Allow smooth coexistence with existing vendor logging — for example, a HAL wrapper may log both via syslog-ng (for system-wide visibility) and via the vendor’s internal mechanism (for component diagnostics).
 
-    Vendors are **not required to adopt** the syslog-ng–based logging macros within their proprietary HAL implementations. Instead, they may continue to use their preferred internal frameworks, provided that the **interface layers exposed to RDK** follow this standardized logging structure.
+    Vendors are **not required to adopt** the syslog-ng based logging macros within their proprietary HAL implementations. Instead, they may continue to use their preferred internal frameworks, provided that the **interface layers exposed to RDK** follow this standardized logging structure.
 
 !!! note "**Governance**"
     - The logging interface, conventions, and requirements described here are managed at the system level, with governance and rules discussed and agreed globally across the RDK ecosystem. These are not per-vendor or per-component decisions, but are established as part of the platform-wide architecture.
@@ -187,8 +187,8 @@ int tuner_init(void)
 {
     openlog("TUNER_HAL", LOG_PID, LOG_USER);
 
-    syslog(LOG_NOTICE,"Tuner HAL initialization complete");
-    syslog(LOG_WARNING,"Using fallback configuration");
+    syslog(LOG_NOTICE, "Tuner HAL initialization complete");
+    syslog(LOG_WARNING, "Using fallback configuration");
 
     LOGF_INFO("DSP firmware version %s", dsp_version());
     LOGF_DEBUG("PLL lock value=0x%x bias=%d", read_pll(), read_bias());
@@ -199,7 +199,7 @@ int tuner_init(void)
 
 void tuner_deinit(void)
 {
-    syslog(LOG_NOTICE,"Tuner HAL shutdown");
+    syslog(LOG_NOTICE, "Tuner HAL shutdown");
 }
 ```
 
@@ -238,4 +238,4 @@ log { source(s_sys); filter(f_tuner); filter(f_runtime); destination(d_tuner_fil
 ```
 
 !!! warning "Filtering / Routing Control"
-    Modules **do not modify syslog-ng** configuration; any routing or filtering changes are expected to controlled at a system level. Although these can be overriden during development and engineering builds.
+    Modules **do not modify syslog-ng** configuration; any routing or filtering changes are expected to controlled at a system level. Although these can be overridden during development and engineering builds.
