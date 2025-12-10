@@ -26,37 +26,37 @@ IDeviceInfo:
   properties:
     - HAL_VERSION:
         value: "1.0.0"
-        format: SemanticVersion
+        format: SEMANTICVERSION
         max_size: 32
         zero_terminated: true
 
     - MANUFACTURER:
         value: "RDK Inc."
-        format: String
+        format: STRING
         max_size: 32
         zero_terminated: true
 
     - MANUFACTURER_OUI:
         value: "AA:BB:CC"
-        format: MAC_OUI
+        format: STRING
         max_size: 8
         zero_terminated: true
 
     - MODELNAME:
         value: "RDK-STB-200"
-        format: String
+        format: STRING
         max_size: 32
         zero_terminated: true
 
     - PRODUCTCLASS:
         value: "STB"
-        format: String
+        format: STRING
         max_size: 16
         zero_terminated: true
 
     - SERIALNUMBER:
         value: "RDK123456789"
-        format: String
+        format: STRING
         max_size: 32
         zero_terminated: true
 
@@ -74,7 +74,7 @@ IDeviceInfo:
 
     - WPSPIN:
         value: "12345670"
-        format: Numeric
+        format: NUMERIC
         max_size: 8
         zero_terminated: true
 
@@ -92,13 +92,13 @@ IDeviceInfo:
 
     - IMAGENAME:
         value: "rdk-main"
-        format: String
+        format: STRING
         max_size: 32
         zero_terminated: true
 
     - IMAGETYPE:
         value: "release"
-        format: String
+        format: STRING
         max_size: 16
         zero_terminated: true
 
@@ -116,6 +116,6 @@ IDeviceInfo:
 
     - MANUFACTURERDATA:
         value: "OEM_TAG_1234"
-        format: String
+        format: STRING
         max_size: 64
         zero_terminated: true

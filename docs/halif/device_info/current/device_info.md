@@ -36,7 +36,7 @@ This HAL provides an interface for reading the persistent device properties. It 
 * Debugging and diagnostic interfaces
 * Factory provisioning tools
 
-All property accesses are string-based, and property keys are pre-defined by the specific platform configuration. The HAL internally validates, normalises, and may persist values across reboots. The data is read-only and if required would expected to be cached and overriden if required by the upper layers.
+All property accesses are string-based, and property keys are pre-defined by the specific platform configuration. The HAL internally validates, normalizes, and may persist values across reboots. The data is read-only and if required would expected to be cached and overridden if required by the upper layers.
 
 ---
 
@@ -48,7 +48,7 @@ All property accesses are string-based, and property keys are pre-defined by the
 | **HAL.DeviceInfo.2** | The service shall support the properties listed in `supportedProperties` | Validated via `getCapabilities()`  |
 | **HAL.DeviceInfo.3** | All MAC addresses must follow `XX:XX:XX:XX:XX:XX` format and are not zero-terminated | Enforced in getProperty           |
 | **HAL.DeviceInfo.4** | All hex strings must be uppercase                                        | Applies to OUI and similar fields  |
-| **HAL.DeviceInfo.5** | All properties are read-only and returned as strings, but may not be zero termined | Data is Read-Only                  |
+| **HAL.DeviceInfo.5** | All properties are read-only and returned as strings, but may not be zero terminated | Data is Read-Only                  |
 | **HAL.DeviceInfo.6** | Each property defines its format, max size, and zero-termination status  | See HAL Feature Profile and YAML   |
 | **HAL.DeviceInfo.7** | ISO3166 and ISO639 codes are 2 bytes and not zero-terminated            | Enforced in getProperty            |
 | **HAL.DeviceInfo.8** | The HAL shall enforce max size and zero-termination as specified         | Validation in implementation       |
@@ -60,12 +60,10 @@ All property accesses are string-based, and property keys are pre-defined by the
 
 | AIDL File                | Description                                         |
 | ------------------------ | --------------------------------------------------- |
-| `IDeviceInfo.aidl`       | Main control interface for property access          |
-| `Capabilities.aidl`      | Lists supported property keys                       |
-| `HALVersion.aidl`        | Encodes interface version (major.minor.doc)         |
-| `SetPropertyResult.aidl` | Return codes for `setProperty()`                    |
-| `Property.aidl`          | Parcelable for device information property metadata |
-| `PropertyType.aidl`      | Enum of supported property types                    |
+| `IDeviceInfo.aidl`       | Main HAL Binder interface for property access, including get/set methods and version reporting |
+| `Capabilities.aidl`      | Defines the list of supported property keys for the platform (used by getCapabilities) |
+| `Property.aidl`          | Parcelable structure describing device property metadata, including format, size, and zero-termination |
+| `PropertyType.aidl`      | Enum of supported property types (e.g., STRING, MAC, NUMERIC, ISO3166, ISO639, UPPERCASEHEX, SEMANTICVERSION) |
 
 ---
 
@@ -116,10 +114,10 @@ No resource handles are needed. The HAL is stateless between calls. There is no 
 
 ## Operation and Data Flow
 
-* `getProperty(Property)` returns a string or `null`
-* `setProperty(Property, String)` returns a `SetPropertyResult`
-* `getCapabilities()` returns the full list of supported properties
-* `getHALVersion()` reports the major.minor.doc version of the interface
+* `getCapabilities()`
+    Returns a `Capabilities` parcelable listing all supported property keys for the platform.
+* `getProperty(String propertyKey)`  
+    Retrieves a persisted device property by key. Returns a `Property` parcelable with value, type, size, and validation metadata, or `null` if unsupported or not found.
 
 ---
 
@@ -137,7 +135,7 @@ This HAL is synchronous and does not emit events or use listeners.
 
 ## State Machine / Lifecycle
 
-This HAL does not manage internal state or resource handles. Each method call is independent and stateless. The interface is always available after service registration, and there is no explicit lifecycle 
+This HAL does not manage internal state or resource handles. Each method call is independent and stateless. The interface is always available after service registration, and there is no explicit lifecycle  management required.
 
 ---
 
@@ -177,7 +175,7 @@ IDeviceInfo:
         zero_terminated: true
     - MANUFACTURER_OUI:
         value: "AA:BB:CC"
-        format: MAC_OUI
+        format: String
         max_size: 8
         zero_terminated: true
     - MODELNAME:
