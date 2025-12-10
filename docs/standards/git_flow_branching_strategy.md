@@ -12,8 +12,8 @@ This document outlines the usage of support and hotfix branches in a Git-Flow AV
     |||
     |-|-|
     |**Direct Branching**|[direct_branching.md](direct_branching.md)|
-    |**Forced Based Branching**|[forked_based_branching.md](forked_based_branching.md)|
-    |**Branchying Strategies**|[branching_strategies.md](../whitepapers/branching_strategies.md)|
+    |**Fork Based Branching**|[forked_based_branching.md](forked_based_branching.md)|
+    |**Branching Strategies**|[branching_strategies.md](../whitepapers/branching_strategies.md)|
     |**Engineering Goals**|[engineering_goals.md](../whitepapers/engineering_goals.md)|
 
 ## **Overview of Git-Flow Workflow**

@@ -114,6 +114,7 @@ nav:
       - Achieving Engineering Goal: whitepapers/engineering_goals.md
       - Commit Message Standards: whitepapers/standardizing_git_commit_messages.md
       - Interface Version Alignment: whitepapers/interface_version_alignment.md
+      - Client Usage of Stable AIDL: whitepapers/client_usage_of_stable_aidl.md
     - Filing an Issue: external_content/ut-core-wiki/1.2.-Standards:-Issue-Description-Guideline.md
     - FAQ:
       - Python Development: external_content/ut-core-wiki/FAQ:-Comparing-Python-Development-Platforms.md
