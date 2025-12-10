@@ -8,6 +8,14 @@ This document outlines the usage of support and hotfix branches in a Git-Flow AV
 |----|-------|------|-------|
 |1st July 2025 | G. Weatherup| 1.0.0 | Initial Revision|
 
+!!! info "**Related Branching Strategies:**"
+    |||
+    |-|-|
+    |**Direct Branching**|[direct_branching.md](direct_branching.md)|
+    |**Forced Based Branching**|[forked_based_branching.md](forked_based_branching.md)|
+    |**Branchying Strategies**|[branching_strategies.md](../whitepapers/branching_strategies.md)|
+    |**Engineering Goals**|[engineering_goals.md](../whitepapers/engineering_goals.md)|
+
 ## **Overview of Git-Flow Workflow**
 
 Git-Flow is a branching model that facilitates parallel development and support of stable release lines. The key branches are:
@@ -16,13 +24,13 @@ Git-Flow is a branching model that facilitates parallel development and support 
 * `develop`: integration branch for features, and the base for releases.
 * `feature/*`: for new features; merged into `develop`.
 * `release/*`: prepares for a production release; merged into `main` and `develop`.
-* `hotfix/*`: used for emergency fixes on production; merged into `develop`, or `support` if branched from a support line.
-* `support/*`: added in AVH to support older release lines; hotfixes can are branched from and to here.
+* `hotfix/*`: used for emergency fixes on production; merged into `main`, or `support` if branched from a support line.
+* `support/*`: added in AVH to support older release lines; hotfixes can be branched from and to here.
 
 ### **Git-Flow Lifecycle (Visualized)**
 
 ```mermaid
-gitGraph
+gitGraph TB:
    commit id: "Init main"
    branch develop
    checkout develop
@@ -97,10 +105,16 @@ Typical use cases:
 
 ### **Creation**
 
-AVH Git Flow provides a dedicated subcommand to create support branches. Example:
+AVH Git Flow provides a dedicated subcommand to create support branches.
+
+To create a support branch from a specific release tag, first check out the tag you want to base the support branch on. Then, run the `git flow support start` command. 
+
+For example:
 
 ```bash
+# Step 1: Check out the release tag you want to support
 git checkout tags/2.16.0
+# Step 2: Create and check out the support branch from that tag
 git flow support start 2.16.x
 ```
 
@@ -110,6 +124,12 @@ To share it with remote:
 
 ```bash
 git flow support publish 2.16.x
+```
+
+or
+
+```bash
+git push -u
 ```
 
 ---
@@ -141,9 +161,9 @@ Support branches are standalone maintenance lines. They do **not** receive merge
 
 ## **Hotfix Branches**
 
-### **Purpose**
+### **Hotfix Purpose**
 
-Used for critical patches, hotfixes are branched from a `support` branch in AVH.
+Used for critical patches. When maintaining older releases, hotfixes are branched from a `support` branch in AVH.
 
 ### **Workflow**
 
@@ -170,7 +190,7 @@ git push origin --tags
 ### **Hotfix Diagram**
 
 ```mermaid
-gitGraph
+gitGraph TB:
    commit id: "Tag 2.16.0"
    branch support/2.16.x
    checkout support/2.16.x
@@ -186,13 +206,18 @@ gitGraph
 ### **Feature**
 
 ```bash
-git flow feature start login-page
+git flow feature start 456-login-page
 # Develop
-git flow feature finish login-page
+git flow feature finish 456-login-page
 ```
+
+`456` in this case is an example github issue id, so that the branch can be tracked via naming convention.
+
+The feature branch will flow :-
 
 * From: `develop`
 * To: `develop`
+
 
 ### **Release**
 
@@ -202,6 +227,8 @@ git flow release start 2.17.0
 git flow release finish 2.17.0
 ```
 
+The release branch will flow :-
+
 * From: `develop`
 * To: `main` and `develop`
 * Tags release
@@ -209,7 +236,7 @@ git flow release finish 2.17.0
 ### **Feature/Release Diagram**
 
 ```mermaid
-gitGraph
+gitGraph TB:
    commit id: "Start"
    branch develop
    commit id: "Initial develop"
@@ -227,8 +254,7 @@ gitGraph
 
 ## **Conclusion**
 
-Git-Flow AVH extends traditional Git-Flow by supporting long-term maintenance via support branches. This approach is particularly well-suited for projects that must continue maintaining older release lines while simultaneously advancing new features. Support branches allow you to isolate hot-fixes and patches without interfering with current development or production versions. The diagrams included in this document help visualize these flows clearly, reinforcing consistent usage across teams.
-This makes it ideal for large-scale software that requires patching older versions while still moving forward with new features. Using Git-Flow commands enforces structure and minimizes branching errors. The visual diagrams assist in understanding the flow of changes across branches.
+Git-Flow AVH extends traditional Git-Flow by supporting long-term maintenance via support branches. This approach is particularly well-suited for projects that must continue maintaining older release lines while simultaneously advancing new features. Support branches allow you to isolate hot-fixes and patches without interfering with current development or production versions. The diagrams included in this document help visualize these flows clearly, reinforcing consistent usage across teams. Using Git-Flow commands enforces structure and minimizes branching errors. The visual diagrams assist in understanding the flow of changes across branches.
 
 ## **References**
 
@@ -239,6 +265,7 @@ The following references provide background on Git-Flow and its common workflows
 * [Gitflow-AVH by petervanderdoes (GitHub)](https://github.com/petervanderdoes/gitflow-avh)
 * [Git Flow by Jeff Kreeftmeijer](https://jeffkreeftmeijer.com/git-flow/)
 * [Gitflow-AVH README (GitHub)](https://github.com/petervanderdoes/gitflow-avh?tab=readme-ov-file)
+* [Git-Flow Cheatsheet](https://danielkummer.github.io/git-flow-cheatsheet/)
 
 !!! note "Note"
       While these references describe the standard Git-Flow model and the AVH implementation, **none of them fully address the enhanced support flow**. Specifically, they typically assume `hotfix/*` always merge into `main`, which is **not the case when using support branches properly**. If you are using `support/*` branches, hotfixes should only merge back into their respective support line to maintain version isolation and avoid regression conflicts.
