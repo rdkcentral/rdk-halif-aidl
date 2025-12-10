@@ -24,86 +24,97 @@
 
 IDeviceInfo:
   properties:
-    - HAL_VERSION:
+    - HAL_VERSION:           # HAL version
         value: "1.0.0"
         format: SEMANTICVERSION
         max_size: 32
         zero_terminated: true
 
-    - MANUFACTURER:
+    - MANUFACTURER:          # Device manufacturer name
         value: "RDK Inc."
         format: STRING
         max_size: 32
         zero_terminated: true
 
-    - MANUFACTURER_OUI:
-        value: "AA:BB:CC"
+    - MANUFACTURER_OUI:      # Manufacturer IEEE OUI, 3-byte hex string
+        value: "AABBCC"
         format: STRING
         max_size: 8
         zero_terminated: true
 
-    - MODELNAME:
+    - MODEL_NAME:             # Device model name
         value: "RDK-STB-200"
         format: STRING
         max_size: 32
         zero_terminated: true
 
-    - PRODUCTCLASS:
+    - PRODUCT_CLASS:          # Product class
         value: "STB"
         format: STRING
         max_size: 16
         zero_terminated: true
 
-    - SERIALNUMBER:
+    - SERIAL_NUMBER:          # Device serial number
         value: "RDK123456789"
         format: STRING
         max_size: 32
         zero_terminated: true
 
-    - WIFIMAC:
+    - WIFI_MAC:               # Wi-Fi MAC
         value: "00:11:22:33:44:55"
         format: MAC
         max_size: 16
         zero_terminated: false
 
-    - BLUETOOTHMAC:
+    - BLUETOOTH_MAC:          # Bluetooth MAC
         value: "11:22:33:44:55:66"
         format: MAC
         max_size: 16
         zero_terminated: false
 
-    - WPSPIN:
+    - WPS_PIN:                # WPS PIN
         value: "12345670"
         format: NUMERIC
         max_size: 8
         zero_terminated: true
 
-    - ETHERNETMAC:
+    - ETHERNET_MAC:           # Ethernet MAC
         value: "AA:BB:CC:DD:EE:FF"
         format: MAC
         max_size: 16
         zero_terminated: false
 
-    - RF4CEMAC:
+    - RF4CE_MAC:              # RF4CE MAC
         value: "22:33:44:55:66:77"
         format: MAC
         max_size: 16
         zero_terminated: false
 
-    - COUNTRYCODE:
+    - COUNTRY_CODE:           # Country code
         value: "US"
         format: ISO3166
         max_size: 2
         zero_terminated: false
 
-    - LANGUAGECODE:
+    - LANGUAGE_CODE:          # Language code
         value: "en"
         format: ISO639
         max_size: 2
         zero_terminated: false
 
-    - MANUFACTURERDATA:
-        value: "OEM_TAG_1234"
+    - DEVICE_TYPE:           # Device type
+        # Allowed values:
+        #   - STB: tuner/demodulator, no display
+        #   - OTT: no tuner, internet-only, no display
+        #   - TV: integrated display device
+        value: "STB"
         format: STRING
-        max_size: 64
+        max_size: 16
         zero_terminated: true
+
+    - CHIPSET_ID:             # SoC chipset ID
+        value: "SAMPLE_CHIPSET_ID"
+        format: STRING
+        max_size: 32
+        zero_terminated: true
+

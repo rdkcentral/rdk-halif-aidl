@@ -4,7 +4,7 @@
 
 The `DeviceInfo` HAL provides platform-independent access to key persistent provisioned identity and configuration properties of the device, such as manufacturer, model name, serial number, MAC addresses. It abstracts device-specific storage mechanisms (e.g., NVM, EEPROM, secure flash) and exposes a read interface to the caller.
 
-The HAL is primarily used for reading the provisioning data. All returned values are exposed as strings, with strict formatting requirements back from the interface.
+The HAL is primarily used for reading the provisioning data. All returned values are exposed as strings, with strict formatting requirements defined by from the interface.
 
 ---
 
@@ -44,7 +44,7 @@ All property accesses are string-based, and property keys are pre-defined by the
 | **HAL.DeviceInfo.3** | All properties are read-only; formatting is enforced according to PropertyType and Property definitions. | Enforced via [`PropertyType`](../../../../deviceinfo/current/com/rdk/hal/deviceinfo/PropertyType.aidl) and [`Property`](../../../../deviceinfo/current/com/rdk/hal/deviceinfo/Property.aidl) |
 | **HAL.DeviceInfo.4** | ISO3166 and ISO639 codes are 2 bytes and not zero-terminated            | Enforced in `Property`            |
 | **HAL.DeviceInfo.5** | The HAL shall enforce max size and zero-termination as specified         | Validation in implementation       |
-| **HAL.DeviceInfo.6** | Property types are defined in the HAL as `PropertyType` enum             | See [PropertyType.aidl](../../../../deviceinfo/current/com/rdk/hal/deviceinfo/PropertyType.aidl)`              |
+| **HAL.DeviceInfo.6** | Property types are defined in the HAL as `PropertyType` enum             | See [PropertyType.aidl](../../../../deviceinfo/current/com/rdk/hal/deviceinfo/PropertyType.aidl)|
 
 ---
 
@@ -52,7 +52,7 @@ All property accesses are string-based, and property keys are pre-defined by the
 
 | AIDL File                | Description                                         |
 | ------------------------ | --------------------------------------------------- |
-| `IDeviceInfo.aidl`       | Main HAL Binder interface for property access, including get/set methods and version reporting |
+| `IDeviceInfo.aidl`       | Main HAL Binder interface for property access |
 | `Capabilities.aidl`      | Defines the list of supported property keys for the platform (used by getCapabilities) |
 | `Property.aidl`          | Parcelable structure describing device property metadata, including format, size, and zero-termination |
 | `PropertyType.aidl`      | Enum of supported property types (e.g., STRING, MAC, NUMERIC, ISO3166, ISO639, UPPERCASEHEX, SEMANTICVERSION) |
@@ -151,77 +151,85 @@ Example Configuration (YAML style)
 ```yaml
 IDeviceInfo:
   properties:
-    - HAL_VERSION:
+    - HAL_VERSION:           # HAL version
         value: "1.0.0"
         format: SEMANTICVERSION
         max_size: 32
         zero_terminated: true
-    - MANUFACTURER:
+    - MANUFACTURER:          # Device manufacturer name
         value: "RDK Inc."
         format: STRING
         max_size: 32
         zero_terminated: true
-    - MANUFACTURER_OUI:
-        value: "AA:BB:CC"
+    - MANUFACTURER_OUI:      # Manufacturer IEEE OUI, 3-byte hex string
+        value: "AABBCC"
         format: STRING
         max_size: 8
         zero_terminated: true
-    - MODELNAME:
+    - MODEL_NAME:             # Device model name
         value: "RDK-STB-200"
         format: STRING
         max_size: 32
         zero_terminated: true
-    - PRODUCTCLASS:
+    - PRODUCT_CLASS:          # Product class
         value: "STB"
         format: STRING
         max_size: 16
         zero_terminated: true
-    - SERIALNUMBER:
+    - SERIAL_NUMBER:          # Device serial number
         value: "RDK123456789"
         format: STRING
         max_size: 32
         zero_terminated: true
-    - WIFIMAC:
+    - WIFI_MAC:               # Wi-Fi MAC
         value: "00:11:22:33:44:55"
         format: MAC
         max_size: 16
         zero_terminated: false
-    - BLUETOOTHMAC:
+    - BLUETOOTH_MAC:          # Bluetooth MAC
         value: "11:22:33:44:55:66"
         format: MAC
         max_size: 16
         zero_terminated: false
-    - WPSPIN:
+    - WPS_PIN:                # WPS PIN
         value: "12345670"
         format: NUMERIC
         max_size: 8
         zero_terminated: true
-    - ETHERNETMAC:
+    - ETHERNET_MAC:           # Ethernet MAC
         value: "AA:BB:CC:DD:EE:FF"
         format: MAC
         max_size: 16
         zero_terminated: false
-    - RF4CEMAC:
+    - RF4CE_MAC:              # RF4CE MAC
         value: "22:33:44:55:66:77"
         format: MAC
         max_size: 16
         zero_terminated: false
-    - COUNTRYCODE:
+    - COUNTRY_CODE:           # Country code
         value: "US"
         format: ISO3166
         max_size: 2
         zero_terminated: false
-    - LANGUAGECODE:
+    - LANGUAGE_CODE:          # Language code
         value: "en"
         format: ISO639
         max_size: 2
         zero_terminated: false
-    - MANUFACTURERDATA:
-        value: "OEM_TAG_1234"
+    - DEVICE_TYPE:           # Device type
+        # Allowed values:
+        #   - STB: tuner/demodulator, no display
+        #   - OTT: no tuner, internet-only, no display
+        #   - TV: integrated display device
+        value: "STB"
         format: STRING
-        max_size: 64
+        max_size: 16
+        zero_terminated: true
+    - CHIPSET_ID:             # SoC chipset ID
+        value: "SAMPLE_CHIPSET_ID"
+        format: STRING
+        max_size: 32
         zero_terminated: true
 ```
 
 This example matches the current HAL Feature Profile YAML structure, showing all required fields for each property.
-
