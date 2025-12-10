@@ -169,7 +169,19 @@ This approach ensures that all critical, error, and diagnostic information from 
 
 ```c
 #include <syslog.h>
-#include "rdk_logging.h"
+
+/* ---- Optional severities (build controlled) ---- */
+#ifdef ENABLE_LOG_INFO
+  #define LOGF_INFO(fmt, ...)   syslog(LOG_INFO, fmt, ##__VA_ARGS__)
+#else
+  #define LOGF_INFO(fmt, ...)   do {} while (0)
+#endif
+
+#ifdef ENABLE_LOG_DEBUG
+  #define LOGF_DEBUG(fmt, ...)  syslog(LOG_DEBUG, "[%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
+#else
+  #define LOGF_DEBUG(fmt, ...)  do {} while (0)
+#endif
 
 int tuner_init(void)
 {
@@ -226,4 +238,4 @@ log { source(s_sys); filter(f_tuner); filter(f_runtime); destination(d_tuner_fil
 ```
 
 !!! warning "Filtering / Routing Control"
-    Modules **do not modify syslog-ng** configuration; any routing or filtering changes are expected to controlled at a system level. Although these can be overriden during development.
+    Modules **do not modify syslog-ng** configuration; any routing or filtering changes are expected to controlled at a system level. Although these can be overriden during development and engineering builds.
