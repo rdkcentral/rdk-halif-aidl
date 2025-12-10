@@ -90,18 +90,6 @@ IDeviceInfo:
         max_size: 16
         zero_terminated: false
 
-    - IMAGENAME:
-        value: "rdk-main"
-        format: STRING
-        max_size: 32
-        zero_terminated: true
-
-    - IMAGETYPE:
-        value: "release"
-        format: STRING
-        max_size: 16
-        zero_terminated: true
-
     - COUNTRYCODE:
         value: "US"
         format: ISO3166
