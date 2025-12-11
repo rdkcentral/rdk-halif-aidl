@@ -56,7 +56,6 @@ endif()
 # Expect layout:
 #   sensor/
 #     CMakeLists.txt (this file)
-#     light/CMakeLists.txt
 #     motion/CMakeLists.txt
 #     thermal/CMakeLists.txt
 # ---------------------------------------------------------------------------------------
@@ -69,10 +68,6 @@ function(_sensor_add_subdir name)
         message(FATAL_ERROR "Expected submodule directory '${name}' not found under ${CMAKE_CURRENT_SOURCE_DIR}")
     endif()
 endfunction()
-
-if (ENABLE_SENSOR_LIGHT)
-    _sensor_add_subdir(light)
-endif()
 
 if (ENABLE_SENSOR_MOTION)
     _sensor_add_subdir(motion)

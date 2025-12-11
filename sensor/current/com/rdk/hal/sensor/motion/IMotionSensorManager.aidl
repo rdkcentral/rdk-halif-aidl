@@ -39,7 +39,7 @@ interface IMotionSensorManager {
      * @brief Binder service registration name.
      * Vendors should publish the service with this name at system startup.
      */
-    const @utf8InCpp String serviceName = "MotionSensorManager";
+    const @utf8InCpp String serviceName = "sensor.motion";
 
     /**
      * @brief Enumerate all platform-specific motion sensor identifiers.

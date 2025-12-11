@@ -37,6 +37,7 @@ set(SRC
     ${SRC_DIR}/IMotionSensorManager.aidl
     ${SRC_DIR}/OperationalMode.aidl
     ${SRC_DIR}/State.aidl
+    ${SRC_DIR}/TimeWindow.aidl
 )
 
 set(INCLUDE_DIRECTORY

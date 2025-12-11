@@ -32,6 +32,7 @@ import com.rdk.hal.sensor.motion.State;
 import com.rdk.hal.sensor.motion.Capabilities;
 import com.rdk.hal.sensor.motion.IMotionSensorEventListener;
 import com.rdk.hal.sensor.motion.OperationalMode;
+import com.rdk.hal.sensor.motion.TimeWindow;
 
 interface IMotionSensor {
 
@@ -93,6 +94,13 @@ interface IMotionSensor {
     State getState();
 
     /**
+     * @brief Get the operational mode configured at start().
+     * @return OperationalMode Current mode (MOTION or NO_MOTION).
+     * @exception binder::Status EX_ILLEGAL_STATE if sensor is STOPPED or ERROR.
+     */
+    OperationalMode getOperationalMode();
+
+    /**
      * @brief Get the current sensitivity value.
      * @return int Current sensitivity level.
      */
@@ -113,6 +121,7 @@ interface IMotionSensor {
      * @brief Enable or disable autonomous motion detection during deep sleep.
      *
      * @param enabled True to enable, false to disable.
+     * @returns success flag.
      * @retval true Mode updated (or already at requested value).
      * @retval false Operation not supported (see Capabilities.supportsDeepSleepAutonomy).
      * @exception binder::Status EX_ILLEGAL_STATE if the sensor is not STOPPED.
@@ -120,6 +129,9 @@ interface IMotionSensor {
      * @details
      * When enabled and supported by the platform, the sensor may wake the system
      * from deep sleep based on motion activity without full SoC resume.
+     *
+     * Since this wake source could be hardware independent of the CPU, the sensor enabling has no effect on DeepSleep of the CPU.
+     * The DeepSleep module must be configured independently to support the CPU wakeup.
      */
     boolean setAutonomousDuringDeepSleep(in boolean enabled);
 
@@ -144,4 +156,43 @@ interface IMotionSensor {
      * @retval false Listener not found.
      */
     boolean unregisterEventListener(in IMotionSensorEventListener motionSensorEventListener);
+
+    /**
+     * @brief Set daily time windows when the sensor should actively monitor.
+     *
+     * @param windows Array of time windows. Motion events outside these windows
+     *        are suppressed. Empty array or windows with both values set to 0
+     *        enables 24-hour monitoring. Windows may overlap; the union of all
+     *        windows defines the active periods.
+     * @retval true Time windows configured successfully.
+     * @retval false Invalid window ranges or sensor state prevents configuration.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if any window has invalid
+     *            time values (outside 0-86399 range).
+     * @exception binder::Status EX_ILLEGAL_STATE if sensor is not STOPPED.
+     *
+     * @details
+     * Windows wrapping across midnight are supported (endTime < startTime).
+     * Changes take effect on next start() call. Calling this method replaces
+     * any previously configured windows.
+     */
+    boolean setActiveWindows(in TimeWindow[] windows);
+
+    /**
+     * @brief Get the currently configured active time windows.
+     *
+     * @return TimeWindow[] Array of active windows. Empty if 24-hour monitoring
+     *         is configured or no windows have been set.
+     */
+    TimeWindow[] getActiveWindows();
+
+    /**
+     * @brief Clear all active time windows, enabling 24-hour monitoring.
+     *
+     * @retval true Windows cleared successfully.
+     * @retval false Unable to clear (e.g., sensor not in valid state).
+     * @exception binder::Status EX_ILLEGAL_STATE if sensor is not STOPPED.
+     *
+     * @details Equivalent to calling setActiveWindows() with an empty array.
+     */
+    boolean clearActiveWindows();
 }
