@@ -32,11 +32,25 @@ Every HAL module follows this exact structure:
 - **Error Handling**: Use AIDL exceptions, not return codes
 
 ### Service Names & Packages
+
+**Service Naming Convention:**
+- Format: `{module}` or `{category}.{module}` (lowercase with dot separators)
+- Simple modules: `"boot"`, `"cec"`, `"panel"`
+- Categorized modules: `"sensor.motion"`, `"sensor.thermal"`, `"broadcast.tuner"`
+- Use the module directory path with dots instead of slashes
+
 ```aidl
 // Standard pattern in main interfaces
 package com.rdk.hal.boot;
 interface IBoot {
-    const @utf8InCpp String serviceName = "Boot";
+    const @utf8InCpp String serviceName = "boot";
+    // ...
+}
+
+// Categorized module example
+package com.rdk.hal.sensor.motion;
+interface IMotionSensorManager {
+    const @utf8InCpp String serviceName = "sensor.motion";
     // ...
 }
 ```
@@ -149,6 +163,51 @@ set(COMMON_VERSION "current")
 - **Package Paths**: AIDL package must align with file directory structure  
 - **Dependencies**: Module CMakeLists.txt must declare version variables for imported modules
 - **Versioning**: Always use "current" for active development until interface stabilizes
+
+## Doxygen Documentation Standards
+
+### Comment Tags
+
+- **@brief**: One-line summary of the function/type
+- **@param**: Document each parameter (use `@param[in]` or `@param[out]` for clarity)
+- **@returns**: Overview description of what is returned (general statement). **ALWAYS use @returns, NEVER @return** (a function "returns" not "return")
+- **@retval**: Document each specific return value (e.g., `@retval true Success`, `@retval false Failure`)
+- **@exception**: Document exceptions that may be thrown
+
+**Note:** Never use `@details` - any text after `@brief` is automatically considered detailed description.
+
+### Return Value Documentation Pattern
+
+For boolean returns or enums with multiple possible values:
+```aidl
+/**
+ * @brief Enable feature X.
+ * @param enabled True to enable, false to disable.
+ * @returns Success flag indicating configuration status.
+ * @retval true Feature enabled successfully.
+ * @retval false Feature not supported or invalid state.
+ * @exception binder::Status EX_ILLEGAL_STATE if not in valid state.
+ */
+boolean enableFeature(in boolean enabled);
+```
+
+For simple returns:
+```aidl
+/**
+ * @brief Get the current state.
+ * @returns Current state (e.g. STARTED, STOPPED, ERROR).
+ */
+State getState();
+```
+
+### General Guidelines
+
+- **ALWAYS use @returns** (never @return): Functions "returns" values, not "return" values
+- Use **@returns** for overview + **@retval** for each specific value when multiple outcomes exist
+- Use **@returns** alone for simple single-value returns (no @retval needed)
+- Always document exceptions with **@exception**
+- Keep descriptions concise but complete
+- Avoid redundant type names in @returns descriptions (e.g., avoid "@returns State Current state" - just "@returns Current state")
 
 ## Contribution Guidelines  
 

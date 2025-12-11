@@ -27,7 +27,7 @@ The Boot HAL is responsible for:
 - Reporting the reason for the last device boot (e.g., watchdog, thermal reset, cold boot).
 - Allowing the system to set a boot reason for the next reboot.
 - Initiating reboots with specific reset types (e.g., full system reset, disaster recovery, software reboot).
-- Reporting the current power source (e.g., PSU, USB, PoE).
+- Reporting the power source (e.g., PSU, USB, PoE).
 - Advertising supported boot reasons and reset types via capabilities.
 
 The interface is intentionally **stateless**: each call is independent, with no persistent session or handle lifecycle.
@@ -41,7 +41,7 @@ The interface is intentionally **stateless**: each call is independent, with no 
 | HAL.Boot.1   | The service shall expose a binder interface named `Boot`.                    | Defined via `serviceName` constant in `IBoot.aidl`. |
 | HAL.Boot.2   | The service shall support the boot reasons listed in `supportedBootReasons`. | Validated via `getCapabilities()`. |
 | HAL.Boot.3   | The service shall support the reset types listed in `supportedResetTypes`.   | Validated via `getCapabilities()`. |
-| HAL.Boot.4   | The service shall report the current power source using `getPowerSource()`.  | Enum values from `PowerSource.aidl`. |
+| HAL.Boot.4   | The service shall report the power source using `getPowerSource()`.  | Enum values from `PowerSource.aidl`. |
 | HAL.Boot.5   | The service shall be stateless between calls.                                | No open/close lifecycle.           |
 
 ---
@@ -174,6 +174,7 @@ Boot:
 
   # List of supported boot reasons (see BootReason.aidl)
   supportedBootReasons:
+    - ERROR_UNKNOWN         # Boot Reason is unknown
     - WATCHDOG              # Hardware-initiated reboot due to watchdog timer
     - MAINTENANCE_REBOOT    # Maintenance reboot
     - THERMAL_RESET         # Thermal reset (overheating)

@@ -63,13 +63,12 @@ interface IBoot
      * Performs a shutdown and warm reboot of the device.
      * 
      * A number of reset types can be applied as part of the reboot process.
-     * If no reset types are provided, then a normal reboot is performed.
      * On success this function does not return.
      * 
-     * @param[in] resetTypes       Array of `ResetType` values.
-     * @param[in] reasonString     Free-form reset reason string (64 bytes)
+     * @param[in] resetType     ResetType value
+     * @param[in] reasonString  Free-form reset reason string (64 bytes)
      */
-    void reboot(in ResetType resetTypes, in String reasonString);
+    void reboot(in ResetType resetType, in String reasonString);
 
     /**
      * Gets the device power source.
