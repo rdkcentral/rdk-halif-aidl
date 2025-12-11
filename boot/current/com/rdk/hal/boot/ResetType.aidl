@@ -49,13 +49,13 @@ enum ResetType {
     FORCE_DISASTER_RECOVERY = 2,
 
     /**
-     * Performing Reboot for a Maintenance reason, caller should also set the reasonString
+     * Performing Reboot for a Maintenance reason, The caller **MUST** also set the reasonString
      * BootReason will be reported as MAINTENANCE_REBOOT
      */
     MAINTENANCE_REBOOT = 3,
 
     /**
-     * Performing Reboot for a Software reason (which is specifically not a Maintenance Reboot), caller should also set the reasonString
+     * Performing Reboot for a Software reason (which is specifically not a Maintenance Reboot), The caller **MUST** also set the reasonString
      * BootReason will be reported as WARM_RESET, unless overridden by setBootReason prior to reboot.
      */
     SOFTWARE_REBOOT = 4,

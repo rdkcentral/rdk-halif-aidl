@@ -126,23 +126,23 @@ flowchart TD
 
 General call flow:
 
-1. **Boot reason determination**</br>
+1. **Boot reason determination**.  
   On boot, firmware or early platform code records the boot reason in hardware registers or storage.
-2. **Capability discovery**</br>
+2. **Capability discovery**.  
   Clients call `getCapabilities()` to learn which:
     - `BootReason` values may be reported.
     - `ResetType` values are accepted by `reboot()`.
-3. **Boot reason query**</br>
+3. **Boot reason query**.  
   Middleware calls `getBootReason()` to retrieve the last boot reason for:
     - Diagnostics and logging.
     - Telemetry and analytics.
-4. **Setting a test boot reason**</br>
+4. **Setting a test boot reason**.  
   For validation, tests can call `setBootReason(reason, reasonString)` before triggering a reboot, so that `getBootReason()` after restart reflects the test scenario.
-5. **Triggering a reboot**</br>
-  Middleware calls `reboot(resetTypes, reasonString)`:
-    - `resetTypes` defines the reset behaviour (e.g., `FULL_SYSTEM_RESET` vs. `SOFTWARE_REBOOT`).
+5. **Triggering a reboot**.  
+  Middleware calls `reboot(resetType, reasonString)`:
+    - `resetTypes` defines the reset behaviour (e.g., `FULL_SYSTEM_RESET` vs. `MAINTENANCE_REBOOT`). 
     - On success, the call does not return because the system is rebooting.
-6. **Power source query**</br>
+6. **Power source query**.  
   `getPowerSource()` may be called at any time to query `PowerSource` (e.g., for power management policies).
 
 ---
@@ -161,7 +161,7 @@ parcelable Capabilities {
 Typical usage:
 
 - `supportedBootReasons` lists all `BootReason` values that may be reported by `getBootReason()`.
-- `supportedResetTypes` lists all `ResetType` values that are accepted by `reboot()`.
+- `supportedResetTypes` lists the `ResetType` values that are accepted by `reboot()`.
 
 The HFP (HAL Feature Profile) should mirror these fields and may extend them with platform metadata (e.g. supported power sources, deployment mode).
 
@@ -174,10 +174,10 @@ Boot:
 
   # List of supported boot reasons (see BootReason.aidl)
   supportedBootReasons:
-    - WATCHDOG              # Booted due to watchdog timer
+    - WATCHDOG              # Hardware-initiated reboot due to watchdog timer
     - MAINTENANCE_REBOOT    # Maintenance reboot
     - THERMAL_RESET         # Thermal reset (overheating)
-    - WARM_RESET            # Warm reset (software reboot)
+    - WARM_RESET            # Software-initiated reboot with power applied, distinct from hardware reboot
     - COLD_BOOT             # Cold boot (power cycle)
     - STR_AUTH_FAILURE      # Suspend to RAM authentication failure
 

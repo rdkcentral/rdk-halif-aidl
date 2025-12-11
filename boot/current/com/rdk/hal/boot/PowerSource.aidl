@@ -36,18 +36,18 @@ enum PowerSource {
     UNKNOWN = 0,
 
     /**
-     * Indicates that the device power source is from an external PSU.
+     * The device power source is from an external PSU.
      *
      */
     PSU = 1,
 
     /**
-     * Indicates that the device power source is from USB.
+     * The device power source is from USB.
      */
     USB = 2,
 
     /**
-     * Indicates that the device power source is from POE (Power over Ethernet).
+     * The device power source is from POE (Power over Ethernet).
      */
     POE = 3,
 }
