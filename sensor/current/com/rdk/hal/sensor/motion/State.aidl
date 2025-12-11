@@ -21,7 +21,6 @@
  * @file State.aidl
  * @brief Lifecycle states for a motion sensor instance.
  *
- * @details
  * Typical transitions:
  *  - STOPPED → STARTING → STARTED
  *  - STARTED → STOPPING → STOPPED

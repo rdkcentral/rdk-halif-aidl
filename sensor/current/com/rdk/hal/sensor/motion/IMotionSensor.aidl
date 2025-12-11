@@ -21,7 +21,6 @@
  * @file IMotionSensor.aidl
  * @brief Instance interface for a motion sensor (PIR, radar, etc.).
  *
- * @details
  * The motion sensor can operate in a mode that reports either "motion" events
  * or "no-motion" events after an inactivity window. Sensitivity is optional:
  * if unsupported, both minSensitivity and maxSensitivity are 0.
@@ -53,12 +52,15 @@ interface IMotionSensor {
 
     /**
      * @brief Returns immutable capabilities for this sensor.
-     * @return Capabilities describing this sensor.
+     * @returns Immutable capabilities describing this sensor instance.
      */
     Capabilities getCapabilities();
 
     /**
      * @brief Start the motion sensor.
+     *
+     * On success, the state transitions STOPPED → STARTING → STARTED.
+     * If initialization fails, the state becomes ERROR.
      *
      * @param operationalMode Operational mode (MOTION or NO_MOTION).
      * @param noMotionSeconds After the sensor becomes active, the contiguous number
@@ -68,9 +70,7 @@ interface IMotionSensor {
      * @param activeStopSeconds Duration in seconds after which the sensor becomes inactive.
      *        Use 0 for no automatic stop.
      *
-     * @details On success, the state transitions STOPPED → STARTING → STARTED.
-     *          If initialization fails, the state becomes ERROR.
-     *
+     * @returns Success flag indicating sensor start status.
      * @retval true Sensor accepted the start request.
      * @retval false Sensor could not be started (e.g. invalid hw state).
      */
@@ -81,7 +81,10 @@ interface IMotionSensor {
 
     /**
      * @brief Stop the motion sensor.
-     * @details On success, the state transitions STARTED → STOPPING → STOPPED.
+     *
+     * On success, the state transitions STARTED → STOPPING → STOPPED.
+     *
+     * @returns Success flag indicating sensor stop status.
      * @retval true Sensor accepted the stop request.
      * @retval false Sensor could not be stopped.
      */
@@ -89,20 +92,22 @@ interface IMotionSensor {
 
     /**
      * @brief Get the current lifecycle state of the sensor.
-     * @return State Current state (e.g. STARTED, STOPPED, ERROR).
+     * @returns Current state (e.g. STARTED, STOPPED, ERROR).
      */
     State getState();
 
     /**
      * @brief Get the operational mode configured at start().
-     * @return OperationalMode Current mode (MOTION or NO_MOTION).
+     *
+     * @returns Current mode (MOTION or NO_MOTION).
      * @exception binder::Status EX_ILLEGAL_STATE if sensor is STOPPED or ERROR.
      */
     OperationalMode getOperationalMode();
 
     /**
      * @brief Get the current sensitivity value.
-     * @return int Current sensitivity level.
+     *
+     * @returns Current sensitivity level (within minSensitivity..maxSensitivity range).
      */
     int getSensitivity();
 
@@ -111,6 +116,8 @@ interface IMotionSensor {
      *
      * @param sensitivity Desired level. Must be within
      *        {@link Capabilities#minSensitivity}..{@link Capabilities#maxSensitivity}.
+     *
+     * @returns Success flag indicating whether sensitivity was set.
      * @retval true Sensitivity was set.
      * @retval false Sensitivity out of range or unsupported.
      * @exception binder::Status EX_ILLEGAL_STATE if the sensor is not STOPPED.
@@ -120,30 +127,32 @@ interface IMotionSensor {
     /**
      * @brief Enable or disable autonomous motion detection during deep sleep.
      *
-     * @param enabled True to enable, false to disable.
-     * @returns success flag.
-     * @retval true Mode updated (or already at requested value).
-     * @retval false Operation not supported (see Capabilities.supportsDeepSleepAutonomy).
-     * @exception binder::Status EX_ILLEGAL_STATE if the sensor is not STOPPED.
-     *
-     * @details
      * When enabled and supported by the platform, the sensor may wake the system
      * from deep sleep based on motion activity without full SoC resume.
      *
-     * Since this wake source could be hardware independent of the CPU, the sensor enabling has no effect on DeepSleep of the CPU.
-     * The DeepSleep module must be configured independently to support the CPU wakeup.
+     * Since this wake source could be hardware independent of the CPU, the sensor
+     * enabling has no effect on deep sleep of the CPU. The deep sleep module must
+     * be configured independently to support the CPU wake-up reasons.
+     *
+     * @param enabled True to enable, false to disable.
+     *
+     * @returns Success flag indicating configuration status.
+     * @retval true Mode updated (or already at requested value).
+     * @retval false Operation not supported (see Capabilities.supportsDeepSleepAutonomy).
+     * @exception binder::Status EX_ILLEGAL_STATE if the sensor is not STOPPED.
      */
     boolean setAutonomousDuringDeepSleep(in boolean enabled);
 
     /**
      * @brief Query whether autonomous deep-sleep mode is enabled.
-     * @return boolean True if enabled, false otherwise (or unsupported).
+     * @returns True if enabled, false otherwise (or unsupported).
      */
     boolean isAutonomousDuringDeepSleepEnabled();
 
     /**
      * @brief Register an event listener. A listener may only be registered once.
      * @param motionSensorEventListener Listener to receive motion events.
+     * @returns Success flag indicating registration status.
      * @retval true Listener registered.
      * @retval false Listener already registered.
      */
@@ -152,6 +161,7 @@ interface IMotionSensor {
     /**
      * @brief Unregister a previously registered listener.
      * @param motionSensorEventListener Listener to remove.
+     * @returns Success flag indicating unregistration status.
      * @retval true Listener unregistered.
      * @retval false Listener not found.
      */
@@ -160,39 +170,41 @@ interface IMotionSensor {
     /**
      * @brief Set daily time windows when the sensor should actively monitor.
      *
+     * Windows wrapping across midnight are supported (endTime < startTime).
+     * Changes take effect on next start() call. Calling this method replaces
+     * any previously configured windows.
+     *
      * @param windows Array of time windows. Motion events outside these windows
      *        are suppressed. Empty array or windows with both values set to 0
      *        enables 24-hour monitoring. Windows may overlap; the union of all
      *        windows defines the active periods.
+     *
+     * @returns Success flag indicating configuration status.
      * @retval true Time windows configured successfully.
      * @retval false Invalid window ranges or sensor state prevents configuration.
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if any window has invalid
      *            time values (outside 0-86399 range).
      * @exception binder::Status EX_ILLEGAL_STATE if sensor is not STOPPED.
-     *
-     * @details
-     * Windows wrapping across midnight are supported (endTime < startTime).
-     * Changes take effect on next start() call. Calling this method replaces
-     * any previously configured windows.
      */
     boolean setActiveWindows(in TimeWindow[] windows);
 
     /**
      * @brief Get the currently configured active time windows.
      *
-     * @return TimeWindow[] Array of active windows. Empty if 24-hour monitoring
-     *         is configured or no windows have been set.
+     * @returns Array of active windows. Empty if 24-hour monitoring is configured
+     *         or no windows have been set.
      */
     TimeWindow[] getActiveWindows();
 
     /**
      * @brief Clear all active time windows, enabling 24-hour monitoring.
      *
+     * Equivalent to calling setActiveWindows() with an empty array.
+     *
+     * @returns Success flag indicating clear operation status.
      * @retval true Windows cleared successfully.
      * @retval false Unable to clear (e.g., sensor not in valid state).
      * @exception binder::Status EX_ILLEGAL_STATE if sensor is not STOPPED.
-     *
-     * @details Equivalent to calling setActiveWindows() with an empty array.
      */
     boolean clearActiveWindows();
 }

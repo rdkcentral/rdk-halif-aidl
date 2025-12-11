@@ -21,7 +21,6 @@
  * @file IMotionSensorManager.aidl
  * @brief Service entry point for discovering and accessing motion sensors.
  *
- * @details
  * The manager enumerates available motion sensors and returns interfaces
  * to them.  A typical implementation is a singleton service registered under
  * {@link #serviceName}.
@@ -37,20 +36,21 @@ import com.rdk.hal.sensor.motion.IMotionSensor;
 interface IMotionSensorManager {
     /**
      * @brief Binder service registration name.
+     *
      * Vendors should publish the service with this name at system startup.
      */
     const @utf8InCpp String serviceName = "sensor.motion";
 
     /**
      * @brief Enumerate all platform-specific motion sensor identifiers.
-     * @return IMotionSensor.Id[] Array of available motion sensor IDs.
+     * @returns Array of available motion sensor IDs.
      */
-    IMotionSensor.Id[] getMotionSensorIds();
+    @nullable IMotionSensor.Id[] getMotionSensorIds();
 
     /**
      * @brief Retrieve a motion sensor interface by ID.
      * @param motionSensorId The identifier of the requested sensor.
-     * @return IMotionSensor The sensor interface, or null if the ID is invalid.
+     * @returns The sensor interface, or null if the ID is invalid.
      */
     @nullable IMotionSensor getMotionSensor(in IMotionSensor.Id motionSensorId);
 }

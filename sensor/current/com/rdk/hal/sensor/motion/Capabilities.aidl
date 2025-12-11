@@ -21,7 +21,6 @@
  * @file Capabilities.aidl
  * @brief Static properties describing a specific motion sensor instance.
  *
- * @details
  * Values returned by this parcelable are immutable across the lifetime of the
  * process and must not change between calls to
  * {@link com.rdk.hal.sensor.motion.IMotionSensor#getCapabilities()}.
@@ -47,7 +46,8 @@ parcelable Capabilities {
 
     /**
      * @brief Indicates whether the sensor can autonomously detect events during deep sleep.
-     * @details If true, platform may support wake-from-motion without full SoC resume.
+     *
+     * If true, platform may support wake-from-motion without full SoC resume.
      */
     boolean supportsDeepSleepAutonomy;
 }

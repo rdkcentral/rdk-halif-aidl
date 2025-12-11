@@ -321,6 +321,53 @@ State getState();
 
 ## Contribution Guidelines
 
+## Doxygen Documentation Standards
+
+### Comment Tags
+
+- **@brief**: One-line summary of the function/type
+- **@param**: Document each parameter (use `@param[in]` or `@param[out]` for clarity)
+- **@returns**: Overview description of what is returned (general statement). **ALWAYS use @returns, NEVER @return** (a function "returns" not "return")
+- **@retval**: Document each specific return value (e.g., `@retval true Success`, `@retval false Failure`)
+- **@exception**: Document exceptions that may be thrown
+
+**Note:** Never use `@details` - any text after `@brief` is automatically considered detailed description.
+
+### Return Value Documentation Pattern
+
+For boolean returns or enums with multiple possible values:
+```aidl
+/**
+ * @brief Enable feature X.
+ * @param enabled True to enable, false to disable.
+ * @returns Success flag indicating configuration status.
+ * @retval true Feature enabled successfully.
+ * @retval false Feature not supported or invalid state.
+ * @exception binder::Status EX_ILLEGAL_STATE if not in valid state.
+ */
+boolean enableFeature(in boolean enabled);
+```
+
+For simple returns:
+```aidl
+/**
+ * @brief Get the current state.
+ * @returns Current state (e.g. STARTED, STOPPED, ERROR).
+ */
+State getState();
+```
+
+### General Guidelines
+
+- **ALWAYS use @returns** (never @return): Functions "returns" values, not "return" values
+- Use **@returns** for overview + **@retval** for each specific value when multiple outcomes exist
+- Use **@returns** alone for simple single-value returns (no @retval needed)
+- Always document exceptions with **@exception**
+- Keep descriptions concise but complete
+- Avoid redundant type names in @returns descriptions (e.g., avoid "@returns State Current state" - just "@returns Current state")
+
+## Contribution Guidelines  
+
 - **English Dictionary**: Use UK English spelling in comments and documentation
 - **Code Style**: Follow existing code patterns for consistency
 - **Pull Requests**: Target `develop` branch with descriptive titles and linked issues

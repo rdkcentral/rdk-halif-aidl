@@ -21,7 +21,6 @@
  * @file TimeWindow.aidl
  * @brief Defines a daily time window when the motion sensor should be active.
  *
- * @details
  * Time windows allow scheduling when the sensor actively monitors for motion.
  * Outside these windows, motion events are suppressed. Multiple windows can
  * be configured for different periods throughout the day (e.g., business hours
@@ -33,16 +32,18 @@ package com.rdk.hal.sensor.motion;
 parcelable TimeWindow {
     /**
      * @brief Start time in seconds since midnight (0-86399).
-     * @details Value must be in range [0, 86399]. For 24-hour monitoring,
-     *          set both startTimeOfDaySeconds and endTimeOfDaySeconds to 0.
+     *
+     * Value must be in range [0, 86399]. For 24-hour monitoring,
+     * set both startTimeOfDaySeconds and endTimeOfDaySeconds to 0.
      */
     int startTimeOfDaySeconds;
 
     /**
      * @brief End time in seconds since midnight (0-86399).
-     * @details Value must be in range [0, 86399]. If endTimeOfDaySeconds is
-     *          less than startTimeOfDaySeconds, the window wraps across midnight.
-     *          For 24-hour monitoring, set both values to 0.
+     *
+     * Value must be in range [0, 86399]. If endTimeOfDaySeconds is
+     * less than startTimeOfDaySeconds, the window wraps across midnight.
+     * For 24-hour monitoring, set both values to 0.
      */
     int endTimeOfDaySeconds;
 }

@@ -38,12 +38,14 @@ interface IMotionSensorManager {
 
     /**
      * @brief Enumerate all platform-specific motion sensor identifiers.
-     * @return IMotionSensor.Id[] Array of available motion sensor IDs.
+     *
+     * @return IMotionSensor.Id[] Array of available motion sensor IDs, or null if none.
      */
-    IMotionSensor.Id[] getMotionSensorIds();
+    @nullable IMotionSensor.Id[] getMotionSensorIds();
 
     /**
      * @brief Retrieve a motion sensor interface by ID.
+     *
      * @param motionSensorId The identifier of the requested sensor.
      * @return IMotionSensor The sensor interface, or null if the ID is invalid.
      */

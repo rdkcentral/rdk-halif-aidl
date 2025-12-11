@@ -12,14 +12,10 @@ A clear lifecycle state machine ensures dependable operation and predictable eve
     |||
     |-|-|
     |**Interface Definition**|[motion/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/motion/current)|
-    |**API Documentation**| *TBD* |
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
     |**Initialization**| [systemd](../../../vsi/systemd/current/systemd.md) – **hal-sensor-motion.service** |
-    |**VTS Tests**| TBC |
-    |**Reference Implementation – vComponent**| TBD |
 
 !!! tip "Related Pages"
-    - [Sensor Light HAL](../light/light_sensor.md)
     - [Sensor Thermal HAL](../thermal/thermal_sensor.md)
 
 ---
