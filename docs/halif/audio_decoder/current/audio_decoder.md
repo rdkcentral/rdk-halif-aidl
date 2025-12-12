@@ -2,19 +2,13 @@
 
 This document provides an overview of the Audio Decoder Hardware Abstraction Layer (HAL) service, which facilitates the decoding of compressed audio streams within the device. The HAL defines the interfaces through which the RDK (Reference Design Kit) middleware interacts with the vendor-specific audio decoding implementation.
 
-## References
-
-!!! info References
+!!! info "References"
     |||
     |-|-|
     |**Interface Definition**|[audio_decoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiodecoder/current)|
-    |**API Documentation**| *TBD* |
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
     |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/systemd.md) - **hal-audio_decoder_manager.service** |
-    |**VTS Tests**| TBC |
     |**Reference Implementation - vComponent**|TBC|
-
-## Related Pages
 
 !!! tip "Related Pages"
     - [Audio Sink](../../audio_sink/current/audio_sink.md)
@@ -43,7 +37,7 @@ Uncompressed PCM audio streams do not require decoding. Therefore, they bypass t
 
 |# | Requirement | Comments |
 |---|---| ---- |
-| **HAL.AUDIODECODER.1** | Starting and stopping audio streams shall never produce an audible click or pop artefact due to the audio waveform the audio streaming was started or stopped at. |This requirement works in conjunction with the audio mixer. |
+| **HAL.AUDIODECODER.1** | Starting and stopping audio streams shall never produce an audible click or pop artefact due to the audio waveform at which audio streaming was started or stopped. |This requirement works in conjunction with the audio mixer. |
 | **HAL.AUDIODECODER.2** | An audio decoder shall indicate its support for secure audio processing through its resource capabilities. |
 | **HAL.AUDIODECODER.3** | An audio decoder advertising the secure audio processing capability that receives a secure buffer of compressed audio shall output decoded audio to secure buffers either returned to the client or tunnelled to the mixer.|Secure audio path must be maintained.|
 | **HAL.AUDIODECODER.4** | An audio decoder can tunnel decoded audio to a mixer or the vendor audio sub-system for passthrough and/or return the decoded audio as PCM to the client. |
@@ -162,7 +156,7 @@ To use an `IAudioDecoder` resource instance it must be opened by a client, which
 !!! Important
     Any number of clients can access the `IAudioDecoderManager` service and get access to the `IAudioDecoder` sub-interfaces, but only 1 client can `open()` an `IAudioDecoder` and access its `IAudioDecoderController` sub-interface.
 
-The diagram below shows the relationship between the Audio Decodeer HAL interfaces and resource instances.
+The diagram below shows the relationship between the Audio Decoder HAL interfaces and resource instances.
 
 ```mermaid
 graph LR

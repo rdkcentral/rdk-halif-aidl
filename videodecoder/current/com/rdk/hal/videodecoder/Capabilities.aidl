@@ -33,12 +33,12 @@ parcelable Capabilities
 	/**
 	 * Array of CodecCapability parcelables supported by this video decoder instance. 
 	 */
-    CodecCapabilities[] supportedCodecs;
+    CodecCapabilities[] codecCapabilities;
 	
 	/**
 	 * Array of DynamicRange values supported by this video decoder instance. 
 	 */
-    DynamicRange[] supportedDynamicRanges;
+    DynamicRange[] dynamicRange;
 	
 	/**
 	 * Indicates if this decoder instance can work in secure video path (SVP) mode. 

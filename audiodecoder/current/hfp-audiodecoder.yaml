@@ -21,29 +21,108 @@
 #** ******************************************************************************
 
 # HAL Feature Profile for audiodecoder
-
-IAudioDecoderManager:           # Component object begins
+audiodecoder:           # Component object begins
     interfaceVersion: current
-    IAudioDecoder:              # Resource list
-      - 0:                      # Resource object begins
-         supportedCodecs:       # Array of codec capabilities
-           - AAC_LC
-           - HE_AAC
-           - HE_AAC2
-           - DOLBY_AC3
-           - DOLBY_AC3_PLUS
-           - DOLBY_AC3_PLUS_JOC
-           - DOLBY_AC4
-           - X_HE_AAC
-         supportsSecure: true
-      - 1:                      # Resource object begins
-         supportedCodecs:       # Array of codec capabilities
-           - AAC_LC
-           - HE_AAC
-           - HE_AAC2
-           - DOLBY_AC3
-           - DOLBY_AC3_PLUS
-           - DOLBY_AC3_PLUS_JOC
-           - DOLBY_AC4
-           - X_HE_AAC
-         supportsSecure: true
+    supportsSecure: true
+    Capabilities:           # Decoder instance capabilities list
+      - 0:                  # Decoder instance 0
+          codecCapabilities:        # Array of codec-specific capabilities
+            - codec: PCM            # Codec enum from Codec.aidl
+              profiles: []          # PCM has no formal profiles
+              maxBitrateBps: 49152000    # 49.152 Mbps
+              maxSampleRateInHz: 192000  # 192 kHz
+              maxChannels: 8
+              maxBitDepth: 32       # 32 bits/sample input, 24 bits/sample output
+              
+            - codec: AAC
+              profiles: [LC, HE_V1, HE_V2, XHE]  # AACProfile enum values
+              maxBitrateBps: 576000      # 576 kbps
+              maxSampleRateInHz: 96000   # 96 kHz
+              maxChannels: 6        # 5.1 channels
+              maxBitDepth: 24
+              
+            - codec: MP3
+              profiles: []          # MP3 has no formal profiles
+              maxBitrateBps: 320000      # 320 kbps
+              maxSampleRateInHz: 48000   # 48 kHz
+              maxChannels: 2
+              maxBitDepth: 24
+              
+            - codec: DOLBY_AC3
+              profiles: [STANDARD, PLUS, PLUS_JOC]  # DolbyAC3Profile enum values (AC-3, E-AC-3, E-AC-3 with JOC/Atmos)
+              maxBitrateBps: 6000000     # 6 Mbps for E-AC-3
+              maxSampleRateInHz: 48000   # 48 kHz
+              maxChannels: 8        # Up to 8 channels for Atmos
+              maxBitDepth: 24
+              
+            - codec: DOLBY_AC4
+              profiles: []          # AC4 profiles not yet defined in AIDL
+              maxBitrateBps: 2000000     # 2 Mbps (typical)
+              maxSampleRateInHz: 48000   # 48 kHz
+              maxChannels: 8
+              maxBitDepth: 24
+              
+            - codec: FLAC
+              profiles: []          # FLAC has no formal profiles
+              maxBitrateBps: 12288000    # 12.288 Mbps
+              maxSampleRateInHz: 192000  # 192 kHz
+              maxChannels: 2
+              maxBitDepth: 32       # 32 bits/sample input, 24 bits/sample output
+              
+            - codec: OPUS
+              profiles: []          # OPUS has no formal profiles
+              maxBitrateBps: 510000      # 510 kbps
+              maxSampleRateInHz: 48000   # 48 kHz
+              maxChannels: 6        # 5.1 channels
+              maxBitDepth: 24
+              
+      - 1:                  # Decoder instance 1
+          codecCapabilities:        # Array of codec-specific capabilities
+            - codec: PCM
+              profiles: []
+              maxBitrateBps: 49152000
+              maxSampleRateInHz: 192000
+              maxChannels: 8
+              maxBitDepth: 32
+              
+            - codec: AAC
+              profiles: [LC, HE_V1, HE_V2, XHE]
+              maxBitrateBps: 576000
+              maxSampleRateInHz: 96000
+              maxChannels: 6
+              maxBitDepth: 24
+              
+            - codec: MP3
+              profiles: []
+              maxBitrateBps: 320000
+              maxSampleRateInHz: 48000
+              maxChannels: 2
+              maxBitDepth: 24
+              
+            - codec: DOLBY_AC3
+              profiles: [STANDARD, PLUS, PLUS_JOC]
+              maxBitrateBps: 6000000
+              maxSampleRateInHz: 48000
+              maxChannels: 8
+              maxBitDepth: 24
+              
+            - codec: DOLBY_AC4
+              profiles: []
+              maxBitrateBps: 2000000
+              maxSampleRateInHz: 48000
+              maxChannels: 8
+              maxBitDepth: 24
+              
+            - codec: FLAC
+              profiles: []
+              maxBitrateBps: 12288000
+              maxSampleRateInHz: 192000
+              maxChannels: 2
+              maxBitDepth: 32
+              
+            - codec: OPUS
+              profiles: []
+              maxBitrateBps: 510000
+              maxSampleRateInHz: 48000
+              maxChannels: 6
+              maxBitDepth: 24

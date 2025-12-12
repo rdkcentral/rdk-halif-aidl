@@ -44,9 +44,8 @@ enum Codec
     AAC = 1,               /**< Advanced Audio Coding base codec. Used in broadcast, IP streams, and files. */
     MPEG_AUDIO = 2,        /**< MPEG-1/2 Layer II. Used in broadcast and file-based delivery. */
     MP3 = 3,               /**< MPEG-1/2 Layer III (MP3). Common in file-based playback. */
-    AAC_ELD = 4,           /**< Enhanced Low Delay AAC. Used in Apple AirPlay and low-latency scenarios. */
-    ALAC = 5,              /**< Apple Lossless Audio Codec. Used in Apple AirPlay. */
-    SBC = 6,               /**< Subband Codec. Used in Bluetooth A2DP audio streaming. */
+    ALAC = 4,              /**< Apple Lossless Audio Codec. Used in Apple AirPlay. */
+    SBC = 5,               /**< Subband Codec. Used in Bluetooth A2DP audio streaming. */
 
     // === Conditionally Mandatory / Licensed (100–199) ===
 

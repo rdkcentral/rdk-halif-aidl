@@ -24,10 +24,7 @@ package com.rdk.hal.audiodecoder;
  * @brief Enumeration of profiles for the USAC codec (Codec.USAC).
  *
  */
-enum USACProfile 
-{
-    BASELINE = 0,        /**< Baseline USAC (core AAC-LC without SBR/PS). */
-    HE_AAC = 1,          /**< High-Efficiency AAC v1 (with SBR). */
-    HE_AAC_V2 = 2,       /**< HE-AAC v2 (SBR + Parametric Stereo). */
-    XHE_AAC = 3          /**< Extended High-Efficiency AAC (xHE-AAC). */
+enum USACProfile {
+    BASELINE        = 0, /**< MPEG-D USAC Baseline profile. */
+    EXTENDED_HE_AAC = 1, /**< MPEG-D USAC Extended HE-AAC profile (xHE-AAC). */
 }

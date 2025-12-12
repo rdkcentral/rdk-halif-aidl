@@ -45,7 +45,8 @@ parcelable CodecSupport
      */
     Profile[] profiles;
 
-    int maxSampleRate;         /**< Maximum supported sample rate in Hz (e.g., 48000, 96000). */
+    long maxBitrateBps;        /**< Maximum supported bitrate in bits per second (e.g., 320000, 6000000). */
+    int maxSampleRateInHz;     /**< Maximum supported sample rate in Hz (e.g., 48000, 96000). */
     int maxChannels;           /**< Maximum number of supported audio channels (e.g., 2, 6, 8). */
     int maxBitDepth;           /**< Maximum supported bit depth (e.g., 16, 24). Applies to PCM, FLAC, etc. */
 }

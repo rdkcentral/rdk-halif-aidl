@@ -1,6 +1,6 @@
 # Video Decoder
 
-The **Video Decoder HAL** service provides interfaces for passing compressed video to the vendor layer for decoding. If the service supports secure audio processing, it may also handle secure buffers.
+The **Video Decoder HAL** service provides interfaces for passing compressed video to the vendor layer for decoding. If the service supports secure video processing, it may also handle secure buffers.
 
 The output of the video decoder can follow two paths:
 
@@ -13,19 +13,13 @@ The video decoder's operational mode can be selected by the client upon initiali
 
 The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decoder** element, specifically designed to integrate with the **Video Decoder HAL** interface.
 
-## References
-
-!!! info References
+!!! info "References"
     |||
     |-|-|
     |**Interface Definition**|[video_decoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videodecoder/current)|
-    |**API Documentation**| *TBD* |
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
-    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/systemd.md) - **hal-video_decoder.service** |
-    |**VTS Tests**| TBC |
-    |**Reference Implementation - vComponent**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videodecoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videodecoder/current)|
-
-## Related Pages
+    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/systemd.md) - **hal-video_decoder_manager.service** |
+    |**Reference Implementation - vComponent**|TBC|
 
 !!! tip "Related Pages"
     - [Video Sink](../../video_sink/current/video_sink.md)
@@ -76,15 +70,15 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 
 The [systemd](../../../vsi/systemd/current/systemd.md) `hal-video_decoder_manager.service` unit file is provided by the vendor layer to start the service and should include  [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
-The Video Decoder Manager service depends on the Service Manager to register itself as a service.
+The Video Decoder Manager service depends on the [Service Manager](../../../vsi/service_manager/current/service_manager.md) to register itself as a service.
 
-Upon starting, the service shall register the `IVideoDecoderManager` interface with the Service Manager using the String `IVideoDecoderManager.serviceName` and immediately become operational.
+Upon starting, the service shall register the `IVideoDecoderManager` interface with the [Service Manager](../../../vsi/service_manager/current/service_manager.md) using the String `IVideoDecoderManager.serviceName` and immediately become operational.
 
 ## Product Customization
 
 The `IVideoDecoderManager.getVideoDecoderIds()` should return an array of `IVideoDecoder.Id` parcelables to uniquely represent all of the video decoder resources supported by the vendor layer.  Typically, the ID value starts at 0 for the first video decoder and increments by 1 for each additional video decoder.
 
-The Capabilities parcelable returned by the IVideoDecoder.getCapabilities() function lists all of the Codec types and DynamicRange types supported by this video decoder instance and indicates if the secure audio path can be used.
+The Capabilities parcelable returned by the IVideoDecoder.getCapabilities() function lists all of the Codec types and DynamicRange types supported by this video decoder instance and indicates if the secure video path can be used.
 
 A video decoder instance may support any number of video codecs, but can only operate on one compressed video stream in an open session.  Concurrent video decode requires multiple video decoder instances to be opened.
 
@@ -113,7 +107,7 @@ flowchart TD
         VideoFrameQueue["Video Frame Queue"]
     end
     RDKClientComponent -- createVideoPool() <br> alloc() <br> free() <br> destroyPool() --> IAVBuffer
-    RDKClientComponent -- getVideoDecoderIds() <br> getVideoDecoder() getSupportedOperationModes()--> IVideoDecoderManager
+    RDKClientComponent -- getVideoDecoderIds() <br> getVideoDecoder() <br> getSupportedOperationModes() --> IVideoDecoderManager
     RDKClientComponent -- getCapabilities() <br> getProperty() <br> getPropertyMulti() <br> getState() <br> open() <br> close() <br> registerEventListener() <br> unregisterEventListener()--> IVideoDecoder
     RDKClientComponent -- registerEventListener() <br> unregisterEventListener() --> IVideoDecoder
     RDKClientComponent -- start() <br> stop() <br> setProperty() <br> decodeBuffer() <br> flush() <br> signalDiscontinuity() <br> signalEOS() <br> parseCodecSpecificData() --> IVideoDecoderController
@@ -251,7 +245,7 @@ In all modes, AV buffers containing compressed video are passed into the video d
 | Operational Mode | Description |
 |---|---|
 | `TUNNELLED` | Decoded video frames are passed directly to the linked video sink and video plane for rendering. <br>The vendor layer is responsible for AV sync where audio and video streams are linked in the same pipeline. <br>Decoded video frames are never received back in frame buffers over `IVideoDecoderControllerListener.onFrameOutput()`, but the `FrameMetadata` must still be returned in the usual way. <br>All calls to `onFrameOutput()` shall have the `frameBufferHandle` set to -1 to indicate no video frame buffer handle is being passed back. <br>It is optional for video decoders to support tunnelled operational mode. <br>If supported, tunnelled mode may be dynamically enabled or disabled while the video decoder is `READY` or `STARTED` and may run concurrently with graphics texture mode. Tunnelled mode cannot be used at the same time as non-tunnelled mode. |
-| `NON_TUNNELLED` | Decoded video frames are received back in video frame buffers over `IVideoDecoderListener.onFrameOutput()`. <br>Frames must be received in presentation order. <br>It is optional for video decoders to support non-tunnelled operational mode. <br>If supported, non-tunnelled mode may be dynamically enabled or disabled while the video decoder is `READY` or `STARTED` and may run concurrently with graphics texture mode. <br>Non-tunnelled mode cannot be used at the same time as tunnelled mode. |
+| `NON_TUNNELLED` | Decoded video frames are received back in video frame buffers over `IVideoDecoderControllerListener.onFrameOutput()`. <br>Frames must be received in presentation order. <br>It is optional for video decoders to support non-tunnelled operational mode. <br>If supported, non-tunnelled mode may be dynamically enabled or disabled while the video decoder is `READY` or `STARTED` and may run concurrently with graphics texture mode. <br>Non-tunnelled mode cannot be used at the same time as tunnelled mode. |
 | `GRAPHICS_TEXTURE` | Video frames are converted to NV12 textures. <br>It is optional for video decoders to support graphics texture operational mode. <br>If supported, graphics texture mode may be dynamically enabled or disabled while the video decoder is `READY` or `STARTED` and may run concurrently with tunnelled or non-tunnelled mode. |
 
 ## Frame Metadata
@@ -304,7 +298,7 @@ If the frame buffer pool is empty then the video decoder cannot output the next 
 
 ## Presentation Time for Video Frames
 
-The presentation time base units for video frames is nanoseconds and passed in an int64 (long in AIDL definition) variable type. Audio buffers shared the same time base units of nanoseconds.
+The presentation time base units for video frames is nanoseconds and passed in an int64 (long in AIDL definition) variable type. Video buffers share the same time base units of nanoseconds with audio buffers.
 
 When coded video frames are passed in through [AV Buffer](../../av_buffer/current/av_buffer.md) handles to `IVideoDecoderController.decodeBuffer()` the `nsPresentationTime` parameter represents the video frame presentation time.
 

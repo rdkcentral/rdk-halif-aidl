@@ -28,5 +28,5 @@ enum AACProfile {
     HE_V1 = 1,         /**< High Efficiency AAC v1. */
     HE_V2 = 2,         /**< High Efficiency AAC v2. */
     ELD = 3,           /**< Enhanced Low Delay AAC. */
-    X_HE = 4           /**< Extended HE-AAC (exHE-AAC). */
+    XHE = 4           /**< Extended HE-AAC (exHE-AAC). */
 } 
