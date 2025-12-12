@@ -4,8 +4,8 @@
 
 |Date|Author|Comments|
 |----|------|--------|
-|21 May 2025|G.Weatherup|Draft Revision|
-|12 Dec 2024|G.Weatherup|Updated for multi-layer architecture|
+|2025-05-21|G.Weatherup|Draft Revision|
+|2024-12-12|G.Weatherup|Updated for multi-layer architecture|
 
 ## Related Pages
 
@@ -559,7 +559,7 @@ ln -sf ${INSTALL_ROOT}/systemd/mw-streaming.service ${D}/etc/systemd/system/mw-s
 # Log directory symlink
 ln -sf /var/log/mw/streaming ${D}${INSTALL_ROOT}/logs
 
-# Version file
+# Version file (using YYYY-MM-DD HH:MM:SS UTC format)
 echo "version=3.1.0" > ${D}${INSTALL_ROOT}/VERSION
 echo "build_date=$(date '+%Y-%m-%d %H:%M:%S %Z')" >> ${D}${INSTALL_ROOT}/VERSION
 echo "layer=mw" >> ${D}${INSTALL_ROOT}/VERSION

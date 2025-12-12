@@ -4,7 +4,7 @@
 
 |Date|Author|Comments|
 |----|------|--------|
-|12 Dec 2024|G.Weatherup|Initial comprehensive specification|
+|2024-12-12|G.Weatherup|Initial comprehensive specification|
 
 ## References
 
