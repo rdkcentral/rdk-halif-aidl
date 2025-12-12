@@ -34,12 +34,12 @@ parcelable Capabilities
 	/**
 	 * Array of CodecCapability parcelables supported by this video decoder instance.
 	 */
-    CodecCapabilities[] supportedCodecs;
+    CodecCapabilities[] codecCapabilities;
 
 	/**
 	 * Array of DynamicRange values supported by this video decoder instance.
 	 */
-    DynamicRange[] supportedDynamicRanges;
+    DynamicRange[] dynamicRange;
 
 	/**
 	 * Array of Colorimetry values that this decoder instance can detect and report

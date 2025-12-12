@@ -25,6 +25,6 @@ package com.rdk.hal.audiodecoder;
  */
 enum DTSProfile {
     CORE = 0,            /**< DTS Core (mandatory) */
-    HD_HRA = 1,          /**< DTS‑HD High Resolution Audio */
-    HD_MA = 2            /**< DTS‑HD Master Audio (lossless) */
+    HD_HRA = 1,          /**< DTS-HD High Resolution Audio */
+    HD_MA = 2            /**< DTS-HD Master Audio (lossless) */
 }

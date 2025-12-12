@@ -24,7 +24,7 @@ package com.rdk.hal.audiodecoder;
  * @brief Enumeration of profiles for the WMA codec (Codec.WMA).
  */
 enum WMAProfile {
-    STANDARD = 0,        /**< WMA Standard (v9) */
+    STANDARD = 0,        /**< WMA Standard (typically v9). */
     PRO = 1,             /**< WMA Pro */
     LOSSLESS = 2         /**< WMA Lossless */
 }

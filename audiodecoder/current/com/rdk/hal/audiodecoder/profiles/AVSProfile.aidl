@@ -21,11 +21,11 @@ package com.rdk.hal.audiodecoder;
 @VintfStability
 @Backing(type="int")
 /**
- * @brief Enumeration of profiles for the AVS codec (Codec.AVS).
+ * @brief AVS system generation for associated audio (Codec.AVS).
  */
 enum AVSProfile {
-    AVS1_PART2 = 0,      /**< AVS1 Part 2 (mandatory for DTV) */
-    AVS2 = 1,            /**< AVS2 Audio (UHD broadcast) */
-    AVS3 = 2             /**< AVS3 Audio (emerging IP streaming) */
+    AVS1_PART2 = 0,      /**< AVS1-P2 system generation (SD/HD DTV). */
+    AVS2       = 1,      /**< AVS2 system generation (UHD broadcast). */
+    AVS3       = 2       /**< AVS3 system generation (next-gen / IP). */
 }
 

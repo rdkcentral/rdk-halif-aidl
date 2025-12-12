@@ -24,7 +24,7 @@ package com.rdk.hal.audiodecoder;
  * @brief Enumeration of profiles for the REALAUDIO codec (Codec.REALAUDIO).
  */
 enum REALAUDIOProfile {
-    RA8 = 0,             /**< Commonly supported legacy version */
-    RA10 = 1             /**< Higher quality, rarely supported */
+    RA8  = 0, /**< RealAudio 8 / typical legacy streams. */
+    RA10 = 1, /**< RealAudio 10 / newer, higher-quality variant (less commonly supported). */
 }
 

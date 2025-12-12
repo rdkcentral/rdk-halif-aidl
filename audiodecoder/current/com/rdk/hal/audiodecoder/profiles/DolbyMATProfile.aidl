@@ -24,6 +24,6 @@
  * @brief Enumeration of profiles for Dolby MAT codec (Codec.DOLBY_MAT).
  */
 enum DolbyMATProfile {
-    V1 = 0,            /**< Dolby MAT version 1. */
-    V2 = 1             /**< Dolby MAT version 2. */
+    V1 = 0, /**< Dolby MAT v1 (legacy). */
+    V2 = 1, /**< Dolby MAT v2 (common for Atmos over HDMI). */
 }

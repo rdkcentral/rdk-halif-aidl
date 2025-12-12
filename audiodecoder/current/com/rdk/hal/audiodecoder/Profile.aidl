@@ -19,8 +19,13 @@
 package com.rdk.hal.audiodecoder;
 
 import com.rdk.hal.audiodecoder.AACProfile;
+import com.rdk.hal.audiodecoder.AVSProfile;
 import com.rdk.hal.audiodecoder.DolbyAC3Profile;
 import com.rdk.hal.audiodecoder.DolbyMATProfile;
+import com.rdk.hal.audiodecoder.DTSProfile;
+import com.rdk.hal.audiodecoder.REALAUDIOProfile;
+import com.rdk.hal.audiodecoder.USACProfile;
+import com.rdk.hal.audiodecoder.WMAProfile;
 
 @VintfStability
 /**
@@ -29,6 +34,11 @@ import com.rdk.hal.audiodecoder.DolbyMATProfile;
  */
 union Profile {
     AACProfile aac;
+    AVSProfile avs;
     DolbyAC3Profile dolbyAc3;
     DolbyMATProfile dolbyMat;
+    DTSProfile dts;
+    REALAUDIOProfile realAudio;
+    USACProfile usac;
+    WMAProfile wma;
 }
