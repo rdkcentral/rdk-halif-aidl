@@ -21,15 +21,29 @@
 #** ******************************************************************************
 
 # HAL Feature Profile for boot
-
-IBoot:                 # Component object begins
+Boot:                 # Component object begins
     interfaceVersion: current
+    # Supported reasons for device boot (from BootReason.aidl)
     supportedBootReasons:
-      - WATCHDOG
-      - SOFTWARE_RESET
-      - THERMAL_RESET
-      - WARM_RESET
-      - COLD_BOOT
-      - STR_AUTH_FAILURE
+      - ERROR_UNKNOWN           # Boot Reason is unknown
+      - WATCHDOG                # Boot Reason is due to Watchdog Timer
+      - MAINTENANCE_REBOOT      # Boot Reason is due to Maintenance Reboot
+      - THERMAL_RESET           # Boot Reason is due to Thermal Reset (overheating)
+      - WARM_RESET              # Boot Reason is due to Software Reboot
+      - COLD_BOOT               # Boot Reason is due to Cold Boot (power cycle)
+      - STR_AUTH_FAILURE        # Boot Reason is due to Suspend to RAM Authentication Failure
+
+    # Supported reset types (from ResetType.aidl), caller should also set the `reasonString`
     supportedResetTypes:
-      - FULL_SYSTEM_RESET
+      - FULL_SYSTEM_RESET               # Delete all persistent data partitions and recreate them
+      - INVALIDATE_CURRENT_APPLICATION_IMAGE # Invalidate current application image, select other bank if available
+      - FORCE_DISASTER_RECOVERY         # Enter disaster recovery mode
+      - MAINTENANCE_REBOOT              # Maintenance Reboot
+      - SOFTWARE_REBOOT                 # Performing Reboot for a Software reason (which is specifically not a Maintenance Reboot)
+
+    # Supported power source types (from PowerSource.aidl)
+    supportedPowerSources:
+      - UNKNOWN                 # The device power source cannot be determined
+      - PSU                     # External power supply unit
+      - USB                     # USB-driven power source
+      - POE                     # Power over Ethernet
