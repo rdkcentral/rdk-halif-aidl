@@ -438,7 +438,7 @@ ln -sf ${INSTALL_ROOT}${systemd_unitdir}/system/start-up-scripts.service ${D}/et
 # Version Metadata
 mkdir -p ${D}${INSTALL_ROOT}
 echo "src_version=$(cd ${S} && git describe --tags --always || echo unknown)" > ${D}${INSTALL_ROOT}/VERSION
-echo "build_date=$(date '+%Y-%m-%d %H:%M:%S %Z')" >> ${D}${INSTALL_ROOT}/VERSION
+echo "build_date=$(TZ=UTC date '+%Y-%m-%d %H:%M:%S UTC')" >> ${D}${INSTALL_ROOT}/VERSION
 
 # This version reflects the git-describe version of the recipe itself (.bb file)
 echo "recipe_version=$(cd $(dirname ${BBPATH})/../.. && git describe --tags --always 2>/dev/null || echo unknown)" >> ${D}${INSTALL_ROOT}/VERSION
@@ -561,7 +561,7 @@ ln -sf /var/log/mw/streaming ${D}${INSTALL_ROOT}/logs
 
 # Version file (using YYYY-MM-DD HH:MM:SS UTC format)
 echo "version=3.1.0" > ${D}${INSTALL_ROOT}/VERSION
-echo "build_date=$(date '+%Y-%m-%d %H:%M:%S %Z')" >> ${D}${INSTALL_ROOT}/VERSION
+echo "build_date=$(TZ=UTC date '+%Y-%m-%d %H:%M:%S UTC')" >> ${D}${INSTALL_ROOT}/VERSION
 echo "layer=mw" >> ${D}${INSTALL_ROOT}/VERSION
 echo "dependencies=vendor-hdmi:2.5.0,vendor-audio:1.3.0" >> ${D}${INSTALL_ROOT}/VERSION
 ```
