@@ -22,7 +22,6 @@ package com.rdk.hal.audiodecoder;
 @Backing(type="int")
 /**
  * @brief Enumeration of profiles for the USAC codec (Codec.USAC).
- *
  */
 enum USACProfile {
     BASELINE        = 0, /**< MPEG-D USAC Baseline profile. */

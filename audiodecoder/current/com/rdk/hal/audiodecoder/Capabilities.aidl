@@ -39,4 +39,10 @@ parcelable Capabilities {
      * - Maximum bit depth
      */
     CodecSupport[] codecCapabilities;
+
+	/**
+	 * Indicates if this decoder instance can work in secure audio path (SAP) mode. 
+	 * If true, secure audio sessions (e.g., for DRM-protected content) are supported.
+	 */
+    boolean supportsSecure;
 }

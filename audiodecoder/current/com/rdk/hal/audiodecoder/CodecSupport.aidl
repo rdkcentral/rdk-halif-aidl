@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package com.rdk.hal.audiodecoder;
+package com.rdk.hal.audiodecoder;
 
 import com.rdk.hal.audiodecoder.Codec;
 import com.rdk.hal.audiodecoder.Profile;
@@ -45,7 +45,7 @@ parcelable CodecSupport
      */
     Profile[] profiles;
 
-    long maxBitrateBps;        /**< Maximum supported bitrate in bits per second (e.g., 320000, 6000000). */
+    long maxBitrateInBps;      /**< Maximum supported bitrate in bits per second (e.g., 320000, 6000000). */
     int maxSampleRateInHz;     /**< Maximum supported sample rate in Hz (e.g., 48000, 96000). */
     int maxChannels;           /**< Maximum number of supported audio channels (e.g., 2, 6, 8). */
     int maxBitDepth;           /**< Maximum supported bit depth (e.g., 16, 24). Applies to PCM, FLAC, etc. */

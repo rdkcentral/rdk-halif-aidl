@@ -23,6 +23,7 @@ import com.rdk.hal.audiodecoder.IAudioDecoderController;
 import com.rdk.hal.audiodecoder.Capabilities;
 import com.rdk.hal.audiodecoder.Property;
 import com.rdk.hal.audiodecoder.Codec;
+import com.rdk.hal.audiodecoder.Profile;
 import com.rdk.hal.audiodecoder.CSDAudioFormat;
 import com.rdk.hal.audiodecoder.State;
 import com.rdk.hal.PropertyValue;
