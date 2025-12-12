@@ -5,90 +5,161 @@
 |Date|Author|Comments|
 |----|------|--------|
 |21 May 2025|G.Weatherup|Draft Revision|
+|12 Dec 2024|G.Weatherup|Updated for multi-layer architecture|
 
 ## Related Pages
 
 !!! tip "Related Pages"
+    - [File System](file_system.md)
     - [HALIF Logging System Design](halif_logging_system_design.md)
+    - [Logging System](logging_system.md)
 
 ## Purpose
 
-This document defines the file placement and dynamic linking policies. It ensures modularity, maintainability, and reliable integration of vendor and third-party components.
+This document defines the file placement and dynamic linking policies for the **layered file system architecture**. It ensures modularity, maintainability, and reliable integration of components across multiple layers.
 
-Applicable to all vendor-provided modules, libraries, executables, and configuration files delivered in the `/vendor` partition.
+Applicable to all modules, libraries, executables, and configuration files delivered in the `/vendor`, `/mw`, `/product`, and `/apps` layers.
+
+!!! note "Multi-Layer Architecture"
+    This specification now covers all system layers, not just `/vendor`. Each layer (`/vendor`, `/mw`, `/product`, `/apps`) follows the same structural conventions while maintaining independence. For architectural overview, see [File System](file_system.md).
 
 ## Design Principles
 
-* **Self-contained Modules**: Each vendor module resides within its own directory under `/vendor/<module>/`.
-* **Mount Isolation**: `/vendor` is treated as an independent mount point, allowing separate updates and integrity checks.
-* **No Global Path Pollution**: Avoids modifying system-level directories like `/etc` or `/lib`, unless explicitly structured.
+* **Self-contained Modules**: Each module resides within its own directory under `/<layer>/<module>/` (e.g., `/vendor/<module>/`, `/mw/<module>/`).
+* **Layer Isolation**: Each layer (`/vendor`, `/mw`, `/product`, `/apps`) is an independent mount point, allowing separate updates, versioning, and integrity checks.
+* **No Global Path Pollution**: Avoids modifying system-level directories like `/etc` or `/lib`, unless explicitly structured via symlinks.
+* **Independent OSS Management**: Each layer manages its own Open Source Software components consumed exclusively from its mount point.
 
 ## Directory Layout
 
-Each vendor module should follow the directory convention:
+Each module in any layer should follow the directory convention:
 
 ```bash
-/vendor/<module>/
+/<layer>/<module>/              # Where <layer> is vendor, mw, product, or apps
 ├── bin/          # Executables specific to the module
 ├── lib/          # Shared/static libraries used by the module
 ├── etc/          # Configuration files for the module
+│   └── manifest.json          # Module metadata and dependencies
 ├── data/         # Optional runtime or persistent module data
 ├── app_armor/    # Optional AppArmor profiles for the module
 ├── systemd/      # Optional systemd service files
 ├── memory/       # Static guide to resource usage declarations
-├── logs/ -> /var/log/vendor/<module>/   # Writable logs symlink
+│   └── usage.conf             # Memory footprint declarations
+├── logs/ -> /var/log/<layer>/<module>/   # Writable logs symlink
 ├── ld.so.conf.d/ # Optional linker path configuration for symlink
-├── VERSION       # Optional module version information
+├── VERSION       # Module version and build information (recommended)
+```
+
+### Examples by Layer
+
+**Vendor Layer** (`/vendor/<module>/`):
+```bash
+/vendor/hdmi/
+├── bin/hdmi-daemon
+├── lib/libhdmi.so.1.0
+├── etc/hdmi.conf
+└── VERSION
+```
+
+**Middleware Layer** (`/mw/<module>/`):
+```bash
+/mw/streaming/
+├── bin/stream-manager
+├── lib/libstreaming.so.2.0
+├── etc/streaming.conf
+└── VERSION
+```
+
+**Product Layer** (`/product/<module>/`):
+```bash
+/product/branding/
+├── data/logo.png
+├── etc/theme.conf
+└── VERSION
+```
+
+**Apps Layer** (`/apps/<app>/`):
+```bash
+/apps/netflix/
+├── bin/netflix
+├── lib/libnetflix.so
+└── VERSION
 ```
 
 ## Integration Requirements
 
-* Executables must be invoked using absolute paths.
+* Executables must be invoked using absolute paths (e.g., `/vendor/<module>/bin/daemon`, `/mw/<module>/bin/service`).
 * Any module requiring dynamic libraries must either:
-  * Embed RPATH during linking (`-Wl,-rpath,/vendor/<module>/lib`), or
-  * Rely on linker cache updates (see Section 6).
+  * Embed RPATH during linking (`-Wl,-rpath,/<layer>/<module>/lib`), or
+  * Rely on linker cache updates via `/etc/ld.so.conf.d/` configuration.
 * Environment variables (e.g., `LD_LIBRARY_PATH`) must not be relied upon at runtime.
+* Cross-layer dependencies must be declared in the module's `etc/manifest.json` file.
+* Each layer maintains independence — libraries from one layer should not directly link against internal libraries of another layer unless through well-defined interfaces.
 
 ## Dynamic Linking and `dlopen()` Support
 
-**Requirement: Vendor module libraries must be made visible to the system linker via configuration files in `/etc/ld.so.conf.d/` to support standard dynamic linking and `dlopen()` usage.**
+**Requirement: Module libraries must be made visible to the system linker via configuration files in `/etc/ld.so.conf.d/` to support standard dynamic linking and `dlopen()` usage.**
 
-Each vendor module must provide a configuration file:
+Each module in any layer must provide a configuration file:
 
 ```bash
-/vendor/<module>/ld.so.conf.d/vendor-<module>.conf
+/<layer>/<module>/ld.so.conf.d/<layer>-<module>.conf
 ```
 
 During image creation, a symbolic link must be created:
 
 ```bash
-/etc/ld.so.conf.d/vendor-<module>.conf -> /vendor/<module>/ld.so.conf.d/vendor-<module>.conf
+/etc/ld.so.conf.d/<layer>-<module>.conf -> /<layer>/<module>/ld.so.conf.d/<layer>-<module>.conf
 ```
 
-Example content:
+### Examples by Layer
 
+**Vendor Module**:
 ```bash
+# File: /vendor/input/ld.so.conf.d/vendor-input.conf
 /vendor/input/lib
+
+# Symlink: /etc/ld.so.conf.d/vendor-input.conf -> /vendor/input/ld.so.conf.d/vendor-input.conf
+```
+
+**Middleware Module**:
+```bash
+# File: /mw/streaming/ld.so.conf.d/mw-streaming.conf
+/mw/streaming/lib
+
+# Symlink: /etc/ld.so.conf.d/mw-streaming.conf -> /mw/streaming/ld.so.conf.d/mw-streaming.conf
 ```
 
 **Post-Install Action:** The system must execute `ldconfig` after installation or image build to regenerate the dynamic linker cache.
 
 ## AppArmor Integration and Permissions
 
-To maintain security boundaries and prevent privilege escalation, each vendor module integrated into the `/vendor/<module>/` structure must be governed by an AppArmor profile.
+To maintain security boundaries and prevent privilege escalation, each module integrated into any layer must be governed by an AppArmor profile.
 
 ### AppArmor Profile Structure
 
 Each module will include its AppArmor profile in:
 
 ```bash
-/vendor/<module>/app_armor/
+/<layer>/<module>/app_armor/<layer>-<module>.profile
 ```
 
 To activate the profile, a symbolic link will be created at install time:
 
 ```bash
-/etc/apparmor.d/vendor-<module>.profile -> /vendor/<module>/app_armor/vendor-<module>.profile
+/etc/apparmor.d/<layer>-<module>.profile -> /<layer>/<module>/app_armor/<layer>-<module>.profile
+```
+
+### Examples by Layer
+
+**Vendor Module**:
+```bash
+/etc/apparmor.d/vendor-hdmi.profile -> /vendor/hdmi/app_armor/vendor-hdmi.profile
+```
+
+**Middleware Module**:
+```bash
+/etc/apparmor.d/mw-streaming.profile -> /mw/streaming/app_armor/mw-streaming.profile
 ```
 
 ### Enforcement Policy
@@ -100,18 +171,21 @@ To activate the profile, a symbolic link will be created at install time:
 
 ## Update and Runtime Policy
 
-* `/vendor` is treated as read-only at runtime.
-* Writable runtime data for modules should be stored under `/var/vendor/<module>/`.
+* All layers (`/vendor`, `/mw`, `/product`, `/apps`) are treated as **read-only** at runtime.
+* Writable runtime data for modules should be stored under `/var/<layer>/<module>/`.
 * Updates to modules must not affect global system directories outside of `/etc/ld.so.conf.d/` and `/etc/apparmor.d/` symlinks.
 * AppArmor profiles should be validated against updated module paths post-deployment.
+* **Layer Independence**: Updates to one layer (e.g., `/mw`) must not require rebuilding other layers (e.g., `/vendor`), provided interface contracts are maintained.
+* **Version Pinning**: Cross-layer dependencies must specify version requirements in manifest files to ensure compatibility.
 
 ## Operational Considerations
 
 ### Filesystem Access Policy
 
-* `/vendor` is **read-only** at runtime.
-* `/vendor/<module>/log` is the designated **writable** path for runtime data, logs, and override configurations, this is a symbolic link from `/var/log/vendor/<module>/`
-* Vendor modules must not write to `/etc`, `/usr`, or other immutable parts of the root filesystem.
+* All layers (`/vendor`, `/mw`, `/product`, `/apps`) are **read-only** at runtime.
+* `/<layer>/<module>/log` is the designated **writable** path for runtime data, logs, and override configurations; this is a symbolic link from `/var/log/<layer>/<module>/`
+* Modules must not write to `/etc`, `/usr`, or other immutable parts of the root filesystem.
+* Each layer maintains isolated writable storage under `/var/<layer>/` to prevent cross-contamination.
 
 ### Memory Footprint Declarations
 
@@ -129,39 +203,71 @@ To activate the profile, a symbolic link will be created at install time:
 
 ### Systemd Service Integration
 
-* Each module may include its own `.service` file in `/vendor/<module>/systemd/`.
+* Each module may include its own `.service` file in `/<layer>/<module>/systemd/`.
 * Post-install, symlinks must be created in `/etc/systemd/system/`:
 
   ```bash
-  /etc/systemd/system/vendor-<module>.service -> /vendor/<module>/systemd/vendor-<module>.service
+  /etc/systemd/system/<layer>-<module>.service -> /<layer>/<module>/systemd/<layer>-<module>.service
   ```
 
-* Services must declare dependencies using `After=`, `Requires=`, and optionally `WatchdogSec=` for health monitoring. **The vendor layer does not specify modules to be installed `After=` but milestone points to refer too.**
+* Services must declare dependencies using `After=`, `Requires=`, and optionally `WatchdogSec=` for health monitoring.
+* **Layer Boundaries**: Lower-layer services (e.g., vendor) should define milestone targets for upper layers to depend on, but must not directly reference upper-layer services.
+
+### Examples by Layer
+
+**Vendor Service**:
+```bash
+/etc/systemd/system/vendor-hdmi.service -> /vendor/hdmi/systemd/vendor-hdmi.service
+```
+
+**Middleware Service** (depending on vendor milestone):
+```bash
+# /mw/streaming/systemd/mw-streaming.service
+[Unit]
+Description=Streaming Middleware Service
+After=vendor-layer.target
+Requires=vendor-hdmi.service
+
+[Service]
+ExecStart=/mw/streaming/bin/stream-manager
+```
 
 ### Log Management
 
 * Logs must be written to:
 
-`/vendor/<module>/log/`
+`/<layer>/<module>/log/`
 
 * This path must be a symbolic link to:
 
-`/var/log/vendor/<module>/`
+`/var/log/<layer>/<module>/`
 
-Logs will be written too `/vendor/<module>/log/`.
+Logs will be written to `/<layer>/<module>/log/`, which redirects to the writable `/var/log/<layer>/<module>/` location.
+
+### Examples by Layer
+
+**Vendor Module**:
+```bash
+/vendor/hdmi/log/ -> /var/log/vendor/hdmi/
+```
+
+**Middleware Module**:
+```bash
+/mw/streaming/log/ -> /var/log/mw/streaming/
+```
 
 #### Log File Rotation Integration
 
 Each module may provide a standard logrotate config file:
 
-```c
-/vendor/<module>/etc/logrotation.conf
+```bash
+/<layer>/<module>/etc/logrotation.conf
 ```
 
-This file can be symlinked to or copied too `/etc/logrotate.d/<module>` from `/vendor/<module>/etc/module_logrotate.conf` to integrate with the system logrotate process.
+This file can be symlinked to `/etc/logrotate.d/<layer>-<module>` from `/<layer>/<module>/etc/logrotation.conf` to integrate with the system logrotate process.
 
-```c
-/vendor/<module>/log/<module>.log { 
+```bash
+/<layer>/<module>/log/<module>.log { 
   size 100k
   rotate 5
   compress
@@ -186,7 +292,7 @@ Logging continues uninterrupted via copytruncate.
 
 Build-time log level configuration is defined in:
 
-`/vendor/<module>/etc/loglevel.conf`
+`/<layer>/<module>/etc/loglevel.conf`
 
 Format:
 
@@ -196,15 +302,15 @@ The default log level must be set to error.
 
 ### Startup Configuration Application:
 
-During system startup, the vendor platform layer is responsible for applying this syslog configuration settings for each of the modules.
+During system startup, each layer's platform components are responsible for applying syslog configuration settings for their modules.
 
 This is platform-specific and may involve setting log levels in drivers, kernel modules, or components using platform-appropriate mechanisms.
 
-The vendor layer team ensures this file is parsed and its value applied according to the SoC’s logging configuration method.
+Each layer team ensures this file is parsed and its value applied according to the SoC’s logging configuration method.
 
 At runtime, a copy of the configuration is made to a writable location:
 
-`/vendor/<module>/log/loglevel.conf`
+`/<layer>/<module>/log/loglevel.conf`
 
 Wrapper modules will read the log level from the runtime configuration file to support dynamic log level adjustments without requiring a reboot or rebuild.
 
@@ -239,21 +345,29 @@ Filter messages based on severity.
 
 Format and dispatch logs appropriately to syslog or other targets.
 
-### Version Declaration (Optional)
+### Version Declaration (Recommended)
 
-* Each module may include a file `/vendor/<module>/VERSION` with contents akin to:
+* Each module should include a file `/<layer>/<module>/VERSION` with contents akin to:
 
   ```bash
   version=MAJOR.MINOR.PATCH
-  build_date=YYYYMMDD
-  build_sha=sha256:<value>
+  build_date=YYYY-MM-DD HH:MM:SS UTC
+  build_sha=sha256:<commit-hash>
+  layer=vendor|mw|product|apps
+  dependencies=<comma-separated list>
   ```
 
-* Version should be Semantic Versioning (SemVer).
+* Version should follow Semantic Versioning (SemVer).
+* The `layer` field identifies which layer the module belongs to.
+* The `dependencies` field lists runtime dependencies on other modules.
 
-## Appendix: Example Integration with Alternate Install Root
+## Appendix: Example Integration
 
-This section provides a concrete example of how a vendor module can integrate with the `/vendor/sysint/${sysconfdir}` structure in compliance with the directory and dynamic linking policies described above.
+This section provides concrete examples of how modules can integrate with the multi-layer architecture in compliance with the directory and dynamic linking policies described above.
+
+### Example 1: Vendor Layer Module Integration
+
+This example shows how a vendor module integrates with the `/vendor/sysint/${sysconfdir}` structure.
 
 ### Overview
 
@@ -342,9 +456,139 @@ recipe_version=2.5.0-123-gabcde12
 sysint-oem.inc_version=sysint-oem-1.3.2-45-gabcdef1
 ```
 
-### Compliance Notes
+### Compliance Notes (Vendor Example)
 
 * All artifacts are scoped to the module directory under `/vendor/sysint`.
 * Global system directories are only modified via symlinks into expected locations.
 * The `VERSION` file provides build provenance including Git tag of the recipe and any referenced include.
 * This supports modular updates and ensures the system remains maintainable, verifiable, and secure.
+
+### Example 2: Middleware Layer Module Integration
+
+This example shows how a middleware module integrates with the `/mw/<module>/` structure.
+
+#### Directory Structure
+
+```bash
+/mw/streaming/
+├── bin/
+│   └── stream-manager
+├── lib/
+│   └── libstreaming.so.2.0
+├── etc/
+│   ├── streaming.conf
+│   ├── manifest.json
+│   └── loglevel.conf
+├── systemd/
+│   └── mw-streaming.service
+├── app_armor/
+│   └── mw-streaming.profile
+├── ld.so.conf.d/
+│   └── mw-streaming.conf
+├── memory/
+│   └── usage.conf
+├── logs/ -> /var/log/mw/streaming/
+└── VERSION
+```
+
+#### Example manifest.json
+
+```json
+{
+  "module": "streaming",
+  "version": "3.1.0",
+  "layer": "mw",
+  "dependencies": {
+    "runtime": [
+      "vendor-hdmi:2.5.0",
+      "vendor-audio:1.3.0"
+    ],
+    "build": [
+      "toolchain:11.0"
+    ]
+  },
+  "provides": [
+    "libstreaming.so.2",
+    "stream-manager"
+  ],
+  "conflicts": [],
+  "oss_components": [
+    {"name": "gstreamer", "version": "1.20.3", "license": "LGPL-2.1"},
+    {"name": "ffmpeg", "version": "5.1.2", "license": "LGPL-2.1"}
+  ]
+}
+```
+
+#### Integration Snippet (Yocto-style do_install())
+
+```bash
+INSTALL_ROOT="/mw/streaming"
+
+# Create directory structure
+install -d ${D}${INSTALL_ROOT}/{bin,lib,etc,systemd,app_armor,ld.so.conf.d,memory}
+install -d ${D}/etc/{ld.so.conf.d,apparmor.d,systemd/system,logrotate.d}
+install -d ${D}/var/log/mw/streaming
+
+# Install binaries and libraries
+install -m 0755 ${S}/bin/stream-manager ${D}${INSTALL_ROOT}/bin/
+install -m 0644 ${S}/lib/libstreaming.so.2.0 ${D}${INSTALL_ROOT}/lib/
+ln -sf libstreaming.so.2.0 ${D}${INSTALL_ROOT}/lib/libstreaming.so.2
+
+# Install configuration
+install -m 0644 ${S}/etc/streaming.conf ${D}${INSTALL_ROOT}/etc/
+install -m 0644 ${S}/etc/manifest.json ${D}${INSTALL_ROOT}/etc/
+echo "loglevel=error" > ${D}${INSTALL_ROOT}/etc/loglevel.conf
+
+# Memory declarations
+echo "heap=8MB" > ${D}${INSTALL_ROOT}/memory/usage.conf
+echo "stack=1MB" >> ${D}${INSTALL_ROOT}/memory/usage.conf
+echo "static=2MB" >> ${D}${INSTALL_ROOT}/memory/usage.conf
+
+# Dynamic linker configuration
+echo "${INSTALL_ROOT}/lib" > ${D}${INSTALL_ROOT}/ld.so.conf.d/mw-streaming.conf
+ln -sf ${INSTALL_ROOT}/ld.so.conf.d/mw-streaming.conf ${D}/etc/ld.so.conf.d/mw-streaming.conf
+
+# AppArmor profile
+install -m 0644 ${S}/apparmor/mw-streaming.profile ${D}${INSTALL_ROOT}/app_armor/
+ln -sf ${INSTALL_ROOT}/app_armor/mw-streaming.profile ${D}/etc/apparmor.d/mw-streaming.profile
+
+# Systemd service
+install -m 0644 ${S}/systemd/mw-streaming.service ${D}${INSTALL_ROOT}/systemd/
+ln -sf ${INSTALL_ROOT}/systemd/mw-streaming.service ${D}/etc/systemd/system/mw-streaming.service
+
+# Log directory symlink
+ln -sf /var/log/mw/streaming ${D}${INSTALL_ROOT}/logs
+
+# Version file
+echo "version=3.1.0" > ${D}${INSTALL_ROOT}/VERSION
+echo "build_date=$(date '+%Y-%m-%d %H:%M:%S %Z')" >> ${D}${INSTALL_ROOT}/VERSION
+echo "layer=mw" >> ${D}${INSTALL_ROOT}/VERSION
+echo "dependencies=vendor-hdmi:2.5.0,vendor-audio:1.3.0" >> ${D}${INSTALL_ROOT}/VERSION
+```
+
+#### Example Systemd Service File
+
+```ini
+[Unit]
+Description=RDK Streaming Middleware Service
+After=vendor-layer.target vendor-hdmi.service vendor-audio.service
+Requires=vendor-hdmi.service
+
+[Service]
+Type=notify
+ExecStart=/mw/streaming/bin/stream-manager
+Restart=on-failure
+RestartSec=5s
+WatchdogSec=30s
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### Compliance Notes (Middleware Example)
+
+* All artifacts are scoped to `/mw/streaming/`.
+* Cross-layer dependencies are explicitly declared in `manifest.json`.
+* The systemd service depends on vendor-layer services but does not hard-code specific vendor module paths.
+* Independent OSS components (GStreamer, FFmpeg) are consumed from `/mw` mount points.
+* Supports independent updates of the middleware layer without rebuilding vendor layer.
