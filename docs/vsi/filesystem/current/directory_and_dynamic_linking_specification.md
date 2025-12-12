@@ -451,7 +451,7 @@ echo "sysint-oem.inc_version=$(cd ${LAYERDIR}/recipes-extended/sysint && git des
 
 ```ini
 src_version=2.5.0-123-gabcde12
-build_date=2025-06-20 14:45:30 UTC
+build_date=2024-06-20 14:45:30 UTC
 recipe_version=2.5.0-123-gabcde12
 sysint-oem.inc_version=sysint-oem-1.3.2-45-gabcdef1
 ```
