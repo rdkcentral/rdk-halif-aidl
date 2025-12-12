@@ -72,6 +72,7 @@ nav:
     - Sensor: halif/sensor/current/sensor.md
   - Vendor System Interfaces (VSI):
     - File System:
+        - Overview: vsi/filesystem/current/file_system.md
         - Directory And Dynamic Linking: vsi/filesystem/current/directory_and_dynamic_linking_specification.md
         - Logging System: vsi/filesystem/current/logging_system.md    
     - Bluetooth: vsi/bluetooth/current/bluetooth.md
