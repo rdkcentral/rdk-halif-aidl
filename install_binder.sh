@@ -21,16 +21,18 @@
 # *
 #** ******************************************************************************
 
-# Define repository and installation paths
-MY_PATH="$(realpath ${BASH_SOURCE[0]})"
-MY_DIR="$(dirname ${MY_PATH})"
+# Define paths relative to this script location
+MY_PATH="$(realpath "${BASH_SOURCE[0]}")"
+MY_DIR="$(dirname "${MY_PATH}")"
 REPO_URL="https://github.com/rdkcentral/linux_binder_idl"
-INSTALL_DIR="$MY_DIR/build-tools"
-CLONE_DIR="${BUILD_DIR}"
-BINDER_BIN_DIR="$INSTALL_DIR/linux_binder_idl"
-PROFILE_FILE="$HOME/.bashrc"
-SCRIPT_FILE="$BASH_SOURCE"
 
+# Where we put the tools
+INSTALL_DIR="$MY_DIR/build-tools"
+BINDER_REPO_DIR="$INSTALL_DIR/linux_binder_idl"
+BINDER_BUILD_SCRIPT="$BINDER_REPO_DIR/build-linux-binder-aidl.sh"
+STAMP_FILE="$BINDER_REPO_DIR/.installed_successfully"
+
+<<<<<<< Updated upstream
 
 # Minimal ANSI colour vars (why: standard, portable)
 RED="\033[0;31m"
@@ -47,9 +49,27 @@ clone_repo()
         echo "Cloning Binder tools repository..."
         mkdir -p ${INSTALL_DIR}
         git clone "$REPO_URL" "$INSTALL_DIR/linux_binder_idl"
+=======
+# EXPORT THIS for other scripts to use
+export BINDER_TOOLCHAIN_ROOT="$BINDER_REPO_DIR"
+
+# ------------------------------------------------------------------------------
+# 1. CLONE
+# ------------------------------------------------------------------------------
+clone_repo() {
+    if [ -d "$BINDER_REPO_DIR" ]; then
+        # Repo exists, but check if it's empty or valid? 
+        # For now assume existence is enough.
+        return 0
+>>>>>>> Stashed changes
     fi
+
+    echo "📦 Cloning Binder tools repository..."
+    mkdir -p "$INSTALL_DIR"
+    git clone "$REPO_URL" "$BINDER_REPO_DIR" || return 1
 }
 
+<<<<<<< Updated upstream
 # Detect shell & profile file (why: correct file for correct user shell)
 detect_profile() {
     if [ -n "$ZSH_VERSION" ]; then
@@ -58,9 +78,18 @@ detect_profile() {
         echo "$HOME/.bashrc"
     else
         echo "$HOME/.profile"
+=======
+# ------------------------------------------------------------------------------
+# 2. BUILD (Idempotent)
+# ------------------------------------------------------------------------------
+build_tools() {
+    # FAST EXIT: If stamp exists, we are done.
+    if [ -f "$STAMP_FILE" ]; then
+        return 0
+>>>>>>> Stashed changes
     fi
-}
 
+<<<<<<< Updated upstream
 PROFILE_FILE="$(detect_profile)"
 EXPORT_LINE="export PATH=\"$BINDER_BIN_DIR:\$PATH\""
 
@@ -94,23 +123,48 @@ verify_installation()
         echo "Binder tools installation successful."
     else
         echo "Installation failed or aidl_ops tool not found. Ensure the path is correctly set."
+=======
+    if [ ! -f "$BINDER_BUILD_SCRIPT" ]; then
+        echo "❌ Error: Build script not found at $BINDER_BUILD_SCRIPT"
+        return 1
+>>>>>>> Stashed changes
     fi
-}
 
-# Function to check if script was sourced
-check_sourced() 
-{
-    if [[ "$SCRIPT_FILE" == "$0" ]]; then
-        echo "Warning: This script should be sourced. Run it using:"
-        echo "    source $SCRIPT_FILE"
+    echo "🚀 Building Linux Binder Toolchain (This runs once)..."
+    
+    # Execute the build script in a subshell to protect current directory context
+    (cd "$BINDER_REPO_DIR" && /bin/bash "$BINDER_BUILD_SCRIPT")
+    
+    if [ $? -eq 0 ]; then
+        touch "$STAMP_FILE"
+        echo "✅ Toolchain build complete."
+    else
+        echo "❌ Toolchain build failed."
         return 1
     fi
 }
 
+<<<<<<< Updated upstream
 # Execute functions
 check_sourced
 clone_repo
 setup_path_auto
 verify_installation
+=======
+# ------------------------------------------------------------------------------
+# 3. SETUP PATH (Exports to current shell)
+# ------------------------------------------------------------------------------
+setup_path() {
+    LOCAL_BIN="$BINDER_REPO_DIR/local/bin"
+    if [[ ":$PATH:" != *":$LOCAL_BIN:"* ]]; then
+        export PATH="$LOCAL_BIN:$PATH"
+    fi
+}
+>>>>>>> Stashed changes
 
-echo "Binder tools setup complete."
+# ------------------------------------------------------------------------------
+# MAIN EXECUTION
+# ------------------------------------------------------------------------------
+clone_repo || return 1
+build_tools || return 1
+setup_path

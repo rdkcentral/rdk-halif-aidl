@@ -33,6 +33,8 @@ PyYAML==6.0.2
 pyyaml_env_tag==0.1
 regex==2024.11.6
 requests==2.32.3
+ruamel.yaml==0.18.16
+ruamel.yaml.clib==0.2.15
 six==1.17.0
 smmap==5.0.2
 urllib3==2.3.0
