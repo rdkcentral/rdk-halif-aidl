@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #/**
-# * Copyright 2024 Comcast Cable Communications Management, LLC
+# * Copyright 2025 Comcast Cable Communications Management, LLC
 # *
 # * Licensed under the Apache License, Version 2.0 (the "License");
 # * you may not use this file except in compliance with the License.
@@ -36,8 +36,17 @@
 # Once aidl repo attains stability this script can be removed.
 ############################################
 
-
 set -euo pipefail
+
+# ----------------------------------------------------------------------------
+# Setup and run the install and the venv
+# ----------------------------------------------------------------------------
+{
+  cd ./docs
+  ./scripts/install.sh --quiet
+  source ./scripts/activate_venv.sh
+  cd ..
+}
 
 ############################################
 # User settings

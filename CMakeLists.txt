@@ -21,48 +21,80 @@
 #** ******************************************************************************
 cmake_minimum_required(VERSION 3.8)
 
-project(Hal
-	LANGUAGES NONE
-	VERSION 1.0)
+project(Hal LANGUAGES NONE VERSION 1.0)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules)
+include(build-tools/linux_binder_idl/host/CMakeLists.inc)
 
-include(CompileAidl)
+# --- 1. Define Known Modules ---
+# Based on your logs, here are all the interfaces in your project
+set(ALL_MODULES
+    audiodecoder
+    audiosink
+    avbuffer
+    avclock
+    boot
+    cec
+    common
+    deepsleep
+    deviceinfo
+    flash
+    hdmiinput
+    hdmioutput
+    indicator
+    panel
+    planecontrol
+    videodecoder
+    videosink
+)
 
+# --- 2. Setup Variables ---
 if (DEFINED AIDL_BIN)
-	get_filename_component(AIDL_BIN ${AIDL_BIN} ABSOLUTE)
-	message(STATUS "AIDL_BIN set to ${AIDL_BIN}")
+    get_filename_component(AIDL_BIN ${AIDL_BIN} ABSOLUTE)
 endif()
-
-if (NOT DEFINED AIDL_TARGET)
-	message(FATAL_ERROR "AIDL_TARGET must be defined")
-elseif (NOT IS_DIRECTORY ${CMAKE_SOURCE_DIR}/${AIDL_TARGET})
-	message(FATAL_ERROR "Module `${AIDL_TARGET}` not found")
-endif()
-message(STATUS "AIDL_TARGET set to ${AIDL_TARGET}")
 
 if (NOT DEFINED AIDL_SRC_VERSION)
-    message(STATUS "Setting AIDL_SRC_VERSION to `current`")
+    message(STATUS "AIDL_SRC_VERSION not set, defaulting to `current`")
     set(AIDL_SRC_VERSION "current")
 endif()
-message(STATUS "AIDL_SRC_VERSION set to ${AIDL_SRC_VERSION}")
 
 if (NOT DEFINED AIDL_GEN_DIR)
-    message(STATUS "Setting AIDL_GEN_DIR to default [${CMAKE_SOURCE_DIR}/gen/${AIDL_TARGET}/${AIDL_SRC_VERSION}]]")
-    set(AIDL_GEN_DIR ${CMAKE_SOURCE_DIR}/gen/${AIDL_TARGET}/${AIDL_SRC_VERSION})
-endif()
-message(STATUS "AIDL_GEN_DIR set to ${AIDL_GEN_DIR}")
-
-if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${AIDL_TARGET}/${AIDL_SRC_VERSION}/CMakeLists.txt)
-	message(FATAL_ERROR "${AIDL_TARGET} does not have version `${AIDL_SRC_VERSION}`")
+    set(AIDL_GEN_DIR ${CMAKE_SOURCE_DIR}/gen)
 endif()
 
-set(COMMON_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/common)
-set(AUDIO_DECODER_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/audiodecoder)
-set(AUDIO_SINK_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/audiosink)
-set(AV_BUFFER_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/avbuffer)
-set(AVCLOCK_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/avclock)
-set(VIDEO_DECODER_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/videodecoder)
-set(VIDEO_SINK_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/videosink)
+# ... (Top of file remains the same) ...
 
-add_subdirectory(${AIDL_TARGET}/${AIDL_SRC_VERSION})
+# --- 3. Logic: Build ALL Available Versions ---
+
+if ("${AIDL_SRC_VERSION}" STREQUAL "all_available")
+    message(STATUS "Mode: Building ALL available versions found on disk")
+    
+    foreach(MODULE ${ALL_MODULES})
+        set(MOD_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/${MODULE}")
+        
+        # 1. Find all subdirectories in the module folder (e.g. '1', '2', 'current')
+        file(GLOB CHILDREN RELATIVE ${MOD_ROOT} ${MOD_ROOT}/*)
+        
+        foreach(VERSION_DIR ${CHILDREN})
+            if(IS_DIRECTORY "${MOD_ROOT}/${VERSION_DIR}")
+                # Check if it has a CMakeLists.txt (to avoid adding 'src' or 'docs' folders)
+                if(EXISTS "${MOD_ROOT}/${VERSION_DIR}/CMakeLists.txt")
+                    message(STATUS "  + Adding target: ${MODULE} (Version: ${VERSION_DIR})")
+                    add_subdirectory(${MODULE}/${VERSION_DIR})
+                endif()
+            endif()
+        endforeach()
+    endforeach()
+
+# --- Fallback: Build Single Global Version (for dev_build.sh) ---
+else()
+    message(STATUS "Mode: Building specific global version: ${AIDL_SRC_VERSION}")
+    
+    foreach(MODULE ${ALL_MODULES})
+        if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${MODULE}/${AIDL_SRC_VERSION}/CMakeLists.txt)
+            add_subdirectory(${MODULE}/${AIDL_SRC_VERSION})
+        else()
+             # Ideally silent skip, or warning depending on preference
+        endif()
+    endforeach()
+endif()

@@ -21,39 +21,13 @@
 #** ******************************************************************************
 cmake_minimum_required(VERSION 3.8)
 
-project(Boot
-	LANGUAGES NONE
-	VERSION 1.0)
+# 1. Define the Interface Identity
+set(INTERFACE_TARGET boot)
+set(INTERFACE_VERSION current)
 
-if (NOT COMMAND compile_aidl)
-	message(FATAL_ERROR "Do not invoke module level CMake directly!\nInvoke CMake at root level instead!")
-endif()
-
-set(SRC_DIR com/rdk/hal/boot)
-
-set(SRC
-	${SRC_DIR}/BootReason.aidl
-	${SRC_DIR}/Capabilities.aidl
-	${SRC_DIR}/IBoot.aidl
-	${SRC_DIR}/PowerSource.aidl
-	${SRC_DIR}/ResetType.aidl
-)
-
-set(INCLUDE_DIRECTORY
-	.
-)
-
-set(COMPILE_AIDL_ARGV "")
-
-if (DEFINED AIDL_GEN_DIR)
-	list(APPEND COMPILE_AIDL_ARGV TARGET_DIRECTORY ${AIDL_GEN_DIR})
-endif()
-
-if (DEFINED AIDL_BIN)
-	list(APPEND COMPILE_AIDL_ARGV AIDL_BIN ${AIDL_BIN})
-endif()
-
-compile_aidl(${SRC}
-	INCLUDE_DIRECTORY ${INCLUDE_DIRECTORY}
-	${COMPILE_AIDL_ARGV}
-)
+# 2. Trigger the Build
+# This function (from CMakeLists.inc) will:
+#   a. Run 'aidl_ops -g' to generate the C++ code
+#   b. Find the generated files in 'stable/generated/boot/src/current'
+#   c. Create the library target 'boot-vcurrent-cpp'
+target_build_interfaces_libraries()
