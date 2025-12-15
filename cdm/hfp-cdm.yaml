@@ -23,6 +23,7 @@
 # HAL Feature Profile for cdm
 
 cdm:
+  interfaceVersion: current
   resources:
     - PlayReady:
         drmClientVersion: 4.4

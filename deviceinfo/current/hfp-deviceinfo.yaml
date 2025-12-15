@@ -22,7 +22,8 @@
 
 # HAL Feature Profile for deviceinfo
 
-IDeviceInfo:
+deviceinfo:
+  interfaceVersion: current
   properties:
     - HAL_VERSION:           # HAL version
         value: "1.0.0"

@@ -22,7 +22,7 @@
 
 # HAL Feature Profile for deep_sleep
 
-IDeepSleep:                 # Component object begins
+deepsleep:                      # Component object begins
     interfaceVersion: current
     supportedTriggers:
         - RCU_IR

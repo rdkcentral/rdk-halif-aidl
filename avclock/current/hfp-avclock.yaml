@@ -22,7 +22,7 @@
 
 # HAL Feature Profile for avclock
 
-IAVClockManager:                # Component object begins
+avclock:                        # Component object begins
   interfaceVersion: current
   IAVClock:                     # Resource list
     - 0
