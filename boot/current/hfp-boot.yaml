@@ -21,7 +21,7 @@
 #** ******************************************************************************
 
 # HAL Feature Profile for boot
-Boot:                 # Component object begins
+boot:                 # Component object begins
     interfaceVersion: current
     # Supported reasons for device boot (from BootReason.aidl)
     supportedBootReasons:
