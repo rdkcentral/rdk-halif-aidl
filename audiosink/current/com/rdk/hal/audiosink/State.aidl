@@ -28,39 +28,39 @@ package com.rdk.hal.audiosink;
 @VintfStability
 @Backing(type="int")
 enum State {
-	/** 
-	 * Initial state entered when the service connection is established. 
-	 */
+    /** 
+     * Initial state entered when the service connection is established. 
+     */
     CLOSED = 0,
-	
-	/** 
-	 * The Audio Sink is transitioning from closed to ready state. 
-	 */
+    
+    /** 
+     * The Audio Sink is transitioning from closed to ready state. 
+     */
     OPENING = 1,
-	
-	/** 
-	 * The Audio Sink is open and ready to start, but in a stopped state. 
-	 */
+    
+    /** 
+     * The Audio Sink is open and ready to start, but in a stopped state. 
+     */
     READY = 2,
-	
-	/** 
-	 * The Audio Sink is transitioning from ready to started state. 
-	 */
+    
+    /** 
+     * The Audio Sink is transitioning from ready to started state. 
+     */
     STARTING = 3,
-	
-	/** 
-	 * The opened Audio Sink has been started. 
-	 */
+    
+    /** 
+     * The opened Audio Sink has been started. 
+     */
     STARTED = 4,
-	
-	/** 
-	 * The started Audio Sink is stopping and flushing its internal state.
-	 * Once flushed, the Audio Sink enters the ready state. 
-	 */
+    
+    /** 
+     * The started Audio Sink is stopping and flushing its internal state.
+     * Once flushed, the Audio Sink enters the ready state. 
+     */
     STOPPING = 5,
-	
-	/** 
-	 * The Audio Sink is transitioning from ready to closed state. 
-	 */
+    
+    /** 
+     * The Audio Sink is transitioning from ready to closed state. 
+     */
     CLOSING = 6
 }

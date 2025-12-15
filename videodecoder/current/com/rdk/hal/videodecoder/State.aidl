@@ -28,39 +28,39 @@ package com.rdk.hal.videodecoder;
 @VintfStability
 @Backing(type="int")
 enum State {
-	/** 
-	 * Initial state entered when the service connection is established. 
-	 */
+    /** 
+     * Initial state entered when the service connection is established. 
+     */
     CLOSED = 0,
-	
-	/** 
-	 * The Video Decoder is transitioning from closed to ready state. 
-	 */
+    
+    /** 
+     * The Video Decoder is transitioning from closed to ready state. 
+     */
     OPENING = 1,
-	
-	/** 
-	 * The Video Decoder is open and ready to start, but in a stopped state. 
-	 */
+    
+    /** 
+     * The Video Decoder is open and ready to start, but in a stopped state. 
+     */
     READY = 2,
-	
-	/** 
-	 * The Video Decoder is transitioning from ready to started state. 
-	 */
+    
+    /** 
+     * The Video Decoder is transitioning from ready to started state. 
+     */
     STARTING = 3,
-	
-	/** 
-	 * The opened Video Decoder has been started. 
-	 */
+    
+    /** 
+     * The opened Video Decoder has been started. 
+     */
     STARTED = 4,
-	
-	/** 
-	 * The started Video Decoder is stopping and flushing its internal state.
-	 * Once flushed, the Video Decoder enters the ready state. 
-	 */
+    
+    /** 
+     * The started Video Decoder is stopping and flushing its internal state.
+     * Once flushed, the Video Decoder enters the ready state. 
+     */
     STOPPING = 5,
-	
-	/** 
-	 * The Video Decoder is transitioning from ready to closed state. 
-	 */
+    
+    /** 
+     * The Video Decoder is transitioning from ready to closed state. 
+     */
     CLOSING = 6
 }

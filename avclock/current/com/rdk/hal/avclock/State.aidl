@@ -28,39 +28,39 @@ package com.rdk.hal.avclock;
 @VintfStability
 @Backing(type="int")
 enum State {
-	/** 
-	 * Initial state entered when the service connection is established. 
-	 */
+    /** 
+     * Initial state entered when the service connection is established. 
+     */
     CLOSED = 0,
-	
-	/** 
-	 * The AV Clock is transitioning from closed to ready state. 
-	 */
+    
+    /** 
+     * The AV Clock is transitioning from closed to ready state. 
+     */
     OPENING = 1,
-	
-	/** 
-	 * The AV Clock is open and ready to start, but in a stopped state. 
-	 */
+    
+    /** 
+     * The AV Clock is open and ready to start, but in a stopped state. 
+     */
     READY = 2,
-	
-	/** 
-	 * The AV Clock is transitioning from ready to started state. 
-	 */
+    
+    /** 
+     * The AV Clock is transitioning from ready to started state. 
+     */
     STARTING = 3,
-	
-	/** 
-	 * The opened AV Clock has been started. 
-	 */
+    
+    /** 
+     * The opened AV Clock has been started. 
+     */
     STARTED = 4,
-	
-	/** 
-	 * The started AV Clock is stopping and flushing its internal state.
-	 * Once flushed, the AV Clock enters the ready state. 
-	 */
+    
+    /** 
+     * The started AV Clock is stopping and flushing its internal state.
+     * Once flushed, the AV Clock enters the ready state. 
+     */
     STOPPING = 5,
-	
-	/** 
-	 * The AV Clock is transitioning from ready to closed state. 
-	 */
+    
+    /** 
+     * The AV Clock is transitioning from ready to closed state. 
+     */
     CLOSING = 6
 }
