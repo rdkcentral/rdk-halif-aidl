@@ -53,6 +53,7 @@ Each module in any layer should follow the directory convention:
 ### Examples by Layer
 
 **Vendor Layer** (`/vendor/<module>/`):
+
 ```bash
 /vendor/hdmi/
 ├── bin/hdmi-daemon
@@ -62,6 +63,7 @@ Each module in any layer should follow the directory convention:
 ```
 
 **Middleware Layer** (`/mw/<module>/`):
+
 ```bash
 /mw/streaming/
 ├── bin/stream-manager
@@ -70,21 +72,17 @@ Each module in any layer should follow the directory convention:
 └── VERSION
 ```
 
-**Product Layer** (`/product/<module>/`):
+**Product Layer** (configuration-only, see [File System](file_system.md)):
+
 ```bash
-/product/branding/
-├── data/logo.png
-├── etc/theme.conf
-└── VERSION
+/product/etc/
+├── as/config.yaml
+├── entservices/config.yaml
+└── rdkappmanager/config.yaml
 ```
 
-**Apps Layer** (`/apps/<app>/`):
-```bash
-/apps/netflix/
-├── bin/netflix
-├── lib/libnetflix.so
-└── VERSION
-```
+!!! note "Layer Examples"
+    For complete layer structure examples and details, see [File System](file_system.md).
 
 ## Integration Requirements
 
@@ -115,6 +113,7 @@ During image creation, a symbolic link must be created:
 ### Examples by Layer
 
 **Vendor Module**:
+
 ```bash
 # File: /vendor/input/ld.so.conf.d/vendor-input.conf
 /vendor/input/lib
@@ -123,6 +122,7 @@ During image creation, a symbolic link must be created:
 ```
 
 **Middleware Module**:
+
 ```bash
 # File: /mw/streaming/ld.so.conf.d/mw-streaming.conf
 /mw/streaming/lib
@@ -153,11 +153,13 @@ To activate the profile, a symbolic link will be created at install time:
 ### Examples by Layer
 
 **Vendor Module**:
+
 ```bash
 /etc/apparmor.d/vendor-hdmi.profile -> /vendor/hdmi/app_armor/vendor-hdmi.profile
 ```
 
 **Middleware Module**:
+
 ```bash
 /etc/apparmor.d/mw-streaming.profile -> /mw/streaming/app_armor/mw-streaming.profile
 ```
@@ -216,11 +218,13 @@ To activate the profile, a symbolic link will be created at install time:
 ### Examples by Layer
 
 **Vendor Service**:
+
 ```bash
 /etc/systemd/system/vendor-hdmi.service -> /vendor/hdmi/systemd/vendor-hdmi.service
 ```
 
 **Middleware Service** (depending on vendor milestone):
+
 ```bash
 # /mw/streaming/systemd/mw-streaming.service
 [Unit]
@@ -247,11 +251,13 @@ Logs will be written to `/<layer>/<module>/log/`, which redirects to the writabl
 ### Examples by Layer
 
 **Vendor Module**:
+
 ```bash
 /vendor/hdmi/log/ -> /var/log/vendor/hdmi/
 ```
 
 **Middleware Module**:
+
 ```bash
 /mw/streaming/log/ -> /var/log/mw/streaming/
 ```

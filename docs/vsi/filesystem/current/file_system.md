@@ -6,14 +6,6 @@
 |----|------|--------|
 |2024-12-12|G.Weatherup|Initial comprehensive specification|
 
-## References
-
-!!! info References
-    |||
-    |-|-|
-    |**VTS Tests**| TBC |
-    |**Reference Implementation - vComponent**|**TBD**|
-
 ## Related Pages
 
 !!! tip "Related Pages"
@@ -37,19 +29,45 @@ The specification enables:
 
 The RDK platform adopts a **multi-layer architecture** where each layer represents a distinct functional and organizational boundary:
 
-```
-┌─────────────────────────────────────┐
-│          /apps (optional)           │  ← Application layer
-├─────────────────────────────────────┤
-│          /product (optional)        │  ← Product-specific customizations
-├─────────────────────────────────────┤
-│          /mw                        │  ← Middleware layer
-├─────────────────────────────────────┤
-│          /vendor                    │  ← Vendor/SoC layer
-├─────────────────────────────────────┤
-│          / (rootfs)                 │  ← Minimal root filesystem
-└─────────────────────────────────────┘
-         Kernel + Bootloader
+```mermaid
+block-beta
+    columns 1
+    block:apps
+        apps_label["/apps (optional)<br/>Application layer"]
+    end
+    space
+    block:product
+        product_label["/product<br/>Product-specific customizations"]
+    end
+    space
+    block:mw
+        mw_label["/mw<br/>Middleware layer"]
+    end
+    space
+    block:vendor
+        vendor_label["/vendor<br/>Vendor/SoC layer"]
+    end
+    space
+    block:rootfs
+        rootfs_label["/ (rootfs)<br/>Minimal root filesystem"]
+    end
+    space
+    block:kernel
+        kernel_label["Kernel + Bootloader<br/>Hardware initialization"]
+    end
+    
+    apps --> product
+    product --> mw
+    mw --> vendor
+    vendor --> rootfs
+    rootfs --> kernel
+    
+    style apps fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    style product fill:#fff4e1,stroke:#e65100,stroke-width:2px
+    style mw fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style vendor fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    style rootfs fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+    style kernel fill:#e0e0e0,stroke:#424242,stroke-width:2px
 ```
 
 ### Layer Characteristics
@@ -116,7 +134,7 @@ The kernel executes the following mount sequence:
 2. Read bootloader configuration from kernel command line or device tree
 3. Mount /vendor layer (required)
 4. Mount /mw layer (required)
-5. Mount /product layer (if specified)
+5. Mount /product layer (required)
 6. Mount /apps layer (if specified)
 7. Execute systemd initialization with full layer visibility
 
@@ -168,8 +186,6 @@ The rootfs creates symbolic links at boot time to integrate layer-specific direc
 
 The **vendor layer** provides hardware abstraction and SoC-specific functionality.
 
-**Expected Freeze Timeline**: Medium-term (1-2 years after stabilization)
-
 **Directory Structure**:
 
 ```bash
@@ -195,8 +211,6 @@ The **vendor layer** provides hardware abstraction and SoC-specific functionalit
 
 The **middleware layer** provides RDK core services and framework components.
 
-**Expected Freeze Timeline**: Longer-term (potentially frozen after vendor layer stabilizes)
-
 **Directory Structure**:
 
 ```bash
@@ -218,26 +232,36 @@ The **middleware layer** provides RDK core services and framework components.
 
 **Independent OSS Components**: Middleware OSS components (e.g., GStreamer, D-Bus wrappers, RDK service libraries) are consumed from /mw mount points only.
 
-### /product Layer (Optional)
+### /product Layer
 
-The **product layer** provides product-specific customizations and branding.
+The **product layer** provides product-specific configurations and customizations. This layer contains configuration only, not platform-specific binaries or libraries.
+
+!!! important "Delivery Mechanism"
+    The `/product` layer is delivered by the **image assembler** during image composition. Unlike `/vendor` (which is SoC-specific) and `/mw` (which is platform-independent), the `/product` layer captures platform-level configurations that may be shared across multiple SoCs within the same product family. This allows the same kernel and vendor layers to support multiple product configurations through different `/product` images. The `/apps` layer is also platform-independent.
 
 **Directory Structure**:
 
 ```bash
 /product/
-├── <module>/
-│   ├── bin/              # Product-specific executables
-│   ├── lib/              # Product customization libraries
-│   ├── etc/              # Product configurations
-│   ├── data/             # Product assets (images, branding)
-│   ├── systemd/          # Service definitions
-│   ├── logs/ -> /var/log/product/<module>/
-│   └── VERSION           # Version metadata
-└── ...
+├── etc/
+│   └── <component>/         # Component-specific configurations
+│       └── *.yaml          # Configuration files (YAML for human readability)
+├── data/                    # Product assets (images, branding)
+├── logs/ -> /var/log/product/
+└── VERSION                  # Version metadata
 ```
 
-**Independent OSS Components**: Product-specific OSS components are isolated to /product mount points.
+**Configuration Only**: The product layer is restricted to configuration files, assets, and data. Platform-specific executables and libraries must reside in the /vendor or /mw layers.
+
+All product-specific configuration files should be organized under `/product/etc/` in component-specific subdirectories for clear organization and maintainability. Configuration files use YAML format to provide human-readable content with support for comments.
+
+**Example**:
+
+```bash
+/product/etc/as/config.yaml              # Application Services configuration
+/product/etc/entservices/config.yaml     # Enterprise services configuration
+/product/etc/rdkappmanager/config.yaml   # RDK App Manager configuration
+```
 
 ### /apps Layer (Optional)
 
@@ -274,9 +298,7 @@ Each layer maintains its own dynamic linker configuration:
 /mw/lib/
 /mw/<module>/lib/
 
-# Product layer
-/product/lib/
-/product/<module>/lib/
+# Product layer (configuration only - no lib directories)
 
 # Apps layer
 /apps/lib/
@@ -329,6 +351,37 @@ dependencies=<comma-separated list>
 
 ### Manifest File Format
 
+The manifest file is typically generated automatically by the build system (e.g., Yocto/BitBake) from recipe metadata during compilation. The specific generation mechanism depends on your vendor layer build setup.
+
+**Example Yocto Generation Approach:**
+
+In a Yocto recipe or custom bbclass, manifest generation can leverage recipe variables:
+
+```python
+# Example in a custom manifest.bbclass or recipe do_install_append
+do_install_append() {
+    install -d ${D}${sysconfdir}
+    cat > ${D}${sysconfdir}/manifest.json << EOF
+{
+  "module": "${PN}",
+  "version": "${PV}",
+  "layer": "${LAYER_TYPE}",
+  "dependencies": {
+    "runtime": [$(echo "${RDEPENDS_${PN}}" | sed 's/ /", "/g' | sed 's/^/"/;s/$/"/')],
+    "build": [$(echo "${DEPENDS}" | sed 's/ /", "/g' | sed 's/^/"/;s/$/"/')]
+  },
+  "provides": ["${RPROVIDES}"],
+  "conflicts": [],
+  "oss_components": [
+    {"name": "${PN}", "version": "${PV}", "license": "${LICENSE}"}
+  ]
+}
+EOF
+}
+```
+
+**JSON Format:**
+
 ```json
 {
   "module": "module-name",
@@ -345,6 +398,9 @@ dependencies=<comma-separated list>
   ]
 }
 ```
+
+!!! note "Build System Integration"
+    The manifest generation approach shown above is an example. Your vendor layer build infrastructure may implement this differently using custom bbclasses, buildhistory integration, or image postprocessing commands. Consult your vendor layer documentation for specific implementation details.
 
 ### Runtime Auditing
 
