@@ -282,7 +282,7 @@ def handle_update_api(interface_name, interfaces):
     interface = interfaces[interface_name]
 
     if not interface.dump_api:
-        logger.info("update_api is not supported for %s. dump api is disabled" %(interface.base_name))
+        logger.error("update_api is not supported for %s. dump api is disabled" %(interface.base_name))
         return
 
     # An API dump is created from source as tot_api_dump(Top of the Tree
@@ -292,7 +292,7 @@ def handle_update_api(interface_name, interfaces):
                                     interface,
                                     interfaces)
 
-    logger.info("Running %s-%s" %(interface.base_name, "update_api"))
+    logger.verbose("Running %s-%s" %(interface.base_name, "update_api"))
 
     # API dump from source is updated to the 'current' version.
     # Triggered by `aidl_ops -u <interface name>`
@@ -325,7 +325,7 @@ def handle_freeze_api(interface_name, interfaces):
                                         interfaces,
                                         is_freeze_api=True)
 
-    logger.info("Running %s-%s" %(interface.base_name, "freeze_api"))
+    logger.verbose("Running %s-%s" %(interface.base_name, "freeze_api"))
 
     # Check 1: Integrity
     #           Frozen APIs are not modified after freezing

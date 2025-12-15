@@ -22,7 +22,6 @@ import os
 from os import path
 import json
 import yaml
-import os
 import glob
 import fnmatch
 import subprocess
@@ -56,18 +55,18 @@ TARGET_FREEZE_API = "freeze-api"
 INTERFACE_DEF_JSON = "interface.json"
 INTERFACE_DEF_YAML  = "interface.yaml"
 
-LIBRARIES_DEPENDECIES_FILE = "dependencies.txt"
+LIBRARIES_DEPENDENCIES_FILE = "dependencies.txt"
 
 # Commands
 CMD_AIDL = path.realpath(
-        path.join(get_host_dir(), "../local/bin", "aidl")
+        path.join(get_host_dir(), "../out/host/bin", "aidl")
         )
 CMD_GEN_AIDL = path.realpath(
         path.join(get_host_dir(), "../build-aidl-generator-tool.sh")
         )
 # TODO compile aidl_hash_gen in out directory
 CMD_AIDL_HASH_GEN = path.join(get_host_dir(), "aidl_hash_gen")
-CMD_INTERFACE_DEF_UPDATE = path.join(get_host_dir(), "interface-update")
+CMD_INTERFACE_DEF_UPDATE = path.join(get_host_dir(), "interface-update.py")
 
 
 def topological_sort(dependencies):
@@ -108,7 +107,7 @@ def generate_libraries_dependencies(interfaces, out_dir):
 
     """
 
-    dep_file = path.join(out_dir, LIBRARIES_DEPENDECIES_FILE)
+    dep_file = path.join(out_dir, LIBRARIES_DEPENDENCIES_FILE)
     if path.exists(dep_file):
         os.remove(dep_file)
 
@@ -137,7 +136,7 @@ def generate_libraries_dependencies(interfaces, out_dir):
             file.write('\n')
 
     if path.exists(dep_file):
-        logger.info("Library dependencies file generated at %s" %(dep_file))
+        logger.verbose("Library dependencies file generated at %s" %(dep_file))
 
 
 def load_interfaces(interfaces_roots, out_dir, gen_dir=None, gen_lib_deps=False):
@@ -154,15 +153,17 @@ def load_interfaces(interfaces_roots, out_dir, gen_dir=None, gen_lib_deps=False)
     # The environment variable will be set to the multiple directories seperated
     # by ","
     skip_dirs_raw = os.getenv("AIDL_VERSIONING_SKIP_DIR", "")
+    defaults = ["examples", "docs", ".git", "site"] # Added docs and .git for safety
+    
     if skip_dirs_raw == "":
-        skip_dirs_raw = "examples"
+        skip_dirs_raw = ",".join(defaults)
     else:
-        skip_dirs_raw += ",examples"
+        skip_dirs_raw += "," + ",".join(defaults)
     interface_locations = []
     for interfaces_root in interfaces_roots:
         skip_paths = [path.join(interfaces_root, skip_dir) \
                 for skip_dir in skip_dirs_raw.split(",")]
-        logger.info("Skipping Interfaces from the path %s" %(skip_paths))
+        logger.debug("Skipping Interfaces from the path %s" %(skip_paths))
         for root, dirs, files in os.walk(interfaces_root):
             dirs[:] = [d for d in dirs \
                     if path.join(root, d) not in skip_paths]
@@ -233,7 +234,7 @@ def validate_interface(interface, interfaces):
             # TODO: should we check if hashfile exist?
             api_dumps.append(dump)
         else:
-            assert False, "API version %s path %s does not exist." %(ver, api_dir)
+            raise RuntimeError(f"API version {ver} path {api_dir} does not exist.")
 
     if path.exists(current_api_dir):
         api_dumps.append(current_api_dump)
@@ -401,14 +402,29 @@ def process_imports(interface, interfaces, api_deps):
         else:
             # List of indirect dependencies (dependencies of direct dependant interfaces)
             # get imports from latest frozen version
-            imports = interface.get_imports(interface.latest_version())
+            
+            # --- START FIX ---
+            ver_to_check = interface.latest_version()
+            
+            # If "0", it means the interface has never been frozen. 
+            # We must use the current/next version to find imports.
+            if ver_to_check == "0":
+                ver_to_check = interface.next_version()
+
+            imports = interface.get_imports(ver_to_check)
+            # --- END FIX ---
 
         for imp in list(imports.keys()):
             imp_interface = interfaces[imp]
             # Set version as per thier frozen versions
             # in case of unknown(case of direct dependencies), set it to the latest
             if imports[imp] == "unknown":
-                api_deps.set_version(imp_interface.latest_version())
+                # Check if the latest version is "0" (never frozen)
+                # If so, use the next version (current)
+                ver = imp_interface.latest_version()
+                if ver == "0":
+                    ver = imp_interface.next_version()
+                api_deps.set_version(ver)
             else:
                 api_deps.set_version(imports[imp])
             api_deps.set_name(imp_interface.base_name)
@@ -528,11 +544,6 @@ def aidl_gen_preprocessed(interface, version, api_deps):
     Generates preprocessed AIDL file for given version which is required
     while resolving dependencies during aidl operations(Update API, Freeze API,
     and Generating sources)
-
-    Args:
-        interface: aidl inerfaces
-        version: Version of the aidl Interface
-        api_deps: API dependencies
     """
     logger.verbose("Interface Name: %s, Version: %s, Dependencies: %s" \
             %(interface.base_name, version, api_deps))
@@ -556,28 +567,38 @@ def aidl_gen_preprocessed(interface, version, api_deps):
         show_dep_error(interface.base_name)
         assert False, "Failed with the above error."
 
-    optional_flags = ""
+    # --- FIX START ---
+    # Use a list instead of a string to prevent argument grouping errors
+    optional_flags = []
+    
     if interface.stability != "unstable":
-        optional_flags = optional_flags + "--stability=%s " %(interface.stability)
+        optional_flags.append("--stability=%s" % interface.stability)
+    
     deps, _, _ = list_dependencies(api_deps)
     if len(deps) > 0:
-        optional_flags = optional_flags + " ".join([f'-p{dep}' for dep in deps]) + " "
+        # Add each dependency as a separate flag in the list
+        for dep in deps:
+            optional_flags.append(f'-p{dep}')
 
     preprocess_gen_cmd = [CMD_AIDL,
             "--preprocess",
-            preprocessed,
-            optional_flags,
+            preprocessed]
+    
+    # Extend the list with our optional flags
+    preprocess_gen_cmd.extend(optional_flags)
+            
+    preprocess_gen_cmd.extend([
             "--structured",
             "-I"+imprt,
-            ]
+            ])
+    # --- FIX END ---
 
     preprocess_gen_cmd.extend(srcs)
 
     logger.verbose("Command to generate Preprocessed AIDL: %s" %(preprocess_gen_cmd))
     if not exec_cmd(preprocess_gen_cmd):
         show_dep_error(interface.base_name)
-        assert False, "Command failed"
-
+        assert False, "Command failed."
 
 def list_dependencies(api_deps):
     deps = []
@@ -807,13 +828,26 @@ class AidlInterface:
         self.interface_root = path.realpath(interface_root)
         self._load_interface(interfaces_roots, out_dir, gen_dir)
 
-
     def _load_interface(self, interfaces_roots, out_dir, gen_dir):
         # TODO Add comments
         """
         """
         logger.verbose("Location:" + self.interface_root)
         data = None
+        
+        # --- DEBUGGING INSERT START ---
+        # json_path = path.join(self.interface_root, INTERFACE_DEF_JSON)
+        # yaml_path = path.join(self.interface_root, INTERFACE_DEF_YAML)
+        # if path.exists(json_path):
+        #     print(f"🛑 DEBUG: LOADING JSON FILE: {json_path}") # Explicit print
+        #     with open(json_path, "r") as json_data:
+        #         data = json.load(json_data)
+        # elif path.exists(yaml_path):
+        #     print(f"✅ DEBUG: LOADING YAML FILE: {yaml_path}") # Explicit print
+        #     with open(yaml_path, "r") as yaml_data:
+        #         data = yaml.safe_load(yaml_data)
+        # --- DEBUGGING INSERT END ---
+        
         if path.exists(path.join(self.interface_root, INTERFACE_DEF_JSON)):
             with open(path.join(self.interface_root, INTERFACE_DEF_JSON), "r") as json_data:
                 data = json.load(json_data)
@@ -866,7 +900,19 @@ class AidlInterface:
         logger.verbose("\tVersionsInfo  = %s" %(self.versions_with_info))
         logger.verbose("\tStability     = %s" %(self.stability))
 
-        self.interface_root_out = path.join(out_dir, path.relpath(self.interface_root, start="/"))
+        # Find which root directory this interface belongs to
+        relative_path = None
+        for root in interfaces_roots:
+            real_root = path.realpath(root)
+            if self.interface_root.startswith(real_root):
+                relative_path = path.relpath(self.interface_root, start=real_root)
+                break
+        
+        if relative_path is None:
+            # Fallback if something weird happens (e.g. interface outside root)
+            relative_path = path.relpath(self.interface_root, start="/")
+
+        self.interface_root_out = path.join(out_dir, relative_path)
         if not path.exists(self.interface_root_out):
             os.makedirs(self.interface_root_out)
 
@@ -937,16 +983,22 @@ class AidlInterface:
 
 
 def exec_cmd(cmd):
-    logger.verbose("Running [%s]" %(" ".join(cmd)))
+    # Don't join the list. Don't use shell=True.
+    logger.debug("Running [%s]" %(" ".join(cmd))) # Logging string join is fine
 
-    result = subprocess.run(" ".join(cmd), stdout=PIPE, stderr=PIPE, shell=True)
-    if result.returncode:
-        logger.error("The command [%s] returned unsuccessful result" \
-                %(" ".join(cmd)))
-        logger.error("%s" %(result.stderr.decode('utf-8')))
+    try:
+        # Pass the list 'cmd' directly
+        result = subprocess.run(cmd, stdout=PIPE, stderr=PIPE, encoding='utf-8', check=False)
+        
+        if result.returncode != 0:
+            logger.error("Command failed: %s" %(" ".join(cmd)))
+            logger.error(result.stderr)
+            return False
+            
+        if result.stdout:
+            print(result.stdout)
+        return True
+        
+    except Exception as e:
+        logger.error(f"Execution error: {e}")
         return False
-    else:
-        if len(result.stdout.decode('utf-8')) > 0:
-            print("%s" %(result.stdout.decode('utf-8')))
-
-    return True

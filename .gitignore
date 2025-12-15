@@ -1,3 +1,9 @@
+build-host
+build-target
+build-aidl-generator
+test_build.log
+.installed_successfully
+.android_source_ready
 android/
 */**/*.pyc
 local/
