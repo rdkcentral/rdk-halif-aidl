@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmioutput;
-import com.rdk.hal.State;
+import com.rdk.hal.hdmioutput.State;
 
 /** 
  *  @brief     Event callbacks listener interface from HDMI output.
