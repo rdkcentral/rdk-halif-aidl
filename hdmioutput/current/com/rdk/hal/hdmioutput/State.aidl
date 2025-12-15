@@ -28,39 +28,39 @@ package com.rdk.hal.hdmioutput;
 @VintfStability
 @Backing(type="int")
 enum State {
-	/** 
-	 * Initial state entered when the service connection is established. 
-	 */
+    /** 
+     * Initial state entered when the service connection is established. 
+     */
     CLOSED = 0,
-	
-	/** 
-	 * The HDMI Output is transitioning from closed to ready state. 
-	 */
+    
+    /** 
+     * The HDMI Output is transitioning from closed to ready state. 
+     */
     OPENING = 1,
-	
-	/** 
-	 * The HDMI Output is open and ready to start, but in a stopped state. 
-	 */
+    
+    /** 
+     * The HDMI Output is open and ready to start, but in a stopped state. 
+     */
     READY = 2,
-	
-	/** 
-	 * The HDMI Output is transitioning from ready to started state. 
-	 */
+    
+    /** 
+     * The HDMI Output is transitioning from ready to started state. 
+     */
     STARTING = 3,
-	
-	/** 
-	 * The opened HDMI Output has been started. 
-	 */
+    
+    /** 
+     * The opened HDMI Output has been started. 
+     */
     STARTED = 4,
-	
-	/** 
-	 * The started HDMI Output is stopping and flushing its internal state.
-	 * Once flushed, the HDMI Output enters the ready state. 
-	 */
+    
+    /** 
+     * The started HDMI Output is stopping and flushing its internal state.
+     * Once flushed, the HDMI Output enters the ready state. 
+     */
     STOPPING = 5,
-	
-	/** 
-	 * The HDMI Output is transitioning from ready to closed state. 
-	 */
+    
+    /** 
+     * The HDMI Output is transitioning from ready to closed state. 
+     */
     CLOSING = 6
 }

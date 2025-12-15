@@ -28,39 +28,39 @@ package com.rdk.hal.broadcast.frontend;
 @VintfStability
 @Backing(type="int")
 enum State {
-	/** 
-	 * Initial state entered when the service connection is established. 
-	 */
+    /** 
+     * Initial state entered when the service connection is established. 
+     */
     CLOSED = 0,
-	
-	/** 
-	 * The Frontend is transitioning from closed to ready state. 
-	 */
+    
+    /** 
+     * The Frontend is transitioning from closed to ready state. 
+     */
     OPENING = 1,
-	
-	/** 
-	 * The Frontend is open and ready to start, but in a stopped state. 
-	 */
+    
+    /** 
+     * The Frontend is open and ready to start, but in a stopped state. 
+     */
     READY = 2,
-	
-	/** 
-	 * The Frontend is transitioning from ready to started state. 
-	 */
+    
+    /** 
+     * The Frontend is transitioning from ready to started state. 
+     */
     STARTING = 3,
-	
-	/** 
-	 * The opened Frontend has been started. 
-	 */
+    
+    /** 
+     * The opened Frontend has been started. 
+     */
     STARTED = 4,
-	
-	/** 
-	 * The started Frontend is stopping and flushing its internal state.
-	 * Once flushed, the Frontend enters the ready state. 
-	 */
+    
+    /** 
+     * The started Frontend is stopping and flushing its internal state.
+     * Once flushed, the Frontend enters the ready state. 
+     */
     STOPPING = 5,
-	
-	/** 
-	 * The Frontend is transitioning from ready to closed state. 
-	 */
+    
+    /** 
+     * The Frontend is transitioning from ready to closed state. 
+     */
     CLOSING = 6
 }
