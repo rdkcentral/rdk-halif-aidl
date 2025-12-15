@@ -51,6 +51,7 @@ set(SRC
 	${SRC_DIR}/IAVClockEventListener.aidl
 	${SRC_DIR}/IAVClockManager.aidl
 	${SRC_DIR}/Property.aidl
+	${SRC_DIR}/State.aidl
 	${COMMON_SRC_DIR}/HALError.aidl
 	${AUDIO_SINK_SRC_DIR}/IAudioSink.aidl
 	${VIDEO_SINK_SRC_DIR}/IVideoSink.aidl

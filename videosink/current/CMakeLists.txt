@@ -45,6 +45,7 @@ set(SRC
 	${SRC_DIR}/IVideoSinkEventListener.aidl
 	${SRC_DIR}/IVideoSinkManager.aidl
 	${SRC_DIR}/Property.aidl
+	${SRC_DIR}/State.aidl
 	${VIDEO_DECODER_SRC_DIR}/FrameMetadata.aidl
 	${VIDEO_DECODER_SRC_DIR}/IVideoDecoder.aidl
 	${COMMON_SRC_DIR}/PropertyValue.aidl

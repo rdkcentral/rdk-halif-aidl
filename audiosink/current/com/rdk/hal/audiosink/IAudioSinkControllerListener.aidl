@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.audiosink;
 import com.rdk.hal.audiosink.ErrorCode;
-import com.rdk.hal.State;
+import com.rdk.hal.audiosink.State;
 
 /** 
  *  @brief     Controller callbacks listener interface from audio sink.

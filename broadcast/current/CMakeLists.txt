@@ -59,6 +59,7 @@ set(SRC
 	${SRC_DIR}/frontend/Modulation.aidl
 	${SRC_DIR}/frontend/SignalInfoProperty.aidl
 	${SRC_DIR}/frontend/SignalInfoValue.aidl
+	${SRC_DIR}/frontend/State.aidl
 	${SRC_DIR}/frontend/TransmissionMode.aidl
 	${SRC_DIR}/frontend/TuneParameters.aidl
 	${SRC_DIR}/frontend/TuneStatus.aidl

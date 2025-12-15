@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.videodecoder;
 import com.rdk.hal.videodecoder.ErrorCode;
-import com.rdk.hal.State;
+import com.rdk.hal.videodecoder.State;
 
 /** 
  *  @brief     Event callbacks listener interface from video decoder.
