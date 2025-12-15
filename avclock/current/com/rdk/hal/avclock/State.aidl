@@ -31,36 +31,36 @@ enum State {
     /** 
      * Initial state entered when the service connection is established. 
      */
-    CLOSED = 0,
+    CLOSED = 1,
     
     /** 
      * The AV Clock is transitioning from closed to ready state. 
      */
-    OPENING = 1,
+    OPENING = 2,
     
     /** 
      * The AV Clock is open and ready to start, but in a stopped state. 
      */
-    READY = 2,
+    READY = 3,
     
     /** 
      * The AV Clock is transitioning from ready to started state. 
      */
-    STARTING = 3,
+    STARTING = 4,
     
     /** 
      * The opened AV Clock has been started. 
      */
-    STARTED = 4,
+    STARTED = 5,
     
     /** 
      * The started AV Clock is stopping and flushing its internal state.
      * Once flushed, the AV Clock enters the ready state. 
      */
-    STOPPING = 5,
+    STOPPING = 7,
     
     /** 
      * The AV Clock is transitioning from ready to closed state. 
      */
-    CLOSING = 6
+    CLOSING = 8
 }
