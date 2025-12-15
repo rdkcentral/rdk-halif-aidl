@@ -20,6 +20,7 @@ package com.rdk.hal;
  
 /** 
  * @brief     HAL component states.
+ * @deprecated This common State enum is deprecated. Each module should use its own module-specific State enum instead.
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
  * @author    Douglas Adler
