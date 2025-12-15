@@ -55,9 +55,9 @@ set(SRC
 	${SRC_DIR}/Property.aidl
 	${SRC_DIR}/PropertyKVPair.aidl
 	${SRC_DIR}/ScanType.aidl
+	${SRC_DIR}/State.aidl
 	${COMMON_SRC_DIR}/PropertyValue.aidl
 	${COMMON_SRC_DIR}/AVSource.aidl
-	${COMMON_SRC_DIR}/State.aidl
 )
 
 set(INCLUDE_DIRECTORY

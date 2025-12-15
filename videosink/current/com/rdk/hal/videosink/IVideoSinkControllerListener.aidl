@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.videosink;
-import com.rdk.hal.State;
+import com.rdk.hal.videosink.State;
 
 /** 
  *  @brief     Controller callbacks listener interface for Video Sink.

@@ -22,8 +22,8 @@ import com.rdk.hal.videosink.IVideoSinkController;
 import com.rdk.hal.videosink.IVideoSinkControllerListener;
 import com.rdk.hal.videosink.IVideoSinkEventListener;
 import com.rdk.hal.videosink.Property;
+import com.rdk.hal.videosink.State;
 import com.rdk.hal.PropertyValue;
-import com.rdk.hal.State;
  
 /** 
  *  @brief     Video Sink HAL interface.
