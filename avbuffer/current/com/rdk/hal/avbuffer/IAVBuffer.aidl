@@ -213,12 +213,13 @@ interface IAVBuffer
      * @param[in] bufferHandle  Memory buffer handle.
      * @param[in] newSize       New size of the memory block in bytes.  Must be > 0 and <= original size.
      *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
-     * 
      * @returns boolean
      * @retval true     The trim was successful.
      * @retval false    The bufferHandle or newSize was invalid.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if buffer is not the last allocated from the pool
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if bufferHandle or newSize is invalid
      *
      * @pre The `bufferHandle` must be the last one returned from a call to `alloc()`.
      * 
