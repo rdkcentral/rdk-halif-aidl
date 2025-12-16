@@ -34,11 +34,11 @@ set(ALL_MODULES
     avbuffer
     avclock
     boot
-    cec
     common
     deepsleep
     deviceinfo
     flash
+    hdmicec
     hdmiinput
     hdmioutput
     indicator
@@ -90,11 +90,23 @@ if ("${AIDL_SRC_VERSION}" STREQUAL "all_available")
 else()
     message(STATUS "Mode: Building specific global version: ${AIDL_SRC_VERSION}")
     
-    foreach(MODULE ${ALL_MODULES})
-        if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${MODULE}/${AIDL_SRC_VERSION}/CMakeLists.txt)
-            add_subdirectory(${MODULE}/${AIDL_SRC_VERSION})
+    # Check if a specific target module is requested
+    if(DEFINED AIDL_TARGET)
+        message(STATUS "  Building only requested module: ${AIDL_TARGET}")
+        if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${AIDL_TARGET}/${AIDL_SRC_VERSION}/CMakeLists.txt)
+            add_subdirectory(${AIDL_TARGET}/${AIDL_SRC_VERSION})
         else()
-             # Ideally silent skip, or warning depending on preference
+            message(WARNING "Module ${AIDL_TARGET} does not have version ${AIDL_SRC_VERSION}")
         endif()
-    endforeach()
+    else()
+        # Build all modules
+        message(STATUS "  Building all modules")
+        foreach(MODULE ${ALL_MODULES})
+            if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${MODULE}/${AIDL_SRC_VERSION}/CMakeLists.txt)
+                add_subdirectory(${MODULE}/${AIDL_SRC_VERSION})
+            else()
+                 # Ideally silent skip, or warning depending on preference
+            endif()
+        endforeach()
+    endif()
 endif()

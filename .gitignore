@@ -1,11 +1,9 @@
 ﻿################################################################################
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
+.api_temp
 build
-<<<<<<< HEAD
 src_link
-=======
->>>>>>> 95b301d4 (reworked build #75)
 __pycache__/
 src_link
 .lastlogin
