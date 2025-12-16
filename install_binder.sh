@@ -21,6 +21,46 @@
 # *
 #** ******************************************************************************
 
+# Show help if requested (only when executed, not sourced)
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
+    cat << EOF
+Usage: ./install_binder.sh
+   or: source ./install_binder.sh
+
+Install and setup the Android Binder toolchain for AIDL development.
+
+Description:
+  This script:
+  1. Clones the linux_binder_idl repository (if not present)
+  2. Builds the AIDL compiler tools (aidl, aidl-cpp)
+  3. Builds the target Binder libraries (libbinder.so, etc.)
+  4. Adds tools to PATH for current shell
+  5. Exports BINDER_TOOLCHAIN_ROOT environment variable
+
+Usage:
+  Execute directly:  ./install_binder.sh
+  Source in shell:   source ./install_binder.sh
+
+  When sourced, PATH is updated in your current shell.
+  When executed, you must source it or restart your shell.
+
+Output:
+  Host tools:    build-tools/linux_binder_idl/out/host/bin/
+  Target libs:   build-tools/linux_binder_idl/out/target/lib/
+  Headers:       build-tools/linux_binder_idl/out/target/include/
+
+Environment:
+  BINDER_TOOLCHAIN_ROOT  Set to toolchain directory
+  PATH                   Updated to include host tools
+
+Examples:
+  ./install_binder.sh           # Install toolchain
+  source ./install_binder.sh    # Install and update current shell
+
+EOF
+    exit 0
+fi
+
 # Define paths relative to this script location
 MY_PATH="$(realpath "${BASH_SOURCE[0]}")"
 MY_DIR="$(dirname "${MY_PATH}")"
@@ -29,27 +69,10 @@ REPO_URL="https://github.com/rdkcentral/linux_binder_idl"
 # Where we put the tools
 INSTALL_DIR="$MY_DIR/build-tools"
 BINDER_REPO_DIR="$INSTALL_DIR/linux_binder_idl"
-BINDER_BUILD_SCRIPT="$BINDER_REPO_DIR/build-linux-binder-aidl.sh"
+BINDER_HOST_BUILD_SCRIPT="$BINDER_REPO_DIR/build-aidl-generator-tool.sh"
+BINDER_TARGET_BUILD_SCRIPT="$BINDER_REPO_DIR/build-linux-binder-aidl.sh"
 STAMP_FILE="$BINDER_REPO_DIR/.installed_successfully"
 
-<<<<<<< Updated upstream
-
-# Minimal ANSI colour vars (why: standard, portable)
-RED="\033[0;31m"
-YELLOW="\033[1;33m"
-GREEN="\033[0;32m"
-RESET="\033[0m"
-
-# Function to check if the repository is already cloned
-clone_repo() 
-{
-    if [ -d "$INSTALL_DIR" ]; then
-        echo "Binder tools already cloned at $INSTALL_DIR. Skipping clone."
-    else
-        echo "Cloning Binder tools repository..."
-        mkdir -p ${INSTALL_DIR}
-        git clone "$REPO_URL" "$INSTALL_DIR/linux_binder_idl"
-=======
 # EXPORT THIS for other scripts to use
 export BINDER_TOOLCHAIN_ROOT="$BINDER_REPO_DIR"
 
@@ -58,10 +81,8 @@ export BINDER_TOOLCHAIN_ROOT="$BINDER_REPO_DIR"
 # ------------------------------------------------------------------------------
 clone_repo() {
     if [ -d "$BINDER_REPO_DIR" ]; then
-        # Repo exists, but check if it's empty or valid? 
-        # For now assume existence is enough.
+        echo "📦 Binder tools already cloned at $BINDER_REPO_DIR"
         return 0
->>>>>>> Stashed changes
     fi
 
     echo "📦 Cloning Binder tools repository..."
@@ -69,71 +90,27 @@ clone_repo() {
     git clone "$REPO_URL" "$BINDER_REPO_DIR" || return 1
 }
 
-<<<<<<< Updated upstream
-# Detect shell & profile file (why: correct file for correct user shell)
-detect_profile() {
-    if [ -n "$ZSH_VERSION" ]; then
-        echo "$HOME/.zshrc"
-    elif [ -n "$BASH_VERSION" ]; then
-        echo "$HOME/.bashrc"
-    else
-        echo "$HOME/.profile"
-=======
 # ------------------------------------------------------------------------------
 # 2. BUILD (Idempotent)
 # ------------------------------------------------------------------------------
 build_tools() {
     # FAST EXIT: If stamp exists, we are done.
     if [ -f "$STAMP_FILE" ]; then
+        echo "✅ Toolchain already built (stamp file exists)"
         return 0
->>>>>>> Stashed changes
     fi
 
-<<<<<<< Updated upstream
-PROFILE_FILE="$(detect_profile)"
-EXPORT_LINE="export PATH=\"$BINDER_BIN_DIR:\$PATH\""
-
-setup_path_auto() {
-    mkdir -p "$BINDER_BIN_DIR"
-
-    if grep -Fxq "$EXPORT_LINE" "$PROFILE_FILE"; then
-        echo -e "${GREEN}Binder tool path is already in PATH.${RESET}"
-        return
-    fi
-
-    echo -e "${YELLOW}Adding Binder tool path to PATH automatically...${RESET}"
-    {
-        echo ""
-        echo "# Added by Binder setup script"
-        echo "$EXPORT_LINE"
-    } >> "$PROFILE_FILE"
-
-    # Apply immediately (why: user doesn’t need to restart shell)
-    # shellcheck disable=SC1090
-    source "$PROFILE_FILE"
-
-    echo -e "${GREEN}Binder tool path added successfully!${RESET}"
-    echo -e "${YELLOW}Profile updated: $PROFILE_FILE${RESET}"
-}
-
-# Function to verify installation
-verify_installation() 
-{
-    if command -v aidl_ops &> /dev/null; then
-        echo "Binder tools installation successful."
-    else
-        echo "Installation failed or aidl_ops tool not found. Ensure the path is correctly set."
-=======
-    if [ ! -f "$BINDER_BUILD_SCRIPT" ]; then
-        echo "❌ Error: Build script not found at $BINDER_BUILD_SCRIPT"
+    if [ ! -f "$BINDER_HOST_BUILD_SCRIPT" ]; then
+        echo "❌ Error: Build script not found at $BINDER_HOST_BUILD_SCRIPT"
         return 1
->>>>>>> Stashed changes
     fi
 
-    echo "🚀 Building Linux Binder Toolchain (This runs once)..."
+    echo "🚀 Building Linux Binder Toolchain (host tools only)..."
+    echo "   This builds the AIDL compiler for code generation on the build machine."
+    echo "   Target binder libraries are built separately per platform."
     
-    # Execute the build script in a subshell to protect current directory context
-    (cd "$BINDER_REPO_DIR" && /bin/bash "$BINDER_BUILD_SCRIPT")
+    # Execute the host build script in a subshell
+    (cd "$BINDER_REPO_DIR" && /bin/bash "$BINDER_HOST_BUILD_SCRIPT")
     
     if [ $? -eq 0 ]; then
         touch "$STAMP_FILE"
@@ -144,27 +121,27 @@ verify_installation()
     fi
 }
 
-<<<<<<< Updated upstream
-# Execute functions
-check_sourced
-clone_repo
-setup_path_auto
-verify_installation
-=======
 # ------------------------------------------------------------------------------
 # 3. SETUP PATH (Exports to current shell)
 # ------------------------------------------------------------------------------
 setup_path() {
-    LOCAL_BIN="$BINDER_REPO_DIR/local/bin"
-    if [[ ":$PATH:" != *":$LOCAL_BIN:"* ]]; then
-        export PATH="$LOCAL_BIN:$PATH"
+    HOST_BIN="$BINDER_REPO_DIR/out/host/bin"
+    if [ ! -d "$HOST_BIN" ]; then
+        echo "⚠️  Warning: Host bin directory not found: $HOST_BIN"
+        return 1
+    fi
+    
+    if [[ ":$PATH:" != *":$HOST_BIN:"* ]]; then
+        export PATH="$HOST_BIN:$PATH"
+        echo "✅ Added $HOST_BIN to PATH"
     fi
 }
->>>>>>> Stashed changes
 
 # ------------------------------------------------------------------------------
 # MAIN EXECUTION
 # ------------------------------------------------------------------------------
-clone_repo || return 1
-build_tools || return 1
+clone_repo || exit 1
+build_tools || exit 1
 setup_path
+
+echo "✅ Binder toolchain setup complete"
