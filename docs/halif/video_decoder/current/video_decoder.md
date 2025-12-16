@@ -292,7 +292,7 @@ Decoded video frame buffers are only passed from the video decoder to the client
 
 If the input [AV Buffer](../../av_buffer/current/av_buffer.md) that contained the coded video frame was passed in a secure buffer, then the corresponding decoded video frame must be output in a secure video frame buffer.
 
-Video frame buffers are passed back as handles in the `IVideoDecoderControllerListener.onFrameOutput()` function `frameBufferHandle` parameter.  If no frame buffer handle is available to pass but the call needs to be made to provide updated FrameMetadata then `-1` shall be passed as the handle value.
+Video frame buffers are passed back as handles in the `IVideoDecoderControllerListener.onFrameOutput()` function `frameBufferHandle` parameter.  In tunnelled mode, `-1` is passed as the handle value to indicate that no frame buffer handle is being provided since the video is consumed internally by the vendor layer.
 
 The format of the data in the decoded video frame buffer is determined by the vendor driver implementation and does not need to be understood by the RDK middleware.
 
