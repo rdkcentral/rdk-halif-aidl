@@ -16,33 +16,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
-import com.rdk.hal.videodecoder.CodecCapabilities;
-import com.rdk.hal.videodecoder.DynamicRange;
- 
-/** 
- *  @brief     Video decoder capabilities definition.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Douglas Adler
- */
- 
+package com.rdk.hal.audiodecoder;
+
 @VintfStability
-parcelable Capabilities
-{
-	/**
-	 * Array of CodecCapability parcelables supported by this video decoder instance. 
-	 */
-    CodecCapabilities[] codecCapabilities;
-	
-	/**
-	 * Array of DynamicRange values supported by this video decoder instance. 
-	 */
-    DynamicRange[] dynamicRange;
-	
-	/**
-	 * Indicates if this decoder instance can work in secure video path (SVP) mode. 
-	 * @see Property.SECURE_VIDEO
-	 */
-    boolean supportsSecure;
+@Backing(type="int")
+/**
+ * @brief Enumeration of profiles for the DTS codec (Codec.DTS).
+ */
+enum DTSProfile {
+    CORE = 0,            /**< DTS Core (mandatory) */
+    HD_HRA = 1,          /**< DTS-HD High Resolution Audio */
+    HD_MA = 2            /**< DTS-HD Master Audio (lossless) */
 }

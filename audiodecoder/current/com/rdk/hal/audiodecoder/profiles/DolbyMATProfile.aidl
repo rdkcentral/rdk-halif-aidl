@@ -16,33 +16,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
-import com.rdk.hal.videodecoder.CodecCapabilities;
-import com.rdk.hal.videodecoder.DynamicRange;
- 
-/** 
- *  @brief     Video decoder capabilities definition.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Douglas Adler
- */
- 
+package com.rdk.hal.audiodecoder;
+
 @VintfStability
-parcelable Capabilities
-{
-	/**
-	 * Array of CodecCapability parcelables supported by this video decoder instance. 
-	 */
-    CodecCapabilities[] codecCapabilities;
-	
-	/**
-	 * Array of DynamicRange values supported by this video decoder instance. 
-	 */
-    DynamicRange[] dynamicRange;
-	
-	/**
-	 * Indicates if this decoder instance can work in secure video path (SVP) mode. 
-	 * @see Property.SECURE_VIDEO
-	 */
-    boolean supportsSecure;
+@Backing(type="int")
+/**
+ * @brief Enumeration of profiles for Dolby MAT codec (Codec.DOLBY_MAT).
+ */
+enum DolbyMATProfile {
+    V1 = 0, /**< Dolby MAT v1 (legacy). */
+    V2 = 1, /**< Dolby MAT v2 (common for Atmos over HDMI). */
 }

@@ -17,26 +17,32 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiodecoder;
-import com.rdk.hal.audiodecoder.Codec;
- 
-/** 
- *  @brief     Audio decoder resource definition.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Douglas Adler
- */
+
+import com.rdk.hal.audiodecoder.CodecSupport;
 
 @VintfStability
-parcelable Capabilities
-{
-	/**
-	 * Array of Codec enum values supported by this audio decoder instance. 
-	 */
-    Codec[] supportedCodecs;
-	
+/**
+ * @brief Describes the overall audio decoder capabilities of the platform.
+ * 
+ * This structure aggregates all codec-specific capabilities supported by the audio
+ * decoder implementation. It includes version information to track capability schema
+ * changes over time.
+ */
+parcelable Capabilities {
+    /**
+     * Array of codec-specific capabilities supported by the platform.
+     * Each entry describes maximum capabilities for a specific codec, including:
+     * - Supported profiles (if applicable)
+     * - Maximum bitrate
+     * - Maximum sample rate
+     * - Maximum number of channels
+     * - Maximum bit depth
+     */
+    CodecSupport[] codecCapabilities;
+
 	/**
 	 * Indicates if this decoder instance can work in secure audio path (SAP) mode. 
-	 * @see Property.SECURE_AUDIO
+	 * If true, secure audio sessions (e.g., for DRM-protected content) are supported.
 	 */
     boolean supportsSecure;
 }
