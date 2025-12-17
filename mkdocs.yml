@@ -38,6 +38,7 @@ nav:
       - HAL Feature Profiles: halif/key_concepts/hal/hal_feature_profiles.md
       - HAL Naming Conventions: halif/key_concepts/hal/hal_naming_conventions.md
       - HAL Session State Management: halif/key_concepts/hal/hal_session_state_management.md
+      - Roles and Responsibilities: halif/key_concepts/hal/roles_and_responsibilities.md
     - Standards:
       - Core Development Guide: standards/direct_branching.md
       - Fork-Based Contribution Guide: standards/forked_based_branching.md
