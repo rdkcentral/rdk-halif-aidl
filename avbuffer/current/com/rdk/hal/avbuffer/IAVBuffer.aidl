@@ -29,6 +29,13 @@ import com.rdk.hal.audiodecoder.IAudioDecoder;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
 
 @VintfStability
@@ -68,7 +75,7 @@ interface IAVBuffer
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if videoDecoderIndex is invalid
      * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, HALError::OUT_OF_MEMORY if heap is exhausted
      *
-     * @note On exception, the returned pool handle is an unknown value and must not be used.
+     * @note On exception, the returned pool handle is an unknown value and must not be used. (See {@link IAVBuffer} for exception handling behavior).
      * 
      * @pre The IVideoDecoder.Id must have been obtained from IVideoDecoderManager.getVideoDecoderIds()
      * 
@@ -97,7 +104,7 @@ interface IAVBuffer
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if audioDecoderId is invalid
      * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, HALError::OUT_OF_MEMORY if heap is exhausted
      *
-     * @note On exception, the returned pool handle is an unknown value and must not be used.
+     * @note On exception, the returned pool handle is an unknown value and must not be used. (See {@link IAVBuffer} for exception handling behavior).
      * 
      * @pre The IAudioDecoder.Id must have been obtained from IAudioDecoderManager.getAudioDecoderIds()
      *      or IAudioDecoder.Id.UNDEFINED must be used.
@@ -178,7 +185,7 @@ interface IAVBuffer
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if pool handle is invalid or size is invalid
      * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, HALError::OUT_OF_MEMORY if allocation fails
      *
-     * @note On exception, the returned buffer handle is an unknown value and must not be used.
+     * @note On exception, the returned buffer handle is an unknown value and must not be used. (See {@link IAVBuffer} for exception handling behavior).
      * 
      * @pre A pool handle must have been obtained from `createVideoPool()` or `createAudioPool()`.
      * 
