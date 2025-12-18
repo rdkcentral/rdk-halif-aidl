@@ -229,7 +229,7 @@ interface IPlaneControl
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
-     * @exception binder::Statu::Exception::EX_NULL_POINTER for Null object. 
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
      *
