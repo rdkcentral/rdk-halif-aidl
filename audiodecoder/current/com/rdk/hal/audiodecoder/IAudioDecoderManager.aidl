@@ -50,6 +50,8 @@ interface IAudioDecoderManager
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns IAudioDecoder.Id[]
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAudioDecoderManager}} for exception handling behavior).
      */
     IAudioDecoder.Id[] getAudioDecoderIds();
 
@@ -61,6 +63,8 @@ interface IAudioDecoderManager
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns IAudioDecoder which can be null if the resource index is invalid.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAudioDecoderManager}} for exception handling behavior).
      */
     @nullable IAudioDecoder getAudioDecoder(in IAudioDecoder.Id decoderResourceId);
 }

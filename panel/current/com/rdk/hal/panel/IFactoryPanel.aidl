@@ -60,6 +60,8 @@ interface IFactoryPanel
      * @return boolean
      * @retval true     The configuration data was successfully written.
      * @retval false    Write error or invalid parameter.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IFactoryPanel}} for exception handling behavior).
      */
     boolean setFactoryPanelConfiguration(in int panelId); 
 
@@ -80,6 +82,8 @@ interface IFactoryPanel
      * @return boolean
      * @retval true     The calibration data was successfully written.
      * @retval false    Write error or invalid parameter.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IFactoryPanel}} for exception handling behavior).
      * 
      * @see getFactoryWhiteBalanceCalibration()
      */
@@ -111,6 +115,8 @@ interface IFactoryPanel
      * @retval true     The calibration data was successfully written.
      * @retval false    Write error or invalid parameter.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IFactoryPanel}} for exception handling behavior).
+     *
      * @see getFactoryGammaTable()
      */
     boolean setFactoryGammaTable(in int colorTemperature, in int[] red, in int[] green, in int[] blue, in SaveTo saveTo);
@@ -140,6 +146,8 @@ interface IFactoryPanel
      * @return boolean
      * @retval true     The peak brightness data was successfully written.
      * @retval false        Write error or invalid parameter.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IFactoryPanel}} for exception handling behavior).
      *
      * @see getFactoryPeakBrightness()
      */
@@ -194,6 +202,8 @@ interface IFactoryPanel
      * @return boolean
      * @retval true     The illumination pattern was presented and the duration timer started.
      * @retval false    Invalid parameter(s) or hardware fault.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IFactoryPanel}} for exception handling behavior).
      */
     boolean setFactoryLocalDimming(in LocalDimmingZone[] zones, in int durationMs);
 
@@ -210,6 +220,8 @@ interface IFactoryPanel
      * @return boolean
      * @retval true     The test mode was run and the duration timer started.
      * @retval false    Invalid parameter(s) or hardware fault.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IFactoryPanel}} for exception handling behavior).
      */
     boolean setFactoryLocalDimmingTestMode(in int mode, in int durationMs);
 
@@ -221,6 +233,8 @@ interface IFactoryPanel
      * @return boolean
      * @retval true     The setting was successfully changed.
      * @retval false    Driver or hardware error.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IFactoryPanel}} for exception handling behavior).
      * 
      * @see getFactoryLocalDimmingPixelCompensation()
      */
@@ -232,6 +246,8 @@ interface IFactoryPanel
      * @return boolean
      * @retval true     Local dimming pixel compensation is enabled.
      * @retval false    Local dimming pixel compensation is disabled.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IFactoryPanel}} for exception handling behavior).
      * 
      * @see setFactoryLocalDimmingPixelCompensation()
      */

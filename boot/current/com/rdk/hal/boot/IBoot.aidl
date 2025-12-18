@@ -46,6 +46,8 @@ interface IBoot
      * Gets the capabilities of the boot service.
      *
      * @returns Capabilities parcelable.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IBoot}} for exception handling behavior).
      */
     Capabilities getCapabilities();
 
@@ -53,6 +55,8 @@ interface IBoot
      * Gets the reason the device was booted.
      * 
      * @returns BootReason
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IBoot}} for exception handling behavior).
      */
     BootReason getBootReason();
 

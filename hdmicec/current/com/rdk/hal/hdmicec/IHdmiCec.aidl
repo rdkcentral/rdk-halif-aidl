@@ -51,6 +51,8 @@ interface IHdmiCec
      *
      * @returns State enum value.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHdmiCec}} for exception handling behavior).
+     *
      * @see IHdmiCecEventListener.onStateChanged().
      */  
     State getState();
@@ -61,6 +63,8 @@ interface IHdmiCec
      * @param[in] property              The key of a property from the Property enum.
      *
      * @returns PropertyValue or null if the property key is unknown.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHdmiCec}} for exception handling behavior).
      * 
      * @see setProperty()
      */
@@ -73,6 +77,8 @@ interface IHdmiCec
      * not returned in this array.
      *
      * @returns int[] - an array of addresses. The size of the array will be zero if no additional addresses have been set.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHdmiCec}} for exception handling behavior).
      * 
      * @see addLogicalAddress(), removeLogicalAddress()
      */
@@ -102,6 +108,8 @@ interface IHdmiCec
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
      * @returns IHdmiCecController or null on error.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHdmiCec}} for exception handling behavior).
      * 
      * @pre The resource must be in State::CLOSED.
      * 
@@ -125,6 +133,8 @@ interface IHdmiCec
      * @retval true     Successfully closed.
      * @retval false    Invalid state or unrecognised parameter.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHdmiCec}} for exception handling behavior).
+     *
      * @pre The resource must be in State::STARTED.
      *
      * @see open()
@@ -142,6 +152,8 @@ interface IHdmiCec
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHdmiCec}} for exception handling behavior).
+     *
      * @see unregisterEventListener()
      */
     boolean registerEventListener(in IHdmiCecEventListener cecEventListener);
@@ -154,6 +166,8 @@ interface IHdmiCec
      * @return boolean
      * @retval true     The event listener was unregistered.
      * @retval false    The event listener was not found registered.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHdmiCec}} for exception handling behavior).
      *
      * @see registerEventListener()
      */

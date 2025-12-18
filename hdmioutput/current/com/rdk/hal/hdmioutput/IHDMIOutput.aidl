@@ -64,6 +64,8 @@ interface IHDMIOutput
      * The returned value is constant and must not change between calls.
      *
      * @returns Capabilities parcelable.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
      */
     Capabilities getCapabilities();
 
@@ -73,17 +75,41 @@ interface IHDMIOutput
      * @param[in] property     The key of a property from the Property enum.
      * @returns PropertyValue or null if the property key is unknown.
      *
-     * @see setProperty()
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
+     * 
+     * @see setProperty(), getPropertyMulti()
      */
     @nullable PropertyValue getProperty(in Property property);
+ 
+    /**
+     * Gets multiple properties.
+     *
+     * When calling `getPropertyMulti()` the `propertyKVList` parameter contains an array of
+     * `PropertyKVPair` parcelables that have their `property` key set.
+     * On success the `propertyValue` is set in the returned array.
+     * It is an error to pass in an empty array, which results in false being returned.
+     * 
+     * @param[in,out] propertyKVList        Holds the properties to get and the values on return.
+     *
+     * @returns boolean - true on success or false if any property keys are invalid.
+     * @retval true     The property values were retrieved successfully.
+     * @retval false    One or more property keys are invalid or the input array is empty.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
+     * 
+     * @see getProperty()
+     */
+    boolean getPropertyMulti(inout PropertyKVPair[] propertyKVList);
 
     /**
      * Gets the current HDMI output state.
      *
      * @returns State enum value.
      *
-     * @see IHDMIOutputEventListener.onStateChanged()
-     */
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
+	 *
+     * @see IHDMIOutputEventListener.onStateChanged().
+     */  
     State getState();
 
     /**
@@ -103,6 +129,14 @@ interface IHDMIOutput
      * @exception binder::Status EX_ILLEGAL_STATE
      * @pre Must be in State::CLOSED.
      *
+     * @returns IHDMIOutputController or null if the parameter is invalid.
+     * 
+     * @exception binder::Status EX_ILLEGAL_STATE 
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
+     * 
+     * @pre The resource must be in State::CLOSED.
+     * 
      * @see IHDMIOutputController, close(), registerEventListener()
      */
     @nullable IHDMIOutputController open(in IHDMIOutputControllerListener hdmiOutputControllerListener);
@@ -120,7 +154,9 @@ interface IHDMIOutput
      * @retval true     Successfully closed.
      * @retval false    Invalid state or mismatched instance.
      *
-     * @pre Must be in State::READY.
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
+     *
+     * @pre The resource must be in State::READY.
      *
      * @see open()
      */
@@ -136,6 +172,8 @@ interface IHDMIOutput
      * @retval true     Listener registered.
      * @retval false    Already registered.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
+     *
      * @see unregisterEventListener()
      */
     boolean registerEventListener(in IHDMIOutputEventListener hdmiOutputEventListener);
@@ -147,6 +185,8 @@ interface IHDMIOutput
      * @returns boolean
      * @retval true     Listener unregistered.
      * @retval false    Listener not found.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
      *
      * @see registerEventListener()
      */

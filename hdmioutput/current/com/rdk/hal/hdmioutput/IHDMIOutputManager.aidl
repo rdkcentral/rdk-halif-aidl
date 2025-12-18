@@ -58,20 +58,18 @@ interface IHDMIOutputManager
      * This describes global support across all HDMI ports, such as max resolution,
      * HDR formats, and FreeSync tiers. The result is immutable and cached.
      *
-     * This can be safely called before any HDMI output instance is opened.
+     * @returns PlatformCapabilities parcelable.
      *
-     * @returns PlatformCapabilities
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputManager}} for exception handling behavior).
      */
     PlatformCapabilities getCapabilities();
 
     /**
-     * Enumerates available HDMI output IDs on the platform.
+	 * Gets the platform list of HDMI output IDs.
+     * 
+     * @returns IHDMIOutput.Id[]
      *
-     * This list provides the logical identifiers needed to call `getHDMIOutput()`.
-     * Each returned ID is guaranteed to be valid unless the underlying resource
-     * becomes unavailable (e.g., hot-removed HDMI transmitters in some systems).
-     *
-     * @returns IHDMIOutput.Id[]  Array of valid HDMI output identifiers.
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputManager}} for exception handling behavior).
      */
     IHDMIOutput.Id[] getHDMIOutputIds();
 
@@ -83,12 +81,9 @@ interface IHDMIOutputManager
      * enters an active state. Multiple clients may query the same ID, but only
      * one may successfully open a session at a time.
      *
-     * @param[in] hdmiOutputId  ID of the HDMI output to access.
+     * @returns IHDMIOutput or null if the ID is invalid.
      *
-     * @returns IHDMIOutput
-     * @retval null  The ID was invalid or the resource is unavailable.
-     *
-     * @see IHDMIOutput
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputManager}} for exception handling behavior).
      */
     @nullable IHDMIOutput getHDMIOutput(in IHDMIOutput.Id hdmiOutputId);
 }

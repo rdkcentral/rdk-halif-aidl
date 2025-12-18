@@ -57,6 +57,8 @@ interface IFrontend {
      * Can be called any time and is not depended o
      *
      * @returns FrontendType array
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IFrontend}} for exception handling behavior).
      */
     FrontendType[] getFrontendTypes();
 
@@ -66,6 +68,8 @@ interface IFrontend {
      * @param[in] frontendType The type of capabilites to request
      *
      * @returns Capabilities or null if the type is not supported
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IFrontend}} for exception handling behavior).
      */
     @nullable Capabilities getCapabilities(in FrontendType frontendType);
 
@@ -73,6 +77,8 @@ interface IFrontend {
 	 * Gets the current frontend state.
      *
      * @returns State enum value.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IFrontend}} for exception handling behavior).
 	 *
      * @see IFrontendListener.onStateChanged().
      */  
@@ -98,6 +104,8 @@ interface IFrontend {
      * @returns IFrontendController or null on error.
      * 
      * @exception binder::Status EX_ILLEGAL_STATE 
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IFrontend}} for exception handling behavior).
      * 
      * @pre The resource must be in State::CLOSED.
      * 
@@ -117,6 +125,8 @@ interface IFrontend {
      * @retval true     The listener was registered.
      * @retval false    The listener is already registered.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IFrontend}} for exception handling behavior).
+     *
      * @see unregisterListener()
      */
     boolean registerListener(in IFrontendListener frontendListener);
@@ -129,6 +139,8 @@ interface IFrontend {
      * @return boolean
      * @retval true     The listener was unregistered.
      * @retval false    The listener was not found registered.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IFrontend}} for exception handling behavior).
      *
      * @see registerListener()
      */

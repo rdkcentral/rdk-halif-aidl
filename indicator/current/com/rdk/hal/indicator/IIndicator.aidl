@@ -49,37 +49,28 @@ interface IIndicator
     /**
      * Gets the capabilities of this indicator instance.
      *
-     * This function can be called at any time and returns the set of states
-     * supported by this specific indicator instance. The returned value must
-     * not change between calls.
+     * @returns Capabilities The capabilities parcelable of the indicator service.
      *
-     * @returns Capabilities parcelable containing supported state strings.
-     * @exception binder::Status::Exception::EX_NONE for success.
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IIndicator}} for exception handling behavior).
      */
     Capabilities getCapabilities();
 
     /**
      * Sets a new indicator state.
      *
-     * The state string must be one of the states listed in the capabilities
-     * returned by getCapabilities(). Setting an unsupported state will fail.
+     * @param[in] state An indicator state to be set.
+     * @returns boolean Returns `true` if the state was set successfully, `false` otherwise.
      *
-     * @param[in] state An indicator state string to be set.
-     * @returns Success flag indicating whether state was set.
-     * @retval true State was set successfully.
-     * @retval false State is not supported or setting failed.
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid state string.
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IIndicator}} for exception handling behavior).
      */
     boolean set(in String state);
 
     /**
      * Gets the current indicator state.
      *
-     * Returns the currently active state as a string.
+     * @returns State The current indicator state.
      *
-     * @returns Current indicator state string.
-     * @exception binder::Status::Exception::EX_NONE for success.
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IIndicator}} for exception handling behavior).
      */
     String get();
 }

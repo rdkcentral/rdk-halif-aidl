@@ -89,11 +89,13 @@ interface IHDMIOutputController
      * This reflects whether a valid sink device is physically connected to the HDMI output.
      * HPD deassertion typically indicates cable disconnect or sink power loss.
      *
-     * @returns boolean
-     * @retval true     HPD is asserted — sink is connected and powered.
-     * @retval false    HPD is deasserted — no active sink detected.
+     * @return boolean
+     * @retval true         The HPD line is asserted.
+     * @retval boolean      The HPD line is deasserted.
      *
-     * @see IHDMIOutputControllerListener.onHotPlugDetectStateChanged()
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputController}} for exception handling behavior).
+     * 
+     * @see start()
      */
     boolean getHotPlugDetectState();
 
@@ -114,7 +116,7 @@ interface IHDMIOutputController
      * @retval true     Property accepted and applied or queued.
      * @retval false    Invalid property key or value.
      *
-     * @pre Output must be in State::READY or State::STARTED.
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputController}} for exception handling behavior).
      *
      * @see setPropertyMulti(), getProperty()
      */
@@ -132,6 +134,8 @@ interface IHDMIOutputController
      * @retval true     All properties were valid and applied.
      * @retval false    At least one invalid property in the array.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputController}} for exception handling behavior).
+     *
      * @see setProperty(), getProperty()
      */
     boolean setPropertyMulti(in PropertyKVPair[] propertyKVList);
@@ -148,7 +152,9 @@ interface IHDMIOutputController
      * @returns HDCPProtocolVersion enum value.
      * @retval HDCPProtocolVersion.UNDEFINED  No active HDCP session (unprotected content or authentication inactive).
      *
-     * @see getHDCPStatus(), getHDCPReceiverVersion(), onEDID()
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputController}} for exception handling behavior).
+     *
+     * @see getHDCPStatus(), getSinkHDCPVersion()
      */
     HDCPProtocolVersion getHDCPCurrentVersion();
 
@@ -162,10 +168,9 @@ interface IHDMIOutputController
      * This may differ from `getHDCPCurrentVersion()` if HDCP repeaters, authentication
      * failures, or content requirements result in a lower version being negotiated.
      *
-     * @returns HDCPProtocolVersion enum value.
-     * @retval HDCPProtocolVersion.UNDEFINED  Sink capabilities not yet known (HPD deasserted or EDID not read).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputController}} for exception handling behavior).
      *
-     * @see getHDCPStatus(), getHDCPCurrentVersion(), onEDID()
+     * @see getHDCPStatus(), getHDCPCurrentVersion()
      */
     HDCPProtocolVersion getHDCPReceiverVersion();
 
@@ -179,7 +184,9 @@ interface IHDMIOutputController
      * @returns HDCPStatus enum value indicating authentication state.
      * @retval HDCPStatus.UNKNOWN  No sink present or HDCP state not yet determined.
      *
-     * @see getHDCPCurrentVersion(), getHDCPReceiverVersion(), onHDCPStatusChanged()
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputController}} for exception handling behavior).
+     *
+     * @see getHDCPCurrentVersion(), getHDCPReceiverVersion()
      */
     HDCPStatus getHDCPStatus();
 

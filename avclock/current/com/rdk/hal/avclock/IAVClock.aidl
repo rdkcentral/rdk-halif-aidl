@@ -62,6 +62,8 @@ interface IAVClock
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns Capabilities parcelable.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAVClock}} for exception handling behavior).
      */
     Capabilities getCapabilities();
 
@@ -71,6 +73,8 @@ interface IAVClock
      * @returns State enum value.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAVClock}} for exception handling behavior).
      *
      * @see IAVClockEventListener.onStateChanged(),  IAVClockControllerListener.onStateChanged().
      */  
@@ -85,6 +89,8 @@ interface IAVClock
      * 
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAVClock}} for exception handling behavior).
      *
      * @see setProperty()
      */
@@ -102,6 +108,8 @@ interface IAVClock
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters. 
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAVClock}} for exception handling behavior).
      *
      * @see getProperty()
      */
@@ -132,6 +140,8 @@ interface IAVClock
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAVClock}} for exception handling behavior).
      * 
      * @pre AV Clock is in State::CLOSED state.
      * 
@@ -156,6 +166,8 @@ interface IAVClock
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in OPENED State.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAVClock}} for exception handling behavior).
+     *
      * @pre AV Clock has been successfully opened and is in the State::READY state.
      *
      * @see open(), IAVClockController
@@ -178,6 +190,8 @@ interface IAVClock
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAVClock}} for exception handling behavior).
+     *
      * @see unregisterEventListener()
      */
     boolean registerEventListener(in IAVClockEventListener avClockEventListener);
@@ -193,6 +207,8 @@ interface IAVClock
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAVClock}} for exception handling behavior).
      *
      * @see registerEventListener()
      */

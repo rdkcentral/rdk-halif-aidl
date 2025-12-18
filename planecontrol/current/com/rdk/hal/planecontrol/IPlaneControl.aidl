@@ -53,6 +53,8 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns Capabilities[] array of plane resource instance capabilities.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
      */
     Capabilities[] getCapabilities();
  
@@ -68,6 +70,8 @@ interface IPlaneControl
      * 
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
      * 
      * @see releaseNativeGraphicsWindowHandle()
      */
@@ -100,6 +104,8 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     *
      * @see getNativeGraphicsWindowHandle()
      */
     boolean flipGraphicsBuffer(in int planeResourceIndex);
@@ -125,6 +131,8 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     *
      * @see getVideoSourceDestinationPlaneMapping()
      */
     boolean setVideoSourceDestinationPlaneMapping(in SourcePlaneMapping[] listSourcePlaneMapping);
@@ -138,6 +146,8 @@ interface IPlaneControl
      * @returns SourcePlaneMapping[]    An array of video source to video plane mappings.
      * 
      * @exception binder::Status::Exception::EX_NONE for success.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
      *
      * @see setVideoSourceDestinationPlaneMapping()
      */
@@ -153,6 +163,8 @@ interface IPlaneControl
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameter value.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
      *
      * @see setProperty(), getPropertyMulti()
      */
@@ -171,6 +183,8 @@ interface IPlaneControl
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value. 
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
      *
      * @see getProperty(), setPropertyMultiAtomic()
      */
@@ -207,6 +221,8 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid plane index, property key(s) or empty input list.
      * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     *
      * @see getProperty(), setPropertyMultiAtomic()
      */
     boolean getPropertyMulti(in int planeResourceIndex, in Property[] properties, out PropertyKVPair[] propertyKVList);
@@ -228,6 +244,8 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
      * @exception binder::Statu::Exception::EX_NULL_POINTER for Null object. 
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     *
      * @see setProperty(), getPropertyMulti()
      */
     boolean setPropertyMultiAtomic(in int planeResourceIndex, in PropertyKVPair[] propertyKVList);
@@ -247,6 +265,8 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     *
      * @see unregisterListener()
      */
     boolean registerListener(in IPlaneControlListener listener);
@@ -262,6 +282,8 @@ interface IPlaneControl
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
      *
      * @see registerListener()
      */
