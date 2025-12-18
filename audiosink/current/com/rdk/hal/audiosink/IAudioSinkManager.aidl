@@ -25,6 +25,13 @@ import com.rdk.hal.audiosink.PlatformCapabilities;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
 
 @VintfStability
@@ -39,6 +46,8 @@ interface IAudioSinkManager
      * @returns IAudioSink.Id[] array.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAudioSinkManager}} for exception handling behavior).
      */
 	IAudioSink.Id[] getAudioSinkIds();   
 
@@ -52,6 +61,8 @@ interface IAudioSinkManager
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns PlatformCapabilities parcelable.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAudioSinkManager}} for exception handling behavior).
      */
     PlatformCapabilities getPlatformCapabilities();
 
@@ -63,6 +74,8 @@ interface IAudioSinkManager
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns IAudioSink or null on invalid audio sink ID.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAudioSinkManager}} for exception handling behavior).
      */
     @nullable IAudioSink getAudioSink(in IAudioSink.Id audioSinkId);
 

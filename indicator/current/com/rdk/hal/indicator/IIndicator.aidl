@@ -21,15 +21,21 @@ import com.rdk.hal.indicator.State;
 import com.rdk.hal.indicator.Capabilities;
 
 /**
- * /**
- * * @brief Indicator HAL interface.
- * *
- * * Defines the Hardware Abstraction Layer (HAL) interface for indicator services.
- * * @author Luc Kennedy-Lamb
- * * @author Peter Stieglitz
- * * @author Douglas Adler
- * * @author Gerald Weatherup
- * */
+ * @brief Indicator HAL interface.
+ *
+ * Defines the Hardware Abstraction Layer (HAL) interface for indicator services.
+ * @author Luc Kennedy-Lamb
+ * @author Peter Stieglitz
+ * @author Douglas Adler
+ * @author Gerald Weatherup
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
+ */
 
 @VintfStability
 interface IIndicator
@@ -41,6 +47,8 @@ interface IIndicator
      * Gets the capabilities of the indicator service.
      *
      * @returns Capabilities The capabilities parcelable of the indicator service.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IIndicator}} for exception handling behavior).
      */
     Capabilities getCapabilities();
 
@@ -49,6 +57,8 @@ interface IIndicator
      *
      * @param[in] state An indicator state to be set.
      * @returns boolean Returns `true` if the state was set successfully, `false` otherwise.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IIndicator}} for exception handling behavior).
      */
     boolean set(in State state);
 
@@ -56,6 +66,8 @@ interface IIndicator
      * Gets the current indicator state.
      *
      * @returns State The current indicator state.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IIndicator}} for exception handling behavior).
      */
     State get();
 }

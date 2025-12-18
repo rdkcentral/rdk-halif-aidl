@@ -31,6 +31,13 @@ import com.rdk.hal.State;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
 
 @VintfStability
@@ -54,6 +61,8 @@ interface IHDMIOutput
      * The returned value is not allowed to change between calls.
      *
      * @returns Capabilities parcelable.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
      */
     Capabilities getCapabilities();
 
@@ -63,6 +72,8 @@ interface IHDMIOutput
      * @param[in] property              The key of a property from the Property enum.
      *
      * @returns PropertyValue or null if the property key is unknown.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
      * 
      * @see setProperty(), getPropertyMulti()
      */
@@ -81,6 +92,8 @@ interface IHDMIOutput
      * @returns boolean - true on success or false if any property keys are invalid.
      * @retval true     The property values were retrieved successfully.
      * @retval false    One or more property keys are invalid or the input array is empty.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
      * 
      * @see getProperty()
      */
@@ -90,6 +103,8 @@ interface IHDMIOutput
 	 * Gets the current HDMI output state.
      *
      * @returns State enum value.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
 	 *
      * @see IHDMIOutputEventListener.onStateChanged().
      */  
@@ -115,6 +130,8 @@ interface IHDMIOutput
      * @returns IHDMIOutputController or null if the parameter is invalid.
      * 
      * @exception binder::Status EX_ILLEGAL_STATE 
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
      * 
      * @pre The resource must be in State::CLOSED.
      * 
@@ -138,6 +155,8 @@ interface IHDMIOutput
      * @retval true     Successfully closed.
      * @retval false    Invalid state or unrecognised parameter.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
+     *
      * @pre The resource must be in State::READY.
      *
      * @see open()
@@ -156,6 +175,8 @@ interface IHDMIOutput
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
+     *
      * @see unregisterEventListener()
      */
     boolean registerEventListener(in IHDMIOutputEventListener hdmiOutputEventListener);
@@ -168,6 +189,8 @@ interface IHDMIOutput
      * @return boolean
      * @retval true     The event listener was unregistered.
      * @retval false    The event listener was not found registered.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
      *
      * @see registerEventListener()
      */

@@ -29,6 +29,13 @@ import com.rdk.hal.PropertyValue;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
  
 @VintfStability
@@ -46,6 +53,8 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns Capabilities[] array of plane resource instance capabilities.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
      */
     Capabilities[] getCapabilities();
  
@@ -61,6 +70,8 @@ interface IPlaneControl
      * 
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
      * 
      * @see releaseNativeGraphicsWindowHandle()
      */
@@ -93,6 +104,8 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     *
      * @see getNativeGraphicsWindowHandle()
      */
     boolean flipGraphicsBuffer(in int planeResourceIndex);
@@ -118,6 +131,8 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     *
      * @see getVideoSourceDestinationPlaneMapping()
      */
     boolean setVideoSourceDestinationPlaneMapping(in SourcePlaneMapping[] listSourcePlaneMapping);
@@ -131,6 +146,8 @@ interface IPlaneControl
      * @returns SourcePlaneMapping[]    An array of video source to video plane mappings.
      * 
      * @exception binder::Status::Exception::EX_NONE for success.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
      *
      * @see setVideoSourceDestinationPlaneMapping()
      */
@@ -146,6 +163,8 @@ interface IPlaneControl
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameter value.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
      *
      * @see setProperty(), getPropertyMulti()
      */
@@ -164,6 +183,8 @@ interface IPlaneControl
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value. 
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
      *
      * @see getProperty(), setPropertyMultiAtomic()
      */
@@ -187,6 +208,8 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     *
      * @see getProperty(), setPropertyMultiAtomic()
      */
     boolean getPropertyMulti(in int planeResourceIndex, inout PropertyKVPair[] propertyKVList);
@@ -206,7 +229,9 @@ interface IPlaneControl
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
-     * @exception binder::Statu::Exception::EX_NULL_POINTER for Null object. 
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
      *
      * @see setProperty(), getPropertyMulti()
      */
@@ -227,6 +252,8 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     *
      * @see unregisterListener()
      */
     boolean registerListener(in IPlaneControlListener listener);
@@ -242,6 +269,8 @@ interface IPlaneControl
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
      *
      * @see registerListener()
      */

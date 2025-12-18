@@ -25,6 +25,13 @@ import com.rdk.hal.videodecoder.IVideoDecoder;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
 
 @VintfStability
@@ -39,6 +46,8 @@ interface IVideoDecoderManager
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns IVideoDecoder.Id[]
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoDecoderManager}} for exception handling behavior).
      */
 	IVideoDecoder.Id[] getVideoDecoderIds();
  
@@ -55,6 +64,8 @@ interface IVideoDecoderManager
      * @returns OperationalMode[] one or more OperationalMode enum values.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoDecoderManager}} for exception handling behavior).
      * 
      * @see enum OperationalMode
      */
@@ -68,6 +79,8 @@ interface IVideoDecoderManager
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns IVideoDecoder or null if the ID is invalid.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoDecoderManager}} for exception handling behavior).
      */
     @nullable IVideoDecoder getVideoDecoder(in IVideoDecoder.Id videoDecoderId);
 

@@ -29,7 +29,14 @@ import com.rdk.hal.State;
  *  @brief     FrontendController HAL interface.
  *  @author    Jan Pedersen
  *  @author    Christian George
- *  @author    Philipp Trommler 
+ *  @author    Philipp Trommler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
 
 @VintfStability
@@ -82,6 +89,8 @@ interface IFrontendController {
 	 * Gets the current frontend tuneStatus.
      *
      * @returns TuneStatus enum value.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IFrontendController}} for exception handling behavior).
 	 *
      * @see IFrontendControllerListener.onTuneStatusChanged().
      */  
@@ -128,6 +137,8 @@ interface IFrontendController {
      *                   be a subset of the information types returned in the Capabilities set for
      *                   this frontend.
      * @returns The list of the requested information values that are in the set of the supported
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IFrontendController}} for exception handling behavior).
      *         types.
      */
     SignalInfoReturn[] getSignalInfo(in SignalInfoProperty[] properties);

@@ -29,6 +29,13 @@ import com.rdk.hal.deviceinfo.Property;
  *  @author    Milorad Neskovic
  *  @author    Tijo Thomas
  *  @author    Gerald Weatherup
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
 
 @VintfStability
@@ -41,6 +48,8 @@ interface IDeviceInfo
      * Gets the capabilities of the Device Info service.
      *
      * @returns Capabilities parcelable.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IDeviceInfo}} for exception handling behavior).
      */
     Capabilities getCapabilities();
 
@@ -54,6 +63,8 @@ interface IDeviceInfo
     *
     * @param[in] propertyKey  The key of a property to retrieve.
     * @returns Property parcelable with metadata, or null if unsupported.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IDeviceInfo}} for exception handling behavior).
     *
     * @see getCapabilities(), Property.aidl, PropertyType.aidl
     */

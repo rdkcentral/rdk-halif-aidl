@@ -30,6 +30,13 @@ import com.rdk.hal.State;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
  
 @VintfStability
@@ -54,6 +61,8 @@ interface IVideoSink
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns Capabilities parcelable.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoSink}} for exception handling behavior).
      */
     Capabilities getCapabilities();
 
@@ -67,6 +76,8 @@ interface IVideoSink
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value. 
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoSink}} for exception handling behavior).
+     *
      * @see setProperty()
      */
     @nullable PropertyValue getProperty(in Property property);
@@ -77,6 +88,8 @@ interface IVideoSink
      * @returns State enum value.
 	 *
      * @exception binder::Status::Exception::EX_NONE for success.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoSink}} for exception handling behavior).
      *
      * @see IVideoSinkListener.onStateChanged().
      */  
@@ -97,6 +110,8 @@ interface IVideoSink
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoSink}} for exception handling behavior).
      * 
      * @pre The resource must be in State::CLOSED.
      * 
@@ -120,6 +135,8 @@ interface IVideoSink
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in OPENED State.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoSink}} for exception handling behavior).
+     *
      * @see open()
      */
     boolean close(in IVideoSinkController videoSinkController);
@@ -139,6 +156,8 @@ interface IVideoSink
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoSink}} for exception handling behavior).
+     *
      * @see unregisterEventListener()
      */
     boolean registerEventListener(in IVideoSinkEventListener videoSinkEventListener);
@@ -154,6 +173,8 @@ interface IVideoSink
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoSink}} for exception handling behavior).
      *
      * @see registerEventListener()
      */
