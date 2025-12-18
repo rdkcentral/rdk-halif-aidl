@@ -128,7 +128,7 @@ interface IVideoSinkController
      * access the buffer after this call returns true.
      *
      *
-     * If an video frame is passed to `queueVideoFrame()` after EOS, then the `binder::Status EX_ILLEGAL_STATE` exception
+     * If a video frame is passed to `queueVideoFrame()` after EOS, then the `binder::Status EX_ILLEGAL_STATE` exception
      * is raised. The video sink must be stopped and restarted or flushed to accept new buffers.
      *
      *
