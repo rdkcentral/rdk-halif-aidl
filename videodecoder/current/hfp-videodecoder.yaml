@@ -22,7 +22,7 @@
 
 # HAL Feature Profile for videodecoder
 
-IVideoDecoderManager:           # Component object begins
+videodecoder:                   # Component object begins
   interfaceVersion: current
   supportedOperationalModes:
     - NON_TUNNELLED

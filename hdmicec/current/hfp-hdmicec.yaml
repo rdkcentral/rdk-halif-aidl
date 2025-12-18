@@ -20,11 +20,12 @@
 # *
 #** ******************************************************************************
 
-# HAL Feature Profile for videodecoder
+# HAL Feature Profile for cec
 
-IHDMIOutputManager:           # Component object begins
-  interfaceVersion: current
-  IHDMIOutput:                  # Resource list
-    - 0:                        # Resource object begins
-      xxx: abc
-          
+
+hdmicec:                        # Component object begins
+    interfaceVersion: current
+    HAL_CEC_VERSION: x06    # x04 = Version 1.3a
+                            # x05 = Version 1.4, Version 1.4a or Version 1.4b
+                            # x06 = Version 2.0
+                            # See HDMI specification [CEC Version] operand definition.

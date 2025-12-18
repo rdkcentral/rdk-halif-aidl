@@ -22,7 +22,7 @@
 
 # HAL Feature Profile for audiodecoder
 
-IAudioDecoderManager:           # Component object begins
+audiodecoder:                   # Component object begins
     interfaceVersion: current
     IAudioDecoder:              # Resource list
       - 0:                      # Resource object begins

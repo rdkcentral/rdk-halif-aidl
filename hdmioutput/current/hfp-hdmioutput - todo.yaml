@@ -20,9 +20,9 @@
 # *
 #** ******************************************************************************
 
-# HAL Feature Profile for videodecoder
+# HAL Feature Profile for hdmioutput
 
-IHDMIOutputManager:           # Component object begins
+hdmioutput:                     # Component object begins
   interfaceVersion: current
   IHDMIOutput:                  # Resource list
     - 0:                        # Resource object begins

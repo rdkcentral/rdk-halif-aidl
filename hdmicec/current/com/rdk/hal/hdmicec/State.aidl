@@ -16,37 +16,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.deviceinfo;
+package com.rdk.hal.hdmicec;
  
 /** 
- *  @brief     Device Information HAL set property result enum.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Douglas Adler
+ * @brief     HAL component states.
+ * @author    Luc Kennedy-Lamb
+ * @author    Peter Stieglitz
+ * @author    Douglas Adler
  */
-
+ 
 @VintfStability
-@Backing(type = "int")
-enum SetPropertyResult
+@Backing(type="int")
+enum State 
 {
-    /** Success */
-    SUCCESS,
+    /** 
+    * Initial state and default.
+    */
+    CLOSED = 0,
 
-    /** Parameter passed to this function is invalid. */
-    ERROR_INVALID_PARAM,
-
-    /** Memory allocation failure */
-    ERROR_MEMORY_EXHAUSTED,
-
-    /** CRC check failed */
-    ERROR_FAILED_CRC_CHECK,
-
-    /** Flash write failed. */
-    ERROR_WRITE_FLASH_FAILED,
-
-    /** Flash read failed. */
-    ERROR_FLASH_READ_FAILED,
-
-    /** Flash verification failed. */
-    ERROR_FLASH_VERIFY_FAILED
+    /** 
+    * The HAL server component session is started. 
+    */
+    STARTED = 1
 }

@@ -71,6 +71,8 @@ oneway interface IHDMIInputControllerListener
      * The `frameRate` could vary on a frame by frame basis, but this callback shall not
      * fire at more than 2Hz.
      *
+     * VRR is active when vrrActive=true. QMS is indicated by M_CONST=true. FVA is indicated by fastVActive=true. See HDMI 2.1 Specification for definitions.
+     *
      * @param[in] vrrActive     When true, VRR is active.
      * @param[in] M_CONST       When true, M_CONST VRR is active.
      * @param[in] fastVActive   When true, FVA is active.
@@ -84,7 +86,7 @@ oneway interface IHDMIInputControllerListener
      * The event fires on first received InfoFrame after the HDMI input port is in
      * in a STARTED state, after a device connection or if the InfoFrame changes.
      *
-     * @param[in] data  Array of data bytes holding the InfoFrame, starting with InfoFrame type code.
+     * @param[in] data  InfoFrame payload, starting with the InfoFrame type code. See HDMI Specification 2.0, Section 8.x for layout.
      */
     void onAVIInfoFrame(in byte[] data);
 

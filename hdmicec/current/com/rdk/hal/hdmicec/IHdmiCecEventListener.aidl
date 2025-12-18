@@ -18,9 +18,9 @@
  */
 package com.rdk.hal.hdmicec;
 import com.rdk.hal.hdmicec.SendMessageStatus;
-import com.rdk.hal.State;
+import com.rdk.hal.hdmicec.State;
 
-/** 
+/**
  *  @brief     HDMI CEC Event Listener HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -28,14 +28,14 @@ import com.rdk.hal.State;
  */
 
 @VintfStability
-oneway interface IHdmiCecControllerListener {
- 
+oneway interface IHdmiCecEventListener 
+{
     /**
-	 * Callback to be invoked for each frame arrival.
-     * 
-     * The frame contained in the buffer will follow this format 
+     * Callback to be invoked for each frame arrival.
+     *
+     * The frame contained in the buffer will follow this format
      *     (ref <HDMI Specification 1-4> Section <CEC 6.1>) :
-     * 
+     *
      * complete frame  = header block + data block@n
      * header block    = destination logical address (4-bit) + source address (4-bit)@n
      * data block      = opcode block (8-bit) + operand block (N-bytes)
@@ -44,7 +44,7 @@ oneway interface IHdmiCecControllerListener {
      * |------------------------------------------------
      * | header block  |          data blocks          |
      * |------------------------------------------------
-     * |3|2|1|0|3|2|1|0|7|6|5|4|3|2|1|0|7|6|5|4|3|2|1|0|  
+     * |3|2|1|0|3|2|1|0|7|6|5|4|3|2|1|0|7|6|5|4|3|2|1|0|
      * |------------------------------------------------
      * | Dest  |  src  |  opcode block | operand block |
      * |------------------------------------------------
@@ -57,11 +57,11 @@ oneway interface IHdmiCecControllerListener {
     void onMessageReceived(in byte[] message);
 
     /**
-	 * Callback when the CEC interface has transitioned to a new state.
+     * Callback when the CEC interface has transitioned to a new state.
      *
      * @param[in] oldState	            The state transitioned from.
      * @param[in] newState              The new state transitioned to.
-     * 
+     *
      * @see IHdmiCec.getState()
      */
     void onStateChanged(in State oldState, in State newState);
@@ -100,5 +100,4 @@ oneway interface IHdmiCecControllerListener {
      * @see IHdmiCecController.sendMessage()
      */
     void onMessageSent(in byte[] message, SendMessageStatus status);
-
 }
