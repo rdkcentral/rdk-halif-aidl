@@ -2,7 +2,7 @@
  * If not stated otherwise in this file or this component's LICENSE file the
  * following copyright and licenses apply:
  *
- * Copyright 2024 RDK Management
+ * Copyright 2026 RDK Management
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,9 @@ import com.rdk.hal.indicator.Capabilities;
  *
  * States are represented as strings to provide flexibility and extensibility.
  * Standard state names include:
- * - "BOOT": Initial bootloader-defined state (read-only)
+ * - "BOOT": Initial bootloader-defined state. The interface is expected to set this
+ *   state on boot until changed by the set() function. It is up to the implementation
+ *   to set the first state. In the case of RDK Comcast method, it's a "BOOT" state.
  * - "ACTIVE": System is fully operational
  * - "STANDBY": Low-power idle state
  * - "OFF": All indicators are off
@@ -48,7 +50,6 @@ import com.rdk.hal.indicator.Capabilities;
  * - "USB_UPGRADE": Firmware upgrade via USB
  * - "SOFTWARE_DOWNLOAD_ERROR": Software update failed
  * - "PSU_FAILURE": Power supply fault detected
- * - "ERROR_UNKNOWN": Current state cannot be determined (read-only)
  *
  * Vendors may define additional custom states as needed.
  *
@@ -64,9 +65,6 @@ interface IIndicator
     /** Indicator resource ID type */
     @VintfStability
     parcelable Id {
-        /** The undefined ID value. */
-        const int UNDEFINED = -1;
-
         /** The actual resource ID */
         int value;
     }
@@ -89,13 +87,10 @@ interface IIndicator
      * The state string must be one of the states listed in the capabilities
      * returned by getCapabilities(). Setting an unsupported state will fail.
      *
-     * Read-only states such as "BOOT" and "ERROR_UNKNOWN" cannot be set by
-     * clients and will be rejected.
-     *
      * @param[in] state An indicator state string to be set.
      * @returns Success flag indicating whether state was set.
      * @retval true State was set successfully.
-     * @retval false State is not supported, is read-only, or setting failed.
+     * @retval false State is not supported or setting failed.
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid state string.
      */
@@ -104,8 +99,7 @@ interface IIndicator
     /**
      * Gets the current indicator state.
      *
-     * Returns the currently active state as a string. If the state cannot be
-     * determined, returns "ERROR_UNKNOWN".
+     * Returns the currently active state as a string.
      *
      * @returns Current indicator state string.
      * @exception binder::Status::Exception::EX_NONE for success.

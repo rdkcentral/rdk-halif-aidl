@@ -66,7 +66,9 @@ Standard state strings include:
 * WPS: `"WPS_CONNECTING"`, `"WPS_CONNECTED"`, `"WPS_ERROR"`, `"WPS_SES_OVERLAP"`
 * Network: `"WIFI_ERROR"`, `"IP_ACQUIRED"`, `"NO_IP"`
 * System: `"FULL_SYSTEM_RESET"`, `"USB_UPGRADE"`, `"SOFTWARE_DOWNLOAD_ERROR"`, `"PSU_FAILURE"`
-* Special: `"ERROR_UNKNOWN"` (read-only, used when state cannot be determined)
+
+The interface is expected to set the "BOOT" state on boot until changed by the set() function.
+It is up to the implementation to set the first state. In the case of RDK Comcast method, it's a "BOOT" state.
 
 ---
 
@@ -79,8 +81,8 @@ Standard state strings include:
 | **HAL.INDICATOR.3** | Each indicator instance shall return the current state via `get()` | Must reflect latest successfully set value |
 | **HAL.INDICATOR.4** | The platform shall advertise supported states via `Capabilities` | Validated against `hfp-indicator.yaml` |
 | **HAL.INDICATOR.5** | States not listed in `Capabilities` shall not be settable | Invalid `set()` calls must fail gracefully |
-| **HAL.INDICATOR.6** | `"ERROR_UNKNOWN"` and `"BOOT"` must be read-only states | `"BOOT"` is platform-initialised only |
-| **HAL.INDICATOR.7** | The interface shall support multi-instance capability | Architecture allows multiple independent indicators |
+| **HAL.INDICATOR.6** | The interface shall support multi-instance capability | Architecture allows multiple independent indicators |
+| **HAL.INDICATOR.7** | `"BOOT"` is the expected initial state on system boot | Set by implementation until changed by client |
 
 ---
 
@@ -175,9 +177,8 @@ For example, a vendor might add:
 | Condition                      | Expected Behaviour                          |
 | ------------------------------ | ------------------------------------------- |
 | Invalid `set(String)` call     | Must fail cleanly and leave state unchanged |
-| `set()` on read-only state     | Rejected (`"BOOT"`, `"ERROR_UNKNOWN"`)      |
 | Unsupported state string       | Rejected if not listed in `Capabilities`    |
-| `get()` before any `set()`     | Returns `"ERROR_UNKNOWN"`                   |
+| `get()` before any `set()`     | Returns initial state (typically `"BOOT"`)  |
 | Invalid indicator ID           | `getIndicator()` returns null               |
 
 

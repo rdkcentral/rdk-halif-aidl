@@ -37,17 +37,16 @@
 # * supports multi-instance configurations for third-party vendors who may require independent
 # * indicator control (e.g., per-zone indicators).
 
-Indicator:
+indicator:
   interfaceVersion: current
   
   # Multi-instance support
   # RDK reference implementation provides a single global indicator instance
   # Third-party vendors may configure multiple instances as needed
-  multiInstance: true
   instances:
-    - id: 0
-      name: "global"
-      description: "Global device state indicator"
+    - 0:
+        name: "global"
+        description: "Global device state indicator"
   
   # Supported state strings
   # These map to the state names from the previous State enum
