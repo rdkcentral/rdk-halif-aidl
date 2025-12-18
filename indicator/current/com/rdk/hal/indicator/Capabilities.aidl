@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 package com.rdk.hal.indicator;
-import com.rdk.hal.indicator.State;
 
 /**
  * /**
@@ -33,5 +32,6 @@ import com.rdk.hal.indicator.State;
 @VintfStability
 parcelable Capabilities
 {
-    State[] supportedStates; /**< Array of states supported by the indicator service. */
+    /** Array of supported state key strings. */
+    String[] supportedStates;
 }

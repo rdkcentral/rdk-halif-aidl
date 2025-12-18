@@ -19,43 +19,62 @@
 # *
 #** *****************************************************************************
 
-# HAL Feature Profile for indicator
+# HAL Feature Profile for Indicator
 
 # **
 # * HAL Feature Profile for the indicator service.
 # *
 # * This section defines the feature profile for the indicator Hardware Abstraction Layer (HAL).
-# * It specifies the interface version and the list of supported states for the indicator component.
-# * This is a reference file and is expected to be used to define the platform specific requirements.
+# * It specifies the interface version, multi-instance support, and the list of supported states
+# * for the indicator component.
+# *
+# * This is a reference file and is expected to be used to define the platform-specific requirements.
 # * It is also consumed by automated test systems and middleware components to determine
 # * the valid set of states for the indicator service on a given device.
 # *
+# * For RDK reference implementations, the indicator is designed to reflect the global state
+# * of the device, therefore only a single indicator instance is provided. However, the interface
+# * supports multi-instance configurations for third-party vendors who may require independent
+# * indicator control (e.g., per-zone indicators).
 
-indicator:
+Indicator:
   interfaceVersion: current
+  
+  # Multi-instance support
+  # RDK reference implementation provides a single global indicator instance
+  # Third-party vendors may configure multiple instances as needed
+  multiInstance: true
+  instances:
+    - id: 0
+      name: "global"
+      description: "Global device state indicator"
+  
+  # Supported state strings
+  # These map to the state names from the previous State enum
   supportedStates:
     # General system states
-    - BOOT
-    - ACTIVE
-    - STANDBY
-    - OFF
-    - DEEP_SLEEP
+    - "BOOT"
+    - "ACTIVE"
+    - "STANDBY"
+    - "OFF"
+    - "DEEP_SLEEP"
 
     # WPS-related states
-    - WPS_CONNECTING
-    - WPS_CONNECTED
-    - WPS_ERROR
-    - WPS_SES_OVERLAP
+    - "WPS_CONNECTING"
+    - "WPS_CONNECTED"
+    - "WPS_ERROR"
+    - "WPS_SES_OVERLAP"
 
     # Network and connectivity states
-    - WIFI_ERROR
-    - IP_ACQUIRED
-    - NO_IP
+    - "WIFI_ERROR"
+    - "IP_ACQUIRED"
+    - "NO_IP"
 
     # System operation and maintenance
-    - FULL_SYSTEM_RESET
-    - USB_UPGRADE
-    - SOFTWARE_DOWNLOAD_ERROR
+    - "FULL_SYSTEM_RESET"
+    - "USB_UPGRADE"
+    - "SOFTWARE_DOWNLOAD_ERROR"
 
     # Fault or diagnostics
-    - PSU_FAILURE
+    - "PSU_FAILURE"
+
