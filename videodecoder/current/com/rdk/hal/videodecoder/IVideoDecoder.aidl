@@ -64,6 +64,8 @@ interface IVideoDecoder
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns Capabilities parcelable.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoDecoder}} for exception handling behavior).
      */
     Capabilities getCapabilities();
 
@@ -76,6 +78,8 @@ interface IVideoDecoder
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value. 
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoDecoder}} for exception handling behavior).
      *
      * @see setProperty(), getPropertyMulti()
      */
@@ -99,6 +103,8 @@ interface IVideoDecoder
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoDecoder}} for exception handling behavior).
+     *
      * @see getProperty()
      */
     boolean getPropertyMulti(inout PropertyKVPair[] propertyKVList);
@@ -109,6 +115,8 @@ interface IVideoDecoder
      * @returns State enum value.
 	 *
      * @exception binder::Status::Exception::EX_NONE for success.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoDecoder}} for exception handling behavior).
      *
      * @see IVideoDecoderEventListener.onStateChanged().
      */  
@@ -139,6 +147,8 @@ interface IVideoDecoder
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoDecoder}} for exception handling behavior).
      * 
      * @pre The resource must be in State::CLOSED.
      * 
@@ -163,6 +173,8 @@ interface IVideoDecoder
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in OPENED State.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoDecoder}} for exception handling behavior).
+     *
      * @pre The resource must be in State::READY.
      *
      * @see open()
@@ -184,6 +196,8 @@ interface IVideoDecoder
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoDecoder}} for exception handling behavior).
+     *
      * @see unregisterEventListener()
      */
     boolean registerEventListener(in IVideoDecoderEventListener videoDecoderEventListener);
@@ -199,6 +213,8 @@ interface IVideoDecoder
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoDecoder}} for exception handling behavior).
      *
      * @see registerEventListener()
      */

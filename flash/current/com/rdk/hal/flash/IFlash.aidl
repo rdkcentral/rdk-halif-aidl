@@ -72,6 +72,8 @@ interface IFlash
      * @returns boolean
      * @retval true     The image file flash request was started.
      * @retval false    The image file flash request was not started because a flash
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IFlash}} for exception handling behavior).
      *                  operation is already in progress.
      * 
      * @see IFlashListener

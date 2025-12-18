@@ -89,6 +89,8 @@ interface IFrontendController {
 	 * Gets the current frontend tuneStatus.
      *
      * @returns TuneStatus enum value.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IFrontendController}} for exception handling behavior).
 	 *
      * @see IFrontendControllerListener.onTuneStatusChanged().
      */  
@@ -135,6 +137,8 @@ interface IFrontendController {
      *                   be a subset of the information types returned in the Capabilities set for
      *                   this frontend.
      * @returns The list of the requested information values that are in the set of the supported
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IFrontendController}} for exception handling behavior).
      *         types.
      */
     SignalInfoReturn[] getSignalInfo(in SignalInfoProperty[] properties);

@@ -53,6 +53,8 @@ interface IHdmiCecController
     * @param[in] logicalAddresses   An array of logical address to be added.
     *
     * @returns true if successfully added or false if the logical addresses have not been added.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHdmiCecController}} for exception handling behavior).
     * 
     * @pre The resource must be in State::STARTED.
     *
@@ -73,6 +75,8 @@ interface IHdmiCecController
     * @pre The resource must be in State::STARTED.
     *
     * @returns true on successfully removing and false if one or more logical addresses have not been previously added.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHdmiCecController}} for exception handling behavior).
     * 
     * @see IHdmiCec.getLogicalAddresses(), addLogicalAddresses()
     */
@@ -116,6 +120,8 @@ interface IHdmiCecController
      * @pre The HDMI CEC interface is in State::STARTED
      *
      * @returns SendMessageStatus
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHdmiCecController}} for exception handling behavior).
      *
      * @see IHdmiCec.open()
      */

@@ -48,6 +48,8 @@ interface IHDMIInputController
      * @retval true         A device is connected.
      * @retval false        No device is connected.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIInputController}} for exception handling behavior).
+     *
      * @see IHDMIInputControllerListener.onConnectionStateChanged()
      */
     boolean getConnectionState();
@@ -109,6 +111,8 @@ interface IHDMIInputController
      * 
      * @exception binder::Status EX_ILLEGAL_STATE If the resource is not in the `STARTED` or `READY` state.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIInputController}} for exception handling behavior).
+     *
      * @see setPropertyMulti(), getProperty()
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);
@@ -126,6 +130,8 @@ interface IHDMIInputController
      * @retval false    Invalid property key or value.
      *
      * @exception binder::Status EX_ILLEGAL_STATE If the resource is not in the `STARTED` or `READY` state.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIInputController}} for exception handling behavior).
      *
      * @see setProperty(), getProperty()
      */
@@ -148,6 +154,8 @@ interface IHDMIInputController
      * @return boolean
      * @retval true     The EDID was set successfully.
      * @retval false    Indicates an error condition (e.g., resource not available, invalid state, or parameter validation failure).
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIInputController}} for exception handling behavior).
      *
      * @see getEDID(), getCapabilities()
      */

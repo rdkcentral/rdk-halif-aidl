@@ -48,6 +48,8 @@ interface IHDMIInputManager
      * The returned value is not allowed to change between calls.
      *
      * @returns PlatformCapabilities parcelable.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIInputManager}} for exception handling behavior).
      */
     PlatformCapabilities getCapabilities();
 
@@ -55,6 +57,8 @@ interface IHDMIInputManager
 	 * Gets the platform list of HDMI input IDs.
      * 
      * @returns IHDMIInput.Id[]
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIInputManager}} for exception handling behavior).
      */
 	IHDMIInput.Id[] getHDMIInputIds();
  
@@ -64,6 +68,8 @@ interface IHDMIInputManager
      * @param[in] hdmiInputId  The HDMI input port ID, must be one of the values returned by getHDMIInputIds().
      *
      * @returns IHDMIInput or null if the ID is invalid.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIInputManager}} for exception handling behavior).
      */
     @nullable IHDMIInput getHDMIInput(in IHDMIInput.Id hdmiInputId);
 

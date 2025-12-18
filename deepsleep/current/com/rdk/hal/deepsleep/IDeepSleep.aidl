@@ -45,6 +45,8 @@ interface IDeepSleep
      * Gets the capabilities of the deep sleep service.
      *
      * @returns Capabilities parcelable.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IDeepSleep}} for exception handling behavior).
      */
     Capabilities getCapabilities();
 
@@ -65,6 +67,8 @@ interface IDeepSleep
      * @returns boolean - true on success or false if any of the triggers are not supported on the device.
      * @retval true - the deep sleep was successful and woke up on one of the explicit or implicit triggers.
      * @retval false - deep sleep could not be entered.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IDeepSleep}} for exception handling behavior).
      * 
      * @see setWakeUpTimer()
      */
@@ -85,6 +89,8 @@ interface IDeepSleep
      * @retval true - if the wake up timer period was valid.
      * @retval false - the period was invalid.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IDeepSleep}} for exception handling behavior).
+     *
      * @pre The WakeUpTrigger.TIMER must be listed in the Capabilities.supportedTriggers array.
      * 
      * @see getWakeUpTimer(), enterDeepSleep()
@@ -97,6 +103,8 @@ interface IDeepSleep
      * If no timer period was previously set, then -1 is returned.
      *
      * @returns int     The period of the wake up timer in seconds.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IDeepSleep}} for exception handling behavior).
      *
      * @pre The WakeUpTrigger.TIMER must be listed in the Capabilities.supportedTriggers array.
      * 

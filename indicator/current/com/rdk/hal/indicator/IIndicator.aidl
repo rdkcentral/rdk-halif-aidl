@@ -47,6 +47,8 @@ interface IIndicator
      * Gets the capabilities of the indicator service.
      *
      * @returns Capabilities The capabilities parcelable of the indicator service.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IIndicator}} for exception handling behavior).
      */
     Capabilities getCapabilities();
 
@@ -55,6 +57,8 @@ interface IIndicator
      *
      * @param[in] state An indicator state to be set.
      * @returns boolean Returns `true` if the state was set successfully, `false` otherwise.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IIndicator}} for exception handling behavior).
      */
     boolean set(in State state);
 
@@ -62,6 +66,8 @@ interface IIndicator
      * Gets the current indicator state.
      *
      * @returns State The current indicator state.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IIndicator}} for exception handling behavior).
      */
     State get();
 }

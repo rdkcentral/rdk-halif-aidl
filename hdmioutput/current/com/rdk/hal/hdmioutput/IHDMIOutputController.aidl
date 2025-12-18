@@ -117,6 +117,8 @@ interface IHDMIOutputController
      * @return boolean
      * @retval true         The HPD line is asserted.
      * @retval boolean      The HPD line is deasserted.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputController}} for exception handling behavior).
      * 
      * @see start()
      */
@@ -135,6 +137,8 @@ interface IHDMIOutputController
      * @retval true     The property was successfully set.
      * @retval false    Invalid property key or value.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputController}} for exception handling behavior).
+     *
      * @see setPropertyMulti(), getProperty()
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);
@@ -151,6 +155,8 @@ interface IHDMIOutputController
      * @retval true     The property was successfully set.
      * @retval false    Invalid property key or value.
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputController}} for exception handling behavior).
+     *
      * @see setProperty(), getProperty()
      */
     boolean setPropertyMulti(in PropertyKVPair[] propertyKVList);
@@ -161,6 +167,8 @@ interface IHDMIOutputController
      * If HDCP has not yet been authenticated then `HDCPProtocolVersion.UNDEFINED` is returned.
      *
      * @returns HDCPProtocolVersion
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputController}} for exception handling behavior).
      *
      * @see getHDCPStatus(), getSinkHDCPVersion()
      */
@@ -173,6 +181,8 @@ interface IHDMIOutputController
      *
      * @returns HDCPProtocolVersion
      *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputController}} for exception handling behavior).
+     *
      * @see getHDCPStatus(), getHDCPCurrentVersion()
      */
     HDCPProtocolVersion getHDCPReceiverVersion();
@@ -183,6 +193,8 @@ interface IHDMIOutputController
      * If HDCP is unable to be used, due to a disconnected or unpowered device then `HDCPStatus.UNKNOWN` is returned.
      *
      * @returns HDCPStatus
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputController}} for exception handling behavior).
      *
      * @see getHDCPCurrentVersion(), getHDCPReceiverVersion()
      */
