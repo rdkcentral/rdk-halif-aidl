@@ -67,8 +67,8 @@ Standard state strings include:
 * Network: `"WIFI_ERROR"`, `"IP_ACQUIRED"`, `"NO_IP"`
 * System: `"FULL_SYSTEM_RESET"`, `"USB_UPGRADE"`, `"SOFTWARE_DOWNLOAD_ERROR"`, `"PSU_FAILURE"`
 
-The interface is expected to set the "BOOT" state on boot until changed by the set() function.
-It is up to the implementation to set the first state. In the case of RDK Comcast method, it's a "BOOT" state.
+On system boot, the implementation shall set the indicator to the first state defined in the
+platform's HFP file until changed by the set() function.
 
 ---
 
@@ -82,7 +82,7 @@ It is up to the implementation to set the first state. In the case of RDK Comcas
 | **HAL.INDICATOR.4** | The platform shall advertise supported states via `Capabilities` | Validated against `hfp-indicator.yaml` |
 | **HAL.INDICATOR.5** | States not listed in `Capabilities` shall not be settable | Invalid `set()` calls must fail gracefully |
 | **HAL.INDICATOR.6** | The interface shall support multi-instance capability | Architecture allows multiple independent indicators |
-| **HAL.INDICATOR.7** | `"BOOT"` is the expected initial state on system boot | Set by implementation until changed by client |
+| **HAL.INDICATOR.7** | Implementation shall set initial state to first state in HFP | State persists until changed by set() |
 
 ---
 
@@ -178,7 +178,7 @@ For example, a vendor might add:
 | ------------------------------ | ------------------------------------------- |
 | Invalid `set(String)` call     | Must fail cleanly and leave state unchanged |
 | Unsupported state string       | Rejected if not listed in `Capabilities`    |
-| `get()` before any `set()`     | Returns initial state (typically `"BOOT"`)  |
+| `get()` before any `set()`     | Returns initial state from HFP file         |
 | Invalid indicator ID           | `getIndicator()` returns null               |
 
 

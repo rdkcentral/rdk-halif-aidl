@@ -32,9 +32,7 @@ import com.rdk.hal.indicator.Capabilities;
  *
  * States are represented as strings to provide flexibility and extensibility.
  * Standard state names include:
- * - "BOOT": Initial bootloader-defined state. The interface is expected to set this
- *   state on boot until changed by the set() function. It is up to the implementation
- *   to set the first state. In the case of RDK Comcast method, it's a "BOOT" state.
+ * - "BOOT": Initial bootloader-defined state
  * - "ACTIVE": System is fully operational
  * - "STANDBY": Low-power idle state
  * - "OFF": All indicators are off
@@ -50,6 +48,9 @@ import com.rdk.hal.indicator.Capabilities;
  * - "USB_UPGRADE": Firmware upgrade via USB
  * - "SOFTWARE_DOWNLOAD_ERROR": Software update failed
  * - "PSU_FAILURE": Power supply fault detected
+ *
+ * On system boot, the implementation shall set the indicator to the first state
+ * defined in the platform's HFP file until changed by the set() function.
  *
  * Vendors may define additional custom states as needed.
  *
