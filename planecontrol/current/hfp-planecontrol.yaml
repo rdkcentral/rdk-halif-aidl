@@ -22,7 +22,7 @@
 
 # HAL Feature Profile for planecontrol
 
-IPlaneControl:              # Component object begins
+planecontrol:                   # Component object begins
   interfaceVersion: current
   planes:                   # Resource list
     - 0:                    # Resource object begins
