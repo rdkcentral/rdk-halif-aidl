@@ -29,6 +29,13 @@ import com.rdk.hal.PropertyValue;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
 
 
