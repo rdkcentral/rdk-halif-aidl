@@ -41,8 +41,31 @@ indicator:
   interfaceVersion: current
   
   # Multi-instance support
-  # RDK reference implementation provides a single global indicator instance
-  # Third-party vendors may configure multiple instances as needed
+  # The interface architecture supports multi-instance configurations.
+  # Each instance represents an independent indicator resource.
+  #
+  # RDK reference implementation:
+  # - Provides a single global indicator instance (ID: 0)
+  # - This reflects the global state of the device
+  #
+  # Third-party vendor multi-instance example:
+  # - Vendors may configure multiple independent instances
+  # - Example: per-zone indicators, per-function indicators, etc.
+  # - Each instance can be controlled independently
+  #
+  # Multi-instance example (commented out - not used in RDK reference):
+  # instances:
+  #   - 0:
+  #       name: "global"
+  #       description: "Global device state indicator"
+  #   - 1:
+  #       name: "zone1"
+  #       description: "Living room indicator"
+  #   - 2:
+  #       name: "zone2"
+  #       description: "Bedroom indicator"
+  #
+  # RDK reference implementation (single instance):
   instances:
     - 0:
         name: "global"

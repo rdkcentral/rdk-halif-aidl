@@ -18,7 +18,6 @@
  */
 package com.rdk.hal.indicator;
 import com.rdk.hal.indicator.IIndicator;
-import com.rdk.hal.indicator.Capabilities;
 
 /**
  * @brief Indicator Manager HAL interface.
@@ -54,17 +53,6 @@ interface IIndicatorManager
      * @exception binder::Status::Exception::EX_NONE for success.
      */
     IIndicator.Id[] getIndicatorIds();
-
-    /**
-     * Gets the platform-wide capabilities for indicator instances.
-     *
-     * This includes the complete set of states supported across all indicator instances.
-     * The platform capabilities are determined at build time and cannot change.
-     *
-     * @returns Capabilities parcelable containing supported states.
-     * @exception binder::Status::Exception::EX_NONE for success.
-     */
-    Capabilities getPlatformCapabilities();
 
     /**
      * Gets the indicator interface for a given ID.
