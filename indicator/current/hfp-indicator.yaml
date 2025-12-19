@@ -53,23 +53,17 @@ indicator:
   # - Example: per-zone indicators, per-function indicators, etc.
   # - Each instance can be controlled independently
   #
-  # Multi-instance example (commented out - not used in RDK reference):
-  # instances:
-  #   - 0:
-  #       name: "global"
-  #       description: "Global device state indicator"
-  #   - 1:
-  #       name: "zone1"
-  #       description: "Living room indicator"
-  #   - 2:
-  #       name: "zone2"
-  #       description: "Bedroom indicator"
-  #
   # RDK reference implementation (single instance):
   instances:
-    - 0:
-        name: "global"
-        description: "Global device state indicator"
+    - Id: 0
+      name: "global"
+      description: "Global device state indicator"
+  
+  # Multi-instance example (commented out - not used in RDK reference):
+  # To enable a second instance, uncomment:
+  #   - Id: 1
+  #     name: "zone1"
+  #     description: "Zone-specific indicator"
   
   # Supported state strings
   # These map to the state names from the previous State enum
