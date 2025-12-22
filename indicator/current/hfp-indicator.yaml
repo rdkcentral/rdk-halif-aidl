@@ -67,6 +67,10 @@ indicator:
   
   # Supported state strings
   # These map to the state names from the previous State enum
+  # 
+  # NOTE: All indicator instances share the same set of supported states.
+  # Each instance can independently be set to any of these states, but the
+  # available states themselves are platform-wide and do not vary per instance.
   supportedStates:
     # General system states
     - "BOOT"
