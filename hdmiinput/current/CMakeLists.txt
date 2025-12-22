@@ -50,7 +50,7 @@ set(SRC
 	${SRC_DIR}/PropertyKVPair.aidl
 	${SRC_DIR}/SignalState.aidl
 	${SRC_DIR}/VIC.aidl
-	${COMMON_SRC_DIR}/State.aidl
+	${SRC_DIR}/State.aidl
 	${COMMON_SRC_DIR}/PropertyValue.aidl
 )
 
