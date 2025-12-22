@@ -88,7 +88,7 @@ interface IHDMIInputController
     void stop();
 
     /**
-     * Gets the current authenticated HDCP version which was negotiated with the HDMI source device (HDCP transmitter).
+     * Sets the EDID for the HDMI input port.
      *
      * The EDID defined in `edid` is set for the HDMI input port.
      * This function can only be called when the interface is open and in the `READY` state.
