@@ -108,12 +108,11 @@ The platform-specific file `hfp-indicator.yaml` defines the supported states and
 
 ### Multi-Instance Support
 
-The interface supports multi-instance configurations through the `IIndicatorManager` interface. The HFP file declares:
+The interface supports multi-instance configurations through the `IIndicatorManager` interface. The HFP file declares multi-instance support through the `instances` array:
 
-* `multiInstance`: Boolean flag indicating multi-instance capability
-* `instances`: Array of indicator instance definitions with ID, name, and description
+* `instances`: Array of indicator instance definitions, each with `Id`, `name`, and `description` fields
 
-For RDK reference implementations, a single global indicator instance (ID: 0) is provided that reflects the overall device state. Third-party vendors may define additional instances as needed for their platform architecture.
+The presence of multiple entries in the `instances` array indicates multi-instance capability. For RDK reference implementations, a single global indicator instance (ID: 0) is provided that reflects the overall device state. Third-party vendors may define additional instances as needed for their platform architecture.
 
 ### State String Definitions
 
@@ -133,11 +132,10 @@ Platforms may define additional custom state strings as needed, which must be do
 ### Supported State Subset (Example)
 
 ```yaml
-Indicator:
+indicator:
   interfaceVersion: current
-  multiInstance: true
   instances:
-    - id: 0
+    - Id: 0
       name: "global"
       description: "Global device state indicator"
   supportedStates:
