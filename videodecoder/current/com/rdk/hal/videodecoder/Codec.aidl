@@ -17,18 +17,18 @@
  * limitations under the License.
  */
 package com.rdk.hal.videodecoder;
- 
-/** 
+
+/**
  *  @brief     Video decoder codec type definitions.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  *  @author    Gerald Weatherup
  */
- 
+
 @VintfStability
 @Backing(type="int")
-enum Codec {   
+enum Codec {
     MPEG2_VIDEO = 1, // MPEG-2 Video (ISO/IEC 13818-2)
     H264_AVC = 2, // H.264/AVC (ITU-T H.264 | ISO/IEC 14496-10)
     H265_HEVC = 3, // H.265/HEVC (ITU-T H.265 | ISO/IEC 23008-2)

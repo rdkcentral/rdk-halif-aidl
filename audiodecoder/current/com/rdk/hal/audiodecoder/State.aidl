@@ -17,14 +17,14 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiodecoder;
- 
-/** 
+
+/**
  * @brief     Audio Decoder States
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
  * @author    Douglas Adler
  */
- 
+
 @VintfStability
 @Backing(type="int")
 enum State {
@@ -32,7 +32,7 @@ enum State {
     CLOSED    = 1, ///< The service connection is established but decoder not yet configured.
     OPENING   = 2, ///< Decoder is loading resources and initializing internal structures.
     READY     = 3, ///< Decoder is configured and ready to start decoding but idle.
-    STARTING  = 4, ///< Decoder is transitioning from READY to DECODING; priming buffers. 
+    STARTING  = 4, ///< Decoder is transitioning from READY to DECODING; priming buffers.
     STARTED   = 5, ///< Decoder is actively decoding audio frames.
     FLUSHING  = 6, ///< Decoder is flushing pending input/output buffers; after flushing, returns to DECODING or READY.
     STOPPING  = 7, ///< Decoder is stopping and flushing; will revert to READY after complete.

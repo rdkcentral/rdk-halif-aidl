@@ -17,15 +17,15 @@
  * limitations under the License.
  */
 package com.rdk.hal.videosink;
-  
-/** 
+
+/**
  *  @brief     Video Sink properties definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  *  @author    Gerald Weatherup
  */
- 
+
 /**
  * @brief Video Sink properties definition.
  *
@@ -39,7 +39,7 @@ enum Property
     /**
      * Unique 0 based index per video sink resource instance.
      *
-     * Type: Integer  
+     * Type: Integer
      * Access: Read-only.
      *
      * @exception binder::Status::Exception::EX_NONE for success
@@ -52,7 +52,7 @@ enum Property
      * The number of frames in the video sink that are queued for display.
      * This property must give a correct value in both tunnelled and non-tunnelled modes.
      *
-     * Type: Integer  
+     * Type: Integer
      * Access: Read-only.
      *
      * @exception binder::Status::Exception::EX_NONE for success
@@ -67,7 +67,7 @@ enum Property
      * Default is 0 - AVUNKNOWN.
      * @see AVSource
      *
-     * Type: Integer (enum AVSource)  
+     * Type: Integer (enum AVSource)
      * Access: Read/Write.
      *
      * @exception binder::Status::Exception::EX_NONE for success
@@ -82,7 +82,7 @@ enum Property
      * If the first frame is ahead of the AV Clock time, it will display but subsequent
      * frames will not display until their presentation times match the AV Clock.
      *
-     * Type: Boolean (0 = don't render, 1 = render)  
+     * Type: Boolean (0 = don't render, 1 = render)
      * Access: Read/Write.
      *
      * @exception binder::Status::Exception::EX_NONE for success
@@ -96,7 +96,7 @@ enum Property
      * Count of frames received. Not necessarily displayed.
      * -1 means this metric is not yet implemented by the vendor.
      *
-     * Type: Integer  
+     * Type: Integer
      * Access: Read-only.
      *
      * @exception binder::Status::Exception::EX_NONE for success
@@ -109,7 +109,7 @@ enum Property
      * Count of frames presented to the display.
      * -1 means this metric is not yet implemented by the vendor.
      *
-     * Type: Integer  
+     * Type: Integer
      * Access: Read-only.
      *
      * @exception binder::Status::Exception::EX_NONE for success
@@ -123,7 +123,7 @@ enum Property
      * Not relevant for graphics plane.
      * -1 means this metric is not yet implemented by the vendor.
      *
-     * Type: Integer  
+     * Type: Integer
      * Access: Read-only.
      *
      * @exception binder::Status::Exception::EX_NONE for success
@@ -137,7 +137,7 @@ enum Property
      * Not relevant for graphics plane.
      * -1 means this metric is not yet implemented by the vendor.
      *
-     * Type: Integer  
+     * Type: Integer
      * Access: Read-only.
      *
      * @exception binder::Status::Exception::EX_NONE for success
@@ -151,7 +151,7 @@ enum Property
      * Not relevant for graphics plane.
      * -1 means this metric is not yet implemented by the vendor.
      *
-     * Type: Integer  
+     * Type: Integer
      * Access: Read-only.
      *
      * @exception binder::Status::Exception::EX_NONE for success
@@ -165,7 +165,7 @@ enum Property
      * Not relevant for graphics plane.
      * -1 means this metric is not yet implemented by the vendor.
      *
-     * Type: Integer  
+     * Type: Integer
      * Access: Read-only.
      *
      * @exception binder::Status::Exception::EX_NONE for success
@@ -179,7 +179,7 @@ enum Property
      * Not relevant for graphics plane.
      * -1 means this metric is not yet implemented by the vendor.
      *
-     * Type: Integer  
+     * Type: Integer
      * Access: Read-only.
      *
      * @exception binder::Status::Exception::EX_NONE for success

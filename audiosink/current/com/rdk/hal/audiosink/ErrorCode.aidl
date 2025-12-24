@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiosink;
- 
-/** 
+
+/**
  *  @brief     Audio sink error code definitions.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -27,7 +27,7 @@ package com.rdk.hal.audiosink;
 
 @VintfStability
 @Backing(type="int")
-enum ErrorCode {   
+enum ErrorCode {
     xxx = 1,
-    
+
 }

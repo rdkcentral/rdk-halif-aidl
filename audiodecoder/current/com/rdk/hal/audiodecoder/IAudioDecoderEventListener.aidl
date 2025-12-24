@@ -21,7 +21,7 @@ import com.rdk.hal.audiodecoder.FrameMetadata;
 import com.rdk.hal.audiodecoder.ErrorCode;
 import com.rdk.hal.audiodecoder.State;
 
-/** 
+/**
  *  @brief     Events callbacks listener interface from audio decoder.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -38,15 +38,15 @@ oneway interface IAudioDecoderEventListener {
      * @param[in] vendorErrorCode  	    A vendor specific error code.
      */
     void onDecodeError(in ErrorCode errorCode, in int vendorErrorCode);
- 
+
     /**
 	 * Callback when the decoder has transitioned to a new state.
      *
      * @param[in] oldState	            The state that the decoder has transitioned from.
      * @param[in] newState              The new state that the decoder has transitioned to.
-     * 
+     *
      * @see getState()
      */
     void onStateChanged(in State oldState, in State newState);
  }
- 
+

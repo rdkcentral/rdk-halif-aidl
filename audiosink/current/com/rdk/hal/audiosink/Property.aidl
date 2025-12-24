@@ -17,14 +17,14 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiosink;
- 
-/** 
+
+/**
  *  @brief     Audio sink properties used in property get/set functions.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
+
 @VintfStability
 @Backing(type="int")
 enum Property {
@@ -40,7 +40,7 @@ enum Property {
 	 *
      */
     RESOURCE_ID = 0,
-    
+
     /**
      * dB reference level of the audio stream.
      * The default reference level for an audio sink session is -31dB.
@@ -55,7 +55,7 @@ enum Property {
 	 *
      */
     REFERENCE_LEVEL = 1,
-    
+
     /**
      * The render output latency in nanoseconds.
      * This is the time from an audio frame being rendered from the queue to being output (HDMI/ARC/BT/internal speakers).
@@ -68,7 +68,7 @@ enum Property {
 	 *
      */
     RENDER_LATENCY_NS = 2,
-    
+
     /**
     * The queue depth of the audio output path in nanoseconds.
     *
@@ -99,7 +99,7 @@ enum Property {
     MIXER_ID = 4,
 
     /**
-     * Set by the client to specify the AV source of the stream.  
+     * Set by the client to specify the AV source of the stream.
      * The AVSource is also set inside the FrameMetadata when output by a decoder.
      *
      * Type: Integer

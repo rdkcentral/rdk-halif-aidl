@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.videodecoder;
 
-/** 
+/**
  *  @brief     Video codec specific data formats.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -33,7 +33,7 @@ package com.rdk.hal.videodecoder;
  * Each enum value corresponds to a specific video codec and its corresponding
  * configuration record structure. The configuration record starts with a version byte.
  *
- * These configuration records provide necessary codec parameters such as sequence headers, 
+ * These configuration records provide necessary codec parameters such as sequence headers,
  * SPS (Sequence Parameter Set), PPS (Picture Parameter Set), and codec initialization details.
  *
  * @enum CSDVideoFormat

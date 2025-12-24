@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.audiodecoder;
 
-/** 
+/**
  *  @brief     PCM audio formats.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -27,8 +27,8 @@ package com.rdk.hal.audiodecoder;
 
 @VintfStability
 @Backing(type="int")
-/** 
-* @brief Enumeration defining different Pulse Code Modulation (PCM) formats. 
+/**
+* @brief Enumeration defining different Pulse Code Modulation (PCM) formats.
 */
 enum PCMFormat {
     F64LE = 0, /**< 64-bit floating-point, little-endian. */

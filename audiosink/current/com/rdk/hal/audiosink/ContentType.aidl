@@ -17,15 +17,15 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiosink;
- 
-/** 
+
+/**
  *  @brief     audio Sink contentType used in the open function.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Amit Patel
  *  @author    Gerald Weatherup
  */
- 
+
 /**
  * @VintfStability
  *

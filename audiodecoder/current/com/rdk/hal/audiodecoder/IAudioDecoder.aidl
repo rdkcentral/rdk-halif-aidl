@@ -16,18 +16,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.audiodecoder; 
-import com.rdk.hal.audiodecoder.IAudioDecoderControllerListener; 
-import com.rdk.hal.audiodecoder.IAudioDecoderEventListener; 
-import com.rdk.hal.audiodecoder.IAudioDecoderController; 
+package com.rdk.hal.audiodecoder;
+import com.rdk.hal.audiodecoder.IAudioDecoderControllerListener;
+import com.rdk.hal.audiodecoder.IAudioDecoderEventListener;
+import com.rdk.hal.audiodecoder.IAudioDecoderController;
 import com.rdk.hal.audiodecoder.Capabilities;
 import com.rdk.hal.audiodecoder.Property;
 import com.rdk.hal.audiodecoder.Codec;
 import com.rdk.hal.audiodecoder.CSDAudioFormat;
 import com.rdk.hal.audiodecoder.State;
 import com.rdk.hal.PropertyValue;
- 
-/** 
+
+/**
  *  @brief     Audio Decoder HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -40,7 +40,7 @@ interface IAudioDecoder
     /** Audio Decoder resource ID type */
     @VintfStability
     parcelable Id {
-        /** The undefined ID value. */    
+        /** The undefined ID value. */
         const int UNDEFINED = -1;
 
         /** The actual resource ID */
@@ -50,7 +50,7 @@ interface IAudioDecoder
 
     /**
      * Gets the audio decoder capabilities.
-     * 
+     *
      * The returned value is not allowed to change between calls.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
@@ -65,7 +65,7 @@ interface IAudioDecoder
      * @param[in] property              The key of a property from the Property enum.
      *
      * @returns PropertyValue or null if the property key is unknown.
-     * 
+     *
      * @see setProperty()
      *
      * @exception binder::Status::Exception::EX_NONE for success.
@@ -73,7 +73,7 @@ interface IAudioDecoder
      *
      */
     @nullable PropertyValue getProperty(in Property property);
- 
+
 	/**
 	 * Gets the current state of the audio decoder resource.
      *
@@ -82,18 +82,18 @@ interface IAudioDecoder
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @see IAudioDecoderListener.onStateChanged().
-     */  
+     */
     State getState();
 
     /**
 	 * Opens the specified audio decoder resource index to decode the specified codec.
-     * 
+     *
      * If successful the audio decoder transitions to an `OPENING` state and then a `READY` state
      * which is notified to any registered `IAudioDecoderEventListener` interfaces.
-     * 
+     *
      * Controller related callbacks are made through the `IAudioDecoderControllerListener`
      * passed into the call.
-     * 
+     *
      * The returned `IAudioDecoderController` interface is used by the client to feed data buffers
      * for decode and manage the decoding flow.
      *
@@ -111,11 +111,11 @@ interface IAudioDecoder
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in CLOSED state.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
-     * 
+     *
      * @returns IAudioDecoderController or null if the codec or secure is not supported if requested.
-     * 
+     *
      * @pre The resource must be in State::CLOSED.
-     * 
+     *
      * @see IAudioDecoderController, IAudioDecoderController.close(), registerEventListener()
      */
     @nullable IAudioDecoderController open(in Codec codec, in boolean secure, in IAudioDecoderControllerListener audioDecoderControllerListener);
@@ -145,7 +145,7 @@ interface IAudioDecoder
 
     /**
 	 * Registers an audio decoder event listener.
-     * 
+     *
      * An `IAudioDecoderEventListener` can only be registered once and will fail on subsequent
      * registration attempts.
      *
@@ -164,7 +164,7 @@ interface IAudioDecoder
 
     /**
 	 * Unregisters an audio decoder event listener.
-     * 
+     *
      * @param[in] audioDecoderEventListener	    Listener object for callbacks.
      *
      * @return boolean

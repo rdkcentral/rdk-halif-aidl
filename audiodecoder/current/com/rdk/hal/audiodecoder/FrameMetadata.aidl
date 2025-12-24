@@ -22,7 +22,7 @@ import com.rdk.hal.audiodecoder.Codec;
 import com.rdk.hal.AVSource;
 import com.rdk.hal.audiodecoder.FrameType;
 
-/** 
+/**
  *  @brief     Audio frame metadata.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz

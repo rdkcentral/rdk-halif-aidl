@@ -19,8 +19,8 @@
 package com.rdk.hal.videodecoder;
 import com.rdk.hal.videodecoder.Property;
 import com.rdk.hal.PropertyValue;
- 
-/** 
+
+/**
  *  @brief     Key-value pair for video decoder properties.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -29,10 +29,10 @@ import com.rdk.hal.PropertyValue;
 
 @VintfStability
 parcelable PropertyKVPair{
- 
+
     /* Property enum key. */
-    Property property;  
- 
+    Property property;
+
     /* Property value. */
     PropertyValue propertyValue;
 }
