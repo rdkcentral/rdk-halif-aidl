@@ -24,38 +24,60 @@
 # Show help if requested (only when executed, not sourced)
 if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
     cat << EOF
-Usage: ./install_binder.sh
+Usage: ./install_binder.sh [clean]
    or: source ./install_binder.sh
 
-Install and setup the Android Binder toolchain for AIDL development.
+Install and build the Android Binder SDK for RDK HAL AIDL modules.
 
 Description:
-  This script:
+  This script (Stage 1 of two-stage build):
   1. Clones the linux_binder_idl repository (if not present)
-  2. Builds the AIDL compiler tools (aidl, aidl-cpp)
-  3. Builds the target Binder libraries (libbinder.so, etc.)
+  2. Builds and installs Binder SDK to out/target/:
+     - Binder runtime libraries (libbinder, libutils, etc.)
+     - AIDL compiler tools (aidl, aidl-cpp)
+     - Headers for development
+  3. Creates .sdk_ready marker file
   4. Adds tools to PATH for current shell
-  5. Exports BINDER_TOOLCHAIN_ROOT environment variable
 
 Usage:
-  Execute directly:  ./install_binder.sh
+  Execute directly:  ./install_binder.sh [clean]
   Source in shell:   source ./install_binder.sh
 
-  When sourced, PATH is updated in your current shell.
-  When executed, you must source it or restart your shell.
+  clean - Force rebuild by removing existing SDK and build directories
 
-Output:
-  Host tools:    build-tools/linux_binder_idl/out/host/bin/
-  Target libs:   build-tools/linux_binder_idl/out/target/lib/
-  Headers:       build-tools/linux_binder_idl/out/target/include/
+Output (Stage 1 - Binder SDK):
+  out/target/lib/       - Binder runtime libraries
+  out/target/include/   - Binder headers
+  out/target/bin/       - AIDL compiler and tools
+  out/target/.sdk_ready - Marker indicating SDK is ready
 
-Environment:
+Environment Variables (optional overrides):
+  BINDER_INSTALL_DIR    - Where to clone linux_binder_idl
+                          (default: build-tools/)
+  BINDER_SOURCE_DIR     - Existing linux_binder_idl location
+                          (default: build-tools/linux_binder_idl)
+  BINDER_BUILD_DIR      - CMake build directory
+                          (default: build/binder)
+  BINDER_SDK_DIR        - Final SDK installation directory
+                          (default: out/target)
+
+Environment (exported):
   BINDER_TOOLCHAIN_ROOT  Set to toolchain directory
-  PATH                   Updated to include host tools
+  PATH                   Updated to include AIDL compiler tools
 
 Examples:
-  ./install_binder.sh           # Install toolchain
-  source ./install_binder.sh    # Install and update current shell
+  ./install_binder.sh           # Build Binder SDK
+  ./install_binder.sh clean     # Force rebuild
+  source ./install_binder.sh    # Build and update current shell
+
+  # Yocto/BitBake override example:
+  BINDER_SDK_DIR=/path/to/sysroot/usr ./install_binder.sh
+
+  # Use existing linux_binder_idl clone:
+  BINDER_SOURCE_DIR=/path/to/linux_binder_idl ./install_binder.sh
+
+Next Steps:
+  Build HAL modules with: ./build_module.sh <module>
 
 EOF
     exit 0
@@ -66,74 +88,153 @@ MY_PATH="$(realpath "${BASH_SOURCE[0]}")"
 MY_DIR="$(dirname "${MY_PATH}")"
 REPO_URL="https://github.com/rdkcentral/linux_binder_idl"
 
-# Where we put the tools
-INSTALL_DIR="$MY_DIR/build-tools"
-BINDER_REPO_DIR="$INSTALL_DIR/linux_binder_idl"
-BINDER_HOST_BUILD_SCRIPT="$BINDER_REPO_DIR/build-aidl-generator-tool.sh"
-BINDER_TARGET_BUILD_SCRIPT="$BINDER_REPO_DIR/build-linux-binder-aidl.sh"
-STAMP_FILE="$BINDER_REPO_DIR/.installed_successfully"
+# Parse arguments
+CLEAN=false
+if [ "${1:-}" = "clean" ]; then
+    CLEAN=true
+fi
+
+# Where we put the tools - allow environment overrides
+INSTALL_DIR="${BINDER_INSTALL_DIR:-$MY_DIR/build-tools}"
+BINDER_REPO_DIR="${BINDER_SOURCE_DIR:-$INSTALL_DIR/linux_binder_idl}"
+BINDER_BUILD_DIR="${BINDER_BUILD_DIR:-$MY_DIR/build/binder}"
+SDK_INSTALL_DIR="${BINDER_SDK_DIR:-$MY_DIR/out/target}"
 
 # EXPORT THIS for other scripts to use
 export BINDER_TOOLCHAIN_ROOT="$BINDER_REPO_DIR"
+
+echo "========================================"
+echo "  RDK HAL AIDL - Binder SDK Build"
+echo "========================================"
+echo "Source:  $BINDER_REPO_DIR"
+echo "Build:   $BINDER_BUILD_DIR"
+echo "Install: $SDK_INSTALL_DIR"
+echo "========================================"
+echo ""
 
 # ------------------------------------------------------------------------------
 # 1. CLONE
 # ------------------------------------------------------------------------------
 clone_repo() {
     if [ -d "$BINDER_REPO_DIR" ]; then
-        echo "📦 Binder tools already cloned at $BINDER_REPO_DIR"
+        echo "✓ Binder source already cloned at $BINDER_REPO_DIR"
         return 0
     fi
 
-    echo "📦 Cloning Binder tools repository..."
+    echo "Cloning Binder toolchain repository..."
     mkdir -p "$INSTALL_DIR"
     git clone "$REPO_URL" "$BINDER_REPO_DIR" || return 1
+    echo "✓ Cloned successfully"
 }
 
 # ------------------------------------------------------------------------------
-# 2. BUILD (Idempotent)
+# 2. CLEAN (if requested)
 # ------------------------------------------------------------------------------
-build_tools() {
-    # FAST EXIT: If stamp exists, we are done.
-    if [ -f "$STAMP_FILE" ]; then
-        echo "✅ Toolchain already built (stamp file exists)"
+clean_build() {
+    if [ "$CLEAN" = true ]; then
+        echo "Cleaning previous build..."
+        rm -rf "$BINDER_BUILD_DIR" "$SDK_INSTALL_DIR"
+        echo "✓ Cleaned"
+        echo ""
+    fi
+}
+
+# ------------------------------------------------------------------------------
+# 3. BUILD SDK (Using CMake)
+# ------------------------------------------------------------------------------
+build_sdk() {
+    # Check if SDK already exists
+    if [ -f "$SDK_INSTALL_DIR/.sdk_ready" ] && [ "$CLEAN" != true ]; then
+        echo "✓ Binder SDK already built at $SDK_INSTALL_DIR"
+        echo ""
+        echo "To rebuild, run: ./install_binder.sh clean"
+        echo ""
         return 0
     fi
 
-    if [ ! -f "$BINDER_HOST_BUILD_SCRIPT" ]; then
-        echo "❌ Error: Build script not found at $BINDER_HOST_BUILD_SCRIPT"
+    if [ ! -d "$BINDER_REPO_DIR" ]; then
+        echo "❌ Error: Binder source not found at $BINDER_REPO_DIR"
         return 1
     fi
 
-    echo "🚀 Building Linux Binder Toolchain (host tools only)..."
-    echo "   This builds the AIDL compiler for code generation on the build machine."
-    echo "   Target binder libraries are built separately per platform."
-    
-    # Execute the host build script in a subshell
-    (cd "$BINDER_REPO_DIR" && /bin/bash "$BINDER_HOST_BUILD_SCRIPT")
-    
-    if [ $? -eq 0 ]; then
-        touch "$STAMP_FILE"
-        echo "✅ Toolchain build complete."
-    else
-        echo "❌ Toolchain build failed."
+    echo "Configuring binder SDK..."
+    cmake -S "$BINDER_REPO_DIR" -B "$BINDER_BUILD_DIR" \
+        -DCMAKE_INSTALL_PREFIX="$SDK_INSTALL_DIR" \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_CORE_SDK=ON \
+        -DBUILD_HOST_AIDL=ON
+
+    if [ $? -ne 0 ]; then
+        echo ""
+        echo "❌ ERROR: CMake configuration failed"
         return 1
     fi
+
+    echo ""
+    echo "Building binder SDK..."
+    cmake --build "$BINDER_BUILD_DIR" -j$(nproc)
+
+    if [ $? -ne 0 ]; then
+        echo ""
+        echo "❌ ERROR: Build failed"
+        return 1
+    fi
+
+    echo ""
+    echo "Installing binder SDK to $SDK_INSTALL_DIR..."
+    cmake --install "$BINDER_BUILD_DIR"
+
+    if [ $? -ne 0 ]; then
+        echo ""
+        echo "❌ ERROR: Installation failed"
+        return 1
+    fi
+
+    echo ""
+    echo "Organizing SDK structure..."
+    
+    # Move libraries to binder subdirectory
+    if [ -d "$SDK_INSTALL_DIR/lib" ] && [ ! -d "$SDK_INSTALL_DIR/lib/binder" ]; then
+        mkdir -p "$SDK_INSTALL_DIR/lib/binder"
+        mv "$SDK_INSTALL_DIR"/lib/*.so* "$SDK_INSTALL_DIR/lib/binder/" 2>/dev/null || true
+    fi
+    
+    # Move headers to binder_sdk subdirectory
+    if [ -d "$SDK_INSTALL_DIR/include" ] && [ ! -d "$SDK_INSTALL_DIR/include/binder_sdk" ]; then
+        mkdir -p "$SDK_INSTALL_DIR/include/binder_sdk"
+        # Move all existing header directories to binder_sdk/
+        find "$SDK_INSTALL_DIR/include" -mindepth 1 -maxdepth 1 -type d \
+            -exec mv {} "$SDK_INSTALL_DIR/include/binder_sdk/" \; 2>/dev/null || true
+        # Also handle any loose header files at top level
+        find "$SDK_INSTALL_DIR/include" -maxdepth 1 -type f -name "*.h" \
+            -exec mv {} "$SDK_INSTALL_DIR/include/binder_sdk/" \; 2>/dev/null || true
+    fi
+    
+    # Create halif placeholder directories
+    mkdir -p "$SDK_INSTALL_DIR/lib/halif"
+    mkdir -p "$SDK_INSTALL_DIR/include/halif"
+
+    # Create marker file
+    touch "$SDK_INSTALL_DIR/.sdk_ready"
+
+    echo "✓ SDK structure organized"
+    echo ""
+    echo "✓ Binder SDK build complete"
 }
 
 # ------------------------------------------------------------------------------
-# 3. SETUP PATH (Exports to current shell)
+# 4. SETUP PATH (Exports to current shell)
 # ------------------------------------------------------------------------------
 setup_path() {
-    HOST_BIN="$BINDER_REPO_DIR/out/host/bin"
-    if [ ! -d "$HOST_BIN" ]; then
-        echo "⚠️  Warning: Host bin directory not found: $HOST_BIN"
+    AIDL_BIN="$SDK_INSTALL_DIR/bin"
+    if [ ! -d "$AIDL_BIN" ]; then
+        echo "⚠️  Warning: AIDL bin directory not found: $AIDL_BIN"
         return 1
     fi
     
-    if [[ ":$PATH:" != *":$HOST_BIN:"* ]]; then
-        export PATH="$HOST_BIN:$PATH"
-        echo "✅ Added $HOST_BIN to PATH"
+    if [[ ":$PATH:" != *":$AIDL_BIN:"* ]]; then
+        export PATH="$AIDL_BIN:$PATH"
+        echo "✓ Added $AIDL_BIN to PATH"
     fi
 }
 
@@ -141,7 +242,24 @@ setup_path() {
 # MAIN EXECUTION
 # ------------------------------------------------------------------------------
 clone_repo || exit 1
-build_tools || exit 1
+clean_build
+build_sdk || exit 1
 setup_path
 
-echo "✅ Binder toolchain setup complete"
+echo ""
+echo "========================================"
+echo "  ✓ Binder SDK Ready"
+echo "========================================"
+echo ""
+echo "SDK installed to: $SDK_INSTALL_DIR"
+echo ""
+echo "Structure:"
+echo "  Binder libraries:    $(find $SDK_INSTALL_DIR/lib/binder -name '*.so' 2>/dev/null | wc -l) files"
+echo "  Binder headers:      $(find $SDK_INSTALL_DIR/include/binder_sdk -name '*.h' 2>/dev/null | wc -l) files"
+echo "  AIDL compiler:       $(find $SDK_INSTALL_DIR/bin -type f -executable 2>/dev/null | wc -l) files"
+echo "  HAL libraries:       (populated by build_module.sh)"
+echo "  HAL headers:         (populated by build_module.sh)"
+echo ""
+echo "Next step: Build HAL modules"
+echo "  Example: ./build_module.sh boot"
+echo ""
