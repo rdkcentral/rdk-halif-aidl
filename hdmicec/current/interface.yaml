@@ -1,5 +1,5 @@
 aidl_interface:
-  name: cec
+  name: hdmicec
   srcs:
     - com/rdk/hal/hdmicec/*.aidl
   imports:
