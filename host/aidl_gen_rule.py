@@ -141,19 +141,10 @@ def get_aidl_files_for_imports(interface, interfaces, imports_dir, import_interf
     imports_dir_tot = []
 
     # Identify files in which we can look for imports
-    if interface.dump_api:
-        # if Dump api is enabled, provided sources won't have import statement
-        # get them from top of the tree aidls
-        search_srcs = aidl_interface.get_path_for_files(interface.interface_root, interface.srcs)
-        for import_interface in import_interfaces:
-            name, _, _ = import_interface.partition("-v")
-            imports_dir_tot.append(interfaces[name].interface_root)
-    else:
-        # if dump api is disabled, provided sources will have all required import statements
-        search_srcs = srcs
+    # Sources will have all required import statements
+    search_srcs = srcs
     logger.verbose("Sources to Search for imports = %s" %(search_srcs))
     logger.verbose("Imports Locations = %s" %(imports_dir))
-    logger.verbose("Imports Location ToT = %s" %(imports_dir_tot))
 
     # get all Imports
     pattern = r'import\s+([\w\.]+);'

@@ -110,6 +110,9 @@ def generate_libraries_dependencies(interfaces, out_dir):
     dep_file = path.join(out_dir, LIBRARIES_DEPENDENCIES_FILE)
     if path.exists(dep_file):
         os.remove(dep_file)
+    
+    # Ensure output directory exists
+    os.makedirs(out_dir, exist_ok=True)
 
     lib_deps_dict = defaultdict(list)
     for interface_name in list(interfaces.keys()):
@@ -193,6 +196,30 @@ def has_version_suffix(moduleName):
     return hasVersionSuffix
 
 
+def has_frozen_versions(interface):
+    """ Check if the interface has any frozen versions (numbered versions like 1, 2, 3).
+    
+    Args:
+        interface: The AidlInterface object to check
+    
+    Returns:
+        True if frozen versions exist (e.g., stable/aidl/{module}/1/, stable/aidl/{module}/2/)
+        False if only 'current' version exists
+    """
+    stable_aidl_dir = interface.interface_root_stable
+    
+    if not path.exists(stable_aidl_dir):
+        return False
+    
+    # Check for numbered version directories (1, 2, 3, etc.)
+    for entry in os.listdir(stable_aidl_dir):
+        entry_path = path.join(stable_aidl_dir, entry)
+        if path.isdir(entry_path) and entry.isdigit():
+            return True
+    
+    return False
+
+
 def validate_interface(interface, interfaces):
     """ Validate if the given interface file has valid interface defined
     Validations:
@@ -221,20 +248,28 @@ def validate_interface(interface, interfaces):
                 )
 
     api_dumps = []
-    for ver in interface.versions:
-        api_dir = get_versioned_dir(interface, ver)
-        if path.exists(api_dir):
-            hash_file_path = path.join(api_dir, ".hash")
-            dump = ApiDump(
-                    ver,
-                    api_dir,
-                    get_path_for_files(api_dir, "*.aidl", True),
-                    hash_file_path
-                    )
-            # TODO: should we check if hashfile exist?
-            api_dumps.append(dump)
-        else:
-            raise RuntimeError(f"API version {ver} path {api_dir} does not exist.")
+    
+    # Only validate frozen versions if they actually exist on disk
+    # During first update, interface.versions may list versions from YAML but dirs don't exist yet
+    if has_frozen_versions(interface):
+        for ver in interface.versions:
+            api_dir = get_versioned_dir(interface, ver)
+            if path.exists(api_dir):
+                hash_file_path = path.join(api_dir, ".hash")
+                dump = ApiDump(
+                        ver,
+                        api_dir,
+                        get_path_for_files(api_dir, "*.aidl", True),
+                        hash_file_path
+                        )
+                # TODO: should we check if hashfile exist?
+                api_dumps.append(dump)
+            else:
+                # Version listed in YAML but directory doesn't exist - this is an error
+                raise RuntimeError(f"API version {ver} path {api_dir} does not exist.")
+    else:
+        logger.verbose("No frozen versions exist for %s - skipping frozen version validation" 
+                      %(interface.base_name))
 
     if path.exists(current_api_dir):
         api_dumps.append(current_api_dump)
@@ -244,7 +279,7 @@ def validate_interface(interface, interfaces):
         logger.verbose("api dump for version %s is %s" %(api_dumps[i].version, vars(api_dumps[i])))
 
         if path.exists(api_dumps[i].hash_file):
-            checkHashTimestamp = check_integrity(interface, api_dumps[i])
+            check_integrity(interface, api_dumps[i])
         elif i != (len(api_dumps) - 1):
             # Only the current version will not have the hash file.
             assert False, "No hash file(%s) found for the frozen version %s" \
@@ -253,6 +288,7 @@ def validate_interface(interface, interfaces):
         if i == 0:
             continue
 
+        # Compatibility check between adjacent versions
         checked = check_compatibility(interface, interfaces, api_dumps[i-1], api_dumps[i])
 
     return api_dumps
@@ -285,29 +321,41 @@ def get_path_for_files(src, pattern, rec=False):
 def get_versioned_dir(interface, version):
     """
     Get the location of versioned interface API for the given version.
+    All versions are stored in stable/aidl/{module}/{version}/
     Args:
         interface: Interface of which versioned directory is required
         version: Version of the interface.
     Return:
         version_dir: location of the versioned Interface API
     """
-    version_dir = ""
-    if interface.dump_api:
-        version_dir = path.join(interface.interface_root_stable, version)
-    else:
-        if version is CURRENT_VERSION:
-            version_dir = interface.interface_root
-        else:
-            version_dir = path.realpath(
-                    path.join(interface.interface_root, "..", version)
-                    )
+    version_dir = path.join(interface.interface_root_stable, version)
     logger.debug("Directory for the version \"%s\" of \"%s\" is %s" \
             %(version, interface.base_name, version_dir))
     return version_dir
 
 
 def get_preprocessed_dir(interface, version):
-    return path.join(interface.interface_root_out,
+    """Get directory for preprocessed AIDL files (temporary build artifacts).
+    
+    These files are placed in out/.preprocessed/ to keep them separate from
+    stable/ directory which contains version-controlled AIDL sources and
+    generated C++ code that should be deployed.
+    
+    Args:
+        interface: The AidlInterface object
+        version: Version string (e.g., "1", "2", "current")
+    
+    Returns:
+        Path to preprocessed directory: out/.preprocessed/{module}/{module}_interface/{version}/
+    """
+    # Use a dedicated .preprocessed directory in out/ for clarity
+    # Extract workspace root from interface_root_stable path
+    # interface_root_stable is typically: <workspace>/stable/aidl/{module}
+    stable_path = interface.interface_root_stable
+    workspace_root = path.dirname(path.dirname(path.dirname(stable_path)))  # Go up 3 levels
+    
+    preprocessed_root = path.join(workspace_root, "out", ".preprocessed", interface.base_name)
+    return path.join(preprocessed_root,
             interface.base_name + AIDL_PREPROCESSED_SUFFIX, version)
 
 
@@ -664,11 +712,48 @@ def check_api(interface, interfaces, oldDump, newDump, checkApiLevel,
     onErrorCmd = ["cat", messageFile]
 
     logger.verbose(checkApiCmd)
-    if not exec_cmd(checkApiCmd):
+    
+    # Run checkapi and capture output for better error reporting
+    result = subprocess.run(checkApiCmd, capture_output=True, text=True)
+    
+    if result.returncode != 0:
         # error from --checkapi
         exec_cmd(onErrorCmd)
+        logger.error("")
+        logger.error("=" * 80)
+        logger.error("AIDL Compatibility Check FAILED for %s" %(interface.base_name))
+        logger.error("=" * 80)
+        
+        # Display AIDL compiler error output
+        if result.stderr:
+            logger.error("Detailed error from AIDL compiler:")
+            logger.error(result.stderr)
+        
+        logger.error("")
+        logger.error("IMPORTANT: Breaking changes are NOT permitted in AIDL versioned interfaces.")
+        logger.error("Only the following changes are allowed:")
+        logger.error("  ✓ ADD new methods at the END of an interface")
+        logger.error("  ✓ ADD new fields at the END of a parcelable")
+        logger.error("  ✓ ADD new enum values (with fallback handling)")
+        logger.error("")
+        logger.error("The following changes are FORBIDDEN:")
+        logger.error("  ✗ Remove methods or fields")
+        logger.error("  ✗ Change method signatures or field types")
+        logger.error("  ✗ Reorder methods or fields")
+        logger.error("  ✗ Rename methods or fields")
+        logger.error("")
+        logger.error("If you need to make breaking changes:")
+        logger.error("  1. Create a NEW interface component (e.g., I%sNew)" %(interface.base_name.capitalize()))
+        logger.error("  2. Leave the existing interface unchanged")
+        logger.error("  3. Clients can migrate to the new interface at their own pace")
+        logger.error("")
+        logger.error("=" * 80)
+        
         assert False, "Failed at check_api. Please update the module"
     else:
+        # Create timestamp file directory if it doesn't exist (for pre-validation scenarios)
+        timestamp_dir = path.dirname(timestampFile)
+        os.makedirs(timestamp_dir, exist_ok=True)
         exec_cmd(touchCmd)
 
     return timestampFile
@@ -680,6 +765,7 @@ def check_equality(interface, interfaces, oldDump, newDump):
     """
     messageFile = path.join(get_host_dir(),
             "message_check_equality.txt")
+    os.makedirs(interface.interface_api_dir_out, exist_ok=True)
     formattedMessageFile = path.join(interface.interface_api_dir_out,
             "message_check_equality.txt")
     logger.verbose("messageFile = %s\nformattedMessageFile = %s" \
@@ -694,33 +780,29 @@ def check_equality(interface, interfaces, oldDump, newDump):
 
 def check_integrity(interface, api_dump):
     """
-    Check the integrity of the given api dump of the versioned interface
-
-    Generates the hash for the aidl
+    Check the integrity of the given api dump of the versioned interface.
+    Validates that AIDL files match their stored hash (in-memory check).
     """
     version = path.basename(api_dump.api_dir)
-    # TODO: Find: how these timestampfiles are used and whether they are
-    # required
-    timestampFile = path.join(interface.interface_api_dir_out,
-            "checkhash_"+version+".timestamp")
     messageFile = path.join(get_host_dir(),
             "message_check_integrity.txt")
 
-    # TODO: aidl files. hash file and message file is used as implicit,
-    # check why
-
+    # Compute hash from AIDL files and compare to stored hash
+    # If mismatch, display error message and exit
     hashGenCmd = "if [ `cd %s && { find ./ -name \"*.aidl\" -print0 | \
             LC_ALL=C sort -z | xargs -0 sha1sum && echo %s; } | \
             sha1sum | cut -d \" \" -f 1` = `tail -1 %s` ]; " + \
-            "then touch %s; else cat %s && exit 1; fi"
+            "then true; else cat %s && exit 1; fi"
     hashGenCmd = hashGenCmd %(api_dump.api_dir,
             version_for_hashgen(api_dump.version), api_dump.hash_file,
-            timestampFile, messageFile)
+            messageFile)
 
     logger.verbose(hashGenCmd)
-    subprocess.call(hashGenCmd, shell=True)
-
-    return timestampFile
+    result = subprocess.call(hashGenCmd, shell=True)
+    
+    if result != 0:
+        raise RuntimeError("Hash integrity check failed for %s version %s" 
+                %(interface.base_name, version))
 
 
 def check_compatibility(interface, interfaces, oldDump, newDump):
@@ -730,6 +812,7 @@ def check_compatibility(interface, interfaces, oldDump, newDump):
 
 def check_for_development(interface, interfaces, latest_version_dump, tot_dump):
     logger.verbose("Interface Name: %s" %(interface.base_name))
+    os.makedirs(interface.interface_api_dir_out, exist_ok=True)
     has_dev_path = path.join(interface.interface_api_dir_out, "has_development")
     rmCmd = ["rm", "-f", has_dev_path]
 
@@ -777,7 +860,8 @@ class AidlInterface:
     # The directory where AIDL interfaces are being modified
     interface_root = ""
     # The directory where the stable version of AIDL interfaces are located.
-    # location: <interfaces root directory>/stable/versioned_aidl/<interface-name>/
+    # location: <interfaces root directory>/stable/<stable_aidl_subdir>/<interface-name>/
+    # Default: <interfaces root directory>/stable/aidl/<interface-name>/
     interface_root_stable = ""
     # The directory where stubs and proxies of stable AIDL interfaces are located.
     # location: <interfaces root directory>/stable/generated/<interface-name>/
@@ -790,22 +874,19 @@ class AidlInterface:
     # value: list of versioned interfaces
     versions_with_info = {}
     stability = ""
-    # Handle generating raw api for versioning
-    # If enabled, written AIDL interfaces will be dumped in a raw format at the 
-    # versioned location.
-    # If Disabled, written APIs will be copied as it is. This skips interfaces 
-    # verification for syntax.
-    dump_api = False
     # location of frozen APIs: set the location where all frozen APIs must be kept
     # after freezing them.
     # values:
     #   stable: frozen versions will be kept at the root directory where all interfaces are
-    #       locatted. A "stable/versioned_aidl" directory will be created to keep frozen versions.
+    #       located. A "stable/<stable_aidl_subdir>" directory will be created to keep frozen versions.
     #       The interfaces root directory should be the first in the list of root directories
     #       provided in "interfaces_roots" field.
     #   interface: frozen versions will be kept along with the AIDL interface.
     # This field cannot be changed once the first version is created.
     frozen_location = "stable"
+    # Subdirectory name under stable/ for AIDL files (default: "aidl")
+    # Can be overridden in interface.yaml via stable_aidl_subdir field
+    stable_aidl_subdir = "aidl"
     # Locations of directories required for intermediatory operations
     interface_root_out = ""
     interface_api_dir_out = ""
@@ -860,12 +941,14 @@ class AidlInterface:
 
         self.base_name = data.get("aidl_interface").get("name")
 
+        # Read stable_aidl_subdir from interface.yaml (optional field, default: "aidl")
+        self.stable_aidl_subdir = data.get("aidl_interface").get("stable_aidl_subdir", "aidl")
 
         self.frozen_location = data.get("aidl_interface").get("frozen_location", "stable")
         if self.frozen_location == "stable":
             # First directory in the list of interface root directory should
             # have the stable directory
-            self.interface_root_stable = path.join(interfaces_roots[0], "stable/versioned_aidl", self.base_name)
+            self.interface_root_stable = path.join(interfaces_roots[0], f"stable/{self.stable_aidl_subdir}", self.base_name)
             self.interface_gen_dir = path.join(interfaces_roots[0], "stable/generated", self.base_name)
         elif self.frozen_location == "interface":
             self.interface_root_stable = path.join(self.interface_root, "aidl_api")
@@ -886,10 +969,6 @@ class AidlInterface:
                 versions_with_info[ver_info[i].get("version")] = ver_info[i].get("imports")
         self.versions = versions
         self.versions_with_info = versions_with_info
-
-        dump_api = data.get("aidl_interface").get("dump_api")
-        if dump_api == "enabled":
-            self.dump_api = True
 
         logger.verbose("Interface Found: %s" %(self.base_name))
         logger.verbose("\tSources       = %s" %(self.srcs))
@@ -912,13 +991,10 @@ class AidlInterface:
             # Fallback if something weird happens (e.g. interface outside root)
             relative_path = path.relpath(self.interface_root, start="/")
 
+        # Output directory for temporary build files (created on-demand)
         self.interface_root_out = path.join(out_dir, relative_path)
-        if not path.exists(self.interface_root_out):
-            os.makedirs(self.interface_root_out)
-
+        # API temp directory - created on-demand when needed for temp files
         self.interface_api_dir_out = path.join(self.interface_root_out, self.base_name+AIDL_API_SUFFIX)
-        if not path.exists(self.interface_api_dir_out):
-            os.makedirs(self.interface_api_dir_out)
 
 
     def get_imports(self, version):

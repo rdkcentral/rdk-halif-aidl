@@ -166,17 +166,52 @@ function(AddInterfaceLibrary aidl_target)
 
     list(GET interfaces_dir 0 first_interfaces_root)
     
-    # [FIX 1] Updated Path Structure: <version>/src instead of src/<version>
-    set(source_dir ${first_interfaces_root}/stable/generated/${interface_name}/${interface_version}/src)
-    set(include_dir ${first_interfaces_root}/stable/generated/${interface_name}/${interface_version}/include)
+    # Use LINUX_BINDER_AIDL_ROOT_OUT directly - parent project provides the complete path
+    set(source_dir ${LINUX_BINDER_AIDL_ROOT_OUT}/${interface_name}/${interface_version}/src)
+    set(include_dir ${LINUX_BINDER_AIDL_ROOT_OUT}/${interface_name}/${interface_version}/include)
 
-    # Generate Sources
-    # Changed command to point to aidl_ops.py and pass Output Dir
-    message(VERBOSE "Command: ${LINUX_BINDER_AIDL_ROOT_HOST}/aidl_ops.py -g ${interface_version_arg} -r ${interfaces_dir} -o ${LINUX_BINDER_AIDL_ROOT_OUT} ${interface_name}")
-    execute_process(
-        COMMAND ${LINUX_BINDER_AIDL_ROOT_HOST}/aidl_ops.py -g ${interface_version_arg} -r "${interfaces_dir}" -o "${LINUX_BINDER_AIDL_ROOT_OUT}" ${interface_name}
+    # Check if generated sources already exist (pre-committed in repo)
+    file(GLOB_RECURSE existing_sources "${source_dir}/*.cpp")
+    
+    if(NOT existing_sources)
+        # Generated code doesn't exist - need to run API update first
+        message(STATUS "No pre-generated sources found for ${interface_name} v${interface_version}")
+        message(STATUS "Generating sources using aidl_ops...")
+        
+        # Generate Sources
+        message(VERBOSE "Command: ${LINUX_BINDER_AIDL_ROOT_HOST}/aidl_ops.py -g ${interface_version_arg} -r ${interfaces_dir} -o ${LINUX_BINDER_AIDL_ROOT_OUT} ${interface_name}")
+        execute_process(
+            COMMAND ${LINUX_BINDER_AIDL_ROOT_HOST}/aidl_ops.py -g ${interface_version_arg} -r "${interfaces_dir}" -o "${LINUX_BINDER_AIDL_ROOT_OUT}" ${interface_name}
+            RESULT_VARIABLE gen_result
         )
-    file(GLOB_RECURSE source_files "${source_dir}/*.cpp")
+        
+        if(NOT gen_result EQUAL 0)
+            message(FATAL_ERROR "Failed to generate sources for ${interface_name}. Run './build_interfaces.sh ${interface_name}' first.")
+        endif()
+        
+        # Re-check after generation
+        file(GLOB_RECURSE source_files "${source_dir}/*.cpp")
+        if(NOT source_files)
+            message(FATAL_ERROR "Source generation completed but no C++ files found in ${source_dir}")
+        endif()
+    else()
+        message(STATUS "Using pre-generated sources for ${interface_name} v${interface_version} (${list_length} files)")
+        set(source_files ${existing_sources})
+    endif()
+    
+    # Post-process generated headers to add missing #include <mutex>
+    # AIDL code generator creates Bp*.h files that use std::mutex without including <mutex>
+    file(GLOB_RECURSE bp_headers "${include_dir}/**/Bp*.h")
+    foreach(header_file ${bp_headers})
+        file(READ "${header_file}" header_content)
+        # Only add if not already present
+        string(FIND "${header_content}" "#include <mutex>" has_mutex)
+        if(has_mutex EQUAL -1)
+            string(REGEX REPLACE "(#pragma once\n)" "\\1#include <mutex>\n" header_content "${header_content}")
+            file(WRITE "${header_file}" "${header_content}")
+        endif()
+    endforeach()
+
 
     message(VERBOSE "adding target ${aidl_target} as a library")
     add_library(
@@ -218,12 +253,19 @@ function(AddInterfaceLibrary aidl_target)
     target_compile_options(${aidl_target} PUBLIC
         -Wall 
         -Wextra 
-        -std=c++17             # Android Binder usually targets C++17
+        -std=gnu++17           # Use GNU extensions instead of strict ISO C++17
         
         # --- GCC COMPATIBILITY FLAGS ---
         -Wno-unknown-pragmas   # Silences "#pragma clang diagnostic..."
         -Wno-attributes        # Silences "[[clang::lto_visibility_public]]"
         -Wno-psabi             # Silences common ARM ABI warnings (optional)
+        -Wno-write-strings     # Silence string literal to char* warnings from AIDL
+        -Wno-return-type       # Silence missing return warnings from AIDL code
+    )
+    
+    # Force include missing headers for AIDL-generated code
+    target_compile_definitions(${aidl_target} PRIVATE
+        _GLIBCXX_INCLUDE_NEXT_C_HEADERS  # Ensure C++ standard headers are available
     )
 
     install(TARGETS
@@ -251,8 +293,8 @@ add_library(${aidl_target} SHARED \${SRC_FILES})
 target_include_directories(${aidl_target} PUBLIC \"include\")
 ")
 
-    # Write the portable file to the generated output directory
-    file(WRITE "${first_interfaces_root}/stable/generated/${interface_name}/${interface_version}/CMakeLists.txt" "${STANDALONE_CMAKE_CONTENT}")
+    # Write the portable file to the output directory provided by parent
+    file(WRITE "${LINUX_BINDER_AIDL_ROOT_OUT}/${interface_name}/${interface_version}/CMakeLists.txt" "${STANDALONE_CMAKE_CONTENT}")
 
 endfunction()
 
