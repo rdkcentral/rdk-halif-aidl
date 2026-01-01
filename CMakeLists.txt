@@ -124,9 +124,45 @@ message(STATUS "✓ Binder SDK found at ${BINDER_SDK_DIR}")
 # The binder system uses this directly without knowing about project structure
 set(LINUX_BINDER_AIDL_ROOT_OUT "${CMAKE_SOURCE_DIR}/stable/generated")
 
-# Make binder SDK headers and libraries available (from binder subdirectory)
-include_directories(${BINDER_SDK_DIR}/include/binder_sdk)
-link_directories(${BINDER_SDK_DIR}/lib/binder)
+# Configure SDK subdirectory structure (overridable for Yocto flat structure)
+if (NOT DEFINED BINDER_SDK_INCLUDE_SUBDIR)
+    set(BINDER_SDK_INCLUDE_SUBDIR "include/binder_sdk")
+endif()
+if (NOT DEFINED BINDER_SDK_LIB_SUBDIR)
+    set(BINDER_SDK_LIB_SUBDIR "lib/binder")
+endif()
+
+message(STATUS "Binder include path: ${BINDER_SDK_DIR}/${BINDER_SDK_INCLUDE_SUBDIR}")
+message(STATUS "Binder library path: ${BINDER_SDK_DIR}/${BINDER_SDK_LIB_SUBDIR}")
+
+# Make binder SDK headers and libraries available
+include_directories(${BINDER_SDK_DIR}/${BINDER_SDK_INCLUDE_SUBDIR})
+link_directories(${BINDER_SDK_DIR}/${BINDER_SDK_LIB_SUBDIR})
+
+#######################################################################
+# Configure installation directories
+#######################################################################
+
+# Default to OUT_DIR/target for local development (maintains current behavior)
+# Yocto will override with -DCMAKE_INSTALL_PREFIX=${D}${prefix}
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "${OUT_DIR}/target" CACHE PATH "Install prefix" FORCE)
+    message(STATUS "CMAKE_INSTALL_PREFIX defaulted to ${CMAKE_INSTALL_PREFIX}")
+else()
+    message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
+endif()
+
+# Set standard installation directories
+include(GNUInstallDirs)
+if (NOT DEFINED CMAKE_INSTALL_LIBDIR)
+    set(CMAKE_INSTALL_LIBDIR "lib/halif")
+endif()
+if (NOT DEFINED CMAKE_INSTALL_INCLUDEDIR)
+    set(CMAKE_INSTALL_INCLUDEDIR "include/halif")
+endif()
+
+message(STATUS "Libraries will install to: ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+message(STATUS "Headers will install to: ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
 
 #######################################################################
 # Include binder CMake infrastructure for interface builds
@@ -168,46 +204,42 @@ foreach(module_dir ${MODULE_DIRS})
 endforeach()
 
 #######################################################################
-# Fix AIDL generator bug: Add missing #include <mutex> to generated .cpp files
-# The AIDL generator omits this include for callback/listener interfaces
+# Install module outputs using standard CMake install commands
 #######################################################################
 
-file(GLOB_RECURSE GENERATED_CPP_FILES "${CMAKE_SOURCE_DIR}/stable/generated/*/current/src/*.cpp")
-foreach(CPP_FILE ${GENERATED_CPP_FILES})
-    file(READ "${CPP_FILE}" FILE_CONTENTS)
-    # Check if file uses mutex but doesn't include it
-    if(FILE_CONTENTS MATCHES "std::mutex|std::lock_guard" AND NOT FILE_CONTENTS MATCHES "#include <mutex>")
-        # Prepend #include <mutex> to the file
-        file(WRITE "${CPP_FILE}" "#include <mutex>\n${FILE_CONTENTS}")
-        message(STATUS "Added #include <mutex> to ${CPP_FILE}")
+# Install HAL module libraries
+# Pattern matches all generated library files from build directory
+install(CODE "
+    file(GLOB_RECURSE MODULE_LIBS
+         \"${CMAKE_BINARY_DIR}/lib*-vcurrent-cpp.so*\"
+         \"${CMAKE_BINARY_DIR}/lib*-v[0-9]+-cpp.so*\")
+    foreach(lib IN LISTS MODULE_LIBS)
+        file(INSTALL \${lib}
+             DESTINATION \"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}\"
+             USE_SOURCE_PERMISSIONS)
+    endforeach()
+    message(STATUS \"Installed HAL module libraries to ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}\")
+")
+
+# Install HAL module headers from pre-generated code
+if (INTERFACE_TARGET STREQUAL "all")
+    # Install all module headers
+    install(DIRECTORY "${CMAKE_SOURCE_DIR}/stable/generated/"
+            DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+            FILES_MATCHING PATTERN "*.h"
+            PATTERN "CMakeFiles" EXCLUDE)
+else()
+    # Install single module headers
+    if (EXISTS "${CMAKE_SOURCE_DIR}/stable/generated/${INTERFACE_TARGET}")
+        install(DIRECTORY "${CMAKE_SOURCE_DIR}/stable/generated/${INTERFACE_TARGET}/"
+                DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${INTERFACE_TARGET}"
+                FILES_MATCHING PATTERN "*.h"
+                PATTERN "CMakeFiles" EXCLUDE)
     endif()
-endforeach()
-
-#######################################################################
-# Stage module outputs to out/ directory
-#######################################################################
-
-# Create custom target to stage module libraries and headers
-add_custom_target(stage_modules ALL
-    COMMAND ${CMAKE_COMMAND}
-        -DOUT_DIR=${OUT_DIR}
-        -DBUILD_DIR=${CMAKE_BINARY_DIR}
-        -DSTABLE_DIR=${LINUX_BINDER_AIDL_ROOT_OUT}
-        -DINTERFACE_TARGET=${INTERFACE_TARGET}
-        -DAIDL_SRC_VERSION=${AIDL_SRC_VERSION}
-        -P ${CMAKE_SOURCE_DIR}/cmake_stage_modules.cmake
-    COMMENT "Staging module outputs to ${OUT_DIR}..."
-)
-
-# Find all interface library targets and make stage_modules depend on them
-# This ensures all modules are built before staging
-get_property(ALL_TARGETS DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY BUILDSYSTEM_TARGETS)
-foreach(target ${ALL_TARGETS})
-    if (target MATCHES ".*-vcurrent-cpp$" OR target MATCHES ".*-v[0-9]+-cpp$")
-        add_dependencies(stage_modules ${target})
-    endif()
-endforeach()
+endif()
 
 message(STATUS "")
-message(STATUS "Module libraries will be built and staged to: ${OUT_DIR}")
+message(STATUS "Build complete. Use 'cmake --install' to install:")
+message(STATUS "  Libraries: ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+message(STATUS "  Headers:   ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
 message(STATUS "")

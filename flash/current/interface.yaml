@@ -3,5 +3,4 @@ aidl_interface:
   srcs:
     - com/rdk/hal/flash/*.aidl
   imports: []
-  dump_api: enabled
   stability: vintf

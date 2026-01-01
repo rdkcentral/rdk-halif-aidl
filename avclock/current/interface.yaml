@@ -6,5 +6,4 @@ aidl_interface:
     - audiosink
     - common
     - videosink
-  dump_api: enabled
   stability: vintf

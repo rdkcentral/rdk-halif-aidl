@@ -5,5 +5,4 @@ aidl_interface:
   imports:
     - common
     - videodecoder
-  dump_api: enabled
   stability: vintf

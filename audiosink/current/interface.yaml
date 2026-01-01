@@ -5,5 +5,4 @@ aidl_interface:
   imports:
     - audiodecoder
     - common
-  dump_api: enabled
   stability: vintf
