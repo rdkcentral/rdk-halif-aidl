@@ -62,85 +62,177 @@ rdk-halif-aidl/
 
 ## Quick Start
 
-### For Interface Consumers (Using Pre-Generated Code)
+### Development Environment (Interface Authors)
+
+**Purpose**: Modify AIDL interfaces, generate C++ code, validate compatibility
 
 ```bash
-# 1. Build Binder SDK (once)
+# 1. Install Binder SDK for development
 ./install_binder.sh
 
-# 2. Build HAL modules
-./build_module.sh boot          # Build specific module
-./build_module.sh all           # Build all modules
+# 2. Modify AIDL interfaces in <module>/current/
+vim boot/current/com/rdk/hal/boot/IBoot.aidl
 
-# 3. Deploy complete SDK
-scp -r out/target/* target:/usr/
+# 3. Build and validate interface
+./build_interfaces.sh boot
+
+# 4. Commit generated code
+git add stable/
+git commit -m "Update boot interface"
 ```
 
-### For Interface Authors (Modifying AIDL)
+**Development Tools**: `install_binder.sh`, `build_interfaces.sh`, `freeze_interface.sh`
+
+⚠️ **These scripts are NOT used in production builds**
+
+### Production Build (Yocto/BitBake)
+
+**Purpose**: Compile pre-generated C++ code into production libraries
 
 ```bash
-# 1. Build complete toolchain
+# Prerequisites:
+# - linux_binder SDK provided by build system (not install_binder.sh)
+# - Pre-generated code in stable/generated/ (committed to repo)
+
+# Build HAL libraries using CMake
+cmake -S . -B build \
+      -DINTERFACE_TARGET=all \
+      -DAIDL_SRC_VERSION=current \
+      -DBINDER_SDK_DIR=${STAGING_DIR}/usr
+
+cmake --build build -j$(nproc)
+
+# Output: out/target/lib/halif/*.so
+#         out/target/include/halif/*
+```
+
+**Production Requirements**:
+
+- ✅ CMake 3.8+
+- ✅ linux_binder SDK (from build system, not this repo)
+- ✅ Pre-generated C++ code (stable/generated/)
+- ❌ Does NOT require: Python, AIDL compiler, interface generation
+
+## Build Workflows
+
+### Development Workflow (Interface Authors Only)
+
+**When to use**: Modifying AIDL interface definitions
+
+```bash
+# 1. Install Binder SDK with AIDL compiler (development only)
+./install_binder.sh
+
+# 2. Modify interfaces, generate C++, validate
 ./build_interfaces.sh <module>
 
-# 2. Commit generated code
-git add stable/
-git commit -m "Update <module> interface"
+# 3. Freeze versions when stable
+./freeze_interface.sh <module>
 ```
 
-## Build System Integration
+**What happens**:
 
-### Local Development (Default)
+- AIDL compiler generates C++ from `.aidl` files
+- Generated code placed in `stable/generated/`
+- Compatibility validation runs
+- Generated code is committed to repository
 
-Uses default paths - no configuration needed:
+**Tools used**: Python scripts, AIDL compiler, validation framework
 
-```bash
-./install_binder.sh              # SDK → out/target/
-./build_module.sh all            # Modules → out/target/lib/halif/,
-                                 #           out/target/include/halif/
-```
+---
 
-### Yocto/BitBake
+### Production Workflow (Yocto/BitBake)
 
-Override paths via environment or CMake:
-
-```bash
-# Option 1: Environment variables
-BINDER_SDK_DIR=${D}${prefix} ./install_binder.sh
-
-# Option 2: Direct CMake
-cmake -S build-tools/linux_binder_idl -B build/binder \
-      -DCMAKE_INSTALL_PREFIX=${D}${prefix}
-```
-
-### Standalone linux_binder_idl
-
-The Binder SDK can be built independently:
+**When to use**: Building deployable HAL libraries from pre-generated code
 
 ```bash
-cd build-tools/linux_binder_idl
-cmake -B build -DCMAKE_INSTALL_PREFIX=/usr/local
+# Prerequisites (provided by build system):
+# - linux_binder SDK installed to ${STAGING_DIR}/usr
+# - libbinder.so, libutils.so, aidl-cpp headers
+
+# Build HAL libraries
+cmake -S . -B build \
+      -DINTERFACE_TARGET=all \
+      -DBINDER_SDK_DIR=${STAGING_DIR}/usr
+
 cmake --build build
+cmake --install build
+```
+
+**What happens**:
+
+- CMake compiles pre-generated C++ (stable/generated/)
+- Links against system-provided linux_binder SDK
+- Produces `lib{module}-vcurrent-cpp.so` libraries
+- Installs to `${OUT_DIR}/target/lib/halif/`
+
+**Tools used**: CMake, C++ compiler, system linker
+
+**Does NOT require**:
+
+- ❌ `install_binder.sh` (SDK from build system)
+- ❌ `build_interfaces.sh` (C++ pre-generated)
+- ❌ Python or AIDL compiler
+
+---
+
+### Yocto Recipe Pattern
+
+```bitbake
+DEPENDS = "linux-binder"
+
+do_configure() {
+    cmake -S ${S} -B ${B} \
+          -DINTERFACE_TARGET=all \
+          -DBINDER_SDK_DIR=${STAGING_DIR}${prefix}
+}
+
+do_compile() {
+    cmake --build ${B}
+}
+
+do_install() {
+    install -d ${D}${libdir}
+    install -m 0755 ${B}/out/target/lib/halif/*.so ${D}${libdir}/
+    
+    install -d ${D}${includedir}/halif
+    cp -r ${B}/out/target/include/halif/* ${D}${includedir}/halif/
+}
 ```
 
 ## Configuration
 
-All paths are configurable via environment variables or CMake arguments:
+### Production Build Variables (CMake)
 
-| Variable            | Purpose                   | Default                 |
-|---------------------|---------------------------|-------------------------|
-| `BINDER_SDK_DIR`    | SDK install location      | `out/target`            |
-| `BINDER_SOURCE_DIR` | Existing binder source    | `build-tools/...`       |
-| `OUT_DIR`           | Module output directory   | `out`                   |
-| `INTERFACE_TARGET`  | Module to build           | `all`                   |
+Used when building HAL libraries for deployment:
 
-Example:
+| Variable            | Purpose                     | Default                 | Required |
+|---------------------|-----------------------------|-------------------------|----------|
+| `INTERFACE_TARGET`  | Module(s) to build          | `all`                   | No       |
+| `AIDL_SRC_VERSION`  | Version to build            | `current`               | No       |
+| `BINDER_SDK_DIR`    | linux_binder SDK location   | `out/target`            | **Yes**  |
+| `OUT_DIR`           | Output directory            | `out`                   | No       |
+
+**Example**:
 
 ```bash
-BINDER_SDK_DIR=/opt/sdk ./install_binder.sh
-cmake -B build -DOUT_DIR=/opt/modules -DINTERFACE_TARGET=boot
+cmake -B build \
+      -DINTERFACE_TARGET=boot \
+      -DBINDER_SDK_DIR=/usr
 ```
 
-See [TWO_STAGE_BUILD.md](TWO_STAGE_BUILD.md) for detailed build workflows.
+### Development Build Variables (Scripts)
+
+Used by `install_binder.sh` and `build_interfaces.sh` only:
+
+| Variable            | Purpose                     | Default                 |
+|---------------------|-----------------------------|-------------------------|
+| `BINDER_SDK_DIR`    | Where to install SDK        | `out/target`            |
+| `BINDER_SOURCE_DIR` | Existing binder source      | `build-tools/linux_...` |
+
+**Not used in production Yocto builds**.
+
+See [TWO_STAGE_BUILD.md](TWO_STAGE_BUILD.md) for detailed workflows.
 
 ## Copyright and License
 

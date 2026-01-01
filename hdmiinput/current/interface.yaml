@@ -4,5 +4,4 @@ aidl_interface:
     - com/rdk/hal/hdmiinput/*.aidl
   imports:
     - common
-  dump_api: enabled
   stability: vintf

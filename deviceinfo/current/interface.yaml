@@ -3,5 +3,4 @@ aidl_interface:
   srcs:
     - com/rdk/hal/deviceinfo/*.aidl
   imports: []
-  dump_api: enabled
   stability: vintf
