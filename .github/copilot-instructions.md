@@ -21,7 +21,7 @@ This codebase defines **RDK Hardware Abstraction Layer interfaces using Android 
 
 ### Service Boundaries
 
-Each hardware domain is a separate service/module. See `../docs/introduction/aidl_and_binder.md` and `../docs/introduction/the_software_stack.md` for diagrams and details.
+Each hardware domain is a separate service/module. See `docs/introduction/aidl_and_binder.md` and `docs/introduction/the_software_stack.md` for diagrams and details.
 
 ## Module Structure Pattern
 
@@ -34,7 +34,7 @@ Every HAL module follows this exact structure:
 │   ├── hfp-{module}.yaml      # HAL Feature Profile (capabilities)
 │   └── com/rdk/hal/{module}/  # AIDL interface definitions
 │       ├── I{Module}Manager.aidl  # Manager interface (typical pattern for complex modules)
-│       ├── I{Module}.aidl         # Main/Resource interface
+│       ├── I{Module}.aidl         # Main/Resource interface (stateless for simple modules)
 │       ├── Capabilities.aidl      # Runtime capability discovery
 │       └── *.aidl                 # Supporting types/enums/listeners
 └── gen/                       # Generated code (not in git)
@@ -123,7 +123,7 @@ make
 - `AIDL_TARGET` (required): Module to build (e.g., "boot", "videodecoder")
 - `AIDL_SRC_VERSION`: Version directory (default: "current")
 - `AIDL_GEN_DIR`: Output directory (defaults to `gen/{module}/{version}`)
-- `AIDL_BIN`: Path to AIDL compiler (auto-detected if in PATH)
+- `AIDL_BIN`: Path to AIDL compiler (from linux_binder_idl tools, auto-detected if in PATH)
 
 ### Default AIDL Compiler Flags
 
@@ -188,7 +188,7 @@ set(COMMON_VERSION "current")
 ### Logging Policy
 
 - All interface and wrapper layers **MUST** use the platform's `syslog-ng` via the standard POSIX `syslog()` API
-- Use macros from a shared logging header for consistent log levels (see `../docs/vsi/filesystem/current/logging_system.md`):
+- Use macros from a shared logging header for consistent log levels (see `docs/vsi/filesystem/current/logging_system.md`):
   - `LOG_CRIT`, `LOG_ERR`, `LOG_WARNING`, `LOG_NOTICE` (always enabled)
   - `LOG_INFO`, `LOG_DEBUG` (controlled by `ENABLE_LOG_INFO`, `ENABLE_LOG_DEBUG` build flags)
 - Log verbosity is controlled by build flags. Production builds log NOTICE and above; debug builds enable INFO/DEBUG
@@ -200,16 +200,17 @@ set(COMMON_VERSION "current")
 - Log at appropriate levels (CRIT for critical failures, ERR for errors, WARNING for warnings, etc.)
 - Include module/component context in log messages
 - Avoid excessive DEBUG logging in hot paths
-- See `../docs/vsi/filesystem/current/logging_system.md` for detailed patterns
+- See `docs/vsi/filesystem/current/logging_system.md` for detailed patterns
 
 ## Documentation Structure
 
 - **Interface Docs**: `docs/halif/{module}/current/` contains detailed HAL specifications
 - **Generated Docs**: MkDocs site at `https://rdkcentral.github.io/rdk-halif-aidl/`
 - **Requirements**: Each HAL doc includes numbered requirements (e.g., `HAL.{Module}.1`)
-- **Architecture**: `../docs/introduction/aidl_and_binder.md` – IPC and AIDL architecture
-- **Build Workflow**: `../docs/introduction/interface_generation.md` – Build/generation workflow
-- **Naming Standards**: `../docs/halif/key_concepts/hal/hal_naming_conventions.md`
+- **Architecture**: `docs/introduction/aidl_and_binder.md` – IPC and AIDL architecture
+- **Build Workflow**: `docs/introduction/interface_generation.md` – Build/generation workflow
+- **Software Stack**: `docs/introduction/the_software_stack.md` – Software stack overview
+- **Naming Standards**: `docs/halif/key_concepts/hal/hal_naming_conventions.md`
 
 ## Doxygen Documentation Standards
 
@@ -263,7 +264,7 @@ State getState();
 1. **Create New HAL**: Copy existing module structure, update package names
 2. **Design AIDL**: Start with main interface, add supporting types
 3. **Add @VintfStability**: Ensure all interfaces have `@VintfStability` annotation
-4. **Update HFP**: Define static capabilities in `hfp-{module}.yaml`
+4. **Update HFP**: Define static capabilities in `hfp-{module}.yaml` (this is the max capabilities of the module from the API definition, and will be tailored per platform later)
 5. **Build**: Use root-level CMake with `AIDL_TARGET` set to your module
 6. **Document**: Follow established documentation patterns in `docs/halif/`
 7. **Add Logging**: Use syslog-ng macros for all logging
@@ -283,6 +284,7 @@ State getState();
 - Use `getCapabilities()` to validate runtime vs. static capability alignment
 - Each interface should handle invalid inputs gracefully via AIDL exceptions
 - VTS Testing for all modules L1-L4 is defined through documentation and external to this workspace
+- HFP Validation Schema: validate against HFP - HFP Schema will be added beside the best case HFP files
 
 ## Project Conventions
 
@@ -292,6 +294,7 @@ State getState();
 - **Naming**:
   - Use lowercase with underscores for docs/files (`audio_decoder`)
   - PascalCase for AIDL interfaces (`IAudioDecoder`)
+  - Lowercase with dots for service names (`"boot"`, `"sensor.motion"`)
   - Systemd services follow `hal-{module}.service` pattern
 - **Documentation**: All build and interface docs are in `docs/` and linked from the main `README.md`
 - **UK English**: Use British English spelling in all documentation and comments
@@ -299,7 +302,7 @@ State getState();
 
 ## Common Pitfalls
 
-- **Service Names**: Must match exactly between `serviceName` constant and registration
+- **Service Names**: Must match exactly between `serviceName` constant and registration (use lowercase with dots)
 - **Package Paths**: AIDL package must align with file directory structure
 - **Dependencies**: Module CMakeLists.txt must declare version variables for imported modules
 - **Versioning**: Always use "current" for active development until interface stabilizes
@@ -308,15 +311,62 @@ State getState();
 
 ## Key References
 
-- `../docs/introduction/aidl_and_binder.md` – IPC and AIDL architecture
-- `../docs/introduction/interface_generation.md` – Build/generation workflow
-- `../docs/introduction/the_software_stack.md` – Software stack overview
-- `../docs/vsi/filesystem/current/logging_system.md` – Logging policy
-- `../docs/halif/key_concepts/hal/hal_naming_conventions.md` – Naming standards
+- `docs/introduction/aidl_and_binder.md` – IPC and AIDL architecture
+- `docs/introduction/interface_generation.md` – Build/generation workflow
+- `docs/introduction/the_software_stack.md` – Software stack overview
+- `docs/vsi/filesystem/current/logging_system.md` – Logging policy
+- `docs/halif/key_concepts/hal/hal_naming_conventions.md` – Naming standards
 - `CMakeModules/CompileAidl.cmake` – AIDL build integration
 - Example modules: `audiodecoder/current/`, `deviceinfo/current/`, `boot/current/`
 
 ## Contribution Guidelines
+
+## Doxygen Documentation Standards
+
+### Comment Tags
+
+- **@brief**: One-line summary of the function/type
+- **@param**: Document each parameter (use `@param[in]` or `@param[out]` for clarity)
+- **@returns**: Overview description of what is returned (general statement). **ALWAYS use @returns, NEVER @return** (a function "returns" not "return")
+- **@retval**: Document each specific return value (e.g., `@retval true Success`, `@retval false Failure`)
+- **@exception**: Document exceptions that may be thrown
+
+**Note:** Never use `@details` - any text after `@brief` is automatically considered detailed description.
+
+### Return Value Documentation Pattern
+
+For boolean returns or enums with multiple possible values:
+```aidl
+/**
+ * @brief Enable feature X.
+ * @param enabled True to enable, false to disable.
+ * @returns Success flag indicating configuration status.
+ * @retval true Feature enabled successfully.
+ * @retval false Feature not supported or invalid state.
+ * @exception binder::Status EX_ILLEGAL_STATE if not in valid state.
+ */
+boolean enableFeature(in boolean enabled);
+```
+
+For simple returns:
+```aidl
+/**
+ * @brief Get the current state.
+ * @returns Current state (e.g. STARTED, STOPPED, ERROR).
+ */
+State getState();
+```
+
+### General Guidelines
+
+- **ALWAYS use @returns** (never @return): Functions "returns" values, not "return" values
+- Use **@returns** for overview + **@retval** for each specific value when multiple outcomes exist
+- Use **@returns** alone for simple single-value returns (no @retval needed)
+- Always document exceptions with **@exception**
+- Keep descriptions concise but complete
+- Avoid redundant type names in @returns descriptions (e.g., avoid "@returns State Current state" - just "@returns Current state")
+
+## Contribution Guidelines  
 
 - **English Dictionary**: Use UK English spelling in comments and documentation
 - **Code Style**: Follow existing code patterns for consistency
