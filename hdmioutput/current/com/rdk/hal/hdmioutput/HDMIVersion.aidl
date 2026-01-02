@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,35 +17,39 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmioutput;
- 
+
 /** 
  *  @brief     HDMI standard version.
+ *
+ *  Represents the major HDMI specification versions supported by a given output.
+ *  This helps in feature negotiation, such as available bandwidth and protocol support.
+ *
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Amit Patel
+ *  @author    Gerald Weatherup
  */
- 
 @VintfStability
 @Backing(type = "int")
 enum HDMIVersion
 {
-	/**
-	 * HDMI version 1.3 or 1.3a
-	 */
-	HDMI_1_3 = 0,
+    /**
+     * HDMI version 1.3 or 1.3a.
+     */
+    HDMI_1_3 = 0,
 
-	/**
-	 * HDMI version 1.4, 1.4a or 1.4b
-	 */
-	HDMI_1_4 = 1,
+    /**
+     * HDMI version 1.4, 1.4a, or 1.4b.
+     */
+    HDMI_1_4 = 1,
 
-	/**
-	 * HDMI version 2.0, 2.0a or 2.0b
-	 */
-	HDMI_2_0 = 2,
+    /**
+     * HDMI version 2.0, 2.0a, or 2.0b.
+     */
+    HDMI_2_0 = 2,
 
-	/**
-	 * HDMI version 2.1
-	 */
-	HDMI_2_1 = 3
+    /**
+     * HDMI version 2.1.
+     */
+    HDMI_2_1 = 3
 }

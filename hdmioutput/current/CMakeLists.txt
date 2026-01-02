@@ -29,11 +29,13 @@ if (NOT DEFINED AIDL_BIN)
 	message(FATAL_ERROR "Do not invoke module level CMake directly!\nInvoke CMake at root level instead!")
 endif()
 
-# version of other modules that `hdmioutput` depends on
+# Dependent module version
 set(COMMON_VERSION "current")
 
+# AIDL source directory
 set(SRC_DIR com/rdk/hal/hdmioutput)
 
+# AIDL source files
 set(SRC
 	${SRC_DIR}/AdditionalColorimetryExtension.aidl
 	${SRC_DIR}/AFD.aidl
@@ -41,6 +43,7 @@ set(SRC
 	${SRC_DIR}/Colorimetry.aidl
 	${SRC_DIR}/ContentType.aidl
 	${SRC_DIR}/ExtendedColorimetry.aidl
+	${SRC_DIR}/FreeSync.aidl
 	${SRC_DIR}/HDCPProtocolVersion.aidl
 	${SRC_DIR}/HDCPStatus.aidl
 	${SRC_DIR}/HDMIVersion.aidl
@@ -54,16 +57,20 @@ set(SRC
 	${SRC_DIR}/PlatformCapabilities.aidl
 	${SRC_DIR}/Property.aidl
 	${SRC_DIR}/PropertyKVPair.aidl
+	${SRC_DIR}/ScanInformation.aidl
 	${SRC_DIR}/SPDInfoFrame.aidl
 	${SRC_DIR}/SPDSource.aidl
+	${SRC_DIR}/State.aidl
 	${SRC_DIR}/VIC.aidl
 )
 
+# AIDL include directories
 set(INCLUDE_DIRECTORY
 	.
 	${COMMON_MODULE_PATH}/${COMMON_VERSION}
 )
 
+# Collect optional AIDL generator arguments
 set(COMPILE_AIDL_ARGV "")
 
 if (DEFINED AIDL_GEN_DIR)
@@ -74,6 +81,7 @@ if (DEFINED AIDL_BIN)
 	list(APPEND COMPILE_AIDL_ARGV AIDL_BIN ${AIDL_BIN})
 endif()
 
+# Compile the AIDL interface set
 compile_aidl(${SRC}
 	INCLUDE_DIRECTORY ${INCLUDE_DIRECTORY}
 	${COMPILE_AIDL_ARGV}

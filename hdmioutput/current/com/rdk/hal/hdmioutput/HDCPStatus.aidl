@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,40 +17,44 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmioutput;
- 
+
 /** 
  *  @brief     HDCP status type enum.
+ *
+ *  Describes the current state of HDCP negotiation and authentication on the HDMI output.
+ *  Useful for tracking secure content link state and reporting diagnostic status.
+ *
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Amit Patel
+ *  @author    Gerald Weatherup
  */
- 
 @VintfStability
 @Backing(type = "int")
 enum HDCPStatus
 {
-	/**
-	 * Not connected, not powered.
-	 */
-	UNKNOWN = -1,
+    /**
+     * Connection status is unknown or the sink is not powered.
+     */
+    UNKNOWN = -1,
 
-	/**
-	 * The connection is unauthenticated.
-	 */
-	UNAUTHENTICATED = 0,
+    /**
+     * HDMI sink is connected but HDCP authentication has not occurred.
+     */
+    UNAUTHENTICATED = 0,
 
-	/**
-	 * HDCP authentication is in progress.
-	 */
-	AUTHENTICATION_IN_PROGRESS = 1,
+    /**
+     * HDCP authentication is currently in progress.
+     */
+    AUTHENTICATION_IN_PROGRESS = 1,
 
-	/**
-	 * HDCP authentication failed.
-	 */
-	AUTHENTICATION_FAILURE = 2,
+    /**
+     * HDCP authentication attempt failed.
+     */
+    AUTHENTICATION_FAILURE = 2,
 
-	/**
-	 * HDCP is successfully authenticated.
-	 */
-	AUTHENTICATED = 3,
+    /**
+     * HDCP authentication completed successfully.
+     */
+    AUTHENTICATED = 3
 }

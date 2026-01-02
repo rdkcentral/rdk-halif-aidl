@@ -17,36 +17,45 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmioutput;
- 
+
 /** 
  *  @brief     HDMI Colorimetry enum.
+ *
+ *  Represents the base colorimetry values encoded in the AVI InfoFrame field C.
+ *  These values define the default colour matrix used by the HDMI sink device,
+ *  unless overridden by extended colorimetry settings.
+ *
+ *  Reference: HDMI Specification – AVI InfoFrame (Colorimetry Field).
+ *
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Amit Patel
+ *  @author    Gerald Weatherup
  */
- 
 @VintfStability
 @Backing(type = "int")
-enum Colorimetry
+enum Colorimetry 
 {
-	/**
-	 * AVI InfoFrame C=0
-	 */
-	NO_DATA = 0,
+    /**
+     * No colorimetry data – AVI InfoFrame C=0
+     */
+    NO_DATA = 0,
 
-	/**
-	 * AVI InfoFrame C=1
-	 */
-	SMPTE_170M = 1,
+    /**
+     * SMPTE 170M / ITU-R BT.601 – AVI InfoFrame C=1
+     */
+    SMPTE_170M = 1,
 
-	/**
-	 * AVI InfoFrame C=2
-	 */
-	ITU_R_BT709 = 2,
+    /**
+     * ITU-R BT.709 – AVI InfoFrame C=2
+     */
+    ITU_R_BT709 = 2,
 
-	/**
-	 * AVI InfoFrame C=3
-	 * @see enum ExtendedColorimetry
-	 */
-	EXTENDED_COLORIMETRY = 3,
+    /**
+     * Extended colorimetry – AVI InfoFrame C=3.
+     * Requires use of the EC (Extended Colorimetry) field.
+     *
+     * @see ExtendedColorimetry
+     */
+    EXTENDED_COLORIMETRY = 3
 }
