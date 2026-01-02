@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmioutput;
+
 import com.rdk.hal.hdmioutput.Property;
 import com.rdk.hal.hdmioutput.PropertyKVPair;
 import com.rdk.hal.hdmioutput.SPDInfoFrame;
@@ -24,14 +25,18 @@ import com.rdk.hal.hdmioutput.HDCPStatus;
 import com.rdk.hal.hdmioutput.HDCPProtocolVersion;
 import com.rdk.hal.PropertyValue;
 
-/** 
+/**
  *  @brief     HDMI Output Controller HAL interface.
+ *
+ *  Provides lifecycle management and low-level control of HDMI signal generation.
+ *  This interface is used after a successful `open()` to configure output parameters,
+ *  initiate/stop signalling, and query HDCP state and InfoFrames.
+ *
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *  @author    Gerald Weatherup
  */
-
-
 @VintfStability
 interface IHDMIOutputController
 {
@@ -70,62 +75,70 @@ interface IHDMIOutputController
      * HAL.HDMIOUTPUT.6. Key Revocation List for HDCP - vendor layer responsibility, updated only by firmware update. 
      *                   Handling SRMs delivered with content?
      */
-
     /**
-	 * Starts the HDMI output.
-     * 
-     * The HDMI output must be in a `READY` state before it can be started.
-     * If successful the HDMI output transitions to a `STARTING` state and then a `STARTED` state.
-     * 
-     * In a `STARTED` state the HDMI output port is enabled to drive an output signal capable of carrying audio, video and data frames.
+     * Starts the HDMI output signal.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
-     * 
-     * @pre The resource must be in State::READY.
-     * 
+     * This operation initiates signal transmission to the connected HDMI sink.
+     * The output transitions from `READY` → `STARTING` → `STARTED`. In this state,
+     * the port actively drives the HDMI signal, including video, audio, and InfoFrames.
+     *
+     * Callbacks such as `onHotPlugDetectStateChanged()` may fire during transition
+     * to reflect sink connection status.
+     *
+     * If `start()` is called when not in `READY`, an `EX_ILLEGAL_STATE` exception is thrown.
+     *
+     * @exception binder::Status EX_ILLEGAL_STATE  HDMI output is not in READY state.
+     *
+     * @pre Must be in State::READY
+     *
      * @see stop(), IHDMIOutput.open()
      */
     void start();
- 
+
     /**
-	 * Stops the HDMI output.
-     * 
-     * The HDMI output enters the `STOPPING` state where the output signal is disabled.
-     * Once the HDMI output signal is disabled, the HDMI output enters the `READY` state.
+     * Stops the HDMI output signal.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
-     * 
-     * @pre The resource must be in State::STARTED.
-     * 
+     * The output transitions from `STARTED` → `STOPPING` → `READY`. Video/audio output
+     * is disabled, and downstream sinks receive an inactive signal. This allows the client
+     * to reconfigure properties before restarting output.
+     *
+     * If `stop()` is called outside of the `STARTED` state, an `EX_ILLEGAL_STATE` is raised.
+     *
+     * @exception binder::Status EX_ILLEGAL_STATE  HDMI output is not in STARTED state.
+     *
+     * @pre Must be in State::STARTED
+     *
      * @see start(), IHDMIOutput.close()
      */
     void stop();
 
     /**
-     * Gets the current HPD line state.
+     * Queries the current Hot Plug Detect (HPD) line state.
      *
-     * The current HDMI output hot plug detect state detects the presence of a HDMI sink
-     * device.
+     * This reflects whether a valid sink device is physically connected to the HDMI output.
+     * HPD deassertion typically indicates cable disconnect or sink power loss.
      *
-     * @return boolean
-     * @retval true         The HPD line is asserted.
-     * @retval boolean      The HPD line is deasserted.
-     * 
-     * @see start()
+     * @returns boolean
+     * @retval true     HPD is asserted — sink is connected and powered.
+     * @retval false    HPD is deasserted — no active sink detected.
+     *
+     * @see IHDMIOutputControllerListener.onHotPlugDetectStateChanged()
      */
     boolean getHotPlugDetectState();
 
     /**
-     * Sets a property.
-     * 
-     * Properties may be set in the `READY` state to take effect once started or in the `STARTED` state
-     * where they are dynamically applied to the current HDMI output signal.
+     * Sets a property on the HDMI output.
      *
-     * @param[in] property              The key of a property from the Property enum.
-     * @param[in] propertyValue         Holds the value to set.
+     * Properties can be applied while in `READY` (queued for next `start()`) or
+     * dynamically in `STARTED` (applied live, depending on implementation).
+     *
+     * Setting a property outside of valid states may result in undefined behavior.
+     *
+     * @param[in] property        Property key (@see Property).
+     * @param[in] propertyValue   New value to apply.
      *
      * @returns boolean
-     * @retval true     The property was successfully set.
+     * @retval true     Property accepted and applied or queued.
      * @retval false    Invalid property key or value.
      *
      * @see setPropertyMulti(), getProperty()
@@ -133,36 +146,38 @@ interface IHDMIOutputController
     boolean setProperty(in Property property, in PropertyValue propertyValue);
 
     /**
-     * Sets multiple properties.
-     * 
-     * Properties may be set in the `READY` state to take effect once started or in the `STARTED` state
-     * where they are dynamically applied to the current HDMI output signal.
+     * Sets multiple properties on the HDMI output.
      *
-     * @param[in] propertyKVList        Array of key value pairs of properties.
+     * Same semantics as `setProperty()`, but applies a batch of key-value pairs.
+     * Invalid keys or values result in the full operation failing (fail-fast).
+     *
+     * @param[in] propertyKVList  Array of property key-value pairs.
      *
      * @returns boolean
-     * @retval true     The property was successfully set.
-     * @retval false    Invalid property key or value.
+     * @retval true     All properties were valid and applied.
+     * @retval false    At least one invalid property in the array.
      *
      * @see setProperty(), getProperty()
      */
     boolean setPropertyMulti(in PropertyKVPair[] propertyKVList);
 
     /**
-     * Gets the current authenticated HDCP version which was negotiated with the HDMI sink device (HDCP receiver).
+     * Retrieves the currently authenticated HDCP protocol version.
      *
-     * If HDCP has not yet been authenticated then `HDCPProtocolVersion.UNDEFINED` is returned.
+     * This represents the negotiated HDCP version after successful authentication.
+     * If HDCP is not active, `HDCPProtocolVersion.UNDEFINED` is returned.
      *
      * @returns HDCPProtocolVersion
      *
-     * @see getHDCPStatus(), getSinkHDCPVersion()
+     * @see getHDCPStatus(), getHDCPReceiverVersion()
      */
     HDCPProtocolVersion getHDCPCurrentVersion();
 
     /**
-     * Gets the HDCP version reported by the HDMI sink device (HDCP receiver).
+     * Retrieves the HDCP protocol version reported by the sink.
      *
-     * If the HDCP receiver version is not yet known then `HDCPProtocolVersion.UNDEFINED` is returned.
+     * This may differ from the currently authenticated version. If the sink’s
+     * capabilities are not yet known, `HDCPProtocolVersion.UNDEFINED` is returned.
      *
      * @returns HDCPProtocolVersion
      *
@@ -171,38 +186,42 @@ interface IHDMIOutputController
     HDCPProtocolVersion getHDCPReceiverVersion();
 
     /**
-     * Gets the HDCP status.
+     * Gets the current HDCP status of the HDMI link.
      *
-     * If HDCP is unable to be used, due to a disconnected or unpowered device then `HDCPStatus.UNKNOWN` is returned.
+     * Indicates whether authentication has occurred and whether it succeeded.
+     * If no sink is present or powered, the status will be `HDCPStatus.UNKNOWN`.
      *
      * @returns HDCPStatus
      *
      * @see getHDCPCurrentVersion(), getHDCPReceiverVersion()
      */
     HDCPStatus getHDCPStatus();
-    
+
     /**
-     * Sets the source product description (SPD) InfoFrame data.
+     * Sets the Source Product Description (SPD) InfoFrame payload.
      *
-     * If set to null, then no SPD InfoFrame is transmitted.
-     * The default is no SPD InfoFrame is defined or transmitted.
+     * The InfoFrame is inserted into HDMI signalling when the output is active.
+     * Passing null disables the SPD InfoFrame.
      *
-     * @param[in] spdInfoFrame  SPD InfoFrame description.
+     * The default behavior is to not transmit SPD unless explicitly configured.
      *
-     * @pre The HDMI output must be in a `READY` or `STARTED` state.
-     * 
+     * @param[in] spdInfoFrame    SPD metadata or null to disable.
+     *
+     * @pre Output must be in State::READY or State::STARTED.
+     *
      * @see getSPDInfoFrame()
      */
     void setSPDInfoFrame(in @nullable SPDInfoFrame spdInfoFrame);
 
     /**
-     * Gets the source product description (SPD) InfoFrame data.
+     * Gets the current Source Product Description (SPD) InfoFrame payload.
      *
-     * If null is returned, then no SPD InfoFrame is defined.
+     * If SPD has not been set, returns null.
      *
-     * @return SPDInfoFrame
+     * @returns SPDInfoFrame
+     * @retval null    No SPD InfoFrame is currently configured.
      *
-     * @pre The HDMI output must be in a `READY` or `STARTED` state.
+     * @pre Output must be in State::READY or State::STARTED.
      *
      * @see setSPDInfoFrame()
      */

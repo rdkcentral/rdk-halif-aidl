@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmioutput;
+
 import com.rdk.hal.hdmioutput.Capabilities;
 import com.rdk.hal.hdmioutput.IHDMIOutputController;
 import com.rdk.hal.hdmioutput.Property;
@@ -26,17 +27,20 @@ import com.rdk.hal.hdmioutput.IHDMIOutputEventListener;
 import com.rdk.hal.PropertyValue;
 import com.rdk.hal.State;
 
-/** 
+/**
  *  @brief     HDMI Output HAL interface.
+ *
+ *  This interface manages HDMI output resources, including capability queries,
+ *  state transitions, and client lifecycle for output control.
+ *
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *  @author    Gerald Weatherup
  */
-
 @VintfStability
-interface IHDMIOutput 
+interface IHDMIOutput
 {
-
     /** HDMI Output resource ID type */
     @VintfStability
     parcelable Id {
@@ -49,18 +53,19 @@ interface IHDMIOutput
 
     /**
      * Gets the capabilities for this HDMI output.
-     * 
-     * This function can be called at any time and is not dependant on any HDMI output state.
-     * The returned value is not allowed to change between calls.
+     *
+     * This function can be called at any time and is not dependent on HDMI output state.
+     * The returned value is constant and must not change between calls.
      *
      * @returns Capabilities parcelable.
      */
     Capabilities getCapabilities();
 
     /**
-     * Gets a property.
+     * Gets a property value.
      *
-     * @param[in] property              The key of a property from the Property enum.
+     * @param[in] property     The key of a property from the Property enum.
+     * @returns PropertyValue or null if the key is unknown.
      *
      * @returns PropertyValue or null if the property key is unknown.
      * 
@@ -69,37 +74,30 @@ interface IHDMIOutput
     @nullable PropertyValue getProperty(in Property property);
 
     /**
-	 * Gets the current HDMI output state.
+     * Gets the current HDMI output state.
      *
      * @returns State enum value.
-	 *
-     * @see IHDMIOutputEventListener.onStateChanged().
-     */  
+     *
+     * @see IHDMIOutputEventListener.onStateChanged()
+     */
     State getState();
- 
+
     /**
-	 * Opens the HDMI output port instance.
-     * 
-     * If successful the HDMI output transitions to an `OPENING` state and then a `READY` state
-     * which is notified to any registered `IHDMIOutputEventListener` interfaces.
-     * 
-     * Controller related callbacks are made through the `IHDMIOutputControllerListener`
-     * passed into the call.
-     * 
-     * The `IHDMIOutputControllerListener.onHotPlugDetectStateChanged()` callback always fires
-     * during the `OPENING` state to reflect the current hot plug state.
-     * 
-     * If the client that opened the `IHDMIOutputController` crashes,
-     * then the `IHDMIOutputController.stop()` and `close()` functions are implicitly called to perform clean up.
+     * Opens the HDMI output port instance.
      *
-     * @param[in] hdmiOutputControllerListener    Listener object for controller callbacks.
+     * The output transitions to `OPENING` and then to `READY` on success.
+     * Callbacks are delivered to the supplied controller listener.
      *
-     * @returns IHDMIOutputController or null if the parameter is invalid.
-     * 
-     * @exception binder::Status EX_ILLEGAL_STATE 
-     * 
-     * @pre The resource must be in State::CLOSED.
-     * 
+     * The `onHotPlugDetectStateChanged()` callback always fires during the `OPENING` state.
+     *
+     * If the client crashes, `stop()` and `close()` are called automatically.
+     *
+     * @param[in] hdmiOutputControllerListener  Listener for controller callbacks.
+     * @returns IHDMIOutputController or null if input is invalid.
+     *
+     * @exception binder::Status EX_ILLEGAL_STATE
+     * @pre Must be in State::CLOSED.
+     *
      * @see IHDMIOutputController, close(), registerEventListener()
      */
     @nullable IHDMIOutputController open(in IHDMIOutputControllerListener hdmiOutputControllerListener);
@@ -107,49 +105,43 @@ interface IHDMIOutput
     /**
      * Closes the HDMI output.
      *
-     * The HDMI output must be in a `READY` state before it can be closed.
-     * If successful the HDMI output transitions to a `CLOSING` state and then a `CLOSED` state.
-     * Then `onStateChanged(CLOSING, CLOSED)` will be notified on any registered event listener interfaces.
+     * Transitions from `READY` to `CLOSING` to `CLOSED`, notifying listeners via
+     * `onStateChanged(CLOSING, CLOSED)`.
      *
-     * The `hdmiOutputController` parameter must be the same instance returned from the `open()` function
-     * otherwise `false` is returned.
+     * The supplied controller instance must match the one returned by `open()`.
      *
-     * @param[in] hdmiOutputController     Instance of the IHDMIOutputController.
-     *
-     * @return boolean
+     * @param[in] hdmiOutputController  Instance from open().
+     * @returns boolean
      * @retval true     Successfully closed.
-     * @retval false    Invalid state or unrecognised parameter.
+     * @retval false    Invalid state or mismatched instance.
      *
-     * @pre The resource must be in State::READY.
+     * @pre Must be in State::READY.
      *
      * @see open()
      */
     boolean close(in IHDMIOutputController hdmiOutputController);
 
     /**
-	 * Registers a HDMI output event listener.
-     * 
-     * An `IHDMIOutputEventListener` can only be registered once and will fail on subsequent
-     * registration attempts.
+     * Registers a HDMI output event listener.
      *
-     * @param[in] hdmiOutputEventListener	    Listener object for event callbacks.
+     * Only one listener can be registered at a time.
      *
-     * @return boolean
-     * @retval true     The event listener was registered.
-     * @retval false    The event listener is already registered.
+     * @param[in] hdmiOutputEventListener  Listener object.
+     * @returns boolean
+     * @retval true     Listener registered.
+     * @retval false    Already registered.
      *
      * @see unregisterEventListener()
      */
     boolean registerEventListener(in IHDMIOutputEventListener hdmiOutputEventListener);
 
     /**
-	 * Unregisters a HDMI output event listener.
-     * 
-     * @param[in] hdmiOutputEventListener	    Listener object for event callbacks.
+     * Unregisters a HDMI output event listener.
      *
-     * @return boolean
-     * @retval true     The event listener was unregistered.
-     * @retval false    The event listener was not found registered.
+     * @param[in] hdmiOutputEventListener  Listener object.
+     * @returns boolean
+     * @retval true     Listener unregistered.
+     * @retval false    Listener not found.
      *
      * @see registerEventListener()
      */
