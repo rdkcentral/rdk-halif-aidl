@@ -44,7 +44,7 @@ interface IHDMIOutputManager
      * Returned by the implementation via `getServiceName()` and used for
      * registration and discovery in the AIDL Binder service manager.
      */
-    const @utf8InCpp String serviceName = "HDMIOutputManager";
+    const @utf8InCpp String serviceName = "hdmioutput";
 
     /**
      * Gets the static platform capabilities for HDMI outputs.

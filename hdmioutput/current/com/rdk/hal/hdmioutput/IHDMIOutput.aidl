@@ -65,10 +65,8 @@ interface IHDMIOutput
      * Gets a property value.
      *
      * @param[in] property     The key of a property from the Property enum.
-     * @returns PropertyValue or null if the key is unknown.
-     *
      * @returns PropertyValue or null if the property key is unknown.
-     * 
+     *
      * @see setProperty()
      */
     @nullable PropertyValue getProperty(in Property property);

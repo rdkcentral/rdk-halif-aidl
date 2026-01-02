@@ -43,6 +43,7 @@ set(SRC
 	${SRC_DIR}/Colorimetry.aidl
 	${SRC_DIR}/ContentType.aidl
 	${SRC_DIR}/ExtendedColorimetry.aidl
+	${SRC_DIR}/FreeSync.aidl
 	${SRC_DIR}/HDCPProtocolVersion.aidl
 	${SRC_DIR}/HDCPStatus.aidl
 	${SRC_DIR}/HDMIVersion.aidl
@@ -56,6 +57,7 @@ set(SRC
 	${SRC_DIR}/PlatformCapabilities.aidl
 	${SRC_DIR}/Property.aidl
 	${SRC_DIR}/PropertyKVPair.aidl
+	${SRC_DIR}/ScanInformation.aidl
 	${SRC_DIR}/SPDInfoFrame.aidl
 	${SRC_DIR}/SPDSource.aidl
 	${SRC_DIR}/VIC.aidl
