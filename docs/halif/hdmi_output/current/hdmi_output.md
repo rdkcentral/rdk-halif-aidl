@@ -8,25 +8,16 @@ This HAL does not manage audio routing (delegated to `AudioSink`) or video plane
 
 ---
 
-## References
-
-!!! info References
+!!! info "References"
     |||
-    |-|-|
-    |                                      |                                                               |
     | ------------------------------------ | ------------------------------------------------------------- |
     | **Interface Definition**             | [hdmioutput](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/hdmioutput/current/com/rdk/hal/hdmioutput) |
-    | **API Documentation**                | TBD                                                           |
     | **HAL Interface Type**               | [AIDL and Binder](../../../introduction/aidl_and_binder.md)   |
     | **Initialization Unit**              | [systemd service](../../../vsi/systemd/current/systemd.md)    |
-    | **VTS Tests**                        | TBD                                                           |
-    | **vDevice Reference Implementation** | TBD                                                           |
 
 ---
 
-## Related Pages
-
-!!! tip Related Pages
+!!! tip "Related Pages"
     * [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
     * [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
     * [Display Pipeline Overview](../../display/architecture.md)
