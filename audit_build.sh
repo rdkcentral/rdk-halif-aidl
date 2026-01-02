@@ -40,6 +40,9 @@
 #    to estimate the impact on the target embedded filesystem.
 #
 # @usage   ./audit_build.sh
+#          BINDER_SDK_DIR=/custom/path ./audit_build.sh
+#
+# @env     BINDER_SDK_DIR - Override SDK location (default: ../../out/target)
 #
 # @output  Logs PASS/FAIL for dependencies and detailed size metrics.
 # ==============================================================================
@@ -48,11 +51,12 @@
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 
 # Assuming the script sits in 'build-tools/linux_binder_idl/'
-# and the output is in 'local/'
-TOOLCHAIN_DIR="$SCRIPT_DIR/local"
-LIB_DIR="$TOOLCHAIN_DIR/lib"
-BIN_DIR="$TOOLCHAIN_DIR/bin"
-INC_DIR="$TOOLCHAIN_DIR/include"
+# Navigate to repository root, then to SDK output directory
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+SDK_DIR="${BINDER_SDK_DIR:-$REPO_ROOT/out/target}"
+LIB_DIR="$SDK_DIR/lib/binder"
+BIN_DIR="$SDK_DIR/bin"
+INC_DIR="$SDK_DIR/include/binder_sdk"
 
 # ANSI Colors
 RED='\033[0;31m'
@@ -64,10 +68,19 @@ NC='\033[0m' # No Color
 echo -e "${CYAN}============================================================${NC}"
 echo -e "${CYAN}  BINDER TOOLCHAIN AUDIT${NC}"
 echo -e "${CYAN}============================================================${NC}"
-echo -e "  Target Dir: $TOOLCHAIN_DIR"
+echo -e "  SDK Dir: $SDK_DIR"
+echo -e "  Lib Dir: $LIB_DIR"
+echo -e "  Bin Dir: $BIN_DIR"
+echo -e "  Inc Dir: $INC_DIR"
+
+if [ ! -d "$SDK_DIR" ]; then
+    echo -e "${RED}❌ Error: SDK not found at $SDK_DIR${NC}"
+    echo -e "   Run ./install_binder.sh first to build the SDK"
+    exit 1
+fi
 
 if [ ! -d "$LIB_DIR" ]; then
-    echo -e "${RED}❌ Error: Build output not found at $LIB_DIR${NC}"
+    echo -e "${RED}❌ Error: Binder libraries not found at $LIB_DIR${NC}"
     exit 1
 fi
 

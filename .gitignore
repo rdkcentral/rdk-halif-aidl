@@ -8,3 +8,7 @@ android/
 */**/*.pyc
 local/
 out/
+
+# Generated AIDL code for examples - regenerate with example/generate_cpp.sh
+example/**/gen/
+example/stable/generated/
