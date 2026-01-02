@@ -24,8 +24,8 @@ import com.rdk.hal.hdmioutput.Property;
 import com.rdk.hal.hdmioutput.PropertyKVPair;
 import com.rdk.hal.hdmioutput.IHDMIOutputControllerListener;
 import com.rdk.hal.hdmioutput.IHDMIOutputEventListener;
+import com.rdk.hal.hdmioutput.State;
 import com.rdk.hal.PropertyValue;
-import com.rdk.hal.State;
 
 /**
  *  @brief     HDMI Output HAL interface.
@@ -88,7 +88,8 @@ interface IHDMIOutput
      *
      * The `onHotPlugDetectStateChanged()` callback always fires during the `OPENING` state.
      *
-     * If the client crashes, `stop()` and `close()` are called automatically.
+     * If the client process dies (detected via Binder death notification), the HAL
+     * implementation automatically calls `stop()` and `close()` to release resources.
      *
      * @param[in] hdmiOutputControllerListener  Listener for controller callbacks.
      * @returns IHDMIOutputController or null if input is invalid.

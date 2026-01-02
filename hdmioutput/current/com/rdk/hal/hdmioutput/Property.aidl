@@ -37,9 +37,9 @@ package com.rdk.hal.hdmioutput;
 enum Property
 {
     /**
-     * Unique ID for the decoder resource instance.
+     * Unique ID for the HDMI output resource instance.
      *
-     * Type: Integer  
+     * Type: Integer
      * Access: Read-only.
      */
     RESOURCE_ID = 0,
@@ -49,10 +49,11 @@ enum Property
      * Controls resolution, refresh rate, and format for the HDMI output.
      * Maps to AVI InfoFrame VIC[0..7].
      *
-     * AVMUTE must be asserted/deasserted per HDMI spec when changing this value.
+     * When changed in STARTED state, AVMUTE is asserted/deasserted per HDMI specification,
+     * causing a brief display interruption.
      *
-     * Type: Integer — enum VIC  
-     * Default: VIC.VIC0_UNAVAILABLE  
+     * Type: Integer — enum VIC
+     * Default: VIC.VIC0_UNAVAILABLE
      * Access: Read-write.
      */
     VIC = 1,
@@ -61,8 +62,8 @@ enum Property
      * Content type as defined by CTA-861.
      * Maps to AVI InfoFrame ITC and CN[0..1].
      *
-     * Type: Integer — enum ContentType  
-     * Default: ContentType.UNSPECIFIED on open()  
+     * Type: Integer — enum ContentType
+     * Default: ContentType.UNSPECIFIED on open()
      * Access: Read-write.
      */
     CONTENT_TYPE = 2,
@@ -71,8 +72,8 @@ enum Property
      * Active Format Description — used to signal aspect ratio of active area.
      * Maps to AVI InfoFrame A0 and R[0..3].
      *
-     * Type: Integer — enum AFD  
-     * Default: AFD.UNSPECIFIED on open()  
+     * Type: Integer — enum AFD
+     * Default: AFD.UNSPECIFIED on open()
      * Access: Read-write.
      */
     AFD = 3,
@@ -83,19 +84,19 @@ enum Property
      * Allows selection of a fixed output HDR mode, where incoming video will be tone-mapped
      * or converted to the configured dynamic range as needed.
      *
-     * Type: Integer — enum HDROutputMode  
-     * Default: HDROutputMode.AUTO on open()  
+     * Type: Integer — enum HDROutputMode
+     * Default: HDROutputMode.AUTO on open()
      * Access: Read-write.
      */
     HDR_OUTPUT_MODE = 4,
 
     /**
-     * Scan information metadata from the AVI InfoFrame.
-     * Indicates whether the source signal is interlaced or progressive.
+     * Scan information metadata for the AVI InfoFrame.
+     * Indicates whether the output content is composed for overscanned or underscanned display.
      * Maps to AVI InfoFrame S[0..1].
      *
-     * Type: Integer — enum ScanInformation  
-     * Default: ScanInformation.NO_DATA on open()  
+     * Type: Integer — enum ScanInformation
+     * Default: ScanInformation.NO_DATA on open()
      * Access: Read-write.
      */
     SCAN_INFORMATION = 5,
@@ -103,10 +104,10 @@ enum Property
     /**
      * Placeholder vendor-specific metric.
      *
-     * Tracks a debug or QoS-related count value, reset on `open()` and `flush()`.
+     * Tracks a debug or QoS-related count value, reset on `open()`.
      * A value of `-1` indicates the metric is not implemented by the vendor.
      *
-     * Type: Integer  
+     * Type: Integer
      * Access: Read-only.
      */
     METRIC_xxx = 1000

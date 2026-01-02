@@ -43,9 +43,10 @@ oneway interface IHDMIOutputControllerListener
      *
      * This event reflects a change in the HDMI Hot Plug Detect (HPD) line state.
      *
-     * - This callback is **always** fired during the `OPENING` transition from `CLOSED` to `READY`,
-     *   even if the HPD state has not changed, to communicate the current sink state.
-     * - It is also fired any time HPD transitions (assertion or deassertion) during `STARTED`.
+     * - **ALWAYS** fired during the `OPENING` transition (CLOSED → READY), even if the
+     *   HPD state has not changed, to communicate the initial sink connection state.
+     * - **Only on actual HPD changes** during `STARTING`, `STARTED`, and `STOPPING` states
+     *   (i.e., when cable is physically connected/disconnected).
      * - Debouncing is handled internally by the HAL; the state reported here is stable.
      *
      * @param[in] state  True if the HPD line is asserted (sink connected), false otherwise.

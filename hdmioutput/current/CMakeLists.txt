@@ -60,6 +60,7 @@ set(SRC
 	${SRC_DIR}/ScanInformation.aidl
 	${SRC_DIR}/SPDInfoFrame.aidl
 	${SRC_DIR}/SPDSource.aidl
+	${SRC_DIR}/State.aidl
 	${SRC_DIR}/VIC.aidl
 )
 

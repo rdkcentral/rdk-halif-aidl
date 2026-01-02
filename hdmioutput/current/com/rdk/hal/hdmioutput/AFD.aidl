@@ -45,17 +45,17 @@ enum AFD
     SAME_AS_PICTURE = 8,
 
     /**
-     * Centre 4:3 - AVI InfoFrame A0=1, R=1001b
+     * Center 4:3 - AVI InfoFrame A0=1, R=1001b
      */
     CENTER_4_3 = 9,
 
     /**
-     * Centre 16:9 - AVI InfoFrame A0=1, R=1010b
+     * Center 16:9 - AVI InfoFrame A0=1, R=1010b
      */
     CENTER_16_9 = 10,
 
     /**
-     * Centre 14:9 - AVI InfoFrame A0=1, R=1011b
+     * Center 14:9 - AVI InfoFrame A0=1, R=1011b
      */
     CENTER_14_9 = 11
 }

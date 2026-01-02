@@ -47,8 +47,8 @@ interface IHDMIOutputController
      * The output transitions from `READY` → `STARTING` → `STARTED`. In this state,
      * the port actively drives the HDMI signal, including video, audio, and InfoFrames.
      *
-     * Callbacks such as `onHotPlugDetectStateChanged()` may fire during transition
-     * to reflect sink connection status.
+     * The `onHotPlugDetectStateChanged()` callback fires during this transition only
+     * if the HPD line state changes (e.g., cable disconnect/reconnect during start).
      *
      * If `start()` is called when not in `READY`, an `EX_ILLEGAL_STATE` exception is thrown.
      *
@@ -94,10 +94,12 @@ interface IHDMIOutputController
     /**
      * Sets a property on the HDMI output.
      *
-     * Properties can be applied while in `READY` (queued for next `start()`) or
-     * dynamically in `STARTED` (applied live, depending on implementation).
+     * Properties can be set in `READY` state (applied when `start()` is called) or
+     * dynamically in `STARTED` state (applied immediately to the active signal).
      *
-     * Setting a property outside of valid states may result in undefined behavior.
+     * When applied in `STARTED` state, most properties update InfoFrames without disruption.
+     * Properties requiring video mode changes (e.g., VIC) will assert/deassert AVMUTE
+     * per HDMI specification, causing a brief display interruption.
      *
      * @param[in] property        Property key (@see Property).
      * @param[in] propertyValue   New value to apply.
@@ -105,6 +107,8 @@ interface IHDMIOutputController
      * @returns boolean
      * @retval true     Property accepted and applied or queued.
      * @retval false    Invalid property key or value.
+     *
+     * @pre Output must be in State::READY or State::STARTED.
      *
      * @see setPropertyMulti(), getProperty()
      */
@@ -129,36 +133,47 @@ interface IHDMIOutputController
     /**
      * Retrieves the currently authenticated HDCP protocol version.
      *
-     * This represents the negotiated HDCP version after successful authentication.
-     * If HDCP is not active, `HDCPProtocolVersion.UNDEFINED` is returned.
+     * This returns the actively negotiated and running HDCP version on the HDMI link.
+     * This may differ from the sink's advertised capabilities (from EDID) due to:
+     * - HDCP repeaters in the signal chain forcing version downgrade
+     * - Authentication failures requiring fallback to lower version
+     * - Content that does not require HDCP protection
      *
-     * @returns HDCPProtocolVersion
+     * @returns HDCPProtocolVersion enum value.
+     * @retval HDCPProtocolVersion.UNDEFINED  No active HDCP session (unprotected content or authentication inactive).
      *
-     * @see getHDCPStatus(), getHDCPReceiverVersion()
+     * @see getHDCPStatus(), getHDCPReceiverVersion(), onEDID()
      */
     HDCPProtocolVersion getHDCPCurrentVersion();
 
     /**
      * Retrieves the HDCP protocol version reported by the sink.
      *
-     * This may differ from the currently authenticated version. If the sink’s
-     * capabilities are not yet known, `HDCPProtocolVersion.UNDEFINED` is returned.
+     * This returns the maximum HDCP version advertised by the connected sink device
+     * as read from the sink's EDID or HDCP capability registers. This represents what
+     * the sink is capable of, not what is currently active on the link.
      *
-     * @returns HDCPProtocolVersion
+     * This may differ from `getHDCPCurrentVersion()` if HDCP repeaters, authentication
+     * failures, or content requirements result in a lower version being negotiated.
      *
-     * @see getHDCPStatus(), getHDCPCurrentVersion()
+     * @returns HDCPProtocolVersion enum value.
+     * @retval HDCPProtocolVersion.UNDEFINED  Sink capabilities not yet known (HPD deasserted or EDID not read).
+     *
+     * @see getHDCPStatus(), getHDCPCurrentVersion(), onEDID()
      */
     HDCPProtocolVersion getHDCPReceiverVersion();
 
     /**
      * Gets the current HDCP status of the HDMI link.
      *
-     * Indicates whether authentication has occurred and whether it succeeded.
-     * If no sink is present or powered, the status will be `HDCPStatus.UNKNOWN`.
+     * Indicates whether HDCP authentication has occurred and whether it succeeded.
+     * Use this in combination with `getHDCPCurrentVersion()` to understand the full
+     * HDCP authentication state.
      *
-     * @returns HDCPStatus
+     * @returns HDCPStatus enum value indicating authentication state.
+     * @retval HDCPStatus.UNKNOWN  No sink present or HDCP state not yet determined.
      *
-     * @see getHDCPCurrentVersion(), getHDCPReceiverVersion()
+     * @see getHDCPCurrentVersion(), getHDCPReceiverVersion(), onHDCPStatusChanged()
      */
     HDCPStatus getHDCPStatus();
 

@@ -22,6 +22,7 @@
 
 # HDMIOutput HAL Feature Profile
 # Defines the supported HDMI video output capabilities of the platform.
+# This profile lists the maximum hardware capabilities available.
 
 hdmioutput:
   interfaceVersion: current  # Matches the version of the AIDL interface
@@ -32,74 +33,108 @@ hdmioutput:
     - id: 0
 
       # List of supported Video ID Codes (VICs). These are defined in VIC.aidl
+      # This example shows common resolutions; expand to include all supported VICs
       supportedVICs:
         - VIC4_1280_720_P_60_16_9         # 720p @ 60Hz
         - VIC16_1920_1080_P_60_16_9       # 1080p @ 60Hz
         - VIC97_3840_2160_P_60_16_9       # 4K @ 60Hz
 
-      # Supported colorimetry schemes for this HDMI output
+      # Supported colorimetry schemes (from Colorimetry.aidl)
       supportedColorimetry:
-        - BT601
-        - BT709
-        - BT2020
+        - NO_DATA
+        - SMPTE_170M           # BT.601
+        - ITU_R_BT709          # BT.709
+        - EXTENDED_COLORIMETRY # Signals use of ExtendedColorimetry field
 
-      # Supported pixel formats (RGB, YCbCr 4:2:0, etc.)
+      # Supported extended colorimetry values (from ExtendedColorimetry.aidl)
+      # Used when Colorimetry is set to EXTENDED_COLORIMETRY
+      supportedExtendedColorimetry:
+        - XV_YCC_601
+        - XV_YCC_709
+        - S_YCC_601
+        - OP_YCC_601
+        - OP_RGB
+        - BT2020_C_YCC
+        - BT2020_RGB_YCC
+        - ADDITIONAL_COLORIMETRY_EXTENSION
+
+      # Supported additional colorimetry extensions (from AdditionalColorimetryExtension.aidl)
+      # Used when Colorimetry=3, ExtendedColorimetry=7 (ADDITIONAL_COLORIMETRY_EXTENSION)
+      supportedAdditionalColorimetryExtensions:
+        - DCI_P3_RGB_D65
+        - DCI_P3_RGB_THEATER
+
+      # Supported pixel formats (from PixelFormat.aidl)
       supportedPixelFormats:
-        - RGB
-        - YCBCR420
-        - YCBCR422
-        - YCBCR444
+        - RGB_444
+        - YCBCR_422
+        - YCBCR_444
+        - YCBCR_420
 
-      # HDCP protocol versions supported on this HDMI output
+      # HDCP protocol versions supported (from HDCPProtocolVersion.aidl)
       supportedHDCPVersions:
-        - HDCP_1_4
-        - HDCP_2_2
+        - VERSION_1_X  # HDCP 1.x
+        - VERSION_2_X  # HDCP 2.x
 
-      # HDR output modes supported (from HDROutputMode.aidl or Capabilities.aidl)
-      supportedHDRModes:
-        - HDR10
+      # HDR output modes supported (from HDROutputMode.aidl)
+      supportedHDROutputModes:
+        - AUTO
         - HLG
+        - HDR10
+        - HDR10_PLUS
+        - DOLBY_VISION
 
-      # Content types supported by this output (typically used for AV routing or policy decisions)
+      # Content types supported (from ContentType.aidl)
+      # These map to AVI InfoFrame ITC/CN fields
       supportedContentTypes:
-        - SDR
-        - HDR
+        - UNSPECIFIED
+        - GRAPHICS
+        - PHOTO
+        - CINEMA
+        - GAME
 
-      # List of adjustable or queryable properties related to HDMI signal characteristics
+      # Active Format Description values supported (from AFD.aidl)
+      supportedAFD:
+        - UNSPECIFIED
+        - SAME_AS_PICTURE
+        - CENTER_4_3
+        - CENTER_16_9
+        - CENTER_14_9
+
+      # Scan information values supported (from ScanInformation.aidl)
+      supportedScanInformation:
+        - NO_DATA
+        - OVERSCAN
+        - UNDERSCAN
+
+      # List of supported properties (from Property.aidl)
+      # Only list properties that are supported by this platform
       supportedProperties:
-        - EOTF                       # Electro-Optical Transfer Function
-        - MaxLuminance
-        - MinLuminance
-        - MaxContentLightLevel
-        - MaxFrameAverageLightLevel
+        - RESOURCE_ID
+        - VIC
+        - CONTENT_TYPE
+        - AFD
+        - HDR_OUTPUT_MODE
+        - SCAN_INFORMATION
 
-      # Source Product Description (SPD) types for identifying signal origin
-      spdSources:
-        - DTV
-        - DVD
-        - STB
-
-      # Indicates if this HDMI output supports event listener registration
-      supportsEventListener: true
+      # Source Product Description (SPD) source types supported (from SPDSource.aidl)
+      supportedSPDSources:
+        - DIGITAL_STB
+        - DVD_PLAYER
+        - D_VHS
+        - HDD_VIDEORECORDER
+        - DVC
+        - DSC
+        - VIDEO_CD
+        - GAME
+        - PC_GENERAL
+        - BLU_RAY_DISC
+        - SUPER_AUDIO_CD
+        - HD_DVD
 
   platformCapabilities:
-    # Maximum resolution supported by the platform's HDMI output (for static profile filtering)
+    # Maximum resolution supported by the platform's HDMI output
     maxSupportedResolution: "3840x2160"
 
     # Maximum supported frame rate across all VICs
     maxFramerate: 60
-
-    # Indicates if the platform generates hotplug connect/disconnect events
-    supportsHotplugEvents: true
-
-    # Indicates support for AFD (Active Format Description) signalling
-    supportsAFD: true
-
-    # Indicates support for SPD (Source Product Description) InfoFrame data
-    supportsSPDInfoFrame: true
-
-    # Identifies the interface used for control operations
-    controllerInterface: IHDMIOutputController
-
-    # Identifies the event notification interface for client listeners
-    eventInterface: IHDMIOutputEventListener

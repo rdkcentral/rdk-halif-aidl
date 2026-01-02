@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.hdmioutput;
 
-import com.rdk.hal.State;
+import com.rdk.hal.hdmioutput.State;
 
 /**
  *  @brief     Event callbacks listener interface from HDMI output.
@@ -53,7 +53,7 @@ oneway interface IHDMIOutputEventListener
      * @param[in] oldState  The state the HDMI output transitioned from.
      * @param[in] newState  The state the HDMI output transitioned to.
      *
-     * @see State enum in com.rdk.hal
+     * @see State
      * @see IHDMIOutput.open(), IHDMIOutput.close()
      */
     void onStateChanged(in State oldState, in State newState);
