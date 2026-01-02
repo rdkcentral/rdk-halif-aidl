@@ -52,6 +52,8 @@ Output (Stage 1 - Binder SDK):
   out/target/.sdk_ready - Marker indicating SDK is ready
 
 Environment Variables (optional overrides):
+  BINDER_VERSION        - Git tag/branch/commit to checkout
+                          (default: 2.0.0)
   BINDER_INSTALL_DIR    - Where to clone linux_binder_idl
                           (default: build-tools/)
   BINDER_SOURCE_DIR     - Existing linux_binder_idl location
@@ -66,9 +68,12 @@ Environment (exported):
   PATH                   Updated to include AIDL compiler tools
 
 Examples:
-  ./install_binder.sh           # Build Binder SDK
+  ./install_binder.sh           # Build Binder SDK (version 2.0.0)
   ./install_binder.sh clean     # Force rebuild
   source ./install_binder.sh    # Build and update current shell
+
+  # Pin to different version:
+  BINDER_VERSION=main ./install_binder.sh
 
   # Yocto/BitBake override example:
   BINDER_SDK_DIR=/path/to/sysroot/usr ./install_binder.sh
@@ -87,6 +92,7 @@ fi
 MY_PATH="$(realpath "${BASH_SOURCE[0]}")"
 MY_DIR="$(dirname "${MY_PATH}")"
 REPO_URL="https://github.com/rdkcentral/linux_binder_idl"
+BINDER_VERSION="${BINDER_VERSION:-2.0.0}"  # Default to 2.0.0, override with tag/commit/branch
 
 # Parse arguments
 CLEAN=false
@@ -106,6 +112,7 @@ export BINDER_TOOLCHAIN_ROOT="$BINDER_REPO_DIR"
 echo "========================================"
 echo "  RDK HAL AIDL - Binder SDK Build"
 echo "========================================"
+echo "Version: $BINDER_VERSION"
 echo "Source:  $BINDER_REPO_DIR"
 echo "Build:   $BINDER_BUILD_DIR"
 echo "Install: $SDK_INSTALL_DIR"
@@ -118,13 +125,34 @@ echo ""
 clone_repo() {
     if [ -d "$BINDER_REPO_DIR" ]; then
         echo "✓ Binder source already cloned at $BINDER_REPO_DIR"
+        
+        # Verify version if not clean build
+        if [ "$CLEAN" != true ]; then
+            cd "$BINDER_REPO_DIR"
+            CURRENT_REF=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || git rev-parse HEAD 2>/dev/null)
+            if [ "$CURRENT_REF" != "$BINDER_VERSION" ]; then
+                echo "⚠️  Warning: Existing clone is at $CURRENT_REF but BINDER_VERSION=$BINDER_VERSION"
+                echo "   Run with 'clean' to checkout requested version"
+            fi
+            cd - > /dev/null
+        fi
+        
         return 0
     fi
 
-    echo "Cloning Binder toolchain repository..."
+    echo "Cloning Binder toolchain repository (version: $BINDER_VERSION)..."
     mkdir -p "$INSTALL_DIR"
+    
+    # Clone and checkout specific version
     git clone "$REPO_URL" "$BINDER_REPO_DIR" || return 1
-    echo "✓ Cloned successfully"
+    cd "$BINDER_REPO_DIR"
+    git checkout "$BINDER_VERSION" || {
+        echo "❌ Failed to checkout version $BINDER_VERSION"
+        return 1
+    }
+    cd - > /dev/null
+    
+    echo "✓ Cloned successfully at version $BINDER_VERSION"
 }
 
 # ------------------------------------------------------------------------------
