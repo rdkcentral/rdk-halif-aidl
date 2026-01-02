@@ -1,10 +1,13 @@
-# File System
+# File System Architecture
 
 ## Document History
 
 |Date|Author|Comments|
 |----|------|--------|
 |2024-12-12|G.Weatherup|Initial comprehensive specification|
+
+!!! warning "Draft Document"
+    This document is currently in **draft form** and under active discussion. Specifications, examples, and recommendations may change based on review feedback and implementation experience.
 
 ## Related Pages
 
@@ -78,9 +81,9 @@ Each layer in the system has the following characteristics:
 |-------|---------|----------------|--------------|----------------|
 | **Kernel** | Hardware initialization, bootloader integration | Low (rarely changes) | Fully independent | Kernel-specific only |
 | **rootfs (/)** | Minimal system-wide essentials | Low (stable base) | System foundation | Core utilities only |
-| **/vendor** | SoC/hardware abstraction layer | Low-Medium (may freeze) | Independent mount | Vendor-specific OSS |
+| **/vendor** | SoC/hardware abstraction layer | Low-Medium (will freeze) | Independent mount | Vendor-specific OSS |
 | **/mw** | RDK middleware services | Medium (may freeze later) | Independent mount | Middleware OSS |
-| **/product** | Product customizations | Medium-High | Independent mount | Product-specific OSS |
+| **/product** | Product customisations | Low-Medium (will freeze) | Independent mount | Configuration only; OSS delivered by /apps, /mw, or /vendor |
 | **/apps** | Application layer | High | Independent mount | Application OSS |
 
 ### Key Design Principles
@@ -138,6 +141,52 @@ The kernel executes the following mount sequence:
 6. Mount /apps layer (if specified)
 7. Execute systemd initialization with full layer visibility
 
+### Boot Sequence and Systemd Targets
+
+The following diagram illustrates the complete boot sequence including systemd layer milestone targets:
+
+```mermaid
+graph TD
+    Start[Kernel Boot] --> MountLayers[Mount Layers: /vendor, /mw, /product, /apps]
+    MountLayers --> Ldconfig[ldconfig: Regenerate dynamic linker cache]
+    Ldconfig --> SystemdInit[Systemd Init]
+
+    SystemdInit --> VendorEarly[vendor-early.target]
+    VendorEarly --> VendorServices[Vendor Services Start]
+    VendorServices --> VendorLate[vendor-late.target]
+
+    VendorLate --> MwEarly[mw-early.target]
+    MwEarly --> MwServices[MW Services Start]
+    MwServices --> GraphicsReady[Graphics Ready Milestone?]
+    GraphicsReady --> MwLate[mw-late.target]
+
+    MwLate --> AppEarly[app-early.target]
+    AppEarly --> AppServices[Application Services Start]
+    AppServices --> AppLate[app-late.target]
+
+    AppLate --> MultiUser[multi-user.target]
+
+    style VendorEarly fill:#fce4ec,stroke:#c2185b
+    style VendorLate fill:#fce4ec,stroke:#c2185b
+    style MwEarly fill:#e8f5e9,stroke:#2e7d32
+    style MwLate fill:#e8f5e9,stroke:#2e7d32
+    style AppEarly fill:#e1f5ff,stroke:#01579b
+    style AppLate fill:#e1f5ff,stroke:#01579b
+```
+
+**Milestone Targets**:
+
+* **vendor-early.target**: Critical vendor services needed before middleware starts (e.g., essential hardware drivers)
+* **vendor-late.target**: Full vendor layer operational (all vendor services running)
+* **mw-early.target**: Middleware early initialization services
+* **Graphics Ready**: Optional milestone indicating graphics subsystem is ready for applications
+* **mw-late.target**: Full middleware stack operational (all RDK services running)
+* **app-early.target**: Application layer initialization
+* **app-late.target**: All applications running
+* **multi-user.target**: System fully operational
+
+**Boot Control**: Middleware controls the overall boot sequence but delegates to layer-specific milestone targets. Each layer's internal service ordering and dependencies are the responsibility of that layer, maintaining independence.
+
 ## Root Filesystem (/)
 
 ### Stripped-Down Design
@@ -175,9 +224,9 @@ The rootfs creates symbolic links at boot time to integrate layer-specific direc
 /etc/vendor -> /vendor/etc
 /etc/mw -> /mw/etc
 
-# Logging directories
-/var/log/vendor -> /vendor/var/log
-/var/log/mw -> /mw/var/log
+# Logging directories (writable, separate from read-only layers)
+# Individual module logs are at /var/log/<layer>/<module>/
+# Created by layer init process during boot
 ```
 
 ## Layer-Specific Architecture
