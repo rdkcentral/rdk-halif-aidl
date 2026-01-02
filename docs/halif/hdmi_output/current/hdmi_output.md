@@ -331,6 +331,12 @@ hdmioutput:
     # Logical HDMI output port 0
     - id: 0
 
+      # Supported HDMI specification versions
+      supportedVersions:
+        - HDMI_1_4
+        - HDMI_2_0
+        - HDMI_2_1
+
       # Supported Video ID Codes (VICs) - HDMI standardised video modes
       supportedVICs:
         - VIC4_1280_720_P_60_16_9         # 720p @ 60Hz
@@ -338,54 +344,115 @@ hdmioutput:
         - VIC97_3840_2160_P_60_16_9       # 4K UHD @ 60Hz
 
       # Colorimetry standards for colour space definition
-      supportedColorimetry:
-        - BT601      # Standard Definition
-        - BT709      # High Definition
-        - BT2020     # Ultra High Definition / Wide Colour Gamut
+      supportedColorimetries:
+        - NO_DATA
+        - SMPTE_170M           # BT.601 - Standard Definition
+        - ITU_R_BT709          # BT.709 - High Definition
+        - EXTENDED_COLORIMETRY # Signals use of ExtendedColorimetry field
+
+      # Extended colorimetry values (when EXTENDED_COLORIMETRY is used)
+      supportedExtendedColorimetry:
+        - XV_YCC_601
+        - XV_YCC_709
+        - S_YCC_601
+        - OP_YCC_601
+        - OP_RGB
+        - BT2020_C_YCC         # BT.2020 constant luminance
+        - BT2020_RGB_YCC       # BT.2020 RGB or YCC
+        - ADDITIONAL_COLORIMETRY_EXTENSION
+
+      # Additional colorimetry extensions (DCI-P3)
+      supportedAdditionalColorimetryExtensions:
+        - DCI_P3_RGB_D65
+        - DCI_P3_RGB_THEATER
+
+      # Supported color bit depths
+      supportedColorDepths:
+        - 8
+        - 10
+        - 12
 
       # Pixel encoding formats
       supportedPixelFormats:
-        - RGB        # Full RGB 4:4:4
-        - YCBCR420   # Chroma subsampled 4:2:0
-        - YCBCR422   # Chroma subsampled 4:2:2
-        - YCBCR444   # Full chroma 4:4:4
+        - RGB_444    # Full RGB 4:4:4
+        - YCBCR_422  # Chroma subsampled 4:2:2
+        - YCBCR_444  # Full chroma 4:4:4
+        - YCBCR_420  # Chroma subsampled 4:2:0
 
       # HDCP protocol versions for content protection
       supportedHDCPVersions:
-        - HDCP_1_4   # HDCP 1.4 (up to 1080p)
-        - HDCP_2_2   # HDCP 2.2 (4K and HDR)
+        - VERSION_1_X  # HDCP 1.x (up to 1080p)
+        - VERSION_2_X  # HDCP 2.x (4K and HDR)
 
       # High Dynamic Range output modes
-      supportedHDRModes:
-        - HDR10      # HDR10 static metadata
-        - HLG        # Hybrid Log-Gamma (broadcast HDR)
+      supportedHDROutputModes:
+        - AUTO         # Automatic based on content
+        - HLG          # Hybrid Log-Gamma (broadcast HDR)
+        - HDR10        # HDR10 static metadata
+        - HDR10_PLUS   # HDR10+ dynamic metadata
+        - DOLBY_VISION # Dolby Vision
 
-      # Content type signalling for AV routing
+      # Content type signalling (AVI InfoFrame ITC/CN fields)
       supportedContentTypes:
-        - SDR        # Standard Dynamic Range
-        - HDR        # High Dynamic Range
+        - UNSPECIFIED
+        - GRAPHICS
+        - PHOTO
+        - CINEMA
+        - GAME
+
+      # Active Format Description values
+      supportedAFD:
+        - UNSPECIFIED
+        - SAME_AS_PICTURE
+        - CENTER_4_3
+        - CENTER_16_9
+        - CENTER_14_9
+
+      # Scan information values
+      supportedScanInformation:
+        - NO_DATA
+        - OVERSCAN
+        - UNDERSCAN
 
       # Configurable properties via setProperty() API
       supportedProperties:
-        - EOTF                       # Electro-Optical Transfer Function
-        - MaxLuminance               # Peak display luminance (nits)
-        - MinLuminance               # Minimum display luminance
-        - MaxContentLightLevel       # Maximum content light level (HDR)
-        - MaxFrameAverageLightLevel  # Maximum frame average light level (HDR)
+        - RESOURCE_ID
+        - VIC
+        - CONTENT_TYPE
+        - AFD
+        - HDR_OUTPUT_MODE
+        - SCAN_INFORMATION
 
       # Source Product Description (SPD) InfoFrame source types
-      spdSources:
-        - DTV        # Digital Television
-        - DVD        # DVD Player
-        - STB        # Set-Top Box
+      supportedSPDSources:
+        - DIGITAL_STB
+        - DVD_PLAYER
+        - D_VHS
+        - HDD_VIDEORECORDER
+        - DVC
+        - DSC
+        - VIDEO_CD
+        - GAME
+        - PC_GENERAL
+        - BLU_RAY_DISC
+        - SUPER_AUDIO_CD
+        - HD_DVD
 
-      # Event listener registration support
-      supportsEventListener: true
+      # Advanced HDMI features
+      supports3D: true           # Stereo 3D video support
+      supportsFRL: true          # Fixed Rate Link (HDMI 2.1)
+      supportsVRR: true          # Variable Refresh Rate
+      supportsFreeSync: true     # AMD FreeSync
+      supportsQMS: true          # Quick Media Switching
+      supportsALLM: true         # Auto Low Latency Mode
+      supportsQFT: true          # Quick Frame Transport
 
   # Platform-wide static capabilities
   platformCapabilities:
     maxSupportedResolution: "3840x2160"   # 4K UHD maximum
     maxFramerate: 60                       # Hz
+    nativeFrameRate: 59.94                 # Territory-specific default (NTSC)
+    freeSync: FREESYNC_PREMIUM             # AMD FreeSync tier
     supportsHotplugEvents: true            # HPD event delivery
     supportsAFD: true                      # Active Format Description signalling
     supportsSPDInfoFrame: true             # Source Product Description InfoFrame
@@ -393,27 +460,46 @@ hdmioutput:
 
 ### Capability Categories
 
+**HDMI Version Support:**
+
+* **HDMI Versions**: Supported HDMI specification versions (1.4, 2.0, 2.1)
+* Determines available bandwidth and feature support (FRL, VRR, etc.)
+
 **Video Mode Capabilities:**
 
 * **VICs**: Standardised HDMI video modes (resolution, frame rate, aspect ratio)
-* **Colorimetry**: Colour space standards (BT.601, BT.709, BT.2020)
-* **Pixel Formats**: Encoding formats (RGB, YCbCr 4:2:0/4:2:2/4:4:4)
+* **Colorimetry**: Base colour space standards (SMPTE_170M/BT.601, ITU_R_BT709/BT.709, EXTENDED_COLORIMETRY)
+* **Extended Colorimetry**: Advanced colour spaces (xvYCC, sYCC, opYCC, BT.2020, DCI-P3)
+* **Additional Colorimetry**: DCI-P3 RGB variants (D65, Theater)
+* **Color Depths**: Bits per color component (8, 10, 12, 16)
+* **Pixel Formats**: Encoding formats (RGB_444, YCBCR_420/422/444)
 
 **Content Protection:**
 
-* **HDCP Versions**: Supported HDCP protocol versions (1.4, 2.2, 2.3)
+* **HDCP Versions**: Supported HDCP protocol versions (VERSION_1_X, VERSION_2_X)
 * **KRL Management**: Key Revocation List handling (vendor layer responsibility)
 
 **HDR Support:**
 
-* **HDR Modes**: HDR10, HLG, Dolby Vision (if supported)
-* **Metadata**: EOTF, luminance ranges, content light levels
+* **HDR Output Modes**: AUTO, HDR10, HDR10_PLUS, HLG, DOLBY_VISION
+* **Properties**: VIC, CONTENT_TYPE, AFD, HDR_OUTPUT_MODE, SCAN_INFORMATION
 
 **InfoFrame Support:**
 
-* **SPD**: Source Product Description for device identification
-* **AFD**: Active Format Description for aspect ratio signalling
-* **Vendor-Specific**: Platform-specific InfoFrame extensions
+* **Content Types**: GRAPHICS, PHOTO, CINEMA, GAME (AVI InfoFrame ITC/CN fields)
+* **AFD**: Active Format Description for aspect ratio signalling (SAME_AS_PICTURE, CENTER_4_3, CENTER_16_9, CENTER_14_9)
+* **Scan Information**: Overscan/underscan behaviour (OVERSCAN, UNDERSCAN)
+* **SPD**: Source Product Description for device identification (DIGITAL_STB, DVD_PLAYER, GAME, etc.)
+
+**Advanced HDMI 2.1 Features:**
+
+* **3D Support**: Stereo 3D video output
+* **FRL**: Fixed Rate Link for higher bandwidth
+* **VRR**: Variable Refresh Rate for gaming
+* **FreeSync**: AMD FreeSync support (with tier: FREESYNC, FREESYNC_PREMIUM, FREESYNC_PREMIUM_PRO)
+* **QMS**: Quick Media Switching (VRR-based seamless format changes)
+* **ALLM**: Auto Low Latency Mode for gaming
+* **QFT**: Quick Frame Transport (Fast VActive signaling)
 
 ### Runtime Capability Discovery
 
@@ -434,12 +520,15 @@ Capabilities caps = output.getCapabilities();
 
 **Example Platform Capabilities (Reference):**
 
-* Maximum resolution: 3840×2160 (4K UHD)
-* Maximum frame rate: 60Hz
-* HDR support: HDR10, HLG
-* HDCP versions: 1.4, 2.2
-* Hotplug events: Supported
-* AFD signalling: Supported
-* SPD InfoFrame: Supported
+* **HDMI Versions**: 1.4, 2.0, 2.1
+* **Maximum resolution**: 3840×2160 (4K UHD)
+* **Maximum frame rate**: 60Hz
+* **Native frame rate**: 59.94Hz (NTSC) or 50Hz (PAL)
+* **Colorimetry**: SMPTE_170M, ITU_R_BT709, EXTENDED_COLORIMETRY (BT.2020, DCI-P3)
+* **Color depths**: 8, 10, 12-bit
+* **Pixel formats**: RGB_444, YCBCR_420/422/444
+* **HDR output modes**: AUTO, HDR10, HDR10_PLUS, HLG, DOLBY_VISION
+* **HDCP versions**: VERSION_1_X, VERSION_2_X
+* **Advanced features**: 3D, FRL, VRR, FreeSync (Premium tier), QMS, ALLM, QFT
 
 ---
