@@ -32,6 +32,12 @@ hdmioutput:
     # Use multiple entries (e.g., id: 0, id: 1) if the platform supports more than one HDMI output.
     - id: 0
 
+      # Supported HDMI specification versions (from HDMIVersion.aidl)
+      supportedVersions:
+        - HDMI_1_4
+        - HDMI_2_0
+        - HDMI_2_1
+
       # List of supported Video ID Codes (VICs). These are defined in VIC.aidl
       # This example shows common resolutions; expand to include all supported VICs
       supportedVICs:
@@ -40,7 +46,7 @@ hdmioutput:
         - VIC97_3840_2160_P_60_16_9       # 4K @ 60Hz
 
       # Supported colorimetry schemes (from Colorimetry.aidl)
-      supportedColorimetry:
+      supportedColorimetries:
         - NO_DATA
         - SMPTE_170M           # BT.601
         - ITU_R_BT709          # BT.709
@@ -63,6 +69,13 @@ hdmioutput:
       supportedAdditionalColorimetryExtensions:
         - DCI_P3_RGB_D65
         - DCI_P3_RGB_THEATER
+
+      # Supported color bit depths (from Capabilities.aidl)
+      # Integer array representing bits per color component
+      supportedColorDepths:
+        - 8
+        - 10
+        - 12
 
       # Supported pixel formats (from PixelFormat.aidl)
       supportedPixelFormats:
@@ -132,9 +145,38 @@ hdmioutput:
         - SUPER_AUDIO_CD
         - HD_DVD
 
+      # Indicates whether the platform supports stereo (3D) video output
+      supports3D: true
+
+      # Indicates support for HDMI Fixed Rate Link (FRL)
+      supportsFRL: true
+
+      # Indicates support for Variable Refresh Rate (VRR)
+      supportsVRR: true
+
+      # Indicates support for AMD FreeSync
+      supportsFreeSync: true
+
+      # Indicates support for Quick Media Switching (QMS)
+      supportsQMS: true
+
+      # Indicates support for Auto Low Latency Mode (ALLM)
+      supportsALLM: true
+
+      # Indicates support for Quick Frame Transport (QFT)
+      supportsQFT: true
+
   platformCapabilities:
     # Maximum resolution supported by the platform's HDMI output
     maxSupportedResolution: "3840x2160"
 
     # Maximum supported frame rate across all VICs
     maxFramerate: 60
+
+    # The default/native frame rate for the platform (from PlatformCapabilities.aidl)
+    # Territory-specific default (e.g., 50.0 for PAL, 59.94 for NTSC)
+    nativeFrameRate: 59.94
+
+    # AMD FreeSync capability level (from FreeSync.aidl)
+    # Indicates the highest FreeSync tier available
+    freeSync: FREESYNC_PREMIUM
