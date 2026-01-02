@@ -73,28 +73,40 @@ interface IVideoDecoder
      * @see setProperty(), getPropertyMulti()
      */
     @nullable PropertyValue getProperty(in Property property);
- 
+
     /**
      * Gets multiple properties.
      *
-     * When calling `getPropertyMulti()` the `propertyKVList` parameter contains an array of
-     * `PropertyKVPair` parcelables that have their `property` key set.
-     * On success the `propertyValue` is set in the returned array.
-     * It is an error to pass in an empty array, which results in false being returned.
-     * 
-     * @param[in,out] propertyKVList        Holds the properties to get and the values on return.
+     * Retrieves values for a list of property keys.
      *
-     * @returns boolean - true on success or false if any property keys are invalid.
-     * @retval true     The property values were retrieved successfully.
-     * @retval false    One or more property keys are invalid or the input array is empty.
+     * Input `properties` is a non-null array of `Property` keys. Each key must be a
+     * valid enum value; unknown or out-of-range values are treated as invalid.
      *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
-     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
+     * Output `propertyKVList` returns one `PropertyKVPair` per requested key, with
+     * the same ordering as `properties`. For each pair, the `property` field echoes
+     * the requested key and `propertyValue` is populated on success.
+     *
+     * Error handling and return semantics:
+     * - Passing an empty `properties` array is an error.
+     * - If any key in `properties` is invalid, no values are populated and the call
+     *   returns `false` with `EX_ILLEGAL_ARGUMENT`.
+     * - If a required out-parameter is null (e.g. `propertyKVList`), the call fails
+     *   with `EX_NULL_POINTER`.
+     *
+     * @param[in] properties      Non-empty list of property keys to query.
+     * @param[out] propertyKVList Returned key/value pairs corresponding to `properties`.
+     *
+     * @returns boolean
+     * @retval true               All property values were retrieved successfully.
+     * @retval false              One or more keys are invalid, or input list is empty.
+     *
+     * @exception binder::Status::Exception::EX_NONE            Success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid property key(s) or empty input list.
+     * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
      *
      * @see getProperty()
      */
-    boolean getPropertyMulti(inout PropertyKVPair[] propertyKVList);
+    boolean getPropertyMulti(in Property[] properties, out PropertyKVPair[] propertyKVList);
 
     /**
 	 * Gets the current Video Decoder state.
