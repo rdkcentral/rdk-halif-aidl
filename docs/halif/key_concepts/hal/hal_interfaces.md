@@ -168,7 +168,7 @@ The following smaller subset of HALs function as in-process libraries, collectiv
 | [**Graphics (OpenGLES, EGL)**](../../../vsi/graphics/current/graphics.md)     | 🟠🟠🟠⚪⚪⚪ (3/6) | 🟢🟢🟢🟢⚪ (4/5) | ⚪⚪⚪⚪⚪ (x/5)| |
 | [**Wi-Fi**](../../../vsi/wifi/current/wifi.md)                                | 🟠🟠🟠⚪⚪⚪ (3/6) | 🟢🟢🟢🟢⚪ (4/5) | ⚪⚪⚪⚪⚪ (x/5)| |
 | [**Kernel**](../../../vsi/kernel/current/kernel.md)                           | 🟠🟠🟠⚪⚪⚪ (3/6) | 🟢🟢🟢🟢⚪ (4/5) | ⚪⚪⚪⚪⚪ (x/5)| |
-| [**Filesystem**](../../../vsi/filesystem/current/file_system.md)              | 🟠⚪⚪⚪⚪⚪ (1/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5)| TBD: /opt. eCryptFS, /sysfs. /procfs, (resilience) abstracted filing system|
+| [**Filesystem**](../../../vsi/filesystem/current/file_system_architecture.md)              | 🟠⚪⚪⚪⚪⚪ (1/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5)| TBD: /opt. eCryptFS, /sysfs. /procfs, (resilience) abstracted filing system|
 | [**Linux Input Device**](../../../vsi/linux_input/current/linux_input.md)     | 🟡⚪⚪⚪⚪⚪ (1/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | |
 
 #### Vendor System Interfaces (VSI) TBD
