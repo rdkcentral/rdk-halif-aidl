@@ -27,8 +27,8 @@ import com.rdk.hal.sensor.thermal.ActionEvent;
 
 oneway interface IThermalEventListener {
     /**
-     * @brief Called when the vendor thermal policy triggers an action.
-     * @param event Action metadata including type and timestamp.
+     * @brief Called when the vendor thermal policy signals a thermal state change.
+     * @param event State change metadata including new state and timestamp.
      */
-    void onThermalActionEvent(in ActionEvent event);
+    void onThermalStateChange(in ActionEvent event);
 }

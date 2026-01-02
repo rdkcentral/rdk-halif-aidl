@@ -44,7 +44,7 @@ sensor:
       # POLICY TRIGGER POINTS
       # -------------------------------------------------------------------------
       # The trigger values define how the vendor policy transitions between
-      # ActionTypes and States.  They MUST satisfy:
+      # State values. They MUST satisfy:
       #   recovered  <  exceeded  <  shutdown
       #
       # • critical_temperature_recovered_celsius :
@@ -62,6 +62,13 @@ sensor:
         critical_temperature_exceeded_celsius: 98
         entering_critical_shutdown_celsius: 115
 
+      # -------------------------------------------------------------------------
+      # THERMAL POLICY
+      # -------------------------------------------------------------------------
+      # The policy section reflects internal vendor thermal management strategy
+      # defined by expert engineering teams during hardware validation.
+      # These values are NOT user-configurable and MUST NOT be modified by
+      # parties outside of the critical hardware design and validation teams.
       policy:
         shutdown_min_downtime_s: 900
         recovery:
@@ -93,6 +100,7 @@ sensor:
         critical_temperature_exceeded_celsius: 70
         entering_critical_shutdown_celsius: 72   # ~10% below sensor max
 
+      # Thermal policy defined by expert engineering teams (not user-configurable).
       policy:
         shutdown_min_downtime_s: 600
         recovery:

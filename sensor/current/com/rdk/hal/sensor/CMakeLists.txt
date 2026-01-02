@@ -33,7 +33,6 @@ endif()
 # ---------------------------------------------------------------------------------------
 # Options to enable/disable individual sensor HALs
 # ---------------------------------------------------------------------------------------
-option(ENABLE_SENSOR_LIGHT   "Build Light Sensor HAL AIDL"   ON)
 option(ENABLE_SENSOR_MOTION  "Build Motion Sensor HAL AIDL"  ON)
 option(ENABLE_SENSOR_THERMAL "Build Thermal Policy HAL AIDL" ON)
 

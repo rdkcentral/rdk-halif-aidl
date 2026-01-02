@@ -31,16 +31,16 @@ enum State {
     NORMAL = 0,
 
     /**
-    * @brief Temperate has exceeded a critical threshold.
+    * @brief Temperature has exceeded a critical threshold.
     *  Platform will be in active mitigation if possible.
     */
     CRITICAL_TEMPERATURE_EXCEEDED = 1,
 
     /**
-    * @brief Temperate has recovered from a critical event.
+    * @brief Temperature has recovered from a critical event.
     *  Platform will return to normal state
     */
-    CRITICAL_TEMPERATURE_RECOVERED =2,
+    CRITICAL_TEMPERATURE_RECOVERED = 2,
 
     /**
      * @brief Shutdown is imminent due to critical thermal breach.

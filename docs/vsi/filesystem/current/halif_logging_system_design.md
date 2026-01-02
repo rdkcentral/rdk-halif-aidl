@@ -155,7 +155,7 @@ Jun  4 15:35:01:MODULE[PID]:[some_function_name:123]:Initialization complete Sta
 
 ## 9. Legacy Printf Fallback Support
 
-To support incremental migration from legacy `printf()`-based logging, the HALIF system provides a fallback mechanism.
+To support incremental mitigation from legacy `printf()`-based logging, the HALIF system provides a fallback mechanism.
 
 ### Static Handle
 

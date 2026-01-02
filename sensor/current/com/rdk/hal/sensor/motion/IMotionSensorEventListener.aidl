@@ -18,28 +18,17 @@
  */
 
 /**
- * @file ActionType.aidl
- * @brief Enumerates actions a thermal policy may trigger.
- *
- * @details
- * Encodes critical or platform-level thermal actions without exposing raw thresholds.
+ * @file IMotionSensorEventListener.aidl
+ * @brief Client callback interface for motion sensor events.
  */
-package com.rdk.hal.sensor.thermal;
+package com.rdk.hal.sensor.motion;
 
-@VintfStability
-enum ActionType {
-    /** @brief No action. */
-    NONE = 0,
+import com.rdk.hal.sensor.motion.OperationalMode;
 
-    /** @brief Critical temperature threshold exceeded,
-     *  If supported on the platform thermal migration will be active
+oneway interface IMotionSensorEventListener {
+    /**
+     * @brief Invoked when the sensor detects an event that matches the active operational mode.
+     * @param mode The active mode whose condition was met (MOTION or NO_MOTION).
      */
-    CRITICAL_TEMPERATURE_EXCEEDED = 1,
-
-    // --- Recovery ---
-    /** @brief System has thermally recovered to normal operating conditions. */
-    CRITICAL_TEMPERATURE_RECOVERED = 2,
-
-    /** @brief Critical thermal breach leading to imminent full shutdown. */
-    ENTERING_CRITICAL_SHUTDOWN = 3
+    void onEvent(in OperationalMode mode);
 }

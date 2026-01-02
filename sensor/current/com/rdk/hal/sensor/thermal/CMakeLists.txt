@@ -32,7 +32,6 @@ set(SRC_DIR com/rdk/hal/sensor/thermal)
 
 set(SRC
     ${SRC_DIR}/ActionEvent.aidl
-    ${SRC_DIR}/ActionType.aidl
     ${SRC_DIR}/IThermalSensor.aidl
     ${SRC_DIR}/IThermalEventListener.aidl
     ${SRC_DIR}/State.aidl

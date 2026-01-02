@@ -19,7 +19,7 @@
 
 package com.rdk.hal.sensor.thermal;
 
-import com.rdk.hal.sensor.thermal.ActionType;
+import com.rdk.hal.sensor.thermal.State;
 import com.rdk.hal.sensor.thermal.TemperatureReading;
 
 /**
@@ -27,24 +27,24 @@ import com.rdk.hal.sensor.thermal.TemperatureReading;
  * @brief Event payload delivered to thermal event listeners.
  *
  * @details
- * Provides context for a thermal action event, including:
- *  - Action type (policy decision)
+ * Provides context for a thermal state change event, including:
+ *  - New thermal state
  *  - Monotonic event timestamp
  *  - Temperature reading with vendor metadata
  */
 @VintfStability
 parcelable ActionEvent {
-    /** @brief The action the policy has decided to take. */
-    ActionType action;
+    /** @brief The new thermal state. */
+    State state;
 
     /**
-     * @brief Monotonic timestamp (ms) when the action was decided.
+     * @brief Monotonic timestamp (ms) when the state change occurred.
      * @details Use monotonic time for event ordering; not wall-clock time.
      */
     long timestampMonotonicMs;
 
     /**
-     * @brief Temperature reading captured at the time the action was triggered.
+     * @brief Temperature reading captured at the time of the state change.
      * @details May be null if not associated with a specific sensor.
      */
     @nullable TemperatureReading temperatureReading;

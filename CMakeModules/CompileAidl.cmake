@@ -84,7 +84,7 @@ Module Functions
   ``TARGET_DIRECTORY``
     Base of ouput directory for the generated files, the source files will be output in
     ``dir/<lang>``, and for cpp source, the corresponding header files are stored in
-    ``dir/h``. Default is the same level as calling CMakeList.txt
+    ``dir/h``. Default is the same level as calling CMakeLists.txt
 #]======================================================================]
 function(compile_aidl)
 	set(oneValueArgs TARGET_DIRECTORY AIDL_BIN LANG)

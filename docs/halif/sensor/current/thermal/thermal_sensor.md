@@ -3,8 +3,7 @@
 The **Thermal Sensor HAL** manages platform thermal state signalling for RDK-E devices.
 It abstracts the underlying hardware sensors, vendor thermal policy engine, and cooling device behaviour, presenting a unified, event-driven interface to the RDK Middleware.
 
-Thermal thresholds are defined at multiple severity levels, allowing the system or user space components to **receive early warning events** and take appropriate action before critical limits are reached.
-These thresholds enable proactive mitigation—such as adjusting workloads, reducing brightness, or throttling performance—without directly exposing raw temperature control or vendor logic.
+Thermal thresholds are defined at multiple severity levels, allowing the system or user space components to **receive early warning events** and communicate thermal stress to the user, indicating that the device will shut down if the condition is not rectified.
 
 The vendor thermal policy remains responsible for determining exact threshold values and corresponding mitigation strategies.
 When any level is breached, the HAL emits a well-defined `ThermalActionEvent` describing the new thermal condition.
@@ -26,7 +25,6 @@ This layered model keeps thermal management flexible across hardware implementat
 
 !!! tip "Related Pages"
     - [Sensor Motion HAL](../motion/motion_sensor.md)
-    - [Sensor Light HAL](../light/light_sensor.md)
 
 ---
 
@@ -46,13 +44,13 @@ The Thermal HAL allows RDK Middleware to receive high-level **thermal action eve
 
 | # | Requirement | Comments |
 |---|--------------|----------|
-| **HAL.THERMAL.1** | Shall provide an event-driven API to report vendor-defined thermal actions to RDK Middleware using a standard `ThermalActionType` enum. | |
+| **HAL.THERMAL.1** | Shall provide an event-driven API to report vendor-defined thermal state changes to RDK Middleware using the `State` enum. | |
 | **HAL.THERMAL.2** | Shall not expose or require Middleware to manage raw temperature thresholds or thermal policy decisions. | |
-| **HAL.THERMAL.3** | Shall emit all `ThermalActionEvent`s to registered Middleware clients and support registering / unregistering of such clients. | |
+| **HAL.THERMAL.3** | Shall emit all thermal state change events to registered Middleware clients and support registering / unregistering of such clients. | |
 | **HAL.THERMAL.4** | Shall support querying the current thermal state at any time via a `getCurrentThermalState()` API. | |
 | **HAL.THERMAL.5** | Shall support optional reporting of current temperature readings for platform sensors via `getCurrentTemperatures()`. | |
-| **HAL.THERMAL.6** | Shall provide a `vendorInfo` string field in `ThermalActionEvent` for vendor-specific debug or telemetry purposes. | |
-| **HAL.THERMAL.7** | Shall update `getCurrentThermalState()` coherently with emitted `ThermalActionEvent`s (`MITIGATION_ACTIVE` when cooling, `NORMAL` after recovery, `CRITICAL_SHUTDOWN_IMMINENT` before shutdown). | Ensures predictable state → event alignment. |
+| **HAL.THERMAL.6** | Shall provide a `vendorInfo` string field in thermal state change events for vendor-specific debug or telemetry purposes. | |
+| **HAL.THERMAL.7** | Shall update `getCurrentThermalState()` coherently with emitted state change events (`CRITICAL_TEMPERATURE_EXCEEDED` when cooling, `NORMAL` after recovery, `CRITICAL_SHUTDOWN_IMMINENT` before shutdown). | Ensures predictable state → event alignment. |
 
 ---
 
@@ -61,10 +59,9 @@ The Thermal HAL allows RDK Middleware to receive high-level **thermal action eve
 | Interface Definition File | Description |
 | -------------------------- | ------------ |
 | `com/rdk/hal/sensor/thermal/IThermalSensor.aidl` | Main service interface for registering listeners and querying state/telemetry. |
-| `com/rdk/hal/sensor/thermal/IThermalEventListener.aidl` | One-way callback for `ThermalActionEvent`s. |
-| `com/rdk/hal/sensor/thermal/ActionType.aidl` | Enumeration of high-level thermal actions (`ENTERING_CRITICAL_SHUTDOWN`, `CRITICAL_TEMPERATURE_EXCEEDED`, etc.). |
-| `com/rdk/hal/sensor/thermal/ActionEvent.aidl` | Parcelable event payload, including `action`, `timestampMonotonicMs`, `originSensorId`, `vendorInfo`. |
-| `com/rdk/hal/sensor/thermal/State.aidl` | Simple state machine values: `NORMAL`, `MITIGATION_ACTIVE`, `CRITICAL_SHUTDOWN_IMMINENT`. |
+| `com/rdk/hal/sensor/thermal/IThermalEventListener.aidl` | One-way callback for thermal state change events. |
+| `com/rdk/hal/sensor/thermal/ActionEvent.aidl` | Parcelable event payload, including `state`, `timestampMonotonicMs`, and `temperatureReading`. |
+| `com/rdk/hal/sensor/thermal/State.aidl` | Thermal state enumeration: `NORMAL`, `CRITICAL_TEMPERATURE_EXCEEDED`, `CRITICAL_TEMPERATURE_RECOVERED`, `CRITICAL_SHUTDOWN_IMMINENT`. |
 | `com/rdk/hal/sensor/thermal/TemperatureReading.aidl` | Optional per-sensor telemetry record (°C + timestamp). |
 
 ---
@@ -84,7 +81,7 @@ The Thermal HAL fits into the system architecture as the **thermal state signall
 
 It enables consistent and portable notification of **thermal state changes** to the Middleware and Applications, allowing system UX and behaviour to be adapted accordingly.
 
-The HAL abstracts away the diversity of hardware implementations and thermal policy tuning across platforms, exposing only well-defined `ThermalActionEvent`s to the RDK stack.
+The HAL abstracts away the diversity of hardware implementations and thermal policy tuning across platforms, exposing only well-defined thermal state change events to the RDK stack.
 
 ## Design Principles
 
@@ -102,7 +99,7 @@ The HAL abstracts away the diversity of hardware implementations and thermal pol
 
   In essence, thermal compliance is a **hardware validation responsibility**, not a runtime tuning exercise. The HAL exposes events and telemetry for visibility — it does **not** make policy decisions.
 
-- **HAL Emits `ThermalActionEvent`**
+- **HAL Emits State Change Events**
 
   This standardizes how temperature and mitigation state changes are reported.
   Events carry portable, structured data that allows middleware to log, visualize, or correlate system behaviour without influencing platform policy.
@@ -124,7 +121,7 @@ The HAL abstracts away the diversity of hardware implementations and thermal pol
 
 - **Explicit Shutdown Signalling**
 
-  When a thermal limit forces a platform-controlled shutdown, the HAL must emit a final `ThermalActionEvent` indicating that condition.
+  When a thermal limit forces a platform-controlled shutdown, the HAL must emit a final state change event indicating that condition.
   This provides clear auditability and compliance traceability for safety and user-experience requirements.
 
 ```mermaid
@@ -161,44 +158,51 @@ graph RL
 | Sensor thresholds      | Vendor                |
 | Policy decisions       | Vendor                |
 | Cooling device control | Vendor                |
-| Action signalling      | HAL                   |
+| State change signalling | HAL                  |
 | Middleware reaction    | RDK Middleware        |
 | App reaction           | Applications (via MW) |
 
 ---
 
-## Thermal Actions
+## Thermal States
 
-The Thermal HAL exposes a small, extensible set of **thermal actions**, represented by the **`ThermalActionType`** enum.
+The Thermal HAL exposes a small, extensible set of **thermal states**, represented by the **`State`** enum.
 
-These actions represent high-level system state changes determined by the platform’s vendor-defined Thermal Policy Engine.
+These states represent high-level system thermal conditions determined by the platform's vendor-defined Thermal Policy Engine.
 
 They enable general principles of:
 
 - Managing application behaviour
-- Logging and report field telemetry
+- Logging and reporting field telemetry
 - Supporting regulatory and UX requirements
 
-The HAL emits `ThermalActionEvent`s containing these actions, abstracting away platform-specific thresholds and control logic.
+The HAL emits state change events containing these states, abstracting away platform-specific thresholds and control logic.
 
-### ThermalActionType Enum
+### State Enum
 
 ```aidl
-enum ActionType {
-    /** @brief No action. */
-    NONE = 0,
-
-    /** @brief Critical temperature threshold exceeded,
-     *  If supported on the platform thermal migration will be active
+enum State {
+    /**
+     * @brief Normal thermal conditions.
      */
+    NORMAL = 0,
+
+    /**
+    * @brief Temperature has exceeded a critical threshold.
+    *  Platform will be in active mitigation if possible.
+    */
     CRITICAL_TEMPERATURE_EXCEEDED = 1,
 
-    // --- Recovery ---
-    /** @brief System has thermally recovered to normal operating conditions. */
+    /**
+    * @brief Temperature has recovered from a critical event.
+    *  Platform will return to normal state
+    */
     CRITICAL_TEMPERATURE_RECOVERED = 2,
 
-    /** @brief Critical thermal breach leading to imminent full shutdown. */
-    ENTERING_CRITICAL_SHUTDOWN = 3
+    /**
+     * @brief Shutdown is imminent due to critical thermal breach.
+     */
+    CRITICAL_SHUTDOWN_IMMINENT = 3
 }
 ```
 
@@ -211,8 +215,8 @@ enum ActionType {
 | State                              | Description                                                           |
 | --------------------------------   | --------------------------------------------------------------------- |
 | **NORMAL**                         | No mitigation active; platform within safe thermal limits.            |
-| **CRITICAL_TEMPERATURE_EXCEEDED**  | Platform entered critcal tempature, if possible platform vendor-defined mitigation is active. |
-| **CRITICAL_TEMPERATURE_RECOVERED** | Platform recovered from critcal tempature, and is returning to normal state. |
+| **CRITICAL_TEMPERATURE_EXCEEDED**  | Platform entered critical temperature, if possible platform vendor-defined mitigation is active. |
+| **CRITICAL_TEMPERATURE_RECOVERED** | Platform recovered from critical temperature, and is returning to normal state. |
 | **CRITICAL_SHUTDOWN_IMMINENT**     | Platform entering forced thermal shutdown; critical platform level actions are imminent. |
 
 **Typical transition model:**
@@ -239,9 +243,9 @@ sequenceDiagram
 
     Sensors->>Policy: Report current temperatures
     Policy->>HAL: Detect moderate condition, activate mitigation
-    HAL->>MW: Emit ThermalActionEvent(action=CRITICAL_TEMPERATURE_EXCEEDED)
+    HAL->>MW: Emit onThermalStateChange(state=CRITICAL_TEMPERATURE_EXCEEDED)
     MW->>Telemetry: Log event
-    HAL->>MW: Emit ThermalActionEvent(action=CRITICAL_TEMPERATURE_RECOVERED)
+    HAL->>MW: Emit onThermalStateChange(state=CRITICAL_TEMPERATURE_RECOVERED)
     MW->>App: Resume normal behaviour
 ```
 
@@ -258,8 +262,8 @@ sequenceDiagram
     participant App
 
     Sensors->>Policy: Detect catastrophic thermal violation
-    Policy->>HAL: Emit ENTERING_CRITICAL_SHUTDOWN
-    HAL->>MW: Emit ThermalActionEvent(action=ENTERING_CRITICAL_SHUTDOWN)
+    Policy->>HAL: Emit CRITICAL_SHUTDOWN_IMMINENT
+    HAL->>MW: Emit onThermalStateChange(state=CRITICAL_SHUTDOWN_IMMINENT)
     MW->>App: Display warning, stop activity
     MW->>Telemetry: Report shutdown event
     HAL->>SystemControl: Initiate hardware shutdown
@@ -301,7 +305,7 @@ sensor:
       # POLICY TRIGGER POINTS
       # -------------------------------------------------------------------------
       # The trigger values define how the vendor policy transitions between
-      # ActionTypes and States.  They MUST satisfy:
+      # State values. They MUST satisfy:
       #   recovered  <  exceeded  <  shutdown
       #
       # • critical_temperature_recovered_celsius :

@@ -33,7 +33,7 @@ import com.rdk.hal.sensor.thermal.TemperatureReading;
 
 interface IThermalSensor {
     /** @brief Binder service registration name. */
-    const @utf8InCpp String serviceName = "ThermalSensor";
+    const @utf8InCpp String serviceName = "sensor.thermal";
 
     /**
      * @brief Register for event-driven thermal actions.
