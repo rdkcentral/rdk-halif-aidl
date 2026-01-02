@@ -21,6 +21,7 @@ import com.rdk.hal.avbuffer.IAVBufferSpaceListener;
 import com.rdk.hal.avbuffer.HeapMetrics;
 import com.rdk.hal.avbuffer.Pool;
 import com.rdk.hal.avbuffer.PoolMetrics;
+import com.rdk.hal.avbuffer.Status;
 import com.rdk.hal.videodecoder.IVideoDecoder;
 import com.rdk.hal.audiodecoder.IAudioDecoder;
 
@@ -59,7 +60,7 @@ interface IAVBuffer
      * If the `videoDecoderId` is invalid then the `binder::Status EX_ILLEGAL_ARGUMENT` exception status is returned.
      * 
      * It the platform has exhausted all available memory from the requested heap then the exception status
-     * `binder::Status::Exception::EX_SERVICE_SPECIFIC` with `HALError::OUT_OF_MEMORY` is returned.
+     * `binder::Status::Exception::EX_SERVICE_SPECIFIC` with `Status::OUT_OF_MEMORY` is returned.
      *
      * @param[in] secureHeap            Indicates if the pool is secure.
      * @param[in] videoDecoderIndex     The index of the video decoder resource.
@@ -70,7 +71,7 @@ interface IAVBuffer
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
-     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, HALError::OUT_OF_MEMORY
+     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, Status::OUT_OF_MEMORY
      * 
      * @pre The IVideoDecoder.Id must have been obtained from IVideoDecoderManager.getVideoDecoderIds()
      * 
@@ -85,7 +86,7 @@ interface IAVBuffer
      * (e.g. system audio PCM) then the ID must be IAudioDecoder.Id.UNDEFINED.
      * 
      * It the platform has exhausted all available memory from the requested heap then the exception status
-     * `binder::Status::Exception::EX_SERVICE_SPECIFIC` with `HALError::OUT_OF_MEMORY` is returned.
+     * `binder::Status::Exception::EX_SERVICE_SPECIFIC` with `Status::OUT_OF_MEMORY` is returned.
      * 
      * If the `audioDecoderId` is invalid then the `binder::Status EX_ILLEGAL_ARGUMENT` exception status is returned.
      *
@@ -98,7 +99,7 @@ interface IAVBuffer
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
-     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, HALError::OUT_OF_MEMORY
+     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, Status::OUT_OF_MEMORY
      * 
      * @pre The IAudioDecoder.Id must have been obtained from IAudioDecoderManager.getAudioDecoderIds()
      *      or IAudioDecoder.Id.UNDEFINED must be used.
@@ -111,7 +112,7 @@ interface IAVBuffer
      * Destroys a memory buffer pool previously created with createVideoPool() or createAudioPool().
      * 
      * The AV buffer pool must be empty, with all previously allocated buffers from the pool freed.
-     * If any buffer allocations are outstanding then the exception status `binder::Status EX_SERVICE_SPECIFIC` with `HALError::NOT_EMPTY`
+     * If any buffer allocations are outstanding then the exception status `binder::Status EX_SERVICE_SPECIFIC` with `Status::NOT_EMPTY`
      * is returned.
      *
      * @param[in] poolHandle      Pool handle.
@@ -121,7 +122,7 @@ interface IAVBuffer
      * @retval false    The pool handle is invalid.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, HALError::NOT_EMPTY
+     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, Status::NOT_EMPTY
      * 
      * @pre A pool handle must have been obtained from `createVideoPool()` or `createAudioPool()`.
      * @pre The pool must have all allocations freed.
@@ -168,7 +169,7 @@ interface IAVBuffer
      * The output handle is valid when the returned result is >= 0.
      * The handle must eventually be used in a call to `free()` to release the memory block.
      * 
-     * If the allocation fails due to an out of memory condition then `binder::Status EX_SERVICE_SPECIFIC` with `HALError::OUT_OF_MEMORY`
+     * If the allocation fails due to an out of memory condition then `binder::Status EX_SERVICE_SPECIFIC` with `Status::OUT_OF_MEMORY`
      * is returned and the client can call `notifyWhenSpaceAvailable()` to be notified when space becomes available.
      *
      * @param[in] poolHandle    Pool handle.
@@ -178,7 +179,7 @@ interface IAVBuffer
      * @retval INVALID_HANDLE   The pool handle is invalid or the size is > the pool size.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, HALError::OUT_OF_MEMORY
+     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, Status::OUT_OF_MEMORY
      * 
      * @pre A pool handle must have been obtained from `createVideoPool()` or `createAudioPool()`.
      * 
