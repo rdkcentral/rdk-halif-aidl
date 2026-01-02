@@ -19,7 +19,7 @@
 package com.rdk.hal.hdmiinput;
  
 /** 
- * @brief     HAL component states.
+ * @brief     HDMI Input component states.
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
  * @author    Douglas Adler
