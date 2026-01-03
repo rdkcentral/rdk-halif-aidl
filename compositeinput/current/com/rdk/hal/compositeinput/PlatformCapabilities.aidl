@@ -21,7 +21,7 @@ package com.rdk.hal.compositeinput;
 
 import com.rdk.hal.compositeinput.VideoStandard;
 import com.rdk.hal.compositeinput.ScalingMode;
-import com.rdk.hal.compositeinput.Property;
+import com.rdk.hal.compositeinput.PropertyMetadata;
 
 /**
  * @brief Platform-wide capabilities for composite input.
@@ -65,10 +65,26 @@ parcelable PlatformCapabilities
     
     /** Array of supported scaling modes. */
     ScalingMode[] supportedScalingModes;
-    
-    /** Array of supported properties. */
-    Property[] supportedProperties;
-    
+
+    /**
+     * Array of supported property keys.
+     *
+     * Contains property key strings defined in the HFP YAML. Clients should
+     * check this array before calling getProperty() or setProperty().
+     * Standard keys include "SIGNAL_STRENGTH", "VIDEO_STANDARD", etc.
+     * Platforms may also define vendor-specific keys.
+     */
+    @utf8InCpp String[] supportedProperties;
+
+    /**
+     * Property metadata for all supported properties (optional).
+     *
+     * Provides type information and access flags for each property.
+     * Array indices correspond to supportedProperties array.
+     * May be null if metadata is not available.
+     */
+    @nullable PropertyMetadata[] propertyMetadata;
+
     /** Feature flags indicating optional capabilities. */
     FeatureFlags features;
 }

@@ -25,45 +25,64 @@ import com.rdk.hal.compositeinput.VideoResolution;
 
 /**
  * @brief Listener interface for port events.
- * 
- * Callbacks for connection status changes, signal status changes,
- * and video mode changes on a composite input port.
- * 
- * @author Gerald Weatherup
+ *
+ * Provides asynchronous callbacks for connection status changes, signal status changes,
+ * and video mode changes on a composite input port. Callbacks are delivered via oneway
+ * binder calls and do not block the HAL service.
+ *
+ * Register instances of this interface using ICompositeInputPort.registerEventListener().
+ * Multiple listeners can be registered for the same port.
  */
 @VintfStability
 oneway interface IPortEventListener
 {
     /**
-     * @brief Callback for port connection status changes.
-     * 
+     * Callback for port connection status changes.
+     *
      * Called when a composite source is physically connected or disconnected from the port.
-     * 
-     * @param[in] portId The port ID that changed connection status.
-     * @param[in] connected True if connected, false if disconnected.
+     * This callback is triggered by hardware detection of cable presence. It does not
+     * indicate signal validity, only physical connection state.
+     *
+     * @param[in] portId     The port ID that changed connection status (0 to maxPorts-1).
+     * @param[in] connected  True if a cable is now connected, false if disconnected.
+     *
+     * @post Clients should call getStatus() to retrieve full port state after connection changes.
+     *
+     * @see ICompositeInputPort.registerEventListener(), ICompositeInputPort.getStatus()
      */
     void onConnectionChanged(in int portId, in boolean connected);
-    
+
     /**
-     * @brief Callback for signal status changes.
-     * 
-     * Called when the signal status changes (e.g., from unstable to stable,
-     * or from no signal to signal detected).
-     * 
-     * @param[in] portId The port ID with signal status change.
-     * @param[in] status The new signal status.
+     * Callback for signal status changes.
+     *
+     * Called when the signal status changes (e.g., NO_SIGNAL → UNSTABLE → STABLE,
+     * or STABLE → UNSTABLE). This indicates changes in signal detection and stability,
+     * which affects whether the port can be activated for presentation.
+     *
+     * @param[in] portId     The port ID with signal status change (0 to maxPorts-1).
+     * @param[in] status     The new signal status.
+     *
+     * @post If status is STABLE, the port can be activated via setActive(true).
+     * @post If status is not STABLE and port was active, it may be automatically deactivated.
+     *
+     * @see SignalStatus, ICompositeInputPort.setActive(), ICompositeInputPort.getStatus()
      */
     void onSignalStatusChanged(in int portId, in SignalStatus status);
-    
+
     /**
-     * @brief Callback for video mode changes.
-     * 
-     * Called when the detected video resolution or format changes.
-     * This typically occurs after signal stabilization or when the
-     * source video format changes.
-     * 
-     * @param[in] portId The port ID with video mode change.
-     * @param[in] resolution The new video resolution and format information.
+     * Callback for video mode changes.
+     *
+     * Called when the detected video resolution, format, or standard changes.
+     * This typically occurs after initial signal stabilization or when the
+     * source device switches video modes.
+     *
+     * @param[in] portId        The port ID with video mode change (0 to maxPorts-1).
+     * @param[in] resolution    The newly detected video resolution and format information.
+     *
+     * @pre Signal status should be STABLE before video mode can be reliably detected.
+     * @post Resolution information can be used for display configuration or scaling decisions.
+     *
+     * @see VideoResolution, ICompositeInputPort.scaleVideo(), ICompositeInputPort.getStatus()
      */
     void onVideoModeChanged(in int portId, in VideoResolution resolution);
 }

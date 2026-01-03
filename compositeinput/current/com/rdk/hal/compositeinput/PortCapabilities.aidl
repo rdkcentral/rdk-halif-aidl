@@ -21,7 +21,7 @@ package com.rdk.hal.compositeinput;
 
 import com.rdk.hal.compositeinput.VideoStandard;
 import com.rdk.hal.compositeinput.ScalingMode;
-import com.rdk.hal.compositeinput.Property;
+import com.rdk.hal.compositeinput.PropertyMetadata;
 
 /**
  * @brief Port-specific capabilities.
@@ -34,16 +34,29 @@ parcelable PortCapabilities
 {
     /** Array of video standards supported by this port. */
     VideoStandard[] supportedVideoStandards;
-    
+
     /** Array of scaling modes supported by this port. */
     ScalingMode[] supportedScalingModes;
-    
-    /** Array of properties supported by this port. */
-    Property[] supportedProperties;
-    
+
+    /**
+     * Array of property key strings supported by this port.
+     *
+     * May be a subset of platform supportedProperties if different ports
+     * have different capabilities. Contains keys defined in HFP YAML.
+     */
+    @utf8InCpp String[] supportedProperties;
+
+    /**
+     * Property metadata for this port's supported properties (optional).
+     *
+     * Array indices correspond to supportedProperties array.
+     * May be null if metadata is not available.
+     */
+    @nullable PropertyMetadata[] propertyMetadata;
+
     /** True if this port supports audio. */
     boolean audioSupported;
-    
+
     /** True if this port supports signal quality metrics. */
     boolean metricsSupported;
 }

@@ -57,7 +57,7 @@ parcelable VideoResolution
     boolean interlaced;
     
     /** Frame rate in Hz (e.g., 25.0, 29.97, 50.0, 59.94). */
-    float frameRate;
+    float frameRateInHz;
     
     /** Optional color information, or null if not available. */
     @nullable ColorInfo colorInfo;

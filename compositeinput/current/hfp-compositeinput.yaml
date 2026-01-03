@@ -55,20 +55,65 @@ compositeinput:
       # Port capabilities (matches PortCapabilities.aidl)
       audioSupported: false
       metricsSupported: true
-      
-      # Supported properties for this port
+
+      # HFP-defined standard property keys (discoverable via getCapabilities())
+      # These are string keys - upper layers query and decide which to use
       supportedProperties:
-        - SIGNAL_STRENGTH
-        - VIDEO_STANDARD
-        - COLOR_SYSTEM
-        - AUDIO_PRESENT
-      
-      # Supported metrics for this port
+        - "SIGNAL_STRENGTH"        # Signal strength in dBm (PropertyValue.longValue, read-only)
+        - "VIDEO_STANDARD"         # Detected video standard (PropertyValue.intValue as VideoStandard enum, read-only)
+        - "COLOR_SYSTEM"           # Detected color system (PropertyValue.intValue as ColorSpace enum, read-only)
+        - "AUDIO_PRESENT"          # Audio signal present (PropertyValue.booleanValue, read-only)
+
+      # Metrics properties (METRIC_ prefix for categorization)
       supportedMetrics:
-        - METRIC_SIGNAL_LOCK_TIME
-        - METRIC_SIGNAL_DROPS
-        - METRIC_UPTIME
-    
+        - "METRIC_SIGNAL_LOCK_TIME"   # Average signal lock time in ms (PropertyValue.longValue, read-only)
+        - "METRIC_SIGNAL_DROPS"       # Total count of signal drops (PropertyValue.longValue, read-only)
+        - "METRIC_UPTIME"             # Total uptime in ms (PropertyValue.longValue, read-only)
+
+      # Property metadata for enhanced discovery (optional but recommended)
+      propertyMetadata:
+        - key: "SIGNAL_STRENGTH"
+          type: LONG
+          readOnly: true
+          isMetric: false
+          description: "Signal strength in dBm"
+
+        - key: "VIDEO_STANDARD"
+          type: INTEGER
+          readOnly: true
+          isMetric: false
+          description: "Detected video standard (VideoStandard enum)"
+
+        - key: "COLOR_SYSTEM"
+          type: INTEGER
+          readOnly: true
+          isMetric: false
+          description: "Detected color system (ColorSpace enum)"
+
+        - key: "AUDIO_PRESENT"
+          type: BOOLEAN
+          readOnly: true
+          isMetric: false
+          description: "Audio signal present indicator"
+
+        - key: "METRIC_SIGNAL_LOCK_TIME"
+          type: LONG
+          readOnly: true
+          isMetric: true
+          description: "Average signal lock time in milliseconds"
+
+        - key: "METRIC_SIGNAL_DROPS"
+          type: LONG
+          readOnly: true
+          isMetric: true
+          description: "Total count of signal drops since last reset"
+
+        - key: "METRIC_UPTIME"
+          type: LONG
+          readOnly: true
+          isMetric: true
+          description: "Total uptime in milliseconds"
+
     - id: 1
       name: "Rear Composite"
       description: "Rear panel composite video input"
@@ -97,16 +142,61 @@ compositeinput:
       # Port capabilities (matches PortCapabilities.aidl)
       audioSupported: false
       metricsSupported: true
-      
-      # Supported properties for this port
+
+      # HFP-defined standard property keys (discoverable via getCapabilities())
+      # These are string keys - upper layers query and decide which to use
       supportedProperties:
-        - SIGNAL_STRENGTH
-        - VIDEO_STANDARD
-        - COLOR_SYSTEM
-        - AUDIO_PRESENT
-      
-      # Supported metrics for this port
+        - "SIGNAL_STRENGTH"        # Signal strength in dBm (PropertyValue.longValue, read-only)
+        - "VIDEO_STANDARD"         # Detected video standard (PropertyValue.intValue as VideoStandard enum, read-only)
+        - "COLOR_SYSTEM"           # Detected color system (PropertyValue.intValue as ColorSpace enum, read-only)
+        - "AUDIO_PRESENT"          # Audio signal present (PropertyValue.booleanValue, read-only)
+
+      # Metrics properties (METRIC_ prefix for categorization)
       supportedMetrics:
-        - METRIC_SIGNAL_LOCK_TIME
-        - METRIC_SIGNAL_DROPS
-        - METRIC_UPTIME
+        - "METRIC_SIGNAL_LOCK_TIME"   # Average signal lock time in ms (PropertyValue.longValue, read-only)
+        - "METRIC_SIGNAL_DROPS"       # Total count of signal drops (PropertyValue.longValue, read-only)
+        - "METRIC_UPTIME"             # Total uptime in ms (PropertyValue.longValue, read-only)
+
+      # Property metadata for enhanced discovery (optional but recommended)
+      propertyMetadata:
+        - key: "SIGNAL_STRENGTH"
+          type: LONG
+          readOnly: true
+          isMetric: false
+          description: "Signal strength in dBm"
+
+        - key: "VIDEO_STANDARD"
+          type: INTEGER
+          readOnly: true
+          isMetric: false
+          description: "Detected video standard (VideoStandard enum)"
+
+        - key: "COLOR_SYSTEM"
+          type: INTEGER
+          readOnly: true
+          isMetric: false
+          description: "Detected color system (ColorSpace enum)"
+
+        - key: "AUDIO_PRESENT"
+          type: BOOLEAN
+          readOnly: true
+          isMetric: false
+          description: "Audio signal present indicator"
+
+        - key: "METRIC_SIGNAL_LOCK_TIME"
+          type: LONG
+          readOnly: true
+          isMetric: true
+          description: "Average signal lock time in milliseconds"
+
+        - key: "METRIC_SIGNAL_DROPS"
+          type: LONG
+          readOnly: true
+          isMetric: true
+          description: "Total count of signal drops since last reset"
+
+        - key: "METRIC_UPTIME"
+          type: LONG
+          readOnly: true
+          isMetric: true
+          description: "Total uptime in milliseconds"

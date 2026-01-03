@@ -25,44 +25,57 @@ import com.rdk.hal.compositeinput.ICompositeInputPort;
 
 /**
  * @brief Composite Input Manager interface.
- * 
+ *
  * Provides platform-independent access to composite video input functionality.
  * This manager interface allows discovery and access to individual composite input ports.
- * 
- * @author Gerald Weatherup
  */
 @VintfStability
 interface ICompositeInputManager
 {
     /** The service name to publish. */
-    const @utf8InCpp String serviceName = "composite_input_manager";
-    
+    const @utf8InCpp String serviceName = "composite_input";
+
     /**
-     * @brief Gets the platform capabilities for composite input.
-     * 
-     * Returns information about supported features, video standards,
-     * and available ports on this platform.
-     * 
+     * Gets the platform capabilities for composite input.
+     *
+     * This function can be called at any time and returns platform-wide information
+     * about supported features, video standards, scaling modes, and properties.
+     * The returned value is constant and must not change between calls.
+     *
      * @returns PlatformCapabilities parcelable containing platform-wide capabilities.
+     *
+     * @see PlatformCapabilities
      */
     PlatformCapabilities getPlatformCapabilities();
-    
+
     /**
-     * @brief Gets the list of available composite input port IDs.
-     * 
-     * @returns Array of port IDs available on this platform (0 to maxPorts-1).
+     * Gets the list of available composite input port IDs.
+     *
+     * Returns an array of valid port identifiers that can be used with getPort().
+     * The array size matches PlatformCapabilities.maxPorts and is constant.
+     *
+     * @returns Array of port IDs available on this platform (typically 0 to maxPorts-1).
+     *
+     * @see getPort()
      */
     int[] getPortIds();
-    
+
     /**
-     * @brief Gets the interface for a specific composite input port.
-     * 
-     * Returns a port-specific interface for controlling and querying
-     * an individual composite input port.
-     * 
-     * @param[in] portId The port ID (0 to maxPorts-1).
+     * Gets the interface for a specific composite input port.
+     *
+     * Returns a port-specific interface for controlling and querying an individual
+     * composite input port. Each port can be independently controlled.
+     *
+     * @param[in] portId     The port ID to access. Must be one of the IDs returned by getPortIds().
      * @returns ICompositeInputPort interface for the requested port, or null if port not found.
-     * @exception EX_ILLEGAL_ARGUMENT if portId is out of range.
+     *
+     * @retval ICompositeInputPort   Valid port interface for the specified portId.
+     * @retval null                  Port ID not found or invalid.
+     *
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if portId is out of range.
+     * @pre portId must be valid (from getPortIds()).
+     *
+     * @see ICompositeInputPort, getPortIds()
      */
     @nullable ICompositeInputPort getPort(in int portId);
 }

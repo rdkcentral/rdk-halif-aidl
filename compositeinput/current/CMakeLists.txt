@@ -26,7 +26,8 @@ set(SRC
     ${SRC_DIR}/VideoScaling.aidl
     ${SRC_DIR}/ColorSpace.aidl
     ${SRC_DIR}/FilterQuality.aidl
-    ${SRC_DIR}/Property.aidl
+    ${SRC_DIR}/PropertyKVPair.aidl
+    ${SRC_DIR}/PropertyMetadata.aidl
     ${SRC_DIR}/PortMetrics.aidl
     ${COMMON_SRC_DIR}/PropertyValue.aidl
 )
