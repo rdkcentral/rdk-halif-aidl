@@ -3,11 +3,11 @@
 This project aims to build and test the Android Binder for the Linux desktop environment.
 The Android 13 AOSP source code is cloned from `Google's` repositories. The Android tag
  is __*android-13.0.0_r74*__, and the code has been modified to make it compatible with Linux.
-The project is primarily designed to build the binder libraries and an example module for the
- host machine (by default). It also builds the `aidl` utility for the host machine, which
- generates the stubs and proxies from the `*.aidl` file. The default binder libraries generated are
- 64-bit, but this can be overridden using the build override flags (refer to the
- [Build Overrides](#build-overrides) section below).
+The project is primarily designed to build the binder runtime libraries for embedded devices.
+It also provides the `aidl` compiler for the architecture team to generate interface code offline.
+The default binder libraries generated are 64-bit, but this can be overridden using CMake variables.
+
+**For comprehensive build documentation, see [BUILD.md](BUILD.md).**
 
 ---
 
@@ -30,9 +30,9 @@ The project is primarily designed to build the binder libraries and an example m
     - [Build AIDL generator tool](#build-aidl-generator-tool)
         - [AIDL Generator Tool Usage](#aidl-generator-tool-usage)
 - [Build Options](#build-options)
-    - [Individual Steps in Binder Build](#individual-steps-in-binder-build)
-    - [Build Overrides](#build-overrides)
-    - [Additional Build Options](#additional-build-options)
+    - [Quick Build Commands](#quick-build-commands)
+    - [CMake Build Variables](#cmake-build-variables)
+    - [Clean Builds](#clean-builds)
 - [Output](#output)
 - [Testing](#testing)
     - [Using Vagrant Box](#using-vagrant-box)
@@ -74,17 +74,18 @@ Following are the build steps to build the binder framework, binder examples and
 ## Build Binder Framework
 
 ### Run below command to generate binder libs, header files and servicemanager.
-```
+```bash
 $ ./build-linux-binder-aidl.sh
 ```
 
-#### Following are the generated files as part of the binder framework.
+#### Following are the generated files as part of the binder framework (in `out/target/`):
 
-    ├── bin
-    │   └── servicemanager
-    ├── include
-    │   └── *.h
-    └── lib
+    out/target/
+    ├── bin/
+    │   └── servicemanager
+    ├── include/
+    │   └── *.h
+    └── lib/
         ├── libbase.so
         ├── libbinder.so
         ├── libcutils.so
@@ -97,34 +98,40 @@ $ ./build-linux-binder-aidl.sh
 Following are the build steps to build the binder examples. This builds the binder framework first and the binder examples.
 
 ### Run below command to build binder example
-```
+```bash
 $ ./build-binder-example.sh
 ```
 
-#### Following are the libraries and binaries generated as part of binder example (along with binder framework).
+#### Following are the libraries and binaries generated as part of binder example (in `out/target/`):
 
-    ├── bin
-    │   ├── FWManagerService
-    │   └── FWManagerClient
-    └── lib
+    out/target/
+    ├── bin/
+    │   ├── FWManagerService
+    │   └── FWManagerClient
+    └── lib/
         └── libfwmanager.so
 
 ## Build AIDL generator tool
 
+**Note:** The AIDL compiler is only used by the architecture team for offline interface code generation. Production builds do NOT require building or installing the AIDL compiler.
+
 ### Run below command to build aidl generator tool
-```
+```bash
 $ ./build-aidl-generator-tool.sh
 ```
 
-#### Following are the libraries, binaries and tarball generated as part of the aidl generator tool. tar ball having the aidl , libbase.so and liblog.so
+#### Following are the generated files (in `out/host/`):
 
-    ├── aidl-gen-tool-android-13.0.0_r74+1.0.0.tar.bz2
-    └── bin
-        └── aidl
+    out/host/
+    ├── bin/
+    │   ├── aidl
+    │   └── aidl-cpp
+    └── tarball/
+        └── aidl-gen-tool-android-13.0.0_r74+1.0.0.tar.bz2
 
-Note : The AIDL generator tool is build and tested only in x86 machine. The aidl generator tool tarball version can be updated using `${AIDL_GENERATOR_TARBALL}`.
+Note: The AIDL generator tool is built and tested only on x86 machines. The tarball version can be updated using `${AIDL_GENERATOR_TARBALL}`.
 
-The Google prebuilt AIDL generator tool for host machine is available in https://android.googlesource.com/platform/prebuilts/build-tools google repo.
+The Google prebuilt AIDL generator tool for host machine is available at: <https://android.googlesource.com/platform/prebuilts/build-tools>
 
 
 ### AIDL Generator Tool Usage
@@ -146,121 +153,120 @@ The stubs and proxies are generated in gen/FWManager and gen/FWManager/include
 
 # Build Options
 
-Following are the build overrides and apis available in the build system to build, debug and test individual components.
+The build system uses CMake and provides wrapper scripts for convenience during development.
 
-## Individual Steps in Binder Build
+## Quick Build Commands
 
-#### Setup environment
-```
-$ source setup-env.sh <Target lib arch version> <Install directory path>
-```
-- Argument1 : Target lib ARCH version. The values are `"32"` or `"64"`. The default target lib version is `"64"` bit.
-- Argument2 : CMake install directory. The default CMake installation path is "${PWD}/local".
+All wrapper scripts support `--help` and `--clean` options:
 
-#### Clone all android repos and apply patches
-```
-$ clone_android_binder_repo
-```
+```bash
+# Build target SDK (libraries + servicemanager)
+$ ./build-linux-binder-aidl.sh [--clean]
 
-#### Build binder for Linux
-```
-$ build_linux_binder
+# Build examples (includes SDK build)
+$ ./build-binder-example.sh [--clean] [--clean-aidl]
+
+# Build AIDL compiler (architecture team only)
+$ ./build-aidl-generator-tool.sh [--clean]
 ```
 
-#### Build binder example
+**For production Yocto/BitBake integration, see [BUILD.md](BUILD.md).**
+
+## CMake Build Variables
+
+**For production Yocto/BitBake usage, see [BUILD.md](BUILD.md) for complete documentation.**
+
+### Core Build Options
+
+| Variable | Description | Default | Values |
+|----------|-------------|---------|--------|
+| `BUILD_CORE_SDK` | Build target binder runtime libraries | `ON` | `ON`/`OFF` |
+| `BUILD_HOST_AIDL` | Build AIDL compiler (architecture team only) | `ON` | `ON`/`OFF` |
+| `TARGET_LIB64_VERSION` | Build 64-bit libraries | Auto-detect | `ON`/`OFF` |
+| `TARGET_LIB32_VERSION` | Build 32-bit libraries | `ON` | `ON`/`OFF` |
+| `CMAKE_INSTALL_PREFIX` | Installation root | `out/target/` | Path |
+
+### Additional Options
+
+- `BUILD_SHARED_LIB` - Build shared libraries (default: `ON`)
+- `BUILD_STATIC_LIB` - Build static libraries (default: `OFF`)
+- `USE_PREBUILT_GEN_FILES` - Use pre-generated AIDL stubs for examples
+- `BUILD_USING_AIDL_UTILITY` - Generate AIDL code at build time
+- `BUILD_BINDER_DEVICE_UTILITY` - Build binder-device utility for Ubuntu
+
+### Example CMake Usage
+
+```bash
+# Standard production build (target libraries only)
+cmake -DBUILD_CORE_SDK=ON -DBUILD_HOST_AIDL=OFF .
+make
+make install
+
+# Architecture team: build AIDL compiler only
+cmake -DBUILD_CORE_SDK=OFF -DBUILD_HOST_AIDL=ON .
+make
+make install
 ```
-$ build_binder_examples
+
+## Clean Builds
+
+All wrapper scripts support the `--clean` flag:
+
+```bash
+# Clean and rebuild SDK
+$ ./build-linux-binder-aidl.sh --clean
+
+# Clean and rebuild examples (with optional AIDL regeneration)
+$ ./build-binder-example.sh --clean --clean-aidl
+
+# Clean and rebuild AIDL compiler
+$ ./build-aidl-generator-tool.sh --clean
 ```
 
-#### Build aidl generator tool
+Manual cleanup:
+```bash
+# Clean target build only
+rm -rf out/target/ build-target/
+
+# Clean host AIDL build only
+rm -rf out/host/ build-host/
+
+# Clean everything
+rm -rf out/ build-target/ build-host/
 ```
-$ build_aidl_generator_tool
-```
-
-## Build Overrides
-
-The `setup-env.sh` is basically written to build the binder and example modules for host machine.
-But the `CMakeLists.txt`, is written in a way that it will build the `32bit` binder and dependend
-libraries and servicemanager for `YOCTO` build system.
-
-#### setup-env.sh Overrides
-
-- TARGET_LIB_VERSION :- Binder lib ARCH version. The values are `"32"` or `"64"`. The default target lib version is `"64"` bit
-
-- INSTALL_DIR :- CMake install directory. The default installation path is `"${PWD}/local"`.
-
-#### CMake Overrides
-
-- CMAKE_INSTALL_PREFIX :- CMake install directory. Usage: `$ cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}`.
-
-- BUILD_ENV_HOST :- Use it to specify the build environment as `HOST Machine`. Usage: `$ cmake -DBUILD_ENV_HOST=ON`.
-
-- BUILD_ENV_YOCTO :- Used it to specify the build environment as `YOCTO`. Usage: `$ cmake -DBUILD_ENV_YOCTO=ON`.
-
-- BUILD_SHARED_LIB :- Used it to specify to build `SHARED` libs. Default generated libs are `SHARED`. Usage: `$ cmake -DBUILD_SHARED_LIB=ON`.
-
-- BUILD_STATIC_LIB :- Used it to specify to build `STATIC` libs. Usage: `$ cmake -DBUILD_STATIC_LIB=ON`.
-  Note: libbinder will be shared but the depend libraries will be static.
-
-- TARGET_LIB64_VERSION :- Target binder lib ARCH version as `64bit`. Usage: `$ cmake -DTARGET_LIB64_VERSION=ON`.
-
-- USE_PREBUILT_GEN_FILES :- Switch to use the pre-generated stubs and proxies from the prebuilts directory for binder example.
-Usage: `$ cmake -DUSE_PREBUILT_GEN_FILES=ON`.
-
-- BUILD_USING_AIDL_UTILITY :- Switch to use the aidl utility to generate stubs and proxies for the binder example.
-Usage: `$ cmake -DBUILD_USING_AIDL_UTILITY=ON`.
-
-- BUILD_BINDER_DEVICE_UTILITY:- Switch to build the binder-device utility to create binder node in `Ubuntu`.
-Usage: `$ cmake -DBUILD_BINDER_DEVICE_UTILITY=ON`.
-
-## Additional Build Options
-
-Following are the additional build options provided by setup-env.sh
-
-| Function/API Name                | Description                                                     |
-|----------------------------------|-----------------------------------------------------------------|
-| clone_android_binder_repo        | Clones all android repos and apply patches                      |
-| clone_android_liblog_repo        | Clones all android liblog repo and apply patches                |
-| build_linux_binder               | Build binder for Linux                                          |
-| build_binder_examples            | Build binder example code for Linux                             |
-| build_aidl_generator_tool        | Build aidl generator tool                                       |
-| build_binder_device_tool         | Build linux binder-device tool to create binder node            |
-| clean_android_build              | Clean android build directory                                   |
-| clean_example_build              | Clean example build directory                                   |
-| clean_aidl_generator_build       | Clean aidl generator build directory                            |
-| clean_android_clone              | Clean android cloned code                                       |
-| clean_build_all                  | Clean android and example build directory                       |
-| clean_all                        | Clean android and example build directory and clone directory   |
-| build_liblog                     | Build android liblog library                                    |
-| build_libbase                    | Build libbase library                                           |
-| build_libcutils                  | Build libcutils library                                         |
-| build_libutils                   | Build libutils library                                          |
-| build_libbinder                  | Build binder library                                            |
-| build_servicemanager             | Build servicemanager                                            |
 
 ---
 
 # Output
 
-The default generated binder libs are 64 bits. This can be modified by setting the `${TARGET_LIB_VERSION}` in
-setup-env.sh. The generated binaries and libraries are copied into `${WORK_DIR}/local`. This can be modified
-by setting the `${INSTALL_DIR}` in setup-env.sh. Please refer [OUTPUT](OUTPUT.md) to see all the installed files.
+The default generated binder libs are 64-bit. This can be modified using `TARGET_LIB64_VERSION` or `TARGET_LIB32_VERSION` CMake variables.
 
-    local/
-        ├── bin
-        │   ├── servicemanager
-        │   ├── FWManagerService
-        │   ├── FWManagerClient
-        │   └── binder-device
-        ├── include
-        │   ├── *.h
-        └── lib
+**Target SDK** (libraries for embedded devices) are installed to `out/target/`:
+
+    out/target/
+        ├── bin/
+        │   ├── servicemanager
+        │   ├── FWManagerService
+        │   ├── FWManagerClient
+        │   └── binder-device
+        ├── include/
+        │   └── *.h
+        └── lib/
             ├── libbinder.so
             ├── libcutils.so
             ├── libcutils_sockets.so
             ├── libutils.so
             ├── liblog.so
             └── libfwmanager.so
+
+**Host AIDL Compiler** (architecture team only) is installed to `out/host/`:
+
+    out/host/
+        └── bin/
+            ├── aidl
+            └── aidl-cpp
+
+Refer to [OUTPUT.md](OUTPUT.md) for a complete list of installed files.
 
 
 ---
@@ -319,9 +325,9 @@ $ ./build-binder-example.sh
 ```
 <a name="3-build-the-binder-libs-and-example-bins"></a>
 #### 4. Move to the bin directory and update the LD_LIBRARY_PATH with binder libs
-```
-$ cd ${WORK_DIR}/local/bin (suppose we haven't modified the default INSTALL_PATH)
-$ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${WORK_DIR}/local/lib/
+```bash
+$ cd out/target/bin
+$ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/../lib
 ```
 
 #### 5. Run the servicemanager
