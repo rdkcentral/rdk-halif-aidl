@@ -204,42 +204,42 @@ foreach(module_dir ${MODULE_DIRS})
 endforeach()
 
 #######################################################################
-# Install module outputs using standard CMake install commands
+# Post-build: Stage module libraries to out/target/lib/halif/
 #######################################################################
+# Invoke cmake_stage_modules.cmake after all libraries are built
 
-# Install HAL module libraries
-# Pattern matches all generated library files from build directory
-install(CODE "
-    file(GLOB_RECURSE MODULE_LIBS
-         \"${CMAKE_BINARY_DIR}/lib*-vcurrent-cpp.so*\"
-         \"${CMAKE_BINARY_DIR}/lib*-v[0-9]+-cpp.so*\")
-    foreach(lib IN LISTS MODULE_LIBS)
-        file(INSTALL \${lib}
-             DESTINATION \"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}\"
-             USE_SOURCE_PERMISSIONS)
-    endforeach()
-    message(STATUS \"Installed HAL module libraries to ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}\")
-")
+add_custom_target(stage_modules ALL
+    COMMAND ${CMAKE_COMMAND}
+        -DOUT_DIR=${OUT_DIR}
+        -DBUILD_DIR=${CMAKE_BINARY_DIR}
+        -DSTABLE_DIR=${CMAKE_SOURCE_DIR}/stable
+        -DINTERFACE_TARGET=${INTERFACE_TARGET}
+        -DAIDL_SRC_VERSION=${AIDL_SRC_VERSION}
+        -P ${CMAKE_SOURCE_DIR}/cmake_stage_modules.cmake
+    COMMENT "Staging HAL module libraries and headers to out/target/"
+    VERBATIM
+)
 
-# Install HAL module headers from pre-generated code
+# Ensure staging happens after all libraries are built
 if (INTERFACE_TARGET STREQUAL "all")
-    # Install all module headers
-    install(DIRECTORY "${CMAKE_SOURCE_DIR}/stable/generated/"
-            DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-            FILES_MATCHING PATTERN "*.h"
-            PATTERN "CMakeFiles" EXCLUDE)
+    # When building all modules, we need to find all library targets
+    # The staging script will glob for lib*-vcurrent-cpp.so files
 else()
-    # Install single module headers
-    if (EXISTS "${CMAKE_SOURCE_DIR}/stable/generated/${INTERFACE_TARGET}")
-        install(DIRECTORY "${CMAKE_SOURCE_DIR}/stable/generated/${INTERFACE_TARGET}/"
-                DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${INTERFACE_TARGET}"
-                FILES_MATCHING PATTERN "*.h"
-                PATTERN "CMakeFiles" EXCLUDE)
+    # When building a specific module, depend on its library target
+    set(LIB_TARGET "${INTERFACE_TARGET}-vcurrent-cpp")
+    if (TARGET ${LIB_TARGET})
+        add_dependencies(stage_modules ${LIB_TARGET})
     endif()
 endif()
 
+#######################################################################
+# Build completion message
+#######################################################################
+
 message(STATUS "")
-message(STATUS "Build complete. Use 'cmake --install' to install:")
-message(STATUS "  Libraries: ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
-message(STATUS "  Headers:   ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
+message(STATUS "Build configured. HAL modules will be staged to:")
+message(STATUS "  Libraries: ${OUT_DIR}/target/lib/halif/")
+message(STATUS "  Headers:   ${OUT_DIR}/target/include/halif/")
+message(STATUS "")
+message(STATUS "Run 'cmake --build <build-dir>' to build")
 message(STATUS "")
