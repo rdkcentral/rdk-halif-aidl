@@ -119,7 +119,7 @@ def handle_aidl_api():
 
 
 def handle_aidl_gen_rule():
-    logger.verbose("handle %s" %(_operation))
+    logger.debug("handle %s" %(_operation))
     aidl_gen_rule.aidl_gen_rule(
             _interface_name,
             _interfaces_roots,
@@ -130,7 +130,7 @@ def handle_aidl_gen_rule():
 
 
 def handle_aidl_gen_deps():
-    logger.verbose("handle %s" %(_operation))
+    logger.debug("handle %s" %(_operation))
     aidl_gen_rule.aidl_gen_deps(
             _interfaces_roots,
             _out_dir
@@ -239,14 +239,14 @@ def main(argv):
 
     # check if aidl tool is available. If not generate it.
     if not path.exists(CMD_AIDL):
-        logger.info("AIDL tool not found, Installation Script: %s" %(CMD_GEN_AIDL))
+        logger.error("AIDL tool not found, Installation Script: %s" %(CMD_GEN_AIDL))
         exec_cmd([CMD_GEN_AIDL])
 
     if not path.exists(CMD_AIDL):
         logger.error("Could not generate AIDL tool")
         sys.exit(1)
     else:
-        logger.info("Installed aidl at %s" %(CMD_AIDL))
+        logger.debug("Installed aidl at %s" %(CMD_AIDL))
 
     logger.debug("aidl_ops:")
     logger.debug  ("\tOperation        = %s" %(_operation))

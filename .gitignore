@@ -1,4 +1,14 @@
+build-host
+build-target
+build-aidl-generator
+test_build.log
+.installed_successfully
+.android_source_ready
 android/
 */**/*.pyc
 local/
 out/
+
+# Generated AIDL code for examples - regenerate with example/generate_cpp.sh
+example/**/gen/
+example/stable/generated/
