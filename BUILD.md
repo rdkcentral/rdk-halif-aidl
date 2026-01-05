@@ -7,7 +7,7 @@ This repository provides **two separate builds**:
 1. **Host Tools** (`out/host/`) - AIDL compiler tools for code generation
 2. **Target Libraries** (`out/target/`) - Binder runtime libraries for embedded devices
 
-```
+```bash
 out/
 ├── host/              # Host tools (x86_64 build machine)
 │   └── bin/
@@ -45,11 +45,13 @@ Host tools run on your **build machine** (typically x86_64) to generate code fro
 ```
 
 **Output:**
+
 - `out/host/bin/aidl` - AIDL compiler
 - `out/host/bin/aidl-cpp` - C++ AIDL compiler
 
 **Compiler Selection:**
 Uses system default `gcc/g++`. Override if needed:
+
 ```bash
 export CC=gcc-11
 export CXX=g++-11
@@ -86,6 +88,7 @@ export TARGET_LIB32_VERSION=ON  # For 32-bit ARM
 ```
 
 **Output:**
+
 - `out/target/lib/libbinder.so` - Core binder library
 - `out/target/lib/liblog.so`, `libbase.so`, etc. - Support libraries
 - `out/target/bin/servicemanager` - Binder service manager
@@ -105,11 +108,13 @@ export TARGET_LIB32_VERSION=ON  # For 32-bit ARM
 ### Examples
 
 **Debug build for host tools:**
+
 ```bash
 BUILD_TYPE=Debug ./build-aidl-generator-tool.sh
 ```
 
 **32-bit ARM target:**
+
 ```bash
 export CC=arm-linux-gnueabihf-gcc
 export CXX=arm-linux-gnueabihf-g++
@@ -119,32 +124,74 @@ export TARGET_LIB32_VERSION=ON
 
 ## Integration with Yocto/Bitbake
 
-When building through Yocto, the build system will:
+### Production Build (CMake Direct)
 
-1. **Set compilers automatically:**
-   - `CC` and `CXX` point to cross-compiler
-   - Sysroot and flags configured by Yocto
+For Yocto/BitBake recipes, call CMake directly with appropriate variables. The wrapper scripts are for manual/development builds only.
 
-2. **Build host tools first** (native):
-   ```bash
-   do_compile_prepend() {
-       # Build host tools with native compiler
-       ./build-aidl-generator-tool.sh
-   }
-   ```
+**Production builds only require TARGET libraries** - the AIDL compiler is used offline by the architecture team to generate interface code, which is then committed to the repository.
 
-3. **Build target libraries** (cross-compiled):
-   ```bash
-   do_compile() {
-       # CC/CXX already set by Yocto
-       ./build-linux-binder-aidl.sh
-   }
-   ```
+**BitBake Recipe Example:**
 
-4. **Install appropriately:**
-   - Host tools → `${STAGING_BINDIR_NATIVE}/`
-   - Target libs → `${D}${libdir}/`
-   - Headers → `${D}${includedir}/`
+```bitbake
+inherit cmake
+
+# Production recipe - build binder runtime libraries only
+DEPENDS = ""
+
+EXTRA_OECMAKE = " \
+    -DBUILD_CORE_SDK=ON \
+    -DBUILD_HOST_AIDL=OFF \
+    -DTARGET_LIB64_VERSION=${@bb.utils.contains('TUNE_FEATURES', 'aarch64', 'ON', 'OFF', d)} \
+"
+
+do_install() {
+    cmake --install ${B} --prefix ${D}${prefix}
+}
+
+FILES_${PN} += "${libdir}/lib*.so*"
+FILES_${PN}-dev += "${includedir}/*"
+```
+
+**Key Points:**
+
+- **Production builds**: Only build target runtime libraries (`BUILD_CORE_SDK=ON`, `BUILD_HOST_AIDL=OFF`)
+- **No AIDL compiler needed**: Architecture team generates C++ code offline using AIDL compiler
+- **Pre-generated code committed**: All AIDL-generated C++ files are in source control
+- **No code generation at build time**: Production builds compile pre-generated C++ only
+
+### CMake Variables Reference
+
+| Variable | Description | Default | Production Value |
+|----------|-------------|---------|------------------|
+| `BUILD_CORE_SDK` | Build target binder libraries | `ON` | `ON` |
+| `BUILD_HOST_AIDL` | Build host AIDL compiler (architecture team only) | `ON` | `OFF` |
+| `TARGET_LIB64_VERSION` | Build 64-bit libraries | Auto-detect | Per architecture |
+| `TARGET_LIB32_VERSION` | Build 32-bit libraries | `ON` | Per architecture |
+| `CMAKE_INSTALL_PREFIX` | Installation root | `/usr/local` | Yocto staging path |
+
+**Note:** `BUILD_HOST_AIDL=ON` is only used by the architecture team for offline interface generation. Production builds always use `BUILD_HOST_AIDL=OFF`.
+
+### Manual/Development Build (Wrapper Scripts)
+
+For developers building manually, convenience scripts are provided:
+
+**Host tools:**
+
+```bash
+./build-aidl-generator-tool.sh
+```
+
+**Target libraries:**
+
+```bash
+./build-linux-binder-aidl.sh
+
+# Cross-compile for ARM
+CC=arm-linux-gnueabihf-gcc CXX=arm-linux-gnueabihf-g++ \
+    ./build-linux-binder-aidl.sh
+```
+
+These wrapper scripts simply invoke CMake with appropriate defaults.
 
 ## Clean Builds
 
@@ -173,6 +220,7 @@ If you see "binder.h not found", the CMake configuration is incorrect.
 ### Cross-compilation fails
 
 Ensure your cross-compiler toolchain is properly configured:
+
 ```bash
 ${CC} --version
 ${CXX} --version
