@@ -573,7 +573,7 @@ journalctl -u servicemanager.service -n 50
 
 Here's the modernized BitBake recipe for the current build system:
 
-```bitbake
+```bash
 DESCRIPTION = "Android Binder IPC for Linux"
 SECTION = "libs"
 LICENSE = "Apache-2.0"
@@ -716,7 +716,7 @@ ldd /usr/bin/servicemanager
 
 If you need the AIDL compiler for code generation:
 
-```bitbake
+```bash
 DESCRIPTION = "AIDL Compiler for Android Binder"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
