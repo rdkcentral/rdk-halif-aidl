@@ -19,7 +19,6 @@
 
 package com.rdk.hal.compositeinput;
 
-import com.rdk.hal.compositeinput.VideoStandard;
 import com.rdk.hal.compositeinput.PropertyMetadata;
 
 /**
@@ -31,9 +30,6 @@ import com.rdk.hal.compositeinput.PropertyMetadata;
 @VintfStability
 parcelable PortCapabilities
 {
-    /** Array of video standards supported by this port. */
-    VideoStandard[] supportedVideoStandards;
-
     /**
      * Array of property key strings supported by this port.
      *

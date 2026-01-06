@@ -19,46 +19,25 @@
 
 package com.rdk.hal.compositeinput;
 
-import com.rdk.hal.compositeinput.VideoStandard;
-import com.rdk.hal.compositeinput.ColorSpace;
-
 /**
  * @brief Video resolution and format information.
- * 
- * Describes the detected video resolution, format, and timing
- * for a composite input signal.
+ *
+ * Describes the digitized video output format from the composite input.
+ * The SOC vendor handles analog video standard detection (NTSC/PAL/SECAM)
+ * and color decoding internally, providing standardized digital output.
  */
 @VintfStability
 parcelable VideoResolution
 {
-    /**
-     * @brief Color information.
-     */
-    @VintfStability
-    parcelable ColorInfo
-    {
-        /** Color space/encoding. */
-        ColorSpace colorSpace;
-        
-        /** Bit depth per color component. */
-        int bitDepth;
-    }
-    
-    /** Detected video standard (NTSC/PAL/SECAM). */
-    VideoStandard standard;
-    
     /** Horizontal resolution in pixels (e.g., 720). */
     int pixelWidth;
-    
+
     /** Vertical resolution in pixels (e.g., 480 or 576). */
     int pixelHeight;
-    
+
     /** True if interlaced, false if progressive. */
     boolean interlaced;
-    
+
     /** Frame rate in Hz (e.g., 25.0, 29.97, 50.0, 59.94). */
     float frameRateInHz;
-    
-    /** Optional color information, or null if not available. */
-    @nullable ColorInfo colorInfo;
 }

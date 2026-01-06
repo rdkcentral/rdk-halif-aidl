@@ -30,28 +30,14 @@ compositeinput:
     - id: 0
       name: "Front Panel Composite"
       description: "Front panel composite video input"
-      
+
       # Supported signal statuses for this port
       supportedSignalStatuses:
         - NO_SIGNAL
         - UNSTABLE
         - NOT_SUPPORTED
         - STABLE
-      
-      # Supported video standards for this port
-      supportedVideoStandards:
-        - NTSC_M       # 525 lines, 60Hz (North America)
-        - PAL_B        # 625 lines, 50Hz (Europe)
-        - PAL_M        # 525 lines, 60Hz (Brazil)
-        - SECAM        # 625 lines, 50Hz (France, Eastern Europe)
-      
-      # Supported scaling modes for this port
-      supportedScalingModes:
-        - NONE
-        - ASPECT_FIT
-        - ASPECT_FILL
-        - CUSTOM
-      
+
       # Port capabilities (matches PortCapabilities.aidl)
       audioSupported: false
       metricsSupported: true
@@ -60,8 +46,6 @@ compositeinput:
       # These are string keys - upper layers query and decide which to use
       supportedProperties:
         - "SIGNAL_STRENGTH"        # Signal strength in dBm (PropertyValue.longValue, read-only)
-        - "VIDEO_STANDARD"         # Detected video standard (PropertyValue.intValue as VideoStandard enum, read-only)
-        - "COLOR_SYSTEM"           # Detected color system (PropertyValue.intValue as ColorSpace enum, read-only)
         - "AUDIO_PRESENT"          # Audio signal present (PropertyValue.booleanValue, read-only)
 
       # Metrics properties (METRIC_ prefix for categorization)
@@ -77,18 +61,6 @@ compositeinput:
           readOnly: true
           isMetric: false
           description: "Signal strength in dBm"
-
-        - key: "VIDEO_STANDARD"
-          type: INTEGER
-          readOnly: true
-          isMetric: false
-          description: "Detected video standard (VideoStandard enum)"
-
-        - key: "COLOR_SYSTEM"
-          type: INTEGER
-          readOnly: true
-          isMetric: false
-          description: "Detected color system (ColorSpace enum)"
 
         - key: "AUDIO_PRESENT"
           type: BOOLEAN
@@ -117,28 +89,14 @@ compositeinput:
     - id: 1
       name: "Rear Composite"
       description: "Rear panel composite video input"
-      
+
       # Supported signal statuses for this port
       supportedSignalStatuses:
         - NO_SIGNAL
         - UNSTABLE
         - NOT_SUPPORTED
         - STABLE
-      
-      # Supported video standards for this port
-      supportedVideoStandards:
-        - NTSC_M       # 525 lines, 60Hz (North America)
-        - PAL_B        # 625 lines, 50Hz (Europe)
-        - PAL_M        # 525 lines, 60Hz (Brazil)
-        - SECAM        # 625 lines, 50Hz (France, Eastern Europe)
-      
-      # Supported scaling modes for this port
-      supportedScalingModes:
-        - NONE
-        - ASPECT_FIT
-        - ASPECT_FILL
-        - CUSTOM
-      
+
       # Port capabilities (matches PortCapabilities.aidl)
       audioSupported: false
       metricsSupported: true
@@ -147,8 +105,6 @@ compositeinput:
       # These are string keys - upper layers query and decide which to use
       supportedProperties:
         - "SIGNAL_STRENGTH"        # Signal strength in dBm (PropertyValue.longValue, read-only)
-        - "VIDEO_STANDARD"         # Detected video standard (PropertyValue.intValue as VideoStandard enum, read-only)
-        - "COLOR_SYSTEM"           # Detected color system (PropertyValue.intValue as ColorSpace enum, read-only)
         - "AUDIO_PRESENT"          # Audio signal present (PropertyValue.booleanValue, read-only)
 
       # Metrics properties (METRIC_ prefix for categorization)
@@ -164,18 +120,6 @@ compositeinput:
           readOnly: true
           isMetric: false
           description: "Signal strength in dBm"
-
-        - key: "VIDEO_STANDARD"
-          type: INTEGER
-          readOnly: true
-          isMetric: false
-          description: "Detected video standard (VideoStandard enum)"
-
-        - key: "COLOR_SYSTEM"
-          type: INTEGER
-          readOnly: true
-          isMetric: false
-          description: "Detected color system (ColorSpace enum)"
 
         - key: "AUDIO_PRESENT"
           type: BOOLEAN

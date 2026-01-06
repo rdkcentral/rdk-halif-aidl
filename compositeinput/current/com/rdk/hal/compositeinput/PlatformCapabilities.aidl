@@ -19,8 +19,6 @@
 
 package com.rdk.hal.compositeinput;
 
-import com.rdk.hal.compositeinput.VideoStandard;
-import com.rdk.hal.compositeinput.ScalingMode;
 import com.rdk.hal.compositeinput.PropertyMetadata;
 
 /**
@@ -40,16 +38,10 @@ parcelable PlatformCapabilities
     {
         /** True if audio detection and routing is supported. */
         boolean audioSupported;
-        
-        /** True if advanced scaling with filters is supported. */
-        boolean advancedScalingSupported;
-        
+
         /** True if signal quality metrics are available. */
         boolean signalMetricsSupported;
-        
-        /** True if color space conversion is supported. */
-        boolean colorSpaceConversionSupported;
-        
+
         /** True if Macrovision copy protection detection is supported. */
         boolean macrovisionDetectionSupported;
     }
@@ -59,12 +51,6 @@ parcelable PlatformCapabilities
     
     /** Maximum number of ports supported. */
     byte maxPorts;
-    
-    /** Array of supported video standards. */
-    VideoStandard[] supportedVideoStandards;
-    
-    /** Array of supported scaling modes. */
-    ScalingMode[] supportedScalingModes;
 
     /**
      * Array of supported property keys.
