@@ -22,10 +22,7 @@ set(SRC
     ${SRC_DIR}/VideoStandard.aidl
     ${SRC_DIR}/VideoResolution.aidl
     ${SRC_DIR}/VideoRectangle.aidl
-    ${SRC_DIR}/ScalingMode.aidl
-    ${SRC_DIR}/VideoScaling.aidl
     ${SRC_DIR}/ColorSpace.aidl
-    ${SRC_DIR}/FilterQuality.aidl
     ${SRC_DIR}/PropertyKVPair.aidl
     ${SRC_DIR}/PropertyMetadata.aidl
     ${SRC_DIR}/PortMetrics.aidl

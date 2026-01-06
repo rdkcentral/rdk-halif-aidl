@@ -22,7 +22,6 @@ package com.rdk.hal.compositeinput;
 import com.rdk.hal.compositeinput.Port;
 import com.rdk.hal.compositeinput.PortCapabilities;
 import com.rdk.hal.compositeinput.PortStatus;
-import com.rdk.hal.compositeinput.VideoScaling;
 import com.rdk.hal.compositeinput.PropertyKVPair;
 import com.rdk.hal.compositeinput.PortMetrics;
 import com.rdk.hal.compositeinput.IPortEventListener;
@@ -92,24 +91,6 @@ interface ICompositeInputPort
      * @see getStatus(), SignalStatus
      */
     void setActive(in boolean active);
-
-    /**
-     * Scales and positions the video from this port.
-     *
-     * Applies scaling mode and positioning to the video output from this port.
-     * The scaling rectangle must be within the display resolution bounds.
-     * Supported scaling modes are defined in port capabilities.
-     *
-     * @param[in] scaling    Video scaling parameters including mode and rectangle.
-     *
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if scaling parameters are invalid or rectangle is out of bounds.
-     * @exception binder::Status EX_ILLEGAL_STATE if port is not active.
-     * @exception binder::Status EX_UNSUPPORTED_OPERATION if scaling mode is not in supportedScalingModes.
-     * @pre Port must be active (via setActive(true)).
-     *
-     * @see VideoScaling, ScalingMode, getCapabilities()
-     */
-    void scaleVideo(in VideoScaling scaling);
 
     /**
      * Gets a property value for this port by string key.
