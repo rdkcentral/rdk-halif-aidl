@@ -711,33 +711,3 @@ systemctl status servicemanager
 ls -l /dev/binder
 ldd /usr/bin/servicemanager
 ```
-
-### Native Recipe (Architecture Team Only)
-
-If you need the AIDL compiler for code generation:
-
-```bash
-DESCRIPTION = "AIDL Compiler for Android Binder"
-LICENSE = "Apache-2.0"
-LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
-
-SRC_URI = "git://github.com/your-org/linux_binder_idl.git;protocol=https;branch=main"
-SRCREV = "${AUTOREV}"
-S = "${WORKDIR}/git"
-
-inherit cmake native
-
-# Build AIDL compiler only (host tools)
-EXTRA_OECMAKE = " \
-    -DBUILD_CORE_SDK=OFF \
-    -DBUILD_HOST_AIDL=ON \
-"
-
-do_configure:prepend() {
-    ${S}/clone-android-binder-repo.sh
-}
-
-BBCLASSEXTEND = "native"
-```
-
-This native recipe produces `aidl` and `aidl-cpp` compilers for the build host.
