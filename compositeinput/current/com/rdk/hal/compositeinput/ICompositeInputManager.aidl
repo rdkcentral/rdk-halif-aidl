@@ -39,8 +39,8 @@ interface ICompositeInputManager
      * Gets the platform capabilities for composite input.
      *
      * This function can be called at any time and returns platform-wide information
-     * about supported features, video standards, scaling modes, and properties.
-     * The returned value is constant and must not change between calls.
+     * about supported features and properties. The returned value is constant and
+     * must not change between calls.
      *
      * @returns PlatformCapabilities parcelable containing platform-wide capabilities.
      *

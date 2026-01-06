@@ -36,9 +36,6 @@ parcelable PlatformCapabilities
     @VintfStability
     parcelable FeatureFlags
     {
-        /** True if audio detection and routing is supported. */
-        boolean audioSupported;
-
         /** True if signal quality metrics are available. */
         boolean signalMetricsSupported;
 

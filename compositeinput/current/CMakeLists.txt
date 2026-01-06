@@ -20,7 +20,6 @@ set(SRC
     ${SRC_DIR}/Port.aidl
     ${SRC_DIR}/SignalStatus.aidl
     ${SRC_DIR}/VideoResolution.aidl
-    ${SRC_DIR}/VideoRectangle.aidl
     ${SRC_DIR}/PropertyKVPair.aidl
     ${SRC_DIR}/PropertyMetadata.aidl
     ${SRC_DIR}/PortMetrics.aidl

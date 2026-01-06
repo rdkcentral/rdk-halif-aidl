@@ -39,14 +39,12 @@ compositeinput:
         - STABLE
 
       # Port capabilities (matches PortCapabilities.aidl)
-      audioSupported: false
       metricsSupported: true
 
       # HFP-defined standard property keys (discoverable via getCapabilities())
       # These are string keys - upper layers query and decide which to use
       supportedProperties:
         - "SIGNAL_STRENGTH"        # Signal strength in dBm (PropertyValue.longValue, read-only)
-        - "AUDIO_PRESENT"          # Audio signal present (PropertyValue.booleanValue, read-only)
 
       # Metrics properties (METRIC_ prefix for categorization)
       supportedMetrics:
@@ -61,12 +59,6 @@ compositeinput:
           readOnly: true
           isMetric: false
           description: "Signal strength in dBm"
-
-        - key: "AUDIO_PRESENT"
-          type: BOOLEAN
-          readOnly: true
-          isMetric: false
-          description: "Audio signal present indicator"
 
         - key: "METRIC_SIGNAL_LOCK_TIME"
           type: LONG
@@ -98,14 +90,12 @@ compositeinput:
         - STABLE
 
       # Port capabilities (matches PortCapabilities.aidl)
-      audioSupported: false
       metricsSupported: true
 
       # HFP-defined standard property keys (discoverable via getCapabilities())
       # These are string keys - upper layers query and decide which to use
       supportedProperties:
         - "SIGNAL_STRENGTH"        # Signal strength in dBm (PropertyValue.longValue, read-only)
-        - "AUDIO_PRESENT"          # Audio signal present (PropertyValue.booleanValue, read-only)
 
       # Metrics properties (METRIC_ prefix for categorization)
       supportedMetrics:
@@ -120,12 +110,6 @@ compositeinput:
           readOnly: true
           isMetric: false
           description: "Signal strength in dBm"
-
-        - key: "AUDIO_PRESENT"
-          type: BOOLEAN
-          readOnly: true
-          isMetric: false
-          description: "Audio signal present indicator"
 
         - key: "METRIC_SIGNAL_LOCK_TIME"
           type: LONG

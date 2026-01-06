@@ -45,8 +45,8 @@ parcelable PropertyKVPair
      * - For setPropertyMulti(), this field must be pre-filled by the caller.
      *
      * The appropriate union field should be used based on the property type:
-     * - booleanValue for boolean properties (e.g., AUDIO_PRESENT)
-     * - intValue for enum properties (e.g., VIDEO_STANDARD as VideoStandard enum)
+     * - booleanValue for boolean properties
+     * - intValue for integer/enum properties
      * - longValue for numeric properties (e.g., SIGNAL_STRENGTH, metrics)
      * - doubleValue for floating-point properties
      * - stringValue for text properties

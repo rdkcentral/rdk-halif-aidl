@@ -46,9 +46,6 @@ parcelable PortCapabilities
      */
     @nullable PropertyMetadata[] propertyMetadata;
 
-    /** True if this port supports audio. */
-    boolean audioSupported;
-
     /** True if this port supports signal quality metrics. */
     boolean metricsSupported;
 }

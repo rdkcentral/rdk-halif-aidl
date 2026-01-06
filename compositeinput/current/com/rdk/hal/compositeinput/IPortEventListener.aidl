@@ -80,9 +80,9 @@ oneway interface IPortEventListener
      * @param[in] resolution    The newly detected video resolution and format information.
      *
      * @pre Signal status should be STABLE before video mode can be reliably detected.
-     * @post Resolution information can be used for display configuration or scaling decisions.
+     * @post Resolution information can be used for display configuration.
      *
-     * @see VideoResolution, ICompositeInputPort.scaleVideo(), ICompositeInputPort.getStatus()
+     * @see VideoResolution, ICompositeInputPort.getStatus()
      */
     void onVideoModeChanged(in int portId, in VideoResolution resolution);
 }
