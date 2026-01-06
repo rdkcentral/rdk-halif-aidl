@@ -126,9 +126,9 @@ export TARGET_LIB32_VERSION=ON
 
 ### Production Build (CMake Direct)
 
-For Yocto/BitBake recipes, call CMake directly with appropriate variables. The wrapper scripts are for manual/development builds only.
+**Production build systems (Yocto/BitBake) MUST call CMake directly** with explicit variables. The wrapper scripts (`build-*.sh`) are convenience tools for developers and architecture team members only - they are NOT suitable for production recipes.
 
-**Production builds only require TARGET libraries** - the AIDL compiler is used offline by the architecture team to generate interface code, which is then committed to the repository.
+**Production builds only require TARGET libraries** - the AIDL compiler is used offline by the architecture team (using `./build-aidl-generator-tool.sh` for convenience) to generate interface code, which is then committed to the repository.
 
 **BitBake Recipe Example:**
 
@@ -158,30 +158,147 @@ FILES_${PN}-dev += "${includedir}/*"
 - **No AIDL compiler needed**: Architecture team generates C++ code offline using AIDL compiler
 - **Pre-generated code committed**: All AIDL-generated C++ files are in source control
 - **No code generation at build time**: Production builds compile pre-generated C++ only
+- **Servicemanager startup**: Systemd service auto-starts on boot via `SYSTEMD_AUTO_ENABLE`
 
 ### CMake Variables Reference
 
-| Variable | Description | Default | Production Value |
-|----------|-------------|---------|------------------|
-| `BUILD_CORE_SDK` | Build target binder libraries | `ON` | `ON` |
-| `BUILD_HOST_AIDL` | Build host AIDL compiler (architecture team only) | `ON` | `OFF` |
-| `TARGET_LIB64_VERSION` | Build 64-bit libraries | Auto-detect | Per architecture |
-| `TARGET_LIB32_VERSION` | Build 32-bit libraries | `ON` | Per architecture |
-| `CMAKE_INSTALL_PREFIX` | Installation root | `/usr/local` | Yocto staging path |
+**When to use what:**
+- **Production (Yocto/BitBake)**: Call CMake directly with explicit variables (documented below)
+- **Development/Architecture Team**: Use wrapper scripts for convenience (see [Manual/Development Build](#manualdevelopment-build-wrapper-scripts) section)
 
-**Note:** `BUILD_HOST_AIDL=ON` is only used by the architecture team for offline interface generation. Production builds always use `BUILD_HOST_AIDL=OFF`.
+The following tables list CMake variables for **direct CMake invocation in production build systems**. Wrapper scripts handle these automatically - developers and architecture team members do NOT need to configure these manually.
+
+#### Required Configuration Variables
+
+| Variable | Description | Default | Required? |
+|----------|-------------|---------|-----------|
+| `BUILD_CORE_SDK` | Build target binder runtime libraries | `ON` | **Required** for target builds |
+| `BUILD_HOST_AIDL` | Build host AIDL compiler (architecture team only) | `ON` | **Required** - Set to `OFF` for production |
+
+#### Architecture Selection (One Required)
+
+| Variable | Description | Default | Notes |
+|----------|-------------|---------|-------|
+| `TARGET_LIB64_VERSION` | Build 64-bit libraries | Auto-detect | Use for aarch64, x86_64 |
+| `TARGET_LIB32_VERSION` | Build 32-bit libraries | `OFF` | Use for armhf, i686 |
+
+**Note:** Set **either** `TARGET_LIB64_VERSION=ON` **or** `TARGET_LIB32_VERSION=ON`, not both.
+
+**Important - 32-bit Userspace on 64-bit Kernel:**
+
+Many embedded systems run 32-bit userspace applications on a 64-bit kernel for memory efficiency. In this configuration:
+
+- **Kernel**: 64-bit (e.g., aarch64 kernel)
+- **Userspace**: 32-bit (e.g., armhf libraries and applications)
+- **Build Configuration**: Use `TARGET_LIB32_VERSION=ON` to build 32-bit binder libraries
+- **Kernel Requirement**: Kernel must have `CONFIG_ANDROID_BINDER_IPC_32BIT=y` enabled
+
+The 64-bit kernel handles syscall translation automatically. Build the userspace libraries to match your **userspace architecture**, not the kernel architecture.
+
+#### Installation Paths (All Optional)
+
+| Variable | Description | Default | Notes |
+|----------|-------------|---------|-------|
+| `CMAKE_INSTALL_PREFIX` | Installation root directory | `/usr/local` | Yocto uses `${prefix}` or `${D}${prefix}` |
+
+**Important:** CMake **does not** use separate `TARGET_DIRECTORIES` or similar output path variables. The build system automatically places output in:
+- Build artifacts: `${CMAKE_BINARY_DIR}` (e.g., `build-target/`)
+- Installed files: `${CMAKE_INSTALL_PREFIX}` (e.g., `/usr/local` or Yocto staging)
+
+#### Complete CMake Invocation Examples (Yocto/Production)
+
+These examples show **direct CMake usage for production build systems** (Yocto/BitBake) targeting ARM embedded devices. For development/testing, use the wrapper scripts instead (see below).
+
+**Yocto/Production: Target Build (64-bit ARM - aarch64):**
+
+```bash
+# Direct CMake invocation for Yocto/BitBake recipes targeting aarch64 devices
+cmake -S . -B build-target \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
+    -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
+    -DBUILD_CORE_SDK=ON \
+    -DBUILD_HOST_AIDL=OFF \
+    -DTARGET_LIB64_VERSION=ON \
+    -DCMAKE_INSTALL_PREFIX=/usr/local
+
+cmake --build build-target -j$(nproc)
+cmake --install build-target
+```
+
+**Yocto/Production: Target Build (32-bit ARM - armhf):**
+
+```bash
+# Direct CMake invocation for Yocto/BitBake recipes with cross-compilation
+# Use case: 32-bit userspace on 64-bit kernel (common in embedded systems)
+cmake -S . -B build-target \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc \
+    -DCMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++ \
+    -DBUILD_CORE_SDK=ON \
+    -DBUILD_HOST_AIDL=OFF \
+    -DTARGET_LIB32_VERSION=ON \
+    -DCMAKE_INSTALL_PREFIX=/usr/local
+
+cmake --build build-target -j$(nproc)
+cmake --install build-target
+```
+
+**Note:** This 32-bit build works on both 32-bit kernels and 64-bit kernels (with `CONFIG_ANDROID_BINDER_IPC_32BIT=y`).
+
+**Direct CMake: Build AIDL Compiler (Architecture Team - Advanced Use Only):**
+
+```bash
+# Direct CMake invocation (advanced - most users should use wrapper script below)
+cmake -S . -B build-host \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DBUILD_CORE_SDK=OFF \
+    -DBUILD_HOST_AIDL=ON \
+    -DCMAKE_INSTALL_PREFIX=/usr/local
+
+cmake --build build-host -j$(nproc)
+cmake --install build-host
+```
+
+**Note:** Architecture team members should typically use `./build-aidl-generator-tool.sh` instead. The architecture team works **outside** the production build system (Yocto/BitBake) - they build the AIDL compiler locally to generate interface code and manage interface versions. This direct CMake example is only for advanced users who need custom configuration.
+
+#### Minimal Required Variables Summary
+
+For **production builds**, you MUST set these three variables:
+
+1. `-DBUILD_CORE_SDK=ON` (build target libraries)
+2. `-DBUILD_HOST_AIDL=OFF` (exclude AIDL compiler)
+3. **One of:** `-DTARGET_LIB64_VERSION=ON` **or** `-DTARGET_LIB32_VERSION=ON`
+
+All other variables have sensible defaults and are optional.
 
 ### Manual/Development Build (Wrapper Scripts)
 
-For developers building manually, convenience scripts are provided:
+**These scripts are for development and architecture team convenience only.** Production builds (Yocto/BitBake) should call CMake directly as shown in the examples above.
 
-**Host tools:**
+**Wrapper scripts automatically handle:**
+
+- All required CMake variables
+- Directory creation
+- Android source cloning
+- Installation to `out/` directories
+
+**Use Cases:**
+
+- Architecture team building AIDL compiler for code generation
+- Developers testing binder functionality locally
+- Quick builds without configuring CMake variables manually
+
+**Build AIDL Compiler (Architecture Team):**
 
 ```bash
 ./build-aidl-generator-tool.sh
+
+# Clean build
+./build-aidl-generator-tool.sh --clean
 ```
 
-**Target libraries:**
+**Build Target Libraries (Development/Testing):**
 
 ```bash
 ./build-linux-binder-aidl.sh
@@ -189,9 +306,12 @@ For developers building manually, convenience scripts are provided:
 # Cross-compile for ARM
 CC=arm-linux-gnueabihf-gcc CXX=arm-linux-gnueabihf-g++ \
     ./build-linux-binder-aidl.sh
+
+# Clean build
+./build-linux-binder-aidl.sh --clean
 ```
 
-These wrapper scripts simply invoke CMake with appropriate defaults.
+**Important:** Yocto/BitBake recipes must NOT use these wrapper scripts. Use direct CMake invocation instead.
 
 ## Clean Builds
 
@@ -234,8 +354,10 @@ ensure you're building with `BUILD_CORE_SDK=ON` (default in both scripts).
 ## Architecture Notes
 
 - **Host tools are architecture-independent** - They generate code, not run on target
-- **Target libraries must match device architecture** - ARM, x86_64, etc.
-- **No mixing** - Host and target use separate build directories
+- **Target libraries must match userspace architecture** - Build 32-bit libraries for 32-bit userspace, 64-bit for 64-bit userspace
+- **32-bit userspace on 64-bit kernel** - Common in embedded systems; use `TARGET_LIB32_VERSION=ON` and ensure kernel has `CONFIG_ANDROID_BINDER_IPC_32BIT=y`
+- **No mixing within userspace** - All binder libraries and applications in userspace must be the same bitness (all 32-bit or all 64-bit)
+- **Host and target use separate build directories** - Never mix host tool builds with target library builds
 - **Kernel headers included** - Self-contained build, no system dependencies
 
 ## Runtime Setup and Installation
@@ -250,11 +372,20 @@ The target device kernel must have Binder support enabled. Required kernel confi
 CONFIG_ANDROID=y
 CONFIG_ANDROID_BINDER_IPC=y
 CONFIG_ANDROID_BINDER_DEVICES="binder,hwbinder,vndbinder"
-CONFIG_ANDROID_BINDER_IPC_32BIT=y       # For 32-bit systems
+CONFIG_ANDROID_BINDER_IPC_32BIT=y       # REQUIRED for 32-bit userspace (even on 64-bit kernel)
 # CONFIG_ANDROID_BINDER_IPC_SELFTEST is not set
 CONFIG_ASHMEM=y
 CONFIG_ANDROID_BINDERFS=y               # Required for Ubuntu/desktop Linux
 ```
+
+**Critical: 32-bit Userspace Configuration**
+
+`CONFIG_ANDROID_BINDER_IPC_32BIT=y` is **required** in these scenarios:
+
+- Pure 32-bit system (32-bit kernel + 32-bit userspace)
+- Mixed architecture system (64-bit kernel + 32-bit userspace) - **common in embedded systems**
+
+A 64-bit kernel with this option enabled can support both 32-bit and 64-bit userspace applications simultaneously. The kernel handles the necessary syscall translation and data structure compatibility.
 
 **Note:** Some Ubuntu kernels (5.16.20) have SELinux context issues with binder. A patch may be required for `drivers/android/binder.c`.
 
@@ -307,7 +438,17 @@ Installed files:
 
 ### Systemd Service Configuration
 
-The Binder `servicemanager` should run as a system service. Create `/etc/systemd/system/servicemanager.service`:
+The Binder `servicemanager` **must be running** before any binder client applications start. In production systems, servicemanager should run as a systemd service that starts automatically on boot.
+
+#### Service Startup Expectations
+
+- **Production (Systemd)**: servicemanager starts automatically on boot when enabled
+- **Development/Testing**: servicemanager can be started manually for testing
+- **Yocto/Embedded**: Systemd service is installed and auto-enabled via BitBake recipe
+
+#### Service Unit File
+
+Create `/etc/systemd/system/servicemanager.service`:
 
 ```ini
 [Unit]
@@ -331,14 +472,45 @@ DeviceAllow=/dev/binderfs/binder rw
 WantedBy=multi-user.target
 ```
 
-Enable and start the service:
+#### Enable and Start the Service
 
 ```bash
+# Reload systemd configuration
 sudo systemctl daemon-reload
+
+# Enable service to start automatically on boot
 sudo systemctl enable servicemanager.service
+
+# Start service immediately (for current session)
 sudo systemctl start servicemanager.service
+
+# Verify service is running
 sudo systemctl status servicemanager.service
 ```
+
+**Important Notes:**
+
+- `systemctl enable` configures the service to start automatically on every boot
+- `systemctl start` starts the service immediately in the current session
+- After `enable`, the service will start automatically on next reboot
+- In Yocto builds, `SYSTEMD_AUTO_ENABLE` handles the enable step automatically
+
+#### Manual Startup (Development/Testing Only)
+
+For development or testing without systemd:
+
+```bash
+# Ensure binder device exists
+ls -l /dev/binder
+
+# Start servicemanager in background
+sudo /usr/local/bin/servicemanager &
+
+# Verify it's running
+ps aux | grep servicemanager
+```
+
+**Note:** This method is **not recommended for production**. Always use systemd in production environments.
 
 ### Runtime Library Path
 
@@ -366,15 +538,34 @@ export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 Test the installation:
 
 ```bash
-# Check servicemanager is running
+# 1. Check servicemanager service status
 systemctl status servicemanager.service
+# Expected: Active: active (running)
 
-# Check binder device
+# 2. Verify servicemanager process is running
+ps aux | grep servicemanager
+# Expected: root ... /usr/local/bin/servicemanager
+
+# 3. Check binder device exists and is accessible
 ls -l /dev/binder
+# Expected: crw-rw-rw- 1 root root ...
 
-# List registered services (requires binder client tools)
-# servicemanager should show empty list initially
+# 4. Verify servicemanager auto-starts on boot
+systemctl is-enabled servicemanager.service
+# Expected: enabled
+
+# 5. Check for errors in system logs
+journalctl -u servicemanager.service -n 50
+# Expected: No errors, servicemanager started successfully
 ```
+
+**Expected Startup Sequence:**
+
+1. System boots and reaches `multi-user.target`
+2. Systemd starts servicemanager (if enabled)
+3. Servicemanager opens `/dev/binder` device
+4. Servicemanager enters main loop waiting for service registrations
+5. Binder client applications can now register and communicate
 
 ## Yocto/BitBake Recipe Migration
 
@@ -426,7 +617,7 @@ do_install:append() {
 
 # Systemd integration
 SYSTEMD_SERVICE:${PN} = "servicemanager.service"
-SYSTEMD_AUTO_ENABLE:${PN} = "enable"
+SYSTEMD_AUTO_ENABLE:${PN} = "enable"  # Auto-start on boot
 
 # Package files
 FILES:${PN} = " \
