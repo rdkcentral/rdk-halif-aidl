@@ -10,7 +10,7 @@ This document defines the architecture and API design for the HALIF logging syst
 
 ## Related Pages
 
-!!! tip Related Pages
+!!! tip "Related Pages"
     - [Directory And Dynamic Linking Specification](directory_and_dynamic_linking_specification.md)
 
 ## 1. Overview
@@ -155,7 +155,7 @@ Jun  4 15:35:01:MODULE[PID]:[some_function_name:123]:Initialization complete Sta
 
 ## 9. Legacy Printf Fallback Support
 
-To support incremental migration from legacy `printf()`-based logging, the HALIF system provides a fallback mechanism.
+To support incremental mitigation from legacy `printf()`-based logging, the HALIF system provides a fallback mechanism.
 
 ### Static Handle
 

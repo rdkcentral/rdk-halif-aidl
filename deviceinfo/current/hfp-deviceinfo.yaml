@@ -22,31 +22,100 @@
 
 # HAL Feature Profile for deviceinfo
 
-IDeviceInfo:                 # Component object begins
-    interfaceVersion: current
-    HALVersion:
-        major: 0
-        minor: 7
-        doc: 1
-    supportedProperties:
-        - KEY_MANUFACTURER            # Device manufacturer name (ASCII, mandatory)
-        - KEY_MANUFACTURER_OUI        # Manufacturer IEEE OUI, 3-byte hex string (mandatory)
-        - KEY_MODELNAME               # Device model name (ASCII, mandatory)
-        - KEY_PRODUCTCLASS            # Product class (ASCII, mandatory)
-        - KEY_SERIALNUMBER            # Device serial number (ASCII, mandatory)
-        - KEY_WIFIMAC                 # Wi-Fi MAC, format XX:XX:XX:XX:XX:XX (mandatory if Wi-Fi present)
-        - KEY_BLUETOOTHMAC            # Bluetooth MAC, format XX:XX:XX:XX:XX:XX (mandatory if Bluetooth present)
-        - KEY_WPSPIN                  # WPS PIN, 8-digit ASCII string (optional)
-        - KEY_ETHERNETMAC             # Ethernet MAC, format XX:XX:XX:XX:XX:XX (mandatory if Ethernet present)
-        - KEY_RF4CEMAC                # RF4CE MAC, format XX:XX:XX:XX:XX:XX (mandatory if RF4CE present)
-        - KEY_IMAGENAME               # Application image name (ASCII, mandatory)
-        - KEY_IMAGETYPE               # Application image type (ASCII, mandatory)
-        - KEY_COUNTRYCODE             # Country code (ASCII, optional)
-        - KEY_LANGUAGECODE            # Language code (ASCII, optional)
-        - KEY_MANUFACTURERDATA        # Manufacturer private data (ASCII, optional)
-        - KEY_DEVICE_TYPE             # Device type (string, mandatory)
-                                      # Allowed values:
-                                      #   - STB: tuner/demodulator, no display
-                                      #   - OTT: no tuner, internet-only, no display
-                                      #   - TV: integrated display device
-        - KEY_CHIPSETID               # Unique SoC chipset ID (string, mandatory)
+deviceinfo:
+  interfaceVersion: current
+  properties:
+    - HAL_VERSION:           # HAL version
+        value: "1.0.0"
+        format: SEMANTICVERSION
+        max_size: 32
+        zero_terminated: true
+
+    - MANUFACTURER:          # Device manufacturer name
+        value: "RDK Inc."
+        format: STRING
+        max_size: 32
+        zero_terminated: true
+
+    - MANUFACTURER_OUI:      # Manufacturer IEEE OUI, 3-byte hex string
+        value: "AABBCC"
+        format: STRING
+        max_size: 8
+        zero_terminated: true
+
+    - MODEL_NAME:             # Device model name
+        value: "RDK-STB-200"
+        format: STRING
+        max_size: 32
+        zero_terminated: true
+
+    - PRODUCT_CLASS:          # Product class
+        value: "STB"
+        format: STRING
+        max_size: 16
+        zero_terminated: true
+
+    - SERIAL_NUMBER:          # Device serial number
+        value: "RDK123456789"
+        format: STRING
+        max_size: 32
+        zero_terminated: true
+
+    - WIFI_MAC:               # Wi-Fi MAC
+        value: "00:11:22:33:44:55"
+        format: MAC
+        max_size: 16
+        zero_terminated: false
+
+    - BLUETOOTH_MAC:          # Bluetooth MAC
+        value: "11:22:33:44:55:66"
+        format: MAC
+        max_size: 16
+        zero_terminated: false
+
+    - WPS_PIN:                # WPS PIN
+        value: "12345670"
+        format: NUMERIC
+        max_size: 8
+        zero_terminated: true
+
+    - ETHERNET_MAC:           # Ethernet MAC
+        value: "AA:BB:CC:DD:EE:FF"
+        format: MAC
+        max_size: 16
+        zero_terminated: false
+
+    - RF4CE_MAC:              # RF4CE MAC
+        value: "22:33:44:55:66:77"
+        format: MAC
+        max_size: 16
+        zero_terminated: false
+
+    - COUNTRY_CODE:           # Country code
+        value: "US"
+        format: ISO3166
+        max_size: 2
+        zero_terminated: false
+
+    - LANGUAGE_CODE:          # Language code
+        value: "en"
+        format: ISO639
+        max_size: 2
+        zero_terminated: false
+
+    - DEVICE_TYPE:           # Device type
+        # Allowed values:
+        #   - STB: tuner/demodulator, no display
+        #   - OTT: no tuner, internet-only, no display
+        #   - TV: integrated display device
+        value: "STB"
+        format: STRING
+        max_size: 16
+        zero_terminated: true
+
+    - CHIPSET_ID:             # SoC chipset ID
+        value: "SAMPLE_CHIPSET_ID"
+        format: STRING
+        max_size: 32
+        zero_terminated: true
+

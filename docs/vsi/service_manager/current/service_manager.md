@@ -6,25 +6,20 @@ The **Service Manager** is a crucial **Binder service** included in the vendor l
 - Registered interfaces are added to the Service Manager’s list, making them discoverable by clients.
 - Clients can retrieve a registered service interface by calling `getService()` with the corresponding service name.
 
-## References
-
-!!! info
-    |||
+!!! info "References"
+    |Reference|Link|
     |-|-|
     |**Interface Definition**|[IServiceManager](https://android.googlesource.com/platform/frameworks/native/+/android-13.0.0_r74/libs/binder/include/binder/IServiceManager.h)|
-    | **API Documentation** | *TBD - Doxygen* |
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
-    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/systemd.md) - **hal-service_manager.service** |
-    |**VTS Tests**| TBC |
 
 ## Implementation Requirements
 
 |#|Requirement | Comments|
 |-|------------|---------|
-|**HAL.SERVICEMAN.1** |Service Manager shall initialise and run early boot time to allow HAL servers to register their binder service interfaces as they start up.|
-|**HAL.SERVICEMAN.2** |The list of registered services shall be listable for developers and testers to list on the device.|
-|**HAL.SERVICEMAN.3** |HAL services shall be able to register their public HAL interfaces with Service Manager using the string name defined in the AIDL file.|
-|**HAL.SERVICEMAN.4** |Clients shall obtain a public HAL interface using a string name from Service Manager.|
+|**HAL.SERVICEMAN.1** |Service Manager shall initialise and run early boot time to allow HAL servers to register their binder service interfaces as they start up.||
+|**HAL.SERVICEMAN.2** |The list of registered services shall be listable for developers and testers to list on the device.||
+|**HAL.SERVICEMAN.3** |HAL services shall be able to register their public HAL interfaces with Service Manager using the string name defined in the AIDL file.||
+|**HAL.SERVICEMAN.4** |Clients shall obtain a public HAL interface using a string name from Service Manager.||
 
 ## Interface Definition
 
@@ -95,4 +90,3 @@ A client can call the `waitForService()` function to block until a HAL binder se
 This may happen if the client is allowed to execute before or while the HAL service is initializing, but then needs to synchronize with the HAL service registration before it can proceed.
 
 See `waitForService()` in [https://android.googlesource.com/platform/frameworks/native/+/android-13.0.0_r74/libs/binder/include/binder/IServiceManager.h](https://android.googlesource.com/platform/frameworks/native/+/android-13.0.0_r74/libs/binder/include/binder/IServiceManager.h)
-

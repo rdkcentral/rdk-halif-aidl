@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmioutput;
+
 import com.rdk.hal.hdmioutput.HDMIVersion;
 import com.rdk.hal.hdmioutput.VIC;
 import com.rdk.hal.hdmioutput.PixelFormat;
@@ -25,103 +26,112 @@ import com.rdk.hal.hdmioutput.HDCPProtocolVersion;
 import com.rdk.hal.hdmioutput.Colorimetry;
 import com.rdk.hal.hdmioutput.ExtendedColorimetry;
 import com.rdk.hal.hdmioutput.AdditionalColorimetryExtension;
- 
+
 /** 
  *  @brief     HDMI output port device capabilities definition.
+ *
+ *  This parcelable encapsulates all HDMI output-related feature support
+ *  exposed by a specific output port. It provides a comprehensive overview
+ *  of supported resolutions, formats, protocols, and HDMI-specific extensions.
+ *
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *  @author    Gerald Weatherup
  */
- 
 @VintfStability
-parcelable Capabilities
+parcelable Capabilities 
 {
-	/**
-	 * The array of HDMI versions the port supports.
-	 */
-	HDMIVersion[] supportedVersions;
+    /**
+     * The array of HDMI versions the port supports.
+     */
+    HDMIVersion[] supportedVersions;
 
-	/**
-	 * The array of VIC the port supports.
-	 */
-	VIC[] supportedVICs;
+    /**
+     * The array of VICs (Video Identification Codes) the port supports.
+     */
+    VIC[] supportedVICs;
 
-	/**
-	 * The array of HDR modes the HDMI output port supports.
-	 */
-	HDROutputMode[] supportedHDROutputModes;
+    /**
+     * The array of HDR modes the HDMI output port supports.
+     */
+    HDROutputMode[] supportedHDROutputModes;
 
-	/**
-	 * Whether the SoC supports forced HDR modes out of the HDMI port.
-	 * When forced on, the current dynamic range is locked as the output
-	 * format and is not dependant on the primary video format.
-	 */
-	boolean supportsForcedHDROutputModes;
+    /**
+     * Whether the SoC supports forced HDR modes on the HDMI output.
+     *
+     * When forced, the current HDR dynamic range is locked as the output
+     * format and does not change based on the primary video content.
+     */
+    boolean supportsForcedHDROutputModes;
 
-	/**
-	 * The array of HDCP protocol versions the HDMI output port supports.
-	 */
-	HDCPProtocolVersion[] supportedHDCPProtocolVersions;
+    /**
+     * The array of HDCP protocol versions the HDMI output port supports.
+     */
+    HDCPProtocolVersion[] supportedHDCPProtocolVersions;
 
-	/**
-	 * The array of colorimetries the HDMI output port supports.
-	 */
-	Colorimetry[] supportedColorimetries;
+    /**
+     * The array of base colorimetries the HDMI output port supports.
+     */
+    Colorimetry[] supportedColorimetries;
 
-	/**
-	 * The array of extended colorimetries the HDMI output port supports.
-	 */
-	ExtendedColorimetry[] supportedExtendedColorimetries;
+    /**
+     * The array of extended colorimetries the HDMI output port supports.
+     */
+    ExtendedColorimetry[] supportedExtendedColorimetries;
 
-	/**
-	 * The array of additional colorimetries extensions the HDMI output port supports.
-	 */
-	AdditionalColorimetryExtension[] supportedAdditionalColorimetryExtensions;
+    /**
+     * The array of additional colorimetry extensions the HDMI output port supports.
+     */
+    AdditionalColorimetryExtension[] supportedAdditionalColorimetryExtensions;
 
-	/**
-	 * The array of color bit depths the HDMI output port supports.
-	 * e.g. [ 8, 10, 12, 16 ]
-	 */
-	int[] supportedColorDepths;
+    /**
+     * The array of color bit depths the HDMI output port supports.
+     * Example values: [8, 10, 12, 16]
+     */
+    int[] supportedColorDepths;
 
-	/**
-	 * The array of pixel formats the HDMI output port supports.
-	 */
-	PixelFormat[] supportedPixelFormats;
+    /**
+     * The array of pixel formats the HDMI output port supports.
+     */
+    PixelFormat[] supportedPixelFormats;
 
-	/**
-	 * Indicates support for stereo (3D) video.
-	 */
-	boolean supports3D;
+    /**
+     * Indicates whether the HDMI output port supports stereo (3D) video.
+     */
+    boolean supports3D;
 
-	/**
-	 * Indicates support for fixed rate link (FRL).
-	 */
-	boolean supportsFRL;
+    /**
+     * Indicates support for Fixed Rate Link (FRL).
+     */
+    boolean supportsFRL;
 
-	/**
-	 * Indicates support for variable refresh rate (VRR).
-	 */
-	boolean supportsVRR;
+    /**
+     * Indicates support for Variable Refresh Rate (VRR).
+     */
+    boolean supportsVRR;
 
-	/**
-	 * Indicates support for AMD FreeSync.
-	 * @see PlatformCapabilities.freeSync to determine the type of FreeSync.
-	 */
-	boolean supportsFreeSync;
+    /**
+     * Indicates support for AMD FreeSync.
+     *
+     * @see PlatformCapabilities.freeSync for FreeSync capability level.
+     */
+    boolean supportsFreeSync;
 
-	/**
-	 * Indicates support quick media switching (QMS is VRR with M_CONST).
-	 */
-	boolean supportsQMS;
+    /**
+     * Indicates support for Quick Media Switching (QMS).
+     * QMS is implemented using VRR with M_CONST.
+     */
+    boolean supportsQMS;
 
-	/**
-	 * Indicates support for automatic low latency mode (ALLM).
-	 */
-	boolean supportsALLM;
+    /**
+     * Indicates support for Auto Low Latency Mode (ALLM).
+     */
+    boolean supportsALLM;
 
-	/**
-	 * Indicates support for quick frame transport (QFT is Fast VActive).
-	 */
-	boolean supportsQFT;
+    /**
+     * Indicates support for Quick Frame Transport (QFT).
+     * QFT is based on Fast VActive signaling.
+     */
+    boolean supportsQFT;
 }

@@ -17,40 +17,45 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmioutput;
- 
+
 /** 
- *  @brief     HDMI VIC enum.
+ *  @brief     HDMI AFD (Active Format Description) enum.
+ *  
+ *  Represents the AFD values as specified in the HDMI AVI InfoFrame.
+ *  These values indicate how the video content should be displayed
+ *  with respect to aspect ratio and centring.
+ * 
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Amit Patel
+ *  @author    Gerald Weatherup
  */
- 
 @VintfStability
 @Backing(type = "int")
-enum AFD
+enum AFD 
 {
-	/**
-	 * Unspecified - AVI InfoFrame A0=0
-	 */
-	UNSPECIFIED = -1,
+    /**
+     * Unspecified AFD - AVI InfoFrame A0=0
+     */
+    UNSPECIFIED = -1,
 
-	/**
-	 * Unspecified - AVI InfoFrame A0=1, R=1000b
-	 */
-	SAME_AS_PICTURE = 8,
+    /**
+     * Same as picture - AVI InfoFrame A0=1, R=1000b
+     */
+    SAME_AS_PICTURE = 8,
 
-	/**
-	 * Unspecified - AVI InfoFrame A0=1, R=1001b
-	 */
-	CENTER_4_3 = 9,
+    /**
+     * Center 4:3 - AVI InfoFrame A0=1, R=1001b
+     */
+    CENTER_4_3 = 9,
 
-	/**
-	 * Unspecified - AVI InfoFrame A0=1, R=1010b
-	 */
-	CENTER_16_9 = 10,
+    /**
+     * Center 16:9 - AVI InfoFrame A0=1, R=1010b
+     */
+    CENTER_16_9 = 10,
 
-	/**
-	 * Unspecified - AVI InfoFrame A0=1, R=1011b
-	 */
-	CENTER_14_9 = 11,
+    /**
+     * Center 14:9 - AVI InfoFrame A0=1, R=1011b
+     */
+    CENTER_14_9 = 11
 }
