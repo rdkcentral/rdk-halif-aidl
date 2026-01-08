@@ -33,6 +33,8 @@ graph TB
     style G fill:#e1f5e1
 ```
 
+**Stage 1 (Binder SDK)**: The `linux_binder_idl` project in `build-tools/` is an independent Android Binder port built as a separate Yocto recipe (linux-binder). See [build-tools/linux_binder_idl/BUILD.md](build-tools/linux_binder_idl/BUILD.md) for Yocto recipe integration and runtime setup.
+
 ### Directory Structure
 
 ```text
@@ -91,7 +93,7 @@ git commit -m "Update boot interface"
 
 ```bash
 # Prerequisites:
-# - linux_binder SDK provided by build system (not install_binder.sh)
+# - linux_binder SDK (Yocto recipe dependency: DEPENDS = "linux-binder")
 # - Pre-generated code in stable/generated/ (committed to repo)
 
 # Build HAL libraries using CMake
@@ -109,7 +111,7 @@ cmake --build build -j$(nproc)
 **Production Requirements**:
 
 - ✅ CMake 3.8+
-- ✅ linux_binder SDK (from build system, not this repo)
+- ✅ linux_binder SDK (Yocto dependency: `DEPENDS = "linux-binder"` - see [BUILD.md](build-tools/linux_binder_idl/BUILD.md) for recipe)
 - ✅ Pre-generated C++ code (stable/generated/)
 - ❌ Does NOT require: Python, AIDL compiler, interface generation
 
@@ -146,8 +148,9 @@ cmake --build build -j$(nproc)
 **When to use**: Building deployable HAL libraries from pre-generated code
 
 ```bash
-# Prerequisites (provided by build system):
-# - linux_binder SDK installed to ${STAGING_DIR}/usr
+# Prerequisites (provided by Yocto dependency system):
+# - linux_binder SDK automatically staged to ${STAGING_DIR}/usr
+#   (via DEPENDS = "linux-binder" in recipe)
 # - libbinder.so, libutils.so, aidl-cpp headers
 
 # Build HAL libraries
@@ -179,6 +182,7 @@ cmake --install build
 ### Yocto Recipe Pattern
 
 ```bitbake
+# Yocto dependency: linux-binder recipe provides SDK automatically
 DEPENDS = "linux-binder"
 
 do_configure() {
@@ -233,6 +237,17 @@ Used by `install_binder.sh` and `build_interfaces.sh` only:
 **Not used in production Yocto builds**.
 
 See [TWO_STAGE_BUILD.md](TWO_STAGE_BUILD.md) for detailed workflows.
+
+## Additional Documentation
+
+- **[build-tools/linux_binder_idl/BUILD.md](build-tools/linux_binder_idl/BUILD.md)** - Binder SDK recipe build guide
+  - Yocto/BitBake recipe examples for linux-binder SDK
+  - Cross-compilation configuration for ARM targets (aarch64, armhf)
+  - Kernel configuration and runtime setup
+  - Systemd service configuration
+  - 32-bit userspace on 64-bit kernel support
+
+- **[TWO_STAGE_BUILD.md](TWO_STAGE_BUILD.md)** - Detailed build workflows for both development and production
 
 ## Copyright and License
 
