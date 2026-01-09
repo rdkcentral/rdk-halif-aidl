@@ -63,6 +63,9 @@ Following are the build steps to build the binder framework, binder examples and
 ./build-linux-binder-aidl.sh
 ```
 
+This also builds the host AIDL generator tool by default so the target build can generate
+stubs/proxies. Use `--no-host-aidl` if you already have `out/host/bin/aidl` available.
+
 #### Following are the generated files as part of the binder framework (in `out/target/`):-
 
 ```bash
@@ -103,7 +106,7 @@ out/target/
 
 ## Build AIDL generator tool
 
-**Note:** The AIDL compiler is only used by the architecture team for offline interface code generation. Production builds do NOT require building or installing the AIDL compiler.
+**Note:** The AIDL compiler is primarily used by the architecture team for offline interface code generation. Production Yocto/BitBake builds do NOT require building or installing the AIDL compiler (they use pre-generated sources).
 
 ### Run below command to build aidl generator tool
 
@@ -155,7 +158,8 @@ All wrapper scripts support `--help` and `--clean` options:
 
 ```bash
 # Build target SDK (libraries + servicemanager)
-./build-linux-binder-aidl.sh [--clean]
+# Also builds host AIDL tools unless --no-host-aidl is used
+./build-linux-binder-aidl.sh [--clean] [--no-host-aidl]
 
 # Build examples (includes SDK build)
 ./build-binder-example.sh [--clean] [--clean-aidl]
@@ -254,7 +258,72 @@ Refer to [OUTPUT.md](OUTPUT.md) for a complete list of installed files.
 ---
 
 # Testing
+This project includes comprehensive test suites to validate the build process and ensure quality for releases.
 
+### Quick Validation Test
+
+For fast validation during development:
+
+```bash
+./quick_test.sh
+```
+
+This runs a streamlined test that:
+1. Clones Android sources (if not present)
+2. Validates all build scripts
+3. Tests clean operations
+4. Builds host AIDL tools
+5. Builds target binder libraries
+6. Builds target libraries via direct CMake (per BUILD.md examples)
+7. Verifies all outputs
+
+**Time:** ~5-10 minutes (faster on subsequent runs with cached builds)
+
+### Comprehensive Build Test
+
+For thorough validation before releases:
+
+```bash
+./test_build.sh
+```
+
+This comprehensive test suite validates:
+- Android source repository cloning
+- All 8 required AOSP repositories
+- Patch application
+- Build script functionality
+- Clean operations
+- Help flags
+- Host AIDL compiler build
+- Target binder libraries build
+- Incremental builds
+- Zero warnings/errors policy
+- Output file verification
+
+**Time:** ~10-20 minutes
+
+### CI/CD Integration
+
+A GitHub Actions workflow is provided in `.github/workflows/build-test.yml` that:
+- Runs on every push and pull request
+- Executes both quick and comprehensive tests
+- Uploads build artifacts
+- Validates release readiness for tagged commits
+
+### Release Validation Checklist
+
+Before creating a release:
+
+1. ✅ Run `./test_build.sh` successfully
+2. ✅ Verify zero build warnings/errors
+3. ✅ Test on clean Ubuntu 22.04 LTS system
+4. ✅ Update CHANGELOG.md with changes
+5. ✅ Tag release with version (e.g., `v1.0.1`)
+6. ✅ Verify CI/CD pipeline passes
+
+---
+
+## Runtime Testing
 ## Using Vagrant Box
 
 Refer : https://www.vagrantup.com/

@@ -50,11 +50,11 @@ Host tools run on your **build machine** (typically x86_64) to generate code fro
 - `out/host/bin/aidl-cpp` - C++ AIDL compiler
 
 **Compiler Selection:**
-Uses system default `gcc/g++`. Override if needed:
+Uses system default `gcc/g++`. Override if needed with `HOST_CC`/`HOST_CXX`:
 
 ```bash
-export CC=gcc-11
-export CXX=g++-11
+export HOST_CC=gcc-11
+export HOST_CXX=g++-11
 ./build-aidl-generator-tool.sh
 ```
 
@@ -75,6 +75,10 @@ For local testing or x86_64 targets:
 # Show help
 ./build-linux-binder-aidl.sh --help
 ```
+
+**Note:** This script builds the host AIDL generator tool by default so the target
+build can generate stubs/proxies. Use `--no-host-aidl` if you already have
+`out/host/bin/aidl` available.
 
 ### Cross-Compilation (ARM target)
 
@@ -225,6 +229,10 @@ cmake -S . -B build-target \
 cmake --build build-target -j$(nproc)
 cmake --install build-target
 ```
+
+**Non-Yocto note:** If you run direct CMake builds outside Yocto and have AIDL
+code generation enabled, ensure `out/host/bin/aidl` exists (run
+`./build-aidl-generator-tool.sh` first).
 
 **Yocto/Production: Target Build (32-bit ARM - armhf):**
 

@@ -46,6 +46,27 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+
+###########################################################
+# Set all the path variables (must be before any checks)
+###########################################################
+set(LINUX_BINDER_AIDL_ROOT "${CMAKE_CURRENT_LIST_DIR}")
+set(LINUX_BINDER_AIDL_ROOT_OUT "${CMAKE_CURRENT_LIST_DIR}/out")
+if(NOT EXISTS ${LINUX_BINDER_AIDL_ROOT_OUT})
+    file(MAKE_DIRECTORY ${LINUX_BINDER_AIDL_ROOT_OUT})
+endif()
+
+set(ANDROID_DIR "${CMAKE_CURRENT_LIST_DIR}/android")
+
+set(ANDROID_LOGGING_DIR ${ANDROID_DIR}/logging)
+set(ANDROID_BASE_DIR ${ANDROID_DIR}/libbase)
+set(ANDROID_CORE_DIR ${ANDROID_DIR}/core)
+set(ANDROID_NATIVE_DIR ${ANDROID_DIR}/native)
+set(ANDROID_FMTLIB_DIR ${ANDROID_DIR}/fmtlib)
+set(ANDROID_AIDL_TOOL_DIR ${ANDROID_DIR}/aidl)
+set(ANDROID_BUILD_TOOLS_DIR ${ANDROID_DIR}/build-tools/linux-x86)
+
+###########################################################
 find_package(PkgConfig)
 
 ###########################################################
@@ -105,6 +126,8 @@ add_compile_options(
     -Wno-return-type               # Missing return statements in switch/if chains
     -w                             # Suppress ALL warnings (AOSP third-party code)
     -fno-strict-aliasing           # Disable strict aliasing (required for AOSP wire formats)
+    -U_FORTIFY_SOURCE              # Disable bionic FORTIFY (uses Clang __overloadable)
+    -D__ANDROID_API__=30           # Set Android API level for bionic features
 )
 
 # C++ specific warnings
@@ -158,7 +181,7 @@ endif()
 
 set(ANDROID_DIR "${CMAKE_CURRENT_LIST_DIR}/android")
 
-set(ANDOIRD_LOGGING_DIR ${ANDROID_DIR}/logging)
+set(ANDROID_LOGGING_DIR ${ANDROID_DIR}/logging)
 set(ANDROID_BASE_DIR ${ANDROID_DIR}/libbase)
 set(ANDROID_CORE_DIR ${ANDROID_DIR}/core)
 set(ANDROID_NATIVE_DIR ${ANDROID_DIR}/native)
@@ -170,7 +193,7 @@ set(BINDER_DIR ${ANDROID_NATIVE_DIR}/libs/binder)
 set(LIBUTILS_DIR ${ANDROID_CORE_DIR}/libutils)
 set(LIBCUTILS_DIR ${ANDROID_CORE_DIR}/libcutils)
 set(LIBBASE_DIR ${ANDROID_BASE_DIR})
-set(LIBLOG_DIR ${ANDOIRD_LOGGING_DIR}/liblog)
+set(LIBLOG_DIR ${ANDROID_LOGGING_DIR}/liblog)
 set(LIBSYSTEM_DIR ${ANDROID_CORE_DIR}/libsystem)
 set(LIBFMT_DIR ${ANDROID_FMTLIB_DIR})
 set(LIBPROCESSGROUP_DIR ${ANDROID_CORE_DIR}/libprocessgroup)
@@ -635,8 +658,6 @@ if (BUILD_CORE_SDK)
         ${LIBFMT_DIR}/include
         ${LIBSYSTEM_DIR}/include
         ${LIBPROCESSGROUP_DIR}/include/
-        ${ANDROID_DIR}/bionic/libc/kernel/uapi
-        ${ANDROID_DIR}/bionic/libc/kernel/android/uapi
     )
 
     if (TARGET_LIB32_VERSION)

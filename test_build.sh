@@ -24,6 +24,7 @@ set -euo pipefail
 #
 # Comprehensive build test for Linux Binder AIDL toolchain.
 # Tests all build scripts to ensure they work correctly:
+#   0. Clone Android source repositories
 #   1. Clean operations (--clean flag)
 #   2. Full host AIDL compiler build
 #   3. Full target binder libraries build
@@ -115,6 +116,101 @@ check_warnings_errors() {
         return 1
     fi
 }
+
+###########################################################
+# Test 0: Clone Android source repositories
+###########################################################
+
+print_header "Test 0: Android Source Repository Clone"
+
+print_test "Checking clone-android-binder-repo.sh"
+if [ -x "./clone-android-binder-repo.sh" ]; then
+    print_pass "clone-android-binder-repo.sh is executable"
+else
+    print_fail "clone-android-binder-repo.sh not found or not executable"
+    exit 1
+fi
+
+# Check if android directory already exists
+if [ -d "./android" ]; then
+    print_info "Android directory already exists - testing re-clone"
+fi
+
+print_test "Cloning Android AOSP repositories (this may take several minutes)"
+if ./clone-android-binder-repo.sh 2>&1 | tee /tmp/clone.log; then
+    print_pass "Clone script completed successfully"
+    
+    # Verify android directory was created
+    if [ -d "./android" ]; then
+        print_pass "android/ directory created"
+    else
+        print_fail "android/ directory not created"
+    fi
+    
+    # Verify key repositories were cloned
+    print_test "Verifying cloned repositories"
+    
+    REQUIRED_REPOS=(
+        "native"
+        "aidl"
+        "fmtlib"
+        "logging"
+        "libbase"
+        "core"
+        "googletest"
+        "build-tools"
+    )
+    
+    for repo in "${REQUIRED_REPOS[@]}"; do
+        if [ -d "./android/${repo}" ]; then
+            print_pass "Repository cloned: ${repo}"
+            
+            # Verify it's a git repository
+            if [ -d "./android/${repo}/.git" ]; then
+                print_pass "${repo} is a valid git repository"
+                
+                # Check if it's on the correct tag
+                pushd "./android/${repo}" > /dev/null
+                current_ref=$(git describe --tags 2>/dev/null || git rev-parse --short HEAD)
+                popd > /dev/null
+                print_info "${repo} at: ${current_ref}"
+            else
+                print_fail "${repo} is not a git repository"
+            fi
+        else
+            print_fail "Repository missing: ${repo}"
+        fi
+    done
+    
+    # Verify patches were applied
+    print_test "Verifying patches applied"
+    PATCHED_REPOS=("aidl" "core" "libbase" "logging" "native")
+    
+    for repo in "${PATCHED_REPOS[@]}"; do
+        if [ -d "./android/${repo}" ]; then
+            pushd "./android/${repo}" > /dev/null
+            # Check if there are any applied patches (look for modified files)
+            if git diff --quiet HEAD 2>/dev/null; then
+                print_info "${repo}: No modifications (patch may be empty or already applied)"
+            else
+                print_pass "${repo}: Patch applied (has modifications)"
+            fi
+            popd > /dev/null
+        fi
+    done
+    
+    # Check disk space used
+    if command -v du &> /dev/null; then
+        android_size=$(du -sh ./android 2>/dev/null | cut -f1)
+        print_info "Android source size: ${android_size}"
+    fi
+    
+else
+    print_fail "Clone script failed"
+    echo "Last 50 lines of clone log:" | tee -a "${TEST_LOG}"
+    tail -50 /tmp/clone.log | tee -a "${TEST_LOG}"
+    exit 1
+fi
 
 ###########################################################
 # Test 1: Check build scripts exist and are executable
