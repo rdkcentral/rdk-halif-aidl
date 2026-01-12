@@ -107,6 +107,10 @@ if [ "$CLEAN_BUILD" = true ]; then
   echo "==> Cleaning all build artifacts and source directories..."
   rm -rf "${BUILD_DIR}" 2>/dev/null || true
   echo "    Cleaned: ${BUILD_DIR}"
+  rm -rf "${ROOT_DIR}/build-target-cmake" 2>/dev/null || true
+  echo "    Cleaned: ${ROOT_DIR}/build-target-cmake"
+  rm -rf "${ROOT_DIR}/CMakeFiles" 2>/dev/null || true
+  echo "    Cleaned: ${ROOT_DIR}/CMakeFiles"
   rm -rf "${ROOT_DIR}/out" 2>/dev/null || true
   echo "    Cleaned: ${ROOT_DIR}/out"
   rm -rf "${ROOT_DIR}/build-host" 2>/dev/null || true
@@ -118,6 +122,10 @@ if [ "$CLEAN_BUILD" = true ]; then
   echo "✅ Complete clean finished"
   exit 0
 fi
+
+# Remove stale in-source CMake artifacts from legacy builds.
+rm -rf "${ROOT_DIR}/build-target-cmake" 2>/dev/null || true
+rm -rf "${ROOT_DIR}/CMakeFiles" 2>/dev/null || true
 
 # Build host AIDL tool first (needed for generating binder AIDL stubs/proxies)
 if [ "$BUILD_HOST_AIDL_TOOL" = true ]; then

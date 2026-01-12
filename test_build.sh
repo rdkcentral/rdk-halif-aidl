@@ -243,6 +243,40 @@ else
 fi
 
 ###########################################################
+# Test 1.5: Default CMake flags
+###########################################################
+
+print_header "Test 1.5: Default CMake Flags"
+
+print_test "Configuring CMake with defaults"
+rm -rf ./build-default-cmake 2>/dev/null || true
+if cmake -S . -B ./build-default-cmake > /tmp/default_config.log 2>&1; then
+    print_pass "Default CMake configure completed"
+
+    if grep -q "^CMAKE_BUILD_TYPE:STRING=Release$" ./build-default-cmake/CMakeCache.txt; then
+        print_pass "Default CMAKE_BUILD_TYPE is Release"
+    else
+        print_fail "Default CMAKE_BUILD_TYPE is not Release"
+    fi
+
+    if grep -q "^BUILD_CORE_SDK:BOOL=ON$" ./build-default-cmake/CMakeCache.txt; then
+        print_pass "Default BUILD_CORE_SDK is ON"
+    else
+        print_fail "Default BUILD_CORE_SDK is not ON"
+    fi
+
+    if grep -q "^BUILD_HOST_AIDL:BOOL=ON$" ./build-default-cmake/CMakeCache.txt; then
+        print_pass "Default BUILD_HOST_AIDL is ON"
+    else
+        print_fail "Default BUILD_HOST_AIDL is not ON"
+    fi
+else
+    print_fail "Default CMake configure failed"
+    tail -20 /tmp/default_config.log | tee -a "${TEST_LOG}"
+fi
+rm -rf ./build-default-cmake 2>/dev/null || true
+
+###########################################################
 # Test 2: Clean operations
 ###########################################################
 
