@@ -19,7 +19,7 @@
 # */
 
 # Helper script to update AIDL APIs and build interface libraries.
-# 
+#
 # This script:
 #   1. Runs aidl_ops -u to copy {module}/current/*.aidl → stable/aidl/{module}/current/
 #   2. Generates C++ code → stable/generated/{module}/current/
@@ -88,12 +88,12 @@ Examples:
   ./build_interfaces.sh boot                   # Build boot module
   ./build_interfaces.sh boot --version current # Explicit version
   ./build_interfaces.sh videodecoder --version v1  # Build frozen v1
-  
+
   # Cleaning
   ./build_interfaces.sh clean                  # Remove build outputs (out/)
   ./build_interfaces.sh cleanstable            # Remove generated code (stable/)
   ./build_interfaces.sh cleanall               # Remove all artifacts
-  
+
   # Testing
   ./build_interfaces.sh test                   # Quick SDK validation
   ./build_interfaces.sh test-all               # Test all modules individually
@@ -147,20 +147,20 @@ case "${1:-}" in
         echo "🧪 Testing interface builds..."
         echo "=========================================="
         echo ""
-        
+
         # Clean previous build
         echo "Cleaning previous build..."
         rm -rf stable/ build/current
-        
+
         echo "Building all interfaces..."
         if "$SCRIPT_PATH" all > /tmp/test_build_all.log 2>&1; then
             echo ""
             echo "Verifying build outputs..."
-            
+
             # Check if libraries were built
             LIB_COUNT=$(find out/target/lib/halif -name "*.so" 2>/dev/null | wc -l || echo 0)
             LIB_COUNT=$(echo "$LIB_COUNT" | tr -d ' ')
-            
+
             if [ "${LIB_COUNT:-0}" -gt 0 ]; then
                 echo "  ✅ HAL libraries: $LIB_COUNT files"
             else
@@ -169,33 +169,33 @@ case "${1:-}" in
                 tail -20 /tmp/test_build_all.log | sed 's/^/     /'
                 exit 1
             fi
-            
+
             # Check if headers were generated
-            HDR_COUNT=$(find out/target/include/halif -name "*.h" 2>/dev/null | wc -l || echo 0)
+            HDR_COUNT=$(find stable/generated -name "*.h" 2>/dev/null | wc -l || echo 0)
             HDR_COUNT=$(echo "$HDR_COUNT" | tr -d ' ')
-            
+
             if [ "${HDR_COUNT:-0}" -gt 0 ]; then
                 echo "  ✅ HAL headers: $HDR_COUNT files"
             else
                 echo "  ❌ No HAL headers generated"
                 exit 1
             fi
-            
+
             # Check generated C++ code structure
             GEN_CPP=$(find stable/generated -name "*.cpp" 2>/dev/null | wc -l || echo 0)
             GEN_CPP=$(echo "$GEN_CPP" | tr -d ' ')
-            
+
             if [ "${GEN_CPP:-0}" -gt 0 ]; then
                 echo "  ✅ Generated C++ files: $GEN_CPP files"
             else
                 echo "  ❌ No C++ code generated"
                 exit 1
             fi
-            
+
             # Verify no unexpected artifacts
             echo ""
             echo "Checking for unwanted build artifacts..."
-            
+
             # Check for timestamp files
             TIMESTAMP_COUNT=$(find stable -name "*.timestamp" 2>/dev/null | wc -l || echo 0)
             TIMESTAMP_COUNT=$(echo "$TIMESTAMP_COUNT" | tr -d ' ')
@@ -206,7 +206,7 @@ case "${1:-}" in
                 find stable -name "*.timestamp" | sed 's/^/     /'
                 exit 1
             fi
-            
+
             # Check for *-api directories
             API_DIR_COUNT=$(find stable -type d -name "*-api" 2>/dev/null | wc -l || echo 0)
             API_DIR_COUNT=$(echo "$API_DIR_COUNT" | tr -d ' ')
@@ -217,7 +217,7 @@ case "${1:-}" in
                 find stable -type d -name "*-api" | sed 's/^/     /'
                 exit 1
             fi
-            
+
             # Check for has_development files
             HAS_DEV_COUNT=$(find stable -name "has_development" 2>/dev/null | wc -l || echo 0)
             HAS_DEV_COUNT=$(echo "$HAS_DEV_COUNT" | tr -d ' ')
@@ -228,7 +228,7 @@ case "${1:-}" in
                 find stable -name "has_development" | sed 's/^/     /'
                 exit 1
             fi
-            
+
             # Check for unexpected module directories in stable/
             # Only aidl/, generated/, and dependencies.txt should exist at top level
             UNEXPECTED=$(ls -1 stable/ 2>/dev/null | grep -v -E "^(aidl|generated|dependencies.txt)$" || echo "")
@@ -239,7 +239,7 @@ case "${1:-}" in
                 echo "$UNEXPECTED" | sed 's/^/     /'
                 exit 1
             fi
-            
+
             echo ""
             echo "✅ Interface build test passed"
             exit 0
@@ -256,21 +256,21 @@ case "${1:-}" in
         echo "🧪 Testing CMake Build System"
         echo "=========================================="
         echo ""
-        
+
         TEST_PASSED=true
         TEST_MODULE="boot"
         TEST_BUILD_DIR="build/test-cmake-validation"
         TEST_INSTALL_DIR="/tmp/rdk-halif-cmake-test-install"
-        
+
         # Cleanup function
         cleanup_cmake_test() {
             echo "  🔄 Cleaning up CMake test artifacts..."
             rm -rf "$TEST_BUILD_DIR" "$TEST_INSTALL_DIR" /tmp/cmake_test_*.log
         }
-        
+
         # Trap to ensure cleanup on exit
         trap cleanup_cmake_test EXIT
-        
+
         echo "Test 1: Check prerequisites"
         echo "--------------------------------------------------------"
         # Verify binder SDK exists
@@ -279,7 +279,7 @@ case "${1:-}" in
             exit 1
         fi
         echo "  ✅ Binder SDK found"
-        
+
         # Verify stable/generated exists
         if [ ! -d "stable/generated/$TEST_MODULE" ]; then
             echo "  ⚠️  Pre-generated code not found - generating now..."
@@ -292,7 +292,7 @@ case "${1:-}" in
         fi
         echo "  ✅ Pre-generated code available"
         echo ""
-        
+
         echo "Test 2: CMake configure (development mode)"
         echo "--------------------------------------------------------"
         if cmake -S . -B "$TEST_BUILD_DIR" \
@@ -300,7 +300,7 @@ case "${1:-}" in
                 -DAIDL_SRC_VERSION=current \
                 > /tmp/cmake_test_configure.log 2>&1; then
             echo "  ✅ CMake configure succeeded"
-            
+
             # Verify CMAKE_INSTALL_PREFIX defaulted correctly
             if grep -q "CMAKE_INSTALL_PREFIX defaulted to" /tmp/cmake_test_configure.log; then
                 PREFIX=$(grep "CMAKE_INSTALL_PREFIX defaulted to" /tmp/cmake_test_configure.log | awk '{print $NF}')
@@ -312,12 +312,12 @@ case "${1:-}" in
             TEST_PASSED=false
         fi
         echo ""
-        
+
         echo "Test 3: CMake build"
         echo "--------------------------------------------------------"
         if cmake --build "$TEST_BUILD_DIR" -j4 > /tmp/cmake_test_build.log 2>&1; then
             echo "  ✅ CMake build succeeded"
-            
+
             # Verify library was built
             LIB_FILE=$(find "$TEST_BUILD_DIR" -name "lib${TEST_MODULE}-vcurrent-cpp.so" 2>/dev/null)
             if [ -n "$LIB_FILE" ]; then
@@ -333,12 +333,12 @@ case "${1:-}" in
             TEST_PASSED=false
         fi
         echo ""
-        
+
         echo "Test 4: CMake install (development mode)"
         echo "--------------------------------------------------------"
         if cmake --install "$TEST_BUILD_DIR" > /tmp/cmake_test_install.log 2>&1; then
             echo "  ✅ CMake install succeeded"
-            
+
             # Verify installed library
             DEFAULT_INSTALL="$(pwd)/out/target"
             if [ -f "$DEFAULT_INSTALL/lib/lib${TEST_MODULE}-vcurrent-cpp.so" ]; then
@@ -347,7 +347,7 @@ case "${1:-}" in
                 echo "  ❌ Library not found at default install location"
                 TEST_PASSED=false
             fi
-            
+
             # Verify installed headers
             HEADER_COUNT=$(find "$DEFAULT_INSTALL/include" -name "*.h" 2>/dev/null | wc -l)
             if [ "$HEADER_COUNT" -gt 0 ]; then
@@ -362,14 +362,14 @@ case "${1:-}" in
             TEST_PASSED=false
         fi
         echo ""
-        
+
         echo "Test 5: CMake install with custom prefix (Yocto mode)"
         echo "--------------------------------------------------------"
         rm -rf "$TEST_INSTALL_DIR"
         if cmake --install "$TEST_BUILD_DIR" --prefix "$TEST_INSTALL_DIR" \
                 > /tmp/cmake_test_install_custom.log 2>&1; then
             echo "  ✅ CMake install with custom prefix succeeded"
-            
+
             # Verify library at custom location
             if [ -f "$TEST_INSTALL_DIR/lib/lib${TEST_MODULE}-vcurrent-cpp.so" ]; then
                 echo "  ✅ Library installed to: $TEST_INSTALL_DIR/lib/"
@@ -377,7 +377,7 @@ case "${1:-}" in
                 echo "  ❌ Library not found at custom install location"
                 TEST_PASSED=false
             fi
-            
+
             # Verify headers at custom location
             CUSTOM_HEADER_COUNT=$(find "$TEST_INSTALL_DIR/include" -name "*.h" 2>/dev/null | wc -l)
             if [ "$CUSTOM_HEADER_COUNT" -gt 0 ]; then
@@ -392,7 +392,7 @@ case "${1:-}" in
             TEST_PASSED=false
         fi
         echo ""
-        
+
         echo "Test 6: Verify configurable SDK paths"
         echo "--------------------------------------------------------"
         rm -rf "$TEST_BUILD_DIR"
@@ -402,7 +402,7 @@ case "${1:-}" in
                 -DBINDER_SDK_LIB_SUBDIR=lib/custom \
                 > /tmp/cmake_test_custom_sdk.log 2>&1; then
             echo "  ✅ CMake accepts custom SDK subdirectories"
-            
+
             # Verify custom paths are used
             if grep -q "include/custom" /tmp/cmake_test_custom_sdk.log && \
                grep -q "lib/custom" /tmp/cmake_test_custom_sdk.log; then
@@ -419,7 +419,7 @@ case "${1:-}" in
             fi
         fi
         echo ""
-        
+
         echo "=========================================="
         if [ "$TEST_PASSED" = true ]; then
             echo "✅ All CMake build tests passed!"
@@ -433,7 +433,7 @@ case "${1:-}" in
         echo "🧪 Running comprehensive build tests..."
         echo "=========================================="
         echo ""
-        
+
         # List of all modules in dependency order
         MODULES=(
             common flash deepsleep indicator boot
@@ -441,17 +441,17 @@ case "${1:-}" in
             videosink audiosink hdmioutput deviceinfo
             planecontrol panel avbuffer avclock
         )
-        
+
         FAILED_MODULES=()
-        
+
         for module in "${MODULES[@]}"; do
             echo "----------------------------------------"
             echo "Testing: $module"
             echo "----------------------------------------"
-            
+
             # Remove stable directory for clean test
             rm -rf stable/
-            
+
             # Build the module
             if "$SCRIPT_PATH" "$module" > /tmp/build_$module.log 2>&1; then
                 # Check stable directory structure
@@ -459,16 +459,16 @@ case "${1:-}" in
                 GEN_DIR=$(ls -d stable/generated 2>/dev/null | wc -l)
                 DEPS_FILE=$(ls stable/dependencies.txt 2>/dev/null | wc -l)
                 HIDDEN_API=$(ls -d stable/.api_temp 2>/dev/null | wc -l)
-                
+
                 AIDL_MODULES=$(ls stable/aidl/ 2>/dev/null | wc -l)
                 GEN_MODULES=$(ls stable/generated/ 2>/dev/null | wc -l)
-                
+
                 if [ "$AIDL_DIR" -eq 1 ] && [ "$GEN_DIR" -eq 1 ] && [ "$DEPS_FILE" -eq 1 ] && [ "$HIDDEN_API" -eq 1 ]; then
                     echo "  ✅ Build: SUCCESS"
                     echo "  ✅ Structure: Clean (aidl/, generated/, dependencies.txt, .api_temp/)"
                     echo "  ✅ Modules in stable/aidl/: $AIDL_MODULES"
                     echo "  ✅ Modules in stable/generated/: $GEN_MODULES"
-                    
+
                     # Check for unexpected directories
                     UNEXPECTED=$(ls stable/ 2>/dev/null | grep -v "^aidl$" | grep -v "^generated$" | grep -v "^dependencies.txt$" | wc -l)
                     if [ "$UNEXPECTED" -gt 0 ]; then
@@ -492,7 +492,7 @@ case "${1:-}" in
             fi
             echo ""
         done
-        
+
         echo "=========================================="
         echo "  Summary"
         echo "=========================================="
@@ -511,18 +511,18 @@ case "${1:-}" in
         echo "🧪 Testing AIDL compatibility validation..."
         echo "=========================================="
         echo ""
-        
+
         TEST_MODULE="testhal"
         TEST_DIR="$TEST_MODULE"
         TEST_INTERFACE_FILE="$TEST_DIR/current/com/rdk/hal/$TEST_MODULE/ITestHal.aidl"
         TEST_YAML_FILE="$TEST_DIR/current/interface.yaml"
         TEST_PASSED=true
-        
+
         # Create mock test interface
         setup_test_interface() {
             echo "  📝 Creating mock test interface..."
             mkdir -p "$TEST_DIR/current/com/rdk/hal/$TEST_MODULE"
-            
+
             # Create interface.yaml
             cat > "$TEST_YAML_FILE" << 'EOF'
 aidl_interface:
@@ -532,7 +532,7 @@ aidl_interface:
   imports: []
   stability: vintf
 EOF
-            
+
             # Create main interface
             cat > "$TEST_INTERFACE_FILE" << 'EOF'
 package com.rdk.hal.testhal;
@@ -540,19 +540,19 @@ package com.rdk.hal.testhal;
 @VintfStability
 interface ITestHal {
     const @utf8InCpp String serviceName = "testhal";
-    
+
     /**
      * Initialize the test HAL.
      * @returns Success status.
      */
     boolean initialize();
-    
+
     /**
      * Get current state.
      * @returns State value.
      */
     int getState();
-    
+
     /**
      * Perform test operation.
      */
@@ -561,19 +561,19 @@ interface ITestHal {
 EOF
             echo "  ✅ Mock interface created at $TEST_DIR"
         }
-        
+
         # Cleanup function
         cleanup_test() {
             echo "  🔄 Cleaning up test interface..."
             rm -rf "$TEST_DIR" stable/ out/
         }
-        
+
         # Trap to ensure cleanup on exit
         trap cleanup_test EXIT
-        
+
         # Setup test interface
         setup_test_interface
-        
+
         echo "Test 1: First update should succeed (no frozen versions)"
         echo "--------------------------------------------------------"
         if "$SCRIPT_PATH" "$TEST_MODULE" > /tmp/test_first_update.log 2>&1; then
@@ -589,7 +589,7 @@ EOF
             TEST_PASSED=false
         fi
         echo ""
-        
+
         echo "Test 2: Freeze interface to create v1"
         echo "--------------------------------------------------------"
         if echo "y" | ./freeze_interface.sh "$TEST_MODULE" > /tmp/test_freeze.log 2>&1; then
@@ -601,15 +601,15 @@ EOF
             TEST_PASSED=false
         fi
         echo ""
-        
+
         echo "Test 3: Adding a method should succeed (backward-compatible)"
         echo "--------------------------------------------------------------"
         # Backup original
         cp "$TEST_INTERFACE_FILE" /tmp/test_aidl.tmp
-        
+
         # Add a new method at the end (before closing brace)
         sed -i '/^}/i\    /**\n     * New compatible method added in v2.\n     */\n    void newCompatibleMethod();' "$TEST_INTERFACE_FILE"
-        
+
         if "$SCRIPT_PATH" "$TEST_MODULE" > /tmp/test_add_method.log 2>&1; then
             echo "  ✅ Adding method succeeded (expected - backward compatible)"
             # Check that validation ran (frozen versions exist)
@@ -622,20 +622,20 @@ EOF
             tail -20 /tmp/test_add_method.log | sed 's/^/     /'
             TEST_PASSED=false
         fi
-        
+
         # Restore original
         cp /tmp/test_aidl.tmp "$TEST_INTERFACE_FILE"
         rm /tmp/test_aidl.tmp
         echo ""
-        
+
         echo "Test 4: Removing a method should fail (breaking change)"
         echo "--------------------------------------------------------"
         # Backup original
         cp "$TEST_INTERFACE_FILE" /tmp/test_aidl.tmp
-        
+
         # Remove a method (testOperation)
         sed -i '/void testOperation/d' "$TEST_INTERFACE_FILE"
-        
+
         if "$SCRIPT_PATH" "$TEST_MODULE" > /tmp/test_remove_method.log 2>&1; then
             echo "  ❌ Removing method succeeded (unexpected - should fail)"
             TEST_PASSED=false
@@ -648,32 +648,32 @@ EOF
                 echo "  ⚠️  Error message may not clearly explain the issue"
             fi
         fi
-        
+
         # Restore original
         cp /tmp/test_aidl.tmp "$TEST_INTERFACE_FILE"
         rm /tmp/test_aidl.tmp
         echo ""
-        
+
         echo "Test 5: Changing method signature should fail (breaking change)"
         echo "----------------------------------------------------------------"
         # Backup original
         cp "$TEST_INTERFACE_FILE" /tmp/test_aidl.tmp
-        
+
         # Change a method signature
         sed -i 's/void reboot();/void reboot(in boolean force);/' "$TEST_INTERFACE_FILE"
-        
+
         if "$SCRIPT_PATH" "$TEST_MODULE" > /tmp/test_change_signature.log 2>&1; then
             echo "  ❌ Changing signature succeeded (unexpected - should fail)"
             TEST_PASSED=false
         else
             echo "  ✅ Changing signature failed (expected - breaking change blocked)"
         fi
-        
+
         # Restore original
         cp /tmp/test_aidl.tmp "$TEST_INTERFACE_FILE"
         rm /tmp/test_aidl.tmp
         echo ""
-        
+
         echo "=========================================="
         if [ "$TEST_PASSED" = true ]; then
             echo "✅ All validation tests passed!"
@@ -761,7 +761,7 @@ with open(deps_file, 'r') as f:
             module, dependencies = line.split(':', 1)
             module = module.replace('-vcurrent-cpp', '').strip()
             order.append(module)
-            dep_list = [d.replace('-vcurrent-cpp', '').strip() 
+            dep_list = [d.replace('-vcurrent-cpp', '').strip()
                        for d in dependencies.split() if d.strip()]
             deps[module] = dep_list
 
@@ -820,7 +820,7 @@ else
     echo "--> [Step 2/4] Calculating dependencies for $MODULE..."
     $AIDL_OPS -a -r "$ROOT_DIR" -o "$STABLE_DIR" >/dev/null 2>&1
     DEPS_FILE="${STABLE_DIR}/dependencies.txt"
-    
+
     if [ -f "$DEPS_FILE" ]; then
         # Use Python helper script to resolve transitive dependencies
         if [ ! -f "$RESOLVE_DEPS_SCRIPT" ]; then
@@ -828,13 +828,13 @@ else
             MODULES="$MODULE"
         else
             MODULES=$(python3 "$RESOLVE_DEPS_SCRIPT" "$MODULE" "$DEPS_FILE" 2>&1)
-            
+
             if [ $? -ne 0 ]; then
                 echo "    ERROR: Dependency resolution failed: $MODULES"
                 MODULES="$MODULE"
             fi
         fi
-        
+
         if [ -n "$MODULES" ]; then
             # Count dependencies (all except the target module)
             # Note: grep -v returns 1 if no matches, so we use || true to prevent exit
@@ -933,21 +933,23 @@ if [ $? -eq 0 ]; then
     echo ""
     echo "✅ Build Complete - SDK Ready for Deployment"
     echo ""
-    
+
     # Verify deployment structure
     BINDER_LIBS=$(ls out/target/lib/binder/*.so 2>/dev/null | wc -l || echo 0)
     MODULE_LIBS=$(ls out/target/lib/halif/*.so 2>/dev/null | wc -l || echo 0)
-    BINDER_HEADERS=$(find out/target/include/binder_sdk -name "*.h" 2>/dev/null | wc -l || echo 0)
-    MODULE_HEADERS=$(find out/target/include/halif -name "*.h" 2>/dev/null | wc -l || echo 0)
-    
-    echo "   📦 out/target/ SDK contents:"
-    echo "      • Binder libraries: ${BINDER_LIBS} files"
-    echo "      • Binder headers: ${BINDER_HEADERS} files"
-    echo "      • HAL libraries: ${MODULE_LIBS} files"
-    echo "      • HAL headers: ${MODULE_HEADERS} files"
+
+    echo "   📦 Runtime libraries ready for deployment:"
+    echo "      • Binder servicemanager: 1 file (out/target/bin/)"
+    echo "      • Binder libraries: ${BINDER_LIBS} files (out/target/lib/binder/)"
+    echo "      • HAL libraries: ${MODULE_LIBS} files (out/target/lib/halif/)"
     echo ""
-    echo "   📂 Deploy to target:"
-    echo "      scp -r out/target/* device:/usr/"
+    echo "   📂 Deploy to target device:"
+    echo "      scp -r out/target/bin/* device:/usr/bin/"
+    echo "      scp -r out/target/lib/* device:/usr/lib/"
+    echo ""
+    echo "   ℹ️  Headers (build-time only, not needed on target):"
+    echo "      • Binder SDK: out/build/include/binder_sdk/"
+    echo "      • HAL interfaces: stable/generated/"
     echo ""
 else
     echo "❌ Build failed"

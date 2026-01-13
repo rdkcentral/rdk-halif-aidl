@@ -2,6 +2,8 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 out
+CMakeLists.binder.txt
+cmake_stage_modules.cmake
 .api_temp
 build
 __pycache__/
@@ -28,6 +30,7 @@ CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 Makefile
+build-tools/linux_binder_idl/build-target-cmake
 
 # Compiled aidl output per module
 */gen/

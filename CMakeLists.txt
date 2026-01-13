@@ -124,6 +124,11 @@ message(STATUS "✓ Binder SDK found at ${BINDER_SDK_DIR}")
 # The binder system uses this directly without knowing about project structure
 set(LINUX_BINDER_AIDL_ROOT_OUT "${CMAKE_SOURCE_DIR}/stable/generated")
 
+# Separate base directories for headers (build-time) vs runtime (libs/bins)
+if (NOT DEFINED BINDER_SDK_INCLUDE_DIR)
+    set(BINDER_SDK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/out/build")
+endif()
+
 # Configure SDK subdirectory structure (overridable for Yocto flat structure)
 if (NOT DEFINED BINDER_SDK_INCLUDE_SUBDIR)
     set(BINDER_SDK_INCLUDE_SUBDIR "include/binder_sdk")
@@ -132,11 +137,11 @@ if (NOT DEFINED BINDER_SDK_LIB_SUBDIR)
     set(BINDER_SDK_LIB_SUBDIR "lib/binder")
 endif()
 
-message(STATUS "Binder include path: ${BINDER_SDK_DIR}/${BINDER_SDK_INCLUDE_SUBDIR}")
+message(STATUS "Binder include path: ${BINDER_SDK_INCLUDE_DIR}/${BINDER_SDK_INCLUDE_SUBDIR}")
 message(STATUS "Binder library path: ${BINDER_SDK_DIR}/${BINDER_SDK_LIB_SUBDIR}")
 
 # Make binder SDK headers and libraries available
-include_directories(${BINDER_SDK_DIR}/${BINDER_SDK_INCLUDE_SUBDIR})
+include_directories(${BINDER_SDK_INCLUDE_DIR}/${BINDER_SDK_INCLUDE_SUBDIR})
 link_directories(${BINDER_SDK_DIR}/${BINDER_SDK_LIB_SUBDIR})
 
 #######################################################################
@@ -177,34 +182,7 @@ include(${HOST_AIDL_DIR}/CMakeLists.inc)
 target_build_interfaces_libraries()
 
 #######################################################################
-# Stage headers BEFORE building so compilation uses staged headers
-#######################################################################
-
-message(STATUS "Staging generated headers to ${OUT_DIR}/target/include/halif/...")
-
-# Determine which modules to stage headers for
-if (INTERFACE_TARGET STREQUAL "all")
-    file(GLOB MODULE_DIRS LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/stable/generated/*")
-else()
-    set(MODULE_DIRS "${CMAKE_SOURCE_DIR}/stable/generated/${INTERFACE_TARGET}")
-endif()
-
-# Copy headers from stable/generated/ to out/target/include/halif/
-foreach(module_dir ${MODULE_DIRS})
-    if (IS_DIRECTORY "${module_dir}")
-        get_filename_component(module_name "${module_dir}" NAME)
-        file(GLOB_RECURSE MODULE_HEADERS "${module_dir}/*.h")
-        foreach(header ${MODULE_HEADERS})
-            file(RELATIVE_PATH rel_path "${CMAKE_SOURCE_DIR}/stable/generated" "${header}")
-            get_filename_component(dest_dir "${OUT_DIR}/target/include/halif/${rel_path}" DIRECTORY)
-            file(MAKE_DIRECTORY "${dest_dir}")
-            file(COPY_FILE "${header}" "${OUT_DIR}/target/include/halif/${rel_path}")
-        endforeach()
-    endif()
-endforeach()
-
-#######################################################################
-# Post-build: Stage module libraries to out/target/lib/halif/
+# Post-build: Stage module libraries and headers
 #######################################################################
 # Invoke cmake_stage_modules.cmake after all libraries are built
 

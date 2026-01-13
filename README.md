@@ -19,16 +19,16 @@ graph TB
         A[linux_binder_idl] -->|cmake install| B[out/target/]
         B --> C[libbinder.so<br/>libutils.so<br/>AIDL compiler]
     end
-    
+
     subgraph "Stage 2: HAL Modules"
         D[stable/aidl/] --> E[Pre-generated C++<br/>stable/generated/]
         E -->|cmake build| F[Module Libraries]
         C -->|links against| F
         F --> G[out/lib/<br/>out/include/]
     end
-    
+
     B -.->|SDK dependency| F
-    
+
     style B fill:#e1f5e1
     style G fill:#e1f5e1
 ```
@@ -105,7 +105,7 @@ cmake -S . -B build \
 cmake --build build -j$(nproc)
 
 # Output: out/target/lib/halif/*.so
-#         out/target/include/halif/*
+#         stable/generated/         (HAL interface headers)
 ```
 
 **Production Requirements**:
@@ -198,9 +198,9 @@ do_compile() {
 do_install() {
     install -d ${D}${libdir}
     install -m 0755 ${B}/out/target/lib/halif/*.so ${D}${libdir}/
-    
-    install -d ${D}${includedir}/halif
-    cp -r ${B}/out/target/include/halif/* ${D}${includedir}/halif/
+
+    # Note: Headers not needed on target (runtime only)
+    # For development packages, create separate -dev recipe
 }
 ```
 

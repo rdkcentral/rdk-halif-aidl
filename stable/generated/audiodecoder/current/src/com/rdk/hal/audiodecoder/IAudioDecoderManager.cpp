@@ -1,4 +1,3 @@
-#include <mutex>
 #include <com/rdk/hal/audiodecoder/IAudioDecoderManager.h>
 #include <com/rdk/hal/audiodecoder/BpAudioDecoderManager.h>
 namespace com {

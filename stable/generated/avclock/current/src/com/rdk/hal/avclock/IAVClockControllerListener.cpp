@@ -1,4 +1,3 @@
-#include <mutex>
 #include <com/rdk/hal/avclock/IAVClockControllerListener.h>
 #include <com/rdk/hal/avclock/BpAVClockControllerListener.h>
 namespace com {

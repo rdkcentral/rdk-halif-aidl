@@ -31,7 +31,7 @@
 #
 # Output:
 #   out/target/lib/       - Binder runtime libraries
-#   out/target/include/   - Binder headers
+#   out/build/include/    - Binder headers (build-time)
 #   out/target/bin/       - aidl compiler and tools
 
 message(WARNING 
