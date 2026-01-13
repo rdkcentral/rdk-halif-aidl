@@ -259,12 +259,6 @@ if cmake -S . -B ./build-default-cmake > /tmp/default_config.log 2>&1; then
         print_fail "Default CMAKE_BUILD_TYPE is not Release"
     fi
 
-    if grep -q "^BUILD_CORE_SDK:BOOL=ON$" ./build-default-cmake/CMakeCache.txt; then
-        print_pass "Default BUILD_CORE_SDK is ON"
-    else
-        print_fail "Default BUILD_CORE_SDK is not ON"
-    fi
-
     if grep -q "^BUILD_HOST_AIDL:BOOL=ON$" ./build-default-cmake/CMakeCache.txt; then
         print_pass "Default BUILD_HOST_AIDL is ON"
     else

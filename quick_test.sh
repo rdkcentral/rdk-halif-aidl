@@ -34,7 +34,7 @@ usage() {
     echo "  --help       Show this help"
 }
 
-TEST_IDS=("1" "1.1" "2" "3" "4" "5" "6" "7" "8" "9")
+TEST_IDS=("1" "1.1" "2" "3" "4" "5" "6" "7" "8" "9" "10")
 
 list_tests() {
     echo "Available tests:"
@@ -48,6 +48,7 @@ list_tests() {
     echo "  7   Direct CMake build (defaults + install)"
     echo "  8   Direct CMake build (per BUILD.md)"
     echo "  9   Direct CMake build (per BUILD.md + install)"
+    echo "  10  Production build (minimal flags + install)"
 }
 
 index_of_test_id() {
@@ -328,7 +329,6 @@ test_8() {
     ensure_host_aidl_tools
     if run_cmake_build build-target-cmake \
         -DCMAKE_BUILD_TYPE=Release \
-        -DBUILD_CORE_SDK=ON \
         -DBUILD_HOST_AIDL=OFF \
         -DTARGET_LIB64_VERSION=ON; then
         warnings=$(grep -ci "warning:" /tmp/cmake_target_build.log || echo "0")
@@ -348,7 +348,6 @@ test_9() {
     ensure_host_aidl_tools
     if run_cmake_build build-target-cmake \
         -DCMAKE_BUILD_TYPE=Release \
-        -DBUILD_CORE_SDK=ON \
         -DBUILD_HOST_AIDL=OFF \
         -DTARGET_LIB64_VERSION=ON && \
        run_cmake_install build-target-cmake; then
@@ -370,6 +369,35 @@ test_9() {
     fi
 }
 
+test_10() {
+    clean_build_state
+    echo "Production build (minimal required flags only)..."
+    echo "This simulates Yocto/BitBake with only required production variables."
+    echo "No AIDL compiler - uses pre-generated C++ from binder_aidl_gen/"
+    if run_cmake_build build-production \
+        -DBUILD_HOST_AIDL=OFF && \
+       run_cmake_install build-production; then
+        warnings=$(grep -ci "warning:" /tmp/cmake_target_build.log || echo "0")
+        errors=$(grep -ci "error:" /tmp/cmake_target_build.log || echo "0")
+        echo "✅ Production build completed (warnings: $warnings, errors: $errors)"
+        test -f ./build-production/libbinder.so && echo "✅ libbinder.so created"
+        test -f "${CMAKE_INSTALL_PREFIX}/lib/libbinder.so" && echo "✅ libbinder.so installed"
+        test -x "${CMAKE_INSTALL_PREFIX}/bin/servicemanager" && echo "✅ servicemanager installed"
+        test ! -f "${CMAKE_INSTALL_PREFIX}/bin/aidl" && echo "✅ AIDL compiler NOT installed (production)"
+        test ! -f "${CMAKE_INSTALL_PREFIX}/bin/aidl-cpp" && echo "✅ AIDL-CPP NOT installed (production)"
+        check_install_layout "${CMAKE_INSTALL_PREFIX}"
+        print_dest_tree "${CMAKE_INSTALL_PREFIX}"
+    else
+        echo "❌ Production build failed!"
+        tail -20 /tmp/cmake_target_build.log
+        if [ -f /tmp/cmake_target_install.log ]; then
+            echo "Install log (last 20 lines):"
+            tail -20 /tmp/cmake_target_install.log
+        fi
+        exit 1
+    fi
+}
+
 run_test "1" "Clean Android sources" test_1
 run_test "1.1" "Clone Android sources" test_1_1
 run_test "2" "Scripts exist and are executable" test_2
@@ -380,6 +408,7 @@ run_test "6" "Build target binder libraries" test_6
 run_test "7" "Direct CMake build (defaults + install)" test_7
 run_test "8" "Direct CMake build (per BUILD.md)" test_8
 run_test "9" "Direct CMake build (per BUILD.md + install)" test_9
+run_test "10" "Production build (minimal flags + install)" test_10
 
 echo ""
 echo "✅ ALL TESTS PASSED"

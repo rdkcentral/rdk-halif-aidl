@@ -27,13 +27,12 @@ out/
 cmake -S . -B build-target \
   -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc \
   -DCMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++ \
-  -DBUILD_CORE_SDK=ON \
   -DBUILD_HOST_AIDL=OFF \
   -DTARGET_LIB32_VERSION=ON \
   -DCMAKE_INSTALL_PREFIX=/usr/local
 ```
 
-Required variables: `BUILD_CORE_SDK=ON`, `BUILD_HOST_AIDL=OFF`, and **one of** `TARGET_LIB64_VERSION=ON` or `TARGET_LIB32_VERSION=ON`.
+Required variables: `BUILD_HOST_AIDL=OFF`, and **one of** `TARGET_LIB64_VERSION=ON` or `TARGET_LIB32_VERSION=ON`.
 
 ### AIDL Code Generation Workflow
 
@@ -115,4 +114,3 @@ Required variables: `BUILD_CORE_SDK=ON`, `BUILD_HOST_AIDL=OFF`, and **one of** `
 1. Check [BUILD.md](../BUILD.md) for build system and Yocto integration
 2. Check [README.md](../README.md) for quick start and workflow
 3. Read script `--help` output for usage patterns
-

@@ -114,7 +114,6 @@ CMAKE_C_COMPILER="${HOST_CC}" \
 CMAKE_CXX_COMPILER="${HOST_CXX}" \
 cmake -S "${ROOT_DIR}" -B "${BUILD_DIR}" \
   -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
-  -DBUILD_CORE_SDK=ON \
   -DBUILD_HOST_AIDL=ON
 
 echo "==> Building host AIDL compiler (and required libraries)..."

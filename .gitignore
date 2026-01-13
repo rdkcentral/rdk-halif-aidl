@@ -1,3 +1,4 @@
+build-production
 test_build.log
 Makefile
 build-target-cmake

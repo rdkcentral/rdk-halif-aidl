@@ -78,7 +78,7 @@ find_package(PkgConfig)
 # High-level build switches
 ###########################################################
 # Build the Core SDK: Android libraries + servicemanager
-option(BUILD_CORE_SDK "Build Android Binder Core SDK (libs + servicemanager)" ON)
+# Always enabled because the AIDL compiler depends on these libraries.
 
 # Build the host AIDL compiler (x86_64 or native host)
 # This is the "aidl compiler / aidl generator" host tool.
@@ -280,7 +280,6 @@ endmacro()
 #   - the *target* uses (via libraries + servicemanager)
 #   - the *host* AIDL compiler links against.
 ###########################################################
-if (BUILD_CORE_SDK)
 
     if (BUILD_WITH_LIBLOG)
         ###########################################################
@@ -603,9 +602,13 @@ if (BUILD_CORE_SDK)
         ${BINDER_DIR}/UtilsHost.cpp
     )
 
+if (BUILD_ENV_YOCTO OR NOT BUILD_HOST_AIDL)
     if (BUILD_ENV_YOCTO)
         message("Yocto environment")
-        message("Using generated prebuilt stubs and proxies")
+    else ()
+        message("Host/Generic environment for Core SDK binder (production)")
+    endif ()
+    message("Using generated prebuilt stubs and proxies")
 
         set(BINDER_AIDL_SRCS
             ${BINDER_AIDL_GEN_DIR}/android/os/IServiceManager.cpp
@@ -643,7 +646,7 @@ if (BUILD_CORE_SDK)
         )
 
         # NOTE: This dependency only applies when building AIDL in the same CMake tree
-        # If BUILD_HOST_AIDL is OFF, the generator uses an external 'aidl' from PATH
+        # BUILD_HOST_AIDL is ON in this branch, so the aidl target is available.
         if (BUILD_HOST_AIDL)
             add_dependencies(binder aidl)
         endif ()
@@ -747,13 +750,12 @@ if (BUILD_CORE_SDK)
         )
     endif ()
 
-endif() # BUILD_CORE_SDK
 
 ###########################################################
 # Host AIDL compiler (aidl / aidl-cpp) – host tool only
 #
 # This is the AIDL compiler / generator. It assumes that the
-# Core SDK is present in this build (BUILD_CORE_SDK ON) and
+# Core SDK is present in this build and
 # reuses libbase, liblog, libcutils, etc instead of rebuilding.
 #
 # In the future, a target AIDL build (BUILD_TARGET_AIDL) would

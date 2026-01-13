@@ -178,7 +178,6 @@ Development wrapper scripts (`build-*.sh`) automatically handle CMake variables.
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `BUILD_CORE_SDK` | Build target binder runtime libraries | `ON` |
 | `BUILD_HOST_AIDL` | Build AIDL compiler (architecture team only) | `ON` |
 | `TARGET_LIB64_VERSION` | Build 64-bit libraries | Auto-detect |
 | `TARGET_LIB32_VERSION` | Build 32-bit libraries | `OFF` |

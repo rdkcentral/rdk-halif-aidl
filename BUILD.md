@@ -143,7 +143,6 @@ inherit cmake
 DEPENDS = ""
 
 EXTRA_OECMAKE = " \
-    -DBUILD_CORE_SDK=ON \
     -DBUILD_HOST_AIDL=OFF \
     -DTARGET_LIB64_VERSION=${@bb.utils.contains('TUNE_FEATURES', 'aarch64', 'ON', 'OFF', d)} \
 "
@@ -158,7 +157,7 @@ FILES_${PN}-dev += "${includedir}/*"
 
 **Key Points:**
 
-- **Production builds**: Only build target runtime libraries (`BUILD_CORE_SDK=ON`, `BUILD_HOST_AIDL=OFF`)
+- **Production builds**: Only build target runtime libraries (`BUILD_HOST_AIDL=OFF`, SDK built by default)
 - **No AIDL compiler needed**: Architecture team generates C++ code offline using AIDL compiler
 - **Pre-generated code committed**: All AIDL-generated C++ files are in source control
 - **No code generation at build time**: Production builds compile pre-generated C++ only
@@ -176,7 +175,6 @@ The following tables list CMake variables for **direct CMake invocation in produ
 
 | Variable | Description | Default | Required? |
 |----------|-------------|---------|-----------|
-| `BUILD_CORE_SDK` | Build target binder runtime libraries | `ON` | **Required** for target builds |
 | `BUILD_HOST_AIDL` | Build host AIDL compiler (architecture team only) | `ON` | **Required** - Set to `OFF` for production |
 
 #### Architecture Selection (One Required)
@@ -221,7 +219,6 @@ cmake -S . -B build-target \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
     -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
-    -DBUILD_CORE_SDK=ON \
     -DBUILD_HOST_AIDL=OFF \
     -DTARGET_LIB64_VERSION=ON \
     -DCMAKE_INSTALL_PREFIX=/usr/local
@@ -243,7 +240,6 @@ cmake -S . -B build-target \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc \
     -DCMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++ \
-    -DBUILD_CORE_SDK=ON \
     -DBUILD_HOST_AIDL=OFF \
     -DTARGET_LIB32_VERSION=ON \
     -DCMAKE_INSTALL_PREFIX=/usr/local
@@ -260,7 +256,6 @@ cmake --install build-target
 # Direct CMake invocation (advanced - most users should use wrapper script below)
 cmake -S . -B build-host \
     -DCMAKE_BUILD_TYPE=Release \
-    -DBUILD_CORE_SDK=OFF \
     -DBUILD_HOST_AIDL=ON \
     -DCMAKE_INSTALL_PREFIX=/usr/local
 
@@ -272,11 +267,10 @@ cmake --install build-host
 
 #### Minimal Required Variables Summary
 
-For **production builds**, you MUST set these three variables:
+For **production builds**, you MUST set these two variables:
 
-1. `-DBUILD_CORE_SDK=ON` (build target libraries)
-2. `-DBUILD_HOST_AIDL=OFF` (exclude AIDL compiler)
-3. **One of:** `-DTARGET_LIB64_VERSION=ON` **or** `-DTARGET_LIB32_VERSION=ON`
+1. `-DBUILD_HOST_AIDL=OFF` (exclude AIDL compiler - uses pre-generated C++ code)
+2. **One of:** `-DTARGET_LIB64_VERSION=ON` **or** `-DTARGET_LIB32_VERSION=ON`
 
 All other variables have sensible defaults and are optional.
 
@@ -357,7 +351,7 @@ ${CXX} --version
 ### Libraries not found during linking
 
 The CMake build should be self-contained. If you see missing library errors,
-ensure you're building with `BUILD_CORE_SDK=ON` (default in both scripts).
+ensure you're building the target SDK (default behaviour).
 
 ## Architecture Notes
 
@@ -604,7 +598,6 @@ inherit cmake systemd
 
 # CMake configuration - production target build only
 EXTRA_OECMAKE = " \
-    -DBUILD_CORE_SDK=ON \
     -DBUILD_HOST_AIDL=OFF \
     -DTARGET_LIB64_VERSION=${@bb.utils.contains('TUNE_FEATURES', 'aarch64', 'ON', 'OFF', d)} \
     -DTARGET_LIB32_VERSION=${@bb.utils.contains('TUNE_FEATURES', 'aarch64', 'OFF', 'ON', d)} \
@@ -656,7 +649,7 @@ INSANE_SKIP:${PN}-dev = "dev-elf"
 
 **Added:**
 
-- ✅ `BUILD_CORE_SDK=ON` / `BUILD_HOST_AIDL=OFF` flags
+- ✅ `BUILD_HOST_AIDL=OFF` flag (exclude AIDL compiler from production build)
 - ✅ `clone-android-binder-repo.sh` script invocation
 - ✅ `TARGET_LIB64_VERSION` / `TARGET_LIB32_VERSION` based on architecture
 - ✅ `SYSTEMD_AUTO_ENABLE` for automatic service enablement
