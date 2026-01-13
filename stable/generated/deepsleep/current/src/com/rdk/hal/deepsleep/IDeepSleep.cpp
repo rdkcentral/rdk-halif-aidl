@@ -1,4 +1,3 @@
-#include <mutex>
 #include <com/rdk/hal/deepsleep/IDeepSleep.h>
 #include <com/rdk/hal/deepsleep/BpDeepSleep.h>
 namespace com {

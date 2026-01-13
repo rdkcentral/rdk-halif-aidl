@@ -1,6 +1,8 @@
 ﻿################################################################################
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
+CMakeLists.binder.txt
+cmake_stage_modules.cmake
 .api_temp
 build
 src_link
@@ -26,4 +28,4 @@ CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 Makefile
-
+build-tools/linux_binder_idl/build-target-cmake

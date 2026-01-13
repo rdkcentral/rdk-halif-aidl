@@ -142,7 +142,7 @@ interface IVehicle {
     void stopMoving();
     void registerVehicleStatusListener(IVehicleStatusListener listener);
     void unregisterVehicleStatusListener(IVehicleStatusListener listener);
-    
+
     // NEW v2 methods added at the end
     void lockVehicle();
     void unlockVehicle();
@@ -158,7 +158,7 @@ interface IVehicle {
     // ... (v1 methods)
     void lockVehicle();
     void unlockVehicle();
-    
+
     // NEW v3 method
     void setFuelLevel(float fuelLevel);
 }
@@ -291,17 +291,15 @@ target_link_interfaces_libraries(myapp boot-vcurrent-cpp)  # Use latest
 
 **Scenario 1: Single Version Deployment**
 ```bash
-# Deploy only v1 (stable)
+# Deploy only v1 (stable) - runtime library only
 scp out/target/lib/halif/libboot-v1-cpp.so device:/usr/lib/
-scp -r out/target/include/halif/boot/1/ device:/usr/include/halif/boot/
 ```
 
 **Scenario 2: Multi-Version Deployment**
 ```bash
-# Deploy both v1 and v2 (transition period)
+# Deploy both v1 and v2 (transition period) - runtime libraries only
 scp out/target/lib/halif/libboot-v1-cpp.so device:/usr/lib/
 scp out/target/lib/halif/libboot-v2-cpp.so device:/usr/lib/
-scp -r out/target/include/halif/boot/ device:/usr/include/halif/
 ```
 
 ## Testing Versioned Interfaces

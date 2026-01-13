@@ -1,4 +1,3 @@
-#include <mutex>
 #include <com/rdk/hal/flash/IFlashListener.h>
 #include <com/rdk/hal/flash/BpFlashListener.h>
 namespace com {

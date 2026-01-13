@@ -102,6 +102,10 @@ Each `hfp-{module}.yaml` declares static capabilities:
 
 ## Build System
 
+### Development Build (Interface Generation)
+
+**Purpose**: Interface authors use these tools to generate C++ code from AIDL interfaces.
+
 ### Prerequisites
 
 1. Install binder tools: `./install_binder.sh` (downloads linux_binder_idl into `build-tools/`)
@@ -161,6 +165,34 @@ compile_aidl(${SRC}
 
 - C++: `{module}/gen/{version}/cpp/com/rdk/hal/{module}/...`
 - Headers: `{module}/gen/{version}/h/com/rdk/hal/{module}/...`
+
+### Production Build (Yocto/BitBake)
+
+**Purpose**: Build HAL interface libraries for deployment on embedded devices.
+
+**Key Differences from Development Build**:
+- **NO interface generation**: Uses pre-generated C++ code from `stable/generated/`
+- **NO AIDL compiler needed**: Only requires C++ compiler and CMake
+- **Binder SDK dependency**: `DEPENDS = "linux-binder"` in Yocto recipe
+
+**Binder SDK Dependency**:
+- The `linux-binder` Yocto recipe builds `build-tools/linux_binder_idl/`
+- Provides: `libbinder.so`, `libutils.so`, `liblog.so`, headers
+- Automatically staged to `${STAGING_DIR}/usr` by Yocto dependency system
+- See `build-tools/linux_binder_idl/BUILD.md` for complete recipe documentation
+
+**Production Build Example**:
+```bitbake
+DEPENDS = "linux-binder"
+
+do_configure() {
+    cmake -S ${S} -B ${B} \
+          -DINTERFACE_TARGET=all \
+          -DBINDER_SDK_DIR=${STAGING_DIR}${prefix}
+}
+```
+
+**Important**: Development scripts (`install_binder.sh`, wrapper scripts) are NOT used in production. Production uses direct CMake with Yocto dependency management.
 
 ## Cross-Module Dependencies
 
@@ -317,6 +349,7 @@ State getState();
 - `docs/vsi/filesystem/current/logging_system.md` – Logging policy
 - `docs/halif/key_concepts/hal/hal_naming_conventions.md` – Naming standards
 - `CMakeModules/CompileAidl.cmake` – AIDL build integration
+- `build-tools/linux_binder_idl/BUILD.md` – Binder SDK production build guide (Yocto recipes, cross-compilation, runtime setup)
 - Example modules: `audiodecoder/current/`, `deviceinfo/current/`, `boot/current/`
 
 ## Contribution Guidelines

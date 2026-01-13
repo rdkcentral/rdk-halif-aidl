@@ -46,11 +46,9 @@ endif()
 # Create output directories - separate binder and halif
 set(BINDER_LIB_OUT_DIR "${OUT_DIR}/target/lib/binder")
 set(HALIF_LIB_OUT_DIR "${OUT_DIR}/target/lib/halif")
-set(HALIF_INC_OUT_DIR "${OUT_DIR}/target/include/halif")
 
 file(MAKE_DIRECTORY "${BINDER_LIB_OUT_DIR}")
 file(MAKE_DIRECTORY "${HALIF_LIB_OUT_DIR}")
-file(MAKE_DIRECTORY "${HALIF_INC_OUT_DIR}")
 
 #######################################################################
 # Stage module libraries to out/target/lib/halif/
@@ -63,15 +61,15 @@ file(GLOB_RECURSE MODULE_LIBS "${BUILD_DIR}/${SEARCH_PATTERN}")
 set(LIB_COUNT 0)
 foreach(lib ${MODULE_LIBS})
     get_filename_component(lib_name "${lib}" NAME)
-    
+
     # Extract module name from library name (e.g., libavclock-vcurrent-cpp.so -> avclock)
     string(REGEX MATCH "lib([a-z]+)-v" module_match "${lib_name}")
     if (module_match)
         set(module_name ${CMAKE_MATCH_1})
-        
+
         # Copy to halif library directory
         file(COPY_FILE "${lib}" "${HALIF_LIB_OUT_DIR}/${lib_name}")
-        
+
         math(EXPR LIB_COUNT "${LIB_COUNT} + 1")
         message(STATUS "  ✓ ${lib_name}")
     endif()
@@ -83,65 +81,17 @@ else()
     message(STATUS "Staged ${LIB_COUNT} HAL interface libraries to ${HALIF_LIB_OUT_DIR}")
 endif()
 
-#######################################################################
-# Stage module headers to out/target/include/halif/
-#######################################################################
-
-message(STATUS "Staging module headers from ${STABLE_DIR}...")
-
-# Copy headers from stable/generated/<module>/
-if (INTERFACE_TARGET STREQUAL "all")
-    # Stage all module headers
-    file(GLOB MODULE_DIRS LIST_DIRECTORIES true "${STABLE_DIR}/generated/*")
-    
-    set(HEADER_COUNT 0)
-    foreach(module_dir ${MODULE_DIRS})
-        if (IS_DIRECTORY "${module_dir}")
-            get_filename_component(module_name "${module_dir}" NAME)
-            
-            # Find all headers in this module
-            file(GLOB_RECURSE MODULE_HEADERS "${module_dir}/*.h")
-            foreach(header ${MODULE_HEADERS})
-                file(RELATIVE_PATH rel_path "${STABLE_DIR}/generated" "${header}")
-                get_filename_component(dest_dir "${HALIF_INC_OUT_DIR}/${rel_path}" DIRECTORY)
-                file(MAKE_DIRECTORY "${dest_dir}")
-                file(COPY_FILE "${header}" "${HALIF_INC_OUT_DIR}/${rel_path}")
-                math(EXPR HEADER_COUNT "${HEADER_COUNT} + 1")
-            endforeach()
-        endif()
-    endforeach()
-    
-    message(STATUS "Staged ${HEADER_COUNT} HAL interface headers to ${HALIF_INC_OUT_DIR}")
-else()
-    # Stage single module headers
-    set(MODULE_HEADER_DIR "${STABLE_DIR}/generated/${INTERFACE_TARGET}")
-    
-    if (EXISTS "${MODULE_HEADER_DIR}")
-        file(GLOB_RECURSE MODULE_HEADERS "${MODULE_HEADER_DIR}/*.h")
-        
-        set(HEADER_COUNT 0)
-        foreach(header ${MODULE_HEADERS})
-            file(RELATIVE_PATH rel_path "${STABLE_DIR}/generated" "${header}")
-            get_filename_component(dest_dir "${HALIF_INC_OUT_DIR}/${rel_path}" DIRECTORY)
-            file(MAKE_DIRECTORY "${dest_dir}")
-            file(COPY_FILE "${header}" "${HALIF_INC_OUT_DIR}/${rel_path}")
-            math(EXPR HEADER_COUNT "${HEADER_COUNT} + 1")
-        endforeach()
-        
-        message(STATUS "Staged ${HEADER_COUNT} headers for ${INTERFACE_TARGET} to ${HALIF_INC_OUT_DIR}")
-    else()
-        message(WARNING "No headers found for ${INTERFACE_TARGET} in ${MODULE_HEADER_DIR}")
-    endif()
-endif()
-
 message(STATUS "")
 message(STATUS "✓ Module staging complete")
 message(STATUS "  HAL Libraries: ${HALIF_LIB_OUT_DIR}/")
-message(STATUS "  HAL Headers:   ${HALIF_INC_OUT_DIR}/")
 message(STATUS "")
 message(STATUS "Complete SDK structure:")
-message(STATUS "  ${OUT_DIR}/target/lib/binder/    - Binder runtime libraries")
-message(STATUS "  ${OUT_DIR}/target/lib/halif/     - HAL interface libraries")
-message(STATUS "  ${OUT_DIR}/target/include/binder/ - Binder headers")
-message(STATUS "  ${OUT_DIR}/target/include/halif/  - HAL interface headers")
+message(STATUS "  ${OUT_DIR}/target/bin/                - Binder servicemanager (runtime)")
+message(STATUS "  ${OUT_DIR}/target/lib/binder/        - Binder runtime libraries")
+message(STATUS "  ${OUT_DIR}/target/lib/halif/         - HAL interface libraries")
+message(STATUS "  ${OUT_DIR}/build/include/binder_sdk/ - Binder headers (build-time)")
+message(STATUS "  ${STABLE_DIR}/generated/             - HAL interface headers (build-time)")
+message(STATUS "")
+message(STATUS "Deploy to target: scp -r ${OUT_DIR}/target/{bin,lib} device:/usr/")
+message(STATUS "                  (headers not needed on target)")
 message(STATUS "")

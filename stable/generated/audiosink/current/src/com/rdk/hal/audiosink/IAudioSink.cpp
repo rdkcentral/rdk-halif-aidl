@@ -1,4 +1,3 @@
-#include <mutex>
 #include <com/rdk/hal/audiosink/IAudioSink.h>
 #include <com/rdk/hal/audiosink/BpAudioSink.h>
 namespace com {

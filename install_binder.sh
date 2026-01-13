@@ -46,9 +46,9 @@ Usage:
   clean - Force rebuild by removing existing SDK and build directories
 
 Output (Stage 1 - Binder SDK):
+  out/target/bin/       - servicemanager (runtime)
   out/target/lib/       - Binder runtime libraries
-  out/target/include/   - Binder headers
-  out/target/bin/       - AIDL compiler and tools
+  out/build/include/    - Binder headers (build-time only)
   out/target/.sdk_ready - Marker indicating SDK is ready
 
 Environment Variables (optional overrides):
@@ -105,6 +105,7 @@ INSTALL_DIR="${BINDER_INSTALL_DIR:-$MY_DIR/build-tools}"
 BINDER_REPO_DIR="${BINDER_SOURCE_DIR:-$INSTALL_DIR/linux_binder_idl}"
 BINDER_BUILD_DIR="${BINDER_BUILD_DIR:-$MY_DIR/build/binder}"
 SDK_INSTALL_DIR="${BINDER_SDK_DIR:-$MY_DIR/out/target}"
+SDK_INCLUDE_DIR="${BINDER_SDK_INCLUDE_DIR:-$MY_DIR/out/build}"
 
 # EXPORT THIS for other scripts to use
 export BINDER_TOOLCHAIN_ROOT="$BINDER_REPO_DIR"
@@ -115,7 +116,8 @@ echo "========================================"
 echo "Version: $BINDER_VERSION"
 echo "Source:  $BINDER_REPO_DIR"
 echo "Build:   $BINDER_BUILD_DIR"
-echo "Install: $SDK_INSTALL_DIR"
+echo "Install (runtime): $SDK_INSTALL_DIR"
+echo "Install (headers): $SDK_INCLUDE_DIR"
 echo "========================================"
 echo ""
 
@@ -125,7 +127,7 @@ echo ""
 clone_repo() {
     if [ -d "$BINDER_REPO_DIR" ]; then
         echo "✓ Binder source already cloned at $BINDER_REPO_DIR"
-        
+
         # Verify version if not clean build
         if [ "$CLEAN" != true ]; then
             cd "$BINDER_REPO_DIR"
@@ -136,13 +138,13 @@ clone_repo() {
             fi
             cd - > /dev/null
         fi
-        
+
         return 0
     fi
 
     echo "Cloning Binder toolchain repository (version: $BINDER_VERSION)..."
     mkdir -p "$INSTALL_DIR"
-    
+
     # Clone and checkout specific version
     git clone "$REPO_URL" "$BINDER_REPO_DIR" || return 1
     cd "$BINDER_REPO_DIR"
@@ -151,7 +153,7 @@ clone_repo() {
         return 1
     }
     cd - > /dev/null
-    
+
     echo "✓ Cloned successfully at version $BINDER_VERSION"
 }
 
@@ -161,7 +163,7 @@ clone_repo() {
 clean_build() {
     if [ "$CLEAN" = true ]; then
         echo "Cleaning previous build..."
-        rm -rf "$BINDER_BUILD_DIR" "$SDK_INSTALL_DIR"
+        rm -rf "$BINDER_BUILD_DIR" "$SDK_INSTALL_DIR" "$SDK_INCLUDE_DIR"
         echo "✓ Cleaned"
         echo ""
     fi
@@ -189,7 +191,6 @@ build_sdk() {
     cmake -S "$BINDER_REPO_DIR" -B "$BINDER_BUILD_DIR" \
         -DCMAKE_INSTALL_PREFIX="$SDK_INSTALL_DIR" \
         -DCMAKE_BUILD_TYPE=Release \
-        -DBUILD_CORE_SDK=ON \
         -DBUILD_HOST_AIDL=ON
 
     if [ $? -ne 0 ]; then
@@ -220,30 +221,32 @@ build_sdk() {
 
     echo ""
     echo "Organizing SDK structure..."
-    
-    # Move libraries to binder subdirectory
+
+    # Move libraries to binder subdirectory in target
     if [ -d "$SDK_INSTALL_DIR/lib" ] && [ ! -d "$SDK_INSTALL_DIR/lib/binder" ]; then
         mkdir -p "$SDK_INSTALL_DIR/lib/binder"
         mv "$SDK_INSTALL_DIR"/lib/*.so* "$SDK_INSTALL_DIR/lib/binder/" 2>/dev/null || true
     fi
-    
-    # Move headers to binder_sdk subdirectory
-    if [ -d "$SDK_INSTALL_DIR/include" ] && [ ! -d "$SDK_INSTALL_DIR/include/binder_sdk" ]; then
-        mkdir -p "$SDK_INSTALL_DIR/include/binder_sdk"
-        # Move all existing header directories to binder_sdk/
+
+    # Move headers to out/build/include (separate from runtime)
+    if [ -d "$SDK_INSTALL_DIR/include" ]; then
+        mkdir -p "$SDK_INCLUDE_DIR/include/binder_sdk"
+        # Move all header directories to build location
         find "$SDK_INSTALL_DIR/include" -mindepth 1 -maxdepth 1 -type d \
-            -exec mv {} "$SDK_INSTALL_DIR/include/binder_sdk/" \; 2>/dev/null || true
+            -exec mv {} "$SDK_INCLUDE_DIR/include/binder_sdk/" \; 2>/dev/null || true
         # Also handle any loose header files at top level
         find "$SDK_INSTALL_DIR/include" -maxdepth 1 -type f -name "*.h" \
-            -exec mv {} "$SDK_INSTALL_DIR/include/binder_sdk/" \; 2>/dev/null || true
+            -exec mv {} "$SDK_INCLUDE_DIR/include/binder_sdk/" \; 2>/dev/null || true
+        # Remove empty include directory from target
+        rmdir "$SDK_INSTALL_DIR/include" 2>/dev/null || true
     fi
-    
+
     # Create halif placeholder directories
     mkdir -p "$SDK_INSTALL_DIR/lib/halif"
-    mkdir -p "$SDK_INSTALL_DIR/include/halif"
 
-    # Create marker file
+    # Create marker files
     touch "$SDK_INSTALL_DIR/.sdk_ready"
+    touch "$SDK_INCLUDE_DIR/.sdk_ready"
 
     echo "✓ SDK structure organized"
     echo ""
@@ -259,7 +262,7 @@ setup_path() {
         echo "⚠️  Warning: AIDL bin directory not found: $AIDL_BIN"
         return 1
     fi
-    
+
     if [[ ":$PATH:" != *":$AIDL_BIN:"* ]]; then
         export PATH="$AIDL_BIN:$PATH"
         echo "✓ Added $AIDL_BIN to PATH"

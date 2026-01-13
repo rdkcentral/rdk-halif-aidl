@@ -1,4 +1,3 @@
-#include <mutex>
 #include <com/rdk/hal/panel/IFactoryPanel.h>
 #include <com/rdk/hal/panel/BpFactoryPanel.h>
 namespace com {
