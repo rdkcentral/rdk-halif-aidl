@@ -1,0 +1,9 @@
+aidl_interface:
+  name: avclock
+  srcs:
+    - com/rdk/hal/avclock/*.aidl
+  imports:
+    - audiosink
+    - common
+    - videosink
+  stability: vintf

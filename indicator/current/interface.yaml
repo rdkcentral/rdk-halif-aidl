@@ -1,0 +1,6 @@
+aidl_interface:
+  name: indicator
+  srcs:
+    - com/rdk/hal/indicator/*.aidl
+  imports: []
+  stability: vintf

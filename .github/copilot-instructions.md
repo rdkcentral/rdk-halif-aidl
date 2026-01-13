@@ -102,6 +102,10 @@ Each `hfp-{module}.yaml` declares static capabilities:
 
 ## Build System
 
+### Development Build (Interface Generation)
+
+**Purpose**: Interface authors use these tools to generate C++ code from AIDL interfaces.
+
 ### Prerequisites
 
 1. Install binder tools: `./install_binder.sh` (downloads linux_binder_idl into `build-tools/`)
@@ -161,6 +165,34 @@ compile_aidl(${SRC}
 
 - C++: `{module}/gen/{version}/cpp/com/rdk/hal/{module}/...`
 - Headers: `{module}/gen/{version}/h/com/rdk/hal/{module}/...`
+
+### Production Build (Yocto/BitBake)
+
+**Purpose**: Build HAL interface libraries for deployment on embedded devices.
+
+**Key Differences from Development Build**:
+- **NO interface generation**: Uses pre-generated C++ code from `stable/generated/`
+- **NO AIDL compiler needed**: Only requires C++ compiler and CMake
+- **Binder SDK dependency**: `DEPENDS = "linux-binder"` in Yocto recipe
+
+**Binder SDK Dependency**:
+- The `linux-binder` Yocto recipe builds `build-tools/linux_binder_idl/`
+- Provides: `libbinder.so`, `libutils.so`, `liblog.so`, headers
+- Automatically staged to `${STAGING_DIR}/usr` by Yocto dependency system
+- See `build-tools/linux_binder_idl/BUILD.md` for complete recipe documentation
+
+**Production Build Example**:
+```bitbake
+DEPENDS = "linux-binder"
+
+do_configure() {
+    cmake -S ${S} -B ${B} \
+          -DINTERFACE_TARGET=all \
+          -DBINDER_SDK_DIR=${STAGING_DIR}${prefix}
+}
+```
+
+**Important**: Development scripts (`install_binder.sh`, wrapper scripts) are NOT used in production. Production uses direct CMake with Yocto dependency management.
 
 ## Cross-Module Dependencies
 
@@ -317,6 +349,7 @@ State getState();
 - `docs/vsi/filesystem/current/logging_system.md` – Logging policy
 - `docs/halif/key_concepts/hal/hal_naming_conventions.md` – Naming standards
 - `CMakeModules/CompileAidl.cmake` – AIDL build integration
+- `build-tools/linux_binder_idl/BUILD.md` – Binder SDK production build guide (Yocto recipes, cross-compilation, runtime setup)
 - Example modules: `audiodecoder/current/`, `deviceinfo/current/`, `boot/current/`
 
 ## Contribution Guidelines
@@ -365,6 +398,105 @@ State getState();
 - Always document exceptions with **@exception**
 - Keep descriptions concise but complete
 - Avoid redundant type names in @returns descriptions (e.g., avoid "@returns State Current state" - just "@returns Current state")
+
+## Versioning & Compatibility
+
+### Core Versioning Principles
+
+- **Backward Compatibility is Mandatory**: All version increments (v1→v2→v3) MUST be fully backward-compatible
+- **Version Numbers are Incremental**: Each version includes ALL features from previous versions
+- **No Breaking Changes**: Breaking changes require creating a completely new interface (e.g., `IBootNew`)
+- **First Freeze Special Case**: When creating version 1, compatibility validation is automatically skipped
+
+### Compatibility Rules
+
+**✅ Allowed Changes (Backward-Compatible):**
+- ADD new methods at the END of an interface
+- ADD new fields at the END of a parcelable/struct
+- ADD new enum values (with fallback handling)
+- ADD new optional parameters with defaults
+
+**❌ Prohibited Changes (Breaking):**
+- Remove methods or fields
+- Change method signatures or field types
+- Reorder methods or fields
+- Rename methods or fields
+
+### Pre-Copy Validation
+
+The build system validates compatibility **BEFORE** copying source changes to `stable/aidl/`:
+
+```bash
+./build_interfaces.sh boot
+# If incompatible changes detected:
+# ❌ Pre-validation FAILED: Source changes are incompatible with existing stable API
+# Breaking changes are NOT allowed - create new interface (IBootNew) instead
+```
+
+**Validation workflow:**
+1. First update: No validation (no existing `stable/aidl/{module}/current/`)
+2. Subsequent updates: Compares source against existing `stable/aidl/{module}/current/`
+3. Freezing v1: Skips validation (no frozen versions to compare against)
+4. Freezing v2+: Validates v2 is compatible with v1
+
+### Versioning Workflow
+
+```bash
+# 1. Develop in module/current/ (complete freedom before first freeze)
+vim boot/current/com/rdk/hal/boot/IBoot.aidl
+
+# 2. Build and validate
+./build_interfaces.sh boot
+
+# 3. When ready, freeze as v1
+./freeze_interface.sh boot
+# Creates: stable/aidl/boot/1/, lib boot-v1-cpp.so
+
+# 4. Continue development for v2 in boot/current/
+# (Only backward-compatible additions allowed now)
+
+# 5. Build validates compatibility automatically
+./build_interfaces.sh boot
+# ✅ Pre-validation passed: source changes are backward-compatible
+
+# 6. Freeze v2 when ready
+./freeze_interface.sh boot
+```
+
+### Client Version Discovery
+
+Clients should check server version and adapt behavior:
+
+```cpp
+int32_t serverVersion;
+bootService->getInterfaceVersion(&serverVersion);
+
+if (serverVersion >= 2) {
+    bootService->newV2Method();  // Use v2 feature
+} else {
+    bootService->oldV1Method();  // Fallback
+}
+```
+
+### Documentation
+
+- **Versioning Guide**: [docs/halif/versioning-guide.md](docs/halif/versioning-guide.md) - Complete versioning strategy and workflow
+- **Client Patterns**: [docs/halif/client-patterns.md](docs/halif/client-patterns.md) - Version discovery and graceful degradation patterns
+- **Migration Guide**: [docs/halif/migration-guide.md](docs/halif/migration-guide.md) - Step-by-step migration instructions
+- **Examples**: [examples/aidl_versioning/](examples/aidl_versioning/) - Working multi-version examples
+
+### Testing Versioning
+
+```bash
+# Test validation logic
+./build_interfaces.sh test-validation
+
+# Tests verify:
+# ✅ First update succeeds (no prior version)
+# ✅ Adding methods succeeds (compatible)
+# ✅ Removing methods fails (incompatible)
+# ✅ Changing signatures fails (incompatible)
+```
 
 ## Contribution Guidelines  
 

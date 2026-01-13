@@ -1,0 +1,8 @@
+aidl_interface:
+  name: audiosink
+  srcs:
+    - com/rdk/hal/audiosink/*.aidl
+  imports:
+    - audiodecoder
+    - common
+  stability: vintf

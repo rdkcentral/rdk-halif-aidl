@@ -1,0 +1,7 @@
+aidl_interface:
+  name: hdmiinput
+  srcs:
+    - com/rdk/hal/hdmiinput/*.aidl
+  imports:
+    - common
+  stability: vintf

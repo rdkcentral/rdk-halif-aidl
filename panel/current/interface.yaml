@@ -1,0 +1,8 @@
+aidl_interface:
+  name: panel
+  srcs:
+    - com/rdk/hal/panel/*.aidl
+  imports:
+    - common
+    - videodecoder
+  stability: vintf

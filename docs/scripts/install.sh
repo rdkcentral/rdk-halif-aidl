@@ -24,7 +24,7 @@ MY_PATH="$(realpath ${BASH_SOURCE[0]})"
 MY_DIR="$(dirname ${MY_PATH})"
 VENV_NAME="python_venv"
 DOCS_DIR="${MY_DIR}/.."
-VENV_DIR="${DOCS_DIR}/${VENV_NAME}"  # Default virtual environment directory name
+VENV_DIR="${DOCS_DIR}/${VENV_NAME}"
 EXTERNAL_CONTENT_DIR="${DOCS_DIR}/external_content"
 
 NO_COLOR="\e[0m"
@@ -36,40 +36,13 @@ RED_BOLD="\e[1;31m"
 BLUE_BOLD="\e[1;34m"
 YELLOW_BOLD="\e[1;33m"
 
-set -e # return on errors
+# REMOVED: set -e 
+# Reason: 'set -e' kills the interactive shell when sourced. 
+# We use explicit error checking (|| return 1) instead.
 
-function DUMP_VAR()
-{
-    local var_name="$1"
-    local var_content="${!var_name}"
-    echo -e ${CYAN}$var_name:[${var_content}]${NO_COLOR}
-}
-
-function ECHO()
-{
-    echo -e "$*"
-}
-
-function DEBUG()
-{
-    # if set -x is in use debug messages are useless as whole stript will be shown
-    if [[ "$-" =~ "x" ]]; then
-        return
-    fi
-    if [[ "${DEBUG_FLAG}" == "1" ]];then
-        ECHO "${BLUE_BOLD}DEBUG: ${CYAN}$*${NO_COLOR}" > /dev/stderr
-    fi
-}
-
-function INFO()
-{
-    ECHO "${GREEN}$*${NO_COLOR}"
-}
-
-function WARNING()
-{
-    ECHO "${YELLOW_BOLD}Warning: ${YELLOW}$*${NO_COLOR}" > /dev/stderr
-}
+function ECHO() { echo -e "$*"; }
+function INFO() { ECHO "${GREEN}$*${NO_COLOR}"; }
+function WARNING() { ECHO "${YELLOW_BOLD}Warning: ${YELLOW}$*${NO_COLOR}" > /dev/stderr; }
 
 function ERROR()
 {
@@ -77,29 +50,25 @@ function ERROR()
     return 1
 }
 
-install_pip_requirements() {
+function install_pip_requirements() {
     local requirements_file="$1"
     local requirements_sha_dir="${VENV_DIR}/requirements"
     local requirements_sha_file="${requirements_sha_dir}${requirements_file}.sha256"
 
     if [ ! -f "${requirements_file}" ]; then
         WARNING "No ${requirements_file} found"
-        return
+        return 0
     fi
 
-    INFO "install_pip_requirements( ${requirements_file} ):"
-
-    # Get the directory part of the requirements file path
+    INFO "install_pip_requirements( ${requirements_file} )"
     local requirements_file_dir=$(dirname "${requirements_sha_file}")
 
-    # Create the SHA directory and the requirements file's directory if they don't exist.
-    mkdir -p "${requirements_sha_dir}"
-    mkdir -p "${requirements_file_dir}" # create requirements file directory if it doesn't exist.
+    # Explicit error handling for mkdir
+    mkdir -p "${requirements_sha_dir}" || { ERROR "Failed to create dir: ${requirements_sha_dir}"; return 1; }
+    mkdir -p "${requirements_file_dir}" || { ERROR "Failed to create dir: ${requirements_file_dir}"; return 1; }
 
-    # Calculate current SHA
     local current_sha=$(sha256sum "${requirements_file}" | awk '{print $1}')
 
-    # Check if SHA file exists and compare
     if [ -f "${requirements_sha_file}" ]; then
         local stored_sha=$(cat "${requirements_sha_file}")
         if [ "${current_sha}" == "${stored_sha}" ]; then
@@ -112,96 +81,111 @@ install_pip_requirements() {
         INFO "No SHA file found. Installing and creating one."
     fi
 
-    # Install only if SHA doesn't match or file doesn't exist
+    # Pip install with error check
     if pip install -r "${requirements_file}" >/dev/null 2>&1; then
         INFO "pip install completed"
-        # Update SHA file after successful install
-        echo "${current_sha}" > "${requirements_sha_file}"
-        INFO "SHA file updated: ${requirements_sha_file}"
+        echo "${current_sha}" > "${requirements_sha_file}" || { ERROR "Failed to write SHA file"; return 1; }
         return 0
     else
-        ERROR "process_and_update_sha(): pip install failed."
+        # Capture the output to show the user why it failed
+        ERROR "pip install failed. Running again without silence to show error:"
+        pip install -r "${requirements_file}"
         return 1
     fi
 }
 
 function clone_repo()
 {
-    # Requirment it to clone only if not present.
     local repo_url="$1"
     local path="$2"
     local version="$3"
-    local message="$4"
+    local message="${4:-Cloning repo}"
 
-    if [[ -z "${repo_url}" ]]; then
-        ERROR "clone_repo:A url for a repository must be passed to the clone repo function"
-    fi
-    if [[ -z "${version}" ]]; then
-        ERROR "clone_repo:Version not specified"
-    fi
+    [ -z "${repo_url}" ] && { ERROR "clone_repo: Missing URL"; return 1; }
+    [ -z "${version}" ] && { ERROR "clone_repo: Missing version"; return 1; }
+
     if [[ ! -z "${path}" ]]; then
         if [[ ! -d "${path}" ]]; then
             INFO "git clone ${repo_url} @ ${version} ${CYAN}${message}${NO_COLOR}"
-            git clone ${repo_url} "${path}" > /dev/null 2>&1
-            cd ${path}
-            #INFO "git checkout ${version}"
-            git checkout ${version} > /dev/null 2>&1
-            cd - > /dev/null
+            
+            # Explicit error handling for git operations
+            git clone ${repo_url} "${path}" > /dev/null 2>&1 || { ERROR "Git clone failed for ${repo_url}"; return 1; }
+            
+            pushd ${path} > /dev/null || { ERROR "Failed to enter directory ${path}"; return 1; }
+            git checkout ${version} > /dev/null 2>&1 || { ERROR "Git checkout failed for version ${version}"; popd > /dev/null; return 1; }
+            popd > /dev/null
         fi
     fi
 }
 
 function setup_and_enable_venv()
 {
-    # Check if virtual environment directory exists, create if not
+    # Create venv if missing
     if [[ ! -d "$VENV_DIR" ]]; then
         ECHO "Creating Virtual environment ${YELLOW}'$VENV_NAME'${NO_COLOR}"
-        python3 -m venv "$VENV_DIR"
+
+        # Try normal venv first, capturing errors
+        if ! python3 -m venv "$VENV_DIR" 2>venv_error.log; then
+            if grep -qi "ensurepip" venv_error.log 2>/dev/null; then
+                WARNING "python3 -m venv failed due to missing ensurepip."
+                WARNING "Retrying with --without-pip (Ubuntu 20 style)..."
+                if ! python3 -m venv --without-pip "$VENV_DIR"; then
+                    ERROR "Failed to create python venv (even with --without-pip). See venv_error.log"
+                    return 1
+                fi
+            else
+                ERROR "Failed to create python venv. See venv_error.log"
+                return 1
+            fi
+        fi
+
         ECHO "Virtual environment created."
     fi
 
-    # Request that the user re-run this script from the vendor
-    # Check if already inside a virtual environment
-    if [[ ! -n "$VIRTUAL_ENV" ]]; then
-        # Activate virtual environment
-        if [ $QUIET == 0 ]; then
-            ECHO "please run the following to ensure setup:"
-            ECHO ${YELLOW}". ./activate_venv.sh"${NO_COLOR}
+    # Activate if not active
+    if [[ -z "$VIRTUAL_ENV" ]]; then
+        if [ -f "$VENV_DIR/bin/activate" ]; then
+            # shellcheck disable=SC1090
+            source "$VENV_DIR/bin/activate" || { ERROR "Failed to activate venv"; return 1; }
+        else
+            ERROR "Venv directory exists but cannot find bin/activate"
+            return 1
         fi
-        return 0  # Exit the function if already in a venv
     fi
 
-    if [ -f "${VENV_DIR}/.installed" ]; then
-        return
+    # Make sure pip exists in the venv
+    if ! command -v pip >/dev/null 2>&1; then
+        WARNING "pip not found in virtualenv, trying to bootstrap pip..."
+        if ! python -m ensurepip --upgrade >/dev/null 2>&1; then
+            WARNING "ensurepip not available inside venv."
+            if command -v pip3 >/dev/null 2>&1; then
+                WARNING "Using system pip3 to bootstrap pip..."
+                pip3 install --upgrade pip
+            else
+                ERROR "No pip available. On Ubuntu, run: sudo apt install python3-venv python3-pip"
+                return 1
+            fi
+        fi
     fi
-
-    # Upgrade pip
-    #python3 -m pip install --upgrade pip
-    #echo "pip upgraded within the virtual environment."
-
-    touch ${VENV_DIR}/.installed
 }
+
+# --- Main Execution Flow ---
 
 QUIET=0
 if [ "$1" == "--quiet" ]; then
     QUIET=1
 fi
 
-## Setup and start venv
-setup_and_enable_venv
+# 1. Setup Venv
+setup_and_enable_venv || return 1
 
-### Clone required repos ###
-# Clone ut-core docs for reference material
-mkdir -p ${EXTERNAL_CONTENT_DIR}
-clone_repo "https://github.com/rdkcentral/ut-core.wiki.git" "${EXTERNAL_CONTENT_DIR}/ut-core-wiki" "main"
+# 2. Clone Repos
+mkdir -p ${EXTERNAL_CONTENT_DIR} || { ERROR "Failed to create ${EXTERNAL_CONTENT_DIR}"; return 1; }
+clone_repo "https://github.com/rdkcentral/ut-core.wiki.git" "${EXTERNAL_CONTENT_DIR}/ut-core-wiki" "main" || return 1
 
-# Setup Pip Env
-install_pip_requirements ${DOCS_DIR}/requirements.txt
+# 3. Install Pip Req
+install_pip_requirements ${DOCS_DIR}/requirements.txt || return 1
 
-## Install your own sub git repo's in here as required
-# 
 if [ ${QUIET} == 0 ]; then
     INFO "Run "${YELLOW}./build_docs.sh${NO_COLOR}" to generate the documentation"
 fi
-
-
