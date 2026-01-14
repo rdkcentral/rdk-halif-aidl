@@ -64,32 +64,43 @@ Target libraries run on your **embedded device** (typically ARM).
 
 ### Native Build (x86_64 target)
 
-For local testing or x86_64 targets:
+For local testing or x86_64 targets using system GCC:
 
 ```bash
 ./build-linux-binder-aidl.sh
 
 # Clean build (removes build-target/ and out/target/ first)
-./build-linux-binder-aidl.sh --clean
+./build-linux-binder-aidl.sh clean
 
 # Show help
-./build-linux-binder-aidl.sh --help
+./build-linux-binder-aidl.sh help
 ```
 
-**Note:** This script builds the host AIDL generator tool by default so the target
-build can generate stubs/proxies. Use `--no-host-aidl` if you already have
-`out/host/bin/aidl` available.
+**Note:**
+- This script builds the host AIDL generator tool by default so the target build can generate stubs/proxies.
+- Use `no-host-aidl` if you already have `out/host/bin/aidl` available.
+- When CC/CXX are **not set**, CMake automatically uses system compiler (gcc/g++ from build-essential).
 
 ### Cross-Compilation (ARM target)
 
-For ARM embedded devices:
+For ARM embedded devices with cross-compiler and sysroot:
 
 ```bash
 export CC=arm-linux-gnueabihf-gcc
 export CXX=arm-linux-gnueabihf-g++
+export CFLAGS="--sysroot=/path/to/sysroot -march=armv7-a -mfpu=neon"
+export CXXFLAGS="--sysroot=/path/to/sysroot -march=armv7-a -mfpu=neon"
+export LDFLAGS="--sysroot=/path/to/sysroot"
 export TARGET_LIB32_VERSION=ON  # For 32-bit ARM
 ./build-linux-binder-aidl.sh
 ```
+
+**Note:** The script respects all standard Yocto environment variables:
+- `CC` / `CXX` - Cross-compiler toolchain
+- `CFLAGS` / `CXXFLAGS` - Compiler flags (sysroot, architecture-specific flags)
+- `LDFLAGS` - Linker flags (sysroot, library paths)
+
+These are automatically passed to CMake as `CMAKE_C_COMPILER`, `CMAKE_CXX_COMPILER`, `CMAKE_C_FLAGS`, `CMAKE_CXX_FLAGS`, and `CMAKE_*_LINKER_FLAGS`.
 
 **Output:**
 
@@ -106,10 +117,20 @@ export TARGET_LIB32_VERSION=ON  # For 32-bit ARM
 |----------|-------------|---------|
 | `CC` | C compiler | System default |
 | `CXX` | C++ compiler | System default |
+| `CFLAGS` | C compiler flags (sysroot, arch flags) | None |
+| `CXXFLAGS` | C++ compiler flags | None |
+| `LDFLAGS` | Linker flags | None |
 | `BUILD_TYPE` | `Debug` or `Release` | `Release` |
 | `TARGET_LIB32_VERSION` | Build 32-bit target | `OFF` |
 
 ### Examples
+
+**Native build (system GCC):**
+
+```bash
+# Uses system default gcc/g++ - no environment variables needed
+./build-linux-binder-aidl.sh
+```
 
 **Debug build for host tools:**
 
@@ -117,11 +138,14 @@ export TARGET_LIB32_VERSION=ON  # For 32-bit ARM
 BUILD_TYPE=Debug ./build-aidl-generator-tool.sh
 ```
 
-**32-bit ARM target:**
+**Cross-compile: 32-bit ARM target with sysroot:**
 
 ```bash
 export CC=arm-linux-gnueabihf-gcc
 export CXX=arm-linux-gnueabihf-g++
+export CFLAGS="--sysroot=/opt/poky/sysroots/armv7ahf-neon -march=armv7-a"
+export CXXFLAGS="--sysroot=/opt/poky/sysroots/armv7ahf-neon -march=armv7-a"
+export LDFLAGS="--sysroot=/opt/poky/sysroots/armv7ahf-neon"
 export TARGET_LIB32_VERSION=ON
 ./build-linux-binder-aidl.sh
 ```

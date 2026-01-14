@@ -23,6 +23,17 @@ set -euo pipefail
 # Quick validation test for build scripts
 cd "$(dirname "$0")"
 
+# Color codes for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Test results tracking
+TESTS_PASSED=0
+TESTS_FAILED=0
+
 CMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX:-$(pwd)/out/target}"
 
 usage() {
@@ -34,7 +45,7 @@ usage() {
     echo "  --help       Show this help"
 }
 
-TEST_IDS=("1" "1.1" "2" "3" "4" "5" "6" "7" "8" "9" "10")
+TEST_IDS=("1" "1.1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11")
 
 list_tests() {
     echo "Available tests:"
@@ -49,6 +60,7 @@ list_tests() {
     echo "  8   Direct CMake build (per BUILD.md)"
     echo "  9   Direct CMake build (per BUILD.md + install)"
     echo "  10  Production build (minimal flags + install)"
+    echo "  11  Docker cross-compilation (RDK Kirkstone ARM toolchain)"
 }
 
 index_of_test_id() {
@@ -398,6 +410,55 @@ test_10() {
     fi
 }
 
+test_11() {
+    echo "Docker cross-compilation test (RDK Kirkstone ARM toolchain)..."
+    
+    # Check if docker command is available
+    if ! command -v docker &> /dev/null; then
+        echo "⚠️  Docker not installed - skipping cross-compilation test"
+        return 0
+    fi
+    
+    # Check if rdk-kirkstone image exists
+    if ! docker images | grep -q "rdk-kirkstone"; then
+        echo "⚠️  rdk-kirkstone Docker image not found - skipping cross-compilation test"
+        echo "    To run this test, ensure rdk-kirkstone image is available"
+        return 0
+    fi
+    
+    clean_build_state
+    echo "Building with RDK Kirkstone ARM toolchain in Docker..."
+    echo "This tests cross-compilation with sysroot and ARM target flags."
+    
+    # Build in Docker with ARM toolchain environment
+    if docker run --rm -v "$(pwd):/workspace" -w /workspace rdk-kirkstone bash -c '
+        . /opt/toolchains/rdk-glibc-x86_64-arm-toolchain/environment-setup-armv7vet2hf-neon-oe-linux-gnueabi && \
+        export TARGET_LIB32_VERSION=ON && \
+        ./build-linux-binder-aidl.sh
+    ' >/tmp/docker_cross_build.log 2>&1; then
+        warnings=$(grep -ci "warning:" /tmp/docker_cross_build.log || echo "0")
+        errors=$(grep -ci "error:" /tmp/docker_cross_build.log || echo "0")
+        echo "✅ Docker cross-compilation completed (warnings: $warnings, errors: $errors)"
+        test -f ./out/target/lib/libbinder.so && echo "✅ libbinder.so created (ARM cross-compile)"
+        test -x ./out/target/bin/servicemanager && echo "✅ servicemanager created (ARM cross-compile)"
+        
+        # Verify ARM architecture
+        if command -v file &> /dev/null; then
+            file_output=$(file ./out/target/lib/libbinder.so)
+            if echo "$file_output" | grep -q "ARM"; then
+                echo "✅ Verified ARM architecture: $file_output"
+            else
+                echo "⚠️  Warning: Expected ARM binary, got: $file_output"
+            fi
+        fi
+    else
+        echo "❌ Docker cross-compilation failed!"
+        tail -30 /tmp/docker_cross_build.log
+        TESTS_FAILED=$((TESTS_FAILED + 1))
+        return 1
+    fi
+}
+
 run_test "1" "Clean Android sources" test_1
 run_test "1.1" "Clone Android sources" test_1_1
 run_test "2" "Scripts exist and are executable" test_2
@@ -409,9 +470,19 @@ run_test "7" "Direct CMake build (defaults + install)" test_7
 run_test "8" "Direct CMake build (per BUILD.md)" test_8
 run_test "9" "Direct CMake build (per BUILD.md + install)" test_9
 run_test "10" "Production build (minimal flags + install)" test_10
+run_test "11" "Docker cross-compilation (RDK Kirkstone ARM)" test_11
 
 echo ""
-echo "✅ ALL TESTS PASSED"
+TOTAL_TESTS=$((TESTS_PASSED + TESTS_FAILED))
+if [ $TESTS_FAILED -gt 0 ]; then
+    echo -e "${RED}❌ SOME TESTS FAILED${NC}"
+    echo -e "${GREEN}Passed: ${TESTS_PASSED}/${TOTAL_TESTS}${NC}"
+    echo -e "${RED}Failed: ${TESTS_FAILED}/${TOTAL_TESTS}${NC}"
+    exit 1
+else
+    echo -e "${GREEN}✅ ALL TESTS PASSED${NC}"
+    echo -e "${GREEN}Passed: ${TESTS_PASSED}/${TOTAL_TESTS}${NC}"
+fi
 echo ""
 echo "Build outputs:"
 echo "  Host:   $(realpath ./out/host/bin/)"

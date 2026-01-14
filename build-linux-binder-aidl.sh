@@ -33,21 +33,32 @@ set -euo pipefail
 #
 # Build Variables:
 #   CC, CXX        - Target cross-compiler (e.g., arm-linux-gnueabihf-gcc)
+#                    If NOT set: Uses system default (gcc/g++ from build-essential)
+#   CFLAGS         - C compiler flags (e.g., sysroot, target-specific flags)
+#   CXXFLAGS       - C++ compiler flags
+#   LDFLAGS        - Linker flags
 #   BUILD_TYPE     - Debug or Release (default: Release)
-#   TARGET_LIB32   - Set to ON for 32-bit target (default: OFF for 64-bit)
+#   TARGET_LIB32_VERSION - Set to ON for 32-bit target (default: OFF for 64-bit)
 #
 # Options:
-#   --clean        - Remove all build artifacts and source directories (android/, build-*, out/)
-#   --no-host-aidl - Skip building the host AIDL generator tool
+#   clean          - Remove all build artifacts and source directories (android/, build-*, out/)
+#   no-host-aidl   - Skip building the host AIDL generator tool
 #
-# Example cross-compile:
+# Native build (uses system GCC from build-essential):
+#   ./build-linux-binder-aidl.sh
+#
+# Cross-compile (Yocto-style with sysroot):
 #   export CC=arm-linux-gnueabihf-gcc
 #   export CXX=arm-linux-gnueabihf-g++
+#   export CFLAGS="--sysroot=/path/to/sysroot -march=armv7-a"
+#   export CXXFLAGS="--sysroot=/path/to/sysroot -march=armv7-a"
+#   export LDFLAGS="--sysroot=/path/to/sysroot"
 #   export TARGET_LIB32_VERSION=ON
 #   ./build-linux-binder-aidl.sh
 #
 # Note: This builds for the TARGET architecture.
-#       Yocto/bitbake should set CC/CXX appropriately.
+#       When CC/CXX are NOT set: CMake auto-detects system compiler (native build)
+#       When CC/CXX ARE set: Uses specified cross-compiler (Yocto/embedded build)
 # -------------------------------------------------------------------
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -60,30 +71,34 @@ TARGET_LIB32="${TARGET_LIB32_VERSION:-OFF}"
 CLEAN_BUILD=false
 BUILD_HOST_AIDL_TOOL=true
 
-# Use CC/CXX for target cross-compilation
+# Use CC/CXX/CFLAGS etc. for target cross-compilation
 # If not set, use system default (native build)
+# Yocto will set these with sysroot, target arch, etc.
 TARGET_CC="${CC:-}"
 TARGET_CXX="${CXX:-}"
+TARGET_CFLAGS="${CFLAGS:-}"
+TARGET_CXXFLAGS="${CXXFLAGS:-}"
+TARGET_LDFLAGS="${LDFLAGS:-}"
 
 # Parse arguments
 for arg in "$@"; do
   case "$arg" in
-    --clean)
+    --clean|clean)
       CLEAN_BUILD=true
       ;;
-    --help|-h)
-      echo "Usage: $0 [--clean] [--no-host-aidl] [--help]"
-      echo "  --clean         Remove all build artifacts and source directories (android/, build-*, out/)"
-      echo "  --no-host-aidl  Skip building the host AIDL generator tool"
-      echo "  --help          Show this help message"
+    --help|-h|help)
+      echo "Usage: $0 [clean] [no-host-aidl] [help]"
+      echo "  clean          Remove all build artifacts and source directories (android/, build-*, out/)"
+      echo "  no-host-aidl   Skip building the host AIDL generator tool"
+      echo "  help           Show this help message"
       exit 0
       ;;
-    --no-host-aidl)
+    --no-host-aidl|no-host-aidl)
       BUILD_HOST_AIDL_TOOL=false
       ;;
     *)
       echo "Unknown option: $arg"
-      echo "Use --help for usage information"
+      echo "Use 'help' for usage information"
       exit 1
       ;;
   esac
@@ -99,6 +114,9 @@ echo "Build type:      ${BUILD_TYPE}"
 echo "Target 32-bit:   ${TARGET_LIB32}"
 echo "Target CC:       ${TARGET_CC:-system default}"
 echo "Target CXX:      ${TARGET_CXX:-system default}"
+echo "Target CFLAGS:   ${TARGET_CFLAGS:-none}"
+echo "Target CXXFLAGS: ${TARGET_CXXFLAGS:-none}"
+echo "Target LDFLAGS:  ${TARGET_LDFLAGS:-none}"
 echo "Clean build:     ${CLEAN_BUILD}"
 echo "Build host AIDL: ${BUILD_HOST_AIDL_TOOL}"
 echo "=========================================="
@@ -138,20 +156,37 @@ mkdir -p "${OUT_DIR}/lib" "${OUT_DIR}/bin" "${OUT_DIR}/include"
 
 echo "==> Configuring CMake for target binder libraries..."
 
-# Set CMAKE compilers if cross-compilation is requested
-if [ -n "${TARGET_CC}" ] && [ -n "${TARGET_CXX}" ]; then
-  CMAKE_C_COMPILER="${TARGET_CC}" \
-  CMAKE_CXX_COMPILER="${TARGET_CXX}" \
-  cmake -S "${ROOT_DIR}" -B "${BUILD_DIR}" \
-    -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
-    -DBUILD_HOST_AIDL=OFF \
-    -DTARGET_LIB32_VERSION="${TARGET_LIB32}"
-else
-  cmake -S "${ROOT_DIR}" -B "${BUILD_DIR}" \
-    -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
-    -DBUILD_HOST_AIDL=OFF \
-    -DTARGET_LIB32_VERSION="${TARGET_LIB32}"
+# Prepare CMake arguments
+CMAKE_ARGS=(
+  -S "${ROOT_DIR}"
+  -B "${BUILD_DIR}"
+  -DCMAKE_BUILD_TYPE="${BUILD_TYPE}"
+  -DBUILD_HOST_AIDL=OFF
+  -DTARGET_LIB32_VERSION="${TARGET_LIB32}"
+)
+
+# Add compiler settings if provided (Yocto cross-compilation)
+if [ -n "${TARGET_CC}" ]; then
+  CMAKE_ARGS+=(-DCMAKE_C_COMPILER="${TARGET_CC}")
 fi
+if [ -n "${TARGET_CXX}" ]; then
+  CMAKE_ARGS+=(-DCMAKE_CXX_COMPILER="${TARGET_CXX}")
+fi
+
+# Add flags if provided (Yocto sysroot, target-specific flags)
+if [ -n "${TARGET_CFLAGS}" ]; then
+  CMAKE_ARGS+=(-DCMAKE_C_FLAGS="${TARGET_CFLAGS}")
+fi
+if [ -n "${TARGET_CXXFLAGS}" ]; then
+  CMAKE_ARGS+=(-DCMAKE_CXX_FLAGS="${TARGET_CXXFLAGS}")
+fi
+if [ -n "${TARGET_LDFLAGS}" ]; then
+  CMAKE_ARGS+=(-DCMAKE_EXE_LINKER_FLAGS="${TARGET_LDFLAGS}")
+  CMAKE_ARGS+=(-DCMAKE_SHARED_LINKER_FLAGS="${TARGET_LDFLAGS}")
+fi
+
+# Run CMake configuration
+cmake "${CMAKE_ARGS[@]}"
 
 echo "==> Building target binder libraries..."
 cmake --build "${BUILD_DIR}" --target all -- -j"$(nproc)"

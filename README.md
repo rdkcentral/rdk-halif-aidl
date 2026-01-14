@@ -64,7 +64,9 @@ Following are the build steps to build the binder framework, binder examples and
 ```
 
 This also builds the host AIDL generator tool by default so the target build can generate
-stubs/proxies. Use `--no-host-aidl` if you already have `out/host/bin/aidl` available.
+stubs/proxies. Use `no-host-aidl` if you already have `out/host/bin/aidl` available.
+
+**Note:** For native builds (standard Linux with build-essential), just run the script without setting any environment variables. CMake will auto-detect your system GCC compiler. For cross-compilation (Yocto/embedded), set CC/CXX/CFLAGS/CXXFLAGS/LDFLAGS before running the script.
 
 #### Following are the generated files as part of the binder framework (in `out/target/`):-
 

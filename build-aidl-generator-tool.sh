@@ -53,18 +53,18 @@ CLEAN_BUILD=false
 # Parse arguments
 for arg in "$@"; do
   case "$arg" in
-    --clean)
+    --clean|clean)
       CLEAN_BUILD=true
       ;;
-    --help|-h)
-      echo "Usage: $0 [--clean] [--help]"
-      echo "  --clean  Remove all build artifacts and source directories (android/, build-*, out/)"
-      echo "  --help   Show this help message"
+    --help|-h|help)
+      echo "Usage: $0 [clean] [help]"
+      echo "  clean  Remove all build artifacts and source directories (android/, build-*, out/)"
+      echo "  help   Show this help message"
       exit 0
       ;;
     *)
       echo "Unknown option: $arg"
-      echo "Use --help for usage information"
+      echo "Use 'help' for usage information"
       exit 1
       ;;
   esac
