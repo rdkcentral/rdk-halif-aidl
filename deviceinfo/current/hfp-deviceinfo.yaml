@@ -104,6 +104,10 @@ deviceinfo:
       zero_terminated: false
 
     - name: DEVICE_TYPE           # Device type
+      # Allowed values:
+      #   - STB: tuner/demodulator, no display
+      #   - OTT: no tuner, internet-only, no display
+      #   - TV: integrated display device
       value: "STB"
       format: STRING
       max_size: 16
