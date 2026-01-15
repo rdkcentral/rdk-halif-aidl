@@ -25,25 +25,25 @@
 audiodecoder:                   # Component object begins
   interfaceVersion: current
   IAudioDecoder:                # Resource list
-  - id: 0
-    supportedCodecs:            # Array of codec capabilities
-    - AAC_LC
-    - HE_AAC
-    - HE_AAC2
-    - DOLBY_AC3
-    - DOLBY_AC3_PLUS
-    - DOLBY_AC3_PLUS_JOC
-    - DOLBY_AC4
-    - X_HE_AAC
-    supportsSecure: true
-  - id: 1
-    supportedCodecs:            # Array of codec capabilities
-    - AAC_LC
-    - HE_AAC
-    - HE_AAC2
-    - DOLBY_AC3
-    - DOLBY_AC3_PLUS
-    - DOLBY_AC3_PLUS_JOC
-    - DOLBY_AC4
-    - X_HE_AAC
-    supportsSecure: true
+    - id: 0
+      supportedCodecs:          # Array of codec capabilities
+        - AAC_LC
+        - HE_AAC
+        - HE_AAC2
+        - DOLBY_AC3
+        - DOLBY_AC3_PLUS
+        - DOLBY_AC3_PLUS_JOC
+        - DOLBY_AC4
+        - X_HE_AAC
+      supportsSecure: true
+    - id: 1
+      supportedCodecs:          # Array of codec capabilities
+        - AAC_LC
+        - HE_AAC
+        - HE_AAC2
+        - DOLBY_AC3
+        - DOLBY_AC3_PLUS
+        - DOLBY_AC3_PLUS_JOC
+        - DOLBY_AC4
+        - X_HE_AAC
+      supportsSecure: true
