@@ -27,7 +27,7 @@ videodecoder:                   # Component object begins
   supportedOperationalModes:
     - NON_TUNNELLED
   IVideoDecoder:                # Resource list
-    - id: 0
+    - id: 0                        # Resource object begins
       supportedCodecs:          # Array of codec capabilities
         - codec: MPEG
           maxFrameRate: 60
@@ -60,7 +60,7 @@ videodecoder:                   # Component object begins
         - DOLBY_VISION
       supportsSecure: true
 
-    - id: 1
+    - id: 1                          # Resource object begins
       supportedCodecs:          # Array of codec capabilities
         - codec: MPEG
           maxFrameRate: 60

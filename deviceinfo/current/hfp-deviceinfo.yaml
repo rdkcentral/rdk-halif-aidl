@@ -25,91 +25,91 @@
 deviceinfo:
   interfaceVersion: current
   properties:
-    - name: HAL_VERSION
+    - name: HAL_VERSION           # HAL version
       value: "1.0.0"
       format: SEMANTICVERSION
       max_size: 32
       zero_terminated: true
 
-    - name: MANUFACTURER
+    - name: MANUFACTURER          # Device manufacturer name
       value: "RDK Inc."
       format: STRING
       max_size: 32
       zero_terminated: true
 
-    - name: MANUFACTURER_OUI
+    - name: MANUFACTURER_OUI      # Manufacturer IEEE OUI, 3-byte hex string
       value: "AABBCC"
       format: STRING
       max_size: 8
       zero_terminated: true
 
-    - name: MODEL_NAME
+    - name: MODEL_NAME             # Device model name
       value: "RDK-STB-200"
       format: STRING
       max_size: 32
       zero_terminated: true
 
-    - name: PRODUCT_CLASS
+    - name: PRODUCT_CLASS          # Product class
       value: "STB"
       format: STRING
       max_size: 16
       zero_terminated: true
 
-    - name: SERIAL_NUMBER
+    - name: SERIAL_NUMBER          # Device serial number
       value: "RDK123456789"
       format: STRING
       max_size: 32
       zero_terminated: true
 
-    - name: WIFI_MAC
+    - name: WIFI_MAC               # Wi-Fi MAC
       value: "00:11:22:33:44:55"
       format: MAC
       max_size: 16
       zero_terminated: false
 
-    - name: BLUETOOTH_MAC
+    - name: BLUETOOTH_MAC          # Bluetooth MAC
       value: "11:22:33:44:55:66"
       format: MAC
       max_size: 16
       zero_terminated: false
 
-    - name: WPS_PIN
+    - name: WPS_PIN                # WPS PIN
       value: "12345670"
       format: NUMERIC
       max_size: 8
       zero_terminated: true
 
-    - name: ETHERNET_MAC
+    - name: ETHERNET_MAC           # Ethernet MAC
       value: "AA:BB:CC:DD:EE:FF"
       format: MAC
       max_size: 16
       zero_terminated: false
 
-    - name: RF4CE_MAC
+    - name: RF4CE_MAC              # RF4CE MAC
       value: "22:33:44:55:66:77"
       format: MAC
       max_size: 16
       zero_terminated: false
 
-    - name: COUNTRY_CODE
+    - name: COUNTRY_CODE           # Country code
       value: "US"
       format: ISO3166
       max_size: 2
       zero_terminated: false
 
-    - name: LANGUAGE_CODE
+    - name: LANGUAGE_CODE          # Language code
       value: "en"
       format: ISO639
       max_size: 2
       zero_terminated: false
 
-    - name: DEVICE_TYPE
+    - name: DEVICE_TYPE           # Device type
       value: "STB"
       format: STRING
       max_size: 16
       zero_terminated: true
 
-    - name: CHIPSET_ID
+    - name: CHIPSET_ID             # SoC chipset ID
       value: "SAMPLE_CHIPSET_ID"
       format: STRING
       max_size: 32

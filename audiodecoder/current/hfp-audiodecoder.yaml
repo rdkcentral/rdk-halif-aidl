@@ -25,7 +25,7 @@
 audiodecoder:                   # Component object begins
   interfaceVersion: current
   IAudioDecoder:                # Resource list
-    - id: 0
+    - id: 0                      # Resource object begins
       supportedCodecs:          # Array of codec capabilities
         - AAC_LC
         - HE_AAC
@@ -37,7 +37,7 @@ audiodecoder:                   # Component object begins
         - X_HE_AAC
       supportsSecure: true
 
-    - id: 1
+    - id: 1                      # Resource object begins
       supportedCodecs:          # Array of codec capabilities
         - AAC_LC
         - HE_AAC
