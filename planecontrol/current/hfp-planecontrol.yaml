@@ -25,52 +25,52 @@
 planecontrol:                   # Component object begins
   interfaceVersion: current
   planes:                   # Resource list
-  - id: 0
-    type: VIDEO
-    pixelFormats:
-    - NATIVE
-    maxWidth: 3840
-    maxHeight: 2160
-    frameWidth: 3840
-    frameHeight: 2160
-    supportedDynamicRanges:
-    - SDR
-    - HLG
-    - HDR10
-    - HDR10PLUS
-    - DOLBY_VISION
-    colorDepth: 12
-    maxFrameRate: 60
-    supportsAlpha: true
-    supportsZOrder: true
-    vsyncDisplayLatency: 3
-  - id: 1
-    type: VIDEO
-    pixelFormats:
-    - NATIVE
-    maxWidth: 3840
-    maxHeight: 2160
-    frameWidth: 3840
-    frameHeight: 2160
-    supportedDynamicRanges:
-    - SDR
-    colorDepth: 10
-    maxFrameRate: 60
-    supportsAlpha: true
-    supportsZOrder: true
-    vsyncDisplayLatency: 3
-  - id: 2
-    type: GRAPHICS
-    pixelFormats:
-    - RGB
-    maxWidth: 1920
-    maxHeight: 1080
-    frameWidth: 1920
-    frameHeight: 1080
-    supportedDynamicRanges:
-    - SDR
-    colorDepth: 8
-    maxFrameRate: 60
-    supportsAlpha: true
-    supportsZOrder: false
-    vsyncDisplayLatency: 1
+    - id: 0
+      type: VIDEO
+      pixelFormats:
+        - NATIVE
+      maxWidth: 3840
+      maxHeight: 2160
+      frameWidth: 3840
+      frameHeight: 2160
+      supportedDynamicRanges:
+        - SDR
+        - HLG
+        - HDR10
+        - HDR10PLUS
+        - DOLBY_VISION
+      colorDepth: 12
+      maxFrameRate: 60
+      supportsAlpha: true
+      supportsZOrder: true
+      vsyncDisplayLatency: 3
+    - id: 1
+      type: VIDEO
+      pixelFormats:
+        - NATIVE
+      maxWidth: 3840
+      maxHeight: 2160
+      frameWidth: 3840
+      frameHeight: 2160
+      supportedDynamicRanges:
+        - SDR
+      colorDepth: 10
+      maxFrameRate: 60
+      supportsAlpha: true
+      supportsZOrder: true
+      vsyncDisplayLatency: 3
+    - id: 2
+      type: GRAPHICS
+      pixelFormats:
+        - RGB
+      maxWidth: 1920
+      maxHeight: 1080
+      frameWidth: 1920
+      frameHeight: 1080
+      supportedDynamicRanges:
+        - SDR
+      colorDepth: 8
+      maxFrameRate: 60
+      supportsAlpha: true
+      supportsZOrder: false
+      vsyncDisplayLatency: 1
