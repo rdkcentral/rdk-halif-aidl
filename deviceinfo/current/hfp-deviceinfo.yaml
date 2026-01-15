@@ -30,71 +30,85 @@ deviceinfo:
       format: SEMANTICVERSION
       max_size: 32
       zero_terminated: true
+
     - name: MANUFACTURER
       value: "RDK Inc."
       format: STRING
       max_size: 32
       zero_terminated: true
+
     - name: MANUFACTURER_OUI
       value: "AABBCC"
       format: STRING
       max_size: 8
       zero_terminated: true
+
     - name: MODEL_NAME
       value: "RDK-STB-200"
       format: STRING
       max_size: 32
       zero_terminated: true
+
     - name: PRODUCT_CLASS
       value: "STB"
       format: STRING
       max_size: 16
       zero_terminated: true
+
     - name: SERIAL_NUMBER
       value: "RDK123456789"
       format: STRING
       max_size: 32
       zero_terminated: true
+
     - name: WIFI_MAC
       value: "00:11:22:33:44:55"
       format: MAC
       max_size: 16
       zero_terminated: false
+
     - name: BLUETOOTH_MAC
       value: "11:22:33:44:55:66"
       format: MAC
       max_size: 16
       zero_terminated: false
+
     - name: WPS_PIN
       value: "12345670"
       format: NUMERIC
       max_size: 8
       zero_terminated: true
+
     - name: ETHERNET_MAC
       value: "AA:BB:CC:DD:EE:FF"
       format: MAC
       max_size: 16
       zero_terminated: false
+
     - name: RF4CE_MAC
       value: "22:33:44:55:66:77"
       format: MAC
       max_size: 16
       zero_terminated: false
+
     - name: COUNTRY_CODE
       value: "US"
       format: ISO3166
       max_size: 2
       zero_terminated: false
+
     - name: LANGUAGE_CODE
       value: "en"
       format: ISO639
       max_size: 2
       zero_terminated: false
+
     - name: DEVICE_TYPE
       value: "STB"
       format: STRING
       max_size: 16
       zero_terminated: true
+
     - name: CHIPSET_ID
       value: "SAMPLE_CHIPSET_ID"
       format: STRING
