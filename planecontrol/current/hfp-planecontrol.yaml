@@ -25,7 +25,7 @@
 planecontrol:                   # Component object begins
   interfaceVersion: current
   planes:                   # Resource list
-    - id: 0
+    - id: 0                    # Resource object begins
       type: VIDEO
       pixelFormats:
         - NATIVE
@@ -45,7 +45,7 @@ planecontrol:                   # Component object begins
       supportsZOrder: true
       vsyncDisplayLatency: 3
 
-    - id: 1
+    - id: 1                    # Resource object begins
       type: VIDEO
       pixelFormats:
         - NATIVE
@@ -61,7 +61,7 @@ planecontrol:                   # Component object begins
       supportsZOrder: true
       vsyncDisplayLatency: 3
 
-    - id: 2
+    - id: 2                    # Resource object begins
       type: GRAPHICS
       pixelFormats:
         - RGB
