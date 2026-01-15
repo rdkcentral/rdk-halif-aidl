@@ -36,6 +36,7 @@ audiodecoder:                   # Component object begins
         - DOLBY_AC4
         - X_HE_AAC
       supportsSecure: true
+
     - id: 1
       supportedCodecs:          # Array of codec capabilities
         - AAC_LC

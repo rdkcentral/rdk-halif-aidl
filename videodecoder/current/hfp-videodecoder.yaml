@@ -33,18 +33,22 @@ videodecoder:                   # Component object begins
           maxFrameRate: 60
           maxFrameWidth: 1920
           maxFrameHeight: 1080
+
         - codec: H264
           maxFrameRate: 60
           maxFrameWidth: 1920
           maxFrameHeight: 1080
+
         - codec: H265
           maxFrameRate: 60
           maxFrameWidth: 3840
           maxFrameHeight: 2160
+
         - codec: VP9
           maxFrameRate: 60
           maxFrameWidth: 3840
           maxFrameHeight: 2160
+
         - codec: AV1
           maxFrameRate: 60
           maxFrameWidth: 3840
@@ -55,24 +59,29 @@ videodecoder:                   # Component object begins
         - HDR10
         - DOLBY_VISION
       supportsSecure: true
+
     - id: 1
       supportedCodecs:          # Array of codec capabilities
         - codec: MPEG
           maxFrameRate: 60
           maxFrameWidth: 1920
           maxFrameHeight: 1080
+
         - codec: H264
           maxFrameRate: 60
           maxFrameWidth: 1920
           maxFrameHeight: 1080
+
         - codec: H265
           maxFrameRate: 60
           maxFrameWidth: 1920
           maxFrameHeight: 1080
+
         - codec: VP9
           maxFrameRate: 60
           maxFrameWidth: 1920
           maxFrameHeight: 1080
+
         - codec: AV1
           maxFrameRate: 60
           maxFrameWidth: 1920
