@@ -2,7 +2,7 @@
 
 - **Type**: Engineering Whitepaper
 - **Audience**: Developers and Systems Architects integrating and maintaining code
-- **Purpose**: To define a consistent client-side framework for version discovery and capability management. This paper provides a selection strategy for configuration formats (YAML, TOML, JSON) to ensure robust fallback mechanisms and "living documentation" when new features are introduced in Stable AIDL interfaces.
+- **Purpose**:- To establish a selection strategy for configuration formats (YAML, TOML, JSON, INI) that prioritises human-readable documentation and schema validation for maintainable system configuration
 
 ---
 
