@@ -90,7 +90,7 @@ endif ()
 
 if (NOT DEFINED CMAKE_INSTALL_INCDIR)
     message("Set and create cmake install include directory")
-    set(CMAKE_INSTALL_INCDIR ${CMAKE_INSTALL_PREFIX}/include)
+    set(CMAKE_INSTALL_INCDIR ${CMAKE_SOURCE_DIR}/../out/build/include)
     file(MAKE_DIRECTORY ${CMAKE_INSTALL_INCDIR})
     message("cmake install header dir ${CMAKE_INSTALL_INCDIR}")
 endif ()

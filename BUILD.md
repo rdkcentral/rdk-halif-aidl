@@ -107,7 +107,7 @@ These are automatically passed to CMake as `CMAKE_C_COMPILER`, `CMAKE_CXX_COMPIL
 - `out/target/lib/libbinder.so` - Core binder library
 - `out/target/lib/liblog.so`, `libbase.so`, etc. - Support libraries
 - `out/target/bin/servicemanager` - Binder service manager
-- `out/target/include/` - Headers for building binder clients/services
+- `out/build/include/` - Headers for building binder clients/services
 
 ## Build Options
 
@@ -460,7 +460,7 @@ Installed files:
 
 - Libraries: `/usr/local/lib/lib{binder,utils,log,base,cutils}.so`
 - Binaries: `/usr/local/bin/servicemanager`
-- Headers: `/usr/local/include/{binder,utils,log,cutils}/`
+- Headers: SDK headers for building against binder (separate from runtime)
 
 ### Systemd Service Configuration
 

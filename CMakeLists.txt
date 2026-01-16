@@ -138,20 +138,6 @@ add_compile_options(
 # C++ specific warnings
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-class-memaccess -Wno-invalid-offsetof -Wno-cast-function-type -Wno-zero-as-null-pointer-constant -Wno-changes-meaning")
 
-# Detect build environment: default to HOST unless Yocto detected or explicitly set
-set(BUILD_ENV_YOCTO OFF)
-set(BUILD_ENV_HOST ON)
-
-# Check for Yocto environment indicators
-if (DEFINED ENV{OECORE_NATIVE_SYSROOT} OR DEFINED ENV{OECORE_TARGET_SYSROOT} OR BUILD_ENV_YOCTO)
-    message("Yocto environment detected or explicitly set")
-    set(BUILD_ENV_YOCTO ON)
-    set(BUILD_ENV_HOST OFF)
-    message("Set build environment as Yocto")
-else ()
-    message("Set build environment as host (native)")
-endif ()
-
 # Generate shared libs as default
 set(BUILD_SHARED_LIB ON)
 if (BUILD_STATIC_LIB)
@@ -312,25 +298,23 @@ endmacro()
             ${LIBLOG_DIR}/include
         )
 
-        if (NOT BUILD_ENV_YOCTO)
-            if (BUILD_SHARED_LIB)
-                install(TARGETS
-                    log
-                    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                )
-            endif ()
-
-            set(HEADER_FILES_DIR
-                ${LIBLOG_DIR}/include/android
-                ${LIBLOG_DIR}/include/log
-            )
-
-            install(
-                DIRECTORY ${HEADER_FILES_DIR}
-                DESTINATION ${CMAKE_INSTALL_INCDIR}
-                FILES_MATCHING PATTERN "*.h"
+        if (BUILD_SHARED_LIB)
+            install(TARGETS
+                log
+                LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
             )
         endif ()
+
+        set(HEADER_FILES_DIR
+            ${LIBLOG_DIR}/include/android
+            ${LIBLOG_DIR}/include/log
+        )
+
+        install(
+            DIRECTORY ${HEADER_FILES_DIR}
+            DESTINATION ${CMAKE_INSTALL_INCDIR}
+            FILES_MATCHING PATTERN "*.h"
+        )
     endif ()
 
     ###########################################################
@@ -377,22 +361,20 @@ endmacro()
 
     target_link_libraries(base PRIVATE log)
 
-    if (NOT BUILD_ENV_YOCTO)
-        if (BUILD_SHARED_LIB)
-            install(TARGETS
-                base
-                LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            )
-        endif ()
-
-        set(HEADER_FILES_DIR ${LIBBASE_DIR}/include/android-base)
-
-        install(
-            DIRECTORY ${HEADER_FILES_DIR}
-            DESTINATION ${CMAKE_INSTALL_INCDIR}
-            FILES_MATCHING PATTERN "*.h"
+    if (BUILD_SHARED_LIB)
+        install(TARGETS
+            base
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         )
-    endif()
+    endif ()
+
+    set(HEADER_FILES_DIR ${LIBBASE_DIR}/include/android-base)
+
+    install(
+        DIRECTORY ${HEADER_FILES_DIR}
+        DESTINATION ${CMAKE_INSTALL_INCDIR}
+        FILES_MATCHING PATTERN "*.h"
+    )
 
     ###########################################################
     # Android libcutils_sockets
@@ -474,25 +456,23 @@ endmacro()
 
     target_link_libraries(cutils PRIVATE log base cutils_sockets dl)
 
-    if (NOT BUILD_ENV_YOCTO)
-        if (BUILD_SHARED_LIB)
-            install(TARGETS
-                cutils_sockets
-                cutils
-                LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            )
-        endif()
-
-        set(HEADER_FILES_DIR
-            ${LIBCUTILS_DIR}/include/cutils
-        )
-
-        install(
-            DIRECTORY ${HEADER_FILES_DIR}
-            DESTINATION ${CMAKE_INSTALL_INCDIR}
-            FILES_MATCHING PATTERN "*.h"
+    if (BUILD_SHARED_LIB)
+        install(TARGETS
+            cutils_sockets
+            cutils
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         )
     endif()
+
+    set(HEADER_FILES_DIR
+        ${LIBCUTILS_DIR}/include/cutils
+    )
+
+    install(
+        DIRECTORY ${HEADER_FILES_DIR}
+        DESTINATION ${CMAKE_INSTALL_INCDIR}
+        FILES_MATCHING PATTERN "*.h"
+    )
 
     ###########################################################
     # Android libutils
@@ -543,24 +523,22 @@ endmacro()
 
     target_link_libraries(utils PRIVATE log cutils)
 
-    if (NOT BUILD_ENV_YOCTO)
-        if (BUILD_SHARED_LIB)
-            install(TARGETS
-                utils
-                LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            )
-        endif ()
-
-        set(HEADER_FILES_DIR
-            ${LIBUTILS_DIR}/include/utils
+    if (BUILD_SHARED_LIB)
+        install(TARGETS
+            utils
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         )
+    endif ()
 
-        install(
-            DIRECTORY ${HEADER_FILES_DIR}
-            DESTINATION ${CMAKE_INSTALL_INCDIR}
-            FILES_MATCHING PATTERN "*.h"
-        )
-    endif()
+    set(HEADER_FILES_DIR
+        ${LIBUTILS_DIR}/include/utils
+    )
+
+    install(
+        DIRECTORY ${HEADER_FILES_DIR}
+        DESTINATION ${CMAKE_INSTALL_INCDIR}
+        FILES_MATCHING PATTERN "*.h"
+    )
 
     ###########################################################
     # Android libbinder
@@ -602,13 +580,8 @@ endmacro()
         ${BINDER_DIR}/UtilsHost.cpp
     )
 
-if (BUILD_ENV_YOCTO OR NOT BUILD_HOST_AIDL)
-    if (BUILD_ENV_YOCTO)
-        message("Yocto environment")
-    else ()
-        message("Host/Generic environment for Core SDK binder (production)")
-    endif ()
-    message("Using generated prebuilt stubs and proxies")
+if (NOT BUILD_HOST_AIDL)
+    message("Using generated prebuilt stubs and proxies from binder_aidl_gen/")
 
         set(BINDER_AIDL_SRCS
             ${BINDER_AIDL_GEN_DIR}/android/os/IServiceManager.cpp
@@ -685,23 +658,21 @@ if (BUILD_ENV_YOCTO OR NOT BUILD_HOST_AIDL)
 
     target_link_libraries(binder PRIVATE log base cutils utils pthread)
 
-    if (NOT BUILD_ENV_YOCTO)
-        install(TARGETS
-            binder
-            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        )
+    install(TARGETS
+        binder
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
 
-        set(HEADER_FILES_DIR
-            ${BINDER_DIR}/include/binder
-            ${BINDER_DIR}/ndk/include_cpp/android
-        )
+    set(HEADER_FILES_DIR
+        ${BINDER_DIR}/include/binder
+        ${BINDER_DIR}/ndk/include_cpp/android
+    )
 
-        install(
-            DIRECTORY ${HEADER_FILES_DIR}
-            DESTINATION ${CMAKE_INSTALL_INCDIR}
-            FILES_MATCHING PATTERN "*.h"
-        )
-    endif()
+    install(
+        DIRECTORY ${HEADER_FILES_DIR}
+        DESTINATION ${CMAKE_INSTALL_INCDIR}
+        FILES_MATCHING PATTERN "*.h"
+    )
 
     ###########################################################
     # Android servicemanager (part of Core SDK)
@@ -731,24 +702,16 @@ if (BUILD_ENV_YOCTO OR NOT BUILD_HOST_AIDL)
         ${LIBPROCESSGROUP_DIR}/include/
     )
 
-    if (BUILD_ENV_YOCTO)
-        target_include_directories(servicemanager PRIVATE
-            ${BINDER_AIDL_GEN_DIR}/include
-        )
-    else ()
-        target_include_directories(servicemanager PRIVATE
-            ${GENERATED_DIR}/BINDER_AIDL/include
-        )
-    endif ()
+    target_include_directories(servicemanager PRIVATE
+        ${GENERATED_DIR}/BINDER_AIDL/include
+    )
 
     target_link_libraries(servicemanager PRIVATE binder utils cutils base log pthread)
 
-    if (NOT BUILD_ENV_YOCTO)
-        install(
-            TARGETS servicemanager
-            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-        )
-    endif ()
+    install(
+        TARGETS servicemanager
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
 
 
 ###########################################################

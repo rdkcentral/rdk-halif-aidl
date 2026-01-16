@@ -54,7 +54,6 @@ The default binder libraries generated are 64-bit, but this can be overridden us
 
 Following are the build steps to build the binder framework, binder examples and aidl generator tool.
 
-
 ## Build Binder Framework
 
 ### Run below command to generate binder libs, header files and servicemanager.
@@ -234,8 +233,6 @@ out/target/
     │   ├── FWManagerService
     │   ├── FWManagerClient
     │   └── binder-device
-    ├── include/
-    │   └── *.h
     └── lib/
         ├── libbinder.so
         ├── libcutils.so
@@ -243,6 +240,15 @@ out/target/
         ├── libutils.so
         ├── liblog.so
         └── libfwmanager.so
+
+out/build/
+    └── include/
+        ├── binder/
+        ├── android/
+        ├── android-base/
+        ├── utils/
+        ├── cutils/
+        └── log/
 ```
 
 **Host AIDL Compiler** (architecture team only) is installed to `out/host/`:
@@ -259,6 +265,7 @@ Refer to [OUTPUT.md](OUTPUT.md) for a complete list of installed files.
 ---
 
 # Testing
+
 This project includes comprehensive test suites to validate the build process and ensure quality for releases.
 
 ### Quick Validation Test
@@ -266,7 +273,7 @@ This project includes comprehensive test suites to validate the build process an
 For fast validation during development:
 
 ```bash
-./quick_test.sh
+./test.sh
 ```
 
 This runs a streamlined test that:
@@ -277,37 +284,24 @@ This runs a streamlined test that:
 5. Builds target binder libraries
 6. Builds target libraries via direct CMake (per BUILD.md examples)
 7. Verifies all outputs
+8. Tests production builds
+9. Validates ARM cross-compilation (if RDK environment available)
 
 **Time:** ~5-10 minutes (faster on subsequent runs with cached builds)
 
-### Comprehensive Build Test
-
-For thorough validation before releases:
+**Selective Testing:** Run specific tests with `--only`, `--from`, or `--to` flags:
 
 ```bash
-./test_build.sh
+./test.sh --list                # Show all available tests
+./test.sh --only 5,6,10         # Run only tests 5, 6, and 10
+./test.sh --from 5 --to 8       # Run tests 5 through 8
 ```
-
-This comprehensive test suite validates:
-- Android source repository cloning
-- All 8 required AOSP repositories
-- Patch application
-- Build script functionality
-- Clean operations
-- Help flags
-- Host AIDL compiler build
-- Target binder libraries build
-- Incremental builds
-- Zero warnings/errors policy
-- Output file verification
-
-**Time:** ~10-20 minutes
 
 ### CI/CD Integration
 
 A GitHub Actions workflow is provided in `.github/workflows/build-test.yml` that:
 - Runs on every push and pull request
-- Executes both quick and comprehensive tests
+- Executes the test suite
 - Uploads build artifacts
 - Validates release readiness for tagged commits
 
@@ -315,7 +309,7 @@ A GitHub Actions workflow is provided in `.github/workflows/build-test.yml` that
 
 Before creating a release:
 
-1. ✅ Run `./test_build.sh` successfully
+1. ✅ Run `./test.sh` successfully
 2. ✅ Verify zero build warnings/errors
 3. ✅ Test on clean Ubuntu 22.04 LTS system
 4. ✅ Update CHANGELOG.md with changes
@@ -325,6 +319,7 @@ Before creating a release:
 ---
 
 ## Runtime Testing
+
 ## Using Vagrant Box
 
 Refer : https://www.vagrantup.com/

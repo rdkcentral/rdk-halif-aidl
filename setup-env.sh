@@ -47,6 +47,9 @@ OUT_DIR="${OUT_DIR:-${WORK_DIR}/out}"
 # Target SDK (what target code links against)
 TARGET_SDK_DIR="${TARGET_SDK_DIR:-${OUT_DIR}/target}"
 
+# SDK headers (separate from target runtime)
+SDK_INCLUDE_DIR="${SDK_INCLUDE_DIR:-${OUT_DIR}/build/include}"
+
 # Host-side outputs
 HOST_OUT_DIR="${HOST_OUT_DIR:-${OUT_DIR}/host}"
 HOST_AIDL_DIR="${HOST_AIDL_DIR:-${HOST_OUT_DIR}/aidl_compiler}"

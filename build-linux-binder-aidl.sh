@@ -26,10 +26,10 @@ set -euo pipefail
 # Builds the Android Binder libraries and servicemanager for the TARGET.
 # These run on the embedded device (typically ARM).
 #
-# Output: out/target/
-#   - lib/*.so (libbinder.so, liblog.so, libbase.so, etc.)
-#   - bin/servicemanager
-#   - include/ (binder headers)
+# Output:
+#   - out/target/lib/*.so (libbinder.so, liblog.so, libbase.so, etc.)
+#   - out/target/bin/servicemanager
+#   - out/build/include/ (binder headers)
 #
 # Build Variables:
 #   CC, CXX        - Target cross-compiler (e.g., arm-linux-gnueabihf-gcc)
@@ -65,7 +65,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ROOT_DIR="${SCRIPT_DIR}"
 
 BUILD_DIR="${ROOT_DIR}/build-target"
-OUT_DIR="${ROOT_DIR}/out/target"
+OUT_DIR="${ROOT_DIR}/out"
 BUILD_TYPE="${BUILD_TYPE:-Release}"
 TARGET_LIB32="${TARGET_LIB32_VERSION:-OFF}"
 CLEAN_BUILD=false
@@ -152,7 +152,8 @@ if [ "$BUILD_HOST_AIDL_TOOL" = true ]; then
 fi
 
 mkdir -p "${BUILD_DIR}"
-mkdir -p "${OUT_DIR}/lib" "${OUT_DIR}/bin" "${OUT_DIR}/include"
+mkdir -p "${OUT_DIR}/target/lib" "${OUT_DIR}/target/bin"
+mkdir -p "${OUT_DIR}/build/include"
 
 echo "==> Configuring CMake for target binder libraries..."
 
@@ -160,8 +161,8 @@ echo "==> Configuring CMake for target binder libraries..."
 CMAKE_ARGS=(
   -S "${ROOT_DIR}"
   -B "${BUILD_DIR}"
-  -DCMAKE_BUILD_TYPE="${BUILD_TYPE}"
-  -DBUILD_HOST_AIDL=OFF
+  -DCMAKE_BUILD_TYPE="${BUILD_TYPE}"  -DCMAKE_INSTALL_PREFIX="${OUT_DIR}/target"
+  -DCMAKE_INSTALL_INCDIR="${OUT_DIR}/build/include"  -DBUILD_HOST_AIDL=OFF
   -DTARGET_LIB32_VERSION="${TARGET_LIB32}"
 )
 
@@ -191,21 +192,15 @@ cmake "${CMAKE_ARGS[@]}"
 echo "==> Building target binder libraries..."
 cmake --build "${BUILD_DIR}" --target all -- -j"$(nproc)"
 
-echo "==> Installing to ${OUT_DIR}..."
-cp "${BUILD_DIR}"/*.so "${OUT_DIR}/lib/" 2>/dev/null || true
-cp "${BUILD_DIR}"/servicemanager "${OUT_DIR}/bin/" 2>/dev/null || true
+echo "==> Installing to ${OUT_DIR}/target/ and ${OUT_DIR}/build/include/..."
+cp "${BUILD_DIR}"/*.so "${OUT_DIR}/target/lib/" 2>/dev/null || true
+cp "${BUILD_DIR}"/servicemanager "${OUT_DIR}/target/bin/" 2>/dev/null || true
 
-# Install headers
-cp -r "${ROOT_DIR}/binder_aidl_gen/include/"* "${OUT_DIR}/include/" 2>/dev/null || true
-cp -r "${ROOT_DIR}/android/native/libs/binder/include/binder" "${OUT_DIR}/include/" 2>/dev/null || true
-cp -r "${ROOT_DIR}/android/native/libs/binder/ndk/include_cpp/"* "${OUT_DIR}/include/" 2>/dev/null || true
-cp -r "${ROOT_DIR}/android/libbase/include/"* "${OUT_DIR}/include/" 2>/dev/null || true
-cp -r "${ROOT_DIR}/android/core/libutils/include/"* "${OUT_DIR}/include/" 2>/dev/null || true
-cp -r "${ROOT_DIR}/android/core/libcutils/include/"* "${OUT_DIR}/include/" 2>/dev/null || true
-cp -r "${ROOT_DIR}/android/logging/liblog/include/"* "${OUT_DIR}/include/" 2>/dev/null || true
+# Install SDK headers using CMake (to out/build/include)
+cmake --install "${BUILD_DIR}"
 
 echo ""
 echo "✅ Target binder libraries built successfully"
-echo "   Libraries:      ${OUT_DIR}/lib/"
-echo "   Servicemanager: ${OUT_DIR}/bin/servicemanager"
-echo "   Headers:        ${OUT_DIR}/include/"
+echo "   Libraries:      ${OUT_DIR}/target/lib/"
+echo "   Servicemanager: ${OUT_DIR}/target/bin/servicemanager"
+echo "   Headers:        ${OUT_DIR}/build/include/"

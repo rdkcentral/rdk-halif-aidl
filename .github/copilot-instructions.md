@@ -1,12 +1,13 @@
-out/
 # Linux Binder IDL — AI Agent Instructions
 
 ## Project Architecture
 
 - **Purpose:** Port Android 13 Binder IPC (AOSP tag `android-13.0.0_r74`) to Linux for embedded/IoT, with strict separation between *target runtime* (for devices) and *host tools* (for codegen, never shipped).
 - **Major outputs:**
-  - `out/target/`: Binder runtime libraries (e.g., `libbinder.so`, `servicemanager`) for ARM/embedded
+  - `out/target/`: Binder runtime SDK (libs in `lib/`, binaries in `bin/`)
+  - `out/build/include/`: SDK headers for building binder clients/services
   - `out/host/`: AIDL compiler tools (`aidl`, `aidl-cpp`) for x86_64 build host
+  - `build-target/`: CMake build artifacts (temporary, not part of SDK)
 - **AIDL codegen is *offline only*:** Architecture team generates C++ from `.aidl` using host tools, commits generated code. *Production builds never run codegen or ship host tools.*
 - **Two-phase build design:** Core SDK (Android libs + servicemanager) is built once; AIDL compiler reuses these libs instead of rebuilding them.
 - **Source management:** AOSP sources in `android/` cloned by `clone-android-binder-repo.sh`, patched via `patches/*.patch` - **never manually edit `android/` contents**.
@@ -42,26 +43,46 @@ Required variables: `BUILD_HOST_AIDL=OFF`, and **one of** `TARGET_LIB64_VERSION=
 
 1. Architecture team builds AIDL compiler: `./build-aidl-generator-tool.sh`
 2. Generate C++ from `.aidl`: `cd example && ./generate_cpp.sh` (use `clean` to regenerate)
-3. Commit generated `.cpp`/`.h` files to `example/stable/generated/FWManager/`
-4. Production builds compile pre-generated C++ only (no runtime codegen)
+3. Generated files are placed in `example/stable/generated/FWManager/` but **NOT committed** (gitignored)
+4. Each developer must run `generate_cpp.sh` locally to create stubs/proxies
+5. Production builds use pre-generated stubs from `binder_aidl_gen/` for Core SDK interfaces
 
 ### API Versioning & Dependencies
 
-- Python tools in `host/` manage interface versions: `aidl_ops.py`, `aidl_interface.py`, `aidl_api.py`
-- Usage: `./host/aidl_ops.py -u|-f|-g <interface-name>` (update-api, freeze-api, generate-source)
-- Dependency tree generation: `./host/aidl_ops.py -a` (for build ordering)
-- Interface definitions: `interface.yaml` or `interface.json` in interface directories
+- **Python tools in `host/`** manage AIDL interface versions and dependencies:
+  - `aidl_ops.py`: Main CLI for versioning operations (use `--help` for full options)
+  - `aidl_interface.py`: Core interface version management logic
+  - `aidl_api.py`: API snapshot comparison and validation
+  - `interface-update.py`: Batch interface updates across multiple interfaces
+- **Common operations:**
+  - Update API: `./host/aidl_ops.py -u <interface-name>` - snapshot current API state
+  - Freeze API: `./host/aidl_ops.py -f <interface-name>` - create new stable version
+  - Generate sources: `./host/aidl_ops.py -g <interface-name>` - create C++ stubs/proxies
+  - Dependency tree: `./host/aidl_ops.py -a` - analyze interface dependencies for build ordering
+  - Specify roots: `-r "/path1;/path2"` - semicolon-separated interface root directories
+  - Custom output: `-o /path/to/out` - override build/intermediate file directory
+- **Interface definitions:** Each interface directory must contain:
+  - `interface.yaml` or `interface.json` - version metadata and dependencies
+  - `aidl/` subdirectory - `.aidl` source files
+  - `aidl_api/<name>/` - frozen API snapshots (versioned directories)
+- **Workflow example:**
+  1. Modify `.aidl` files in `MyInterface/aidl/`
+  2. Update API: `./host/aidl_ops.py -u MyInterface` (detect changes)
+  3. Freeze version: `./host/aidl_ops.py -f MyInterface` (create v2, v3, etc.)
+  4. Generate code: `./host/aidl_ops.py -g MyInterface -v 2` (specific version)
+  5. Commit generated files to `stable/generated/` for production builds
 
 ## Key Conventions & Patterns
 
 ### CMake & Build System
 
-- **No system headers:** CMake explicitly disables `/usr/include` (lines 140+ in CMakeLists.txt); only uses Android headers from `android/`
-- **AOSP warning suppression:** All AOSP code warnings suppressed via `-w` and specific `-Wno-*` flags (lines 90–110)
+- **No system headers:** CMake uses only Android headers from `android/` - system headers not needed
+- **AOSP warning suppression:** All AOSP code warnings suppressed via `-w` and specific `-Wno-*` flags (lines 116–145 in CMakeLists.txt)
 - **Separate build trees:** `build-host/` for AIDL compiler, `build-target/` for runtime libs (never mix)
-- **Build environment detection:** CMake auto-detects Yocto via `OECORE_*` environment variables (lines 145–150)
-- **AidlGenerator macro:** CMakeLists.txt defines macro for generating stubs/proxies (line 242+); used by examples but not production
-- **Default architecture:** 64-bit auto-detected unless `TARGET_LIB32_VERSION=ON` explicitly set (line 172)
+- **AidlGenerator macro:** CMakeLists.txt defines macro for generating stubs/proxies (line 246+); used by examples but not production
+- **Default architecture:** 64-bit auto-detected unless `TARGET_LIB32_VERSION=ON` explicitly set
+- **Android source auto-clone:** CMake runs `clone-android-binder-repo.sh` if `android/` missing (lines 228–232)
+- **Install rules:** Always enabled in CMakeLists.txt - Yocto/BitBake recipes handle installation via `do_install()`, not CMake install rules
 
 ### Source Code Management
 
@@ -74,6 +95,10 @@ Required variables: `BUILD_HOST_AIDL=OFF`, and **one of** `TARGET_LIB64_VERSION=
 
 - `android/`: AOSP sources (aidl, core, native, libbase, logging, fmtlib, googletest) - cloned, never modified directly
 - `patches/*.patch`: Local changes to AOSP code, applied during `clone-android-binder-repo.sh`
+- `setup-env.sh`: Shared environment variables and helper functions for all scripts
+  - Defines core paths: `OUT_DIR`, `TARGET_SDK_DIR`, `SDK_INCLUDE_DIR`, `HOST_OUT_DIR`
+  - Logging functions: `LOGI`, `LOGW`, `LOGE` (color-coded output)
+  - Tool wrappers: `CMAKE`, `MAKE`, `GIT`, `TAR_BIN`
 - `host/`: Python tooling for interface versioning (architecture team only)
   - `aidl_ops.py`: Main CLI for update-api, freeze-api, generate-source operations
   - `aidl_interface.py`, `aidl_api.py`: Interface version management
@@ -81,11 +106,27 @@ Required variables: `BUILD_HOST_AIDL=OFF`, and **one of** `TARGET_LIB64_VERSION=
 - `example/FWManager/`: Reference IPC example with `.aidl` sources and generated C++
   - `FWManager/aidl/`: Source `.aidl` files
   - `stable/generated/FWManager/`: Committed generated code (production builds use this)
+    - **Note:** `stable/generated/` is gitignored - generated files are NOT committed
+    - Each project must run `generate_cpp.sh` to create stubs/proxies locally
   - `generate_cpp.sh`: Script showing AIDL invocation patterns
 - `out/target/`: Installed target libraries/binaries
+  - `lib/`: Shared libraries (`libbinder.so`, `libutils.so`, etc.)
+  - `bin/`: Executables (`servicemanager`, example clients/services)
+- `out/build/include/`: SDK headers (binder/, utils/, log/, android/, etc.) - used by downstream projects
 - `out/host/`: Installed AIDL compiler tools
 - `build-*/generated/`: Temporary generated files (gitignored, not committed)
-- `tools/`: Utility C programs (e.g., BinderDevice.c for device creation)
+- `build-target/`: CMake build directory for target SDK (temporary build artifacts)
+- `build-host/`: CMake build directory for host AIDL tools (temporary build artifacts)
+- `build-production/`: Build directory used by `tools/production-build.sh` (temporary, cleaned after tests)
+- `tools/`: Utility programs and production build scripts
+  - `BinderDevice.c`: C program for creating binder device nodes
+  - `production-build.sh`: Production build script - works with any toolchain (native or cross-compiled)
+    - Usage: `./tools/production-build.sh <source_dir> <install_prefix> [--clean]`
+    - Always use `--clean` when switching toolchains (SDK must match final build toolchain)
+    - Can be used in RDK docker builds with sourced toolchain environment
+- `binder_aidl_gen/`: Pre-generated stubs for Core SDK binder (android/os/IServiceManager.aidl, etc.)
+  - Used when `BUILD_HOST_AIDL=OFF` or in Yocto/production builds
+  - Avoids circular dependency: Core SDK needs these stubs, but AIDL compiler needs Core SDK libs
 
 ### Kernel & Runtime Requirements
 
@@ -108,6 +149,12 @@ Required variables: `BUILD_HOST_AIDL=OFF`, and **one of** `TARGET_LIB64_VERSION=
   export TARGET_LIB32_VERSION=ON
   ./build-linux-binder-aidl.sh
   ```
+- **RDK sc docker build (production):** For RDK Kirkstone ARM builds:
+  ```bash
+  sc docker run rdk-kirkstone ". /opt/toolchains/rdk-glibc-x86_64-arm-toolchain/environment-setup-armv7vet2hf-neon-oe-linux-gnueabi; build_modules.sh sdk; build_modules.sh all"
+  ```
+  - This sources the RDK ARM toolchain and builds SDK + all modules
+  - Output validates with ARM compiler: check `.so` files with `file` or `readelf -h` for ARM architecture
 - **Direct CMake:** Pass compiler and flags explicitly (see Production/Yocto section above)
 - `TARGET_LIB32_VERSION=ON` for 32-bit ARM/i686 targets
 - `TARGET_LIB64_VERSION=ON` for 64-bit aarch64/x86_64 targets (default auto-detected)
@@ -119,25 +166,46 @@ Required variables: `BUILD_HOST_AIDL=OFF`, and **one of** `TARGET_LIB64_VERSION=
 
 ## Testing & Validation
 
-- **Quick validation:** `./quick_test.sh` (~5-10 min) - validates clone, build, outputs
-- **Comprehensive test:** `./test_build.sh` (~10-20 min) - full validation suite with zero-warnings check
+- **Quick validation:** `./test.sh` (~5-10 min) - comprehensive test suite with all validation
+  - Supports selective testing: `--from ID`, `--to ID`, `--only ID[,ID...]`, `--list`
+  - Example: `./test.sh --only 3,6,9` runs specific test IDs only
+  - Example: `./test.sh --from 5 --to 8` runs tests 5 through 8
+  - Use `--list` to see all available test IDs and descriptions
+  - Covers: source cloning, builds, CMake direct builds, production builds, ARM cross-compilation validation
+  - Test 11 validates ARM cross-compilation: verifies `out/` directory contains objects and `.so` files built with ARM compiler
+  - Zero warnings/errors policy enforcement
+  - **Toolchain management:** After any `clean_build_state()`, host AIDL tools are automatically rebuilt with host compiler (x86_64)
+    - `ensure_host_aidl_tools()` saves/restores cross-compiler environment variables
+    - Host tools (aidl/aidl-cpp) are always built with native host compiler, never cross-compiled
+    - Production builds (test_8, test_9, test_10, test_11) use pre-generated code, don't need tools
+    - Development builds (test_5, test_6, test_7) ensure tools are available before building
+- **Build audit:** `./audit_build.sh` - verifies toolchain integrity and deployment readiness
+  - Hermetic dependency check: ensures libs link locally, not against system `/usr/lib`
+  - Orphan detection: identifies unused .so files in `lib/` directory
+  - Deployment footprint: calculates stripped library sizes for embedded targets
+  - Override SDK location: `BINDER_SDK_DIR=/custom/path ./audit_build.sh`
+  - Essential for validating cross-compiled builds before deployment
 - **Example IPC test:** `./build-binder-example.sh` - builds FWManager service/client, tests binder IPC
 - **Clean builds:** Add `clean` to any build script (e.g., `./build-linux-binder-aidl.sh clean`)
 - **Runtime testing:** Requires Linux 5.16+ with binder; see BUILD.md §"Testing" for Vagrant/KVM setup
 
 ## Common Pitfalls
 
-- **Never** build or ship host AIDL tools in production Yocto builds
-- **Never** use wrapper scripts in BitBake recipes (use direct CMake invocation)
+- **Never** build or ship host AIDL tools in production Yocto builds (`BUILD_HOST_AIDL=OFF`)
+- **Never** use wrapper scripts in BitBake recipes (use direct CMake invocation per BUILD.md)
 - **Never** use both `TARGET_LIB32_VERSION` and `TARGET_LIB64_VERSION` simultaneously
-- **Never** allow `/usr/include` in compile commands (CMake explicitly disables this)
-- **Never** manually edit files in `android/` directory - use patches instead
-- **Always** commit AIDL-generated C++ to `stable/generated/`; never generate at production build time
+- **Never** manually edit files in `android/` directory - use patches in `patches/*.patch` instead
+- **Never** commit generated files to `stable/generated/` - these are gitignored and must be regenerated locally
+- **Always** run `./example/generate_cpp.sh` before building examples (generates stubs/proxies from .aidl)
 - **Always** set `CC`/`CXX`/`CFLAGS`/`CXXFLAGS`/`LDFLAGS` for cross-compilation (Yocto sets these automatically)
 - **Always** ensure CFLAGS/CXXFLAGS/LDFLAGS include sysroot when cross-compiling
-- **Native builds:** Leave CC/CXX unset to use system GCC (CMake auto-detects)
-- **Remember** servicemanager must start before binder clients (systemd dependency ordering)
-- **Remember** to re-run `clone-android-binder-repo.sh` after modifying any `.patch` files
+- **Always** use `--clean` flag with production-build.sh when switching toolchains - SDK must be rebuilt with matching compiler
+- **Native builds:** Leave CC/CXX unset to use system GCC (CMake auto-detects from build-essential)
+- **Remember** servicemanager must start before binder clients (systemd dependency ordering - see BUILD.md §"Runtime Setup")
+- **Remember** to re-run `./clone-android-binder-repo.sh` after modifying any `.patch` files in `patches/`
+- **Remember** host AIDL tools (aidl/aidl-cpp) are always built with host compiler, never cross-compiled (test suite handles this automatically)
+- **Debugging builds:** Use `BUILD_TYPE=Debug` environment variable, examine CMake logs in `build-*/CMakeCache.txt`
+- **Architecture confusion:** Match build to *userspace* architecture, not kernel (32-bit userspace on 64-bit kernel is common in embedded)
 
 ## Reference Files
 
@@ -145,8 +213,11 @@ Required variables: `BUILD_HOST_AIDL=OFF`, and **one of** `TARGET_LIB64_VERSION=
 - [README.md](../README.md): Quick start, build commands, output structure
 - [example/generate_cpp.sh](../example/generate_cpp.sh): AIDL codegen workflow reference
 - [host/aidl_ops.py](../host/aidl_ops.py): Interface versioning CLI (run with `--help`)
-- [CMakeLists.txt](../CMakeLists.txt): Core build logic - see lines 90–110 (warnings), 240+ (AidlGenerator)
+- [CMakeLists.txt](../CMakeLists.txt): Core build logic - see lines 116–145 (warnings), 246+ (AidlGenerator macro)
 - [clone-android-binder-repo.sh](../clone-android-binder-repo.sh): AOSP source management and patching
+- [setup-env.sh](../setup-env.sh): Shared environment setup for all build scripts
+- [tools/production-build.sh](../tools/production-build.sh): Toolchain-agnostic production build script
+- [test.sh](../test.sh): Fast validation test suite with selective test execution
 - [CHANGELOG.md](../CHANGELOG.md): Version history - latest is 1.1.0 with AIDL versioning support
 
 ---
