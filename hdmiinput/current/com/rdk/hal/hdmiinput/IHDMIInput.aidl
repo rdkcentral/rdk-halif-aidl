@@ -25,6 +25,8 @@ import com.rdk.hal.hdmiinput.HDMIVersion;
 import com.rdk.hal.hdmiinput.IHDMIInputControllerListener;
 import com.rdk.hal.hdmiinput.IHDMIInputEventListener;
 import com.rdk.hal.hdmiinput.State;
+import com.rdk.hal.hdmiinput.HDCPProtocolVersion;
+import com.rdk.hal.hdmiinput.HDCPStatus;
 import com.rdk.hal.PropertyValue;
 
 /** 

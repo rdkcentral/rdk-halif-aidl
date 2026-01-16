@@ -34,7 +34,7 @@ set(COMMON_VERSION "current")
 
 # AIDL source directory
 set(SRC_DIR com/rdk/hal/hdmioutput)
-
+set(COMMON_SRC_DIR ${COMMON_MODULE_PATH}/${COMMON_VERSION}/com/rdk/hal)
 # AIDL source files
 set(SRC
 	${SRC_DIR}/AdditionalColorimetryExtension.aidl
@@ -62,6 +62,7 @@ set(SRC
 	${SRC_DIR}/SPDSource.aidl
 	${SRC_DIR}/State.aidl
 	${SRC_DIR}/VIC.aidl
+	${COMMON_SRC_DIR}/PropertyValue.aidl
 )
 
 # AIDL include directories
