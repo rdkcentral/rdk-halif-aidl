@@ -76,7 +76,7 @@ nav:
     - File System:
         - System Architecture: vsi/filesystem/current/file_system_architecture.md
         - Directory And Dynamic Linking: vsi/filesystem/current/directory_and_dynamic_linking_specification.md
-        - Logging System: vsi/filesystem/current/logging_system.md    
+        - Logging System: vsi/filesystem/current/logging_system.md
     - Bluetooth: vsi/bluetooth/current/bluetooth.md
     - Graphics: vsi/graphics/current/graphics.md
     - Service Manager: vsi/service_manager/current/service_manager.md
@@ -100,24 +100,25 @@ nav:
   - Virtual Device:
     - What is the vDevice: external_content/ut-core-wiki/5.0:-Standards:-vDevice-Overview.md
     - Architecture Overview: external_content/ut-core-wiki/5.0.1:-Standards:-vDevice-Architecture-Overview.md
-    - Key Concepts: 
+    - Key Concepts:
       - Controller: external_content/ut-core-wiki/5.1.0:-Standards:-vDevice-Controller.md
       - Control Plane: external_content/ut-core-wiki/5.1.1:-Standards:-vDevice-Control-Plane.md
   - Misc:
     - References: references/references.md
-    - Documentation Standards: 
+    - Documentation Standards:
       - Getting Started: introduction/documentation_getting_started.md
       - Interface Template: standards/interface_template.md
     - Governance:
       - RDK Documentation Structure: governance/rdk-release-documenation-structure.md
     - White Papers:
       - Documentation in Git: whitepapers/documentation_in_git.md
-      - Branching Strategies : whitepapers/branching_strategies.md 
+      - Branching Strategies : whitepapers/branching_strategies.md
       - Doxygen Code Documentation: whitepapers/doxygen_code_documentation.md
       - Achieving Engineering Goal: whitepapers/engineering_goals.md
       - Commit Message Standards: whitepapers/standardizing_git_commit_messages.md
       - Interface Version Alignment: whitepapers/interface_version_alignment.md
       - Client Usage of Stable AIDL: whitepapers/client_usage_of_stable_aidl.md
+      - Right Format for the Right Job: whitepapers/right_format_right_job.md
     - Filing an Issue: external_content/ut-core-wiki/1.2.-Standards:-Issue-Description-Guideline.md
     - FAQ:
       - Python Development: external_content/ut-core-wiki/FAQ:-Comparing-Python-Development-Platforms.md
@@ -137,7 +138,7 @@ markdown_extensions:
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
-  - pymdownx.superfences  
+  - pymdownx.superfences
   - toc:
       toc_depth: 4
   - pymdownx.emoji: # Enable Extended Emoji if required
