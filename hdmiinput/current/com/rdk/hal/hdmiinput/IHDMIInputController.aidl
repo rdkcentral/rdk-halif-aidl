@@ -88,43 +88,6 @@ interface IHDMIInputController
     void stop();
 
     /**
-     * Sets a property.
-     * 
-     * If set in an invalid state, the change is ignored and false is returned.
-     * Properties set in `READY` state apply at next start; those set in `STARTED` are applied immediately.
-     *
-     * @param[in] property       The key of a property from the Property enum.
-     * @param[in] propertyValue  The value to set. Must be of the expected type for the given property key (see @Property documentation).
-     *
-     * @returns boolean
-     * @retval true     The property was successfully set.
-     * @retval false    Indicates an error condition (e.g., resource not available, invalid state, or parameter validation failure).
-     * 
-     * @exception binder::Status EX_ILLEGAL_STATE If the resource is not in the `STARTED` or `READY` state.
-     *
-     * @see setPropertyMulti(), getProperty()
-     */
-    boolean setProperty(in Property property, in PropertyValue propertyValue);
-
-    /**
-     * Sets multiple properties.
-     * 
-     * Properties may be set in the `READY` state to take effect once started or in the `STARTED` state
-     * where they are dynamically applied to the HDMI input port.
-     *
-     * @param[in] propertyKVList        Array of key value pairs of properties.
-     *
-     * @returns boolean
-     * @retval true     The property was successfully set.
-     * @retval false    Invalid property key or value.
-     *
-     * @exception binder::Status EX_ILLEGAL_STATE If the resource is not in the `STARTED` or `READY` state.
-     *
-     * @see setProperty(), getProperty()
-     */
-    boolean setPropertyMulti(in PropertyKVPair[] propertyKVList);
-
-    /**
      * Sets the EDID for the HDMI input port.
      *
      * The EDID defined in `edid` is set for the HDMI input port.

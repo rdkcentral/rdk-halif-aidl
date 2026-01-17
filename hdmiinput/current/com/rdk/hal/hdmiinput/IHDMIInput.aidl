@@ -87,6 +87,8 @@ interface IHDMIInput
      * 
      * The default EDID will be returned if it's never been changed.
      *
+     * Spec Info : CTA 861 standards
+     *
      * The EDID returned in `edid` is set for the HDMI input port.
      *
      * @param[out] edid     The EDID data.
@@ -102,6 +104,8 @@ interface IHDMIInput
     /**
      * Gets the default EDID for the HDMI input port for a given HDMI version.
      * 
+     * Spec Info : CTA 861 standards
+     *
      * A default EDID is defined for each HDMIVersion listed as as supported in the
      * `Capabilities.supportedVersions[]`.
      * 

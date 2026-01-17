@@ -51,13 +51,13 @@ oneway interface IHDMIInputControllerListener
     void onSignalStateChanged(in SignalState signalState);
 
     /**
-     * Video format change notification.
+     * Video ID code change notification.
      * 
-     * Fires to reflect a change in the video format from the HDMI source device.
+     * Fires to reflect a change in the video ID code from the HDMI source device.
      *
      * @param[in] vic       The VIC code.
      */
-    void onVideoFormatChanged(in VIC vic);
+    void onVIChanged(in VIC vic);
 
     /**
      * Variable refresh rate change notification.
@@ -83,6 +83,8 @@ oneway interface IHDMIInputControllerListener
     /**
      * Auxilliary Video Information (AVI) InfoFrame event.
      * 
+     * Spec Info : CTA 861 standards
+     *
      * The event fires on first received InfoFrame after the HDMI input port is in
      * in a STARTED state, after a device connection or if the InfoFrame changes.
      *
@@ -92,6 +94,8 @@ oneway interface IHDMIInputControllerListener
 
     /**
      * Audio InfoFrame event.
+     *
+     * Spec Info : CTA 861 standards
      *
      * The event fires on first received InfoFrame after the HDMI input port is in
      * in a STARTED state, after a device connection or if the InfoFrame changes.
@@ -103,6 +107,8 @@ oneway interface IHDMIInputControllerListener
     /**
      * Source Product Description (SPD) InfoFrame event.
      *
+     * Spec Info : CTA 861 standards
+     *
      * The event fires on first received InfoFrame after the HDMI input port is in
      * in a STARTED state, after a device connection or if the InfoFrame changes.
      *
@@ -113,6 +119,8 @@ oneway interface IHDMIInputControllerListener
     /**
      * Dynamic Range and Mastering (DRM) InfoFrame event.
      *
+     * Spec Info : CTA 861 standards
+     *
      * The event fires on first received InfoFrame after the HDMI input port is in
      * in a STARTED state, after a device connection or if the InfoFrame changes.
      *
@@ -122,6 +130,8 @@ oneway interface IHDMIInputControllerListener
     
     /**
      * Vendor Specific InfoFrame (VSIF) event.
+     *
+     * Spec Info : CTA 861 standards
      *
      * The event fires on first received InfoFrame after the HDMI input port is in
      * in a STARTED state, after a device connection or if the InfoFrame changes.
