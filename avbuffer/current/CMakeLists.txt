@@ -42,6 +42,7 @@ set(SRC
 	${SRC_DIR}/IAVBufferSpaceListener.aidl
 	${SRC_DIR}/Pool.aidl
 	${SRC_DIR}/PoolMetrics.aidl
+	${SRC_DIR}/Status.aidl
 )
 
 set(INCLUDE_DIRECTORY

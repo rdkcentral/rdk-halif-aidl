@@ -22,8 +22,8 @@ import com.rdk.hal.avclock.IAVClockController;
 import com.rdk.hal.avclock.IAVClockControllerListener;
 import com.rdk.hal.avclock.IAVClockEventListener;
 import com.rdk.hal.avclock.Property;
+import com.rdk.hal.avclock.State;
 import com.rdk.hal.PropertyValue;
-import com.rdk.hal.State; 
 
 /** 
  *  @brief     AV Clock HAL interface.

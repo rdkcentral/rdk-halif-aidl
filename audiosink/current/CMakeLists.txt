@@ -48,6 +48,7 @@ set(SRC
 	${SRC_DIR}/IAudioSinkManager.aidl
 	${SRC_DIR}/PlatformCapabilities.aidl
 	${SRC_DIR}/Property.aidl
+	${SRC_DIR}/State.aidl
 	${SRC_DIR}/Volume.aidl
 	${SRC_DIR}/VolumeRamp.aidl
 	${AUDIO_DECODER_SRC_DIR}/FrameMetadata.aidl
