@@ -25,9 +25,11 @@
 cdm:
   interfaceVersion: current
   resources:
-    - PlayReady:
-        drmClientVersion: 4.4
-    - Widevine:
-        drmClientVersion: 16.0.0
-    - Fairplay:
-        drmClientVersion: 3.0
+    - name: PlayReady
+      drmClientVersion: 4.4
+
+    - name: Widevine
+      drmClientVersion: 16.0.0
+
+    - name: Fairplay
+      drmClientVersion: 3.0
