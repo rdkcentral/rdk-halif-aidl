@@ -110,6 +110,7 @@ nav:
       - Interface Template: standards/interface_template.md
     - Governance:
       - RDK Documentation Structure: governance/rdk-release-documenation-structure.md
+      - RDK Engineering Validation Framework: governance/RDK-Engineering-Validation-Framework.md
     - White Papers:
       - Documentation in Git: whitepapers/documentation_in_git.md
       - Branching Strategies : whitepapers/branching_strategies.md 
