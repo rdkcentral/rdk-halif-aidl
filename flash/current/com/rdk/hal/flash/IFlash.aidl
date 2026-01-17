@@ -29,6 +29,9 @@ import com.rdk.hal.flash.IFlashListener;
 @VintfStability
 interface IFlash
 {
+
+    /** The service name to publish. To be returned by getServiceName() in the derived class. */
+    const @utf8InCpp String serviceName = "Flash";
     /**
      * Flashes a firmware image file onto the device.
      * 
