@@ -103,6 +103,7 @@ nav:
     - Key Concepts: 
       - Controller: external_content/ut-core-wiki/5.1.0:-Standards:-vDevice-Controller.md
       - Control Plane: external_content/ut-core-wiki/5.1.1:-Standards:-vDevice-Control-Plane.md
+    - Installation: vdevice/vdevice_installation.md
   - Misc:
     - References: references/references.md
     - Documentation Standards: 
