@@ -104,7 +104,7 @@ enum Property {
      *
      * Type: Integer
      *  0 - AVUNKNOWN (default on open)
-     * @see enum AVSource for possible values.
+     * @see enum com.rdk.hal.AVSource for possible values.
      * Access: Read-write.
      * Write in states: READY
      *
