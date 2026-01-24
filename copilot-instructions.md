@@ -15,7 +15,7 @@ Every HAL module follows this exact structure:
 ```
 {module}/
 ├── current/                    # Current interface version
-│   ├── CMakeLists.txt         # Module build configuration  
+│   ├── CMakeLists.txt         # Module build configuration
 │   ├── hfp-{module}.yaml      # HAL Feature Profile (capabilities)
 │   └── com/rdk/hal/{module}/  # AIDL interface definitions
 │       ├── I{Module}.aidl     # Main interface (stateless)
@@ -75,7 +75,7 @@ make
 ```
 
 ### Required CMake Variables
-- `AIDL_TARGET`: Module to build (e.g., "boot", "videodecoder")  
+- `AIDL_TARGET`: Module to build (e.g., "boot", "videodecoder")
 - `AIDL_SRC_VERSION`: Version directory (typically "current")
 - `AIDL_GEN_DIR`: Output directory (defaults to `gen/{module}/{version}`)
 - `AIDL_BIN`: Path to AIDL compiler (from linux_binder_idl tools)
@@ -95,7 +95,7 @@ set(INCLUDE_DIRECTORY .)
 ## Linux Binder Setup
 
 ### Prerequisites
-1. Install binder tools: `./install_binder.sh` (downloads linux_binder_idl)
+1. Build binder tools: `./build_binder.sh` (downloads and builds linux_binder_idl)
 2. Ensure kernel binder support is enabled
 3. Add binder tools to PATH
 
@@ -103,7 +103,7 @@ set(INCLUDE_DIRECTORY .)
 Use the custom `compile_aidl()` CMake function from `CMakeModules/CompileAidl.cmake`:
 ```cmake
 compile_aidl(${SRC}
-    INCLUDE_DIRECTORY ${INCLUDE_DIRECTORY}  
+    INCLUDE_DIRECTORY ${INCLUDE_DIRECTORY}
     TARGET_DIRECTORY ${AIDL_GEN_DIR}
     # Additional flags as needed
 )
@@ -136,7 +136,7 @@ set(COMMON_VERSION "current")
 ## Development Workflow
 
 1. **Create New HAL**: Copy existing module structure, update package names
-2. **Design AIDL**: Start with main interface, add supporting types  
+2. **Design AIDL**: Start with main interface, add supporting types
 3. **Update HFP**: Define static capabilities in `hfp-{module}.yaml`, this is the max caps of the module from the API definition, and will be tailored per platform later.
 4. **Build**: Use root-level CMake with `AIDL_TARGET` set to your module
 5. **Document**: Follow established documentation patterns in `docs/halif/`
@@ -160,7 +160,7 @@ set(COMMON_VERSION "current")
 ## Common Pitfalls
 
 - **Service Names**: Must match exactly between `serviceName` constant and registration
-- **Package Paths**: AIDL package must align with file directory structure  
+- **Package Paths**: AIDL package must align with file directory structure
 - **Dependencies**: Module CMakeLists.txt must declare version variables for imported modules
 - **Versioning**: Always use "current" for active development until interface stabilizes
 
@@ -209,7 +209,7 @@ State getState();
 - Keep descriptions concise but complete
 - Avoid redundant type names in @returns descriptions (e.g., avoid "@returns State Current state" - just "@returns Current state")
 
-## Contribution Guidelines  
+## Contribution Guidelines
 
 - **English Dictionary**: Use UK English spelling in comments and documentation
 - **Code Style**: Follow existing code patterns for consistency

@@ -1,3 +1,4 @@
+#include <mutex>
 #include <com/rdk/hal/videosink/IVideoSinkManager.h>
 #include <com/rdk/hal/videosink/BpVideoSinkManager.h>
 namespace com {

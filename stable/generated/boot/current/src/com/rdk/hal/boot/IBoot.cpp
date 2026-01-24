@@ -1,3 +1,4 @@
+#include <mutex>
 #include <com/rdk/hal/boot/IBoot.h>
 #include <com/rdk/hal/boot/BpBoot.h>
 namespace com {

@@ -3,15 +3,15 @@ videodecoder-vcurrent-cpp: common-vcurrent-cpp
 audiodecoder-vcurrent-cpp: common-vcurrent-cpp
 videosink-vcurrent-cpp: common-vcurrent-cpp videodecoder-vcurrent-cpp
 audiosink-vcurrent-cpp: audiodecoder-vcurrent-cpp common-vcurrent-cpp
-hdmioutput-vcurrent-cpp: common-vcurrent-cpp
-avclock-vcurrent-cpp: audiosink-vcurrent-cpp common-vcurrent-cpp videosink-vcurrent-cpp
-hdmiinput-vcurrent-cpp: common-vcurrent-cpp
-avbuffer-vcurrent-cpp: audiodecoder-vcurrent-cpp videodecoder-vcurrent-cpp
-panel-vcurrent-cpp: common-vcurrent-cpp videodecoder-vcurrent-cpp
-flash-vcurrent-cpp: 
 deepsleep-vcurrent-cpp: 
-indicator-vcurrent-cpp: 
+avbuffer-vcurrent-cpp: audiodecoder-vcurrent-cpp videodecoder-vcurrent-cpp
+hdmioutput-vcurrent-cpp: common-vcurrent-cpp
 boot-vcurrent-cpp: 
-planecontrol-vcurrent-cpp: common-vcurrent-cpp videodecoder-vcurrent-cpp
+flash-vcurrent-cpp: 
+panel-vcurrent-cpp: common-vcurrent-cpp videodecoder-vcurrent-cpp
 deviceinfo-vcurrent-cpp: 
+hdmiinput-vcurrent-cpp: common-vcurrent-cpp
+avclock-vcurrent-cpp: audiosink-vcurrent-cpp common-vcurrent-cpp videosink-vcurrent-cpp
+planecontrol-vcurrent-cpp: common-vcurrent-cpp videodecoder-vcurrent-cpp
+indicator-vcurrent-cpp: 
 hdmicec-vcurrent-cpp: common-vcurrent-cpp

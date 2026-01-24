@@ -1,5 +1,10 @@
 {
     "cSpell.words": [
         "retval"
-    ]
+    ],
+    "chatgpt.openOnStartup": true,
+    "chat.tools.terminal.autoApprove": {
+        "./test.sh": true,
+        "tee": true
+    }
 }

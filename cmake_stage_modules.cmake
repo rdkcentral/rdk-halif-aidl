@@ -46,6 +46,7 @@ endif()
 # Create output directories - separate binder and halif
 set(BINDER_LIB_OUT_DIR "${OUT_DIR}/target/lib/binder")
 set(HALIF_LIB_OUT_DIR "${OUT_DIR}/target/lib/halif")
+set(HALIF_INC_OUT_DIR "${OUT_DIR}/build/include")
 
 file(MAKE_DIRECTORY "${BINDER_LIB_OUT_DIR}")
 file(MAKE_DIRECTORY "${HALIF_LIB_OUT_DIR}")
@@ -79,6 +80,57 @@ if (LIB_COUNT EQUAL 0)
     message(WARNING "No module libraries found in ${BUILD_DIR}")
 else()
     message(STATUS "Staged ${LIB_COUNT} HAL interface libraries to ${HALIF_LIB_OUT_DIR}")
+endif()
+
+#######################################################################
+# Stage module headers to out/build/include/
+#######################################################################
+
+message(STATUS "Staging module headers from ${STABLE_DIR}...")
+
+# Copy headers from stable/generated/<module>/
+if (INTERFACE_TARGET STREQUAL "all")
+    # Stage all module headers
+    file(GLOB MODULE_DIRS LIST_DIRECTORIES true "${STABLE_DIR}/generated/*")
+    
+    set(HEADER_COUNT 0)
+    foreach(module_dir ${MODULE_DIRS})
+        if (IS_DIRECTORY "${module_dir}")
+            get_filename_component(module_name "${module_dir}" NAME)
+            
+            # Find all headers in this module
+            file(GLOB_RECURSE MODULE_HEADERS "${module_dir}/*.h")
+            foreach(header ${MODULE_HEADERS})
+                file(RELATIVE_PATH rel_path "${STABLE_DIR}/generated" "${header}")
+                get_filename_component(dest_dir "${HALIF_INC_OUT_DIR}/${rel_path}" DIRECTORY)
+                file(MAKE_DIRECTORY "${dest_dir}")
+                file(COPY_FILE "${header}" "${HALIF_INC_OUT_DIR}/${rel_path}")
+                math(EXPR HEADER_COUNT "${HEADER_COUNT} + 1")
+            endforeach()
+        endif()
+    endforeach()
+    
+    message(STATUS "Staged ${HEADER_COUNT} HAL interface headers to ${HALIF_INC_OUT_DIR}")
+else()
+    # Stage single module headers
+    set(MODULE_HEADER_DIR "${STABLE_DIR}/generated/${INTERFACE_TARGET}")
+    
+    if (EXISTS "${MODULE_HEADER_DIR}")
+        file(GLOB_RECURSE MODULE_HEADERS "${MODULE_HEADER_DIR}/*.h")
+        
+        set(HEADER_COUNT 0)
+        foreach(header ${MODULE_HEADERS})
+            file(RELATIVE_PATH rel_path "${STABLE_DIR}/generated" "${header}")
+            get_filename_component(dest_dir "${HALIF_INC_OUT_DIR}/${rel_path}" DIRECTORY)
+            file(MAKE_DIRECTORY "${dest_dir}")
+            file(COPY_FILE "${header}" "${HALIF_INC_OUT_DIR}/${rel_path}")
+            math(EXPR HEADER_COUNT "${HEADER_COUNT} + 1")
+        endforeach()
+        
+        message(STATUS "Staged ${HEADER_COUNT} headers for ${INTERFACE_TARGET} to ${HALIF_INC_OUT_DIR}")
+    else()
+        message(WARNING "No headers found for ${INTERFACE_TARGET} in ${MODULE_HEADER_DIR}")
+    endif()
 endif()
 
 message(STATUS "")

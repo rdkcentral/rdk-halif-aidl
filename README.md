@@ -69,8 +69,8 @@ rdk-halif-aidl/
 **Purpose**: Modify AIDL interfaces, generate C++ code, validate compatibility
 
 ```bash
-# 1. Install Binder SDK for development
-./install_binder.sh
+# 1. Build Binder SDK for development
+./build_binder.sh
 
 # 2. Modify AIDL interfaces in <module>/current/
 vim boot/current/com/rdk/hal/boot/IBoot.aidl
@@ -83,7 +83,7 @@ git add stable/
 git commit -m "Update boot interface"
 ```
 
-**Development Tools**: `install_binder.sh`, `build_interfaces.sh`, `freeze_interface.sh`
+**Development Tools**: `build_binder.sh`, `build_interfaces.sh`, `freeze_interface.sh`
 
 ⚠️ **These scripts are NOT used in production builds**
 
@@ -105,7 +105,7 @@ cmake -S . -B build \
 cmake --build build -j$(nproc)
 
 # Output: out/target/lib/halif/*.so
-#         stable/generated/         (HAL interface headers)
+#         out/build/include/*
 ```
 
 **Production Requirements**:
@@ -122,8 +122,8 @@ cmake --build build -j$(nproc)
 **When to use**: Modifying AIDL interface definitions
 
 ```bash
-# 1. Install Binder SDK with AIDL compiler (development only)
-./install_binder.sh
+# 1. Build Binder SDK with AIDL compiler (development only)
+./build_binder.sh
 
 # 2. Modify interfaces, generate C++, validate
 ./build_interfaces.sh <module>
@@ -173,7 +173,7 @@ cmake --install build
 
 **Does NOT require**:
 
-- ❌ `install_binder.sh` (SDK from build system)
+- ❌ `build_binder.sh` (SDK from build system)
 - ❌ `build_interfaces.sh` (C++ pre-generated)
 - ❌ Python or AIDL compiler
 
@@ -186,13 +186,17 @@ cmake --install build
 DEPENDS = "linux-binder"
 
 do_configure() {
+    # Compiler and flags are passed via environment variables
+    # CMake will automatically use CC, CXX, CFLAGS, CXXFLAGS, LDFLAGS
+    CC="${CC}" CXX="${CXX}" \
+    CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" LDFLAGS="${LDFLAGS}" \
     cmake -S ${S} -B ${B} \
           -DINTERFACE_TARGET=all \
           -DBINDER_SDK_DIR=${STAGING_DIR}${prefix}
 }
 
 do_compile() {
-    cmake --build ${B}
+    cmake --build ${B} -j ${PARALLEL_MAKE}
 }
 
 do_install() {
@@ -203,6 +207,19 @@ do_install() {
     # For development packages, create separate -dev recipe
 }
 ```
+
+**Compiler Configuration**:
+
+The build system respects externally-defined compiler and flags through environment variables:
+
+- **`CC`** - C compiler (e.g., `arm-linux-gnueabihf-gcc`)
+- **`CXX`** - C++ compiler (e.g., `arm-linux-gnueabihf-g++`)
+- **`CFLAGS`** - C compiler flags (e.g., `-O2 -march=armv7-a`)
+- **`CXXFLAGS`** - C++ compiler flags (e.g., `-O2 -march=armv7-a -std=c++17`)
+- **`LDFLAGS`** - Linker flags (e.g., `-Wl,--hash-style=gnu`)
+
+These variables are automatically detected and applied by CMake when set in the environment.
+Yocto's build system automatically provides these variables with appropriate cross-compilation settings.
 
 ## Configuration
 
@@ -227,7 +244,7 @@ cmake -B build \
 
 ### Development Build Variables (Scripts)
 
-Used by `install_binder.sh` and `build_interfaces.sh` only:
+Used by `build_binder.sh` and `build_interfaces.sh` only:
 
 | Variable            | Purpose                     | Default                 |
 |---------------------|-----------------------------|-------------------------|

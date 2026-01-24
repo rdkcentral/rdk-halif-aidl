@@ -69,8 +69,8 @@ fi
 ROOT_DIR=$(pwd)
 
 # 1. PRE-FLIGHT: Ensure Toolchain is Ready
-if [ -f "./install_binder.sh" ]; then
-    source ./install_binder.sh
+if [ -f "./build_binder.sh" ]; then
+    source ./build_binder.sh
     if [ $? -ne 0 ]; then
         echo "❌ Critical Error: Failed to setup Binder Toolchain."
         exit 1

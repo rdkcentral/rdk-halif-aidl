@@ -1,3 +1,4 @@
+#include <mutex>
 #include <com/rdk/hal/panel/IPanelOutput.h>
 #include <com/rdk/hal/panel/BpPanelOutput.h>
 namespace com {

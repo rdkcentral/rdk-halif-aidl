@@ -1,3 +1,4 @@
+#include <mutex>
 #include <com/rdk/hal/indicator/IIndicatorManager.h>
 #include <com/rdk/hal/indicator/BpIndicatorManager.h>
 namespace com {
