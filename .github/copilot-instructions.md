@@ -117,13 +117,8 @@ Required variables: `BUILD_HOST_AIDL=OFF`, and **one of** `TARGET_LIB64_VERSION=
 - `build-*/generated/`: Temporary generated files (gitignored, not committed)
 - `build-target/`: CMake build directory for target SDK (temporary build artifacts)
 - `build-host/`: CMake build directory for host AIDL tools (temporary build artifacts)
-- `build-production/`: Build directory used by `tools/production-build.sh` (temporary, cleaned after tests)
-- `tools/`: Utility programs and production build scripts
+- `tools/`: Utility programs
   - `BinderDevice.c`: C program for creating binder device nodes
-  - `production-build.sh`: Production build script - works with any toolchain (native or cross-compiled)
-    - Usage: `./tools/production-build.sh <source_dir> <install_prefix> [--clean]`
-    - Always use `--clean` when switching toolchains (SDK must match final build toolchain)
-    - Can be used in RDK docker builds with sourced toolchain environment
 - `binder_aidl_gen/`: Pre-generated stubs for Core SDK binder (android/os/IServiceManager.aidl, etc.)
   - Used when `BUILD_HOST_AIDL=OFF` or in Yocto/production builds
   - Avoids circular dependency: Core SDK needs these stubs, but AIDL compiler needs Core SDK libs
@@ -199,7 +194,6 @@ Required variables: `BUILD_HOST_AIDL=OFF`, and **one of** `TARGET_LIB64_VERSION=
 - **Always** run `./example/generate_cpp.sh` before building examples (generates stubs/proxies from .aidl)
 - **Always** set `CC`/`CXX`/`CFLAGS`/`CXXFLAGS`/`LDFLAGS` for cross-compilation (Yocto sets these automatically)
 - **Always** ensure CFLAGS/CXXFLAGS/LDFLAGS include sysroot when cross-compiling
-- **Always** use `--clean` flag with production-build.sh when switching toolchains - SDK must be rebuilt with matching compiler
 - **Native builds:** Leave CC/CXX unset to use system GCC (CMake auto-detects from build-essential)
 - **Remember** servicemanager must start before binder clients (systemd dependency ordering - see BUILD.md §"Runtime Setup")
 - **Remember** to re-run `./clone-android-binder-repo.sh` after modifying any `.patch` files in `patches/`
@@ -216,7 +210,7 @@ Required variables: `BUILD_HOST_AIDL=OFF`, and **one of** `TARGET_LIB64_VERSION=
 - [CMakeLists.txt](../CMakeLists.txt): Core build logic - see lines 116–145 (warnings), 246+ (AidlGenerator macro)
 - [clone-android-binder-repo.sh](../clone-android-binder-repo.sh): AOSP source management and patching
 - [setup-env.sh](../setup-env.sh): Shared environment setup for all build scripts
-- [tools/production-build.sh](../tools/production-build.sh): Toolchain-agnostic production build script
+- [build-linux-binder-aidl.sh](../build-linux-binder-aidl.sh): Canonical target build script - supports native and cross-compilation
 - [test.sh](../test.sh): Fast validation test suite with selective test execution
 - [CHANGELOG.md](../CHANGELOG.md): Version history - latest is 1.1.0 with AIDL versioning support
 

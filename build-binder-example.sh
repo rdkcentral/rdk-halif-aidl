@@ -111,11 +111,8 @@ fi
 # ------------------------------------------------------------------------------
 # 1) Ensure Binder SDK is built
 # ------------------------------------------------------------------------------
-BUILD_ARGS=()
-[ "${FORCE}" -eq 1 ] && BUILD_ARGS+=("--force")
-
 LOGI "Building Binder SDK..."
-"${SCRIPT_DIR}/build-linux-binder-aidl.sh" "${BUILD_ARGS[@]}"
+"${SCRIPT_DIR}/build-linux-binder-aidl.sh"
 
 # ------------------------------------------------------------------------------
 # 2) Build AIDL generator tool (host compiler)
@@ -132,38 +129,47 @@ if [ ! -d "$FWMANAGER_GEN_DIR" ] || [ -z "$(ls -A "$FWMANAGER_GEN_DIR" 2>/dev/nu
   LOGW "    These files are normally pre-committed to git in:"
   LOGW "    ${FWMANAGER_GEN_DIR}"
   LOGW ""
-  LOGW "    Regenerating will modify tracked files in the repository."
-  LOGW ""
-
-  if [ -t 0 ]; then  # Check if stdin is a terminal (interactive)
+  
+  # Check if forced mode or automated environment
+  if [ "${FORCE}" -eq 1 ]; then
+    LOGI "Force mode enabled - generating C++ code from .aidl files..."
+    GENERATE=1
+  elif [ ! -t 0 ] || [ ! -t 1 ]; then
+    # Non-interactive: stdin or stdout is redirected (CI, piped, automated tests)
+    LOGW "Non-interactive environment detected (CI/automated testing)"
+    LOGW "Auto-generating AIDL C++ code (use 'clean-aidl' to remove them later)"
+    GENERATE=1
+  else
+    # Interactive mode - prompt user
+    LOGW "    Regenerating will modify tracked files in the repository."
+    LOGW ""
     read -r -p "    Do you want to generate C++ code from .aidl files? [y/N] " response
     case "$response" in
       [yY][eE][sS]|[yY])
         LOGI "Proceeding with C++ code generation..."
+        GENERATE=1
         ;;
       *)
-        LOGE "Aborting. Please restore generated files or use --force to regenerate."
+        LOGE "Aborting. Please restore generated files or use 'force' flag"
         exit 1
         ;;
     esac
-  else
-    LOGE "Non-interactive mode: cannot prompt for confirmation"
-    LOGE "Use --clean-aidl explicitly to regenerate tracked files"
-    exit 1
   fi
 
-  # Set AIDL_BIN for the generate script (host tools, not target)
-  export AIDL_BIN="${OUT_DIR}/host/bin/aidl"
+  if [ "${GENERATE:-0}" -eq 1 ]; then
+    # Set AIDL_BIN for the generate script (host tools, not target)
+    export AIDL_BIN="${OUT_DIR}/host/bin/aidl"
 
-  if [ ! -x "$AIDL_BIN" ]; then
-    LOGE "AIDL compiler not found at $AIDL_BIN"
-    LOGE "Please build AIDL generator tool first"
-    exit 1
+    if [ ! -x "$AIDL_BIN" ]; then
+      LOGE "AIDL compiler not found at $AIDL_BIN"
+      LOGE "Please build AIDL generator tool first"
+      exit 1
+    fi
+
+    "${SCRIPT_DIR}/example/generate_cpp.sh"
+    LOGI "✓ C++ code generation complete"
+    [ -t 0 ] && [ -t 1 ] && LOGW "⚠️  Remember to review and commit changes to generated files"
   fi
-
-  "${SCRIPT_DIR}/example/generate_cpp.sh"
-  LOGI "✓ C++ code generation complete"
-  LOGW "⚠️  Remember to review and commit changes to generated files"
 else
   LOGI "Using pre-generated AIDL C++ files from ${FWMANAGER_GEN_DIR}"
 fi

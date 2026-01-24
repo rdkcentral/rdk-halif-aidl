@@ -67,18 +67,71 @@ ROOT_DIR="${SCRIPT_DIR}"
 BUILD_DIR="${ROOT_DIR}/build-target"
 OUT_DIR="${ROOT_DIR}/out"
 BUILD_TYPE="${BUILD_TYPE:-Release}"
-TARGET_LIB32="${TARGET_LIB32_VERSION:-OFF}"
 CLEAN_BUILD=false
 BUILD_HOST_AIDL_TOOL=true
 
+# Install prefix configuration (override via environment for custom locations)
+INSTALL_PREFIX="${INSTALL_PREFIX:-${OUT_DIR}/target}"
+SDK_INCLUDE_DIR="${SDK_INCLUDE_DIR:-${OUT_DIR}/build/include}"
+
 # Use CC/CXX/CFLAGS etc. for target cross-compilation
 # If not set, use system default (native build)
-# Yocto will set these with sysroot, target arch, etc.
+# Yocto/OE often embeds flags directly in CC/CXX - extract just the compiler executable
 TARGET_CC="${CC:-}"
 TARGET_CXX="${CXX:-}"
-TARGET_CFLAGS="${CFLAGS:-}"
-TARGET_CXXFLAGS="${CXXFLAGS:-}"
+
+# Extract compiler executable from CC/CXX if they contain flags
+# Yocto pattern: CC="arm-oe-linux-gnueabi-gcc -march=... --sysroot=..."
+if [ -n "${TARGET_CC}" ]; then
+    # Extract first word (compiler path/name) and flags separately
+    TARGET_CC_EXEC=$(echo "${TARGET_CC}" | awk '{print $1}')
+    TARGET_CC_FLAGS=$(echo "${TARGET_CC}" | cut -d' ' -f2-)
+    if [ "${TARGET_CC_EXEC}" = "${TARGET_CC_FLAGS}" ]; then
+        # No flags in CC, just compiler
+        TARGET_CC_FLAGS=""
+    fi
+    TARGET_CC="${TARGET_CC_EXEC}"
+else
+    TARGET_CC_FLAGS=""
+fi
+
+if [ -n "${TARGET_CXX}" ]; then
+    TARGET_CXX_EXEC=$(echo "${TARGET_CXX}" | awk '{print $1}')
+    TARGET_CXX_FLAGS=$(echo "${TARGET_CXX}" | cut -d' ' -f2-)
+    if [ "${TARGET_CXX_EXEC}" = "${TARGET_CXX_FLAGS}" ]; then
+        TARGET_CXX_FLAGS=""
+    fi
+    TARGET_CXX="${TARGET_CXX_EXEC}"
+else
+    TARGET_CXX_FLAGS=""
+fi
+
+# Merge extracted CC/CXX flags into CFLAGS/CXXFLAGS
+TARGET_CFLAGS="${TARGET_CC_FLAGS:+${TARGET_CC_FLAGS} }${CFLAGS:-}"
+TARGET_CXXFLAGS="${TARGET_CXX_FLAGS:+${TARGET_CXX_FLAGS} }${CXXFLAGS:-}"
 TARGET_LDFLAGS="${LDFLAGS:-}"
+
+# Architecture configuration - must be set explicitly by Yocto or user
+# Validate that exactly one architecture flag is set
+if [ -n "${TARGET_LIB32_VERSION:-}" ] && [ -n "${TARGET_LIB64_VERSION:-}" ]; then
+    echo "❌ Error: Both TARGET_LIB32_VERSION and TARGET_LIB64_VERSION are set"
+    echo "   Please set exactly one architecture flag."
+    exit 1
+fi
+
+if [ -z "${TARGET_LIB32_VERSION:-}" ] && [ -z "${TARGET_LIB64_VERSION:-}" ]; then
+    # Default to 64-bit for native builds if not specified
+    TARGET_LIB32="OFF"
+    TARGET_ARCH_DISPLAY="64-bit (default)"
+else
+    if [ "${TARGET_LIB32_VERSION:-OFF}" = "ON" ]; then
+        TARGET_LIB32="ON"
+        TARGET_ARCH_DISPLAY="32-bit"
+    else
+        TARGET_LIB32="OFF"
+        TARGET_ARCH_DISPLAY="64-bit"
+    fi
+fi
 
 # Parse arguments
 for arg in "$@"; do
@@ -123,20 +176,29 @@ echo "=========================================="
 
 if [ "$CLEAN_BUILD" = true ]; then
   echo "==> Cleaning all build artifacts and source directories..."
+  
+  # Clean build directories
   rm -rf "${BUILD_DIR}" 2>/dev/null || true
   echo "    Cleaned: ${BUILD_DIR}"
   rm -rf "${ROOT_DIR}/build-target-cmake" 2>/dev/null || true
   echo "    Cleaned: ${ROOT_DIR}/build-target-cmake"
-  rm -rf "${ROOT_DIR}/CMakeFiles" 2>/dev/null || true
-  echo "    Cleaned: ${ROOT_DIR}/CMakeFiles"
-  rm -rf "${ROOT_DIR}/out" 2>/dev/null || true
-  echo "    Cleaned: ${ROOT_DIR}/out"
   rm -rf "${ROOT_DIR}/build-host" 2>/dev/null || true
   echo "    Cleaned: ${ROOT_DIR}/build-host"
   rm -rf "${ROOT_DIR}/build-target" 2>/dev/null || true
   echo "    Cleaned: ${ROOT_DIR}/build-target"
+  
+  # Clean all output directories (target, host, build, examples)
+  rm -rf "${OUT_DIR}" 2>/dev/null || true
+  echo "    Cleaned: ${OUT_DIR} (all subdirectories: target, host, build)"
+  
+  # Clean CMake artifacts
+  rm -rf "${ROOT_DIR}/CMakeFiles" 2>/dev/null || true
+  echo "    Cleaned: ${ROOT_DIR}/CMakeFiles"
+  
+  # Clean Android sources (bison/flex tools)
   rm -rf "${ROOT_DIR}/android" 2>/dev/null || true
   echo "    Cleaned: ${ROOT_DIR}/android"
+  
   echo "✅ Complete clean finished"
   exit 0
 fi
@@ -152,8 +214,8 @@ if [ "$BUILD_HOST_AIDL_TOOL" = true ]; then
 fi
 
 mkdir -p "${BUILD_DIR}"
-mkdir -p "${OUT_DIR}/target/lib" "${OUT_DIR}/target/bin"
-mkdir -p "${OUT_DIR}/build/include"
+mkdir -p "${INSTALL_PREFIX}/lib" "${INSTALL_PREFIX}/bin"
+mkdir -p "${SDK_INCLUDE_DIR}"
 
 echo "==> Configuring CMake for target binder libraries..."
 
@@ -161,8 +223,10 @@ echo "==> Configuring CMake for target binder libraries..."
 CMAKE_ARGS=(
   -S "${ROOT_DIR}"
   -B "${BUILD_DIR}"
-  -DCMAKE_BUILD_TYPE="${BUILD_TYPE}"  -DCMAKE_INSTALL_PREFIX="${OUT_DIR}/target"
-  -DCMAKE_INSTALL_INCDIR="${OUT_DIR}/build/include"  -DBUILD_HOST_AIDL=OFF
+  -DCMAKE_BUILD_TYPE="${BUILD_TYPE}"
+  -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}"
+  -DCMAKE_INSTALL_INCDIR="${SDK_INCLUDE_DIR}"
+  -DBUILD_HOST_AIDL=OFF
   -DTARGET_LIB32_VERSION="${TARGET_LIB32}"
 )
 
@@ -186,21 +250,62 @@ if [ -n "${TARGET_LDFLAGS}" ]; then
   CMAKE_ARGS+=(-DCMAKE_SHARED_LINKER_FLAGS="${TARGET_LDFLAGS}")
 fi
 
+# Handle CMAKE_TOOLCHAIN_FILE
+# When cross-compiling with manual flags (Yocto environment-setup),
+# we need to prevent CMake from auto-detecting incompatible toolchain files
+if [ -n "${CMAKE_TOOLCHAIN_FILE+x}" ]; then
+  # Variable is set (even if empty) - respect user's choice
+  if [ -z "${CMAKE_TOOLCHAIN_FILE}" ]; then
+    # Explicitly disabled (empty string)
+    CMAKE_ARGS+=(-DCMAKE_TOOLCHAIN_FILE=)
+  else
+    # User provided a toolchain file
+    CMAKE_ARGS+=(-DCMAKE_TOOLCHAIN_FILE="${CMAKE_TOOLCHAIN_FILE}")
+  fi
+fi
+
 # Run CMake configuration
 cmake "${CMAKE_ARGS[@]}"
 
 echo "==> Building target binder libraries..."
 cmake --build "${BUILD_DIR}" --target all -- -j"$(nproc)"
 
-echo "==> Installing to ${OUT_DIR}/target/ and ${OUT_DIR}/build/include/..."
-cp "${BUILD_DIR}"/*.so "${OUT_DIR}/target/lib/" 2>/dev/null || true
-cp "${BUILD_DIR}"/servicemanager "${OUT_DIR}/target/bin/" 2>/dev/null || true
+echo "==> Installing to ${INSTALL_PREFIX}/ and ${SDK_INCLUDE_DIR}/..."
 
-# Install SDK headers using CMake (to out/build/include)
-cmake --install "${BUILD_DIR}"
+# Copy build artifacts to install prefix
+# Note: CMake build outputs to CMAKE_BINARY_DIR, then we copy to INSTALL_PREFIX
+if [ -f "${BUILD_DIR}"/servicemanager ]; then
+    cp "${BUILD_DIR}"/servicemanager "${INSTALL_PREFIX}/bin/" || {
+        echo "❌ Failed to copy servicemanager"
+        exit 1
+    }
+    echo "   ✓ Copied servicemanager"
+else
+    echo "⚠️  Warning: servicemanager not found in ${BUILD_DIR}/"
+fi
+
+# Copy shared libraries
+SO_FILES=$(find "${BUILD_DIR}" -maxdepth 1 -name "*.so" 2>/dev/null)
+if [ -n "${SO_FILES}" ]; then
+    cp "${BUILD_DIR}"/*.so "${INSTALL_PREFIX}/lib/" || {
+        echo "❌ Failed to copy shared libraries"
+        exit 1
+    }
+    echo "   ✓ Copied $(echo "${SO_FILES}" | wc -l) shared libraries"
+else
+    echo "❌ Error: No shared libraries (.so files) found in ${BUILD_DIR}/"
+    echo "   Build may have failed silently. Check CMake output above."
+    exit 1
+fi
+
+# Install SDK headers using CMake
+cmake --install "${BUILD_DIR}" || {
+    echo "❌ CMake install failed"
+    exit 1
+}
 
 echo ""
 echo "✅ Target binder libraries built successfully"
-echo "   Libraries:      ${OUT_DIR}/target/lib/"
-echo "   Servicemanager: ${OUT_DIR}/target/bin/servicemanager"
-echo "   Headers:        ${OUT_DIR}/build/include/"
+echo "   Libraries:      ${INSTALL_PREFIX}/lib/"
+echo "   Servicemanager: ${INSTALL_PREFIX}/bin/servicemanager"
+echo "   Headers:        ${SDK_INCLUDE_DIR}/"

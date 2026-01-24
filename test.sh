@@ -35,6 +35,11 @@ TESTS_PASSED=0
 TESTS_FAILED=0
 
 CMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX:-$(pwd)/out/target}"
+SDK_INCLUDE_DIR="${SDK_INCLUDE_DIR:-$(pwd)/out/build/include}"
+
+# SDK required artifacts (data-driven)
+REQUIRED_SDK_LIBS=("libbinder.so" "liblog.so" "libbase.so" "libutils.so" "libcutils.so")
+REQUIRED_SDK_BINS=("servicemanager")
 
 usage() {
     echo "Usage: $0 [--from ID] [--to ID] [--only ID[,ID...]] [--list] [--help]"
@@ -45,7 +50,7 @@ usage() {
     echo "  --help       Show this help"
 }
 
-TEST_IDS=("1" "1.1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11")
+TEST_IDS=("1" "1.1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "12" "13")
 
 list_tests() {
     echo "Available tests:"
@@ -59,8 +64,10 @@ list_tests() {
     echo "  7   Direct CMake build (defaults + install)"
     echo "  8   Direct CMake build (per BUILD.md)"
     echo "  9   Direct CMake build (per BUILD.md + install)"
-    echo "  10  Production build (minimal flags + install)"
-    echo "  11  Cross-compilation environment check (sc/RDK)"
+    echo "  10  Production SDK build (native host, no examples)"
+    echo "  11  Production SDK build (ARM cross, no examples)"
+    echo "  12  Examples build (native host)"
+    echo "  13  Examples build (ARM cross)"
 }
 
 index_of_test_id() {
@@ -137,9 +144,10 @@ ensure_host_aidl_tools() {
     local saved_cflags="${CFLAGS:-}"
     local saved_cxxflags="${CXXFLAGS:-}"
     local saved_ldflags="${LDFLAGS:-}"
+    local saved_cmake_toolchain="${CMAKE_TOOLCHAIN_FILE:-}"
 
     # Clear cross-compiler environment to force host compiler
-    unset CC CXX CFLAGS CXXFLAGS LDFLAGS
+    unset CC CXX CFLAGS CXXFLAGS LDFLAGS CMAKE_TOOLCHAIN_FILE
 
     if ./build-aidl-generator-tool.sh >/tmp/host_build.log 2>&1; then
         warnings=$(grep -ci "warning:" /tmp/host_build.log || echo "0")
@@ -173,9 +181,10 @@ ensure_host_aidl_tools() {
 run_cmake_build() {
     local build_dir="$1"
     shift
-    echo "==> cmake -S . -B ${build_dir} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} $*"
+    echo "==> cmake -S . -B ${build_dir} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} -DCMAKE_INSTALL_INCDIR=${SDK_INCLUDE_DIR} $*"
     cmake -S . -B "${build_dir}" \
         -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
+        -DCMAKE_INSTALL_INCDIR="${SDK_INCLUDE_DIR}" \
         "$@" \
         >/tmp/cmake_target_config.log 2>&1 && \
     echo "==> cmake --build ${build_dir} -- -j$(nproc)" && \
@@ -204,25 +213,115 @@ print_dest_tree() {
     fi
 }
 
-check_install_layout() {
-    local prefix_path="${CMAKE_INSTALL_PREFIX}"
+# Verify install directory layout (R10.6, R11.9)
+verify_install_layout() {
+    local prefix="$1"
+    local sdk_include="$2"
+    
+    # Safety check: refuse dangerous prefixes (G4)
+    if [ -z "${prefix}" ] || [ "${prefix}" = "/" ]; then
+        echo "❌ SAFETY: Refusing to verify empty or root prefix"
+        return 1
+    fi
+    
+    echo "==> Verifying install layout..."
+    echo "    Prefix:      ${prefix}"
+    echo "    SDK headers: ${sdk_include}"
+    
     local ok=true
-    if [ ! -d "${prefix_path}/lib" ]; then
-        echo "❌ Missing lib directory: ${prefix_path}/lib"
+    if [ ! -d "${prefix}/lib" ]; then
+        echo "    ❌ Missing lib directory: ${prefix}/lib"
         ok=false
+    else
+        echo "    ✅ lib directory exists"
     fi
-    # SDK headers are in out/build/include, not out/target/include
-    local sdk_include_dir="$(dirname "${prefix_path}")/build/include"
-    if [ ! -d "${sdk_include_dir}" ]; then
-        echo "❌ Missing include directory: ${sdk_include_dir}"
+    
+    if [ ! -d "${prefix}/bin" ]; then
+        echo "    ❌ Missing bin directory: ${prefix}/bin"
         ok=false
+    else
+        echo "    ✅ bin directory exists"
     fi
-    if [ ! -d "${prefix_path}/bin" ]; then
-        echo "❌ Missing bin directory: ${prefix_path}/bin"
+    
+    if [ ! -d "${sdk_include}" ]; then
+        echo "    ❌ Missing SDK include directory: ${sdk_include}"
         ok=false
+    else
+        echo "    ✅ SDK include directory exists"
     fi
+    
     if [ "${ok}" != true ]; then
-        print_dest_tree "${prefix_path}"
+        echo "    Install layout verification FAILED"
+        print_dest_tree "${prefix}"
+        return 1
+    fi
+    
+    echo "    ✅ Install layout verified"
+    return 0
+}
+
+# Verify required SDK binaries exist (R10.6, R11.9)
+verify_binaries_exist() {
+    local prefix="$1"
+    echo "==> Verifying required SDK binaries..."
+    
+    local ok=true
+    local found_count=0
+    local total_count=0
+    
+    # Check required libraries
+    for lib in "${REQUIRED_SDK_LIBS[@]}"; do
+        total_count=$((total_count + 1))
+        if [ -f "${prefix}/lib/${lib}" ]; then
+            echo "    ✅ ${lib}"
+            found_count=$((found_count + 1))
+        else
+            echo "    ❌ ${lib} MISSING"
+            ok=false
+        fi
+    done
+    
+    # Check required binaries
+    for bin in "${REQUIRED_SDK_BINS[@]}"; do
+        total_count=$((total_count + 1))
+        if [ -x "${prefix}/bin/${bin}" ]; then
+            echo "    ✅ ${bin}"
+            found_count=$((found_count + 1))
+        else
+            echo "    ❌ ${bin} MISSING or not executable"
+            ok=false
+        fi
+    done
+    
+    echo "    Summary: ${found_count}/${total_count} required artifacts found"
+    
+    if [ "${ok}" != true ]; then
+        return 1
+    fi
+    return 0
+}
+
+# Verify AIDL tools are NOT installed (R10.7)
+verify_no_aidl_tools() {
+    local prefix="$1"
+    echo "==> Verifying AIDL tools NOT in install (production)..."
+    
+    local ok=true
+    if [ -f "${prefix}/bin/aidl" ]; then
+        echo "    ❌ aidl found (should not be installed)"
+        ok=false
+    else
+        echo "    ✅ aidl not installed"
+    fi
+    
+    if [ -f "${prefix}/bin/aidl-cpp" ]; then
+        echo "    ❌ aidl-cpp found (should not be installed)"
+        ok=false
+    else
+        echo "    ✅ aidl-cpp not installed"
+    fi
+    
+    if [ "${ok}" != true ]; then
         return 1
     fi
     return 0
@@ -291,6 +390,96 @@ verify_host_architecture() {
         return 1
     else
         echo "    ✅ All ${host_files} files verified as host architecture (${expected_arch})"
+        return 0
+    fi
+}
+
+# Verify architecture of installed binaries (R10.8, R10.9, R11.10, R11.11)
+# Checks both libs and binaries, supports both host and ARM expectations
+verify_architecture() {
+    local prefix="$1"
+    local expected="$2"  # "host" or "arm32" or "arm64"
+    local description="${3:-build}"
+    
+    echo "==> Verifying ${expected} architecture for ${description}..."
+    
+    local expected_arch_pattern
+    local expected_display
+    case "${expected}" in
+        host)
+            expected_arch_pattern="$(uname -m)|x86-64|x86_64|ELF 64-bit"
+            expected_display="$(uname -m)"
+            ;;
+        arm32|arm)
+            expected_arch_pattern="ARM|armv7|armv8"
+            expected_display="ARM (32-bit)"
+            ;;
+        arm64|aarch64)
+            expected_arch_pattern="ARM|AArch64|aarch64"
+            expected_display="ARM (64-bit)"
+            ;;
+        *)
+            echo "    ❌ Unknown architecture expectation: ${expected}"
+            return 1
+            ;;
+    esac
+    
+    echo "    Expected: ${expected_display}"
+    
+    local files_checked=0
+    local files_pass=0
+    local files_fail=0
+    
+    # Check libraries
+    for so_file in "${prefix}/lib"/*.so; do
+        if [ -f "${so_file}" ]; then
+            files_checked=$((files_checked + 1))
+            local basename_file=$(basename "${so_file}")
+            local file_output=$(file "${so_file}")
+            
+            if echo "${file_output}" | grep -Eqi "${expected_arch_pattern}"; then
+                echo "    ✅ ${basename_file}: ${expected_display}"
+                files_pass=$((files_pass + 1))
+            else
+                echo "    ❌ ${basename_file}: Wrong architecture"
+                echo "       file: ${file_output}"
+                files_fail=$((files_fail + 1))
+            fi
+        fi
+    done
+    
+    # Check binaries (R10.9, R11.11)
+    for bin_file in "${prefix}/bin"/*; do
+        if [ -f "${bin_file}" ] && [ -x "${bin_file}" ]; then
+            files_checked=$((files_checked + 1))
+            local basename_file=$(basename "${bin_file}")
+            local file_output=$(file "${bin_file}")
+            
+            if echo "${file_output}" | grep -Eqi "${expected_arch_pattern}"; then
+                echo "    ✅ ${basename_file}: ${expected_display}"
+                files_pass=$((files_pass + 1))
+            else
+                echo "    ❌ ${basename_file}: Wrong architecture"
+                echo "       file: ${file_output}"
+                files_fail=$((files_fail + 1))
+            fi
+        fi
+    done
+    
+    # Summary (R10.10, R11.12, R11.13)
+    echo "    ---"
+    echo "    Checked: ${files_checked} files (libs + binaries)"
+    echo "    Passed:  ${files_pass}"
+    echo "    Failed:  ${files_fail}"
+    
+    if [ ${files_checked} -eq 0 ]; then
+        echo "    ❌ No files found to verify"
+        return 1
+    elif [ ${files_fail} -gt 0 ]; then
+        echo "    ❌ Architecture verification FAILED"
+        return 1
+    else
+        echo "    ✅ All binaries verified as ${expected_display}"
         return 0
     fi
 }
@@ -421,7 +610,7 @@ test_7() {
         echo "✅ Default CMake build completed (warnings: $warnings, errors: $errors)"
         test -f ./build-target-cmake/libbinder.so && echo "✅ libbinder.so created (default CMake build)"
         test -f "${CMAKE_INSTALL_PREFIX}/lib/libbinder.so" && echo "✅ libbinder.so installed (default CMake install)"
-        check_install_layout "${CMAKE_INSTALL_PREFIX}"
+        verify_install_layout "${CMAKE_INSTALL_PREFIX}" "${SDK_INCLUDE_DIR}"
 
         # Verify host architecture
         if ! verify_host_architecture "${CMAKE_INSTALL_PREFIX}/lib" "default CMake build"; then
@@ -476,7 +665,7 @@ test_9() {
         echo "✅ Direct CMake build completed (warnings: $warnings, errors: $errors)"
         test -f ./build-target-cmake/libbinder.so && echo "✅ libbinder.so created (CMake build)"
         test -f "${CMAKE_INSTALL_PREFIX}/lib/libbinder.so" && echo "✅ libbinder.so installed (CMake install)"
-        check_install_layout "${CMAKE_INSTALL_PREFIX}"
+        verify_install_layout "${CMAKE_INSTALL_PREFIX}" "${SDK_INCLUDE_DIR}"
 
         # Verify host architecture
         if ! verify_host_architecture "${CMAKE_INSTALL_PREFIX}/lib" "BUILD.md direct CMake build"; then
@@ -497,271 +686,501 @@ test_9() {
 }
 
 test_10() {
+    # R10.1: Clean build state
     clean_build_state
-    echo "Production build (minimal required flags only)..."
-    echo "This simulates Yocto/BitBake with only required production variables."
-    echo "No AIDL compiler - uses pre-generated C++ from binder_aidl_gen/"
-
-    # Remove host AIDL tools to verify production build doesn't need them
-    echo "Removing host AIDL tools to verify production build independence..."
+    
+    echo "=== Test 10: Production SDK build (native host, no examples) ==="
+    echo ""
+    
+    # R10.2: Remove host AIDL outputs to prove independence
+    echo "==> Removing host AIDL tools to verify production build independence..."
     rm -rf ./out/host ./build-host 2>/dev/null || true
     echo "✅ Host tools removed - production build will use pre-generated code only"
     echo ""
-
-    # Use production-build.sh script with clean flag to ensure SDK is built with host toolchain
-    if [ -x "./tools/production-build.sh" ]; then
-        echo "Using tools/production-build.sh for production build"
-        if ./tools/production-build.sh "$(pwd)" "${CMAKE_INSTALL_PREFIX}" --clean >/tmp/production_build.log 2>&1; then
-            echo "✅ Production build completed successfully"
-        else
-            echo "❌ Production build failed!"
-            tail -30 /tmp/production_build.log
-            exit 1
-        fi
-    else
-        # Fallback to direct CMake if script doesn't exist
-        if run_cmake_build build-production \
-            -DBUILD_HOST_AIDL=OFF && \
-           run_cmake_install build-production; then
-            echo "✅ Production build completed (fallback CMake)"
-        else
-            echo "❌ Production build failed!"
-            tail -20 /tmp/cmake_target_build.log
-            exit 1
-        fi
-    fi
-
-    # Verify outputs
-    warnings=$(grep -ci "warning:" /tmp/production_build.log 2>/dev/null || echo "0")
-    errors=$(grep -ci "error:" /tmp/production_build.log 2>/dev/null || echo "0")
-    echo "Build warnings: $warnings, errors: $errors"
-    test -f "${CMAKE_INSTALL_PREFIX}/lib/libbinder.so" && echo "✅ libbinder.so installed"
-    test -x "${CMAKE_INSTALL_PREFIX}/bin/servicemanager" && echo "✅ servicemanager installed"
-    test ! -f "${CMAKE_INSTALL_PREFIX}/bin/aidl" && echo "✅ AIDL compiler NOT installed (production)"
-    test ! -f "${CMAKE_INSTALL_PREFIX}/bin/aidl-cpp" && echo "✅ AIDL-CPP NOT installed (production)"
-    check_install_layout "${CMAKE_INSTALL_PREFIX}"
-
-    # Verify host architecture (production build should be for host platform)
-    if ! verify_host_architecture "${CMAKE_INSTALL_PREFIX}/lib" "production build"; then
-        echo "❌ Architecture verification failed!"
-        exit 1
-    fi
-
-    print_dest_tree "${CMAKE_INSTALL_PREFIX}"
-
-    # Clean up build-production directory after test completes
+    
+    # R10.3: Set production env vars
+    export INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}"
+    
+    echo "Production build configuration:"
+    echo "  Install prefix: ${INSTALL_PREFIX}"
+    echo "  Uses pre-generated code from binder_aidl_gen/"
     echo ""
-    echo "==> Cleaning up build-production directory..."
-    rm -rf build-production 2>/dev/null || true
-    echo "✅ build-production cleaned up"
+    
+    # R10.4: Build SDK using canonical script (no examples)
+    echo "==> Building SDK (binder libraries + servicemanager)..."
+    if ! ./build-linux-binder-aidl.sh --no-host-aidl >/tmp/production_sdk_build.log 2>&1; then
+        echo "❌ SDK build failed!"
+        echo ""
+        echo "Last 50 lines of build log:"
+        tail -50 /tmp/production_sdk_build.log
+        echo ""
+        echo "Searching for errors:"
+        grep -i "error:" /tmp/production_sdk_build.log | tail -20 || echo "  (no 'error:' messages found)"
+        return 1
+    fi
+    echo "✅ SDK build completed"
+    echo ""
+    
+    # Count warnings/errors (R10.10)
+    local warnings=$(grep -ci "warning:" /tmp/production_sdk_build.log 2>/dev/null || echo "0")
+    local errors=$(grep -ci "error:" /tmp/production_sdk_build.log 2>/dev/null || echo "0")
+    
+    # R10.6: Verify install layout
+    if ! verify_install_layout "${INSTALL_PREFIX}" "$(dirname "${INSTALL_PREFIX}")/build/include"; then
+        echo "❌ Install layout verification failed"
+        return 1
+    fi
+    echo ""
+    
+    # R10.6: Verify required binaries exist
+    if ! verify_binaries_exist "${INSTALL_PREFIX}"; then
+        echo "❌ Required binaries verification failed"
+        return 1
+    fi
+    echo ""
+    
+    # R10.7: Verify AIDL tools are NOT in install
+    if ! verify_no_aidl_tools "${INSTALL_PREFIX}"; then
+        echo "❌ AIDL tools found in production install (should not be present)"
+        return 1
+    fi
+    echo ""
+    
+    # R10.8, R10.9: Verify all binaries (libs + bins) are host architecture
+    if ! verify_architecture "${INSTALL_PREFIX}" "host" "production SDK"; then
+        echo "❌ Architecture verification failed"
+        return 1
+    fi
+    echo ""
+    
+    # R10.10: Clear summary
+    echo "=========================================="
+    echo "  ✅ Test 10 PASSED - Production SDK Build"
+    echo "=========================================="
+    echo ""
+    echo "Build summary:"
+    echo "  Warnings: ${warnings}"
+    echo "  Errors:   ${errors}"
+    echo ""
+    echo "Key artifacts:"
+    echo "  SDK libraries:   ${INSTALL_PREFIX}/lib ($(ls -1 "${INSTALL_PREFIX}"/lib/*.so 2>/dev/null | wc -l) files)"
+    echo "  SDK binaries:    ${INSTALL_PREFIX}/bin ($(ls -1 "${INSTALL_PREFIX}"/bin/* 2>/dev/null | wc -l) files)"
+    echo "  SDK headers:     ${SDK_INCLUDE_DIR}"
+    echo "  AIDL tools:      NOT installed (production)"
+    echo ""
+    echo "Architecture:      Host ($(uname -m))"
+    echo ""
 }
 
 test_11() {
-    echo "Cross-compilation build and verification (RDK Kirkstone ARM toolchain)..."
+    echo "=== Test 11: Production SDK build (ARM cross, no examples) ==="
     echo ""
-
-    # Step 1: Check if sc command is available
-    echo "==> Step 1: Checking for 'sc' command..."
+    
+    # R11.1: Check if sc command is available
     if ! command -v sc &> /dev/null; then
-        echo "⚠️  'sc' command not found - cross-compilation environment not available"
-        echo "    This is optional for development builds"
+        echo "⚠️  SKIPPED: 'sc' command not found"
+        echo "    Cross-compilation environment not available (optional for development)"
         return 0
     fi
-    echo "✅ 'sc' command available"
-    echo ""
-
-    # Step 2: Check if rdk-kirkstone image exists
-    echo "==> Step 2: Checking for rdk-kirkstone Docker image..."
+    
+    # R11.2: Check if rdk-kirkstone image exists
     if ! sc docker list 2>/dev/null | grep -q "rdk-kirkstone"; then
-        echo "⚠️  rdk-kirkstone Docker image not found via 'sc docker list'"
-        echo "    Cross-compilation environment may not be fully configured"
-        echo "    This is optional for development builds"
+        echo "⚠️  SKIPPED: rdk-kirkstone Docker image not found"
+        echo "    Cross-compilation environment not configured (optional for development)"
         return 0
     fi
-    echo "✅ rdk-kirkstone Docker image available"
-    echo ""
-
-    # Get current directory for docker mount
-    local current_dir
-    current_dir=$(pwd)
-
-    # Step 3: Clean build state
-    echo "==> Step 3: Cleaning build state..."
-    echo "Removing: build-production, ${CMAKE_INSTALL_PREFIX}"
+    
+    # R11.4: Clean build state
     clean_build_state
-    echo "✅ Build state cleaned"
-
-    echo "==> Step 4: Verifying production-build.sh script..."
-    if [ ! -x "${current_dir}/tools/production-build.sh" ]; then
-        echo "❌ tools/production-build.sh not found or not executable!"
+    
+    # R11.5: Do NOT build host AIDL tools - production doesn't need them
+    # Production uses pre-generated code from binder_aidl_gen/
+    echo "==> Production build uses pre-generated code (no host AIDL tools needed)"
+    echo ""
+    
+    # R11.6: Set env vars inside container
+    local current_dir=$(pwd)
+    export INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}"
+    
+    echo "ARM cross-compilation build configuration:"
+    echo "  Install prefix: ${INSTALL_PREFIX}"
+    echo "  Target arch:    ARM 32-bit (armv7)"
+    echo "  Uses pre-generated code from binder_aidl_gen/"
+    echo ""
+    
+    # R11.7: Build SDK using canonical script inside docker (no examples)
+    # Note: Environment variables (CC, CXX, CFLAGS, etc.) are set by environment-setup script
+    # We must prevent CMake from using the default Yocto toolchain file which conflicts with manual flags
+    echo "==> Step 1: Configure and build ARM SDK in Docker"
+    echo "    Command: sc docker run rdk-kirkstone + build-linux-binder-aidl.sh --no-host-aidl"
+    echo ""
+    
+    if ! sc docker run rdk-kirkstone \
+        ". /opt/toolchains/rdk-glibc-x86_64-arm-toolchain/environment-setup-armv7vet2hf-neon-oe-linux-gnueabi; export INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}; export TARGET_LIB32_VERSION=ON; export CMAKE_TOOLCHAIN_FILE=; cd ${current_dir}; ./build-linux-binder-aidl.sh --no-host-aidl" \
+        >/tmp/arm_sdk_build.log 2>&1; then
+        echo "    ❌ Build script failed with exit code $?"
+        echo ""
+        echo "Last 50 lines of build log:"
+        tail -50 /tmp/arm_sdk_build.log
+        echo ""
+        echo "Searching for errors:"
+        grep -i "error:" /tmp/arm_sdk_build.log | tail -20 || echo "  (no 'error:' messages found)"
         return 1
     fi
-    echo "✅ Script found: ${current_dir}/tools/production-build.sh"
+    echo "    ✅ Build script completed"
     echo ""
-
-    # Step 5: Run ARM cross-compilation build
-    echo "==> Step 5: Running ARM cross-compilation build..."
-    echo "This uses the same production-build.sh as test_10 but with ARM toolchain"
-    echo ""
-    echo "Build command:"
-    echo "  sc docker run rdk-kirkstone \\"
-    echo "    \". /opt/toolchains/rdk-glibc-x86_64-arm-toolchain/environment-setup-armv7vet2hf-neon-oe-linux-gnueabi; \\"
-    echo "    unset CMAKE_TOOLCHAIN_FILE; \\"
-    echo "    ${current_dir}/tools/production-build.sh ${current_dir} ${CMAKE_INSTALL_PREFIX}\""
-    echo ""
-    echo "Starting ARM build (this may take several minutes)..."
-    echo "========================================"
-
-    # Run production build through sc docker with ARM toolchain - show output in real-time
-    # Uses the committed tools/production-build.sh script which works for any toolchain
-    # Note: clean_build_state() already cleaned everything on host, no need for --clean inside docker
-    # Unset CMAKE_TOOLCHAIN_FILE so CMake uses CC/CXX from environment instead of OE toolchain file
-    # Note: sc docker automatically mounts PWD and runs in that directory
-    if sc docker run rdk-kirkstone \
-        ". /opt/toolchains/rdk-glibc-x86_64-arm-toolchain/environment-setup-armv7vet2hf-neon-oe-linux-gnueabi; unset CMAKE_TOOLCHAIN_FILE; ${current_dir}/tools/production-build.sh ${current_dir} ${CMAKE_INSTALL_PREFIX}" \
-        2>&1 | tee /tmp/arm_build.log; then
-        echo "========================================"
-        echo "✅ ARM build completed successfully"
+    
+    # R11.7.1: Verify build outputs exist (immediate check after build)
+    echo "==> Step 2: Verify build artifacts were created"
+    
+    local build_dir="${current_dir}/build-target"
+    local found_issues=false
+    
+    # Check build directory exists
+    if [ ! -d "${build_dir}" ]; then
+        echo "    ❌ Build directory missing: ${build_dir}"
+        found_issues=true
     else
-        echo "========================================"
-        echo "❌ ARM build failed!"
-        echo ""
-        echo "Last 30 lines of build log:"
-        tail -30 /tmp/arm_build.log
-        return 1
-    fi
-    echo ""
-
-    # Debug: Check what actually exists after build
-    echo "==> Debug: Checking filesystem after ARM build..."
-    echo "    Contents of out/:"
-    ls -la "${current_dir}/out/" 2>&1 || echo "    out/ doesn't exist"
-    echo "    Contents of CMAKE_INSTALL_PREFIX (${CMAKE_INSTALL_PREFIX}):"
-    ls -la "${CMAKE_INSTALL_PREFIX}" 2>&1 || echo "    ${CMAKE_INSTALL_PREFIX} doesn't exist"
-    echo "    Contents of build-production/:"
-    ls -la "${current_dir}/build-production/" 2>&1 | head -20
-    echo "    Checking for built libs in build-production:"
-    find "${current_dir}/build-production" -name "*.so" 2>&1 | head -10
-    echo "    Checking cmake install manifest:"
-    if [ -f "${current_dir}/build-production/install_manifest.txt" ]; then
-        echo "    Install manifest exists - first 10 files:"
-        head -10 "${current_dir}/build-production/install_manifest.txt"
-    else
-        echo "    No install_manifest.txt found - install may have failed"
-    fi
-    echo ""
-
-    # Step 6: Check if output directory exists
-    echo "==> Step 6: Checking for build output directory..."
-    echo "Expected directory: ${CMAKE_INSTALL_PREFIX}/lib"
-    if [ ! -d "${CMAKE_INSTALL_PREFIX}" ]; then
-        echo "❌ Install prefix does not exist: ${CMAKE_INSTALL_PREFIX}"
-        return 1
-    fi
-
-    if [ ! -d "${CMAKE_INSTALL_PREFIX}/lib" ]; then
-        echo "❌ Library directory not found: ${CMAKE_INSTALL_PREFIX}/lib"
-        echo ""
-        echo "Contents of ${CMAKE_INSTALL_PREFIX}:"
-        ls -la "${CMAKE_INSTALL_PREFIX}"
-        return 1
-    fi
-    echo "✅ Output directory exists: ${CMAKE_INSTALL_PREFIX}/lib"
-    echo ""
-
-    # Step 7: List built files
-    echo "==> Step 7: Listing built libraries..."
-    if ! ls -lh "${CMAKE_INSTALL_PREFIX}/lib"/*.so 2>/dev/null; then
-        echo "❌ No .so files found in ${CMAKE_INSTALL_PREFIX}/lib"
-        echo ""
-        echo "Directory contents:"
-        ls -la "${CMAKE_INSTALL_PREFIX}/lib"
-        return 1
-    fi
-    echo ""
-
-    # Step 8: Verify ARM architecture for each library
-    echo "==> Step 8: Verifying ARM architecture..."
-
-    local found_libs=false
-    local all_arm=true
-    local lib_count=0
-    local arm_count=0
-
-    for lib in "${CMAKE_INSTALL_PREFIX}/lib"/*.so; do
-        if [ -f "${lib}" ]; then
-            found_libs=true
-            lib_count=$((lib_count + 1))
-            local basename_lib=$(basename "${lib}")
-            local file_output=$(file "${lib}")
-
-            echo ""
-            echo "  Library: ${basename_lib}"
-            echo "  file output: ${file_output}"
-
-            # Get readelf output if available
-            if command -v readelf &> /dev/null; then
-                local machine=$(readelf -h "${lib}" 2>/dev/null | grep "Machine:" || echo "readelf failed")
-                echo "  readelf Machine: ${machine}"
-            fi
-
-            # Check for ARM indicators
-            if echo "${file_output}" | grep -qi "ARM\|armv7\|armv8"; then
-                arm_count=$((arm_count + 1))
-                echo "  ✅ ARM architecture confirmed (file command)"
-            elif command -v readelf &> /dev/null && readelf -h "${lib}" 2>/dev/null | grep -qi "ARM\|AArch64"; then
-                arm_count=$((arm_count + 1))
-                echo "  ✅ ARM architecture confirmed (readelf)"
-            else
-                echo "  ❌ Not ARM architecture - may be x86_64 or unknown!"
-                all_arm=false
-            fi
-        fi
-    done
-
-    echo ""
-    echo "==> Step 9: Verification summary..."
-    echo "Total libraries checked: ${lib_count}"
-    echo "ARM libraries found: ${arm_count}"
-
-    if [ "${found_libs}" = false ]; then
-        echo "❌ No .so files found to verify"
-        return 1
-    fi
-
-    if [ "${all_arm}" = false ]; then
-        echo "❌ Architecture verification FAILED: Not all libraries are ARM"
-        echo "    Expected ${lib_count} ARM libraries, found ${arm_count}"
-        return 1
-    fi
-
-    echo "✅ All ${lib_count} libraries verified as ARM architecture"
-    echo ""
-
-    # Step 10: Verify servicemanager
-    echo "==> Step 10: Verifying servicemanager binary..."
-    if [ -x "${CMAKE_INSTALL_PREFIX}/bin/servicemanager" ]; then
-        echo "✅ servicemanager binary exists"
-        local sm_arch=$(file "${CMAKE_INSTALL_PREFIX}/bin/servicemanager")
-        echo "   Architecture: ${sm_arch}"
-        if echo "${sm_arch}" | grep -qi "ARM\|armv7\|armv8"; then
-            echo "   ✅ servicemanager is ARM"
+        echo "    ✅ Build directory exists: ${build_dir}"
+        
+        # Check for .so files in build directory
+        local so_count=$(find "${build_dir}" -maxdepth 1 -name "*.so" 2>/dev/null | wc -l)
+        if [ "${so_count}" -eq 0 ]; then
+            echo "    ❌ No .so files found in ${build_dir}"
+            echo "       CMake build may have failed during compilation"
+            found_issues=true
         else
-            echo "   ❌ servicemanager is NOT ARM!"
+            echo "    ✅ Found ${so_count} .so files in build directory"
+        fi
+        
+        # Check for servicemanager binary
+        if [ ! -f "${build_dir}/servicemanager" ]; then
+            echo "    ❌ servicemanager binary missing in ${build_dir}"
+            found_issues=true
+        else
+            echo "    ✅ servicemanager binary exists"
+        fi
+    fi
+    
+    if [ "${found_issues}" = true ]; then
+        echo ""
+        echo "Build artifacts verification FAILED"
+        echo "Check CMake configuration and compilation logs above"
+        return 1
+    fi
+    echo ""
+    
+    # R11.12: Count warnings/errors
+    local warnings=$(grep -ci "warning:" /tmp/arm_sdk_build.log 2>/dev/null || echo "0")
+    local errors=$(grep -ci "error:" /tmp/arm_sdk_build.log 2>/dev/null || echo "0")
+    
+    # R11.9: Verify install layout (files copied to out/target/)
+    echo "==> Step 3: Verify install layout"
+    if ! verify_install_layout "${INSTALL_PREFIX}" "$(dirname "${INSTALL_PREFIX}")/build/include"; then
+        echo "    ❌ Install layout verification failed"
+        echo "       Files may not have been copied to ${INSTALL_PREFIX}"
+        return 1
+    fi
+    echo ""
+    
+    # R11.9: Verify required binaries exist in install location
+    echo "==> Step 4: Verify installed binaries"
+    if ! verify_binaries_exist "${INSTALL_PREFIX}"; then
+        echo "    ❌ Required binaries missing from install location"
+        echo "       Build artifacts exist but installation failed"
+        return 1
+    fi
+    echo ""
+    
+    # Verify AIDL tools are NOT in install (production)
+    echo "==> Step 5: Verify production install (no AIDL tools)"
+    if ! verify_no_aidl_tools "${INSTALL_PREFIX}"; then
+        echo "    ❌ AIDL tools found in production install (should not be present)"
+        return 1
+    fi
+    echo ""
+    
+    # R11.10, R11.11: Verify all binaries (libs + bins) are ARM architecture
+    echo "==> Step 6: Verify ARM architecture"
+    if ! verify_architecture "${INSTALL_PREFIX}" "arm32" "ARM SDK"; then
+        echo "    ❌ Architecture verification failed"
+        return 1
+    fi
+    echo ""
+    
+    # R11.13: Clear summary (same format as test 10)
+    echo "=========================================="
+    echo "  ✅ Test 11 PASSED - ARM Production SDK"
+    echo "=========================================="
+    echo ""
+    echo "Build summary:"
+    echo "  Warnings: ${warnings}"
+    echo "  Errors:   ${errors}"
+    echo ""
+    echo "Key artifacts:"
+    echo "  SDK libraries:   ${INSTALL_PREFIX}/lib ($(ls -1 "${INSTALL_PREFIX}"/lib/*.so 2>/dev/null | wc -l) files)"
+    echo "  SDK binaries:    ${INSTALL_PREFIX}/bin ($(ls -1 "${INSTALL_PREFIX}"/bin/* 2>/dev/null | wc -l) files)"
+    echo "  SDK headers:     ${SDK_INCLUDE_DIR}"
+    echo "  AIDL tools:      NOT installed (production)"
+    echo ""
+    echo "Architecture:      ARM (32-bit armv7)"
+    echo ""
+}
+
+test_12() {
+    echo "=== Test 12: Examples build (native host) ==="
+    echo ""
+    
+    # R12.0: Clean all build artifacts and Android sources for self-contained test
+    echo "==> Cleaning all build artifacts and Android sources..."
+    ./build-linux-binder-aidl.sh --clean >/tmp/sdk_clean.log 2>&1 || true
+    echo "✅ Clean complete"
+    echo ""
+
+    # R12.1: Check SDK prerequisites and build if needed
+    echo "==> Checking SDK prerequisites..."
+    if [ ! -f "${CMAKE_INSTALL_PREFIX}/lib/libbinder.so" ]; then
+        echo "⚠️  SDK not found - building SDK first..."
+        echo ""
+        
+        # Ensure Android sources are cloned (needed for bison/flex tools)
+        if [ ! -d "android/build-tools" ]; then
+            echo "==> Cloning Android sources (needed for build tools)..."
+            if ! ./clone-android-binder-repo.sh >/tmp/sdk_clone.log 2>&1; then
+                echo "❌ Android source clone failed!"
+                tail -30 /tmp/sdk_clone.log
+                return 1
+            fi
+            echo "✅ Android sources cloned"
+            echo ""
+        fi
+        
+        # Build host AIDL tools
+        echo "==> Building host AIDL tools..."
+        if ! ./build-aidl-generator-tool.sh >/tmp/sdk_aidl_build.log 2>&1; then
+            echo "❌ AIDL tools build failed!"
+            tail -30 /tmp/sdk_aidl_build.log
             return 1
         fi
+        echo "✅ AIDL tools built"
+        echo ""
+        
+        # Build target binder SDK
+        echo "==> Building target Binder SDK..."
+        if ! ./build-linux-binder-aidl.sh no-host-aidl >/tmp/sdk_target_build.log 2>&1; then
+            echo "❌ SDK build failed!"
+            tail -30 /tmp/sdk_target_build.log
+            return 1
+        fi
+        echo "✅ SDK built successfully"
+        echo ""
     else
-        echo "❌ servicemanager binary not found"
+        echo "✅ SDK already available"
+    fi
+    echo ""
+    
+    # R12.2: Clean examples build artifacts only (not SDK)
+    # Don't call clean_build_state here as it would delete the SDK we just built
+    rm -rf ./out/build/examples 2>/dev/null || true
+    
+    echo "Examples build configuration:"
+    echo "  SDK prefix: ${CMAKE_INSTALL_PREFIX}"
+    echo ""
+    
+    # R12.3: Build examples using SDK (force mode auto-generates AIDL files)
+    echo "==> Building examples (FWManager)..."
+    if ! ./build-binder-example.sh force >/tmp/examples_host_build.log 2>&1; then
+        echo "❌ Examples build failed!"
+        echo ""
+        echo "Last 50 lines of build log:"
+        tail -50 /tmp/examples_host_build.log
+        echo ""
+        echo "Searching for errors:"
+        grep -i "error:" /tmp/examples_host_build.log | tail -20 || echo "  (no 'error:' messages found)"
+        return 1
+    fi
+    echo "✅ Examples build completed"
+    echo ""
+    
+    # R12.4: Verify example binaries exist
+    echo "==> Verifying example binaries..."
+    if [ ! -x "${CMAKE_INSTALL_PREFIX}/bin/FWManagerService" ]; then
+        echo "❌ FWManagerService not found"
+        return 1
+    fi
+    echo "✅ FWManagerService exists"
+    
+    if [ ! -x "${CMAKE_INSTALL_PREFIX}/bin/FWManagerClient" ]; then
+        echo "❌ FWManagerClient not found"
+        return 1
+    fi
+    echo "✅ FWManagerClient exists"
+    echo ""
+    
+    # R12.5: Verify architecture
+    if ! verify_architecture "${CMAKE_INSTALL_PREFIX}" "host" "examples"; then
+        echo "❌ Architecture verification failed"
         return 1
     fi
     echo ""
-
+    
     echo "=========================================="
-    echo "✅ Test 11 PASSED - ARM cross-compilation verified"
+    echo "  ✅ Test 12 PASSED - Examples Build (Host)"
     echo "=========================================="
-
-    return 0
+    echo ""
 }
+
+test_13() {
+    echo "=== Test 13: Examples build (ARM cross) ==="
+    echo ""
+    
+    # R13.1: Check if sc command is available
+    if ! command -v sc &> /dev/null; then
+        echo "⚠️  SKIPPED: 'sc' command not found"
+        echo "    Cross-compilation environment not available (optional for development)"
+        return 0
+    fi
+    
+    # R13.2: Check if rdk-kirkstone image exists
+    if ! sc docker list 2>/dev/null | grep -q "rdk-kirkstone"; then
+        echo "⚠️  SKIPPED: rdk-kirkstone Docker image not found"
+        echo "    Cross-compilation environment not configured (optional for development)"
+        return 0
+    fi
+    
+    # R13.0: Clean all build artifacts and Android sources for self-contained test
+    echo "==> Cleaning all build artifacts and Android sources..."
+    ./build-linux-binder-aidl.sh --clean >/tmp/sdk_clean.log 2>&1 || true
+    echo "✅ Clean complete"
+    echo ""
+
+    # Set up environment variables
+    local current_dir=$(pwd)
+    export INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}"
+
+    # R13.1: Check if sc command is available
+    if ! command -v sc &> /dev/null; then
+        echo "⚠️  SKIPPED: 'sc' command not found"
+        echo "    Cross-compilation environment not available (optional for development)"
+        return 0
+    fi
+    
+    # R13.2: Check if rdk-kirkstone image exists
+    if ! sc docker list 2>/dev/null | grep -q "rdk-kirkstone"; then
+        echo "⚠️  SKIPPED: rdk-kirkstone Docker image not found"
+        echo "    Cross-compilation environment not configured (optional for development)"
+        return 0
+    fi
+    
+    # R13.3: Build host AIDL tools (native, outside docker)
+    echo "==> Building host AIDL tools..."
+    if ! ./build-aidl-generator-tool.sh >/tmp/sdk_aidl_build.log 2>&1; then
+        echo "❌ AIDL tools build failed!"
+        tail -30 /tmp/sdk_aidl_build.log
+        return 1
+    fi
+    echo "✅ AIDL tools built"
+    echo ""
+    
+    # R13.3.5: Generate AIDL C++ files (outside Docker, using host tools)
+    echo "==> Generating AIDL C++ files from .aidl sources..."
+    export AIDL_BIN="${current_dir}/out/host/bin/aidl"
+    if ! "${current_dir}/example/generate_cpp.sh" >/tmp/aidl_gen.log 2>&1; then
+        echo "❌ AIDL C++ generation failed!"
+        tail -30 /tmp/aidl_gen.log
+        return 1
+    fi
+    echo "✅ AIDL C++ files generated"
+    echo ""
+    
+    # R13.4: Build ARM target Binder SDK (inside docker with RDK environment)
+    echo "ARM cross-compilation build configuration:"
+    echo "  Install prefix: ${INSTALL_PREFIX}"
+    echo "  Target arch:    ARM 32-bit (armv7)"
+    echo ""
+    
+    echo "==> Building ARM target Binder SDK in Docker..."
+    echo "    Command: sc docker run rdk-kirkstone + build-linux-binder-aidl.sh --no-host-aidl"
+    echo ""
+    
+    if ! sc docker run rdk-kirkstone \
+        ". /opt/toolchains/rdk-glibc-x86_64-arm-toolchain/environment-setup-armv7vet2hf-neon-oe-linux-gnueabi; export INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}; export TARGET_LIB32_VERSION=ON; export CMAKE_TOOLCHAIN_FILE=; cd ${current_dir}; ./build-linux-binder-aidl.sh --no-host-aidl" \
+        >/tmp/sdk_arm_build.log 2>&1; then
+        echo "❌ ARM SDK build failed!"
+        tail -50 /tmp/sdk_arm_build.log
+        echo ""
+        echo "Searching for errors:"
+        grep -i "error:" /tmp/sdk_arm_build.log | tail -20 || echo "  (no 'error:' messages found)"
+        return 1
+    fi
+    echo "✅ ARM SDK built successfully"
+    echo ""
+    
+    # Quick arch check
+    local lib_arch=$(file "${CMAKE_INSTALL_PREFIX}/lib/libbinder.so")
+    if ! echo "${lib_arch}" | grep -qi "ARM"; then
+        echo "❌ SDK is not ARM - build failed"
+        return 1
+    fi
+    echo "✅ ARM SDK available"
+    echo ""
+    
+    # R13.5: Build examples configuration
+    echo "ARM examples build configuration:"
+    echo "  SDK prefix: ${INSTALL_PREFIX}"
+    echo "  Target arch: ARM 32-bit (armv7)"
+    echo ""
+    
+    # R13.6: Build examples inside docker (C++ files already generated, just compile)
+    echo "==> Building ARM examples (FWManager)..."
+    echo "Command: sc docker run rdk-kirkstone + CMake + make for examples"
+    echo ""
+    
+    # Build examples directly with CMake (skip SDK build and AIDL generation)
+    # Add -Wl,-rpath-link to help linker find dependent libraries at link time
+    if ! sc docker run rdk-kirkstone \
+        ". /opt/toolchains/rdk-glibc-x86_64-arm-toolchain/environment-setup-armv7vet2hf-neon-oe-linux-gnueabi; export INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}; export TARGET_LIB32_VERSION=ON; export LDFLAGS=\"\${LDFLAGS} -Wl,-rpath-link=${CMAKE_INSTALL_PREFIX}/lib\"; unset CMAKE_TOOLCHAIN_FILE; cd ${current_dir}; mkdir -p out/build/examples && cd out/build/examples && cmake -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} -DBUILD_ENV_HOST=ON ${current_dir}/example && make -j\$(nproc) && make install" \
+        >/tmp/examples_arm_build.log 2>&1; then
+        echo "❌ ARM examples build failed!"
+        echo ""
+        echo "Last 50 lines of build log:"
+        tail -50 /tmp/examples_arm_build.log
+        echo ""
+        echo "Searching for errors:"
+        grep -i "error:" /tmp/examples_arm_build.log | tail -20 || echo "  (no 'error:' messages found)"
+        return 1
+    fi
+    echo "✅ ARM examples build completed"
+    echo ""
+    
+    # R13.7: Verify example binaries exist
+    echo "==> Verifying ARM example binaries..."
+    if [ ! -x "${CMAKE_INSTALL_PREFIX}/bin/FWManagerService" ]; then
+        echo "❌ FWManagerService not found"
+        return 1
+    fi
+    echo "✅ FWManagerService exists"
+    
+    if [ ! -x "${CMAKE_INSTALL_PREFIX}/bin/FWManagerClient" ]; then
+        echo "❌ FWManagerClient not found"
+        return 1
+    fi
+    echo "✅ FWManagerClient exists"
+    echo ""
+    
+    # R13.8: Verify ARM architecture
+    if ! verify_architecture "${CMAKE_INSTALL_PREFIX}" "arm32" "ARM examples"; then
+        echo "❌ Architecture verification failed"
+        return 1
+    fi
+    echo ""
+    
+    echo "=========================================="
+    echo "  ✅ Test 13 PASSED - Examples Build (ARM)"
+    echo "=========================================="
+    echo ""
+}
+
 
 run_test "1" "Clean Android sources" test_1
 run_test "1.1" "Clone Android sources" test_1_1
@@ -773,8 +1192,10 @@ run_test "6" "Build target binder libraries" test_6
 run_test "7" "Direct CMake build (defaults + install)" test_7
 run_test "8" "Direct CMake build (per BUILD.md)" test_8
 run_test "9" "Direct CMake build (per BUILD.md + install)" test_9
-run_test "10" "Production build (minimal flags + install)" test_10
-run_test "11" "Cross-compilation environment check (sc/RDK)" test_11
+run_test "10" "Production SDK build (native host, no examples)" test_10
+run_test "11" "Production SDK build (ARM cross, no examples)" test_11
+run_test "12" "Examples build (native host)" test_12
+run_test "13" "Examples build (ARM cross)" test_13
 
 echo ""
 TOTAL_TESTS=$((TESTS_PASSED + TESTS_FAILED))
@@ -791,3 +1212,4 @@ echo ""
 echo "Build outputs:"
 echo "  Host:   $(realpath ./out/host/bin/)"
 echo "  Target: $(realpath ./out/target/lib/)"
+echo "  Installed to: $(realpath ${CMAKE_INSTALL_PREFIX})"
