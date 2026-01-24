@@ -1,3 +1,4 @@
+#include <mutex>
 #include <com/rdk/hal/avbuffer/IAVBufferSpaceListener.h>
 #include <com/rdk/hal/avbuffer/BpAVBufferSpaceListener.h>
 namespace com {

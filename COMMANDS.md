@@ -4,15 +4,15 @@ Quick reference for all build scripts in this repository.
 
 ## Setup
 
-### Install Toolchain
+### Build Toolchain
 ```bash
-./install_binder.sh
+./build_binder.sh
 # or
-source ./install_binder.sh  # Updates PATH in current shell
+source ./build_binder.sh  # Updates PATH in current shell
 ```
 
-Installs Android Binder AIDL toolchain (aidl compiler, binder libraries).  
-Run `./install_binder.sh --help` for details.
+Builds Android Binder AIDL toolchain (aidl compiler, binder libraries).
+Run `./build_binder.sh --help` for details.
 
 ---
 
@@ -49,7 +49,7 @@ CC=arm-linux-gnueabihf-gcc CXX=arm-linux-gnueabihf-g++ ./build_interfaces.sh <mo
 ./freeze_interface.sh <module>
 ```
 
-Creates a frozen version (v1, v2, etc.) from the current working copy.  
+Creates a frozen version (v1, v2, etc.) from the current working copy.
 Output: `stable/<module>/v1/<module>-api/` and `stable/generated/<module>/v1/`
 
 ---
@@ -58,7 +58,7 @@ Output: `stable/<module>/v1/<module>-api/` and `stable/generated/<module>/v1/`
 
 | Script | Purpose | Example |
 |--------|---------|---------|
-| `./install_binder.sh` | Install AIDL toolchain | `source ./install_binder.sh` |
+| `./build_binder.sh` | Build AIDL toolchain | `source ./build_binder.sh` |
 | `./build_interfaces.sh` | Build interfaces | `./build_interfaces.sh boot` |
 | `./freeze_interface.sh` | Freeze interface version | `./freeze_interface.sh boot` |
 
@@ -128,7 +128,7 @@ scp -r out/* root@target:/usr/local/
 ```
 <module>/current/              # Working source files (edit here)
 stable/
-  <module>/current/            # Copied AIDL sources  
+  <module>/current/            # Copied AIDL sources
   <module>/v1/                 # Frozen version 1
   generated/<module>/current/  # Generated C++ code
   generated/<module>/v1/       # Generated code (frozen)
@@ -145,7 +145,7 @@ out/
 
 All scripts support `--help`:
 ```bash
-./install_binder.sh --help
+./build_binder.sh --help
 ./build_interfaces.sh --help
 ./freeze_interface.sh --help
 ```

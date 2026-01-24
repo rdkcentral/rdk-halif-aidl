@@ -38,9 +38,40 @@
 
 cmake_minimum_required(VERSION 3.8)
 
-project(RDK_HAL_AIDL_Modules LANGUAGES NONE VERSION 1.0)
+#######################################################################
+# Respect Yocto/external compiler and flags environment variables
+#######################################################################
+
+# CMake respects CC/CXX environment variables if set before project()
+# For Yocto integration: export CC, CXX, CFLAGS, CXXFLAGS in recipe
+# Example: CC="${CC}" CXX="${CXX}" cmake ...
+
+# Append environment CFLAGS/CXXFLAGS to CMake flags if provided
+if(DEFINED ENV{CFLAGS})
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} $ENV{CFLAGS}" CACHE STRING "C compiler flags" FORCE)
+    message(STATUS "Using CFLAGS from environment: $ENV{CFLAGS}")
+endif()
+
+if(DEFINED ENV{CXXFLAGS})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{CXXFLAGS}" CACHE STRING "C++ compiler flags" FORCE)
+    message(STATUS "Using CXXFLAGS from environment: $ENV{CXXFLAGS}")
+endif()
+
+if(DEFINED ENV{LDFLAGS})
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} $ENV{LDFLAGS}" CACHE STRING "Linker flags" FORCE)
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} $ENV{LDFLAGS}" CACHE STRING "Shared linker flags" FORCE)
+    message(STATUS "Using LDFLAGS from environment: $ENV{LDFLAGS}")
+endif()
+
+project(RDK_HAL_AIDL_Modules LANGUAGES CXX C VERSION 1.0)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules)
+
+# Display compiler information for verification
+message(STATUS "C Compiler:   ${CMAKE_C_COMPILER}")
+message(STATUS "C++ Compiler: ${CMAKE_CXX_COMPILER}")
+message(STATUS "C Flags:      ${CMAKE_C_FLAGS}")
+message(STATUS "CXX Flags:    ${CMAKE_CXX_FLAGS}")
 
 #######################################################################
 # Configuration variables with sensible defaults
@@ -157,14 +188,17 @@ else()
     message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
 endif()
 
-# Set standard installation directories
-include(GNUInstallDirs)
+# Set halif subdirectories as defaults BEFORE including GNUInstallDirs
+# This allows caller to override via -DCMAKE_INSTALL_LIBDIR=... while providing sensible defaults
 if (NOT DEFINED CMAKE_INSTALL_LIBDIR)
-    set(CMAKE_INSTALL_LIBDIR "lib/halif")
+    set(CMAKE_INSTALL_LIBDIR "lib/halif" CACHE PATH "Library install directory")
 endif()
 if (NOT DEFINED CMAKE_INSTALL_INCLUDEDIR)
-    set(CMAKE_INSTALL_INCLUDEDIR "include/halif")
+    set(CMAKE_INSTALL_INCLUDEDIR "include/halif" CACHE PATH "Header install directory")
 endif()
+
+# Set standard installation directories (will respect variables already set above)
+include(GNUInstallDirs)
 
 message(STATUS "Libraries will install to: ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 message(STATUS "Headers will install to: ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
@@ -182,7 +216,34 @@ include(${HOST_AIDL_DIR}/CMakeLists.inc)
 target_build_interfaces_libraries()
 
 #######################################################################
-# Post-build: Stage module libraries and headers
+# Stage headers BEFORE building so compilation uses staged headers
+#######################################################################
+
+message(STATUS "Staging generated headers to ${OUT_DIR}/target/include/halif/...")
+
+# Determine which modules to stage headers for
+if (INTERFACE_TARGET STREQUAL "all")
+    file(GLOB MODULE_DIRS LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/stable/generated/*")
+else()
+    set(MODULE_DIRS "${CMAKE_SOURCE_DIR}/stable/generated/${INTERFACE_TARGET}")
+endif()
+
+# Copy headers from stable/generated/ to out/build/include/
+foreach(module_dir ${MODULE_DIRS})
+    if (IS_DIRECTORY "${module_dir}")
+        get_filename_component(module_name "${module_dir}" NAME)
+        file(GLOB_RECURSE MODULE_HEADERS "${module_dir}/*.h")
+        foreach(header ${MODULE_HEADERS})
+            file(RELATIVE_PATH rel_path "${CMAKE_SOURCE_DIR}/stable/generated" "${header}")
+            get_filename_component(dest_dir "${OUT_DIR}/build/include/${rel_path}" DIRECTORY)
+            file(MAKE_DIRECTORY "${dest_dir}")
+            file(COPY_FILE "${header}" "${OUT_DIR}/build/include/${rel_path}")
+        endforeach()
+    endif()
+endforeach()
+
+#######################################################################
+# Post-build: Stage module libraries to out/target/lib/halif/
 #######################################################################
 # Invoke cmake_stage_modules.cmake after all libraries are built
 
@@ -200,8 +261,13 @@ add_custom_target(stage_modules ALL
 
 # Ensure staging happens after all libraries are built
 if (INTERFACE_TARGET STREQUAL "all")
-    # When building all modules, we need to find all library targets
-    # The staging script will glob for lib*-vcurrent-cpp.so files
+    # When building all modules, add dependencies on all library targets
+    get_property(all_targets DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY BUILDSYSTEM_TARGETS)
+    foreach(target ${all_targets})
+        if (target MATCHES ".*-vcurrent-cpp$")
+            add_dependencies(stage_modules ${target})
+        endif()
+    endforeach()
 else()
     # When building a specific module, depend on its library target
     set(LIB_TARGET "${INTERFACE_TARGET}-vcurrent-cpp")

@@ -1,3 +1,4 @@
+#include <mutex>
 #include <com/rdk/hal/hdmiinput/IHDMIInputController.h>
 #include <com/rdk/hal/hdmiinput/BpHDMIInputController.h>
 namespace com {

@@ -1,3 +1,4 @@
+#include <mutex>
 #include <com/rdk/hal/avclock/IAVClockManager.h>
 #include <com/rdk/hal/avclock/BpAVClockManager.h>
 namespace com {

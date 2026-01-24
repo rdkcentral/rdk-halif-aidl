@@ -1,3 +1,4 @@
+#include <mutex>
 #include <com/rdk/hal/hdmicec/IHdmiCecEventListener.h>
 #include <com/rdk/hal/hdmicec/BpHdmiCecEventListener.h>
 namespace com {

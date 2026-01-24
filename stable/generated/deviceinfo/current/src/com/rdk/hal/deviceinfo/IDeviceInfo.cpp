@@ -1,3 +1,4 @@
+#include <mutex>
 #include <com/rdk/hal/deviceinfo/IDeviceInfo.h>
 #include <com/rdk/hal/deviceinfo/BpDeviceInfo.h>
 namespace com {

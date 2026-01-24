@@ -1,3 +1,4 @@
+#include <mutex>
 #include <com/rdk/hal/planecontrol/IPlaneControl.h>
 #include <com/rdk/hal/planecontrol/BpPlaneControl.h>
 namespace com {

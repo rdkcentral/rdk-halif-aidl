@@ -1,3 +1,4 @@
+#include <mutex>
 #include <com/rdk/hal/flash/IFlash.h>
 #include <com/rdk/hal/flash/BpFlash.h>
 namespace com {

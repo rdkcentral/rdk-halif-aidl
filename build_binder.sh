@@ -24,10 +24,10 @@
 # Show help if requested (only when executed, not sourced)
 if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
     cat << EOF
-Usage: ./install_binder.sh [clean]
-   or: source ./install_binder.sh
+Usage: ./build_binder.sh [clean]
+   or: source ./build_binder.sh
 
-Install and build the Android Binder SDK for RDK HAL AIDL modules.
+Build and install the Android Binder SDK for RDK HAL AIDL modules.
 
 Description:
   This script (Stage 1 of two-stage build):
@@ -40,8 +40,8 @@ Description:
   4. Adds tools to PATH for current shell
 
 Usage:
-  Execute directly:  ./install_binder.sh [clean]
-  Source in shell:   source ./install_binder.sh
+  Execute directly:  ./build_binder.sh [clean]
+  Source in shell:   source ./build_binder.sh
 
   clean - Force rebuild by removing existing SDK and build directories
 
@@ -68,18 +68,18 @@ Environment (exported):
   PATH                   Updated to include AIDL compiler tools
 
 Examples:
-  ./install_binder.sh           # Build Binder SDK (version 2.0.0)
-  ./install_binder.sh clean     # Force rebuild
-  source ./install_binder.sh    # Build and update current shell
+  ./build_binder.sh           # Build Binder SDK (version 2.0.0)
+  ./build_binder.sh clean     # Force rebuild
+  source ./build_binder.sh    # Build and update current shell
 
   # Pin to different version:
-  BINDER_VERSION=main ./install_binder.sh
+  BINDER_VERSION=main ./build_binder.sh
 
   # Yocto/BitBake override example:
-  BINDER_SDK_DIR=/path/to/sysroot/usr ./install_binder.sh
+  BINDER_SDK_DIR=/path/to/sysroot/usr ./build_binder.sh
 
   # Use existing linux_binder_idl clone:
-  BINDER_SOURCE_DIR=/path/to/linux_binder_idl ./install_binder.sh
+  BINDER_SOURCE_DIR=/path/to/linux_binder_idl ./build_binder.sh
 
 Next Steps:
   Build HAL modules with: ./build_module.sh <module>
@@ -128,14 +128,11 @@ clone_repo() {
     if [ -d "$BINDER_REPO_DIR" ]; then
         echo "✓ Binder source already cloned at $BINDER_REPO_DIR"
 
-        # Verify version if not clean build
+        # Show current branch/commit for information only
         if [ "$CLEAN" != true ]; then
             cd "$BINDER_REPO_DIR"
-            CURRENT_REF=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || git rev-parse HEAD 2>/dev/null)
-            if [ "$CURRENT_REF" != "$BINDER_VERSION" ]; then
-                echo "⚠️  Warning: Existing clone is at $CURRENT_REF but BINDER_VERSION=$BINDER_VERSION"
-                echo "   Run with 'clean' to checkout requested version"
-            fi
+            CURRENT_REF=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null)
+            echo "   Current: $CURRENT_REF"
             cd - > /dev/null
         fi
 
@@ -145,16 +142,18 @@ clone_repo() {
     echo "Cloning Binder toolchain repository (version: $BINDER_VERSION)..."
     mkdir -p "$INSTALL_DIR"
 
-    # Clone and checkout specific version
+    # Clone repository
     git clone "$REPO_URL" "$BINDER_REPO_DIR" || return 1
-    cd "$BINDER_REPO_DIR"
-    git checkout "$BINDER_VERSION" || {
-        echo "❌ Failed to checkout version $BINDER_VERSION"
-        return 1
-    }
-    cd - > /dev/null
 
-    echo "✓ Cloned successfully at version $BINDER_VERSION"
+    # Checkout requested version (branch, tag, or commit)
+    cd "$BINDER_REPO_DIR"
+    if git checkout "$BINDER_VERSION" 2>/dev/null; then
+        echo "✓ Cloned and checked out version $BINDER_VERSION"
+    else
+        echo "⚠️  Version/branch '$BINDER_VERSION' not found, using default branch"
+        echo "   This is normal for development versions"
+    fi
+    cd - > /dev/null
 }
 
 # ------------------------------------------------------------------------------
@@ -163,9 +162,27 @@ clone_repo() {
 clean_build() {
     if [ "$CLEAN" = true ]; then
         echo "Cleaning previous build..."
+
+        # Clean toolchain build artifacts if toolchain exists
+        if [ -d "$BINDER_REPO_DIR" ] && [ -f "$BINDER_REPO_DIR/build-linux-binder-aidl.sh" ]; then
+            echo "  Cleaning toolchain build artifacts..."
+            cd "$BINDER_REPO_DIR"
+            bash build-linux-binder-aidl.sh --clean 2>/dev/null || true
+            cd - > /dev/null
+            echo "  ✓ Toolchain cleaned"
+        fi
+
+        # Clean SDK installation directories
         rm -rf "$BINDER_BUILD_DIR" "$SDK_INSTALL_DIR" "$SDK_INCLUDE_DIR"
         echo "✓ Cleaned"
         echo ""
+        echo "Removed:"
+        echo "  - $BINDER_BUILD_DIR"
+        echo "  - $SDK_INSTALL_DIR"
+        echo "  - $SDK_INCLUDE_DIR"
+        echo ""
+        echo "✅ Clean complete"
+        exit 0
     fi
 }
 
@@ -177,7 +194,7 @@ build_sdk() {
     if [ -f "$SDK_INSTALL_DIR/.sdk_ready" ] && [ "$CLEAN" != true ]; then
         echo "✓ Binder SDK already built at $SDK_INSTALL_DIR"
         echo ""
-        echo "To rebuild, run: ./install_binder.sh clean"
+        echo "To rebuild, run: ./build_binder.sh clean"
         echo ""
         return 0
     fi

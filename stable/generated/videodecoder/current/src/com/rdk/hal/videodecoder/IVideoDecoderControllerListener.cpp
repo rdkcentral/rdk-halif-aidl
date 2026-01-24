@@ -1,3 +1,4 @@
+#include <mutex>
 #include <com/rdk/hal/videodecoder/IVideoDecoderControllerListener.h>
 #include <com/rdk/hal/videodecoder/BpVideoDecoderControllerListener.h>
 namespace com {

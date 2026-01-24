@@ -1,3 +1,4 @@
+#include <mutex>
 #include <com/rdk/hal/hdmicec/IHdmiCec.h>
 #include <com/rdk/hal/hdmicec/BpHdmiCec.h>
 namespace com {

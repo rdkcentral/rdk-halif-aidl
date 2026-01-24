@@ -20,6 +20,7 @@
 
 # Helper script to update AIDL APIs and build interface libraries.
 #
+#
 # This script:
 #   1. Runs aidl_ops -u to copy {module}/current/*.aidl → stable/aidl/{module}/current/
 #   2. Generates C++ code → stable/generated/{module}/current/
@@ -53,6 +54,8 @@ Arguments:
              - <name> : Build specific module (e.g., boot, videodecoder)
 
 Commands:
+  sdk             Stage Binder SDK only (Stage 1), skip AIDL generation and compilation
+  sdk-only        Alias for 'sdk'
   clean           Remove out/ directory (build outputs)
   cleanstable     Remove stable/ directory (generated code and AIDL copies)
   cleanall        Remove out/, stable/, and build-tools/ directories
@@ -71,10 +74,11 @@ Options:
 
 Description:
   This script performs a complete build:
-  1. Updates AIDL APIs (copies module/current → stable/<module>/<version>/)
-  2. Generates C++ code → stable/generated/<module>/<version>/
-  3. Builds shared libraries (.so) and headers (.h)
-  4. Outputs everything to out/ directory ready for deployment
+  1. Stage 1: Stage Binder SDK from toolchain to out/target/
+  2. Stage 2: Update AIDL APIs and generate C++ code to stable/
+  3. Stage 3: Compile libraries and stage to out/
+
+  Use 'sdk' or 'sdk-only' command to only perform Stage 1 (SDK staging).
 
 Build Configuration:
   Use CC/CXX environment variables to control compiler and flags:
@@ -84,8 +88,9 @@ Build Configuration:
 
 Examples:
   # Building
-  ./build_interfaces.sh all                    # Build all modules
-  ./build_interfaces.sh boot                   # Build boot module
+  ./build_interfaces.sh all                    # Build all modules (all stages)
+  ./build_interfaces.sh boot                   # Build boot module (all stages)
+  ./build_interfaces.sh sdk                    # Stage SDK only (Stage 1)
   ./build_interfaces.sh boot --version current # Explicit version
   ./build_interfaces.sh videodecoder --version v1  # Build frozen v1
 
@@ -123,8 +128,38 @@ EOF
     exit 0
 fi
 
-# Handle clean commands
+# Handle commands
 case "${1:-}" in
+    sdk|sdk-only)
+        echo "=========================================="
+        echo "  Stage 1: Binder SDK Build & Staging"
+        echo "=========================================="
+        echo ""
+
+        # Call build_binder.sh to handle SDK build
+        BUILD_BINDER_SCRIPT="$SCRIPT_DIR/build_binder.sh"
+
+        if [ ! -f "$BUILD_BINDER_SCRIPT" ]; then
+            echo "❌ ERROR: build_binder.sh not found at $BUILD_BINDER_SCRIPT"
+            echo ""
+            exit 1
+        fi
+
+        # Execute build_binder.sh (it handles clone, build, organize, PATH setup)
+        if ! bash "$BUILD_BINDER_SCRIPT"; then
+            echo ""
+            echo "❌ ERROR: Binder SDK build failed"
+            echo ""
+            exit 1
+        fi
+
+        echo ""
+        echo "✅ Stage 1 Complete - Binder SDK Ready"
+        echo ""
+        echo "SDK Location: $SCRIPT_DIR/out/target/"
+        echo ""
+        exit 0
+        ;;
     clean)
         echo "🧹 Cleaning build outputs..."
         rm -rf out/
@@ -171,7 +206,7 @@ case "${1:-}" in
             fi
 
             # Check if headers were generated
-            HDR_COUNT=$(find stable/generated -name "*.h" 2>/dev/null | wc -l || echo 0)
+            HDR_COUNT=$(find out/target/include/halif -name "*.h" 2>/dev/null | wc -l || echo 0)
             HDR_COUNT=$(echo "$HDR_COUNT" | tr -d ' ')
 
             if [ "${HDR_COUNT:-0}" -gt 0 ]; then
@@ -275,7 +310,7 @@ case "${1:-}" in
         echo "--------------------------------------------------------"
         # Verify binder SDK exists
         if [ ! -f "out/target/.sdk_ready" ]; then
-            echo "  ❌ Binder SDK not found - run ./install_binder.sh first"
+            echo "  ❌ Binder SDK not found - run ./build_binder.sh first"
             exit 1
         fi
         echo "  ✅ Binder SDK found"
@@ -686,14 +721,14 @@ EOF
 esac
 
 # Ensure binder toolchain is installed and PATH is set
-if [ -f "./install_binder.sh" ]; then
-    source ./install_binder.sh
+if [ -f "./build_binder.sh" ]; then
+    source ./build_binder.sh
     if [ $? -ne 0 ]; then
         echo "❌ Critical Error: Failed to setup Binder Toolchain."
         exit 1
     fi
 else
-    echo "❌ Error: install_binder.sh not found in root."
+    echo "❌ Error: build_binder.sh not found in root."
     exit 1
 fi
 
@@ -720,12 +755,13 @@ ROOT_DIR=$(pwd)
 STABLE_DIR="${ROOT_DIR}/stable"
 OUT_DIR="${ROOT_DIR}/out"              # Final output: headers + libs for deployment
 BUILD_DIR="${ROOT_DIR}/build/${VERSION}"  # CMake build directory
-SDK_INCLUDE_DIR="${BUILD_DIR}/sdk/include"
-SDK_LIB_DIR="${BUILD_DIR}/sdk/lib"
 
-# Use BINDER_TOOLCHAIN_ROOT exported by install_binder.sh
+# Use BINDER_TOOLCHAIN_ROOT exported by build_binder.sh
 BINDER_ROOT="${BINDER_TOOLCHAIN_ROOT:-${ROOT_DIR}/build-tools/linux_binder_idl}"
 AIDL_OPS="${BINDER_ROOT}/host/aidl_ops.py"
+
+# SDK location where build_binder.sh installs (not toolchain source)
+SDK_DIR="${ROOT_DIR}/out/target"
 
 echo "=========================================="
 echo "  Building AIDL Interfaces"
@@ -737,8 +773,6 @@ echo "=========================================="
 
 mkdir -p "$OUT_DIR"
 mkdir -p "$BUILD_DIR"
-mkdir -p "$SDK_INCLUDE_DIR"
-mkdir -p "$SDK_LIB_DIR"
 
 # Create Python helper script for dependency resolution
 cat > /tmp/resolve_deps_$$.py << 'EOFPY'
@@ -793,19 +827,9 @@ EOFPY
 
 RESOLVE_DEPS_SCRIPT="/tmp/resolve_deps_$$.py"
 
-# Stage SDK from toolchain
-echo "--> [Step 1/4] Staging SDK..."
-TOOLCHAIN_INSTALL_DIR="$BINDER_ROOT/out/target"
-if [ -d "$TOOLCHAIN_INSTALL_DIR/include" ]; then
-    cp -au "$TOOLCHAIN_INSTALL_DIR/include/." "$SDK_INCLUDE_DIR/" 2>/dev/null || true
-fi
-if [ -d "$TOOLCHAIN_INSTALL_DIR/lib" ]; then
-    cp -au "$TOOLCHAIN_INSTALL_DIR/lib/"*.so* "$SDK_LIB_DIR/" 2>/dev/null || true
-fi
-
 # Determine which modules to process
+echo "--> [Step 1/4] Analyzing dependencies..."
 if [ "$MODULE" == "all" ]; then
-    echo "--> [Step 2/4] Calculating build order..."
     $AIDL_OPS -a -r "$ROOT_DIR" -o "$STABLE_DIR" > /dev/null
     DEPS_FILE="${STABLE_DIR}/dependencies.txt"
     if [ -f "$DEPS_FILE" ]; then
@@ -817,7 +841,6 @@ if [ "$MODULE" == "all" ]; then
     fi
 else
     # Building a specific module - calculate full dependency tree
-    echo "--> [Step 2/4] Calculating dependencies for $MODULE..."
     $AIDL_OPS -a -r "$ROOT_DIR" -o "$STABLE_DIR" >/dev/null 2>&1
     DEPS_FILE="${STABLE_DIR}/dependencies.txt"
 
@@ -859,7 +882,7 @@ else
 fi
 
 # Update APIs for each module
-echo "--> [Step 3/4] Updating APIs..."
+echo "--> [Step 2/4] Updating APIs..."
 for mod in $MODULES; do
     echo "    Updating: $mod"
     $AIDL_OPS -u -r "$ROOT_DIR" -o "$STABLE_DIR" "$mod" || exit 1
@@ -884,52 +907,32 @@ if [ -d "$STABLE_DIR/generated" ]; then
     done
 fi
 
-# Build with CMake
-echo "--> [Step 4/4] Building libraries..."
+# Build with CMake (Stage 3)
+echo "--> [Step 3/4] Building libraries..."
 
-# Check if we need to reconfigure CMake due to target change
-NEEDS_RECONFIG=false
-if [ -f "${BUILD_DIR}/CMakeCache.txt" ]; then
-    CACHED_TARGET=$(grep "^INTERFACE_TARGET:" "${BUILD_DIR}/CMakeCache.txt" | cut -d= -f2)
-    if [ "$MODULE" == "all" ] && [ -n "$CACHED_TARGET" ]; then
-        NEEDS_RECONFIG=true
-    elif [ "$MODULE" != "all" ] && [ "$CACHED_TARGET" != "$MODULE" ]; then
-        NEEDS_RECONFIG=true
-    fi
-fi
+# Delegate to build_modules.sh for consistency
+BUILD_MODULES_SCRIPT="${ROOT_DIR}/build_modules.sh"
 
-if [ "$NEEDS_RECONFIG" = true ]; then
-    echo "    Reconfiguring CMake (target changed)..."
-    rm -rf "${BUILD_DIR}"
-fi
-
-# Pass the module name to CMake if building a specific module
-if [ "$MODULE" != "all" ]; then
-    MODULE_ARG="-DINTERFACE_TARGET=${MODULE}"
-else
-    MODULE_ARG="-DINTERFACE_TARGET=all"
-fi
-
-cmake -S"${ROOT_DIR}" -B"${BUILD_DIR}" \
-    -DAIDL_SRC_VERSION="${VERSION}" \
-    -DLINUX_BINDER_AIDL_ROOT="${BINDER_ROOT}" \
-    -DLINUX_BINDER_AIDL_ROOT_OUT="${STABLE_DIR}" \
-    -DHOST_AIDL_DIR="${BINDER_ROOT}/host" \
-    -DINTERFACES_ROOT_DIRS="${ROOT_DIR}" \
-    -DSDK_INCLUDE_DIR="${SDK_INCLUDE_DIR}" \
-    -DSDK_LIB_DIR="${SDK_LIB_DIR}" \
-    ${MODULE_ARG}
-
-if [ $? -ne 0 ]; then
-    echo "❌ CMake configuration failed"
+if [ ! -x "$BUILD_MODULES_SCRIPT" ]; then
+    echo "❌ build_modules.sh not found or not executable: $BUILD_MODULES_SCRIPT"
     exit 1
 fi
 
-JOBS=$(command -v nproc >/dev/null 2>&1 && nproc || echo 4)
-cmake --build "${BUILD_DIR}" -j"$JOBS"
+# Construct arguments for build_modules.sh
+BUILD_ARGS=()
+if [ "$MODULE" != "all" ]; then
+    BUILD_ARGS+=("$MODULE")
+else
+    BUILD_ARGS+=("all")
+fi
+
+BUILD_ARGS+=("--version" "$VERSION")
+BUILD_ARGS+=("--sdk-dir" "$SDK_DIR")
+
+# Call build_modules.sh
+"$BUILD_MODULES_SCRIPT" "${BUILD_ARGS[@]}"
 
 if [ $? -eq 0 ]; then
-    # Staging is handled by cmake_stage_modules.cmake during build
     echo ""
     echo "✅ Build Complete - SDK Ready for Deployment"
     echo ""
