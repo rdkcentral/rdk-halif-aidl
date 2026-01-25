@@ -203,6 +203,33 @@ build_sdk() {
         echo "❌ Error: Binder source not found at $BINDER_REPO_DIR"
         return 1
     fi
+    
+    # Clone Android Binder sources if not already present
+    if [ ! -d "$BINDER_REPO_DIR/android" ]; then
+        echo "Cloning Android Binder sources..."
+        cd "$BINDER_REPO_DIR"
+        if [ -f "./clone-android-binder-repo.sh" ]; then
+            bash ./clone-android-binder-repo.sh
+            if [ $? -ne 0 ]; then
+                echo "❌ ERROR: Failed to clone Android sources"
+                cd - > /dev/null
+                return 1
+            fi
+        else
+            echo "❌ ERROR: clone-android-binder-repo.sh not found"
+            cd - > /dev/null
+            return 1
+        fi
+        cd - > /dev/null
+        echo "✓ Android sources cloned"
+    fi
+
+    # Remove CMakeCache.txt to avoid stale configuration from previous builds
+    # This is critical when switching between different build configurations
+    if [ -f "$BINDER_BUILD_DIR/CMakeCache.txt" ]; then
+        echo "Removing stale CMake cache..."
+        rm -f "$BINDER_BUILD_DIR/CMakeCache.txt"
+    fi
 
     echo "Configuring binder SDK..."
     cmake -S "$BINDER_REPO_DIR" -B "$BINDER_BUILD_DIR" \

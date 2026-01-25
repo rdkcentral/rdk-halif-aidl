@@ -888,8 +888,12 @@ for mod in $MODULES; do
     $AIDL_OPS -u -r "$ROOT_DIR" -o "$STABLE_DIR" "$mod" || exit 1
 done
 
-# Note: C++ code generation is handled by CMake via CMakeLists.inc
-# which calls aidl_ops -g automatically during the build
+# Generate C++ code from AIDL files
+echo "--> [Step 2.5/4] Generating C++ code..."
+for mod in $MODULES; do
+    echo "    Generating: $mod"
+    $AIDL_OPS -g -r "$ROOT_DIR" -o "$STABLE_DIR" "$mod" || exit 1
+done
 
 # Sanitize generated files (mutex include fix)
 if [ -d "$STABLE_DIR/generated" ]; then
