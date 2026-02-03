@@ -25,7 +25,7 @@ import com.rdk.hal.audiomixer.IAudioMixerControllerListener;
 /**
  * @brief     Audio Mixer Controller HAL interface.
  * @details   Provides stateful and runtime control over a specific platform audio mixer resource.
- *            This includes lifecycle management (start/stop), flushing, signaling end-of-stream,
+ *            This includes lifecycle management (start/stop), flushing, signalling end-of-stream,
  *            property configuration, and event listener management. Intended for use by the
  *            middleware audio server and platform integrators.
  * @author    Luc Kennedy-Lamb
@@ -45,15 +45,6 @@ interface IAudioMixerController {
      * @see       getProperty()
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);
-
-    /**
-     * @brief     Gets a property value from the controlled mixer instance.
-     * @param[in] property      The property key (from Property enum).
-     * @return    The current property value.
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if property not supported.
-     * @see       setProperty()
-     */
-    PropertyValue getProperty(in Property property);
 
     /**
      * @brief     Starts audio mixing for this mixer instance.
@@ -104,7 +95,7 @@ interface IAudioMixerController {
     void registerListener(in IAudioMixerEventListener listener);
 
     /**
-     * @brief     Unregisters a previously registered mixer event listener.
+     * @brief     Un-registers a previously registered mixer event listener.
      * @param[in] listener   Instance of IAudioMixerEventListener to remove.
      */
     void unregisterListener(in IAudioMixerEventListener listener);

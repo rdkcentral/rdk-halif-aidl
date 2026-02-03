@@ -38,23 +38,32 @@ set(COMMON_SRC_DIR ${COMMON_MODULE_PATH}/${COMMON_VERSION}/com/rdk/hal)
 set(AUDIO_DECODER_SRC_DIR ${AUDIO_DECODER_MODULE_PATH}/${AUDIO_DECODER_VERSION}/com/rdk/hal/audiodecoder)
 
 set(SRC
+    # Parcelables and Enums
     ${SRC_DIR}/Capabilities.aidl
-    ${SRC_DIR}/Input.aidl
+    ${SRC_DIR}/MixerInput.aidl
+    ${SRC_DIR}/AudioSourceType.aidl
+    ${SRC_DIR}/InputRouting.aidl
     ${SRC_DIR}/ContentType.aidl
+    ${SRC_DIR}/State.aidl
+    ${SRC_DIR}/ConnectionState.aidl
+    ${SRC_DIR}/Property.aidl
+    ${SRC_DIR}/OutputPortProperty.aidl
+    ${SRC_DIR}/AQProcessor.aidl
+    ${SRC_DIR}/AQParameter.aidl
+    ${SRC_DIR}/OutputFormat.aidl
+    ${SRC_DIR}/TranscodeFormat.aidl
+    ${SRC_DIR}/MixingModes.aidl
+    ${SRC_DIR}/OutputPortCapabilties.aidl
+    # Interfaces
     ${SRC_DIR}/IAudioMixer.aidl
     ${SRC_DIR}/IAudioMixerController.aidl
-    ${SRC_DIR}/IAudioMixerControllerListener.aidl
+    ${SRC_DIR}/IAudioMixerEventListener.aidl
     ${SRC_DIR}/IAudioMixerManager.aidl
-    ${SRC_DIR}/IAQProcessor.aidl
-    ${SRC_DIR}/AQParameter.aidl
     ${SRC_DIR}/IAudioOutputPort.aidl
-    ${SRC_DIR}/OutputPortCapabilities.aidl
-    ${SRC_DIR}/OutputFormat.aidl
     ${SRC_DIR}/IAudioOutputPortListener.aidl
-    ${SRC_DIR}/MixingMode.aidl
-    # Add more as you introduce new types
+    # External dependencies
     ${AUDIO_DECODER_SRC_DIR}/Codec.aidl
-    # Add other dependencies (e.g., Volume, State) as needed
+    ${COMMON_SRC_DIR}/PropertyValue.aidl
 )
 
 set(INCLUDE_DIRECTORY

@@ -29,10 +29,14 @@ import com.rdk.hal.audiomixer.IAudioMixer;
  * This interface is implemented by the vendor layer and allows the RDK
  * middleware to discover and control available mixer resources.
  */
+@VintfStability
 interface IAudioMixerManager {
+    /** The service name for registration with Binder Service Manager. */
+    const @utf8InCpp String serviceName = "audiomixer";
+
     /**
      * @brief Returns a list of available audio mixer instance IDs.
-     * 
+     *
      * This function can be called at any time. The returned set must
      * be stable for the lifetime of the process.
      *
@@ -42,7 +46,7 @@ interface IAudioMixerManager {
 
     /**
      * @brief Acquires a specific audio mixer interface by ID.
-     * 
+     *
      * @param id Mixer resource identifier.
      * @return IAudioMixer interface for controlling the mixer, or null if unavailable.
      */

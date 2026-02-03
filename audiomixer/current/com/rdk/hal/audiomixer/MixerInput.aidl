@@ -22,10 +22,19 @@ import com.rdk.hal.audiomixer.ContentType;
 import com.rdk.hal.audiodecoder.Codec;
 
 /**
- * @brief Audio Mixer Input Definition.
+ * @brief Audio Mixer Input Capability Definition.
  *
- * Specifies the supported content types (STREAM, CLIP, TTS) and codecs
- * (PCM, AC3, etc.) for a given input on a mixer resource.
+ * Describes the capabilities of a single mixer input, including supported
+ * content types (STREAM, CLIP, TTS) and codecs (PCM, AC3, etc.).
+ *
+ * Usage workflow:
+ * 1. Call IAudioMixer.getCapabilities() to retrieve Capabilities.inputs[] array
+ * 2. Examine each inputs[i] to find a mixer input that supports your codec/content type
+ * 3. Use the array index i in InputRouting to connect your audio source to that mixer input
+ *
+ * For example, to route compressed AC3 audio:
+ * - Check inputs[0].supportedCodecs contains Codec.AC3
+ * - Use setInputRouting() with routing[0] to connect your source to mixer input 0
  *
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
@@ -34,7 +43,7 @@ import com.rdk.hal.audiodecoder.Codec;
  * @copyright Copyright 2024 RDK Management
  */
 @VintfStability
-parcelable Input {
+parcelable MixerInput {
     /**
      * @brief List of content types this input supports.
      */
@@ -44,4 +53,12 @@ parcelable Input {
      * @brief List of codecs supported for this input.
      */
     Codec[] supportedCodecs;
+
+    /**
+     * @brief Human-readable name for this audio mixer input.
+     * @details May be null if not set by the platform.
+     *          Examples: "main", "assoc", "pcm1", "pcm2", "aux".
+     *          Although optional, this field aids debugging, logging, and platform introspection.
+     */
+    @nullable String name;
 }

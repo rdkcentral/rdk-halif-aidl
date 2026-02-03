@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.audiomixer;
 
-import com.rdk.hal.audiomixer.Input;
+import com.rdk.hal.audiomixer.MixerInput;
 
 /**
  * @brief Capabilities structure for Audio Mixer.
@@ -41,13 +41,24 @@ parcelable Capabilities {
     boolean isSecure;
 
     /**
-     * @brief Describes the available audio mixer inputs.
+     * @brief Describes the available audio mixer input specifications.
      *
-     * Each input specifies supported content types (e.g., STREAM, CLIP)
-     * and codecs (e.g., PCM, AC3, AAC).
-     * The number of entries indicates the number of concurrently supported input streams.
+     * Contains N mixer input capability definitions where each array element describes
+     * the capabilities of the mixer input at that index position.
+     *
+     * The array index directly corresponds to the mixer input index:
+     * - inputs[0] = mixer input 0 capabilities
+     * - inputs[1] = mixer input 1 capabilities
+     * - etc.
+     *
+     * When routing audio sources via setInputRouting(), check this array to:
+     * 1. Find which mixer input(s) support your required codec (e.g., AC3, PCM)
+     * 2. Verify the input supports your content type (STREAM, CLIP, TTS)
+     * 3. Use the matching array index in the InputRouting array to connect your source
+     *
+     * The array length indicates the total number of mixer inputs available.
      */
-    Input[] inputs;
+    MixerInput[] inputs;
 
     /**
     * @brief Human-readable name for this audio mixer input.

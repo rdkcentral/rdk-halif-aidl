@@ -63,7 +63,7 @@ interface IAudioOutputPort {
     void registerListener(in IAudioOutputPortListener listener);
 
     /**
-     * @brief    Unregisters a previously registered listener.
+     * @brief    Un-registers a previously registered listener.
      */
     void unregisterListener(in IAudioOutputPortListener listener);
 }

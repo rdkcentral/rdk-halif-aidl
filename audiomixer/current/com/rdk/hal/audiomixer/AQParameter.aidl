@@ -30,6 +30,7 @@
  * @author   Gerald Weatherup
  * @copyright Copyright 2024 RDK Management
  */
+@VintfStability
 @Backing(type="int")
 enum AQParameter {
     VOLUME_LEVELLER = 0,          /**< Automatic volume levelling */

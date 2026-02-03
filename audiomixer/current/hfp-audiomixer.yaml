@@ -29,6 +29,11 @@ audiomixer:
   resources:
     - id: 0  # Mixer instance 0 (secure)
       isSecure: true
+      # Supported audio source types for dynamic input routing
+      supportedSourceTypes:
+        - AUDIO_DECODER
+        - HDMI_INPUT
+        - APPLICATION_AUDIO
       inputs:
         - name: main
           supportedContentTypes:
@@ -90,6 +95,7 @@ audiomixer:
         - PCM
         - AC3
         - EAC3
+        - MAT
       supportedTranscodeFormats:
         - AC3
       supportedAQProcessors:

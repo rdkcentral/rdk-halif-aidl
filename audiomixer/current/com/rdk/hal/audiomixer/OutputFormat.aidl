@@ -43,16 +43,24 @@ enum OutputFormat {
     /** Output is passed through as received (bitstream, no re-encoding). */
     PASSTHROUGH = 1,
 
-    /** Output as uncompressed PCM (typically stereo). */
-    PCM_STEREO = 2,
+    /** Output as uncompressed PCM. */
+    PCM = 2,
 
-    /** Output as Dolby Digital (AC-3) bitstream. */
-    DOLBY_DIGITAL = 3,
+    /** Output as AC-3 (Dolby Digital) bitstream. */
+    AC3 = 3,
 
-    /** Output as Dolby Digital Plus (E-AC-3) bitstream. */
-    DOLBY_DIGITAL_PLUS = 4,
+    /** Output as E-AC-3 (Dolby Digital Plus) bitstream. */
+    EAC3 = 4,
 
     /** Output as Dolby MAT (Metadata-enhanced Audio Transmission). */
-    DOLBY_MAT = 5
-    // Extend with additional formats as needed, e.g., DTS, TrueHD, etc.
+    MAT = 5,
+
+    /** Output as Dolby TrueHD bitstream. */
+    TRUEHD = 6,
+
+    /** Output as DTS bitstream. */
+    DTS = 7,
+
+    /** Output as DTS-HD Master Audio bitstream. */
+    DTS_HD = 8
 };

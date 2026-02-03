@@ -16,49 +16,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package com.rdk.hal.audiomixer;
+package com.rdk.hal.audiomixer;
 
 /**
- * @brief Defines the available mixer operating modes.
- *
- * These modes influence how audio streams are blended within the mixer,
- * including attenuation behaviour during interruptive or priority playback scenarios.
- *
+ * @brief     Audio source types for mixer input routing.
+ * @details   Defines the types of audio sources that can be routed to mixer inputs.
+ *            Follows the pattern established by planecontrol::SourceType.
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
  * @author    Douglas Adler
+ * @author    Gerald Weatherup
  * @copyright Copyright 2024 RDK Management
  */
 @VintfStability
 @Backing(type="int")
-enum MixingMode {
+enum AudioSourceType
+{
     /**
-     * Standard mixing behaviour. All streams mix at their configured volumes.
+     * No audio source is connected to the mixer input. Default/disconnected state.
      */
-    NORMAL = 0,
+    NONE = 0,
 
     /**
-     * Background streams are attenuated while a priority (interruptive) stream plays.
+     * Audio sink output is connected to the mixer input.
      */
-    DUCKED = 1,
+    AUDIO_SINK = 1,
 
     /**
-     * Only the designated stream is played; all others are temporarily muted.
+     * HDMI input audio is connected to the mixer input.
      */
-    SOLO = 2,
+    HDMI_INPUT = 2,
 
     /**
-     * All streams are forcibly muted at the mixer level.
+     * Composite input audio is connected to the mixer input.
      */
-    MUTED = 3,
-
-    /**
-     * Overrides standard mixing rules for special stream behaviour (e.g., emergency alerts).
-     */
-    MIXED_OVERRIDE = 4,
-
-    /**
-     * Vendor-specific or extended mixing behaviour.
-     */
-    VENDOR_EXTENSION = 1000
+    COMPOSITE_INPUT = 3
 }

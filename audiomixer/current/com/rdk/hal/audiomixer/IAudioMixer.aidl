@@ -20,6 +20,9 @@
 
 import com.rdk.hal.audiomixer.Capabilities;
 import com.rdk.hal.audiomixer.IAudioOutputPort;
+import com.rdk.hal.audiomixer.Property;
+import com.rdk.hal.audiomixer.InputRouting;
+import com.rdk.hal.PropertyValue;
 import com.rdk.hal.audiodecoder.Codec;
 
 /**
@@ -36,6 +39,7 @@ import com.rdk.hal.audiodecoder.Codec;
  * @author    Gerald Weatherup
  * @copyright Copyright 2024 RDK Management
  */
+@VintfStability
 interface IAudioMixer {
     /**
      * @brief Mixer resource IDs.
@@ -51,7 +55,7 @@ interface IAudioMixer {
         MIX4 = 4,
         MIX5 = 5,
     }
-    
+
     /**
     * @brief Returns the list of audio output port IDs on this mixer.
     *
@@ -80,6 +84,14 @@ interface IAudioMixer {
     Capabilities getCapabilities();
 
     /**
+     * @brief     Gets a property value from the mixer instance.
+     * @param[in] property      The property key (from Property enum).
+     * @returns   The current property value.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if property not supported.
+     */
+    PropertyValue getProperty(in Property property);
+
+    /**
     * @brief Gets the list of currently active source codecs being mixed.
     *
     * Useful for clients to discover what input formats are currently processed
@@ -92,4 +104,42 @@ interface IAudioMixer {
     * @return List of codecs for active sources.
     */
     Codec[] getCurrentSourceCodecs();
+
+    /**
+     * @brief     Sets the audio source routing for one or more mixer inputs.
+     * @details   Allows multiple audio [source -> mixer input] mappings to be configured.
+     *            This enables operations such as switching between decoders, routing
+     *            HDMI input audio, or connecting application audio to mixer inputs.
+     *
+     *            Each InputRouting element specifies:
+     *            - mixerInputIndex: Which mixer input to configure (from Capabilities.inputs[])
+     *            - sourceType/sourceIndex: Which audio source to connect
+     *
+     *            To disconnect a source from a mixer input, set `sourceType` to `AudioSourceType.NONE`.
+     *
+     *            Validation:
+     *            - If a mixer input index appears multiple times in the routing array, the call fails.
+     *            - If a source type and source index appear multiple times in the routing array, the call fails.
+     *            - If a mixer input is already mapped to a different source, returns false.
+     *
+     * @param[in] routing   Array of audio source to mixer input routing configurations.
+     * @returns   Success status.
+     * @retval true     All routing mappings were successfully applied.
+     * @retval false    One or more routing configurations were invalid or conflicted.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if routing array contains invalid values.
+     * @exception binder::Status EX_ILLEGAL_STATE if mixer is in a state that prevents routing changes.
+     * @see       getInputRouting()
+     */
+    boolean setInputRouting(in InputRouting[] routing);
+
+    /**
+     * @brief     Gets the current audio source routing for all mixer inputs.
+     * @details   Returns an array with one element for each mixer input (as declared in Capabilities.inputs).
+     *            If a mixer input has no source connected, `AudioSourceType.NONE` is indicated.
+     *
+     * @returns   Array of audio source to mixer input routing configurations.
+     * @exception binder::Status EX_NONE for success.
+     * @see       setInputRouting()
+     */
+    InputRouting[] getInputRouting();
 }
