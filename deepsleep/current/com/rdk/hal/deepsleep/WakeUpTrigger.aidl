@@ -88,5 +88,5 @@ enum WakeUpTrigger
     /**
      * Deep sleep wakeup reason is due to User Voice.
      */
-    VOICE = 9, 
+    VOICE = 9
 }

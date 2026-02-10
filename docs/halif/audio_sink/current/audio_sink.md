@@ -30,7 +30,7 @@ The interaction between the RDK GStreamer Audio Sink element and the Audio Sink 
 
 ## Related Pages
 
-!!! tip Related Pages
+!!! tip "Related Pages"
     - [Audio Decoder](../../audio_decoder/current/audio_decoder.md)
     - [AV Buffer](../../av_buffer/current/av_buffer.md)
     - [AV Clock](../../av_clock/current/av_clock.md)

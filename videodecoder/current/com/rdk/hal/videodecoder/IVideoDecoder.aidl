@@ -54,6 +54,8 @@ interface IVideoDecoder
      * This function can be called at any time and is not dependant on any Video Decoder state.
      * The returned value is not allowed to change between calls.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @returns Capabilities parcelable.
      */
     Capabilities getCapabilities();
@@ -64,34 +66,55 @@ interface IVideoDecoder
      * @param[in] property              The key of a property from the Property enum.
      *
      * @returns PropertyValue or null if the property key is unknown.
-     * 
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value. 
+     *
      * @see setProperty(), getPropertyMulti()
      */
     @nullable PropertyValue getProperty(in Property property);
- 
+
     /**
      * Gets multiple properties.
      *
-     * When calling `getPropertyMulti()` the `propertyKVList` parameter contains an array of
-     * `PropertyKVPair` parcelables that have their `property` key set.
-     * On success the `propertyValue` is set in the returned array.
-     * It is an error to pass in an empty array, which results in false being returned.
-     * 
-     * @param[in,out] propertyKVList        Holds the properties to get and the values on return.
+     * Retrieves values for a list of property keys.
      *
-     * @returns boolean - true on success or false if any property keys are invalid.
-     * @retval true     The property values were retrieved successfully.
-     * @retval false    One or more property keys are invalid or the input array is empty.
-     * 
+     * Input `properties` is a non-null array of `Property` keys. Each key must be a
+     * valid enum value; unknown or out-of-range values are treated as invalid.
+     *
+     * Output `propertyKVList` returns one `PropertyKVPair` per requested key, with
+     * the same ordering as `properties`. For each pair, the `property` field echoes
+     * the requested key and `propertyValue` is populated on success.
+     *
+     * Error handling and return semantics:
+     * - Passing an empty `properties` array is an error.
+     * - If any key in `properties` is invalid, no values are populated and the call
+     *   returns `false` with `EX_ILLEGAL_ARGUMENT`.
+     * - If a required out-parameter is null (e.g. `propertyKVList`), the call fails
+     *   with `EX_NULL_POINTER`.
+     *
+     * @param[in] properties      Non-empty list of property keys to query.
+     * @param[out] propertyKVList Returned key/value pairs corresponding to `properties`.
+     *
+     * @returns boolean
+     * @retval true               All property values were retrieved successfully.
+     * @retval false              One or more keys are invalid, or input list is empty.
+     *
+     * @exception binder::Status::Exception::EX_NONE            Success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid property key(s) or empty input list.
+     * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
+     *
      * @see getProperty()
      */
-    boolean getPropertyMulti(inout PropertyKVPair[] propertyKVList);
+    boolean getPropertyMulti(in Property[] properties, out PropertyKVPair[] propertyKVList);
 
     /**
 	 * Gets the current Video Decoder state.
      *
      * @returns State enum value.
 	 *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @see IVideoDecoderEventListener.onStateChanged().
      */  
     State getState();
@@ -117,7 +140,10 @@ interface IVideoDecoder
      *
      * @returns IVideoDecoderController or null if the codec or the requested secure mode is not supported.
      * 
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      * 
      * @pre The resource must be in State::CLOSED.
      * 
@@ -138,6 +164,10 @@ interface IVideoDecoder
      * @retval true     Successfully closed.
      * @retval false    Invalid state or unrecognised parameter.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in OPENED State.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
      * @pre The resource must be in State::READY.
      *
      * @see open()
@@ -156,6 +186,9 @@ interface IVideoDecoder
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
      * @see unregisterEventListener()
      */
     boolean registerEventListener(in IVideoDecoderEventListener videoDecoderEventListener);
@@ -168,6 +201,9 @@ interface IVideoDecoder
      * @return boolean
      * @retval true     The event listener was unregistered.
      * @retval false    The event listener was not found registered.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      * @see registerEventListener()
      */

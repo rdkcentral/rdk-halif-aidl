@@ -10,7 +10,7 @@
 
 ## Related Pages
 
-!!! tip Related Pages
+!!! tip "Related Pages"
     - TBC
 
 ## 🚧 Document Under Construction

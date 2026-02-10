@@ -20,7 +20,7 @@ package com.rdk.hal.hdmiinput;
 import com.rdk.hal.hdmiinput.HDMIVersion;
 import com.rdk.hal.hdmiinput.VIC;
 import com.rdk.hal.hdmiinput.HDCPProtocolVersion;
- 
+
 /** 
  *  @brief     HDMI input port device capabilities definition.
  *  @author    Luc Kennedy-Lamb
@@ -34,6 +34,7 @@ parcelable Capabilities
 	/**
 	 * The array of HDMI versions the port supports.
 	 * Specifying more than one HDMI version indicates support for switching between versions.
+	 * @Note: supportsQMS requires supportsVRR to be true. supportsFreeSync is only meaningful if supportsVRR is true.
 	 */
 	HDMIVersion[] supportedVersions;
 
@@ -70,7 +71,7 @@ parcelable Capabilities
 
 	/**
 	 * Indicates support quick media switching (QMS is VRR with M_CONST).
-	 */
+ 	 */
 	boolean supportsQMS;
 
 	/**

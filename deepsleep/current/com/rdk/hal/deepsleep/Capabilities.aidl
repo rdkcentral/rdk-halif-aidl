@@ -34,9 +34,12 @@ parcelable Capabilities
      */
     WakeUpTrigger[] supportedTriggers;
 
-    /** 
-     * Array of mandatory wake up triggers which are implicitly enabled. 
+    /**
+     * Array of preconfigured wake up triggers which are always armed by the platform.
+     *
+     * These triggers are platform-defined and cannot be disabled by the client.
+     * They are implicitly added to the set of active triggers when entering deep sleep.
      * This is a subset of the supportedTriggers[].
      */
-    WakeUpTrigger[] mandatoryTriggers;
+    WakeUpTrigger[] preconfiguredTriggers;
 }

@@ -22,7 +22,7 @@ The **AV Buffer HAL** manages both secure and non-secure memory heaps and pools 
 
 ## Related Pages
 
-!!! tip Related Pages
+!!! tip "Related Pages"
     - [Audio Decoder](../../audio_decoder/current/audio_decoder.md)
     - [Audio Sink](../../audio_sink/current/audio_sink.md)
     - [AV Clock](../../av_clock/current/av_clock.md)

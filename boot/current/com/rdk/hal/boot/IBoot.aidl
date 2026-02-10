@@ -50,22 +50,25 @@ interface IBoot
     BootReason getBootReason();
 
     /**
+     * Sets the reboot reason that will be associated with the next reboot.
+     * This function is used for validation testing the retrieval method of various boot
+     * scenarios.
+     *
+     * @param[in] reason           BootReason value.
+     * @param[in] reasonString     Free-form reboot reason string (64 bytes)
+     */
+    void setBootReason(in BootReason reason, in String reasonString);
+
+    /**
      * Performs a shutdown and warm reboot of the device.
      * 
      * A number of reset types can be applied as part of the reboot process.
-     * If no reset types are provided, then a normal reboot is performed.
      * On success this function does not return.
      * 
-     * @param[in] resetTypes    Array of `ResetType` values.
+     * @param[in] resetType     ResetType value
+     * @param[in] reasonString  Free-form reset reason string (64 bytes)
      */
-    void reboot(in ResetType[] resetTypes);
-
-    /**
-     * Performs a shutdown of the device, without reboot.
-     * 
-     * On success this function does not return.
-     */
-    void shutdown();
+    void reboot(in ResetType resetType, in String reasonString);
 
     /**
      * Gets the device power source.

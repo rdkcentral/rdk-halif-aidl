@@ -106,7 +106,7 @@ When contributing to the documentation, please adhere to the following guideline
 !!! info Info
     This is an example of a info admonition.
 
-!!! tip Tip
+!!! tip "Tip"
     This is an example of a tip admonition.
 
 !!! example Example
