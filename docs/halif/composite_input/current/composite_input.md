@@ -13,7 +13,7 @@ This HAL manages composite video input detection, signal status, and video mode 
     | ------------------------------------ | ------------------------------------------------------------- |
     | **Interface Definition**             | [compositeinput](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/compositeinput/current/com/rdk/hal/compositeinput) |
     | **HAL Interface Type**               | [AIDL and Binder](../../../introduction/aidl_and_binder.md)   |
-    | **Initialization Unit**              | [systemd service](../../../vsi/systemd/current/systemd.md) - **hal-composite_input_manager.service** |
+    | **Initialization Unit**              | [systemd service](../../../vsi/systemd/current/systemd.md) - **hal-composite_input.service** |
 
 ---
 
@@ -84,9 +84,9 @@ The `CompositeInput` HAL provides control over:
 
 ## Initialization
 
-The HAL service should be initialized via a systemd unit and must register with the Service Manager under the name defined in `ICompositeInputManager.serviceName` ("composite_input_manager"). It must be ready before middleware components attempt to query or bind.
+The HAL service should be initialized via a systemd unit and must register with the Service Manager under the name defined in `ICompositeInputManager.serviceName` ("composite_input"). It must be ready before middleware components attempt to query or bind.
 
-The systemd unit file (`hal-composite_input_manager.service`) should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
+The systemd unit file (`hal-composite_input.service`) should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
 ---
 
