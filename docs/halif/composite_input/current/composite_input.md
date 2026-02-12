@@ -13,7 +13,7 @@ This HAL manages composite video input detection, signal status, and video mode 
     | ------------------------------------ | ------------------------------------------------------------- |
     | **Interface Definition**             | [compositeinput](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/compositeinput/current/com/rdk/hal/compositeinput) |
     | **HAL Interface Type**               | [AIDL and Binder](../../../introduction/aidl_and_binder.md)   |
-    | **Initialization Unit**              | [systemd service](../../../vsi/systemd/current/systemd.md) - **hal-composite_input_manager.service** |
+    | **Initialization Unit**              | [systemd service](../../../vsi/systemd/current/systemd.md) - **hal-composite_input.service** |
 
 ---
 
