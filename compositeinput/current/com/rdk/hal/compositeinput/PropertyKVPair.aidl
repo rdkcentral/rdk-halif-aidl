@@ -31,7 +31,7 @@ import com.rdk.hal.PropertyValue;
 parcelable PropertyKVPair
 {
     /**
-     * Property key string (e.g., "SIGNAL_STRENGTH", "VIDEO_STANDARD").
+     * Property key string (e.g., "SIGNAL_STRENGTH").
      *
      * Should match one of the keys in the platform's supportedProperties array
      * returned by getCapabilities().
@@ -44,12 +44,14 @@ parcelable PropertyKVPair
      * - For getPropertyMulti(), this field is populated by the HAL on return.
      * - For setPropertyMulti(), this field must be pre-filled by the caller.
      *
-     * The appropriate union field should be used based on the property type:
-     * - booleanValue for boolean properties
-     * - intValue for integer/enum properties
-     * - longValue for numeric properties (e.g., SIGNAL_STRENGTH, metrics)
-     * - doubleValue for floating-point properties
-     * - stringValue for text properties
+     * The appropriate union field should be used based on the property's
+     * PropertyMetadata.type (see PropertyMetadata.PropertyType):
+     * - booleanValue for BOOLEAN properties
+     * - intValue for INTEGER/enum properties
+     * - longValue for LONG properties (e.g., SIGNAL_STRENGTH, metrics)
+     * - floatValue for FLOAT properties
+     * - doubleValue for DOUBLE properties
+     * - stringValue for STRING properties
      */
     PropertyValue value;
 }

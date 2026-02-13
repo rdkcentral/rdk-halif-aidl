@@ -20,7 +20,6 @@
 package com.rdk.hal.compositeinput;
 
 import com.rdk.hal.compositeinput.PlatformCapabilities;
-import com.rdk.hal.compositeinput.Port;
 import com.rdk.hal.compositeinput.ICompositeInputPort;
 
 /**

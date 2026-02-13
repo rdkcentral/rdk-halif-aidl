@@ -48,6 +48,19 @@ interface ICompositeInputPort
     int getId();
 
     /**
+     * Gets port metadata.
+     *
+     * Returns the port's metadata including its human-readable name
+     * and description. The returned value is constant and must not change
+     * between calls.
+     *
+     * @returns Port parcelable containing port metadata.
+     *
+     * @see Port
+     */
+    Port getPortInfo();
+
+    /**
      * Gets the capabilities of this specific port.
      *
      * Returns port-specific capabilities which may differ from platform
@@ -135,8 +148,8 @@ interface ICompositeInputPort
      * Gets multiple property values in a single call.
      *
      * Efficient batch retrieval of multiple properties. Reduces IPC overhead
-     * when querying multiple properties simultaneously. Unsupported properties
-     * will have null values in the returned array.
+     * when querying multiple properties simultaneously. Entries for unsupported
+     * properties will have default-initialized values.
      *
      * @param[in] propertyKeys     Array of property key strings to retrieve.
      * @returns Array of PropertyKVPair with keys and values populated.

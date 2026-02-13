@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `CompositeInput` HAL interface manages the configuration and control of analog composite video input ports on the platform. It provides abstraction over composite video signal detection, video standard decoding (NTSC, PAL, SECAM), and presentation control. This interface ensures consistent interaction with higher layers (such as the RDK media manager or video switch controller) while remaining agnostic to platform-specific analog frontend (AFE) and decoder implementations.
+The `CompositeInput` HAL interface manages the configuration and control of analog composite video input ports on the platform. It provides abstraction over composite video signal detection and presentation control. This interface ensures consistent interaction with higher layers (such as the RDK media manager or video switch controller) while remaining agnostic to platform-specific analog frontend (AFE) and decoder implementations.
 
 This HAL manages composite video input detection, signal status, and video mode configuration. Audio routing (if supported) is handled separately by the platform's audio subsystem.
 
@@ -32,10 +32,8 @@ The `CompositeInput` HAL provides control over:
 * Composite video port enumeration and discovery
 * Connection status detection (cable presence)
 * Signal status monitoring (NO_SIGNAL, UNSTABLE, STABLE, NOT_SUPPORTED)
-* Automatic video standard detection (NTSC-M, PAL-B/M/N, SECAM)
 * Port activation and presentation control
-* Video scaling and positioning (aspect ratio handling)
-* Runtime property queries (signal strength, video standard, color space)
+* Runtime property queries (signal strength)
 * Telemetry and metrics (signal lock time, drop counts, uptime)
 * Event callbacks (connection changes, signal changes, video mode changes)
 
@@ -49,12 +47,10 @@ The `CompositeInput` HAL provides control over:
 | **HAL.CompositeInput.2**    | The service shall allow clients to query port-specific capabilities.      | See `ICompositeInputPort.getCapabilities()`        |
 | **HAL.CompositeInput.3**    | The service shall emit events on cable connect/disconnect.                | Via `IPortEventListener.onConnectionChanged()`    |
 | **HAL.CompositeInput.4**    | The service shall emit events on signal status changes.                   | Via `IPortEventListener.onSignalStatusChanged()`  |
-| **HAL.CompositeInput.5**    | The implementation shall automatically detect video standards (NTSC, PAL, SECAM). | Signal must be STABLE before reliable detection |
-| **HAL.CompositeInput.6**    | Only one port shall be active for video presentation at any time.         | Activating a port deactivates others             |
-| **HAL.CompositeInput.7**    | Port activation shall fail if signal status is not STABLE.                | Prevents presenting unstable or unsupported signals |
-| **HAL.CompositeInput.8**    | Video scaling shall only apply to active ports.                           | setActive(true) required before scaleVideo()      |
-| **HAL.CompositeInput.9**    | Property keys shall be defined in the HFP YAML and discoverable via capabilities. | Enables vendor-specific properties without API changes |
-| **HAL.CompositeInput.10**   | Telemetry listeners shall only be supported on ports with metricsSupported capability. | See `PortCapabilities.metricsSupported`          |
+| **HAL.CompositeInput.5**    | Only one port shall be active for video presentation at any time.         | Activating a port deactivates others             |
+| **HAL.CompositeInput.6**    | Port activation shall fail if signal status is not STABLE.                | Prevents presenting unstable or unsupported signals |
+| **HAL.CompositeInput.7**    | Property keys shall be defined in the HFP YAML and discoverable via capabilities. | Enables vendor-specific properties without API changes |
+| **HAL.CompositeInput.8**    | Telemetry listeners shall only be supported on ports with metricsSupported capability. | See `PortCapabilities.metricsSupported`          |
 
 ---
 
@@ -63,19 +59,15 @@ The `CompositeInput` HAL provides control over:
 | AIDL File                              | Description                                                          |
 | -------------------------------------- | -------------------------------------------------------------------- |
 | `ICompositeInputManager.aidl`          | Manager interface for port discovery and access                      |
-| `ICompositeInputPort.aidl`             | Per-port interface for control and configuration                     |
+| `ICompositeInputPort.aidl`             | Per-port interface for control, configuration, and port metadata     |
 | `IPortEventListener.aidl`              | Event listener for connection, signal, and video mode changes        |
 | `IPortTelemetryListener.aidl`          | Telemetry listener for signal quality and metrics updates            |
 | `PlatformCapabilities.aidl`            | Platform-wide capabilities and feature flags                         |
 | `PortCapabilities.aidl`                | Port-specific capabilities (may vary per port)                       |
 | `PortStatus.aidl`                      | Current port status (connection, signal, video mode)                 |
-| `Port.aidl`                            | Port metadata (ID, name, description)                                |
+| `Port.aidl`                            | Port metadata (name, description)                                    |
 | `SignalStatus.aidl`                    | Enum for signal status (NO_SIGNAL, UNSTABLE, STABLE, NOT_SUPPORTED)  |
-| `VideoStandard.aidl`                   | Enum for video standards (NTSC_M, PAL_B, PAL_M, PAL_N, SECAM)        |
 | `VideoResolution.aidl`                 | Video resolution and format information                              |
-| `VideoScaling.aidl`                    | Scaling mode and rectangle parameters                                |
-| `ScalingMode.aidl`                     | Enum for scaling modes (NONE, ASPECT_FIT, ASPECT_FILL, CUSTOM)       |
-| `ColorSpace.aidl`                      | Color space enumeration                                              |
 | `PortMetrics.aidl`                     | Telemetry metrics (lock time, drops, uptime)                         |
 | `PropertyKVPair.aidl`                  | Key-value pair for batch property operations                         |
 | `PropertyMetadata.aidl`                | Property type metadata for runtime discovery                         |
@@ -93,8 +85,7 @@ The systemd unit file (`hal-composite_input_manager.service`) should include [Wa
 ## Product Customization
 
 * Each composite input port is exposed as a resource instance via `ICompositeInputManager.getPort()`
-* Port capabilities are queried via `ICompositeInputPort.getCapabilities()` and may vary per port (e.g., audio support, metrics support)
-* Supported video standards per port are indicated in `PortCapabilities.supportedVideoStandards`
+* Port capabilities are queried via `ICompositeInputPort.getCapabilities()` and may vary per port (e.g., metrics support)
 * Property keys are defined in the HFP YAML (`hfp-compositeinput.yaml`) and discoverable via `PortCapabilities.supportedProperties`
 * Platforms can define custom property keys beyond the HFP standard keys
 
@@ -141,7 +132,7 @@ flowchart TD
 
 * Composite input ports are identified by logical IDs (typically 0 to maxPorts-1)
 * Each port can be independently queried and controlled
-* Port metadata (ID, name, description) is available via `ICompositeInputPort.getId()` and capabilities
+* Port metadata (name, description) is available via `ICompositeInputPort.getPortInfo()`
 * Event listeners can be registered/unregistered dynamically per port
 * Telemetry listeners require `PortCapabilities.metricsSupported == true`
 
@@ -177,17 +168,13 @@ sequenceDiagram
     Port->>Listener: onSignalStatusChanged(portId, UNSTABLE)
 
     Note over Hardware: Signal stable
-    Hardware->>Port: Signal stable, NTSC-M detected
+    Hardware->>Port: Signal stable
     Port->>Listener: onSignalStatusChanged(portId, STABLE)
     Port->>Listener: onVideoModeChanged(portId, resolution)
 
     Client->>Port: setActive(true)
     Port-->>Client: Success
     Note over Port,Hardware: Video presentation begins
-
-    Client->>Port: scaleVideo(ASPECT_FIT, rectangle)
-    Port-->>Client: Success
-    Note over Port,Hardware: Video scaled to fit
 ```
 
 ### Property Query
@@ -198,10 +185,10 @@ sequenceDiagram
     participant Port as ICompositeInputPort
 
     Client->>Port: getCapabilities()
-    Port-->>Client: PortCapabilities<br/>(supportedProperties: ["SIGNAL_STRENGTH", "VIDEO_STANDARD"])
+    Port-->>Client: PortCapabilities<br/>(supportedProperties: ["SIGNAL_STRENGTH"])
 
-    Client->>Port: getPropertyMulti(["SIGNAL_STRENGTH", "VIDEO_STANDARD"])
-    Port-->>Client: PropertyKVPair[]<br/>(SIGNAL_STRENGTH: -35dBm, VIDEO_STANDARD: NTSC_M)
+    Client->>Port: getProperty("SIGNAL_STRENGTH")
+    Port-->>Client: PropertyValue<br/>(longValue: -35)
 ```
 
 ---
@@ -212,20 +199,13 @@ sequenceDiagram
 
 1. **NO_SIGNAL**: No video signal detected (cable disconnected or source off)
 2. **UNSTABLE**: Signal detected but not yet stable (sync issues, unsupported format during detection)
-3. **STABLE**: Signal stable and video standard identified (ready for activation)
-4. **NOT_SUPPORTED**: Signal detected but video standard not supported by port
+3. **STABLE**: Signal stable and locked (ready for activation)
+4. **NOT_SUPPORTED**: Signal detected but format not supported by port
 
 ### Port States
 
 1. **Inactive**: Port not selected for presentation (default state)
 2. **Active**: Port presenting video to display (only one port active at a time)
-
-### Video Scaling Modes
-
-- **NONE**: No scaling, video at native resolution
-- **ASPECT_FIT**: Scale to fit display while preserving aspect ratio (letterbox/pillarbox)
-- **ASPECT_FILL**: Scale to fill display while preserving aspect ratio (crop edges)
-- **CUSTOM**: Custom scaling rectangle specified by client
 
 ---
 
@@ -234,42 +214,22 @@ sequenceDiagram
 | Event       | Callback                         | Description                                          | Trigger Condition |
 | ----------- | -------------------------------- | ---------------------------------------------------- | ----------------- |
 | Connection  | `onConnectionChanged()`          | Cable connected or disconnected                      | Hardware cable detection |
-| Signal Status | `onSignalStatusChanged()`      | Signal status changed (NO_SIGNAL→UNSTABLE→STABLE)    | Signal lock/loss, standard detection |
-| Video Mode  | `onVideoModeChanged()`           | Video resolution or standard changed                 | Source switches format, standard detected |
+| Signal Status | `onSignalStatusChanged()`      | Signal status changed (NO_SIGNAL→UNSTABLE→STABLE)    | Signal lock/loss |
+| Video Mode  | `onVideoModeChanged()`           | Video resolution changed                             | Source switches format |
 | Signal Quality | `onSignalQualityChanged()`    | Signal quality percentage changed significantly      | Quality degrades/improves (±5-10%) |
 | Metrics     | `onMetricsUpdated()`             | Telemetry metrics snapshot                           | Periodic (1-10s) or significant changes |
 
 ---
 
-## Video Standard Detection
+## Signal Detection
 
-The HAL shall automatically detect the video standard of the composite input signal when the signal stabilizes. Supported standards include:
-
-| Video Standard | Lines | Field Rate | Regions |
-| -------------- | ----- | ---------- | ------- |
-| NTSC-M         | 525   | 60Hz       | North America, Japan, South Korea |
-| PAL-B          | 625   | 50Hz       | Europe, Australia, most of Asia |
-| PAL-M          | 525   | 60Hz       | Brazil |
-| PAL-N          | 625   | 50Hz       | Argentina, Paraguay, Uruguay |
-| SECAM          | 625   | 50Hz       | France, Eastern Europe, Russia |
+The HAL implementation internally detects the video standard (NTSC, PAL, SECAM) and provides the digitized video resolution via the `VideoResolution` parcelable. Video standard detection is handled internally by the platform's analog frontend and is not exposed as an API-level concept.
 
 Detection sequence:
 1. Cable connection detected → `onConnectionChanged(true)`
 2. Signal detection begins → `onSignalStatusChanged(UNSTABLE)`
-3. Video standard identified → `onSignalStatusChanged(STABLE)` + `onVideoModeChanged(resolution)`
+3. Signal locked → `onSignalStatusChanged(STABLE)` + `onVideoModeChanged(resolution)`
 4. Port ready for activation via `setActive(true)`
-
----
-
-## Data Format / Protocol Support
-
-| Format | Use Case                   | Support Level |
-| ------ | -------------------------- | ------------- |
-| NTSC-M | North America, Japan       | Mandatory     |
-| PAL-B  | Europe, Australia          | Mandatory     |
-| PAL-M  | Brazil                     | Optional      |
-| PAL-N  | Argentina, South America   | Optional      |
-| SECAM  | France, Eastern Europe     | Optional      |
 
 ---
 
@@ -293,32 +253,20 @@ compositeinput:
         - NOT_SUPPORTED
         - STABLE
 
-      # Supported video standards for this port
-      supportedVideoStandards:
-        - NTSC_M       # 525 lines, 60Hz (North America)
-        - PAL_B        # 625 lines, 50Hz (Europe)
-        - PAL_M        # 525 lines, 60Hz (Brazil)
-        - SECAM        # 625 lines, 50Hz (France, Eastern Europe)
-
-      # Supported scaling modes for this port
-      supportedScalingModes:
-        - NONE
-        - ASPECT_FIT
-        - ASPECT_FILL
-        - CUSTOM
-
-      # Port capabilities
-      audioSupported: false
+      # Port capabilities (matches PortCapabilities.aidl)
       metricsSupported: true
 
       # HFP-defined standard property keys (discoverable via getCapabilities())
       supportedProperties:
         - "SIGNAL_STRENGTH"        # Signal strength in dBm (PropertyValue.longValue, read-only)
-        - "VIDEO_STANDARD"         # Detected video standard (PropertyValue.intValue as VideoStandard enum, read-only)
-        - "COLOR_SYSTEM"           # Detected color system (PropertyValue.intValue as ColorSpace enum, read-only)
-        - "AUDIO_PRESENT"          # Audio signal present (PropertyValue.booleanValue, read-only)
 
-      # Property metadata for enhanced discovery
+      # Metrics properties (METRIC_ prefix for categorization)
+      supportedMetrics:
+        - "METRIC_SIGNAL_LOCK_TIME"   # Average signal lock time in ms (PropertyValue.longValue, read-only)
+        - "METRIC_SIGNAL_DROPS"       # Total count of signal drops (PropertyValue.longValue, read-only)
+        - "METRIC_UPTIME"             # Total uptime in ms (PropertyValue.longValue, read-only)
+
+      # Property metadata for enhanced discovery (optional but recommended)
       propertyMetadata:
         - key: "SIGNAL_STRENGTH"
           type: LONG
@@ -326,11 +274,23 @@ compositeinput:
           isMetric: false
           description: "Signal strength in dBm"
 
-        - key: "VIDEO_STANDARD"
-          type: INTEGER
+        - key: "METRIC_SIGNAL_LOCK_TIME"
+          type: LONG
           readOnly: true
-          isMetric: false
-          description: "Detected video standard (VideoStandard enum)"
+          isMetric: true
+          description: "Average signal lock time in milliseconds"
+
+        - key: "METRIC_SIGNAL_DROPS"
+          type: LONG
+          readOnly: true
+          isMetric: true
+          description: "Total count of signal drops since last reset"
+
+        - key: "METRIC_UPTIME"
+          type: LONG
+          readOnly: true
+          isMetric: true
+          description: "Total uptime in milliseconds"
 ```
 
 ### Discovery-First Pattern
@@ -346,24 +306,28 @@ PortCapabilities portCaps = port.getCapabilities();
 // 2. Check what properties are available
 String[] supportedProps = portCaps.supportedProperties;
 
-// 3. Query properties of interest
-List<String> propsToQuery = new ArrayList<>();
+// 3. Query individual property (returns null if unsupported)
 if (Arrays.asList(supportedProps).contains("SIGNAL_STRENGTH")) {
-    propsToQuery.add("SIGNAL_STRENGTH");
-}
-if (Arrays.asList(supportedProps).contains("VIDEO_STANDARD")) {
-    propsToQuery.add("VIDEO_STANDARD");
+    PropertyValue value = port.getProperty("SIGNAL_STRENGTH");
+    if (value != null) {
+        long strength = value.longValue;
+    }
 }
 
-// 4. Batch query for efficiency
-PropertyKVPair[] results = port.getPropertyMulti(propsToQuery.toArray(new String[0]));
-
-// 5. Use the values
+// 4. Or batch query for efficiency using getPropertyMulti()
+//    Note: PropertyKVPair.value uses a PropertyValue union - use the
+//    appropriate field based on the property's PropertyMetadata.type:
+//      BOOLEAN  -> value.booleanValue
+//      INTEGER  -> value.intValue
+//      LONG     -> value.longValue
+//      FLOAT    -> value.floatValue
+//      DOUBLE   -> value.doubleValue
+//      STRING   -> value.stringValue
+PropertyKVPair[] results = port.getPropertyMulti(
+    new String[] { "SIGNAL_STRENGTH" });
 for (PropertyKVPair pair : results) {
     if (pair.key.equals("SIGNAL_STRENGTH")) {
         long strength = pair.value.longValue;
-    } else if (pair.key.equals("VIDEO_STANDARD")) {
-        int standard = pair.value.intValue; // VideoStandard enum
     }
 }
 ```
@@ -382,9 +346,10 @@ Ports with `PortCapabilities.metricsSupported == true` provide telemetry data:
 | Last Reset Timestamp | long (ms) | Timestamp of last metrics reset |
 
 Clients can:
-- Query current metrics via `getMetrics()`
-- Reset metrics via `resetMetrics()`
-- Register for periodic updates via `registerTelemetryListener()`
+
+* Query current metrics via `getMetrics()`
+* Reset metrics via `resetMetrics()`
+* Register for periodic updates via `registerTelemetryListener()`
 
 ---
 
@@ -395,10 +360,8 @@ Clients can:
 | Exception | Method | Condition |
 | --------- | ------ | --------- |
 | `EX_ILLEGAL_STATE` | `setActive()` | Port has no stable signal |
-| `EX_ILLEGAL_STATE` | `scaleVideo()` | Port is not active |
 | `EX_ILLEGAL_ARGUMENT` | `getPort()` | Port ID out of range |
 | `EX_ILLEGAL_ARGUMENT` | `getProperty()` | Property key is null or empty |
-| `EX_UNSUPPORTED_OPERATION` | `scaleVideo()` | Scaling mode not in supportedScalingModes |
 | `EX_UNSUPPORTED_OPERATION` | `setProperty()` | Property is read-only or not supported |
 | `EX_UNSUPPORTED_OPERATION` | `getMetrics()` | Port does not support metrics |
 | `EX_UNSUPPORTED_OPERATION` | `registerTelemetryListener()` | Port does not support metrics |
@@ -410,10 +373,11 @@ Clients can:
 ### Composite Video Legacy Support
 
 Composite video is a legacy analog format primarily used for:
-- Retro gaming consoles
-- DVD players and VCRs
-- Legacy camcorders and cameras
-- Backward compatibility with older equipment
+
+* Retro gaming consoles
+* DVD players and VCRs
+* Legacy camcorders and cameras
+* Backward compatibility with older equipment
 
 Modern platforms typically provide 1-2 composite input ports for legacy device support, with most inputs using HDMI.
 
@@ -425,7 +389,7 @@ Modern platforms typically provide 1-2 composite input ports for legacy device s
 stateDiagram-v2
     [*] --> NO_SIGNAL: Port Initialized
     NO_SIGNAL --> UNSTABLE: Cable Connected
-    UNSTABLE --> STABLE: Standard Detected
+    UNSTABLE --> STABLE: Signal Locked
     UNSTABLE --> NOT_SUPPORTED: Unsupported Format
     UNSTABLE --> NO_SIGNAL: Cable Disconnected
     STABLE --> UNSTABLE: Signal Lost/Changed
@@ -444,22 +408,11 @@ stateDiagram-v2
 
 ## Additional Considerations
 
-### Aspect Ratio Handling
-
-Composite video sources typically output:
-- **NTSC**: 4:3 aspect ratio (640x480 equivalent)
-- **PAL**: 4:3 aspect ratio (768x576 equivalent)
-- **Widescreen**: 16:9 anamorphic (requires proper flag detection)
-
-Clients should use `scaleVideo()` with appropriate `ScalingMode`:
-- **ASPECT_FIT**: Preserve aspect ratio, add letterbox/pillarbox
-- **ASPECT_FILL**: Preserve aspect ratio, crop to fill
-- **CUSTOM**: Manual rectangle specification
-
 ### Interlaced Video Handling
 
 All composite video standards are interlaced:
-- **NTSC**: 525i59.94 (480 active lines, ~59.94Hz field rate)
-- **PAL/SECAM**: 625i50 (576 active lines, 50Hz field rate)
+
+* **NTSC**: 525i59.94 (480 active lines, ~59.94Hz field rate)
+* **PAL/SECAM**: 625i50 (576 active lines, 50Hz field rate)
 
 The HAL implementation should perform deinterlacing in the vendor layer before presentation. The `VideoResolution` parcelable indicates whether the source is interlaced.

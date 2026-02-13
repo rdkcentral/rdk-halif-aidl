@@ -20,20 +20,17 @@
 package com.rdk.hal.compositeinput;
 
 /**
- * @brief Composite input port identifier and metadata.
- * 
- * Defines port identifiers and optional metadata for composite input ports.
- * Port ID ranges from 0 to (maxPorts - 1).
+ * @brief Composite input port metadata.
+ *
+ * Provides human-readable metadata for composite input ports.
+ * The port ID is available via ICompositeInputPort.getId().
  */
 @VintfStability
 parcelable Port
 {
-    /** Port ID (0 to maxPorts-1). */
-    int id;
-    
-    /** Optional human-readable port name (e.g., "Front Panel", "Rear"). */
+    /** Human-readable port name (e.g., "Front Panel", "Rear"). */
     @utf8InCpp String name;
-    
-    /** Optional port description. */
+
+    /** Port description. */
     @utf8InCpp String description;
 }

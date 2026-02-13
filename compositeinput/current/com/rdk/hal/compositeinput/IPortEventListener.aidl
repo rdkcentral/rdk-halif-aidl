@@ -19,7 +19,6 @@
 
 package com.rdk.hal.compositeinput;
 
-import com.rdk.hal.compositeinput.Port;
 import com.rdk.hal.compositeinput.SignalStatus;
 import com.rdk.hal.compositeinput.VideoResolution;
 
