@@ -22,7 +22,7 @@
 
 # HAL Feature Profile for audiosink
 
-IAudioSinkManager:     # Component object begins
+audiosink:             # Component object begins
     interfaceVersion: current
     platformCapabilities:
         supportsLowLatency: false

@@ -34,8 +34,8 @@ set(SRC_DIR com/rdk/hal/deviceinfo)
 set(SRC
 	${SRC_DIR}/Capabilities.aidl
 	${SRC_DIR}/IDeviceInfo.aidl
-	${SRC_DIR}/HALVersion.aidl
-	${SRC_DIR}/SetPropertyResult.aidl
+	${SRC_DIR}/Property.aidl
+	${SRC_DIR}/PropertyType.aidl
 )
 
 set(INCLUDE_DIRECTORY

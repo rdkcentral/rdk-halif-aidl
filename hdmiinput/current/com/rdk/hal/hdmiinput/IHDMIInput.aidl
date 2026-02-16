@@ -25,6 +25,8 @@ import com.rdk.hal.hdmiinput.HDMIVersion;
 import com.rdk.hal.hdmiinput.IHDMIInputControllerListener;
 import com.rdk.hal.hdmiinput.IHDMIInputEventListener;
 import com.rdk.hal.hdmiinput.State;
+import com.rdk.hal.hdmiinput.HDCPProtocolVersion;
+import com.rdk.hal.hdmiinput.HDCPStatus;
 import com.rdk.hal.PropertyValue;
 
 /** 
@@ -67,27 +69,9 @@ interface IHDMIInput
      *
      * @returns PropertyValue or null if the property key is unknown or unavailable for this port.
      * 
-     * @see IHDMIInputController.setProperty(), getPropertyMulti()
+     * @see IHDMIInputController.setProperty()
      */
     @nullable PropertyValue getProperty(in Property property);
- 
-    /**
-     * Gets multiple properties.
-     *
-     * When calling `getPropertyMulti()` the `propertyKVList` parameter contains an array of
-     * `PropertyKVPair` parcelables that have their `property` key set.
-     * On success the `propertyValue` is set in the returned array.
-     * It is an error to pass in an empty array, which results in false being returned.
-     * 
-     * @param[in,out] propertyKVList        Holds the properties to get and the values on return.
-     *
-     * @returns boolean
-     * @retval true     The property values were retrieved successfully.
-     * @retval false    One or more property keys are invalid or the input array is empty.
-     * 
-     * @see getProperty()
-     */
-    boolean getPropertyMulti(inout PropertyKVPair[] propertyKVList);
 
     /**
      * Gets the current HDMI input state.

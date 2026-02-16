@@ -23,7 +23,7 @@
 # HAL Feature Profile for cec
 
 
-IHdmiCec:              # Component object begins
+hdmicec:                        # Component object begins
     interfaceVersion: current
     HAL_CEC_VERSION: x06    # x04 = Version 1.3a
                             # x05 = Version 1.4, Version 1.4a or Version 1.4b
