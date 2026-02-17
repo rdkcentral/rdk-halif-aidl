@@ -17,9 +17,12 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmiinput;
- 
+
 /** 
  *  @brief     HDMI standard version.
+ * 
+ *  Reference: HDMI 2.1 Specification, Section 6.x for Video ID Codes.
+ * 
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Amit Patel

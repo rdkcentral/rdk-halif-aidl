@@ -19,7 +19,7 @@
 package com.rdk.hal.audiodecoder;
 import com.rdk.hal.audiodecoder.FrameMetadata;
 import com.rdk.hal.audiodecoder.ErrorCode;
-import com.rdk.hal.State;
+import com.rdk.hal.audiodecoder.State;
 
 /** 
  *  @brief     Events callbacks listener interface from audio decoder.

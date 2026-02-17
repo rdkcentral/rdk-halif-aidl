@@ -20,7 +20,7 @@ Each plane is configurable through a set of properties that clients can read or 
 
 ## Related Pages
 
-!!! tip Related Pages
+!!! tip "Related Pages"
     - [Video Sink](../../video_sink/current/video_sink.md)
 
 ## Implementation Requirements

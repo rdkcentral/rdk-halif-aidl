@@ -22,7 +22,7 @@
 
 # HAL Feature Profile for panel
 
-IPanelOutput:          # Component object begins
+panel:                  # Component object begins
   interfaceVersion: current
   panelType: LCD # LCD = 0, QLED = 1, OLED = 2, MINI_LED = 3,
   pixelWidth:  3840 # UHD Panel Example

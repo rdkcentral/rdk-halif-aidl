@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,30 +17,34 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmioutput;
- 
+
 /** 
- *  @brief     HDCP version enum.
+ *  @brief     HDCP protocol version enum.
+ *
+ *  Identifies the supported version of HDCP (High-bandwidth Digital Content Protection)
+ *  that may be used over the HDMI output port.
+ *
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Amit Patel
+ *  @author    Gerald Weatherup
  */
- 
 @VintfStability
 @Backing(type = "int")
 enum HDCPProtocolVersion
 {
-	/**
-	 * HDCP protocol is not supported or unknown.
-	 */
-	UNDEFINED = 0,
+    /**
+     * HDCP protocol is not supported or unknown.
+     */
+    UNDEFINED = 0,
 
-	/**
-	 * HDCP protocol version 1.x
-	 */
-	VERSION_1_X = 1,
+    /**
+     * HDCP protocol version 1.x
+     */
+    VERSION_1_X = 1,
 
-	/**
-	 * HDCP protocol version 2.x
-	 */
-	VERSION_2_X = 2,
+    /**
+     * HDCP protocol version 2.x
+     */
+    VERSION_2_X = 2
 }

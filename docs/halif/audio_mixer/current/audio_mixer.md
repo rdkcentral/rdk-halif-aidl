@@ -14,7 +14,7 @@
 
 ## Related Pages
 
-!!! tip Related Pages
+!!! tip "Related Pages"
     - [Audio Sink](../../audio_sink/current/audio_sink.md)
     - [AV Buffer](../../av_buffer/current/av_buffer.md)
     - [Session State Management](../../key_concepts/hal/hal_session_state_management.md)
