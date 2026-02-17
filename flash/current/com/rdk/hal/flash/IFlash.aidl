@@ -31,7 +31,7 @@ interface IFlash
 {
 
     /** The service name to publish. To be returned by getServiceName() in the derived class. */
-    const @utf8InCpp String serviceName = "Flash";
+    const @utf8InCpp String serviceName = "flash";
     /**
      * Flashes a firmware image file onto the device.
      * 
