@@ -42,12 +42,14 @@ set(SRC
 	${SRC_DIR}/CSDAudioFormat.aidl
 	${SRC_DIR}/ErrorCode.aidl
 	${SRC_DIR}/FrameMetadata.aidl
+	${SRC_DIR}/FrameType.aidl
 	${SRC_DIR}/IAudioDecoder.aidl
 	${SRC_DIR}/IAudioDecoderController.aidl
 	${SRC_DIR}/IAudioDecoderControllerListener.aidl
 	${SRC_DIR}/IAudioDecoderEventListener.aidl
 	${SRC_DIR}/IAudioDecoderManager.aidl
 	${SRC_DIR}/PCMFormat.aidl
+	${SRC_DIR}/PCMMetadata.aidl
 	${SRC_DIR}/Property.aidl
 	${SRC_DIR}/State.aidl
 	${COMMON_SRC_DIR}/PropertyValue.aidl

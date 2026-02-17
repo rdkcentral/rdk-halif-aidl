@@ -9,7 +9,6 @@
 # * you may not use this file except in compliance with the License.
 # * You may obtain a copy of the License at
 # *
-# *
 # * http://www.apache.org/licenses/LICENSE-2.0
 # *
 # * Unless required by applicable law or agreed to in writing, software
@@ -19,12 +18,41 @@
 # * limitations under the License.
 # *
 #** ******************************************************************************
+cmake_minimum_required(VERSION 3.8)
 
-# HAL Feature Profile for hdmioutput
+project(SensorThermal
+    LANGUAGES NONE
+    VERSION 1.0)
 
-hdmioutput:                     # Component object begins
-  interfaceVersion: current
-  IHDMIOutput:                  # Resource list
-    - 0:                        # Resource object begins
-      xxx: abc
-          
+if (NOT COMMAND compile_aidl)
+    message(FATAL_ERROR "Do not invoke module level CMake directly!\nInvoke CMake at root level instead!")
+endif()
+
+set(SRC_DIR com/rdk/hal/sensor/thermal)
+
+set(SRC
+    ${SRC_DIR}/ActionEvent.aidl
+    ${SRC_DIR}/IThermalSensor.aidl
+    ${SRC_DIR}/IThermalEventListener.aidl
+    ${SRC_DIR}/State.aidl
+    ${SRC_DIR}/TemperatureReading.aidl
+)
+
+set(INCLUDE_DIRECTORY
+    .
+)
+
+set(COMPILE_AIDL_ARGV "")
+
+if (DEFINED AIDL_GEN_DIR)
+    list(APPEND COMPILE_AIDL_ARGV TARGET_DIRECTORY ${AIDL_GEN_DIR})
+endif()
+
+if (DEFINED AIDL_BIN)
+    list(APPEND COMPILE_AIDL_ARGV AIDL_BIN ${AIDL_BIN})
+endif()
+
+compile_aidl(${SRC}
+    INCLUDE_DIRECTORY ${INCLUDE_DIRECTORY}
+    ${COMPILE_AIDL_ARGV}
+)
