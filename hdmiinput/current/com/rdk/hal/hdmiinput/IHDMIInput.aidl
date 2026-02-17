@@ -85,7 +85,9 @@ interface IHDMIInput
     /**
      * Gets the current EDID set for the HDMI input port.
      * 
-     * The default EDID will be returned if it's never been changed.
+     * If no EDID has been explicitly set via setEDID(), a default EDID is returned.
+     * When multiple default EDID versions are supported (as listed in Capabilities.supportedVersions[]),
+     * the latest supported default EDID version is returned.
      *
      * Spec Info : CTA 861 standards
      *
@@ -97,7 +99,7 @@ interface IHDMIInput
      * @retval true     The EDID was retrieved successfully.
      * @retval false    Indicates an error condition (e.g., resource not available, invalid state, or parameter validation failure).
      *
-     * @see setEDID()
+     * @see setEDID(), getDefaultEDID()
      */
     boolean getEDID(out byte[] edid);
     

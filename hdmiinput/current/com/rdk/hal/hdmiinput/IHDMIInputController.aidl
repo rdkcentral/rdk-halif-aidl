@@ -62,11 +62,13 @@ interface IHDMIInputController
      * the HPD line for the corresponding HDMI input port is asserted towards the source.
      *
      * @exception binder::Status EX_ILLEGAL_STATE
-     *     Thrown if the resource is not in State::READY.
+     *     Thrown if the resource is not in State::READY, or if starting this port would
+     *     exceed the platform's maximumConcurrentStartedPorts limit as defined in
+     *     PlatformCapabilities.
      *
      * @pre The resource must be in State::READY.
      *
-     * @see stop(), IHDMIInput.open()
+     * @see stop(), IHDMIInput.open(), PlatformCapabilities.maximumConcurrentStartedPorts
      */
     void start();
  
