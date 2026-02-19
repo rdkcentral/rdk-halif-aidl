@@ -17,36 +17,20 @@
  * limitations under the License.
  */
 package com.rdk.hal.deviceinfo;
- 
-/** 
- *  @brief     Device Information HAL set property result enum.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Douglas Adler
+import com.rdk.hal.deviceinfo.PropertyType;
+
+/**
+ * @brief Property definition for DeviceInfo HAL.
+ * Each property includes type, size, and zero-termination info for validation.
  */
-
 @VintfStability
-@Backing(type = "int")
-enum SetPropertyResult
-{
-    /** Success */
-    SUCCESS,
-
-    /** Parameter passed to this function is invalid. */
-    ERROR_INVALID_PARAM,
-
-    /** Memory allocation failure */
-    ERROR_MEMORY_EXHAUSTED,
-
-    /** CRC check failed */
-    ERROR_FAILED_CRC_CHECK,
-
-    /** Flash write failed. */
-    ERROR_WRITE_FLASH_FAILED,
-
-    /** Flash read failed. */
-    ERROR_FLASH_READ_FAILED,
-
-    /** Flash verification failed. */
-    ERROR_FLASH_VERIFY_FAILED
+parcelable Property {
+    /** Property key string (e.g., "MANUFACTURER") */
+    String key;
+    /** Data type, defined by PropertyType enum (see PropertyType.aidl) */
+    PropertyType type;
+    /** Maximum size in bytes */
+    int sizeInBytes;
+    /** True if value is zero-terminated */
+    boolean zeroTerminated;
 }

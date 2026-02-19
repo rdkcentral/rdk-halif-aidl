@@ -136,20 +136,21 @@ This list provides an overview of various HAL components, their device profiles,
 
 | HAL Component                                                                  | Interface                      | L1                           | L2                           | L3                          | vComponent |
 | -------------------                                                            |-------------------             |                            --|--                            |--                           |------------|
-| [**Plane Control**](../../plane_control/current/plane_control.md)              | 🟢🟢🟢🟢⚪⚪ (4/6) | 🟡🟡⚪⚪⚪ (2/5)</br> | 🟡🟡⚪⚪⚪ (2/5)</br> | ⚪⚪⚪⚪⚪ (x/5) | 🟡⚪⚪⚪⚪ (1/5) |
+| [**Plane Control**](../../plane_control/current/plane_control.md)              | 🟢🟢🟢🟢⚪⚪ (4/6) | 🟡🟡⚪⚪⚪ (2/5) | 🟡🟡⚪⚪⚪ (2/5) | ⚪⚪⚪⚪⚪ (x/5) | 🟡⚪⚪⚪⚪ (1/5) |
 | [**Composite Input**](../../composite_input/current/composite_input.md)        | 🟡⚪⚪⚪⚪⚪ (1/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
 | [**HDMI CEC**](../../cec/current/cec.md)                                       | 🟢🟢🟢🟢⚪⚪ (4/6) | 🟠🟠🟠⚪⚪ (3/5) | 🟠🟠🟠⚪⚪ (3/5) | 🟠🟠🟠⚪⚪ (3/5) | 🟠🟠🟠⚪⚪ (3/5) |
-| [**HDMI Input**](../../hdmi_input/current/hdmi_input.md)                       | [🟡🟠⚪⚪⚪⚪](https://github.com/rdkcentral/rdk-halif-aidl/issues/43) (1/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
-| [**HDMI Output**](../../hdmi_output/current/hdmi_output.md)                    | [🟡🟠⚪⚪⚪⚪](https://github.com/rdkcentral/rdk-halif-aidl/issues/43) (1/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**HDMI Input**](../../hdmi_input/current/hdmi_input.md)                       | 🟠🟠🟠⚪⚪⚪ (3/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**HDMI Output**](../../hdmi_output/current/hdmi_output.md)                    | 🟠🟠🟠⚪⚪⚪ (3/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
 | [**Service Manager**](../../../vsi/service_manager/current/service_manager.md) | 🟢🟢🟢🟢🟢🟢 (6/6) | N/A              | N/A               | N/A              | 🟢🟢🟢🟢🟢 (5/5) |
-| [**Boot**](../../boot/current/boot.md)                                         | 🟡⚪⚪⚪⚪⚪ (1/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
-| [**Broadcast**](../../broadcast/current/broadcast.md)                          | 🟡🟡⚪⚪⚪⚪ (2/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
-| [**Deep Sleep**](../../deep_sleep/current/deep_sleep.md)                       | 🟢🟢🟢🟢⚪⚪ (3/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
-| [**Device Info**](../../device_info/current/device_info.md)                    | 🟠🟠🟠⚪⚪⚪ (3/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
-| [**Indicator**](../../indicator/current/indicator.md)                          | 🟢🟢🟢🟢⚪⚪ (3/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Boot**](../../boot/current/boot.md)                                         | 🟠🟠🟠⚪⚪⚪ (3/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Deep Sleep**](../../deep_sleep/current/deep_sleep.md)                       | 🟢🟢🟢🟢⚪⚪ (4/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Device Info**](../../device_info/current/device_info.md)                    | 🟢🟢🟢🟢⚪⚪ (4/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Indicator**](../../indicator/current/indicator.md)                          | 🟢🟢🟢🟢⚪⚪ (4/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
 | [**Panel**](../../panel/current/panel.md)                                      | 🟠🟠🟠⚪⚪⚪ (3/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
-| [**Sensor**](../../sensor/current/sensor.md)                                   | 🟡⚪⚪⚪⚪⚪ (1/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
-| [**FFV**](../../ffv/current/ffv.md)                                            | ⚪⚪⚪⚪⚪⚪ (x/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Motion Sensor**](../../sensor/current/motion/motion_sensor.md)              | 🟠🟠🟠⚪⚪⚪ (3/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Thermal Sensor**](../../sensor/current/thermal/thermal_sensor.md)           | 🟠🟠🟠⚪⚪⚪ (3/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Broadcast**](../../broadcast/current/broadcast.md)                          | 🟠🟠🟠⚪⚪⚪ (3/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**FFV**](../../ffv/current/ffv.md)                                            | 🟡⚪⚪⚪⚪⚪ (1/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
 
 ### Non AV Components TBD
 
@@ -168,7 +169,8 @@ The following smaller subset of HALs function as in-process libraries, collectiv
 | [**Graphics (OpenGLES, EGL)**](../../../vsi/graphics/current/graphics.md)     | 🟠🟠🟠⚪⚪⚪ (3/6) | 🟢🟢🟢🟢⚪ (4/5) | ⚪⚪⚪⚪⚪ (x/5)| |
 | [**Wi-Fi**](../../../vsi/wifi/current/wifi.md)                                | 🟠🟠🟠⚪⚪⚪ (3/6) | 🟢🟢🟢🟢⚪ (4/5) | ⚪⚪⚪⚪⚪ (x/5)| |
 | [**Kernel**](../../../vsi/kernel/current/kernel.md)                           | 🟠🟠🟠⚪⚪⚪ (3/6) | 🟢🟢🟢🟢⚪ (4/5) | ⚪⚪⚪⚪⚪ (x/5)| |
-| [**Filesystem**](../../../vsi/filesystem/current/file_system.md)              | 🟠⚪⚪⚪⚪⚪ (1/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5)| TBD: /opt. eCryptFS, /sysfs. /procfs, (resilience) abstracted filing system|
+| [**Filesystem**](../../../vsi/filesystem/current/file_system_architecture.md)              | 🟠🟠🟠⚪⚪⚪ (3/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5)| |
+| [**Abstracted Filesystems**](../../../vsi/filesystem/current/file_system_architecture.md)              | ⚪⚪⚪⚪⚪⚪ (x/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5)| TBD: /opt. eCryptFS, /sysfs. /procfs, (resilience) abstracted filing system|
 | [**Linux Input Device**](../../../vsi/linux_input/current/linux_input.md)     | 🟡⚪⚪⚪⚪⚪ (1/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | |
 
 #### Vendor System Interfaces (VSI) TBD

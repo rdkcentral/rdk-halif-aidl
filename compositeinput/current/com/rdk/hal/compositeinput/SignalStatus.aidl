@@ -2,7 +2,7 @@
  * If not stated otherwise in this file or this component's LICENSE file the
  * following copyright and licenses apply:
  *
- * Copyright 2024 RDK Management
+ * Copyright 2026 RDK Management
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.deviceinfo;
- 
-/** 
- *  @brief     HAL version definition.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Douglas Adler
- */
 
+package com.rdk.hal.compositeinput;
+
+/**
+ * @brief Composite input signal status.
+ * 
+ * Describes the current state of the composite video signal detection.
+ */
 @VintfStability
-parcelable HALVersion
+@Backing(type="int")
+enum SignalStatus
 {
-    /**
-     * A HAL major.minor.doc version.
-     */
-    int major;
-    int minor;
-    int doc;
+    /** No signal detected on the port. */
+    NO_SIGNAL = 0,
+    
+    /** Signal detected but unstable or not locked. */
+    UNSTABLE = 1,
+    
+    /** Signal detected but format is not supported. */
+    NOT_SUPPORTED = 2,
+    
+    /** Signal detected, locked, and stable. */
+    STABLE = 3,
 }

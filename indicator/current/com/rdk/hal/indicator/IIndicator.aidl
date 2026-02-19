@@ -2,7 +2,7 @@
  * If not stated otherwise in this file or this component's LICENSE file the
  * following copyright and licenses apply:
  *
- * Copyright 2024 RDK Management
+ * Copyright 2026 RDK Management
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,45 +17,93 @@
  * limitations under the License.
  */
 package com.rdk.hal.indicator;
-import com.rdk.hal.indicator.State;
 import com.rdk.hal.indicator.Capabilities;
 
 /**
- * /**
- * * @brief Indicator HAL interface.
- * *
- * * Defines the Hardware Abstraction Layer (HAL) interface for indicator services.
- * * @author Luc Kennedy-Lamb
- * * @author Peter Stieglitz
- * * @author Douglas Adler
- * * @author Gerald Weatherup
- * */
+ * @brief Indicator HAL interface.
+ *
+ * Defines the Hardware Abstraction Layer (HAL) interface for indicator services.
+ * Each indicator instance represents a hardware-controlled visual indicator
+ * (e.g., LED, panel display) that can be set to different states.
+ *
+ * For RDK reference implementations, a single global indicator is typically used
+ * to reflect the overall device state. Third-party vendors may implement multiple
+ * independent indicator instances if required by their platform architecture.
+ *
+ * States are represented as strings to provide flexibility and extensibility.
+ * Standard state names include:
+ * - "BOOT": Initial bootloader-defined state
+ * - "ACTIVE": System is fully operational
+ * - "STANDBY": Low-power idle state
+ * - "OFF": All indicators are off
+ * - "DEEP_SLEEP": Deep sleep mode
+ * - "WPS_CONNECTING": Wi-Fi Protected Setup is active
+ * - "WPS_CONNECTED": WPS connection successful
+ * - "WPS_ERROR": WPS session failed
+ * - "WPS_SES_OVERLAP": Multiple WPS sessions detected
+ * - "WIFI_ERROR": Wi-Fi hardware or configuration fault
+ * - "IP_ACQUIRED": IP address successfully assigned
+ * - "NO_IP": IP assignment failed
+ * - "FULL_SYSTEM_RESET": Factory reset in progress
+ * - "USB_UPGRADE": Firmware upgrade via USB
+ * - "SOFTWARE_DOWNLOAD_ERROR": Software update failed
+ * - "PSU_FAILURE": Power supply fault detected
+ *
+ * On system boot, the implementation shall set the indicator to the first state
+ * defined in the platform's HFP file until changed by the set() function.
+ *
+ * Vendors may define additional custom states as needed.
+ *
+ * @author Luc Kennedy-Lamb
+ * @author Peter Stieglitz
+ * @author Douglas Adler
+ * @author Gerald Weatherup
+ */
 
 @VintfStability
 interface IIndicator
 {
-    /** The service name to publish. To be returned by getServiceName() in the derived class. */
-    const @utf8InCpp String serviceName = "Indicator";
+    /** Indicator resource ID type */
+    @VintfStability
+    parcelable Id {
+        /** The actual resource ID */
+        int value;
+    }
 
     /**
-     * Gets the capabilities of the indicator service.
+     * Gets the capabilities of this indicator instance.
      *
-     * @returns Capabilities The capabilities parcelable of the indicator service.
+     * This function can be called at any time and returns the set of states
+     * supported by this specific indicator instance. The returned value must
+     * not change between calls.
+     *
+     * @returns Capabilities parcelable containing supported state strings.
+     * @exception binder::Status::Exception::EX_NONE for success.
      */
     Capabilities getCapabilities();
 
     /**
      * Sets a new indicator state.
      *
-     * @param[in] state An indicator state to be set.
-     * @returns boolean Returns `true` if the state was set successfully, `false` otherwise.
+     * The state string must be one of the states listed in the capabilities
+     * returned by getCapabilities(). Setting an unsupported state will fail.
+     *
+     * @param[in] state An indicator state string to be set.
+     * @returns Success flag indicating whether state was set.
+     * @retval true State was set successfully.
+     * @retval false State is not supported or setting failed.
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid state string.
      */
-    boolean set(in State state);
+    boolean set(in String state);
 
     /**
      * Gets the current indicator state.
      *
-     * @returns State The current indicator state.
+     * Returns the currently active state as a string.
+     *
+     * @returns Current indicator state string.
+     * @exception binder::Status::Exception::EX_NONE for success.
      */
-    State get();
+    String get();
 }
