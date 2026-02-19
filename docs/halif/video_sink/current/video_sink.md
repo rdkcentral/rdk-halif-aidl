@@ -19,7 +19,7 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
 
 ## Related Pages
 
-!!! tip Related Pages
+!!! tip "Related Pages"
     - [Video Decoder](../../video_decoder/current/video_decoder.md)
     - [AV Buffer](../../av_buffer/current/av_buffer.md)
     - [AV Clock](../../av_clock/current/av_clock.md)

@@ -34,7 +34,7 @@ set(SRC_DIR com/rdk/hal/indicator)
 set(SRC
 	${SRC_DIR}/Capabilities.aidl
 	${SRC_DIR}/IIndicator.aidl
-	${SRC_DIR}/State.aidl
+	${SRC_DIR}/IIndicatorManager.aidl
 )
 
 set(INCLUDE_DIRECTORY

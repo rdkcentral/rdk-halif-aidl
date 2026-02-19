@@ -294,6 +294,8 @@ enum VIC
     /** 5120x2160p              100Hz           64:27   1:1                     */
     VIC127_5120_2160_P_100_64_27 = 127,
     /** 5120x2160p              119.88Hz/120Hz  64:27   1:1                     */
+
+    // Reserved range 128–192 (for future VICs or vendor-specific extensions)
     VIC193_5120_2160_P_120_64_27 = 193,
     /** 7680x4320p              23.98Hz/24Hz    16:9    1:1                     */
     VIC194_7680_4320_P_24_16_9 = 194,

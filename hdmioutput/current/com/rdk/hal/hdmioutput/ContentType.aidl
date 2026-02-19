@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,42 +17,49 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmioutput;
- 
+
 /** 
  *  @brief     HDMI content type enum.
+ *
+ *  Maps to the AVI InfoFrame fields ITC (InfoFrame Type Code) and CN (Content Type),
+ *  allowing source devices to indicate the intended content profile for the video stream.
+ *
+ *  Reference: HDMI Specification – AVI InfoFrame ITC/CN fields.
+ *
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Amit Patel
+ *  @author    Gerald Weatherup
  */
- 
 @VintfStability
 @Backing(type = "int")
-enum ContentType
-{
-	/**
-	 * AVI InfoFrame ITC=0
-	 */
-	UNSPECIFIED = -1,
+enum ContentType {
+    /**
+     * Content type not specified – AVI InfoFrame ITC=0
+     */
+    UNSPECIFIED = -1,
 
-	/**
-	 * AVI InfoFrame ITC=1, CN=0
-	 */
-	GRAPHICS = 0,
+    /**
+     * Graphics content – AVI InfoFrame ITC=1, CN=0
+     */
+    GRAPHICS = 0,
 
-	/**
-	 * AVI InfoFrame ITC=1, CN=1
-	 */
-	PHOTO = 1,
+    /**
+     * Photo content – AVI InfoFrame ITC=1, CN=1
+     */
+    PHOTO = 1,
 
-	/**
-	 * AVI InfoFrame ITC=1, CN=2
-	 * CINEMA is also used to declare FilmMaker mode.
-	 */
-	CINEMA = 2,
+    /**
+     * Cinema content – AVI InfoFrame ITC=1, CN=2
+     *
+     * Also used to declare FilmMaker Mode.
+     */
+    CINEMA = 2,
 
-	/**
-	 * AVI InfoFrame ITC=1, CN=3
-	 * GAME provides a hint to the connected TV to enter a low latency state and/or switch to a Game picture mode.
-	 */
-	GAME = 3
+    /**
+     * Game content – AVI InfoFrame ITC=1, CN=3
+     *
+     * Suggests the sink device enter low-latency mode or switch to a game-optimised picture mode.
+     */
+    GAME = 3
 }

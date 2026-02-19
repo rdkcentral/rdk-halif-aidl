@@ -35,6 +35,7 @@ set(VIDEO_DECODER_VERSION "current")
 
 set(SRC_DIR com/rdk/hal/panel)
 set(COMMON_SRC_DIR ${COMMON_MODULE_PATH}/${COMMON_VERSION}/com/rdk/hal)
+set(VIDEO_DECODER_SRC_DIR ${VIDEO_DECODER_MODULE_PATH}/${VIDEO_DECODER_VERSION}/com/rdk/hal/videodecoder)
 
 set(SRC
 	${SRC_DIR}/Capabilities.aidl
@@ -49,6 +50,7 @@ set(SRC
 	${SRC_DIR}/WhiteBalance2PointSettings.aidl
 	${SRC_DIR}/WhiteBalanceMultiPointSettings.aidl
 	${COMMON_SRC_DIR}/AVSource.aidl
+	${VIDEO_DECODER_SRC_DIR}/DynamicRange.aidl
 )
 
 set(INCLUDE_DIRECTORY

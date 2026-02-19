@@ -30,7 +30,12 @@ import com.rdk.hal.hdmiinput.FreeSync;
 parcelable PlatformCapabilities
 {
 	/**
-	 * Defines the maximum number of HDMI input ports than can be concurrently started.
+	 * Defines the maximum number of HDMI input ports that can be concurrently started.
+	 * This is a hardware/platform constraint that limits how many HDMI input ports
+	 * can be in the STARTED state simultaneously. Attempting to start an additional
+	 * port beyond this limit will result in an EX_ILLEGAL_STATE exception.
+	 * 
+	 * @see IHDMIInputController.start()
 	 */
 	int maximumConcurrentStartedPorts;
 

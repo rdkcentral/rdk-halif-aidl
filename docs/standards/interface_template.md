@@ -22,7 +22,7 @@ Describe the role of this HAL service. Outline its responsibilities, how it abst
 
 ## Related Pages
 
-!!! tip Related Pages
+!!! tip "Related Pages"
 - [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
 - [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
 - [Other HALs or Framework Components](link)

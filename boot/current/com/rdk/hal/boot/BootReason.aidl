@@ -35,13 +35,13 @@ enum BootReason
     /** Boot Reason is due to Watchdog Timer. */
     WATCHDOG = 0,
 
-    /** Boot Reason is due to software Reset. */
-    SOFTWARE_RESET = 1,
+    /** Boot Reason is due to Maintenance Reboot. */
+    MAINTENANCE_REBOOT = 1,
 
     /** Boot Reason is due to Thermal Reset. */
     THERMAL_RESET = 2,
 
-    /** Boot Reason is due to Warm Temperature Reset. */
+    /** Boot Reason is due to software reboot */
     WARM_RESET = 3,
 
     /** Boot Reason is due to Cold Boot. */
