@@ -84,7 +84,7 @@ interface IVideoDecoderController
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoDecoderController}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IVideoDecoderController} for exception handling behavior).
      *
      * @see getProperty()
      */
@@ -110,7 +110,7 @@ interface IVideoDecoderController
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoDecoderController}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IVideoDecoderController} for exception handling behavior).
      * 
      * @pre The resource must be in State::STARTED.
      */
@@ -206,7 +206,7 @@ interface IVideoDecoderController
     * @exception binder::Status::Exception::EX_NONE for success
     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the `STARTED` state.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoDecoderController}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IVideoDecoderController} for exception handling behavior).
     *
     * @pre The resource must be in the `STARTED` state.
     */

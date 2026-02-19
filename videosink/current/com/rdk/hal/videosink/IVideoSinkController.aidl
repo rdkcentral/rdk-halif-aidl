@@ -51,7 +51,7 @@ interface IVideoSinkController
      *
      * @exception binder::Status::Exception::EX_NONE for success
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoSinkController}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IVideoSinkController} for exception handling behavior).
      *
      * @see getProperty()
      */
@@ -72,7 +72,7 @@ interface IVideoSinkController
      * @retval true     The Video Decoder ID was set successfully.
      * @retval false    Invalid Video Decoder ID.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoSinkController}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IVideoSinkController} for exception handling behavior).
      *
      * @pre The resource must be in State::READY.
      *
@@ -88,7 +88,7 @@ interface IVideoSinkController
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoSinkController}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IVideoSinkController} for exception handling behavior).
      *
      * @pre The resource must be in State::READY or State::STARTED.
      *
@@ -149,7 +149,7 @@ interface IVideoSinkController
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IVideoSinkController}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IVideoSinkController} for exception handling behavior).
      * 
      * @pre The resource must be in State::STARTED.
      */

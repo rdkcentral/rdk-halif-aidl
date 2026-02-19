@@ -54,7 +54,7 @@ interface IPlaneControl
      *
      * @returns Capabilities[] array of plane resource instance capabilities.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPlaneControl} for exception handling behavior).
      */
     Capabilities[] getCapabilities();
  
@@ -71,7 +71,7 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPlaneControl} for exception handling behavior).
      * 
      * @see releaseNativeGraphicsWindowHandle()
      */
@@ -104,7 +104,7 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPlaneControl} for exception handling behavior).
      *
      * @see getNativeGraphicsWindowHandle()
      */
@@ -131,7 +131,7 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPlaneControl} for exception handling behavior).
      *
      * @see getVideoSourceDestinationPlaneMapping()
      */
@@ -147,7 +147,7 @@ interface IPlaneControl
      * 
      * @exception binder::Status::Exception::EX_NONE for success.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPlaneControl} for exception handling behavior).
      *
      * @see setVideoSourceDestinationPlaneMapping()
      */
@@ -164,7 +164,7 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameter value.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPlaneControl} for exception handling behavior).
      *
      * @see setProperty(), getPropertyMulti()
      */
@@ -184,7 +184,7 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value. 
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPlaneControl} for exception handling behavior).
      *
      * @see getProperty(), setPropertyMultiAtomic()
      */
@@ -221,7 +221,7 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid plane index, property key(s) or empty input list.
      * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPlaneControl} for exception handling behavior).
      *
      * @see getProperty(), setPropertyMultiAtomic()
      */
@@ -244,7 +244,7 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPlaneControl} for exception handling behavior).
      *
      * @see setProperty(), getPropertyMulti()
      */
@@ -265,7 +265,7 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPlaneControl} for exception handling behavior).
      *
      * @see unregisterListener()
      */
@@ -283,7 +283,7 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPlaneControl}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPlaneControl} for exception handling behavior).
      *
      * @see registerListener()
      */

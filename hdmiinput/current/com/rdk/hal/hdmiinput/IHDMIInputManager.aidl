@@ -49,7 +49,7 @@ interface IHDMIInputManager
      *
      * @returns PlatformCapabilities parcelable.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIInputManager}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIInputManager} for exception handling behavior).
      */
     PlatformCapabilities getCapabilities();
 
@@ -58,7 +58,7 @@ interface IHDMIInputManager
      * 
      * @returns IHDMIInput.Id[]
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIInputManager}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIInputManager} for exception handling behavior).
      */
 	IHDMIInput.Id[] getHDMIInputIds();
  
@@ -69,7 +69,7 @@ interface IHDMIInputManager
      *
      * @returns IHDMIInput or null if the ID is invalid.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIInputManager}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIInputManager} for exception handling behavior).
      */
     @nullable IHDMIInput getHDMIInput(in IHDMIInput.Id hdmiInputId);
 

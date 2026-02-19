@@ -49,7 +49,7 @@ interface IDeviceInfo
      *
      * @returns Capabilities parcelable.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IDeviceInfo}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IDeviceInfo} for exception handling behavior).
      */
     Capabilities getCapabilities();
 
@@ -64,7 +64,7 @@ interface IDeviceInfo
     * @param[in] propertyKey  The key of a property to retrieve.
     * @returns Property parcelable with metadata, or null if unsupported.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IDeviceInfo}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IDeviceInfo} for exception handling behavior).
     *
     * @see getCapabilities(), Property.aidl, PropertyType.aidl
     */

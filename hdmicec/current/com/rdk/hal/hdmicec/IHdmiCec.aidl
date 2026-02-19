@@ -51,7 +51,7 @@ interface IHdmiCec
      *
      * @returns State enum value.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHdmiCec}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHdmiCec} for exception handling behavior).
      *
      * @see IHdmiCecEventListener.onStateChanged().
      */  
@@ -64,7 +64,7 @@ interface IHdmiCec
      *
      * @returns PropertyValue or null if the property key is unknown.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHdmiCec}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHdmiCec} for exception handling behavior).
      * 
      * @see setProperty()
      */
@@ -78,7 +78,7 @@ interface IHdmiCec
      *
      * @returns int[] - an array of addresses. The size of the array will be zero if no additional addresses have been set.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHdmiCec}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHdmiCec} for exception handling behavior).
      * 
      * @see addLogicalAddress(), removeLogicalAddress()
      */
@@ -109,7 +109,7 @@ interface IHdmiCec
      * 
      * @returns IHdmiCecController or null on error.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHdmiCec}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHdmiCec} for exception handling behavior).
      * 
      * @pre The resource must be in State::CLOSED.
      * 
@@ -133,7 +133,7 @@ interface IHdmiCec
      * @retval true     Successfully closed.
      * @retval false    Invalid state or unrecognised parameter.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHdmiCec}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHdmiCec} for exception handling behavior).
      *
      * @pre The resource must be in State::STARTED.
      *
@@ -152,7 +152,7 @@ interface IHdmiCec
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHdmiCec}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHdmiCec} for exception handling behavior).
      *
      * @see unregisterEventListener()
      */
@@ -167,7 +167,7 @@ interface IHdmiCec
      * @retval true     The event listener was unregistered.
      * @retval false    The event listener was not found registered.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHdmiCec}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHdmiCec} for exception handling behavior).
      *
      * @see registerEventListener()
      */

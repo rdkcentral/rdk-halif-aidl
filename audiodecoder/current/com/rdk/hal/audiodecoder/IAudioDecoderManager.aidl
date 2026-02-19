@@ -51,7 +51,7 @@ interface IAudioDecoderManager
      *
      * @returns IAudioDecoder.Id[]
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAudioDecoderManager}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioDecoderManager} for exception handling behavior).
      */
     IAudioDecoder.Id[] getAudioDecoderIds();
 
@@ -64,7 +64,7 @@ interface IAudioDecoderManager
      *
      * @returns IAudioDecoder which can be null if the resource index is invalid.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAudioDecoderManager}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioDecoderManager} for exception handling behavior).
      */
     @nullable IAudioDecoder getAudioDecoder(in IAudioDecoder.Id decoderResourceId);
 }

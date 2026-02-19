@@ -47,7 +47,7 @@ interface IBoot
      *
      * @returns Capabilities parcelable.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IBoot}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IBoot} for exception handling behavior).
      */
     Capabilities getCapabilities();
 
@@ -56,7 +56,7 @@ interface IBoot
      * 
      * @returns BootReason
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IBoot}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IBoot} for exception handling behavior).
      */
     BootReason getBootReason();
 

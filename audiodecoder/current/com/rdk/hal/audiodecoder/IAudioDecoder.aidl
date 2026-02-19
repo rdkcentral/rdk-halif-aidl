@@ -64,7 +64,7 @@ interface IAudioDecoder
      *
      * @returns Capabilities parcelable.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAudioDecoder}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioDecoder} for exception handling behavior).
      */
     Capabilities getCapabilities();
 
@@ -80,7 +80,7 @@ interface IAudioDecoder
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAudioDecoder}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioDecoder} for exception handling behavior).
      *
      */
     @nullable PropertyValue getProperty(in Property property);
@@ -92,7 +92,7 @@ interface IAudioDecoder
 	 *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAudioDecoder}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioDecoder} for exception handling behavior).
      *
      * @see IAudioDecoderListener.onStateChanged().
      */  
@@ -127,7 +127,7 @@ interface IAudioDecoder
      * 
      * @returns IAudioDecoderController or null if the codec or secure is not supported if requested.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAudioDecoder}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioDecoder} for exception handling behavior).
      * 
      * @pre The resource must be in State::CLOSED.
      * 
@@ -154,7 +154,7 @@ interface IAudioDecoder
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in OPENED State.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAudioDecoder}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioDecoder} for exception handling behavior).
      *
      * @see open()
      */
@@ -175,7 +175,7 @@ interface IAudioDecoder
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAudioDecoder}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioDecoder} for exception handling behavior).
      *
      * @see unregisterEventListener()
      */
@@ -193,7 +193,7 @@ interface IAudioDecoder
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAudioDecoder}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioDecoder} for exception handling behavior).
      *
      * @see registerEventListener()
      */

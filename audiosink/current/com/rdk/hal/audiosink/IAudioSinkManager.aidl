@@ -47,7 +47,7 @@ interface IAudioSinkManager
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAudioSinkManager}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioSinkManager} for exception handling behavior).
      */
 	IAudioSink.Id[] getAudioSinkIds();   
 
@@ -62,7 +62,7 @@ interface IAudioSinkManager
      *
      * @returns PlatformCapabilities parcelable.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAudioSinkManager}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioSinkManager} for exception handling behavior).
      */
     PlatformCapabilities getPlatformCapabilities();
 
@@ -75,7 +75,7 @@ interface IAudioSinkManager
      *
      * @returns IAudioSink or null on invalid audio sink ID.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IAudioSinkManager}} for exception handling behavior).
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioSinkManager} for exception handling behavior).
      */
     @nullable IAudioSink getAudioSink(in IAudioSink.Id audioSinkId);
 
