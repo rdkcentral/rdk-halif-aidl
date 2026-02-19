@@ -34,6 +34,7 @@ import com.rdk.hal.hdmioutput.IHDMIOutput;
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  *  @author    Gerald Weatherup
+ */
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
@@ -41,7 +42,6 @@ import com.rdk.hal.hdmioutput.IHDMIOutput;
  *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
  *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
  *    The caller must ignore any output variables.
- */
 @VintfStability
 interface IHDMIOutputManager
 {
@@ -78,7 +78,7 @@ interface IHDMIOutputManager
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIOutputManager} for exception handling behavior).
      */
-	IHDMIOutput.Id[] getHDMIOutputIds();
+    IHDMIOutput.Id[] getHDMIOutputIds();
 
     /**
      * Retrieves a HDMI output instance associated with a given ID.
@@ -93,9 +93,9 @@ interface IHDMIOutputManager
      * @returns IHDMIOutput
      * @retval null  The ID was invalid or the resource is unavailable.
      *
-     * @see IHDMIOutput
-     *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIOutputManager} for exception handling behavior).
+     *
+     * @see IHDMIOutput
      */
     @nullable IHDMIOutput getHDMIOutput(in IHDMIOutput.Id hdmiOutputId);
 }

@@ -112,4 +112,69 @@ flowchart TD
 
 ## Interface / Testing / vComponent Status
 
-> **Note:** For the current review and approval status of each component (GREEN / AMBER / RED), see the [RAG Status Report](../../../../RAG_STATUS_REPORT.md).
+### AV Components
+
+This list provides an overview of various HAL components, their device profiles, and functionality within the system.
+
+| HAL Component                                                     |    Interface                   | L1                           | L2                          | L3                           | vComponent |
+| -------------------                                               |--------------------            |                            --|                            -|                             -|----------|
+| [**Audio Decoder**](../../audio_decoder/current/audio_decoder.md) | 🟢🟢🟢🟢⚪⚪ (4/6) | 🟠🟠🟠⚪⚪ (3/5) | 🟠🟠🟠⚪⚪ (3/5) | 🟠🟠🟠⚪⚪ (3/5) | 🟡⚪⚪⚪⚪ (1/5)|
+| [**Audio Sink**](../../audio_sink/current/audio_sink.md)          | 🟢🟢🟢🟢⚪⚪ (4/6) | 🟠🟠🟠⚪⚪ (3/5) | 🟠🟠🟠⚪⚪ (3/5) | 🟠🟠🟠⚪⚪ (3/5) | 🟡⚪⚪⚪⚪ (1/5)|
+| [**Audio Mixer**](../../audio_mixer/current/audio_mixer.md)       | 🟡⚪⚪⚪⚪⚪ (2/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5)|
+| [**AV Buffer**](../../av_buffer/current/av_buffer.md)             | 🟢🟢🟢🟢⚪⚪ (4/6) | 🟠🟠🟠⚪⚪ (3/5) | N/A              | 🟠🟠🟠⚪⚪ (1/5) | 🟡⚪⚪⚪⚪ (1/5)|
+| [**AV Clock**](../../av_clock/current/av_clock.md)                | 🟢🟢🟢🟢⚪⚪ (4/6) | 🟡🟡⚪⚪⚪ (3/5) | 🟡🟡⚪⚪⚪ (2/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5)|
+| [**Video Decoder**](../../video_decoder/current/video_decoder.md) | 🟢🟢🟢🟢⚪⚪ (4/6) | 🟠🟠🟠⚪⚪ (3/5) | 🟠🟠🟠⚪⚪ (3/5) | 🟠🟠🟠⚪⚪ (3/5) | 🟡⚪⚪⚪⚪ (1/5)|
+| [**Video Sink**](../../video_sink/current/video_sink.md)          | 🟢🟢🟢🟢⚪⚪ (4/6) | 🟠🟠🟠⚪⚪ (3/5) | 🟠🟠🟠⚪⚪ (3/5) | 🟠🟠🟠⚪⚪ (3/5) | 🟡⚪⚪⚪⚪ (1/5)|
+
+| A/V Tests          |L4 | vDevice |
+| ------------------ |---|------------|
+| **Generic A/V Tests**      | 🟡⚪⚪⚪⚪ (1/5) | 🟡⚪⚪⚪⚪ (1/5) |
+
+### Non AV Components
+
+This list provides an overview of various HAL components, their device profiles, and functionality within the system.
+
+| HAL Component                                                                  | Interface                      | L1                           | L2                           | L3                          | vComponent |
+| -------------------                                                            |-------------------             |                            --|--                            |--                           |------------|
+| [**Plane Control**](../../plane_control/current/plane_control.md)              | 🟢🟢🟢🟢⚪⚪ (4/6) | 🟡🟡⚪⚪⚪ (2/5) | 🟡🟡⚪⚪⚪ (2/5) | ⚪⚪⚪⚪⚪ (x/5) | 🟡⚪⚪⚪⚪ (1/5) |
+| [**Composite Input**](../../composite_input/current/composite_input.md)        | 🟡⚪⚪⚪⚪⚪ (1/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**HDMI CEC**](../../cec/current/cec.md)                                       | 🟢🟢🟢🟢⚪⚪ (4/6) | 🟠🟠🟠⚪⚪ (3/5) | 🟠🟠🟠⚪⚪ (3/5) | 🟠🟠🟠⚪⚪ (3/5) | 🟠🟠🟠⚪⚪ (3/5) |
+| [**HDMI Input**](../../hdmi_input/current/hdmi_input.md)                       | 🟠🟠🟠⚪⚪⚪ (3/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**HDMI Output**](../../hdmi_output/current/hdmi_output.md)                    | 🟠🟠🟠⚪⚪⚪ (3/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Service Manager**](../../../vsi/service_manager/current/service_manager.md) | 🟢🟢🟢🟢🟢🟢 (6/6) | N/A              | N/A               | N/A              | 🟢🟢🟢🟢🟢 (5/5) |
+| [**Boot**](../../boot/current/boot.md)                                         | 🟠🟠🟠⚪⚪⚪ (3/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Deep Sleep**](../../deep_sleep/current/deep_sleep.md)                       | 🟢🟢🟢🟢⚪⚪ (4/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Device Info**](../../device_info/current/device_info.md)                    | 🟢🟢🟢🟢⚪⚪ (4/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Indicator**](../../indicator/current/indicator.md)                          | 🟢🟢🟢🟢⚪⚪ (4/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Panel**](../../panel/current/panel.md)                                      | 🟠🟠🟠⚪⚪⚪ (3/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Motion Sensor**](../../sensor/current/motion/motion_sensor.md)              | 🟠🟠🟠⚪⚪⚪ (3/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Thermal Sensor**](../../sensor/current/thermal/thermal_sensor.md)           | 🟠🟠🟠⚪⚪⚪ (3/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**Broadcast**](../../broadcast/current/broadcast.md)                          | 🟠🟠🟠⚪⚪⚪ (3/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+| [**FFV**](../../ffv/current/ffv.md)                                            | 🟡⚪⚪⚪⚪⚪ (1/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) |
+
+### Non AV Components TBD
+
+| HAL Component                                                                  | Interface                      | L1                | L2                | L3               | vComponent | Comments|
+| -------------------                                                            |-------------------             |                 --|--                 |--                |------------| --- |
+| [**CDM**](../../cdm/current/cdm.md)                                            | ⚪⚪⚪⚪⚪⚪ (X/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | Needs to reviewed in light of non-standard integration for vendors|
+|  **Secapi**                                                                    | ⚪⚪⚪⚪⚪⚪ (X/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | Used for crypto, needs rationalisation  with TEE |
+
+### Vendor System Interfaces (VSI)
+
+The following smaller subset of HALs function as in-process libraries, collectively referred to as the Vendor System Interface (VSI). They are dynamically linked to the RDK Middleware, commonly used for:
+
+| HAL Component                                                                 | Interface                    | L4                         | vDevice           | Comment |
+| -------------------                                                           | ----------                   |----                        |-----------        | ------ |
+| [**Bluetooth**](../../../vsi/bluetooth/current/bluetooth.md)                  | 🟠🟠🟠⚪⚪⚪ (3/6) | 🟠🟠🟠⚪⚪ (3/5) | ⚪⚪⚪⚪⚪ (x/5)| |
+| [**Graphics (OpenGLES, EGL)**](../../../vsi/graphics/current/graphics.md)     | 🟠🟠🟠⚪⚪⚪ (3/6) | 🟢🟢🟢🟢⚪ (4/5) | ⚪⚪⚪⚪⚪ (x/5)| |
+| [**Wi-Fi**](../../../vsi/wifi/current/wifi.md)                                | 🟠🟠🟠⚪⚪⚪ (3/6) | 🟢🟢🟢🟢⚪ (4/5) | ⚪⚪⚪⚪⚪ (x/5)| |
+| [**Kernel**](../../../vsi/kernel/current/kernel.md)                           | 🟠🟠🟠⚪⚪⚪ (3/6) | 🟢🟢🟢🟢⚪ (4/5) | ⚪⚪⚪⚪⚪ (x/5)| |
+| [**Filesystem**](../../../vsi/filesystem/current/file_system_architecture.md)              | 🟠🟠🟠⚪⚪⚪ (3/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5)| |
+| [**Abstracted Filesystems**](../../../vsi/filesystem/current/file_system_architecture.md)              | ⚪⚪⚪⚪⚪⚪ (x/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5)| TBD: /opt. eCryptFS, /sysfs. /procfs, (resilience) abstracted filing system|
+| [**Linux Input Device**](../../../vsi/linux_input/current/linux_input.md)     | 🟡⚪⚪⚪⚪⚪ (1/6) | ⚪⚪⚪⚪⚪ (x/5) | ⚪⚪⚪⚪⚪ (x/5) | |
+
+#### Vendor System Interfaces (VSI) TBD
+
+| HAL Component                                                                 | L4               | Comments |
+| -------------------                                                           |----              | ----- |
+| [**Graphics Display**](../../../vsi/graphics/current/graphics.md)             | ⚪⚪⚪⚪⚪ (x/5) | Integrated with the display, EGL & Plane Control (Benchmarks) (Wayland), Composition |

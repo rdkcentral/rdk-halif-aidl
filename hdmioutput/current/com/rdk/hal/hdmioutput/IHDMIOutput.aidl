@@ -37,6 +37,7 @@ import com.rdk.hal.PropertyValue;
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  *  @author    Gerald Weatherup
+ */
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
@@ -44,7 +45,6 @@ import com.rdk.hal.PropertyValue;
  *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
  *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
  *    The caller must ignore any output variables.
- */
 @VintfStability
 interface IHDMIOutput
 {
@@ -61,8 +61,8 @@ interface IHDMIOutput
     /**
      * Gets the capabilities for this HDMI output.
      *
-     * This function can be called at any time and is not dependant on any HDMI output state.
-     * The returned value is not allowed to change between calls.
+     * This function can be called at any time and is not dependent on HDMI output state.
+     * The returned value is constant and must not change between calls.
      *
      * @returns Capabilities parcelable.
      *
@@ -88,7 +88,7 @@ interface IHDMIOutput
      * @returns State enum value.
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIOutput} for exception handling behavior).
-	 *
+     *
      * @see IHDMIOutputEventListener.onStateChanged()
      */
     State getState();
@@ -110,7 +110,6 @@ interface IHDMIOutput
      * @exception binder::Status EX_ILLEGAL_STATE
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIOutput} for exception handling behavior).
-     *
      * @pre Must be in State::CLOSED.
      *
      * @see IHDMIOutputController, close(), registerEventListener()
@@ -139,10 +138,7 @@ interface IHDMIOutput
     boolean close(in IHDMIOutputController hdmiOutputController);
 
     /**
-	 * Registers a HDMI output event listener.
-     *
-     * An `IHDMIOutputEventListener` can only be registered once and will fail on subsequent
-     * registration attempts.
+     * Registers a HDMI output event listener.
      *
      * Only one listener can be registered at a time.
      *
@@ -158,9 +154,7 @@ interface IHDMIOutput
     boolean registerEventListener(in IHDMIOutputEventListener hdmiOutputEventListener);
 
     /**
-	 * Unregisters a HDMI output event listener.
-     *
-     * @param[in] hdmiOutputEventListener	    Listener object for event callbacks.
+     * Unregisters a HDMI output event listener.
      *
      * @param[in] hdmiOutputEventListener  Listener object.
      * @returns boolean

@@ -31,6 +31,8 @@ import com.rdk.hal.AVSource;
 /** 
  *  @brief     Display Panel Output Control HAL interface.
  *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
+ */
+
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
@@ -38,8 +40,6 @@ import com.rdk.hal.AVSource;
  *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
  *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
  *    The caller must ignore any output variables.
- */
-
 @VintfStability
 interface IPanelOutput
 {
@@ -155,10 +155,11 @@ interface IPanelOutput
      * @retval true     All default picture modes were successfully returned.
      * @retval false    One or more picture mode configurations were invalid and could not be returned or Invalid criteria or empty input list.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPanelOutput} for exception handling behavior).
      * @exception binder::Status::Exception::EX_NONE             Success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid criteria or empty input list.
      * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPanelOutput} for exception handling behavior).
      *
      * @see setPictureModes(), getPictureModes()
      */

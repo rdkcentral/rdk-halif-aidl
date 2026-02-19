@@ -36,6 +36,7 @@ import com.rdk.hal.PropertyValue;
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  *  @author    Gerald Weatherup
+ */
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
@@ -43,7 +44,6 @@ import com.rdk.hal.PropertyValue;
  *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
  *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
  *    The caller must ignore any output variables.
- */
 @VintfStability
 interface IHDMIOutputController
 {
@@ -68,14 +68,17 @@ interface IHDMIOutputController
     void start();
 
     /**
-	 * Stops the HDMI output.
+     * Stops the HDMI output signal.
      *
-     * The HDMI output enters the `STOPPING` state where the output signal is disabled.
-     * Once the HDMI output signal is disabled, the HDMI output enters the `READY` state.
+     * The output transitions from `STARTED` → `STOPPING` → `READY`. Video/audio output
+     * is disabled, and downstream sinks receive an inactive signal. This allows the client
+     * to reconfigure properties before restarting output.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE
+     * If `stop()` is called outside of the `STARTED` state, an `EX_ILLEGAL_STATE` is raised.
      *
-     * @pre The resource must be in State::STARTED.
+     * @exception binder::Status EX_ILLEGAL_STATE  HDMI output is not in STARTED state.
+     *
+     * @pre Must be in State::STARTED
      *
      * @see start(), IHDMIOutput.close()
      */
@@ -98,10 +101,7 @@ interface IHDMIOutputController
     boolean getHotPlugDetectState();
 
     /**
-     * Sets a property.
-     *
-     * Properties may be set in the `READY` state to take effect once started or in the `STARTED` state
-     * where they are dynamically applied to the current HDMI output signal.
+     * Sets a property on the HDMI output.
      *
      * Properties can be set in `READY` state (applied when `start()` is called) or
      * dynamically in `STARTED` state (applied immediately to the active signal).
@@ -119,15 +119,14 @@ interface IHDMIOutputController
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIOutputController} for exception handling behavior).
      *
+     * @pre Output must be in State::READY or State::STARTED.
+     *
      * @see setPropertyMulti(), getProperty()
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);
 
     /**
-     * Sets multiple properties.
-     *
-     * Properties may be set in the `READY` state to take effect once started or in the `STARTED` state
-     * where they are dynamically applied to the current HDMI output signal.
+     * Sets multiple properties on the HDMI output.
      *
      * Same semantics as `setProperty()`, but applies a batch of key-value pairs.
      * Invalid keys or values result in the full operation failing (fail-fast).
@@ -177,7 +176,7 @@ interface IHDMIOutputController
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIOutputController} for exception handling behavior).
      *
-     * @see getHDCPStatus(), getHDCPReceiverVersion(), onEDID()
+     * @see getHDCPStatus(), getHDCPCurrentVersion(), onEDID()
      */
     HDCPProtocolVersion getHDCPReceiverVersion();
 
@@ -209,8 +208,6 @@ interface IHDMIOutputController
      *
      * @pre Output must be in State::READY or State::STARTED.
      *
-     * @pre The HDMI output must be in a `READY` or `STARTED` state.
-     *
      * @see getSPDInfoFrame()
      */
     void setSPDInfoFrame(in @nullable SPDInfoFrame spdInfoFrame);
@@ -222,6 +219,8 @@ interface IHDMIOutputController
      *
      * @returns SPDInfoFrame
      * @retval null    No SPD InfoFrame is currently configured.
+     *
+     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIOutputController} for exception handling behavior).
      *
      * @pre Output must be in State::READY or State::STARTED.
      *

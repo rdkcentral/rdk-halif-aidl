@@ -58,6 +58,8 @@ import com.rdk.hal.indicator.Capabilities;
  * @author Peter Stieglitz
  * @author Douglas Adler
  * @author Gerald Weatherup
+ */
+
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
@@ -65,7 +67,6 @@ import com.rdk.hal.indicator.Capabilities;
  *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
  *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
  *    The caller must ignore any output variables.
- */
 @VintfStability
 interface IIndicator
 {
@@ -79,7 +80,12 @@ interface IIndicator
     /**
      * Gets the capabilities of this indicator instance.
      *
-     * @returns Capabilities The capabilities parcelable of the indicator service.
+     * This function can be called at any time and returns the set of states
+     * supported by this specific indicator instance. The returned value must
+     * not change between calls.
+     *
+     * @returns Capabilities parcelable containing supported state strings.
+     * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IIndicator} for exception handling behavior).
      */
@@ -88,8 +94,15 @@ interface IIndicator
     /**
      * Sets a new indicator state.
      *
-     * @param[in] state An indicator state to be set.
-     * @returns boolean Returns `true` if the state was set successfully, `false` otherwise.
+     * The state string must be one of the states listed in the capabilities
+     * returned by getCapabilities(). Setting an unsupported state will fail.
+     *
+     * @param[in] state An indicator state string to be set.
+     * @returns Success flag indicating whether state was set.
+     * @retval true State was set successfully.
+     * @retval false State is not supported or setting failed.
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid state string.
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IIndicator} for exception handling behavior).
      */
@@ -98,7 +111,10 @@ interface IIndicator
     /**
      * Gets the current indicator state.
      *
-     * @returns State The current indicator state.
+     * Returns the currently active state as a string.
+     *
+     * @returns Current indicator state string.
+     * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IIndicator} for exception handling behavior).
      */
