@@ -13,7 +13,6 @@ The HAL is primarily used for reading the provisioning data. All returned values
     | ---------------------------- | ------------------------------------------------------------------------------------------------ |
     | **Interface Definition**     | [com/rdk/hal/deviceinfo](../../../../deviceinfo/current/) |
     | **HAL Interface Type**       | [AIDL and Binder](../../../introduction/aidl_and_binder.md)                                      |
-    | **Initialization Unit**      | [systemd service](../../../vsi/systemd/current/systemd.md)                                       |
 
 ---
 
