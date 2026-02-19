@@ -51,6 +51,8 @@ interface IVideoSink
      * This function can be called at any time and is not dependant on any Video Sink state.
      * The returned value is not allowed to change between calls.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @returns Capabilities parcelable.
      */
     Capabilities getCapabilities();
@@ -61,7 +63,10 @@ interface IVideoSink
      * @param[in] property              The key of a property from the Property enum.
      *
      * @returns PropertyValue or null if the property key is unknown.
-     * 
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value. 
+     *
      * @see setProperty()
      */
     @nullable PropertyValue getProperty(in Property property);
@@ -71,6 +76,8 @@ interface IVideoSink
      *
      * @returns State enum value.
 	 *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @see IVideoSinkListener.onStateChanged().
      */  
     State getState();
@@ -87,7 +94,9 @@ interface IVideoSink
      * 
      * @returns IVideoSinkController or null on error.
      * 
-     * @exception binder::Status EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
      * 
      * @pre The resource must be in State::CLOSED.
      * 
@@ -107,7 +116,9 @@ interface IVideoSink
      * @retval true     Successfully closed.
      * @retval false    Invalid state or unrecognised parameter.
      *
-     * @pre The resource must be in State::READY.
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in OPENED State.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      * @see open()
      */
@@ -125,6 +136,9 @@ interface IVideoSink
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
      *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
      * @see unregisterEventListener()
      */
     boolean registerEventListener(in IVideoSinkEventListener videoSinkEventListener);
@@ -137,6 +151,9 @@ interface IVideoSink
      * @return boolean
      * @retval true     The event listener was unregistered.
      * @retval false    The event listener was not found registered.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      * @see registerEventListener()
      */

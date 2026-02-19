@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmiinput;
-import com.rdk.hal.State;
+import com.rdk.hal.hdmiinput.State;
 
 /** 
  *  @brief     Event callbacks listener interface from HDMI input.
@@ -30,10 +30,19 @@ import com.rdk.hal.State;
 oneway interface IHDMIInputEventListener {
  
     /**
-	 * Callback when the HDMI input has transitioned to a new state.
+     Callback when the HDMI input has transitioned to a new state.
      *
      * @param[in] oldState      The state that the port has transitioned from.
      * @param[in] newState      The new state that the port has transitioned to.
      */
     void onStateChanged(in State oldState, in State newState);
+
+    /**
+     * EDID change notification.
+     *
+     * Fires when the EDID for the HDMI input port is changed via setEDID().
+     *
+     * @param[in] edid  The new EDID data as a byte array.
+     */
+    void onEDIDChange(in byte[] edid);    
 }

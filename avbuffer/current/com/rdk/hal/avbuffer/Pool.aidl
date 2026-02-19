@@ -28,8 +28,8 @@ package com.rdk.hal.avbuffer;
 @VintfStability 
 parcelable Pool
 {
-    /** Invalid handle value. */
-    const byte INVALID = -1;
+    /** Invalid Pool handle */
+    const byte INVALID_POOL = -1;
 
     /** Handle for the pool. */
     byte handle;

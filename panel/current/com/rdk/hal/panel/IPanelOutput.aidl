@@ -101,29 +101,54 @@ interface IPanelOutput
 
     /**
      * Gets one or more picture modes of the panel for a given AV source and dynamic range video format.
-     * 
-     * @param[in,out] configurations  Array of PictureModeConfiguration, filled with `pictureMode` values if successful.
-     * 
+     *
+     * Input `requestedConfigurations` contains one or more entries where the `format` and `source` fields
+     * specify the query criteria. The `pictureMode` field may be ignored on input.
+     *
+     * Output `returnedConfigurations` contains one element per input element (same ordering). For each element:
+     * - The `format` and `source` fields echo the requested values.
+     * - The `pictureMode` field is populated on success.
+     *
+     * Error handling:
+     * - Passing an empty `requestedConfigurations` array returns false.
+     * - If any entry contains invalid criteria, the call returns false and no output values are populated.
+     *
+     * @param[in] requestedConfigurations   Non-empty list of query criteria (format/source/pictureMode optional).
+     * @param[out] returnedConfigurations   Populated picture mode results matching input ordering.
+     *
      * @return boolean
-     * @retval true				The picture modes were successfully return.
-     * @retval false			One or more picture mode configurations were invalid and could not be returned.
+     * @retval true     All picture modes were successfully returned.
+     * @retval false    One or more picture mode configurations were invalid and could not be returned or Invalid criteria or empty input list.
+     *
+     * @exception binder::Status::Exception::EX_NONE             Success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid criteria or empty input list.
+     * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
      *
      * @see setPictureModes()
      */
-    boolean getPictureModes(inout PictureModeConfiguration[] configurations);
+    boolean getPictureModes(in PictureModeConfiguration[] requestedConfigurations, out PictureModeConfiguration[] returnedConfigurations);
 
     /**
-     * Gets one or more picture mode defaults for a given AV source and dynamic range video format.
+     * Gets one or more default picture modes for a given AV source and dynamic range video format.
      *
-     * @param[in,out] configurations  Array of PictureModeConfiguration, filled with `pictureMode` values if successful.
+     * Input `requestedConfigurations` defines the query criteria (format/source). `pictureMode` is ignored.
+     * Output `defaultConfigurations` echoes criteria and populates the default `pictureMode` value.
+     * Failure semantics mirror `getPictureModes()`.
+     *
+     * @param[in] requestedConfigurations   Non-empty list of query criteria.
+     * @param[out] defaultConfigurations     Populated default picture modes.
      *
      * @return boolean
-     * @retval true				The picture modes were successfully return.
-     * @retval false			One or more picture mode configurations were invalid and could not be returned.
+     * @retval true     All default picture modes were successfully returned.
+     * @retval false    One or more picture mode configurations were invalid and could not be returned or Invalid criteria or empty input list.
      *
-     * @see setPictureModes()
+     * @exception binder::Status::Exception::EX_NONE             Success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid criteria or empty input list.
+     * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
+     *
+     * @see setPictureModes(), getPictureModes()
      */
-    boolean getDefaultPictureModes(inout PictureModeConfiguration[] configurations);
+    boolean getDefaultPictureModes(in PictureModeConfiguration[] requestedConfigurations, out PictureModeConfiguration[] defaultConfigurations);
 
     /**
      * Sets the picture quality parameters.
@@ -139,30 +164,53 @@ interface IPanelOutput
     boolean setPQParameters(in PQParameterConfiguration[] configurations);
 
     /**
-     * Gets the current picture quality parameters.
+     * Gets the current picture quality (PQ) parameter values.
      *
-     * @param[inout] configurations     Array of PQParameterConfiguration values.
+     * Input `requestedConfigurations` specifies one or more PQ parameters to query. Each element's:
+     * - `pqParameter` must be valid.
+     * - `pictureMode`, `source`, and `format` may be concrete values or wildcards per their definitions.
+     * - `value` field is ignored on input.
+     *
+     * Output `returnedConfigurations` mirrors ordering and criteria and populates the `value` field.
+     *
+     * Errors:
+     * - Empty input list returns false.
+     * - Any invalid `pqParameter` or unsupported criteria returns false with no output populated.
+     *
+     * @param[in] requestedConfigurations   Non-empty list of PQ parameter query criteria.
+     * @param[out] returnedConfigurations   Populated PQ parameter values (value field set).
      *
      * @return boolean
-     * @retval true     The PQ parameters were returned.
-     * @retval false    One or more invalid parameter configuration requested.
+     * @retval true     All PQ parameter values were successfully returned.
+     * @retval false    Invalid criteria or empty input list.
+     *
+     * @exception binder::Status::Exception::EX_NONE             Success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid criteria or empty input list.
+     * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
      *
      * @see setPQParameters(), getDefaultPQParameters(), getPQParameterCapabilities(), PQParameterConfiguration
      */
-    boolean getPQParameters(inout PQParameterConfiguration[] configurations);
+    boolean getPQParameters(in PQParameterConfiguration[] requestedConfigurations, out PQParameterConfiguration[] returnedConfigurations);
 
     /**
-     * Gets the default picture quality parameters.
+     * Gets the default picture quality (PQ) parameter values.
      *
-     * @param[inout] configurations     Array of PQParameterConfiguration values.
-     * 
+     * Semantics are identical to `getPQParameters()` except the returned `value` reflects factory/default settings.
+     *
+     * @param[in] requestedConfigurations   Non-empty list of PQ parameter query criteria.
+     * @param[out] defaultConfigurations    Populated default PQ parameter values.
+     *
      * @return boolean
-     * @retval true     The default PQ parameter values were returned.
-     * @retval false    One or more invalid parameter configuration requested.
+     * @retval true     All default PQ parameters were successfully returned.
+     * @retval false    Invalid criteria or empty input list.
+     *
+     * @exception binder::Status::Exception::EX_NONE             Success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid criteria or empty input list.
+     * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
      *
      * @see setPQParameters(), getPQParameters(), getPQParameterCapabilities(), PQParameterConfiguration
      */
-    boolean getDefaultPQParameters(inout PQParameterConfiguration[] configurations);
+    boolean getDefaultPQParameters(in PQParameterConfiguration[] requestedConfigurations, out PQParameterConfiguration[] defaultConfigurations);
 
 	/**
 	 * Gets the platform capabilities for a PQ parameter.

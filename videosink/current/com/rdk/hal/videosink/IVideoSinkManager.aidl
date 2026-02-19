@@ -34,7 +34,9 @@ interface IVideoSinkManager
 
     /**
      * Gets the list of platform Video Sink IDs.
-     * 
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     *
      * @returns IVideoSink.Id[]
      */
     IVideoSink.Id[] getVideoSinkIds();
@@ -43,6 +45,8 @@ interface IVideoSinkManager
 	 * Gets a Video Sink interface.
      *
      * @param[in] videoSinkId	    The ID of the Video Sink.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
      *
      * @returns IVideoSink or null if the ID is invalid.
      */

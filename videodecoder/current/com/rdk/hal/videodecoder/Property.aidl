@@ -33,6 +33,10 @@ enum Property {
 	 *
 	 * Type: Integer
 	 * Access: Read-only.
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
 	 */
 	RESOURCE_ID = 0,
 
@@ -42,6 +46,10 @@ enum Property {
 	 *
 	 * Type: Integer
 	 * Access: Read-only.
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
 	 */
 	INPUT_QUEUE_DEPTH = 1,
 
@@ -50,7 +58,11 @@ enum Property {
 	 * The default is vendor defined.
 	 *
 	 * Type: Integer
-	 * Access: Read-only.
+	 * Access: Read-only
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *.
 	 */
     OUTPUT_FRAME_POOL_SIZE = 2,
 
@@ -68,6 +80,10 @@ enum Property {
 	 * @see enum OperationalMode for possible values.
 	 * Access: Read-write.
 	 * Write in states: READY, STARTED
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state or non STARTED state.
+	 *
 	 */
     OPERATIONAL_MODE = 3,
 
@@ -84,6 +100,10 @@ enum Property {
 	 *  1 - on
 	 * Access: Read-write.
 	 * Write in states: READY
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+	 *
 	 */
 	LOW_LATENCY_MODE = 4,
 
@@ -95,6 +115,10 @@ enum Property {
 	 *  1 - conceal corrupt frames, not output from decoder
 	 * Access: Read-write.
 	 * Write in states: READY
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+	 *
 	 */
 	DECODE_ERROR_POLICY = 5,
 
@@ -107,6 +131,10 @@ enum Property {
 	 * @see enum AVSource for possible values.
 	 * Access: Read-write.
 	 * Write in states: READY
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+	 *
 	 */
 	AV_SOURCE = 6,
 
@@ -120,6 +148,10 @@ enum Property {
 	 *  1 - on
 	 * Access: Read-write.
 	 * Write in states: READY, STARTED
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state or non STARTED state.
+	 *
 	 */
 	SHA1_CALC = 7,
 
@@ -131,6 +163,10 @@ enum Property {
 	 *  1 - on (only if supported)
 	 * Access: Read-only.
 	 * @see Capabilities.supportsSecure IVideoDecoder.open()
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
 	 */
 	SECURE_VIDEO = 8,
 
@@ -141,6 +177,10 @@ enum Property {
 	 * Type: Integer
 	 *  -1 means this metric is not yet implemented by the vendor.
 	 * Access: Read-only.
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
 	 */
 	METRIC_FRAMES_DECODED = 1000,
 
@@ -151,6 +191,10 @@ enum Property {
 	 * Type: Integer
 	 *  -1 means this metric is not yet implemented by the vendor.
 	 * Access: Read-only.
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
 	 */
 	METRIC_DECODE_ERRORS = 1001,
 
@@ -164,6 +208,10 @@ enum Property {
 	 * Type: Integer
 	 *  -1 means this metric is not yet implemented by the vendor.
 	 * Access: Read-only.
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
 	 */
 	METRIC_FRAMES_DROPPED = 1002,
 }

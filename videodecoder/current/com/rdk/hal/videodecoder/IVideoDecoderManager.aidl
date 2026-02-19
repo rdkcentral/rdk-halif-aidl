@@ -35,7 +35,9 @@ interface IVideoDecoderManager
 
     /**
 	 * Gets the platform list of Video Decoder IDs.
-     * 
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @returns IVideoDecoder.Id[]
      */
 	IVideoDecoder.Id[] getVideoDecoderIds();
@@ -51,6 +53,8 @@ interface IVideoDecoderManager
      * The returned value is not allowed to change between calls.
      *
      * @returns OperationalMode[] one or more OperationalMode enum values.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
      * 
      * @see enum OperationalMode
      */
@@ -60,6 +64,8 @@ interface IVideoDecoderManager
 	 * Gets a Video Decoder interface.
      *
      * @param[in] videoDecoderId	The ID of the video decoder.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns IVideoDecoder or null if the ID is invalid.
      */
