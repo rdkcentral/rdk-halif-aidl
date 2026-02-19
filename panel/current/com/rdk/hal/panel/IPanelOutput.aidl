@@ -156,8 +156,11 @@ interface IPanelOutput
      * @retval false    One or more picture mode configurations were invalid and could not be returned or Invalid criteria or empty input list.
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IPanelOutput}} for exception handling behavior).
+     * @exception binder::Status::Exception::EX_NONE             Success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid criteria or empty input list.
+     * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
      *
-     * @see setPictureModes()
+     * @see setPictureModes(), getPictureModes()
      */
     boolean getDefaultPictureModes(in PictureModeConfiguration[] requestedConfigurations, out PictureModeConfiguration[] defaultConfigurations);
 

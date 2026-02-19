@@ -33,6 +33,7 @@ import com.rdk.hal.hdmioutput.IHDMIOutput;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *  @author    Gerald Weatherup
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
@@ -58,20 +59,26 @@ interface IHDMIOutputManager
      * This describes global support across all HDMI ports, such as max resolution,
      * HDR formats, and FreeSync tiers. The result is immutable and cached.
      *
-     * @returns PlatformCapabilities parcelable.
+     * This can be safely called before any HDMI output instance is opened.
+     *
+     * @returns PlatformCapabilities
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputManager}} for exception handling behavior).
      */
     PlatformCapabilities getCapabilities();
 
     /**
-	 * Gets the platform list of HDMI output IDs.
-     * 
-     * @returns IHDMIOutput.Id[]
+     * Enumerates available HDMI output IDs on the platform.
+     *
+     * This list provides the logical identifiers needed to call `getHDMIOutput()`.
+     * Each returned ID is guaranteed to be valid unless the underlying resource
+     * becomes unavailable (e.g., hot-removed HDMI transmitters in some systems).
+     *
+     * @returns IHDMIOutput.Id[]  Array of valid HDMI output identifiers.
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputManager}} for exception handling behavior).
      */
-    IHDMIOutput.Id[] getHDMIOutputIds();
+	IHDMIOutput.Id[] getHDMIOutputIds();
 
     /**
      * Retrieves a HDMI output instance associated with a given ID.
@@ -81,7 +88,12 @@ interface IHDMIOutputManager
      * enters an active state. Multiple clients may query the same ID, but only
      * one may successfully open a session at a time.
      *
-     * @returns IHDMIOutput or null if the ID is invalid.
+     * @param[in] hdmiOutputId  ID of the HDMI output to access.
+     *
+     * @returns IHDMIOutput
+     * @retval null  The ID was invalid or the resource is unavailable.
+     *
+     * @see IHDMIOutput
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputManager}} for exception handling behavior).
      */

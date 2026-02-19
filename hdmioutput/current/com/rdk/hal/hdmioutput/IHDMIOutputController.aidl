@@ -35,6 +35,7 @@ import com.rdk.hal.PropertyValue;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *  @author    Gerald Weatherup
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
@@ -67,17 +68,14 @@ interface IHDMIOutputController
     void start();
 
     /**
-     * Stops the HDMI output signal.
+	 * Stops the HDMI output.
      *
-     * The output transitions from `STARTED` → `STOPPING` → `READY`. Video/audio output
-     * is disabled, and downstream sinks receive an inactive signal. This allows the client
-     * to reconfigure properties before restarting output.
+     * The HDMI output enters the `STOPPING` state where the output signal is disabled.
+     * Once the HDMI output signal is disabled, the HDMI output enters the `READY` state.
      *
-     * If `stop()` is called outside of the `STARTED` state, an `EX_ILLEGAL_STATE` is raised.
+     * @exception binder::Status EX_ILLEGAL_STATE
      *
-     * @exception binder::Status EX_ILLEGAL_STATE  HDMI output is not in STARTED state.
-     *
-     * @pre Must be in State::STARTED
+     * @pre The resource must be in State::STARTED.
      *
      * @see start(), IHDMIOutput.close()
      */
@@ -89,18 +87,21 @@ interface IHDMIOutputController
      * This reflects whether a valid sink device is physically connected to the HDMI output.
      * HPD deassertion typically indicates cable disconnect or sink power loss.
      *
-     * @return boolean
-     * @retval true         The HPD line is asserted.
-     * @retval boolean      The HPD line is deasserted.
+     * @returns boolean
+     * @retval true     HPD is asserted — sink is connected and powered.
+     * @retval false    HPD is deasserted — no active sink detected.
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputController}} for exception handling behavior).
-     * 
-     * @see start()
+     *
+     * @see IHDMIOutputControllerListener.onHotPlugDetectStateChanged()
      */
     boolean getHotPlugDetectState();
 
     /**
-     * Sets a property on the HDMI output.
+     * Sets a property.
+     *
+     * Properties may be set in the `READY` state to take effect once started or in the `STARTED` state
+     * where they are dynamically applied to the current HDMI output signal.
      *
      * Properties can be set in `READY` state (applied when `start()` is called) or
      * dynamically in `STARTED` state (applied immediately to the active signal).
@@ -123,7 +124,10 @@ interface IHDMIOutputController
     boolean setProperty(in Property property, in PropertyValue propertyValue);
 
     /**
-     * Sets multiple properties on the HDMI output.
+     * Sets multiple properties.
+     *
+     * Properties may be set in the `READY` state to take effect once started or in the `STARTED` state
+     * where they are dynamically applied to the current HDMI output signal.
      *
      * Same semantics as `setProperty()`, but applies a batch of key-value pairs.
      * Invalid keys or values result in the full operation failing (fail-fast).
@@ -154,7 +158,7 @@ interface IHDMIOutputController
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputController}} for exception handling behavior).
      *
-     * @see getHDCPStatus(), getSinkHDCPVersion()
+     * @see getHDCPStatus(), getHDCPReceiverVersion(), onEDID()
      */
     HDCPProtocolVersion getHDCPCurrentVersion();
 
@@ -168,9 +172,12 @@ interface IHDMIOutputController
      * This may differ from `getHDCPCurrentVersion()` if HDCP repeaters, authentication
      * failures, or content requirements result in a lower version being negotiated.
      *
+     * @returns HDCPProtocolVersion enum value.
+     * @retval HDCPProtocolVersion.UNDEFINED  Sink capabilities not yet known (HPD deasserted or EDID not read).
+     *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputController}} for exception handling behavior).
      *
-     * @see getHDCPStatus(), getHDCPCurrentVersion()
+     * @see getHDCPStatus(), getHDCPReceiverVersion(), onEDID()
      */
     HDCPProtocolVersion getHDCPReceiverVersion();
 
@@ -186,7 +193,7 @@ interface IHDMIOutputController
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutputController}} for exception handling behavior).
      *
-     * @see getHDCPCurrentVersion(), getHDCPReceiverVersion()
+     * @see getHDCPCurrentVersion(), getHDCPReceiverVersion(), onHDCPStatusChanged()
      */
     HDCPStatus getHDCPStatus();
 
@@ -201,6 +208,8 @@ interface IHDMIOutputController
      * @param[in] spdInfoFrame    SPD metadata or null to disable.
      *
      * @pre Output must be in State::READY or State::STARTED.
+     *
+     * @pre The HDMI output must be in a `READY` or `STARTED` state.
      *
      * @see getSPDInfoFrame()
      */

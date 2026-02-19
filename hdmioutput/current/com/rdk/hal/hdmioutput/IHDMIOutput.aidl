@@ -36,6 +36,7 @@ import com.rdk.hal.PropertyValue;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *  @author    Gerald Weatherup
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
@@ -60,8 +61,8 @@ interface IHDMIOutput
     /**
      * Gets the capabilities for this HDMI output.
      *
-     * This function can be called at any time and is not dependent on HDMI output state.
-     * The returned value is constant and must not change between calls.
+     * This function can be called at any time and is not dependant on any HDMI output state.
+     * The returned value is not allowed to change between calls.
      *
      * @returns Capabilities parcelable.
      *
@@ -76,30 +77,10 @@ interface IHDMIOutput
      * @returns PropertyValue or null if the property key is unknown.
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
-     * 
-     * @see setProperty(), getPropertyMulti()
+     *
+     * @see setProperty()
      */
     @nullable PropertyValue getProperty(in Property property);
- 
-    /**
-     * Gets multiple properties.
-     *
-     * When calling `getPropertyMulti()` the `propertyKVList` parameter contains an array of
-     * `PropertyKVPair` parcelables that have their `property` key set.
-     * On success the `propertyValue` is set in the returned array.
-     * It is an error to pass in an empty array, which results in false being returned.
-     * 
-     * @param[in,out] propertyKVList        Holds the properties to get and the values on return.
-     *
-     * @returns boolean - true on success or false if any property keys are invalid.
-     * @retval true     The property values were retrieved successfully.
-     * @retval false    One or more property keys are invalid or the input array is empty.
-     *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
-     * 
-     * @see getProperty()
-     */
-    boolean getPropertyMulti(inout PropertyKVPair[] propertyKVList);
 
     /**
      * Gets the current HDMI output state.
@@ -108,8 +89,8 @@ interface IHDMIOutput
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
 	 *
-     * @see IHDMIOutputEventListener.onStateChanged().
-     */  
+     * @see IHDMIOutputEventListener.onStateChanged()
+     */
     State getState();
 
     /**
@@ -127,16 +108,11 @@ interface IHDMIOutput
      * @returns IHDMIOutputController or null if input is invalid.
      *
      * @exception binder::Status EX_ILLEGAL_STATE
-     * @pre Must be in State::CLOSED.
-     *
-     * @returns IHDMIOutputController or null if the parameter is invalid.
-     * 
-     * @exception binder::Status EX_ILLEGAL_STATE 
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
-     * 
-     * @pre The resource must be in State::CLOSED.
-     * 
+     *
+     * @pre Must be in State::CLOSED.
+     *
      * @see IHDMIOutputController, close(), registerEventListener()
      */
     @nullable IHDMIOutputController open(in IHDMIOutputControllerListener hdmiOutputControllerListener);
@@ -156,14 +132,17 @@ interface IHDMIOutput
      *
      * @note On exception, output parameters/return values are undefined and must not be used. (See {{@link IHDMIOutput}} for exception handling behavior).
      *
-     * @pre The resource must be in State::READY.
+     * @pre Must be in State::READY.
      *
      * @see open()
      */
     boolean close(in IHDMIOutputController hdmiOutputController);
 
     /**
-     * Registers a HDMI output event listener.
+	 * Registers a HDMI output event listener.
+     *
+     * An `IHDMIOutputEventListener` can only be registered once and will fail on subsequent
+     * registration attempts.
      *
      * Only one listener can be registered at a time.
      *
@@ -179,7 +158,9 @@ interface IHDMIOutput
     boolean registerEventListener(in IHDMIOutputEventListener hdmiOutputEventListener);
 
     /**
-     * Unregisters a HDMI output event listener.
+	 * Unregisters a HDMI output event listener.
+     *
+     * @param[in] hdmiOutputEventListener	    Listener object for event callbacks.
      *
      * @param[in] hdmiOutputEventListener  Listener object.
      * @returns boolean

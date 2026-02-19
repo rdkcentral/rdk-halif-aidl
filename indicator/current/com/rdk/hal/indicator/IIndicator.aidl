@@ -23,6 +23,37 @@ import com.rdk.hal.indicator.Capabilities;
  * @brief Indicator HAL interface.
  *
  * Defines the Hardware Abstraction Layer (HAL) interface for indicator services.
+ * Each indicator instance represents a hardware-controlled visual indicator
+ * (e.g., LED, panel display) that can be set to different states.
+ *
+ * For RDK reference implementations, a single global indicator is typically used
+ * to reflect the overall device state. Third-party vendors may implement multiple
+ * independent indicator instances if required by their platform architecture.
+ *
+ * States are represented as strings to provide flexibility and extensibility.
+ * Standard state names include:
+ * - "BOOT": Initial bootloader-defined state
+ * - "ACTIVE": System is fully operational
+ * - "STANDBY": Low-power idle state
+ * - "OFF": All indicators are off
+ * - "DEEP_SLEEP": Deep sleep mode
+ * - "WPS_CONNECTING": Wi-Fi Protected Setup is active
+ * - "WPS_CONNECTED": WPS connection successful
+ * - "WPS_ERROR": WPS session failed
+ * - "WPS_SES_OVERLAP": Multiple WPS sessions detected
+ * - "WIFI_ERROR": Wi-Fi hardware or configuration fault
+ * - "IP_ACQUIRED": IP address successfully assigned
+ * - "NO_IP": IP assignment failed
+ * - "FULL_SYSTEM_RESET": Factory reset in progress
+ * - "USB_UPGRADE": Firmware upgrade via USB
+ * - "SOFTWARE_DOWNLOAD_ERROR": Software update failed
+ * - "PSU_FAILURE": Power supply fault detected
+ *
+ * On system boot, the implementation shall set the indicator to the first state
+ * defined in the platform's HFP file until changed by the set() function.
+ *
+ * Vendors may define additional custom states as needed.
+ *
  * @author Luc Kennedy-Lamb
  * @author Peter Stieglitz
  * @author Douglas Adler
@@ -35,7 +66,6 @@ import com.rdk.hal.indicator.Capabilities;
  *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
  *    The caller must ignore any output variables.
  */
-
 @VintfStability
 interface IIndicator
 {
