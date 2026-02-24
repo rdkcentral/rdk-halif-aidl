@@ -214,4 +214,158 @@ enum Property {
 	 *
 	 */
 	METRIC_FRAMES_DROPPED = 1002,
+
+
+        /**
+         * Stream resolution width in pixels.
+         * Represents the coded/decoded video frame width.
+         * Can be set while the video decoder resource is in READY.
+         *
+         * Type: Integer
+         * Units: pixels
+         * Access: Read-write.
+         * Write in states: READY Only
+         *
+         * @exception binder::Status::Exception::EX_NONE for success
+         * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+         */
+        STREAM_RESOLUTION_WIDTH = 1003,
+
+        /**
+         * Stream resolution height in pixels.
+         * Represents the coded/decoded video frame height.
+         * Can be set while the video decoder resource is in READY.
+         *
+         * Type: Integer
+         * Units: pixels
+         * Access: Read-write.
+         * Write in states: READY only
+         *
+         * @exception binder::Status::Exception::EX_NONE for success
+         * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+         */
+        STREAM_RESOLUTION_HEIGHT = 1004,
+
+        /**
+         * Mastering display information (SMPTE ST 2086) as a textual payload.
+         * Typically encodes primaries, white point, and luminance (min/max).
+         * Can be set while the video decoder resource is in READY.
+         *
+         * Type: String
+         * Format: Implementation-defined (e.g., JSON or "G(x,y),B(x,y),R(x,y),WP(x,y),L(min,max)")
+         * Access: Read-write.
+         * Write in states: READY only
+         *
+         * @exception binder::Status::Exception::EX_NONE for success
+         * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+         */
+        MASTERING_DISPLAY_INFO = 1005,
+
+        /**
+         * Content light level information (SMPTE ST 2094/MaxCLL/MaxFALL) as a textual payload.
+         * Used to convey per-title light level metadata.
+         * Can be set while the video decoder resource is in READY.
+         *
+         * Type: String
+         * Format: Implementation-defined (e.g., "MaxCLL=<nits>;MaxFALL=<nits>")
+         * Access: Read-write.
+         * Write in states: READY only
+         *
+         * @exception binder::Status::Exception::EX_NONE for success
+         * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+         */
+        CONTENT_LIGHT_LEVEL = 1006,
+
+        /**
+         * Mastering display metadata as a textual payload.
+         * This may include a superset or alternate representation of mastering info.
+         * Can be set while the video decoder resource is in READY.
+         *
+         * Type: String
+         * Format: Implementation-defined (may be vendor/HDR10/HDR10+ specific)
+         * Access: Read-write.
+         * Write in states: READY only
+         *
+         * @exception binder::Status::Exception::EX_NONE for success
+         * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+         */
+        MASTERING_DISPLAY_METADATA = 1007,
+
+       /**
+        * Colorimetry specification for the stream.
+        * Common values include "BT.709", "BT.2020", "BT.601", etc.
+        * Can be set while the video decoder resource is in READY.
+        *
+        * Type: String
+        * Allowed values: Implementation-defined (e.g., "BT.709", "BT.2020", "BT.601", "DCI-P3")
+        * Access: Read-write.
+        * Write in states: READY only
+        *
+        * @exception binder::Status::Exception::EX_NONE for success
+        * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+        */
+       COLORIMETRY = 1008,
+
+       /**
+        * Dolby Vision Base Layer (BL) present flag.
+        * Indicates whether a Dolby Vision Base Layer is present in the bitstream.
+        * Can be set while the video decoder resource is in READY.
+        *
+        * Type: Boolean
+        *  false - BL not present
+        *  true  - BL present
+        * Access: Read-write.
+        * Write in states: READY only
+        *
+        * @exception binder::Status::Exception::EX_NONE for success
+        * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+        */
+       DV_BL_PRESENT_FLAG = 1009,
+
+       /**
+        * Dolby Vision Enhancement Layer (EL) present flag.
+        * Indicates whether a Dolby Vision Enhancement Layer is present in the bitstream.
+        * Can be set while the video decoder resource is in READY.
+        *
+        * Type: Boolean
+        *  false - EL not present
+        *  true  - EL present
+        * Access: Read-write.
+        * Write in states: READY only
+        *
+        * @exception binder::Status::Exception::EX_NONE for success
+        * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+        */
+       DV_EL_PRESENT_FLAG = 1010,
+
+       /**
+        * Stream frame rate numerator.
+        * Together with FrameRateDenominator defines the rational frame rate (N/D).
+        * Can be set while the video decoder resource is in READY.
+        *
+        * Type: Integer
+        * Range: >= 0
+        * Access: Read-write.
+        * Write in states: READY only
+        *
+        * @exception binder::Status::Exception::EX_NONE for success
+        * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+        */
+       FRAME_RATE_NUMERATOR = 1011,
+
+       /**
+        * Stream frame rate denominator.
+        * Together with FrameRateNumerator defines the rational frame rate (N/D).
+        * Can be set while the video decoder resource is in READY.
+        *
+        * Type: Integer
+        * Range: > 0 (must be non-zero)
+        * Access: Read-write.
+        * Write in states: READY only
+        *
+        * @exception binder::Status::Exception::EX_NONE for success
+        * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+        */
+       FRAME_RATE_DENOMINATOR = 1012,
+
 }
