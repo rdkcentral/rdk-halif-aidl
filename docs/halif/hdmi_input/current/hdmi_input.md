@@ -16,7 +16,6 @@ This HAL excludes HDMI_CEC and video plane attachment logic, which are managed b
     | **Interface Definition**     | [hdmiinput](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/hdmiinput/current/com/rdk/hal/hdmiinput)                                     |
     | **API Documentation**        | TBD                                                         |
     | **HAL Interface Type**       | [AIDL and Binder](../../../introduction/aidl_and_binder.md) |
-    | **Initialization Unit**      | [systemd service](../../../vsi/systemd/current/systemd.md)  |
     | **VTS Tests**                | TBD                                                         |
     | **vDevice Reference Implementation** | [GitHub/Repo link - TBD]                                         |
 
@@ -93,6 +92,16 @@ Each HDMI input resource:
 * Declares capabilities like `supportedVICs`, `supportedHDCPProtocolVersions`, and feature flags (e.g., `supportsVRR`, `supportsQFT`)
 * May be limited by platform-wide rules, e.g. `maximumConcurrentStartedPorts`
 
+### Maximum Concurrent Started Ports
+
+The `PlatformCapabilities.maximumConcurrentStartedPorts` field defines the maximum number of HDMI input ports that can be in the STARTED state simultaneously. This is a hardware/platform constraint that varies by device capabilities.
+
+**Behavior when exceeding the limit:**
+
+* If `start()` is called on a port when the maximum number of ports are already started, the call will fail with an `EX_ILLEGAL_STATE` exception.
+* Clients must call `stop()` on an already-started port before starting another port if the maximum concurrent limit has been reached.
+* The middleware is responsible for managing port allocation and ensuring the concurrent limit is respected.
+
 ---
 
 ## System Context
@@ -121,6 +130,8 @@ sequenceDiagram
 
 * A port must be opened via `open()` before use.
 * If a custom EDID is not set before opening, the default EDID will be used.
+    * When no EDID has been explicitly set, `getEDID()` returns a default EDID.
+    * If multiple default EDID versions are supported, the latest supported version is returned.
     * To change the EDID, the interface must be in the READY state (i.e., stopped).
 * Only one client can hold the controller.
 * `close()` is required to release the resource.
