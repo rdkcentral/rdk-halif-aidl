@@ -22,7 +22,7 @@
 
 # HAL Feature Profile for videosink
 
-videosink:
+videosink:                      # Component object begins
   interfaceVersion: current
 
   IVideoSink:
