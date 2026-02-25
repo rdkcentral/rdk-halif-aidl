@@ -59,13 +59,13 @@ enum Property {
 
 	/**
 	 * Set by the client to specify the AV source of the stream.
-	 * 
-	 * The AVSource is also set inside the FrameMetadata when output by a decoder.
-	 * Type: Integer
-	 *  Default is 0 - AVSource::UNKNOWN.
+	 *
+	 * The source is also set inside the FrameMetadata when output by a decoder.
+	 * Type: String
+	 *  Default is "UNKNOWN".
 	 * Access: Read-write.
 	 * Write in states: READY
-	 * @see enum AVSource for possible values.
+	 * @see hfp-audiodecoder.yaml for supported source names.
 	 *
 	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.

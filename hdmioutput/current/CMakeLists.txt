@@ -29,9 +29,6 @@ if (NOT DEFINED AIDL_BIN)
 	message(FATAL_ERROR "Do not invoke module level CMake directly!\nInvoke CMake at root level instead!")
 endif()
 
-# Dependent module version
-set(COMMON_VERSION "current")
-
 # AIDL source directory
 set(SRC_DIR com/rdk/hal/hdmioutput)
 set(COMMON_SRC_DIR ${COMMON_MODULE_PATH}/${COMMON_VERSION}/com/rdk/hal)
@@ -57,6 +54,7 @@ set(SRC
 	${SRC_DIR}/PlatformCapabilities.aidl
 	${SRC_DIR}/Property.aidl
 	${SRC_DIR}/PropertyKVPair.aidl
+	${SRC_DIR}/PropertyValue.aidl
 	${SRC_DIR}/ScanInformation.aidl
 	${SRC_DIR}/SPDInfoFrame.aidl
 	${SRC_DIR}/SPDSource.aidl
@@ -68,7 +66,6 @@ set(SRC
 # AIDL include directories
 set(INCLUDE_DIRECTORY
 	.
-	${COMMON_MODULE_PATH}/${COMMON_VERSION}
 )
 
 # Collect optional AIDL generator arguments

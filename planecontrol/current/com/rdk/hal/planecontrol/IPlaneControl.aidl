@@ -22,7 +22,7 @@ import com.rdk.hal.planecontrol.Capabilities;
 import com.rdk.hal.planecontrol.SourcePlaneMapping;
 import com.rdk.hal.planecontrol.Property;
 import com.rdk.hal.planecontrol.PropertyKVPair;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.planecontrol.PropertyValue;
  
 /** 
  *  @brief     Plane Control HAL interface.

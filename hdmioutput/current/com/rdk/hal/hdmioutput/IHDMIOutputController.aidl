@@ -23,7 +23,7 @@ import com.rdk.hal.hdmioutput.PropertyKVPair;
 import com.rdk.hal.hdmioutput.SPDInfoFrame;
 import com.rdk.hal.hdmioutput.HDCPStatus;
 import com.rdk.hal.hdmioutput.HDCPProtocolVersion;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.hdmioutput.PropertyValue;
 
 /**
  *  @brief     HDMI Output Controller HAL interface.

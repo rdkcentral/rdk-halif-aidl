@@ -30,11 +30,9 @@ if (NOT COMMAND compile_aidl)
 endif()
 
 # version of other modules that `planecontrol` depends on
-set(COMMON_VERSION "current")
 set(VIDEO_DECODER_VERSION "current")
 
 set(SRC_DIR com/rdk/hal/planecontrol)
-set(COMMON_SRC_DIR ${COMMON_MODULE_PATH}/${COMMON_VERSION}/com/rdk/hal)
 set(VIDEO_DECODER_SRC_DIR ${VIDEO_DECODER_MODULE_PATH}/${VIDEO_DECODER_VERSION}/com/rdk/hal/videodecoder)
 
 set(SRC
@@ -45,16 +43,15 @@ set(SRC
 	${SRC_DIR}/PlaneType.aidl
 	${SRC_DIR}/Property.aidl
 	${SRC_DIR}/PropertyKVPair.aidl
+	${SRC_DIR}/PropertyValue.aidl
 	${SRC_DIR}/SourcePlaneMapping.aidl
 	${SRC_DIR}/SourceType.aidl
 	${VIDEO_DECODER_SRC_DIR}/PixelFormat.aidl
 	${VIDEO_DECODER_SRC_DIR}/DynamicRange.aidl
-	${COMMON_SRC_DIR}/PropertyValue.aidl
 )
 
 set(INCLUDE_DIRECTORY
 	.
-	${COMMON_MODULE_PATH}/${COMMON_VERSION}
 	${VIDEO_DECODER_MODULE_PATH}/${VIDEO_DECODER_VERSION}
 )
 

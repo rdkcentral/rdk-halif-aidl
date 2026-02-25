@@ -26,7 +26,6 @@ import com.rdk.hal.panel.PQParameterCapabilities;
 import com.rdk.hal.panel.WhiteBalance2PointSettings;
 import com.rdk.hal.panel.WhiteBalanceMultiPointSettings;
 import com.rdk.hal.videodecoder.DynamicRange;
-import com.rdk.hal.AVSource;
 
 /** 
  *  @brief     Display Panel Output Control HAL interface.
@@ -283,41 +282,41 @@ interface IPanelOutput
     boolean getFrameRateMatching();
 
     /**
-	 * Sets the AV source override used to applying PQ settings.  e.g. AUTO, IP, HDMI, composite, DTV.
-	 * 
-	 * When set to AVSource.AUTO the video source is determined from the video playback subsystem.
+	 * Sets the AV source override used to applying PQ settings.  e.g. "AUTO", "IP", "HDMI_1", "COMPOSITE_1", "TUNER".
+	 *
+	 * When set to "AUTO" the video source is determined from the video playback subsystem.
 	 * Any other value overrides the video source and any other sources being used in the video playback
 	 * subsystem are ignored.
-     * 
-	 * Typically AVSource.AUTO is used (and is the default), but override values may be used when 
+     *
+	 * Typically "AUTO" is used (and is the default), but override values may be used when
 	 * multi-video display is in operation and the PQ settings corresponding to one of the sources need to be applied.
-	 * 
-	 * @param[in] source	An AVSource enum value.
-	 * 
-	 * @see getVideoSourceOverride(), AVSource
-	 */ 
-  	void setVideoSourceOverride(in AVSource source);
-  	
+	 *
+	 * @param[in] source	An AV source name string.
+	 *
+	 * @see getVideoSourceOverride(), hfp-panel.yaml for supported source names.
+	 */
+  	void setVideoSourceOverride(in String source);
+
   	/**
 	 * Gets the AV source override used to applying PQ settings.
-     * 
+     *
 	 * This returns the value previously set by a call to setVideoSourceOverride()
-	 * or the default is AUTO.
-	 * 
-	 * @return AVSource
-	 * 
-	 * @see setVideoSourceOverride(), AVSource
-	 */ 
-	AVSource getVideoSourceOverride();
+	 * or the default is "AUTO".
+	 *
+	 * @return String	The AV source name.
+	 *
+	 * @see setVideoSourceOverride()
+	 */
+	String getVideoSourceOverride();
 
     /**
      * Gets the current video source used to apply PQ settings.
-     * 
-     * The returned value is AVSource.UNKNOWN if no video is playing.
      *
-     * @return AVSource     The AV source.
+     * The returned value is "UNKNOWN" if no video is playing.
+     *
+     * @return String     The AV source name.
      */
-    AVSource getVideoSource();
+    String getVideoSource();
 
     /**
      * Gets the current dynamic range video format used to apply PQ settings.

@@ -25,7 +25,7 @@ import com.rdk.hal.videodecoder.Codec;
 import com.rdk.hal.videodecoder.IVideoDecoderControllerListener;
 import com.rdk.hal.videodecoder.IVideoDecoderEventListener;
 import com.rdk.hal.videodecoder.State;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.videodecoder.PropertyValue;
 
 /** 
  *  @brief     Video Decoder HAL interface.

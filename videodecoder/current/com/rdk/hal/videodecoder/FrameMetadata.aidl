@@ -20,7 +20,6 @@ package com.rdk.hal.videodecoder;
 import com.rdk.hal.videodecoder.ScanType;
 import com.rdk.hal.videodecoder.PixelFormat;
 import com.rdk.hal.videodecoder.DynamicRange;
-import com.rdk.hal.AVSource;
 
 /** 
  *  @brief     Decoded video frame metadata, relating to the frame output from the video decoder.
@@ -118,10 +117,11 @@ parcelable FrameMetadata {
 //TODO: colorimetry for static HDR metadata... - must have matching properties
 	
 	/**
-	 * The source of the video frame.
+	 * The source of the video frame as a string name (e.g., "IP", "TUNER", "HDMI_1").
 	 * When the frame is presented the source may be used to configure the TV picture mode settings.
+	 * @see hfp-videodecoder.yaml for supported source names.
 	 */
-	AVSource source;
+	String source;
 
 	/**
 	 * SHA1 calculation value.

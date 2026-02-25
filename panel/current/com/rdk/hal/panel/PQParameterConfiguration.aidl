@@ -19,7 +19,6 @@
 package com.rdk.hal.panel;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.videodecoder.DynamicRange;
-import com.rdk.hal.AVSource;
 
 /** 
  *  @brief     PQ parameter configuration.
@@ -41,10 +40,10 @@ parcelable PQParameterConfiguration
 	@nullable String pictureMode;
 
 	/**
-	 * The AV source.
-	 * AVSource.UNKNOWN means wildcard which applies to all supported AV sources.
+	 * The AV source name (e.g., "IP", "TUNER", "HDMI_1").
+	 * "UNKNOWN" means wildcard which applies to all supported AV sources.
 	 */
-	AVSource source;
+	String source;
 
 	/**
 	 * The video format dynamic range.

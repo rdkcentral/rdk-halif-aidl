@@ -20,7 +20,7 @@ package com.rdk.hal.videosink;
 import com.rdk.hal.videodecoder.IVideoDecoder;
 import com.rdk.hal.videodecoder.FrameMetadata;
 import com.rdk.hal.videosink.Property;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.videosink.PropertyValue;
 
 /** 
  *  @brief     Video Sink Controller HAL interface.

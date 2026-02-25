@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.hdmiinput;
 import com.rdk.hal.hdmiinput.Property;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.hdmiinput.PropertyValue;
  
 /** 
  *  @brief     Key-value pair for video decoder properties.

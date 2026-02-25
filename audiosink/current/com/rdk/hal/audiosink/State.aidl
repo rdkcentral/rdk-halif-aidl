@@ -28,6 +28,9 @@ package com.rdk.hal.audiosink;
 @VintfStability
 @Backing(type="int")
 enum State {
+
+    UNKNOWN   = 0, ///< The audio decoder HAL is in an unknown or uninitialized state.
+
     /** 
      * Initial state entered when the service connection is established. 
      */

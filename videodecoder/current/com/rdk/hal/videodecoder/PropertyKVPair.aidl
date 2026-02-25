@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.videodecoder;
 import com.rdk.hal.videodecoder.Property;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.videodecoder.PropertyValue;
  
 /** 
  *  @brief     Key-value pair for video decoder properties.

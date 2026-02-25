@@ -27,7 +27,7 @@ import com.rdk.hal.hdmiinput.IHDMIInputEventListener;
 import com.rdk.hal.hdmiinput.State;
 import com.rdk.hal.hdmiinput.HDCPProtocolVersion;
 import com.rdk.hal.hdmiinput.HDCPStatus;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.hdmiinput.PropertyValue;
 
 /** 
  *  @brief     HDMI Input HAL interface for a single port.
