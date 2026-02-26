@@ -206,7 +206,7 @@ All video frame buffers queued up in the Video Sink are expected to continue to 
 
 ## Video Plane Mapping
 
-The display of decoded video frames are made on the video plane that has been mapped by a `SourceType::VIDEO_SINK` and index matching the Video Sink resource instance ID which was specified in the ID when `IVideoSinkManager.getVideoSink()` was called and can also be read back in the `RESOURCE_ID` property of the Video Sink.
+The display of decoded video frames are made on the video plane that has been mapped by a source type of `"VIDEO_SINK"` and index matching the Video Sink resource instance ID which was specified in the ID when `IVideoSinkManager.getVideoSink()` was called and can also be read back in the `RESOURCE_ID` property of the Video Sink.
 
 Setting and changing the mapping requires a call to `IPlaneControl.setVideoSourceDestinationPlaneMapping()`.
 

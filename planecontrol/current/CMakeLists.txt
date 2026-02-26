@@ -45,7 +45,6 @@ set(SRC
 	${SRC_DIR}/PropertyKVPair.aidl
 	${SRC_DIR}/PropertyValue.aidl
 	${SRC_DIR}/SourcePlaneMapping.aidl
-	${SRC_DIR}/SourceType.aidl
 	${VIDEO_DECODER_SRC_DIR}/PixelFormat.aidl
 	${VIDEO_DECODER_SRC_DIR}/DynamicRange.aidl
 )

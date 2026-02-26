@@ -44,8 +44,7 @@ Each plane is configurable through a set of properties that clients can read or 
 | `PlaneType.aidl` | Enum list of plane types.|
 | `Property.aidl` | Enum list of plane properties.|
 | `PropertyKVPair.aidl` | Parcelable of a single property key and value pair.|
-| `SourcePlaneMapping.aidl` | Parcelable of a single source to plane mapping.|
-| `SourceType.aidl` | Enum list of source types used in source plane mapping.|
+| `SourcePlaneMapping.aidl` | Parcelable of a single source to plane mapping. Source types are string-based (e.g., `"VIDEO_SINK"`, `"HDMI"`, `"COMPOSITE"`) and defined in `hfp-planecontrol.yaml`.|
 
 ## Initialization
 
@@ -203,7 +202,7 @@ The sequence of calls below shows how man video and PIP video can be mapped sepa
 ```c++
 SourcePlaneMapping[] =
 {
-    sourceType = "SOURCE_VIDEO_SINK",
+    sourceType = "VIDEO_SINK",
     sourceIndex = 0,
     destinationPlaneIndex = 0
 }
@@ -217,7 +216,7 @@ SourcePlaneMapping[] =
 ```c++
 SourcePlaneMapping[] =
 {
-    sourceType = "SOURCE_VIDEO_SINK",
+    sourceType = "VIDEO_SINK",
     sourceIndex = 1,
     destinationPlaneIndex = 1
 }
@@ -230,12 +229,12 @@ SourcePlaneMapping[] =
 ```c++
 SourcePlaneMapping[] =
 {
-  sourceType = "SOURCE_VIDEO_SINK",
+  sourceType = "VIDEO_SINK",
   sourceIndex = 0,
   destinationPlaneIndex = 1
 },
 {
-  sourceType = "SOURCE_VIDEO_SINK",
+  sourceType = "VIDEO_SINK",
   sourceIndex = 1,
   destinationPlaneIndex = 0
 }
@@ -248,12 +247,12 @@ SourcePlaneMapping[] =
 ```c++
 SourcePlaneMapping[] =
 {
-    sourceType = "SOURCE_VIDEO_SINK",
+    sourceType = "VIDEO_SINK",
     sourceIndex = 0,
     destinationPlaneIndex = -1 // -1 indicates unmapping
 },
 {
-    sourceType = "SOURCE_VIDEO_SINK",
+    sourceType = "VIDEO_SINK",
     sourceIndex = 1,
     destinationPlaneIndex = 0
 }
@@ -272,7 +271,7 @@ The `setVideoSourceDestinationPlaneMapping()` function can be used to unmap one 
 ```c++
 SourcePlaneMapping[]=
 {
-    sourceType = SOURCE_VIDEO_SINK, 
+    sourceType = "VIDEO_SINK",
     sourceIndex = 0, 
     destinationPlaneIndex = -1
 }
