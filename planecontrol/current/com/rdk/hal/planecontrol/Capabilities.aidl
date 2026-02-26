@@ -18,7 +18,6 @@
  */
 package com.rdk.hal.planecontrol;
 import com.rdk.hal.planecontrol.PlaneType;
-import com.rdk.hal.planecontrol.SourceType;
 import com.rdk.hal.videodecoder.PixelFormat;
 import com.rdk.hal.videodecoder.DynamicRange;
  
@@ -50,9 +49,10 @@ parcelable Capabilities
     PixelFormat[] pixelFormats;
  
     /**
-     * The list of video source types the plane supports.
+     * The list of video source type names the plane supports.
+     * @see hfp-planecontrol.yaml for valid source type names.
      */
-    SourceType[] sourceTypes;
+    String[] sourceTypes;
 
     /** 
      * The maximum width and height in pixels the plane can be set to.

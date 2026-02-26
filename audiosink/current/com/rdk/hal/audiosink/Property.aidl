@@ -99,12 +99,12 @@ enum Property {
     MIXER_ID = 4,
 
     /**
-     * Set by the client to specify the AV source of the stream.  
-     * The AVSource is also set inside the FrameMetadata when output by a decoder.
+     * Set by the client to specify the AV source of the stream.
+     * The source is also set inside the FrameMetadata when output by a decoder.
      *
-     * Type: Integer
-     *  0 - AVUNKNOWN (default on open)
-     * @see enum AVSource for possible values.
+     * Type: String
+     *  "UNKNOWN" (default on open)
+     * @see hfp-audiosink.yaml for supported source names.
      * Access: Read-write.
      * Write in states: READY
      *

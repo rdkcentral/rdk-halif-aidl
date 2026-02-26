@@ -20,7 +20,7 @@ package com.rdk.hal.audiodecoder;
 import com.rdk.hal.audiodecoder.CSDAudioFormat;
 import com.rdk.hal.audiodecoder.Property;
 
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.audiodecoder.PropertyValue;
 
 /** 
  *  @brief     Audio Decoder Controller HAL interface.

@@ -63,11 +63,11 @@ enum Property
 
     /**
      * Set by the client to specify the AV source of the stream.
-     * The AVSource is also set inside the FrameMetadata when output by a decoder.
-     * Default is 0 - AVUNKNOWN.
-     * @see AVSource
+     * The source is also set inside the FrameMetadata when output by a decoder.
+     * Default is "UNKNOWN".
+     * @see hfp-videosink.yaml for supported source names.
      *
-     * Type: Integer (enum AVSource)  
+     * Type: String
      * Access: Read/Write.
      *
      * @exception binder::Status::Exception::EX_NONE for success

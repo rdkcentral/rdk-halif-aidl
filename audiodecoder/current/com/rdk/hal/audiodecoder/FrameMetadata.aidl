@@ -19,7 +19,6 @@
 package com.rdk.hal.audiodecoder;
 import com.rdk.hal.audiodecoder.PCMMetadata;
 import com.rdk.hal.audiodecoder.Codec;
-import com.rdk.hal.AVSource;
 import com.rdk.hal.audiodecoder.FrameType;
 
 /** 
@@ -69,10 +68,11 @@ parcelable FrameMetadata {
 	boolean discontinuity;
 
 	/**
-	 * The source of the audio frame.
+	 * The source of the audio frame as a string name (e.g., "IP", "TUNER", "HDMI_1").
 	 * When the frame is presented the source may be used to configure the audio settings.
+	 * @see hfp-audiodecoder.yaml for supported source names.
 	 */
-	AVSource source;
+	String source;
 
 	/**
 	 * If the frame is PCM audio data this parcelable contains the PCM metadata.

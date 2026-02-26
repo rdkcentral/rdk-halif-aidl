@@ -19,7 +19,7 @@
 package com.rdk.hal.videodecoder;
 import com.rdk.hal.videodecoder.Property;
 import com.rdk.hal.videodecoder.CSDVideoFormat;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.videodecoder.PropertyValue;
 
 /** 
  *  @brief     Video Decoder Controller HAL interface.

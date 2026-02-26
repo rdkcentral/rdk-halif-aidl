@@ -24,6 +24,14 @@
 
 videosink:                      # Component object begins
   interfaceVersion: current
+  supportedAVSources:
+    - IP
+    - TUNER
+    - SYSTEM
+    - HDMI_1
+    - HDMI_2
+    - HDMI_3
+    - COMPOSITE_1
   IVideoSink:               # Resource list
     - 0
     - 1

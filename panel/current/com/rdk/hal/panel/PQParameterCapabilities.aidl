@@ -19,7 +19,6 @@
 package com.rdk.hal.panel;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.videodecoder.DynamicRange;
-import com.rdk.hal.AVSource;
 
 /** 
  *  @brief     Panel PQ parameter capabilities.
@@ -82,9 +81,9 @@ parcelable PQParameterCapabilities
             DynamicRange drFormat;
 
             /**
-             * The array of AV sources supported by this PQ parameter for the video format and picture mode.
+             * The array of AV source names supported by this PQ parameter for the video format and picture mode.
              */
-            AVSource[] supportedAVSources;
+            String[] supportedAVSources;
         }
 
         /**

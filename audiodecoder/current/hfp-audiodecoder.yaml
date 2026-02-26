@@ -24,6 +24,14 @@
 
 audiodecoder:                   # Component object begins
     interfaceVersion: current
+    supportedAVSources:
+      - IP
+      - TUNER
+      - SYSTEM
+      - HDMI_1
+      - HDMI_2
+      - HDMI_3
+      - COMPOSITE_1
     IAudioDecoder:              # Resource list
       - 0:                      # Resource object begins
          supportedCodecs:       # Array of codec capabilities

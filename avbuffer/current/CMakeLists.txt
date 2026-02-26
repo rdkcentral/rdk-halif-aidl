@@ -31,7 +31,6 @@ endif()
 
 # version of other modules that `avbuffer` depends on
 set(AUDIO_DECODER_VERSION "current")
-set(COMMON_VERSION "current")
 set(VIDEO_DECODER_VERSION "current")
 
 set(SRC_DIR com/rdk/hal/avbuffer)
@@ -42,13 +41,13 @@ set(SRC
 	${SRC_DIR}/IAVBufferSpaceListener.aidl
 	${SRC_DIR}/Pool.aidl
 	${SRC_DIR}/PoolMetrics.aidl
+	${SRC_DIR}/Status.aidl
 )
 
 set(INCLUDE_DIRECTORY
 	.
 	${AUDIO_DECODER_MODULE_PATH}/${AUDIO_DECODER_VERSION}
 	${VIDEO_DECODER_MODULE_PATH}/${VIDEO_DECODER_VERSION}
-	${COMMON_MODULE_PATH}/${COMMON_VERSION}
 )
 
 set(COMPILE_AIDL_ARGV "")

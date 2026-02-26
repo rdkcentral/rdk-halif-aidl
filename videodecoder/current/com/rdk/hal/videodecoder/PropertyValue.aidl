@@ -16,25 +16,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal;
- 
+package com.rdk.hal.videodecoder;
+
 /** 
- * @brief       RDK HAL common error codes returned by HAL interface functions.
+ * @brief       RDK HAL common property value variant type.
  * @author      Luc Kennedy-Lamb
  * @author      Peter Stieglitz
  * @author      Douglas Adler
  */
- 
+
 @VintfStability
-@Backing(type="int")
-enum HALError {
-    SUCCESS = 0,
-    BUFFER_FULL = 1,
-    INVALID_RESOURCE = 2,
-    INVALID_CODEC = 3,
-    DEFERRED = 4,
-    OUT_OF_MEMORY = 5,
-    OUT_OF_BOUNDS = 6,
-    NOT_EMPTY = 7,	
-    INVALID_ARGUMENT = 8,
+parcelable PropertyValue 
+{
+    /**
+    * Union Value type.
+    */
+    @VintfStability
+    union Value
+    {
+        boolean booleanValue; /**< Boolean value. */
+        byte byteValue;       /**< 8-bit integer value. */
+        char charValue;       /**< 16-bit Unicode character value. */
+        int intValue;         /**< 32-bit signed integer value. */
+        long longValue;       /**< 64-bit signed integer value. */
+        float floatValue;     /**< 32-bit floating-point value. */
+        double doubleValue;   /**< 64-bit floating-point value. */
+        String stringValue;   /**< String value. */
+    }
+
+    /**
+    * Value of property or null if not defined.
+    */
+    @nullable Value value;
 }

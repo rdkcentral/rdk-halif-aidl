@@ -18,7 +18,6 @@
  */
 package com.rdk.hal.panel;
 import com.rdk.hal.videodecoder.DynamicRange;
-import com.rdk.hal.AVSource;
 
 /** 
  *  @brief     Picture mode configuration.
@@ -39,7 +38,7 @@ parcelable PictureModeConfiguration
 	DynamicRange format;
 
 	/**
-	 * The AV source.
+	 * The AV source name (e.g., "IP", "TUNER", "HDMI_1").
 	 */
-	AVSource source;
+	String source;
 }

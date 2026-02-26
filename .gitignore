@@ -1,6 +1,8 @@
 ﻿################################################################################
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
+.claude
+.venv
 build
 src_link
 __pycache__/

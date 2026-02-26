@@ -164,13 +164,12 @@ compile_aidl(${SRC}
 
 ## Cross-Module Dependencies
 
-### Common Types
+### Per-HAL Types
 
-Import shared types from `common/current/com/rdk/hal/`:
-- `State.aidl`: Generic component states - **will be deprecated** in preference of each module defining its own State enum
-- `HALError.aidl`: Standard error codes - **will be deprecated** in favour of module-specific error handling
-- `PropertyValue.aidl`: Key-value property types
-- `AVSource.aidl`: Audio/video source definitions
+- **PropertyValue.aidl**: Each HAL defines its own `PropertyValue` in its package (e.g., `com.rdk.hal.audiosink.PropertyValue`). This avoids cross-module dependencies.
+- **AVSource**: Replaced by `String` type. Valid source names (e.g., `"IP"`, `"TUNER"`, `"HDMI_1"`) are defined per-module in HFP YAML files under `supportedAVSources`. This enables extensibility without interface recompilation.
+- **State**: Each module defines its own `State` enum (the common `State.aidl` is deprecated).
+- **HALError**: Deprecated in favour of module-specific error handling via AIDL exceptions.
 
 ### Module Interdependencies
 
@@ -180,7 +179,6 @@ Complex modules reference each other via CMake:
 # Example from avbuffer/current/CMakeLists.txt
 set(AUDIO_DECODER_VERSION "current")
 set(VIDEO_DECODER_VERSION "current")
-set(COMMON_VERSION "current")
 ```
 
 ## Logging & Diagnostics

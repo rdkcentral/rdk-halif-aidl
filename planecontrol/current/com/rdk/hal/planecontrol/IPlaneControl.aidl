@@ -22,7 +22,7 @@ import com.rdk.hal.planecontrol.Capabilities;
 import com.rdk.hal.planecontrol.SourcePlaneMapping;
 import com.rdk.hal.planecontrol.Property;
 import com.rdk.hal.planecontrol.PropertyKVPair;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.planecontrol.PropertyValue;
  
 /** 
  *  @brief     Plane Control HAL interface.
@@ -126,7 +126,7 @@ interface IPlaneControl
      * Gets the video source to plane mapping for all video planes.
      * 
      * This function always returns an array with one element for each video plane.
-     * If a video plane has no source mapped, then `SourceType.NONE` is mapped to it.
+     * If a video plane has no source mapped, then `"NONE"` is mapped to it.
      * 
      * @returns SourcePlaneMapping[]    An array of video source to video plane mappings.
      * 

@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal;
+package com.rdk.hal.videosink;
 
 /** 
  * @brief       RDK HAL common property value variant type.

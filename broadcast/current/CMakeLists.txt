@@ -32,9 +32,6 @@ if (NOT COMMAND compile_aidl)
 	message(FATAL_ERROR "Do not invoke module level CMake directly!\nInvoke CMake at root level instead!")
 endif()
 
-# version of other modules that `broadcast` depends on
-set(COMMON_VERSION "current")
-
 set(SRC_DIR com/rdk/hal/broadcast)
 
 set(SRC
@@ -59,6 +56,7 @@ set(SRC
 	${SRC_DIR}/frontend/Modulation.aidl
 	${SRC_DIR}/frontend/SignalInfoProperty.aidl
 	${SRC_DIR}/frontend/SignalInfoValue.aidl
+	${SRC_DIR}/frontend/State.aidl
 	${SRC_DIR}/frontend/TransmissionMode.aidl
 	${SRC_DIR}/frontend/TuneParameters.aidl
 	${SRC_DIR}/frontend/TuneStatus.aidl
@@ -75,7 +73,6 @@ set(SRC
 
 set(INCLUDE_DIRECTORY
 	.
-	${COMMON_MODULE_PATH}/${COMMON_VERSION}
 )
 
 set(COMPILE_AIDL_ARGV "")

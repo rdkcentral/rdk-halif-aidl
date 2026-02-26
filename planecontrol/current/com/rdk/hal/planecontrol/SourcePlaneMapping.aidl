@@ -17,8 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.planecontrol;
-import com.rdk.hal.planecontrol.SourceType; 
- 
+
 /**
  *  @brief     Video source to plane mapping definition.
  *  @author    Luc Kennedy-Lamb
@@ -30,13 +29,15 @@ import com.rdk.hal.planecontrol.SourceType;
 parcelable SourcePlaneMapping
 {
     /**
-     * The video source type to map.
-     */    
-    SourceType sourceType;  
- 
+     * The video source type name to map (e.g., "VIDEO_SINK", "HDMI", "COMPOSITE").
+     * Use "NONE" to indicate no video source.
+     * @see hfp-planecontrol.yaml for valid source type names per-plane.
+     */
+    String sourceType;
+
     /**
      * The index of the video source.
-     * Ignored if `sourceType` is `SourceType.NONE`.
+     * Ignored if `sourceType` is `"NONE"`.
      */
     int sourceIndex;
  

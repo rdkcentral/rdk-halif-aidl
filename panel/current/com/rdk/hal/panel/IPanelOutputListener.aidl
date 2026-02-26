@@ -18,7 +18,6 @@
  */
 package com.rdk.hal.panel;
 import com.rdk.hal.videodecoder.DynamicRange;
-import com.rdk.hal.AVSource;
 
 /** 
  *  @brief     Display Panel Output Listener interface.
@@ -40,13 +39,13 @@ oneway interface IPanelOutputListener
  
     /**
      * Callback when the video source being tracked for PQ settings changes.
-     * 
-     * This occurs when video starts, stops or on an AVSource change to the video.
-     * When video stops then `AVSource.UNKNOWN` is passed in the call.
-     * 
-     * @param[in] avSource      The new AV source.
-     */
-    void onVideoSourceChanged(in AVSource avSource);
+     *
+     * This occurs when video starts, stops or on an AV source change to the video.
+     * When video stops then "UNKNOWN" is passed in the call.
+     *
+     * @param[in] avSource      The new AV source name.
+    */
+    void onVideoSourceChanged(in String avSource);
 
     /**
      * Callback when the dynamic range video format being tracked for PQ settings changes.
@@ -55,7 +54,7 @@ oneway interface IPanelOutputListener
      * When video stops then `DynamicRange.UNKNOWN` is passed in the call.
      *
      * @param[in] dynamicRange      The new dynamic range video format.
-     */
+    ï¿½*/
     void onVideoFormatChanged(in DynamicRange dynamicRange);
 
     /**
@@ -66,7 +65,7 @@ oneway interface IPanelOutputListener
      *
      * @param[in] frameRateNumerator        The numerator of the frame rate.
      * @param[in] frameRateDenominator      The denominator of the frame rate.
-     */
+    ï¿½*/
     void onVideoFrameRateChanged(in int frameRateNumerator, in int frameRateDenominator);
  
     /**
@@ -77,7 +76,7 @@ oneway interface IPanelOutputListener
      *
      * @param[in] width     The video frame width.
      * @param[in] height    The video frame height.
-     */
+    ï¿½*/
     void onVideoResolutionChanged(in int width, in int height);
 
     /**
@@ -87,7 +86,7 @@ oneway interface IPanelOutputListener
      * matching is enabled and it adjusts the refresh rate to best match the video frame rate.
      * 
      * @param[in] refreshRateHz     The new panel refresh rate.
-     */
+    ï¿½*/
     void onRefreshRateChanged(in double refreshRateHz);
 
 }

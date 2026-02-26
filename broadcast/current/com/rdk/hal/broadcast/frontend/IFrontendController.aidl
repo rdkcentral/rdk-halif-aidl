@@ -23,7 +23,7 @@ import com.rdk.hal.broadcast.frontend.SignalInfoProperty;
 import com.rdk.hal.broadcast.frontend.SignalInfoValue;
 import com.rdk.hal.broadcast.frontend.TuneStatus;
 import com.rdk.hal.broadcast.frontend.TuneParameters;
-import com.rdk.hal.State;
+import com.rdk.hal.broadcast.frontend.State;
 
 /**
  *  @brief     FrontendController HAL interface.
