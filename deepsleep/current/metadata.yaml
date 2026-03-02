@@ -1,0 +1,41 @@
+component: deepsleep
+version: 0.0.1
+generation: 0
+status: AMBER
+description: "Deep sleep and low-power state management"
+type: OEM
+
+# Timeline Tracking (14+5 Rule)
+lifecycle:
+  review_started: 2026-02-13
+  review_deadline: 2026-02-27 # 14 Calendar Days
+  target_green_date: 2026-03-06 # +5 Business Days for resolution
+  hal_lead: "Ulrond"
+
+# High-Level Architecture
+scope:
+  - Device deep sleep entry with configurable wake-up triggers
+  - Wake trigger support (timer, RCU, remote, power button, etc.)
+  - Timer-based wake-up with ±5 second accuracy and 7-day support
+  - Wake-up trigger and key code reporting for diagnostics
+  - System clock synchronization during deep sleep operation
+
+# Priority 4 - Deep Sleep
+notes:
+  priority: 4
+  status_detail: "Feedback-loop review"
+  action: "Review design based on learnings from current platforms. Examine findings and investigation on Shutdown issue"
+  owners: "Architecture"
+
+# Stakeholder Visibility
+reviewers:
+    RTAB_Group: pending
+    Architecture: pending
+    Product_Architecture: pending
+    Kernel_Architecture: pending
+    VTS_Team: pending
+
+# Automated Dashboard Metadata
+impact:
+  breaking_change: true # Signals Reintegration Required (0.x.0/0.x.1 transition)
+  multi_view_sync: false

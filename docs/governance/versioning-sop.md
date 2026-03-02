@@ -166,44 +166,16 @@ Once the repo is restructured and the backlog is clear, we present the "New Worl
 
 ---
 
-## Codebase Metadata.yaml
+## Codebase Metadata
 
-Here is the template for **FFV**, incorporating the new status, the "14+5" tracking, and the specific technical requirements for Far-Field Voice.
+Every HAL and VSI component directory contains a `metadata.yaml` file that drives the [RAG Status Report](../../RAG_STATUS_REPORT.md). This file captures:
 
-### `metadata.yaml` Template (FFV 0.100.1)
+- **Component identity** — name, version, and generation number
+- **RAG status** — RED, AMBER, or GREEN reflecting review readiness on develop
+- **Lifecycle tracking** — review start date, 14-day review deadline, and target GREEN date (14+5 rule)
+- **Scope** — high-level architectural responsibilities of the interface
+- **Notes** — priority, current status detail, required actions, and owners
+- **Reviewers** — the teams responsible for sign-off (mandatory teams plus component-specific team)
+- **Impact** — flags for breaking changes and multi-view sync requirements
 
-```yaml
-component: ffv
-version: 0.100.1
-generation: 100
-status: AMBER
-
-# Timeline Tracking (14+5 Rule)
-lifecycle:
-  review_started: 2026-02-13
-  review_deadline: 2026-02-27 # 14 Calendar Days
-  target_green_date: 2026-03-06 # +5 Business Days for resolution
-  hal_lead: "Your Name/ID"
-
-# High-Level Architecture
-scope:
-  - Multi-mic array topology support (up to 8 channels)
-  - Hardware-offloaded Beamforming & AEC (Acoustic Echo Cancellation)
-  - Wake-word Engine (WWE) integration path
-  - Low-power "Always-on" buffer management
-
-# Stakeholder Visibility
-reviewers:
-    - Audio_MW
-    - Voice_Assistant_Team
-    - VTS_Testing
-
-# Automated Dashboard Metadata
-impact:
-  breaking_change: true # Signals Reintegration Required (0.x.0/0.x.1 transition)
-  multi_view_sync: false
-
-# Documentation References
-links:
-  spec: "./docs/FFV_Interface_Spec.md"
-```
+When a component's status changes (e.g. a new PR lands on develop that moves it from AMBER to GREEN), the `metadata.yaml` should be updated accordingly and the RAG report regenerated.

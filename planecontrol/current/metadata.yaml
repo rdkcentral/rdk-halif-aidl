@@ -1,0 +1,41 @@
+component: planecontrol
+version: 0.0.1
+generation: 0
+status: AMBER
+description: "Graphics and video plane composition control"
+type: SOC
+
+# Timeline Tracking (14+5 Rule)
+lifecycle:
+  review_started: 2026-02-13
+  review_deadline: 2026-02-27 # 14 Calendar Days
+  target_green_date: 2026-03-06 # +5 Business Days for resolution
+  hal_lead: "Ulrond"
+
+# High-Level Architecture
+scope:
+  - Graphics and video rendering plane management for composited display
+  - Video source-to-plane mapping for main and PIP scenarios
+  - Native graphics window handle integration with EGL
+  - Atomic plane property control (position, size, Z-order)
+  - Graphics buffer flipping and plane-specific property access
+
+# Priority 3 - Plane Control
+notes:
+  priority: 3
+  status_detail: "Re-review required"
+  action: "Discussions with MW team - Simplify design"
+  owners: "Architecture + Graphics_Architecture"
+
+# Stakeholder Visibility
+reviewers:
+    RTAB_Group: pending
+    Architecture: pending
+    Product_Architecture: pending
+    Graphics_Architecture: pending
+    VTS_Team: pending
+
+# Automated Dashboard Metadata
+impact:
+  breaking_change: true # Signals Reintegration Required (0.x.0/0.x.1 transition)
+  multi_view_sync: false

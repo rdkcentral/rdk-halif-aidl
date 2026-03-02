@@ -1,0 +1,40 @@
+component: kernel
+version: 0.0.1
+generation: 0
+status: RED
+description: "Kernel interface strategy and system abstraction"
+type: SOC
+
+# Timeline Tracking (14+5 Rule)
+lifecycle:
+  review_started: 2026-02-13
+  review_deadline: 2026-02-27 # 14 Calendar Days
+  target_green_date: 2026-03-06 # +5 Business Days for resolution
+  hal_lead: "Ulrond"
+
+# High-Level Architecture
+scope:
+  - Linux kernel configuration and requirements for RDK platform
+  - Kernel module and driver interface specifications
+  - Device tree and hardware abstraction requirements
+  - Kernel version and patch level standardization
+
+# Priority 1 - Kernel
+notes:
+  priority: 1
+  status_detail: "Strategy required"
+  action: "Not blocking progress - Architecture Strategy"
+  owners: "Architecture"
+
+# Stakeholder Visibility
+reviewers:
+    RTAB_Group: pending
+    Architecture: pending
+    Product_Architecture: pending
+    Kernel_Architecture: pending
+    VTS_Team: pending
+
+# Automated Dashboard Metadata
+impact:
+  breaking_change: true # Signals Reintegration Required (0.x.0/0.x.1 transition)
+  multi_view_sync: false

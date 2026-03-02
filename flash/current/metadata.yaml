@@ -1,0 +1,41 @@
+component: flash
+version: 0.0.1
+generation: 0
+status: AMBER
+description: "Firmware image storage and update management"
+type: OEM
+
+# Timeline Tracking (14+5 Rule)
+lifecycle:
+  review_started: 2026-02-13
+  review_deadline: 2026-02-27 # 14 Calendar Days
+  target_green_date: 2026-03-06 # +5 Business Days for resolution
+  hal_lead: "Ulrond"
+
+# High-Level Architecture
+scope:
+  - Firmware image flashing with signature verification
+  - Multiple image type support (application, recovery, bootloader, splash screen)
+  - Non-blocking background flash operations with progress notifications
+  - Image compatibility and target flash area size validation
+  - Low priority execution to prevent impact on AV operations
+
+# Priority 5 - Flash (OEM)
+notes:
+  priority: 5
+  status_detail: "Migrate -> Image"
+  action: "Rename Module"
+  owners: "Architecture + Kernel_Architecture"
+
+# Stakeholder Visibility
+reviewers:
+    RTAB_Group: pending
+    Architecture: pending
+    Product_Architecture: pending
+    Kernel_Architecture: pending
+    VTS_Team: pending
+
+# Automated Dashboard Metadata
+impact:
+  breaking_change: true # Signals Reintegration Required (0.x.0/0.x.1 transition)
+  multi_view_sync: false
