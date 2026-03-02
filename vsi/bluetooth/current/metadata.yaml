@@ -1,7 +1,7 @@
 component: bluetooth
 version: 0.0.1
 generation: 0
-status: RED
+status: AMBER
 description: "Bluetooth stack integration and profile support"
 type: OEM
 

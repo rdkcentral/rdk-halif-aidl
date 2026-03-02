@@ -1,7 +1,7 @@
 component: wifi
 version: 0.0.1
 generation: 0
-status: RED
+status: AMBER
 description: "Wi-Fi driver integration and network management"
 type: OEM
 

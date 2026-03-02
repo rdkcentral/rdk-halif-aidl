@@ -1,7 +1,7 @@
 component: graphics
 version: 0.0.1
 generation: 0
-status: RED
+status: AMBER
 description: "Graphics subsystem and display pipeline interface"
 type: SOC
 

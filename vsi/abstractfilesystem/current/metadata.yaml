@@ -1,7 +1,7 @@
 component: abstractfilesystem
 version: 0.0.1
 generation: 0
-status: RED
+status: AMBER
 description: "Abstract file system interface and storage abstraction"
 type: OEM
 

@@ -24,14 +24,14 @@ scope:
 notes:
   priority: 3
   status_detail: "Re-review required"
-  action: "Discussions with MW team - Simplify design"
+  action: "Discussions with MW team - Simplify design. Architecture requires simplified design and restructured review."
   owners: "Architecture + Graphics_Architecture"
 
 # Stakeholder Visibility
 reviewers:
     RTAB_Group: pending
-    Architecture: pending
-    Product_Architecture: pending
+    Architecture: reviewed
+    Product_Architecture: reviewed
     Graphics_Architecture: pending
     VTS_Team: pending
 

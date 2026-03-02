@@ -1,7 +1,7 @@
 component: filesystem
 version: 0.0.1
 generation: 0
-status: RED
+status: AMBER
 description: "File system layout standards and partition management"
 type: OEM
 
@@ -30,7 +30,7 @@ notes:
 reviewers:
     RTAB_Group: pending
     Architecture: pending
-    Product_Architecture: pending
+    Product_Architecture: reviewed
     Kernel_Architecture: pending
     VTS_Team: pending
 

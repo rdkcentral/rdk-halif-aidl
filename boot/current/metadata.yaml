@@ -30,8 +30,8 @@ notes:
 # Stakeholder Visibility
 reviewers:
     RTAB_Group: pending
-    Architecture: pending
-    Product_Architecture: pending
+    Architecture: reviewed
+    Product_Architecture: reviewed
     Kernel_Architecture: pending
     VTS_Team: pending
 

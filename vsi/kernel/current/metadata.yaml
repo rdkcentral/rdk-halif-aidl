@@ -1,7 +1,7 @@
 component: kernel
 version: 0.0.1
 generation: 0
-status: RED
+status: AMBER
 description: "Kernel interface strategy and system abstraction"
 type: SOC
 

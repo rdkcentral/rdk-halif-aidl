@@ -1,7 +1,7 @@
 component: linuxinput
 version: 0.0.1
 generation: 0
-status: RED
+status: AMBER
 description: "Linux input subsystem and event handling"
 type: OEM
 
