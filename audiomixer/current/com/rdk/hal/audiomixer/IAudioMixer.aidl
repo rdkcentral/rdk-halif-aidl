@@ -137,7 +137,7 @@ interface IAudioMixer {
      * @details   Returns an array with one element for each mixer input (as declared in Capabilities.inputs).
      *            If a mixer input has no source connected, `AudioSourceType.NONE` is indicated.
      *
-     * @returns   Array of audio source to mixer input routing configurations.
+     * @returns   Array of audio source to mixer tree input routing configurations.
      * @exception binder::Status EX_NONE for success.
      * @see       setInputRouting()
      */
