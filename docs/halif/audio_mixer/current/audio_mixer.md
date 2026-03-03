@@ -84,7 +84,7 @@ The AudioMixer HAL service is initialized by systemd, registered with the Binder
 
 * Mixers are uniquely identified via `IAudioMixer.Id` enum values.
 * Capabilities are queried using `getCapabilities()` and may differ per instance.
-* Mixer resources are declared in the HFP YAML including `isSecure`, input configurations, and multi-instance support.
+* Mixer resources are declared in the HFP YAML including `supportsSecure`, input configurations, and multi-instance support.
 * Output ports may vary in capability (formats, transcode support, AQ processors).
 
 ---
@@ -169,7 +169,7 @@ flowchart TD
 
 ## Modes of Operation
 
-Mixers can operate in secure and non-secure paths. Properties such as `MIXING_MODE`, `ACTIVE_PROFILE`, and `DEBUG_TAP_ENABLED` affect runtime behavior and are accessible via the controller’s property interface.
+Mixers can operate in secure and non-secure paths. Properties such as `MIXING_MODE`, `ACTIVE_AQ_PROFILE`, `MUTE`, and `DEBUG_TAP_ENABLED` affect runtime behavior and are accessible via the controller’s property interface.
 
 ---
 

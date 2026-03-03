@@ -52,9 +52,4 @@ enum AQParameter {
     CENTER_SPREADING = 16,        /**< Center channel spreading */
     DRC = 17,                     /**< Dynamic Range Compression */
     // Extend with further AC4/DTS/MS12-specific parameters as needed.
-
-    /**
-     * Vendor-specific extensions.
-     */
-    VENDOR_EXTENSION = 1000
 }

@@ -40,7 +40,4 @@ enum AQProcessor {
 
     /** DTS:X Ultra processor. */
     DTS_ULTRA = 2,
-
-    /** Vendor-extensions or custom AQ processor. */
-    VENDOR_EXTENSION = 1000
 }

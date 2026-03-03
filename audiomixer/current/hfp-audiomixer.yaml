@@ -28,10 +28,10 @@ audiomixer:
   # Each resources entry describes a single logical audio mixer instance and its input capabilities
   resources:
     - id: 0  # Mixer instance 0 (secure)
-      isSecure: true
+      supportsSecure: true
       # Supported audio source types for dynamic input routing
       supportedSourceTypes:
-        - AUDIO_DECODER
+        - AUDIO_SINK
         - HDMI_INPUT
         - APPLICATION_AUDIO
       inputs:
@@ -67,7 +67,7 @@ audiomixer:
             - PCM
 
     - id: 1  # Mixer instance 1 (non-secure)
-      isSecure: false
+      supportsSecure: false
       inputs:
         - name: main
           supportedContentTypes:

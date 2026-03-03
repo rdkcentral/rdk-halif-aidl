@@ -19,6 +19,8 @@
  package com.rdk.hal.audiomixer;
 
 import com.rdk.hal.audiomixer.Capabilities;
+import com.rdk.hal.audiomixer.IAudioMixerController;
+import com.rdk.hal.audiomixer.IAudioMixerEventListener;
 import com.rdk.hal.audiomixer.IAudioOutputPort;
 import com.rdk.hal.audiomixer.Property;
 import com.rdk.hal.audiomixer.InputRouting;
@@ -92,6 +94,54 @@ interface IAudioMixer {
     PropertyValue getProperty(in Property property);
 
     /**
+     * @brief Opens this mixer instance for runtime control.
+     *
+     * If successful, the mixer transitions from CLOSED to OPENING and then READY.
+     * The returned controller is used to start/stop/flush and manage mixer runtime behaviour.
+     *
+     * If `secure` is requested (true) and `Capabilities.supportsSecure` is false, open fails
+     * with a null return.
+     *
+     * If the client that opened the controller crashes, `stop()` and `close()` are implicitly
+     * called to perform cleanup.
+     *
+     * @param[in] secure                  The mixer secure audio path mode.
+     * @param[in] audioMixerEventListener Listener for state/error/runtime mixer callbacks.
+     * @return IAudioMixerController interface, or null on internal/open failure.
+     * @exception binder::Status EX_ILLEGAL_STATE if mixer is not in CLOSED state.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if parameters are invalid.
+     * @exception binder::Status EX_NULL_POINTER if listener is null.
+     * @see close()
+     */
+    @nullable IAudioMixerController open(in boolean secure, in IAudioMixerEventListener audioMixerEventListener);
+
+    /**
+     * @brief Closes this mixer instance.
+     *
+     * The mixer must be in READY state before it can be closed. On success it transitions
+     * to CLOSING and then CLOSED.
+     *
+     * @param[in] audioMixerController Instance returned by open().
+     * @return true on successful close, false for invalid state or unknown controller.
+     * @exception binder::Status EX_ILLEGAL_STATE if mixer is not in READY state.
+     * @exception binder::Status EX_NULL_POINTER if controller is null.
+     * @see open()
+     */
+    boolean close(in IAudioMixerController audioMixerController);
+
+    /**
+    * @brief Registers a listener to receive events from this mixer instance.
+    * @param[in] listener Instance of IAudioMixerEventListener to receive callbacks.
+    */
+    void registerListener(in IAudioMixerEventListener listener);
+
+    /**
+     * @brief     Un-registers a previously registered mixer event listener.
+     * @param[in] listener   Instance of IAudioMixerEventListener to remove.
+     */
+    void unregisterListener(in IAudioMixerEventListener listener);
+
+    /**
     * @brief Gets the list of currently active source codecs being mixed.
     *
     * Useful for clients to discover what input formats are currently processed
@@ -106,40 +156,13 @@ interface IAudioMixer {
     Codec[] getCurrentSourceCodecs();
 
     /**
-     * @brief     Sets the audio source routing for one or more mixer inputs.
-     * @details   Allows multiple audio [source -> mixer input] mappings to be configured.
-     *            This enables operations such as switching between decoders, routing
-     *            HDMI input audio, or connecting application audio to mixer inputs.
-     *
-     *            Each InputRouting element specifies:
-     *            - mixerInputIndex: Which mixer input to configure (from Capabilities.inputs[])
-     *            - sourceType/sourceIndex: Which audio source to connect
-     *
-     *            To disconnect a source from a mixer input, set `sourceType` to `AudioSourceType.NONE`.
-     *
-     *            Validation:
-     *            - If a mixer input index appears multiple times in the routing array, the call fails.
-     *            - If a source type and source index appear multiple times in the routing array, the call fails.
-     *            - If a mixer input is already mapped to a different source, returns false.
-     *
-     * @param[in] routing   Array of audio source to mixer input routing configurations.
-     * @returns   Success status.
-     * @retval true     All routing mappings were successfully applied.
-     * @retval false    One or more routing configurations were invalid or conflicted.
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if routing array contains invalid values.
-     * @exception binder::Status EX_ILLEGAL_STATE if mixer is in a state that prevents routing changes.
-     * @see       getInputRouting()
-     */
-    boolean setInputRouting(in InputRouting[] routing);
-
-    /**
      * @brief     Gets the current audio source routing for all mixer inputs.
      * @details   Returns an array with one element for each mixer input (as declared in Capabilities.inputs).
      *            If a mixer input has no source connected, `AudioSourceType.NONE` is indicated.
      *
      * @returns   Array of audio source to mixer tree input routing configurations.
      * @exception binder::Status EX_NONE for success.
-     * @see       setInputRouting()
+     * @see       IAudioMixerController.setInputRouting()
      */
     InputRouting[] getInputRouting();
 }

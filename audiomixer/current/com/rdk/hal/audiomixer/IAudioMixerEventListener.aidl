@@ -25,7 +25,7 @@ import com.rdk.hal.audiomixer.ContentType;
  * @brief     Listener interface for asynchronous Audio Mixer events.
  * @details   Provides callbacks for runtime events such as input codec changes, error notifications,
  *            resource state changes, and other dynamic mixer events. 
- *            Intended to be registered with the IAudioMixerController.
+ *            Intended to be registered with the IAudioMixer.
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
  * @author    Douglas Adler

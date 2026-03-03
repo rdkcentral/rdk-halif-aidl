@@ -17,7 +17,7 @@ package com.rdk.hal.audiomixer;
 enum Property {
     /**
      * Current latency of the mixer in milliseconds.
-     * 
+     *
      * Type: Integer
      * Access: Read-only.
      */
@@ -25,7 +25,7 @@ enum Property {
 
     /**
      * Enables or disables debug tap output for audio analysis.
-     * 
+     *
      * Type: Boolean
      * Access: Read-write.
      * Writeable in states: READY
@@ -34,11 +34,11 @@ enum Property {
 
     /**
      * Gets or sets the currently active AQ (Audio Quality) profile or preset.
-     * 
-     * Type: String  
-     * Access: Read-write  
-     * Writable States: READY, STARTED  
-     * 
+     *
+     * Type: String
+     * Access: Read-write
+     * Writeable States: READY, STARTED
+     *
      * The value must correspond to a named AQ parameter configuration supported
      * by the system. These profiles internally control one or more parameters
      * defined in {@see AQParameter}, such as DIALOGUE_ENHANCER, BASS_ENHANCER_GAIN,
@@ -49,26 +49,29 @@ enum Property {
      * @see com.rdk.hal.audiomixer.AQParameter
      */
     ACTIVE_AQ_PROFILE = 2,
-    
+
     /**
     * Mixer operating mode (e.g., NORMAL, DUCKED).
     *
     * Designed for runtime changes in response to policy or stream priority.
+    * TODO: Future Expansion
     *
     * Type: MixingMode (Enum) @see com.rdk.hal.audiomixer.MixingModes
     * Access: Read-write.
-    * Writable in states: READY, STARTED
+    * Writeable in states: READY, STARTED
     *
     * @see MixingMode
     */
     MIXING_MODE = 3,
 
     /**
-     * Custom vendor-specific property for mixer configuration or debug.
-     * 
-     * Type: Integer or String (as defined by vendor extension)
+     * Mute state for the mixer output path.
+     *
+     * Type: Boolean
      * Access: Read-write.
-     * Writeable in states: All
+     * Writeable in states: READY, STARTED
+     * - false: unmuted (default on open)
+     * - true: muted
      */
-    VENDOR_EXTENSION = 1000,
+    MUTE = 4
 };

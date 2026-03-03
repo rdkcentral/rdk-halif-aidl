@@ -36,9 +36,9 @@ import com.rdk.hal.audiomixer.MixerInput;
 @VintfStability
 parcelable Capabilities {
     /**
-     * @brief Indicates whether this mixer instance supports secure audio path.
+     * @brief Indicates if this mixer instance supports secure audio path mode.
      */
-    boolean isSecure;
+    boolean supportsSecure;
 
     /**
      * @brief Describes the available audio mixer input specifications.

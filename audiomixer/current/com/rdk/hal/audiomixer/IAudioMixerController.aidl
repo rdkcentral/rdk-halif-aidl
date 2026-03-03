@@ -16,17 +16,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package com.rdk.hal.audiomixer;
+package com.rdk.hal.audiomixer;
 
+import com.rdk.hal.audiomixer.InputRouting;
 import com.rdk.hal.audiomixer.Property;
 import com.rdk.hal.PropertyValue;
-import com.rdk.hal.audiomixer.IAudioMixerControllerListener;
 
 /**
  * @brief     Audio Mixer Controller HAL interface.
  * @details   Provides stateful and runtime control over a specific platform audio mixer resource.
  *            This includes lifecycle management (start/stop), flushing, signalling end-of-stream,
- *            property configuration, and event listener management. Intended for use by the
+ *            routing configuration, and property configuration. Intended for use by the
  *            middleware audio server and platform integrators.
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
@@ -36,6 +36,35 @@ import com.rdk.hal.audiomixer.IAudioMixerControllerListener;
  */
 @VintfStability
 interface IAudioMixerController {
+
+    /**
+     * @brief     Sets the audio source routing for one or more inputs on this mixer instance.
+     * @details   Allows multiple audio [source -> mixer input] mappings to be configured.
+     *            This enables operations such as switching between decoders, routing
+     *            HDMI input audio, or connecting application audio to mixer inputs.
+     *
+     *            The target mixer input is defined by the array position:
+     *            - routing[0] configures mixer input 0
+     *            - routing[1] configures mixer input 1
+     *            - etc.
+     *
+     *            Each InputRouting element specifies sourceType/sourceIndex for that input.
+     *
+     *            To disconnect a source from a mixer input, set `sourceType` to `AudioSourceType.NONE`.
+     *
+     *            Validation:
+     *            - If a source type and source index appear multiple times in the routing array, the call fails.
+     *            - If a mixer input is already mapped to a different source, returns false.
+     *
+     * @param[in] routing   Array of audio source to mixer input routing configurations.
+     * @returns   Success status.
+     * @retval true     All routing mappings were successfully applied.
+     * @retval false    One or more routing configurations were invalid or conflicted.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if routing array contains invalid values.
+     * @exception binder::Status EX_ILLEGAL_STATE if mixer is in a state that prevents routing changes.
+     * @see       IAudioMixer.getInputRouting()
+     */
+    boolean setInputRouting(in InputRouting[] routing);
 
     /**
      * @brief     Sets a property on the controlled mixer instance.
@@ -87,16 +116,4 @@ interface IAudioMixerController {
      * @pre       The mixer must be in STARTED state.
      */
     void signalEOS();
-
-    /**
-    * @brief Registers a listener to receive events from this mixer instance.
-    * @param[in] listener Instance of IAudioMixerEventListener to receive callbacks.
-    */
-    void registerListener(in IAudioMixerEventListener listener);
-
-    /**
-     * @brief     Un-registers a previously registered mixer event listener.
-     * @param[in] listener   Instance of IAudioMixerEventListener to remove.
-     */
-    void unregisterListener(in IAudioMixerEventListener listener);
 }

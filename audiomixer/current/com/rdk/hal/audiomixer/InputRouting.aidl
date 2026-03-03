@@ -21,7 +21,16 @@ import com.rdk.hal.audiomixer.AudioSourceType;
 
 /**
  * @brief     Audio source to mixer input routing definition.
- * @details   Specifies which audio source is connected to which mixer input.
+ * @details   Specifies which audio source is connected to a mixer input.
+ *            The target mixer input is determined by the position in the
+ *            InputRouting[] array passed to setInputRouting()/returned by
+ *            getInputRouting():
+ *            - routing[0] maps mixer input 0
+ *            - routing[1] maps mixer input 1
+ *            - etc.
+ *
+ *            This parcelable therefore only describes the source side of
+ *            the mapping for one mixer input entry.
  *            Follows the pattern established by planecontrol::SourcePlaneMapping.
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
@@ -33,15 +42,6 @@ import com.rdk.hal.audiomixer.AudioSourceType;
 parcelable InputRouting
 {
     /**
-     * The destination mixer input index.
-     *
-     * This specifies which mixer input to configure.
-     * Valid range: 0 to (number of mixer inputs - 1) as defined in Capabilities.inputs[].
-     * The index corresponds to the position in the Capabilities.inputs array.
-     */
-    int mixerInputIndex;
-
-    /**
      * The audio source type to route to this mixer input.
      */
     AudioSourceType sourceType;
@@ -50,7 +50,7 @@ parcelable InputRouting
      * The instance index of the specified audio source type.
      *
      * For example:
-     * - If sourceType is AUDIO_DECODER, sourceIndex specifies which decoder (0, 1, 2...).
+     * - If sourceType is AUDIO_SINK, sourceIndex specifies which sink instance (0, 1, 2...).
      * - If sourceType is HDMI_INPUT, sourceIndex specifies which HDMI input port (0, 1, 2...).
      *
      * Ignored if `sourceType` is `AudioSourceType.NONE`.

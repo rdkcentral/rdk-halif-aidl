@@ -34,31 +34,31 @@
 enum MixingMode {
     /**
      * Standard mixing behaviour. All streams mix at their configured volumes.
+     * FIXME: Only supported format required today
      */
     NORMAL = 0,
 
     /**
-     * Background streams are attenuated while a priority (interruptive) stream plays.
+     * All streams are forcibly muted at the mixer level.
+     * TODO: Future expansion
      */
-    DUCKED = 1,
+    MUTED = 1,
+
+    /**
+     * Background streams are attenuated while a priority (interruptive) stream plays.
+     * TODO: Future expansion
+     */
+    DUCKED = 2,
 
     /**
      * Only the designated stream is played; all others are temporarily muted.
+     * TODO: Future expansion
      */
-    SOLO = 2,
-
-    /**
-     * All streams are forcibly muted at the mixer level.
-     */
-    MUTED = 3,
+    SOLO = 3,
 
     /**
      * Overrides standard mixing rules for special stream behaviour (e.g., emergency alerts).
+     * TODO: Future expansion
      */
-    MIXED_OVERRIDE = 4,
-
-    /**
-     * Vendor-specific or extended mixing behaviour.
-     */
-    VENDOR_EXTENSION = 1000
+    MIXED_OVERRIDE = 4
 }
