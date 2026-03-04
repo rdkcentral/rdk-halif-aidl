@@ -20,6 +20,9 @@ package com.rdk.hal.videodecoder;
 import com.rdk.hal.videodecoder.ScanType;
 import com.rdk.hal.videodecoder.PixelFormat;
 import com.rdk.hal.videodecoder.DynamicRange;
+import com.rdk.hal.videodecoder.MasteringDisplayInfo;
+import com.rdk.hal.videodecoder.ContentLightLevel;
+import com.rdk.hal.videodecoder.Colorimetry;
 import com.rdk.hal.AVSource;
 
 /** 
@@ -115,8 +118,24 @@ parcelable FrameMetadata {
 	 */
 	boolean lowLatency; 
 		
-//TODO: colorimetry for static HDR metadata... - must have matching properties
-	
+	/**
+	 * Colorimetry (colour primaries and matrix) of the video frame as reported by the decoder.
+	 * Set to Colorimetry::UNKNOWN if not signalled in the stream.
+	 */
+	Colorimetry colorimetry;
+
+	/**
+	 * Mastering display colour volume metadata (SMPTE ST 2086).
+	 * Extracted from HEVC SEI type 137 or equivalent. Null if not present in the stream.
+	 */
+	@nullable MasteringDisplayInfo masteringDisplayInfo;
+
+	/**
+	 * Content light level metadata (SMPTE ST 2094-10 / CTA-861.3).
+	 * Extracted from HEVC SEI type 144 or equivalent. Null if not present in the stream.
+	 */
+	@nullable ContentLightLevel contentLightLevel;
+
 	/**
 	 * The source of the video frame.
 	 * When the frame is presented the source may be used to configure the TV picture mode settings.
