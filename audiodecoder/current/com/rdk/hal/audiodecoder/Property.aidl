@@ -226,45 +226,4 @@ enum Property {
 	 *
 	 */
 	METRIC_FRAMES_DROPPED = 1002,
-
-       /**
-        * Controls the number of audio output channels.
-        *
-        * The number of channels defines the channel layout of the decoded PCM audio
-        * that will be rendered by the audio sink.
-        *
-        * Type: Integer
-        *  1  - Mono
-        *  2  - Stereo
-        *  6  - 5.1 surround (if supported)
-        *  8  - 7.1 surround (if supported)
-        *
-        * Access: Read-write.
-        * Write in states: READY only
-        *
-        * @exception binder::Status::Exception::EX_NONE for success
-        * @exception binder::Status::Exception::EX_ILLEGAL_STATE if modified in a non-READY state
-        */
-       NUMBER_OF_CHANNELS = 1003,
-
-       /**
-        * Controls the audio output sample rate.
-        *
-        * The sample rate specifies the frequency at which the decoded PCM audio
-        * is rendered by the audio sink.
-        *
-        * Type: Integer (in Hz)
-        *  Common values:
-        *   8000, 16000, 32000
-        *   44100
-        *   48000 (recommended default)
-        *   96000, 192000 (if supported)
-        *
-        * Access: Read-write.
-        * Write in states: READY only
-        *
-        * @exception binder::Status::Exception::EX_NONE for success
-        * @exception binder::Status::Exception::EX_ILLEGAL_STATE if modified in a non-READY state
-        */
-       SAMPLE_RATE = 1004,
 }
