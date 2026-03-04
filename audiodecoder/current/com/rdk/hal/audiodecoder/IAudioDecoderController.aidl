@@ -184,4 +184,35 @@ interface IAudioDecoderController {
      * @pre The decoder resource must be in State::STARTED.
      */
     boolean parseCodecSpecificData(in CSDAudioFormat csdAudioFormat, in byte[] codecData);
+
+    /**
+     * Sets the audio stream format hint before decoding begins.
+     *
+     * Provides the channel count and sample rate sourced from container
+     * or demuxer metadata (e.g. GStreamer caps). Required for codecs
+     * such as AC3/EAC3 where this information is not carried in
+     * codec-specific data but is needed by the decoder and downstream
+     * audio sink pipeline.
+     *
+     * For codecs that do carry format info in codec-specific data
+     * (e.g. AAC AudioSpecificConfig), this method is optional — the
+     * decoder will use the CSD values. If both are provided, the CSD
+     * values take precedence.
+     *
+     * @param[in] channels    Number of audio channels.
+     *                        Common values: 1 (mono), 2 (stereo),
+     *                        6 (5.1 surround), 8 (7.1 surround).
+     * @param[in] sampleRate  Sample rate in Hz.
+     *                        Common values: 8000, 16000, 32000,
+     *                        44100, 48000, 96000, 192000.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the READY state.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if channels or sampleRate is <= 0.
+     *
+     * @pre The resource must be in State::READY.
+     *
+     * @see PCMMetadata.numChannels, PCMMetadata.sampleRate
+     */
+    void setAudioFormat(in int channels, in int sampleRate);
 }
