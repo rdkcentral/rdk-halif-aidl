@@ -22,7 +22,7 @@ package com.rdk.hal.videodecoder;
  *  @brief     Content light level metadata (SMPTE ST 2094-10 / CTA-861.3).
  *
  *  Carried in HEVC SEI message type 144 (content_light_level_info).
- *  Both fields are integer cd/m² (nits) in the range 0–65535.
+ *  Both fields are integer cd/m^2 (nits) in the range 0-65535.
  *  A value of 0 indicates the field is not present or unknown.
  *
  *  @author    Gerald Weatherup
@@ -34,7 +34,7 @@ parcelable ContentLightLevel {
     /**
      * Maximum Content Light Level (MaxCLL).
      * The peak luminance of any single pixel across the entire content,
-     * in integer cd/m² (nits). Range: 0–65535. 0 = not present.
+     * in integer cd/m^2 (nits). Range: 0-65535. 0 = not present.
      * @see HEVC SEI type 144, max_content_light_level
      */
     int maxCLL;
@@ -42,7 +42,7 @@ parcelable ContentLightLevel {
     /**
      * Maximum Frame-Average Light Level (MaxFALL).
      * The maximum average luminance of any single frame across the entire
-     * content, in integer cd/m² (nits). Range: 0–65535. 0 = not present.
+     * content, in integer cd/m^2 (nits). Range: 0-65535. 0 = not present.
      * @see HEVC SEI type 144, max_pic_average_light_level
      */
     int maxFALL;

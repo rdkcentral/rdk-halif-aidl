@@ -195,7 +195,7 @@ interface IAudioDecoderController {
      * audio sink pipeline.
      *
      * For codecs that do carry format info in codec-specific data
-     * (e.g. AAC AudioSpecificConfig), this method is optional — the
+     * (e.g. AAC AudioSpecificConfig), this method is optional - the
      * decoder will use the CSD values. If both are provided, the CSD
      * values take precedence.
      *
