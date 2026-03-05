@@ -67,7 +67,7 @@ enum DynamicRange {
      * An improved version of HDR10 that uses dynamic metadata for better tone mapping.
      * @see SMPTE ST 2094-40
      */
-    HDR10PLUS = 4,
+    HDR10_PLUS = 4,
 
     /**
      * Dolby Vision (DV).

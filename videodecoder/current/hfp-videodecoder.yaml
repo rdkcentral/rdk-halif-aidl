@@ -53,7 +53,13 @@ videodecoder:                   # Component object begins
         - SDR
         - HLG
         - HDR10
+        - HDR10_PLUS
         - DOLBY_VISION
+      supportedColorimetries:
+        - BT601_525
+        - BT601_625
+        - BT709
+        - BT2020
       supportsSecure: true
     - 1:                          # Resource object begins
       supportedCodecs:          # Array of codec capabilities
@@ -79,4 +85,8 @@ videodecoder:                   # Component object begins
             maxFrameHeight: 1080
       supportedDynamicRanges:
         - SDR
+      supportedColorimetries:
+        - BT601_525
+        - BT601_625
+        - BT709
       supportsSecure: true
