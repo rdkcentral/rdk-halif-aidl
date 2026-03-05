@@ -220,10 +220,10 @@ interface IVideoDecoderController
     void setMasteringDisplayInfo(in @nullable MasteringDisplayInfo info);
 
     /**
-     * Sets the content light level metadata for the stream (SMPTE ST 2094-10 / CTA-861.3).
+     * Sets the content light level metadata for the stream (CTA-861.3 / HEVC SEI type 144).
      *
-     * Provides the MaxCLL and MaxFALL values. This is typically sourced from
-     * container-level metadata (e.g. MP4/ISOBMFF 'clli' box, DASH MPD) before
+     * Provides the MaxCLL and MaxFALL values as CTA-861.3 static metadata. This is typically
+     * sourced from container-level metadata (e.g. MP4/ISOBMFF 'clli' box, DASH MPD) before
      * SEI messages arrive in the stream.
      *
      * Pass null to clear any previously set value and revert to stream-signalled metadata.
