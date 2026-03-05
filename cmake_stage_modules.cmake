@@ -64,7 +64,7 @@ foreach(lib ${MODULE_LIBS})
     get_filename_component(lib_name "${lib}" NAME)
 
     # Extract module name from library name (e.g., libavclock-vcurrent-cpp.so -> avclock)
-    string(REGEX MATCH "lib([a-z]+)-v" module_match "${lib_name}")
+    string(REGEX MATCH "lib([a-z0-9]+)-v" module_match "${lib_name}")
     if (module_match)
         set(module_name ${CMAKE_MATCH_1})
 

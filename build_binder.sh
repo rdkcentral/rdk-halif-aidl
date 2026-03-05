@@ -232,15 +232,22 @@ build_sdk() {
     fi
 
     echo "Configuring binder SDK..."
-    cmake -S "$BINDER_REPO_DIR" -B "$BINDER_BUILD_DIR" \
+    if ! cmake -S "$BINDER_REPO_DIR" -B "$BINDER_BUILD_DIR" \
         -DCMAKE_INSTALL_PREFIX="$SDK_INSTALL_DIR" \
         -DCMAKE_BUILD_TYPE=Release \
-        -DBUILD_HOST_AIDL=ON
-
-    if [ $? -ne 0 ]; then
-        echo ""
-        echo "❌ ERROR: CMake configuration failed"
-        return 1
+        -DBUILD_HOST_AIDL=ON; then
+        # Stale CMake cache (e.g. repo moved) — clear and retry once
+        echo "    Clearing stale CMake cache and retrying..."
+        rm -rf "$BINDER_BUILD_DIR"
+        cmake -S "$BINDER_REPO_DIR" -B "$BINDER_BUILD_DIR" \
+            -DCMAKE_INSTALL_PREFIX="$SDK_INSTALL_DIR" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_HOST_AIDL=ON
+        if [ $? -ne 0 ]; then
+            echo ""
+            echo "❌ ERROR: CMake configuration failed"
+            return 1
+        fi
     fi
 
     echo ""

@@ -44,7 +44,7 @@ SCRIPT_PATH="$SCRIPT_DIR/$(basename "${BASH_SOURCE[0]}")"
 # Show help if no arguments or help requested
 if [[ $# -eq 0 ]] || [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
     cat << EOF
-Usage: ./build_interfaces.sh <module|command> [--version <ver>]
+Usage: ./build_interfaces.sh <module|command> [--version <ver>] [--force-copy]
 
 Build AIDL interface libraries or clean build artifacts.
 
@@ -69,6 +69,9 @@ Options:
                      - "current" : Working development version
                      - "v1"      : Frozen version 1
                      - "v2"      : Frozen version 2, etc.
+
+  --force-copy       Force copy AIDL files even if no changes detected
+                     Use when hash check fails or to ensure fresh copy
 
   --help, -h         Show this help message
 
@@ -471,7 +474,7 @@ case "${1:-}" in
 
         # List of all modules in dependency order
         MODULES=(
-            common flash deepsleep indicator boot
+            common flash deepsleep rf4ce indicator boot
             videodecoder audiodecoder hdmicec hdmiinput
             videosink audiosink hdmioutput deviceinfo
             planecontrol panel avbuffer avclock
@@ -735,6 +738,7 @@ fi
 # Parse arguments
 MODULE="${1:-all}"
 VERSION="current"
+FORCE_COPY=false
 
 shift || true  # Remove first argument
 while [[ $# -gt 0 ]]; do
@@ -742,6 +746,10 @@ while [[ $# -gt 0 ]]; do
         --version)
             VERSION="$2"
             shift 2
+            ;;
+        --force-copy)
+            FORCE_COPY=true
+            shift
             ;;
         *)
             echo "❌ Unknown option: $1"
@@ -882,18 +890,59 @@ else
 fi
 
 # Update APIs for each module
-echo "--> [Step 2/4] Updating APIs..."
+echo "--> [Step 3/4] Updating APIs..."
+HASH_CHECKER="${SCRIPT_DIR}/check_aidl_changes.sh"
+COPY_NEEDED_MODULES=""
+
 for mod in $MODULES; do
-    echo "    Updating: $mod"
-    $AIDL_OPS -u -r "$ROOT_DIR" -o "$STABLE_DIR" "$mod" || exit 1
+    # Check if we should force copy
+    HASH_CHECK_FLAGS="--quiet"
+    if [ "$FORCE_COPY" = true ]; then
+        HASH_CHECK_FLAGS="$HASH_CHECK_FLAGS --force"
+    fi
+
+    # Always check if source has changed using hash comparison
+    if "$HASH_CHECKER" "$mod" "$ROOT_DIR" "$STABLE_DIR" "$VERSION" $HASH_CHECK_FLAGS; then
+        # Return code 0 = no changes
+        echo "    ✓ $mod - no changes detected (using cached)"
+        continue
+    else
+        HASH_CHECK_RC=$?
+        if [ $HASH_CHECK_RC -eq 1 ]; then
+            # Return code 1 = changes detected or first build
+            echo "    → $mod - changes detected, copying..."
+            COPY_NEEDED_MODULES="$COPY_NEEDED_MODULES $mod"
+        else
+            # Return code 2 = error
+            echo "    ⚠ $mod - hash check failed, forcing copy..."
+            COPY_NEEDED_MODULES="$COPY_NEEDED_MODULES $mod"
+        fi
+    fi
 done
 
-# Generate C++ code from AIDL files
-echo "--> [Step 2.5/4] Generating C++ code..."
-for mod in $MODULES; do
-    echo "    Generating: $mod"
-    $AIDL_OPS -g -r "$ROOT_DIR" -o "$STABLE_DIR" "$mod" || exit 1
-done
+# Copy AIDL files for modules that have changes
+if [ -n "$COPY_NEEDED_MODULES" ]; then
+    for mod in $COPY_NEEDED_MODULES; do
+        echo "    Copying AIDL files: $mod"
+        $AIDL_OPS -u -r "$ROOT_DIR" -o "$STABLE_DIR" "$mod" || {
+            echo "❌ Error: Failed to copy AIDL files for $mod"
+            echo "   This usually means syntax errors in AIDL files"
+            echo ""
+            echo "   Common issues:"
+            echo "   • Missing semicolons or braces"
+            echo "   • Incorrect import statements"
+            echo "   • Invalid AIDL syntax"
+            echo ""
+            echo "   Check the AIDL files in: $ROOT_DIR/$mod/$VERSION/"
+            exit 1
+        }
+    done
+else
+    echo "    No modules require AIDL file updates"
+fi
+
+# Note: C++ code generation is handled by CMake via CMakeLists.inc
+# which calls aidl_ops -g automatically during the build
 
 # Sanitize generated files (mutex include fix)
 if [ -d "$STABLE_DIR/generated" ]; then
@@ -908,7 +957,7 @@ if [ -d "$STABLE_DIR/generated" ]; then
                 sed -i '1i #include <mutex>' "$file"
             fi
         fi
-    done
+    done || true  # Don't exit if grep finds no files
 fi
 
 # Build with CMake (Stage 3)
@@ -922,19 +971,11 @@ if [ ! -x "$BUILD_MODULES_SCRIPT" ]; then
     exit 1
 fi
 
-# Construct arguments for build_modules.sh
-BUILD_ARGS=()
-if [ "$MODULE" != "all" ]; then
-    BUILD_ARGS+=("$MODULE")
-else
-    BUILD_ARGS+=("all")
-fi
-
-BUILD_ARGS+=("--version" "$VERSION")
-BUILD_ARGS+=("--sdk-dir" "$SDK_DIR")
-
-# Call build_modules.sh
-"$BUILD_MODULES_SCRIPT" "${BUILD_ARGS[@]}"
+# Use single-threaded build for clear sequential output
+echo ""
+echo "Building (single-threaded for clarity)..."
+echo "────────────────────────────────────────────────────────────────"
+cmake --build "${BUILD_DIR}" -- -j1
 
 if [ $? -eq 0 ]; then
     echo ""
@@ -962,4 +1003,3 @@ else
     echo "❌ Build failed"
     exit 1
 fi
-

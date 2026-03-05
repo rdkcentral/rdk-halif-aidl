@@ -21,8 +21,8 @@ class IDeepSleep : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(DeepSleep)
   static const int32_t VERSION = 1;
-  const std::string HASH = "e0d5ad156ab90a805d64e9b6a5fbc77512b97725";
-  static constexpr char* HASHVALUE = "e0d5ad156ab90a805d64e9b6a5fbc77512b97725";
+  const std::string HASH = "a8b30139f602c36027ae8eaee7a82c7f2a4bf9ba";
+  static constexpr char* HASHVALUE = "a8b30139f602c36027ae8eaee7a82c7f2a4bf9ba";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getCapabilities(::com::rdk::hal::deepsleep::Capabilities* _aidl_return) = 0;
   virtual ::android::binder::Status enterDeepSleep(const ::std::vector<::com::rdk::hal::deepsleep::WakeUpTrigger>& triggersToWakeUpon, ::std::vector<::com::rdk::hal::deepsleep::WakeUpTrigger>* wokeUpByTriggers, ::std::optional<::com::rdk::hal::deepsleep::KeyCode>* keyCode, bool* _aidl_return) = 0;
