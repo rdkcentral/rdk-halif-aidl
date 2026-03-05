@@ -131,7 +131,7 @@ parcelable FrameMetadata {
 	@nullable MasteringDisplayInfo masteringDisplayInfo;
 
 	/**
-	 * Content light level metadata (SMPTE ST 2094-10 / CTA-861.3).
+	 * Content light level static HDR metadata (MaxCLL/MaxFALL as defined in CTA-861.3).
 	 * Extracted from HEVC SEI type 144 or equivalent. Null if not present in the stream.
 	 */
 	@nullable ContentLightLevel contentLightLevel;
