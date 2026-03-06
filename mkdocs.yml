@@ -123,6 +123,7 @@ nav:
     - Filing an Issue: external_content/ut-core-wiki/1.2.-Standards:-Issue-Description-Guideline.md
     - FAQ:
       - Python Development: external_content/ut-core-wiki/FAQ:-Comparing-Python-Development-Platforms.md
+    - Release Notes 0.14.0: releases/0.14.0.md
     - ChangeLog: CHANGELOG.md
 
 markdown_extensions:
