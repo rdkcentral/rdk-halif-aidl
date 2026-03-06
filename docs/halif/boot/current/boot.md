@@ -11,11 +11,9 @@ The Boot HAL provides a platform-independent interface for managing device boot,
     |-|-|
     |**Interface Definition**|[boot/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/boot/current)|
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
-    |**Initialization** | [systemd](../../../vsi/systemd/current/systemd.md) – **hal-boot.service** |
 
 !!! tip "Related Pages"
     - [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
-    - [Systemd Integration](../../../vsi/systemd/current/systemd.md)
     - [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
 
 ---
