@@ -1,4 +1,4 @@
-# **HAL API Deprecation Governance Process**
+# **HAL API Evolution Governance Process**
 
 ## Document History
 
@@ -8,9 +8,9 @@
 
 ## **Objective**
 
-This document defines the governance process for managing the lifecycle of HAL APIs through deprecation and eventual removal. It outlines how HAL API deprecations will be communicated, documented, validated, and executed in a controlled and visible manner. This ensures backward compatibility during transition periods, minimises risk, and provides clear guidance to engineering teams on the required steps and responsibilities throughout the deprecation process.
+This document defines the governance process for managing the lifecycle of HAL APIs through evolution and eventual removal. It outlines how HAL API evolutions will be communicated, documented, validated, and executed in a controlled and visible manner. This ensures backward compatibility during transition periods, minimises risk, and provides clear guidance to engineering teams on the required steps and responsibilities throughout the evolution process.
 
-## **Step 1: Soft Deprecation**
+## **Step 1: Soft Evolution**
 
 ### **Header Annotation**
 
@@ -18,7 +18,7 @@ This document defines the governance process for managing the lifecycle of HAL A
 
 * Use the Doxygen `@deprecated` tag with:
 
-  * **Deprecation date** (e.g. `@deprecated Deprecated since 2025-04-01`)
+  * **Evolution date** (e.g. `@deprecated Deprecated since 2025-04-01`)
   * **Replacement API** if available (e.g. `Use NewHALAPI_DoTask() instead.`)
   * Example:
 
@@ -77,7 +77,7 @@ This document defines the governance process for managing the lifecycle of HAL A
 
 #### **Module Documentation**
 
-* Review and update any related Markdown documentation for the HAL module to reflect the deprecation status.
+* Review and update any related Markdown documentation for the HAL module to reflect the deprecated status.
 * Ensure deprecated APIs are clearly marked and guidance on replacements is provided.
 
 ---
@@ -90,34 +90,34 @@ This document defines the governance process for managing the lifecycle of HAL A
 * Removal of function tests from the HAL Validation Test Suite (VTS) may only occur once the header file version without the deprecated API has been released.
 * The new header file version must not be consumed or published externally until the corresponding VTS version is also ready and aligned.
 * Document the deprecated API in VTS documentation for reference.
-* Create a dedicated Deprecated APIs Section in VTS Release Notes that lists:
+* Create a dedicated Evolved APIs Section in VTS Release Notes that lists:
   * API Name
-  * Deprecation Date
+  * Evolution Date
   * Replacement API (if available)
 
 ### **HAL Release Notes**  
 
-* Create a dedicated **Deprecated APIs Section** in the HAL Release Notes that lists:
+* Create a dedicated **Evolved APIs Section** in the HAL Release Notes that lists:
   * API Name
-  * Deprecation Date
+  * Evolution Date
   * Replacement API (if available)
 
-### **Communicate Deprecation**  
+### **Communicate Evolution**  
 
 * Inform all relevant engineering stakeholders. IDE + Doxygen warnings will provide developer visibility.
 
 ---
 
-## **Step 3: Deprecation Ticketing**
+## **Step 3: Evolution Ticketing**
 
-### **Deprecation Ticket**
+### **Evolution Ticket**
 
-* Title: "Deprecate `<API Name>`"  
+* Title: "Evolve `<API Name>`"  
 * Include:
   * Rationale
   * Target removal release version
   * Replacement guidance
-  * Deprecation date
+  * Evolution date
 
 ### **Assignment & Tracking**
 
@@ -132,7 +132,7 @@ This document defines the governance process for managing the lifecycle of HAL A
 ### **Major Version Bump**
 
 * Increment HAL major version to signal breaking change (e.g. v5.0.0 → v6.0.0).
-* Document removal in unified Release Notes, and update the Deprecated APIs sections accordingly.
+* Document removal in unified Release Notes, and update the Evolved APIs sections accordingly.
 
 ### **Code & Test Cleanup**
 
@@ -156,7 +156,7 @@ This document defines the governance process for managing the lifecycle of HAL A
 
 ### **Ticket Resolution**
 
-* Close the Deprecation Ticket upon verification.
+* Close the Evolution Ticket upon verification.
 
 ---
 
@@ -164,7 +164,7 @@ This document defines the governance process for managing the lifecycle of HAL A
 
 If urgent removal is necessary (e.g. security risks):
 
-1. **Document Rationale** in the Deprecation Ticket.
+1. **Document Rationale** in the Evolution Ticket.
 2. **Obtain Explicit Sign-Off** from Principal Architect and QA.
 3. **Accelerated Execution** of HAL removal.
 
@@ -174,30 +174,30 @@ If urgent removal is necessary (e.g. security risks):
 
 | Role               | Responsibilities                                                                 |
 |--------------------|----------------------------------------------------------------------------------|
-| HAL Vendor Team    | Soft deprecation, warnings/logging, version bump, final removal and verification |
-| QA/Test Team      | Update VTS/tests, enforce build/test pass criteria, maintain Deprecated APIs sections in release notes |
-| Architecture & PM | Approve plan/changes, manage exceptions, track deprecation through ticketing     |
+| HAL Vendor Team    | Soft evolution, warnings/logging, version bump, final removal and verification |
+| QA/Test Team      | Update VTS/tests, enforce build/test pass criteria, maintain Evolved APIs sections in release notes |
+| Architecture & PM | Approve plan/changes, manage exceptions, track evolution through ticketing     |
 
 ## Checklists Lists for Pasting into PR reviews
 
 ---
 
 ```markdown
-### **HAL API Deprecation Ticket Checklist (Soft Removal)**
+### **HAL API Evolution Ticket Checklist (Soft Removal)**
 
 * [ ] API declaration moved to `Deprecated APIs` section in HAL header file
 * [ ] `@deprecated` Doxygen tag added with date and replacement API
 * [ ] Compiler deprecation macro implemented to generate warnings
 * [ ] Runtime logging added to capture deprecated API usage
-* [ ] HAL module Markdown documentation updated to reflect deprecation
-* [ ] HAL Release Notes updated with Deprecated APIs section
+* [ ] HAL module Markdown documentation updated to reflect evolution
+* [ ] HAL Release Notes updated with Evolved APIs section
 * [ ] Relevant engineering teams notified
 ```
 
 ---
 
 ```markdown
-### **HAL API Deprecation Ticket Checklist (Hard Removal)**
+### **HAL API Evolution Ticket Checklist (Hard Removal)**
 
 * [ ] At least one release cycle (or defined period) with no active consumers completed
 * [ ] HAL header file version without deprecated API released
@@ -206,7 +206,7 @@ If urgent removal is necessary (e.g. security risks):
 * [ ] HAL module Markdown documentation updated to remove API references
 * [ ] HAL Release Notes updated to remove API
 * [ ] HAL CI build and test verification completed
-* [ ] Deprecation Ticket closed
+* [ ] Evolution Ticket closed
 ```
 
 ---
@@ -215,9 +215,9 @@ If urgent removal is necessary (e.g. security risks):
 ### **VTS Ticket Checklist (Soft Removal)**
 
 * [ ] Deprecated API tests retained in VTS
-* [ ] VTS Release Notes updated with Deprecated APIs section
-* [ ] VTS Markdown documentation updated with deprecation notice
-* [ ] VTS Doxygen updated with deprecation notice
+* [ ] VTS Release Notes updated with Evolved APIs section
+* [ ] VTS Markdown documentation updated with evolution notice
+* [ ] VTS Doxygen updated with evolution notice
 ```
 
 ---
@@ -228,5 +228,5 @@ If urgent removal is necessary (e.g. security risks):
 * [ ] Deprecated API tests removed from VTS (aligned with HAL header removal)
 * [ ] VTS Markdown documentation updated to reflect API removal
 * [ ] VTS Doxygen updated to reflect API removal
-* [ ] VTS Release Notes updated to remove Deprecated APIs section entry
+* [ ] VTS Release Notes updated to remove Evolved APIs section entry
 ```
