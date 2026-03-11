@@ -1,0 +1,30 @@
+name: Update RAG Status Report
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - "**/metadata.yaml"
+      - "scripts/generate_rag_report.sh"
+
+permissions:
+  contents: write
+
+jobs:
+  update-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate RAG report
+        run: bash scripts/generate_rag_report.sh
+
+      - name: Commit updated report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add RAG_STATUS_REPORT.md
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "chore: update RAG status report [skip ci]"
+          git push

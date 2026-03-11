@@ -95,21 +95,24 @@ yaml_reviewer_status() {
 # Map reviewer status to visual indicator
 review_icon() {
     case "$1" in
-        reviewed)  echo "✅" ;;
-        pending)   echo "☐" ;;
-        abstained) echo "➖" ;;
-        *)         echo "N/A" ;;
+        reviewed)           echo "✅" ;;
+        in_review)          echo "🔍" ;;
+        changes_requested)  echo "🔁" ;;
+        recheck)            echo "🔄" ;;
+        pending)            echo "☐" ;;
+        abstained)          echo "➖" ;;
+        *)                  echo "N/A" ;;
     esac
 }
 
 # All teams (column order)
-ALL_TEAMS="Architecture VTS_Team AV_Architecture Broadcast_Team Control_Manager_Team Graphics_Architecture Bluetooth_Architecture Kernel_Architecture"
+ALL_TEAMS="RTAB_Group Architecture Product_Architecture VTS_Team AV_Architecture Broadcast_Team Control_Manager_Architecture Graphics_Architecture Connectivity_Architecture Kernel_Architecture"
 
 # Derive component path label (e.g. "vsi/kernel" or "boot")
 component_path() {
     local file="$1"
     local rel="${file#$REPO_ROOT/}"
-    echo "$rel" | sed 's|/current/metadata.yaml||'
+    echo "$rel" | sed 's|/metadata.yaml||'
 }
 
 # Map status to colour indicator
@@ -135,15 +138,20 @@ for f in $METADATA_FILES; do
     action=$(yaml_nested "$f" "notes" "action")
     owners=$(yaml_nested "$f" "notes" "owners")
     risk=$(yaml_nested "$f" "notes" "risk")
+    review_deadline=$(yaml_nested "$f" "lifecycle" "review_deadline")
+    target_green=$(yaml_nested "$f" "lifecycle" "target_green_date")
+    # Normalize YAML null (~) to empty so the ${var:-—} default triggers
+    [ "$review_deadline" = "~" ] && review_deadline=""
+    [ "$target_green" = "~" ] && target_green=""
     review_progress=$(yaml_review_progress "$f")
     path=$(component_path "$f")
     icon=$(rag_icon "$status")
 
-    # Build row (AMBER/RED use full detail)
-    row="| ${icon} | ${path} | ${version} | ${priority:-—} | ${status_detail:-—} | ${action:-—} | ${review_progress} | ${owners:-—} |"
+    # Build row (AMBER/RED use full detail, with lifecycle dates — no Reviews column)
+    row="| ${icon} | ${path} | ${version} | ${priority:-—} | ${status_detail:-—} | ${action:-—} | ${review_deadline:-—} | ${target_green:-—} | ${owners:-—} |"
 
-    # Build GREEN row (simplified: description + owners, no reviews)
-    green_row="| ${icon} | ${path} | ${version} | ${description:-—} | ${owners:-—} |"
+    # Build GREEN row (per-team detail is in the Review Status section)
+    green_row="| ${icon} | ${path} | ${version} | ${description:-—} | ${review_progress} | ${owners:-—} |"
 
     # Build review detail row with per-team columns
     detail_row="| ${icon} | ${path} | ${review_progress}"
@@ -182,7 +190,7 @@ for f in $METADATA_FILES; do
             append_review_row GREEN_SOC_REVIEW_ROWS GREEN_OEM_REVIEW_ROWS "$detail_row"
             # If component has a risk note, also list it in AMBER as a watch item
             if [ -n "$risk" ]; then
-                amber_row="| ${RAG_AMBER} | ${path} *(SVP risk)* | ${version} | ${priority:-—} | ${status_detail:-—} | ${risk} | ${review_progress} | ${owners:-—} |"
+                amber_row="| ${RAG_AMBER} | ${path} *(SVP risk)* | ${version} | ${priority:-—} | ${status_detail:-—} | ${risk} | ${review_deadline:-—} | ${target_green:-—} | ${owners:-—} |"
                 append_row AMBER_SOC_ROWS AMBER_OEM_ROWS AMBER_SHARED_ROWS "$amber_row"
             fi
             ;;
@@ -199,10 +207,6 @@ for f in $METADATA_FILES; do
     esac
 done
 
-# Git describe for traceability
-GIT_DESCRIBE=$(git -C "$REPO_ROOT" describe --tags --always 2>/dev/null || git -C "$REPO_ROOT" rev-parse --short HEAD)
-GIT_BRANCH=$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null)
-
 # Generate report
 cat > "$OUTPUT" << HEADER
 # HAL Interface RAG Status Report
@@ -210,8 +214,6 @@ cat > "$OUTPUT" << HEADER
 | | |
 |---|---|
 | **Generated** | ${TODAY} |
-| **Branch** | \`${GIT_BRANCH}\` |
-| **Version** | \`${GIT_DESCRIBE}\` |
 | **Components** | ${TOTAL} |
 | ${RAG_GREEN} **GREEN** | ${GREEN_COUNT} |
 | ${RAG_AMBER} **AMBER** | ${AMBER_COUNT} |
@@ -224,7 +226,7 @@ cat > "$OUTPUT" << HEADER
 | Status | Count | Meaning |
 |--------|-------|---------|
 | ${RAG_GREEN} GREEN | **${GREEN_COUNT}** | Reviewed & Approved — Interface stable on develop |
-| ${RAG_AMBER} AMBER | **${AMBER_COUNT}** | Under Active Review — Design iteration in progress |
+| ${RAG_AMBER} AMBER | **${AMBER_COUNT}** | Under Active Ingestion — Will enter sprint review when ready |
 | ${RAG_RED} RED | **${RED_COUNT}** | Not Started / Blocked — Strategy or definition required |
 
 ---
@@ -233,8 +235,8 @@ cat > "$OUTPUT" << HEADER
 
 ### SOC Components
 
-| | Component | Version | Description | Owners |
-|---|-----------|---------|-------------|--------|
+| | Component | Current Version | Description | Reviews | Owners |
+|---|-----------|---------|-------------|---------|--------|
 HEADER
 
 echo -e "$GREEN_SOC_ROWS" >> "$OUTPUT"
@@ -243,8 +245,8 @@ cat >> "$OUTPUT" << 'GREEN_OEM'
 
 ### OEM Components
 
-| | Component | Version | Description | Owners |
-|---|-----------|---------|-------------|--------|
+| | Component | Current Version | Description | Reviews | Owners |
+|---|-----------|---------|-------------|---------|--------|
 GREEN_OEM
 
 echo -e "$GREEN_OEM_ROWS" >> "$OUTPUT"
@@ -254,8 +256,8 @@ cat >> "$OUTPUT" << 'GREEN_SHARED'
 
 ### Shared
 
-| | Component | Version | Description | Owners |
-|---|-----------|---------|-------------|--------|
+| | Component | Current Version | Description | Reviews | Owners |
+|---|-----------|---------|-------------|---------|--------|
 GREEN_SHARED
 echo -e "$GREEN_SHARED_ROWS" >> "$OUTPUT"
 fi
@@ -264,12 +266,12 @@ cat >> "$OUTPUT" << 'SECTION2'
 
 ---
 
-## 🟡 AMBER — Under Active Review
+## 🟡 AMBER — Under Active Ingestion
 
 ### SOC Components
 
-| | Component | Version | Priority | Detail | Action Required | Reviews | Owners |
-|---|-----------|---------|----------|--------|-----------------|---------|--------|
+| | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
+|---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
 SECTION2
 
 printf '%b' "$AMBER_SOC_ROWS" | grep -v '^$' | sort -t'|' -k5 -n >> "$OUTPUT"
@@ -279,8 +281,8 @@ cat >> "$OUTPUT" << 'AMBER_OEM'
 
 ### OEM Components
 
-| | Component | Version | Priority | Detail | Action Required | Reviews | Owners |
-|---|-----------|---------|----------|--------|-----------------|---------|--------|
+| | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
+|---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
 AMBER_OEM
 
 printf '%b' "$AMBER_OEM_ROWS" | grep -v '^$' | sort -t'|' -k5 -n >> "$OUTPUT"
@@ -291,8 +293,8 @@ cat >> "$OUTPUT" << 'AMBER_SHARED'
 
 ### Shared
 
-| | Component | Version | Priority | Detail | Action Required | Reviews | Owners |
-|---|-----------|---------|----------|--------|-----------------|---------|--------|
+| | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
+|---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
 AMBER_SHARED
 printf '%b' "$AMBER_SHARED_ROWS" | grep -v '^$' | sort -t'|' -k5 -n >> "$OUTPUT"
 echo "" >> "$OUTPUT"
@@ -306,8 +308,8 @@ cat >> "$OUTPUT" << 'SECTION3'
 
 ### SOC Components
 
-| | Component | Version | Priority | Detail | Action Required | Reviews | Owners |
-|---|-----------|---------|----------|--------|-----------------|---------|--------|
+| | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
+|---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
 SECTION3
 
 printf '%b' "$RED_SOC_ROWS" | grep -v '^$' | sort -t'|' -k5 -n >> "$OUTPUT"
@@ -317,8 +319,8 @@ cat >> "$OUTPUT" << 'RED_OEM'
 
 ### OEM Components
 
-| | Component | Version | Priority | Detail | Action Required | Reviews | Owners |
-|---|-----------|---------|----------|--------|-----------------|---------|--------|
+| | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
+|---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
 RED_OEM
 
 printf '%b' "$RED_OEM_ROWS" | grep -v '^$' | sort -t'|' -k5 -n >> "$OUTPUT"
@@ -329,14 +331,14 @@ cat >> "$OUTPUT" << 'RED_SHARED'
 
 ### Shared
 
-| | Component | Version | Priority | Detail | Action Required | Reviews | Owners |
-|---|-----------|---------|----------|--------|-----------------|---------|--------|
+| | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
+|---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
 RED_SHARED
 echo -e "$RED_SHARED_ROWS" >> "$OUTPUT"
 fi
 
-REVIEW_HEADER="| | Component | Progress | Arch | VTS | AV | Broadcast | CtrlMgr | Graphics | BT/Net | Kernel |
-|---|-----------|----------|------|-----|-----|-----------|---------|----------|--------|--------|"
+REVIEW_HEADER="| | Component | Progress | RTAB | Arch | Prod | VTS | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel |
+|---|-----------|----------|------|------|------|-----|-----|-----------|----------|----------|--------------|--------|"
 
 cat >> "$OUTPUT" << 'REVIEW_SECTION'
 
@@ -344,26 +346,58 @@ cat >> "$OUTPUT" << 'REVIEW_SECTION'
 
 ## Review Status by Component
 
-> ✅ Reviewed | ☐ Pending | ➖ Abstained | N/A Not assigned
+> ✅ Reviewed | 🔍 In Review | 🔁 Changes Requested | 🔄 Recheck | ☐ Pending | ➖ Abstained | N/A Not assigned
 
-### SOC Components
+### SOC — 🟢 GREEN
 
 REVIEW_SECTION
 
 echo "$REVIEW_HEADER" >> "$OUTPUT"
 printf '%b' "$GREEN_SOC_REVIEW_ROWS" >> "$OUTPUT"
+
+cat >> "$OUTPUT" << 'SOC_AMBER_REVIEW'
+
+### SOC — 🟡 AMBER
+
+SOC_AMBER_REVIEW
+
+echo "$REVIEW_HEADER" >> "$OUTPUT"
 printf '%b' "$AMBER_SOC_REVIEW_ROWS" | grep -v '^$' | sort -t$'\t' -k1 -n | cut -f2- >> "$OUTPUT"
+
+cat >> "$OUTPUT" << 'SOC_RED_REVIEW'
+
+### SOC — 🔴 RED
+
+SOC_RED_REVIEW
+
+echo "$REVIEW_HEADER" >> "$OUTPUT"
 printf '%b' "$RED_SOC_REVIEW_ROWS" | grep -v '^$' | sort -t$'\t' -k1 -n | cut -f2- >> "$OUTPUT"
 
-cat >> "$OUTPUT" << 'REVIEW_OEM'
+cat >> "$OUTPUT" << 'OEM_GREEN_REVIEW'
 
-### OEM Components
+### OEM — 🟢 GREEN
 
-REVIEW_OEM
+OEM_GREEN_REVIEW
 
 echo "$REVIEW_HEADER" >> "$OUTPUT"
 printf '%b' "$GREEN_OEM_REVIEW_ROWS" >> "$OUTPUT"
+
+cat >> "$OUTPUT" << 'OEM_AMBER_REVIEW'
+
+### OEM — 🟡 AMBER
+
+OEM_AMBER_REVIEW
+
+echo "$REVIEW_HEADER" >> "$OUTPUT"
 printf '%b' "$AMBER_OEM_REVIEW_ROWS" | grep -v '^$' | sort -t$'\t' -k1 -n | cut -f2- >> "$OUTPUT"
+
+cat >> "$OUTPUT" << 'OEM_RED_REVIEW'
+
+### OEM — 🔴 RED
+
+OEM_RED_REVIEW
+
+echo "$REVIEW_HEADER" >> "$OUTPUT"
 printf '%b' "$RED_OEM_REVIEW_ROWS" | grep -v '^$' | sort -t$'\t' -k1 -n | cut -f2- >> "$OUTPUT"
 
 cat >> "$OUTPUT" << 'FOOTER'
@@ -382,17 +416,32 @@ cat >> "$OUTPUT" << 'FOOTER'
 | VTS_Team | All components |
 | AV_Architecture | Audio/Video pipeline components |
 | Broadcast_Team | Broadcast/tuner components |
-| Control_Manager_Team | Remote control & input management |
+| Control_Manager_Architecture | Remote control & input management |
 | Graphics_Architecture | Graphics, display & composition |
-| Bluetooth_Architecture | Bluetooth, Wi-Fi & connectivity |
+| Connectivity_Architecture | Bluetooth, Wi-Fi & connectivity |
 | Kernel_Architecture | System, kernel, boot & platform |
+
+---
+
+### Version Key
+
+Pre-baseline versions use the format `0.<generation>.<minor>.<patch>`:
+
+| Field | Meaning | Bumped when |
+|-------|---------|-------------|
+| `0` | Pre-baseline prefix | Changes to AIDL integer at freeze |
+| `generation` | Architectural era (0 = initial, 1+ = full design cycle) | Breaking interface change |
+| `minor` | ABI-compatible enhancement counter | Non-breaking feature added |
+| `patch` | Documentation or trivial fix counter | No interface change |
+
+Post-baseline (frozen) versions use AIDL stable versioning: `1`, `2`, `3`... (100% backwards compatible, additive only).
 
 ---
 
 ### RAG Key
 
 - 🟢 **GREEN** — Interface reviewed, approved and stable. Ready for implementation.
-- 🟡 **AMBER** — Interface under active review. Design iteration in progress.
+- 🟡 **AMBER** — Interface under active ingestion. Will enter sprint review when ready.
 - 🔴 **RED** — Interface not yet started or blocked. Requires architecture strategy, AIDL definition, or team alignment.
 
 ---
