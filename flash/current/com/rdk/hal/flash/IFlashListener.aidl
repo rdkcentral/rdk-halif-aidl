@@ -33,9 +33,17 @@ oneway interface IFlashListener
      * Callback which occurs during the background image flashing operation to provide progress reports.
      *
      * The `onProgress()` callback provides a percentage complete report.
-     * After all image validations are complete and as flashing is about to start, 
-     * 0% progress is reported.
-     * On success, 100% progress is reported before the `onCompleted()` callback is made.
+     * 
+     * Progress Reporting Timeline:
+     * - Pre-flash validation (existence, type, signature, size, product compatibility) occurs first.
+     * - After all pre-flash validations are complete and as flashing is about to start, 
+     *   0% progress is reported.
+     * - Progress callbacks continue as the image is written to flash.
+     * - On success, 100% progress is reported after the flash write completes and before
+     *   post-flash validation begins.
+     * - Post-flash validation (data integrity check and signature re-verification) occurs
+     *   after 100% progress is reported.
+     * - The `onCompleted()` callback is made after all validation is complete.
      *
      * @param[in] percentComplete   Percentage complete (0~100)
      */

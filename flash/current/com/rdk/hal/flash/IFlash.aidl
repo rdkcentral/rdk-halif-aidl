@@ -56,12 +56,26 @@ interface IFlash
      * 
      * Only one background flashing operation is supported at any time.
      * 
-     * The image file is:
-     *  - Checked for existence.
-     *  - Checked to be a valid flash image file.
-     *  - Signature verified.
-     *  - Checked to be the correct size for the target flash area.
-     *  - Checked to be targeted at and compatible with the product.
+     * Image Validation Process:
+     * 
+     * Before flashing begins, the image file is validated through the following steps:
+     *  - Checked for existence (ERROR_FILE_OPEN_FAIL if not found or cannot be opened).
+     *  - Checked to be a valid flash image file (ERROR_IMAGE_INVALID_TYPE if not recognised).
+     *  - Signature verified if present in the image (ERROR_IMAGE_INVALID_SIGNATURE if verification fails).
+     *  - Checked to be the correct size for the target flash area (ERROR_IMAGE_INVALID_SIZE if too large).
+     *  - Checked to be targeted at and compatible with the product (ERROR_IMAGE_INVALID_PRODUCT if incompatible).
+     * 
+     * If any pre-flash validation fails, the operation is aborted and onCompleted() is called
+     * with the appropriate error code. No data is written to flash in this case.
+     * 
+     * After the image is written to flash, post-flash validation is performed:
+     *  - The written data is read back from flash and compared to the source image data
+     *    (ERROR_FLASH_VERIFY_FAILED if data integrity check fails).
+     *  - If a signature exists in the image, it is re-verified against the data read from flash
+     *    (ERROR_FLASH_VERIFY_SIGNATURE_FAILED if post-flash signature verification fails).
+     * 
+     * The post-flash validation is a critical security step to ensure the integrity of the
+     * flashed image and detect any corruption or tampering during the write process.
      * 
      * The background flashing operation shall run at a priority which does not
      * impact foreground audio, video or graphics operations.
