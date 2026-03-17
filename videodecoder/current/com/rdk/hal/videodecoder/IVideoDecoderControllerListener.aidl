@@ -35,7 +35,7 @@ oneway interface IVideoDecoderControllerListener {
      * when the metadata changes in the stream.
      * It can only be null if the contents have not changed since the last callback.
      *
-     * Ownership semantics for {@code frameAVBufferHandle}:
+     * Ownership semantics for `frameAVBufferHandle`:
      * - The client receives ownership of the AVBuffer handle when this callback is invoked.
      * - The client is responsible for managing the handle's lifecycle: either passing it to the next
      *   module (e.g., video sink) or explicitly freeing it via IAVBuffer.free() when no longer needed.

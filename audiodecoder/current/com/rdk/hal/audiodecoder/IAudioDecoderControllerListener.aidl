@@ -33,11 +33,11 @@ oneway interface IAudioDecoderControllerListener {
     *
     * In tunnelled mode, audio data is consumed by the vendor layer, so no PCM buffer is returned.
     *
-    * Otherwise, {@code frameAVBufferHandle} is a valid AVBuffer handle to a decoded PCM buffer,
-    * and {@code metadata} is non-null for the first frame after {@code State::START} or {@code State::FLUSHING},
+    * Otherwise, `frameAVBufferHandle` is a valid AVBuffer handle to a decoded PCM buffer,
+    * and `metadata` is non-null for the first frame after `State::START` or `State::FLUSHING`,
     * or whenever stream metadata changes. Metadata may be null if unchanged since the last callback.
     *
-    * Ownership semantics for {@code frameAVBufferHandle}:
+    * Ownership semantics for `frameAVBufferHandle`:
     * - The client receives ownership of the AVBuffer handle when this callback is invoked.
     * - The client is responsible for managing the handle's lifecycle: either passing it to the next
     *   module (e.g., audio sink) or explicitly freeing it via IAVBuffer.free() when no longer needed.
