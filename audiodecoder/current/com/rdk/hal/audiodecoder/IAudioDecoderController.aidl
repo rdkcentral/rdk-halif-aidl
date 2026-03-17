@@ -54,7 +54,6 @@ interface IAudioDecoderController {
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property and propertyValue.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioDecoderController} for exception handling behavior).
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);
 
@@ -112,7 +111,6 @@ interface IAudioDecoderController {
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioDecoderController} for exception handling behavior).
      * 
      * @pre The resource must be in State::STARTED.
      */
@@ -191,7 +189,6 @@ interface IAudioDecoderController {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioDecoderController} for exception handling behavior).
      *           Thrown if the resource is not in State::STARTED.
      *
      * @pre The decoder resource must be in State::STARTED.

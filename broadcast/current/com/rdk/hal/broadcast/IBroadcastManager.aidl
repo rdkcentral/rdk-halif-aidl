@@ -45,7 +45,6 @@ interface IBroadcastManager {
      * 
      * @returns IFrontEnd.Id[]
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IBroadcastManager} for exception handling behavior).
      */
     IFrontend.Id[] getFrontendIds();
 
@@ -56,7 +55,6 @@ interface IBroadcastManager {
      *
      * @returns IFrontend ID or null if the ID is invalid.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IBroadcastManager} for exception handling behavior).
      */
     @nullable IFrontend getFrontend(in IFrontend.Id frontendId);
 

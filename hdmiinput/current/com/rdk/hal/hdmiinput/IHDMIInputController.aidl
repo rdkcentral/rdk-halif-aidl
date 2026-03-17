@@ -48,7 +48,6 @@ interface IHDMIInputController
      * @retval true         A device is connected.
      * @retval false        No device is connected.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIInputController} for exception handling behavior).
      *
      * @see IHDMIInputControllerListener.onConnectionStateChanged()
      */
@@ -116,7 +115,6 @@ interface IHDMIInputController
      * @retval true     The EDID was set successfully.
      * @retval false    Indicates an error condition (e.g., resource not available, invalid state, or parameter validation failure).
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIInputController} for exception handling behavior).
      *
      * @see getEDID(), getCapabilities()
      */

@@ -83,7 +83,6 @@ interface IAVClockController {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAVClockController} for exception handling behavior).
      * 
      * @pre AV Clock is in State::READY or State::STARTED state.
      * 
@@ -99,7 +98,6 @@ interface IAVClockController {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAVClockController} for exception handling behavior).
      * 
      * @pre AV Clock is in State::READY or State::STARTED state.
      * 
@@ -126,7 +124,6 @@ interface IAVClockController {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAVClockController} for exception handling behavior).
      * 
      * @pre AV Clock is in State::READY or State::STARTED state.
      * 
@@ -142,7 +139,6 @@ interface IAVClockController {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAVClockController} for exception handling behavior).
      * 
      * @pre AV Clock is in State::READY or State::STARTED state.
      * 
@@ -165,7 +161,6 @@ interface IAVClockController {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAVClockController} for exception handling behavior).
      * 
      * @pre AV Clock is in State::READY or State::STARTED state.
      * 
@@ -181,7 +176,6 @@ interface IAVClockController {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAVClockController} for exception handling behavior).
      * 
      * @pre AV Clock is in State::READY or State::STARTED state.
      * 
@@ -203,7 +197,6 @@ interface IAVClockController {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAVClockController} for exception handling behavior).
      * 
      * @pre AV Clock is in State::READY state.
      * 
@@ -219,7 +212,6 @@ interface IAVClockController {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAVClockController} for exception handling behavior).
      * 
      * @pre AV Clock is in State::READY or State::STARTED state.
      * 
@@ -249,7 +241,6 @@ interface IAVClockController {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAVClockController} for exception handling behavior).
      * 
      * @pre AV Clock is in State::STARTED state and in PCR clock mode.
      * 
@@ -269,7 +260,6 @@ interface IAVClockController {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAVClockController} for exception handling behavior).
      * 
      * @pre AV Clock is in State::STARTED state.
      */  
@@ -293,7 +283,6 @@ interface IAVClockController {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAVClockController} for exception handling behavior).
      * 
      * @pre AV Clock is in State::READY or State::STARTED state and clock mode is not ClockMode::PCR.
      * 
@@ -311,7 +300,6 @@ interface IAVClockController {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAVClockController} for exception handling behavior).
      * 
      * @pre AV Clock is in State::READY or State::STARTED state and mode is not ClockMode::PCR.
      */  

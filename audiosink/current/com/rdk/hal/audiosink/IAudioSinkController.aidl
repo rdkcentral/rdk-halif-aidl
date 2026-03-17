@@ -52,7 +52,6 @@ interface IAudioSinkController {
      * 
      * @returns boolean - true on success or false if the ID is invalid or not IAudioDecoder.Id.UNDEFINED.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioSinkController} for exception handling behavior).
      * 
      * @pre The resource must be in State::READY.
      * 
@@ -68,7 +67,6 @@ interface IAudioSinkController {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioSinkController} for exception handling behavior).
      * 
      * @pre The resource must be in State::READY or State::STARTED.
      * 
@@ -130,7 +128,6 @@ interface IAudioSinkController {
     * @exception binder::Status::Exception::EX_ILLEGAL_STATE    If the resource is not in the `STARTED` state or an audio frame is passed after EOS.
     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT If an invalid argument is provided.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioSinkController} for exception handling behavior).
     *
     * @pre The resource must be in the `STARTED` state.
     */
@@ -160,7 +157,6 @@ interface IAudioSinkController {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioSinkController} for exception handling behavior).
      * 
      * @pre The resource must be in State::READY or State::STARTED.
      */
@@ -176,7 +172,6 @@ interface IAudioSinkController {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioSinkController} for exception handling behavior).
      * 
      * @pre The resource must be in State::READY or State::STARTED.
      */
@@ -204,7 +199,6 @@ interface IAudioSinkController {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAudioSinkController} for exception handling behavior).
      * 
      * @pre The resource must be in State::STARTED.
      */

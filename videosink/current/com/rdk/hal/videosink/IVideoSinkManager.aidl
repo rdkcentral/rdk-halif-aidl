@@ -46,7 +46,6 @@ interface IVideoSinkManager
      *
      * @returns IVideoSink.Id[]
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IVideoSinkManager} for exception handling behavior).
      */
     IVideoSink.Id[] getVideoSinkIds();
 
@@ -59,7 +58,6 @@ interface IVideoSinkManager
      *
      * @returns IVideoSink or null if the ID is invalid.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IVideoSinkManager} for exception handling behavior).
      */
     @nullable IVideoSink getVideoSink(in IVideoSink.Id videoSinkId);
 }

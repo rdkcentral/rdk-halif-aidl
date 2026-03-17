@@ -86,7 +86,6 @@ interface IPanelOutput
 	 * @retval true				The panel is enabled.
 	 * @retval false			The panel is disabled.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPanelOutput} for exception handling behavior).
 	 * 
 	 * @see setEnabled()
 	 */ 
@@ -104,7 +103,6 @@ interface IPanelOutput
      * @retval true				The picture modes were successfully set.
      * @retval false			One or more picture mode configurations were invalid and could not be set.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPanelOutput} for exception handling behavior).
      *
      * @see getPictureModes()
      */
@@ -135,7 +133,6 @@ interface IPanelOutput
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid criteria or empty input list.
      * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPanelOutput} for exception handling behavior).
      *
      * @see setPictureModes()
      */
@@ -159,7 +156,6 @@ interface IPanelOutput
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid criteria or empty input list.
      * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPanelOutput} for exception handling behavior).
      *
      * @see setPictureModes(), getPictureModes()
      */
@@ -174,7 +170,6 @@ interface IPanelOutput
      * @retval true     The PQ parameters were set.
      * @retval false    One or more invalid parameter configurations.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPanelOutput} for exception handling behavior).
      * 
      * @see getPQParameters(), getDefaultPQParameters(), getPQParameterCapabilities(), PQParameterConfiguration
      */
@@ -205,7 +200,6 @@ interface IPanelOutput
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid criteria or empty input list.
      * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPanelOutput} for exception handling behavior).
      *
      * @see setPQParameters(), getDefaultPQParameters(), getPQParameterCapabilities(), PQParameterConfiguration
      */
@@ -227,7 +221,6 @@ interface IPanelOutput
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid criteria or empty input list.
      * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPanelOutput} for exception handling behavior).
      *
      * @see setPQParameters(), getPQParameters(), getPQParameterCapabilities(), PQParameterConfiguration
      */
@@ -258,7 +251,6 @@ interface IPanelOutput
      * @retval true     The refresh rate was set.
      * @retval false    Unsupported refresh rate.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPanelOutput} for exception handling behavior).
      * 
      * @see getRefreshRate()
      */
@@ -290,7 +282,6 @@ interface IPanelOutput
      * @retval true     The new frame rate matching state was set.
      * @retval false    The new frame rate matching state was not set.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPanelOutput} for exception handling behavior).
      * 
      * @see getFrameRateMatching()
 	 */
@@ -303,7 +294,6 @@ interface IPanelOutput
      * @retval true     Frame rate matching is enabled.
      * @retval false    Frame rate matching is disabled.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPanelOutput} for exception handling behavior).
      * 
      * @see setFrameRateMatching()
      */
@@ -385,7 +375,6 @@ interface IPanelOutput
      * @retval true     The 2-point white balance was set for the color temperature.
      * @retval false    One or more parameters are invalid.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPanelOutput} for exception handling behavior).
      */
     boolean set2PointWhiteBalance(in int colorTemperature, in WhiteBalance2PointSettings whiteBalance);
 
@@ -408,7 +397,6 @@ interface IPanelOutput
      * @retval true     The multi-point white balance was set for the color temperature.
      * @retval false    One or more parameters are invalid.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPanelOutput} for exception handling behavior).
      */
     boolean setMultiPointWhiteBalance(in int colorTemperature, in WhiteBalanceMultiPointSettings whiteBalance);
 
@@ -452,7 +440,6 @@ interface IPanelOutput
      * @retval true     The fade operation was started.
      * @retval false    The fade operation was not started because one or more parameters are invalid.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IPanelOutput} for exception handling behavior).
 	 */ 
 	boolean fadeDisplay(in int start, in int end, in int durationMs);
 

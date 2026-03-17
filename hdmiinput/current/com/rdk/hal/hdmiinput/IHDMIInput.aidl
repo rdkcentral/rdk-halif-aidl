@@ -67,7 +67,6 @@ interface IHDMIInput
      *
      * @returns Capabilities parcelable.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIInput} for exception handling behavior).
      */
     Capabilities getCapabilities();
 
@@ -78,7 +77,6 @@ interface IHDMIInput
      *
      * @returns PropertyValue or null if the property key is unknown or unavailable for this port.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIInput} for exception handling behavior).
      * 
      * @see IHDMIInputController.setProperty()
      */
@@ -89,7 +87,6 @@ interface IHDMIInput
      *
      * @returns State enum value.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIInput} for exception handling behavior).
      *
      * @see IHDMIInputEventListener.onStateChanged().
      */  
@@ -112,7 +109,6 @@ interface IHDMIInput
      * @retval true     The EDID was retrieved successfully.
      * @retval false    Indicates an error condition (e.g., resource not available, invalid state, or parameter validation failure).
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIInput} for exception handling behavior).
      *
      * @see setEDID(), getDefaultEDID()
      */
@@ -136,7 +132,6 @@ interface IHDMIInput
      * @retval true         The EDID was retrieved successfully.
      * @retval false        The EDID was not available.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIInput} for exception handling behavior).
      *
      * @see setEDID(), getCapabilities()
      */
@@ -149,7 +144,6 @@ interface IHDMIInput
      *
      * @returns HDCPProtocolVersion
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIInput} for exception handling behavior).
      *
      * @see getHDCPStatus(), IHDMIInputControllerListener.onHDCPStatusChanged()
      */
@@ -164,7 +158,6 @@ interface IHDMIInput
      *
      * @returns HDCPStatus
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIInput} for exception handling behavior).
      *
      * @see getHDCPCurrentVersion(), IHDMIInputControllerListener.onHDCPStatusChanged()
      */
@@ -177,7 +170,6 @@ interface IHDMIInput
      *
      * @returns InfoFrame data byte array, or empty array if no InfoFrame has been received since last device connection or start.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIInput} for exception handling behavior).
      *
      * @see IHDMIInputControllerListener.onSPDInfoFrame()
      */
@@ -210,7 +202,6 @@ interface IHDMIInput
      * 
      * @exception binder::Status EX_ILLEGAL_STATE 
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIInput} for exception handling behavior).
      * 
      * @pre The resource must be in State::CLOSED.
      * 
@@ -234,7 +225,6 @@ interface IHDMIInput
      * @retval true     Successfully closed.
      * @retval false    Invalid state or unrecognised parameter.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIInput} for exception handling behavior).
      *
      * @pre The resource must be in State::READY.
      *
@@ -253,7 +243,6 @@ interface IHDMIInput
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIInput} for exception handling behavior).
      *
      * @see unregisterEventListener()
      */
@@ -268,7 +257,6 @@ interface IHDMIInput
      * @retval true     The event listener was unregistered.
      * @retval false    The event listener was not found registered.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIInput} for exception handling behavior).
      *
      * @see registerEventListener()
      */

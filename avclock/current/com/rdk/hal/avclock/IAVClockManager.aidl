@@ -46,7 +46,6 @@ interface IAVClockManager
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAVClockManager} for exception handling behavior).
      *
      */
 	IAVClock.Id[] getAVClockIds();   
@@ -60,7 +59,6 @@ interface IAVClockManager
      *
      * @returns IAVClock or null if the `avClockId` is invalid.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IAVClockManager} for exception handling behavior).
      */
     @nullable IAVClock getAVClock(in IAVClock.Id avClockId);
 }

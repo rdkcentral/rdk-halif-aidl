@@ -66,7 +66,6 @@ interface IHDMIOutput
      *
      * @returns Capabilities parcelable.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIOutput} for exception handling behavior).
      */
     Capabilities getCapabilities();
 
@@ -76,7 +75,6 @@ interface IHDMIOutput
      * @param[in] property     The key of a property from the Property enum.
      * @returns PropertyValue or null if the property key is unknown.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIOutput} for exception handling behavior).
      *
      * @see setProperty()
      */
@@ -87,7 +85,6 @@ interface IHDMIOutput
      *
      * @returns State enum value.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIOutput} for exception handling behavior).
      *
      * @see IHDMIOutputEventListener.onStateChanged()
      */
@@ -109,7 +106,6 @@ interface IHDMIOutput
      *
      * @exception binder::Status EX_ILLEGAL_STATE
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIOutput} for exception handling behavior).
      * @pre Must be in State::CLOSED.
      *
      * @see IHDMIOutputController, close(), registerEventListener()
@@ -129,7 +125,6 @@ interface IHDMIOutput
      * @retval true     Successfully closed.
      * @retval false    Invalid state or mismatched instance.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIOutput} for exception handling behavior).
      *
      * @pre Must be in State::READY.
      *
@@ -147,7 +142,6 @@ interface IHDMIOutput
      * @retval true     Listener registered.
      * @retval false    Already registered.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIOutput} for exception handling behavior).
      *
      * @see unregisterEventListener()
      */
@@ -161,7 +155,6 @@ interface IHDMIOutput
      * @retval true     Listener unregistered.
      * @retval false    Listener not found.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IHDMIOutput} for exception handling behavior).
      *
      * @see registerEventListener()
      */

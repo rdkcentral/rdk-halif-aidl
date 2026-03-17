@@ -87,7 +87,6 @@ interface IIndicator
      * @returns Capabilities parcelable containing supported state strings.
      * @exception binder::Status::Exception::EX_NONE for success.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IIndicator} for exception handling behavior).
      */
     Capabilities getCapabilities();
 
@@ -104,7 +103,6 @@ interface IIndicator
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid state string.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IIndicator} for exception handling behavior).
      */
     boolean set(in String state);
 
@@ -116,7 +114,6 @@ interface IIndicator
      * @returns Current indicator state string.
      * @exception binder::Status::Exception::EX_NONE for success.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IIndicator} for exception handling behavior).
      */
     String get();
 }

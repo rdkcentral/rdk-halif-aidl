@@ -47,7 +47,6 @@ interface IVideoDecoderManager
      *
      * @returns IVideoDecoder.Id[]
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IVideoDecoderManager} for exception handling behavior).
      */
 	IVideoDecoder.Id[] getVideoDecoderIds();
  
@@ -65,7 +64,6 @@ interface IVideoDecoderManager
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IVideoDecoderManager} for exception handling behavior).
      * 
      * @see enum OperationalMode
      */
@@ -80,7 +78,6 @@ interface IVideoDecoderManager
      *
      * @returns IVideoDecoder or null if the ID is invalid.
      *
-     * @note On exception, output parameters/return values are undefined and must not be used. (See {@link IVideoDecoderManager} for exception handling behavior).
      */
     @nullable IVideoDecoder getVideoDecoder(in IVideoDecoder.Id videoDecoderId);
 
