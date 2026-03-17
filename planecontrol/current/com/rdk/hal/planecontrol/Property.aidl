@@ -23,7 +23,6 @@ package com.rdk.hal.planecontrol;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
- *  @copyright 
  */
  
 @VintfStability
@@ -35,6 +34,10 @@ enum Property
 	 *
 	 * Type: Integer
 	 * Access: Read-only.
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
 	 */
 	RESOURCE_ID = 0,
 

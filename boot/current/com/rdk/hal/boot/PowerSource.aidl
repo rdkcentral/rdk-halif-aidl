@@ -23,6 +23,7 @@ package com.rdk.hal.boot;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *  @author    Gerald Weatherup
  */
 
 @VintfStability 
@@ -36,6 +37,7 @@ enum PowerSource {
 
     /**
      * The device power source is from an external PSU.
+     *
      */
     PSU = 1,
 
@@ -43,4 +45,9 @@ enum PowerSource {
      * The device power source is from USB.
      */
     USB = 2,
+
+    /**
+     * The device power source is from POE (Power over Ethernet).
+     */
+    POE = 3,
 }

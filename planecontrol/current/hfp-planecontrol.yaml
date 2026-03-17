@@ -22,7 +22,7 @@
 
 # HAL Feature Profile for planecontrol
 
-IPlaneControl:              # Component object begins
+planecontrol:                   # Component object begins
   interfaceVersion: current
   planes:                   # Resource list
     - 0:                    # Resource object begins
@@ -37,7 +37,7 @@ IPlaneControl:              # Component object begins
           - SDR
           - HLG
           - HDR10
-          - HDR10PLUS
+          - HDR10_PLUS
           - DOLBY_VISION
         colorDepth: 12
         maxFrameRate: 60

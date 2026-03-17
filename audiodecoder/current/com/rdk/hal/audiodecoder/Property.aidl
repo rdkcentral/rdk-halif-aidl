@@ -34,6 +34,10 @@ enum Property {
 	 * 
 	 * Type: Integer
 	 * Access: Read-only.
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
 	 */
 	RESOURCE_ID = 0,
 	
@@ -46,6 +50,10 @@ enum Property {
 	 *  1 - on (only if supported)
 	 * Access: Read-write.
 	 * Write in states: READY
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+	 *
 	 */
 	LOW_LATENCY_MODE = 1,
 
@@ -58,6 +66,10 @@ enum Property {
 	 * Access: Read-write.
 	 * Write in states: READY
 	 * @see enum AVSource for possible values.
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+	 *
 	 */
 	AV_SOURCE = 3,
 
@@ -69,6 +81,10 @@ enum Property {
 	 *  1 - on (only if supported)
 	 * Access: Read-only.
 	 * @see Capabilities.supportsSecure IAudioDecoder.open()
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
 	 */
 	SECURE_AUDIO = 4,
 
@@ -80,6 +96,8 @@ enum Property {
 	 *  0..n - AC-4 presentation group index.
 	 * Access: Read-write.
 	 * Writeable in states: All
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 */
 	AC4_PRESENTATION_GROUP_INDEX = 200,
 	
@@ -91,6 +109,8 @@ enum Property {
 	 *  Otherwise the string should be a 3 letter language code from ISO 639.
 	 * Access: Read-write.
 	 * Writeable in states: All
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 */
 	AC4_PREFERRED_LANG1 = 201,
 
@@ -102,6 +122,8 @@ enum Property {
 	 *  Otherwise the string should be a 3 letter language code from ISO 639.
 	 * Access: Read-write.
 	 * Writeable in states: All
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 */
 	AC4_PREFERRED_LANG2 = 202,
 
@@ -115,6 +137,8 @@ enum Property {
 	 *  2 - commentary
 	 * Access: Read-write.
 	 * Writeable in states: All
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 */
 	AC4_ASSOCIATED_TYPE = 203,
 	
@@ -127,6 +151,8 @@ enum Property {
 	 *  1 - associated type - Prioritize the preferred associated type in the automatic selection of the presentation group.
 	 * Access: Read-write.
 	 * Writeable in states: All
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 */
 	AC4_AUTO_SELECTION_PRIORITY = 204,
 	
@@ -138,6 +164,8 @@ enum Property {
 	 *  -32..32 - Mixer balance from -32 (mute associated) to 32 (mute main).
 	 * Access: Read-write.
 	 * Writeable in states: All
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 */
 	AC4_MIXER_BALANCE = 205,
 	
@@ -150,6 +178,8 @@ enum Property {
 	 *  1 - on
 	 * Access: Read-write.
 	 * Writeable in states: All
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
 	 */
 	AC4_ASSOCIATED_AUDIO_MIXING_ENABLE = 206,
 	
@@ -160,6 +190,10 @@ enum Property {
 	 * Type: Integer
 	 *  -1 means this metric is not yet implemented by the vendor.
 	 * Access: Read-only.
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
 	 */
 	METRIC_FRAMES_DECODED = 1000,
 
@@ -170,6 +204,10 @@ enum Property {
 	 * Type: Integer
 	 *  -1 means this metric is not yet implemented by the vendor.
 	 * Access: Read-only.
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
 	 */
 	METRIC_DECODE_ERRORS = 1001,
 
@@ -182,6 +220,10 @@ enum Property {
 	 * Type: Integer
 	 *  -1 means this metric is not yet implemented by the vendor.
 	 * Access: Read-only.
+	 *
+	 * @exception binder::Status::Exception::EX_NONE for success
+	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+	 *
 	 */
 	METRIC_FRAMES_DROPPED = 1002,
 }

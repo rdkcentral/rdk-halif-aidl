@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmiinput;
- 
+
 /** 
  *  @brief     HDMI AMD FreeSync enum.
  *  @author    Luc Kennedy-Lamb

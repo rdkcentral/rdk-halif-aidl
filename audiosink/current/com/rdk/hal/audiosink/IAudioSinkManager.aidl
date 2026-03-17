@@ -37,6 +37,8 @@ interface IAudioSinkManager
 	 * Gets the list of platform audio sink IDs.
      * 
      * @returns IAudioSink.Id[] array.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
      */
 	IAudioSink.Id[] getAudioSinkIds();   
 
@@ -46,7 +48,9 @@ interface IAudioSinkManager
      * This includes the system mixer native PCM formats and sample rate that an audio sink
      * has to deliver for mixing.
      * The platform capabilities are determined at build time and cannot change.
-     * 
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
      * @returns PlatformCapabilities parcelable.
      */
     PlatformCapabilities getPlatformCapabilities();
@@ -55,6 +59,8 @@ interface IAudioSinkManager
      * Gets the audio sink interface for a given ID.
      *
      * @param[in] audioSinkId       The ID of the audio sink resource.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns IAudioSink or null on invalid audio sink ID.
      */

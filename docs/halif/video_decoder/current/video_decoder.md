@@ -21,13 +21,12 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
     |**Interface Definition**|[video_decoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videodecoder/current)|
     |**API Documentation**| *TBD* |
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
-    |**Initialization - TBC** | [systemd](../../../vsi/systemd/current/intro.md) - **hal-video_decoder.service** |
     |**VTS Tests**| TBC |
     |**Reference Implementation - vComponent**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videodecoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videodecoder/current)|
 
 ## Related Pages
 
-!!! tip Related Pages
+!!! tip "Related Pages"
     - [Video Sink](../../video_sink/current/video_sink.md)
     - [AV Buffer](../../av_buffer/current/av_buffer.md)
     - [Session State Management](../../key_concepts/hal/hal_session_state_management.md)
@@ -74,7 +73,7 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 
 ## Initialization
 
-The [systemd](../../../vsi/systemd/current/intro.md) `hal-video_decoder_manager.service` unit file is provided by the vendor layer to start the service and should include  [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
+The [systemd](../../../vsi/systemd/current/systemd.md) `hal-video_decoder_manager.service` unit file is provided by the vendor layer to start the service and should include  [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
 The Video Decoder Manager service depends on the Service Manager to register itself as a service.
 
@@ -311,6 +310,32 @@ When coded video frames are passed in through [AV Buffer](../../av_buffer/curren
 Calls to `IVideoDecoderControllerListener.onFrameOutput()` with frame buffer handles (non-tunnelled mode) and/or frame metadata shall use the same `nsPresentationTime`.
 
 The video decoder shall output frames in presentation order regardless of the order of input frames which is ordered by the encoder.
+
+## Subtitling and SEI User Data
+
+To support closed captioning and subtitle extraction, the Video Decoder HAL defines the `onUserDataOutput()` callback. This callback delivers user data associated with each decoded video frame, typically used to transport caption information embedded in SEI NAL units.
+
+### Caption Data Delivery
+
+The user data passed via `onUserDataOutput()` corresponds to SEI NAL units conforming to the `user_data_registered_itu_t_t35` format, commonly used for CEA-608/708 captions:
+
+* Begins with ITU-T T.35 `country_code` (e.g., `0xB5` for USA)
+* Followed by `provider_code` (e.g., `0x0031` for ATSC)
+* Includes a `user_identifier` string (typically `'GA94'`)
+* Contains a `user_data_type_code` (e.g., `0x03` for CEA-608/708)
+* Followed by one or more closed caption (CC) data packets
+
+The byte array in `onUserDataOutput()` starts from the `user_identifier` field (inclusive).
+
+### Timing and Sync
+
+* Each `onUserDataOutput(nsPresentationTime, userData)` call corresponds to a single decoded frame.
+* The user data must follow the same **presentation order** as the output video frames to maintain AV sync.
+* The video frame itself may be delivered before or after the user data.
+
+### Client Handling
+
+The RDK media pipeline is responsible for parsing the SEI user data from the byte array to extract CEA-608 or CEA-708 caption packets and synchronize them with playback.
 
 ## Video Decoder States
 
