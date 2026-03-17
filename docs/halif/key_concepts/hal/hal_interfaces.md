@@ -112,6 +112,8 @@ flowchart TD
 
 ## Interface / Testing / vComponent Status
 
+> **Note:** For the current review and approval status of each component (GREEN / AMBER / RED), see the [RAG Status Report](../../../../RAG_STATUS_REPORT.md). The tables below track **development phase progress** — they are maintained manually and may lag behind the RAG report.
+
 ### AV Components
 
 This list provides an overview of various HAL components, their device profiles, and functionality within the system.
