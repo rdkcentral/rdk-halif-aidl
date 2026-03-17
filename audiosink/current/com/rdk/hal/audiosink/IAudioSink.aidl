@@ -16,17 +16,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.audiosink; 
-import com.rdk.hal.audiosink.IAudioSinkController; 
-import com.rdk.hal.audiosink.IAudioSinkControllerListener; 
-import com.rdk.hal.audiosink.IAudioSinkEventListener; 
-import com.rdk.hal.audiosink.Capabilities; 
+package com.rdk.hal.audiosink;
+import com.rdk.hal.audiosink.IAudioSinkController;
+import com.rdk.hal.audiosink.IAudioSinkControllerListener;
+import com.rdk.hal.audiosink.IAudioSinkEventListener;
+import com.rdk.hal.audiosink.Capabilities;
 import com.rdk.hal.audiosink.ContentType;
 import com.rdk.hal.audiosink.Property;
 import com.rdk.hal.PropertyValue;
 import com.rdk.hal.State;
 
-/** 
+/**
  *  @brief     Audio Sink HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -41,8 +41,8 @@ import com.rdk.hal.State;
  */
 
 @VintfStability
-interface IAudioSink 
-{   
+interface IAudioSink
+{
 
     /** Audio Sink resource ID type */
     @VintfStability
@@ -56,7 +56,7 @@ interface IAudioSink
 
     /**
      * Gets the capabilities for this audio sink.
-     * 
+     *
      * This function can be called at any time and is not dependant on any audio sink state.
      * The returned value is not allowed to change between calls.
      *
@@ -73,7 +73,7 @@ interface IAudioSink
      * @param[in] property              The key of a property from the Property enum.
      *
      * @returns PropertyValue or null if the property key is unknown.
-     * 
+     *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value.
      *
@@ -81,7 +81,7 @@ interface IAudioSink
      * @see setProperty()
      */
     @nullable PropertyValue getProperty(in Property property);
- 
+
     /**
      * Sets a property.
      *
@@ -93,23 +93,21 @@ interface IAudioSink
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
      *
-     * 
      * @see getProperty()
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);
 
 	/**
 	 * Gets the current audio sink state.
-     * 
+     *
      * @returns State enum value.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
-     * 
      * @see IAudioSinkEventListener.onStateChanged().
-     */  
+     */
     State getState();
- 
+
     /**
     * Opens the audio sink.
     *
@@ -147,16 +145,16 @@ interface IAudioSink
      * onStateChanged(CLOSING, CLOSED) will be notified on any registered IAudioSinkListener interfaces.
      *
      * @param[in] audioSinkController     Instance of the IAudioSinkController.
-     * 
+     *
      * @return boolean
      * @retval true     Successfully closed.
      * @retval false    Invalid state or unrecognised parameter.
-     * 
+     *
      * @pre The resource must be in State::READY.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in OPENED State.
-     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.     
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      *
      * @see open()
@@ -165,7 +163,7 @@ interface IAudioSink
 
     /**
 	 * Registers an audio sink event listener.
-     * 
+     *
      * An `IAudioSinkEventListener` can only be registered once and will fail on subsequent
      * registration attempts.
      *
@@ -185,7 +183,7 @@ interface IAudioSink
 
     /**
 	 * Unregisters an audio sink event listener.
-     * 
+     *
      * @param[in] audioSinkEventListener	    Listener object for event callbacks.
      *
      * @return boolean

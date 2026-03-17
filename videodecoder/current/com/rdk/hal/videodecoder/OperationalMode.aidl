@@ -17,14 +17,14 @@
  * limitations under the License.
  */
 package com.rdk.hal.videodecoder;
- 
-/** 
+
+/**
  *  @brief     Operation modes, returned by getOperationalMode() and set in PROP_OPERATIONAL_MODE property.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
+
 @VintfStability
 @Backing(type="int")
 enum OperationalMode {

@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.videosink;
- 
-/** 
+
+/**
  *  @brief     Video Sink resource definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz

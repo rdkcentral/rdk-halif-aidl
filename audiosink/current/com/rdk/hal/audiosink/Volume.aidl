@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiosink;
- 
-/** 
+
+/**
  *  @brief     Audio sink volume settings.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -37,5 +37,5 @@ parcelable Volume {
 	/**
 	 * Muted state of the audio sink.
 	 */
-	boolean muted;    
+	boolean muted;
 }

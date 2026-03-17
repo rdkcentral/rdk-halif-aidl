@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiosink;
- 
-/** 
+
+/**
  *  @brief     Audio sink volume ramp definitions.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
