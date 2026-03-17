@@ -96,10 +96,11 @@ interface IVideoDecoderController
      * Buffers can be either non-secure or secure to support SVP (Secure Video Path).
      * Each call shall reference a single video frame with a presentation timestamp.
      *
-     * Buffer Ownership: All buffers passed into decodeBuffer() become the responsibility
-     * of the Video Decoder HAL to free. Once the decoder has finished processing
-     * the buffer, it is automatically released and returned to the AV Buffer Manager.
-     * The caller must not modify or access the buffer after this call returns true.
+     * Buffer Ownership: Ownership of the buffer transfers to the Video Decoder HAL only
+     * when decodeBuffer() accepts the buffer (returns true). Once accepted, the HAL is
+     * responsible for freeing the buffer after processing. The caller must not modify or
+     * access the buffer after a successful call. If the call returns false or throws an
+     * exception, ownership remains with the caller.
      *
      * @param[in] nsPresentationTime	The presentation time of the video frame in nanoseconds.
      * @param[in] bufferHandle			A handle to the AV buffer containing the encoded video frame.

@@ -96,10 +96,11 @@ interface IAudioDecoderController {
      * Buffers can be either non-secure or secure to support SAP (Secure Audio Path).
      * Each call shall reference a single audio frame with a presentation timestamp.
      *
-     * Buffer Ownership: All buffers passed into decodeBuffer() become the responsibility
-     * of the Audio Decoder HAL to free. Buffers are typically freed after
-     * successful decoding and output, or immediately during flush/stop operations.
-     * The caller must not access the buffer after this call returns true.
+     * Buffer Ownership: Ownership of the buffer transfers to the Audio Decoder HAL only
+     * when decodeBuffer() accepts the buffer (returns true). Once accepted, the HAL is
+     * responsible for freeing the buffer after processing. The caller must not modify or
+     * access the buffer after a successful call. If the call returns false or throws an
+     * exception, ownership remains with the caller.
      *
      * @param[in] nsPresentationTime	The presentation time of the audio frame in nanoseconds.
      * @param[in] bufferHandle			A handle to the AV buffer containing the encoded audio frame.

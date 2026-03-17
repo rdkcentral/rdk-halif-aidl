@@ -109,10 +109,11 @@ interface IAudioSinkController {
      * Each call shall reference a single audio frame with a presentation timestamp.
      * The audio sink may refuse the buffer if its internal resource usage prevents it from accepting it at that time.
      *
-     * Buffer Ownership: All buffers passed into `queueAudioFrame()` become the responsibility of the
-     * Audio Sink HAL to free once they are no longer required. Buffers are typically freed after
-     * successful mixing and output, or immediately during flush/stop operations. The caller must not
-     * access the buffer after this call returns true.
+     * Buffer Ownership: Ownership of the buffer transfers to the Audio Sink HAL only
+     * when `queueAudioFrame()` accepts the buffer (returns true). Once accepted, the HAL is
+     * responsible for freeing the buffer after processing. The caller must not modify or
+     * access the buffer after a successful call. If the call returns false or throws an
+     * exception, ownership remains with the caller.
      *
      * If an audio frame is passed to `queueAudioFrame()` after EOS, then the `binder::Status EX_ILLEGAL_STATE` exception
      * is raised. The audio sink must be stopped and restarted or flushed to accept new buffers.

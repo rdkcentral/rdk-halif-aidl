@@ -132,10 +132,11 @@ interface IVideoSinkController
      * and will be lip synced with an Audio Sink delivered stream if linked.
      *
      *
-     * Buffer Ownership: All frame buffers passed into `queueVideoFrame()` become the responsibility of the
-     * Video Sink HAL to free once they are no longer required. Buffers are typically freed after
-     * successful display and output, or immediately during flush/stop operations. The caller must not
-     * access the buffer after this call returns true.
+     * Buffer Ownership: Ownership of the buffer transfers to the Video Sink HAL only
+     * when `queueVideoFrame()` accepts the buffer (returns true). Once accepted, the HAL is
+     * responsible for freeing the buffer after processing. The caller must not modify or
+     * access the buffer after a successful call. If the call returns false or throws an
+     * exception, ownership remains with the caller.
      *
      *
      * If a video frame is passed to `queueVideoFrame()` after EOS, then the `binder::Status EX_ILLEGAL_STATE` exception
