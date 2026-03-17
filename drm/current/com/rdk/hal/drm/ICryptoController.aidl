@@ -20,6 +20,27 @@ package com.rdk.hal.drm;
 import com.rdk.hal.PropertyValue;
 import com.rdk.hal.drm.DecryptArgs;
 
+/*
+Notes: 
+In android.
+SessionID created by IDrmPlugin for the DRM scheme.
+SessionID is passed to ICryptoPlugin to link it to the DRM so keys can be used securely.
+The initialized decoder is used to create the Buffer Pool for receiving the decrypted stream data.
+The pool is passed to ICryptoPlugin this allows the link between Buffer pool and DRM to be made. Since it comes from decoder then there is then a secure linked bewteen DRM,decrypt, and decoder.   
+Now the pipeline can start.
+
+A Secure buffer pool is conceptually "tied" to the decoder that will consume data from it.
+Therefore:
+
+The decoder must be opened and configurd to be a secure decoder.
+The Buffer pool for the DecoderID will by default be configured inaccordance to its maximum capabilities.
+For Video decoders the size of the buffer pool can be constrained by setting the maximum height and width.
+This can allow for more lower resolution capable decoders and decrypt streams.
+e.g. 1xUHD + 1xFHD or 4xFHD.
+
+*/
+
+
 /** 
  *  @brief     Crypto Controller HAL interface.
  *  @author    TBD

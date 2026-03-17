@@ -132,7 +132,7 @@ interface IDrmController {
      * enforcing compliance with HDCP requirements. Trusted enforcement of HDCP
      * policies must be handled by the DRM system.
      * 
-     * getHdcpLevels() should not be polled.
+     * Polling should be avoided or at a level that has very low performance impact on the system.
      *
      * @return HdcpLevels parcelable
      *     Implicit error codes:
