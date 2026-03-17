@@ -29,6 +29,13 @@ import com.rdk.hal.PropertyValue;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
 
 @VintfStability
@@ -77,6 +84,7 @@ interface IVideoDecoderController
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
+     *
      * @see getProperty()
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);
@@ -100,6 +108,7 @@ interface IVideoDecoderController
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
+     *
      * 
      * @pre The resource must be in State::STARTED.
      */
@@ -194,6 +203,7 @@ interface IVideoDecoderController
     *
     * @exception binder::Status::Exception::EX_NONE for success
     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the `STARTED` state.
+     *
     *
     * @pre The resource must be in the `STARTED` state.
     */

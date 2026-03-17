@@ -28,7 +28,14 @@ import com.rdk.hal.State;
  *  @brief     FrontEnd HAL interface.
  *  @author    Jan Pedersen
  *  @author    Christian George
- *  @author    Philipp Trommler 
+ *  @author    Philipp Trommler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
 
 @VintfStability
@@ -50,6 +57,7 @@ interface IFrontend {
      * Can be called any time and is not depended o
      *
      * @returns FrontendType array
+     *
      */
     FrontendType[] getFrontendTypes();
 
@@ -59,6 +67,7 @@ interface IFrontend {
      * @param[in] frontendType The type of capabilites to request
      *
      * @returns Capabilities or null if the type is not supported
+     *
      */
     @nullable Capabilities getCapabilities(in FrontendType frontendType);
 
@@ -66,6 +75,7 @@ interface IFrontend {
 	 * Gets the current frontend state.
      *
      * @returns State enum value.
+     *
 	 *
      * @see IFrontendListener.onStateChanged().
      */  
@@ -91,6 +101,7 @@ interface IFrontend {
      * @returns IFrontendController or null on error.
      * 
      * @exception binder::Status EX_ILLEGAL_STATE 
+     *
      * 
      * @pre The resource must be in State::CLOSED.
      * 
@@ -110,6 +121,7 @@ interface IFrontend {
      * @retval true     The listener was registered.
      * @retval false    The listener is already registered.
      *
+     *
      * @see unregisterListener()
      */
     boolean registerListener(in IFrontendListener frontendListener);
@@ -122,6 +134,7 @@ interface IFrontend {
      * @return boolean
      * @retval true     The listener was unregistered.
      * @retval false    The listener was not found registered.
+     *
      *
      * @see registerListener()
      */

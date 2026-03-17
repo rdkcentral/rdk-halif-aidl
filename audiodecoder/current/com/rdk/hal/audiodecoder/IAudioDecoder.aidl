@@ -32,6 +32,13 @@ import com.rdk.hal.PropertyValue;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
 
 @VintfStability
@@ -70,7 +77,6 @@ interface IAudioDecoder
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value.
-     *
      */
     @nullable PropertyValue getProperty(in Property property);
  
@@ -82,7 +88,7 @@ interface IAudioDecoder
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @see IAudioDecoderListener.onStateChanged().
-     */  
+     */
     State getState();
 
     /**
@@ -113,9 +119,9 @@ interface IAudioDecoder
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      * 
      * @returns IAudioDecoderController or null if the codec or secure is not supported if requested.
-     * 
+     *
      * @pre The resource must be in State::CLOSED.
-     * 
+     *
      * @see IAudioDecoderController, IAudioDecoderController.close(), registerEventListener()
      */
     @nullable IAudioDecoderController open(in Codec codec, in boolean secure, in IAudioDecoderControllerListener audioDecoderControllerListener);

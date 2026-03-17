@@ -38,6 +38,13 @@ import com.rdk.hal.PropertyValue;
  *  @author    Douglas Adler
  *  @author    Gerald Weatherup
  */
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
 @VintfStability
 interface IHDMIOutput
 {
@@ -58,6 +65,7 @@ interface IHDMIOutput
      * The returned value is constant and must not change between calls.
      *
      * @returns Capabilities parcelable.
+     *
      */
     Capabilities getCapabilities();
 
@@ -67,6 +75,7 @@ interface IHDMIOutput
      * @param[in] property     The key of a property from the Property enum.
      * @returns PropertyValue or null if the property key is unknown.
      *
+     *
      * @see setProperty()
      */
     @nullable PropertyValue getProperty(in Property property);
@@ -75,6 +84,7 @@ interface IHDMIOutput
      * Gets the current HDMI output state.
      *
      * @returns State enum value.
+     *
      *
      * @see IHDMIOutputEventListener.onStateChanged()
      */
@@ -95,6 +105,7 @@ interface IHDMIOutput
      * @returns IHDMIOutputController or null if input is invalid.
      *
      * @exception binder::Status EX_ILLEGAL_STATE
+     *
      * @pre Must be in State::CLOSED.
      *
      * @see IHDMIOutputController, close(), registerEventListener()
@@ -114,6 +125,7 @@ interface IHDMIOutput
      * @retval true     Successfully closed.
      * @retval false    Invalid state or mismatched instance.
      *
+     *
      * @pre Must be in State::READY.
      *
      * @see open()
@@ -130,6 +142,7 @@ interface IHDMIOutput
      * @retval true     Listener registered.
      * @retval false    Already registered.
      *
+     *
      * @see unregisterEventListener()
      */
     boolean registerEventListener(in IHDMIOutputEventListener hdmiOutputEventListener);
@@ -141,6 +154,7 @@ interface IHDMIOutput
      * @returns boolean
      * @retval true     Listener unregistered.
      * @retval false    Listener not found.
+     *
      *
      * @see registerEventListener()
      */
