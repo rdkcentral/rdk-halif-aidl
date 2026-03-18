@@ -27,43 +27,11 @@
 package com.rdk.hal.drm;
 
 /**
- * HDCP specifications are defined by Digital Content Protection LLC (DCP).
- *   "HDCP Specification Rev. 2.3 Interface Independent Adaptation"
- *   "HDCP 2.3 on HDMI Specification"
+ * A subsample consists of some number of bytes of clear (unencrypted)
+ * data followed by a number of bytes of encrypted data.
  */
 @VintfStability
-@Backing(type="int")
-enum HdcpLevel {
-    /**
-     * Unable to determine the HDCP level
-     */
-    HDCP_UNKNOWN,
-    /**
-     * No HDCP, output is unprotected
-     */
-    HDCP_NONE,
-    /**
-     * HDCP version 1.0
-     */
-    HDCP_V1,
-    /**
-     * HDCP version 2.0 Type 1.
-     */
-    HDCP_V2,
-    /**
-     * HDCP version 2.1 Type 1.
-     */
-    HDCP_V2_1,
-    /**
-     *  HDCP version 2.2 Type 1.
-     */
-    HDCP_V2_2,
-    /**
-     * No digital output, implicitly secure
-     */
-    HDCP_NO_OUTPUT,
-    /**
-     * HDCP version 2.3 Type 1.
-     */
-    HDCP_V2_3,
+parcelable SubSample {
+    int numBytesOfClearData;
+    int numBytesOfEncryptedData;
 }

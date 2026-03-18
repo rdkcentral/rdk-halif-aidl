@@ -15,45 +15,50 @@
  * limitations under the License.
  *
  * -------------------------------------------------------------------
- * This file was inspired by Android 16 and derived from 
- * the following work:
+ * This file is derived from Android 16 drm interface definitions:
  *
- *     Copyright (C) 2021 The Android Open Source Project
+ * https://android.googlesource.com/platform/hardware/interfaces/+/refs/tags/android-16.0.0_r4/drm/aidl/android/hardware/drm    
+ * 
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0.
  * -------------------------------------------------------------------
  */
 
 package com.rdk.hal.drm;
-import com.rdk.hal.PropertyValue;
-import com.rdk.drm.HdcpLevels;
-import com.rdk.drm.DrmMetricGroup;
-import com.rdk.drm.NumberOfSessions;
 
-/** 
- *  @brief     DRM Controller HAL interface.
- *  @author    TBD
+import com.rdk.hal.drm.DrmMetricGroup;
+import com.rdk.hal.drm.HdcpLevels;
+import com.rdk.hal.drm.IDrmPluginListener;
+import com.rdk.hal.drm.KeySetId;
+import com.rdk.hal.drm.KeyRequest;
+import com.rdk.hal.drm.KeyStatus;
+import com.rdk.hal.drm.KeyType;
+import com.rdk.hal.drm.KeyValue;
+//import com.rdk.hal.drm.LogMessage; How to log?
+import com.rdk.hal.drm.NumberOfSessions;
+// import com.rdk.hal.drm.OfflineLicenseState; Do we need offline?
+import com.rdk.hal.drm.ProvideProvisionResponseResult;
+import com.rdk.hal.drm.ProvisionRequest;
+import com.rdk.hal.drm.SecurityLevel;
+
+/**
+Todo: 
+OfflineLicenseState?
+LogMessage?
+*/
+
+
+/**
+ * IDrmPlugin is used to interact with a specific drm plugin that was
+ * created by IDrmFactory::createPlugin.
+ *
+ * A drm plugin provides methods for obtaining drm keys to be used by a codec
+ * to decrypt protected video content.
  */
-
 @VintfStability
-interface IDrmController {
-
+interface IDrmPlugin {
     /**
-     * @brief Sets a property.
-     *
-     * @param[in] property              The key of a property.
-     * @param[in] propertyValue         Holds the value to set.
-     *
-     * @returns Success flag indicating property update status.
-     * @retval true     The property was successfully set.
-     * @retval false    Invalid property key or value.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property and propertyValue.
-     */
-    boolean setProperty(in int property, in PropertyValue propertyValue);
-
-        /**
      * Close a session on the DrmPlugin object
      *
      * @param sessionId the session id the call applies to

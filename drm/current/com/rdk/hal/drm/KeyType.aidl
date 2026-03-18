@@ -26,44 +26,23 @@
 
 package com.rdk.hal.drm;
 
-/**
- * HDCP specifications are defined by Digital Content Protection LLC (DCP).
- *   "HDCP Specification Rev. 2.3 Interface Independent Adaptation"
- *   "HDCP 2.3 on HDMI Specification"
- */
 @VintfStability
 @Backing(type="int")
-enum HdcpLevel {
+enum KeyType {
     /**
-     * Unable to determine the HDCP level
+     * Drm keys can be for offline content or for online streaming.
+     * Offline keys are persisted on the device and may be used when the device
+     * is disconnected from the network.
      */
-    HDCP_UNKNOWN,
+    OFFLINE,
     /**
-     * No HDCP, output is unprotected
+     * Keys for streaming are not persisted and require the device to be
+     * connected to the network for periodic renewal.
      */
-    HDCP_NONE,
+    STREAMING,
     /**
-     * HDCP version 1.0
+     * The Release type is used to request that offline keys be no longer
+     * restricted to offline use.
      */
-    HDCP_V1,
-    /**
-     * HDCP version 2.0 Type 1.
-     */
-    HDCP_V2,
-    /**
-     * HDCP version 2.1 Type 1.
-     */
-    HDCP_V2_1,
-    /**
-     *  HDCP version 2.2 Type 1.
-     */
-    HDCP_V2_2,
-    /**
-     * No digital output, implicitly secure
-     */
-    HDCP_NO_OUTPUT,
-    /**
-     * HDCP version 2.3 Type 1.
-     */
-    HDCP_V2_3,
+    RELEASE,
 }

@@ -18,7 +18,7 @@
  *
  * https://android.googlesource.com/platform/hardware/interfaces/+/refs/tags/android-16.0.0_r4/drm/aidl/android/hardware/drm    
  * 
- * Copyright (C) 2021 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0.
  * -------------------------------------------------------------------
@@ -26,44 +26,16 @@
 
 package com.rdk.hal.drm;
 
-/**
- * HDCP specifications are defined by Digital Content Protection LLC (DCP).
- *   "HDCP Specification Rev. 2.3 Interface Independent Adaptation"
- *   "HDCP 2.3 on HDMI Specification"
- */
+import com.rdk.hal.drm.SecurityLevel;
+
 @VintfStability
-@Backing(type="int")
-enum HdcpLevel {
-    /**
-     * Unable to determine the HDCP level
-     */
-    HDCP_UNKNOWN,
-    /**
-     * No HDCP, output is unprotected
-     */
-    HDCP_NONE,
-    /**
-     * HDCP version 1.0
-     */
-    HDCP_V1,
-    /**
-     * HDCP version 2.0 Type 1.
-     */
-    HDCP_V2,
-    /**
-     * HDCP version 2.1 Type 1.
-     */
-    HDCP_V2_1,
-    /**
-     *  HDCP version 2.2 Type 1.
-     */
-    HDCP_V2_2,
-    /**
-     * No digital output, implicitly secure
-     */
-    HDCP_NO_OUTPUT,
-    /**
-     * HDCP version 2.3 Type 1.
-     */
-    HDCP_V2_3,
+parcelable SupportedContentType {
+    /** Supported mime type. E.g. cenc, video/mp4, etc */
+    String mime;
+
+    /** Minimum supported security level (inclusive) */
+    SecurityLevel minLevel;
+
+    /** Maximum supported security level (inclusive) */
+    SecurityLevel maxLevel;
 }

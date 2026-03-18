@@ -26,44 +26,33 @@
 
 package com.rdk.hal.drm;
 
+//import android.hardware.common.NativeHandle;
 /**
- * HDCP specifications are defined by Digital Content Protection LLC (DCP).
- *   "HDCP Specification Rev. 2.3 Interface Independent Adaptation"
- *   "HDCP 2.3 on HDMI Specification"
+   Todo: AVBUffer usage?
+*/
+
+/**
+ * SharedBuffer describes a decrypt buffer which is defined by a bufferId, an
+ * offset and a size.  The offset is relative to the shared memory base for the
+ * memory region identified by bufferId, which is established by
+ * setSharedMemoryBase().
  */
 @VintfStability
-@Backing(type="int")
-enum HdcpLevel {
+parcelable SharedBuffer {
     /**
-     * Unable to determine the HDCP level
+     * The unique buffer identifier
      */
-    HDCP_UNKNOWN,
+    int bufferId;
     /**
-     * No HDCP, output is unprotected
+     * The offset from the shared memory base
      */
-    HDCP_NONE,
+    long offset;
     /**
-     * HDCP version 1.0
+     * The size of the shared buffer in bytes
      */
-    HDCP_V1,
+    long size;
     /**
-     * HDCP version 2.0 Type 1.
+     * Handle to shared memory
      */
-    HDCP_V2,
-    /**
-     * HDCP version 2.1 Type 1.
-     */
-    HDCP_V2_1,
-    /**
-     *  HDCP version 2.2 Type 1.
-     */
-    HDCP_V2_2,
-    /**
-     * No digital output, implicitly secure
-     */
-    HDCP_NO_OUTPUT,
-    /**
-     * HDCP version 2.3 Type 1.
-     */
-    HDCP_V2_3,
+    NativeHandle handle;
 }

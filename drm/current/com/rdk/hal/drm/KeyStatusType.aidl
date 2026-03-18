@@ -26,44 +26,36 @@
 
 package com.rdk.hal.drm;
 
-/**
- * HDCP specifications are defined by Digital Content Protection LLC (DCP).
- *   "HDCP Specification Rev. 2.3 Interface Independent Adaptation"
- *   "HDCP 2.3 on HDMI Specification"
- */
 @VintfStability
 @Backing(type="int")
-enum HdcpLevel {
+enum KeyStatusType {
     /**
-     * Unable to determine the HDCP level
+     * The key is currently usable to decrypt media data.
      */
-    HDCP_UNKNOWN,
+    USABLE,
     /**
-     * No HDCP, output is unprotected
+     * The key is no longer usable to decrypt media data because its expiration
+     * time has passed.
      */
-    HDCP_NONE,
+    EXPIRED,
     /**
-     * HDCP version 1.0
+     * The key is not currently usable to decrypt media data because its output
+     * requirements cannot currently be met.
      */
-    HDCP_V1,
+    OUTPUT_NOT_ALLOWED,
     /**
-     * HDCP version 2.0 Type 1.
+     * The status of the key is not yet known and is being determined.
      */
-    HDCP_V2,
+    STATUS_PENDING,
     /**
-     * HDCP version 2.1 Type 1.
+     * The key is not currently usable to decrypt media data because of an
+     * internal error in processing unrelated to input parameters.
      */
-    HDCP_V2_1,
+    INTERNAL_ERROR,
     /**
-     *  HDCP version 2.2 Type 1.
+     * The key is not yet usable to decrypt media because the start
+     * time is in the future. The key must become usable when
+     * its start time is reached.
      */
-    HDCP_V2_2,
-    /**
-     * No digital output, implicitly secure
-     */
-    HDCP_NO_OUTPUT,
-    /**
-     * HDCP version 2.3 Type 1.
-     */
-    HDCP_V2_3,
+    USABLE_IN_FUTURE,
 }

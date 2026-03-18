@@ -26,44 +26,29 @@
 
 package com.rdk.hal.drm;
 
+// import android.hardware.common.NativeHandle;
+import com.rdk.hal.drm.SharedBuffer;
+
 /**
- * HDCP specifications are defined by Digital Content Protection LLC (DCP).
- *   "HDCP Specification Rev. 2.3 Interface Independent Adaptation"
- *   "HDCP 2.3 on HDMI Specification"
+Todo: AVBuffer usage?
+*/
+
+/**
+ * A decrypt destination buffer can be either normal user-space shared
+ * memory for the non-secure decrypt case, or it can be a secure buffer
+ * which is referenced by a native-handle.
+ *
+ * The native handle is allocated by the vendor's buffer allocator.
  */
 @VintfStability
-@Backing(type="int")
-enum HdcpLevel {
+union DestinationBuffer {
     /**
-     * Unable to determine the HDCP level
+     * decrypted data written to user-space non-secure shared memory.
      */
-    HDCP_UNKNOWN,
+    SharedBuffer nonsecureMemory;
     /**
-     * No HDCP, output is unprotected
+     * decrypted data written to secure memory referenced by the vendor's
+     * buffer allocator.
      */
-    HDCP_NONE,
-    /**
-     * HDCP version 1.0
-     */
-    HDCP_V1,
-    /**
-     * HDCP version 2.0 Type 1.
-     */
-    HDCP_V2,
-    /**
-     * HDCP version 2.1 Type 1.
-     */
-    HDCP_V2_1,
-    /**
-     *  HDCP version 2.2 Type 1.
-     */
-    HDCP_V2_2,
-    /**
-     * No digital output, implicitly secure
-     */
-    HDCP_NO_OUTPUT,
-    /**
-     * HDCP version 2.3 Type 1.
-     */
-    HDCP_V2_3,
+    NativeHandle secureMemory;
 }

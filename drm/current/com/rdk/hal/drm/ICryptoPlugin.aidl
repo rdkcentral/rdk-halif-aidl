@@ -1,24 +1,37 @@
 /*
- * If not stated otherwise in this file or this component's LICENSE file the
- * following copyright and licenses apply:
- *
- * Copyright 2025 RDK Management
+ * Copyright (C) 2026 RDK Management
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * -------------------------------------------------------------------
+ * This file is derived from Android 16 drm interface definitions:
+ *
+ * https://android.googlesource.com/platform/hardware/interfaces/+/refs/tags/android-16.0.0_r4/drm/aidl/android/hardware/drm    
+ * 
+ * Copyright (C) 2021 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * -------------------------------------------------------------------
  */
 package com.rdk.hal.drm;
-import com.rdk.hal.PropertyValue;
 import com.rdk.hal.drm.DecryptArgs;
+import com.rdk.hal.drm.DestinationBuffer;
+// import com.rdk.hal.drm.LogMessage; To discuss
+import com.rdk.hal.drm.Mode;
+import com.rdk.hal.drm.Pattern;
+import com.rdk.hal.drm.SharedBuffer;
+import com.rdk.hal.drm.Status;
+import com.rdk.hal.drm.SubSample;
 
 /*
 Notes: 
@@ -38,32 +51,19 @@ For Video decoders the size of the buffer pool can be constrained by setting the
 This can allow for more lower resolution capable decoders and decrypt streams.
 e.g. 1xUHD + 1xFHD or 4xFHD.
 
+
+Log message?
 */
 
 
-/** 
- *  @brief     Crypto Controller HAL interface.
- *  @author    TBD
+/**
+ * ICryptoPlugin is the HAL for vendor-provided crypto plugins.
+ *
+ * It allows crypto sessions to be opened and operated on, to
+ * load crypto keys for a codec to decrypt protected video content.
  */
-
 @VintfStability
-interface ICryptoController {
-
-    /**
-     * @brief Sets a property.
-     *
-     * @param[in] property              The key of a property.
-     * @param[in] propertyValue         Holds the value to set.
-     *
-     * @returns Success flag indicating property update status.
-     * @retval true     The property was successfully set.
-     * @retval false    Invalid property key or value.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property and propertyValue.
-     */
-    boolean setProperty(in int property, in PropertyValue propertyValue);
-
+interface ICryptoPlugin {
     /**
      * Decrypt an array of subsamples from the source memory buffer to the
      * destination memory buffer.

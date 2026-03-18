@@ -27,43 +27,36 @@
 package com.rdk.hal.drm;
 
 /**
- * HDCP specifications are defined by Digital Content Protection LLC (DCP).
- *   "HDCP Specification Rev. 2.3 Interface Independent Adaptation"
- *   "HDCP 2.3 on HDMI Specification"
+ * An app determines the type of a key request returned from getKeyRequest.
  */
 @VintfStability
 @Backing(type="int")
-enum HdcpLevel {
+enum KeyRequestType {
     /**
-     * Unable to determine the HDCP level
+     * Key request type is for an initial license request
      */
-    HDCP_UNKNOWN,
+    INITIAL,
     /**
-     * No HDCP, output is unprotected
+     * Key request type is for license renewal. Renewal requests are used
+     * to extend the validity period for streaming keys.
      */
-    HDCP_NONE,
+    RENEWAL,
     /**
-     * HDCP version 1.0
+     * Key request type is a release. A key release causes offline keys
+     * to become available for streaming.
      */
-    HDCP_V1,
+    RELEASE,
     /**
-     * HDCP version 2.0 Type 1.
+     * Key request type is unknown due to some error condition.
      */
-    HDCP_V2,
+    UNKNOWN,
     /**
-     * HDCP version 2.1 Type 1.
+     * Keys are already loaded. No key request is needed.
      */
-    HDCP_V2_1,
+    NONE,
     /**
-     *  HDCP version 2.2 Type 1.
+     * Keys have previously been loaded. An additional (non-renewal) license
+     * request is needed.
      */
-    HDCP_V2_2,
-    /**
-     * No digital output, implicitly secure
-     */
-    HDCP_NO_OUTPUT,
-    /**
-     * HDCP version 2.3 Type 1.
-     */
-    HDCP_V2_3,
+    UPDATE,
 }

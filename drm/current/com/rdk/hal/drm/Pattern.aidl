@@ -27,43 +27,23 @@
 package com.rdk.hal.drm;
 
 /**
- * HDCP specifications are defined by Digital Content Protection LLC (DCP).
- *   "HDCP Specification Rev. 2.3 Interface Independent Adaptation"
- *   "HDCP 2.3 on HDMI Specification"
+ * A crypto Pattern is a repeating sequence of encrypted and clear blocks
+ * occurring within the bytes indicated by mNumBytesOfEncryptedDatad bytes
+ * of a subsample. Patterns are used to reduce the CPU overhead of
+ * decrypting samples. As an example, HLS uses 1:9 patterns where every
+ * 10th block is encrypted.
  */
 @VintfStability
-@Backing(type="int")
-enum HdcpLevel {
+parcelable Pattern {
     /**
-     * Unable to determine the HDCP level
+     * The number of blocks to be encrypted in the pattern. If zero,
+     * pattern encryption is inoperative.
      */
-    HDCP_UNKNOWN,
+    int encryptBlocks;
+
     /**
-     * No HDCP, output is unprotected
+     * The number of blocks to be skipped (left clear) in the pattern. If
+     * zero, pattern encryption is inoperative.
      */
-    HDCP_NONE,
-    /**
-     * HDCP version 1.0
-     */
-    HDCP_V1,
-    /**
-     * HDCP version 2.0 Type 1.
-     */
-    HDCP_V2,
-    /**
-     * HDCP version 2.1 Type 1.
-     */
-    HDCP_V2_1,
-    /**
-     *  HDCP version 2.2 Type 1.
-     */
-    HDCP_V2_2,
-    /**
-     * No digital output, implicitly secure
-     */
-    HDCP_NO_OUTPUT,
-    /**
-     * HDCP version 2.3 Type 1.
-     */
-    HDCP_V2_3,
+    int skipBlocks;
 }

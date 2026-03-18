@@ -27,43 +27,35 @@
 package com.rdk.hal.drm;
 
 /**
- * HDCP specifications are defined by Digital Content Protection LLC (DCP).
- *   "HDCP Specification Rev. 2.3 Interface Independent Adaptation"
- *   "HDCP 2.3 on HDMI Specification"
+ * EventType enumerates the events that can be delivered by sendEvent
  */
 @VintfStability
 @Backing(type="int")
-enum HdcpLevel {
+enum EventType {
     /**
-     * Unable to determine the HDCP level
+     * This event type indicates that the app needs to request a certificate
+     * from the provisioning server. The request message data is obtained using
+     * getProvisionRequest().
      */
-    HDCP_UNKNOWN,
+    PROVISION_REQUIRED,
     /**
-     * No HDCP, output is unprotected
+     * This event type indicates that the app needs to request keys from a
+     * license server. The request message data is obtained using getKeyRequest.
      */
-    HDCP_NONE,
+    KEY_NEEDED,
     /**
-     * HDCP version 1.0
+     * This event type indicates that the licensed usage duration for keys in a
+     * session has expired. The keys are no longer valid.
      */
-    HDCP_V1,
+    KEY_EXPIRED,
     /**
-     * HDCP version 2.0 Type 1.
+     * This event may indicate some specific vendor-defined condition, see your
+     * DRM provider documentation for details.
      */
-    HDCP_V2,
+    VENDOR_DEFINED,
     /**
-     * HDCP version 2.1 Type 1.
+     * This event indicates that a session opened by the app has been reclaimed
+     * by the resource manager.
      */
-    HDCP_V2_1,
-    /**
-     *  HDCP version 2.2 Type 1.
-     */
-    HDCP_V2_2,
-    /**
-     * No digital output, implicitly secure
-     */
-    HDCP_NO_OUTPUT,
-    /**
-     * HDCP version 2.3 Type 1.
-     */
-    HDCP_V2_3,
+    SESSION_RECLAIMED,
 }

@@ -26,44 +26,31 @@
 
 package com.rdk.hal.drm;
 
-/**
- * HDCP specifications are defined by Digital Content Protection LLC (DCP).
- *   "HDCP Specification Rev. 2.3 Interface Independent Adaptation"
- *   "HDCP 2.3 on HDMI Specification"
- */
+import com.rdk.hal.drm.KeyRequestType;
+
 @VintfStability
-@Backing(type="int")
-enum HdcpLevel {
+parcelable KeyRequest {
+    /** The opaque key request blob. */
+    byte[] request;
+
     /**
-     * Unable to determine the HDCP level
+     * Enumerated type:
+     *     INITIAL - the first key request for a license
+     *     NONE - indicates that no request is needed because the keys
+     *         are already loaded
+     *     RENEWAL - is a subsequent key request used to refresh the
+     *         keys in a license
+     *     RELEASE - indicates keys are being released
+     *     UPDATE - indicates that the keys need to be refetched after
+     *         the initial license request
      */
-    HDCP_UNKNOWN,
+    KeyRequestType requestType;
+
     /**
-     * No HDCP, output is unprotected
+     * The URL that the request may be sent to,
+     * if provided by the drm HAL. The app can choose to
+     * override this URL. If the HAL implementation does not provide
+     * a defaultUrl, the returned string must be empty.
      */
-    HDCP_NONE,
-    /**
-     * HDCP version 1.0
-     */
-    HDCP_V1,
-    /**
-     * HDCP version 2.0 Type 1.
-     */
-    HDCP_V2,
-    /**
-     * HDCP version 2.1 Type 1.
-     */
-    HDCP_V2_1,
-    /**
-     *  HDCP version 2.2 Type 1.
-     */
-    HDCP_V2_2,
-    /**
-     * No digital output, implicitly secure
-     */
-    HDCP_NO_OUTPUT,
-    /**
-     * HDCP version 2.3 Type 1.
-     */
-    HDCP_V2_3,
+    String defaultUrl;
 }
