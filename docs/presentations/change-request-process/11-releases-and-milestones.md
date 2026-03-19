@@ -10,7 +10,7 @@
 
 - Each release is **tagged** in the git repository (e.g. `0.14.0`)
 - A **GitHub Release** is published for every tag with auto-generated **release notes**
-- Release notes summarise all changes, contributors, and linked PRs included in the release
+- Release notes are generated detailing what has changed since the last release
 
 Example: [Release 0.14.0](https://github.com/rdkcentral/rdk-halif-aidl/releases/tag/0.14.0)
 
