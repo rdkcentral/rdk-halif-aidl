@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiosink;
+import com.rdk.hal.audiosink.ContentType;
 
 /**
  *  @brief     Audio Sink capabilities parcelable definition.
@@ -33,4 +34,11 @@ parcelable Capabilities
 	 * @see Property.SECURE_AUDIO
 	 */
 	boolean supportsSecure;
+
+	/**
+	 * List of content types supported by this audio sink instance.
+	 * Clients should check this before calling `open()` with a given `ContentType`.
+	 * @see IAudioSink.open()
+	 */
+	ContentType[] supportedContentTypes;
 }
