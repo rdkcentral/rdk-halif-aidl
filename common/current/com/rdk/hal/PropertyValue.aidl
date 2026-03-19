@@ -42,7 +42,7 @@ parcelable PropertyValue
         float floatValue;     /**< 32-bit floating-point value. */
         double doubleValue;   /**< 64-bit floating-point value. */
         String stringValue;   /**< String value. */
-        int[] intArrayValue; // for arrays of enums */
+        int[] intArrayValue;  /**< Array of 32-bit signed integer values (for arrays of enums). */
     }
 
     /**

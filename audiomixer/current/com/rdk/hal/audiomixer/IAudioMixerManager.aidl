@@ -40,7 +40,7 @@ interface IAudioMixerManager {
      * This function can be called at any time. The returned set must
      * be stable for the lifetime of the process.
      *
-     * @return Array of IAudioMixer.Id values representing available mixers.
+     * @returns Array of IAudioMixer.Id values representing available mixers.
      */
     IAudioMixer.Id[] getAudioMixerIds();
 
@@ -48,7 +48,7 @@ interface IAudioMixerManager {
      * @brief Acquires a specific audio mixer interface by ID.
      *
      * @param id Mixer resource identifier.
-     * @return IAudioMixer interface for controlling the mixer, or null if unavailable.
+     * @returns IAudioMixer interface for controlling the mixer, or null if unavailable.
      */
     @nullable IAudioMixer getAudioMixer(in IAudioMixer.Id id);
 }

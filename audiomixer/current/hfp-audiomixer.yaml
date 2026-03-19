@@ -99,7 +99,7 @@ audiomixer:
       supportedTranscodeFormats:
         - AC3
       supportedAQProcessors:
-        - DEFAULT
+        - UNDEFINED
       supportedAQ:
         - GRAPHIC_EQUALIZER
         - BASS_ENHANCER_GAIN
@@ -116,7 +116,7 @@ audiomixer:
       supportedTranscodeFormats:
         - AC3
       supportedAQProcessors:
-        - DEFAULT
+        - UNDEFINED
       supportedAQ:
         - DIALOGUE_ENHANCER
         - BASS_ENHANCER_CUTOFF

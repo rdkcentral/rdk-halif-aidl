@@ -61,7 +61,7 @@ interface IAudioMixer {
     /**
     * @brief Returns the list of audio output port IDs on this mixer.
     *
-    * @return Array of int values representing port IDs.
+    * @returns Array of int values representing port IDs.
     */
     int[] getAudioOutputPortIds();
 
@@ -71,7 +71,7 @@ interface IAudioMixer {
     * Returns null if the port is not supported on this mixer instance.
     *
     * @param id Output port identifier (as int).
-    * @return IAudioOutputPort interface or null.
+    * @returns IAudioOutputPort interface or null.
     */
     @nullable IAudioOutputPort getAudioOutputPort(in int id);
 
@@ -81,7 +81,7 @@ interface IAudioMixer {
      * Capabilities include secure path, number/types of supported inputs,
      * and supported content types/codecs per input.
      *
-     * @return Capabilities description for the mixer.
+     * @returns Capabilities description for the mixer.
      */
     Capabilities getCapabilities();
 
@@ -107,7 +107,7 @@ interface IAudioMixer {
      *
      * @param[in] secure                  The mixer secure audio path mode.
      * @param[in] audioMixerEventListener Listener for state/error/runtime mixer callbacks.
-     * @return IAudioMixerController interface, or null on internal/open failure.
+     * @returns IAudioMixerController interface, or null on internal/open failure.
      * @exception binder::Status EX_ILLEGAL_STATE if mixer is not in CLOSED state.
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if parameters are invalid.
      * @exception binder::Status EX_NULL_POINTER if listener is null.
@@ -122,7 +122,7 @@ interface IAudioMixer {
      * to CLOSING and then CLOSED.
      *
      * @param[in] audioMixerController Instance returned by open().
-     * @return true on successful close, false for invalid state or unknown controller.
+     * @returns true on successful close, false for invalid state or unknown controller.
      * @exception binder::Status EX_ILLEGAL_STATE if mixer is not in READY state.
      * @exception binder::Status EX_NULL_POINTER if controller is null.
      * @see open()
@@ -151,7 +151,7 @@ interface IAudioMixer {
     * mixer inputs; each entry matches the input at the same index as returned
     * by capability or enumeration APIs.
     *
-    * @return List of codecs for active sources.
+    * @returns List of codecs for active sources.
     */
     Codec[] getCurrentSourceCodecs();
 

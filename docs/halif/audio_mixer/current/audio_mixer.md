@@ -70,7 +70,7 @@ Mixer instances are accessed and controlled via `IAudioMixer`, with additional l
 | Codec.aidl                    | Imported from audiodecoder HAL                         |
 | State.aidl                    | Lifecycle state machine (READY, STARTED, etc.)         |
 | ConnectionState.aidl          | Physical or logical connection status for output ports |
-| MixingModes.aidl              | Enumerates the mixer operating modes.                  |
+| MixingMode.aidl               | Enumerates the mixer operating modes.                  |
 
 ---
 

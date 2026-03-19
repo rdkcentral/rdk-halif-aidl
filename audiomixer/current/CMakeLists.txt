@@ -52,8 +52,8 @@ set(SRC
     ${SRC_DIR}/AQParameter.aidl
     ${SRC_DIR}/OutputFormat.aidl
     ${SRC_DIR}/TranscodeFormat.aidl
-    ${SRC_DIR}/MixingModes.aidl
-    ${SRC_DIR}/OutputPortCapabilties.aidl
+    ${SRC_DIR}/MixingMode.aidl
+    ${SRC_DIR}/OutputPortCapabilities.aidl
     # Interfaces
     ${SRC_DIR}/IAudioMixer.aidl
     ${SRC_DIR}/IAudioMixerController.aidl

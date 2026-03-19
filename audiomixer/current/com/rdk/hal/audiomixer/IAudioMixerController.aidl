@@ -70,7 +70,7 @@ interface IAudioMixerController {
      * @brief     Sets a property on the controlled mixer instance.
      * @param[in] property      The property key (from Property enum).
      * @param[in] propertyValue The value to set (PropertyValue union).
-     * @return    true if successfully set, false otherwise.
+     * @returns   true if successfully set, false otherwise.
      * @see       getProperty()
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);

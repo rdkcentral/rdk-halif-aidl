@@ -82,7 +82,7 @@ enum OutputPortProperty {
 
     /**
      * Supported audio output formats.
-     * Type: int[] (com.rdk.hal.audiosink.AudioOutputFormat enum values)
+     * Type: int[] (com.rdk.hal.audiomixer.OutputFormat enum values)
      * Access: Read-only.
      */
     SUPPORTED_AUDIO_FORMATS = 5,
