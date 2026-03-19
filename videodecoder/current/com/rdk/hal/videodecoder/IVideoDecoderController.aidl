@@ -107,7 +107,8 @@ interface IVideoDecoderController
      *
      * @returns boolean
      * @retval true   Buffer successfully queued for decoding. Buffer ownership transfers to HAL.
-     * @retval false  Internal decode buffer queue is full. Buffer ownership remains with caller.
+     * @retval false  Internal decode buffer queue is full, or `signalEOS()` has already been called
+     *                and the decoder has not been flushed or restarted. Buffer ownership remains with caller.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
@@ -158,6 +159,7 @@ interface IVideoDecoderController
      *
      * No more AV buffers are expected to be delivered to the Video Decoder after
      * `signalEOS()` has been called unless the decoder is first flushed or stopped and started again.
+     * Any subsequent `decodeBuffer()` call in this state shall return false.
      *
      * An `IVideoDecoderControllerListener.onFrameOutput()` callback with `FrameMetadata.endOfStream`
      * must be set to true after all video frames have been output.

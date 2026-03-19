@@ -46,7 +46,7 @@ parcelable FrameMetadata {
 	 * The buffer contains Dolby Atmos audio and metadata.
 	 */
 	boolean isDolbyAtmos;
-	
+
 	/**
 	 * Audio trimming to use on presentation.
 	 */
@@ -59,7 +59,9 @@ parcelable FrameMetadata {
 	boolean lowLatency;
 
 	/**
-	 * End of stream indicator.
+	 * End of stream flag for decoder output.
+	 * Set to true on the final frame output callback after signalEOS(), once all queued frames have been output.
+	 * This may correspond to an end of stream marker in the audio bitstream, when present.
 	 */
 	boolean endOfStream;
 

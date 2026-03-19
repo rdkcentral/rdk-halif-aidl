@@ -104,7 +104,9 @@ parcelable FrameMetadata {
 	int frameRateDenominator;
 
 	/**
-	 * End of stream marker found in the video bitstream.
+	 * End of stream flag for decoder output.
+	 * Set to true on the final frame output callback after signalEOS(), once all queued frames have been output.
+	 * This may correspond to an end of stream marker in the video bitstream, when present.
 	 */
 	boolean endOfStream;
 

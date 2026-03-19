@@ -109,7 +109,8 @@ interface IAudioDecoderController {
      *
      * @returns boolean
      * @retval true   Buffer successfully queued for decoding. Buffer ownership transfers to HAL.
-     * @retval false  Internal decode buffer queue is full. Buffer ownership remains with caller.
+     * @retval false  Internal decode buffer queue is full, or `signalEOS()` has already been called
+     *                and the decoder has not been flushed or restarted. Buffer ownership remains with caller.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
@@ -156,7 +157,8 @@ interface IAudioDecoderController {
      * The audio decoder must be in a state of `STARTED`.
      * Any frames held by the decoder should continue to be decoded and output.
      * No more audio buffers are expected to be delivered to the audio decoder after
-	 * `signalEOS()` has been called unless the decoder is first flushed or stopped and started again.
+     * `signalEOS()` has been called unless the decoder is first flushed or stopped and started again.
+     * Any subsequent `decodeBuffer()` call in this state shall return false.
      *
 	 * An `IAudioDecoderControllerListener.onFrameOutput()` callback with `FrameMetadata.endOfStream`
      * must be set to true after all audio frames have been output.
