@@ -22,8 +22,9 @@
 # HAL Feature Profile for audiosink
 audiosink:
   interfaceVersion: current
+
   IAudioSink:
-    - 0:
+    - id: 0
       supportsSecure: true
       supportedContentTypes:
         - UNKNOWN
@@ -31,11 +32,12 @@ audiosink:
         - MUSIC
         - MOVIE
         - SONIFICATION
-    - 1:
+    - id: 1
       supportsSecure: false
       supportedContentTypes:
         - SPEECH
         - MUSIC
+
   platformCapabilities:
     supportsLowLatency: false
     systemMixerSampleRateHz: 48000
