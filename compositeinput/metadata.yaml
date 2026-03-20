@@ -60,6 +60,6 @@ reviewers:
     RTAB_Group: pending
     Architecture: reviewed
     Product_Architecture: reviewed
-    AV_Architecture: pending
-    VTS_Team: pending
+    AV_Architecture: reviewed
+    VTS_Team: recheck
 
