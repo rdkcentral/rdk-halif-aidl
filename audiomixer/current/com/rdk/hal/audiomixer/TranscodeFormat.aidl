@@ -22,7 +22,10 @@ package com.rdk.hal.audiomixer;
  * @brief     Enumerates supported audio output transcode formats.
  * @details   Indicates the possible output audio encoding formats supported by an audio output port
  *            for transcoding or passthrough. Used in capability queries and output configuration.
- * @author    (Add your author list)
+ * @author    Luc Kennedy-Lamb
+ * @author    Peter Stieglitz
+ * @author    Douglas Adler
+ * @author    Gerald Weatherup
  */
 @VintfStability
 @Backing(type="int")

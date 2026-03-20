@@ -161,7 +161,6 @@ interface IAudioMixer {
      *            If a mixer input has no source connected, `AudioSourceType.NONE` is indicated.
      *
      * @returns   Array of audio source to mixer tree input routing configurations.
-     * @exception binder::Status EX_NONE for success.
      * @see       IAudioMixerController.setInputRouting()
      */
     InputRouting[] getInputRouting();

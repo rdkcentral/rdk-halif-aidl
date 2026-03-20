@@ -63,4 +63,4 @@ enum OutputFormat {
 
     /** Output as DTS-HD Master Audio bitstream. */
     DTS_HD = 8
-};
+}

@@ -20,6 +20,7 @@ package com.rdk.hal.audiomixer;
 
 import com.rdk.hal.audiodecoder.Codec;
 import com.rdk.hal.audiomixer.ContentType;
+import com.rdk.hal.audiomixer.State;
 
 /**
  * @brief     Listener interface for asynchronous Audio Mixer events.
@@ -49,11 +50,11 @@ oneway interface IAudioMixerEventListener {
     void onError(in int errorCode, in String message);
 
     /**
-     * @brief     Called when the mixer state changes (e.g., STARTED, STOPPED, FLUSHED).
+     * @brief     Called when the mixer state changes (e.g., READY, STARTED, STOPPING).
      * @param[in] oldState  The previous state.
      * @param[in] newState  The new state.
      */
-    void onStateChanged(in int oldState, in int newState);
+    void onStateChanged(in State oldState, in State newState);
 
     // Add more events as needed, e.g. onResourceAvailable(), onEndOfStream(), etc.
 }

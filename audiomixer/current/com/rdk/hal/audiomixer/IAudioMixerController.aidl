@@ -71,7 +71,7 @@ interface IAudioMixerController {
      * @param[in] property      The property key (from Property enum).
      * @param[in] propertyValue The value to set (PropertyValue union).
      * @returns   true if successfully set, false otherwise.
-     * @see       getProperty()
+     * @see       IAudioMixer.getProperty()
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);
 
@@ -86,7 +86,7 @@ interface IAudioMixerController {
 
     /**
      * @brief     Stops audio mixing for this mixer instance.
-     * @details   The mixer enters the STOPPED state, ceasing output and freeing any buffered resources.
+     * @details   The mixer transitions through STOPPING to READY state, ceasing output and freeing any buffered resources.
      * @exception binder::Status EX_ILLEGAL_STATE if not started.
      * @pre       The mixer must be in STARTED state.
      * @see       start(), flush()

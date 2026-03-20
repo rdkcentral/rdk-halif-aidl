@@ -54,7 +54,7 @@ enum Property {
      *
      * The value must correspond to a named AQ parameter configuration supported
      * by the system. These profiles internally control one or more parameters
-     * defined in {@see AQParameter}, such as DIALOGUE_ENHANCER, BASS_ENHANCER_GAIN,
+     * defined in @see AQParameter, such as DIALOGUE_ENHANCER, BASS_ENHANCER_GAIN,
      * or GRAPHIC_EQUALIZER.
      *
      * Example values: "DIALOGUE_ENHANCER", "GRAPHIC_EQUALIZER", "SURROUND_VIRTUALIZER"
@@ -87,4 +87,4 @@ enum Property {
      * - true: muted
      */
     MUTE = 4
-};
+}

@@ -12,11 +12,7 @@ Multiple mixer instances can exist on a platform, each capable of mixing multipl
     |||
     |-|-|
     |**Interface Definition**|[audio_mixer/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/audiomixer/current)|
-    |**API Documentation**| *TBD* |
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
-    |**Initialization Unit**|[systemd service](../../../vsi/systemd/current/systemd.md)|
-    |**VTS Tests**| TBC |
-    |**Reference Implementation - vComponent**|**TBD**|
 
 ---
 

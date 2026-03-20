@@ -27,7 +27,7 @@ package com.rdk.hal.audiomixer;
  * Each property must be documented with:
  *   - Value type (int, boolean, int[], etc.)
  *   - Access (Read-only, Read-write)
- *   - Writeable in states (READY, ENABLED, etc.)
+ *   - Writeable in states (READY, STARTED, etc.)
  *   - Value semantics (enum, range, etc.)
  *
  * @author   Luc Kennedy-Lamb
@@ -43,7 +43,7 @@ enum OutputPortProperty {
      * Type: int
      * Range: 0..100
      * Access: Read-write.
-     * Writeable in states: ENABLED
+     * Writeable in states: READY, STARTED
      */
     VOLUME = 0,
 
@@ -52,7 +52,7 @@ enum OutputPortProperty {
      * Type: int
      * Range: Implementation-dependent.
      * Access: Read-write.
-     * Writeable in states: ENABLED
+     * Writeable in states: READY, STARTED
      */
     DELAY_MS = 1,
 
@@ -60,7 +60,7 @@ enum OutputPortProperty {
      * Output port mute state.
      * Type: boolean
      * Access: Read-write.
-     * Writeable in states: ENABLED
+     * Writeable in states: READY, STARTED
      */
     MUTE = 2,
 
