@@ -152,7 +152,7 @@ Common when resource is unavailable or not supported.
 ### Cross-Component Communication
 - Audio sources (decoders, HDMI input, app audio) route to mixer inputs via `setInputRouting()`
 - Output ports (HDMI, SPDIF) retrieve mixed audio with format conversion/transcoding
-- State transitions coordinated via `State` enum (UNINITIALIZED → READY → STARTED → STOPPED)
+- State transitions coordinated via `State` enum (CLOSED → OPENING → READY → STARTING → STARTED → FLUSHING/STOPPING → CLOSING → CLOSED)
 
 ## Troubleshooting
 
