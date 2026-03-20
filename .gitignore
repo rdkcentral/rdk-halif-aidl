@@ -38,3 +38,6 @@ build-tools/linux_binder_idl/build-target-cmake
 # Generated presentations
 *.pdf
 !docs/presentations/**/*.pdf
+
+# Claude Code
+.claude/
