@@ -43,7 +43,7 @@ Mixer instances are accessed and controlled via `IAudioMixer`, with additional l
 | HAL.AUDIOMIXER.3 | The mixer shall support querying `Capabilities` via `getCapabilities()`.         |                        |
 | HAL.AUDIOMIXER.4 | The controller shall support `start`, `stop`, `flush`, and `signalEOS`.          |                        |
 | HAL.AUDIOMIXER.5 | Output port properties shall be accessible via `getProperty` and `setProperty`.  |                        |
-| HAL.AUDIOMIXER.6 | Null names returned by `getName()` or in `portName` are allowed but discouraged. | For debugging support. |
+| HAL.AUDIOMIXER.6 | Null values for `Capabilities.name` or `OutputPortCapabilities.portName` are allowed but discouraged. | For debugging support. |
 
 ---
 
@@ -58,7 +58,7 @@ Mixer instances are accessed and controlled via `IAudioMixer`, with additional l
 | IAudioOutputPort.aidl         | Output port control interface                          |
 | IAudioOutputPortListener.aidl | Listener interface for port events                     |
 | Capabilities.aidl             | Supported input types, codecs, secure path flag        |
-| Input.aidl                    | Per-input supported codec and content type definitions |
+| MixerInput.aidl               | Per-input supported codec and content type definitions |
 | OutputPortCapabilities.aidl   | Describes per-port format and property support         |
 | OutputFormat.aidl             | Enumerates output encoding formats                     |
 | TranscodeFormat.aidl          | Enumerates supported transcode formats                 |

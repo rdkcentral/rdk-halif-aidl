@@ -50,5 +50,10 @@ enum AudioSourceType
     /**
      * Composite input audio is connected to the mixer input.
      */
-    COMPOSITE_INPUT = 3
+    COMPOSITE_INPUT = 3,
+
+    /**
+     * Application audio is connected to the mixer input.
+     */
+    APPLICATION_AUDIO = 4
 }

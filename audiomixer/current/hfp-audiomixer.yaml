@@ -33,24 +33,25 @@ audiomixer:
       supportedSourceTypes:
         - AUDIO_SINK
         - HDMI_INPUT
+        - COMPOSITE_INPUT
         - APPLICATION_AUDIO
       inputs:
         - name: main
           supportedContentTypes:
             - STREAM
           supportedCodecs:
-            - AC3
-            - AC3_PLUS
+            - DOLBY_AC3
+            - DOLBY_AC3_PLUS
             - PCM
-            - AAC
+            - AAC_LC
         - name: assoc
           supportedContentTypes:
             - STREAM
           supportedCodecs:
-            - AC3
-            - AC3_PLUS
+            - DOLBY_AC3
+            - DOLBY_AC3_PLUS
             - PCM
-            - AAC
+            - AAC_LC
         - name: pcm1
           supportedContentTypes:
             - STREAM
@@ -74,7 +75,7 @@ audiomixer:
             - STREAM
           supportedCodecs:
             - PCM
-            - AAC
+            - AAC_LC
         - name: aux
           supportedContentTypes:
             - CLIP
@@ -97,7 +98,7 @@ audiomixer:
         - EAC3
         - MAT
       supportedTranscodeFormats:
-        - AC3
+        - DOLBY_AC3
       supportedAQProcessors:
         - UNDEFINED
       supportedAQ:
@@ -114,7 +115,7 @@ audiomixer:
         - PCM
         - AC3
       supportedTranscodeFormats:
-        - AC3
+        - DOLBY_AC3
       supportedAQProcessors:
         - UNDEFINED
       supportedAQ:
