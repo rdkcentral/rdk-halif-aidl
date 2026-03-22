@@ -36,3 +36,4 @@ Makefile
 
 # Generated presentations
 *.pdf
+!docs/presentations/**/*.pdf
