@@ -26,7 +26,6 @@
 package com.rdk.hal.drm;
 import com.rdk.hal.drm.DecryptArgs;
 import com.rdk.hal.drm.DestinationBuffer;
-// import com.rdk.hal.drm.LogMessage; To discuss
 import com.rdk.hal.drm.Mode;
 import com.rdk.hal.drm.Pattern;
 import com.rdk.hal.drm.SharedBuffer;
@@ -51,8 +50,6 @@ For Video decoders the size of the buffer pool can be constrained by setting the
 This can allow for more lower resolution capable decoders and decrypt streams.
 e.g. 1xUHD + 1xFHD or 4xFHD.
 
-
-Log message?
 */
 
 
@@ -102,16 +99,20 @@ interface ICryptoPlugin {
      * Check if the specified mime-type requires a secure decoder
      * component.
      *
+     * Video:	video/avc (H.264), video/hevc (H.265), video/x-vnd.on2.vp9, video/av1, video/mp4v-es
+     * Audio:	audio/mp4a-latm (AAC), audio/ac3, audio/eac3, audio/vnd.dts, audio/opus
+     *
      * @param mime The content mime-type
      * @return must be true only if a secure decoder is required
      * for the specified mime-type
      */
     boolean requiresSecureDecoderComponent(in String mime);
 
-//ToDO: Define supported mime types.
-
     /**
      * Associate a mediadrm session with this crypto session.
+     *
+     * The session (if known) can be passed in at creation, or this call can be used. 
+     * Potentially the sessionID can change if there is a key change.
      *
      * @param sessionId the MediaDrm session ID to associate with
      *     this crypto session
@@ -122,28 +123,6 @@ interface ICryptoPlugin {
      */
     void setMediaDrmSession(in byte[] sessionId);
 
-// TODO: the session can be passed in at creation, or this call can be used. Potentially the sessionID can change if there is a key change.
-
-    /**
-     * Set a shared memory base for subsequent decrypt operations.
-     * The buffer base is mmaped from a ParcelFileDesciptor in Ashmem
-     * which maps shared memory in the HAL module.
-     * After the shared buffer base is established, the decrypt() method
-     * receives SharedBuffer instances which specify the buffer address range
-     * for decrypt source and destination addresses.
-     *
-     * There can be multiple shared buffers per crypto plugin. The buffers
-     * are distinguished by the bufferId.
-     *
-     * @param base the base of the memory buffer abstracted by
-     *     SharedBuffer parcelable (bufferId, size, handle)
-     */
-    void setSharedBufferBase(in SharedBuffer base);
-
-// TODO. We could change the way AVBuffer works to allow the complete buffer to be allocated and the offsets used?
-// Is this a better way? 
-// One alloc. Maybe the gstreamer appsrc issue disappears?
-// It is closer to Android.
 
 
 }

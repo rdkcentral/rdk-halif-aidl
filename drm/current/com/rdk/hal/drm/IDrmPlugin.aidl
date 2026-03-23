@@ -35,18 +35,10 @@ import com.rdk.hal.drm.KeyRequest;
 import com.rdk.hal.drm.KeyStatus;
 import com.rdk.hal.drm.KeyType;
 import com.rdk.hal.drm.KeyValue;
-//import com.rdk.hal.drm.LogMessage; How to log?
 import com.rdk.hal.drm.NumberOfSessions;
-// import com.rdk.hal.drm.OfflineLicenseState; Do we need offline?
 import com.rdk.hal.drm.ProvideProvisionResponseResult;
 import com.rdk.hal.drm.ProvisionRequest;
 import com.rdk.hal.drm.SecurityLevel;
-
-/**
-Todo: 
-OfflineLicenseState?
-LogMessage?
-*/
 
 
 /**
@@ -493,8 +485,6 @@ interface IDrmPlugin {
      */
     void setPropertyByteArray(in String propertyName, in byte[] value);
 
-// TODO: What are the properties?
-
     /**
      * Write a property string value given the property name
      *
@@ -508,8 +498,6 @@ interface IDrmPlugin {
      *         property cannot be set
      */
     void setPropertyString(in String propertyName, in String value);
-
-// TODO: What are the properties?
 
     /**
      * Compute a signature over the provided message using the mac algorithm

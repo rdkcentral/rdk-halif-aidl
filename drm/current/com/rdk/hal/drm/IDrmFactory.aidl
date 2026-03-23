@@ -61,7 +61,8 @@ interface IDrmFactory {
      * @param uuid uniquely identifies the drm scheme. See
      *     http://dashif.org/identifiers/protection for uuid assignments
      *
-     * @param initData scheme-specific init data.
+     * @param initData scheme-specific init data. 
+     *        The initData can (if known) contain the SessionId created by DRMPlugin::openSession(), else NULL.
      *
      * @return A crypto plugin instance if successful, or null if not created.
      */

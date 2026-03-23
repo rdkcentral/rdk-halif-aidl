@@ -43,6 +43,7 @@ parcelable DecryptArgs {
      *
      * This enables the plugin to configure buffer modes to work consistently
      * with a secure decoder.
+     *
      */
     boolean secure;
 
@@ -78,19 +79,13 @@ parcelable DecryptArgs {
     SubSample[] subSamples;
 
     /**
-     * Input buffer for the decryption
+     * Input AVBuffer handle for the encrypted data.
      */
-    SharedBuffer source;
+    in long sourceBufferHandle;
 
     /**
-     * The offset of the first byte of encrypted data from the base of the
-     * source buffer
+     * Output AVBuffer handle for the decrypted data.
      */
-    long offset;
-
-    /**
-     * Output buffer for the decryption
-     */
-    DestinationBuffer destination;
+    in long destinationBufferHandle;
 
 }
