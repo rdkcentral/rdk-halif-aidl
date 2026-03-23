@@ -215,7 +215,7 @@ stateDiagram-v2
 | `signalEOS()` | STARTED → STOPPING → READY | Drains remaining buffered data, then stops |
 | `close()` | READY → CLOSING → CLOSED | Releases the mixer instance |
 
-All state changes are reported via `IAudioMixerEventListener.onStateChanged()`. Methods called in an invalid state return `EX_ILLEGAL_STATE`.
+All state changes are reported via `IAudioMixerEventListener.onStateChanged()`. Methods called in an invalid state throw `EX_ILLEGAL_STATE` via `binder::Status`.
 
 ---
 

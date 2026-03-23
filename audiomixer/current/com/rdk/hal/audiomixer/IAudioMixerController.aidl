@@ -77,10 +77,11 @@ interface IAudioMixerController {
 
     /**
      * @brief     Starts audio mixing for this mixer instance.
-     * @details   The mixer transitions from READY through STARTING to STARTED state
-     *            and begins processing configured audio inputs and outputs.
-     *            State change notifications are delivered via
-     *            IAudioMixerEventListener.onStateChanged().
+     *
+     * The mixer transitions from READY through STARTING to STARTED state
+     * and begins processing configured audio inputs and outputs.
+     * State change notifications are delivered via
+     * IAudioMixerEventListener.onStateChanged().
      * @exception binder::Status EX_ILLEGAL_STATE if already started or not ready.
      * @pre       The mixer must be in READY state.
      * @see       stop(), flush()
@@ -89,10 +90,11 @@ interface IAudioMixerController {
 
     /**
      * @brief     Stops audio mixing for this mixer instance.
-     * @details   The mixer immediately halts all output — no drain, no fade — and
-     *            transitions through STOPPING to READY state, freeing any buffered
-     *            resources. To drain remaining data before stopping, use signalEOS()
-     *            instead.
+     *
+     * The mixer immediately halts all output — no drain, no fade — and
+     * transitions through STOPPING to READY state, freeing any buffered
+     * resources. To drain remaining data before stopping, use signalEOS()
+     * instead.
      * @exception binder::Status EX_ILLEGAL_STATE if not started.
      * @pre       The mixer must be in STARTED state.
      * @see       start(), flush(), signalEOS()
@@ -101,14 +103,15 @@ interface IAudioMixerController {
 
     /**
      * @brief     Flushes the mixer, discarding all buffered input audio data.
-     * @details   When reset is false, the mixer clears input buffers but retains
-     *            routing and property configuration. The mixer transitions through
-     *            FLUSHING and returns to STARTED state.
      *
-     *            When reset is true, the mixer clears input buffers and resets
-     *            internal state. The mixer transitions through FLUSHING to READY state.
+     * When reset is false, the mixer clears input buffers but retains
+     * routing and property configuration. The mixer transitions through
+     * FLUSHING and returns to STARTED state.
      *
-     *            Scope: input buffers only. Output buffers are not affected.
+     * When reset is true, the mixer clears input buffers and resets
+     * internal state. The mixer transitions through FLUSHING to READY state.
+     *
+     * Scope: input buffers only. Output buffers are not affected.
      * @param[in] reset   When true, clears buffers and transitions to READY;
      *                    when false, clears buffers and remains in STARTED.
      * @exception binder::Status EX_ILLEGAL_STATE if not started.
