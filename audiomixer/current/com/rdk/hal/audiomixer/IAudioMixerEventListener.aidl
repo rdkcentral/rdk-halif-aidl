@@ -44,6 +44,11 @@ oneway interface IAudioMixerEventListener {
 
     /**
      * @brief     Called when a runtime error occurs on the mixer instance.
+     *
+     * The primary expected runtime error is buffer underrun, indicating
+     * that the mixer has insufficient input data to produce continuous output.
+     * Timing discontinuities are not reported as errors; they are handled
+     * explicitly via IAudioMixerController.signalDiscontinuity().
      * @param[in] errorCode  An implementation-defined or HAL-standard error code.
      * @param[in] message    Human-readable error message, may be empty.
      */
