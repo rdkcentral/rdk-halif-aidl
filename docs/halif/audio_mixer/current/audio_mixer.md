@@ -63,10 +63,12 @@ Mixer instances are accessed and controlled via `IAudioMixer`, with additional l
 | AQProcessor.aidl              | Supported audio post-processing processor types        |
 | AQParameter.aidl              | Audio quality configuration parameters                 |
 | ContentType.aidl              | Classifies audio input usage (STREAM, CLIP, TTS)       |
-| Codec.aidl                    | Imported from audiodecoder HAL                         |
+| AudioSourceType.aidl          | Audio source types for mixer input routing             |
+| InputRouting.aidl              | Maps audio sources to mixer inputs                     |
 | State.aidl                    | Lifecycle state machine (READY, STARTED, etc.)         |
 | ConnectionState.aidl          | Physical or logical connection status for output ports |
-| MixingMode.aidl               | Enumerates the mixer operating modes.                  |
+| MixingMode.aidl               | Enumerates the mixer operating modes                   |
+| Codec.aidl (imported)         | Imported from audiodecoder HAL (`com.rdk.hal.audiodecoder.Codec`) |
 
 ---
 
@@ -187,19 +189,33 @@ Mixer sessions follow this typical state progression:
 ```mermaid
 stateDiagram-v2
     [*] --> CLOSED
-    CLOSED --> OPENING
+    CLOSED --> OPENING : open()
     OPENING --> READY
-    READY --> STARTING
+    READY --> STARTING : start()
     STARTING --> STARTED
-    STARTED --> FLUSHING : flush()
-    STARTED --> STOPPING : stop()
-    FLUSHING --> STARTED
+    STARTED --> FLUSHING : flush(false)
+    STARTED --> FLUSHING : flush(true)
+    STARTED --> STOPPING : stop() / signalEOS()
+    FLUSHING --> STARTED : reset=false
+    FLUSHING --> READY : reset=true
     STOPPING --> READY
-    READY --> CLOSING
+    READY --> CLOSING : close()
     CLOSING --> CLOSED
 ```
 
-Methods like `start()`, `stop()`, `flush(reset)`, and `signalEOS()` are valid only in specific states. Errors are returned if called out of sequence.
+### State Transition Details
+
+| Trigger | Transition | Description |
+|---|---|---|
+| `open()` | CLOSED → OPENING → READY | Opens a mixer instance for runtime control |
+| `start()` | READY → STARTING → STARTED | Begins audio mixing and output processing |
+| `flush(false)` | STARTED → FLUSHING → STARTED | Clears input buffers, retains config |
+| `flush(true)` | STARTED → FLUSHING → READY | Clears input buffers and resets internal state |
+| `stop()` | STARTED → STOPPING → READY | Immediately halts output — no drain, no fade |
+| `signalEOS()` | STARTED → STOPPING → READY | Drains remaining buffered data, then stops |
+| `close()` | READY → CLOSING → CLOSED | Releases the mixer instance |
+
+All state changes are reported via `IAudioMixerEventListener.onStateChanged()`. Methods called in an invalid state return `EX_ILLEGAL_STATE`.
 
 ---
 
@@ -227,9 +243,103 @@ Declared in the HFP YAML:
 
 ---
 
-## End-of-Stream and Error Handling
+## Start / Stop / Flush Semantics
 
-* `signalEOS()` triggers end-of-stream processing for all inputs.
-* `onError()` provides error propagation.
-* `flush(reset=true)` resets internal state, `flush(false)` discards buffered data only.
-* `signalDiscontinuity()` informs the HAL of PTS jumps or source switches.
+| Method | Behaviour |
+|---|---|
+| `start()` | Transitions READY → STARTING → STARTED. The mixer begins processing inputs and producing output. |
+| `stop()` | Immediately halts all output — no drain, no fade. Transitions STARTED → STOPPING → READY. All input buffers are discarded. |
+| `flush(false)` | Clears input buffers but retains routing and property configuration. Transitions STARTED → FLUSHING → STARTED. Scope: input buffers only. |
+| `flush(true)` | Clears input buffers and resets internal state. Transitions STARTED → FLUSHING → READY. |
+| `signalEOS()` | Drains all remaining buffered input frames through the mixer pipeline, then transitions STARTED → STOPPING → READY. Use this for graceful end-of-stream. |
+| `signalDiscontinuity()` | Notifies the mixer of a PTS break or source switch. No state change occurs. The mixer adjusts its internal timing/sync accordingly. |
+
+---
+
+## Silence Output Behaviour
+
+When the mixer is in STARTED state with no active inputs:
+
+* **Streaming output ports** (e.g., Speakers, SPDIF): the mixer outputs silence to maintain a continuous audio stream.
+* **HDMI output ports**: the mixer should **not** output silence, as continuous silence on HDMI introduces unwanted latency when real audio resumes.
+
+This behaviour is per output port type and is determined by the platform implementation.
+
+---
+
+## Error Handling
+
+Runtime errors are reported via `IAudioMixerEventListener.onError()`.
+
+* **Buffer underrun** is the primary expected runtime error, indicating the mixer has insufficient input data to produce continuous output.
+* Timing discontinuities are **not** reported as errors — they are handled explicitly via `IAudioMixerController.signalDiscontinuity()`.
+* `signalEOS()` triggers graceful end-of-stream processing; the mixer drains buffered data before stopping.
+* Additional error codes may be defined as development progresses.
+
+---
+
+## Single-Playback Control Flow
+
+The sequence diagram below shows a typical single-playback use case: discovering a mixer, opening it, configuring input routing and output ports, running audio, and shutting down.
+
+```mermaid
+sequenceDiagram
+    %% --- RDK Middleware ---
+    box rgb(30,136,229) RDK Middleware
+        participant Client as RDK Client
+        participant EventListener as IAudioMixerEventListener
+        participant PortListener as IAudioOutputPortListener
+    end
+
+    %% --- Audio Mixer Server ---
+    box rgb(249,168,37) Audio Mixer Server
+        participant Manager as IAudioMixerManager
+        participant Mixer as IAudioMixer
+        participant Controller as IAudioMixerController
+        participant Port as IAudioOutputPort
+    end
+
+    Note over Client,Manager: 1. Resource Discovery
+    Client->>Manager: getAudioMixerIds()
+    Manager-->>Client: [MIXER_SYSTEM]
+    Client->>Manager: getAudioMixer(MIXER_SYSTEM)
+    Manager-->>Client: IAudioMixer
+
+    Note over Client,Mixer: 2. Register Listener & Open
+    Client->>Mixer: registerListener(EventListener)
+    Client->>Mixer: open(secure=false, EventListener)
+    Mixer-->>EventListener: onStateChanged(CLOSED → OPENING)
+    Mixer->>Controller: new
+    Mixer-->>EventListener: onStateChanged(OPENING → READY)
+    Mixer-->>Client: IAudioMixerController
+
+    Note over Client,Port: 3. Configure Output Port
+    Client->>Mixer: getAudioOutputPortIds()
+    Mixer-->>Client: [0]
+    Client->>Mixer: getAudioOutputPort(0)
+    Mixer-->>Client: IAudioOutputPort
+    Client->>Port: registerListener(PortListener)
+    Client->>Port: setProperty(VOLUME, 80)
+
+    Note over Client,Controller: 4. Configure Input Routing
+    Client->>Controller: setInputRouting([{AUDIO_SINK, 0}])
+    Controller-->>Client: true
+
+    Note over Client,Controller: 5. Start Mixing
+    Client->>Controller: start()
+    Mixer-->>EventListener: onStateChanged(READY → STARTING)
+    Mixer-->>EventListener: onStateChanged(STARTING → STARTED)
+
+    Note over Client,Controller: 6. Runtime Events
+    Mixer-->>EventListener: onInputCodecChanged(0, AAC, STREAM)
+
+    Note over Client,Controller: 7. Stop and Close
+    Client->>Controller: stop()
+    Mixer-->>EventListener: onStateChanged(STARTED → STOPPING)
+    Mixer-->>EventListener: onStateChanged(STOPPING → READY)
+    Client->>Mixer: close(Controller)
+    Mixer-->>EventListener: onStateChanged(READY → CLOSING)
+    Mixer->>Controller: delete
+    Mixer-->>EventListener: onStateChanged(CLOSING → CLOSED)
+    Client->>Mixer: unregisterListener(EventListener)
+```
