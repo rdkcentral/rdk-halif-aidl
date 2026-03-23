@@ -55,7 +55,7 @@ interface IAudioMixer {
         MIX2 = 2,
         MIX3 = 3,
         MIX4 = 4,
-        MIX5 = 5,
+        MIX5 = 5
     }
 
     /**

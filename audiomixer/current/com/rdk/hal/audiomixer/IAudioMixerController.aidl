@@ -111,7 +111,8 @@ interface IAudioMixerController {
 
     /**
      * @brief     Signals end-of-stream for all active mixer inputs.
-     * @details   After all buffered frames are processed, the mixer transitions to an EOS state.
+     * @details   After all buffered frames are processed, the mixer drains remaining data
+     *            and transitions through STOPPING to READY state.
      * @exception binder::Status EX_ILLEGAL_STATE if not started.
      * @pre       The mixer must be in STARTED state.
      */

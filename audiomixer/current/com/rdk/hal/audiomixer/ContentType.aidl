@@ -33,5 +33,5 @@ enum ContentType {
     UNDEFINED = -1, /**< Undefined or unspecified type. */
     CLIP = 0,       /**< System sounds or short samples. */
     STREAM = 1,     /**< Stream of undefined length (e.g. music, TV). */
-    TTS = 2,        /**< Text-to-speech or voice guidance. */
+    TTS = 2         /**< Text-to-speech or voice guidance. */
 }

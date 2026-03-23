@@ -50,6 +50,6 @@ enum AQParameter {
     AUDIO_OPTIMIZER = 14,         /**< Generic audio post-processing */
     ACTIVE_DOWNMIX = 15,          /**< Downmix multichannel to stereo */
     CENTER_SPREADING = 16,        /**< Center channel spreading */
-    DRC = 17,                     /**< Dynamic Range Compression */
+    DRC = 17                      /**< Dynamic Range Compression */
     // Extend with further AC4/DTS/MS12-specific parameters as needed.
 }

@@ -74,7 +74,7 @@ enum OutputPortProperty {
 
     /**
      * Configured output audio format.
-     * Type: int (AudioOutputFormat enum value)
+     * Type: int (OutputFormat enum value)
      * Access: Read-write.
      * Writeable in states: READY, ENABLED
      */
