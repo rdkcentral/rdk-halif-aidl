@@ -24,6 +24,51 @@
 # NOTE: Use the directory name (lowercase) as the top-level key for consistency with file location
 drm:                  # Component object begins (matches directory name)
     interfaceVersion: current
-    # Supported DRM features will be defined here
-    supportedFeatures:
-      - PLACEHOLDER   # Placeholder - define actual DRM capabilities
+
+    # Maximum security level supported by the platform.
+    # Values from SecurityLevel enum (SecurityLevel.aidl).
+    # Platform tailors this per device; best-case is HW_SECURE_ALL.
+    supportedSecurityLevels:
+      - SW_SECURE_CRYPTO
+      - SW_SECURE_DECODE
+      - HW_SECURE_CRYPTO
+      - HW_SECURE_DECODE
+      - HW_SECURE_ALL
+
+    # Maximum HDCP output protection level supported.
+    # Values from HdcpLevel enum (HdcpLevel.aidl).
+    supportedHdcpLevels:
+      - HDCP_NONE
+      - HDCP_V1
+      - HDCP_V2
+      - HDCP_V2_1
+      - HDCP_V2_2
+      - HDCP_V2_3
+      - HDCP_NO_OUTPUT
+
+    # Supported cipher modes for content decryption.
+    # Values from Mode enum (Mode.aidl).
+    supportedCipherModes:
+      - UNENCRYPTED
+      - AES_CTR
+      - AES_CBC_CTS
+      - AES_CBC
+
+    # Supported key types.
+    # Values from KeyType enum (KeyType.aidl).
+    supportedKeyTypes:
+      - STREAMING
+      - OFFLINE
+      - RELEASE
+
+    # Whether the platform supports a secure decoder component.
+    # Corresponds to ICryptoPlugin.requiresSecureDecoderComponent().
+    supportsSecureDecoder: true
+
+    # Whether the platform supports device provisioning.
+    # Corresponds to IDrmPlugin.getProvisionRequest() / provideProvisionResponse().
+    supportsProvisioning: true
+
+    # Whether the platform supports DRM metrics collection.
+    # Corresponds to IDrmPlugin.getMetrics().
+    supportsMetrics: true

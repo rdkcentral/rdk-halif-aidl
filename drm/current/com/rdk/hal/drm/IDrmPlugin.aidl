@@ -190,18 +190,6 @@ interface IDrmPlugin {
      */
     List<DrmMetricGroup> getMetrics();
 
-
-//We have to make a decission about how sessions are managed.
-// We can use resource manager and the  IDrmManager to manage DRMs.
-// You get one DRM for the DRM Scheme you want and then configure the key session.
-// For each session of the same DRM scheme you repeat and the pool of DRM sessions reduces. 
-//
-// Android does not work that way.
-// You get a IDrmPlugin for a DRM scheme and then open as many keys sessions that you are allowed to with openSession().
-//
-// For Android, to manage the DRM scheme session resources the approach implies that there is a central DRM resource manager that creates sessions.
-// Only one client ever calls IDrmPlugin.  
-
     /**
      * Return the current number of open sessions and the maximum number of
      * sessions that may be opened simultaneously among all DRM instances
@@ -214,7 +202,7 @@ interface IDrmPlugin {
      */
     NumberOfSessions getNumberOfSessions();
 
-/**
+    /**
      * Read a byte array property value given the property name.
      * See getPropertyString.
      *
@@ -318,10 +306,6 @@ interface IDrmPlugin {
      */
     byte[] openSession(in SecurityLevel securityLevel);
 
-//We have a question here as above. Do we only allow one session per DRM scheme DrmController instance. 
-// How to manage the resource?
-// What is best? Do it the Android way everywhere?
-
     /**
      * After a key response is received by the app, it is provided to the
      * Drm plugin using provideKeyResponse.
@@ -403,9 +387,6 @@ interface IDrmPlugin {
      *     ERROR_DRM_SESSION_NOT_OPENED if the session is not opened
      */
     void removeKeys(in byte[] sessionId);
-
-// Question. Do we need offline License support?
-// restoreKeys()? removeOfflineLicense()? etc.
 
     /**
      * Check if the specified mime-type & security level require a secure decoder
