@@ -23,7 +23,7 @@ import com.rdk.hal.audiodecoder.CodecSupport;
 @VintfStability
 /**
  * @brief Describes the overall audio decoder capabilities of the platform.
- * 
+ *
  * This structure aggregates all codec-specific capabilities supported by the audio
  * decoder implementation. It includes version information to track capability schema
  * changes over time.
@@ -41,7 +41,7 @@ parcelable Capabilities {
     CodecSupport[] codecCapabilities;
 
 	/**
-	 * Indicates if this decoder instance can work in secure audio path (SAP) mode. 
+	 * Indicates if this decoder instance can work in secure audio path (SAP) mode.
 	 * If true, secure audio sessions (e.g., for DRM-protected content) are supported.
 	 */
     boolean supportsSecure;

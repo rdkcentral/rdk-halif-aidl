@@ -39,6 +39,7 @@ set(SRC
 	${SRC_DIR}/Capabilities.aidl
 	${SRC_DIR}/ChannelType.aidl
 	${SRC_DIR}/Codec.aidl
+	${SRC_DIR}/CodecSupport.aidl
 	${SRC_DIR}/CSDAudioFormat.aidl
 	${SRC_DIR}/ErrorCode.aidl
 	${SRC_DIR}/FrameMetadata.aidl
@@ -50,8 +51,17 @@ set(SRC
 	${SRC_DIR}/IAudioDecoderManager.aidl
 	${SRC_DIR}/PCMFormat.aidl
 	${SRC_DIR}/PCMMetadata.aidl
+	${SRC_DIR}/Profile.aidl
 	${SRC_DIR}/Property.aidl
 	${SRC_DIR}/State.aidl
+	${SRC_DIR}/profiles/AACProfile.aidl
+	${SRC_DIR}/profiles/AVSProfile.aidl
+	${SRC_DIR}/profiles/DolbyAC3Profile.aidl
+	${SRC_DIR}/profiles/DolbyMATProfile.aidl
+	${SRC_DIR}/profiles/DTSProfile.aidl
+	${SRC_DIR}/profiles/REALAUDIOProfile.aidl
+	${SRC_DIR}/profiles/USACProfile.aidl
+	${SRC_DIR}/profiles/WMAProfile.aidl
 	${COMMON_SRC_DIR}/PropertyValue.aidl
 	${COMMON_SRC_DIR}/AVSource.aidl
 	${COMMON_SRC_DIR}/HALError.aidl

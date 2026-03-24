@@ -30,7 +30,7 @@ package com.rdk.hal.audiodecoder;
 @Backing(type="int")
 /**
  * @brief Enumeration of supported audio codecs.
- * 
+ *
  * ID ranges are used to indicate implementation support expectations:
  * - 0–99:     Mandatory support
  * - 100–199:  Conditionally mandatory (e.g., licensed codecs)

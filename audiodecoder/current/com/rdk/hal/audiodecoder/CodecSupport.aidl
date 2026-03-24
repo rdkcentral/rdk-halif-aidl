@@ -35,7 +35,7 @@ import com.rdk.hal.audiodecoder.Profile;
  * @note Codecs without standardized profiles include: PCM, MP3, MPEG_AUDIO, FLAC, VORBIS,
  * OPUS, ALAC, SBC, REALAUDIO.
  */
-parcelable CodecSupport 
+parcelable CodecSupport
 {
     Codec codec;               /**< The audio codec type (e.g., AAC, FLAC, AC3). */
 
