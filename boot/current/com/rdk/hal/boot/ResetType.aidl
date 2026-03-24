@@ -53,10 +53,11 @@ enum ResetType {
      * BootReason will be reported as WARM_RESET
      * @note From a Primary/Current Image (PCI) perspective there is no visibility that the system
      *       entered disaster recovery mode. Only the DRI itself knows it was force-loaded. After the
-     *       DRI completes recovery and the system returns to normal operation the BootReason will not
+     *       DRI completes recovery and the system returns to normal operation, the BootReason will not
      *       reflect that a forced disaster recovery occurred.
      * @note This reset type may not be supported on all platforms (e.g. platforms without a dedicated
-     *       disaster recovery image). Platform support should be verified before use.
+     *       disaster recovery image). Clients **MUST** verify platform support by checking
+     *       Capabilities.supportedResetTypes before requesting this reset type.
      * @note The precise semantics, sequencing and terminology for this reset type are under review.
      *       A sequence diagram documenting how the system enters, executes and exits disaster recovery
      *       mode should be provided.
