@@ -33,3 +33,8 @@ Makefile
 
 # Compiled aidl output per module
 */gen/
+
+.autotools
+.cproject
+.project
+.settings/
