@@ -1,0 +1,337 @@
+# Jira Ticket Index for HAL Modules
+#
+# Source: https://etwiki.sys.comcast.net/display/RDKAR/Polaris+HAL+High+Level+Plan
+#
+# Fields:
+#   metadata      - Path to local metadata.yaml for this component
+#   feature       - ENT initiative ticket { id, title, status }
+#   hal_spec      - HAL specification CPESP ticket { id, title, status }
+#   mw_review     - MW Review Complete (from Confluence)
+#   mw_teams      - MW reviewer teams (from metadata.yaml reviewers section)
+#   vts_team      - VTS/VL Review CPESP ticket(s) [{ id, title, status }]
+#   vdevice       - vDevice CPESP ticket { id, title, status }
+#
+# MW Teams (middleware review teams in metadata.yaml):
+#   AV_Architecture, Control_Manager_Architecture, Graphics_Architecture
+#
+# Last refreshed: 2026-03-20T23:00Z
+
+# SOC Components
+videodecoder:
+  metadata: videodecoder/metadata.yaml
+  feature: { id: ENT-6676, url: "https://ccp.sys.comcast.net/browse/ENT-6676", title: "RDK-E Video Decoder HAL", status: Ideation }
+  hal_spec: { id: CPESP-3908, url: "https://ccp.sys.comcast.net/browse/CPESP-3908", title: "RDK-E Video Decoder HAL Interface Specification", status: Closed }
+  mw_review: Complete
+  mw_teams: [AV_Architecture]
+  vts_team:
+    - { id: CPESP-9032, url: "https://ccp.sys.comcast.net/browse/CPESP-9032", title: "RDK-E Video Decoder - VTS", status: Closed }
+    - { id: CPESP-8647, url: "https://ccp.sys.comcast.net/browse/CPESP-8647", title: "RDK-E Video Decoder HAL - vDevice", status: Ready to Define }
+  vdevice: { id: CPESP-8649, url: "https://ccp.sys.comcast.net/browse/CPESP-8649", title: "RDK-E Video Decoder HAL - Amlogic", status: Ready to Define }
+
+audiosink:
+  metadata: audiosink/metadata.yaml
+  feature: { id: ENT-8631, url: "https://ccp.sys.comcast.net/browse/ENT-8631", title: "RDK-E Audio Sink HAL", status: Ideation }
+  hal_spec: { id: CPESP-4239, url: "https://ccp.sys.comcast.net/browse/CPESP-4239", title: "RDK-E Audio Sink HAL Interface Specification", status: Closed }
+  mw_review: Complete
+  mw_teams: [AV_Architecture]
+  vts_team:
+    - { id: CPESP-9030, url: "https://ccp.sys.comcast.net/browse/CPESP-9030", title: "RDK-E Audio Sink - VTS", status: Closed }
+    - { id: CPESP-8163, url: "https://ccp.sys.comcast.net/browse/CPESP-8163", title: "RDK-E Audio Sink HAL VTS", status: Closed }
+  vdevice: { id: CPESP-9029, url: "https://ccp.sys.comcast.net/browse/CPESP-9029", title: "RDK-E Audio Sink HAL Implementation - vDevice", status: Ready to Define }
+
+audiodecoder:
+  metadata: audiodecoder/metadata.yaml
+  feature: { id: ENT-8586, url: "https://ccp.sys.comcast.net/browse/ENT-8586", title: "RDK-E Audio Decoder HAL", status: Ideation }
+  hal_spec: { id: CPESP-3794, url: "https://ccp.sys.comcast.net/browse/CPESP-3794", title: "RDK-E Audio Decoder HAL Interface Specification", status: Closed }
+  mw_review: Complete
+  mw_teams: [AV_Architecture]
+  vts_team:
+    - { id: CPESP-9031, url: "https://ccp.sys.comcast.net/browse/CPESP-9031", title: "RDK-E Audio Decoder - VTS", status: Closed }
+    - { id: CPESP-8161, url: "https://ccp.sys.comcast.net/browse/CPESP-8161", title: "RDK-E Audio Decoder HAL VTS", status: Closed }
+  vdevice: { id: CPESP-8651, url: "https://ccp.sys.comcast.net/browse/CPESP-8651", title: "RDK-E Audio Decoder HAL - vDevice", status: Ready to Define }
+
+videosink:
+  metadata: videosink/metadata.yaml
+  feature: { id: ENT-8630, url: "https://ccp.sys.comcast.net/browse/ENT-8630", title: "RDK-E Video Sink HAL", status: Ideation }
+  hal_spec: { id: CPESP-3811, url: "https://ccp.sys.comcast.net/browse/CPESP-3811", title: "RDK-E Plane Control (Video Sink) HAL Interface Specification", status: Closed }
+  mw_review: Complete
+  mw_teams: [AV_Architecture]
+  vts_team:
+    - { id: CPESP-8162, url: "https://ccp.sys.comcast.net/browse/CPESP-8162", title: "RDK-E Video Sink HAL VTS", status: Closed }
+    - { id: CPESP-9033, url: "https://ccp.sys.comcast.net/browse/CPESP-9033", title: "RDK-E Video Sink - VTS", status: Closed }
+  vdevice: { id: CPESP-9023, url: "https://ccp.sys.comcast.net/browse/CPESP-9023", title: "RDK-E Video Sink HAL Implementation - vDevice", status: Ready to Define }
+
+avclock:
+  metadata: avclock/metadata.yaml
+  feature: { id: ENT-8632, url: "https://ccp.sys.comcast.net/browse/ENT-8632", title: "RDK-E AV Clock HAL", status: Ideation }
+  hal_spec: { id: CPESP-4237, url: "https://ccp.sys.comcast.net/browse/CPESP-4237", title: "RDK-E AV Clock HAL Interface Specification", status: Closed }
+  mw_review: Complete
+  mw_teams: [AV_Architecture]
+  vts_team:
+    - { id: CPESP-9034, url: "https://ccp.sys.comcast.net/browse/CPESP-9034", title: "RDK-E AVClock - VTS", status: Closed }
+    - { id: CPESP-8645, url: "https://ccp.sys.comcast.net/browse/CPESP-8645", title: "RDK-E AV Clock HAL VTS", status: Closed }
+  vdevice: ~
+
+avbuffer:
+  metadata: avbuffer/metadata.yaml
+  feature: { id: ENT-8633, url: "https://ccp.sys.comcast.net/browse/ENT-8633", title: "RDK-E AV Buffer HAL", status: Ideation }
+  hal_spec: { id: CPESP-4235, url: "https://ccp.sys.comcast.net/browse/CPESP-4235", title: "RDK-E AV Buffer HAL Interface Specification", status: Closed }
+  mw_review: Complete
+  mw_teams: [AV_Architecture]
+  vts_team:
+    - { id: CPESP-8644, url: "https://ccp.sys.comcast.net/browse/CPESP-8644", title: "RDK-E AV Buffer HAL VTS", status: Closed }
+    - { id: CPESP-9035, url: "https://ccp.sys.comcast.net/browse/CPESP-9035", title: "RDK-E AV Buffer - VTS", status: Closed }
+  vdevice: ~
+
+audiomixer:
+  metadata: audiomixer/metadata.yaml
+  feature: { id: ENT-8634, url: "https://ccp.sys.comcast.net/browse/ENT-8634", title: "RDK-E Audio Mixer HAL", status: Ideation }
+  hal_spec: { id: CPESP-4474, url: "https://ccp.sys.comcast.net/browse/CPESP-4474", title: "RDK-E Audio Mixer HAL Interface Specification", status: In Progress }
+  mw_review: Complete
+  mw_teams: [AV_Architecture]
+  vts_team:
+    - { id: CPESP-8646, url: "https://ccp.sys.comcast.net/browse/CPESP-8646", title: "RDK-E Audio Mixer HAL VTS", status: Closed }
+  vdevice: { id: CPESP-5195, url: "https://ccp.sys.comcast.net/browse/CPESP-5195", title: "RDK-E Audio Mixer HAL - vDevice", status: Ready to Define }
+
+planecontrol:
+  metadata: planecontrol/metadata.yaml
+  feature: { id: ENT-8635, url: "https://ccp.sys.comcast.net/browse/ENT-8635", title: "RDK-E Plane Control HAL", status: Ideation }
+  hal_spec: { id: CPESP-3811, url: "https://ccp.sys.comcast.net/browse/CPESP-3811", title: "RDK-E Plane Control (Video Sink) HAL Interface Specification", status: Closed }
+  mw_review: Complete
+  mw_teams: [AV_Architecture, Graphics_Architecture]
+  vts_team:
+    - { id: CPESP-9036, url: "https://ccp.sys.comcast.net/browse/CPESP-9036", title: "RDK-E Plane Control - VTS", status: Ready to Define }
+  vdevice: ~
+
+hdmicec:
+  metadata: hdmicec/metadata.yaml
+  feature: { id: ENT-6677, url: "https://ccp.sys.comcast.net/browse/ENT-6677", title: "RDK-E HDMI CEC HAL", status: Ideation }
+  hal_spec: { id: CPESP-4473, url: "https://ccp.sys.comcast.net/browse/CPESP-4473", title: "RDK-E HDMI-CEC HAL Interface Specification", status: Released }
+  mw_review: Complete
+  mw_teams: [AV_Architecture]
+  vts_team:
+    - { id: CPESP-5391, url: "https://ccp.sys.comcast.net/browse/CPESP-5391", title: "RDK-E HDMI-CEC HAL VTS", status: Released }
+  vdevice: { id: CPESP-5493, url: "https://ccp.sys.comcast.net/browse/CPESP-5493", title: "RDK-E HDMI-CEC HAL - vDevice", status: Ready to Define }
+
+hdmiinput:
+  metadata: hdmiinput/metadata.yaml
+  feature: { id: ENT-8636, url: "https://ccp.sys.comcast.net/browse/ENT-8636", title: "RDK-E HDMI Input HAL", status: Ideation }
+  hal_spec: { id: CPESP-4573, url: "https://ccp.sys.comcast.net/browse/CPESP-4573", title: "RDK-E HDMI Input HAL Interface Specification", status: Released }
+  mw_review: Complete
+  mw_teams: [AV_Architecture]
+  vts_team:
+    - { id: CPESP-5398, url: "https://ccp.sys.comcast.net/browse/CPESP-5398", title: "RDK-E HDMI Input HAL VTS", status: In Progress }
+  vdevice: { id: CPESP-5488, url: "https://ccp.sys.comcast.net/browse/CPESP-5488", title: "RDK-E HDMI Input HAL - vDevice", status: Ready to Define }
+
+hdmioutput:
+  metadata: hdmioutput/metadata.yaml
+  feature: { id: ENT-8640, url: "https://ccp.sys.comcast.net/browse/ENT-8640", title: "RDK-E HDMI Output HAL", status: Ideation }
+  hal_spec: { id: CPESP-4574, url: "https://ccp.sys.comcast.net/browse/CPESP-4574", title: "RDK-E HDMI Output HAL Interface Specification", status: Released }
+  mw_review: Complete
+  mw_teams: [AV_Architecture]
+  vts_team:
+    - { id: CPESP-5397, url: "https://ccp.sys.comcast.net/browse/CPESP-5397", title: "RDK-E HDMI Output HAL VTS", status: In Progress }
+  vdevice: { id: CPESP-5489, url: "https://ccp.sys.comcast.net/browse/CPESP-5489", title: "RDK-E HDMI Output HAL - vDevice", status: Ready to Define }
+
+# OEM Components
+compositeinput:
+  metadata: compositeinput/metadata.yaml
+  feature: { id: ENT-8641, url: "https://ccp.sys.comcast.net/browse/ENT-8641", title: "RDK-E Composite Input HAL", status: Ideation }
+  hal_spec: { id: CPESP-4575, url: "https://ccp.sys.comcast.net/browse/CPESP-4575", title: "RDK-E Composite Input HAL Interface Specification", status: Closed }
+  mw_review: Complete
+  mw_teams: [AV_Architecture]
+  vts_team:
+    - { id: CPESP-5396, url: "https://ccp.sys.comcast.net/browse/CPESP-5396", title: "RDK-E Composite Input HAL VTS", status: Ready to Define }
+  vdevice: { id: CPESP-5490, url: "https://ccp.sys.comcast.net/browse/CPESP-5490", title: "RDK-E Composite Input HAL - vDevice", status: Ready to Define }
+
+indicator:
+  metadata: indicator/metadata.yaml
+  feature: { id: ENT-8643, url: "https://ccp.sys.comcast.net/browse/ENT-8643", title: "RDK-E Indicator HAL", status: Ideation }
+  hal_spec: { id: CPESP-4572, url: "https://ccp.sys.comcast.net/browse/CPESP-4572", title: "RDK-E Indicator HAL Interface Specification", status: Released }
+  mw_review: Complete
+  mw_teams: [Graphics_Architecture]
+  vts_team:
+    - { id: CPESP-5405, url: "https://ccp.sys.comcast.net/browse/CPESP-5405", title: "RDK-E Indicator HAL VTS", status: In Progress }
+  vdevice: { id: CPESP-5467, url: "https://ccp.sys.comcast.net/browse/CPESP-5467", title: "RDK-E Indicator HAL - vDevice", status: Ready to Define }
+
+panel:
+  metadata: panel/metadata.yaml
+  feature: { id: ENT-8642, url: "https://ccp.sys.comcast.net/browse/ENT-8642", title: "RDK-E Panel HAL", status: Ideation }
+  hal_spec: { id: CPESP-5614, url: "https://ccp.sys.comcast.net/browse/CPESP-5614", title: "RDK-E Panel HAL Interface Specification", status: In Progress }
+  mw_review: Complete
+  mw_teams: [Graphics_Architecture]
+  vts_team:
+    - { id: CPESP-4569, url: "https://ccp.sys.comcast.net/browse/CPESP-4569", title: "RDK-E Panel HAL VTS", status: In Progress }
+  vdevice: { id: CPESP-5466, url: "https://ccp.sys.comcast.net/browse/CPESP-5466", title: "RDK-E Panel HAL - vDevice", status: Ready to Define }
+
+sensor:
+  metadata: sensor/metadata.yaml
+  feature: { id: ENT-8650, url: "https://ccp.sys.comcast.net/browse/ENT-8650", title: "RDK-E Sensor HAL", status: Ideation }
+  hal_spec: { id: CPESP-4577, url: "https://ccp.sys.comcast.net/browse/CPESP-4577", title: "RDK-E Sensor HAL Interface Specification", status: In Progress }
+  mw_review: Complete
+  mw_teams: ~
+  vts_team:
+    - { id: CPESP-5403, url: "https://ccp.sys.comcast.net/browse/CPESP-5403", title: "RDK-E Sensor HAL VTS", status: Ready to Define }
+  vdevice: { id: CPESP-5469, url: "https://ccp.sys.comcast.net/browse/CPESP-5469", title: "RDK-E Sensor HAL - vDevice", status: Ready to Define }
+
+deviceinfo:
+  metadata: deviceinfo/metadata.yaml
+  feature: { id: ENT-8652, url: "https://ccp.sys.comcast.net/browse/ENT-8652", title: "RDK-E DeviceInfo HAL", status: Ideation }
+  hal_spec: { id: CPESP-4571, url: "https://ccp.sys.comcast.net/browse/CPESP-4571", title: "RDK-E DeviceInfo HAL Interface Specification", status: Released }
+  mw_review: Complete
+  mw_teams: ~
+  vts_team:
+    - { id: CPESP-5399, url: "https://ccp.sys.comcast.net/browse/CPESP-5399", title: "RDK-E DeviceInfo HAL VTS", status: In Progress }
+  vdevice: { id: CPESP-5487, url: "https://ccp.sys.comcast.net/browse/CPESP-5487", title: "RDK-E DeviceInfo HAL - vDevice", status: Ready to Define }
+
+deepsleep:
+  metadata: deepsleep/metadata.yaml
+  feature: { id: ENT-8655, url: "https://ccp.sys.comcast.net/browse/ENT-8655", title: "RDK-E DeepSleep HAL", status: Ideation }
+  hal_spec: { id: CPESP-4395, url: "https://ccp.sys.comcast.net/browse/CPESP-4395", title: "RDK-E DeepSleep HAL Interface Specification", status: In Progress }
+  mw_review: Complete
+  mw_teams: ~
+  vts_team:
+    - { id: CPESP-5394, url: "https://ccp.sys.comcast.net/browse/CPESP-5394", title: "RDK-E DeepSleep HAL VTS", status: In Progress }
+  vdevice: { id: CPESP-5492, url: "https://ccp.sys.comcast.net/browse/CPESP-5492", title: "RDK-E DeepSleep HAL - vDevice", status: Ready to Define }
+
+boot:
+  metadata: boot/metadata.yaml
+  feature: { id: ENT-8657, url: "https://ccp.sys.comcast.net/browse/ENT-8657", title: "RDK-E Boot HAL", status: Ideation }
+  hal_spec: { id: CPESP-4580, url: "https://ccp.sys.comcast.net/browse/CPESP-4580", title: "RDK-E Boot HAL Interface Specification", status: Ready to Define }
+  mw_review: Complete
+  mw_teams: ~
+  vts_team:
+    - { id: CPESP-5393, url: "https://ccp.sys.comcast.net/browse/CPESP-5393", title: "RDK-E Boot HAL VTS", status: In Progress }
+  vdevice: { id: CPESP-9199, url: "https://ccp.sys.comcast.net/browse/CPESP-9199", title: "RDK-E Boot HAL - vDevice", status: New }
+
+broadcast:
+  metadata: broadcast/metadata.yaml
+  feature: { id: ENT-8656, url: "https://ccp.sys.comcast.net/browse/ENT-8656", title: "RDK-E Broadcast HAL", status: Ideation }
+  hal_spec: { id: CPESP-3483, url: "https://ccp.sys.comcast.net/browse/CPESP-3483", title: "RDK-E Broadcast AIDL HALs Interface Specification", status: In Progress }
+  mw_review: Complete
+  mw_teams: ~
+  vts_team: ~
+  vdevice: ~
+
+flash:
+  metadata: flash/metadata.yaml
+  feature: { id: ENT-8658, url: "https://ccp.sys.comcast.net/browse/ENT-8658", title: "RDK-E Flash HAL", status: Ideation }
+  hal_spec: ~
+  mw_review: ~
+  mw_teams: ~
+  vts_team: ~
+  vdevice: ~
+
+cdm:
+  metadata: cdm/metadata.yaml
+  feature: { id: ENT-8653, url: "https://ccp.sys.comcast.net/browse/ENT-8653", title: "RDK-E DRM HAL", status: Ideation }
+  hal_spec: ~
+  mw_review: ~
+  mw_teams: [AV_Architecture]
+  vts_team: ~
+  vdevice: ~
+
+ffv:
+  metadata: ffv/metadata.yaml
+  feature: { id: ENT-8662, url: "https://ccp.sys.comcast.net/browse/ENT-8662", title: "RDK-E FFV HAL", status: Ideation }
+  hal_spec: { id: CPESP-4570, url: "https://ccp.sys.comcast.net/browse/CPESP-4570", title: "RDK-E FFV HAL Interface Specification", status: In Progress }
+  mw_review: ~
+  mw_teams: [AV_Architecture]
+  vts_team:
+    - { id: CPESP-5408, url: "https://ccp.sys.comcast.net/browse/CPESP-5408", title: "RDK-E FFV HAL VTS", status: Ready to Define }
+  vdevice: ~
+
+r4ce:
+  metadata: r4ce/metadata.yaml
+  feature: { id: ENT-8645, url: "https://ccp.sys.comcast.net/browse/ENT-8645", title: "RDK-E RF4CE", status: Ideation }
+  hal_spec: { id: CPESP-9194, url: "https://ccp.sys.comcast.net/browse/CPESP-9194", title: "RF4CE Interface Specification", status: New }
+  mw_review: ~
+  mw_teams: [Control_Manager_Architecture]
+  vts_team:
+    - { id: CPESP-9197, url: "https://ccp.sys.comcast.net/browse/CPESP-9197", title: "RDK-E RF4CE VTS", status: New }
+  vdevice: { id: CPESP-9195, url: "https://ccp.sys.comcast.net/browse/CPESP-9195", title: "RDK-E RF4CE - vDevice", status: New }
+
+# VSI Components
+vsi/kernel:
+  metadata: vsi/kernel/metadata.yaml
+  feature: { id: ENT-8654, url: "https://ccp.sys.comcast.net/browse/ENT-8654", title: "RDK-E Kernel", status: Ideation }
+  hal_spec: { id: CPESP-3478, url: "https://ccp.sys.comcast.net/browse/CPESP-3478", title: "RDK-E Kernel", status: Ready to Define }
+  mw_review: Complete
+  mw_teams: ~
+  vts_team: ~
+  vdevice: ~
+
+vsi/bluetooth:
+  metadata: vsi/bluetooth/metadata.yaml
+  feature: { id: ENT-8660, url: "https://ccp.sys.comcast.net/browse/ENT-8660", title: "RDK-E Bluetooth HAL", status: Ideation }
+  hal_spec: { id: CPESP-4379, url: "https://ccp.sys.comcast.net/browse/CPESP-4379", title: "RDK-E Bluetooth HAL Interface Specification", status: In Progress }
+  mw_review: Complete
+  mw_teams: ~
+  vts_team:
+    - { id: CPESP-5392, url: "https://ccp.sys.comcast.net/browse/CPESP-5392", title: "RDK-E Bluetooth HAL VTS", status: Ready to Define }
+  vdevice: { id: CPESP-5494, url: "https://ccp.sys.comcast.net/browse/CPESP-5494", title: "RDK-E Bluetooth HAL - vDevice", status: Ready to Define }
+
+vsi/wifi:
+  metadata: vsi/wifi/metadata.yaml
+  feature: { id: ENT-8661, url: "https://ccp.sys.comcast.net/browse/ENT-8661", title: "RDK-E WPA Supplicant HAL", status: Ideation }
+  hal_spec: { id: CPESP-3482, url: "https://ccp.sys.comcast.net/browse/CPESP-3482", title: "RDK-E WPA Supplicant HAL Interface Specification", status: In Progress }
+  mw_review: Complete
+  mw_teams: ~
+  vts_team:
+    - { id: CPESP-5395, url: "https://ccp.sys.comcast.net/browse/CPESP-5395", title: "RDK-E WPA Supplicant HAL VTS", status: Ready for Work }
+  vdevice: { id: CPESP-5491, url: "https://ccp.sys.comcast.net/browse/CPESP-5491", title: "RDK-E WPA Supplicant HAL - vDevice", status: Ready to Define }
+
+vsi/graphics:
+  metadata: vsi/graphics/metadata.yaml
+  feature: { id: ENT-8659, url: "https://ccp.sys.comcast.net/browse/ENT-8659", title: "RDK-E Graphics Libraries", status: Ideation }
+  hal_spec: ~
+  mw_review: ~
+  mw_teams: [Graphics_Architecture]
+  vts_team: ~
+  vdevice: ~
+
+vsi/linuxinput:
+  metadata: vsi/linuxinput/metadata.yaml
+  feature: { id: ENT-8644, url: "https://ccp.sys.comcast.net/browse/ENT-8644", title: "RDK-E Linux Input Interface", status: Ideation }
+  hal_spec: { id: CPESP-4380, url: "https://ccp.sys.comcast.net/browse/CPESP-4380", title: "Linux Input Interface Specification", status: Analyzing }
+  mw_review: Complete
+  mw_teams: ~
+  vts_team:
+    - { id: CPESP-5400, url: "https://ccp.sys.comcast.net/browse/CPESP-5400", title: "RDK-E Linux Input Interface VTS", status: Closed }
+  vdevice: { id: CPESP-5486, url: "https://ccp.sys.comcast.net/browse/CPESP-5486", title: "RDK-E Linux Input Interface - vDevice", status: Ready to Define }
+
+vsi/abstractfilesystem:
+  metadata: vsi/abstractfilesystem/metadata.yaml
+  feature: { id: ENT-8664, url: "https://ccp.sys.comcast.net/browse/ENT-8664", title: "RDK-E Abstract File System", status: Ideation }
+  hal_spec: ~
+  mw_review: ~
+  mw_teams: ~
+  vts_team: ~
+  vdevice: ~
+
+vsi/filesystem:
+  metadata: vsi/filesystem/metadata.yaml
+  feature: { id: ENT-8663, url: "https://ccp.sys.comcast.net/browse/ENT-8663", title: "RDK-E File System", status: Ideation }
+  hal_spec: ~
+  mw_review: ~
+  mw_teams: ~
+  vts_team: ~
+  vdevice: ~
+
+vsi/crypto:
+  metadata: vsi/crypto/metadata.yaml
+  feature: { id: ENT-8666, url: "https://ccp.sys.comcast.net/browse/ENT-8666", title: "RDK-E Crypto", status: Ideation }
+  hal_spec: ~
+  mw_review: ~
+  mw_teams: ~
+  vts_team: ~
+  vdevice: ~
+
+vsi/keyvault:
+  metadata: vsi/keyvault/metadata.yaml
+  feature: { id: ENT-8665, url: "https://ccp.sys.comcast.net/browse/ENT-8665", title: "RDK-E Key Vault", status: Ideation }
+  hal_spec: ~
+  mw_review: ~
+  mw_teams: ~
+  vts_team: ~
+  vdevice: ~

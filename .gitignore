@@ -33,3 +33,9 @@ Makefile
 
 # Compiled aidl output per module
 */gen/
+
+# IDE / Editor
+*.code-workspace
+
+# Claude Code
+.claude/

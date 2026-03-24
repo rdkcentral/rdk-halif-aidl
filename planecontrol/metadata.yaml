@@ -61,9 +61,9 @@ notes:
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
     RTAB_Group: pending
-    Architecture: pending
-    Product_Architecture: pending
-    AV_Architecture: pending
-    Graphics_Architecture: pending
-    VTS_Team: pending
+    Architecture: reviewed
+    Product_Architecture: reviewed
+    AV_Architecture: reviewed
+    Graphics_Architecture: reviewed
+    VTS_Team: recheck
 
