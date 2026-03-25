@@ -2,6 +2,8 @@
 
 ## Overview
 
+TODO: Credit Android 16, state motivation, link to Android documentation, state differences
+
 The DRM (Digital Rights Management) HAL provides a platform-independent interface for managing content protection and secure media playback. It allows middleware and media services to interact with vendor-specific DRM implementations whilst maintaining a consistent interface across diverse hardware platforms. This abstraction enables secure content delivery, licence management, and cryptographic operations for protected media streams.
 
 ---
