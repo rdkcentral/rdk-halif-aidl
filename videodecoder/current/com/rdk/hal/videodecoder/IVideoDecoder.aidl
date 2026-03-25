@@ -134,6 +134,8 @@ interface IVideoDecoder
      * If the client that opened the `IVideoDecoderController` crashes,
      * then the `IVideoDecoderController` has `stop()` and `close()` implicitly called to perform clean up.
      *
+     * The decode will be opened expecting frames with a resolution up to a maximum as specified 'CodecCapabilities'. 
+     *
      * @param[in] codec                             The codec to configure the Video Decoder for.
      * @param[in] secure                            The Video Decoder secure mode.
      * @param[in] videoDecoderControllerListener    Listener object for controller callbacks.
@@ -150,6 +152,45 @@ interface IVideoDecoder
      * @see IVideoDecoderController, IVideoDecoderController.close(), registerEventListener()
      */
     @nullable IVideoDecoderController open(in Codec codec, in boolean secure, in IVideoDecoderControllerListener videoDecoderControllerListener);
+
+    /**
+	 * Opens the Video Decoder to decode the specified codec with a specified maximum resolution.
+     * 
+     * If successful the Video Decoder transitions to an `OPENING` state and then a `READY` state
+     * which is notified to any registered `IVideoDecoderEventListener` interfaces.
+     * 
+     * Controller related callbacks are made through the `IVideoDecoderControllerListener`
+     * passed into the call.
+     * 
+     * The returned `IVideoDecoderController` interface is used by the client to feed data buffers
+     * for decode and manage the decoding flow.
+     *
+     * If the client that opened the `IVideoDecoderController` crashes,
+     * then the `IVideoDecoderController` has `stop()` and `close()` implicitly called to perform clean up.
+     *
+     * The decode will be opened expecting frames up to a maximum of 'maxHeight' and 'maxWidth'. 
+     * If 'maxHeight' and 'maxWidth' exceed that specified in the 'CodecCapabilities' then binder::Status::Exception::EX_ILLEGAL_ARGUMENT
+     * will be returned.
+     *
+     * @param[in] codec                             The codec to configure the Video Decoder for.
+     * @param[in] secure                            The Video Decoder secure mode.
+     * @param[in] videoDecoderControllerListener    Listener object for controller callbacks.
+     * @param[in] maxHeight                         maximum height of the decoded frame.
+     * @param[in] maxWidth                          maximum height of the decoded frame.
+     *
+     * @returns IVideoDecoderController or null if the codec or the requested secure mode is not supported.
+     * 
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     * 
+     * @pre The resource must be in State::CLOSED.
+     * 
+     * @see IVideoDecoderController, IVideoDecoderController.close(), registerEventListener()
+     */
+    @nullable IVideoDecoderController openWithResolution(in Codec codec, in boolean secure, in IVideoDecoderControllerListener videoDecoderControllerListener, in int maxHeight, in int maxWidth);
+
 
     /**
      * Closes the Video Decoder.
