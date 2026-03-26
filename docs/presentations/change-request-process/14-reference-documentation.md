@@ -5,7 +5,7 @@
 | Document                 | Location                                               |
 |--------------------------|--------------------------------------------------------|
 | Versioning SOP           | `docs/governance/versioning-sop.md`                    |
-| Release Documentation    | `docs/governance/rdk-release-documenation-structure.md` |
+| Release Documentation    | `docs/governance/rdk-release-documentation-structure.md` |
 | Contributing Guidelines  | `CONTRIBUTING.md`                                      |
 
 ## Published Documentation & Controls
