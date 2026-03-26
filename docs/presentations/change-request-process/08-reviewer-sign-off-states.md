@@ -12,3 +12,5 @@ Each reviewer records a formal status against the PR:
 | **Abstained**        | ➖     | Not applicable for this component          |
 
 **All mandatory reviewers must reach "Reviewed" or "Abstained" before merge.**
+
+See live sign-off status per component: [Component Review Status](https://rdkcentral.github.io/rdk-halif-aidl/)

@@ -9,3 +9,5 @@ After successful review, the component progresses through a **RAG status lifecyc
 | 🟢     | **GREEN - Approved**    | All reviewers signed off, ready for implementation|
 
 ### Current Status: **13 GREEN** | **16 AMBER** | **3 RED** (32 total)
+
+See live RAG status: [Component RAG Dashboard](https://rdkcentral.github.io/rdk-halif-aidl/)
