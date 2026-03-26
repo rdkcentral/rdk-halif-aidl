@@ -33,3 +33,7 @@ Makefile
 
 # Compiled aidl output per module
 */gen/
+
+# Generated presentations
+*.pdf
+!docs/presentations/**/*.pdf

@@ -3,9 +3,6 @@ name: Update RAG Status Report
 on:
   push:
     branches: [develop]
-    paths:
-      - "**/metadata.yaml"
-      - "scripts/generate_rag_report.sh"
 
 permissions:
   contents: write
