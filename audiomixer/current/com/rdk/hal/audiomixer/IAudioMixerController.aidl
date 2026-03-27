@@ -77,11 +77,7 @@ interface IAudioMixerController {
 
     /**
      * @brief     Starts audio mixing for this mixer instance.
-     *
-     * The mixer transitions from READY through STARTING to STARTED state
-     * and begins processing configured audio inputs and outputs.
-     * State change notifications are delivered via
-     * IAudioMixerEventListener.onStateChanged().
+     * @details   The mixer transitions to the STARTED state and processes configured audio inputs and outputs.
      * @exception binder::Status EX_ILLEGAL_STATE if already started or not ready.
      * @pre       The mixer must be in READY state.
      * @see       stop(), flush()
@@ -90,30 +86,16 @@ interface IAudioMixerController {
 
     /**
      * @brief     Stops audio mixing for this mixer instance.
-     *
-     * The mixer immediately halts all output — no drain, no fade — and
-     * transitions through STOPPING to READY state, freeing any buffered
-     * resources. To drain remaining data before stopping, use signalEOS()
-     * instead.
+     * @details   The mixer transitions through STOPPING to READY state, ceasing output and freeing any buffered resources.
      * @exception binder::Status EX_ILLEGAL_STATE if not started.
      * @pre       The mixer must be in STARTED state.
-     * @see       start(), flush(), signalEOS()
+     * @see       start(), flush()
      */
     void stop();
 
     /**
-     * @brief     Flushes the mixer, discarding all buffered input audio data.
-     *
-     * When reset is false, the mixer clears input buffers but retains
-     * routing and property configuration. The mixer transitions through
-     * FLUSHING and returns to STARTED state.
-     *
-     * When reset is true, the mixer clears input buffers and resets
-     * internal state. The mixer transitions through FLUSHING to READY state.
-     *
-     * Scope: input buffers only. Output buffers are not affected.
-     * @param[in] reset   When true, clears buffers and transitions to READY;
-     *                    when false, clears buffers and remains in STARTED.
+     * @brief     Flushes the mixer, discarding all buffered audio data.
+     * @param[in] reset   When true, resets internal state to READY; when false, retains configuration but flushes data.
      * @exception binder::Status EX_ILLEGAL_STATE if not started.
      * @pre       The mixer must be in STARTED state.
      */
