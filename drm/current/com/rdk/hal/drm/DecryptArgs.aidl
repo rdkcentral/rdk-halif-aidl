@@ -80,6 +80,8 @@ parcelable DecryptArgs {
 
     /**
      * Input AVBuffer handle for the encrypted data.
+     * 
+     * It is the responsibility of the caller to recycle/free the allocated AVBuffer after the call to decrypt returns.
      */
     in long sourceBufferHandle;
 

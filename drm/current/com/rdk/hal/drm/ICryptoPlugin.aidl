@@ -44,7 +44,11 @@ interface ICryptoPlugin {
     /**
      * Decrypt an array of subsamples from the source memory buffer to the
      * destination memory buffer.
-     *
+     * 
+     * Decrypt is a synchronous call.
+     * After decryption the source AVBuffer must be recycled/freed by the caller.
+     * This approach is the same as Android and is unlike other RDK-E AIDL HALs where the HAL component consumes and frees buffers.
+     * 
      * @return number of decrypted bytes
      *     Implicit error codes:
      *       + ERROR_DRM_CANNOT_HANDLE in other failure cases
