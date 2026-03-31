@@ -14,7 +14,7 @@ In principle the same Android VTS approach can be applied early in SoC bring up.
 The significant differences: 
 - AVBuffer for the input and output buffers.
 - No support for legacy "secure stop"
-- No support required for "offline keys"
+- No support required for "offline keys" - REQUIREMENT UNDER REVIEW 
 
 ---
 
