@@ -11,7 +11,10 @@ The approach is to minimize SoC vendor (and Drm vendor) effor by using a model t
 See: https://source.android.com/docs/core/media/drm#drm-plugin-details
 In principle the same Android VTS approach can be applied early in SoC bring up.
 
-The only significant difference is the use of AVBuffer for the input and output buffers.
+The significant differences: 
+- AVBuffer for the input and output buffers.
+- No support for legacy "secure stop"
+- No support required for "offline keys"
 
 ---
 
@@ -246,6 +249,14 @@ Runtime capability information is obtained via:
 - `IDrmPlugin.getPropertyString("vendor")` / `"version"` / `"description"` — scheme metadata.
 
 ---
+
+## Decryption Buffer Life Cycle
+
+There is a departure from the RDK AIDL model where the consuming component releases `AVBuffers` back to the `Pool`. The `ICryptoPlugin::decrypt` function is blocking for the decryption. On return, the input `AVBuffer` must  be released/recycled by the calling component. Similarly the output `AVBuffer` is passed to the decoder for the decoding. 
+
+- **Non-secure Input and Output**: No restrictrions apply (under review). 
+
+- **Secure Output**: For secure `AVBuffers` the pool must be created after the consuming secure Decoder has been initialized.
 
 ## Security Considerations
 
