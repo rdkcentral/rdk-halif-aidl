@@ -12,26 +12,21 @@ To declare the static feature set and ensure alignment between implementation an
 
 ## References
 
-!!! info References
-
-|                              |                                                                                                                                                                |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Interface Definition**     | [panel/current/com/rdk/hal/panel](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/panel/current/com/rdk/hal/panel)|
-| **HAL Feature Profile**      | [`hfp-panel.yaml`](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/panel/current/hfp-panel.yaml) – [Learn more](../../key_concepts/hal/hal_feature_profiles.md) |
-| **API Documentation**        | TBD                                                                                                                                                            |
-| **HAL Interface Type**       | [AIDL and Binder](../../../introduction/aidl_and_binder.md)                                                                                                    |
-| **Initialization Unit**      | [systemd](../../../vsi/systemd/current/systemd.md) – **hal-panel.service**                                                                                     |
-| **VTS Tests**                | TBD                                                                                                                                                            |
-| **Reference Implementation** | TBD                                                                                                                                                            |
+!!! info "References"
+    |||
+    |-|-|
+    |**Interface Definition**|[panel/current/com/rdk/hal/panel](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/panel/current/com/rdk/hal/panel)|
+    |**HAL Feature Profile**|[`hfp-panel.yaml`](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/panel/current/hfp-panel.yaml) – [Learn more](../../key_concepts/hal/hal_feature_profiles.md)|
+    |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
+    |**Initialization Unit**|[systemd](../../../vsi/systemd/current/systemd.md) – **hal-panel.service**|
 
 ---
 
 ## Related Pages
 
-!!! tip Related Pages
-
-* [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
-* [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
+!!! tip "Related Pages"
+    * [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
+    * [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
 
 ---
 
@@ -48,7 +43,7 @@ The Panel HAL manages both static capabilities and dynamic runtime control of th
 
 The corresponding [`hfp-panel.yaml`](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/panel/current/hfp-panel.yaml) file includes structured declarations for:
 
-* `panelType`, `pixelWidth`, `heightCm`, etc. (from `IPanelOutput.aidl`)
+* `panelType`, `pixelWidth`, `heightCm`, etc. (from `Capabilities.aidl`, returned via `IPanelOutput.getCapabilities()`)
 * `supportedPQParameters` (from `PQParameter.aidl`)
 * `pqParameterCapabilities` (from `PQParameterCapabilities.aidl`)
 * `pictureModeCapabilities` (from `Capabilities.aidl`)
