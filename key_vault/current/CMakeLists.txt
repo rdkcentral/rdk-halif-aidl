@@ -7,7 +7,7 @@ endif()
 
 set(CRYPTOENGINE_VERSION "current")
 set(SRC_DIR com/rdk/hal/keyvault)
-set(CRYPTOENGINE_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../cryptoengine/${CRYPTOENGINE_VERSION}/com/rdk/hal/cryptoengine)
+set(CRYPTOENGINE_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../crypto_engine/${CRYPTOENGINE_VERSION}/com/rdk/hal/cryptoengine)
 
 set(SRC
     ${SRC_DIR}/IKeyVault.aidl
@@ -27,7 +27,7 @@ set(SRC
 
 set(INCLUDE_DIRECTORY
     .
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../cryptoengine/${CRYPTOENGINE_VERSION}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../crypto_engine/${CRYPTOENGINE_VERSION}
 )
 
 compile_aidl(${SRC} INCLUDE_DIRECTORY ${INCLUDE_DIRECTORY})
