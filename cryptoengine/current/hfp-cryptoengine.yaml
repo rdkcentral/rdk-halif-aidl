@@ -41,6 +41,7 @@ cryptoengine:
     - HMAC
     - RSA
     - CHACHA20_POLY1305
+    - CMAC
 
   # Supported block modes
   supportedBlockModes:
@@ -78,6 +79,8 @@ cryptoengine:
     - PBKDF2
     - NFLX_DH
     - DH
+    - CONCAT_KDF
+    - CMAC_KDF
 
   # Supported key sizes in bits (per algorithm)
   supportedKeySizes:
