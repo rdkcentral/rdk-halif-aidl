@@ -1,0 +1,32 @@
+component: keyvault
+version: 0.0.1.0
+generation: 1
+status: RED
+description: >
+  KeyVault HAL providing configurable vault instances with independent
+  key material, crypto policy, and access rules. Uses OTP-protected
+  keystores and an attached crypto engine. Supports AES-GCM authenticated
+  encryption, runtime key generation, and per-vault security levels
+  (SOFTWARE/TEE).
+type: SOC
+
+lifecycle:
+  review_started: ~
+  review_deadline: ~
+  target_green_date: ~
+
+scope:
+  - Key generation and import within TEE/software vaults
+  - Vault lifecycle and session management
+  - Per-vault crypto policy and access rules
+  - Keystore persistence and HMAC validation
+  - Deep sleep key invalidation and recovery
+
+notes:
+  owners: "Architecture + Security"
+  dependencies: "Crypto Engine HAL (com.rdk.hal.cryptoengine)"
+
+reviewers:
+  RTAB_Group: pending
+  Architecture: pending
+  Security: pending
