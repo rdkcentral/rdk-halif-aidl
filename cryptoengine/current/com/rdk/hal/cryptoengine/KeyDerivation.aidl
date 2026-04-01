@@ -36,4 +36,8 @@ enum KeyDerivation {
     NFLX_DH = 2,
     /** Standard Diffie-Hellman key exchange. */
     DH = 3,
+    /** Concatenation KDF (NIST SP 800-56A Section 5.8.1). Used for ECDH key agreement and cert store derivation. */
+    CONCAT_KDF = 4,
+    /** Counter-mode CMAC-AES-128 KDF (NIST SP 800-108). Required by Widevine OEMCrypto for key ladder derivation. */
+    CMAC_KDF = 5,
 }

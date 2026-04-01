@@ -39,4 +39,6 @@ enum Algorithm {
     RSA = 3,
     /** ChaCha20-Poly1305 authenticated encryption. */
     CHACHA20_POLY1305 = 4,
+    /** CMAC message authentication code (AES-128). Required by Widevine OEMCrypto for key derivation. */
+    CMAC = 5,
 }
