@@ -1,12 +1,26 @@
 # KeyVault HAL
 
-## Overview
-
 The KeyVault HAL provides secure key storage and lifecycle management. It abstracts platform-specific secure storage (TEE, HSM) behind a uniform AIDL interface, offering named vault instances with independent key material, access rules, and persistence policies.
 
 A KeyVault is purely a key store — it holds key material and manages key metadata. To perform cryptographic operations on vault-managed keys, callers attach an `ICryptoEngineController` to the vault. The engine then uses the vault's keys for its operations.
 
 Excluded: cryptographic operations themselves — these are the responsibility of the CryptoEngine HAL.
+
+## References
+
+!!! info References
+    |||
+    |-|-|
+    |**Interface Definition**|[key_vault/current](./com/rdk/hal/keyvault/)|
+    |**API Documentation**| Generated from AIDL Javadoc comments |
+    |**HAL Interface Type**| AIDL and Binder |
+    |**HAL Feature Profile**| [hfp-keyvault.yaml](./hfp-keyvault.yaml) |
+
+## Related Pages
+
+!!! tip "Related Pages"
+    - [CryptoEngine HAL](../../crypto_engine/current/crypto_engine.md) — crypto operations; attached to a vault via `attachCryptoEngine()`
+    - [HAL Feature Profile](./hfp-keyvault.yaml) — platform-provisioned vaults and constraints
 
 ---
 
@@ -339,26 +353,6 @@ When an application calls `open(vaultName)`:
 4. If not, `EX_SECURITY` is returned
 
 This is declarative, auditable, and updatable without changing the HAL or recompiling applications. The platform integrator defines the policy at build time; the service enforces it at runtime.
-
----
-
-## References
-
-!!! info References
-|||
-|-|-|
-|**Interface Definition**|[keyvault/current](./com/rdk/hal/keyvault/)|
-|**API Documentation**| Generated from AIDL Javadoc comments |
-|**HAL Interface Type**| AIDL and Binder |
-|**HAL Feature Profile**| [hfp-keyvault.yaml](./hfp-keyvault.yaml) |
-
----
-
-## Related Pages
-
-!!! tip "Related Pages"
-- [CryptoEngine HAL](../../cryptoengine/current/document.md) — crypto operations; attached to a vault via `attachCryptoEngine()`
-- [HAL Feature Profile](./hfp-keyvault.yaml) — platform-provisioned vaults and constraints
 
 ---
 
