@@ -1,7 +1,5 @@
 # CryptoEngine HAL
 
-## Overview
-
 The CryptoEngine HAL provides standalone cryptographic operations independent of key storage. It abstracts platform-specific crypto acceleration (TEE) or software fallback (OpenSSL) behind a uniform AIDL interface.
 
 The engine operates on caller-provided key material and configuration. It has no concept of key storage or ownership — it receives keys, performs operations, and returns results.
@@ -25,7 +23,7 @@ Excluded: key storage, key lifecycle, and access policy.
 ## Related Pages
 
 !!! tip "Related Pages"
-- [KeyVault HAL](../../keyvault/current/document.md) — key storage and lifecycle; attaches a CryptoEngine for operations on vault-managed keys
+- [KeyVault HAL](../../key_vault/current/key_vault.md) — key storage and lifecycle; attaches a CryptoEngine for operations on vault-managed keys
 - [HAL Feature Profile](./hfp-cryptoengine.yaml) — platform-specific capability declaration
 
 ---
