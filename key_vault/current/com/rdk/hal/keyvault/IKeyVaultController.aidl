@@ -125,8 +125,8 @@ interface IKeyVaultController {
      * @brief Generate an asymmetric keypair within this vault.
      *
      * Both the public and private key are stored in the vault under
-     * separate aliases. The public key bytes are also returned directly
-     * for transmission to a peer (e.g. DH key exchange).
+     * separate aliases. Only key descriptors are returned from this call;
+     * callers must use exportKey(publicAlias) to obtain raw public key bytes.
      *
      * @param publicAlias Alias for the public key in the vault.
      * @param privateAlias Alias for the private key in the vault.
@@ -231,10 +231,10 @@ interface IKeyVaultController {
      * For HKDF/PBKDF2, typically one output spec.
      *
      * The source key for derivation must already exist in this vault
-     * (referenced by alias in config.keyAlias) and have DERIVE_KEY usage.
+     * (referenced by the sourceKeyAlias parameter) and have DERIVE_KEY usage.
      *
      * @param config Crypto configuration for the derivation (kdf, digest, salt, info, etc.).
-     *               config.keyData is ignored — the source key is taken from the vault.
+     *               config.keyData is ignored — the source key is taken from the vault via sourceKeyAlias.
      * @param sourceKeyAlias Alias of the source key in this vault.
      * @param peerPublicKey Peer's public key for DH/NFLX-DH. Null for HKDF/PBKDF2.
      * @param outputKeys Specifications for each derived key to store.
@@ -265,10 +265,10 @@ interface IKeyVaultController {
     // -------------------------------------------------------------------------
 
     /**
-     * @brief Register for vault lifecycle events (deep sleep, key invalidation).
+     * @brief Register for vault lifecycle events.
      *
      * @param listener The event listener to register.
-     * @post listener receives onDeviceSuspending/onDeviceResumed/onKeyInvalidated callbacks.
+     * @post listener receives onVaultStateChanged, onKeyExpired, onKeyInvalidated, and onKeyRotated callbacks.
      */
     void registerEventListener(in IKeyVaultEventListener listener);
 

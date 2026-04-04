@@ -25,7 +25,7 @@ import com.rdk.hal.keyvault.VaultState;
  * @author Gerald Weatherup
  *
  * Registered via IKeyVaultController to receive notifications about
- * vault lifecycle events, key expiry, and power state transitions.
+ * vault state changes, key expiry, key invalidation, and key rotation.
  */
 @VintfStability
 oneway interface IKeyVaultEventListener {

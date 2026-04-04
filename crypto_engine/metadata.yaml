@@ -1,7 +1,7 @@
 component: cryptoengine
-version: 0.0.1.0
+version: 0.1.0.0
 generation: 1
-status: RED
+status: GREEN
 description: >
   Crypto Engine HAL providing standalone cryptographic operations (encrypt,
   decrypt, hash, sign, verify, random) independent of key storage. Engines
@@ -26,9 +26,11 @@ scope:
 
 notes:
   owners: "Architecture + Security"
-  dependencies: "Shared enums from KeyVault HAL (com.rdk.hal.keyvault)"
+  dependencies: "None"
 
 reviewers:
   RTAB_Group: pending
   Architecture: pending
-  Security: pending
+  Product_Architecture: pending
+  Kernel_Architecture: pending
+  VTS_Team: pending
