@@ -22,7 +22,7 @@ package com.rdk.hal.cryptoengine;
  * @brief Handle for an in-progress cryptographic operation.
  * @author Gerald Weatherup
  *
- * Returned by ICryptoEngineController.begin() or IKeyVaultController.begin().
+ * Returned by ICryptoEngineController.begin().
  * Callers stream data through update() and complete with finish().
  *
  * Each operation maps to a crypto engine instance internally.

@@ -46,7 +46,7 @@ The engine supports:
 - **Key agreement** — ECDH (P-256, P-384, X25519)
 - **Key wrapping** — AES-KW, RSA-OAEP
 - **Key derivation** — HKDF, PBKDF2, DH, NFLX-DH
-- **Digest** — SHA-1, SHA-2-224, SHA-2-256, SHA-2-384, SHA-2-512
+- **Digest** — SHA-2-224, SHA-2-256, SHA-2-384, SHA-2-512, SHA-3-256, SHA-3-384, SHA-3-512
 - **Random number generation** — hardware RNG when available
 
 ---
@@ -77,7 +77,7 @@ The engine supports:
 | `Algorithm.aidl` | Enum: AES, EC, HMAC, RSA, CHACHA20_POLY1305 |
 | `BlockMode.aidl` | Enum: CBC, CTR, GCM, ECB, KW |
 | `PaddingMode.aidl` | Enum: NONE, PKCS7, RSA_OAEP, RSA_PSS, RSA_PKCS1_V1_5 |
-| `Digest.aidl` | Enum: SHA-1, SHA-2 family |
+| `Digest.aidl` | Enum: SHA-2 family, SHA-3 family |
 | `EcCurve.aidl` | Enum: P-256, P-384, Ed25519, X25519 |
 | `KeyDerivation.aidl` | Enum: HKDF, PBKDF2, NFLX_DH, DH |
 | `KeyPurpose.aidl` | Enum: ENCRYPT, DECRYPT, SIGN, VERIFY, AGREE_KEY, WRAP_KEY, UNWRAP_KEY, DERIVE_KEY, DERIVE_BITS |
