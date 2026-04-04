@@ -86,7 +86,7 @@ interface ICryptoEngineController {
      *
      * Stateless, one-shot operation. Does not require a key.
      *
-     * @param digest The digest algorithm to use (SHA-1, SHA-2-256, SHA-3-256, etc.).
+     * @param digest The digest algorithm to use (e.g. SHA_2_256, SHA_3_256).
      * @param data The data to hash.
      * @returns Digest bytes (length depends on algorithm: SHA-256=32, SHA-384=48, SHA-512=64).
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if the digest algorithm is not supported.
