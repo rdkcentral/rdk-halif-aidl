@@ -44,6 +44,14 @@ enum State {
 
     /**
      * @brief Shutdown is imminent due to critical thermal breach.
+     *
+     * The HAL thermal policy service initiates the shutdown autonomously.
+     * Clients receiving this event via {@link IThermalEventListener} should
+     * perform only time-critical cleanup (flush caches, persist critical
+     * state) and must not attempt to manage the reboot themselves.
+     *
+     * The thermal HAL records the shutdown reason so that on the next boot
+     * it can be reported via the Boot HAL ({@link com.rdk.hal.boot.ResetType}).
      */
     CRITICAL_SHUTDOWN_IMMINENT = 3
 }
