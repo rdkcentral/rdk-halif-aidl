@@ -95,7 +95,7 @@ interface IMotionSensor {
      *
      * @returns Success flag indicating sensor start status.
      * @retval true Sensor accepted the start request.
-     * @retval false Sensor could not be started (e.g. invalid hw state).
+     * @retval false Sensor could not be started due to an internal or hardware initialisation failure.
      * @exception binder::Status EX_ILLEGAL_STATE if sensor is not STOPPED.
      */
     boolean start(in OperationalMode operationalMode,
