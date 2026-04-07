@@ -86,5 +86,25 @@ enum Property {
      * - false: unmuted (default on open)
      * - true: muted
      */
-    MUTE = 4
+    MUTE = 4,
+
+    /**
+     * Fader level controlling the balance between main and associated audio inputs.
+     *
+     * Type: Integer
+     * Range: 0..100
+     *   - 0 = main audio only
+     *   - 50 = equal mix (default)
+     *   - 100 = associated audio only
+     * Access: Read-write.
+     * Writeable in states: READY, STARTED
+     *
+     * Primarily used for audio description (AD) where the user adjusts the
+     * relative level of the AD track against the main audio.
+     *
+     * Support for this property is platform-dependent and must be declared
+     * in the HAL Feature Profile (hfp-audiomixer.yaml). Middleware must
+     * query capabilities before using this property.
+     */
+    FADER_LEVEL = 5
 }

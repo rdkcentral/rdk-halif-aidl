@@ -117,4 +117,34 @@ interface IAudioMixerController {
      * @pre       The mixer must be in STARTED state.
      */
     void signalEOS();
+
+    /**
+     * @brief     Sets the volume level for a specific mixer input.
+     * @details   Allows per-input attenuation for use cases such as TTS overlay,
+     *            system sound mixing, or audio description level adjustment.
+     *
+     *            The input index corresponds to the mixer input as declared in
+     *            Capabilities.inputs (e.g., 0 = main, 1 = assoc, 2 = pcm1).
+     *
+     * @param[in] inputIndex  Mixer input index (0-based, matching Capabilities.inputs).
+     * @param[in] volume      Volume level in range 0..100 (0 = silent, 100 = full).
+     *
+     * @returns   true if the volume was set, false if the input index is invalid.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if volume is outside 0..100 range.
+     * @exception binder::Status EX_ILLEGAL_STATE if mixer is not in READY or STARTED state.
+     * @pre       The mixer must be in READY or STARTED state.
+     * @see       getInputVolume()
+     */
+    boolean setInputVolume(in int inputIndex, in int volume);
+
+    /**
+     * @brief     Gets the current volume level for a specific mixer input.
+     *
+     * @param[in] inputIndex  Mixer input index (0-based, matching Capabilities.inputs).
+     *
+     * @returns   Current volume level in range 0..100.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if inputIndex is invalid.
+     * @see       setInputVolume()
+     */
+    int getInputVolume(in int inputIndex);
 }

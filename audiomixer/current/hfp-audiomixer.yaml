@@ -29,6 +29,9 @@ audiomixer:
   resources:
     - id: 0  # Mixer instance 0 (secure)
       supportsSecure: true
+      # Supported mixer-level properties (platform-dependent)
+      supportedProperties:
+        - FADER_LEVEL
       # Supported audio source types for dynamic input routing
       supportedSourceTypes:
         - AUDIO_SINK
