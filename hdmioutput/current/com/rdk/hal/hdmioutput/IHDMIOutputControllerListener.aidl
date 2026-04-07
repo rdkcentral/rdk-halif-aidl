@@ -46,7 +46,7 @@ oneway interface IHDMIOutputControllerListener
      * - **ALWAYS** fired during the `OPENING` transition (CLOSED → READY), even if the
      *   HPD state has not changed, to communicate the initial sink connection state.
      * - **Only on actual HPD changes** during `STARTING`, `STARTED`, and `STOPPING` states
-     *   (i.e., when cable is physically connected/disconnected).
+     *   (i.e., when cable is physically connected/disconnected or sink is powered on/off).
      * - Debouncing is handled internally by the HAL; the state reported here is stable.
      *
      * @param[in] state  True if the HPD line is asserted (sink connected), false otherwise.
@@ -63,11 +63,9 @@ oneway interface IHDMIOutputControllerListener
      * any display timing changes are now live.
      *
      * Must be fired only after AVMUTE is cleared — i.e., when content can be visible.
-     * This is especially important for native frame rate matching with OTT apps like Netflix.
+     * This is especially important for native frame rate matching in OTT applications.
      *
      * This callback is paired with client-facing logic such as `videoOutputStatusChanged`.
-     *
-     * @see Native Frame Rate handling in app middleware (e.g., Netflix).
      */
     void onFrameRateChanged();
 
