@@ -232,12 +232,8 @@ Secure buffers must never be copied to non-secure memory. The HAL implementation
 
 ```mermaid
 flowchart TD
-    subgraph Application["Application Layer"]
-        App["GStreamer Pipeline / App"]
-    end
-
-    subgraph MW["RDK Middleware"]
-        ResMgr["Resource Manager<br/>(routing, allocation, policy)"]
+    subgraph MW["RDK Middleware<br/>(routing, allocation, policy)"]
+        ResMgr["Resource Manager"]
     end
 
     subgraph Boundary["HAL AIDL Boundary"]
@@ -257,7 +253,6 @@ flowchart TD
         DSP["Audio DSP / Hardware"]
     end
 
-    App --> ResMgr
     ResMgr --> DecAPI
     ResMgr --> SinkAPI
     ResMgr --> MixAPI
@@ -275,7 +270,6 @@ flowchart TD
     classDef green fill:#4CAF50,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
     classDef default fill:#1E1E1E,stroke:#E0E0E0,stroke-width:1px,color:#E0E0E0;
 
-    App:::blue
     ResMgr:::blue
     DecAPI:::wheat
     SinkAPI:::wheat
