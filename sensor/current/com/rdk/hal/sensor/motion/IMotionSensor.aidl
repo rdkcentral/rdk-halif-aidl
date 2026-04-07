@@ -24,6 +24,27 @@
  * The motion sensor can operate in a mode that reports either "motion" events
  * or "no-motion" events after an inactivity window. Sensitivity is optional:
  * if unsupported, both minSensitivity and maxSensitivity are 0.
+ *
+ * @details
+ * Lifecycle ownership:
+ * The sensor uses a single-owner lifecycle model. start() and stop()
+ * operate on the sensor instance directly — there is no per-client
+ * controller or exclusive open/close pattern. A single middleware
+ * component (e.g., a power management service) should own the sensor
+ * lifecycle, while other components register as event listeners only.
+ *
+ * Timing controls vs active windows:
+ * activeStartSeconds/activeStopSeconds (passed to start()) and active
+ * windows (configured via setActiveWindows()) are independent, layered
+ * mechanisms:
+ *   - Timing controls govern the sensor hardware lifecycle — whether
+ *     the sensor is active at all.
+ *   - Active windows govern event suppression — whether detected events
+ *     are delivered to listeners.
+ *
+ * Timing controls take precedence. Callers are responsible for ensuring
+ * sensible combinations (e.g., that activeStartSeconds does not exceed
+ * the remaining window duration).
  */
 package com.rdk.hal.sensor.motion;
 
@@ -70,9 +91,12 @@ interface IMotionSensor {
      * @param activeStopSeconds Duration in seconds after which the sensor becomes inactive.
      *        Use 0 for no automatic stop.
      *
+     * @pre Sensor must be in STOPPED state.
+     *
      * @returns Success flag indicating sensor start status.
      * @retval true Sensor accepted the start request.
-     * @retval false Sensor could not be started (e.g. invalid hw state).
+     * @retval false Sensor could not be started due to an internal or hardware initialisation failure.
+     * @exception binder::Status EX_ILLEGAL_STATE if sensor is not STOPPED.
      */
     boolean start(in OperationalMode operationalMode,
                   in int noMotionSeconds,
