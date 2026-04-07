@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Panel HAL provides a standardized interface to control and configure the display panel hardware on RDK platforms. It abstracts platform-specific display functions including resolution, panel type, picture quality parameters, white balance calibration, local dimming, factory configurations, and dynamic runtime controls such as picture modes and refresh rate management.
+The Panel HAL provides a standardised interface to control and configure the display panel hardware on RDK platforms. It abstracts platform-specific display functions including resolution, panel type, picture quality parameters, white balance calibration, local dimming, factory configurations, and dynamic runtime controls such as picture modes and refresh rate management.
 
 This HAL enables higher-level components to dynamically adjust video output parameters and factory tools to calibrate and validate panel hardware during manufacturing or service.
 
@@ -59,7 +59,7 @@ The corresponding [`hfp-panel.yaml`](https://github.com/rdkcentral/rdk-halif-aid
 | **HAL.PANEL.3** | The service shall allow enabling/disabling panel output and backlight with no side effects.                                                    |                                               |
 | **HAL.PANEL.4** | The service shall provide asynchronous event callbacks for video source, picture mode, and refresh rate changes.                               | Ensures responsive UI/middleware updates      |
 | **HAL.PANEL.5** | The factory interface shall provide persistent storage of panel calibration including white balance, gamma tables, and local dimming settings. | Supports factory calibration and service      |
-| **HAL.PANEL.6** | The service shall support frame rate matching with panel refresh rate adjustments.                                                             | Enables smooth video playback synchronization |
+| **HAL.PANEL.6** | The service shall support frame rate matching with panel refresh rate adjustments.                                                             | Enables smooth video playback synchronisation |
 | **HAL.PANEL.7** | The service shall support local dimming zone control and test modes with timed duration.                                                       | Enables factory and diagnostic tests          |
 
 ---
@@ -84,7 +84,7 @@ The corresponding [`hfp-panel.yaml`](https://github.com/rdkcentral/rdk-halif-aid
 
 ## Initialization
 
-The Panel HAL service is initialized early in the device boot process, registering itself with the system service manager under the name `"PanelOutput"`. Upon initialization, it exposes static capabilities, factory interface, and supports client connections for runtime control. The event listener interface allows clients to subscribe for asynchronous updates.
+The Panel HAL service is initialised early in the device boot process, registering itself with the system service manager under the name `"PanelOutput"`. Upon initialisation, it exposes static capabilities, factory interface, and supports client connections for runtime control. The event listener interface allows clients to subscribe for asynchronous updates.
 
 Factory tools access `IFactoryPanel` for calibration data storage and test mode activation.
 
