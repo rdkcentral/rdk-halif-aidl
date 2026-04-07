@@ -25,14 +25,15 @@
  * or "no-motion" events after an inactivity window. Sensitivity is optional:
  * if unsupported, both minSensitivity and maxSensitivity are 0.
  *
- * @par Lifecycle ownership
+ * @details
+ * Lifecycle ownership:
  * The sensor uses a single-owner lifecycle model. start() and stop()
  * operate on the sensor instance directly — there is no per-client
  * controller or exclusive open/close pattern. A single middleware
  * component (e.g., a power management service) should own the sensor
  * lifecycle, while other components register as event listeners only.
  *
- * @par Timing controls vs active windows
+ * Timing controls vs active windows:
  * activeStartSeconds/activeStopSeconds (passed to start()) and active
  * windows (configured via setActiveWindows()) are independent, layered
  * mechanisms:
