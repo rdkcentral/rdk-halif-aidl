@@ -25,26 +25,25 @@
  * or "no-motion" events after an inactivity window. Sensitivity is optional:
  * if unsupported, both minSensitivity and maxSensitivity are 0.
  *
- * <h3>Lifecycle ownership</h3>
- * The sensor uses a single-owner lifecycle model. {@link #start()} and
- * {@link #stop()} operate on the sensor instance directly — there is no
- * per-client controller or exclusive open/close pattern. A single middleware
+ * @par Lifecycle ownership
+ * The sensor uses a single-owner lifecycle model. start() and stop()
+ * operate on the sensor instance directly — there is no per-client
+ * controller or exclusive open/close pattern. A single middleware
  * component (e.g., a power management service) should own the sensor
  * lifecycle, while other components register as event listeners only.
  *
- * <h3>Timing controls vs active windows</h3>
- * {@code activeStartSeconds}/{@code activeStopSeconds} (passed to
- * {@link #start()}) and active windows (configured via
- * {@link #setActiveWindows()}) are independent, layered mechanisms:
- * <ul>
- *   <li><b>Timing controls</b> govern the sensor hardware lifecycle —
- *       whether the sensor is active at all.</li>
- *   <li><b>Active windows</b> govern event suppression — whether detected
- *       events are delivered to listeners.</li>
- * </ul>
+ * @par Timing controls vs active windows
+ * activeStartSeconds/activeStopSeconds (passed to start()) and active
+ * windows (configured via setActiveWindows()) are independent, layered
+ * mechanisms:
+ *   - Timing controls govern the sensor hardware lifecycle — whether
+ *     the sensor is active at all.
+ *   - Active windows govern event suppression — whether detected events
+ *     are delivered to listeners.
+ *
  * Timing controls take precedence. Callers are responsible for ensuring
- * sensible combinations (e.g., that {@code activeStartSeconds} does not
- * exceed the remaining window duration).
+ * sensible combinations (e.g., that activeStartSeconds does not exceed
+ * the remaining window duration).
  */
 package com.rdk.hal.sensor.motion;
 
