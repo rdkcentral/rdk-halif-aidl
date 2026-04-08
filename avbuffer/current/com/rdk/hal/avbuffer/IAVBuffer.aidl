@@ -65,7 +65,7 @@ interface IAVBuffer
      * If the platform has exhausted all available memory from the requested heap then the exception status
      * `binder::Status::Exception::EX_SERVICE_SPECIFIC` with `HALError::OUT_OF_MEMORY` is returned.
      *
-     * If a 'secureHeap' is created and the video decoder has not be configured then the exception status
+     * If a `secureHeap` is created and the video decoder has not been configured then the exception status
      * `binder::Status::Exception::EX_ILLEGAL_STATE` is returned.
      *
      * @param[in] secureHeap            Indicates if the pool is secure.
