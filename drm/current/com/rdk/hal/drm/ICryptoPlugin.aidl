@@ -47,6 +47,8 @@ interface ICryptoPlugin {
      * This approach is the same as Android and is unlike other RDK-E AIDL HALs where the HAL component consumes and frees buffers.
      * 
      * @return number of decrypted bytes
+     * 
+     * Error codes are returned via binder::status EX_SERVICE_SPECIFIC error codes
      *     Implicit error codes:
      *       + ERROR_DRM_CANNOT_HANDLE in other failure cases
      *       + ERROR_DRM_DECRYPT if the decrypt operation fails
