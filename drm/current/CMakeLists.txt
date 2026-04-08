@@ -32,16 +32,37 @@ endif()
 set(SRC_DIR com/rdk/hal/drm)
 
 set(SRC
-	${SRC_DIR}/Capabilities.aidl
-	${SRC_DIR}/ICrypto.aidl
-	${SRC_DIR}/ICryptoController.aidl
-	${SRC_DIR}/ICryptoControllerListener.aidl
-	${SRC_DIR}/ICryptoEventListener.aidl
-	${SRC_DIR}/IDrm.aidl
-	${SRC_DIR}/IDrmController.aidl
-	${SRC_DIR}/IDrmControllerListener.aidl
-	${SRC_DIR}/IDrmEventListener.aidl
-	${SRC_DIR}/IDrmManager.aidl
+	${SRC_DIR}/CryptoSchemes.aidl
+	${SRC_DIR}/DecryptArgs.aidl
+	${SRC_DIR}/DrmErrors.aidl
+	${SRC_DIR}/DrmMetric.aidl
+	${SRC_DIR}/DrmMetricGroup.aidl
+	${SRC_DIR}/DrmMetricNamedValue.aidl
+	${SRC_DIR}/DrmMetricValue.aidl
+	${SRC_DIR}/EventType.aidl
+	${SRC_DIR}/HdcpLevel.aidl
+	${SRC_DIR}/HdcpLevels.aidl
+	${SRC_DIR}/ICryptoPlugin.aidl
+	${SRC_DIR}/IDrmFactory.aidl
+	${SRC_DIR}/IDrmPlugin.aidl
+	${SRC_DIR}/IDrmPluginListener.aidl
+	${SRC_DIR}/KeyRequest.aidl
+	${SRC_DIR}/KeyRequestType.aidl
+	${SRC_DIR}/KeySetId.aidl
+	${SRC_DIR}/KeyStatus.aidl
+	${SRC_DIR}/KeyStatusType.aidl
+	${SRC_DIR}/KeyType.aidl
+	${SRC_DIR}/KeyValue.aidl
+	${SRC_DIR}/Mode.aidl
+	${SRC_DIR}/NumberOfSessions.aidl
+	${SRC_DIR}/Pattern.aidl
+	${SRC_DIR}/ProvideProvisionResponseResult.aidl
+	${SRC_DIR}/ProvisionRequest.aidl
+	${SRC_DIR}/SecurityLevel.aidl
+	${SRC_DIR}/Status.aidl
+	${SRC_DIR}/SubSample.aidl
+	${SRC_DIR}/SupportedContentType.aidl
+	${SRC_DIR}/Uuid.aidl
 )
 
 set(INCLUDE_DIRECTORY
