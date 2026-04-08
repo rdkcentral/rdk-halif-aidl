@@ -30,7 +30,6 @@
 package com.rdk.hal.drm;
 
 import com.rdk.hal.drm.CryptoSchemes;
-import com.rdk.hal.drm.SecurityLevel;
 import com.rdk.hal.drm.Uuid;
 
 /**
