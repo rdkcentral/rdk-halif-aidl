@@ -178,8 +178,8 @@ interface IVideoDecoder
      * If the client that opened the `IVideoDecoderController` crashes,
      * then the `IVideoDecoderController` has `stop()` and `close()` implicitly called to perform clean up.
      *
-     * The decode will be opened expecting frames up to a maximum of 'maxHeight' and 'maxWidth'. 
-     * If 'maxHeight' and 'maxWidth' exceed that specified in the 'CodecCapabilities' then binder::Status::Exception::EX_ILLEGAL_ARGUMENT
+     * The decoder will be opened expecting frames up to a maximum of `maxHeight` and `maxWidth`.
+     * If `maxHeight` and `maxWidth` exceed that specified in the `CodecCapabilities` then binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      * will be returned.
      *
      * @param[in] codec                             The codec to configure the Video Decoder for.
