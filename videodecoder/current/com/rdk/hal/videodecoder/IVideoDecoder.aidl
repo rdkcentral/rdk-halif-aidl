@@ -176,7 +176,7 @@ interface IVideoDecoder
      * @param[in] secure                            The Video Decoder secure mode.
      * @param[in] videoDecoderControllerListener    Listener object for controller callbacks.
      * @param[in] maxHeight                         maximum height of the decoded frame.
-     * @param[in] maxWidth                          maximum height of the decoded frame.
+     * @param[in] maxWidth                          maximum width of the decoded frame.
      *
      * @returns IVideoDecoderController or null if the codec or the requested secure mode is not supported.
      * 
