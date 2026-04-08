@@ -28,10 +28,6 @@
  */
 package com.rdk.hal.drm;
 import com.rdk.hal.drm.DecryptArgs;
-import com.rdk.hal.drm.Mode;
-import com.rdk.hal.drm.Pattern;
-import com.rdk.hal.drm.Status;
-import com.rdk.hal.drm.SubSample;
 
 
 /**
