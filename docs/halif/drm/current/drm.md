@@ -294,7 +294,7 @@ DRM HAL implementations must pass:
 - **L1 Tests**: Basic DRM operations (session creation, licence processing).
 - **L2 Tests**: DRM scheme-specific validation.
 - **L3 Tests**: Integration with secure media pipeline.
-- **L4 Tests**: End-to-end protected content playback.
+- **L4 Tests**: End-to-end protected content playback and throughput performance
 
 ---
 

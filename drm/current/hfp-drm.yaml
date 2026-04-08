@@ -25,6 +25,13 @@
 drm:                  # Component object begins (matches directory name)
     interfaceVersion: current
 
+    maxSessions: 4 # This is the maximum toptal number of concurrent DRM sessions of all schemes that the platform must support. Adjust as needed based on expected use cases and platform capabilities.
+
+    # The VTS must include tests that verify the platform can handle the specified maxTotalBitrate under realistic conditions.
+    maxTotalBitrate: 40000000 # This is the total real-time bitrate in bits per second (bps) that the drm system must handle. Adjust as needed based on platform capabilities.
+    # Example1: For a system that must support (worst case) encrypted streams of 1xUHD at 18Mbps and 1xFHD @ 12Mbps simultaneously the total bitrate would be 30Mbps.
+    # Example2: For a system that must support (worst case) encrypted streams of 4xFHD at 12Mbps the total bitrate would be 48Mbps.
+
     # Maximum security level supported by the platform.
     # Values from SecurityLevel enum (SecurityLevel.aidl).
     # Platform tailors this per device; best-case is HW_SECURE_ALL.
@@ -35,9 +42,9 @@ drm:                  # Component object begins (matches directory name)
       - HW_SECURE_DECODE
       - HW_SECURE_ALL
 
-    # Maximum HDCP output protection level supported.
-    # Values from HdcpLevel enum (HdcpLevel.aidl).
-    supportedHdcpLevels:
+      # Maximum HDCP output protection level supported.
+      # Values from HdcpLevel enum (HdcpLevel.aidl).
+      supportedHdcpLevels:
       - HDCP_NONE
       - HDCP_V1
       - HDCP_V2
@@ -46,29 +53,54 @@ drm:                  # Component object begins (matches directory name)
       - HDCP_V2_3
       - HDCP_NO_OUTPUT
 
-    # Supported cipher modes for content decryption.
-    # Values from Mode enum (Mode.aidl).
-    supportedCipherModes:
-      - UNENCRYPTED
-      - AES_CTR
-      - AES_CBC_CTS
-      - AES_CBC
 
-    # Supported key types.
-    # Values from KeyType enum (KeyType.aidl).
-    supportedKeyTypes:
-      - STREAMING
-      - OFFLINE
-      - RELEASE
+    scheme: 
+      - WIDEVINE:
+          instance_name: "widevine" ## The instance name that IDrmFactory is registered with `com.rdk.hal.drm.IDrmFactory/widevine`
 
-    # Whether the platform supports a secure decoder component.
-    # Corresponds to ICryptoPlugin.requiresSecureDecoderComponent().
-    supportsSecureDecoder: true
+          maxBitrate: 20000000 # This is the maximum real-time bitrate in bits per second (bps) that the drm must support per session. Adjust as needed based on platform capabilities and expected use cases.
 
-    # Whether the platform supports device provisioning.
-    # Corresponds to IDrmPlugin.getProvisionRequest() / provideProvisionResponse().
-    supportsProvisioning: true
+          maxSchemeSessions: 4 # This is the maximum number of concurrent DRM scheme sessions that the platform must support. Adjust as needed based on expected use cases and platform capabilities.
+          
+          # Supported cipher modes for content decryption.
+          # Values from Mode enum (Mode.aidl).
+          supportedCipherModes:
+            - UNENCRYPTED
+            - AES_CTR
+            - AES_CBC_CTS
+            - AES_CBC
 
-    # Whether the platform supports DRM metrics collection.
-    # Corresponds to IDrmPlugin.getMetrics().
-    supportsMetrics: true
+          # Supported key types.
+          # Values from KeyType enum (KeyType.aidl).
+          supportedKeyTypes:
+            - STREAMING   
+            - OFFLINE       # Typically not supported for RDK products
+            - RELEASE       # Typically not supported for RDK products
+
+          # Whether the platform supports a secure decoder component.
+          # Corresponds to ICryptoPlugin.requiresSecureDecoderComponent().
+          supportsSecureDecoder: true
+
+      - PLAYREADY:
+          instance_name: "playready" ## The instance name that IDrmFactory is registered with `com.rdk.hal.drm.IDrmFactory/playready`
+          # Similar properties for PlayReady can be added here if needed
+
+          maxSchemeSessions: 4 # This is the maximum number of concurrent DRM scheme sessions that the platform must support. Adjust as needed based on expected use cases and platform capabilities.
+
+          maxBitrate: 20000000 # This is the maximum real-time bitrate in bits per second (bps) that the drm must support per session. Adjust as needed based on platform capabilities and expected use cases.
+
+          supportedCipherModes:
+            - UNENCRYPTED
+            - AES_CTR
+            - AES_CBC_CTS
+            - AES_CBC
+
+          supportedKeyTypes:
+            - STREAMING   
+            - OFFLINE       # Typically not supported for RDK products
+            - RELEASE       # Typically not supported for RDK products
+
+          supportsSecureDecoder: true
+ 
+
+
