@@ -254,7 +254,7 @@ Runtime capability information is obtained via:
 
 There is a departure from the RDK AIDL model where the consuming component releases `AVBuffers` back to the `Pool`. The `ICryptoPlugin::decrypt` function is blocking for the decryption. On return, the input `AVBuffer` must  be released/recycled by the calling component. Similarly the output `AVBuffer` is passed to the decoder for the decoding. 
 
-- **Non-secure Input and Output**: No restrictrions apply (under review). 
+- **Non-secure Input and Output**: No restrictions apply (under review). 
 
 - **Secure Output**: For secure `AVBuffers` the pool must be created after the consuming secure Decoder has been initialized.
 
