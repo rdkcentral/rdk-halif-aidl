@@ -17,15 +17,15 @@
  * limitations under the License.
  */
 package com.rdk.hal.videodecoder;
- 
-/** 
+
+/**
  *  @brief     Video decoder dynamic range definitions.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  *  @author    Gerald Weatherup
  */
- 
+
 /**
  * Enum representing different dynamic range formats supported by video decoders.
  *
@@ -36,7 +36,7 @@ package com.rdk.hal.videodecoder;
  */
 @VintfStability
 @Backing(type="int")
-enum DynamicRange {    
+enum DynamicRange {
     /**
      * Dynamic range is unknown or not reported.
      */
@@ -67,7 +67,7 @@ enum DynamicRange {
      * An improved version of HDR10 that uses dynamic metadata for better tone mapping.
      * @see SMPTE ST 2094-40
      */
-    HDR10PLUS = 4,
+    HDR10_PLUS = 4,
 
     /**
      * Dolby Vision (DV).

@@ -17,15 +17,15 @@
  * limitations under the License.
  */
 package com.rdk.hal.videodecoder;
- 
-/** 
+
+/**
  *  @brief     Codec capability definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  *  @author    Gerald Weatherup
  */
- 
+
 @VintfStability
 @Backing(type="int")
 enum CodecLevel {

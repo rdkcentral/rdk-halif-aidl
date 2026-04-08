@@ -27,15 +27,22 @@ import com.rdk.hal.videodecoder.IVideoDecoderEventListener;
 import com.rdk.hal.PropertyValue;
 import com.rdk.hal.State;
 
-/** 
+/**
  *  @brief     Video Decoder HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
 
 @VintfStability
-interface IVideoDecoder 
+interface IVideoDecoder
 {
 
     /** Video decoder resource ID type */
@@ -50,13 +57,14 @@ interface IVideoDecoder
 
     /**
      * Gets the capabilities for this Video Decoder.
-     * 
+     *
      * This function can be called at any time and is not dependant on any Video Decoder state.
      * The returned value is not allowed to change between calls.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns Capabilities parcelable.
+     *
      */
     Capabilities getCapabilities();
 
@@ -68,7 +76,8 @@ interface IVideoDecoder
      * @returns PropertyValue or null if the property key is unknown.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value. 
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value.
+     *
      *
      * @see setProperty(), getPropertyMulti()
      */
@@ -115,19 +124,20 @@ interface IVideoDecoder
 	 *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
+     *
      * @see IVideoDecoderEventListener.onStateChanged().
-     */  
+     */
     State getState();
- 
+
     /**
 	 * Opens the Video Decoder to decode the specified codec.
-     * 
+     *
      * If successful the Video Decoder transitions to an `OPENING` state and then a `READY` state
      * which is notified to any registered `IVideoDecoderEventListener` interfaces.
-     * 
+     *
      * Controller related callbacks are made through the `IVideoDecoderControllerListener`
      * passed into the call.
-     * 
+     *
      * The returned `IVideoDecoderController` interface is used by the client to feed data buffers
      * for decode and manage the decoding flow.
      *
@@ -141,14 +151,14 @@ interface IVideoDecoder
      * @param[in] videoDecoderControllerListener    Listener object for controller callbacks.
      *
      * @returns IVideoDecoderController or null if the codec or the requested secure mode is not supported.
-     * 
+     *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
-     * 
+     *
      * @pre The resource must be in State::CLOSED.
-     * 
+     *
      * @see IVideoDecoderController, IVideoDecoderController.close(), registerEventListener()
      */
     @nullable IVideoDecoderController open(in Codec codec, in boolean secure, in IVideoDecoderControllerListener videoDecoderControllerListener);
@@ -209,6 +219,7 @@ interface IVideoDecoder
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in OPENED State.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
+     *
      * @pre The resource must be in State::READY.
      *
      * @see open()
@@ -217,7 +228,7 @@ interface IVideoDecoder
 
     /**
 	 * Registers a Video Decoder event listener.
-     * 
+     *
      * An `IVideoDecoderEventListener` can only be registered once and will fail on subsequent
      * registration attempts.
      *
@@ -230,13 +241,14 @@ interface IVideoDecoder
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
+     *
      * @see unregisterEventListener()
      */
     boolean registerEventListener(in IVideoDecoderEventListener videoDecoderEventListener);
 
     /**
 	 * Unregisters a Video Decoder event listener.
-     * 
+     *
      * @param[in] videoDecoderEventListener	    Listener object for event callbacks.
      *
      * @return boolean
@@ -245,6 +257,7 @@ interface IVideoDecoder
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
      *
      * @see registerEventListener()
      */

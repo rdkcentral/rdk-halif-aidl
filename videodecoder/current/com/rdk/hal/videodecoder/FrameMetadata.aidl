@@ -20,15 +20,18 @@ package com.rdk.hal.videodecoder;
 import com.rdk.hal.videodecoder.ScanType;
 import com.rdk.hal.videodecoder.PixelFormat;
 import com.rdk.hal.videodecoder.DynamicRange;
+import com.rdk.hal.videodecoder.MasteringDisplayInfo;
+import com.rdk.hal.videodecoder.ContentLightLevel;
+import com.rdk.hal.videodecoder.Colorimetry;
 import com.rdk.hal.AVSource;
 
-/** 
+/**
  *  @brief     Decoded video frame metadata, relating to the frame output from the video decoder.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
+
 @VintfStability
 parcelable FrameMetadata {
 
@@ -39,24 +42,24 @@ parcelable FrameMetadata {
      */
     int parX;
     int parY;
- 
+
     /**
 	 * Source aspect ratio (SAR) defined as the ratio sarX:sarY.
      * e.g. 720:480, 3840:2160
      */
     int sarX;
     int sarY;
-	
+
 	/**
-	 * The coded width and height of the video frame in pixels. 
+	 * The coded width and height of the video frame in pixels.
 	 * Decoded video frame buffers hold the video frame in coded dimensions.
 	 */
     int codedWidth;
     int codedHeight;
 
 	/**
-	 * The active display dimensions of the video frame in pixels. 
-	 * These dimensions can be smaller than the coded dimensions to specify a 
+	 * The active display dimensions of the video frame in pixels.
+	 * These dimensions can be smaller than the coded dimensions to specify a
 	 * smaller central region to display inside the coded video frame.
 	 * The active dimensions should reflect any display frame or bar data from the stream.
 	 */
@@ -66,32 +69,32 @@ parcelable FrameMetadata {
 	int activeHeight;
 
 	/**
-	 * The color depth in bits. 
-	 * e.g. 8, 10, 12. 
+	 * The color depth in bits.
+	 * e.g. 8, 10, 12.
 	 */
     int colorDepth;
-	
+
 	/**
-	 * Pixel format of the video frame. 
+	 * Pixel format of the video frame.
 	 */
 	PixelFormat pixelFormat;
-	
+
 	/**
 	 * Dynamic range of the video frame.
 	 */
 	DynamicRange dynamicRange;
-	
+
 	/**
-	 * The picture scan type output from the decoder. 
+	 * The picture scan type output from the decoder.
 	 */
     ScanType scanType;
-	
+
 	/**
-	 * Active format description code. 
+	 * Active format description code.
 	 * See https://en.wikipedia.org/wiki/Active_Format_Description
 	 */
     int afd;
- 
+
 	/**
 	 * Frame rate decoded from the video stream expressed as a fraction.
 	 * Use 0/0 if unknown.e
@@ -99,24 +102,40 @@ parcelable FrameMetadata {
 	 */
 	int frameRateNumerator;
 	int frameRateDenominator;
-	
+
 	/**
 	 * End of stream marker found in the video bitstream.
 	 */
 	boolean endOfStream;
-	
+
 	/**
 	 * Discontinuity indicator where the PTS for this frame is likely to be discontinuous to the previous.
 	 */
 	boolean discontinuity;
-	
+
 	/**
 	 * Indicates if the video should be delivered in low latency mode.
 	 */
-	boolean lowLatency; 
-		
-//TODO: colorimetry for static HDR metadata... - must have matching properties
-	
+	boolean lowLatency;
+
+	/**
+	 * Colorimetry (colour primaries and matrix) of the video frame as reported by the decoder.
+	 * Set to Colorimetry::UNKNOWN if not signalled in the stream.
+	 */
+	Colorimetry colorimetry;
+
+	/**
+	 * Mastering display colour volume metadata (SMPTE ST 2086).
+	 * Extracted from HEVC SEI type 137 or equivalent. Null if not present in the stream.
+	 */
+	@nullable MasteringDisplayInfo masteringDisplayInfo;
+
+	/**
+	 * Content light level static HDR metadata (MaxCLL/MaxFALL as defined in CTA-861.3).
+	 * Extracted from HEVC SEI type 144 or equivalent. Null if not present in the stream.
+	 */
+	@nullable ContentLightLevel contentLightLevel;
+
 	/**
 	 * The source of the video frame.
 	 * When the frame is presented the source may be used to configure the TV picture mode settings.
@@ -126,11 +145,11 @@ parcelable FrameMetadata {
 	/**
 	 * SHA1 calculation value.
 	 * Only set when SHA1_CALC is set 1=on
-	 */ 
+	 */
 	byte[] sha1;
 
 	/**
-	 * Private extension for future use. 
+	 * Private extension for future use.
 	 */
     ParcelableHolder extension;
 }

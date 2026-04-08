@@ -16,17 +16,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.audiodecoder; 
+package com.rdk.hal.audiodecoder;
 import com.rdk.hal.audiodecoder.CSDAudioFormat;
 import com.rdk.hal.audiodecoder.Property;
 
 import com.rdk.hal.PropertyValue;
 
-/** 
+/**
  *  @brief     Audio Decoder Controller HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
 
 @VintfStability
@@ -46,70 +53,75 @@ interface IAudioDecoderController {
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property and propertyValue.
+     *
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);
 
 
     /**
 	 * Starts the audio decoder.
-     * 
+     *
      * The audio decoder must be in a ready state before it can be started.
      * If successful the audio decoder transitions to a `STARTING` state and then a `STARTED` state.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status EX_ILLEGAL_STATE 
-     * 
+     * @exception binder::Status EX_ILLEGAL_STATE
+     *
      * @pre The resource must be in State::READY.
-     * 
+     *
      * @see open(), stop()
      */
     void start();
- 
+
     /**
 	 * Stops the audio decoder.
-     * 
+     *
      * The decoder enters the `STOPPING` state and then any input data buffers that have been passed for decode but have
      * not yet been decoded are freed automatically.  This is effectively the same as a flush.
      * Once buffers are freed and the internal audio decoder state is reset, the decoder enters the `READY` state.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
-     * 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
      * @pre The resource must be in State::STARTED.
-     * 
+     *
      * @see start()
      */
     void stop();
- 
+
     /**
-	 * Pass an encoded buffer of audio elementary stream data to the audio decoder.
-     * 
+     * Pass an encoded buffer of audio elementary stream data to the audio decoder.
+     *
      * The audio decoder must be in a `STARTED` state.
-     * Buffers can be either non-secure or secure to support SAP.
+     * Buffers can be either non-secure or secure to support SAP (Secure Audio Path).
      * Each call shall reference a single audio frame with a presentation timestamp.
      *
-     * Once the decoder has finished processing the buffer, it is automatically released
-     * and returned to the AV Buffer Manager. The caller must not modify or free the
-     * buffer after submission.
+     * Buffer Ownership: Ownership of the buffer transfers to the Audio Decoder HAL only
+     * when decodeBuffer() accepts the buffer (returns true). Once accepted, the HAL is
+     * responsible for freeing the buffer after processing. The caller must not modify or
+     * access the buffer after a successful call. If the call returns false or throws an
+     * exception, ownership remains with the caller.
      *
      * @param[in] nsPresentationTime	The presentation time of the audio frame in nanoseconds.
      * @param[in] bufferHandle			A handle to the AV buffer containing the encoded audio frame.
      * @param[in] trimStartNs			The time to trim from the start of the decoded audio in nanoseconds.
      * @param[in] trimEndNs  			The time to trim from the end of the decoded audio in nanoseconds.
      *
-     * @returns true on success or false if the decode buffer is full.
-     * 
+     * @returns boolean
+     * @retval true   Buffer successfully queued for decoding. Buffer ownership transfers to HAL.
+     * @retval false  Internal decode buffer queue is full. Buffer ownership remains with caller.
+     *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
-     * 
+     *
      * @pre The resource must be in State::STARTED.
      */
     boolean decodeBuffer(in long nsPresentationTime, in long bufferHandle, in int trimStartNs, in int trimEndNs);
 
     /**
 	 * Starts a flush operation on the decoder.
-     * 
+     *
      * The audio decoder must be in a state of `STARTED`.
      * Any input data buffers that have been passed for decode but have
      * not yet been decoded are automatically freed.
@@ -118,40 +130,40 @@ interface IAudioDecoderController {
      * @param[in] reset     When true, the internal audio decoder state is fully reset back to its opened READY state.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
-     * 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
      * @pre The resource must be in State::STARTED.
      */
 	void flush(in boolean reset);
 
     /**
 	 * Signals a discontinuity in the audio stream.
-     * 
+     *
      * The audio decoder must be in a state of `STARTED`.
      * Buffers that follow this call passed in `decodeBuffer()` shall be regarded
      * as PTS discontinuous to any audio frames previously passed.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
-     * 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
      * @pre The resource must be in State::STARTED.
      */
     void signalDiscontinuity();
 
     /**
 	 * Signals an end of stream condition in the audio stream after the last audio buffer has been delivered.
-     * 
+     *
      * The audio decoder must be in a state of `STARTED`.
      * Any frames held by the decoder should continue to be decoded and output.
      * No more audio buffers are expected to be delivered to the audio decoder after
 	 * `signalEOS()` has been called unless the decoder is first flushed or stopped and started again.
-     * 
-	 * An `IAudioDecoderControllerListener.onFrameOutput()` callback with `FrameMetadata.endOfStream` 
+     *
+	 * An `IAudioDecoderControllerListener.onFrameOutput()` callback with `FrameMetadata.endOfStream`
      * must be set to true after all audio frames have been output.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
-     * 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
      * @pre The resource must be in State::STARTED.
      */
 	void signalEOS();
@@ -164,7 +176,7 @@ interface IAudioDecoderController {
      * This must be invoked before any audio frame buffers are passed to `decodeBuffer()`.
      *
      * For example, MPEG-4 Audio requires the AudioSpecificConfig, beginning with the audio object type.
-     * 
+     *
      * The accepted `CSDAudioFormat` values align with DVB, ISDB, HLS, and DASH broadcast/streaming standards.
      *
      * @see ISO/IEC 14496-3:2019
@@ -179,9 +191,41 @@ interface IAudioDecoderController {
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
      *           Thrown if the resource is not in State::STARTED.
      *
      * @pre The decoder resource must be in State::STARTED.
      */
     boolean parseCodecSpecificData(in CSDAudioFormat csdAudioFormat, in byte[] codecData);
+
+    /**
+     * Sets the audio stream format hint before decoding begins.
+     *
+     * Provides the channel count and sample rate sourced from container
+     * or demuxer metadata (e.g. GStreamer caps). Required for codecs
+     * such as AC3/EAC3 where this information is not carried in
+     * codec-specific data but is needed by the decoder and downstream
+     * audio sink pipeline.
+     *
+     * For codecs that do carry format info in codec-specific data
+     * (e.g. AAC AudioSpecificConfig), this method is optional - the
+     * decoder will use the CSD values. If both are provided, the CSD
+     * values take precedence.
+     *
+     * @param[in] channels    Number of audio channels.
+     *                        Common values: 1 (mono), 2 (stereo),
+     *                        6 (5.1 surround), 8 (7.1 surround).
+     * @param[in] sampleRate  Sample rate in Hz.
+     *                        Common values: 8000, 16000, 32000,
+     *                        44100, 48000, 96000, 192000.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the READY state.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if channels or sampleRate is <= 0.
+     *
+     * @pre The resource must be in State::READY.
+     *
+     * @see PCMMetadata.numChannels, PCMMetadata.sampleRate
+     */
+    void setAudioFormat(in int channels, in int sampleRate);
 }

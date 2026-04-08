@@ -18,14 +18,21 @@
  */
 package com.rdk.hal.videosink;
 import com.rdk.hal.videosink.IVideoSink;
- 
-/** 
+
+/**
  *  @brief     Video Sink Manager HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
- 
+
 @VintfStability
 interface IVideoSinkManager
 {
@@ -38,6 +45,7 @@ interface IVideoSinkManager
      * @exception binder::Status::Exception::EX_NONE for success
      *
      * @returns IVideoSink.Id[]
+     *
      */
     IVideoSink.Id[] getVideoSinkIds();
 
@@ -49,6 +57,7 @@ interface IVideoSinkManager
      * @exception binder::Status::Exception::EX_NONE for success
      *
      * @returns IVideoSink or null if the ID is invalid.
+     *
      */
     @nullable IVideoSink getVideoSink(in IVideoSink.Id videoSinkId);
 }

@@ -16,15 +16,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.audiosink; 
-import com.rdk.hal.audiosink.IAudioSink; 
-import com.rdk.hal.audiosink.PlatformCapabilities; 
+package com.rdk.hal.audiosink;
+import com.rdk.hal.audiosink.IAudioSink;
+import com.rdk.hal.audiosink.PlatformCapabilities;
 
-/** 
+/**
  *  @brief     Audio Sink Manager HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
 
 @VintfStability
@@ -35,16 +42,17 @@ interface IAudioSinkManager
 
 	/**
 	 * Gets the list of platform audio sink IDs.
-     * 
+     *
      * @returns IAudioSink.Id[] array.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
+     *
      */
-	IAudioSink.Id[] getAudioSinkIds();   
+	IAudioSink.Id[] getAudioSinkIds();
 
     /**
      * Gets the platform wide capabilities for audio sinks.
-     * 
+     *
      * This includes the system mixer native PCM formats and sample rate that an audio sink
      * has to deliver for mixing.
      * The platform capabilities are determined at build time and cannot change.
@@ -52,6 +60,7 @@ interface IAudioSinkManager
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns PlatformCapabilities parcelable.
+     *
      */
     PlatformCapabilities getPlatformCapabilities();
 
@@ -63,6 +72,7 @@ interface IAudioSinkManager
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns IAudioSink or null on invalid audio sink ID.
+     *
      */
     @nullable IAudioSink getAudioSink(in IAudioSink.Id audioSinkId);
 

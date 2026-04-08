@@ -52,7 +52,8 @@ enum FlashImageResult
     ERROR_IMAGE_INVALID_TYPE = 2,
 
     /**
-     * The image signature failed verification.
+     * The image signature failed verification during pre-flash validation.
+     * This error occurs during the initial validation phase before any data is written to flash.
      */
     ERROR_IMAGE_INVALID_SIGNATURE = 3,
 
@@ -72,12 +73,29 @@ enum FlashImageResult
     ERROR_FLASH_WRITE_FAILED = 6,
 
     /**
-     * Flash read verify operation failed.
+     * Flash read-back verify operation failed after writing.
+     * This error indicates that data written to flash does not match the source image data
+     * when read back for verification. This is a data integrity check performed after the
+     * flash write operation completes.
      */
     ERROR_FLASH_VERIFY_FAILED = 7,
 
     /**
      * Flash image signature failed verification after writing.
+     * 
+     * This error occurs during the post-flash validation phase and indicates that the
+     * signature verification of the image data read back from flash has failed.
+     * 
+     * Implementation Requirements:
+     * - This validation MUST be performed after the flash write operation completes.
+     * - The implementation MUST read the written image data back from flash.
+     * - If a signature exists in the image, the implementation MUST verify it against
+     *   the image data read from flash.
+     * - This is a critical security validation step to ensure the integrity of the
+     *   flashed image and detect any corruption or tampering that may have occurred
+     *   during the write process.
+     * - The signature verification algorithm and key management are platform-specific
+     *   and should align with the platform's secure boot requirements.
      */
     ERROR_FLASH_VERIFY_SIGNATURE_FAILED = 8,
 }

@@ -14,6 +14,8 @@ linux_binder_idl/
 /.vs/hal/FileContentIndex
 /.vs/hal/v17
 /.vs
+/.vscode
+*.code-workspace
 /.history
 */h
 */cpp
@@ -31,3 +33,7 @@ Makefile
 
 # Compiled aidl output per module
 */gen/
+
+# Generated presentations
+*.pdf
+!docs/presentations/**/*.pdf

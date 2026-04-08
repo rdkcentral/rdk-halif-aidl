@@ -19,7 +19,7 @@
 package com.rdk.hal.videosink;
 import com.rdk.hal.State;
 
-/** 
+/**
  *  @brief     Callbacks event listener interface for Video Sink.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -28,7 +28,7 @@ import com.rdk.hal.State;
 
 @VintfStability
 oneway interface IVideoSinkEventListener
-{ 
+{
     /**
      * Callback when the first video frame has been rendered.
      *

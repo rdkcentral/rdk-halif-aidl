@@ -291,7 +291,7 @@ Decoded video frame buffers are only passed from the video decoder to the client
 
 If the input [AV Buffer](../../av_buffer/current/av_buffer.md) that contained the coded video frame was passed in a secure buffer, then the corresponding decoded video frame must be output in a secure video frame buffer.
 
-Video frame buffers are passed back as handles in the `IVideoDecoderControllerListener.onFrameOutput()` function `frameBufferHandle` parameter.  If no frame buffer handle is available to pass but the call needs to be made to provide updated FrameMetadata then `-1` shall be passed as the handle value.
+Video frame buffers are passed back as handles in the `IVideoDecoderControllerListener.onFrameOutput()` function `frameBufferHandle` parameter.  In tunnelled mode, `-1` is passed as the handle value to indicate that no frame buffer handle is being provided since the video is consumed internally by the vendor layer.
 
 The format of the data in the decoded video frame buffer is determined by the vendor driver implementation and does not need to be understood by the RDK middleware.
 
@@ -310,6 +310,32 @@ When coded video frames are passed in through [AV Buffer](../../av_buffer/curren
 Calls to `IVideoDecoderControllerListener.onFrameOutput()` with frame buffer handles (non-tunnelled mode) and/or frame metadata shall use the same `nsPresentationTime`.
 
 The video decoder shall output frames in presentation order regardless of the order of input frames which is ordered by the encoder.
+
+## Subtitling and SEI User Data
+
+To support closed captioning and subtitle extraction, the Video Decoder HAL defines the `onUserDataOutput()` callback. This callback delivers user data associated with each decoded video frame, typically used to transport caption information embedded in SEI NAL units.
+
+### Caption Data Delivery
+
+The user data passed via `onUserDataOutput()` corresponds to SEI NAL units conforming to the `user_data_registered_itu_t_t35` format, commonly used for CEA-608/708 captions:
+
+* Begins with ITU-T T.35 `country_code` (e.g., `0xB5` for USA)
+* Followed by `provider_code` (e.g., `0x0031` for ATSC)
+* Includes a `user_identifier` string (typically `'GA94'`)
+* Contains a `user_data_type_code` (e.g., `0x03` for CEA-608/708)
+* Followed by one or more closed caption (CC) data packets
+
+The byte array in `onUserDataOutput()` starts from the `user_identifier` field (inclusive).
+
+### Timing and Sync
+
+* Each `onUserDataOutput(nsPresentationTime, userData)` call corresponds to a single decoded frame.
+* The user data must follow the same **presentation order** as the output video frames to maintain AV sync.
+* The video frame itself may be delivered before or after the user data.
+
+### Client Handling
+
+The RDK media pipeline is responsible for parsing the SEI user data from the byte array to extract CEA-608 or CEA-708 caption packets and synchronize them with playback.
 
 ## Video Decoder States
 

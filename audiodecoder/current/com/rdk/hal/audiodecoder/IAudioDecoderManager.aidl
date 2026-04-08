@@ -16,14 +16,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.audiodecoder; 
+package com.rdk.hal.audiodecoder;
 import com.rdk.hal.audiodecoder.IAudioDecoder;
- 
-/** 
+
+/**
  *  @brief     Audio Decoder Manager HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
 
 @VintfStability
@@ -36,13 +43,14 @@ interface IAudioDecoderManager
 
     /**
 	 * Get all audio decoder resource IDs.
-     * 
+     *
      * The list of audio decoders is static in the system and does not change
      * between calls.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns IAudioDecoder.Id[]
+     *
      */
     IAudioDecoder.Id[] getAudioDecoderIds();
 
@@ -54,6 +62,7 @@ interface IAudioDecoderManager
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns IAudioDecoder which can be null if the resource index is invalid.
+     *
      */
     @nullable IAudioDecoder getAudioDecoder(in IAudioDecoder.Id decoderResourceId);
 }

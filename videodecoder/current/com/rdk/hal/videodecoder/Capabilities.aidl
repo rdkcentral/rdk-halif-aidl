@@ -18,30 +18,38 @@
  */
 package com.rdk.hal.videodecoder;
 import com.rdk.hal.videodecoder.CodecCapabilities;
+import com.rdk.hal.videodecoder.Colorimetry;
 import com.rdk.hal.videodecoder.DynamicRange;
- 
-/** 
+
+/**
  *  @brief     Video decoder capabilities definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
+
 @VintfStability
 parcelable Capabilities
 {
 	/**
-	 * Array of CodecCapability parcelables supported by this video decoder instance. 
+	 * Array of CodecCapability parcelables supported by this video decoder instance.
 	 */
     CodecCapabilities[] supportedCodecs;
-	
+
 	/**
-	 * Array of DynamicRange values supported by this video decoder instance. 
+	 * Array of DynamicRange values supported by this video decoder instance.
 	 */
     DynamicRange[] supportedDynamicRanges;
-	
+
 	/**
-	 * Indicates if this decoder instance can work in secure video path (SVP) mode. 
+	 * Array of Colorimetry values that this decoder instance can detect and report
+	 * in FrameMetadata.colorimetry. An empty array indicates colorimetry detection
+	 * is not supported.
+	 */
+    Colorimetry[] supportedColorimetries;
+
+	/**
+	 * Indicates if this decoder instance can work in secure video path (SVP) mode.
 	 * @see Property.SECURE_VIDEO
 	 */
     boolean supportsSecure;

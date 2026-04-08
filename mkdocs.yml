@@ -38,6 +38,7 @@ nav:
       - HAL Feature Profiles: halif/key_concepts/hal/hal_feature_profiles.md
       - HAL Naming Conventions: halif/key_concepts/hal/hal_naming_conventions.md
       - HAL Session State Management: halif/key_concepts/hal/hal_session_state_management.md
+      - HAL API Deprecation Governance: halif/key_concepts/hal/hal_api_deprecation_governance.md
     - Standards:
       - Core Development Guide: standards/direct_branching.md
       - Fork-Based Contribution Guide: standards/forked_based_branching.md
@@ -110,8 +111,9 @@ nav:
       - Getting Started: introduction/documentation_getting_started.md
       - Interface Template: standards/interface_template.md
     - Governance:
-      - RDK Documentation Structure: governance/rdk-release-documenation-structure.md
+      - RDK Documentation Structure: governance/rdk-release-documentation-structure.md
       - RDK Engineering Validation Framework: governance/rdk-engineering-validation-framework.md
+      - HAL Delivery & Versioning SOP: governance/versioning-sop.md
     - White Papers:
       - Documentation in Git: whitepapers/documentation_in_git.md
       - Branching Strategies : whitepapers/branching_strategies.md
@@ -124,6 +126,7 @@ nav:
     - Filing an Issue: external_content/ut-core-wiki/1.2.-Standards:-Issue-Description-Guideline.md
     - FAQ:
       - Python Development: external_content/ut-core-wiki/FAQ:-Comparing-Python-Development-Platforms.md
+    - Release Notes 0.14.0: releases/0.14.0.md
     - ChangeLog: CHANGELOG.md
 
 markdown_extensions:

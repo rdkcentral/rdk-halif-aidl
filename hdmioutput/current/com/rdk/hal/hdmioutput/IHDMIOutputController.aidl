@@ -37,6 +37,13 @@ import com.rdk.hal.PropertyValue;
  *  @author    Douglas Adler
  *  @author    Gerald Weatherup
  */
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
 @VintfStability
 interface IHDMIOutputController
 {
@@ -87,6 +94,7 @@ interface IHDMIOutputController
      * @retval true     HPD is asserted — sink is connected and powered.
      * @retval false    HPD is deasserted — no active sink detected.
      *
+     *
      * @see IHDMIOutputControllerListener.onHotPlugDetectStateChanged()
      */
     boolean getHotPlugDetectState();
@@ -108,6 +116,7 @@ interface IHDMIOutputController
      * @retval true     Property accepted and applied or queued.
      * @retval false    Invalid property key or value.
      *
+     *
      * @pre Output must be in State::READY or State::STARTED.
      *
      * @see setPropertyMulti(), getProperty()
@@ -126,6 +135,7 @@ interface IHDMIOutputController
      * @retval true     All properties were valid and applied.
      * @retval false    At least one invalid property in the array.
      *
+     *
      * @see setProperty(), getProperty()
      */
     boolean setPropertyMulti(in PropertyKVPair[] propertyKVList);
@@ -141,6 +151,7 @@ interface IHDMIOutputController
      *
      * @returns HDCPProtocolVersion enum value.
      * @retval HDCPProtocolVersion.UNDEFINED  No active HDCP session (unprotected content or authentication inactive).
+     *
      *
      * @see getHDCPStatus(), getHDCPReceiverVersion(), onEDID()
      */
@@ -159,6 +170,7 @@ interface IHDMIOutputController
      * @returns HDCPProtocolVersion enum value.
      * @retval HDCPProtocolVersion.UNDEFINED  Sink capabilities not yet known (HPD deasserted or EDID not read).
      *
+     *
      * @see getHDCPStatus(), getHDCPCurrentVersion(), onEDID()
      */
     HDCPProtocolVersion getHDCPReceiverVersion();
@@ -172,6 +184,7 @@ interface IHDMIOutputController
      *
      * @returns HDCPStatus enum value indicating authentication state.
      * @retval HDCPStatus.UNKNOWN  No sink present or HDCP state not yet determined.
+     *
      *
      * @see getHDCPCurrentVersion(), getHDCPReceiverVersion(), onHDCPStatusChanged()
      */
@@ -200,6 +213,7 @@ interface IHDMIOutputController
      *
      * @returns SPDInfoFrame
      * @retval null    No SPD InfoFrame is currently configured.
+     *
      *
      * @pre Output must be in State::READY or State::STARTED.
      *

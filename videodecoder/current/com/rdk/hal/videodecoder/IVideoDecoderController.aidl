@@ -19,13 +19,23 @@
 package com.rdk.hal.videodecoder;
 import com.rdk.hal.videodecoder.Property;
 import com.rdk.hal.videodecoder.CSDVideoFormat;
+import com.rdk.hal.videodecoder.MasteringDisplayInfo;
+import com.rdk.hal.videodecoder.ContentLightLevel;
+import com.rdk.hal.videodecoder.Colorimetry;
 import com.rdk.hal.PropertyValue;
 
-/** 
+/**
  *  @brief     Video Decoder Controller HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
 
 @VintfStability
@@ -33,31 +43,31 @@ interface IVideoDecoderController
 {
     /**
      * Starts the Video Decoder.
-     * 
+     *
      * The Video Decoder must be in a `READY` state before it can be started.
      * If successful the Video Decoder transitions to a `STARTING` state and then a `STARTED` state.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
-     * 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
      * @pre The resource must be in State::READY.
-     * 
+     *
      * @see IVideoDecoder.open(), IVideoDecoder.stop()
      */
     void start();
- 
+
     /**
      * Stops the Video Decoder.
-     * 
+     *
      * The decoder enters the `STOPPING` state and then any input data buffers that have been passed for decode but have
      * not yet been decoded are automatically freed.  This is effectively the same as a flush.
      * Once buffers are freed and the internal Video Decoder state is reset, the decoder enters the `READY` state.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
-     * 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
      * @pre The resource must be in State::STARTED.
-     * 
+     *
      * @see start()
      */
     void stop();
@@ -74,86 +84,91 @@ interface IVideoDecoderController
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
+     *
      * @see getProperty()
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);
 
     /**
      * Pass an encoded buffer of video elementary stream data to the Video Decoder.
-     * 
+     *
      * The Video Decoder must be in a `STARTED` state.
-     * Buffers can be either non-secure or secure to support SVP.
+     * Buffers can be either non-secure or secure to support SVP (Secure Video Path).
      * Each call shall reference a single video frame with a presentation timestamp.
-     * 
-     * Once the decoder has finished processing the buffer, it is automatically released
-     * and returned to the AV Buffer Manager. The caller must not modify or free the
-     * buffer after submission.
-     * 
+     *
+     * Buffer Ownership: Ownership of the buffer transfers to the Video Decoder HAL only
+     * when decodeBuffer() accepts the buffer (returns true). Once accepted, the HAL is
+     * responsible for freeing the buffer after processing. The caller must not modify or
+     * access the buffer after a successful call. If the call returns false or throws an
+     * exception, ownership remains with the caller.
+     *
      * @param[in] nsPresentationTime	The presentation time of the video frame in nanoseconds.
      * @param[in] bufferHandle			A handle to the AV buffer containing the encoded video frame.
-     * 
-     * @returns true on success or false if the decode buffer is full.
+     *
+     * @returns boolean
+     * @retval true   Buffer successfully queued for decoding. Buffer ownership transfers to HAL.
+     * @retval false  Internal decode buffer queue is full. Buffer ownership remains with caller.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
-     * 
+     *
      * @pre The resource must be in State::STARTED.
      */
     boolean decodeBuffer(in long nsPresentationTime, in long bufferHandle);
 
     /**
      * Starts a flush operation on the decoder.
-     * 
+     *
      * The Video Decoder must be in a `STARTED` state.
      * Any input data buffers that have been passed for decode but have
      * not yet been decoded are automatically freed.
-     * 
+     *
      * Any pending decoded video frames due for callback are returned to the video frame buffer pool.
      * The internal Video Decoder state is optionally reset.
      *
      * @param[in] reset - When true, the internal Video Decoder state is fully reset back to its opened `READY` state.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
-     * 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
      * @pre The resource must be in State::STARTED.
      */
     void flush(in boolean reset);
 
     /**
      * Signals a discontinuity in the video stream.
-     * 
+     *
      * The Video Decoder must be in a state of `STARTED`.
      * Buffers that follow this call passed in `decodeBuffer()` shall be regarded
      * as PTS discontinuous to any video frames past or already held in the Video Decoder.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
-     * 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
      * @pre The resource must be in State::STARTED.
      */
     void signalDiscontinuity();
 
     /**
      * Signals an end of stream condition after the last AV buffer has been passed for decode.
-     * 
+     *
      * The Video Decoder must be in a state of `STARTED`.
      * Any frames held by the decoder should continue to be decoded and output.
-     * 
+     *
      * No more AV buffers are expected to be delivered to the Video Decoder after
      * `signalEOS()` has been called unless the decoder is first flushed or stopped and started again.
-     * 
+     *
      * An `IVideoDecoderControllerListener.onFrameOutput()` callback with `FrameMetadata.endOfStream`
      * must be set to true after all video frames have been output.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE 
-     * 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
      * @pre The resource must be in State::STARTED.
      */
     void signalEOS();
-    
+
     /**
     * Sends codec specific data to initialise the Video Decoder.
     *
@@ -191,8 +206,144 @@ interface IVideoDecoderController
     *
     * @exception binder::Status::Exception::EX_NONE for success
     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the `STARTED` state.
+     *
     *
     * @pre The resource must be in the `STARTED` state.
     */
     boolean parseCodecSpecificData(in CSDVideoFormat csdVideoFormat, in byte[] codecData);
+
+    /**
+     * Sets the mastering display colour volume metadata for the stream (SMPTE ST 2086).
+     *
+     * Provides the display primaries, white point, and peak/floor luminance of the
+     * mastering display. This is typically sourced from container-level metadata
+     * (e.g. MP4/ISOBMFF 'mdcv' box, DASH MPD) before SEI messages arrive in the stream.
+     *
+     * Pass null to clear any previously set value and revert to stream-signalled metadata.
+     *
+     * @param[in] info  Mastering display metadata, or null to clear.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the READY state.
+     *
+     * @pre The resource must be in State::READY.
+     *
+     * @see MasteringDisplayInfo, FrameMetadata.masteringDisplayInfo
+     */
+    void setMasteringDisplayInfo(in @nullable MasteringDisplayInfo info);
+
+    /**
+     * Sets the content light level metadata for the stream (CTA-861.3 / HEVC SEI type 144).
+     *
+     * Provides the MaxCLL and MaxFALL values as CTA-861.3 static metadata. This is typically
+     * sourced from container-level metadata (e.g. MP4/ISOBMFF 'clli' box, DASH MPD) before
+     * SEI messages arrive in the stream.
+     *
+     * Pass null to clear any previously set value and revert to stream-signalled metadata.
+     *
+     * @param[in] info  Content light level metadata, or null to clear.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the READY state.
+     *
+     * @pre The resource must be in State::READY.
+     *
+     * @see ContentLightLevel, FrameMetadata.contentLightLevel
+     */
+    void setContentLightLevel(in @nullable ContentLightLevel info);
+
+    /**
+     * Sets the colorimetry (colour primaries and matrix) for the stream.
+     *
+     * Identifies the colour space of the video content. This is typically derived
+     * from container or manifest metadata and used to configure the downstream
+     * display pipeline before decoding begins.
+     *
+     * @param[in] colorimetry  The colorimetry of the stream. Use Colorimetry::UNKNOWN
+     *                         if not signalled.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the READY state.
+     *
+     * @pre The resource must be in State::READY.
+     *
+     * @see Colorimetry, FrameMetadata.colorimetry
+     */
+    void setColorimetry(in Colorimetry colorimetry);
+
+    /**
+     * Sets the stream resolution hint before decoding begins.
+     *
+     * Provides the coded frame dimensions sourced from container metadata
+     * (e.g. MP4/ISOBMFF track header, DASH MPD). Allows the decoder to
+     * pre-allocate frame buffers at the correct size before the first frame
+     * is decoded.
+     *
+     * The decoder will use the actual coded dimensions from the bitstream once
+     * decoding starts. If those differ, FrameMetadata.codedWidth/codedHeight
+     * reflects the true decoded dimensions.
+     *
+     * @param[in] width   Coded frame width in pixels. Must be > 0.
+     * @param[in] height  Coded frame height in pixels. Must be > 0.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the READY state.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if width or height is <= 0.
+     *
+     * @pre The resource must be in State::READY.
+     *
+     * @see FrameMetadata.codedWidth, FrameMetadata.codedHeight
+     */
+    void setStreamResolution(in int width, in int height);
+
+    /**
+     * Sets the stream frame rate hint before decoding begins.
+     *
+     * Provides the frame rate as a rational number (numerator/denominator)
+     * sourced from container metadata. Allows the decoder and downstream
+     * pipeline to configure timing before the first frame is decoded.
+     *
+     * e.g. 24fps = 24/1, 29.97fps = 30000/1001, 59.94fps = 60000/1001
+     *
+     * The decoder reports the frame rate detected from the bitstream in
+     * FrameMetadata.frameRateNumerator / frameRateDenominator.
+     *
+     * @param[in] numerator    Frame rate numerator. Must be >= 0. Use 0/0 if unknown.
+     * @param[in] denominator  Frame rate denominator. Must be > 0 unless numerator is 0.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the READY state.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if denominator is 0 and numerator is non-zero.
+     *
+     * @pre The resource must be in State::READY.
+     *
+     * @see FrameMetadata.frameRateNumerator, FrameMetadata.frameRateDenominator
+     */
+    void setFrameRate(in int numerator, in int denominator);
+
+    /**
+     * Sets the Dolby Vision layer configuration for the stream.
+     *
+     * Indicates whether a Dolby Vision Base Layer (BL) and/or Enhancement
+     * Layer (EL) are present in the bitstream, as signalled in the container.
+     * This allows the decoder to configure the correct dual-stream DV decode
+     * mode before decoding begins.
+     *
+     * A BL-only stream is a standard HEVC/AVC-compatible stream with DV
+     * RPU metadata. A BL+EL stream carries an additional enhancement layer
+     * for full Dolby Vision quality.
+     *
+     * Only applicable when the stream DynamicRange is DOLBY_VISION.
+     *
+     * @param[in] blPresent  true if a Dolby Vision Base Layer is present.
+     * @param[in] elPresent  true if a Dolby Vision Enhancement Layer is present.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the READY state.
+     *
+     * @pre The resource must be in State::READY.
+     *
+     * @see DynamicRange::DOLBY_VISION
+     */
+    void setDolbyVisionLayerFlags(in boolean blPresent, in boolean elPresent);
 }
