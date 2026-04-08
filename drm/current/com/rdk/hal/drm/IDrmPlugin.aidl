@@ -303,9 +303,9 @@ interface IDrmPlugin {
      * lower supported security level must be set. The level can be queried
      * using {@link #getSecurityLevel}. A session ID is returned.
      *
-     * @param level the requested security level
+     * @param[in] securityLevel the requested security level
      *
-     * @return sessionId
+     * @returns Session ID.
      */
     byte[] openSession(in SecurityLevel securityLevel);
 
