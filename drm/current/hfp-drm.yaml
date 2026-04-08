@@ -25,7 +25,7 @@
 drm:                  # Component object begins (matches directory name)
     interfaceVersion: current
 
-    maxSessions: 4 # This is the maximum toptal number of concurrent DRM sessions of all schemes that the platform must support. Adjust as needed based on expected use cases and platform capabilities.
+    maxSessions: 4 # This is the maximum total number of concurrent DRM sessions of all schemes that the platform must support. Adjust as needed based on expected use cases and platform capabilities.
 
     # The VTS must include tests that verify the platform can handle the specified maxTotalBitrate under realistic conditions.
     maxTotalBitrate: 40000000 # This is the total real-time bitrate in bits per second (bps) that the drm system must handle. Adjust as needed based on platform capabilities.

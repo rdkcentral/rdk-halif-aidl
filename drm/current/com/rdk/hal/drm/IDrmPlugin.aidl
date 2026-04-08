@@ -211,7 +211,7 @@ interface IDrmPlugin {
      *
      * @param propertyName the name of the property
      *
-     * @return property value bye array
+     * @return property value byte array
      *     Implicit error codes:
      *       + BAD_VALUE if the property name is invalid
      *       + ERROR_DRM_CANNOT_HANDLE if the property is not supported
@@ -521,7 +521,7 @@ interface IDrmPlugin {
      */
     byte[] signRSA(
             in byte[] sessionId, in String algorithm, in byte[] message,
-            in byte[] wrappedkey);
+            in byte[] wrappedKey);
 
     /**
      * Compute a hash of the provided message using the mac algorithm specified
