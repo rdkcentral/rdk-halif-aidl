@@ -1,6 +1,6 @@
 # CDM
 
-CDM is depricated. Please see ../drm and https://github.com/rdkcentral/rdk-halif-aidl/tree/main/drm/current
+CDM is deprecated. Please see ../drm and https://github.com/rdkcentral/rdk-halif-aidl/tree/main/drm/current
 
 ## References
 
