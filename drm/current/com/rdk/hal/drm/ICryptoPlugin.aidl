@@ -73,7 +73,7 @@ interface ICryptoPlugin {
     /**
      * Notify a plugin of the currently configured resolution.
      *
-     * @param width - the display resolutions's width
+     * @param width - the display resolution's width
      * @param height - the display resolution's height
      */
     void notifyResolution(in int width, in int height);
