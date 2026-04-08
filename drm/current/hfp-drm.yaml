@@ -42,9 +42,9 @@ drm:                  # Component object begins (matches directory name)
       - HW_SECURE_DECODE
       - HW_SECURE_ALL
 
-      # Maximum HDCP output protection level supported.
-      # Values from HdcpLevel enum (HdcpLevel.aidl).
-      supportedHdcpLevels:
+    # Maximum HDCP output protection level supported.
+    # Values from HdcpLevel enum (HdcpLevel.aidl).
+    supportedHdcpLevels:
       - HDCP_NONE
       - HDCP_V1
       - HDCP_V2
