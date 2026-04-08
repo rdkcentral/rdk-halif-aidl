@@ -81,11 +81,11 @@ parcelable DecryptArgs {
      * 
      * It is the responsibility of the caller to recycle/free the allocated AVBuffer after the call to decrypt returns.
      */
-    in long sourceBufferHandle;
+    long sourceBufferHandle;
 
     /**
      * Output AVBuffer handle for the decrypted data.
      */
-    in long destinationBufferHandle;
+    long destinationBufferHandle;
 
 }
