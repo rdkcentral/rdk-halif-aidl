@@ -422,7 +422,7 @@ interface IDrmPlugin {
      *     BAD_VALUE if any parameters are invalid
      *     ERROR_DRM_INVALID_STATE  if the HAL is in a state where
      *         the algorithm cannot be set.
-     *     ERROR_DRM_SESSION_NOT_OPENED if the session is not opened`
+     *     ERROR_DRM_SESSION_NOT_OPENED if the session is not opened
      */
     void setCipherAlgorithm(in byte[] sessionId, in String algorithm);
 
@@ -449,7 +449,7 @@ interface IDrmPlugin {
      *     BAD_VALUE if any parameters are invalid
      *     ERROR_DRM_INVALID_STATE  if the HAL is in a state where
      *         the algorithm cannot be set.
-     *     ERROR_DRM_SESSION_NOT_OPENED if the session is not opened`
+     *     ERROR_DRM_SESSION_NOT_OPENED if the session is not opened
      */
     void setMacAlgorithm(in byte[] sessionId, in String algorithm);
 
