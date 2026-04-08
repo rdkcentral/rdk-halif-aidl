@@ -427,6 +427,17 @@ interface IDrmPlugin {
     void setCipherAlgorithm(in byte[] sessionId, in String algorithm);
 
     /**
+     * Plugins call the following methods to deliver events 
+     *
+     *
+     * Set a listener for a drm session. This allows the drm HAL to
+     * make asynchronous calls back to the client of IDrm.
+     *
+     * @param listener instance of IDrmPluginListener to receive the events
+     */
+    void setListener(in IDrmPluginListener listener);
+
+    /**
      * Set the MAC algorithm to be used for computing hashes in a session.
      *
      * @param sessionId the session id the call applies to
