@@ -7,7 +7,7 @@
 The DRM (Digital Rights Management) HAL provides a platform-independent interface for managing content protection and secure media playback. It allows middleware and media services to interact with vendor-specific DRM implementations whilst maintaining a consistent interface across diverse hardware platforms. This abstraction enables secure content delivery, licence management, and cryptographic operations for protected media streams.
 
 This DRM interface definition is almost identical to Android 16's DRM and Crypto Plugin interfaces. Usage of the Plugins and discovery by the RDK framework is identical.
-The approach is to minimize SoC vendor (and Drm vendor) effor by using a model that is well known and understood, thus minimizing bringup and maintenance issues.
+This approach minimises SoC vendor (and DRM vendor) effort by using a model that is well known and understood, thereby reducing bring-up and maintenance issues.
 See: https://source.android.com/docs/core/media/drm#drm-plugin-details
 In principle the same Android VTS approach can be applied early in SoC bring up.
 
