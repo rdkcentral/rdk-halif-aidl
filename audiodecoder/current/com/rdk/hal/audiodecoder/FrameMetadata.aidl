@@ -61,7 +61,8 @@ parcelable FrameMetadata {
 	/**
 	 * End of stream flag for decoder output.
 	 * Set to true on the final frame output callback after IAudioDecoderController.signalEOS() has been invoked, once all queued frames have been output.
-	 * This may correspond to an end of stream marker in the audio bitstream, when present.
+	 * On an EOS-only callback (where the frame buffer handle is invalid), only this field is guaranteed to be meaningful.
+	 * All other metadata fields are undefined and must not be interpreted by the client on such a callback.
 	 */
 	boolean endOfStream;
 
