@@ -105,6 +105,7 @@ parcelable FrameMetadata {
 
 	/**
 	 * End of stream flag for decoder output.
+	 * Set to true on the onFrameOutput() callback when an EOS marker is detected in the video bitstream; the frame buffer handle is valid and all metadata fields are meaningful.
 	 * Set to true on the final frame output callback after IVideoDecoderController.signalEOS(), once all queued frames have been output.
 	 * On an EOS-only callback (where the frame buffer handle is invalid), only this field is guaranteed to be meaningful.
 	 * All other metadata fields are undefined and must not be interpreted by the client on such a callback.

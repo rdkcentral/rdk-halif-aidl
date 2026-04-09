@@ -35,11 +35,6 @@ oneway interface IVideoDecoderControllerListener {
      * when the metadata changes in the stream.
      * It can only be null if the contents have not changed since the last callback.
      *
-     * On an EOS-only callback (after IVideoDecoderController.signalEOS(), where frameAVBufferHandle is -1
-     * and FrameMetadata.endOfStream is true), metadata must be non-null but only the endOfStream field is
-     * guaranteed to be meaningful. All other metadata fields are undefined and must not be interpreted by
-     * the client. The client must not call IAVBuffer.free() as the handle is invalid.
-     *
      * Ownership semantics for `frameAVBufferHandle`:
      * - The client receives ownership of the AVBuffer handle when this callback is invoked.
      * - The client is responsible for managing the handle's lifecycle: either passing it to the next

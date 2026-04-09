@@ -37,11 +37,6 @@ oneway interface IAudioDecoderControllerListener {
     * and `metadata` is non-null for the first frame after `State::START` or `State::FLUSHING`,
     * or whenever stream metadata changes. Metadata may be null if unchanged since the last callback.
     *
-    * On an EOS-only callback (after IAudioDecoderController.signalEOS(), where frameAVBufferHandle is -1
-    * and FrameMetadata.endOfStream is true), metadata must be non-null but only the endOfStream field is
-    * guaranteed to be meaningful. All other metadata fields are undefined and must not be interpreted by
-    * the client. The client must not call IAVBuffer.free() as the handle is invalid.
-    *
     * Ownership semantics for `frameAVBufferHandle`:
     * - The client receives ownership of the AVBuffer handle when this callback is invoked.
     * - The client is responsible for managing the handle's lifecycle: either passing it to the next
