@@ -21,7 +21,7 @@
  *
  * https://android.googlesource.com/platform/hardware/interfaces/+/refs/tags/android-16.0.0_r4/drm/aidl/android/hardware/drm
  *
- * Copyright (C) 2021 The Android Open Source Project
+ * Copyright (C) 2009 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0.
  * -------------------------------------------------------------------
