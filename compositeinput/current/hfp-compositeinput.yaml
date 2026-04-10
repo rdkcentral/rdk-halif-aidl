@@ -41,18 +41,18 @@ compositeinput:
       # Port capabilities (matches PortCapabilities.aidl)
       metricsSupported: true
 
-      # HFP-defined standard property keys (discoverable via getCapabilities())
-      # These are string keys - upper layers query and decide which to use
+      # HFP-defined property keys supported on this port (maps to
+      # PortCapabilities.supportedProperties[]). Metric keys (METRIC_ prefix)
+      # are carried in this same list and distinguished via
+      # propertyMetadata[].isMetric.
       supportedProperties:
-        - "SIGNAL_STRENGTH"        # Signal strength in dBm (PropertyValue.longValue, read-only)
+        - "SIGNAL_STRENGTH"            # Signal strength in dBm (PropertyValue.longValue, read-only)
+        - "METRIC_SIGNAL_LOCK_TIME"    # Average signal lock time in ms (PropertyValue.longValue, read-only)
+        - "METRIC_SIGNAL_DROPS"        # Total count of signal drops (PropertyValue.longValue, read-only)
+        - "METRIC_UPTIME"              # Total uptime in ms (PropertyValue.longValue, read-only)
 
-      # Metrics properties (METRIC_ prefix for categorization)
-      supportedMetrics:
-        - "METRIC_SIGNAL_LOCK_TIME"   # Average signal lock time in ms (PropertyValue.longValue, read-only)
-        - "METRIC_SIGNAL_DROPS"       # Total count of signal drops (PropertyValue.longValue, read-only)
-        - "METRIC_UPTIME"             # Total uptime in ms (PropertyValue.longValue, read-only)
-
-      # Property metadata for enhanced discovery (optional but recommended)
+      # Property metadata for each supported property (maps to
+      # PortCapabilities.propertyMetadata[]). isMetric=true flags metric keys.
       propertyMetadata:
         - key: "SIGNAL_STRENGTH"
           type: LONG
@@ -92,18 +92,18 @@ compositeinput:
       # Port capabilities (matches PortCapabilities.aidl)
       metricsSupported: true
 
-      # HFP-defined standard property keys (discoverable via getCapabilities())
-      # These are string keys - upper layers query and decide which to use
+      # HFP-defined property keys supported on this port (maps to
+      # PortCapabilities.supportedProperties[]). Metric keys (METRIC_ prefix)
+      # are carried in this same list and distinguished via
+      # propertyMetadata[].isMetric.
       supportedProperties:
-        - "SIGNAL_STRENGTH"        # Signal strength in dBm (PropertyValue.longValue, read-only)
+        - "SIGNAL_STRENGTH"            # Signal strength in dBm (PropertyValue.longValue, read-only)
+        - "METRIC_SIGNAL_LOCK_TIME"    # Average signal lock time in ms (PropertyValue.longValue, read-only)
+        - "METRIC_SIGNAL_DROPS"        # Total count of signal drops (PropertyValue.longValue, read-only)
+        - "METRIC_UPTIME"              # Total uptime in ms (PropertyValue.longValue, read-only)
 
-      # Metrics properties (METRIC_ prefix for categorization)
-      supportedMetrics:
-        - "METRIC_SIGNAL_LOCK_TIME"   # Average signal lock time in ms (PropertyValue.longValue, read-only)
-        - "METRIC_SIGNAL_DROPS"       # Total count of signal drops (PropertyValue.longValue, read-only)
-        - "METRIC_UPTIME"             # Total uptime in ms (PropertyValue.longValue, read-only)
-
-      # Property metadata for enhanced discovery (optional but recommended)
+      # Property metadata for each supported property (maps to
+      # PortCapabilities.propertyMetadata[]). isMetric=true flags metric keys.
       propertyMetadata:
         - key: "SIGNAL_STRENGTH"
           type: LONG
@@ -128,3 +128,46 @@ compositeinput:
           readOnly: true
           isMetric: true
           description: "Total uptime in milliseconds"
+
+  # Platform-wide capabilities (maps to PlatformCapabilities.aidl)
+  platformCapabilities:
+    halVersion: "1.0.0"                # PlatformCapabilities.halVersion (semver)
+    maxPorts: 2                        # PlatformCapabilities.maxPorts (matches ports[].length)
+
+    # Union of all property keys supported across the platform's ports
+    supportedProperties:
+      - "SIGNAL_STRENGTH"
+      - "METRIC_SIGNAL_LOCK_TIME"
+      - "METRIC_SIGNAL_DROPS"
+      - "METRIC_UPTIME"
+
+    # Metadata for the platform-wide property set
+    propertyMetadata:
+      - key: "SIGNAL_STRENGTH"
+        type: LONG
+        readOnly: true
+        isMetric: false
+        description: "Signal strength in dBm"
+
+      - key: "METRIC_SIGNAL_LOCK_TIME"
+        type: LONG
+        readOnly: true
+        isMetric: true
+        description: "Average signal lock time in milliseconds"
+
+      - key: "METRIC_SIGNAL_DROPS"
+        type: LONG
+        readOnly: true
+        isMetric: true
+        description: "Total count of signal drops since last reset"
+
+      - key: "METRIC_UPTIME"
+        type: LONG
+        readOnly: true
+        isMetric: true
+        description: "Total uptime in milliseconds"
+
+    # Optional feature flags (PlatformCapabilities.FeatureFlags)
+    features:
+      signalMetricsSupported: true
+      macrovisionDetectionSupported: false
