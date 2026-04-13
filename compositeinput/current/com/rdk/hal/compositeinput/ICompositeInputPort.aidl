@@ -33,6 +33,15 @@ import com.rdk.hal.PropertyValue;
  *
  * Provides control and monitoring for an individual composite video input port.
  * Each port can be independently controlled, configured, and monitored.
+ *
+ * @note Video scaling, positioning and aspect-ratio control are intentionally
+ *       not exposed on this interface. Composite input video, once presented
+ *       via setActive(true), is scaled and positioned by the display pipeline
+ *       through the planecontrol HAL (package com.rdk.hal.planecontrol, see
+ *       IPlaneControl and its Property enum: X, Y, WIDTH, HEIGHT, ASPECT_RATIO,
+ *       OVERSCAN). Clients migrating from the legacy dsCompositeInScaleVideo()
+ *       API should configure the video plane via IPlaneControl rather than
+ *       looking for an equivalent method on this interface.
  */
 @VintfStability
 interface ICompositeInputPort
@@ -81,8 +90,6 @@ interface ICompositeInputPort
      * conjunction with event listeners for real-time updates.
      *
      * @returns PortStatus parcelable with current port state.
-     *
-     * @exception binder::Status EX_ILLEGAL_STATE if service is not ready.
      *
      * @see PortStatus, IPortEventListener
      */
@@ -148,16 +155,21 @@ interface ICompositeInputPort
      * Gets multiple property values in a single call.
      *
      * Efficient batch retrieval of multiple properties. Reduces IPC overhead
-     * when querying multiple properties simultaneously. Entries for unsupported
-     * properties will have default-initialized values.
+     * when querying multiple properties simultaneously.
+     *
+     * This is an all-or-nothing batch operation. If any key in propertyKeys is
+     * invalid or unsupported by this port, no values are populated and the call
+     * throws EX_ILLEGAL_ARGUMENT. Clients must therefore only pass keys they
+     * have first confirmed via getCapabilities().supportedProperties.
      *
      * @param[in] propertyKeys     Array of property key strings to retrieve.
-     * @returns Array of PropertyKVPair with keys and values populated.
+     * @returns Array of PropertyKVPair with keys and values populated. Length
+     *          matches the input array length.
      *
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if propertyKeys is null or empty.
-     * @post Returned array length matches input array length.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if propertyKeys is null, empty,
+     *            or contains any key that is invalid or not supported by this port.
      *
-     * @see PropertyKVPair, getProperty(), setPropertyMulti()
+     * @see PropertyKVPair, getProperty(), setPropertyMulti(), getCapabilities()
      */
     PropertyKVPair[] getPropertyMulti(in @utf8InCpp String[] propertyKeys);
 
