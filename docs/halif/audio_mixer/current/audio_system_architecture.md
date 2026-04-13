@@ -32,8 +32,8 @@ This document is intended for SoC vendors implementing HAL services, middleware 
 
 ## Audio Subsystem Components
 
-| Component | HAL Service Name | Role |
-|-----------|-----------------|------|
+| Component | HAL Module | Role |
+| --------- | ---------- | ---- |
 | **AudioDecoder** | `audiodecoder` | Decodes compressed audio (AC3, AAC, etc.). Tunnelled mode: decoded audio is delivered internally to the mixer. Non-tunnelled mode: decoded PCM is returned to middleware via callback. |
 | **AudioSink** | `audiosink` | Receives PCM frames from middleware via `queueAudioFrame()` and delivers them to the mixer. Manages per-stream volume, mute, and fading. |
 | **AudioMixer** | `audiomixer` | Mixes multiple audio inputs (main, associated, PCM, TTS) and routes the result to output ports (HDMI, SPDIF). Manages AQ processing, output format, and transcode. |
@@ -147,14 +147,14 @@ sequenceDiagram
 
     Note over MW,MIX: Non-Tunnelled Decode Path
 
-    MW->>BUF: allocate(inputPool)
+    MW->>BUF: alloc(inputPool)
     BUF-->>MW: bufferHandle (compressed)
     MW->>MW: Fill buffer with compressed audio
     MW->>DEC: decodeBuffer(pts, bufferHandle)
     Note right of MW: Ownership → Decoder
 
     DEC->>BUF: free(inputBuffer)
-    DEC->>BUF: allocate(outputPool)
+    DEC->>BUF: alloc(outputPool)
     BUF-->>DEC: frameHandle (PCM)
     DEC->>DEC: Decode into frameHandle
     DEC-->>MW: onFrameOutput(pts, frameHandle, metadata)
@@ -169,7 +169,7 @@ sequenceDiagram
 
     Note over MW,MIX: PCM-Only Path (TTS / Clips)
 
-    MW->>BUF: allocate(pcmPool)
+    MW->>BUF: alloc(pcmPool)
     BUF-->>MW: bufferHandle (PCM)
     MW->>MW: Fill buffer with PCM audio
     MW->>SINK: queueAudioFrame(pts, bufferHandle, metadata)
@@ -212,7 +212,7 @@ Secure buffers must never be copied to non-secure memory. The HAL implementation
 | Resource allocation (which decoder for which stream) | Middleware | Internal resource management logic |
 | Audio routing decisions (which source to which mixer input) | Middleware | `IAudioMixerController.setInputRouting()` |
 | Codec selection and stream setup | Middleware | `IAudioDecoder.open(codec, secure, listener)` |
-| Buffer pool allocation | Middleware | `IAVBuffer.allocate()` |
+| Buffer pool allocation | Middleware | `IAVBuffer.createAudioPool()` / `createVideoPool()`, then pool `alloc()` / `free()` |
 | Decoder output pool management | HAL | Internal to AudioDecoder |
 | PCM format requirements declaration | HAL | `IAudioSinkManager.getPlatformCapabilities()` |
 | Audio mixing execution | HAL | Vendor implementation |
@@ -220,7 +220,7 @@ Secure buffers must never be copied to non-secure memory. The HAL implementation
 | Transcode format selection | Middleware | `IAudioOutputPort.setProperty(TRANSCODE_FORMAT, ...)` |
 | AV synchronisation execution | HAL | Vendor implementation driven by AVClock |
 | Sync group configuration | Middleware | `IAVClockController.setAudioSink()` / `setVideoSink()` |
-| Per-stream volume and mute | Middleware | `IAudioSinkController` properties |
+| Per-stream volume and mute | Middleware | `IAudioSinkController.getVolume()` / `setVolume()` / `setVolumeRamp()` |
 | Per-output-port volume and mute | Middleware | `IAudioOutputPort.setProperty(VOLUME/MUTE, ...)` |
 | AQ profile selection | Middleware | `IAudioMixerController.setProperty(ACTIVE_AQ_PROFILE, ...)` |
 | AQ processing execution | HAL | Vendor implementation (Dolby MS12, DTS:X Ultra, etc.) |
@@ -375,14 +375,18 @@ sequenceDiagram
     end
     box rgb(249,168,37) Pipeline 1 (Secure - Broadcast)
         participant DEC0 as AudioDecoder 0
+        participant DCTRL0 as AudioDecoderController 0
         participant SINK0 as AudioSink 0
         participant MIX0 as AudioMixer 0
+        participant MCTRL0 as AudioMixerController 0
         participant CLK0 as AVClock 0
     end
     box rgb(67,160,71) Pipeline 2 (Non-Secure - App)
         participant DEC1 as AudioDecoder 1
+        participant DCTRL1 as AudioDecoderController 1
         participant SINK1 as AudioSink 1
         participant MIX1 as AudioMixer 1
+        participant MCTRL1 as AudioMixerController 1
         participant CLK1 as AVClock 1
     end
 
@@ -390,22 +394,26 @@ sequenceDiagram
 
     MW->>MIX0: open(secure=true, listener)
     MIX0-->>MW: IAudioMixerController
-    MW->>MIX0: setInputRouting([{AUDIO_SINK, 0}])
+    MW->>MCTRL0: setInputRouting([{AUDIO_SINK, 0}])
     MW->>CLK0: setAudioSink(0), setVideoSink(0)
     MW->>CLK0: setClockMode(PCR)
+    MW->>DEC0: open(codec, secure=true, listener)
+    DEC0-->>MW: IAudioDecoderController
 
     MW->>MIX1: open(secure=false, listener)
     MIX1-->>MW: IAudioMixerController
-    MW->>MIX1: setInputRouting([{AUDIO_SINK, 1}])
+    MW->>MCTRL1: setInputRouting([{AUDIO_SINK, 1}])
     MW->>CLK1: setAudioSink(1)
     MW->>CLK1: setClockMode(AUTO)
+    MW->>DEC1: open(codec, secure=false, listener)
+    DEC1-->>MW: IAudioDecoderController
 
     Note over MW,CLK1: Playback Phase
 
-    MW->>MIX0: start()
-    MW->>DEC0: start()
-    MW->>MIX1: start()
-    MW->>DEC1: start()
+    MW->>MCTRL0: start()
+    MW->>DCTRL0: start()
+    MW->>MCTRL1: start()
+    MW->>DCTRL1: start()
 
     Note over MIX0,MIX1: Both mixers output to HDMI and SPDIF independently
 ```
@@ -427,14 +435,16 @@ sequenceDiagram
         participant SINK0 as AudioSink 0 (main)
         participant SINK1 as AudioSink 1 (TTS)
         participant MIX as AudioMixer 0
+        participant CTRL as AudioMixerController 0
     end
 
-    Note over MW,MIX: Setup
+    Note over MW,CTRL: Setup
 
     MW->>MIX: open(secure=true, listener)
-    MW->>MIX: setInputRouting([{AUDIO_SINK, 0}, {AUDIO_SINK, 1}])
-    Note right of MIX: Sink 0 → input "main"<br/>Sink 1 → input "pcm1"
-    MW->>MIX: start()
+    MIX-->>MW: IAudioMixerController
+    MW->>CTRL: setInputRouting([{AUDIO_SINK, 0}, {AUDIO_SINK, 1}])
+    Note right of CTRL: Sink 0 → input "main"<br/>Sink 1 → input "pcm1"
+    MW->>CTRL: start()
 
     Note over MW,MIX: Main content playing
 
@@ -477,7 +487,7 @@ The HAL does not define audio priority or pre-emption policy. When resources are
 - Releasing resources before allocating them to new streams
 - Implementing an audio focus model (e.g., TTS pre-empts background music)
 
-The HAL simply returns `null` from `open()` or `false` from `start()` if a resource is unavailable.
+The HAL indicates resource unavailability by returning `null` from `open()`. If `start()` is invoked when a resource is unavailable or otherwise not in a valid state, failure is reported via a Binder exception (for example, `EX_ILLEGAL_STATE`) rather than a boolean return value.
 
 ---
 
