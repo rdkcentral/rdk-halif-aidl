@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,8 +23,8 @@ package com.rdk.hal.compositeinput;
  *
  * These keys identify runtime attributes and telemetry metrics of a composite
  * input port. They are the canonical reference for the property key strings
- * declared in hfp-compositeinput.yaml under supportedProperties[] and
- * propertyMetadata[].key.
+ * declared in hfp-compositeinput.yaml under supportedProperties[],
+ * supportedMetrics[] and propertyMetadata[].key.
  *
  * The string-keyed getProperty()/setProperty()/getPropertyMulti()/
  * setPropertyMulti() methods on ICompositeInputPort are the transitional
