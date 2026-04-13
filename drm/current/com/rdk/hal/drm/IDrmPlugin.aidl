@@ -403,8 +403,6 @@ interface IDrmPlugin {
      */
     boolean requiresSecureDecoder(in String mime, in SecurityLevel level);
 
-//TODO: Add mime types.
-
     /**
      * The following methods implement operations on a CryptoSession to support
      * encrypt, decrypt, sign verify operations on operator-provided
