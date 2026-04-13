@@ -28,7 +28,6 @@
  */
 package com.rdk.hal.drm;
 
-import com.rdk.hal.drm.KeyStatusType;
 import com.rdk.hal.drm.Mode;
 import com.rdk.hal.drm.Pattern;
 import com.rdk.hal.drm.SubSample;
