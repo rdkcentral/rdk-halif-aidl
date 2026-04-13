@@ -81,13 +81,22 @@ drm:                  # Component object begins (matches directory name)
           # Corresponds to ICryptoPlugin.requiresSecureDecoderComponent().
           supportsSecureDecoder: true
 
+          # The mimeType informs the DRM engine about the type of media container being used. 
+          # This can affect how the DRM system interprets the initData (initialization data), 
+          # which is typically extracted from the media file and contains information needed to generate the license request.
+          Adjust as needed based on expected use cases and platform capabilities.
+          supportedContainerMimeTypes:
+            - video/mp4
+            - audio/mp4
+            - video/webm
+            - audio/webm
+
       - PLAYREADY:
           instanceName: "playready" ## The instance name that IDrmFactory is registered with `com.rdk.hal.drm.IDrmFactory/playready`
-          # Similar properties for PlayReady can be added here if needed
+         
+          maxBitrate: 20000000 # This is the maximum real-time bitrate in bits per second (bps) that the drm must support per session. Adjust as needed based on platform capabilities and expected use cases.
 
           maxSchemeSessions: 4 # This is the maximum number of concurrent DRM scheme sessions that the platform must support. Adjust as needed based on expected use cases and platform capabilities.
-
-          maxBitrate: 20000000 # This is the maximum real-time bitrate in bits per second (bps) that the drm must support per session. Adjust as needed based on platform capabilities and expected use cases.
 
           supportedCipherModes:
             - UNENCRYPTED
@@ -99,6 +108,15 @@ drm:                  # Component object begins (matches directory name)
             - STREAMING   
 
           supportsSecureDecoder: true
- 
+
+          # The mimeType informs the DRM engine about the type of media container being used. 
+          # This can affect how the DRM system interprets the initData (initialization data), 
+          # which is typically extracted from the media file and contains information needed to generate the license request.
+          Adjust as needed based on expected use cases and platform capabilities.
+          supportedContainerMimeTypes:
+            - video/mp4
+            - audio/mp4
+            - video/webm
+            - audio/webm
 
 
