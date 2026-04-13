@@ -50,7 +50,7 @@ The interface design follows a factory pattern: `IDrmFactory` is the entry point
 
 | #            | Requirement                                                                  | Comments                           |
 |--------------|-------------------------------------------------------------------------------|------------------------------------|
-| HAL.DRM.1    | Each DRM scheme shall register an `IDrmFactory` instance using the format `com.rdk.hal.drm.IDrmFactory/<instance>`. | The `<instance>` is vendor-defined (e.g. `clearkey`, `widevine`, `playready`). Multiple instances may be registered simultaneously. |
+| HAL.DRM.1    | Each DRM scheme shall register an `IDrmFactory` instance using the format `com.rdk.hal.drm.IDrmFactory/<instanceName>`. | The `<instanceName>` is vendor-defined (e.g. `clearkey`, `widevine`, `playready`). Multiple unique instanceNames may be registered simultaneously. |
 | HAL.DRM.2    | The service shall support DRM capabilities as declared in the HFP.           | Validated via `IDrmFactory.getSupportedCryptoSchemes()`. |
 | HAL.DRM.3    | The service shall maintain secure media pipelines for protected content.     | Security level enforcement via `SecurityLevel`. |
 | HAL.DRM.4    | The service shall support licence acquisition and renewal.                   | Via `IDrmPlugin.getKeyRequest()` and `IDrmPlugin.provideKeyResponse()`. |
@@ -118,12 +118,12 @@ At startup:
 2. Each `IDrmFactory` implementation registers itself with the AIDL Service Manager using the format:
 
     ```
-    com.rdk.hal.drm.IDrmFactory/<instance>
+    com.rdk.hal.drm.IDrmFactory/<instanceName>
     ```
 
-    where `<instance>` is a vendor-defined identifier for the DRM scheme, for example:
+    where `<instanceName>` is a vendor-defined identifier for the DRM scheme, for example:
 
-    | Instance name | DRM scheme |
+    | InstanceName | DRM scheme |
     |---|---|
     | `clearkey` | ClearKey (built-in) |
     | `widevine` | Google Widevine |
@@ -195,7 +195,7 @@ flowchart TD
 
 ## Resource Management
 
-- Multiple `IDrmFactory` instances are registered — one per supported DRM scheme — each under `com.rdk.hal.drm.IDrmFactory/<instance>`. They create per-scheme plugin instances on demand.
+- Multiple `IDrmFactory` instances are registered — one per supported DRM scheme — each under `com.rdk.hal.drm.IDrmFactory/<instanceName>`. They create per-scheme plugin instances on demand.
 - `IDrmFactory.createDrmPlugin(uuid, appPackageName)` returns an `IDrmPlugin` for the specified DRM scheme.
 - `IDrmFactory.createCryptoPlugin(uuid, initData)` returns an `ICryptoPlugin` for content decryption.
 - `IDrmPlugin` manages one or more sessions identified by opaque `byte[] sessionId` values.
