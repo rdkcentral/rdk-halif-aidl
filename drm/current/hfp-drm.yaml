@@ -84,7 +84,7 @@ drm:                  # Component object begins (matches directory name)
           # The mimeType informs the DRM engine about the type of media container being used. 
           # This can affect how the DRM system interprets the initData (initialization data), 
           # which is typically extracted from the media file and contains information needed to generate the license request.
-          Adjust as needed based on expected use cases and platform capabilities.
+          # Adjust as needed based on expected use cases and platform capabilities.
           supportedContainerMimeTypes:
             - video/mp4
             - audio/mp4
@@ -112,7 +112,7 @@ drm:                  # Component object begins (matches directory name)
           # The mimeType informs the DRM engine about the type of media container being used. 
           # This can affect how the DRM system interprets the initData (initialization data), 
           # which is typically extracted from the media file and contains information needed to generate the license request.
-          Adjust as needed based on expected use cases and platform capabilities.
+          # Adjust as needed based on expected use cases and platform capabilities.
           supportedContainerMimeTypes:
             - video/mp4
             - audio/mp4
