@@ -76,8 +76,6 @@ drm:                  # Component object begins (matches directory name)
           # Values from KeyType enum (KeyType.aidl).
           supportedKeyTypes:
             - STREAMING   
-            - OFFLINE       # Typically not supported for RDK products
-            - RELEASE       # Typically not supported for RDK products
 
           # Whether the platform supports a secure decoder component.
           # Corresponds to ICryptoPlugin.requiresSecureDecoderComponent().
@@ -99,8 +97,6 @@ drm:                  # Component object begins (matches directory name)
 
           supportedKeyTypes:
             - STREAMING   
-            - OFFLINE       # Typically not supported for RDK products
-            - RELEASE       # Typically not supported for RDK products
 
           supportsSecureDecoder: true
  
