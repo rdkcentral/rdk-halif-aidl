@@ -56,7 +56,7 @@ drm:                  # Component object begins (matches directory name)
 
     scheme: 
       - WIDEVINE:
-          instance_name: "widevine" ## The instance name that IDrmFactory is registered with `com.rdk.hal.drm.IDrmFactory/widevine`
+          instanceName: "widevine" ## The instance name that IDrmFactory is registered with `com.rdk.hal.drm.IDrmFactory/widevine`
 
           maxBitrate: 20000000 # This is the maximum real-time bitrate in bits per second (bps) that the drm must support per session. Adjust as needed based on platform capabilities and expected use cases.
 
@@ -82,7 +82,7 @@ drm:                  # Component object begins (matches directory name)
           supportsSecureDecoder: true
 
       - PLAYREADY:
-          instance_name: "playready" ## The instance name that IDrmFactory is registered with `com.rdk.hal.drm.IDrmFactory/playready`
+          instanceName: "playready" ## The instance name that IDrmFactory is registered with `com.rdk.hal.drm.IDrmFactory/playready`
           # Similar properties for PlayReady can be added here if needed
 
           maxSchemeSessions: 4 # This is the maximum number of concurrent DRM scheme sessions that the platform must support. Adjust as needed based on expected use cases and platform capabilities.
