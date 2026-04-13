@@ -64,7 +64,7 @@ interface IDrmFactory {
      *     http://dashif.org/identifiers/protection for uuid assignments
      *
      * @param initData scheme-specific init data. 
-     *        The initData can (if known) contain the SessionId created by DRMPlugin::openSession(), else NULL.
+     *        The initData can (if known) contain the SessionId created by DRMPlugin::openSession(), else a byte array of zero length.
      *
      * @return A crypto plugin instance if successful, or null if not created.
      */
