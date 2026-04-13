@@ -103,7 +103,7 @@ flowchart TD
 
 ### Tunnelled Audio Path
 
-In tunnelled mode, the AudioDecoder manages output directly. Compressed audio is submitted to the decoder via `decodeBuffer()`, and the decoded audio is delivered internally to the mixer without middleware involvement. The `onFrameOutput()` callback carries `frameBufferHandle = -1` and metadata only (no buffer transfer to middleware).
+In tunnelled mode, the AudioDecoder manages output directly. Compressed audio is submitted to the decoder via `decodeBuffer()`, and the decoded audio is delivered internally to the mixer without middleware involvement. The `onFrameOutput()` callback indicates this by carrying `frameBufferHandle = -1`; no PCM buffer is transferred to middleware, and the callback may still be emitted for metadata and/or state signalling, with `metadata` possibly null when unchanged.
 
 This is the primary path for broadcast and DRM-protected content, and for Dolby MS12 processing.
 
@@ -119,7 +119,7 @@ Clear PCM from applications (TTS, system sounds, notification clips) bypasses th
 
 ### Audio Passthrough Path
 
-When an output port is configured with `OutputFormat.PASSTHROUGH`, the compressed bitstream bypasses decoding and mixing. The AudioDecoder tunnels the compressed audio directly to the output port. Only one compressed source can be passed through at a time; other mixer inputs must be handled independently (decoded and mixed, or muted).
+When an output port is configured with `OutputFormat.PASSTHROUGH`, the selected compressed bitstream is carried to that output using a vendor-defined internal pipeline behaviour controlled by the `IAudioOutputPort` configuration. In this mode, normal PCM decoding and mixer processing for that stream are bypassed or reduced as implementation-defined, but the stream still traverses the mixer/output-port path for routing to the selected hardware output. The AIDL does not define a direct binding from an `AudioDecoder` instance to an output port. Only one compressed source can be passed through at a time; other mixer inputs must be handled independently (decoded and mixed, or muted).
 
 Concurrent decode+passthrough is needed when some ports use passthrough (e.g., SPDIF) and others require decoded PCM (e.g., TV speakers via HDMI).
 
@@ -487,7 +487,7 @@ The HAL does not define audio priority or pre-emption policy. When resources are
 - Releasing resources before allocating them to new streams
 - Implementing an audio focus model (e.g., TTS pre-empts background music)
 
-The HAL indicates resource unavailability by returning `null` from `open()`. If `start()` is invoked when a resource is unavailable or otherwise not in a valid state, failure is reported via a Binder exception (for example, `EX_ILLEGAL_STATE`) rather than a boolean return value.
+In these HALs, `open()` does not use `null` as the sole signal for resource contention. Invalid state or invalid arguments are reported via Binder exceptions (for example, `EX_ILLEGAL_STATE`), while a `null` return from `open()` indicates that the requested resource could not be opened — for example because the request is unsupported or the operation otherwise failed, including resource exhaustion. Likewise, if `start()` is invoked when a resource is unavailable or not in a valid state, failure is reported via a Binder exception rather than a boolean return value.
 
 ---
 
