@@ -21,10 +21,25 @@
 #** ******************************************************************************
 
 # HAL Feature Profile for composite input
+#
+# Property keys are unquoted PortProperty enum identifiers as defined in
+# com.rdk.hal.compositeinput.PortProperty (PortProperty.aidl).
+#
+# Runtime status keys (slots 0..999):
+#   SIGNAL_STRENGTH, SIGNAL_QUALITY
+#
+# Telemetry metric keys (slots 1000+; reset by resetMetrics()):
+#   METRIC_SIGNAL_LOCK_TIME, METRIC_SIGNAL_DROPS, METRIC_UPTIME,
+#   METRIC_SIGNAL_LOCK_COUNT, METRIC_LAST_SIGNAL_LOCK_TIME,
+#   METRIC_LAST_RESET_TIMESTAMP
 
 compositeinput:
   interfaceVersion: current
-  
+
+  # Maximum number of ports that may be in STARTED state simultaneously.
+  # Maps to PlatformCapabilities.maximumConcurrentStartedPorts.
+  maximumConcurrentStartedPorts: 1
+
   # Per-port configuration
   ports:
     - id: 0
@@ -38,96 +53,138 @@ compositeinput:
         - NOT_SUPPORTED
         - STABLE
 
-      # Port capabilities (matches PortCapabilities.aidl)
-      metricsSupported: true
-
-      # HFP-defined property keys supported on this port (maps to
-      # PortCapabilities.supportedProperties[]). Metric keys (METRIC_ prefix)
-      # are carried in this same list and distinguished via
-      # propertyMetadata[].isMetric.
+      # PortProperty enum identifiers supported on this port.
+      # Includes both runtime status keys and telemetry metric keys.
+      # Maps to PortCapabilities.supportedProperties.
       supportedProperties:
-        - "SIGNAL_STRENGTH"            # Signal strength in dBm (PropertyValue.longValue, read-only)
-        - "METRIC_SIGNAL_LOCK_TIME"    # Average signal lock time in ms (PropertyValue.longValue, read-only)
-        - "METRIC_SIGNAL_DROPS"        # Total count of signal drops (PropertyValue.longValue, read-only)
-        - "METRIC_UPTIME"              # Total uptime in ms (PropertyValue.longValue, read-only)
+        - SIGNAL_STRENGTH                # Signal strength in dBm (longValue, read-only)
+        - SIGNAL_QUALITY                 # Aggregated signal quality 0..100 (intValue, read-only)
+        - METRIC_SIGNAL_LOCK_TIME        # Average signal lock time in ms (longValue, read-only)
+        - METRIC_SIGNAL_DROPS            # Count of signal drops (longValue, read-only)
+        - METRIC_UPTIME                  # Total uptime in ms (longValue, read-only)
+        - METRIC_SIGNAL_LOCK_COUNT       # Count of successful lock acquisitions (longValue, read-only)
+        - METRIC_LAST_SIGNAL_LOCK_TIME   # Most recent lock acquisition time in ms (longValue, read-only)
+        - METRIC_LAST_RESET_TIMESTAMP    # Wall-clock timestamp of last resetMetrics() (longValue, read-only)
 
-      # Property metadata for each supported property (maps to
-      # PortCapabilities.propertyMetadata[]). isMetric=true flags metric keys.
+      # Property metadata for enhanced runtime discovery (matches PropertyMetadata.aidl).
       propertyMetadata:
-        - key: "SIGNAL_STRENGTH"
+        - key: SIGNAL_STRENGTH
           type: LONG
           readOnly: true
           isMetric: false
           description: "Signal strength in dBm"
 
-        - key: "METRIC_SIGNAL_LOCK_TIME"
+        - key: SIGNAL_QUALITY
+          type: INTEGER
+          readOnly: true
+          isMetric: false
+          description: "Aggregated signal quality percentage (0..100)"
+
+        - key: METRIC_SIGNAL_LOCK_TIME
           type: LONG
           readOnly: true
           isMetric: true
           description: "Average signal lock time in milliseconds"
 
-        - key: "METRIC_SIGNAL_DROPS"
+        - key: METRIC_SIGNAL_DROPS
           type: LONG
           readOnly: true
           isMetric: true
           description: "Total count of signal drops since last reset"
 
-        - key: "METRIC_UPTIME"
+        - key: METRIC_UPTIME
           type: LONG
           readOnly: true
           isMetric: true
           description: "Total uptime in milliseconds"
 
+        - key: METRIC_SIGNAL_LOCK_COUNT
+          type: LONG
+          readOnly: true
+          isMetric: true
+          description: "Total count of successful signal lock acquisitions since last reset"
+
+        - key: METRIC_LAST_SIGNAL_LOCK_TIME
+          type: LONG
+          readOnly: true
+          isMetric: true
+          description: "Most recent signal lock time in milliseconds"
+
+        - key: METRIC_LAST_RESET_TIMESTAMP
+          type: LONG
+          readOnly: true
+          isMetric: true
+          description: "Wall-clock timestamp (ms since epoch) when metrics were last reset"
+
     - id: 1
       name: "Rear Composite"
       description: "Rear panel composite video input"
 
-      # Supported signal statuses for this port
       supportedSignalStatuses:
         - NO_SIGNAL
         - UNSTABLE
         - NOT_SUPPORTED
         - STABLE
 
-      # Port capabilities (matches PortCapabilities.aidl)
-      metricsSupported: true
-
-      # HFP-defined property keys supported on this port (maps to
-      # PortCapabilities.supportedProperties[]). Metric keys (METRIC_ prefix)
-      # are carried in this same list and distinguished via
-      # propertyMetadata[].isMetric.
       supportedProperties:
-        - "SIGNAL_STRENGTH"            # Signal strength in dBm (PropertyValue.longValue, read-only)
-        - "METRIC_SIGNAL_LOCK_TIME"    # Average signal lock time in ms (PropertyValue.longValue, read-only)
-        - "METRIC_SIGNAL_DROPS"        # Total count of signal drops (PropertyValue.longValue, read-only)
-        - "METRIC_UPTIME"              # Total uptime in ms (PropertyValue.longValue, read-only)
+        - SIGNAL_STRENGTH
+        - SIGNAL_QUALITY
+        - METRIC_SIGNAL_LOCK_TIME
+        - METRIC_SIGNAL_DROPS
+        - METRIC_UPTIME
+        - METRIC_SIGNAL_LOCK_COUNT
+        - METRIC_LAST_SIGNAL_LOCK_TIME
+        - METRIC_LAST_RESET_TIMESTAMP
 
-      # Property metadata for each supported property (maps to
-      # PortCapabilities.propertyMetadata[]). isMetric=true flags metric keys.
+
       propertyMetadata:
-        - key: "SIGNAL_STRENGTH"
+        - key: SIGNAL_STRENGTH
           type: LONG
           readOnly: true
           isMetric: false
           description: "Signal strength in dBm"
 
-        - key: "METRIC_SIGNAL_LOCK_TIME"
+        - key: SIGNAL_QUALITY
+          type: INTEGER
+          readOnly: true
+          isMetric: false
+          description: "Aggregated signal quality percentage (0..100)"
+
+        - key: METRIC_SIGNAL_LOCK_TIME
           type: LONG
           readOnly: true
           isMetric: true
           description: "Average signal lock time in milliseconds"
 
-        - key: "METRIC_SIGNAL_DROPS"
+        - key: METRIC_SIGNAL_DROPS
           type: LONG
           readOnly: true
           isMetric: true
           description: "Total count of signal drops since last reset"
 
-        - key: "METRIC_UPTIME"
+        - key: METRIC_UPTIME
           type: LONG
           readOnly: true
           isMetric: true
           description: "Total uptime in milliseconds"
+
+        - key: METRIC_SIGNAL_LOCK_COUNT
+          type: LONG
+          readOnly: true
+          isMetric: true
+          description: "Total count of successful signal lock acquisitions since last reset"
+
+        - key: METRIC_LAST_SIGNAL_LOCK_TIME
+          type: LONG
+          readOnly: true
+          isMetric: true
+          description: "Most recent signal lock time in milliseconds"
+
+        - key: METRIC_LAST_RESET_TIMESTAMP
+          type: LONG
+          readOnly: true
+          isMetric: true
+          description: "Wall-clock timestamp (ms since epoch) when metrics were last reset"
 
   # Platform-wide capabilities (maps to PlatformCapabilities.aidl)
   platformCapabilities:
@@ -136,38 +193,65 @@ compositeinput:
 
     # Union of all property keys supported across the platform's ports
     supportedProperties:
-      - "SIGNAL_STRENGTH"
-      - "METRIC_SIGNAL_LOCK_TIME"
-      - "METRIC_SIGNAL_DROPS"
-      - "METRIC_UPTIME"
+      - SIGNAL_STRENGTH
+      - SIGNAL_QUALITY
+      - METRIC_SIGNAL_LOCK_TIME
+      - METRIC_SIGNAL_DROPS
+      - METRIC_UPTIME
+      - METRIC_SIGNAL_LOCK_COUNT
+      - METRIC_LAST_SIGNAL_LOCK_TIME
+      - METRIC_LAST_RESET_TIMESTAMP
 
     # Metadata for the platform-wide property set
     propertyMetadata:
-      - key: "SIGNAL_STRENGTH"
+      - key: SIGNAL_STRENGTH
         type: LONG
         readOnly: true
         isMetric: false
         description: "Signal strength in dBm"
 
-      - key: "METRIC_SIGNAL_LOCK_TIME"
+      - key: SIGNAL_QUALITY
+        type: INTEGER
+        readOnly: true
+        isMetric: false
+        description: "Aggregated signal quality percentage (0..100)"
+
+      - key: METRIC_SIGNAL_LOCK_TIME
         type: LONG
         readOnly: true
         isMetric: true
         description: "Average signal lock time in milliseconds"
 
-      - key: "METRIC_SIGNAL_DROPS"
+      - key: METRIC_SIGNAL_DROPS
         type: LONG
         readOnly: true
         isMetric: true
         description: "Total count of signal drops since last reset"
 
-      - key: "METRIC_UPTIME"
+      - key: METRIC_UPTIME
         type: LONG
         readOnly: true
         isMetric: true
         description: "Total uptime in milliseconds"
 
+      - key: METRIC_SIGNAL_LOCK_COUNT
+        type: LONG
+        readOnly: true
+        isMetric: true
+        description: "Total count of successful signal lock acquisitions since last reset"
+
+      - key: METRIC_LAST_SIGNAL_LOCK_TIME
+        type: LONG
+        readOnly: true
+        isMetric: true
+        description: "Most recent signal lock time in milliseconds"
+
+      - key: METRIC_LAST_RESET_TIMESTAMP
+        type: LONG
+        readOnly: true
+        isMetric: true
+        description: "Wall-clock timestamp (ms since epoch) when metrics were last reset"
+
     # Optional feature flags (PlatformCapabilities.FeatureFlags)
     features:
-      signalMetricsSupported: true
       macrovisionDetectionSupported: false

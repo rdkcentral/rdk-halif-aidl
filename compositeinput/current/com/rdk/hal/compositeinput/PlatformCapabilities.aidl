@@ -19,6 +19,7 @@
 
 package com.rdk.hal.compositeinput;
 
+import com.rdk.hal.compositeinput.PortProperty;
 import com.rdk.hal.compositeinput.PropertyMetadata;
 
 /**
@@ -50,14 +51,22 @@ parcelable PlatformCapabilities
     byte maxPorts;
 
     /**
-     * Array of supported property keys.
+     * Maximum number of ports that may be in STARTED state simultaneously.
      *
-     * Contains property key strings defined in the HFP YAML. Clients should
-     * check this array before calling getProperty() or setProperty().
-     * Standard keys include "SIGNAL_STRENGTH", "VIDEO_STANDARD", etc.
-     * Platforms may also define vendor-specific keys.
+     * Declared by the platform in the HFP. Most platforms will set this to 1
+     * (single active port). ICompositeInputController.start() throws
+     * EX_ILLEGAL_STATE if this limit would be exceeded.
      */
-    @utf8InCpp String[] supportedProperties;
+    int maximumConcurrentStartedPorts;
+
+    /**
+     * Array of PortProperty enum values supported across the platform.
+     *
+     * Declared in the platform HFP. Includes both runtime status keys and
+     * telemetry metric keys. Individual ports may support a subset (see
+     * PortCapabilities.supportedProperties).
+     */
+    PortProperty[] supportedProperties;
 
     /**
      * Property metadata for all supported properties (optional).

@@ -19,69 +19,76 @@
 
 package com.rdk.hal.compositeinput;
 
+import com.rdk.hal.compositeinput.PortProperty;
 import com.rdk.hal.compositeinput.SignalStatus;
 import com.rdk.hal.compositeinput.VideoResolution;
+import com.rdk.hal.PropertyValue;
 
 /**
  * @brief Listener interface for port events.
  *
- * Provides asynchronous callbacks for connection status changes, signal status changes,
- * and video mode changes on a composite input port. Callbacks are delivered via oneway
- * binder calls and do not block the HAL service.
+ * Provides asynchronous callbacks for connection, signal status, video mode,
+ * and property change notifications on a composite input port. Callbacks are
+ * delivered via oneway binder calls and do not block the HAL service.
  *
- * Register instances of this interface using ICompositeInputPort.registerEventListener().
- * Multiple listeners can be registered for the same port.
+ * Multiple listeners can be registered on the same port via
+ * ICompositeInputPort.registerEventListener(). Observers do not need to own
+ * the controller — this is the multi-client observation channel for UI,
+ * diagnostics, telemetry, and other watchers.
  */
 @VintfStability
 oneway interface IPortEventListener
 {
     /**
-     * Callback for port connection status changes.
+     * Callback for port connection state changes.
      *
-     * Called when a composite source is physically connected or disconnected from the port.
-     * This callback is triggered by hardware detection of cable presence. It does not
-     * indicate signal validity, only physical connection state.
+     * Triggered by hardware detection of cable presence. Indicates physical
+     * connection state only, not signal validity.
      *
-     * @param[in] portId     The port ID that changed connection status (0 to maxPorts-1).
      * @param[in] connected  True if a cable is now connected, false if disconnected.
      *
-     * @post Clients should call getStatus() to retrieve full port state after connection changes.
-     *
-     * @see ICompositeInputPort.registerEventListener(), ICompositeInputPort.getStatus()
+     * @see ICompositeInputPort.getStatus()
      */
-    void onConnectionChanged(in int portId, in boolean connected);
+    void onConnectionChanged(in boolean connected);
 
     /**
      * Callback for signal status changes.
      *
-     * Called when the signal status changes (e.g., NO_SIGNAL → UNSTABLE → STABLE,
-     * or STABLE → UNSTABLE). This indicates changes in signal detection and stability,
-     * which affects whether the port can be activated for presentation.
+     * Fired when the signal status transitions between states
+     * (e.g. NO_SIGNAL → UNSTABLE → STABLE).
      *
-     * @param[in] portId     The port ID with signal status change (0 to maxPorts-1).
-     * @param[in] status     The new signal status.
+     * @param[in] status  The new signal status.
      *
-     * @post If status is STABLE, the port can be activated via setActive(true).
-     * @post If status is not STABLE and port was active, it may be automatically deactivated.
-     *
-     * @see SignalStatus, ICompositeInputPort.setActive(), ICompositeInputPort.getStatus()
+     * @see SignalStatus, ICompositeInputPort.getStatus()
      */
-    void onSignalStatusChanged(in int portId, in SignalStatus status);
+    void onSignalStatusChanged(in SignalStatus status);
 
     /**
      * Callback for video mode changes.
      *
-     * Called when the detected video resolution, format, or standard changes.
-     * This typically occurs after initial signal stabilization or when the
-     * source device switches video modes.
+     * Fired when the detected video resolution, format, or standard changes.
+     * Typically occurs after initial signal stabilization or when the source
+     * device switches video modes.
      *
-     * @param[in] portId        The port ID with video mode change (0 to maxPorts-1).
-     * @param[in] resolution    The newly detected video resolution and format information.
-     *
-     * @pre Signal status should be STABLE before video mode can be reliably detected.
-     * @post Resolution information can be used for display configuration.
+     * @param[in] resolution  The newly detected video resolution and format.
      *
      * @see VideoResolution, ICompositeInputPort.getStatus()
      */
-    void onVideoModeChanged(in int portId, in VideoResolution resolution);
+    void onVideoModeChanged(in VideoResolution resolution);
+
+    /**
+     * Callback for property value changes.
+     *
+     * Fired when any runtime property or telemetry metric on this port
+     * changes. Clients receive the same PortProperty keys they would read
+     * via ICompositeInputPort.getProperty(). Update frequency is
+     * implementation-defined; typically bursty for status changes and
+     * periodic (1–10 s) for metric counters during active monitoring.
+     *
+     * @param[in] property  The property key whose value changed.
+     * @param[in] value     The new property value.
+     *
+     * @see PortProperty, ICompositeInputPort.getProperty()
+     */
+    void onPropertyChanged(in PortProperty property, in PropertyValue value);
 }
