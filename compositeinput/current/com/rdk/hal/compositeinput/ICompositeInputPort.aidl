@@ -151,8 +151,11 @@ interface ICompositeInputPort
      *
      * On success the port transitions from CLOSED through OPENING to READY.
      * The ICompositeInputControllerListener.onStateChanged() callback is fired
-     * for each transition. onSignalStatusChanged() is also always fired during
-     * OPENING to report the current signal state.
+     * for each transition.
+     *
+     * onSignalStatusChanged() is not fired during OPENING — it is guaranteed
+     * during the STARTING transition (driven by ICompositeInputController.start())
+     * to report the current signal state before STARTED is reached.
      *
      * The returned ICompositeInputController is used to start/stop the port
      * and mutate properties. If the client that opened the controller crashes,
@@ -176,7 +179,7 @@ interface ICompositeInputPort
      *
      * @param[in] controller  The ICompositeInputController instance returned by open().
      * @retval true   Successfully closed.
-     * @retval false  Invalid state or unrecognised controller instance.
+     * @retval false  The supplied controller is not the instance returned by open().
      *
      * @exception binder::Status EX_ILLEGAL_STATE if port is not in READY state.
      * @exception binder::Status EX_NULL_POINTER if controller is null.
