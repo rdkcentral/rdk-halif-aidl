@@ -21,7 +21,7 @@ package com.rdk.hal.compositeinput;
 
 import com.rdk.hal.compositeinput.ICompositeInputController;
 import com.rdk.hal.compositeinput.ICompositeInputControllerListener;
-import com.rdk.hal.compositeinput.IPortEventListener;
+import com.rdk.hal.compositeinput.ICompositeInputEventListener;
 import com.rdk.hal.compositeinput.Port;
 import com.rdk.hal.compositeinput.PortCapabilities;
 import com.rdk.hal.compositeinput.PortProperty;
@@ -97,7 +97,7 @@ interface ICompositeInputPort
      * Gets the current state of this port.
      *
      * @returns State enum value.
-     * @see ICompositeInputControllerListener.onStateChanged()
+     * @see ICompositeInputEventListener.onStateChanged()
      */
     State getState();
 
@@ -105,10 +105,12 @@ interface ICompositeInputPort
      * Gets the current status of this port.
      *
      * Returns a polled snapshot of connection state, signal status, and detected
-     * video mode. Use in conjunction with IPortEventListener for async updates.
+     * video mode. For async updates, register an ICompositeInputControllerListener
+     * via open() (signal events) and/or an ICompositeInputEventListener via
+     * registerEventListener() (lifecycle and property events).
      *
      * @returns PortStatus parcelable with current port state.
-     * @see PortStatus, IPortEventListener
+     * @see PortStatus, ICompositeInputControllerListener, ICompositeInputEventListener
      */
     PortStatus getStatus();
 
@@ -150,8 +152,13 @@ interface ICompositeInputPort
      * Opens this composite input port for runtime control.
      *
      * On success the port transitions from CLOSED through OPENING to READY.
-     * The ICompositeInputControllerListener.onStateChanged() callback is fired
-     * for each transition.
+     * onStateChanged() is fired for each transition on any registered
+     * ICompositeInputEventListener — register via registerEventListener()
+     * before calling open() if you need to observe these transitions.
+     *
+     * ICompositeInputControllerListener.onConnectionChanged() always fires at
+     * least once during the OPENING transition to report the current
+     * connected/disconnected state before READY is reached.
      *
      * onSignalStatusChanged() is not fired during OPENING — it is guaranteed
      * during the STARTING transition (driven by ICompositeInputController.start())
@@ -161,13 +168,14 @@ interface ICompositeInputPort
      * and mutate properties. If the client that opened the controller crashes,
      * stop() and close() are implicitly called.
      *
-     * @param[in] listener  Listener for controller callbacks (state, signal status).
+     * @param[in] listener  Listener for controller callbacks (connection,
+     *                      signal status, video mode).
      * @returns ICompositeInputController, or null on failure.
      *
      * @exception binder::Status EX_ILLEGAL_STATE if port is not in CLOSED state.
      * @exception binder::Status EX_NULL_POINTER if listener is null.
      *
-     * @see close(), ICompositeInputController, State
+     * @see close(), ICompositeInputController, registerEventListener(), State
      */
     @nullable ICompositeInputController open(in ICompositeInputControllerListener listener);
 
@@ -175,7 +183,8 @@ interface ICompositeInputPort
      * Closes this composite input port.
      *
      * The port must be in READY state. On success it transitions through
-     * CLOSING to CLOSED. onStateChanged() is fired for each transition.
+     * CLOSING to CLOSED. ICompositeInputEventListener.onStateChanged() is
+     * fired for each transition on any registered event listener.
      *
      * @param[in] controller  The ICompositeInputController instance returned by open().
      * @retval true   Successfully closed.
@@ -194,16 +203,19 @@ interface ICompositeInputPort
      * Multiple listeners may be registered. Callbacks are delivered asynchronously
      * via oneway binder calls. Registration does not require the port to be open.
      *
-     * Event listeners receive connection, signal status, video mode, and property
-     * change notifications.
+     * Event listeners receive state transition and property change notifications.
+     * Real-time A/V signal events (connection, signal status, video mode) are
+     * delivered exclusively to the ICompositeInputControllerListener passed into
+     * open() — register an event listener before calling open() to observe the
+     * CLOSED → OPENING → READY transitions.
      *
      * @param[in] listener  The event listener to register.
      *
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if listener is null.
      *
-     * @see IPortEventListener, unregisterEventListener()
+     * @see ICompositeInputEventListener, unregisterEventListener()
      */
-    void registerEventListener(in IPortEventListener listener);
+    void registerEventListener(in ICompositeInputEventListener listener);
 
     /**
      * Unregisters a previously registered event listener.
@@ -214,5 +226,5 @@ interface ICompositeInputPort
      *
      * @see registerEventListener()
      */
-    void unregisterEventListener(in IPortEventListener listener);
+    void unregisterEventListener(in ICompositeInputEventListener listener);
 }

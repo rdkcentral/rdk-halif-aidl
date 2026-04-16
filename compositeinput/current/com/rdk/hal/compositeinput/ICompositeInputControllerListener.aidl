@@ -19,35 +19,66 @@
 package com.rdk.hal.compositeinput;
 
 import com.rdk.hal.compositeinput.SignalStatus;
-import com.rdk.hal.compositeinput.State;
+import com.rdk.hal.compositeinput.VideoResolution;
 
 /**
- * @brief     Listener interface for composite input controller callbacks.
- * @details   Passed into ICompositeInputPort.open(). Delivers state transitions
- *            and signal status changes to the controller owner.
+ * @brief     Controller callback listener interface for composite input.
+ * @details   Passed into ICompositeInputPort.open(). Delivers real-time A/V
+ *            signal events to the exclusive controller owner: connection
+ *            detection, signal status, and video mode changes.
+ *
+ *            State transition events (onStateChanged) are delivered on
+ *            ICompositeInputEventListener instead — any observer (including
+ *            the controller owner) may register an event listener to observe
+ *            port lifecycle without needing exclusive ownership.
+ *
  *            All callbacks are oneway (non-blocking, fire-and-forget).
+ *
  * @author    Gerald Weatherup
  */
 @VintfStability
 oneway interface ICompositeInputControllerListener {
 
     /**
-     * Called when the port state changes.
+     * Called when the port connection state changes.
      *
-     * Fired for all transitions driven by open(), close(), start(), and stop().
+     * Fired by hardware detection of cable presence. Indicates physical
+     * connection only, not signal validity.
      *
-     * @param[in] oldState  The state being left.
-     * @param[in] newState  The state being entered.
+     * Always fires at least once during the OPENING transition to report
+     * the current connected/disconnected state before READY is reached.
+     *
+     * @param[in] connected  True if a cable is now connected, false if disconnected.
+     *
+     * @see ICompositeInputPort.getStatus()
      */
-    void onStateChanged(in State oldState, in State newState);
+    void onConnectionChanged(in boolean connected);
 
     /**
      * Called when the composite input signal status changes.
      *
-     * Always fired at least once during the STARTING transition to indicate
+     * Fired for transitions between signal states
+     * (e.g. NO_SIGNAL → UNSTABLE → STABLE).
+     *
+     * Always fires at least once during the STARTING transition to report
      * the current signal state before STARTED is reached.
      *
      * @param[in] signalStatus  The new signal status.
+     *
+     * @see SignalStatus, ICompositeInputPort.getStatus()
      */
     void onSignalStatusChanged(in SignalStatus signalStatus);
+
+    /**
+     * Called when the detected video mode changes.
+     *
+     * Fired when the digitized resolution, format, or frame rate changes —
+     * typically after initial signal stabilization or when the source device
+     * switches video modes.
+     *
+     * @param[in] resolution  The newly detected video resolution and format.
+     *
+     * @see VideoResolution, ICompositeInputPort.getStatus()
+     */
+    void onVideoModeChanged(in VideoResolution resolution);
 }

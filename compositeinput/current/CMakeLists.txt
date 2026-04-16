@@ -14,7 +14,7 @@ set(SRC
     ${SRC_DIR}/ICompositeInputPort.aidl
     ${SRC_DIR}/ICompositeInputController.aidl
     ${SRC_DIR}/ICompositeInputControllerListener.aidl
-    ${SRC_DIR}/IPortEventListener.aidl
+    ${SRC_DIR}/ICompositeInputEventListener.aidl
     ${SRC_DIR}/PlatformCapabilities.aidl
     ${SRC_DIR}/PortCapabilities.aidl
     ${SRC_DIR}/PortStatus.aidl
