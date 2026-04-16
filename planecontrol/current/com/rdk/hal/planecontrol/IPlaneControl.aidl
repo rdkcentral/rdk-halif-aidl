@@ -23,6 +23,7 @@ import com.rdk.hal.planecontrol.SourcePlaneMapping;
 import com.rdk.hal.planecontrol.Property;
 import com.rdk.hal.planecontrol.PropertyKVPair;
 import com.rdk.hal.PropertyValue;
+import com.rdk.hal.planecontrol.GraphicsFrameInfo;
  
 /** 
  *  @brief     Plane Control HAL interface.
@@ -56,57 +57,64 @@ interface IPlaneControl
      *
      */
     Capabilities[] getCapabilities();
- 
-    /**
-     * Gets the native graphics window handle to couple with an EGL display.
-     * 
-     * This function can be called multiple times, but will return the same native graphics window
-     * handle on successive calls.  No reference counting is performed.
-     * 
-     * @param[in] planeResourceIndex    The plane resource index.
-     * 
-     * @returns Native graphics window handle.
-     * 
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
-     *
-     * 
-     * @see releaseNativeGraphicsWindowHandle()
-     */
-    long getNativeGraphicsWindowHandle(in int planeResourceIndex);
- 
-    /**
-     * Releases the native graphics window handle previously returned from a call to getNativeGraphicsWindowHandle().
-     * 
-     * @param[in] planeResourceIndex    The plane resource index.
-     * @param[in] nativeWindowHandle    A native window handle.
-     * 
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
-     * 
-     * @see getNativeGraphicsWindowHandle()
-     */
-    void releaseNativeGraphicsWindowHandle(in int planeResourceIndex, in long nativeWindowHandle);
 
     /**
-     * Flips the latest swapped graphics buffer (e.g. provided by eglSwapBuffers) to the graphics plane for display.
-     * 
-     * @note Should be redundant if EGL can flip automatically during buffer swaps on all platforms.
+     * Commit the graphics frame buffer to be displayed on a graphics plane.
+     *
+     * This is a non-locking function to ready this frame buffer to display at the earliest opportunity.
+     * After the frame has been displayed an event is raised to indicate that the buffer previously on display is now free to be re-used.
      * 
      * @param[in] planeResourceIndex        The graphics plane resource index.
+     * @param[in] GraphicsFrameId                The Frame Id of the buffer to replace the currently displaying buffer
      * 
      * @returns boolean
-     * @retval true     The flip was performed successfully.
+     * @retval true     The frame was accepted for display.
      * @retval false    Invalid graphics plane resource index.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      *
      *
-     * @see getNativeGraphicsWindowHandle()
+     * @see CreateDmaBufGraphicsFrameBuffer()
      */
-    boolean flipGraphicsBuffer(in int planeResourceIndex);
+    boolean commitGraphicsFrameBuffer(in int planeResourceIndex, in int GraphicsFrameId);
  
+     /**
+     * Creates a dmabuf graphics frame buffer
+     * 
+     * This function can be called multiple times to create up to the maximum allowed graphics frames specified in the plane resources capabilities. 
+     * The returned file descripter can be the same for all created graphics frame buffers.
+     * 
+     * @param[in] planeResourceIndex    The plane resource index.
+     * @param[in] width                 The requested width of the graphics frame buffer.  
+     * @param[in] height                The requested height of the graphics frame buffer.  
+     * @param[out] outInfo              A parcelable describing the graphics frame buffer.
+     *
+     * @returns A dmaBuf file descriptor and the associated graphics frame buffer info
+     *
+     * 
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
+     *
+     * 
+     * @see releaseGraphicsFrameBuffer()
+     */
+    GraphicsDmaBufFrameFd CreateDmaBufGraphicsFrameBuffer(in int planeResourceIndex, in int width, in height, out GraphicsFrameInfo outInfo );
+
+    /**
+     * Frees the graphics frame buffer previously returned from a call to CreateDmaBufGraphicsFrameBuffer().
+     * 
+     * If plane is enabled
+     *
+     * @param[in] GraphicsFrameId    The graphics frame buffer identifier
+     * 
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
+     * 
+     * @see CreateDmaBufGraphicsFrameBuffer()
+     */
+    void destroyGraphicsFrameBuffer(in int GraphicsFrameId);
+
     /**
      * Sets the destination plane for one or more video sources.
      * 

@@ -18,22 +18,20 @@
  */
 package com.rdk.hal.planecontrol;
   
-/** 
- *  @brief     Callbacks listener interface from Plane Control.
+/**
+ *  @brief     Graphics Pixel Format definitions.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
 
 @VintfStability
-oneway interface IPlaneControlListener 
+@Backing(type="int")
+enum GraphicsPixelFormat
 {
-    /**
-     * @brief     Called when the after a call to commitGraphicsFrameBuffer() when the Graphics Frame Buffer has become current.
-     * @param[in] OldGraphicsFrameId   The Frame Id of the old frame replaced by the newly committed  frame.
-     * @param[out] elapsedRealtimeNanos The CLOCK_MONOTONIC time when the old graphics frame was replaced by the new.
-     *                                
-     * If no old frame exists (e.g. the first time) -1 is returned as an old OldGraphicsFrameId.
+    /*
+     * 8bits per component Alpha + Red, Green & Blue 
+     * Mandatory supported pixel format
      */
-    void onGfxFrameReleased(in int OldGraphicsFrameId, out long elapsedRealtimeNanos);
+    PIXEL_FORMAT_ARGB8888 = 0,
 }

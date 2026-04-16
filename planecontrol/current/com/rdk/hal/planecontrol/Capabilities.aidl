@@ -104,4 +104,16 @@ parcelable Capabilities
      * to the moment it appears on the output display (e.g. panel or HDMI output).
      */
     int vsyncDisplayLatency;
+
+    /**
+     * Indicates the support for dmabuf graphics frame buffers. 
+     * If true the IDmaBufGfx interface can be used to create, flip and destroy graphics frame buffers.
+     */
+    boolean supportsDmaBuf; 
+
+    /**
+     * If the plane is a graphics plane, maxGraphicsFrameBuffers indicates the maximum number of frame buffers that can be created for use on this plane.
+     * If the plane is a video place, maxGraphicsFrameBuffers is zero.
+     */
+    int maxGraphicsFrameBuffers;
 }
