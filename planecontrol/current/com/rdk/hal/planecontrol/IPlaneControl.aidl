@@ -61,8 +61,8 @@ interface IPlaneControl
     /**
      * Commit the graphics frame buffer to be displayed on a graphics plane.
      *
-     * This is a non-locking function to ready this frame buffer to display at the earliest opportunity.
-     * After the frame has been displayed an event is raised to indicate that the buffer previously on display is now free to be re-used.
+     * This is a non-blocking function to commit this frame buffer to display at the earliest opportunity.
+     * After the frame has been displayed an event is raised to indicate that the buffer, previously on display, is now free to be re-used.
      * 
      * @param[in] planeResourceIndex        The graphics plane resource index.
      * @param[in] GraphicsFrameId                The Frame Id of the buffer to replace the currently displaying buffer
@@ -75,7 +75,7 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      *
      *
-     * @see CreateDmaBufGraphicsFrameBuffer()
+     * @see createDmaBufGraphicsFrameBuffer()
      */
     boolean commitGraphicsFrameBuffer(in int planeResourceIndex, in int GraphicsFrameId);
  
@@ -99,19 +99,18 @@ interface IPlaneControl
      * 
      * @see releaseGraphicsFrameBuffer()
      */
-    GraphicsDmaBufFrameFd CreateDmaBufGraphicsFrameBuffer(in int planeResourceIndex, in int width, in height, out GraphicsFrameInfo outInfo );
+    GraphicsDmaBufFrameFd createDmaBufGraphicsFrameBuffer(in int planeResourceIndex, in int width, in height, out GraphicsFrameInfo outInfo );
 
     /**
-     * Frees the graphics frame buffer previously returned from a call to CreateDmaBufGraphicsFrameBuffer().
+     * Frees a graphics frame buffer.
      * 
-     * If plane is enabled
      *
      * @param[in] GraphicsFrameId    The graphics frame buffer identifier
      * 
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      * 
-     * @see CreateDmaBufGraphicsFrameBuffer()
+     * @see createDmaBufGraphicsFrameBuffer()
      */
     void destroyGraphicsFrameBuffer(in int GraphicsFrameId);
 
