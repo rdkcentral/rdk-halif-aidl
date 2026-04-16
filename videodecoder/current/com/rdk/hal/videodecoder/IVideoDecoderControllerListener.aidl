@@ -71,4 +71,20 @@ oneway interface IVideoDecoderControllerListener {
     */
     void onUserDataOutput(in long nsPresentationTime, in byte[] userData);
 
+    /**
+     * Callback that signals the video decoder input buffer queue has space again.
+     *
+     * Fired exactly once after a previous `IVideoDecoderController.decodeBuffer()` call
+     * returned `false` (internal queue full), when the queue subsequently has space.
+     *
+     * The client SHOULD wait for this callback before retrying `decodeBuffer()` to avoid
+     * wasted binder transactions. Continuing to call `decodeBuffer()` while the queue is
+     * full is permitted but will return `false` repeatedly until space is available.
+     *
+     * Not fired in steady-state operation - only after a refused buffer.
+     *
+     * @see IVideoDecoderController.decodeBuffer()
+     */
+    void onDecodeBufferAvailable();
+
 }

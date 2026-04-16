@@ -190,6 +190,14 @@ The video frame data in the buffer is vendor specific and is not decoded or unde
 
 Once the data in a video frame buffer has been presented or upon a flush request, the Video Sink shall free handles by calling `IAVBuffer.free()`.
 
+## Input Buffer Back-Pressure
+
+`IVideoSinkController.queueVideoFrame()` returns `false` when the internal frame buffer queue is full. Buffer ownership remains with the caller and the frame must be retained for re-submission.
+
+To avoid wasted binder transactions, the client SHOULD wait for `IVideoSinkControllerListener.onFrameBufferAvailable()` before calling `queueVideoFrame()` again. The callback fires exactly once after a `false` return, when the input queue has space again. It is not fired in steady-state operation.
+
+Continuing to call `queueVideoFrame()` while the queue is full is permitted but will return `false` repeatedly until space is available.
+
 ## Secure Video Processing
 
 Secure video processing (SVP) is a requirement for RDK-E.

@@ -125,6 +125,10 @@ interface IAudioSinkController {
      * @returns boolean
      * @retval true  Buffer successfully queued for mixing. Buffer ownership transfers to HAL.
      * @retval false Buffer queue is full. Buffer ownership remains with caller.
+     *               The client SHOULD wait for `IAudioSinkControllerListener.onFrameBufferAvailable()`
+     *               before retrying, to avoid wasted binder transactions. Continuing to call this
+     *               method while the queue is full is permitted but will return `false` repeatedly
+     *               until space is available.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE    If the resource is not in the `STARTED` state or an audio frame is passed after EOS.

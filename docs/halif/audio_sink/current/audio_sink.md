@@ -197,6 +197,14 @@ The audio data must be in the PCM audio format and sample rate, as reported in `
 
 Once the data in an audio frame buffer has been fully passed to or processed by the mixer, the Audio Sink shall free the handle by calling `IAVBuffer.free()`.
 
+## Input Buffer Back-Pressure
+
+`IAudioSinkController.queueAudioFrame()` returns `false` when the internal frame buffer queue is full. Buffer ownership remains with the caller and the frame must be retained for re-submission.
+
+To avoid wasted binder transactions, the client SHOULD wait for `IAudioSinkControllerListener.onFrameBufferAvailable()` before calling `queueAudioFrame()` again. The callback fires exactly once after a `false` return, when the input queue has space again. It is not fired in steady-state operation.
+
+Continuing to call `queueAudioFrame()` while the queue is full is permitted but will return `false` repeatedly until space is available.
+
 ## Secure Audio Processing
 
 If any audio decoder supports SAP in non-tunnelled mode then the Audio Sink HAL must also support SAP to be able to process secure AV buffers of decoded PCM data, otherwise SAP support is optional.

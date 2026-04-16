@@ -50,4 +50,20 @@ oneway interface IAudioDecoderControllerListener {
     * @see IAudioDecoderController.decodeBuffer(), IAVBuffer.free()
     */
     void onFrameOutput(in long nsPresentationTime, in long frameAVBufferHandle, in @nullable FrameMetadata metadata);
+
+    /**
+     * Callback that signals the audio decoder input buffer queue has space again.
+     *
+     * Fired exactly once after a previous `IAudioDecoderController.decodeBuffer()` call
+     * returned `false` (internal queue full), when the queue subsequently has space.
+     *
+     * The client SHOULD wait for this callback before retrying `decodeBuffer()` to avoid
+     * wasted binder transactions. Continuing to call `decodeBuffer()` while the queue is
+     * full is permitted but will return `false` repeatedly until space is available.
+     *
+     * Not fired in steady-state operation - only after a refused buffer.
+     *
+     * @see IAudioDecoderController.decodeBuffer()
+     */
+    void onDecodeBufferAvailable();
 }

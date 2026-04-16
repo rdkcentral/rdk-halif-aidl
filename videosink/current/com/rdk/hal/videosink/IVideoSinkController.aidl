@@ -150,6 +150,10 @@ interface IVideoSinkController
      * @returns boolean
      * @retval true  Frame successfully queued for display. Buffer ownership transfers to HAL.
      * @retval false Video sink queue is full. Buffer ownership remains with caller.
+     *               The client SHOULD wait for `IVideoSinkControllerListener.onFrameBufferAvailable()`
+     *               before retrying, to avoid wasted binder transactions. Continuing to call this
+     *               method while the queue is full is permitted but will return `false` repeatedly
+     *               until space is available.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
