@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.planecontrol;
+parcelable GraphicsDmaBufFrameFd;
+
 import com.rdk.hal.planecontrol.IPlaneControlListener;
 import com.rdk.hal.planecontrol.Capabilities;
 import com.rdk.hal.planecontrol.SourcePlaneMapping;
@@ -80,7 +82,7 @@ interface IPlaneControl
     boolean commitGraphicsFrameBuffer(in int planeResourceIndex, in int GraphicsFrameId);
  
      /**
-     * Creates a dmabuf graphics frame buffer
+     * Creates a GBM (Generic Buffer Management) dmabuf graphics frame buffer
      * 
      * This function can be called multiple times to create up to the maximum allowed graphics frames specified in the plane resources capabilities. 
      * The returned file descripter can be the same for all created graphics frame buffers.
@@ -99,7 +101,7 @@ interface IPlaneControl
      * 
      * @see releaseGraphicsFrameBuffer()
      */
-    GraphicsDmaBufFrameFd createDmaBufGraphicsFrameBuffer(in int planeResourceIndex, in int width, in height, out GraphicsFrameInfo outInfo );
+    GraphicsDmaBufFrameFd createGbmDmaBufGraphicsFrameBuffer(in int planeResourceIndex, in int width, in height, out GraphicsFrameInfo outInfo );
 
     /**
      * Frees a graphics frame buffer.
