@@ -91,8 +91,11 @@ oneway interface IAudioSinkControllerListener {
     /**
      * Callback that signals the audio sink input frame buffer queue has space again.
      *
-     * Fired exactly once after a previous `IAudioSinkController.queueAudioFrame()` call
-     * returned `false` (internal queue full), when the queue subsequently has space.
+     * Fired exactly once per back-pressure episode: when the internal queue transitions
+     * from full to has-space after `IAudioSinkController.queueAudioFrame()` returned `false`.
+     * If the client continues to call `queueAudioFrame()` during back-pressure (receiving
+     * `false` repeatedly), only one callback is delivered per transition, regardless of
+     * the number of intermediate `false` returns.
      *
      * The client SHOULD wait for this callback before retrying `queueAudioFrame()` to avoid
      * wasted binder transactions. Continuing to call `queueAudioFrame()` while the queue is

@@ -54,8 +54,11 @@ oneway interface IAudioDecoderControllerListener {
     /**
      * Callback that signals the audio decoder input buffer queue has space again.
      *
-     * Fired exactly once after a previous `IAudioDecoderController.decodeBuffer()` call
-     * returned `false` (internal queue full), when the queue subsequently has space.
+     * Fired exactly once per back-pressure episode: when the internal queue transitions
+     * from full to has-space after `IAudioDecoderController.decodeBuffer()` returned `false`.
+     * If the client continues to call `decodeBuffer()` during back-pressure (receiving
+     * `false` repeatedly), only one callback is delivered per transition, regardless of
+     * the number of intermediate `false` returns.
      *
      * The client SHOULD wait for this callback before retrying `decodeBuffer()` to avoid
      * wasted binder transactions. Continuing to call `decodeBuffer()` while the queue is

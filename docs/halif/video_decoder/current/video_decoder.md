@@ -305,7 +305,7 @@ If the frame buffer pool is empty then the video decoder cannot output the next 
 
 `IVideoDecoderController.decodeBuffer()` returns `false` when the internal decode buffer queue is full. Buffer ownership remains with the caller and the buffer must be retained for re-submission.
 
-To avoid wasted binder transactions, the client SHOULD wait for `IVideoDecoderControllerListener.onDecodeBufferAvailable()` before calling `decodeBuffer()` again. The callback fires exactly once after a `false` return, when the input queue has space again. It is not fired in steady-state operation.
+To avoid wasted binder transactions, the client SHOULD wait for `IVideoDecoderControllerListener.onDecodeBufferAvailable()` before calling `decodeBuffer()` again. The callback fires exactly once per back-pressure episode: when the internal queue transitions from full to has-space. If the client continues to call `decodeBuffer()` during back-pressure (receiving `false` repeatedly), only one callback is delivered per transition. It is not fired in steady-state operation.
 
 Continuing to call `decodeBuffer()` while the queue is full is permitted but will return `false` repeatedly until space is available.
 

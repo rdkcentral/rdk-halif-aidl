@@ -201,7 +201,7 @@ Once the data in an audio frame buffer has been fully passed to or processed by 
 
 `IAudioSinkController.queueAudioFrame()` returns `false` when the internal frame buffer queue is full. Buffer ownership remains with the caller and the frame must be retained for re-submission.
 
-To avoid wasted binder transactions, the client SHOULD wait for `IAudioSinkControllerListener.onFrameBufferAvailable()` before calling `queueAudioFrame()` again. The callback fires exactly once after a `false` return, when the input queue has space again. It is not fired in steady-state operation.
+To avoid wasted binder transactions, the client SHOULD wait for `IAudioSinkControllerListener.onFrameBufferAvailable()` before calling `queueAudioFrame()` again. The callback fires exactly once per back-pressure episode: when the internal queue transitions from full to has-space. If the client continues to call `queueAudioFrame()` during back-pressure (receiving `false` repeatedly), only one callback is delivered per transition. It is not fired in steady-state operation.
 
 Continuing to call `queueAudioFrame()` while the queue is full is permitted but will return `false` repeatedly until space is available.
 

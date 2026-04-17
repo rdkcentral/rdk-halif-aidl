@@ -95,8 +95,11 @@ oneway interface IVideoSinkControllerListener
     /**
      * Callback that signals the video sink input frame buffer queue has space again.
      *
-     * Fired exactly once after a previous `IVideoSinkController.queueVideoFrame()` call
-     * returned `false` (internal queue full), when the queue subsequently has space.
+     * Fired exactly once per back-pressure episode: when the internal queue transitions
+     * from full to has-space after `IVideoSinkController.queueVideoFrame()` returned `false`.
+     * If the client continues to call `queueVideoFrame()` during back-pressure (receiving
+     * `false` repeatedly), only one callback is delivered per transition, regardless of
+     * the number of intermediate `false` returns.
      *
      * The client SHOULD wait for this callback before retrying `queueVideoFrame()` to avoid
      * wasted binder transactions. Continuing to call `queueVideoFrame()` while the queue is
