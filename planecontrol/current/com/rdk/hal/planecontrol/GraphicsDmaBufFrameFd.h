@@ -20,6 +20,22 @@
 #include <binder/Parcelable.h>
 #include <fcntl.h>
 
+#ifndef _GRAPHICSDMABUFFRAMEFD_H_
+#define _GRAPHICSDMABUFFRAMEFD_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#include <cstdint>
+
+using namespace std;
+
 class GraphicsDmaBufFrameFd : public android::Parcelable {
 public:
     int fd;
@@ -46,3 +62,4 @@ public:
     }
 };
 
+#endif // _GRAPHICSDMABUFFRAMEFD_H_
