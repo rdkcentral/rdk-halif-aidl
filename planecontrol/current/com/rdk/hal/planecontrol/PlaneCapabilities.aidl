@@ -107,7 +107,8 @@ parcelable PlaneCapabilities
 
     /**
      * Indicates the support for GBM dmabuf graphics frame buffers. 
-     * If true the interface IGbmDmaBufGraphicsFrameBuffer interface can be opened and used to create, flip and destroy graphics frame buffers.
+     * If true, clients can open IGbmDmaBufFbProvider via IPlaneControl.getGbmDmaBufFbProvider()
+     * and use it to create, commit and destroy graphics frame buffers.
      */
     boolean supportsGbmDmaBuf; 
 }

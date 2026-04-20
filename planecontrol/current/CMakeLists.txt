@@ -40,12 +40,12 @@ set(VIDEO_DECODER_SRC_DIR ${VIDEO_DECODER_MODULE_PATH}/${VIDEO_DECODER_VERSION}/
 set(SRC
 	${SRC_DIR}/AspectRatio.aidl
 	${SRC_DIR}/GbmDmaBufCapabilities.aidl
-	${SRC_DIR}/GraphicsFrameInfo.aidl
-	${SRC_DIR}/GraphicsPixelFormat.aidl
-	${SRC_DIR}/IGbmDmaBufGraphicsFrameBuffer.aidl
+	${SRC_DIR}/GbmDmaBufGraphicsFrameInfo.aidl
+	${SRC_DIR}/IGbmDmaBufFbProvider.aidl
+	${SRC_DIR}/IGbmDmaBufFbProviderListener.aidl
 	${SRC_DIR}/IPlaneControl.aidl
 	${SRC_DIR}/IPlaneControlListener.aidl
-	${SRC_DIR}/Capabilities.aidl
+	${SRC_DIR}/PlaneCapabilities.aidl
 	${SRC_DIR}/PlaneType.aidl
 	${SRC_DIR}/Property.aidl
 	${SRC_DIR}/PropertyKVPair.aidl

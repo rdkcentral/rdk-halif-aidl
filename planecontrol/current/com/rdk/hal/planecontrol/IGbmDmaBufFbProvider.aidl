@@ -42,8 +42,8 @@ interface IGbmDmaBufFbProvider
 {
 
     /**
-     * Gets the GBM Dma-Buf graphics frame buffer capabilities
-     * 
+     * Gets the GBM Dma-Buf graphics frame buffer capabilities.
+     *
      * This function can be called at any time and is not dependant on any Plane Control state.
      * The returned value is not allowed to change between calls.
      *
@@ -74,8 +74,8 @@ interface IGbmDmaBufFbProvider
      */
     boolean commitGraphicsFrameBuffer(in int GraphicsFrameId);
  
-     /**
-     * Creates a GBM (Generic Buffer Management) dmabuf graphics frame buffer for this plane.
+    /**
+     * Creates a GBM (Generic Buffer Management) Dma-Buf graphics frame buffer for this plane.
      * 
      * This function can be called multiple times to create up to the maximum allowed graphics frames specified in the plane resources capabilities. 
      * The returned file descriptor can be the same for all created graphics frame buffers.
@@ -84,7 +84,7 @@ interface IGbmDmaBufFbProvider
      * @param[in] height                The requested height of the graphics frame buffer.  
      * @param[out] outInfo              A parcelable describing the graphics frame buffer.
      *
-     * @returns A dmaBuf file descriptor and the associated graphics frame buffer info
+     * @returns A Dma-Buf file descriptor and the associated graphics frame buffer info.
      * 
      * width and height must not exceed the GbmDmaBufCapabilities. 
      * 
@@ -92,7 +92,7 @@ interface IGbmDmaBufFbProvider
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      *
      * 
-     * @see releaseGraphicsFrameBuffer()
+     * @see destroyGraphicsFrameBuffer()
      */
     GraphicsDmaBufFrameFd createGraphicsFrameBuffer(in int width, in int height, out GbmDmaBufGraphicsFrameInfo outInfo );
 

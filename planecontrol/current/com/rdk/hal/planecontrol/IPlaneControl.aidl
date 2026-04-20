@@ -233,12 +233,15 @@ interface IPlaneControl
     boolean unregisterListener(in IPlaneControlListener listener);
 
     /**
-	 * Gets a GBM DmaBuf Frame Buffer Provider.
+     * Gets a GBM DmaBuf Frame Buffer Provider.
+     *
+     * Current model: GBM Dma-Buf is the only supported graphics frame provider.
+     * Future interface versions may introduce additional provider types.
      *
      * @param[in] planeResourceIndex               The ID of the plane resource.
      * @param[in] gbmDmaBufFbProviderListener      Listener for provider callbacks.
      *
-     * @returns IGbmDmaBufFbProvider or null if the resource index is invalid.
+     * @returns IGbmDmaBufFbProvider or null if the resource index is invalid or supportsGbmDmaBuf is false.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid resource index.

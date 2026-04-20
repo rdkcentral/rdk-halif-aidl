@@ -2,7 +2,9 @@
 
 The Plane Control HAL manages the platform’s video and graphics plane resources, exposing each plane as a resource with readable capabilities.  
 
-It enables linking video sources—such as video sinks, HDMI input, and composite input—to a video plane. Additionally, it provides the RDK middleware with a native window graphics plane handle for EGL-based graphics display.  
+It enables linking video sources - such as video sinks, HDMI input, and composite input - to a video plane. For graphics planes, the current model provides GBM Dma-Buf Graphics Frame Buffers through `IGbmDmaBufFbProvider` for EGL-based graphics display.  
+
+Future interface versions may add additional graphics frame provider types.
 
 Each plane is configurable through a set of properties that clients can read or modify, either individually or in batches.
 
@@ -32,15 +34,22 @@ Each plane is configurable through a set of properties that clients can read or 
 | **HAL.PLANECONTROL.4** | Shall provide an API to atomically set multiple properties of a plane which take effect at the next available vsync.|
 | **HAL.PLANECONTROL.5** | Shall allow only 1 source to be mapped to any given video plane.|
 | **HAL.PLANECONTROL.6** | Shall provide an API to atomically update multiple video source to video plane mappings.|
+| **HAL.PLANECONTROL.7** | Shall provide a GBM Dma-Buf graphics frame buffer provider API for graphics planes where `supportsGbmDmaBuf = true`.|
+| **HAL.PLANECONTROL.8** | Shall provide APIs to create, commit and destroy graphics frame buffers via `IGbmDmaBufFbProvider`.|
+| **HAL.PLANECONTROL.9** | Shall notify clients when committed graphics frame buffers are released and available for reuse via `IGbmDmaBufFbProviderListener`.|
 
 ## Interface Definition
 
 |Interface Definition File | Description|
 |--------------------------|------------|
-|`IPlaneControl.aidl` | Plane Control HAL interface which provides the central API video and graphics plane management.|
+|`IPlaneControl.aidl` | Plane Control HAL interface which provides the central API for video and graphics plane management.|
 | `IPlaneControlListener.aidl` | Plane Control listener for callbacks.|
+| `IGbmDmaBufFbProvider.aidl` | GBM Dma-Buf graphics frame buffer provider interface for a graphics plane.|
+| `IGbmDmaBufFbProviderListener.aidl` | Listener interface for graphics frame release callbacks from the GBM provider.|
 | `AspectRatio.aidl` | Enum list of aspect ratios.|
-| `Capabilities.aidl` | Parcelable describing a single plane resource capabilities.|
+| `PlaneCapabilities.aidl` | Parcelable describing a single plane resource capabilities.|
+| `GbmDmaBufCapabilities.aidl` | Parcelable describing GBM provider capabilities for a graphics plane.|
+| `GbmDmaBufGraphicsFrameInfo.aidl` | Parcelable describing GBM frame metadata (frame ID, stride, offset, format, modifier).|
 | `PlaneType.aidl` | Enum list of plane types.|
 | `Property.aidl` | Enum list of plane properties.|
 | `PropertyKVPair.aidl` | Parcelable of a single property key and value pair.|
@@ -57,11 +66,11 @@ Upon starting, the service shall register the `IPlaneControl` interface with the
 
 ## Product Customization
 
-The `IPlaneControl.getCapabilities()` returns an array of `Capabilities` parcelables to uniquely represent all of the plane resources supported by the vendor layer.
+The `IPlaneControl.getCapabilities()` returns an array of `PlaneCapabilities` parcelables to uniquely represent all of the plane resources supported by the vendor layer.
 
 Typically, the plane index (resource ID) value starts at 0 for the first video plane and increments by 1 for each additional video plane, followed by the graphic plane(s).
 
-The `Capabilities` parcelable returned by the `IPlaneControl.getCapabilities()` function lists all capabilities supported by a plane resource.
+The `PlaneCapabilities` parcelable returned by the `IPlaneControl.getCapabilities()` function lists all capabilities supported by a plane resource.
 - Concurrent control of plane resources is allowed by multiple clients. The RDK middleware is responsible for ensuring only 1 controlling client is active at any given time.
 
 ## System Context
@@ -70,13 +79,15 @@ The Plane Control service provides functionality to multiple clients which exist
 
 Typically, video planes are linked to video sources when a GStreamer pipeline is created in the RDK middleware. The geometry of the video planes can be manipulated by the Window Manager through a separate client connection.
 
-Native graphics plane windows are taken by the RDK middleware compositor to link graphics display updates from EGL to the hardware.
+Graphics planes supporting `supportsGbmDmaBuf = true` can expose `IGbmDmaBufFbProvider` for EGL-based graphics frame rendering and commit.
 
 ```mermaid
 flowchart TD
     %% --- Components ---
     RDKClientComponent["RDK Client Component"]
     IPlaneControlListener["IPlaneControlListener"]
+    IGbmDmaBufFbProvider["IGbmDmaBufFbProvider"]
+    IGbmDmaBufFbProviderListener["IGbmDmaBufFbProviderListener"]
 
     subgraph Connections["Vendor Layer"]
         subgraph IPlaneControlHAL["Plane Control HAL"]
@@ -92,9 +103,7 @@ flowchart TD
 
     %% --- Function Calls Over Single Line ---
     RDKClientComponent -- getCapabilities()
-    getNativeGraphicsWindowHandle()
-    releaseNativeGraphicsWindowHandle()
-    flipGraphicsBuffer()
+    getGbmDmaBufFbProvider()
     setVideoSourceDestinationPlaneMapping()
     getVideoSourceDestinationPlaneMapping()
     getProperty()
@@ -105,10 +114,19 @@ flowchart TD
     unregisterListener()
      --> IPlaneControl
 
+    RDKClientComponent -- getCapabilities()
+    createGraphicsFrameBuffer()
+    commitGraphicsFrameBuffer()
+    destroyGraphicsFrameBuffer()
+     --> IGbmDmaBufFbProvider
+
     IPlaneControlListener --> RDKClientComponent
+    IGbmDmaBufFbProviderListener --> RDKClientComponent
 
     %% --- Wrapped Connections in a Subgraph ---
         IPlaneControl --> IPlaneControlListener
+        IPlaneControl --> IGbmDmaBufFbProvider
+        IGbmDmaBufFbProvider --> IGbmDmaBufFbProviderListener
         IPlaneControl -.-> VideoPlane0
         IPlaneControl -.-> VideoPlane1
         IPlaneControl -.-> VideoPlane2
@@ -124,6 +142,8 @@ flowchart TD
     RDKClientComponent:::blue
     IPlaneControl:::wheat
     IPlaneControlListener:::wheat
+    IGbmDmaBufFbProvider:::wheat
+    IGbmDmaBufFbProviderListener:::wheat
     VideoPlane0:::green
     VideoPlane1:::green
     VideoPlane2:::green
@@ -183,7 +203,20 @@ For the 2 types of planes (video and graphics) there are fixed configurations wh
 |Plane Type | Fixed Configuration|
 |-----------|--------------------|
 | **Video** |If there is no video to display on a visible plane, then it shall render transparent black. <br>The z-order is dynamic only for video planes.<br> Primary video plane shall always be listed at resource index 0.|
-| **Graphics** |Calls to `getNativeGraphicsWindowHandle()` will return a handle that can be used to connect with EGL display implementations.|
+| **Graphics** |When `supportsGbmDmaBuf` is true, `getGbmDmaBufFbProvider()` provides GBM Dma-Buf frame creation, commit, and destroy operations.|
+
+## Graphics Frame Providers
+
+Current model:
+- Plane Control supports GBM Dma-Buf graphics frame buffers via `IGbmDmaBufFbProvider`.
+- Clients should first query `IPlaneControl.getCapabilities()` and check `PlaneCapabilities.supportsGbmDmaBuf` for the target graphics plane.
+- If supported, clients open the provider using `IPlaneControl.getGbmDmaBufFbProvider()` and use provider APIs to create, render, commit, and destroy frames.
+
+Future model:
+- Future interface versions may add new graphics frame provider interfaces.
+- A provider-factory interface may be introduced in a future version to discover and open provider-specific interfaces.
+- Provider discovery is expected to remain capability-driven so existing GBM clients remain compatible.
+- New providers should be introduced without changing current GBM semantics.
 
 ## Video Planes
 

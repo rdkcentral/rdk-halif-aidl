@@ -41,9 +41,10 @@ lifecycle:
 scope:
   - Graphics and video rendering plane management for composited display
   - Video source-to-plane mapping for main and PIP scenarios
-  - Native graphics window handle integration with EGL
+  - GBM Dma-Buf graphics frame buffer provider integration with EGL
+  - Provider-extensible graphics frame model for future interface versions
   - Atomic plane property control (position, size, Z-order)
-  - Graphics buffer flipping and plane-specific property access
+  - Graphics frame commit workflow and plane-specific property access
 
 # notes - Tracking metadata                                              [manual]
 #   priority      - Numeric priority (lower = higher)

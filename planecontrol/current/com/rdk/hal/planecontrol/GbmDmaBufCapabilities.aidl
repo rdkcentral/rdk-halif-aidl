@@ -40,8 +40,4 @@ parcelable GbmDmaBufCapabilities
     int maxGraphicsFrameBufferWidth;
     int maxGraphicsFrameBufferHeight;
 
-    /** 
-     * The list of graphics pixel formats supported by this frame buffer provider.
-     */
-    GraphicsPixelFormat[] grahicsPixelFormats;
 }
