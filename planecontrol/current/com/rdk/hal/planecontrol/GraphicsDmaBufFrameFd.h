@@ -32,7 +32,17 @@ public:
     }
 
     android::status_t readFromParcel(const android::Parcel* parcel) override {
-        this->fd = fcntl(parcel->readFileDescriptor(), F_DUPFD_CLOEXEC, 0);
+        // Take the FD Binder created for you.
+        this->fd = parcel->readFileDescriptor();
+
+        // Check if it is good
+        if (this->fd < 0) return android::BAD_VALUE;
+
+        // Simply set the flag on the existing FD. 
+        // No new FD is created; no need to close anything extra.
+        fcntl(this->fd, F_SETFD, FD_CLOEXEC);
+
         return android::OK;
     }
 };
+

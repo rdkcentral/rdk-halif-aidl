@@ -102,18 +102,8 @@ flowchart TD
     end
 
     %% --- Function Calls Over Single Line ---
-    RDKClientComponent -- getCapabilities()
-    getGbmDmaBufFbProvider()
-    setVideoSourceDestinationPlaneMapping()
-    getVideoSourceDestinationPlaneMapping()
-    getProperty()
-    setProperty()
-    getPropertyMulti()
-    setPropertyMultiAtomic()
-    registerListener()
-    unregisterListener()
-     --> IPlaneControl
-
+    RDKClientComponent -- getCapabilities() <br> getGbmDmaBufFbProvider() <br> setVideoSourceDestinationPlaneMapping() <br> getVideoSourceDestinationPlaneMapping() <br> getProperty() <br> setProperty() <br> getPropertyMulti() <br> setPropertyMultiAtomic() <br> registerListener() <br> unregisterListener() --> IPlaneControl
+    
     RDKClientComponent -- getCapabilities()
     createGraphicsFrameBuffer()
     commitGraphicsFrameBuffer()
