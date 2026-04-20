@@ -99,13 +99,13 @@ interface IGbmDmaBufFbProvider
     /**
      * Frees a graphics frame buffer.
      * 
-     * @param[in] GraphicsFrameId    The graphics frame buffer identifier
+     * @param[in] graphicsFrameId    The graphics frame buffer identifier
      * 
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      * 
      * @see createGraphicsFrameBuffer()
      */
-    void destroyGraphicsFrameBuffer(in int GraphicsFrameId);
+    void destroyGraphicsFrameBuffer(in int graphicsFrameId);
 
 }
