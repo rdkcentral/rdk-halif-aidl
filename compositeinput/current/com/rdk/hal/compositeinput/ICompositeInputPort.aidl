@@ -32,7 +32,8 @@ import com.rdk.hal.PropertyValue;
 
 /**
  * @brief     Composite Input Port HAL interface.
- * @details   Provides control and monitoring for a single composite video input port.
+ *
+ *            Provides control and monitoring for a single composite video input port.
  *            State lifecycle is managed via open() / close() on this interface and
  *            start() / stop() on the ICompositeInputController returned by open().
  *

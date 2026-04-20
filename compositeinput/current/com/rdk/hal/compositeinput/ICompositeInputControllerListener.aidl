@@ -23,7 +23,8 @@ import com.rdk.hal.compositeinput.VideoResolution;
 
 /**
  * @brief     Controller callback listener interface for composite input.
- * @details   Passed into ICompositeInputPort.open(). Delivers real-time A/V
+ *
+ *            Passed into ICompositeInputPort.open(). Delivers real-time A/V
  *            signal events to the exclusive controller owner: connection
  *            detection, signal status, and video mode changes.
  *

@@ -37,11 +37,11 @@ parcelable PlatformCapabilities
     @VintfStability
     parcelable FeatureFlags
     {
-        /** True if signal quality metrics are available. */
-        boolean signalMetricsSupported;
-
         /** True if Macrovision copy protection detection is supported. */
         boolean macrovisionDetectionSupported;
+
+        // Signal-metrics support is inferred from the presence of METRIC_*
+        // keys in supportedProperties — no separate flag needed.
     }
     
     /** HAL version (semantic versioning, e.g., "1.0.0"). */

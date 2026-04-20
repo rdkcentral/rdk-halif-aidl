@@ -20,8 +20,9 @@ package com.rdk.hal.compositeinput;
 
 /**
  * @brief     HAL component states for a composite input port.
- * @details   State transitions are driven by open(), close() on ICompositeInputPort
- *            and start(), stop() on ICompositeInputController.
+ *
+ * State transitions are driven by open(), close() on ICompositeInputPort
+ * and start(), stop() on ICompositeInputController.
  * @author    Gerald Weatherup
  */
 @VintfStability

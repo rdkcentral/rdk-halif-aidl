@@ -128,10 +128,8 @@ enum PortProperty
      * Type: Long
      * Access: Read-only.
      */
-    METRIC_LAST_RESET_TIMESTAMP = 1005
+    METRIC_LAST_RESET_TIMESTAMP = 1005,
 
-    /**
-     * Additional keys may be introduced in future revisions.
-     * Clients must tolerate unknown keys gracefully.
-     */
+    // Additional keys may be introduced in future revisions.
+    // Clients must tolerate unknown keys gracefully.
 }

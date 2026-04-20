@@ -24,7 +24,8 @@ import com.rdk.hal.PropertyValue;
 
 /**
  * @brief     Composite Input Controller HAL interface.
- * @details   Returned by ICompositeInputPort.open(). Provides exclusive write
+ *
+ *            Returned by ICompositeInputPort.open(). Provides exclusive write
  *            control over a composite input port: lifecycle (start/stop),
  *            property mutation, and metrics reset. All state-mutating operations
  *            are gated on the port being in the correct State.
