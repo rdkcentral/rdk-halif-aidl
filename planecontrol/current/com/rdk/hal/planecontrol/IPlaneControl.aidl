@@ -17,15 +17,16 @@
  * limitations under the License.
  */
 package com.rdk.hal.planecontrol;
-parcelable GraphicsDmaBufFrameFd;
 
 import com.rdk.hal.planecontrol.IPlaneControlListener;
-import com.rdk.hal.planecontrol.Capabilities;
+import com.rdk.hal.planecontrol.PlaneCapabilities;
 import com.rdk.hal.planecontrol.SourcePlaneMapping;
 import com.rdk.hal.planecontrol.Property;
 import com.rdk.hal.planecontrol.PropertyKVPair;
 import com.rdk.hal.PropertyValue;
-import com.rdk.hal.planecontrol.GraphicsFrameInfo;
+import com.rdk.hal.planecontrol.IGbmDmaBufFbProvider;
+import com.rdk.hal.planecontrol.IGbmDmaBufFbProviderListener;
+
  
 /** 
  *  @brief     Plane Control HAL interface.
@@ -55,66 +56,10 @@ interface IPlaneControl
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
-     * @returns Capabilities[] array of plane resource instance capabilities.
+     * @returns PlaneCapabilities[] array of plane resource instance capabilities.
      *
      */
-    Capabilities[] getCapabilities();
-
-    /**
-     * Commit the graphics frame buffer to be displayed on a graphics plane.
-     *
-     * This is a non-blocking function to commit this frame buffer to display at the earliest opportunity.
-     * After the frame has been displayed an event is raised to indicate that the buffer, previously on display, is now free to be re-used.
-     * 
-     * @param[in] planeResourceIndex        The graphics plane resource index.
-     * @param[in] GraphicsFrameId                The Frame Id of the buffer to replace the currently displaying buffer
-     * 
-     * @returns boolean
-     * @retval true     The frame was accepted for display.
-     * @retval false    Invalid graphics plane resource index.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
-     *
-     *
-     * @see createDmaBufGraphicsFrameBuffer()
-     */
-    boolean commitGraphicsFrameBuffer(in int planeResourceIndex, in int GraphicsFrameId);
- 
-     /**
-     * Creates a GBM (Generic Buffer Management) dmabuf graphics frame buffer
-     * 
-     * This function can be called multiple times to create up to the maximum allowed graphics frames specified in the plane resources capabilities. 
-     * The returned file descripter can be the same for all created graphics frame buffers.
-     * 
-     * @param[in] planeResourceIndex    The plane resource index.
-     * @param[in] width                 The requested width of the graphics frame buffer.  
-     * @param[in] height                The requested height of the graphics frame buffer.  
-     * @param[out] outInfo              A parcelable describing the graphics frame buffer.
-     *
-     * @returns A dmaBuf file descriptor and the associated graphics frame buffer info
-     *
-     * 
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
-     *
-     * 
-     * @see releaseGraphicsFrameBuffer()
-     */
-    GraphicsDmaBufFrameFd createGbmDmaBufGraphicsFrameBuffer(in int planeResourceIndex, in int width, in height, out GraphicsFrameInfo outInfo );
-
-    /**
-     * Frees a graphics frame buffer.
-     * 
-     *
-     * @param[in] GraphicsFrameId    The graphics frame buffer identifier
-     * 
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
-     * 
-     * @see createDmaBufGraphicsFrameBuffer()
-     */
-    void destroyGraphicsFrameBuffer(in int GraphicsFrameId);
+    PlaneCapabilities[] getCapabilities();
 
     /**
      * Sets the destination plane for one or more video sources.
@@ -130,7 +75,7 @@ interface IPlaneControl
      *
      * @param[in] listSourcePlaneMapping    An array of video source to video plane mappings.
      *
-     * @return boolean
+     * @returns boolean
      * @retval true     The mapping was updated.
      * @retval false    One or more mappings were invalid.
      * 
@@ -258,7 +203,7 @@ interface IPlaneControl
      *
      * @param[in] listener              IPlaneControlListener interface.
      * 
-     * @return boolean
+     * @returns boolean
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
      *
@@ -275,7 +220,7 @@ interface IPlaneControl
      *
      * @param[in] listener              Reference to IPlaneControlListener interface.
      *
-     * @return boolean
+     * @returns boolean
      * @retval true     The event listener was unregistered.
      * @retval false    The event listener was not found registered.
      *
@@ -286,4 +231,18 @@ interface IPlaneControl
      * @see registerListener()
      */
     boolean unregisterListener(in IPlaneControlListener listener);
+
+    /**
+	 * Gets a GBM DmaBuf Frame Buffer Provider.
+     *
+     * @param[in] planeResourceIndex               The ID of the plane resource.
+     * @param[in] gbmDmaBufFbProviderListener      Listener for provider callbacks.
+     *
+     * @returns IGbmDmaBufFbProvider or null if the resource index is invalid.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid resource index.
+     *
+     */
+    @nullable IGbmDmaBufFbProvider getGbmDmaBufFbProvider(in int planeResourceIndex, in IGbmDmaBufFbProviderListener gbmDmaBufFbProviderListener); 
 }

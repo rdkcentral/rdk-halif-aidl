@@ -30,7 +30,7 @@ import com.rdk.hal.videodecoder.DynamicRange;
  */
 
 @VintfStability
-parcelable Capabilities
+parcelable PlaneCapabilities
 {
     /**
      * 0 based index of this plane resource.
@@ -106,14 +106,8 @@ parcelable Capabilities
     int vsyncDisplayLatency;
 
     /**
-     * Indicates the support for dmabuf graphics frame buffers. 
-     * If true the IDmaBufGfx interface can be used to create, flip and destroy graphics frame buffers.
+     * Indicates the support for GBM dmabuf graphics frame buffers. 
+     * If true the interface IGbmDmaBufGraphicsFrameBuffer interface can be opened and used to create, flip and destroy graphics frame buffers.
      */
-    boolean supportsDmaBuf; 
-
-    /**
-     * If the plane is a graphics plane, maxGraphicsFrameBuffers indicates the maximum number of frame buffers that can be created for use on this plane.
-     * If the plane is a video place, maxGraphicsFrameBuffers is zero.
-     */
-    int maxGraphicsFrameBuffers;
+    boolean supportsGbmDmaBuf; 
 }

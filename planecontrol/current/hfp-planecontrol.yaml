@@ -44,6 +44,7 @@ planecontrol:                   # Component object begins
         supportsAlpha: true
         supportsZOrder: true
         vsyncDisplayLatency: 3
+        supportsGbmDmaBuf: false
     - 1:                    # Resource object begins
         type: VIDEO
         pixelFormats:
@@ -59,6 +60,7 @@ planecontrol:                   # Component object begins
         supportsAlpha: true
         supportsZOrder: true
         vsyncDisplayLatency: 3
+        supportsGbmDmaBuf: false
     - 2:                    # Resource object begins
         type: GRAPHICS
         pixelFormats:
@@ -74,3 +76,11 @@ planecontrol:                   # Component object begins
         supportsAlpha: true
         supportsZOrder: false
         vsyncDisplayLatency: 1
+        supportsGbmDmaBuf: true
+        gbmDmaBuf:
+          maxGraphicsFrameBuffers: 3
+          maxGraphicsFrameBufferWidth: 1920
+          maxGraphicsFrameBufferHeight: 1080
+          format: 0xDEADBEEF 
+          modifier: 0xDEADBEEFDEADBEEF
+

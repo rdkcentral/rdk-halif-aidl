@@ -17,37 +17,23 @@
  * limitations under the License.
  */
 package com.rdk.hal.planecontrol;
-
-import com.rdk.hal.planecontrol.GraphicsPixelFormat;
-
-/**
- *  @brief     Graphics Frame Buffer Info.
+  
+/** 
+ *  @brief     Callbacks listener interface from Plane Control.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
- *  @author    Gerald Weatherup
  */
 
 @VintfStability
-parcelable GraphicsFrameInfo{
- 
-    /* Uniquely identifies this Gfx Frame Buffer */
-    int GraphicsFrameId;
- 
-    /* width of the created gfx frame in pixels */
-    int pixelWidth;
-
-    /* height of the created gfx frame in pixels */
-    int pixelHeight;
-
-    /* Stride - The number of bytes from the start of one row of pixels to the start of the next row. */
-    int stride;
-
-    /* Offset - The number of bytes from the very beginning of the DMA-BUF file descriptor's memory to the actual start of the pixel data.*/
-    int offset;
-
-    /* The pixel format of the returned graphics frame. */
-    GraphicsPixelFormat format;
+oneway interface IGbmDmaBufGraphicsFbListener 
+{
+    /**
+     * @brief     Called after a call to commitGraphicsFrameBuffer() when the Graphics Frame Buffer has become current.
+     * @param[in] OldGraphicsFrameId   The Frame Id of the old frame replaced by the newly committed  frame.
+     * @param[out] elapsedRealtimeNanos The CLOCK_MONOTONIC time when the old graphics frame was replaced by the new.
+     *                                
+     * If no old frame exists (e.g. the first time) -1 is returned as an old OldGraphicsFrameId.
+     */
+    void onGfxFrameReleased(in int OldGraphicsFrameId, out long elapsedRealtimeNanos);
 }
-
-

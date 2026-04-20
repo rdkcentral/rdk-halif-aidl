@@ -17,21 +17,31 @@
  * limitations under the License.
  */
 package com.rdk.hal.planecontrol;
-  
-/**
- *  @brief     Graphics Pixel Format definitions.
+
+ /**
+ *  @brief     GBM Dma-Buf interface capabilities definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
 
 @VintfStability
-@Backing(type="int")
-enum GraphicsPixelFormat
+parcelable GbmDmaBufCapabilities
 {
-    /*
-     * 8bits per component Alpha + Red, Green & Blue 
-     * Mandatory supported pixel format
+   /**
+     * The maxGraphicsFrameBuffers indicates the maximum number of frame buffers that can be created for use on this plane.
      */
-    PIXEL_FORMAT_ARGB8888 = 0,
+    int maxGraphicsFrameBuffers;
+
+    /** 
+     * The maximum width and height in pixels that the frame buffer can created with.
+     * Typically the width and height will match the plane width and height.
+     */
+    int maxGraphicsFrameBufferWidth;
+    int maxGraphicsFrameBufferHeight;
+
+    /** 
+     * The list of graphics pixel formats supported by this frame buffer provider.
+     */
+    GraphicsPixelFormat[] grahicsPixelFormats;
 }
