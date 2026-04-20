@@ -60,7 +60,7 @@ interface IGbmDmaBufFbProvider
      * This is a non-blocking function to commit this frame buffer to display at the earliest opportunity.
      * After the frame has been displayed an event is raised to indicate that the buffer, previously on display, is now free to be re-used.
      * 
-     * @param[in] GraphicsFrameId                The Frame Id of the buffer to replace the currently displaying buffer
+     * @param[in] graphicsFrameId                The Frame Id of the buffer to replace the currently displaying buffer
      * 
      * @returns boolean
      * @retval true     The frame was accepted for display.
@@ -72,7 +72,7 @@ interface IGbmDmaBufFbProvider
      *
      * @see createGraphicsFrameBuffer()
      */
-    boolean commitGraphicsFrameBuffer(in int GraphicsFrameId);
+    boolean commitGraphicsFrameBuffer(in int graphicsFrameId);
  
     /**
      * Creates a GBM (Generic Buffer Management) Dma-Buf graphics frame buffer for this plane.
