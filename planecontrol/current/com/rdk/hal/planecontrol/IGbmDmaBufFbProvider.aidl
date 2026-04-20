@@ -64,7 +64,7 @@ interface IGbmDmaBufFbProvider
      * 
      * @returns boolean
      * @retval true     The frame was accepted for display.
-     * @retval false    Invalid graphics plane resource index.
+     * @retval false    The frame was not accepted because the graphics frame id is invalid or unknown to this provider.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
