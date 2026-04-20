@@ -34,7 +34,7 @@ parcelable GbmDmaBufCapabilities
     int maxGraphicsFrameBuffers;
 
     /** 
-     * The maximum width and height in pixels that the frame buffer can created with.
+     * The maximum width and height in pixels that the frame buffer can be created with.
      * Typically the width and height will match the plane width and height.
      */
     int maxGraphicsFrameBufferWidth;
