@@ -81,6 +81,6 @@ planecontrol:                   # Component object begins
           maxGraphicsFrameBuffers: 3
           maxGraphicsFrameBufferWidth: 1920
           maxGraphicsFrameBufferHeight: 1080
-          format: 0xDEADBEEF 
-          modifier: 0xDEADBEEFDEADBEEF
+          format: 0x34325258
+          modifier: 0x0000000000000000
 
