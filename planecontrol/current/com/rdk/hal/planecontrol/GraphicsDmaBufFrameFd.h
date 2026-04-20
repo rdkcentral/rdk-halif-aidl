@@ -18,6 +18,7 @@
  */
 #include <binder/Parcel.h>
 #include <binder/Parcelable.h>
+#include <fcntl.h>
 
 class GraphicsDmaBufFrameFd : public android::Parcelable {
 public:
