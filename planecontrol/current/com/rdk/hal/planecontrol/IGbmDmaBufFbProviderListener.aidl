@@ -31,9 +31,9 @@ oneway interface IGbmDmaBufFbProviderListener
     /**
      * @brief     Called after a call to commitGraphicsFrameBuffer() when the Graphics Frame Buffer has become current.
      * @param[in] oldGraphicsFrameId    The Frame Id of the old frame replaced by the newly committed frame.
-     * @param[out] elapsedRealtimeNanos The CLOCK_MONOTONIC time when the old graphics frame was replaced by the new.
-     *                                
+     * @param[in] elapsedRealtimeNanos  The CLOCK_MONOTONIC time when the old graphics frame was replaced by the new.
+     *
      * If no old frame exists (e.g. the first time), -1 is returned as oldGraphicsFrameId.
      */
-    void onGfxFrameReleased(in int oldGraphicsFrameId, out long elapsedRealtimeNanos);
+    void onGfxFrameReleased(in int oldGraphicsFrameId, in long elapsedRealtimeNanos);
 }
