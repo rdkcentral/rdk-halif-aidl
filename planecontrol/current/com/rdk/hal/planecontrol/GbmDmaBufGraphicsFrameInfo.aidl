@@ -30,7 +30,7 @@ package com.rdk.hal.planecontrol;
 parcelable GbmDmaBufGraphicsFrameInfo {
  
     /* Uniquely identifies this Gfx Frame Buffer */
-    int GraphicsFrameId;
+    int graphicsFrameId;
  
     /* width of the created gfx frame in pixels */
     int pixelWidth;
