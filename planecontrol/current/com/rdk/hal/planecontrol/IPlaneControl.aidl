@@ -244,7 +244,6 @@ interface IPlaneControl
      * @returns IGbmDmaBufFbProvider or null if the resource index is invalid or supportsGbmDmaBuf is false.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid resource index.
      *
      */
     @nullable IGbmDmaBufFbProvider getGbmDmaBufFbProvider(in int planeResourceIndex, in IGbmDmaBufFbProviderListener gbmDmaBufFbProviderListener); 
