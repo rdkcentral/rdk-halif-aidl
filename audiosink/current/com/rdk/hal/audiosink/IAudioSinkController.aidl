@@ -107,11 +107,12 @@ interface IAudioSinkController {
      * The audio sink must be in the `STARTED` state.
      * Buffers can be either non-secure or secure to support SAP (Secure Audio Path).
      * Each call shall reference a single audio frame with a presentation timestamp.
-     * When no AVClock is attached, the sink has no clock to drive consumption of queued frames.
-     * Depending on the implementation, the internal queue will fill and the sink will return
-     * `false` until a clock is attached. If the hardware does not support clockless queuing,
-     * the method returns `false` immediately. Pausing the clock has the same effect: data
-     * cannot be consumed out of the sink, so the queue will eventually fill.
+     * The sink will not consume queued frames until an AVClock has been linked to this sink
+     * (via `IAVClockController.setAudioSink()`) and the clock has been started. Until then,
+     * depending on the implementation, the internal queue will fill and the method will return
+     * `false`. If the hardware does not support clockless queuing, the method returns `false`
+     * immediately. Pausing the clock has the same effect: data cannot be consumed out of the
+     * sink, so the queue will eventually fill.
      * The audio sink may refuse the buffer if its internal resource usage prevents it from accepting it at that time.
      *
      * Buffer Ownership: Ownership of the buffer transfers to the Audio Sink HAL only
