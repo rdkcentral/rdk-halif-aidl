@@ -37,5 +37,5 @@ parcelable ChannelStatus
      * This is for information only and useful to log at the end of a session.
      * Non zero values may indicate inadequate CPU time or buffer space.
      */
-    long samplesLost;
+    int samplesLost;
 }

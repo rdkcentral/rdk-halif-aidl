@@ -127,40 +127,4 @@ interface IFarFieldVoiceController {
      * @see IFarFieldVoiceEventListener.onEnteredPowerMode(), IFarFieldVoiceEventListener.onHardwareFailed()
      */
     void setPowerMode(in PowerMode powerMode);
-
-    /**
-     * Start recording audio.
-     *
-     * Captures of audio will be written to wave files for test purposes. Each wave file name
-     * will begin with the specified base path and file name and end with a vendor specific extension
-     * correlating to the particular captured audio.
-     *
-     * @param[in] fileNamePrefix    File name prefix (path and base file name).
-     * @param[in] audioSelect       Selected audio to capture (vendor specific code).
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT     Unknown audio selection.
-     * @exception binder::Status::Exception::EX_NULL_POINTER         File create failed.
-     */
-    void startAudioRecording(in @utf8InCpp String fileNamePrefix, in long audioSelect);
-
-    /**
-     * Stop recording audio.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     */
-    void stopAudioRecording();
-
-    /**
-     * Perform a test command.
-     *
-     * Performs a vendor specific test command for test and debug purposes.
-     *
-     * @param[in] command       Test command.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     *
-     * @returns string - Response to command.
-     */
-    @utf8InCpp String testCommand(in @utf8InCpp String command);
 }
