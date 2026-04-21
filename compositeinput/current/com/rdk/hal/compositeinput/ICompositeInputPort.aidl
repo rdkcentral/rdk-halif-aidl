@@ -188,6 +188,7 @@ interface ICompositeInputPort
      * fired for each transition on any registered event listener.
      *
      * @param[in] controller  The ICompositeInputController instance returned by open().
+     * @returns Success flag indicating whether the port was closed.
      * @retval true   Successfully closed.
      * @retval false  The supplied controller is not the instance returned by open().
      *

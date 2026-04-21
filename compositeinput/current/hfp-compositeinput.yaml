@@ -36,10 +36,6 @@
 compositeinput:
   interfaceVersion: current
 
-  # Maximum number of ports that may be in STARTED state simultaneously.
-  # Maps to PlatformCapabilities.maximumConcurrentStartedPorts.
-  maximumConcurrentStartedPorts: 1
-
   # Per-port configuration
   ports:
     - id: 0
@@ -190,6 +186,7 @@ compositeinput:
   platformCapabilities:
     halVersion: "1.0.0"                # PlatformCapabilities.halVersion (semver)
     maxPorts: 2                        # PlatformCapabilities.maxPorts (matches ports[].length)
+    maximumConcurrentStartedPorts: 1   # PlatformCapabilities.maximumConcurrentStartedPorts
 
     # Union of all property keys supported across the platform's ports
     supportedProperties:
