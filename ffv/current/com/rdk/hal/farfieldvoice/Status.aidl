@@ -28,13 +28,6 @@ import com.rdk.hal.farfieldvoice.PowerMode;
 @VintfStability
 parcelable Status
 {
-    /**
-     * Build version of this Far Field Voice code instance.
-     *
-     * This is for information only and useful to log when the Far Field
-     * Voice service is opened.
-     */
-    @utf8InCpp String codeBuildVersion;
 
     /**
      * Current power mode.
