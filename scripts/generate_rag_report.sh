@@ -106,7 +106,7 @@ review_icon() {
 }
 
 # All teams (column order)
-ALL_TEAMS="RTAB_Group Architecture Product_Architecture VTS_Team AV_Architecture Broadcast_Team Control_Manager_Architecture Graphics_Architecture Connectivity_Architecture Kernel_Architecture Vendor_Layer_Team"
+ALL_TEAMS="RTAB_Group Architecture Product_Architecture AV_Architecture Broadcast_Team Control_Manager_Architecture Graphics_Architecture Connectivity_Architecture Kernel_Architecture Vendor_Layer_Team"
 
 # Derive component path label (e.g. "vsi/kernel" or "boot")
 component_path() {
@@ -337,8 +337,8 @@ RED_SHARED
 echo -e "$RED_SHARED_ROWS" >> "$OUTPUT"
 fi
 
-REVIEW_HEADER="| | Component | Progress | RTAB | Arch | Prod | VTS | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel | Vendor |
-|---|-----------|----------|------|------|------|-----|-----|-----------|----------|----------|--------------|--------|--------|"
+REVIEW_HEADER="| | Component | Progress | RTAB | Arch | Prod | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel | Vendor |
+|---|-----------|----------|------|------|------|-----|-----------|----------|----------|--------------|--------|--------|"
 
 cat >> "$OUTPUT" << 'REVIEW_SECTION'
 
@@ -413,7 +413,6 @@ cat >> "$OUTPUT" << 'FOOTER'
 | RTAB_Group | All components |
 | Architecture | All components |
 | Product_Architecture | All components |
-| VTS_Team | All components |
 | AV_Architecture | Audio/Video pipeline components |
 | Broadcast_Team | Broadcast/tuner components |
 | Control_Manager_Architecture | Remote control & input management |

@@ -64,6 +64,5 @@ reviewers:
     Architecture: reviewed
     Product_Architecture: reviewed
     Kernel_Architecture: pending
-    VTS_Team: reviewed
     Vendor_Layer_Team: reviewed
 

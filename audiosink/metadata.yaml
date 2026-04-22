@@ -60,7 +60,6 @@ reviewers:
     RTAB_Group: reviewed
     Architecture: reviewed
     Product_Architecture: reviewed
-    VTS_Team: reviewed
     AV_Architecture: reviewed
     Vendor_Layer_Team: reviewed
 
