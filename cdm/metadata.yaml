@@ -58,7 +58,6 @@ notes:
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
-    RTAB_Group: pending
     Architecture: pending
     Product_Architecture: pending
     AV_Architecture: pending

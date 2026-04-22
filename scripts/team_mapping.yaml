@@ -4,7 +4,6 @@
 #
 # To find team slugs: gh api orgs/rdkcentral/teams --paginate --jq '.[].slug'
 
-RTAB_Group: hal-rtab-reviewers
 Architecture: hal-arch-reviewers
 Product_Architecture: hal-product-arch-reviewers
 AV_Architecture: hal-av-arch-reviewers
