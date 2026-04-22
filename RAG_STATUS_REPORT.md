@@ -26,16 +26,16 @@
 
 | | Component | Current Version | Description | Reviews | Owners |
 |---|-----------|---------|-------------|---------|--------|
-| 🟢 | audiodecoder | 0.1.0.0 | Audio decoder resource management and codec format support | 5/6 | Architecture + AV_Architecture |
-| 🟢 | audiomixer | 0.1.0.1 | Audio mixing and routing for multi-stream output | 4/6 | Architecture + VTS_Team + AV_Architecture |
-| 🟢 | audiosink | 0.1.0.0 | Audio output rendering and sink device management | 5/6 | Architecture + AV_Architecture |
-| 🟢 | avbuffer | 0.1.0.0 | AV buffer allocation and secure video path management | 5/6 | Architecture + AV_Architecture |
-| 🟢 | avclock | 0.1.0.0 | Audio/video clock synchronization and timing control | 5/6 | Architecture + AV_Architecture |
-| 🟢 | hdmicec | 0.1.0.0 | HDMI CEC protocol messaging and device control | 4/6 | Architecture + AV_Architecture |
+| 🟢 | audiodecoder | 0.1.0.0 | Audio decoder resource management and codec format support | 6/6 | Architecture + AV_Architecture |
+| 🟢 | audiomixer | 0.1.0.1 | Audio mixing and routing for multi-stream output | 5/6 | Architecture + VTS_Team + AV_Architecture |
+| 🟢 | audiosink | 0.1.0.0 | Audio output rendering and sink device management | 6/6 | Architecture + AV_Architecture |
+| 🟢 | avbuffer | 0.1.0.0 | AV buffer allocation and secure video path management | 6/6 | Architecture + AV_Architecture |
+| 🟢 | avclock | 0.1.0.0 | Audio/video clock synchronization and timing control | 6/6 | Architecture + AV_Architecture |
+| 🟢 | hdmicec | 0.1.0.0 | HDMI CEC protocol messaging and device control | 5/6 | Architecture + AV_Architecture |
 | 🟢 | hdmiinput | 0.1.0.0 | HDMI input port management and signal detection | 3/6 | Architecture + AV_Architecture |
 | 🟢 | hdmioutput | 0.1.0.0 | HDMI output port configuration and display control | 3/6 | Architecture + AV_Architecture |
-| 🟢 | videodecoder | 0.1.0.0 | Video decoder resource management and codec support | 5/6 | Architecture + AV_Architecture |
-| 🟢 | videosink | 0.1.0.0 | Video output rendering and display sink management | 5/6 | Architecture + AV_Architecture |
+| 🟢 | videodecoder | 0.1.0.0 | Video decoder resource management and codec support | 6/6 | Architecture + AV_Architecture |
+| 🟢 | videosink | 0.1.0.0 | Video output rendering and display sink management | 6/6 | Architecture + AV_Architecture |
 
 
 ### OEM Components
@@ -43,9 +43,9 @@
 | | Component | Current Version | Description | Reviews | Owners |
 |---|-----------|---------|-------------|---------|--------|
 | 🟢 | compositeinput | 0.2.0.0 | Composite video input capture and control | 2/6 | Architecture + AV_Architecture |
-| 🟢 | deviceinfo | 0.1.0.0 | Device information and platform capability reporting | 4/6 | Architecture + Kernel_Architecture |
-| 🟢 | indicator | 0.1.0.0 | LED and visual indicator state management | 4/6 | Architecture + Graphics_Architecture |
-| 🟢 | sensor | 0.1.0.0 | Hardware sensor data acquisition and monitoring | 4/6 | Architecture + Kernel_Architecture |
+| 🟢 | deviceinfo | 0.1.0.0 | Device information and platform capability reporting | 5/6 | Architecture + Kernel_Architecture |
+| 🟢 | indicator | 0.1.0.0 | LED and visual indicator state management | 5/6 | Architecture + Graphics_Architecture |
+| 🟢 | sensor | 0.1.0.0 | Hardware sensor data acquisition and monitoring | 5/6 | Architecture + Kernel_Architecture |
 
 
 ---
@@ -109,16 +109,16 @@
 
 | | Component | Progress | RTAB | Arch | Prod | VTS | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel | Vendor |
 |---|-----------|----------|------|------|------|-----|-----|-----------|----------|----------|--------------|--------|--------|
-| 🟢 | audiodecoder | 5/6 | ✅ | ✅ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ |
-| 🟢 | audiomixer | 4/6 | ☐ | ✅ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ |
-| 🟢 | audiosink | 5/6 | ✅ | ✅ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ |
-| 🟢 | avbuffer | 5/6 | ✅ | ✅ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ |
-| 🟢 | avclock | 5/6 | ✅ | ✅ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ |
-| 🟢 | hdmicec | 4/6 | ☐ | ✅ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ |
-| 🟢 | hdmiinput | 3/6 | ☐ | ✅ | ✅ | 🔄 | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ |
-| 🟢 | hdmioutput | 3/6 | ☐ | ✅ | ✅ | 🔄 | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ |
-| 🟢 | videodecoder | 5/6 | ✅ | ✅ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ |
-| 🟢 | videosink | 5/6 | ✅ | ✅ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ |
+| 🟢 | audiodecoder | 6/6 | ✅ | ✅ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
+| 🟢 | audiomixer | 5/6 | ☐ | ✅ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
+| 🟢 | audiosink | 6/6 | ✅ | ✅ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
+| 🟢 | avbuffer | 6/6 | ✅ | ✅ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
+| 🟢 | avclock | 6/6 | ✅ | ✅ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
+| 🟢 | hdmicec | 5/6 | ☐ | ✅ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
+| 🟢 | hdmiinput | 3/6 | ☐ | ✅ | ✅ | 🔄 | ✅ | N/A | N/A | N/A | N/A | N/A | 🔄 |
+| 🟢 | hdmioutput | 3/6 | ☐ | ✅ | ✅ | 🔄 | ✅ | N/A | N/A | N/A | N/A | N/A | 🔄 |
+| 🟢 | videodecoder | 6/6 | ✅ | ✅ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
+| 🟢 | videosink | 6/6 | ✅ | ✅ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
 
 ### SOC — 🟡 AMBER
 
@@ -140,19 +140,19 @@
 | | Component | Progress | RTAB | Arch | Prod | VTS | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel | Vendor |
 |---|-----------|----------|------|------|------|-----|-----|-----------|----------|----------|--------------|--------|--------|
 | 🟢 | compositeinput | 2/6 | ☐ | ✅ | ✅ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
-| 🟢 | deviceinfo | 4/6 | ☐ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ☐ |
-| 🟢 | indicator | 4/6 | ☐ | ✅ | ✅ | ✅ | N/A | N/A | N/A | ✅ | N/A | N/A | ☐ |
-| 🟢 | sensor | 4/6 | ☐ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ☐ |
+| 🟢 | deviceinfo | 5/6 | ☐ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
+| 🟢 | indicator | 5/6 | ☐ | ✅ | ✅ | ✅ | N/A | N/A | N/A | ✅ | N/A | N/A | ✅ |
+| 🟢 | sensor | 5/6 | ☐ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
 
 ### OEM — 🟡 AMBER
 
 | | Component | Progress | RTAB | Arch | Prod | VTS | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel | Vendor |
 |---|-----------|----------|------|------|------|-----|-----|-----------|----------|----------|--------------|--------|--------|
 | 🟡 | panel | 2/6 | ☐ | ✅ | ✅ | ☐ | N/A | N/A | N/A | ☐ | N/A | N/A | ☐ |
-| 🟡 | deepsleep | 3/6 | ☐ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |
-| 🟡 | boot | 3/6 | ☐ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |
+| 🟡 | deepsleep | 4/6 | ☐ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ | ✅ |
+| 🟡 | boot | 4/6 | ☐ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ | ✅ |
 | 🟡 | broadcast | 0/6 | ☐ | ☐ | ☐ | ☐ | N/A | ☐ | N/A | N/A | N/A | N/A | ☐ |
-| 🟡 | flash | 3/6 | ☐ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |
+| 🟡 | flash | 4/6 | ☐ | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ | ✅ |
 | 🟡 | r4ce | 0/6 | ☐ | ☐ | ☐ | ☐ | N/A | N/A | ☐ | N/A | N/A | N/A | ☐ |
 | 🟡 | vsi/bluetooth | 0/6 | ☐ | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | ☐ | N/A | ☐ |
 | 🟡 | vsi/linuxinput | 0/6 | ☐ | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |
