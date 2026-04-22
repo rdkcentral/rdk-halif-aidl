@@ -1,0 +1,16 @@
+# Mapping from metadata.yaml reviewer names to GitHub team slugs (rdkcentral org)
+#
+# Format: <metadata_name>: <github_team_slug>
+#
+# To find team slugs: gh api orgs/rdkcentral/teams --paginate --jq '.[].slug'
+
+RTAB_Group: hal-rtab-reviewers
+Architecture: hal-arch-reviewers
+Product_Architecture: hal-product-arch-reviewers
+AV_Architecture: hal-av-arch-reviewers
+Broadcast_Team: hal-broadcast-reviewers
+Control_Manager_Architecture: hal-control-manager-reviewers
+Graphics_Architecture: hal-graphics-arch-reviewers
+Connectivity_Architecture: hal-connectivity-arch-reviewers
+Kernel_Architecture: hal-kernel-arch-reviewers
+Vendor_Layer_Team: rdk-halif-aidl-pr-review-team
