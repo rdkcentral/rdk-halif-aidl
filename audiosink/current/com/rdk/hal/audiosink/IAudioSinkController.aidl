@@ -107,6 +107,12 @@ interface IAudioSinkController {
      * The audio sink must be in the `STARTED` state.
      * Buffers can be either non-secure or secure to support SAP (Secure Audio Path).
      * Each call shall reference a single audio frame with a presentation timestamp.
+     * The sink will not consume queued frames until an AVClock has been linked to this sink
+     * (via `IAVClockController.setAudioSink()`) and the clock has been started. Until then,
+     * depending on the implementation, the internal queue will fill and the method will return
+     * `false`. If the hardware does not support clockless queuing, the method returns `false`
+     * immediately. Pausing the clock has the same effect: data cannot be consumed out of the
+     * sink, so the queue will eventually fill.
      * The audio sink may refuse the buffer if its internal resource usage prevents it from accepting it at that time.
      *
      * Buffer Ownership: Ownership of the buffer transfers to the Audio Sink HAL only
@@ -125,6 +131,10 @@ interface IAudioSinkController {
      * @returns boolean
      * @retval true  Buffer successfully queued for mixing. Buffer ownership transfers to HAL.
      * @retval false Buffer queue is full. Buffer ownership remains with caller.
+     *               The client SHOULD wait for `IAudioSinkControllerListener.onFrameBufferAvailable()`
+     *               before retrying, to avoid wasted binder transactions. Continuing to call this
+     *               method while the queue is full is permitted but will return `false` repeatedly
+     *               until space is available.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE    If the resource is not in the `STARTED` state or an audio frame is passed after EOS.

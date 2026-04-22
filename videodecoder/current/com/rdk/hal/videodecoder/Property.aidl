@@ -172,7 +172,7 @@ enum Property {
 
 	/**
 	 * Count of decoded frames.
-	 * This metric is reset on open() and flush() calls.
+	 * This metric is reset on open(), flush() and stop() calls.
 	 *
 	 * Type: Integer
 	 *  -1 means this metric is not yet implemented by the vendor.
@@ -186,7 +186,7 @@ enum Property {
 
 	/**
 	 * Count of decode errors.
-	 * This metric is reset on open() and flush() calls.
+	 * This metric is reset on open(), flush() and stop() calls.
 	 *
 	 * Type: Integer
 	 *  -1 means this metric is not yet implemented by the vendor.
@@ -203,7 +203,7 @@ enum Property {
 	 * No frame was output due to corruption or decode error that could not
 	 * deliver a frame suitable for display.
 	 * This count includes any frames received before the first reference frame.
-	 * This metric is reset on open() and flush() calls.
+	 * This metric is reset on open(), flush() and stop() calls.
 	 *
 	 * Type: Integer
 	 *  -1 means this metric is not yet implemented by the vendor.

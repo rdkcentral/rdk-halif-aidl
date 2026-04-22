@@ -91,4 +91,23 @@ oneway interface IVideoSinkControllerListener
      * @param[in] newState  The new state that the sink has transitioned to.
      */
     void onStateChanged(in State oldState, in State newState);
+
+    /**
+     * Callback that signals the video sink input frame buffer queue has space again.
+     *
+     * Fired exactly once per back-pressure episode: when the internal queue transitions
+     * from full to has-space after `IVideoSinkController.queueVideoFrame()` returned `false`.
+     * If the client continues to call `queueVideoFrame()` during back-pressure (receiving
+     * `false` repeatedly), only one callback is delivered per transition, regardless of
+     * the number of intermediate `false` returns.
+     *
+     * The client SHOULD wait for this callback before retrying `queueVideoFrame()` to avoid
+     * wasted binder transactions. Continuing to call `queueVideoFrame()` while the queue is
+     * full is permitted but will return `false` repeatedly until space is available.
+     *
+     * Not fired in steady-state operation - only after a refused frame.
+     *
+     * @see IVideoSinkController.queueVideoFrame()
+     */
+    void onFrameBufferAvailable();
 }

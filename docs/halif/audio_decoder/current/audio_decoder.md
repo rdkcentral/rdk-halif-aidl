@@ -334,6 +334,14 @@ The vendor layer is expected to manage the pool of decoded audio buffers private
 
 If the frame buffer pool is empty then the audio decoder cannot output the next decoded frame until a new frame buffer becomes available. While frame output is blocked, it is reasonable for the audio decoder service to either buffer additional coded input buffers or to reject new calls to `decodeBuffer()` with a `false` return value.
 
+## Input Buffer Back-Pressure
+
+`IAudioDecoderController.decodeBuffer()` returns `false` when the internal decode buffer queue is full. Buffer ownership remains with the caller and the buffer must be retained for re-submission.
+
+To avoid wasted binder transactions, the client SHOULD wait for `IAudioDecoderControllerListener.onDecodeBufferAvailable()` before calling `decodeBuffer()` again. The callback fires exactly once per back-pressure episode: when the internal queue transitions from full to has-space. If the client continues to call `decodeBuffer()` during back-pressure (receiving `false` repeatedly), only one callback is delivered per transition. It is not fired in steady-state operation.
+
+Continuing to call `decodeBuffer()` while the queue is full is permitted but will return `false` repeatedly until space is available.
+
 ## Presentation Time for Audio Frames
 
 The presentation time base units for audio frames is nanoseconds and passed in an int64 (long in AIDL definition) variable type. Video buffers shared the same time base units of nanoseconds.

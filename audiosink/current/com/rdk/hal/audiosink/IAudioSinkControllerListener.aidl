@@ -87,4 +87,23 @@ oneway interface IAudioSinkControllerListener {
      * Callback when a requested flush() operation has completed.
      */
     void onFlushComplete();
+
+    /**
+     * Callback that signals the audio sink input frame buffer queue has space again.
+     *
+     * Fired exactly once per back-pressure episode: when the internal queue transitions
+     * from full to has-space after `IAudioSinkController.queueAudioFrame()` returned `false`.
+     * If the client continues to call `queueAudioFrame()` during back-pressure (receiving
+     * `false` repeatedly), only one callback is delivered per transition, regardless of
+     * the number of intermediate `false` returns.
+     *
+     * The client SHOULD wait for this callback before retrying `queueAudioFrame()` to avoid
+     * wasted binder transactions. Continuing to call `queueAudioFrame()` while the queue is
+     * full is permitted but will return `false` repeatedly until space is available.
+     *
+     * Not fired in steady-state operation - only after a refused frame.
+     *
+     * @see IAudioSinkController.queueAudioFrame()
+     */
+    void onFrameBufferAvailable();
 }
