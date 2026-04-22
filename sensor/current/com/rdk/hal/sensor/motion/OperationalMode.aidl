@@ -21,8 +21,8 @@
  * @file OperationalMode.aidl
  * @brief Operation trigger mode for motion detection.
  *
- * When {@link IMotionSensor#start(OperationalMode,int,int,int)} is called,
- * the sensor fires the event only for the selected mode (motion vs. no-motion).
+ * When {@link IMotionSensorController#start(StartConfig)} is called,
+ * the sensor fires events only for the mode specified in StartConfig.operationalMode.
  */
 package com.rdk.hal.sensor.motion;
 
