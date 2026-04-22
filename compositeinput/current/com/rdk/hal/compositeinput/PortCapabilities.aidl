@@ -19,11 +19,12 @@
 
 package com.rdk.hal.compositeinput;
 
+import com.rdk.hal.compositeinput.PortProperty;
 import com.rdk.hal.compositeinput.PropertyMetadata;
 
 /**
  * @brief Port-specific capabilities.
- * 
+ *
  * Describes the capabilities of an individual composite input port,
  * which may differ from platform capabilities if ports have varying features.
  */
@@ -31,12 +32,16 @@ import com.rdk.hal.compositeinput.PropertyMetadata;
 parcelable PortCapabilities
 {
     /**
-     * Array of property key strings supported by this port.
+     * Array of PortProperty enum values supported by this port.
      *
-     * May be a subset of platform supportedProperties if different ports
-     * have different capabilities. Contains keys defined in HFP YAML.
+     * Includes both runtime status keys (e.g. SIGNAL_STRENGTH) and telemetry
+     * metric keys (METRIC_*). May be a subset of PlatformCapabilities.supportedProperties
+     * when ports differ. Values correspond to entries declared in the platform
+     * HFP under ports[].supportedProperties.
+     *
+     * A port supports metrics if this array contains any METRIC_* key.
      */
-    @utf8InCpp String[] supportedProperties;
+    PortProperty[] supportedProperties;
 
     /**
      * Property metadata for this port's supported properties (optional).
@@ -45,7 +50,4 @@ parcelable PortCapabilities
      * May be null if metadata is not available.
      */
     @nullable PropertyMetadata[] propertyMetadata;
-
-    /** True if this port supports signal quality metrics. */
-    boolean metricsSupported;
 }

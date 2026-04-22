@@ -26,8 +26,12 @@ import com.rdk.hal.compositeinput.VideoResolution;
 /**
  * @brief Current status of a composite input port.
  *
- * Describes the runtime state of a composite input port, including
- * connection, signal, and video mode information.
+ * Lean polled snapshot of the basic connectivity, signal, and video mode
+ * state. Returned by ICompositeInputPort.getStatus() in a single IPC call.
+ *
+ * Extended status (signal quality, signal strength) and telemetry metrics
+ * are accessed via ICompositeInputPort.getProperty() using PortProperty
+ * keys — this avoids duplicating data across two read paths.
  */
 @VintfStability
 parcelable PortStatus
@@ -43,9 +47,6 @@ parcelable PortStatus
 
     /** Current signal status. */
     SignalStatus signalStatus;
-
-    /** Signal quality percentage (0-100), or -1 if not available. */
-    byte signalQuality;
 
     /** Detected video resolution and format, or null if no signal. */
     @nullable VideoResolution detectedResolution;

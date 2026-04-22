@@ -19,24 +19,26 @@
 
 package com.rdk.hal.compositeinput;
 
+import com.rdk.hal.compositeinput.PortProperty;
 import com.rdk.hal.PropertyValue;
 
 /**
- * @brief Key-value pair for composite input properties.
+ * @brief Key-value pair for composite input port properties.
  *
- * Used by getPropertyMulti() and setPropertyMulti() for batch operations.
- * Property keys are defined in the HFP YAML and discoverable via capabilities.
+ * Used by ICompositeInputPort.getPropertyMulti() and
+ * ICompositeInputController.setPropertyMulti() for batch operations.
  */
 @VintfStability
 parcelable PropertyKVPair
 {
     /**
-     * Property key string (e.g., "SIGNAL_STRENGTH").
+     * Property key (from the PortProperty enum).
      *
-     * Should match one of the keys in the platform's supportedProperties array
-     * returned by getCapabilities().
+     * Must be one of the values declared in the platform HFP under
+     * ports[].supportedProperties and discoverable via
+     * PortCapabilities.supportedProperties.
      */
-    @utf8InCpp String key;
+    PortProperty property;
 
     /**
      * Property value.
@@ -44,8 +46,7 @@ parcelable PropertyKVPair
      * - For getPropertyMulti(), this field is populated by the HAL on return.
      * - For setPropertyMulti(), this field must be pre-filled by the caller.
      *
-     * The appropriate union field should be used based on the property's
-     * PropertyMetadata.type (see PropertyMetadata.PropertyType):
+     * The appropriate union field must match PropertyMetadata.type:
      * - booleanValue for BOOLEAN properties
      * - intValue for INTEGER/enum properties
      * - longValue for LONG properties (e.g., SIGNAL_STRENGTH, metrics)

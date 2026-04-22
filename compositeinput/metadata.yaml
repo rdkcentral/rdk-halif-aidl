@@ -22,8 +22,8 @@
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: compositeinput
-version: 0.1.0.0
-generation: 1
+version: 0.2.0.0
+generation: 2
 status: GREEN
 description: "Composite video input capture and control"
 type: OEM
