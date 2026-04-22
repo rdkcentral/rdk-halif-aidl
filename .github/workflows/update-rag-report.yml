@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   update-report:
@@ -17,11 +18,12 @@ jobs:
       - name: Generate RAG report
         run: bash scripts/generate_rag_report.sh
 
-      - name: Commit updated report
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add RAG_STATUS_REPORT.md
-          git diff --cached --quiet && echo "No changes to commit" && exit 0
-          git commit -m "chore: update RAG status report [skip ci]"
-          git push
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore: update RAG status report"
+          branch: chore/update-rag-report
+          title: "chore: update RAG status report"
+          body: "Automated update of RAG_STATUS_REPORT.md triggered by a push to develop."
+          labels: scope:infrastructure
+          delete-branch: true

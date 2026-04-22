@@ -106,7 +106,7 @@ review_icon() {
 }
 
 # All teams (column order)
-ALL_TEAMS="RTAB_Group Architecture Product_Architecture VTS_Team AV_Architecture Broadcast_Team Control_Manager_Architecture Graphics_Architecture Connectivity_Architecture Kernel_Architecture"
+ALL_TEAMS="RTAB_Group Architecture Product_Architecture VTS_Team AV_Architecture Broadcast_Team Control_Manager_Architecture Graphics_Architecture Connectivity_Architecture Kernel_Architecture Vendor_Layer_Team"
 
 # Derive component path label (e.g. "vsi/kernel" or "boot")
 component_path() {
@@ -337,8 +337,8 @@ RED_SHARED
 echo -e "$RED_SHARED_ROWS" >> "$OUTPUT"
 fi
 
-REVIEW_HEADER="| | Component | Progress | RTAB | Arch | Prod | VTS | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel |
-|---|-----------|----------|------|------|------|-----|-----|-----------|----------|----------|--------------|--------|"
+REVIEW_HEADER="| | Component | Progress | RTAB | Arch | Prod | VTS | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel | Vendor |
+|---|-----------|----------|------|------|------|-----|-----|-----------|----------|----------|--------------|--------|--------|"
 
 cat >> "$OUTPUT" << 'REVIEW_SECTION'
 
@@ -420,6 +420,7 @@ cat >> "$OUTPUT" << 'FOOTER'
 | Graphics_Architecture | Graphics, display & composition |
 | Connectivity_Architecture | Bluetooth, Wi-Fi & connectivity |
 | Kernel_Architecture | System, kernel, boot & platform |
+| Vendor_Layer_Team | Vendor HAL implementation review |
 
 ---
 
