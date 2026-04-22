@@ -17,13 +17,11 @@
 
 # component   - Machine-readable component identifier                    [manual]
 # version     - Pre-baseline: 0.<generation>.<minor>.<patch>              [release.sh]
-# generation  - Architectural era (0 = initial, 1+ = full design cycle)   [release.sh]
 # status      - RAG status: GREEN / AMBER / RED                          [manual]
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: panel
 version: 0.1.0.0
-generation: 1
 status: AMBER
 description: "Front panel display and button control"
 type: OEM
