@@ -300,12 +300,6 @@ compositeinput:
       name: "Front Panel Composite"
       description: "Front panel composite video input"
 
-      supportedSignalStatuses:
-        - NO_SIGNAL
-        - UNSTABLE
-        - NOT_SUPPORTED
-        - STABLE
-
       # PortProperty enum identifiers supported on this port
       supportedProperties:
         - SIGNAL_STRENGTH

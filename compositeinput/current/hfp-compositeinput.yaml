@@ -42,13 +42,6 @@ compositeinput:
       name: "Front Panel Composite"
       description: "Front panel composite video input"
 
-      # Supported signal statuses for this port
-      supportedSignalStatuses:
-        - NO_SIGNAL
-        - UNSTABLE
-        - NOT_SUPPORTED
-        - STABLE
-
       # PortProperty enum identifiers supported on this port.
       # Includes both runtime status keys and telemetry metric keys.
       # Maps to PortCapabilities.supportedProperties.
@@ -115,12 +108,6 @@ compositeinput:
     - id: 1
       name: "Rear Composite"
       description: "Rear panel composite video input"
-
-      supportedSignalStatuses:
-        - NO_SIGNAL
-        - UNSTABLE
-        - NOT_SUPPORTED
-        - STABLE
 
       supportedProperties:
         - SIGNAL_STRENGTH
