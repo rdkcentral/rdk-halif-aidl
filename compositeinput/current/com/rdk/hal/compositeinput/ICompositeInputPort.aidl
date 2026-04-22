@@ -50,7 +50,7 @@ import com.rdk.hal.PropertyValue;
  *
  * @note Video scaling, positioning and aspect-ratio control are intentionally
  *       not exposed on this interface. Composite input video, once presented
- *       via setActive(true), is scaled and positioned by the display pipeline
+ *       via ICompositeInputController.start(), is scaled and positioned by the display pipeline
  *       through the planecontrol HAL (package com.rdk.hal.planecontrol, see
  *       IPlaneControl and its Property enum: X, Y, WIDTH, HEIGHT, ASPECT_RATIO,
  *       OVERSCAN). Clients migrating from the legacy dsCompositeInScaleVideo()
