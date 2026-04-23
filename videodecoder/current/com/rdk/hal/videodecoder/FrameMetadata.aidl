@@ -104,7 +104,34 @@ parcelable FrameMetadata {
 	int frameRateDenominator;
 
 	/**
-	 * End of stream marker found in the video bitstream.
+	 * End-of-stream marker delivered to the client via
+	 * `IVideoDecoderControllerListener.onFrameOutput()`.
+	 *
+	 * When true, this is the final `onFrameOutput()` callback of the current
+	 * decode session. The HAL delivers it exactly once per session, ordered
+	 * strictly after any prior decoded-frame callbacks.
+	 *
+	 * When `endOfStream = true`, only this field is authoritative. All other
+	 * fields of this parcelable (including `codedWidth`, `pixelFormat`,
+	 * `colorimetry`, etc.) are undefined on such a callback and MUST be
+	 * ignored by the client. The `frameAVBufferHandle` parameter of the
+	 * enclosing `onFrameOutput()` callback is likewise irrelevant for EOS
+	 * detection - a callback with `endOfStream = true` is unambiguously the
+	 * session-terminating EOS event regardless of tunnelling mode.
+	 *
+	 * EOS originates either from the HAL detecting an in-bitstream EOS marker
+	 * (MPEG-2 sequence_end_code, H.264/H.265 end_of_stream NAL, MPEG-4 Part 2
+	 * visual_object_sequence_end_code) or from the client submitting a final
+	 * buffer via `IVideoDecoderController.decodeBufferWithMetadata()` with
+	 * `InputBufferMetadata.endOfStream = true`. Both sources collapse to a
+	 * single event on this side.
+	 *
+	 * After this callback the decoder remains in `State::STARTED` but is
+	 * drained. No further `onFrameOutput()` is delivered until `flush()` or
+	 * `stop()` + `start()`.
+	 *
+	 * @see IVideoDecoderController.decodeBufferWithMetadata()
+	 * @see InputBufferMetadata.endOfStream
 	 */
 	boolean endOfStream;
 

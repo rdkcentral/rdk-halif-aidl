@@ -59,7 +59,36 @@ parcelable FrameMetadata {
 	boolean lowLatency;
 
 	/**
-	 * End of stream indicator.
+	 * End-of-stream marker delivered to the client via
+	 * `IAudioDecoderControllerListener.onFrameOutput()`.
+	 *
+	 * When true, this is the final `onFrameOutput()` callback of the current
+	 * decode session. The HAL delivers it exactly once per session, ordered
+	 * strictly after any prior decoded-frame callbacks (or, in tunnelled
+	 * mode, the vendor-internal consumption of the final audio frame).
+	 *
+	 * When `endOfStream = true`, only this field is authoritative. All other
+	 * fields of this parcelable (including `sourceCodec`, `isDolbyAtmos`,
+	 * `trimStartNs`, `trimEndNs`, `metadata`, `SoCPrivate`, etc.) are
+	 * undefined on such a callback and MUST be ignored by the client. The
+	 * `frameAVBufferHandle` parameter of the enclosing `onFrameOutput()`
+	 * callback is likewise irrelevant for EOS detection: in tunnelled mode
+	 * `frameAVBufferHandle = -1` is the normal case, but a callback with
+	 * `endOfStream = true` is unambiguously the session-terminating EOS
+	 * event regardless of tunnelling mode.
+	 *
+	 * Audio EOS is always application-driven. No supported audio elementary
+	 * stream (MP3, AAC, AC-3/E-AC-3, Opus, Vorbis) carries an in-bitstream
+	 * EOS marker, so EOS originates only from the client submitting a final
+	 * buffer via `IAudioDecoderController.decodeBufferWithMetadata()` with
+	 * `InputBufferMetadata.endOfStream = true`.
+	 *
+	 * After this callback the decoder remains in `State::STARTED` but is
+	 * drained. No further `onFrameOutput()` is delivered until `flush()` or
+	 * `stop()` + `start()`.
+	 *
+	 * @see IAudioDecoderController.decodeBufferWithMetadata()
+	 * @see InputBufferMetadata.endOfStream
 	 */
 	boolean endOfStream;
 
