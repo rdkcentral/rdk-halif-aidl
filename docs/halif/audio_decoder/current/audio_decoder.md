@@ -120,7 +120,7 @@ flowchart TD
     RDKClientComponent -- getIAudioDecoderIds() <br> getIAudioDecoder() --> IAudioDecoderManager
     RDKClientComponent -- getCapabilities() <br> getState() <br> open() <br> close() --> IAudioDecoder
     RDKClientComponent -- registerEventListener() <br> unregisterEventListener() --> IAudioDecoder
-    RDKClientComponent -- start() <br> stop() <br> setProperty() <br> decodeBuffer() <br> flush() <br> signalDiscontinuity() / signalEOS() <br> parseCodecSpecificData() --> IAudioDecoderController
+    RDKClientComponent -- start() <br> stop() <br> setProperty() <br> decodeBufferWithMetadata() <br> flush() <br> signalDiscontinuity() <br> parseCodecSpecificData() --> IAudioDecoderController
     IAudioDecoderManager --> IAudioDecoder --> IAudioDecoderController
     IAudioDecoder -- onStateChanged() <br> onDecodeError() --> IAudioDecoderEventListener
     IAudioDecoderEventListener --> RDKClientComponent
@@ -306,17 +306,19 @@ Any metadata associated with the supplementary/primary audio mix levels is left 
 
 ## Audio Stream Discontinuities
 
-Where the client has knowledge of PTS discontinuities in the audio stream, it shall call `IAudioDecoderController.signalDiscontinuity()` between the AV buffers passed to `decodeBuffer()`.
+Where the client has knowledge of PTS discontinuities in the audio stream, it shall call `IAudioDecoderController.signalDiscontinuity()` between the AV buffers passed to `decodeBufferWithMetadata()`.
 
 For the first input [AV Buffer](../../av_buffer/current/av_buffer.md) audio frame passed in for decode after the discontinuity, it shall indicate the discontinuity in its next output `FrameMetadata`.
 
 ## End of Stream Signalling
 
-When the client knows it has delivered the final audio frame buffer to a decoder it shall then call `IAudioDecoderController.signalEOS()`.
+EOS rides entirely on the framework metadata parcelables on both sides of the interface. There is no separate signal method. Audio EOS is always application-driven - no supported audio elementary stream (MP3, AAC, AC-3/E-AC-3, Opus, Vorbis) carries an in-bitstream EOS marker.
 
-The Audio Decoder shall continue to decode all buffers previously passed for decode, but no further audio buffers should be expected unless the audio decoder is first stopped and restarted or is flushed.
+**Input side:** the client sets `InputBufferMetadata.endOfStream = true` on the final call to `IAudioDecoderController.decodeBufferWithMetadata()`. `bufferHandle` MUST reference a valid encoded frame - there is no EOS-only marker form and no path to signal EOS without data. If the client has no more data to send, it ends the session via `stop()` (or `flush(reset=true)` if the decoder is to be reused).
 
-The Audio Decoder shall emit a `FrameMetadata` with `endOfStream=true` after all audio frames have been output from the decoder.
+**Output side:** the Audio Decoder shall deliver the final `IAudioDecoderControllerListener.onFrameOutput()` callback with `FrameMetadata.endOfStream = true` exactly once per decode session, strictly after any prior decoded-frame callbacks (or, in tunnelled mode, the vendor-internal consumption of the final audio frame). When `endOfStream = true`, only that field is authoritative; all other fields of `FrameMetadata` (and the enclosing `frameAVBufferHandle` parameter) are undefined and MUST be ignored by the client. In tunnelled mode `frameAVBufferHandle = -1` is the normal case but the EOS callback is still unambiguously identifiable by `endOfStream = true` alone.
+
+After the EOS callback the decoder remains in `State::STARTED` but is drained. No further `onFrameOutput()` is delivered until `flush()` or `stop()` + `start()`.
 
 ## Decoded Audio Frame Buffers
 
@@ -332,21 +334,21 @@ The frame buffer handle is later passed to the Audio Sink for queuing before pre
 
 The vendor layer is expected to manage the pool of decoded audio buffers privately.
 
-If the frame buffer pool is empty then the audio decoder cannot output the next decoded frame until a new frame buffer becomes available. While frame output is blocked, it is reasonable for the audio decoder service to either buffer additional coded input buffers or to reject new calls to `decodeBuffer()` with a `false` return value.
+If the frame buffer pool is empty then the audio decoder cannot output the next decoded frame until a new frame buffer becomes available. While frame output is blocked, it is reasonable for the audio decoder service to either buffer additional coded input buffers or to reject new calls to `decodeBufferWithMetadata()` with a `false` return value.
 
 ## Input Buffer Back-Pressure
 
-`IAudioDecoderController.decodeBuffer()` returns `false` when the internal decode buffer queue is full. Buffer ownership remains with the caller and the buffer must be retained for re-submission.
+`IAudioDecoderController.decodeBufferWithMetadata()` returns `false` when the internal decode buffer queue is full. Buffer ownership remains with the caller and the buffer must be retained for re-submission.
 
-To avoid wasted binder transactions, the client SHOULD wait for `IAudioDecoderControllerListener.onDecodeBufferAvailable()` before calling `decodeBuffer()` again. The callback fires exactly once per back-pressure episode: when the internal queue transitions from full to has-space. If the client continues to call `decodeBuffer()` during back-pressure (receiving `false` repeatedly), only one callback is delivered per transition. It is not fired in steady-state operation.
+To avoid wasted binder transactions, the client SHOULD wait for `IAudioDecoderControllerListener.onDecodeBufferAvailable()` before calling `decodeBufferWithMetadata()` again. The callback fires exactly once per back-pressure episode: when the internal queue transitions from full to has-space. If the client continues to call `decodeBufferWithMetadata()` during back-pressure (receiving `false` repeatedly), only one callback is delivered per transition. It is not fired in steady-state operation.
 
-Continuing to call `decodeBuffer()` while the queue is full is permitted but will return `false` repeatedly until space is available.
+Continuing to call `decodeBufferWithMetadata()` while the queue is full is permitted but will return `false` repeatedly until space is available.
 
 ## Presentation Time for Audio Frames
 
 The presentation time base units for audio frames is nanoseconds and passed in an int64 (long in AIDL definition) variable type. Video buffers shared the same time base units of nanoseconds.
 
-When coded audio frames are passed in through [AV Buffer](../../av_buffer/current/av_buffer.md) handles to `IAudioDecoderController.decodeBuffer()` the `nsPresentationTime` parameter represents the audio frame presentation time.
+When coded audio frames are passed in through [AV Buffer](../../av_buffer/current/av_buffer.md) handles to `IAudioDecoderController.decodeBufferWithMetadata()` the `nsPresentationTime` parameter represents the audio frame presentation time.
 
 Calls to `IVideoDecoderControllerListener.onFrameOutput()` with frame buffer handles (non-tunnelled mode) and/or frame metadata shall use the same `nsPresentationTime`.
 
@@ -407,8 +409,8 @@ sequenceDiagram
     ADC-->>IAudioDecoderEventListener: onStateChanged(STARTING → STARTED)
 
     Note over Client: Client can now send AV buffers
-    Client->>Controller: decodeBuffer(pts, bufferHandle=1, trimStartNs=0, trimEndNs=0)
-    Client->>Controller: decodeBuffer(pts, bufferHandle=2, trimStartNs=0, trimEndNs=0)
+    Client->>Controller: decodeBufferWithMetadata(bufferHandle=1, {pts, endOfStream=false, trimStartNs=0, trimEndNs=0, ...})
+    Client->>Controller: decodeBufferWithMetadata(bufferHandle=2, {pts, endOfStream=false, trimStartNs=0, trimEndNs=0, ...})
     Controller-->>IAudioDecoderControllerListener: onFrameOutput(pts, frameBufferHandle=1000, metadata)
     Controller->>IAVBuffer: free(bufferHandle=1)
 
@@ -417,7 +419,7 @@ sequenceDiagram
     ADC-->>IAudioDecoderEventListener: onStateChanged(STARTED → FLUSHING)
     Controller->>IAVBuffer: free(bufferHandle=2)
     ADC-->>IAudioDecoderEventListener: onStateChanged(FLUSHING → STARTED)
-    Client->>Controller: decodeBuffer(pts, bufferHandle=3, trimStartNs=0, trimEndNs=0)
+    Client->>Controller: decodeBufferWithMetadata(bufferHandle=3, {pts, endOfStream=false, trimStartNs=0, trimEndNs=0, ...})
 
     Note over ADC: stop() transitions from STARTED → STOPPING → READY
     Client->>Controller: stop()
