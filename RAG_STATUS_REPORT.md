@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Generated** | 2026-04-22 |
+| **Generated** | 2026-04-23 |
 | **Components** | 32 |
 | 🟢 **GREEN** | 14 |
 | 🟡 **AMBER** | 15 |
@@ -27,7 +27,7 @@
 | | Component | Current Version | Description | Reviews | Owners |
 |---|-----------|---------|-------------|---------|--------|
 | 🟢 | audiodecoder | 0.1.0.0 | Audio decoder resource management and codec format support | 4/4 | Architecture + AV_Architecture |
-| 🟢 | audiomixer | 0.1.0.1 | Audio mixing and routing for multi-stream output | 4/4 | Architecture + VTS_Team + AV_Architecture |
+| 🟢 | audiomixer | 0.1.0.1 | Audio mixing and routing for multi-stream output | 4/4 | Architecture + Vendor_Layer_Team + AV_Architecture |
 | 🟢 | audiosink | 0.1.0.0 | Audio output rendering and sink device management | 4/4 | Architecture + AV_Architecture |
 | 🟢 | avbuffer | 0.1.0.0 | AV buffer allocation and secure video path management | 4/4 | Architecture + AV_Architecture |
 | 🟢 | avclock | 0.1.0.0 | Audio/video clock synchronization and timing control | 4/4 | Architecture + AV_Architecture |
@@ -69,7 +69,7 @@
 | 🟡 | panel | 0.1.0.0 | 3 | Re-review required | Review PQ settings for multiple video and PQ panel mixing | — | — | Architecture + Graphics_Architecture |
 | 🟡 | deepsleep | 0.1.0.0 | 4 | Feedback-loop review | Review design based on learnings from current platforms. Examine findings and investigation on Shutdown issue | — | — | Architecture |
 | 🟡 | boot | 0.1.0.0 | 5 | Migrate -> Reboot Reason | Rename Module | — | — | Architecture + MW_Team |
-| 🟡 | broadcast | 0.0.0.1 | 5 | PR under review | Review Required - Start the PR Review | 2026-03-18 | 2026-03-25 | VTS_Team + Broadcast_Team |
+| 🟡 | broadcast | 0.0.0.1 | 5 | PR under review | Review Required - Start the PR Review | 2026-03-18 | 2026-03-25 | Vendor_Layer_Team + Broadcast_Team |
 | 🟡 | flash | 0.1.0.0 | 5 | Migrate -> Image | Rename Module | — | — | Architecture + Kernel_Architecture |
 | 🟡 | r4ce | 0.0.0.1 | 5 | API Definition in progress | Control Manager Team - API Definition started | — | — | Architecture + Control_Manager_Architecture |
 | 🟡 | vsi/bluetooth | 0.0.0.1 | 6 | Docs required | Not blocking progress - Have discussions write up methodology, Discussions with Bluetooth Team | 2026-03-24 | 2026-03-31 | Architecture + Connectivity_Architecture |

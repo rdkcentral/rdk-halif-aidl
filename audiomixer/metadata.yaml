@@ -50,7 +50,7 @@ scope:
 #   risk          - Risk notes (appears as watch item on dashboard)
 #   owners        - Responsible architecture teams
 notes:
-  owners: "Architecture + VTS_Team + AV_Architecture"
+  owners: "Architecture + Vendor_Layer_Team + AV_Architecture"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
