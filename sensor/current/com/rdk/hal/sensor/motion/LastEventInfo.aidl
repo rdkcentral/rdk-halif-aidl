@@ -37,8 +37,9 @@ parcelable LastEventInfo {
     OperationalMode mode;
 
     /**
-     * @brief Wall-clock timestamp in nanoseconds when the event occurred.
+     * @brief Monotonic timestamp in nanoseconds when the event occurred.
      *
+     * Uses the same time base as CLOCK_MONOTONIC / System.nanoTime().
      * Elapsed time since the event is computed as (System.nanoTime() - timestampNs).
      */
     long timestampNs;

@@ -42,6 +42,9 @@ parcelable StartConfig {
      * @brief Contiguous seconds without motion before a NO_MOTION event fires.
      *
      * Only meaningful when operationalMode is NO_MOTION. Use 0 to disable.
+     *
+     * Valid range: 0 (disabled), or 1–86400 (1 second to 24 hours).
+     * Values outside this range cause start() to throw EX_ILLEGAL_ARGUMENT.
      */
     int noMotionSeconds;
 
