@@ -75,4 +75,4 @@ sensor:
       notes:
         - "Front-facing PIR motion detector."
         - "Supports autonomous operation during deep sleep."
-        - "Active windows can be configured via setActiveWindows()."
+        - "Active windows can be configured via IMotionSensorController.setActiveWindows()."

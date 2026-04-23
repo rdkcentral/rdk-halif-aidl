@@ -50,7 +50,12 @@ oneway interface IMotionSensorControllerListener {
     void onStateChanged(in State oldState, in State newState);
 
     /**
-     * @brief Called when the sensor enters a configured active monitoring window.
+     * @brief Called when the sensor enters an active monitoring period.
+     *
+     * Fires when the current time enters the union of all configured active
+     * windows. If windows overlap, this callback fires once on the first
+     * entry — not per-window. Motion events may be delivered while inside
+     * the active period.
      *
      * Only fires when active windows have been configured via
      * IMotionSensorController.setActiveWindows(). Not fired if 24-hour
@@ -59,10 +64,12 @@ oneway interface IMotionSensorControllerListener {
     void onActiveWindowEntered();
 
     /**
-     * @brief Called when the sensor exits a configured active monitoring window.
+     * @brief Called when the sensor exits all active monitoring windows.
      *
-     * Motion events are suppressed while outside active windows. Only fires
-     * when active windows have been configured via
+     * Fires when the current time leaves the union of all configured active
+     * windows. Motion events are suppressed while outside active windows.
+     *
+     * Only fires when active windows have been configured via
      * IMotionSensorController.setActiveWindows().
      */
     void onActiveWindowExited();

@@ -48,11 +48,20 @@ interface IMotionSensorController {
      *
      * @param config Start configuration (mode, timing parameters).
      *
-     * @returns Success flag indicating whether the sensor accepted the start request.
-     * @retval true  Sensor started successfully.
-     * @retval false Sensor could not start due to an internal or hardware failure.
+     * @returns Success flag for hardware-level acceptance.
+     * @retval true  Sensor hardware initialised and started successfully.
+     * @retval false Sensor could not start due to an internal or hardware
+     *               initialisation failure (state transitions to ERROR).
      *
      * @exception binder::Status EX_ILLEGAL_STATE if sensor is not in STOPPED state.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if StartConfig contains
+     *            invalid values (e.g. noMotionSeconds outside 0–86400 range).
+     *
+     * Note: the boolean return signals operational (hardware) failure, while
+     * the binder exception signals a programming error (wrong state). This
+     * dual-signal pattern differs from modules where start() is void+exception
+     * (e.g. compositeinput) because motion sensor hardware probe failures are
+     * a normal operational condition, not an exceptional case.
      */
     boolean start(in StartConfig config);
 
