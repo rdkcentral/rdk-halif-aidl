@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.planecontrol;
 
-parcelable GraphicsDmaBufFrameFd cpp_header "com/rdk/hal/planecontrol/GraphicsDmaBufFrameFd.h";
+parcelable ParcelFileDescriptor;
 
 import com.rdk.hal.planecontrol.GbmDmaBufGraphicsFrameInfo;
 import com.rdk.hal.planecontrol.GbmDmaBufCapabilities;
@@ -94,7 +94,7 @@ interface IGbmDmaBufFbProvider
      * 
      * @see destroyGraphicsFrameBuffer()
      */
-    GraphicsDmaBufFrameFd createGraphicsFrameBuffer(in int width, in int height, out GbmDmaBufGraphicsFrameInfo outInfo );
+    ParcelFileDescriptor createGraphicsFrameBuffer(in int width, in int height, out GbmDmaBufGraphicsFrameInfo outInfo );
 
     /**
      * Frees a graphics frame buffer.
