@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.planecontrol;
 
-parcelable ParcelFileDescriptor;
+import android.os.ParcelFileDescriptor;
 
 import com.rdk.hal.planecontrol.GbmDmaBufGraphicsFrameInfo;
 import com.rdk.hal.planecontrol.GbmDmaBufCapabilities;
