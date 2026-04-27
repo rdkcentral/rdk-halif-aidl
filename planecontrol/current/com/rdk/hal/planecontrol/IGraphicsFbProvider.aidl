@@ -84,7 +84,7 @@ interface IGraphicsFbProvider
      *
      * @returns A Dma-Buf file descriptor and the associated graphics frame buffer info.
      * 
-     * width and height must not exceed the GraphicsCapabilities. 
+     * width and height must not exceed the GraphicsFbCapabilities. 
      * 
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
