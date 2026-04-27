@@ -77,7 +77,7 @@ The Plane Control service provides functionality to multiple clients which exist
 
 Typically, video planes are linked to video sources when a GStreamer pipeline is created in the RDK middleware. The geometry of the video planes can be manipulated by the Window Manager through a separate client connection.
 
-Graphics planes with `graphicsFbCapabilities` can expose `IGraphicsFbProvider` for EGL-based graphics frame rendering and commit.
+Graphics planes may expose `IGraphicsFbProvider` for EGL-based graphics frame rendering and commit.
 
 ```mermaid
 flowchart TD
