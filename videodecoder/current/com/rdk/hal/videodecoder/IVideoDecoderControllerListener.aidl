@@ -44,6 +44,11 @@ oneway interface IVideoDecoderControllerListener {
      * - EOS is signalled on this callback by `metadata.endOfStream = true`. The HAL
      *   delivers it exactly once per decode session, strictly after the final
      *   decoded-frame callback.
+     * - On the EOS callback, `metadata` is GUARANTEED to be non-null even though
+     *   the parameter is annotated `@nullable`. The general "may be null if
+     *   unchanged since the last callback" rule does NOT apply to the EOS
+     *   callback — clients can rely on `metadata != null && metadata.endOfStream`
+     *   for unambiguous EOS detection.
      * - When `metadata.endOfStream = true`, only that field is authoritative; all
      *   other fields of `FrameMetadata` are undefined and MUST be ignored by the
      *   client. `frameAVBufferHandle` is irrelevant for EOS detection.
@@ -53,6 +58,8 @@ oneway interface IVideoDecoderControllerListener {
      * @param[in] frameAVBufferHandle	AVBuffer handle to the decoded 2D video frame buffer. Valid handle in
      *                                   non-tunnelled mode; -1 in tunnelled mode.
      * @param[in] metadata				A FrameMetadata parcelable of metadata related to the frame.
+     *                                  Nullable on routine callbacks per the rule above; non-null on
+     *                                  the EOS callback.
      *
      * @see IVideoDecoderController.decodeBufferWithMetadata(), IAVBuffer.free(),
      *      FrameMetadata.endOfStream

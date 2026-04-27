@@ -47,17 +47,23 @@ oneway interface IAudioDecoderControllerListener {
     *   delivers it exactly once per decode session, strictly after the final
     *   decoded-frame callback (or, in tunnelled mode, the vendor-internal
     *   consumption of the final audio frame).
+    * - On the EOS callback, `metadata` is GUARANTEED to be non-null even though
+    *   the parameter is annotated `@nullable`. The general "may be null in
+    *   tunnelled mode or if unchanged" rule does NOT apply to the EOS callback —
+    *   clients can rely on `metadata != null && metadata.endOfStream` for
+    *   unambiguous EOS detection, including in tunnelled mode where
+    *   `frameAVBufferHandle = -1` is the normal case.
     * - When `metadata.endOfStream = true`, only that field is authoritative; all
     *   other fields of `FrameMetadata` are undefined and MUST be ignored by the
-    *   client. `frameAVBufferHandle` is irrelevant for EOS detection - in tunnelled
-    *   mode `frameAVBufferHandle = -1` is the normal case but the EOS callback is
-    *   still unambiguously identifiable by `endOfStream = true`.
+    *   client. `frameAVBufferHandle` is irrelevant for EOS detection.
     * - See `FrameMetadata.endOfStream` for the full contract.
     *
     * @param[in] nsPresentationTime    The presentation timestamp in nanoseconds.
     * @param[in] frameAVBufferHandle   AVBuffer handle to the decoded audio frame buffer. Valid handle in
     *                                   non-tunnelled mode; -1 in tunnelled mode.
-    * @param[in] metadata              FrameMetadata for the audio frame, or null in tunnelled mode or if unchanged.
+    * @param[in] metadata              FrameMetadata for the audio frame. Nullable on routine
+    *                                  callbacks (in tunnelled mode or when unchanged); non-null
+    *                                  on the EOS callback.
     *
     * @see IAudioDecoderController.decodeBufferWithMetadata(), IAVBuffer.free(),
     *      FrameMetadata.endOfStream

@@ -65,7 +65,11 @@ parcelable FrameMetadata {
 	 * When true, this is the final `onFrameOutput()` callback of the current
 	 * decode session. The HAL delivers it exactly once per session, ordered
 	 * strictly after any prior decoded-frame callbacks (or, in tunnelled
-	 * mode, the vendor-internal consumption of the final audio frame).
+	 * mode, the vendor-internal consumption of the final audio frame). The
+	 * HAL MUST deliver a non-null `FrameMetadata` on the EOS callback (the
+	 * `@nullable` rule for routine callbacks is suspended for EOS) so
+	 * clients can reliably detect EOS via `metadata.endOfStream` even in
+	 * tunnelled mode.
 	 *
 	 * When `endOfStream = true`, only this field is authoritative. All other
 	 * fields of this parcelable (including `sourceCodec`, `isDolbyAtmos`,

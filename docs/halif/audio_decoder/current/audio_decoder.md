@@ -348,9 +348,9 @@ Continuing to call `decodeBufferWithMetadata()` while the queue is full is permi
 
 The presentation time base units for audio frames is nanoseconds and passed in an int64 (long in AIDL definition) variable type. Video buffers shared the same time base units of nanoseconds.
 
-When coded audio frames are passed in through [AV Buffer](../../av_buffer/current/av_buffer.md) handles to `IAudioDecoderController.decodeBufferWithMetadata()` the `nsPresentationTime` parameter represents the audio frame presentation time.
+When coded audio frames are passed in through [AV Buffer](../../av_buffer/current/av_buffer.md) handles to `IAudioDecoderController.decodeBufferWithMetadata()` the `InputBufferMetadata.nsPresentationTime` field represents the audio frame presentation time.
 
-Calls to `IVideoDecoderControllerListener.onFrameOutput()` with frame buffer handles (non-tunnelled mode) and/or frame metadata shall use the same `nsPresentationTime`.
+Calls to `IAudioDecoderControllerListener.onFrameOutput()` with frame buffer handles (non-tunnelled mode) and/or frame metadata shall use the same `nsPresentationTime`.
 
 ## Dolby MS12 and AC-4 Audio Decoding
 

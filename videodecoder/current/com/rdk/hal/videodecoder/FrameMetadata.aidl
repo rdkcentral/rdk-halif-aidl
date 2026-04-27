@@ -109,7 +109,10 @@ parcelable FrameMetadata {
 	 *
 	 * When true, this is the final `onFrameOutput()` callback of the current
 	 * decode session. The HAL delivers it exactly once per session, ordered
-	 * strictly after any prior decoded-frame callbacks.
+	 * strictly after any prior decoded-frame callbacks. The HAL MUST deliver
+	 * a non-null `FrameMetadata` on the EOS callback (the `@nullable` rule
+	 * for routine callbacks is suspended for EOS) so clients can reliably
+	 * detect EOS via `metadata.endOfStream`.
 	 *
 	 * When `endOfStream = true`, only this field is authoritative. All other
 	 * fields of this parcelable (including `codedWidth`, `pixelFormat`,
