@@ -18,8 +18,6 @@
  */
 package com.rdk.hal.planecontrol;
 
-import android.os.ParcelFileDescriptor;
-
 import com.rdk.hal.planecontrol.GraphicsFbInfo;
 import com.rdk.hal.planecontrol.GraphicsFbCapabilities;
 
