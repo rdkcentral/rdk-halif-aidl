@@ -123,13 +123,12 @@ interface IAudioSinkController {
      *
      * End-of-stream signalling: the client signals EOS by setting
      * `metadata.endOfStream = true` on the final queued frame. The buffer MUST
-     * be a valid final audio frame - there is no EOS-only marker form. The sink
-     * shall continue to mix all previously queued frames in the usual way and
-     * deliver `IAudioSinkControllerListener.onEndOfStream()` once the final
-     * frame has been completely passed to the mixer. When `metadata.endOfStream`
-     * is true, only that field is authoritative; all other fields of
-     * `FrameMetadata` are undefined and MUST be ignored by the sink. If an audio
-     * frame is passed to `queueAudioFrame()` after EOS, then the
+     * be a valid final audio frame - there is no EOS-only marker form. The
+     * other fields of `FrameMetadata` describe the final frame as normal. The
+     * sink shall continue to mix all previously queued frames in the usual way
+     * and deliver `IAudioSinkControllerListener.onEndOfStream()` once the final
+     * frame has been completely passed to the mixer. If an audio frame is
+     * passed to `queueAudioFrame()` after EOS, then the
      * `binder::Status EX_ILLEGAL_STATE` exception is raised. The audio sink must
      * be stopped and restarted or flushed to accept new buffers.
      *

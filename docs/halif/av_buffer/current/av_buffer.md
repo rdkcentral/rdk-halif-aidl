@@ -226,7 +226,7 @@ sequenceDiagram
         c2 ->> c2: decrypt(sec-a-handle, nonsec-a-handle, audiodata-size)
         c2 ->> avbm: free(nonsec-a-handle)
         c2 ->> adc: sec-a-handle
-        adc ->> adc: decodeBufferWithMetadata(sec-a-handle)
+        adc ->> adc: decodeBufferWithMetadata(sec-a-handle, inputBufferMetadata)
         adc ->> avbm: free(sec-a-handle)
 
         Note over c1: Process new video frame
@@ -240,7 +240,7 @@ sequenceDiagram
         c2 ->> c2: decrypt(sec-v-handle, nonsec-v-handle, videodata-size)
         c2 ->> avbm: free(nonsec-v-handle)
         c2 ->> vdc: sec-v-handle
-        vdc ->> vdc: decodeBufferWithMetadata(sec-v-handle)
+        vdc ->> vdc: decodeBufferWithMetadata(sec-v-handle, inputBufferMetadata)
         vdc ->> avbm: free(sec-v-handle)
     end
 

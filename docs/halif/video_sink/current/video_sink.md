@@ -208,7 +208,7 @@ If any video decoder supports SVP in non-tunnelled mode then the Video Sink HAL 
 
 EOS is carried on the framework metadata parcelable. The RDK middleware client signals EOS to the Video Sink by setting `FrameMetadata.endOfStream = true` on the final frame queued via `IVideoSinkController.queueVideoFrame()`. The buffer MUST be a valid final video frame - there is no EOS-only marker form.
 
-When `FrameMetadata.endOfStream = true`, only that field is authoritative; all other fields of `FrameMetadata` are undefined and MUST be ignored by the sink.
+When `FrameMetadata.endOfStream = true`, the other fields of `FrameMetadata` describe the final frame as normal — there is no separate EOS-only marker form.
 
 For non-tunnelled video, the Video Decoder delivers `FrameMetadata.endOfStream = true` on its final `onFrameOutput()` callback; the RDK middleware client forwards that frame and metadata to the Video Sink via `queueVideoFrame()`.
 

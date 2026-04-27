@@ -227,7 +227,7 @@ The Audio Sink HAL is still used to control the audio stream volume, mute and vo
 
 EOS is carried on the framework metadata parcelable. The RDK middleware client signals EOS to the Audio Sink by setting `FrameMetadata.endOfStream = true` on the final frame queued via `IAudioSinkController.queueAudioFrame()`. The buffer MUST be a valid final audio frame - there is no EOS-only marker form.
 
-When `FrameMetadata.endOfStream = true`, only that field is authoritative; all other fields of `FrameMetadata` are undefined and MUST be ignored by the sink.
+When `FrameMetadata.endOfStream = true`, the other fields of `FrameMetadata` describe the final frame as normal — there is no separate EOS-only marker form.
 
 For non-tunnelled audio decoded by the Audio Decoder, the Audio Decoder delivers `FrameMetadata.endOfStream = true` on its final `onFrameOutput()` callback; the RDK middleware client forwards that frame and metadata to the Audio Sink via `queueAudioFrame()`.
 

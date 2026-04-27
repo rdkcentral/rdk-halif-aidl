@@ -104,23 +104,22 @@ parcelable FrameMetadata {
 	int frameRateDenominator;
 
 	/**
-	 * End-of-stream marker delivered to the client via
-	 * `IVideoDecoderControllerListener.onFrameOutput()`.
+	 * End-of-stream marker delivered to the client on the FINAL
+	 * `IVideoDecoderControllerListener.onFrameOutput()` callback of the
+	 * decode session.
 	 *
-	 * When true, this is the final `onFrameOutput()` callback of the current
-	 * decode session. The HAL delivers it exactly once per session, ordered
-	 * strictly after any prior decoded-frame callbacks. The HAL MUST deliver
-	 * a non-null `FrameMetadata` on the EOS callback (the `@nullable` rule
-	 * for routine callbacks is suspended for EOS) so clients can reliably
-	 * detect EOS via `metadata.endOfStream`.
+	 * When true, this is the final `onFrameOutput()` callback of the session.
+	 * The HAL delivers it exactly once per session. There is no separate
+	 * EOS-only marker callback - `endOfStream = true` rides on the metadata
+	 * of the last real decoded frame in non-tunnelled mode, or on the final
+	 * tunnelled-mode metadata callback in tunnelled mode (where
+	 * `frameAVBufferHandle = -1` is the normal case).
 	 *
-	 * When `endOfStream = true`, only this field is authoritative. All other
-	 * fields of this parcelable (including `codedWidth`, `pixelFormat`,
-	 * `colorimetry`, etc.) are undefined on such a callback and MUST be
-	 * ignored by the client. The `frameAVBufferHandle` parameter of the
-	 * enclosing `onFrameOutput()` callback is likewise irrelevant for EOS
-	 * detection - a callback with `endOfStream = true` is unambiguously the
-	 * session-terminating EOS event regardless of tunnelling mode.
+	 * The HAL MUST deliver a non-null `FrameMetadata` on the EOS callback so
+	 * clients can reliably detect EOS via `metadata.endOfStream`. This follows
+	 * from the existing "metadata is non-null when it changes" rule -
+	 * `endOfStream` transitioning from false to true is a metadata change.
+	 * The other fields of this parcelable describe the final frame as normal.
 	 *
 	 * EOS originates either from the HAL detecting an in-bitstream EOS marker
 	 * (MPEG-2 sequence_end_code, H.264/H.265 end_of_stream NAL, MPEG-4 Part 2

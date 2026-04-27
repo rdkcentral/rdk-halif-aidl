@@ -59,27 +59,23 @@ parcelable FrameMetadata {
 	boolean lowLatency;
 
 	/**
-	 * End-of-stream marker delivered to the client via
-	 * `IAudioDecoderControllerListener.onFrameOutput()`.
+	 * End-of-stream marker delivered to the client on the FINAL
+	 * `IAudioDecoderControllerListener.onFrameOutput()` callback of the
+	 * decode session.
 	 *
-	 * When true, this is the final `onFrameOutput()` callback of the current
-	 * decode session. The HAL delivers it exactly once per session, ordered
-	 * strictly after any prior decoded-frame callbacks (or, in tunnelled
-	 * mode, the vendor-internal consumption of the final audio frame). The
-	 * HAL MUST deliver a non-null `FrameMetadata` on the EOS callback (the
-	 * `@nullable` rule for routine callbacks is suspended for EOS) so
+	 * When true, this is the final `onFrameOutput()` callback of the session.
+	 * The HAL delivers it exactly once per session. There is no separate
+	 * EOS-only marker callback - `endOfStream = true` rides on the metadata
+	 * of the last real decoded frame in non-tunnelled mode, or on the final
+	 * tunnelled-mode metadata callback in tunnelled mode (where
+	 * `frameAVBufferHandle = -1` is the normal case).
+	 *
+	 * The HAL MUST deliver a non-null `FrameMetadata` on the EOS callback so
 	 * clients can reliably detect EOS via `metadata.endOfStream` even in
-	 * tunnelled mode.
-	 *
-	 * When `endOfStream = true`, only this field is authoritative. All other
-	 * fields of this parcelable (including `sourceCodec`, `isDolbyAtmos`,
-	 * `trimStartNs`, `trimEndNs`, `metadata`, `SoCPrivate`, etc.) are
-	 * undefined on such a callback and MUST be ignored by the client. The
-	 * `frameAVBufferHandle` parameter of the enclosing `onFrameOutput()`
-	 * callback is likewise irrelevant for EOS detection: in tunnelled mode
-	 * `frameAVBufferHandle = -1` is the normal case, but a callback with
-	 * `endOfStream = true` is unambiguously the session-terminating EOS
-	 * event regardless of tunnelling mode.
+	 * tunnelled mode. This follows from the existing "metadata is non-null
+	 * when it changes" rule - `endOfStream` transitioning from false to true
+	 * is a metadata change. The other fields of this parcelable describe
+	 * the final frame as normal.
 	 *
 	 * Audio EOS is always application-driven. No supported audio elementary
 	 * stream (MP3, AAC, AC-3/E-AC-3, Opus, Vorbis) carries an in-bitstream

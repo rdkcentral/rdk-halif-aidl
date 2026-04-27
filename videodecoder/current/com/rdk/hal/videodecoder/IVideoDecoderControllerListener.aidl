@@ -41,25 +41,27 @@ oneway interface IVideoDecoderControllerListener {
      *   module (e.g., video sink) or explicitly freeing it via IAVBuffer.free() when no longer needed.
      *
      * End-of-stream delivery:
-     * - EOS is signalled on this callback by `metadata.endOfStream = true`. The HAL
-     *   delivers it exactly once per decode session, strictly after the final
-     *   decoded-frame callback.
+     * - EOS is signalled on the FINAL `onFrameOutput()` callback of the decode
+     *   session by `metadata.endOfStream = true`. There is no separate EOS-only
+     *   marker callback after the last frame — `endOfStream = true` rides on
+     *   the metadata of the last real frame in non-tunnelled mode, or on the
+     *   final tunnelled-mode metadata callback in tunnelled mode (where
+     *   `frameAVBufferHandle = -1` is the normal case).
+     * - Fires exactly once per decode session.
      * - On the EOS callback, `metadata` is GUARANTEED to be non-null even though
-     *   the parameter is annotated `@nullable`. The general "may be null if
-     *   unchanged since the last callback" rule does NOT apply to the EOS
-     *   callback — clients can rely on `metadata != null && metadata.endOfStream`
-     *   for unambiguous EOS detection.
-     * - When `metadata.endOfStream = true`, only that field is authoritative; all
-     *   other fields of `FrameMetadata` are undefined and MUST be ignored by the
-     *   client. `frameAVBufferHandle` is irrelevant for EOS detection.
+     *   the parameter is annotated `@nullable`. This follows from the existing
+     *   "metadata is non-null when it changes" rule — `endOfStream` transitioning
+     *   from false to true is a metadata change. Clients can rely on
+     *   `metadata != null && metadata.endOfStream` for unambiguous EOS detection.
+     * - All other fields of `FrameMetadata` describe the final frame as normal.
      * - See `FrameMetadata.endOfStream` for the full contract.
      *
      * @param[in] nsPresentationTime	The presentation time or -1 if only metadata is being returned.
      * @param[in] frameAVBufferHandle	AVBuffer handle to the decoded 2D video frame buffer. Valid handle in
      *                                   non-tunnelled mode; -1 in tunnelled mode.
      * @param[in] metadata				A FrameMetadata parcelable of metadata related to the frame.
-     *                                  Nullable on routine callbacks per the rule above; non-null on
-     *                                  the EOS callback.
+     *                                  Nullable on routine callbacks per the rule above; guaranteed
+     *                                  non-null on the final callback that carries EOS.
      *
      * @see IVideoDecoderController.decodeBufferWithMetadata(), IAVBuffer.free(),
      *      FrameMetadata.endOfStream

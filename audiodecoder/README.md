@@ -28,25 +28,17 @@ haven't got data, don't signal EOS, just shut down the pipeline.
 
 ## Output-side contract (tunnelled-mode EOS resolution)
 
-When `FrameMetadata.endOfStream = true` on an `onFrameOutput()` callback:
+EOS rides on the FINAL `onFrameOutput()` callback of the decode session by `metadata.endOfStream = true`. There is no separate EOS-only marker callback after the last frame.
 
-- The HAL is signalling EOS on this callback.
-- The callback is ordered strictly after any prior decoded-frame callbacks
-  (or, in tunnelled mode, the vendor-internal consumption of the final
-  audio frame).
-- The HAL fires this **exactly once** per decode session.
-- **Only** `endOfStream` is authoritative. All other fields of `FrameMetadata`
-  (including `sourceCodec`, `isDolbyAtmos`, `trimStartNs`, `trimEndNs`,
-  `metadata`, `SoCPrivate`, etc.) are **undefined** on such a callback and
-  MUST be ignored by the client.
-- The enclosing `frameAVBufferHandle` is likewise irrelevant for EOS
-  detection.
+When `metadata.endOfStream = true`:
 
-This resolves the tunnelled-mode ambiguity raised in [discussion #380](https://github.com/rdkcentral/rdk-halif-aidl/discussions/380).
-In tunnelled mode `frameAVBufferHandle = -1` is the normal case, but the
-EOS callback is still unambiguously identifiable by `endOfStream = true`
-alone. Clients do not need to look at `frameAVBufferHandle` or any other
-field to detect EOS.
+- This is the final `onFrameOutput()` callback of the session — fires exactly once per session.
+- In non-tunnelled mode the callback delivers the last decoded audio frame with valid `frameAVBufferHandle` and `FrameMetadata`.
+- In tunnelled mode the callback is delivered with `frameAVBufferHandle = -1` as is normal for tunnelled output.
+- `metadata` is GUARANTEED non-null, because `endOfStream` transitioning from false to true is itself a metadata change. Clients can rely on `metadata != null && metadata.endOfStream` for unambiguous EOS detection — including in tunnelled mode.
+- The other fields of `FrameMetadata` describe the final frame as normal.
+
+This resolves the tunnelled-mode ambiguity raised in [discussion #380](https://github.com/rdkcentral/rdk-halif-aidl/discussions/380). With EOS being just-another-metadata-field on the final `onFrameOutput()` (rather than a separate EOS-only callback with undefined fields), there is no ambiguity about what the other metadata fields mean — they describe the frame being delivered.
 
 After this callback the decoder remains in `State::STARTED` but is drained.
 No further `onFrameOutput()` is delivered until `flush()` or `stop()` + `start()`.

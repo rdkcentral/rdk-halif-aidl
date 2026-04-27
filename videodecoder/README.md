@@ -24,20 +24,17 @@ haven't got data, don't signal EOS, just shut down the pipeline.
 
 ## Output-side contract
 
-When `FrameMetadata.endOfStream = true` on an `onFrameOutput()` callback:
+EOS rides on the FINAL `onFrameOutput()` callback of the decode session by `metadata.endOfStream = true`. There is no separate EOS-only marker callback after the last frame.
 
-- The HAL is signalling EOS on this callback.
-- The callback is ordered strictly after any prior decoded-frame callbacks.
-- The HAL fires this **exactly once** per decode session.
-- **Only** `endOfStream` is authoritative. All other fields of `FrameMetadata`
-  (including `codedWidth`, `pixelFormat`, `colorimetry`, etc.) are
-  **undefined** on such a callback and MUST be ignored by the client.
-- The enclosing `frameAVBufferHandle` is likewise irrelevant for EOS
-  detection.
+When `metadata.endOfStream = true`:
 
-This resolves the #380 vendor divergence at spec level: the EOS callback
-is unambiguously identifiable by `endOfStream = true` alone, regardless of
-tunnelling mode or the state of other metadata fields.
+- This is the final `onFrameOutput()` callback of the session — fires exactly once per session.
+- In non-tunnelled mode the callback delivers the last decoded frame with valid `frameAVBufferHandle` and `FrameMetadata`.
+- In tunnelled mode the callback is delivered with `frameAVBufferHandle = -1` as is normal for tunnelled output.
+- `metadata` is GUARANTEED non-null, because `endOfStream` transitioning from false to true is itself a metadata change. Clients can rely on `metadata != null && metadata.endOfStream` for unambiguous EOS detection.
+- The other fields of `FrameMetadata` describe the final frame as normal.
+
+This resolves the #380 vendor divergence: with EOS being just-another-metadata-field on the final real frame (rather than a separate EOS-only callback with undefined fields), there is no ambiguity about what the other metadata fields mean — they describe the frame being delivered.
 
 After this callback the decoder remains in `State::STARTED` but is drained.
 No further `onFrameOutput()` is delivered until `flush()` or `stop()` + `start()`.
