@@ -62,8 +62,11 @@ interface IAVBuffer
      * 
      * If the `videoDecoderId` is invalid then the `binder::Status EX_ILLEGAL_ARGUMENT` exception status is returned.
      * 
-     * It the platform has exhausted all available memory from the requested heap then the exception status
+     * If the platform has exhausted all available memory from the requested heap then the exception status
      * `binder::Status::Exception::EX_SERVICE_SPECIFIC` with `HALError::OUT_OF_MEMORY` is returned.
+     *
+     * If a `secureHeap` is created and the video decoder has not been configured then the exception status
+     * `binder::Status::Exception::EX_ILLEGAL_STATE` is returned.
      *
      * @param[in] secureHeap            Indicates if the pool is secure.
      * @param[in] videoDecoderIndex     The index of the video decoder resource.
@@ -72,10 +75,10 @@ interface IAVBuffer
      * @returns A new `Pool` object with a valid handle.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if videoDecoderIndex is invalid
-     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, HALError::OUT_OF_MEMORY if heap is exhausted
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT  if videoDecoderIndex is invalid
+     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, HALError::OUT_OF_MEMORY  if heap is exhausted
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE decoder not configured
      *
-     * 
      * @pre The IVideoDecoder.Id must have been obtained from IVideoDecoderManager.getVideoDecoderIds()
      * 
      * @see destroyPool()
@@ -88,9 +91,12 @@ interface IAVBuffer
      * If the audio pool is for audio data not destinated for a vendor audio decoder
      * (e.g. system audio PCM) then the ID must be IAudioDecoder.Id.UNDEFINED.
      * 
-     * It the platform has exhausted all available memory from the requested heap then the exception status
+     * If the platform has exhausted all available memory from the requested heap then the exception status
      * `binder::Status::Exception::EX_SERVICE_SPECIFIC` with `HALError::OUT_OF_MEMORY` is returned.
      * 
+     * If a `secureHeap` is created and the audio decoder has not been configured then the exception status
+     * `binder::Status::Exception::EX_ILLEGAL_STATE` is returned.
+     *
      * If the `audioDecoderId` is invalid then the `binder::Status EX_ILLEGAL_ARGUMENT` exception status is returned.
      *
      * @param[in] secureHeap            Indicates if the pool is secure.
@@ -101,8 +107,8 @@ interface IAVBuffer
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if audioDecoderId is invalid
-     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, HALError::OUT_OF_MEMORY if heap is exhausted
-     *
+     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC, HALError::OUT_OF_MEMORY  if heap is exhausted
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE decoder not configured
      * 
      * @pre The IAudioDecoder.Id must have been obtained from IAudioDecoderManager.getAudioDecoderIds()
      *      or IAudioDecoder.Id.UNDEFINED must be used.
