@@ -32,7 +32,7 @@ Each plane is configurable through a set of properties that clients can read or 
 | **HAL.PLANECONTROL.4** | Shall provide an API to atomically set multiple properties of a plane which take effect at the next available vsync.|
 | **HAL.PLANECONTROL.5** | Shall allow only 1 source to be mapped to any given video plane.|
 | **HAL.PLANECONTROL.6** | Shall provide an API to atomically update multiple video source to video plane mappings.|
-| **HAL.PLANECONTROL.7** | Shall provide a graphics frame buffer provider API for graphics planes where `graphicsFbCapabilities` is present in capabilities.|
+| **HAL.PLANECONTROL.7** | Shall provide a graphics frame buffer provider API for graphics planes where plane type is GRAPHICS. |
 | **HAL.PLANECONTROL.8** | Shall provide APIs to create, commit and destroy graphics frame buffers via `IGraphicsFbProvider`.|
 | **HAL.PLANECONTROL.9** | Shall notify clients when committed graphics frame buffers are released and available for reuse via `IGraphicsFbProviderListener`.|
 
@@ -191,7 +191,7 @@ For the 2 types of planes (video and graphics) there are fixed configurations wh
 |Plane Type | Fixed Configuration|
 |-----------|--------------------|
 | **Video** |If there is no video to display on a visible plane, then it shall render transparent black. <br>The z-order is dynamic only for video planes.<br> Primary video plane shall always be listed at resource index 0.|
-| **Graphics** |When `graphicsFbCapabilities` is present, `getGraphicsFbProvider()` provides graphics frame creation, commit, and destroy operations.|
+| **Graphics** |When the plane type is GRAPHICS, `getGraphicsFbProvider()` provides graphics frame creation, commit, and destroy operations.|
 
 ## Graphics Frame Providers
 
@@ -204,7 +204,7 @@ For the 2 types of planes (video and graphics) there are fixed configurations wh
 Use the following sequence for each graphics plane:
 
 1. Discover provider support:
-Call `IPlaneControl.getCapabilities()` and confirm the target plane exposes `graphicsFbCapabilities`.
+Call `IPlaneControl.getCapabilities()` and confirm the target plane is of type GRAPHICS.
 2. Open provider:
 Call `IPlaneControl.getGraphicsFbProvider(planeResourceIndex, graphicsFbProviderListener)`.
 3. Create one or more frame buffers:
