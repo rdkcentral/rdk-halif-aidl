@@ -300,7 +300,7 @@ SourcePlaneMapping[] =
   destinationPlaneIndex = 1
 },
 {
-    sourceType = "VIDEO_SINK",
+  sourceType = SourceType::VIDEO_SINK,
   sourceIndex = 1,
   destinationPlaneIndex = 0
 }
@@ -313,12 +313,12 @@ SourcePlaneMapping[] =
 ```c++
 SourcePlaneMapping[] =
 {
-    sourceType = "VIDEO_SINK",
+    sourceType = SourceType::VIDEO_SINK,
     sourceIndex = 0,
     destinationPlaneIndex = -1 // -1 indicates unmapping
 },
 {
-    sourceType = "VIDEO_SINK",
+    sourceType = SourceType::VIDEO_SINK,
     sourceIndex = 1,
     destinationPlaneIndex = 0
 }
