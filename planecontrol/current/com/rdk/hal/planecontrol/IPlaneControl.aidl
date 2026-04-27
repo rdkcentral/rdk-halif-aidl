@@ -239,7 +239,7 @@ interface IPlaneControl
      * @param[in] planeResourceIndex               The ID of the plane resource.
      * @param[in] graphicsFbProviderListener      Listener for provider callbacks.
      *
-     * @returns IGraphicsFbProvider or null if the resource index invalid.
+     * @returns IGraphicsFbProvider, or null if the resource index is invalid.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
