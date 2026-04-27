@@ -234,15 +234,24 @@ interface IPlaneControl
 
     /**
      * Gets a Graphics Frame Buffer Provider.
+     * Gets a Graphics Frame Buffer Provider for a plane resource.
      *
-     * Planes of type GRAPHICS support a graphics Frame Buffer Provider
+     * A provider is only available for plane resources that support graphics frame buffer
+     * provisioning. If the specified plane resource does not support this capability, the
+     * method returns `null` rather than throwing an exception.
      *
      * @param[in] planeResourceIndex               The ID of the plane resource.
-     * @param[in] graphicsFbProviderListener      Listener for provider callbacks.
+     * @param[in] graphicsFbProviderListener       Listener for provider callbacks.
      *
-     * @returns IGraphicsFbProvider, or null if the resource index is invalid.
+     * @returns Graphics frame buffer provider for the specified plane resource when supported.
+     * @retval IGraphicsFbProvider A valid provider instance when the plane resource index is valid
+     *         and the plane supports the graphics frame buffer provider capability.
+     * @retval null The plane resource index is invalid, or the indexed plane is not a graphics
+     *         plane, or the indexed plane otherwise does not support the graphics frame buffer
+     *         provider capability.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      */
     @nullable IGraphicsFbProvider getGraphicsFbProvider(in int planeResourceIndex, in IGraphicsFbProviderListener graphicsFbProviderListener); 
