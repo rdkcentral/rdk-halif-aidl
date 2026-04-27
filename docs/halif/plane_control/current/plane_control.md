@@ -268,7 +268,7 @@ The sequence of calls below shows how main video and PIP video can be mapped sep
 ```c++
 SourcePlaneMapping[] =
 {
-    sourceType = "VIDEO_SINK",
+    sourceType = SourceType::VIDEO_SINK,
     sourceIndex = 0,
     destinationPlaneIndex = 0
 }
@@ -282,7 +282,7 @@ SourcePlaneMapping[] =
 ```c++
 SourcePlaneMapping[] =
 {
-    sourceType = "VIDEO_SINK",
+    sourceType = SourceType::VIDEO_SINK,
     sourceIndex = 1,
     destinationPlaneIndex = 1
 }
@@ -295,7 +295,7 @@ SourcePlaneMapping[] =
 ```c++
 SourcePlaneMapping[] =
 {
-    sourceType = "VIDEO_SINK",
+  sourceType = SourceType::VIDEO_SINK,
   sourceIndex = 0,
   destinationPlaneIndex = 1
 },
