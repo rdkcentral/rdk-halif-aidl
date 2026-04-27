@@ -139,13 +139,24 @@ interface IVideoSinkController
      * exception, ownership remains with the caller.
      *
      *
-     * If a video frame is passed to `queueVideoFrame()` after EOS, then the `binder::Status EX_ILLEGAL_STATE` exception
-     * is raised. The video sink must be stopped and restarted or flushed to accept new buffers.
+     * End-of-stream signalling: the client signals EOS by setting
+     * `metadata.endOfStream = true` on the final queued frame. The buffer MUST
+     * be a valid final video frame - there is no EOS-only marker form. The sink
+     * shall continue to render all previously queued frames in the usual way
+     * and deliver `IVideoSinkControllerListener.onEndOfStream()` once the final
+     * frame has been rendered. When `metadata.endOfStream` is true, only that
+     * field is authoritative; all other fields of `FrameMetadata` are undefined
+     * and MUST be ignored by the sink. If a video frame is passed to
+     * `queueVideoFrame()` after EOS, then the `binder::Status EX_ILLEGAL_STATE`
+     * exception is raised. The video sink must be stopped and restarted or
+     * flushed to accept new buffers.
      *
      *
      * @param[in] nsPresentationTime    The presentation time of the video frame in nanoseconds.
      * @param[in] frameBufferHandle     A handle to the video frame buffer.
      * @param[in] metadata              A FrameMetadata object with metadata relating to the video frame.
+     *                                  Set `endOfStream = true` on the final queued frame to
+     *                                  signal EOS.
      *
      * @returns boolean
      * @retval true  Frame successfully queued for display. Buffer ownership transfers to HAL.

@@ -121,12 +121,23 @@ interface IAudioSinkController {
      * access the buffer after a successful call. If the call returns false or throws an
      * exception, ownership remains with the caller.
      *
-     * If an audio frame is passed to `queueAudioFrame()` after EOS, then the `binder::Status EX_ILLEGAL_STATE` exception
-     * is raised. The audio sink must be stopped and restarted or flushed to accept new buffers.
+     * End-of-stream signalling: the client signals EOS by setting
+     * `metadata.endOfStream = true` on the final queued frame. The buffer MUST
+     * be a valid final audio frame - there is no EOS-only marker form. The sink
+     * shall continue to mix all previously queued frames in the usual way and
+     * deliver `IAudioSinkControllerListener.onEndOfStream()` once the final
+     * frame has been completely passed to the mixer. When `metadata.endOfStream`
+     * is true, only that field is authoritative; all other fields of
+     * `FrameMetadata` are undefined and MUST be ignored by the sink. If an audio
+     * frame is passed to `queueAudioFrame()` after EOS, then the
+     * `binder::Status EX_ILLEGAL_STATE` exception is raised. The audio sink must
+     * be stopped and restarted or flushed to accept new buffers.
      *
      * @param[in] nsPresentationTime The presentation time of the audio frame in nanoseconds.
      * @param[in] bufferHandle       A handle to the AV buffer containing the audio frame.
      * @param[in] metadata           A FrameMetadata parcelable describing the audio frame.
+     *                               Set `endOfStream = true` on the final queued frame to
+     *                               signal EOS.
      *
      * @returns boolean
      * @retval true  Buffer successfully queued for mixing. Buffer ownership transfers to HAL.

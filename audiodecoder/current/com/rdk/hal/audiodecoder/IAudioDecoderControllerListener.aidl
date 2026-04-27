@@ -58,7 +58,7 @@ oneway interface IAudioDecoderControllerListener {
     *   client. `frameAVBufferHandle` is irrelevant for EOS detection.
     * - See `FrameMetadata.endOfStream` for the full contract.
     *
-    * @param[in] nsPresentationTime    The presentation timestamp in nanoseconds.
+    * @param[in] nsPresentationTime    The presentation timestamp in nanoseconds, or -1 if only metadata is being returned.
     * @param[in] frameAVBufferHandle   AVBuffer handle to the decoded audio frame buffer. Valid handle in
     *                                   non-tunnelled mode; -1 in tunnelled mode.
     * @param[in] metadata              FrameMetadata for the audio frame. Nullable on routine

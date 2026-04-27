@@ -139,7 +139,7 @@ A client can allocate a new AV buffer from a pool by calling the `IAVBuffer.allo
 
 On success, the buffer is returned to the client as an integer handle (int64_t) which must be globally unique in the system across all pools and all client connections.
 
-The client can pass ownership of the AV buffer handle to a HAL component (e.g. `IAudioDecoderController.decodeBuffer()` or `IAudioSinkController.queueAudioFrame()`) where it will eventually be freed otherwise it must call `IAVBuffer.free()` itself.
+The client can pass ownership of the AV buffer handle to a HAL component (e.g. `IAudioDecoderController.decodeBufferWithMetadata()` or `IAudioSinkController.queueAudioFrame()`) where it will eventually be freed otherwise it must call `IAVBuffer.free()` itself.
 
 If a HAL component (e.g. a decoder or sink) has finished with a buffer that it has taken ownership of then it must be freed and the buffer is returned to its original pool.  This can be achieved by calling the public HAL API `IAVBuffer.free()` or by a private internal call inside the vendor layer which has the same effect.
 
@@ -226,7 +226,7 @@ sequenceDiagram
         c2 ->> c2: decrypt(sec-a-handle, nonsec-a-handle, audiodata-size)
         c2 ->> avbm: free(nonsec-a-handle)
         c2 ->> adc: sec-a-handle
-        adc ->> adc: decodeBuffer(sec-a-handle)
+        adc ->> adc: decodeBufferWithMetadata(sec-a-handle)
         adc ->> avbm: free(sec-a-handle)
 
         Note over c1: Process new video frame
@@ -240,7 +240,7 @@ sequenceDiagram
         c2 ->> c2: decrypt(sec-v-handle, nonsec-v-handle, videodata-size)
         c2 ->> avbm: free(nonsec-v-handle)
         c2 ->> vdc: sec-v-handle
-        vdc ->> vdc: decodeBuffer(sec-v-handle)
+        vdc ->> vdc: decodeBufferWithMetadata(sec-v-handle)
         vdc ->> avbm: free(sec-v-handle)
     end
 

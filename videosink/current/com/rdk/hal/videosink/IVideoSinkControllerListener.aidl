@@ -45,13 +45,19 @@ oneway interface IVideoSinkControllerListener
     /**
      * Callback when the last video frame has been rendered.
      *
+     * Triggered after the client signalled EOS by passing a frame to
+     * `IVideoSinkController.queueVideoFrame()` with `FrameMetadata.endOfStream = true`.
+     * Fires exactly once per session, ordered strictly after that final frame
+     * has been rendered.
+     *
      * The behaviour is the same for tunnelled and non-tunnelled video operating modes.
-     * This occurs on the last frame rendered in the session.
 	 * The frame may not immediately be visible due to video pipeline and compositor functions.
      * The associated plane `Capabilities.vsyncDisplayLatency` indicates the expected time between
      * this callback and actual display.
      *
-     * @param[in] nsPresentationTime    The presentation time of the frame.
+     * @param[in] nsPresentationTime    The presentation time of the final video frame.
+     *
+     * @see IVideoSinkController.queueVideoFrame()
      */
     void onEndOfStream(in long nsPresentationTime);
 
