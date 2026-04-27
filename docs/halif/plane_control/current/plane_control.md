@@ -337,7 +337,7 @@ The `setVideoSourceDestinationPlaneMapping()` function can be used to unmap one 
 ```c++
 SourcePlaneMapping[]=
 {
-    sourceType = VIDEO_SINK, 
+    sourceType = SourceType::VIDEO_SINK,
     sourceIndex = 0, 
     destinationPlaneIndex = -1
 }
