@@ -20,11 +20,11 @@ package com.rdk.hal.planecontrol;
 
 import android.os.ParcelFileDescriptor;
 
-import com.rdk.hal.planecontrol.GbmDmaBufGraphicsFrameInfo;
-import com.rdk.hal.planecontrol.GbmDmaBufCapabilities;
+import com.rdk.hal.planecontrol.GraphicsFbInfo;
+import com.rdk.hal.planecontrol.GraphicsFbCapabilities;
 
 /** 
- *  @brief     Generic Buffer Management Dma-Buf interface.
+ *  @brief     Graphics Frame Buffer interface.
  *  @author    Gerald Weatherup
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
@@ -38,21 +38,21 @@ import com.rdk.hal.planecontrol.GbmDmaBufCapabilities;
  */
  
 @VintfStability
-interface IGbmDmaBufFbProvider
+interface IGraphicsFbProvider
 {
 
     /**
-     * Gets the GBM Dma-Buf graphics frame buffer capabilities.
+     * Gets the graphics frame buffer capabilities.
      *
      * This function can be called at any time and is not dependent on any Plane Control state.
      * The returned value is not allowed to change between calls.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
-     * @returns GbmDmaBufCapabilities
+     * @returns GraphicsFbCapabilities
      *
      */
-    GbmDmaBufCapabilities getCapabilities();
+    GraphicsFbCapabilities getCapabilities();
 
     /**
      * Commit the graphics frame buffer to be displayed on the graphics plane.
@@ -60,7 +60,7 @@ interface IGbmDmaBufFbProvider
      * This is a non-blocking function to commit this frame buffer to display at the earliest opportunity.
      * After the frame has been displayed an event is raised to indicate that the buffer, previously on display, is now free to be re-used.
      * 
-     * @param[in] graphicsFrameId                The Frame Id of the buffer to replace the currently displaying buffer
+     * @param[in] graphicsFbId                The Frame Id of the buffer to replace the currently displaying buffer
      * 
      * @returns boolean
      * @retval true     The frame was accepted for display.
@@ -70,12 +70,12 @@ interface IGbmDmaBufFbProvider
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      *
      *
-     * @see createGraphicsFrameBuffer()
+     * @see createGraphicsFb()
      */
-    boolean commitGraphicsFrameBuffer(in int graphicsFrameId);
+    boolean commitGraphicsFb(in int graphicsFbId);
  
     /**
-     * Creates a GBM (Generic Buffer Management) Dma-Buf graphics frame buffer for this plane.
+     * Creates a graphics frame buffer for this plane.
      * 
      * This function can be called multiple times to create up to the maximum allowed graphics frames specified in the plane resources capabilities. 
      * The returned file descriptor can be the same for all created graphics frame buffers.
@@ -86,26 +86,26 @@ interface IGbmDmaBufFbProvider
      *
      * @returns A Dma-Buf file descriptor and the associated graphics frame buffer info.
      * 
-     * width and height must not exceed the GbmDmaBufCapabilities. 
+     * width and height must not exceed the GraphicsCapabilities. 
      * 
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      *
      * 
-     * @see destroyGraphicsFrameBuffer()
+     * @see destroyGraphicsFb()
      */
-    ParcelFileDescriptor createGraphicsFrameBuffer(in int width, in int height, out GbmDmaBufGraphicsFrameInfo outInfo );
+    ParcelFileDescriptor createGraphicsFb(in int width, in int height, out GraphicsFbInfo outInfo );
 
     /**
      * Frees a graphics frame buffer.
      * 
-     * @param[in] graphicsFrameId    The graphics frame buffer identifier
+     * @param[in] graphicsFbId    The graphics frame buffer identifier
      * 
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      * 
-     * @see createGraphicsFrameBuffer()
+     * @see createGraphicsFb()
      */
-    void destroyGraphicsFrameBuffer(in int graphicsFrameId);
+    void destroyGraphicsFb(in int graphicsFbId);
 
 }

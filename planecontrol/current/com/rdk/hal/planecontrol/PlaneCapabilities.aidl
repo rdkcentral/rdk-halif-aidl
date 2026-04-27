@@ -104,11 +104,4 @@ parcelable PlaneCapabilities
      * to the moment it appears on the output display (e.g. panel or HDMI output).
      */
     int vsyncDisplayLatency;
-
-    /**
-     * Indicates the support for GBM dmabuf graphics frame buffers. 
-     * If true, clients can open IGbmDmaBufFbProvider via IPlaneControl.getGbmDmaBufFbProvider()
-     * and use it to create, commit and destroy graphics frame buffers.
-     */
-    boolean supportsGbmDmaBuf; 
 }

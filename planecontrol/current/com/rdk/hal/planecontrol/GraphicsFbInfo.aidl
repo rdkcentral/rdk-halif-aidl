@@ -27,10 +27,10 @@ package com.rdk.hal.planecontrol;
  */
 
 @VintfStability
-parcelable GbmDmaBufGraphicsFrameInfo {
+parcelable GraphicsFbInfo {
  
-    /* Uniquely identifies this Gfx Frame Buffer */
-    int graphicsFrameId;
+    /* Uniquely identifies this Graphics Frame Buffer */
+    int graphicsFbId;
  
     /* width of the created gfx frame in pixels */
     int pixelWidth;
@@ -49,7 +49,7 @@ parcelable GbmDmaBufGraphicsFrameInfo {
     /* For validation purposes a constant value in the hfp can be used. */
     int format;   // FourCC format (e.g., DRM_FORMAT_ARGB8888)
 
-    /* GBM modifiers that describe the buffer format. */ 
+    /*  modifiers that describe the buffer format. */ 
     /* This is an opaque value expected to be known to the client EGL implementation */
     /* For validation purposes a constant value in the hfp can be used. */
     long modifier;

@@ -17,23 +17,26 @@
  * limitations under the License.
  */
 package com.rdk.hal.planecontrol;
-  
-/** 
- *  @brief     Callbacks listener interface from Plane Control.
+
+ /**
+ *  @brief      Dma-Buf interface capabilities definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
 
 @VintfStability
-oneway interface IGbmDmaBufFbProviderListener
+parcelable GraphicsFbCapabilities
 {
-    /**
-     * @brief     Called after a call to commitGraphicsFrameBuffer() when the Graphics Frame Buffer has become current.
-     * @param[in] oldGraphicsFrameId    The Frame Id of the old frame replaced by the newly committed frame.
-     * @param[in] elapsedRealtimeNanos  The CLOCK_MONOTONIC time when the old graphics frame was replaced by the new.
-     *
-     * If no old frame exists (e.g. the first time), -1 is returned as oldGraphicsFrameId.
+   /**
+     * The maxGraphicsFrameBuffers indicates the maximum number of frame buffers that can be created for use on this plane.
      */
-    void onGfxFrameReleased(in int oldGraphicsFrameId, in long elapsedRealtimeNanos);
+    int maxGraphicsFrameBuffers;
+
+    /** 
+     * The maximum width and height in pixels that the frame buffer can be created with.
+     * Typically the width and height will match the plane width and height.
+     */
+    int maxGraphicsFrameBufferWidth;
+    int maxGraphicsFrameBufferHeight;
 }

@@ -24,8 +24,8 @@ import com.rdk.hal.planecontrol.SourcePlaneMapping;
 import com.rdk.hal.planecontrol.Property;
 import com.rdk.hal.planecontrol.PropertyKVPair;
 import com.rdk.hal.PropertyValue;
-import com.rdk.hal.planecontrol.IGbmDmaBufFbProvider;
-import com.rdk.hal.planecontrol.IGbmDmaBufFbProviderListener;
+import com.rdk.hal.planecontrol.IGraphicsFbProvider;
+import com.rdk.hal.planecontrol.IGraphicsFbProviderListener;
 
  
 /** 
@@ -233,18 +233,16 @@ interface IPlaneControl
     boolean unregisterListener(in IPlaneControlListener listener);
 
     /**
-     * Gets a GBM DmaBuf Frame Buffer Provider.
+     * Gets a Graphics Frame Buffer Provider.
      *
-     * Current model: GBM Dma-Buf is the only supported graphics frame provider.
-     * Future interface versions may introduce additional provider types.
      *
      * @param[in] planeResourceIndex               The ID of the plane resource.
-     * @param[in] gbmDmaBufFbProviderListener      Listener for provider callbacks.
+     * @param[in] graphicsFbProviderListener      Listener for provider callbacks.
      *
-     * @returns IGbmDmaBufFbProvider or null if the resource index is invalid or supportsGbmDmaBuf is false.
+     * @returns IGraphicsFbProvider or null if the resource index invalid.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      */
-    @nullable IGbmDmaBufFbProvider getGbmDmaBufFbProvider(in int planeResourceIndex, in IGbmDmaBufFbProviderListener gbmDmaBufFbProviderListener); 
+    @nullable IGraphicsFbProvider getGraphicsFbProvider(in int planeResourceIndex, in IGraphicsFbProviderListener graphicsFbProviderListener); 
 }
