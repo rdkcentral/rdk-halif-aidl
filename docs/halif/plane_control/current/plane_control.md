@@ -231,7 +231,7 @@ sequenceDiagram
     participant Plane as Graphics Plane
 
     Client->>PC: getCapabilities()
-    PC-->>Client: PlaneCapabilities[] (graphicsFbCapabilities present)
+    PC-->>Client: PlaneCapabilities[] (type == GRAPHICS)
 
     Client->>PC: getGraphicsFbProvider(planeId, listener)
     PC-->>Client: IGraphicsFbProvider
