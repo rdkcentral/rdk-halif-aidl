@@ -33,7 +33,7 @@ oneway interface IGraphicsFbProviderListener
      * @param[in] oldGraphicsFbId    The Frame Id of the old frame replaced by the newly committed frame.
      * @param[in] elapsedRealtimeNanos  The CLOCK_MONOTONIC time when the old graphics frame was replaced by the new.
      *
-     * If no old frame exists (e.g. the first time), -1 is returned as oldGraphicsFbId.
+     * If no old frame exists (e.g. on the first invocation), this callback is invoked with oldGraphicsFbId set to -1.
      */
     void onGfxFrameReleased(in int oldGraphicsFbId, in long elapsedRealtimeNanos);
 }
