@@ -17,13 +17,11 @@
 
 # component   - Machine-readable component identifier                    [manual]
 # version     - Pre-baseline: 0.<generation>.<minor>.<patch>              [release.sh]
-# generation  - Architectural era (0 = initial, 1+ = full design cycle)   [release.sh]
 # status      - RAG status: GREEN / AMBER / RED                          [manual]
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: indicator
 version: 0.1.0.0
-generation: 1
 status: GREEN
 description: "LED and visual indicator state management"
 type: OEM
@@ -57,9 +55,8 @@ notes:
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
-    RTAB_Group: pending
     Architecture: reviewed
     Product_Architecture: reviewed
     Graphics_Architecture: reviewed
-    VTS_Team: reviewed
+    Vendor_Layer_Team: reviewed
 

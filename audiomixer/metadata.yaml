@@ -17,13 +17,11 @@
 
 # component   - Machine-readable component identifier                    [manual]
 # version     - Pre-baseline: 0.<generation>.<minor>.<patch>              [release.sh]
-# generation  - Architectural era (0 = initial, 1+ = full design cycle)   [release.sh]
 # status      - RAG status: GREEN / AMBER / RED                          [manual]
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: audiomixer
 version: 0.1.0.1
-generation: 0
 status: GREEN
 description: "Audio mixing and routing for multi-stream output"
 type: SOC
@@ -52,14 +50,13 @@ scope:
 #   risk          - Risk notes (appears as watch item on dashboard)
 #   owners        - Responsible architecture teams
 notes:
-  owners: "Architecture + VTS_Team + AV_Architecture"
+  owners: "Architecture + Vendor_Layer_Team + AV_Architecture"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
-    RTAB_Group: pending
     Architecture: reviewed
     Product_Architecture: reviewed
     AV_Architecture: reviewed
-    VTS_Team: reviewed
+    Vendor_Layer_Team: reviewed
 

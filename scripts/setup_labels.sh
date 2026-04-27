@@ -108,7 +108,7 @@ echo ""
 # ---------------------------------------------------------------------------
 
 echo "Workflow labels:"
-create_label "breaking-change"      "b60205" "Breaking interface change — bumps generation"
+create_label "breaking-change"      "b60205" "Breaking interface change — bumps version generation segment"
 create_label "documentation"        "0075ca" "Documentation-only change — no interface change"
 
 echo ""

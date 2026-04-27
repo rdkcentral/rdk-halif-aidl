@@ -17,13 +17,11 @@
 
 # component   - Machine-readable component identifier                    [manual]
 # version     - Pre-baseline: 0.<generation>.<minor>.<patch>              [release.sh]
-# generation  - Architectural era (0 = initial, 1+ = full design cycle)   [release.sh]
 # status      - RAG status: GREEN / AMBER / RED                          [manual]
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: crypto
 version: 0.0.0.1
-generation: 0
 status: RED
 description: "HAL lower-layer cryptography and security API requirements"
 type: SOC
@@ -59,9 +57,8 @@ notes:
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
-    RTAB_Group: pending
     Architecture: pending
     Product_Architecture: pending
     Kernel_Architecture: pending
-    VTS_Team: pending
+    Vendor_Layer_Team: pending
 
