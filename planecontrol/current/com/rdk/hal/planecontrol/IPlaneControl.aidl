@@ -235,6 +235,7 @@ interface IPlaneControl
     /**
      * Gets a Graphics Frame Buffer Provider.
      *
+     * Planes of type GRAPHICS support a graphics Frame Buffer Provider
      *
      * @param[in] planeResourceIndex               The ID of the plane resource.
      * @param[in] graphicsFbProviderListener      Listener for provider callbacks.
