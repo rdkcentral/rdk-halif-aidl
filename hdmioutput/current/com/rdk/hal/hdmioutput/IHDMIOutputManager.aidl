@@ -34,7 +34,7 @@ import com.rdk.hal.hdmioutput.IHDMIOutput;
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  *  @author    Gerald Weatherup
- */
+ *
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
@@ -42,6 +42,7 @@ import com.rdk.hal.hdmioutput.IHDMIOutput;
  *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
  *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
  *    The caller must ignore any output variables.
+ */
 @VintfStability
 interface IHDMIOutputManager
 {
