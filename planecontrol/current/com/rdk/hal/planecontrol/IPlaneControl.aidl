@@ -233,22 +233,18 @@ interface IPlaneControl
     boolean unregisterListener(in IPlaneControlListener listener);
 
     /**
-     * Gets a Graphics Frame Buffer Provider.
-     * Gets a Graphics Frame Buffer Provider for a plane resource.
+     * Gets a Graphics Frame Buffer Provider for a Graphics plane resource.
      *
-     * A provider is only available for plane resources that support graphics frame buffer
-     * provisioning. If the specified plane resource does not support this capability, the
+     * A provider is only available for plane resources of type GRAPHICS. The
      * method returns `null` rather than throwing an exception.
+     * All graphics planes must support a Graphics Frame Buffer Provider. 
      *
      * @param[in] planeResourceIndex               The ID of the plane resource.
      * @param[in] graphicsFbProviderListener       Listener for provider callbacks.
      *
      * @returns Graphics frame buffer provider for the specified plane resource when supported.
-     * @retval IGraphicsFbProvider A valid provider instance when the plane resource index is valid
-     *         and the plane supports the graphics frame buffer provider capability.
-     * @retval null The plane resource index is invalid, or the indexed plane is not a graphics
-     *         plane, or the indexed plane otherwise does not support the graphics frame buffer
-     *         provider capability.
+     * @retval IGraphicsFbProvider A valid provider instance when the plane resource index referes to a Graphics plane.
+     * @retval null The plane resource index is invalid, or the indexed plane is not a graphic plane. 
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
