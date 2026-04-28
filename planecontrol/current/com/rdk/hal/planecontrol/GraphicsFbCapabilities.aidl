@@ -39,4 +39,14 @@ parcelable GraphicsFbCapabilities
      */
     int maxGraphicsFrameBufferWidth;
     int maxGraphicsFrameBufferHeight;
+
+    /* The pixel format of the returned graphics frame. */
+    /* This is an opaque value expected to be known to the client EGL implementation */
+    /* For validation purposes a constant value in the hfp can be used. */
+    int format;   // FourCC format (e.g., DRM_FORMAT_ARGB8888)
+
+    /*  modifiers that describe the buffer format. */ 
+    /* This is an opaque value expected to be known to the client EGL implementation */
+    /* For validation purposes a constant value in the hfp can be used. */
+    long modifier;
 }
