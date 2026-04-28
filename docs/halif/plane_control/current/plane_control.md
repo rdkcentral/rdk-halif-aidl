@@ -47,7 +47,7 @@ Each plane is configurable through a set of properties that clients can read or 
 | `AspectRatio.aidl` | Enum list of aspect ratios.|
 | `PlaneCapabilities.aidl` | Parcelable describing a single plane resource capabilities.|
 | `GraphicsFbCapabilities.aidl` | Parcelable describing graphics frame buffer provider capabilities for a graphics plane.|
-| `GraphicsFbInfo.aidl` | Parcelable describing graphics frame metadata (frame ID, stride, offset, format, modifier).|
+| `GraphicsFbInfo.aidl` | Parcelable describing graphics frame metadata (frame ID, pixel width, pixel height, stride and offset).|
 | `PlaneType.aidl` | Enum list of plane types.|
 | `Property.aidl` | Enum list of plane properties.|
 | `PropertyKVPair.aidl` | Parcelable of a single property key and value pair.|
