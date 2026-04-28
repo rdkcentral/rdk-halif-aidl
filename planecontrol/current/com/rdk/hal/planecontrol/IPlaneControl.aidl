@@ -242,9 +242,9 @@ interface IPlaneControl
      * @param[in] planeResourceIndex               The ID of the plane resource.
      * @param[in] graphicsFbProviderListener       Listener for provider callbacks.
      *
-     * @returns Graphics frame buffer provider for the specified plane resource when supported.
-     * @retval IGraphicsFbProvider A valid provider instance when the plane resource index referes to a Graphics plane.
-     * @retval null The plane resource index is invalid, or the indexed plane is not a graphic plane. 
+     * @returns A valid graphics frame buffer provider instance when the plane resource index refers
+     *          to a graphics plane, or `null` if the plane resource index is invalid or the indexed
+     *          plane is not a graphics plane.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
