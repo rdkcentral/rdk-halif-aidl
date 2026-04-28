@@ -17,13 +17,11 @@
 
 # component   - Machine-readable component identifier                    [manual]
 # version     - Pre-baseline: 0.<generation>.<minor>.<patch>              [release.sh]
-# generation  - Architectural era (0 = initial, 1+ = full design cycle)   [release.sh]
 # status      - RAG status: GREEN / AMBER / RED                          [manual]
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: planecontrol
 version: 0.1.0.0
-generation: 1
 status: AMBER
 description: "Graphics and video plane composition control"
 type: SOC
@@ -60,10 +58,9 @@ notes:
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
-    RTAB_Group: pending
     Architecture: pending
     Product_Architecture: pending
     AV_Architecture: pending
     Graphics_Architecture: pending
-    VTS_Team: pending
+    Vendor_Layer_Team: pending
 

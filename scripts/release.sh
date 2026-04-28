@@ -31,7 +31,7 @@ Usage:
 
 Options:
   --since <ref>  Base reference to diff from (default: nearest reachable tag).
-  --apply        Apply computed version/generation updates to metadata.yaml.
+  --apply        Apply computed version updates to metadata.yaml.
   --no-gh        Disable GitHub label lookup and use local heuristics only.
   --verbose      Print extra diagnostics.
   --help         Show this help.
@@ -276,11 +276,9 @@ fi
 
 compute_next_versions() {
     local current_version="$1"
-    local current_generation="$2"
-    local bump="$3"
+    local bump="$2"
 
     NEXT_VERSION="${current_version}"
-    NEXT_GENERATION="${current_generation}"
     NEXT_NOTE=""
 
     if [[ "${bump}" == "none" ]]; then
@@ -305,7 +303,6 @@ compute_next_versions() {
         fi
 
         NEXT_VERSION="0.${gen}.${minor}.${patch}"
-        NEXT_GENERATION="${gen}"
         return 0
     fi
 
@@ -328,12 +325,8 @@ compute_next_versions() {
 update_metadata() {
     local file="$1"
     local new_version="$2"
-    local new_generation="$3"
 
     sed -i -E "s/^version:.*/version: ${new_version}/" "${file}"
-    if grep -q '^generation:' "${file}"; then
-        sed -i -E "s/^generation:.*/generation: ${new_generation}/" "${file}"
-    fi
 }
 
 MODE="DRY-RUN"
@@ -367,8 +360,6 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
     fi
 
     current_version="$(awk -F': *' '$1=="version"{print $2; exit}' "${meta}")"
-    current_generation="$(awk -F': *' '$1=="generation"{print $2; exit}' "${meta}")"
-    [[ -n "${current_generation}" ]] || current_generation="0"
 
     bump="none"
     if [[ "${COMP_BREAKING[$comp]:-0}" -eq 1 ]]; then
@@ -379,7 +370,7 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
         bump="patch"
     fi
 
-    compute_next_versions "${current_version}" "${current_generation}" "${bump}"
+    compute_next_versions "${current_version}" "${bump}"
 
     status="ok"
     if [[ "${NEXT_NOTE}" == "breaking change on frozen interface: create new component instead" ]]; then
@@ -400,14 +391,14 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
     fi
 
     if [[ "${APPLY}" -eq 1 ]]; then
-        if [[ "${current_version}" != "${NEXT_VERSION}" || "${current_generation}" != "${NEXT_GENERATION}" ]]; then
+        if [[ "${current_version}" != "${NEXT_VERSION}" ]]; then
             if [[ "${status}" == "ok" ]]; then
-                update_metadata "${meta}" "${NEXT_VERSION}" "${NEXT_GENERATION}"
+                update_metadata "${meta}" "${NEXT_VERSION}"
                 changed_count=$((changed_count + 1))
             fi
         fi
     else
-        if [[ "${current_version}" != "${NEXT_VERSION}" || "${current_generation}" != "${NEXT_GENERATION}" ]]; then
+        if [[ "${current_version}" != "${NEXT_VERSION}" ]]; then
             changed_count=$((changed_count + 1))
         fi
     fi

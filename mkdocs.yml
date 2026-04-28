@@ -58,6 +58,7 @@ nav:
     - Boot: halif/boot/current/boot.md
     - Broadcast: halif/broadcast/current/broadcast.md
     - CDM: halif/cdm/current/cdm.md
+    - DRM: halif/drm/current/drm.md
     - HDMI:
       - HDMI CEC: halif/hdmi_cec/current/hdmi_cec.md
       - HDMI Input: halif/hdmi_input/current/hdmi_input.md

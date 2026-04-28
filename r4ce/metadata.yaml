@@ -17,13 +17,11 @@
 
 # component   - Machine-readable component identifier                    [manual]
 # version     - Pre-baseline: 0.<generation>.<minor>.<patch>              [release.sh]
-# generation  - Architectural era (0 = initial, 1+ = full design cycle)   [release.sh]
 # status      - RAG status: GREEN / AMBER / RED                          [manual]
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: r4ce
 version: 0.0.0.1
-generation: 0
 status: AMBER
 description: "RF4CE remote control protocol and pairing"
 type: OEM
@@ -60,9 +58,8 @@ notes:
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
-    RTAB_Group: pending
     Architecture: pending
     Product_Architecture: pending
     Control_Manager_Architecture: pending
-    VTS_Team: pending
+    Vendor_Layer_Team: pending
 
