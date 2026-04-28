@@ -19,7 +19,7 @@
 package com.rdk.hal.planecontrol;
   
 /** 
- *  @brief     Callbacks listener interface from Plane Control.
+ *  @brief     Callbacks listener interface from graphics frame buffer provider.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
