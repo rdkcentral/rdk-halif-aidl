@@ -60,6 +60,8 @@ set(SRC
     ${SRC_DIR}/IAudioMixerEventListener.aidl
     ${SRC_DIR}/IAudioMixerManager.aidl
     ${SRC_DIR}/IAudioOutputPort.aidl
+    ${SRC_DIR}/IAudioOutputPortController.aidl
+    ${SRC_DIR}/IAudioOutputPortControllerListener.aidl
     ${SRC_DIR}/IAudioOutputPortListener.aidl
     # External dependencies
     ${AUDIO_DECODER_SRC_DIR}/Codec.aidl

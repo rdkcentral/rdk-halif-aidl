@@ -117,4 +117,40 @@ interface IAudioMixerController {
      * @pre       The mixer must be in STARTED state.
      */
     void signalEOS();
+
+    /**
+     * @brief     Sets the volume (attenuation) for a specific mixer input.
+     * @details   Per-input attenuation lets clients balance multiple sources
+     *            mixed into the same output (e.g., reduce media volume while
+     *            TTS plays). Value range is 0..100 where 100 is unity gain
+     *            (no attenuation) and 0 is silence.
+     *
+     *            Independent of the mixer-level FADER_LEVEL property which
+     *            controls main/associated audio balance, and the output port
+     *            VOLUME property which controls overall output volume.
+     *
+     * @param[in] inputIndex  Mixer input index (0..Capabilities.inputs.length-1).
+     * @param[in] volume      Volume level 0..100.
+     *
+     * @returns   true on success, false if input index is out of range or
+     *            volume is out of range.
+     *
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if inputIndex or volume
+     *            is invalid.
+     *
+     * @see       getInputVolume()
+     */
+    boolean setInputVolume(in int inputIndex, in int volume);
+
+    /**
+     * @brief     Gets the current volume for a specific mixer input.
+     *
+     * @param[in] inputIndex  Mixer input index (0..Capabilities.inputs.length-1).
+     * @returns   Current volume level 0..100.
+     *
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if inputIndex is invalid.
+     *
+     * @see       setInputVolume()
+     */
+    int getInputVolume(in int inputIndex);
 }

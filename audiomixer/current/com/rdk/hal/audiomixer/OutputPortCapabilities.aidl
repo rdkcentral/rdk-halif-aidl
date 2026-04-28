@@ -35,10 +35,11 @@ parcelable OutputPortCapabilities {
 
     /**
     * @brief Human-readable name or role for this output port (e.g., "HDMI", "SPDIF", "Speakers").
-    * @details May be null if the platform does not expose a name for this output port.
-    *          Although optional, this field is expected to aid debugging, logging, and user-facing diagnostics.
+    * @details Required, declared per output port in hfp-audiomixer.yaml under
+    *          outputPorts[].portName. Used for debugging, logging, and
+    *          user-facing diagnostics.
     */
-    @nullable String portName;
+    String portName;
 
     /**
      * List of property keys supported by this output port (see OutputPortProperty).

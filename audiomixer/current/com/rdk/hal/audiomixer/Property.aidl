@@ -86,5 +86,22 @@ enum Property {
      * - false: unmuted (default on open)
      * - true: muted
      */
-    MUTE = 4
+    MUTE = 4,
+
+    /**
+     * Fader level controlling balance between main and associated audio.
+     *
+     * Range: 0..100.
+     *  - 0   = main audio only (associated fully attenuated)
+     *  - 50  = balanced mix (default)
+     *  - 100 = associated audio only (main fully attenuated)
+     *
+     * Used by accessibility features such as descriptive video where the
+     * associated audio track narrates the scene over the main programme.
+     *
+     * Type: Integer
+     * Access: Read-write.
+     * Writeable in states: READY, STARTED
+     */
+    FADER_LEVEL = 5
 }
