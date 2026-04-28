@@ -209,7 +209,7 @@ Call `IPlaneControl.getCapabilities()` and confirm the target plane is of type G
 Call `IPlaneControl.getGraphicsFbProvider(planeResourceIndex, graphicsFbProviderListener)`.
 3. Create one or more frame buffers:
 Call `IGraphicsFbProvider.createGraphicsFb(width, height, outInfo)`.
-The returned file descriptor is the graphics buffer memory, and `outInfo` provides metadata such as `graphicsFbId`, stride, offset, format, and modifier.
+The returned file descriptor is the graphics buffer memory, and `outInfo` provides metadata such as `graphicsFbId`, stride, and offset. Supported format and modifier values are defined in `GraphicsFbCapabilities` and should be obtained via `IGraphicsFbProvider.getCapabilities()`.
 4. Render into the buffer:
 Use the returned graphics buffer and metadata with the client graphics stack (for example EGL/GL) to draw a frame.
 5. Commit for display:
