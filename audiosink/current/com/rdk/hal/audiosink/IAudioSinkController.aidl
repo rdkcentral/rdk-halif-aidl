@@ -122,8 +122,9 @@ interface IAudioSinkController {
      * exception, ownership remains with the caller.
      *
      * End-of-stream signalling: the client signals EOS by setting
-     * `metadata.endOfStream = true` on the final queued frame. The buffer MUST
-     * be a valid final audio frame - there is no EOS-only marker form. The
+     * `metadata.endOfStream = true` on the final queued frame. Both
+     * `bufferHandle` and `nsPresentationTime` MUST be valid for the final real
+     * frame - the same as for any other frame submitted to this method. The
      * other fields of `FrameMetadata` describe the final frame as normal. The
      * sink shall continue to mix all previously queued frames in the usual way
      * and deliver `IAudioSinkControllerListener.onEndOfStream()` once the final
