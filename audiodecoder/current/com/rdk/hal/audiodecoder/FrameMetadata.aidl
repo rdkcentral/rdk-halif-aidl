@@ -48,7 +48,28 @@ parcelable FrameMetadata {
 	boolean isDolbyAtmos;
 	
 	/**
-	 * Audio trimming to use on presentation.
+	 * Audio trim durations to apply when presenting this decoded frame.
+	 *
+	 * `trimStartNs` is the duration to discard from the start of the decoded
+	 * audio frame; `trimEndNs` from the end. Both are durations in nanoseconds,
+	 * relative to the frame's own boundaries (not absolute timestamps).
+	 *
+	 * Per-frame — applies only to this decoded frame, not to the stream as a
+	 * whole. Set to 0 (the common case) for no trim.
+	 *
+	 * Carried through unchanged from `InputBufferMetadata.trimStartNs` and
+	 * `trimEndNs` on the corresponding `decodeBufferWithMetadata()` call. The
+	 * AudioSink uses these to trim the PCM before presenting to the mixer.
+	 *
+	 * Used for codec priming / encoder delay (AAC LC/HE, Opus pre-skip), AAC
+	 * SBR padding, and gapless playback across track boundaries.
+	 *
+	 * Type rationale: `int` (not `long`) — at nanosecond precision, max value
+	 * is ~2.1 seconds, sufficient for any per-frame priming/padding trim.
+	 *
+	 * @see IAudioDecoderController.decodeBufferWithMetadata()
+	 * @see InputBufferMetadata.trimStartNs
+	 * @see InputBufferMetadata.trimEndNs
 	 */
 	int trimStartNs;
 	int trimEndNs;

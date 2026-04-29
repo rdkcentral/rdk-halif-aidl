@@ -80,18 +80,49 @@ parcelable InputBufferMetadata {
     boolean discontinuity;
 
     /**
-     * The time to trim from the start of the decoded audio in nanoseconds.
+     * Duration to trim from the start of the decoded audio frame, in nanoseconds.
      *
-     * Applies only to the buffer of the current `decodeBufferWithMetadata()`
-     * call; not carried forward.
+     * Per-frame trim — applied to the single decoded frame produced from this
+     * input buffer, not to the stream as a whole. Relative to the frame's own
+     * boundaries (a duration to discard from the leading edge), not an absolute
+     * timestamp. Applies only to the buffer of the current
+     * `decodeBufferWithMetadata()` call; not carried forward across calls.
+     *
+     * Set to 0 (the common case) to apply no trim to this frame's start.
+     *
+     * Primary use cases:
+     * - Codec priming / encoder delay (e.g. AAC LC/HE prepended silence)
+     * - Opus pre-skip
+     * - AAC SBR padding
+     * - Gapless playback across track boundaries
+     *
+     * Data flow: the middleware sets this here on each
+     * `decodeBufferWithMetadata()` call; the HAL carries it through unchanged to
+     * the matching `FrameMetadata.trimStartNs` on the corresponding
+     * `IAudioDecoderControllerListener.onFrameOutput()` callback; the AudioSink
+     * applies the trim when presenting PCM to the mixer.
+     *
+     * Type rationale: `int` (not `long`) — at nanosecond precision, max value is
+     * ~2.1 seconds, sufficient for any per-frame priming/padding trim.
+     *
+     * @see FrameMetadata.trimStartNs
      */
     int trimStartNs;
 
     /**
-     * The time to trim from the end of the decoded audio in nanoseconds.
+     * Duration to trim from the end of the decoded audio frame, in nanoseconds.
      *
-     * Applies only to the buffer of the current `decodeBufferWithMetadata()`
-     * call; not carried forward.
+     * Per-frame trim — applied to the single decoded frame produced from this
+     * input buffer, not to the stream as a whole. Relative to the frame's own
+     * boundaries (a duration to discard from the trailing edge), not an
+     * absolute timestamp. Applies only to the buffer of the current
+     * `decodeBufferWithMetadata()` call; not carried forward across calls.
+     *
+     * Set to 0 (the common case) to apply no trim to this frame's end.
+     *
+     * Use cases, data flow, and type rationale as for `trimStartNs` above.
+     *
+     * @see FrameMetadata.trimEndNs
      */
     int trimEndNs;
 }
