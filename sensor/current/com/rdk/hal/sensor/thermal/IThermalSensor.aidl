@@ -31,6 +31,7 @@ import com.rdk.hal.sensor.thermal.IThermalEventListener;
 import com.rdk.hal.sensor.thermal.State;
 import com.rdk.hal.sensor.thermal.TemperatureReading;
 
+@VintfStability
 interface IThermalSensor {
     /** @brief Binder service registration name. */
     const @utf8InCpp String serviceName = "sensor.thermal";
