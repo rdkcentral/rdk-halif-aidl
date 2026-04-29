@@ -25,6 +25,7 @@ package com.rdk.hal.sensor.thermal;
 
 import com.rdk.hal.sensor.thermal.ActionEvent;
 
+@VintfStability
 oneway interface IThermalEventListener {
     /**
      * @brief Called when the vendor thermal policy signals a thermal state change.
