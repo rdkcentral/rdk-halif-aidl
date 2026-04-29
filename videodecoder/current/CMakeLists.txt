@@ -52,6 +52,7 @@ set(SRC
 	${SRC_DIR}/IVideoDecoderControllerListener.aidl
 	${SRC_DIR}/IVideoDecoderEventListener.aidl
 	${SRC_DIR}/IVideoDecoderManager.aidl
+	${SRC_DIR}/InputBufferMetadata.aidl
 	${SRC_DIR}/MasteringDisplayInfo.aidl
 	${SRC_DIR}/OperationalMode.aidl
 	${SRC_DIR}/PixelFormat.aidl

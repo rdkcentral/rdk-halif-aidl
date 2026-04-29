@@ -19,6 +19,7 @@
 package com.rdk.hal.audiodecoder;
 import com.rdk.hal.audiodecoder.CSDAudioFormat;
 import com.rdk.hal.audiodecoder.Property;
+import com.rdk.hal.audiodecoder.InputBufferMetadata;
 
 import com.rdk.hal.PropertyValue;
 
@@ -90,22 +91,35 @@ interface IAudioDecoderController {
     void stop();
 
     /**
-     * Pass an encoded buffer of audio elementary stream data to the audio decoder.
+     * Pass an encoded buffer of audio elementary stream data to the audio decoder
+     * with per-buffer metadata.
      *
      * The audio decoder must be in a `STARTED` state.
      * Buffers can be either non-secure or secure to support SAP (Secure Audio Path).
-     * Each call shall reference a single audio frame with a presentation timestamp.
+     * Each call shall reference a single audio frame with a presentation timestamp
+     * carried in `metadata.nsPresentationTime`.
      *
-     * Buffer Ownership: Ownership of the buffer transfers to the Audio Decoder HAL only
-     * when decodeBuffer() accepts the buffer (returns true). Once accepted, the HAL is
-     * responsible for freeing the buffer after processing. The caller must not modify or
-     * access the buffer after a successful call. If the call returns false or throws an
-     * exception, ownership remains with the caller.
+     * Buffer Ownership: Ownership of the buffer transfers to the Audio Decoder HAL
+     * only when this call accepts the buffer (returns true). Once accepted, the HAL
+     * is responsible for freeing the buffer after processing. The caller must not
+     * modify or access the buffer after a successful call. If the call returns false
+     * or throws an exception, ownership remains with the caller.
      *
-     * @param[in] nsPresentationTime	The presentation time of the audio frame in nanoseconds.
-     * @param[in] bufferHandle			A handle to the AV buffer containing the encoded audio frame.
-     * @param[in] trimStartNs			The time to trim from the start of the decoded audio in nanoseconds.
-     * @param[in] trimEndNs  			The time to trim from the end of the decoded audio in nanoseconds.
+     * `bufferHandle` MUST reference a valid encoded frame. EOS is signalled by
+     * setting `metadata.endOfStream = true` on the final real buffer of the
+     * decode session. There is no EOS-only marker form and no path to signal
+     * EOS without data - a client that has no more data to send ends the session
+     * via `stop()` or `flush(reset=true)`, not via this method.
+     *
+     * Each call is self-describing; the HAL MUST NOT carry any field of
+     * `InputBufferMetadata` (including `trimStartNs`/`trimEndNs`) across calls.
+     *
+     * The `metadata.discontinuity` field is reserved in v1 and MUST be false.
+     * Use `signalDiscontinuity()` to signal a PTS discontinuity.
+     *
+     * @param[in] bufferHandle  A handle to the AV buffer containing the encoded
+     *                          audio frame. MUST be a valid handle.
+     * @param[in] metadata      Per-buffer metadata. See `InputBufferMetadata`.
      *
      * @returns boolean
      * @retval true   Buffer successfully queued for decoding. Buffer ownership transfers to HAL.
@@ -117,11 +131,15 @@ interface IAudioDecoderController {
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if `bufferHandle` is
+     *            invalid or if `metadata.discontinuity` is true.
      *
      * @pre The resource must be in State::STARTED.
+     *
+     * @see InputBufferMetadata
+     * @see IAudioDecoderControllerListener.onFrameOutput()
      */
-    boolean decodeBuffer(in long nsPresentationTime, in long bufferHandle, in int trimStartNs, in int trimEndNs);
+    boolean decodeBufferWithMetadata(in long bufferHandle, in InputBufferMetadata metadata);
 
     /**
 	 * Starts a flush operation on the decoder.
@@ -144,8 +162,12 @@ interface IAudioDecoderController {
 	 * Signals a discontinuity in the audio stream.
      *
      * The audio decoder must be in a state of `STARTED`.
-     * Buffers that follow this call passed in `decodeBuffer()` shall be regarded
-     * as PTS discontinuous to any audio frames previously passed.
+     * Buffers that follow this call passed in `decodeBufferWithMetadata()` shall be
+     * regarded as PTS discontinuous to any audio frames previously passed.
+     *
+     * This method remains the authoritative path for signalling discontinuity in
+     * v1. The `InputBufferMetadata.discontinuity` field is reserved and MUST be
+     * false until a later release migrates the signalling path.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
@@ -155,29 +177,11 @@ interface IAudioDecoderController {
     void signalDiscontinuity();
 
     /**
-	 * Signals an end of stream condition in the audio stream after the last audio buffer has been delivered.
-     *
-     * The audio decoder must be in a state of `STARTED`.
-     * Any frames held by the decoder should continue to be decoded and output.
-     * No more audio buffers are expected to be delivered to the audio decoder after
-	 * `signalEOS()` has been called unless the decoder is first flushed or stopped and started again.
-     *
-	 * An `IAudioDecoderControllerListener.onFrameOutput()` callback with `FrameMetadata.endOfStream`
-     * must be set to true after all audio frames have been output.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     *
-     * @pre The resource must be in State::STARTED.
-     */
-	void signalEOS();
-
-    /**
      * Sends codec-specific data to initialise the audio decoder.
      *
      * Some audio formats require out-of-band codec-specific data describing the audio stream,
      * which has been filtered from the container or provided by the application.
-     * This must be invoked before any audio frame buffers are passed to `decodeBuffer()`.
+     * This must be invoked before any audio frame buffers are passed to `decodeBufferWithMetadata()`.
      *
      * For example, MPEG-4 Audio requires the AudioSpecificConfig, beginning with the audio object type.
      *

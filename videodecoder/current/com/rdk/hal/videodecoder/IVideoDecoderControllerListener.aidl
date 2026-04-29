@@ -40,12 +40,31 @@ oneway interface IVideoDecoderControllerListener {
      * - The client is responsible for managing the handle's lifecycle: either passing it to the next
      *   module (e.g., video sink) or explicitly freeing it via IAVBuffer.free() when no longer needed.
      *
+     * End-of-stream delivery:
+     * - EOS is signalled on the FINAL `onFrameOutput()` callback of the decode
+     *   session by `metadata.endOfStream = true`. There is no separate EOS-only
+     *   marker callback after the last frame — `endOfStream = true` rides on
+     *   the metadata of the last real frame in non-tunnelled mode, or on the
+     *   final tunnelled-mode metadata callback in tunnelled mode (where
+     *   `frameAVBufferHandle = -1` is the normal case).
+     * - Fires exactly once per decode session.
+     * - On the EOS callback, `metadata` is GUARANTEED to be non-null even though
+     *   the parameter is annotated `@nullable`. This follows from the existing
+     *   "metadata is non-null when it changes" rule — `endOfStream` transitioning
+     *   from false to true is a metadata change. Clients can rely on
+     *   `metadata != null && metadata.endOfStream` for unambiguous EOS detection.
+     * - All other fields of `FrameMetadata` describe the final frame as normal.
+     * - See `FrameMetadata.endOfStream` for the full contract.
+     *
      * @param[in] nsPresentationTime	The presentation time or -1 if only metadata is being returned.
      * @param[in] frameAVBufferHandle	AVBuffer handle to the decoded 2D video frame buffer. Valid handle in
      *                                   non-tunnelled mode; -1 in tunnelled mode.
      * @param[in] metadata				A FrameMetadata parcelable of metadata related to the frame.
+     *                                  Nullable on routine callbacks per the rule above; guaranteed
+     *                                  non-null on the final callback that carries EOS.
      *
-     * @see IVideoDecoderController.decodeBuffer(), IAVBuffer.free()
+     * @see IVideoDecoderController.decodeBufferWithMetadata(), IAVBuffer.free(),
+     *      FrameMetadata.endOfStream
      */
     void onFrameOutput(in long nsPresentationTime, in long frameAVBufferHandle, in @nullable FrameMetadata metadata);
 
@@ -75,18 +94,19 @@ oneway interface IVideoDecoderControllerListener {
      * Callback that signals the video decoder input buffer queue has space again.
      *
      * Fired exactly once per back-pressure episode: when the internal queue transitions
-     * from full to has-space after `IVideoDecoderController.decodeBuffer()` returned `false`.
-     * If the client continues to call `decodeBuffer()` during back-pressure (receiving
-     * `false` repeatedly), only one callback is delivered per transition, regardless of
-     * the number of intermediate `false` returns.
+     * from full to has-space after `IVideoDecoderController.decodeBufferWithMetadata()`
+     * returned `false`. If the client continues to call `decodeBufferWithMetadata()`
+     * during back-pressure (receiving `false` repeatedly), only one callback is
+     * delivered per transition, regardless of the number of intermediate `false` returns.
      *
-     * The client SHOULD wait for this callback before retrying `decodeBuffer()` to avoid
-     * wasted binder transactions. Continuing to call `decodeBuffer()` while the queue is
-     * full is permitted but will return `false` repeatedly until space is available.
+     * The client SHOULD wait for this callback before retrying
+     * `decodeBufferWithMetadata()` to avoid wasted binder transactions. Continuing
+     * to call it while the queue is full is permitted but will return `false`
+     * repeatedly until space is available.
      *
      * Not fired in steady-state operation - only after a refused buffer.
      *
-     * @see IVideoDecoderController.decodeBuffer()
+     * @see IVideoDecoderController.decodeBufferWithMetadata()
      */
     void onDecodeBufferAvailable();
 
