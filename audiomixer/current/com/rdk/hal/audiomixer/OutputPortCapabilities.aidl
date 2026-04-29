@@ -28,7 +28,10 @@ import com.rdk.hal.audiomixer.AQParameter;
  * @brief    Capabilities for an audio output port.
  * @details  Enumerates which properties can be set or queried for a given port,
  *           plus codec/format support and AQ processors.
- * @note: This structure is descriptive only. All runtime configuration must be performed using setProperty() / getProperty()
+ * @note     This structure is descriptive only. Property reads use
+ *           IAudioOutputPort.getProperty(); property writes use
+ *           IAudioOutputPortController.setProperty() (controller acquired via
+ *           IAudioOutputPort.open()).
  */
 @VintfStability
 parcelable OutputPortCapabilities {

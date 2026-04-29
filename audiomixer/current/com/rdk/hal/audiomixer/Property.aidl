@@ -96,8 +96,9 @@ enum Property {
      *  - 50  = balanced mix (default)
      *  - 100 = associated audio only (main fully attenuated)
      *
-     * Used by accessibility features such as descriptive video where the
-     * associated audio track narrates the scene over the main programme.
+     * Used by accessibility features such as descriptive audio (audio
+     * description) where the associated audio track narrates the scene
+     * over the main programme.
      *
      * <b>Orthogonal to per-input volume:</b> FADER_LEVEL is a cross-input
      * balance control between the main and associated audio inputs only.
