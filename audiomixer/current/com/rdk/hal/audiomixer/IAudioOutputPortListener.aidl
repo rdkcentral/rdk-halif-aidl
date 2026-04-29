@@ -36,6 +36,33 @@ oneway interface IAudioOutputPortListener {
 
     /**
      * @brief     Called when a dynamic property value changes.
+     * @details   Fires for any property whose value changes after the listener
+     *            was registered. Common change sources:
+     *            <ul>
+     *              <li><b>CONNECTION_STATE</b> — physical hot-plug / hot-unplug
+     *                  events (HDMI cable insert/remove, ARC/eARC negotiation,
+     *                  Bluetooth A2DP connect/disconnect). The HAL fires this
+     *                  callback whenever the underlying connection transitions
+     *                  between any two ConnectionState values
+     *                  (UNKNOWN / DISCONNECTED / CONNECTED / PENDING / FAULT).
+     *                  Clients should not poll CONNECTION_STATE — register a
+     *                  listener instead.</li>
+     *              <li><b>OUTPUT_FORMAT</b> — when the active format changes
+     *                  (e.g. AUTO mode resolves to a different codec after
+     *                  EDID/CEC re-negotiation).</li>
+     *              <li><b>VOLUME / MUTE</b> — when changed by another component
+     *                  (e.g. system audio service adjusting per-port master).</li>
+     *              <li><b>SUPPORTED_AUDIO_FORMATS / DOLBY_ATMOS_SUPPORT</b> —
+     *                  when the connected sink's capability set changes
+     *                  (e.g. different AVR plugged in, eARC handshake completes).</li>
+     *            </ul>
+     *
+     *            On disconnect (CONNECTION_STATE → DISCONNECTED) any in-flight
+     *            audio routed to this port is silently dropped. The port
+     *            remains open from the controller's perspective; the HAL does
+     *            not implicitly close it. Middleware should decide whether to
+     *            re-route to another port, pause playback, or wait for re-plug.
+     *
      * @param[in] property   The OutputPortProperty that changed.
      * @param[in] newValue   The new PropertyValue.
      */

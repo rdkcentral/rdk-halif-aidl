@@ -93,10 +93,12 @@ audiomixer:
   outputPorts:
     - id: 0
       portName: HDMI
+      portType: HDMI
       supportedProperties:
         - VOLUME
         - DELAY_MS
         - OUTPUT_FORMAT
+        - CONNECTION_STATE
       supportedOutputFormats:
         - PCM
         - AC3
@@ -113,6 +115,7 @@ audiomixer:
 
     - id: 1
       portName: SPDIF
+      portType: SPDIF
       supportedProperties:
         - VOLUME
         - OUTPUT_FORMAT

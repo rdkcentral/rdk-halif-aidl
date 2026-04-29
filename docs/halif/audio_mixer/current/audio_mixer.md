@@ -340,6 +340,80 @@ The ducking pattern (use case 2) uses `setInputVolumeRamp()` because that is the
 
 ---
 
+## Output Ports
+
+This section explains how output ports are typed, how middleware should branch on port type, what combinations are allowed simultaneously, and what happens when a connection is lost or restored at runtime.
+
+### Port types
+
+Each output port declares both a human-readable `portName` (for logs / diagnostics) and a programmatic `portType` from the `OutputPortType` enum. **Branch on `portType`, never on `portName`** — names are HFP-declared and may vary across platforms.
+
+| `OutputPortType` | Typical capabilities | Notes |
+|---|---|---|
+| `HDMI` | PCM, AC3, EAC3, MAT, TrueHD passthrough | Hot-plug detected via `CONNECTION_STATE` |
+| `SPDIF` | PCM, AC3, DTS passthrough | No hot-plug detection on most platforms |
+| `OPTICAL` | Same as SPDIF (TOSLINK) | Electrically distinct, same protocol |
+| `SPEAKERS` | PCM only | Always connected; no `CONNECTION_STATE` events |
+| `BLUETOOTH` | A2DP codec subset (SBC mandatory; AAC / aptX / LDAC optional) | Pairing handled outside the audiomixer HAL; `CONNECTION_STATE` reflects the active A2DP link |
+| `ARC` | PCM, AC3 (typical capability subset) | Logically an output despite the cable being HDMI input; format negotiation via CEC |
+| `EARC` | Full HDMI audio set incl. MAT / TrueHD / Atmos | Higher bandwidth than ARC; uses Audio Return Data Channel on TMDS |
+| `COMPOSITE` | PCM only | Bundled with composite video |
+| `INTERNAL` | Vendor-specific | Use `portName` for differentiation |
+
+### Allowed output combinations
+
+Multiple output ports may be active simultaneously, subject to platform constraints. The HAL declares supported combinations indirectly via the per-port HFP entries; the runtime enforces them by rejecting incompatible `setProperty()` calls (returning `false`).
+
+Common constraints across platforms:
+
+* **Only one passthrough source at a time** — a compressed bitstream (AC3, DTS, MAT, etc.) can leave one output port in `OutputFormat.PASSTHROUGH`. A second port simultaneously requesting passthrough on the same source is generally rejected. Other ports must use decoded PCM or transcode.
+* **Transcode is per-port** — each port independently chooses its `TRANSCODE_FORMAT`. SPDIF can transcode to AC3 while HDMI delivers MAT.
+* **Internal speakers are PCM only** — they receive the decoded mix; passthrough does not apply.
+* **ARC / eARC are mutually exclusive** — a port operates as one or the other based on the connected sink's capability negotiation, not both at once.
+
+There is no API to query the full allowed-combination matrix at runtime — applications should attempt the configuration via `setProperty()` and react to a `false` return. The HFP declares per-port capabilities; the cross-port matrix is platform-specific implementation detail.
+
+### Hot-plug and hot-unplug
+
+Each output port carries a `CONNECTION_STATE` property (`UNKNOWN` / `DISCONNECTED` / `CONNECTED` / `PENDING` / `FAULT`). Changes are signalled via `IAudioOutputPortListener.onPropertyChanged(CONNECTION_STATE, newValue)` — clients should register the listener rather than poll.
+
+```mermaid
+sequenceDiagram
+    participant App as Middleware
+    participant Port as IAudioOutputPort
+    participant Listener as IAudioOutputPortListener
+    Note over App,Listener: HDMI port open and active
+
+    App->>Port: registerListener(listener)
+    Note over Port: User unplugs HDMI cable
+    Port-->>Listener: onPropertyChanged(CONNECTION_STATE, DISCONNECTED)
+    Note over App: Decide policy:<br/>• re-route to internal speakers?<br/>• pause playback?<br/>• wait for re-plug?
+
+    Note over Port: User re-plugs HDMI cable
+    Port-->>Listener: onPropertyChanged(CONNECTION_STATE, PENDING)
+    Note over Port: EDID/CEC/HDCP handshake
+    Port-->>Listener: onPropertyChanged(CONNECTION_STATE, CONNECTED)
+    Port-->>Listener: onPropertyChanged(SUPPORTED_AUDIO_FORMATS, [PCM, AC3, EAC3, MAT])
+    Note over App: Capability set may differ<br/>from previous sink
+```
+
+**HAL behaviour on disconnect:**
+
+* In-flight audio routed to the disconnected port is silently dropped.
+* The port remains **open** from the controller's perspective — the HAL does **not** implicitly close it.
+* `setProperty()` calls continue to succeed (state is recorded); they take effect when the port reconnects.
+* Routing decisions are middleware policy, not HAL policy. The HAL does not auto-reroute to another port.
+
+**HAL behaviour on reconnect:**
+
+* `CONNECTION_STATE` transitions through `PENDING` (during EDID / CEC / HDCP / pairing handshake) before `CONNECTED`.
+* `SUPPORTED_AUDIO_FORMATS` and `DOLBY_ATMOS_SUPPORT` may change on reconnect — the new sink could have a different capability set than the previous one. The HAL fires `onPropertyChanged` for any capability that actually changes.
+* The previously configured `OUTPUT_FORMAT` is re-applied. If the new sink does not support it (e.g. previous sink was MAT-capable, new one is not), `OUTPUT_FORMAT` falls back to `AUTO` and the HAL fires `onPropertyChanged(OUTPUT_FORMAT, ...)` with the resolved format.
+
+For ports without hot-plug detection (`SPDIF`, `SPEAKERS`, `COMPOSITE`), the `CONNECTION_STATE` stays at `UNKNOWN` and no events are fired — the port is treated as always connected.
+
+---
+
 ## Modes of Operation
 
 Mixers can operate in secure and non-secure paths. Properties such as `MIXING_MODE`, `ACTIVE_AQ_PROFILE`, `MUTE`, and `DEBUG_TAP_ENABLED` affect runtime behavior and are accessible via the controller’s property interface.

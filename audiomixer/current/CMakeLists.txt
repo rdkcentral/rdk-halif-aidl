@@ -48,6 +48,7 @@ set(SRC
     ${SRC_DIR}/ConnectionState.aidl
     ${SRC_DIR}/Property.aidl
     ${SRC_DIR}/OutputPortProperty.aidl
+    ${SRC_DIR}/OutputPortType.aidl
     ${SRC_DIR}/AQProcessor.aidl
     ${SRC_DIR}/AQParameter.aidl
     ${SRC_DIR}/OutputFormat.aidl
