@@ -58,7 +58,17 @@ interface IAudioOutputPort {
 
     /**
      * @brief    Gets the current lifecycle state of this output port.
-     * @returns  Current State (CLOSED, OPENING, READY, CLOSING).
+     * @details  Output ports use a subset of the shared State enum:
+     *           CLOSED, OPENING, READY, CLOSING. Output ports do NOT enter
+     *           STARTING / STARTED / STOPPING / FLUSHING — those values
+     *           apply to the mixer instance lifecycle. Audio routing and
+     *           emission to the port are driven by the mixer's start/stop;
+     *           the port itself only tracks ownership of write access.
+     *
+     *           The OutputPortProperty.STATE read-only property mirrors this
+     *           value for clients accessing it via getProperty().
+     *
+     * @returns  Current State (CLOSED, OPENING, READY, or CLOSING).
      */
     State getState();
 
@@ -88,10 +98,16 @@ interface IAudioOutputPort {
      *           client holding the controller crashes, the HAL implicitly
      *           calls close().
      *
-     * @param[in] listener  Listener for controller callbacks (state transitions).
-     * @returns   IAudioOutputPortController, or null if the port cannot be opened.
+     *           A second open() call on a port already held by another client
+     *           throws EX_ILLEGAL_STATE — null is returned only for internal
+     *           failures (resource allocation, vendor-specific init errors).
      *
-     * @exception binder::Status EX_ILLEGAL_STATE if the port is not in CLOSED state.
+     * @param[in] listener  Listener for controller callbacks (state transitions).
+     * @returns   IAudioOutputPortController on success; null on internal/init
+     *            failure (port stays in CLOSED state).
+     *
+     * @exception binder::Status EX_ILLEGAL_STATE if the port is not in CLOSED
+     *            state (i.e. another client already holds the controller).
      * @exception binder::Status EX_NULL_POINTER if listener is null.
      *
      * @see close(), IAudioOutputPortController

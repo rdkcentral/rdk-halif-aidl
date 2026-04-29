@@ -51,7 +51,6 @@ import com.rdk.hal.PropertyValue;
  * @author    Peter Stieglitz
  * @author    Douglas Adler
  * @author    Gerald Weatherup
- * @copyright Copyright 2024 RDK Management
  */
 @VintfStability
 interface IAudioMixerController {
@@ -165,11 +164,12 @@ interface IAudioMixerController {
      * @param[in] inputIndex  Mixer input index (0..Capabilities.inputs.length-1).
      * @param[in] volume      Volume level 0..100.
      *
-     * @returns   true on success, false if input index is out of range or
-     *            volume is out of range.
+     * @returns   true on success, false if the input is unsupported on this
+     *            mixer (e.g. input is unrouted / has no source). Out-of-range
+     *            inputIndex or volume values throw EX_ILLEGAL_ARGUMENT.
      *
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if inputIndex or volume
-     *            is invalid.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if inputIndex is outside
+     *            [0, Capabilities.inputs.length-1] or volume is outside [0, 100].
      *
      * @see       getInputVolume(), setInputVolumeRamp()
      */
