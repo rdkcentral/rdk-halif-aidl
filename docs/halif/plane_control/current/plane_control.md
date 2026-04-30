@@ -389,7 +389,7 @@ Where a plane is configured to use a translucent alpha setting (`Property::ALPHA
 
 ## Plane Display Latency
 
-The `vsyncDisplayLatency` in `Capabilities` indicates the delay of video or graphics presentation changes before final output.
+The `vsyncDisplayLatency` in `PlaneCapabilities` indicates the delay of video or graphics presentation changes before final output.
 
 For example, video planes may have latency incurred by vendor specific PQ pipelines or MEMC processing and graphics planes may have latency incurred by vendor specific double buffering or composition.
 
