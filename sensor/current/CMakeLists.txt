@@ -22,13 +22,18 @@
 cmake_minimum_required(VERSION 3.8)
 
 project(Sensor
-	LANGUAGES NONE
-	VERSION 1.0)
+    LANGUAGES NONE
+    VERSION 1.0)
 
 if (NOT COMMAND compile_aidl)
-	message(FATAL_ERROR "Do not invoke module level CMake directly!\nInvoke CMake at root level instead!")
+    message(FATAL_ERROR "Do not invoke module level CMake directly!\nInvoke CMake at root level instead!")
 endif()
 
+# Each sensor type is independent and not present on every platform.
+# Delegate to the per-sensor build, which exposes ENABLE_SENSOR_MOTION /
+# ENABLE_SENSOR_THERMAL options. Platforms that do not ship a sensor type
+# can disable it via -DENABLE_SENSOR_MOTION=OFF or
+# -DENABLE_SENSOR_THERMAL=OFF.
 set(MOTION_SRC_DIR com/rdk/hal/sensor/motion)
 set(THERMAL_SRC_DIR com/rdk/hal/sensor/thermal)
 

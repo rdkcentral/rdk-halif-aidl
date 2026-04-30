@@ -2,7 +2,7 @@
  * If not stated otherwise in this file or this component's LICENSE file the
  * following copyright and licenses apply:
  *
- * Copyright 2025 RDK Management
+ * Copyright 2026 RDK Management
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,18 +18,29 @@
  */
 
 /**
- * @file IMotionSensorEventListener.aidl
- * @brief Client callback interface for motion sensor events.
+ * @file LastEventInfo.aidl
+ * @brief Diagnostic snapshot of the most recent motion sensor event.
+ *
+ * Returned by {@link IMotionSensorController#getLastEventInfo()}.
+ * Allows debug tools to determine what happened last and when, without
+ * replaying the event stream.
  */
 package com.rdk.hal.sensor.motion;
 
 import com.rdk.hal.sensor.motion.OperationalMode;
 
 @VintfStability
-oneway interface IMotionSensorEventListener {
+parcelable LastEventInfo {
     /**
-     * @brief Invoked when the sensor detects an event that matches the active operational mode.
-     * @param mode The active mode whose condition was met (MOTION or NO_MOTION).
+     * @brief The event type (MOTION or NO_MOTION).
      */
-    void onEvent(in OperationalMode mode);
+    OperationalMode mode;
+
+    /**
+     * @brief Monotonic timestamp in nanoseconds when the event occurred.
+     *
+     * Uses the same time base as CLOCK_MONOTONIC / System.nanoTime().
+     * Elapsed time since the event is computed as (System.nanoTime() - timestampNs).
+     */
+    long timestampNs;
 }

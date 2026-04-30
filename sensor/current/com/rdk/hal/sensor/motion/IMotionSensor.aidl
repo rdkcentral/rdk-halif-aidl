@@ -25,35 +25,39 @@
  * or "no-motion" events after an inactivity window. Sensitivity is optional:
  * if unsupported, both minSensitivity and maxSensitivity are 0.
  *
- * @details
  * Lifecycle ownership:
- * The sensor uses a single-owner lifecycle model. start() and stop()
- * operate on the sensor instance directly — there is no per-client
- * controller or exclusive open/close pattern. A single middleware
- * component (e.g., a power management service) should own the sensor
- * lifecycle, while other components register as event listeners only.
+ * The sensor uses a controller pattern. A single middleware component
+ * (e.g., a power management service) calls open() to acquire an exclusive
+ * IMotionSensorController for lifecycle and configuration control. Other
+ * components register as event listeners via registerEventListener() to
+ * observe motion/no-motion events without needing ownership.
+ *
+ * If the client that opened the controller crashes, stop() and close()
+ * are implicitly called by the HAL to release the sensor.
  *
  * Timing controls vs active windows:
- * activeStartSeconds/activeStopSeconds (passed to start()) and active
- * windows (configured via setActiveWindows()) are independent, layered
- * mechanisms:
+ * StartConfig.activeStartSeconds/activeStopSeconds and active windows
+ * (configured via IMotionSensorController.setActiveWindows()) are
+ * independent, layered mechanisms:
  *   - Timing controls govern the sensor hardware lifecycle — whether
  *     the sensor is active at all.
  *   - Active windows govern event suppression — whether detected events
  *     are delivered to listeners.
  *
  * Timing controls take precedence. Callers are responsible for ensuring
- * sensible combinations (e.g., that activeStartSeconds does not exceed
- * the remaining window duration).
+ * sensible combinations.
+ *
+ * @author Gerald Weatherup
  */
 package com.rdk.hal.sensor.motion;
 
 import com.rdk.hal.sensor.motion.State;
 import com.rdk.hal.sensor.motion.Capabilities;
+import com.rdk.hal.sensor.motion.IMotionSensorController;
+import com.rdk.hal.sensor.motion.IMotionSensorControllerListener;
 import com.rdk.hal.sensor.motion.IMotionSensorEventListener;
-import com.rdk.hal.sensor.motion.OperationalMode;
-import com.rdk.hal.sensor.motion.TimeWindow;
 
+@VintfStability
 interface IMotionSensor {
 
     /**
@@ -73,162 +77,93 @@ interface IMotionSensor {
 
     /**
      * @brief Returns immutable capabilities for this sensor.
+     *
+     * Can be called at any time, regardless of sensor state.
+     *
      * @returns Immutable capabilities describing this sensor instance.
      */
     Capabilities getCapabilities();
 
     /**
-     * @brief Start the motion sensor.
-     *
-     * On success, the state transitions STOPPED → STARTING → STARTED.
-     * If initialization fails, the state becomes ERROR.
-     *
-     * @param operationalMode Operational mode (MOTION or NO_MOTION).
-     * @param noMotionSeconds After the sensor becomes active, the contiguous number
-     *        of seconds without motion before a NO_MOTION event is reported. Use 0 for none.
-     * @param activeStartSeconds Delay in seconds before the sensor becomes active after start().
-     *        Use 0 for immediate activation.
-     * @param activeStopSeconds Duration in seconds after which the sensor becomes inactive.
-     *        Use 0 for no automatic stop.
-     *
-     * @pre Sensor must be in STOPPED state.
-     *
-     * @returns Success flag indicating sensor start status.
-     * @retval true Sensor accepted the start request.
-     * @retval false Sensor could not be started due to an internal or hardware initialisation failure.
-     * @exception binder::Status EX_ILLEGAL_STATE if sensor is not STOPPED.
-     */
-    boolean start(in OperationalMode operationalMode,
-                  in int noMotionSeconds,
-                  in int activeStartSeconds,
-                  in int activeStopSeconds);
-
-    /**
-     * @brief Stop the motion sensor.
-     *
-     * On success, the state transitions STARTED → STOPPING → STOPPED.
-     *
-     * @returns Success flag indicating sensor stop status.
-     * @retval true Sensor accepted the stop request.
-     * @retval false Sensor could not be stopped.
-     */
-    boolean stop();
-
-    /**
      * @brief Get the current lifecycle state of the sensor.
+     *
      * @returns Current state (e.g. STARTED, STOPPED, ERROR).
      */
     State getState();
 
     /**
-     * @brief Get the operational mode configured at start().
+     * @brief Open this sensor for exclusive control.
      *
-     * @returns Current mode (MOTION or NO_MOTION).
-     * @exception binder::Status EX_ILLEGAL_STATE if sensor is STOPPED or ERROR.
+     * On success the sensor is ready for configuration and start().
+     * The returned IMotionSensorController provides lifecycle control,
+     * configuration, and diagnostic queries.
+     *
+     * Only one controller may exist at a time. If the owning client
+     * crashes, the HAL implicitly calls stop() and close() to release
+     * the sensor.
+     *
+     * @param listener Listener for controller callbacks (state changes,
+     *                 active window transitions).
+     *
+     * @returns IMotionSensorController, or null if the sensor cannot be opened.
+     *
+     * @exception binder::Status EX_ILLEGAL_STATE if sensor is already open.
+     * @exception binder::Status EX_NULL_POINTER if listener is null.
+     *
+     * @see close(), IMotionSensorController
      */
-    OperationalMode getOperationalMode();
+    @nullable IMotionSensorController open(in IMotionSensorControllerListener listener);
 
     /**
-     * @brief Get the current sensitivity value.
+     * @brief Close this sensor and release the controller.
      *
-     * @returns Current sensitivity level (within minSensitivity..maxSensitivity range).
+     * Accepted from STOPPED or ERROR. From STOPPED this is the normal close
+     * path. From ERROR this is the recovery path: after a start() failure
+     * (which transitions the sensor to ERROR), the client calls close() to
+     * release the controller and the sensor returns to a state where it can
+     * be opened again. On success the controller is invalidated and another
+     * client may `open()` the sensor.
+     *
+     * If the sensor is in STARTED, STARTING, or STOPPING the call fails with
+     * EX_ILLEGAL_STATE — the client must call stop() first (or, from ERROR,
+     * close() directly).
+     *
+     * @param controller The IMotionSensorController instance returned by open().
+     *
+     * @returns Success flag.
+     * @retval true  Successfully closed.
+     * @retval false The supplied controller is not the instance returned by open().
+     *
+     * @exception binder::Status EX_ILLEGAL_STATE if sensor is not in STOPPED or ERROR state.
+     * @exception binder::Status EX_NULL_POINTER if controller is null.
+     *
+     * @see open(), IMotionSensorController.start()
      */
-    int getSensitivity();
+    boolean close(in IMotionSensorController controller);
 
     /**
-     * @brief Set the sensitivity level.
+     * @brief Register an event listener.
      *
-     * @param sensitivity Desired level. Must be within
-     *        {@link Capabilities#minSensitivity}..{@link Capabilities#maxSensitivity}.
+     * Multiple listeners may be registered. Event listeners receive
+     * motion/no-motion detection events via onEvent(). Registration does
+     * not require the sensor to be open.
      *
-     * @returns Success flag indicating whether sensitivity was set.
-     * @retval true Sensitivity was set.
-     * @retval false Sensitivity out of range or unsupported.
-     * @exception binder::Status EX_ILLEGAL_STATE if the sensor is not STOPPED.
-     */
-    boolean setSensitivity(in int sensitivity);
-
-    /**
-     * @brief Enable or disable autonomous motion detection during deep sleep.
-     *
-     * When enabled and supported by the platform, the sensor may wake the system
-     * from deep sleep based on motion activity without full SoC resume.
-     *
-     * Since this wake source could be hardware independent of the CPU, the sensor
-     * enabling has no effect on deep sleep of the CPU. The deep sleep module must
-     * be configured independently to support the CPU wake-up reasons.
-     *
-     * @param enabled True to enable, false to disable.
-     *
-     * @returns Success flag indicating configuration status.
-     * @retval true Mode updated (or already at requested value).
-     * @retval false Operation not supported (see Capabilities.supportsDeepSleepAutonomy).
-     * @exception binder::Status EX_ILLEGAL_STATE if the sensor is not STOPPED.
-     */
-    boolean setAutonomousDuringDeepSleep(in boolean enabled);
-
-    /**
-     * @brief Query whether autonomous deep-sleep mode is enabled.
-     * @returns True if enabled, false otherwise (or unsupported).
-     */
-    boolean isAutonomousDuringDeepSleepEnabled();
-
-    /**
-     * @brief Register an event listener. A listener may only be registered once.
      * @param motionSensorEventListener Listener to receive motion events.
-     * @returns Success flag indicating registration status.
-     * @retval true Listener registered.
+     *
+     * @returns Success flag.
+     * @retval true  Listener registered.
      * @retval false Listener already registered.
      */
     boolean registerEventListener(in IMotionSensorEventListener motionSensorEventListener);
 
     /**
      * @brief Unregister a previously registered listener.
+     *
      * @param motionSensorEventListener Listener to remove.
-     * @returns Success flag indicating unregistration status.
-     * @retval true Listener unregistered.
+     *
+     * @returns Success flag.
+     * @retval true  Listener unregistered.
      * @retval false Listener not found.
      */
     boolean unregisterEventListener(in IMotionSensorEventListener motionSensorEventListener);
-
-    /**
-     * @brief Set daily time windows when the sensor should actively monitor.
-     *
-     * Windows wrapping across midnight are supported (endTime < startTime).
-     * Changes take effect on next start() call. Calling this method replaces
-     * any previously configured windows.
-     *
-     * @param windows Array of time windows. Motion events outside these windows
-     *        are suppressed. Empty array or windows with both values set to 0
-     *        enables 24-hour monitoring. Windows may overlap; the union of all
-     *        windows defines the active periods.
-     *
-     * @returns Success flag indicating configuration status.
-     * @retval true Time windows configured successfully.
-     * @retval false Invalid window ranges or sensor state prevents configuration.
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if any window has invalid
-     *            time values (outside 0-86399 range).
-     * @exception binder::Status EX_ILLEGAL_STATE if sensor is not STOPPED.
-     */
-    boolean setActiveWindows(in TimeWindow[] windows);
-
-    /**
-     * @brief Get the currently configured active time windows.
-     *
-     * @returns Array of active windows. Empty if 24-hour monitoring is configured
-     *         or no windows have been set.
-     */
-    TimeWindow[] getActiveWindows();
-
-    /**
-     * @brief Clear all active time windows, enabling 24-hour monitoring.
-     *
-     * Equivalent to calling setActiveWindows() with an empty array.
-     *
-     * @returns Success flag indicating clear operation status.
-     * @retval true Windows cleared successfully.
-     * @retval false Unable to clear (e.g., sensor not in valid state).
-     * @exception binder::Status EX_ILLEGAL_STATE if sensor is not STOPPED.
-     */
-    boolean clearActiveWindows();
 }

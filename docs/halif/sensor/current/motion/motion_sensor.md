@@ -11,7 +11,7 @@ A clear lifecycle state machine ensures dependable operation and predictable eve
 !!! info "References"
     |||
     |-|-|
-    |**Interface Definition**|[motion/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/motion/current)|
+    |**Interface Definition**|[`sensor/current/com/rdk/hal/sensor/motion`](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/sensor/current/com/rdk/hal/sensor/motion)|
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
     |**Initialization**| [systemd](../../../vsi/systemd/current/systemd.md) – **hal-sensor-motion.service** |
 
@@ -26,7 +26,7 @@ The Motion HAL enables RDK Middleware to configure and receive **event-driven mo
 
 ### Sensor Types
 
-The HAL supports various motion/presence detection technologies as examples:
+The HAL supports various motion/presence detection technologies:
 
 - **PIR (Passive Infrared)**: Detects heat signatures and movement
 - **Microwave/Radar**: Active sensors measuring reflected waves
@@ -36,8 +36,6 @@ Each sensor type has different characteristics (range, field-of-view, sensitivit
 
 ### Use Cases
 
-Typical uses:
-
 - **Wake on Motion**: Resume from standby when user approaches device
 - **Power Savings**: Enter low-power mode after period of no activity
 - **Presence Detection**: Adapt UI/behaviour based on user presence
@@ -46,11 +44,12 @@ Typical uses:
 
 ### Key Features
 
+- **Controller pattern**: Exclusive ownership via `open()`/`close()` with binder death cleanup
 - **Event-driven architecture**: Async callbacks eliminate polling overhead
-- **Configurable timing**: Control activation delays, inactivity windows, and scheduled active periods
+- **Configurable timing**: Control activation delays, inactivity windows, and scheduled active periods via `StartConfig`
 - **Optional deep-sleep autonomy**: Sensor can operate and wake system from low-power states
 - **Per-sensor capabilities**: Static properties describe hardware limits and features
-- **Lifecycle state machine**: Predictable state transitions for reliable operation
+- **Diagnostics**: `getStartConfig()` and `getLastEventInfo()` for runtime inspection
 
 ---
 
@@ -59,15 +58,17 @@ Typical uses:
 | # | Requirement | Comments |
 |---|--------------|----------|
 | **HAL.MOTION.1** | Shall expose per-sensor capabilities via `getCapabilities()`; values remain immutable during runtime. | |
-| **HAL.MOTION.2** | Shall provide start/stop APIs to control detection. | |
-| **HAL.MOTION.3** | Shall support querying current state via `getState()` and operational mode via `getOperationalMode()`. | |
-| **HAL.MOTION.4** | Shall deliver events via `IMotionSensorEventListener.onEvent(mode)` according to configured operational mode and timing parameters. | |
+| **HAL.MOTION.2** | Shall provide start/stop APIs on `IMotionSensorController` to control detection. | |
+| **HAL.MOTION.3** | Shall support querying current state via `IMotionSensor.getState()` and current config via `IMotionSensorController.getStartConfig()`. | |
+| **HAL.MOTION.4** | Shall deliver motion/no-motion events via `IMotionSensorEventListener.onEvent(mode)` according to the `StartConfig`. | |
 | **HAL.MOTION.5** | If sensitivity is supported (`minSensitivity`/`maxSensitivity` > 0), `setSensitivity()` shall enforce range and require `State==STOPPED`. | Returns `false` for out-of-range; throws `EX_ILLEGAL_STATE` if not stopped. |
-| **HAL.MOTION.6** | Listener registration shall be idempotent; duplicate registrations return `false`, as do unregisters of unknown listeners. | |
+| **HAL.MOTION.6** | Event listener registration shall be idempotent; duplicate registrations return `false`, as do unregisters of unknown listeners. | |
 | **HAL.MOTION.7** | If deep-sleep autonomy is supported, `setAutonomousDuringDeepSleep()` shall require `State==STOPPED`; when unsupported it shall return `false`. | |
-| **HAL.MOTION.8** | Active time windows shall only suppress events outside configured periods; motion detection continues but notifications are deferred or cancelled. | See `setActiveWindows()` for scheduling. |
+| **HAL.MOTION.8** | Active time windows shall only suppress events outside configured periods; motion detection continues but notifications are deferred or cancelled. | See `IMotionSensorController.setActiveWindows()`. |
 | **HAL.MOTION.9** | When active windows are configured, events shall only fire during the union of all configured windows. Empty array or windows with both times = 0 enables 24-hour monitoring. | |
-| **HAL.MOTION.10** | Shall register the service under the name `"MotionSensorManager"` and become operational at startup. | |
+| **HAL.MOTION.10** | Shall register the service under the name `"sensor.motion"` and become operational at startup. | Matches `IMotionSensorManager.serviceName`. |
+| **HAL.MOTION.11** | `IMotionSensorControllerListener.onStateChanged()` shall fire for every lifecycle state transition. | Matches the pattern used by all other HAL modules. |
+| **HAL.MOTION.12** | If the controller-owning client crashes, the HAL shall implicitly call `stop()` and `close()` to release the sensor. | Binder death cleanup. |
 
 ---
 
@@ -75,13 +76,17 @@ Typical uses:
 
 | Interface Definition File | Description |
 |----------------------------|-------------|
-| `com/rdk/hal/sensor/motion/IMotionSensorManager.aidl` | Manager interface to enumerate and acquire motion sensors. |
-| `com/rdk/hal/sensor/motion/IMotionSensor.aidl` | Interface representing one motion sensor instance. |
-| `com/rdk/hal/sensor/motion/IMotionSensorEventListener.aidl` | One-way callback delivering motion or no-motion events. |
-| `com/rdk/hal/sensor/motion/Capabilities.aidl` | Immutable capabilities (`sensorName`, sensitivity range, autonomy support). |
-| `com/rdk/hal/sensor/motion/OperationalMode.aidl` | Mode enum: `MOTION`, `NO_MOTION`. |
-| `com/rdk/hal/sensor/motion/State.aidl` | Lifecycle states: `STOPPED`, `STARTING`, `STARTED`, `STOPPING`, `ERROR`. |
-| `com/rdk/hal/sensor/motion/TimeWindow.aidl` | Daily time window for active period scheduling. |
+| `IMotionSensorManager.aidl` | Manager interface to enumerate and acquire motion sensors. |
+| `IMotionSensor.aidl` | Per-sensor interface: capabilities, state, open/close, event listener registration. |
+| `IMotionSensorController.aidl` | Exclusive controller: start/stop, config, sensitivity, deep sleep, active windows, diagnostics. |
+| `IMotionSensorControllerListener.aidl` | Controller callbacks: `onStateChanged`, `onActiveWindowEntered`, `onActiveWindowExited`. |
+| `IMotionSensorEventListener.aidl` | Multi-observer callback: `onEvent(mode)` for motion/no-motion detection. |
+| `Capabilities.aidl` | Immutable capabilities (`sensorName`, sensitivity range, autonomy support). |
+| `StartConfig.aidl` | Parcelable: operational mode + timing parameters for `start()`. |
+| `LastEventInfo.aidl` | Diagnostic parcelable: last event mode + timestamp. |
+| `OperationalMode.aidl` | Mode enum: `MOTION`, `NO_MOTION`. |
+| `State.aidl` | Lifecycle states: `STOPPED`, `STARTING`, `STARTED`, `STOPPING`, `ERROR`. |
+| `TimeWindow.aidl` | Daily time window for active period scheduling. |
 
 ---
 
@@ -97,25 +102,29 @@ Dependencies on drivers or low-level services must be expressed using systemd `R
 ## System Context
 
 ```mermaid
-graph RL
-    subgraph Hardware
-        A1[PIR / Radar Sensor] --> B1[Vendor Driver]
-    end
-    B1 --> C1[Motion Sensor HAL Layer]
-    subgraph Software
-        C1 --> D1[RDK Middleware / Motion]
-        D1 --> E1[Applications]
-        D1 --> F1[Telemetry Pipeline]
-    end
-    classDef background fill:#121212,stroke:none,color:#E0E0E0;
+flowchart TD
+    Client[RDK Middleware]
+    Manager[IMotionSensorManager]
+    Sensor[IMotionSensor]
+    Controller[IMotionSensorController]
+    CtrlListener[IMotionSensorControllerListener]
+    EventListener[IMotionSensorEventListener]
+    Hardware[PIR / Radar Sensor]
+
+    Client --> Manager
+    Manager --> Sensor
+    Sensor -->|open| Controller
+    Controller -->|state + window events| CtrlListener
+    Sensor -->|motion events| EventListener
+    Sensor --> Hardware
+
     classDef blue fill:#1565C0,stroke:#E0E0E0,stroke-width:2px,color:#E0E0E0;
     classDef wheat fill:#FFB74D,stroke:#424242,stroke-width:2px,color:#000000;
     classDef green fill:#4CAF50,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
 
-    D1:::blue
-    C1:::wheat
-    A1:::green
-    B1:::wheat
+    class Client blue;
+    class Manager,Sensor,Controller,CtrlListener,EventListener wheat;
+    class Hardware green;
 ```
 
 ---
@@ -136,6 +145,21 @@ STOPPED → STARTING → STARTED → STOPPING → STOPPED
 | **STOPPING** | Disarming detection.                                |
 | **ERROR**    | Failure occurred; requires recovery or re-init.     |
 
+`IMotionSensorControllerListener.onStateChanged(oldState, newState)` fires for every transition.
+
+---
+
+## Controller Pattern
+
+The motion sensor uses an exclusive controller pattern:
+
+1. **`IMotionSensor.open(controllerListener)`** — acquires exclusive `IMotionSensorController`
+2. Controller provides: `start()`, `stop()`, `getStartConfig()`, `getLastEventInfo()`, sensitivity, deep sleep autonomy, active windows
+3. **`IMotionSensor.close(controller)`** — releases the controller
+4. If the owning client crashes, the HAL implicitly calls `stop()` + `close()`
+
+Event listeners (`IMotionSensorEventListener`) are registered separately on `IMotionSensor` and do not require ownership — any client can observe motion events.
+
 ---
 
 ## Capabilities Structure
@@ -149,35 +173,51 @@ parcelable Capabilities {
 }
 ```
 
-### Rules
-
 - Capabilities are immutable for the process lifetime.
 - Sensitivity is unsupported when **both** min/max are `0`.
 
 ---
 
-## Operational Modes & Timing
+## StartConfig and Operational Modes
 
-`IMotionSensor.start(mode, noMotionSeconds, activeStartSeconds, activeStopSeconds)`
+`IMotionSensorController.start(StartConfig config)`:
 
-- **mode**:
+```aidl
+parcelable StartConfig {
+    OperationalMode operationalMode;
+    int noMotionSeconds;
+    int activeStartSeconds;
+    int activeStopSeconds;
+}
+```
+
+- **operationalMode**:
   - `MOTION`: fire event when motion is detected after activation window.
   - `NO_MOTION`: fire event after **contiguous** `noMotionSeconds` of inactivity.
 - **noMotionSeconds**: inactivity window (only for `NO_MOTION`); `0` disables it.
 - **activeStartSeconds**: delay after `start()` before the sensor becomes active (`0` = immediate).
 - **activeStopSeconds**: automatic stop after duration (`0` = continuous until `stop()`).
 
+The current config is retrievable via `IMotionSensorController.getStartConfig()`.
+
+---
+
+## Diagnostics
+
+```aidl
+parcelable LastEventInfo {
+    OperationalMode mode;
+    long timestampNs;
+}
+```
+
+`IMotionSensorController.getLastEventInfo()` returns the mode and timestamp of the most recent event, or null if no event has occurred since `start()`. Elapsed time since the event is `System.nanoTime() - timestampNs`.
+
 ---
 
 ## Active Time Windows
 
-The `setActiveWindows()` API allows scheduling when the sensor should actively report events. This is useful for:
-
-- Energy management (only monitor during expected occupancy hours)
-- Privacy controls (disable detection during specific times)
-- Multi-period monitoring (e.g., business hours + evening hours)
-
-### Time Window Structure
+`IMotionSensorController.setActiveWindows()` schedules when the sensor should actively report events:
 
 ```aidl
 parcelable TimeWindow {
@@ -186,26 +226,35 @@ parcelable TimeWindow {
 }
 ```
 
-### Behaviour
-
 - **Multiple Windows**: Array of `TimeWindow` objects; events fire during ANY configured window (union semantics)
 - **Midnight Wrapping**: Windows can span midnight when `endTime < startTime` (e.g., 22:00-02:00)
 - **24-Hour Monitoring**: Empty array or single window with both values = 0
 - **Configuration Timing**: Must be set in `STOPPED` state; takes effect on next `start()`
 - **Event Suppression**: Outside active windows, the sensor may continue detecting but **SHALL NOT** deliver events
-
-### Daylight Saving Time (DST) Considerations
+- **Window Callbacks**: `IMotionSensorControllerListener.onActiveWindowEntered()` / `onActiveWindowExited()` fire on transitions (only when windows are configured)
 
 !!! warning "DST Shifts"
     On days when DST shifts occur (23-hour or 25-hour days), applications should reprogram active windows to ensure reliable operation. If windows are updated daily, this occurs automatically.
 
 ---
 
-## Performance & Behaviour
+## Controller Listener (IMotionSensorControllerListener)
 
-- Event latency should be **≤ 500 ms** from physical motion to callback under typical conditions (non-normative but recommended).
-- Timing windows (`noMotionSeconds`, `activeStartSeconds`, `activeStopSeconds`) must be honoured precisely.
-- When deep-sleep autonomy is enabled and supported, the sensor should continue operating per vendor constraints during low-power states.
+Delivered exclusively to the controller owner (passed into `open()`).
+
+| Event | Description | When fired |
+|-------|-------------|------------|
+| `onStateChanged(old, new)` | Lifecycle state transition | Every start/stop/error transition |
+| `onActiveWindowEntered()` | Sensor entered active monitoring window | Only when windows configured |
+| `onActiveWindowExited()` | Sensor exited active monitoring window | Only when windows configured |
+
+## Event Listener (IMotionSensorEventListener)
+
+Available to any registered observer.
+
+| Event | Description |
+|-------|-------------|
+| `onEvent(mode)` | Motion or no-motion condition detected |
 
 ---
 
@@ -216,19 +265,30 @@ parcelable TimeWindow {
 ```mermaid
 sequenceDiagram
     participant MW as Middleware
-    participant HAL as Motion HAL
-    participant Sensor as Motion Sensor
+    participant Sensor as IMotionSensor
+    participant Ctrl as IMotionSensorController
+    participant CtrlL as IMotionSensorControllerListener
+    participant EvtL as IMotionSensorEventListener
+    participant HW as Motion Sensor
 
-    MW->>HAL: getMotionSensorIds()
-    HAL-->>MW: [id0]
-    MW->>HAL: getMotionSensor(id0)
-    HAL-->>MW: IMotionSensor
-    MW->>HAL: registerEventListener(l)
-    MW->>HAL: start(MOTION, 0, 0, 0)
-    HAL->>Sensor: Arm detection
-    Sensor-->>HAL: Motion detected
-    HAL-->>MW: onEvent(MOTION)
-    MW->>HAL: stop()
+    MW->>Sensor: registerEventListener(evtListener)
+    MW->>Sensor: open(ctrlListener)
+    Sensor-->>MW: IMotionSensorController
+    Note over Ctrl: sensor remains in STOPPED state
+
+    MW->>Ctrl: start({MOTION, 0, 0, 0})
+    CtrlL-->>MW: onStateChanged(STOPPED, STARTING)
+    Ctrl->>HW: Arm detection
+    CtrlL-->>MW: onStateChanged(STARTING, STARTED)
+
+    HW-->>Ctrl: Motion detected
+    EvtL-->>MW: onEvent(MOTION)
+
+    MW->>Ctrl: stop()
+    CtrlL-->>MW: onStateChanged(STARTED, STOPPING)
+    CtrlL-->>MW: onStateChanged(STOPPING, STOPPED)
+
+    MW->>Sensor: close(controller)
 ```
 
 ### No-Motion Window (NO_MOTION mode)
@@ -236,156 +296,71 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant MW as Middleware
-    participant HAL as Motion HAL
-    participant Sensor as Motion Sensor
+    participant Ctrl as IMotionSensorController
+    participant CtrlL as IMotionSensorControllerListener
+    participant EvtL as IMotionSensorEventListener
+    participant HW as Motion Sensor
 
-    MW->>HAL: start(NO_MOTION, 5, 0, 0)
-    HAL->>Sensor: Arm detection with 5s inactivity window
-    Sensor-->>HAL: No motion for 5s
-    HAL-->>MW: onEvent(NO_MOTION)
+    MW->>Ctrl: start({NO_MOTION, 5, 0, 0})
+    CtrlL-->>MW: onStateChanged(STOPPED, STARTING)
+    CtrlL-->>MW: onStateChanged(STARTING, STARTED)
+    Ctrl->>HW: Arm detection with 5s inactivity window
+    HW-->>Ctrl: No motion for 5s
+    EvtL-->>MW: onEvent(NO_MOTION)
 ```
 
 ---
 
-## Timing Scenarios
+## Performance & Behaviour
 
-### Scenario 1: Motion Detection After Active Start Time
-
-User goes to standby at 06:30, configuring:
-
-- Active window start: 08:00
-- No-motion period: 30 minutes
-- Mode: NO_MOTION
-
-The sensor waits 30 minutes before the active window, then arms for motion detection once the no-motion period expires.
-
-```mermaid
-gantt
-    title Motion Detection After Active Period Start
-    dateFormat HH:mm
-    axisFormat %H:%M
-    
-    section Host State
-    Active (TV in use)          :active, 06:00, 30m
-    Standby (User pressed standby) :crit, 06:30, 3h30m
-    Active (Motion woke TV)     :active, 10:00, 1h
-    
-    section Motion Sensor State
-    Unarmed                     :done, 06:00, 30m
-    Armed-Waiting (Config set)  :active, 06:30, 1h
-    Armed-DetectNoMotion        :crit, 07:30, 30m
-    Armed-DetectMotion          :milestone, 08:00, 2h
-    Event: Motion Detected      :milestone, 10:00, 0m
-    Unarmed                     :done, 10:00, 1h
-```
-
-**Timeline:**
-
-| Time | Event | Motion Sensor State |
-|------|-------|---------------------|
-| 06:00 | TV active, in use | `STOPPED` (Unarmed) |
-| 06:30 | User presses standby; `start(NO_MOTION, 1800, 5400, 0)` called | `STARTING` → `STARTED` (Armed-Waiting) |
-| 07:30 | 30 minutes before active window, no-motion countdown begins | `STARTED` (Armed-DetectNoMotion) |
-| 08:00 | Active window starts; no-motion period expires | `STARTED` (Armed-DetectMotion) |
-| 10:00 | Motion event occurs | Event fired, transitions to `STOPPED` |
-
----
-
-### Scenario 2: Motion Detection Before and After Active Start
-
-User goes to standby at 06:30 with same configuration, but motion is detected before and during the active window start, extending the no-motion period.
-
-```mermaid
-gantt
-    title Motion Detection Before/After Active Period (Extended No-Motion)
-    dateFormat HH:mm
-    axisFormat %H:%M
-    
-    section Host State
-    Active (TV in use)          :active, 06:00, 30m
-    Standby                     :crit, 06:30, 4h
-    Active (Motion woke TV)     :active, 10:30, 30m
-    
-    section Motion Sensor State
-    Unarmed                     :done, 06:00, 30m
-    Armed-Waiting               :active, 06:30, 1h
-    Armed-DetectNoMotion (1)    :crit, 07:30, 15m
-    Motion Detected (reset)     :milestone, 07:45, 0m
-    Armed-DetectNoMotion (2)    :crit, 07:45, 45m
-    Motion Detected (reset)     :milestone, 08:30, 0m
-    Armed-DetectNoMotion (3)    :crit, 08:30, 30m
-    Armed-DetectMotion          :milestone, 09:00, 1h30m
-    Event: Motion Detected      :milestone, 10:30, 0m
-    Unarmed                     :done, 10:30, 30m
-```
-
-**Timeline:**
-
-| Time | Event | Motion Sensor State |
-|------|-------|---------------------|
-| 06:00 | TV active, in use | `STOPPED` (Unarmed) |
-| 06:30 | User presses standby; sensor armed | `STARTING` → `STARTED` (Armed-Waiting) |
-| 07:30 | No-motion countdown begins (30 min before window) | `STARTED` (Armed-DetectNoMotion) |
-| 07:45 | **Motion detected** → no-motion timer resets | `STARTED` (Armed-DetectNoMotion, timer reset) |
-| 08:00 | Active window starts, but no-motion period still running | `STARTED` (Armed-DetectNoMotion) |
-| 08:30 | **Motion stops** → no-motion timer resets again | `STARTED` (Armed-DetectNoMotion, timer reset) |
-| 09:00 | No-motion period (30 min) expires | `STARTED` (Armed-DetectMotion) |
-| 10:30 | Motion event occurs | Event fired, transitions to `STOPPED` |
-
-**Key Insight:** The active window defines WHEN events can fire, but the no-motion period must still be satisfied. Motion during the no-motion countdown resets the timer, even if it spans across the active window start time.
+- Event latency should be **≤ 500 ms** from physical motion to callback under typical conditions (non-normative but recommended).
+- Timing parameters in `StartConfig` must be honoured precisely.
+- When deep-sleep autonomy is enabled and supported, the sensor should continue operating per vendor constraints during low-power states.
 
 ---
 
 ## Hardware Configuration Example
 
-The HAL Feature Profile (HFP) defines platform-specific capabilities. Fields marked with `Capabilities.*` comments
-correspond to immutable values returned by `getCapabilities()`.
+The HAL Feature Profile (HFP) defines platform-specific capabilities and defaults:
 
 ```yaml
 sensor:
   motion:
-    # ========================================================================
-    # CAPABILITIES (Immutable - returned by getCapabilities())
-    # ========================================================================
-    - id: 0                                   # IMotionSensor.Id.value
-      sensorName: "PIR-Front-1"               # Capabilities.sensorName
+    - id: 0
+      sensorName: "PIR-Front-1"
       sensitivity_range:
-        minSensitivity: 1                     # Capabilities.minSensitivity
-        maxSensitivity: 10                    # Capabilities.maxSensitivity
-      supportsDeepSleepAutonomy: true         # Capabilities.supportsDeepSleepAutonomy
-      
-      # ========================================================================
-      # OPERATIONAL CONFIGURATION (Platform-specific defaults and constraints)
-      # ========================================================================
+        minSensitivity: 1
+        maxSensitivity: 10
+      supportsDeepSleepAutonomy: true
+
       operational_modes:
         - MOTION
         - NO_MOTION
-      default_mode: MOTION
-      timing:
-        no_motion_seconds: 5     # Default inactivity window before NO_MOTION event
-        active_start_seconds: 0  # Activation delay after start()
-        active_stop_seconds: 0   # Continuous monitoring until stop()
+
+      # Factory default StartConfig values (maps to StartConfig.aidl fields)
+      defaultStartConfig:
+        operationalMode: MOTION
+        noMotionSeconds: 5
+        activeStartSeconds: 0
+        activeStopSeconds: 0
+
       active_windows:
-        # Example: Monitor during business hours (9am-5pm) and evening (8pm-10pm)
-        - startTimeOfDaySeconds: 32400  # 09:00:00 (9 * 3600)
-          endTimeOfDaySeconds: 61200    # 17:00:00 (17 * 3600)
-        - startTimeOfDaySeconds: 72000  # 20:00:00 (20 * 3600)
-          endTimeOfDaySeconds: 79200    # 22:00:00 (22 * 3600)
-        # Leave empty or set both values to 0 for 24-hour monitoring
+        - startTimeOfDaySeconds: 32400  # 09:00
+          endTimeOfDaySeconds: 61200    # 17:00
+        - startTimeOfDaySeconds: 72000  # 20:00
+          endTimeOfDaySeconds: 79200    # 22:00
+
       requirements:
-        min_reaction_time_ms: 500  # Minimum reaction time to motion events
+        min_reaction_time_ms: 500
       notes:
         - "Front-facing PIR motion detector."
         - "Supports autonomous operation during deep sleep."
-        - "Active windows can be configured via setActiveWindows()."
 ```
-
-**Capabilities vs. Configuration:**
 
 | Section | Purpose | Mutability |
 |---------|---------|------------|
-| `id`, `sensorName`, `sensitivity_range`, `supportsDeepSleepAutonomy` | Hardware capabilities exposed via `getCapabilities()` | **Immutable** at runtime |
-| `operational_modes`, `default_mode`, `timing`, `active_windows` | Platform defaults and operational constraints | Configuration values for testing/validation |
+| `id`, `sensorName`, `sensitivity_range`, `supportsDeepSleepAutonomy` | Hardware capabilities via `getCapabilities()` | **Immutable** at runtime |
+| `operational_modes`, `defaultStartConfig`, `active_windows` | Platform defaults for testing/validation | Configuration values |
 
 ---
 
@@ -394,8 +369,13 @@ sensor:
 | Test                   | Expected Behaviour                                                           |
 | ---------------------- | ---------------------------------------------------------------------------- |
 | Capabilities Stability | Values constant across calls.                                                |
-| Start/Stop Sequence    | State transitions follow the model; timing windows honoured.                 |
+| Open/Close Lifecycle   | `open()` returns controller; `close()` releases it; double-open fails.       |
+| Start/Stop Sequence    | State transitions follow the model; `onStateChanged()` fires for each.       |
+| StartConfig Retrieval  | `getStartConfig()` matches the config passed to `start()`.                   |
+| LastEventInfo          | Returns null before first event; populated after `onEvent()` fires.          |
 | Sensitivity Control    | Enforced only in `STOPPED`; range-checked or returns `false` if unsupported. |
 | Listener Semantics     | Idempotent register/unregister; single delivery per event condition.         |
 | NO_MOTION Window       | Event fires only after contiguous inactivity equals `noMotionSeconds`.       |
 | Deep-Sleep Autonomy    | `setAutonomousDuringDeepSleep()` behaviour matches capability flag.          |
+| Active Window Callbacks | `onActiveWindowEntered`/`onActiveWindowExited` fire at window boundaries.   |
+| Crash Cleanup          | Controller owner crash triggers implicit `stop()` + `close()`.              |
