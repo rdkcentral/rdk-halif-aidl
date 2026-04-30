@@ -21,6 +21,7 @@ import com.rdk.hal.audiosink.Volume;
 import com.rdk.hal.audiosink.VolumeRamp;
 import com.rdk.hal.audiodecoder.IAudioDecoder;
 import com.rdk.hal.audiodecoder.FrameMetadata;
+import com.rdk.hal.avclock.IAVClock;
 
 /**
  *  @brief     Audio Sink Controller HAL interface.
@@ -71,6 +72,79 @@ interface IAudioSinkController {
      * @see setAudioDecoder()
 	 */
     IAudioDecoder.Id getAudioDecoder();
+
+    /**
+     * Attaches an AVClock to this audio sink for AV synchronisation.
+     *
+     * When an AVClock is attached, the sink consumes queued frames at the rate
+     * dictated by the clock. When no clock is attached the sink operates in
+     * <b>freerun</b> mode — see the IAudioSinkController interface header for
+     * the no-clock behaviour contract.
+     *
+     * The same AVClock may be attached to multiple sinks (typically one audio
+     * sink and one video sink for AV-synchronised playback). The sink owns its
+     * clock relationship; the AVClock does not need to be made aware.
+     *
+     * If a different clock is already attached, this call replaces the
+     * attachment. Calling with `IAVClock.Id.UNDEFINED` is equivalent to
+     * `detachClock()`.
+     *
+     * Can be called in `READY` or `STARTED` state. Attaching a clock during
+     * `STARTED` causes the sink to begin clock-paced consumption from the next
+     * frame; detaching transitions to freerun without stopping playback.
+     *
+     * @param[in] clockId   The ID of the AVClock to attach, or
+     *                      `IAVClock.Id.UNDEFINED` to detach.
+     *
+     * @returns boolean
+     * @retval true     The clock was attached (or detached when UNDEFINED).
+     * @retval false    The clock ID is invalid or the AVClock is not in a
+     *                  state that permits attachment.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
+     * @pre The resource must be in State::READY or State::STARTED.
+     *
+     * @see detachClock(), getClock(), IAVClockManager.getAVClockIds()
+     */
+    boolean attachClock(in IAVClock.Id clockId);
+
+    /**
+     * Detaches the currently attached AVClock from this audio sink.
+     *
+     * After this call, the sink operates in <b>freerun</b> mode — frames are
+     * consumed without AV synchronisation. Equivalent to calling
+     * `attachClock(IAVClock.Id.UNDEFINED)`.
+     *
+     * Idempotent: calling when no clock is attached is a no-op.
+     *
+     * Does not stop playback — the sink continues to consume queued frames at
+     * its native rate.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
+     * @pre The resource must be in State::READY or State::STARTED.
+     *
+     * @see attachClock(), getClock()
+     */
+    void detachClock();
+
+    /**
+     * Gets the AVClock ID currently attached to this audio sink.
+     *
+     * @returns IAVClock.Id, which is `IAVClock.Id.UNDEFINED` when no clock is
+     *          attached (sink is in freerun mode).
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
+     * @pre The resource must be in State::READY or State::STARTED.
+     *
+     * @see attachClock(), detachClock()
+     */
+    IAVClock.Id getClock();
 
     /**
 	 * Starts the audio sink.

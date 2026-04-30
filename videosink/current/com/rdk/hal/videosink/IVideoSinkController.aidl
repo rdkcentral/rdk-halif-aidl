@@ -21,6 +21,7 @@ import com.rdk.hal.videodecoder.IVideoDecoder;
 import com.rdk.hal.videodecoder.FrameMetadata;
 import com.rdk.hal.videosink.Property;
 import com.rdk.hal.PropertyValue;
+import com.rdk.hal.avclock.IAVClock;
 
 /**
  *  @brief     Video Sink Controller HAL interface.
@@ -92,6 +93,80 @@ interface IVideoSinkController
      * @see setVideoDecoder()
      */
     IVideoDecoder.Id getVideoDecoder();
+
+    /**
+     * Attaches an AVClock to this video sink for AV synchronisation.
+     *
+     * When an AVClock is attached, the sink presents queued frames at the
+     * presentation times dictated by the clock. When no clock is attached the
+     * sink operates in <b>freerun</b> mode — frames are presented in queue
+     * order at the native vsync cadence without AV synchronisation.
+     *
+     * The same AVClock may be attached to multiple sinks (typically one audio
+     * sink and one video sink for AV-synchronised playback). The sink owns its
+     * clock relationship; the AVClock does not need to be made aware.
+     *
+     * If a different clock is already attached, this call replaces the
+     * attachment. Calling with `IAVClock.Id.UNDEFINED` is equivalent to
+     * `detachClock()`.
+     *
+     * Can be called in `READY` or `STARTED` state. Attaching a clock during
+     * `STARTED` causes the sink to begin clock-paced presentation from the
+     * next frame; detaching transitions to freerun without stopping playback.
+     *
+     * @param[in] clockId   The ID of the AVClock to attach, or
+     *                      `IAVClock.Id.UNDEFINED` to detach.
+     *
+     * @returns boolean
+     * @retval true     The clock was attached (or detached when UNDEFINED).
+     * @retval false    The clock ID is invalid or the AVClock is not in a
+     *                  state that permits attachment.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
+     * @pre The resource must be in State::READY or State::STARTED.
+     *
+     * @see detachClock(), getClock(), IAVClockManager.getAVClockIds()
+     */
+    boolean attachClock(in IAVClock.Id clockId);
+
+    /**
+     * Detaches the currently attached AVClock from this video sink.
+     *
+     * After this call, the sink operates in <b>freerun</b> mode — frames are
+     * presented in queue order at the native vsync cadence without AV
+     * synchronisation. Equivalent to calling
+     * `attachClock(IAVClock.Id.UNDEFINED)`.
+     *
+     * Idempotent: calling when no clock is attached is a no-op.
+     *
+     * Does not stop playback — the sink continues to present queued frames at
+     * its native rate.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
+     * @pre The resource must be in State::READY or State::STARTED.
+     *
+     * @see attachClock(), getClock()
+     */
+    void detachClock();
+
+    /**
+     * Gets the AVClock ID currently attached to this video sink.
+     *
+     * @returns IAVClock.Id, which is `IAVClock.Id.UNDEFINED` when no clock is
+     *          attached (sink is in freerun mode).
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
+     * @pre The resource must be in State::READY or State::STARTED.
+     *
+     * @see attachClock(), detachClock()
+     */
+    IAVClock.Id getClock();
 
     /**
 	 * Starts the Video Sink.

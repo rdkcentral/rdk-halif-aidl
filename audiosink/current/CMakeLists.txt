@@ -31,11 +31,13 @@ endif()
 
 # version of other modules that `audiosink` depends on
 set(AUDIO_DECODER_VERSION "current")
+set(AVCLOCK_VERSION "current")
 set(COMMON_VERSION "current")
 
 set(SRC_DIR com/rdk/hal/audiosink)
 set(COMMON_SRC_DIR ${COMMON_MODULE_PATH}/${COMMON_VERSION}/com/rdk/hal)
 set(AUDIO_DECODER_SRC_DIR ${AUDIO_DECODER_MODULE_PATH}/${AUDIO_DECODER_VERSION}/com/rdk/hal/audiodecoder)
+set(AVCLOCK_SRC_DIR ${AVCLOCK_MODULE_PATH}/${AVCLOCK_VERSION}/com/rdk/hal/avclock)
 
 set(SRC
 	${SRC_DIR}/Capabilities.aidl
@@ -59,6 +61,7 @@ set(INCLUDE_DIRECTORY
 	.
 	${COMMON_MODULE_PATH}/${COMMON_VERSION}
 	${AUDIO_DECODER_MODULE_PATH}/${AUDIO_DECODER_VERSION}
+	${AVCLOCK_MODULE_PATH}/${AVCLOCK_VERSION}
 )
 
 set(COMPILE_AIDL_ARGV "")
