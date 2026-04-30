@@ -274,7 +274,7 @@ sequenceDiagram
     MW->>Sensor: registerEventListener(evtListener)
     MW->>Sensor: open(ctrlListener)
     Sensor-->>MW: IMotionSensorController
-    CtrlL-->>MW: onStateChanged(STOPPED, STOPPED)
+    Note over Ctrl: sensor remains in STOPPED state
 
     MW->>Ctrl: start({MOTION, 0, 0, 0})
     CtrlL-->>MW: onStateChanged(STOPPED, STARTING)
