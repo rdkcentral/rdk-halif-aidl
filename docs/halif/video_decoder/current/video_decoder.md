@@ -85,6 +85,8 @@ The `IVideoDecoderManager.getVideoDecoderIds()` should return an array of `IV
 
 The Capabilities parcelable returned by the IVideoDecoder.getCapabilities() function lists all of the Codec types and DynamicRange types supported by this video decoder instance and indicates if the secure audio path can be used.
 
+Each entry in `supportedCodecs[]` (a `CodecCapabilities` parcelable) declares an explicit `supportedOutputPixelFormats[]` list — the chroma formats the decoder hardware can produce on its output for that codec/profile/level. The middleware uses this at capability-discovery time to reject incompatible streams before binding the decoder, rather than failing inside `decodeBufferWithMetadata()` after start. Hardware support typically varies per codec block (e.g. a SoC's VP9 path may produce 4:4:4 on the same silicon where the H.264 path is 4:2:0 only), so the list is per-codec entry rather than a single global list.
+
 A video decoder instance may support any number of video codecs, but can only operate on one compressed video stream in an open session.  Concurrent video decode requires multiple video decoder instances to be opened.
 
 ## System Context
