@@ -9,17 +9,17 @@ It is important to distinguish the different layers within the software stack:
 ```mermaid
 block-beta
     block: modules
-        columns 2
-        appl("Application Layer"):2
-        mwl("Middleware Layer"):2
-        vendor("Hardware Porting Kit (HPK)"):2
-        vhal("Vendor Hal Interface(API)")
-        vsi("Vendor System Interface - (VSI)")
-        vc("Vendor Drivers")
-        sl("Vendor System Libraries")
-        osl("Vendor Open Source Libraries (VOSS)"):2
-        ub("Kernel"):2
-        hw("Hardware"):2
+        columns 30
+        appl("Application Layer"):30
+        mwl("Middleware Layer"):30
+        vendor("Hardware Porting Kit (HPK)"):30
+        vhal("Vendor Hal Interface(API)"):15
+        vsi("Vendor System Interface - (VSI)"):15
+        vc("Vendor Drivers"):15
+        sl("Vendor System Libraries"):15
+        osl("Vendor Open Source Libraries (VOSS)"):30
+        ub("Kernel"):30
+        hw("Hardware"):30
     end
 
     %% Set background to white for better contrast
