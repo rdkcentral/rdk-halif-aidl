@@ -244,7 +244,7 @@ sequenceDiagram
     Provider->>Plane: Queue frame for display
 
     Plane-->>Provider: Previous frame released
-    Provider-->>Listener: onGfxFrameReleased(oldGraphicsFbId, elapsedRealtimeNanos)
+    Provider-->>Listener: onGraphicsFbReleased(oldGraphicsFbId, elapsedRealtimeNanos)
     Listener-->>Client: Buffer available for reuse
 
     Client->>Provider: destroyGraphicsFb(graphicsFbId)
