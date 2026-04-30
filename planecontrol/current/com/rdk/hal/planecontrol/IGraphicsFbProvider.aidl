@@ -22,7 +22,7 @@ import com.rdk.hal.planecontrol.GraphicsFbInfo;
 import com.rdk.hal.planecontrol.GraphicsFbCapabilities;
 
 /** 
- *  @brief     Graphics Frame Buffer interface.
+ *  @brief     Graphics Frame Buffer (Fb) interface.
  *  @author    Gerald Weatherup
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
