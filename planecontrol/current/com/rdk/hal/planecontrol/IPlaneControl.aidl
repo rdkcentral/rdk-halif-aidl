@@ -51,7 +51,7 @@ interface IPlaneControl
     /**
      * Gets the platform plane resources and their capabilities.
      * 
-     * This function can be called at any time and is not dependant on any Plane Control state.
+     * This function can be called at any time and is not dependent on any Plane Control state.
      * The returned value is not allowed to change between calls.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
