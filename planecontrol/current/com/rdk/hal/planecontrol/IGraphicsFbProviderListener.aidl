@@ -35,5 +35,5 @@ oneway interface IGraphicsFbProviderListener
      *
      * If no old frame exists (e.g. on the first invocation), this callback is invoked with oldGraphicsFbId set to -1.
      */
-    void onGfxFrameReleased(in int oldGraphicsFbId, in long elapsedRealtimeNanos);
+    void onGraphicsFbReleased(in int oldGraphicsFbId, in long elapsedRealtimeNanos);
 }
