@@ -120,7 +120,7 @@ interface IGraphicsFbProvider
     /**
      * Gets the EGL Platform Type
      * 
-     * The platform type is is paired with getNativeDisplayHandle() for eglGetPlatformDisplay().
+     * The platform type is paired with getNativeDisplayHandle() for eglGetPlatformDisplay().
      *
      * @returns the EGL_PLATFORM_* constant (e.g. EGL_PLATFORM_GBM_KHR or a
      * vendor-defined value) that pairs with getNativeDisplayHandle() for
