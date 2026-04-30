@@ -106,4 +106,25 @@ interface IGraphicsFbProvider
      */
     void destroyGraphicsFb(in int graphicsFbId);
 
+    /**
+     * Gets a native display handle
+     * 
+     * Used by the compositor with eglGetPlatformDisplay() so EGL display
+     * initialisation does not require vendor-specific code paths.
+     * 
+     * @returns the vendor-specific native display handle for EGL setup.
+     * 
+     */
+    long getNativeDisplayHandle();
+    
+    /**
+     * Gets the EGL Platform Type
+     * 
+     * The platform type is is paired with getNativeDisplayHandle() for eglGetPlatformDisplay().
+     *
+     * @returns the EGL_PLATFORM_* constant (e.g. EGL_PLATFORM_GBM_KHR or a
+     * vendor-defined value) that pairs with getNativeDisplayHandle() for
+     * eglGetPlatformDisplay().
+     */
+    int getEGLPlatformType();
 }
