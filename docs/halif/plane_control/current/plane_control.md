@@ -196,7 +196,7 @@ For the 2 types of planes (video and graphics) there are fixed configurations wh
 ## Graphics Frame Providers
 
 - Plane Control supports graphics frame buffers via `IGraphicsFbProvider`.
-- Clients should first query `IPlaneControl.getCapabilities()` and check that graphics frame buffer capabilities are present for the target graphics plane.
+- Clients should first query `IPlaneControl.getCapabilities()` and confirm the target plane is of type GRAPHICS.
 - If supported, clients open the provider using `IPlaneControl.getGraphicsFbProvider()` and use provider APIs to create, render, commit, and destroy frames.
 
 ### Graphics Frame Buffer Lifecycle
