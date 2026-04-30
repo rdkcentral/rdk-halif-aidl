@@ -81,6 +81,21 @@ Each AV pipeline utilises its own instance of an AV clock which operates indepen
 
 Clients can access their AV clock time by calling `getCurrentClockTime()` to synchronise data streams such as closed captions and subtitles.
 
+### Priming
+
+An AV Clock has a primed/unprimed sub-state inside `STARTED`. Until the clock receives its first priming event for the configured `ClockMode`, it is `STARTED` but unprimed and `getCurrentClockTime()` returns `null`. Once primed, it returns valid `ClockTime` values for the remainder of the started session.
+
+| `ClockMode` | Priming event |
+|---|---|
+| `PCR` | First call to `IAVClockController.notifyPCRSample()` |
+| `AUDIO_MASTER` | First audio frame PTS received by the linked audio sink |
+| `VIDEO_MASTER` | First video frame PTS received by the linked video sink |
+| `AUTO` | Whichever of the above arrives first, given the configured sources |
+
+The unprimed → primed transition is one-way per started session — `stop()` followed by `start()` is required to re-prime.
+
+Clients that need to react to the priming transition without polling `getCurrentClockTime()` register for `IAVClockControllerListener.onPrimed(ClockTime currentClockTime)`. The callback fires exactly once per started session, ordered after the priming event arrives, and carries the first valid clock value so callers do not need an immediate follow-up `getCurrentClockTime()` call.
+
 The AV clock is always linked to the timebase source it has been configured to use (PCR, audio master or video master).
 
 A PCR driven AV clock may wrap or jump at PCR discontinuities.
@@ -107,7 +122,7 @@ flowchart TD
     RDKClientComponent -- setAudioSink() <br> getAudioSink() setSupplementaryAudioSink() setSupplementaryAudioSink() <br> setVideoSink() <br> getVideoSink() <br> start() <br> stop() <br> setClockMode() <br> getClockMode() <br> notifyPCRSample() <br> getCurrentClockTime() <br> setPlaybackRate() <br> getPlaybackRate() --> IAVClockController
     IAVClockManager --> IAVClock --> IAVClockController
     IAVClock -- onStateChanged() --> IAVClockEventListener
-    IAVClockController -- onStateChanged() --> IAVClockControllerListener
+    IAVClockController -- onStateChanged() <br> onPrimed() --> IAVClockControllerListener
     IAVClockEventListener --> RDKClientComponent
     IAVClockControllerListener --> RDKClientComponent
     IAVClockController --> platformAVSync
