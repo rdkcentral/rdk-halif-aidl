@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| **Generated** | 2026-04-23 |
-| **Components** | 32 |
-| 🟢 **GREEN** | 14 |
-| 🟡 **AMBER** | 15 |
-| 🔴 **RED** | 3 |
+| **Generated** | 2026-04-30 |
+| **Components** | 33 |
+| 🟢 **GREEN** | 11 |
+| 🟡 **AMBER** | 18 |
+| 🔴 **RED** | 4 |
 
 ---
 
@@ -14,9 +14,9 @@
 
 | Status | Count | Meaning |
 |--------|-------|---------|
-| 🟢 GREEN | **14** | Reviewed & Approved — Interface stable on develop |
-| 🟡 AMBER | **15** | Under Active Ingestion — Will enter sprint review when ready |
-| 🔴 RED | **3** | Not Started / Blocked — Strategy or definition required |
+| 🟢 GREEN | **11** | Reviewed & Approved — Interface stable on develop |
+| 🟡 AMBER | **18** | Under Active Ingestion — Will enter sprint review when ready |
+| 🔴 RED | **4** | Not Started / Blocked — Strategy or definition required |
 
 ---
 
@@ -28,14 +28,11 @@
 |---|-----------|---------|-------------|---------|--------|
 | 🟢 | audiodecoder | 0.1.0.0 | Audio decoder resource management and codec format support | 4/4 | Architecture + AV_Architecture |
 | 🟢 | audiomixer | 0.1.0.1 | Audio mixing and routing for multi-stream output | 4/4 | Architecture + Vendor_Layer_Team + AV_Architecture |
-| 🟢 | audiosink | 0.1.0.0 | Audio output rendering and sink device management | 4/4 | Architecture + AV_Architecture |
 | 🟢 | avbuffer | 0.1.0.0 | AV buffer allocation and secure video path management | 4/4 | Architecture + AV_Architecture |
-| 🟢 | avclock | 0.1.0.0 | Audio/video clock synchronization and timing control | 4/4 | Architecture + AV_Architecture |
 | 🟢 | hdmicec | 0.1.0.0 | HDMI CEC protocol messaging and device control | 4/4 | Architecture + AV_Architecture |
 | 🟢 | hdmiinput | 0.1.0.0 | HDMI input port management and signal detection | 3/4 | Architecture + AV_Architecture |
 | 🟢 | hdmioutput | 0.1.0.0 | HDMI output port configuration and display control | 3/4 | Architecture + AV_Architecture |
 | 🟢 | videodecoder | 0.1.0.0 | Video decoder resource management and codec support | 4/4 | Architecture + AV_Architecture |
-| 🟢 | videosink | 0.1.0.0 | Video output rendering and display sink management | 4/4 | Architecture + AV_Architecture |
 
 
 ### OEM Components
@@ -56,6 +53,9 @@
 
 | | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
 |---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
+| 🟡 | audiosink | 0.1.1.0 | — | — | — | — | — | Architecture + AV_Architecture |
+| 🟡 | avclock | 0.1.0.1 | — | — | — | — | — | Architecture + AV_Architecture |
+| 🟡 | videosink | 0.1.1.0 | — | — | — | — | — | Architecture + AV_Architecture |
 | 🟡 | avbuffer *(SVP risk)* | 0.1.0.0 | 1 | Encrypted buffer (DRM/SVP) - Pending on DRM strategy | May change due to SVP changes from DRM which is being worked on | — | — | Architecture + AV_Architecture |
 | 🟡 | vsi/kernel | 0.0.0.1 | 1 | Strategy required | Not blocking progress - Architecture Strategy | — | — | Architecture |
 | 🟡 | planecontrol | 0.1.0.0 | 3 | Re-review required | Discussions with MW team - Simplify design. Architecture requires simplified design and restructured review. | — | — | Architecture + Graphics_Architecture |
@@ -88,6 +88,7 @@
 
 | | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
 |---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
+| 🔴 | drm | 0.1.0.0 | 1 | Initial interface definition — under review | Architecture review and vendor alignment | — | — | Architecture + AV_Architecture |
 | 🔴 | vsi/crypto | 0.0.0.1 | 1 | Security API definition required | HAL lower-layer requirement - define Security API contracts and integration boundaries | — | — | Architecture + Kernel_Architecture |
 | 🔴 | vsi/keyvault | 0.0.0.1 | 1 | Encrypted storage architecture required | HAL lower-layer requirement - define Key Vault interface for encrypted storage | — | — | Architecture + Kernel_Architecture |
 
@@ -111,14 +112,11 @@
 |---|-----------|----------|------|------|-----|-----------|----------|----------|--------------|--------|--------|
 | 🟢 | audiodecoder | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
 | 🟢 | audiomixer | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
-| 🟢 | audiosink | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
 | 🟢 | avbuffer | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
-| 🟢 | avclock | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
 | 🟢 | hdmicec | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
 | 🟢 | hdmiinput | 3/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | 🔄 |
 | 🟢 | hdmioutput | 3/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | 🔄 |
 | 🟢 | videodecoder | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
-| 🟢 | videosink | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
 
 ### SOC — 🟡 AMBER
 
@@ -127,11 +125,15 @@
 | 🟡 | vsi/kernel | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |
 | 🟡 | planecontrol | 0/5 | ☐ | ☐ | ☐ | N/A | N/A | ☐ | N/A | N/A | ☐ |
 | 🟡 | vsi/graphics | 0/4 | ☐ | ☐ | N/A | N/A | N/A | ☐ | N/A | N/A | ☐ |
+| 🟡 | audiosink | 0/4 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
+| 🟡 | avclock | 0/4 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
+| 🟡 | videosink | 0/4 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
 
 ### SOC — 🔴 RED
 
 | | Component | Progress | Arch | Prod | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel | Vendor |
 |---|-----------|----------|------|------|-----|-----------|----------|----------|--------------|--------|--------|
+| 🔴 | drm | 0/5 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | N/A |
 | 🔴 | vsi/crypto | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |
 | 🔴 | vsi/keyvault | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |
 

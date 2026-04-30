@@ -85,23 +85,34 @@ interface IAVClockController {
      *
      * 
      * @pre AV Clock is in State::READY or State::STARTED state.
-     * 
-     * @see getAudioSink()
+     *
+     * @deprecated Use `IAudioSinkController.attachClock()` on the sink side
+     *             instead. This setter is retained for backward compatibility
+     *             and will be removed in the next major version. If both this
+     *             setter and the sink-side `attachClock()` are used, the
+     *             sink-side attachment takes precedence.
+     *
+     * @see getAudioSink(), IAudioSinkController.attachClock()
 	 */
 	boolean setAudioSink(in IAudioSink.Id audioSinkId);
 
     /**
      * Gets the primary Audio Sink ID for presentation against the AV Clock.
-     * 
+     *
      * @returns IAudioSink.Id which can be `IAudioSink.Id.UNDEFINED`.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
-     * 
+     *
      * @pre AV Clock is in State::READY or State::STARTED state.
-     * 
-     * @see setAudioSink()
+     *
+     * @deprecated Use `IAudioSinkController.getClock()` on the sink side
+     *             instead. This getter is retained for backward compatibility
+     *             and will be removed in the next major version. It does not
+     *             reflect attachments made via the sink-side `attachClock()`.
+     *
+     * @see setAudioSink(), IAudioSinkController.getClock()
      */
     IAudioSink.Id getAudioSink();
     
@@ -126,23 +137,36 @@ interface IAVClockController {
      *
      * 
      * @pre AV Clock is in State::READY or State::STARTED state.
-     * 
-     * @see getSupplementaryAudioSink()
+     *
+     * @deprecated Use `IAudioSinkController.attachClock()` on the supplementary
+     *             sink itself instead. This setter is retained for backward
+     *             compatibility and will be removed in the next major version.
+     *             For receiver-side mixing scenarios, attach the same AVClock
+     *             to both the primary and supplementary audio sinks via their
+     *             respective sink-side `attachClock()` calls.
+     *
+     * @see getSupplementaryAudioSink(), IAudioSinkController.attachClock()
 	 */
     boolean setSupplementaryAudioSink(in IAudioSink.Id supplementaryAudioSinkId);
 
     /**
      * Gets the supplementary Audio Sink ID for presentation against the AV Clock.
-     * 
+     *
      * @returns IAudioSink.Id which can be `IAudioSink.Id.UNDEFINED`.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
-     * 
+     *
      * @pre AV Clock is in State::READY or State::STARTED state.
-     * 
-     * @see setSupplementaryAudioSink()
+     *
+     * @deprecated Use `IAudioSinkController.getClock()` on the supplementary
+     *             sink itself instead. This getter is retained for backward
+     *             compatibility and will be removed in the next major version.
+     *             It does not reflect attachments made via the sink-side
+     *             `attachClock()`.
+     *
+     * @see setSupplementaryAudioSink(), IAudioSinkController.getClock()
      */
     IAudioSink.Id getSupplementaryAudioSink();
 
@@ -163,23 +187,34 @@ interface IAVClockController {
      *
      * 
      * @pre AV Clock is in State::READY or State::STARTED state.
-     * 
-     * @see getVideoSink()
+     *
+     * @deprecated Use `IVideoSinkController.attachClock()` on the sink side
+     *             instead. This setter is retained for backward compatibility
+     *             and will be removed in the next major version. If both this
+     *             setter and the sink-side `attachClock()` are used, the
+     *             sink-side attachment takes precedence.
+     *
+     * @see getVideoSink(), IVideoSinkController.attachClock()
 	 */
 	boolean setVideoSink(in IVideoSink.Id videoSinkId);
 
     /**
      * Gets the Video Sink ID for presentation against the AV Clock.
-     * 
+     *
      * @returns IVideoSink.Id which can be `IVideoSink.Id.UNDEFINED`.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
-     * 
+     *
      * @pre AV Clock is in State::READY or State::STARTED state.
-     * 
-     * @see setVideoSink()
+     *
+     * @deprecated Use `IVideoSinkController.getClock()` on the sink side
+     *             instead. This getter is retained for backward compatibility
+     *             and will be removed in the next major version. It does not
+     *             reflect attachments made via the sink-side `attachClock()`.
+     *
+     * @see setVideoSink(), IVideoSinkController.getClock()
      */
     IVideoSink.Id getVideoSink();
 
