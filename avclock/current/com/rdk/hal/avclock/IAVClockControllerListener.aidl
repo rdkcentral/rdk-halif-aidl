@@ -18,6 +18,7 @@
  */
 package com.rdk.hal.avclock;
 import com.rdk.hal.State;
+import com.rdk.hal.avclock.ClockTime;
 
 /** 
  *  @brief     Controller callbacks listener interface from AV Clock.
@@ -36,4 +37,30 @@ oneway interface IAVClockControllerListener {
      * @param[in] newState              The new state transitioned to.
      */
     void onStateChanged(in State oldState, in State newState);
+
+    /**
+     * Callback delivered when the AV Clock transitions from `STARTED`-but-unprimed
+     * to primed — the first valid clock value is now available. Fires exactly
+     * once per started session, ordered after the configured `ClockMode`'s
+     * priming event arrives:
+     *
+     * - `ClockMode::PCR`          → after the first `notifyPCRSample()` call
+     * - `ClockMode::AUDIO_MASTER` → after the first audio frame PTS from the linked audio sink
+     * - `ClockMode::VIDEO_MASTER` → after the first video frame PTS from the linked video sink
+     * - `ClockMode::AUTO`         → after whichever of the above arrives first
+     *
+     * Until this callback fires, `IAVClockController.getCurrentClockTime()`
+     * returns `null`. After it fires, `getCurrentClockTime()` returns valid
+     * times for the remainder of the started session. The unprimed → primed
+     * transition is one-way per session; re-priming requires `stop()` + `start()`.
+     *
+     * @param[in] currentClockTime  The first valid clock value, so clients do
+     *                              not need to immediately call `getCurrentClockTime()`
+     *                              after the callback.
+     *
+     * @see IAVClockController.getCurrentClockTime()
+     * @see IAVClockController.notifyPCRSample()
+     * @see ClockMode
+     */
+    void onPrimed(in ClockTime currentClockTime);
  }

@@ -250,20 +250,38 @@ interface IAVClockController {
 
 	/**
 	 * Gets the current AV Clock time.
-     * 
+     *
 	 * For `ClockMode::PCR` driven clocks this returns the equivalent of the MPEG system time clock (STC) in nanoseconds units.
-     * 
+     *
 	 * For other clock modes this returns the clock used for presentation of AV frames in the system.
+     *
+     * Priming: the AV Clock has a primed/unprimed sub-state inside `STARTED`.
+     * Until the clock receives its first priming event for the configured
+     * `ClockMode`, it is `STARTED` but unprimed and `getCurrentClockTime()`
+     * returns `null`. Once primed, it returns a valid `ClockTime`. Clients
+     * that need to react to the priming transition without polling can
+     * register for the `IAVClockControllerListener.onPrimed()` callback.
+     *
+     * Priming source per `ClockMode`:
+     * - `ClockMode::PCR`          → first call to `notifyPCRSample()`
+     * - `ClockMode::AUDIO_MASTER` → first audio frame PTS received by the linked audio sink
+     * - `ClockMode::VIDEO_MASTER` → first video frame PTS received by the linked video sink
+     * - `ClockMode::AUTO`         → whichever of the above arrives first, given the configured sources
+     *
+     * The unprimed → primed transition is one-way per started session;
+     * re-priming requires `stop()` followed by `start()`.
 	 *
-  	 * @returns ClockTime
+  	 * @returns ClockTime, or `null` if the clock is `STARTED` but not yet primed.
 	 *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the clock is not in `STARTED`.
      *
-     * 
+     *
      * @pre AV Clock is in State::STARTED state.
-     */  
- 	ClockTime getCurrentClockTime();
+     *
+     * @see IAVClockControllerListener.onPrimed()
+     */
+ 	@nullable ClockTime getCurrentClockTime();
 
 	/**
 	 * Sets the playback rate for the AV Clock.
