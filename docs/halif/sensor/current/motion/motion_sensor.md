@@ -11,7 +11,7 @@ A clear lifecycle state machine ensures dependable operation and predictable eve
 !!! info "References"
     |||
     |-|-|
-    |**Interface Definition**|[sensor/current/com/rdk/hal/sensor/motion](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/sensor/current/com/rdk/hal/sensor/motion)|
+    |**Interface Definition**|[`sensor/current/com/rdk/hal/sensor/motion`](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/sensor/current/com/rdk/hal/sensor/motion)|
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
     |**Initialization**| [systemd](../../../vsi/systemd/current/systemd.md) – **hal-sensor-motion.service** |
 
@@ -66,7 +66,7 @@ Each sensor type has different characteristics (range, field-of-view, sensitivit
 | **HAL.MOTION.7** | If deep-sleep autonomy is supported, `setAutonomousDuringDeepSleep()` shall require `State==STOPPED`; when unsupported it shall return `false`. | |
 | **HAL.MOTION.8** | Active time windows shall only suppress events outside configured periods; motion detection continues but notifications are deferred or cancelled. | See `IMotionSensorController.setActiveWindows()`. |
 | **HAL.MOTION.9** | When active windows are configured, events shall only fire during the union of all configured windows. Empty array or windows with both times = 0 enables 24-hour monitoring. | |
-| **HAL.MOTION.10** | Shall register the service under the name `"MotionSensorManager"` and become operational at startup. | |
+| **HAL.MOTION.10** | Shall register the service under the name `"sensor.motion"` and become operational at startup. | Matches `IMotionSensorManager.serviceName`. |
 | **HAL.MOTION.11** | `IMotionSensorControllerListener.onStateChanged()` shall fire for every lifecycle state transition. | Matches the pattern used by all other HAL modules. |
 | **HAL.MOTION.12** | If the controller-owning client crashes, the HAL shall implicitly call `stop()` and `close()` to release the sensor. | Binder death cleanup. |
 

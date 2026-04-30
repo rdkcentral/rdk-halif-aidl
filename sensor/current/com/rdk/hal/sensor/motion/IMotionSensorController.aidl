@@ -44,26 +44,25 @@ interface IMotionSensorController {
      *
      * On success, the state transitions STOPPED → STARTING → STARTED.
      * IMotionSensorControllerListener.onStateChanged() fires for each transition.
-     * If initialisation fails, the state becomes ERROR.
+     * If hardware initialisation fails, the state transitions to ERROR
+     * (observable via onStateChanged()) and this call fails with
+     * EX_SERVICE_SPECIFIC. Use IMotionSensor.close() to release the sensor
+     * from ERROR; close() accepts STOPPED or ERROR.
      *
      * @param config Start configuration (mode, timing parameters).
-     *
-     * @returns Success flag for hardware-level acceptance.
-     * @retval true  Sensor hardware initialised and started successfully.
-     * @retval false Sensor could not start due to an internal or hardware
-     *               initialisation failure (state transitions to ERROR).
      *
      * @exception binder::Status EX_ILLEGAL_STATE if sensor is not in STOPPED state.
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if StartConfig contains
      *            invalid values (e.g. noMotionSeconds outside 0–86400 range).
+     * @exception binder::Status EX_SERVICE_SPECIFIC if hardware initialisation
+     *            fails. The state transitions to ERROR before the exception
+     *            is raised.
      *
-     * Note: the boolean return signals operational (hardware) failure, while
-     * the binder exception signals a programming error (wrong state). This
-     * dual-signal pattern differs from modules where start() is void+exception
-     * (e.g. compositeinput) because motion sensor hardware probe failures are
-     * a normal operational condition, not an exceptional case.
+     * Aligned with the repo-wide controller convention (`void start()` +
+     * binder exceptions for failure, lifecycle observable via state change
+     * listener) — same shape as compositeinput, hdmiinput, audiosink, etc.
      */
-    boolean start(in StartConfig config);
+    void start(in StartConfig config);
 
     /**
      * @brief Stop the motion sensor.
@@ -71,13 +70,12 @@ interface IMotionSensorController {
      * On success, the state transitions STARTED → STOPPING → STOPPED.
      * IMotionSensorControllerListener.onStateChanged() fires for each transition.
      *
-     * @returns Success flag indicating whether the sensor accepted the stop request.
-     * @retval true  Sensor stopped successfully.
-     * @retval false Sensor could not be stopped.
-     *
      * @exception binder::Status EX_ILLEGAL_STATE if sensor is not in STARTED state.
+     *
+     * Aligned with the repo-wide controller convention (`void stop()` +
+     * binder exception for failure).
      */
-    boolean stop();
+    void stop();
 
     /**
      * @brief Retrieve the configuration passed to start().

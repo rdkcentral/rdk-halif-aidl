@@ -117,8 +117,16 @@ interface IMotionSensor {
     /**
      * @brief Close this sensor and release the controller.
      *
-     * The sensor must be in STOPPED state. On success the controller
-     * is invalidated and another client may open() the sensor.
+     * Accepted from STOPPED or ERROR. From STOPPED this is the normal close
+     * path. From ERROR this is the recovery path: after a start() failure
+     * (which transitions the sensor to ERROR), the client calls close() to
+     * release the controller and the sensor returns to a state where it can
+     * be opened again. On success the controller is invalidated and another
+     * client may `open()` the sensor.
+     *
+     * If the sensor is in STARTED, STARTING, or STOPPING the call fails with
+     * EX_ILLEGAL_STATE — the client must call stop() first (or, from ERROR,
+     * close() directly).
      *
      * @param controller The IMotionSensorController instance returned by open().
      *
@@ -126,10 +134,10 @@ interface IMotionSensor {
      * @retval true  Successfully closed.
      * @retval false The supplied controller is not the instance returned by open().
      *
-     * @exception binder::Status EX_ILLEGAL_STATE if sensor is not in STOPPED state.
+     * @exception binder::Status EX_ILLEGAL_STATE if sensor is not in STOPPED or ERROR state.
      * @exception binder::Status EX_NULL_POINTER if controller is null.
      *
-     * @see open()
+     * @see open(), IMotionSensorController.start()
      */
     boolean close(in IMotionSensorController controller);
 
