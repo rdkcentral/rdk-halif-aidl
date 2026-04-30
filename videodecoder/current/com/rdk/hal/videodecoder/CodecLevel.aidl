@@ -74,7 +74,9 @@ enum CodecLevel {
     AV1_LEVEL_4_1 = 401,
     AV1_LEVEL_5_0 = 402,  // 4K with high efficiency
     AV1_LEVEL_5_1 = 403,  // High-bitrate 4K HDR
-    AV1_LEVEL_6_0 = 404,  // 8K support
-    AV1_LEVEL_6_1 = 405,  // High-bitrate 8K HDR
+    AV1_LEVEL_5_2 = 404,  // 4K UHD
+    AV1_LEVEL_6_0 = 405,  // 8K support
+    AV1_LEVEL_6_1 = 406,  // High-bitrate 8K HDR
+    AV1_LEVEL_6_2 = 407,  // 8K at 120 fps
 }
 

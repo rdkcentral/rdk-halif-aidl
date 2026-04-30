@@ -22,13 +22,13 @@
 
 # HAL Feature Profile for videodecoder
 
-videodecoder:                   # Component object begins
+videodecoder:           # Component object begins
   interfaceVersion: current
   supportedOperationalModes:
     - NON_TUNNELLED
-  IVideoDecoder:                # Resource list
+  Capabilities:
     - 0:                        # Resource object begins
-      supportedCodecs:          # Array of codec capabilities
+      codecCapabilities:          # Array of codec capabilities
         - MPEG:
             maxFrameRate: 60
             maxFrameWidth: 1920
@@ -49,7 +49,7 @@ videodecoder:                   # Component object begins
             maxFrameRate: 60
             maxFrameWidth: 3840
             maxFrameHeight: 2160
-      supportedDynamicRanges:
+      dynamicRange:
         - SDR
         - HLG
         - HDR10
@@ -62,7 +62,7 @@ videodecoder:                   # Component object begins
         - BT2020
       supportsSecure: true
     - 1:                          # Resource object begins
-      supportedCodecs:          # Array of codec capabilities
+      codecCapabilities:          # Array of codec capabilities
         - MPEG:
             maxFrameRate: 60
             maxFrameWidth: 1920
@@ -83,7 +83,7 @@ videodecoder:                   # Component object begins
             maxFrameRate: 60
             maxFrameWidth: 1920
             maxFrameHeight: 1080
-      supportedDynamicRanges:
+      dynamicRange:
         - SDR
       supportedColorimetries:
         - BT601_525
