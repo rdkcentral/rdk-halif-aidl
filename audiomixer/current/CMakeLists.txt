@@ -48,6 +48,7 @@ set(SRC
     ${SRC_DIR}/ConnectionState.aidl
     ${SRC_DIR}/Property.aidl
     ${SRC_DIR}/OutputPortProperty.aidl
+    ${SRC_DIR}/OutputPortType.aidl
     ${SRC_DIR}/AQProcessor.aidl
     ${SRC_DIR}/AQParameter.aidl
     ${SRC_DIR}/OutputFormat.aidl
@@ -60,6 +61,8 @@ set(SRC
     ${SRC_DIR}/IAudioMixerEventListener.aidl
     ${SRC_DIR}/IAudioMixerManager.aidl
     ${SRC_DIR}/IAudioOutputPort.aidl
+    ${SRC_DIR}/IAudioOutputPortController.aidl
+    ${SRC_DIR}/IAudioOutputPortControllerListener.aidl
     ${SRC_DIR}/IAudioOutputPortListener.aidl
     # External dependencies
     ${AUDIO_DECODER_SRC_DIR}/Codec.aidl

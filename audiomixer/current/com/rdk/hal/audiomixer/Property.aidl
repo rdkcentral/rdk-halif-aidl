@@ -86,5 +86,33 @@ enum Property {
      * - false: unmuted (default on open)
      * - true: muted
      */
-    MUTE = 4
+    MUTE = 4,
+
+    /**
+     * Fader level controlling balance between main and associated audio.
+     *
+     * Range: 0..100.
+     *  - 0   = main audio only (associated fully attenuated)
+     *  - 50  = balanced mix (default)
+     *  - 100 = associated audio only (main fully attenuated)
+     *
+     * Used by accessibility features such as descriptive audio (audio
+     * description) where the associated audio track narrates the scene
+     * over the main programme.
+     *
+     * <b>Orthogonal to per-input volume:</b> FADER_LEVEL is a cross-input
+     * balance control between the main and associated audio inputs only.
+     * It is applied <i>after</i> per-input volumes set via
+     * IAudioMixerController.setInputVolume() / setInputVolumeRamp().
+     *
+     * <b>Not a ducking control:</b> for system-sound ducking over arbitrary
+     * inputs (e.g. notification beep over main programme), use
+     * IAudioMixerController.setInputVolumeRamp() on the main input.
+     * FADER_LEVEL is scoped to the main/associated pair only.
+     *
+     * Type: Integer
+     * Access: Read-write.
+     * Writeable in states: READY, STARTED
+     */
+    FADER_LEVEL = 5
 }
