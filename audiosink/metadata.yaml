@@ -21,8 +21,8 @@
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: audiosink
-version: 0.1.1.0
-status: AMBER
+version: 0.1.0.0
+status: GREEN
 description: "Audio output rendering and sink device management"
 type: SOC
 
@@ -55,8 +55,8 @@ notes:
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
-    Architecture: pending
-    Product_Architecture: pending
-    AV_Architecture: pending
-    Vendor_Layer_Team: pending
+    Architecture: reviewed
+    Product_Architecture: reviewed
+    AV_Architecture: reviewed
+    Vendor_Layer_Team: reviewed
 
