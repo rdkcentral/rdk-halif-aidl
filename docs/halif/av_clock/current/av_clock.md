@@ -117,7 +117,7 @@ flowchart TD
         VideoFrameQueue("Video Frame Queue")
     end
       platformAVSync("Platform AV Sync")
-    RDKClientComponent -- getIAVClockIds() <br> getIAVClock() --> IAVClockManager
+    RDKClientComponent -- getAVClockIds() <br> getAVClock() --> IAVClockManager
     RDKClientComponent -- getCapabilities() <br> getProperty() <br> getState() <br> open() <br> close() <br> registerEventListener() <br> unregisterEventListener() --> IAVClock
     RDKClientComponent -- start() <br> stop() <br> setClockMode() <br> getClockMode() <br> notifyPCRSample() <br> getCurrentClockTime() <br> setPlaybackRate() <br> getPlaybackRate() --> IAVClockController
     IAVClockManager --> IAVClock --> IAVClockController
