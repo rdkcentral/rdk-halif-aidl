@@ -267,7 +267,7 @@ sequenceDiagram
     ADC->>Controller: new
     ADC-->>IAudioSinkEventListener: onStateChanged(OPENING -> READY)
     ADC-->>Client: IAudioSinkController
-    Client->>Controller: setAudioSink(0)
+    Client->>Controller: attachClock(0)
 
     Note over ADC: start() transitions from READY -> STARTING -> STARTED
 
