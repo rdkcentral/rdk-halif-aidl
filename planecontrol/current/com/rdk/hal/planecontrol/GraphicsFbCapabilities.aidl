@@ -37,16 +37,18 @@ parcelable GraphicsFbCapabilities
      * The maximum width and height in pixels that the frame buffer can be created with.
      * Typically the width and height will match the plane width and height.
      */
-    int maxGraphicsFrameBufferWidth;
-    int maxGraphicsFrameBufferHeight;
+    int maxGraphicsFbWidth;
+    int maxGraphicsFbHeight;
 
     /* The pixel format of the returned graphics frame. */
     /* This is an opaque value expected to be known to the client EGL implementation */
     /* For validation purposes a constant value in the hfp can be used. */
-    int format;   // FourCC format (e.g., DRM_FORMAT_ARGB8888)
+    /* This value is opaque in that it is passed through this interface without any undertsnading of its value. */
+    int format;   
 
     /*  modifiers that describe the buffer format. */ 
     /* This is an opaque value expected to be known to the client EGL implementation */
     /* For validation purposes a constant value in the hfp can be used. */
+    /* This value is opaque in that it is passed through this interface without any undertsnading of its value. */
     long modifier;
 }
