@@ -28,8 +28,10 @@ import com.rdk.hal.PropertyValue;
  *           volume, mute, output format, transcode format, AQ processor, etc.).
  *
  *           Only one client may hold the controller at a time. If the holding
- *           client crashes, the HAL implicitly calls IAudioOutputPort.close()
- *           to release the port.
+ *           client crashes, the HAL detects the binder death and releases
+ *           the port internally — equivalent to calling
+ *           IAudioOutputPort.close(controller) on the orphaned controller —
+ *           so a subsequent open() from another client succeeds.
  *
  *           Read access (getProperty, getCapabilities) remains on
  *           IAudioOutputPort and does not require ownership.
