@@ -220,10 +220,14 @@ interface IAudioMixerController {
      * @param[in] curve         Ramp curve from VolumeRamp enum
      *                          (LINEAR, IN_CUBIC, OUT_CUBIC).
      *
-     * @returns   true on success, false if any parameter is out of range.
+     * @returns   true on success, false if the input is unsupported on this
+     *            mixer (e.g. input is unrouted / has no source). Out-of-range
+     *            inputIndex, targetVolume, or overMs values throw
+     *            EX_ILLEGAL_ARGUMENT.
      *
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if inputIndex,
-     *            targetVolume, or overMs is invalid.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if inputIndex is outside
+     *            [0, Capabilities.inputs.length-1], targetVolume is outside
+     *            [0, 100], or overMs is <= 0.
      * @exception binder::Status EX_ILLEGAL_STATE if the mixer is not in
      *            STARTED state.
      *

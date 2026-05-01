@@ -180,7 +180,7 @@ This section explains how audio is combined inside the mixer, how volumes are ap
 | Control | API | Purpose |
 |---|---|---|
 | Per-input volume | `IAudioMixerController.setInputVolume(inputIndex, 0..100)` | How loud *this one input* contributes to the mix |
-| Per-output port volume | `IAudioOutputPort` `VOLUME` property | How loud the *combined mix* leaves the device on a specific port |
+| Per-output port volume | `IAudioOutputPortController.setProperty(VOLUME, ...)` | How loud the *combined mix* leaves the device on a specific port (controller acquired via `IAudioOutputPort.open()`) |
 
 Per-input volume is for relative balance between sources. Per-output volume is the master "speaker" volume.
 
