@@ -93,7 +93,7 @@ Each sensor type has different characteristics (range, field-of-view, sensitivit
 ## Initialization
 
 Vendors shall provide a `hal-sensor-motion.service` systemd unit to launch the Motion HAL.  
-The service shall register `IMotionSensorManager` with the Service Manager using `serviceName = "MotionSensorManager"`.
+The service shall register `IMotionSensorManager` with the Service Manager using `serviceName = "sensor.motion"` (matches `IMotionSensorManager.serviceName` in the AIDL).
 
 Dependencies on drivers or low-level services must be expressed using systemd `Requires=` or `Wants=`.
 
