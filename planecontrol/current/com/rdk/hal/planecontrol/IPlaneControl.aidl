@@ -17,12 +17,16 @@
  * limitations under the License.
  */
 package com.rdk.hal.planecontrol;
+
 import com.rdk.hal.planecontrol.IPlaneControlListener;
-import com.rdk.hal.planecontrol.Capabilities;
+import com.rdk.hal.planecontrol.PlaneCapabilities;
 import com.rdk.hal.planecontrol.SourcePlaneMapping;
 import com.rdk.hal.planecontrol.Property;
 import com.rdk.hal.planecontrol.PropertyKVPair;
 import com.rdk.hal.PropertyValue;
+import com.rdk.hal.planecontrol.IGraphicsFbProvider;
+import com.rdk.hal.planecontrol.IGraphicsFbProviderListener;
+
  
 /** 
  *  @brief     Plane Control HAL interface.
@@ -47,66 +51,16 @@ interface IPlaneControl
     /**
      * Gets the platform plane resources and their capabilities.
      * 
-     * This function can be called at any time and is not dependant on any Plane Control state.
+     * This function can be called at any time and is not dependent on any Plane Control state.
      * The returned value is not allowed to change between calls.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
-     * @returns Capabilities[] array of plane resource instance capabilities.
+     * @returns PlaneCapabilities[] array of plane resource instance capabilities.
      *
      */
-    Capabilities[] getCapabilities();
- 
-    /**
-     * Gets the native graphics window handle to couple with an EGL display.
-     * 
-     * This function can be called multiple times, but will return the same native graphics window
-     * handle on successive calls.  No reference counting is performed.
-     * 
-     * @param[in] planeResourceIndex    The plane resource index.
-     * 
-     * @returns Native graphics window handle.
-     * 
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
-     *
-     * 
-     * @see releaseNativeGraphicsWindowHandle()
-     */
-    long getNativeGraphicsWindowHandle(in int planeResourceIndex);
- 
-    /**
-     * Releases the native graphics window handle previously returned from a call to getNativeGraphicsWindowHandle().
-     * 
-     * @param[in] planeResourceIndex    The plane resource index.
-     * @param[in] nativeWindowHandle    A native window handle.
-     * 
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
-     * 
-     * @see getNativeGraphicsWindowHandle()
-     */
-    void releaseNativeGraphicsWindowHandle(in int planeResourceIndex, in long nativeWindowHandle);
+    PlaneCapabilities[] getCapabilities();
 
-    /**
-     * Flips the latest swapped graphics buffer (e.g. provided by eglSwapBuffers) to the graphics plane for display.
-     * 
-     * @note Should be redundant if EGL can flip automatically during buffer swaps on all platforms.
-     * 
-     * @param[in] planeResourceIndex        The graphics plane resource index.
-     * 
-     * @returns boolean
-     * @retval true     The flip was performed successfully.
-     * @retval false    Invalid graphics plane resource index.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
-     *
-     *
-     * @see getNativeGraphicsWindowHandle()
-     */
-    boolean flipGraphicsBuffer(in int planeResourceIndex);
- 
     /**
      * Sets the destination plane for one or more video sources.
      * 
@@ -121,7 +75,7 @@ interface IPlaneControl
      *
      * @param[in] listSourcePlaneMapping    An array of video source to video plane mappings.
      *
-     * @return boolean
+     * @returns boolean
      * @retval true     The mapping was updated.
      * @retval false    One or more mappings were invalid.
      * 
@@ -249,7 +203,7 @@ interface IPlaneControl
      *
      * @param[in] listener              IPlaneControlListener interface.
      * 
-     * @return boolean
+     * @returns boolean
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
      *
@@ -266,7 +220,7 @@ interface IPlaneControl
      *
      * @param[in] listener              Reference to IPlaneControlListener interface.
      *
-     * @return boolean
+     * @returns boolean
      * @retval true     The event listener was unregistered.
      * @retval false    The event listener was not found registered.
      *
@@ -277,4 +231,24 @@ interface IPlaneControl
      * @see registerListener()
      */
     boolean unregisterListener(in IPlaneControlListener listener);
+
+    /**
+     * Gets a Graphics Frame Buffer Provider for a Graphics plane resource.
+     *
+     * A provider is only available for plane resources of type GRAPHICS. The
+     * method returns `null` rather than throwing an exception.
+     * All graphics planes must support a Graphics Frame Buffer Provider. 
+     *
+     * @param[in] planeResourceIndex               The ID of the plane resource.
+     * @param[in] graphicsFbProviderListener       Listener for provider callbacks.
+     *
+     * @returns A valid graphics frame buffer provider instance when the plane resource index refers
+     *          to a graphics plane, or `null` if the plane resource index is invalid or the indexed
+     *          plane is not a graphics plane.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
+     */
+    @nullable IGraphicsFbProvider getGraphicsFbProvider(in int planeResourceIndex, in IGraphicsFbProviderListener graphicsFbProviderListener); 
 }

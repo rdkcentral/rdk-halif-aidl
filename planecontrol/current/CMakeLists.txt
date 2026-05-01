@@ -39,9 +39,13 @@ set(VIDEO_DECODER_SRC_DIR ${VIDEO_DECODER_MODULE_PATH}/${VIDEO_DECODER_VERSION}/
 
 set(SRC
 	${SRC_DIR}/AspectRatio.aidl
+	${SRC_DIR}/GraphicsFbCapabilities.aidl
+	${SRC_DIR}/GraphicsFbInfo.aidl
+	${SRC_DIR}/IGraphicsFbProvider.aidl
+	${SRC_DIR}/IGraphicsFbProviderListener.aidl
 	${SRC_DIR}/IPlaneControl.aidl
 	${SRC_DIR}/IPlaneControlListener.aidl
-	${SRC_DIR}/Capabilities.aidl
+	${SRC_DIR}/PlaneCapabilities.aidl
 	${SRC_DIR}/PlaneType.aidl
 	${SRC_DIR}/Property.aidl
 	${SRC_DIR}/PropertyKVPair.aidl

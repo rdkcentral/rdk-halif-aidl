@@ -30,7 +30,7 @@ import com.rdk.hal.videodecoder.DynamicRange;
  */
 
 @VintfStability
-parcelable Capabilities
+parcelable PlaneCapabilities
 {
     /**
      * 0 based index of this plane resource.

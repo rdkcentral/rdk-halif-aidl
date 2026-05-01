@@ -19,14 +19,21 @@
 package com.rdk.hal.planecontrol;
   
 /** 
- *  @brief     Callbacks listener interface from Plane Control.
+ *  @brief     Callbacks listener interface from graphics frame buffer provider.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
 
 @VintfStability
-oneway interface IPlaneControlListener 
+oneway interface IGraphicsFbProviderListener
 {
-    /* Add callbacks. If none - delete */
+    /**
+     * @brief     Called after a call to commitGraphicsFb() when the Graphics Frame Buffer has become current.
+     * @param[in] oldGraphicsFbId    The Frame Id of the old frame replaced by the newly committed frame.
+     * @param[in] elapsedRealtimeNanos  The CLOCK_MONOTONIC time when the old graphics frame was replaced by the new.
+     *
+     * If no old frame exists (e.g. on the first invocation), this callback is invoked with oldGraphicsFbId set to -1.
+     */
+    void onGraphicsFbReleased(in int oldGraphicsFbId, in long elapsedRealtimeNanos);
 }

@@ -2,7 +2,7 @@
 
 The Plane Control HAL manages the platform’s video and graphics plane resources, exposing each plane as a resource with readable capabilities.  
 
-It enables linking video sources—such as video sinks, HDMI input, and composite input—to a video plane. Additionally, it provides the RDK middleware with a native window graphics plane handle for EGL-based graphics display.  
+It enables linking video sources - such as video sinks, HDMI input, and composite input - to a video plane. For graphics planes, graphics frame buffers are provided through `IGraphicsFbProvider` for EGL-based graphics display.  
 
 Each plane is configurable through a set of properties that clients can read or modify, either individually or in batches.
 
@@ -32,15 +32,22 @@ Each plane is configurable through a set of properties that clients can read or 
 | **HAL.PLANECONTROL.4** | Shall provide an API to atomically set multiple properties of a plane which take effect at the next available vsync.|
 | **HAL.PLANECONTROL.5** | Shall allow only 1 source to be mapped to any given video plane.|
 | **HAL.PLANECONTROL.6** | Shall provide an API to atomically update multiple video source to video plane mappings.|
+| **HAL.PLANECONTROL.7** | Shall provide a graphics frame buffer provider API for graphics planes where plane type is GRAPHICS. |
+| **HAL.PLANECONTROL.8** | Shall provide APIs to create, commit and destroy graphics frame buffers via `IGraphicsFbProvider`.|
+| **HAL.PLANECONTROL.9** | Shall notify clients when committed graphics frame buffers are released and available for reuse via `IGraphicsFbProviderListener`.|
 
 ## Interface Definition
 
 |Interface Definition File | Description|
 |--------------------------|------------|
-|`IPlaneControl.aidl` | Plane Control HAL interface which provides the central API video and graphics plane management.|
+|`IPlaneControl.aidl` | Plane Control HAL interface which provides the central API for video and graphics plane management.|
 | `IPlaneControlListener.aidl` | Plane Control listener for callbacks.|
+| `IGraphicsFbProvider.aidl` | Graphics frame buffer provider interface for a graphics plane.|
+| `IGraphicsFbProviderListener.aidl` | Listener interface for graphics frame release callbacks from the graphics frame buffer provider.|
 | `AspectRatio.aidl` | Enum list of aspect ratios.|
-| `Capabilities.aidl` | Parcelable describing a single plane resource capabilities.|
+| `PlaneCapabilities.aidl` | Parcelable describing a single plane resource capabilities.|
+| `GraphicsFbCapabilities.aidl` | Parcelable describing graphics frame buffer provider capabilities for a graphics plane.|
+| `GraphicsFbInfo.aidl` | Parcelable describing graphics frame metadata (frame ID, pixel width, pixel height, stride and offset).|
 | `PlaneType.aidl` | Enum list of plane types.|
 | `Property.aidl` | Enum list of plane properties.|
 | `PropertyKVPair.aidl` | Parcelable of a single property key and value pair.|
@@ -57,11 +64,11 @@ Upon starting, the service shall register the `IPlaneControl` interface with the
 
 ## Product Customization
 
-The `IPlaneControl.getCapabilities()` returns an array of `Capabilities` parcelables to uniquely represent all of the plane resources supported by the vendor layer.
+The `IPlaneControl.getCapabilities()` returns an array of `PlaneCapabilities` parcelables to uniquely represent all of the plane resources supported by the vendor layer.
 
 Typically, the plane index (resource ID) value starts at 0 for the first video plane and increments by 1 for each additional video plane, followed by the graphic plane(s).
 
-The `Capabilities` parcelable returned by the `IPlaneControl.getCapabilities()` function lists all capabilities supported by a plane resource.
+The `PlaneCapabilities` parcelable returned by the `IPlaneControl.getCapabilities()` function lists all capabilities supported by a plane resource.
 - Concurrent control of plane resources is allowed by multiple clients. The RDK middleware is responsible for ensuring only 1 controlling client is active at any given time.
 
 ## System Context
@@ -70,13 +77,15 @@ The Plane Control service provides functionality to multiple clients which exist
 
 Typically, video planes are linked to video sources when a GStreamer pipeline is created in the RDK middleware. The geometry of the video planes can be manipulated by the Window Manager through a separate client connection.
 
-Native graphics plane windows are taken by the RDK middleware compositor to link graphics display updates from EGL to the hardware.
+Graphics planes may expose `IGraphicsFbProvider` for EGL-based graphics frame rendering and commit.
 
 ```mermaid
 flowchart TD
     %% --- Components ---
     RDKClientComponent["RDK Client Component"]
     IPlaneControlListener["IPlaneControlListener"]
+    IGraphicsFbProvider["IGraphicsFbProvider"]
+    IGraphicsFbProviderListener["IGraphicsFbProviderListener"]
 
     subgraph Connections["Vendor Layer"]
         subgraph IPlaneControlHAL["Plane Control HAL"]
@@ -91,24 +100,21 @@ flowchart TD
     end
 
     %% --- Function Calls Over Single Line ---
+    RDKClientComponent -- getCapabilities() <br> getGraphicsFbProvider() <br> setVideoSourceDestinationPlaneMapping() <br> getVideoSourceDestinationPlaneMapping() <br> getProperty() <br> setProperty() <br> getPropertyMulti() <br> setPropertyMultiAtomic() <br> registerListener() <br> unregisterListener() --> IPlaneControl
+    
     RDKClientComponent -- getCapabilities()
-    getNativeGraphicsWindowHandle()
-    releaseNativeGraphicsWindowHandle()
-    flipGraphicsBuffer()
-    setVideoSourceDestinationPlaneMapping()
-    getVideoSourceDestinationPlaneMapping()
-    getProperty()
-    setProperty()
-    getPropertyMulti()
-    setPropertyMultiAtomic()
-    registerListener()
-    unregisterListener()
-     --> IPlaneControl
+    createGraphicsFb()
+    commitGraphicsFb()
+    destroyGraphicsFb()
+     --> IGraphicsFbProvider
 
     IPlaneControlListener --> RDKClientComponent
+    IGraphicsFbProviderListener --> RDKClientComponent
 
     %% --- Wrapped Connections in a Subgraph ---
         IPlaneControl --> IPlaneControlListener
+        IPlaneControl --> IGraphicsFbProvider
+        IGraphicsFbProvider --> IGraphicsFbProviderListener
         IPlaneControl -.-> VideoPlane0
         IPlaneControl -.-> VideoPlane1
         IPlaneControl -.-> VideoPlane2
@@ -124,6 +130,8 @@ flowchart TD
     RDKClientComponent:::blue
     IPlaneControl:::wheat
     IPlaneControlListener:::wheat
+    IGraphicsFbProvider:::wheat
+    IGraphicsFbProviderListener:::wheat
     VideoPlane0:::green
     VideoPlane1:::green
     VideoPlane2:::green
@@ -183,7 +191,64 @@ For the 2 types of planes (video and graphics) there are fixed configurations wh
 |Plane Type | Fixed Configuration|
 |-----------|--------------------|
 | **Video** |If there is no video to display on a visible plane, then it shall render transparent black. <br>The z-order is dynamic only for video planes.<br> Primary video plane shall always be listed at resource index 0.|
-| **Graphics** |Calls to `getNativeGraphicsWindowHandle()` will return a handle that can be used to connect with EGL display implementations.|
+| **Graphics** |When the plane type is GRAPHICS, `getGraphicsFbProvider()` provides graphics frame creation, commit, and destroy operations.|
+
+## Graphics Frame Providers
+
+- Plane Control supports graphics frame buffers via `IGraphicsFbProvider`.
+- Clients should first query `IPlaneControl.getCapabilities()` and confirm the target plane is of type GRAPHICS.
+- If supported, clients open the provider using `IPlaneControl.getGraphicsFbProvider()` and use provider APIs to create, render, commit, and destroy frames.
+
+### Graphics Frame Buffer Lifecycle
+
+Use the following sequence for each graphics plane:
+
+1. Discover provider support:
+Call `IPlaneControl.getCapabilities()` and confirm the target plane is of type GRAPHICS.
+2. Open provider:
+Call `IPlaneControl.getGraphicsFbProvider(planeResourceIndex, graphicsFbProviderListener)`.
+3. Create one or more frame buffers:
+Call `IGraphicsFbProvider.createGraphicsFb(width, height, outInfo)`.
+The returned file descriptor is the graphics buffer memory, and `outInfo` provides metadata such as `graphicsFbId`, stride, and offset. Supported format and modifier values are defined in `GraphicsFbCapabilities` and should be obtained via `IGraphicsFbProvider.getCapabilities()`.
+4. Render into the buffer:
+Use the returned graphics buffer and metadata with the client graphics stack (for example EGL/GL) to draw a frame.
+5. Commit for display:
+Call `IGraphicsFbProvider.commitGraphicsFb(graphicsFbId)` to queue the frame for presentation.
+This call is non-blocking.
+6. Reuse released buffers:
+Wait for `IGraphicsFbProviderListener.onGraphicsFbReleased(oldGraphicsFbId, elapsedRealtimeNanos)` before reusing a previously displayed buffer.
+7. Destroy buffers when no longer needed:
+Call `IGraphicsFbProvider.destroyGraphicsFb(graphicsFbId)` for each created buffer during shutdown or reconfiguration.
+
+The number of simultaneously created buffers must not exceed `maxGraphicsFrameBuffers`, and created dimensions must not exceed `maxGraphicsFrameBufferWidth` and `maxGraphicsFrameBufferHeight`.
+
+```mermaid
+sequenceDiagram
+    participant Client as RDK Client
+    participant PC as IPlaneControl
+    participant Provider as IGraphicsFbProvider
+    participant Listener as IGraphicsFbProviderListener
+    participant Plane as Graphics Plane
+
+    Client->>PC: getCapabilities()
+    PC-->>Client: PlaneCapabilities[] (type == GRAPHICS)
+
+    Client->>PC: getGraphicsFbProvider(planeId, listener)
+    PC-->>Client: IGraphicsFbProvider
+
+    Client->>Provider: createGraphicsFb(width, height, outInfo)
+    Provider-->>Client: ParcelFileDescriptor + GraphicsFbInfo(graphicsFbId)
+
+    Client->>Client: Render into graphics buffer
+    Client->>Provider: commitGraphicsFb(graphicsFbId)
+    Provider->>Plane: Queue frame for display
+
+    Plane-->>Provider: Previous frame released
+    Provider-->>Listener: onGraphicsFbReleased(oldGraphicsFbId, elapsedRealtimeNanos)
+    Listener-->>Client: Buffer available for reuse
+
+    Client->>Provider: destroyGraphicsFb(graphicsFbId)
+```
 
 ## Video Planes
 
@@ -193,7 +258,7 @@ A video plane can only be mapped to one video source at a time, and any attempt 
 
 A call to the `setVideoSourceDestinationPlaneMapping()` allows for multiple sources and planes to be mapped and can perform complex operations such as plane swapping between main and PIP video.
 
-The sequence of calls below shows how man video and PIP video can be mapped separately and then swapped.
+The sequence of calls below shows how main video and PIP video can be mapped separately and then swapped.
 
 ### Main Video on Plane 0
 
@@ -203,7 +268,7 @@ The sequence of calls below shows how man video and PIP video can be mapped sepa
 ```c++
 SourcePlaneMapping[] =
 {
-    sourceType = "SOURCE_VIDEO_SINK",
+    sourceType = SourceType::VIDEO_SINK,
     sourceIndex = 0,
     destinationPlaneIndex = 0
 }
@@ -217,7 +282,7 @@ SourcePlaneMapping[] =
 ```c++
 SourcePlaneMapping[] =
 {
-    sourceType = "SOURCE_VIDEO_SINK",
+    sourceType = SourceType::VIDEO_SINK,
     sourceIndex = 1,
     destinationPlaneIndex = 1
 }
@@ -230,12 +295,12 @@ SourcePlaneMapping[] =
 ```c++
 SourcePlaneMapping[] =
 {
-  sourceType = "SOURCE_VIDEO_SINK",
+  sourceType = SourceType::VIDEO_SINK,
   sourceIndex = 0,
   destinationPlaneIndex = 1
 },
 {
-  sourceType = "SOURCE_VIDEO_SINK",
+  sourceType = SourceType::VIDEO_SINK,
   sourceIndex = 1,
   destinationPlaneIndex = 0
 }
@@ -248,12 +313,12 @@ SourcePlaneMapping[] =
 ```c++
 SourcePlaneMapping[] =
 {
-    sourceType = "SOURCE_VIDEO_SINK",
+    sourceType = SourceType::VIDEO_SINK,
     sourceIndex = 0,
     destinationPlaneIndex = -1 // -1 indicates unmapping
 },
 {
-    sourceType = "SOURCE_VIDEO_SINK",
+    sourceType = SourceType::VIDEO_SINK,
     sourceIndex = 1,
     destinationPlaneIndex = 0
 }
@@ -272,7 +337,7 @@ The `setVideoSourceDestinationPlaneMapping()` function can be used to unmap one 
 ```c++
 SourcePlaneMapping[]=
 {
-    sourceType = SOURCE_VIDEO_SINK, 
+    sourceType = SourceType::VIDEO_SINK,
     sourceIndex = 0, 
     destinationPlaneIndex = -1
 }
@@ -324,7 +389,7 @@ Where a plane is configured to use a translucent alpha setting (`Property::ALPHA
 
 ## Plane Display Latency
 
-The `vsyncDisplayLatency` in `Capabilities` indicates the delay of video or graphics presentation changes before final output.
+The `vsyncDisplayLatency` in `PlaneCapabilities` indicates the delay of video or graphics presentation changes before final output.
 
 For example, video planes may have latency incurred by vendor specific PQ pipelines or MEMC processing and graphics planes may have latency incurred by vendor specific double buffering or composition.
 
