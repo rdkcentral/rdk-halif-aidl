@@ -20,7 +20,7 @@ package com.rdk.hal.audiosink;
 import com.rdk.hal.audiosink.ErrorCode;
 import com.rdk.hal.State;
 
-/** 
+/**
  *  @brief     Controller callbacks listener interface from audio sink.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -29,7 +29,7 @@ import com.rdk.hal.State;
 
 @VintfStability
 oneway interface IAudioSinkControllerListener {
-  
+
     /**
      * Callback when the sink has transitioned to a new state.
      *
@@ -37,29 +37,35 @@ oneway interface IAudioSinkControllerListener {
      * @param[in] newState              The new state transitioned to.
      */
     void onStateChanged(in State oldState, in State newState);
- 
+
     /**
      * Callback when the first audio frame has started to be mixed.
-     * 
+     *
      * The behaviour is the same for tunnelled and non-tunnelled audio.
      * This occurs on the first audio frame in the session or after a flush() call.
      * The frame may not immediately be heard due to the audio pipeline output latency.
-     * 
+     *
      * @param[in] nsPresentationTime	The presentation time of the audio frame in nanoseconds.
      */
     void onFirstFrameRendered(in long nsPresentationTime);
-   
+
     /**
      * Callback when the last audio frame has been completely passed to the mixer.
-     * 
+     *
+     * Triggered after the client signalled EOS by passing a frame to
+     * `IAudioSinkController.queueAudioFrame()` with `FrameMetadata.endOfStream = true`.
+     * Fires exactly once per session, ordered strictly after that final frame
+     * has been completely passed to the mixer.
+     *
      * The behaviour is the same for tunnelled and non-tunnelled audio.
-     * This occurs on the last frame mixed in the session.
      * The audio may not immediately be heard due to audio mixer and output latencies.
-     * 
-     * @param[in] nsPresentationTime	The presentation time of the audio frame in nanoseconds.
+     *
+     * @param[in] nsPresentationTime	The presentation time of the final audio frame in nanoseconds.
+     *
+     * @see IAudioSinkController.queueAudioFrame()
      */
     void onEndOfStream(in long nsPresentationTime);
-   
+
     /**
     * Callback to indicate an audio frame buffer underflow condition.
     *
@@ -73,12 +79,12 @@ oneway interface IAudioSinkControllerListener {
     * underflow occurs.
     */
     void onAudioUnderflow();
-  
+
     /**
      * Callback to indicate that audio has resumed after an audio underflow event.
-     * 
+     *
      * The onAudioUnderflow() can occur again after onAudioResumed() has been called.
-     * 
+     *
      * @param[in] nsPresentationTime	The presentation time of the audio frame in nanoseconds.
      */
     void onAudioResumed(in long nsPresentationTime);
@@ -87,4 +93,23 @@ oneway interface IAudioSinkControllerListener {
      * Callback when a requested flush() operation has completed.
      */
     void onFlushComplete();
+
+    /**
+     * Callback that signals the audio sink input frame buffer queue has space again.
+     *
+     * Fired exactly once per back-pressure episode: when the internal queue transitions
+     * from full to has-space after `IAudioSinkController.queueAudioFrame()` returned `false`.
+     * If the client continues to call `queueAudioFrame()` during back-pressure (receiving
+     * `false` repeatedly), only one callback is delivered per transition, regardless of
+     * the number of intermediate `false` returns.
+     *
+     * The client SHOULD wait for this callback before retrying `queueAudioFrame()` to avoid
+     * wasted binder transactions. Continuing to call `queueAudioFrame()` while the queue is
+     * full is permitted but will return `false` repeatedly until space is available.
+     *
+     * Not fired in steady-state operation - only after a refused frame.
+     *
+     * @see IAudioSinkController.queueAudioFrame()
+     */
+    void onFrameBufferAvailable();
 }

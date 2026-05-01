@@ -41,17 +41,29 @@ sensor:
       supportsDeepSleepAutonomy: true         # Capabilities.supportsDeepSleepAutonomy
       
       # ========================================================================
-      # OPERATIONAL CONFIGURATION (Platform-specific defaults and constraints)
+      # PLATFORM DEFAULTS AND CAPABILITY DECLARATIONS
+      #
+      # These values declare the platform's factory defaults and supported
+      # modes. They are NOT runtime configuration — actual runtime parameters
+      # are set via IMotionSensorController.start(StartConfig) and
+      # IMotionSensorController.setActiveWindows().
+      #
+      # Used by:
+      #   - VTS test automation to validate against declared capabilities
+      #   - Middleware to query expected defaults without calling the HAL
+      #   - Documentation of platform-specific constraints
       # ========================================================================
-      operational_modes:
+      operational_modes:       # Supported OperationalMode values
         - MOTION
         - NO_MOTION
-      default_mode: MOTION
-      timing:
-        no_motion_seconds: 5     # Default inactivity window before NO_MOTION event
-        active_start_seconds: 0  # Activation delay after start()
-        active_stop_seconds: 0   # Continuous monitoring until stop()
-      active_windows:
+
+      # Factory default StartConfig values (maps to StartConfig.aidl fields)
+      defaultStartConfig:
+        operationalMode: MOTION       # StartConfig.operationalMode
+        noMotionSeconds: 5            # StartConfig.noMotionSeconds
+        activeStartSeconds: 0         # StartConfig.activeStartSeconds (0 = immediate)
+        activeStopSeconds: 0          # StartConfig.activeStopSeconds (0 = no auto-stop)
+      active_windows:          # Factory default active windows (example values)
         # Example: Monitor during business hours (9am-5pm) and evening (8pm-10pm)
         - startTimeOfDaySeconds: 32400  # 09:00:00 (9 * 3600)
           endTimeOfDaySeconds: 61200    # 17:00:00 (17 * 3600)
@@ -63,4 +75,4 @@ sensor:
       notes:
         - "Front-facing PIR motion detector."
         - "Supports autonomous operation during deep sleep."
-        - "Active windows can be configured via setActiveWindows()."
+        - "Active windows can be configured via IMotionSensorController.setActiveWindows()."

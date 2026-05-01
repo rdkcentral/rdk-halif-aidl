@@ -19,6 +19,8 @@
 
 package com.rdk.hal.compositeinput;
 
+import com.rdk.hal.compositeinput.PortProperty;
+
 /**
  * @brief Metadata describing a composite input property.
  *
@@ -57,8 +59,8 @@ parcelable PropertyMetadata
         STRING = 5,
     }
 
-    /** Property key string (e.g., "SIGNAL_STRENGTH"). */
-    @utf8InCpp String key;
+    /** Property key (from the PortProperty enum). */
+    PortProperty key;
 
     /** Data type of the property value. */
     PropertyType type;

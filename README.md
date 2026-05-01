@@ -1,8 +1,16 @@
 # RDK HAL Aidl Interface
 
-**RDK-HALIF-AIDL** is an open-source framework that standardizes hardware abstraction layers using Android AIDL. It provides a structured, IPC-driven interface for seamless communication between system components and hardware devices. 
+**RDK-HALIF-AIDL** is an open-source framework that standardizes hardware abstraction layers using Android AIDL. It provides a structured, IPC-driven interface for seamless communication between system components and hardware devices.
 
 Designed for embedded platforms, **RDK-HALIF-AIDL** ensures efficient hardware interaction, modular development, and interoperability with Android-based ecosystems.
+
+## Governance
+
+Each HAL interface follows a structured review and versioning lifecycle to ensure stability, traceability, and alignment across teams before release.
+
+- **[RAG Status Report](RAG_STATUS_REPORT.md)** — Tracks the review readiness of every HAL and VSI component on the develop branch. Each component carries a 🟢 GREEN / 🟡 AMBER / 🔴 RED status reflecting whether its interface definition has been reviewed, is under active design iteration, or is blocked awaiting strategy. This report is generated from the `metadata.yaml` files embedded in each component directory.
+
+- **[Versioning SOP](docs/governance/versioning-sop.md)** — Defines how interface versions are assigned, incremented, and promoted. Covers the generation numbering scheme (`0.x.y`), the 14+5 day review cycle, and the criteria for a component to move from RED → AMBER → GREEN. All teams contributing to or consuming HAL interfaces should follow this process.
 
 ## Documentation
 

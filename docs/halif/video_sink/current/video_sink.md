@@ -190,6 +190,14 @@ The video frame data in the buffer is vendor specific and is not decoded or unde
 
 Once the data in a video frame buffer has been presented or upon a flush request, the Video Sink shall free handles by calling `IAVBuffer.free()`.
 
+## Input Buffer Back-Pressure
+
+`IVideoSinkController.queueVideoFrame()` returns `false` when the internal frame buffer queue is full. Buffer ownership remains with the caller and the frame must be retained for re-submission.
+
+To avoid wasted binder transactions, the client SHOULD wait for `IVideoSinkControllerListener.onFrameBufferAvailable()` before calling `queueVideoFrame()` again. The callback fires exactly once per back-pressure episode: when the internal queue transitions from full to has-space. If the client continues to call `queueVideoFrame()` during back-pressure (receiving `false` repeatedly), only one callback is delivered per transition. It is not fired in steady-state operation.
+
+Continuing to call `queueVideoFrame()` while the queue is full is permitted but will return `false` repeatedly until space is available.
+
 ## Secure Video Processing
 
 Secure video processing (SVP) is a requirement for RDK-E.
@@ -198,11 +206,13 @@ If any video decoder supports SVP in non-tunnelled mode then the Video Sink HAL 
 
 ## End of Stream Signalling
 
-The Video Decoder shall emit a `FrameMetadata` with `endOfStream=true` after all video frames have been output from the decoder.
+EOS is carried on the framework metadata parcelable. The RDK middleware client signals EOS to the Video Sink by setting `FrameMetadata.endOfStream = true` on the final frame queued via `IVideoSinkController.queueVideoFrame()`. The buffer MUST be a valid final video frame - there is no EOS-only marker form.
 
-For non-tunnelled video, the Video Sink shall be passed this metadata with the final video frame buffer or after the last video frame buffer has been queued by the RDK middleware client.
+When `FrameMetadata.endOfStream = true`, the other fields of `FrameMetadata` describe the final frame as normal — there is no separate EOS-only marker form.
 
-All video frame buffers queued up in the Video Sink are expected to continue to be displayed in the usual way, but the Video Sink is not expecting any further video buffers to be queued.
+For non-tunnelled video, the Video Decoder delivers `FrameMetadata.endOfStream = true` on its final `onFrameOutput()` callback; the RDK middleware client forwards that frame and metadata to the Video Sink via `queueVideoFrame()`.
+
+All video frame buffers queued up in the Video Sink continue to be displayed in the usual way. After the final frame has been rendered, the sink fires `IVideoSinkControllerListener.onEndOfStream()` exactly once. Subsequent calls to `queueVideoFrame()` raise `EX_ILLEGAL_STATE` until the sink is flushed or stopped and restarted.
 
 ## Video Plane Mapping
 

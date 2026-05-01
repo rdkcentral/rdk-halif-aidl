@@ -81,6 +81,21 @@ Each AV pipeline utilises its own instance of an AV clock which operates indepen
 
 Clients can access their AV clock time by calling `getCurrentClockTime()` to synchronise data streams such as closed captions and subtitles.
 
+### Priming
+
+An AV Clock has a primed/unprimed sub-state inside `STARTED`. Until the clock receives its first priming event for the configured `ClockMode`, it is `STARTED` but unprimed and `getCurrentClockTime()` returns `null`. Once primed, it returns valid `ClockTime` values for the remainder of the started session.
+
+| `ClockMode` | Priming event |
+|---|---|
+| `PCR` | First call to `IAVClockController.notifyPCRSample()` |
+| `AUDIO_MASTER` | First audio frame PTS received by the linked audio sink |
+| `VIDEO_MASTER` | First video frame PTS received by the linked video sink |
+| `AUTO` | Whichever of the above arrives first, given the configured sources |
+
+The unprimed → primed transition is one-way per started session — `stop()` followed by `start()` is required to re-prime.
+
+Clients that need to react to the priming transition without polling `getCurrentClockTime()` register for `IAVClockControllerListener.onPrimed(ClockTime currentClockTime)`. The callback fires exactly once per started session, ordered after the priming event arrives, and carries the first valid clock value so callers do not need an immediate follow-up `getCurrentClockTime()` call.
+
 The AV clock is always linked to the timebase source it has been configured to use (PCR, audio master or video master).
 
 A PCR driven AV clock may wrap or jump at PCR discontinuities.
@@ -102,12 +117,12 @@ flowchart TD
         VideoFrameQueue("Video Frame Queue")
     end
       platformAVSync("Platform AV Sync")
-    RDKClientComponent -- getIAVClockIds() <br> getIAVClock() --> IAVClockManager
+    RDKClientComponent -- getAVClockIds() <br> getAVClock() --> IAVClockManager
     RDKClientComponent -- getCapabilities() <br> getProperty() <br> getState() <br> open() <br> close() <br> registerEventListener() <br> unregisterEventListener() --> IAVClock
-    RDKClientComponent -- setAudioSink() <br> getAudioSink() setSupplementaryAudioSink() setSupplementaryAudioSink() <br> setVideoSink() <br> getVideoSink() <br> start() <br> stop() <br> setClockMode() <br> getClockMode() <br> notifyPCRSample() <br> getCurrentClockTime() <br> setPlaybackRate() <br> getPlaybackRate() --> IAVClockController
+    RDKClientComponent -- start() <br> stop() <br> setClockMode() <br> getClockMode() <br> notifyPCRSample() <br> getCurrentClockTime() <br> setPlaybackRate() <br> getPlaybackRate() --> IAVClockController
     IAVClockManager --> IAVClock --> IAVClockController
     IAVClock -- onStateChanged() --> IAVClockEventListener
-    IAVClockController -- onStateChanged() --> IAVClockControllerListener
+    IAVClockController -- onStateChanged() <br> onPrimed() --> IAVClockControllerListener
     IAVClockEventListener --> RDKClientComponent
     IAVClockControllerListener --> RDKClientComponent
     IAVClockController --> platformAVSync
@@ -190,13 +205,9 @@ graph LR
 
 ### AV Sources and Sync Groups
 
-There can be at most 1 Video Sink source and at most 2 Audio Sink sources linked by an AV Clock session in a sync group.
+A sync group typically consists of one Video Sink source and one Audio Sink source. For receiver-side mixing scenarios (a primary audio language track plus an audio description track) the same AVClock can also be attached to a second Audio Sink — see [https://www.etsi.org/deliver/etsi_en/300400_300499/300468/01.16.01_20/en_300468v011601a.pdf](https://www.etsi.org/deliver/etsi_en/300400_300499/300468/01.16.01_20/en_300468v011601a.pdf) Annex J.
 
-The second Audio Sink is intended for supplementary audio where receiver side mixing is required. 
-
-See [https://www.etsi.org/deliver/etsi_en/300400_300499/300468/01.16.01_20/en_300468v011601a.pdf](https://www.etsi.org/deliver/etsi_en/300400_300499/300468/01.16.01_20/en_300468v011601a.pdf) Annex J.
-
-The client calls the `setAudioSink()`, `setSupplementaryAudioSink()` and `setVideoSink()` APIs to link audio and video sink instances as a sync group to the AV Clock session.
+The sink/clock association is **owned by the sink** — clients call `IAudioSinkController.attachClock(IAVClock.Id)` and `IVideoSinkController.attachClock(IAVClock.Id)` to link a sink to an AVClock. The AVClock itself does not enumerate or track the sinks presenting against it. With no clock attached, the sink does not consume or present output. See `IAudioSinkController` / `IVideoSinkController` for the full sink-side contract.
 
 The AV Clock is required for video decoders/sinks operating in tunnelled, non-tunnelled and/or video texture modes.
 
@@ -331,8 +342,7 @@ sequenceDiagram
     CLK-->>Listener: onStateChanged(OPENING, READY)
     CLK-->>Client: IAVClockController
     note over CLK: Default clock mode is AUTO\nwhen session is opened.
-    Client->>CTRL: setAudioSink(0)
-    Client->>CTRL: setVideoSink(0)
+    note over Client: Sinks attach to this clock<br>via IAudioSinkController.attachClock()<br>and IVideoSinkController.attachClock()
     Client->>CTRL: start()
     CLK-->>Listener: onStateChanged(READY, STARTING)
     CLK-->>Listener: onStateChanged(STARTING, STARTED)
@@ -370,7 +380,7 @@ sequenceDiagram
     CLK-->>Listener: onStateChanged(OPENING, READY)
     CLK-->>Client: IAVClockController
     note over CLK: Default clock mode is AUTO\nwhen session is opened.
-    Client->>CTRL: setAudioSink(0)
+    note over Client: Sink attaches to this clock<br>via IAudioSinkController.attachClock()
     Client->>CTRL: start()
     CLK-->>Listener: onStateChanged(READY, STARTING)
     CLK-->>Listener: onStateChanged(STARTING, STARTED)
@@ -409,8 +419,7 @@ sequenceDiagram
     CLK-->>Client: IAVClockController
     note over CLK: Default clock mode is AUTO\nwhen session is opened.
     Client->>CTRL: setClockMode(PCR)
-    Client->>CTRL: setAudioSink(0)
-    Client->>CTRL: setVideoSink(0)
+    note over Client: Sinks attach to this clock<br>via IAudioSinkController.attachClock()<br>and IVideoSinkController.attachClock()
     Client->>CTRL: start()
     CLK-->>Listener: onStateChanged(READY, STARTING)
     CLK-->>Listener: onStateChanged(STARTING, STARTED)
@@ -453,9 +462,7 @@ sequenceDiagram
     CLK-->>Client: IAVClockController
     note over CLK: Default clock mode is AUTO\nwhen session is opened.
     Client->>CTRL: setClockMode(PCR)
-    Client->>CTRL: setAudioSink(0)
-    Client->>CTRL: setSupplementaryAudioSink(1)
-    Client->>CTRL: setVideoSink(0)
+    note over Client: Both audio sinks (primary + supplementary)<br>and the video sink attach to this clock<br>via their respective IAudioSinkController.attachClock()<br>and IVideoSinkController.attachClock() calls
     Client->>CTRL: start()
     CLK-->>Listener: onStateChanged(READY, STARTING)
     CLK-->>Listener: onStateChanged(STARTING, STARTED)
@@ -497,8 +504,7 @@ sequenceDiagram
     CLK-->>Listener: onStateChanged(OPENING, READY)
     CLK-->>Client: IAVClockController
     note over CLK: Default clock mode is AUTO\nwhen session is opened.
-    Client->>CTRL: setAudioSink(0)
-    Client->>CTRL: setVideoSink(0)
+    note over Client: Sinks attach to this clock<br>via IAudioSinkController.attachClock()<br>and IVideoSinkController.attachClock()
     Client->>CTRL: start()
     CLK-->>Listener: onStateChanged(READY, STARTING)
     CLK-->>Listener: onStateChanged(STARTING, STARTED)

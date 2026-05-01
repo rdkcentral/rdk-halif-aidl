@@ -74,3 +74,11 @@ planecontrol:                   # Component object begins
         supportsAlpha: true
         supportsZOrder: false
         vsyncDisplayLatency: 1
+        graphicsFbCapabilities:
+          maxGraphicsFrameBuffers: 3
+          maxGraphicsFrameBufferWidth: 1920
+          maxGraphicsFrameBufferHeight: 1080
+          format: 0x34325258
+          modifier: 0x0000000000000000
+
+

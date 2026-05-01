@@ -85,6 +85,8 @@ The `IVideoDecoderManager.getVideoDecoderIds()` should return an array of `IV
 
 The Capabilities parcelable returned by the IVideoDecoder.getCapabilities() function lists all of the Codec types and DynamicRange types supported by this video decoder instance and indicates if the secure audio path can be used.
 
+Each entry in `supportedCodecs[]` (a `CodecCapabilities` parcelable) declares an explicit `supportedOutputPixelFormats[]` list — the chroma formats the decoder hardware can produce on its output for that codec/profile/level. The middleware uses this at capability-discovery time to reject incompatible streams before binding the decoder, rather than failing inside `decodeBufferWithMetadata()` after start. Hardware support typically varies per codec block (e.g. a SoC's VP9 path may produce 4:4:4 on the same silicon where the H.264 path is 4:2:0 only), so the list is per-codec entry rather than a single global list.
+
 A video decoder instance may support any number of video codecs, but can only operate on one compressed video stream in an open session.  Concurrent video decode requires multiple video decoder instances to be opened.
 
 ## System Context
@@ -115,7 +117,7 @@ flowchart TD
     RDKClientComponent -- getVideoDecoderIds() <br> getVideoDecoder() getSupportedOperationModes()--> IVideoDecoderManager
     RDKClientComponent -- getCapabilities() <br> getProperty() <br> getPropertyMulti() <br> getState() <br> open() <br> close() <br> registerEventListener() <br> unregisterEventListener()--> IVideoDecoder
     RDKClientComponent -- registerEventListener() <br> unregisterEventListener() --> IVideoDecoder
-    RDKClientComponent -- start() <br> stop() <br> setProperty() <br> decodeBuffer() <br> flush() <br> signalDiscontinuity() <br> signalEOS() <br> parseCodecSpecificData() --> IVideoDecoderController
+    RDKClientComponent -- start() <br> stop() <br> setProperty() <br> decodeBufferWithMetadata() <br> flush() <br> signalDiscontinuity() <br> parseCodecSpecificData() --> IVideoDecoderController
     IVideoDecoderManager --> IVideoDecoder --> IVideoDecoderController
     IVideoDecoder -- onStateChanged() <br> onDecodeError() --> IVideoDecoderEventListener
     IVideoDecoderEventListener --> RDKClientComponent
@@ -245,7 +247,7 @@ The enum `OperationalMode` provides the constants used to specify operational 
 
 The video decoder may switch operational modes at any time while in a READY or STARTED state.
 
-In all modes, AV buffers containing compressed video are passed into the video decoder through calls to `decodeBuffer()`.
+In all modes, AV buffers containing compressed video are passed into the video decoder through calls to `decodeBufferWithMetadata()`.
 
 | Operational Mode | Description |
 |---|---|
@@ -273,17 +275,21 @@ A media pipeline is operating in low latency mode when the video decoder and aud
 
 ## Video Stream Discontinuities
 
-Where the client has knowledge of PTS discontinuities in the video stream, it shall call `IVideoDecoderController.signalDiscontinuity()` between the AV buffers passed to `decodeBuffer()`.
+Where the client has knowledge of PTS discontinuities in the video stream, it shall call `IVideoDecoderController.signalDiscontinuity()` between the AV buffers passed to `decodeBufferWithMetadata()`.
 
 For the first input [AV Buffer](../../av_buffer/current/av_buffer.md) video frame passed in for decode after the discontinuity, it shall indicate the discontinuity in its next output `FrameMetadata`.
 
 ## End of Stream Signalling
 
-When the client knows it has delivered the final video frame buffer to a decoder it shall then call `IVideoDecoderController.signalEOS()`.
+EOS rides entirely on the framework metadata parcelables on both sides of the interface. There is no separate signal method.
 
-The Video Decoder shall continue to decode all buffers previously passed for decode, but no further video buffers should be expected unless the video decoder is first stopped and restarted or is flushed.
+**Input side:** the client sets `InputBufferMetadata.endOfStream = true` on the final call to `IVideoDecoderController.decodeBufferWithMetadata()`. `bufferHandle` MUST reference a valid encoded frame - there is no EOS-only marker form and no path to signal EOS without data. If the client has no more data to send, it ends the session via `stop()` (or `flush(reset=true)` if the decoder is to be reused).
 
-The Video Decoder shall emit a `FrameMetadata` with `endOfStream=true` after all video frames have been output from the decoder.
+**Output side:** EOS rides on the FINAL `IVideoDecoderControllerListener.onFrameOutput()` callback of the decode session by `FrameMetadata.endOfStream = true`. There is no separate EOS-only marker callback after the last frame. Fires exactly once per session. In non-tunnelled mode the callback delivers the last decoded frame with valid `frameAVBufferHandle` and `FrameMetadata`; in tunnelled mode `frameAVBufferHandle = -1` as normal. `metadata` is guaranteed non-null on the EOS callback (because `endOfStream` transitioning from false to true is a metadata change) so clients can rely on `metadata != null && metadata.endOfStream` for unambiguous EOS detection. The other fields of `FrameMetadata` describe the final frame as normal.
+
+**In-bitstream EOS:** for codecs that carry an elementary-stream EOS marker (MPEG-2 `sequence_end_code`, H.264/H.265 end_of_stream NAL, MPEG-4 Part 2 `visual_object_sequence_end_code`), the HAL absorbs the marker, drains, and delivers the final `onFrameOutput()` with `endOfStream = true`. The client need not additionally set `InputBufferMetadata.endOfStream = true`, but doing so is not an error - the two EOS sources collapse to a single event.
+
+After the EOS callback the decoder remains in `State::STARTED` but is drained. No further `onFrameOutput()` is delivered until `flush()` or `stop()` + `start()`.
 
 ## Decoded Video Frame Buffers
 
@@ -291,7 +297,7 @@ Decoded video frame buffers are only passed from the video decoder to the client
 
 If the input [AV Buffer](../../av_buffer/current/av_buffer.md) that contained the coded video frame was passed in a secure buffer, then the corresponding decoded video frame must be output in a secure video frame buffer.
 
-Video frame buffers are passed back as handles in the `IVideoDecoderControllerListener.onFrameOutput()` function `frameBufferHandle` parameter.  If no frame buffer handle is available to pass but the call needs to be made to provide updated FrameMetadata then `-1` shall be passed as the handle value.
+Video frame buffers are passed back as handles in the `IVideoDecoderControllerListener.onFrameOutput()` function `frameBufferHandle` parameter.  In tunnelled mode, `-1` is passed as the handle value to indicate that no frame buffer handle is being provided since the video is consumed internally by the vendor layer.
 
 The format of the data in the decoded video frame buffer is determined by the vendor driver implementation and does not need to be understood by the RDK middleware.
 
@@ -299,17 +305,51 @@ The frame buffer handle is later passed to the Video Sink for queuing before pre
 
 The vendor layer is expected to manage the pool of decoded frame buffers privately and report its size in the `OUTPUT_FRAME_POOL_SIZE` property.
 
-If the frame buffer pool is empty then the video decoder cannot output the next decoded frame until a new frame buffer becomes available.  While frame output is blocked, it is reasonable for the video decoder service to either buffer additional coded input buffers or to reject new calls to `decodeBuffer()` with a false return value.
+If the frame buffer pool is empty then the video decoder cannot output the next decoded frame until a new frame buffer becomes available.  While frame output is blocked, it is reasonable for the video decoder service to either buffer additional coded input buffers or to reject new calls to `decodeBufferWithMetadata()` with a false return value.
+
+## Input Buffer Back-Pressure
+
+`IVideoDecoderController.decodeBufferWithMetadata()` returns `false` when the internal decode buffer queue is full. Buffer ownership remains with the caller and the buffer must be retained for re-submission.
+
+To avoid wasted binder transactions, the client SHOULD wait for `IVideoDecoderControllerListener.onDecodeBufferAvailable()` before calling `decodeBufferWithMetadata()` again. The callback fires exactly once per back-pressure episode: when the internal queue transitions from full to has-space. If the client continues to call `decodeBufferWithMetadata()` during back-pressure (receiving `false` repeatedly), only one callback is delivered per transition. It is not fired in steady-state operation.
+
+Continuing to call `decodeBufferWithMetadata()` while the queue is full is permitted but will return `false` repeatedly until space is available.
 
 ## Presentation Time for Video Frames
 
 The presentation time base units for video frames is nanoseconds and passed in an int64 (long in AIDL definition) variable type. Audio buffers shared the same time base units of nanoseconds.
 
-When coded video frames are passed in through [AV Buffer](../../av_buffer/current/av_buffer.md) handles to `IVideoDecoderController.decodeBuffer()` the `nsPresentationTime` parameter represents the video frame presentation time.
+When coded video frames are passed in through [AV Buffer](../../av_buffer/current/av_buffer.md) handles to `IVideoDecoderController.decodeBufferWithMetadata()` the `InputBufferMetadata.nsPresentationTime` field represents the video frame presentation time.
 
 Calls to `IVideoDecoderControllerListener.onFrameOutput()` with frame buffer handles (non-tunnelled mode) and/or frame metadata shall use the same `nsPresentationTime`.
 
 The video decoder shall output frames in presentation order regardless of the order of input frames which is ordered by the encoder.
+
+## Subtitling and SEI User Data
+
+To support closed captioning and subtitle extraction, the Video Decoder HAL defines the `onUserDataOutput()` callback. This callback delivers user data associated with each decoded video frame, typically used to transport caption information embedded in SEI NAL units.
+
+### Caption Data Delivery
+
+The user data passed via `onUserDataOutput()` corresponds to SEI NAL units conforming to the `user_data_registered_itu_t_t35` format, commonly used for CEA-608/708 captions:
+
+* Begins with ITU-T T.35 `country_code` (e.g., `0xB5` for USA)
+* Followed by `provider_code` (e.g., `0x0031` for ATSC)
+* Includes a `user_identifier` string (typically `'GA94'`)
+* Contains a `user_data_type_code` (e.g., `0x03` for CEA-608/708)
+* Followed by one or more closed caption (CC) data packets
+
+The byte array in `onUserDataOutput()` starts from the `user_identifier` field (inclusive).
+
+### Timing and Sync
+
+* Each `onUserDataOutput(nsPresentationTime, userData)` call corresponds to a single decoded frame.
+* The user data must follow the same **presentation order** as the output video frames to maintain AV sync.
+* The video frame itself may be delivered before or after the user data.
+
+### Client Handling
+
+The RDK media pipeline is responsible for parsing the SEI user data from the byte array to extract CEA-608 or CEA-708 caption packets and synchronize them with playback.
 
 ## Video Decoder States
 
@@ -352,8 +392,8 @@ sequenceDiagram
 
     Note over Client: Client can now<br>send AV buffers
 
-    Client->>Controller: decodeBuffer(pts, bufferHandle=1)
-    Client->>Controller: decodeBuffer(pts, bufferHandle=2)
+    Client->>Controller: decodeBufferWithMetadata(bufferHandle=1, {pts, endOfStream=false, ...})
+    Client->>Controller: decodeBufferWithMetadata(bufferHandle=2, {pts, endOfStream=false, ...})
     Controller-->>IVideoDecoderControllerListener: onFrameOutput(pts, frameBufferHandle=1000, metadata)
     Controller->>IAVBuffer: free(bufferHandle=1)
 
@@ -364,7 +404,7 @@ sequenceDiagram
     Controller->>IAVBuffer: free(bufferHandle=2)
     ADC-->>IVideoDecoderEventListener: onStateChanged(FLUSHING -> STARTED)
 
-    Client->>Controller: decodeBuffer(pts, bufferHandle=3)
+    Client->>Controller: decodeBufferWithMetadata(bufferHandle=3, {pts, endOfStream=false, ...})
 
     Note over ADC: stop() transitions from STARTED -> STOPPING -> READY
 

@@ -12,17 +12,19 @@ set(COMMON_SRC_DIR ${COMMON_MODULE_PATH}/${COMMON_VERSION}/com/rdk/hal)
 set(SRC
     ${SRC_DIR}/ICompositeInputManager.aidl
     ${SRC_DIR}/ICompositeInputPort.aidl
-    ${SRC_DIR}/IPortEventListener.aidl
-    ${SRC_DIR}/IPortTelemetryListener.aidl
+    ${SRC_DIR}/ICompositeInputController.aidl
+    ${SRC_DIR}/ICompositeInputControllerListener.aidl
+    ${SRC_DIR}/ICompositeInputEventListener.aidl
     ${SRC_DIR}/PlatformCapabilities.aidl
     ${SRC_DIR}/PortCapabilities.aidl
     ${SRC_DIR}/PortStatus.aidl
     ${SRC_DIR}/Port.aidl
+    ${SRC_DIR}/PortProperty.aidl
     ${SRC_DIR}/SignalStatus.aidl
+    ${SRC_DIR}/State.aidl
     ${SRC_DIR}/VideoResolution.aidl
     ${SRC_DIR}/PropertyKVPair.aidl
     ${SRC_DIR}/PropertyMetadata.aidl
-    ${SRC_DIR}/PortMetrics.aidl
     ${COMMON_SRC_DIR}/PropertyValue.aidl
 )
 

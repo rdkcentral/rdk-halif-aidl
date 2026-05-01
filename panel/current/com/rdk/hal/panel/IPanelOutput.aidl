@@ -31,8 +31,16 @@ import com.rdk.hal.AVSource;
 /** 
  *  @brief     Display Panel Output Control HAL interface.
  *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
+ *
+ *
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
-
 @VintfStability
 interface IPanelOutput
 {
@@ -78,6 +86,7 @@ interface IPanelOutput
 	 * @return boolean
 	 * @retval true				The panel is enabled.
 	 * @retval false			The panel is disabled.
+     *
 	 * 
 	 * @see setEnabled()
 	 */ 
@@ -94,6 +103,7 @@ interface IPanelOutput
      * @return boolean
      * @retval true				The picture modes were successfully set.
      * @retval false			One or more picture mode configurations were invalid and could not be set.
+     *
      *
      * @see getPictureModes()
      */
@@ -124,6 +134,7 @@ interface IPanelOutput
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid criteria or empty input list.
      * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
      *
+     *
      * @see setPictureModes()
      */
     boolean getPictureModes(in PictureModeConfiguration[] requestedConfigurations, out PictureModeConfiguration[] returnedConfigurations);
@@ -146,6 +157,7 @@ interface IPanelOutput
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid criteria or empty input list.
      * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
      *
+     *
      * @see setPictureModes(), getPictureModes()
      */
     boolean getDefaultPictureModes(in PictureModeConfiguration[] requestedConfigurations, out PictureModeConfiguration[] defaultConfigurations);
@@ -158,6 +170,7 @@ interface IPanelOutput
      * @return boolean
      * @retval true     The PQ parameters were set.
      * @retval false    One or more invalid parameter configurations.
+     *
      * 
      * @see getPQParameters(), getDefaultPQParameters(), getPQParameterCapabilities(), PQParameterConfiguration
      */
@@ -188,6 +201,7 @@ interface IPanelOutput
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid criteria or empty input list.
      * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
      *
+     *
      * @see setPQParameters(), getDefaultPQParameters(), getPQParameterCapabilities(), PQParameterConfiguration
      */
     boolean getPQParameters(in PQParameterConfiguration[] requestedConfigurations, out PQParameterConfiguration[] returnedConfigurations);
@@ -207,6 +221,7 @@ interface IPanelOutput
      * @exception binder::Status::Exception::EX_NONE             Success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid criteria or empty input list.
      * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
+     *
      *
      * @see setPQParameters(), getPQParameters(), getPQParameterCapabilities(), PQParameterConfiguration
      */
@@ -236,6 +251,7 @@ interface IPanelOutput
      * @return boolean
      * @retval true     The refresh rate was set.
      * @retval false    Unsupported refresh rate.
+     *
      * 
      * @see getRefreshRate()
      */
@@ -266,6 +282,7 @@ interface IPanelOutput
 	 * @return boolean
      * @retval true     The new frame rate matching state was set.
      * @retval false    The new frame rate matching state was not set.
+     *
      * 
      * @see getFrameRateMatching()
 	 */
@@ -277,6 +294,7 @@ interface IPanelOutput
      * @return boolean
      * @retval true     Frame rate matching is enabled.
      * @retval false    Frame rate matching is disabled.
+     *
      * 
      * @see setFrameRateMatching()
      */
@@ -357,6 +375,7 @@ interface IPanelOutput
      * @return boolean
      * @retval true     The 2-point white balance was set for the color temperature.
      * @retval false    One or more parameters are invalid.
+     *
      */
     boolean set2PointWhiteBalance(in int colorTemperature, in WhiteBalance2PointSettings whiteBalance);
 
@@ -378,6 +397,7 @@ interface IPanelOutput
      * @return boolean
      * @retval true     The multi-point white balance was set for the color temperature.
      * @retval false    One or more parameters are invalid.
+     *
      */
     boolean setMultiPointWhiteBalance(in int colorTemperature, in WhiteBalanceMultiPointSettings whiteBalance);
 
@@ -420,6 +440,7 @@ interface IPanelOutput
      * @return boolean
      * @retval true     The fade operation was started.
      * @retval false    The fade operation was not started because one or more parameters are invalid.
+     *
 	 */ 
 	boolean fadeDisplay(in int start, in int end, in int durationMs);
 

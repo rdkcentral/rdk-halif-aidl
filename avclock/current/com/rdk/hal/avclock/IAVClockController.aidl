@@ -17,8 +17,6 @@
  * limitations under the License.
  */
 package com.rdk.hal.avclock;
-import com.rdk.hal.audiosink.IAudioSink;
-import com.rdk.hal.videosink.IVideoSink;
 import com.rdk.hal.avclock.ClockMode;
 import com.rdk.hal.avclock.ClockTime;
 
@@ -27,6 +25,13 @@ import com.rdk.hal.avclock.ClockTime;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
 
 @VintfStability
@@ -62,115 +67,6 @@ interface IAVClockController {
     void stop();
 
 	/**
-	 * Sets the primary audio sink for presentation against the AV Clock.
-     * 
-     * When the AV Clock is opened, the default is set to `IAudioSink.Id.UNDEFINED`.
-	 * When set to `IAudioSink.Id.UNDEFINED` then no audio sink is set.  
-     * 
- 	 * @param[in] audioSinkId				    The ID of the Audio Sink source.
-     * 
-     * @returns boolean
-     * @retval true     Successfully set the audio sink.
-     * @retval false    The ID is invalid or not `IAudioSink.Id.UNDEFINED`.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     * 
-     * @pre AV Clock is in State::READY or State::STARTED state.
-     * 
-     * @see getAudioSink()
-	 */
-	boolean setAudioSink(in IAudioSink.Id audioSinkId);
-
-    /**
-     * Gets the primary Audio Sink ID for presentation against the AV Clock.
-     * 
-     * @returns IAudioSink.Id which can be `IAudioSink.Id.UNDEFINED`.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     * 
-     * @pre AV Clock is in State::READY or State::STARTED state.
-     * 
-     * @see setAudioSink()
-     */
-    IAudioSink.Id getAudioSink();
-    
- 	/**
-	 * Sets the supplementary Audio Sink ID for presentation against the AV Clock.
-     * 
-	 * The supplementary Audio Sink is only used for receiver side mixing where
-	 * the primary audio and supplementary audio are mixed from 2 separate Audio Sinks.
-     * e.g. A primary audio language track and an audio description track.
-     * 
-     * Both audio tracks sources must be from the same stream sharing a common clock source.
-     * Receiver mixing is most commonly found in TV broadcast networks.
-	 *
-	 * @param[in] supplementaryAudioSinkId	    Supplementary Audio Sink ID source.
-     * 
-     * @returns boolean
-     * @retval true     Successfully set the supplementary audio sink.
-     * @retval false    The ID is invalid or not `IAudioSink.Id.UNDEFINED`.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     * 
-     * @pre AV Clock is in State::READY or State::STARTED state.
-     * 
-     * @see getSupplementaryAudioSink()
-	 */
-    boolean setSupplementaryAudioSink(in IAudioSink.Id supplementaryAudioSinkId);
-
-    /**
-     * Gets the supplementary Audio Sink ID for presentation against the AV Clock.
-     * 
-     * @returns IAudioSink.Id which can be `IAudioSink.Id.UNDEFINED`.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     * 
-     * @pre AV Clock is in State::READY or State::STARTED state.
-     * 
-     * @see setSupplementaryAudioSink()
-     */
-    IAudioSink.Id getSupplementaryAudioSink();
-
-	/**
-	 * Sets the Video Sink for presentation against the AV Clock.
-     * 
-     * When the AV Clock is opened, the default is set to `IVideoSink.Id.UNDEFINED`.
-	 * When set to `IVideoSink.Id.UNDEFINED` then no video sink is set.  
-     * 
- 	 * @param[in] videoSinkId				    The ID of the Video Sink source.
-     * 
-     * @returns boolean
-     * @retval true     Successfully set the video sink.
-     * @retval false    The ID is invalid or not `IVideoSink.Id.UNDEFINED`.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     * 
-     * @pre AV Clock is in State::READY or State::STARTED state.
-     * 
-     * @see getVideoSink()
-	 */
-	boolean setVideoSink(in IVideoSink.Id videoSinkId);
-
-    /**
-     * Gets the Video Sink ID for presentation against the AV Clock.
-     * 
-     * @returns IVideoSink.Id which can be `IVideoSink.Id.UNDEFINED`.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     * 
-     * @pre AV Clock is in State::READY or State::STARTED state.
-     * 
-     * @see setVideoSink()
-     */
-    IVideoSink.Id getVideoSink();
-
-	/** 
 	 * Sets the mode of the AV Clock.
      * 
      * The default mode is `ClockMode::AUTO` and can only be changed in the `READY` state.
@@ -183,6 +79,7 @@ interface IAVClockController {
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
      * 
      * @pre AV Clock is in State::READY state.
      * 
@@ -197,6 +94,7 @@ interface IAVClockController {
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
      * 
      * @pre AV Clock is in State::READY or State::STARTED state.
      * 
@@ -225,6 +123,7 @@ interface IAVClockController {
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
      * 
      * @pre AV Clock is in State::STARTED state and in PCR clock mode.
      * 
@@ -234,19 +133,38 @@ interface IAVClockController {
 
 	/**
 	 * Gets the current AV Clock time.
-     * 
+     *
 	 * For `ClockMode::PCR` driven clocks this returns the equivalent of the MPEG system time clock (STC) in nanoseconds units.
-     * 
+     *
 	 * For other clock modes this returns the clock used for presentation of AV frames in the system.
+     *
+     * Priming: the AV Clock has a primed/unprimed sub-state inside `STARTED`.
+     * Until the clock receives its first priming event for the configured
+     * `ClockMode`, it is `STARTED` but unprimed and `getCurrentClockTime()`
+     * returns `null`. Once primed, it returns a valid `ClockTime`. Clients
+     * that need to react to the priming transition without polling can
+     * register for the `IAVClockControllerListener.onPrimed()` callback.
+     *
+     * Priming source per `ClockMode`:
+     * - `ClockMode::PCR`          → first call to `notifyPCRSample()`
+     * - `ClockMode::AUDIO_MASTER` → first audio frame PTS received by the linked audio sink
+     * - `ClockMode::VIDEO_MASTER` → first video frame PTS received by the linked video sink
+     * - `ClockMode::AUTO`         → whichever of the above arrives first, given the configured sources
+     *
+     * The unprimed → primed transition is one-way per started session;
+     * re-priming requires `stop()` followed by `start()`.
 	 *
-  	 * @returns ClockTime
+  	 * @returns ClockTime, or `null` if the clock is `STARTED` but not yet primed.
 	 *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     * 
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the clock is not in `STARTED`.
+     *
+     *
      * @pre AV Clock is in State::STARTED state.
-     */  
- 	ClockTime getCurrentClockTime();
+     *
+     * @see IAVClockControllerListener.onPrimed()
+     */
+ 	@nullable ClockTime getCurrentClockTime();
 
 	/**
 	 * Sets the playback rate for the AV Clock.
@@ -265,6 +183,7 @@ interface IAVClockController {
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
      * 
      * @pre AV Clock is in State::READY or State::STARTED state and clock mode is not ClockMode::PCR.
      * 
@@ -281,6 +200,7 @@ interface IAVClockController {
 	 *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
      * 
      * @pre AV Clock is in State::READY or State::STARTED state and mode is not ClockMode::PCR.
      */  

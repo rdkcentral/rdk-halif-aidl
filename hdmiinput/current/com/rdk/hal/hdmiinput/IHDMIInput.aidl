@@ -36,8 +36,14 @@ import com.rdk.hal.PropertyValue;
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  *  @author    Gerald Weatherup
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
-
 @VintfStability
 interface IHDMIInput 
 {
@@ -59,6 +65,7 @@ interface IHDMIInput
      * The returned value is not allowed to change between calls.
      *
      * @returns Capabilities parcelable.
+     *
      */
     Capabilities getCapabilities();
 
@@ -68,6 +75,7 @@ interface IHDMIInput
      * @param[in] property              The key of a property from the Property enum.
      *
      * @returns PropertyValue or null if the property key is unknown or unavailable for this port.
+     *
      * 
      * @see IHDMIInputController.setProperty()
      */
@@ -77,6 +85,7 @@ interface IHDMIInput
      * Gets the current HDMI input state.
      *
      * @returns State enum value.
+     *
      *
      * @see IHDMIInputEventListener.onStateChanged().
      */  
@@ -98,6 +107,7 @@ interface IHDMIInput
      * @return boolean
      * @retval true     The EDID was retrieved successfully.
      * @retval false    Indicates an error condition (e.g., resource not available, invalid state, or parameter validation failure).
+     *
      *
      * @see setEDID(), getDefaultEDID()
      */
@@ -121,6 +131,7 @@ interface IHDMIInput
      * @retval true         The EDID was retrieved successfully.
      * @retval false        The EDID was not available.
      *
+     *
      * @see setEDID(), getCapabilities()
      */
     boolean getDefaultEDID(in HDMIVersion version, out byte[] edid);
@@ -131,6 +142,7 @@ interface IHDMIInput
      * If HDCP has not yet been authenticated then `HDCPProtocolVersion.UNDEFINED` is returned.
      *
      * @returns HDCPProtocolVersion
+     *
      *
      * @see getHDCPStatus(), IHDMIInputControllerListener.onHDCPStatusChanged()
      */
@@ -145,6 +157,7 @@ interface IHDMIInput
      *
      * @returns HDCPStatus
      *
+     *
      * @see getHDCPCurrentVersion(), IHDMIInputControllerListener.onHDCPStatusChanged()
      */
     HDCPStatus getHDCPStatus();
@@ -155,6 +168,7 @@ interface IHDMIInput
      * For InfoFrame payload, starting with the InfoFrame type code. See HDMI Specification 2.0, Section 8.x for layout.
      *
      * @returns InfoFrame data byte array, or empty array if no InfoFrame has been received since last device connection or start.
+     *
      *
      * @see IHDMIInputControllerListener.onSPDInfoFrame()
      */
@@ -186,6 +200,7 @@ interface IHDMIInput
      * @returns IHDMIInputController, or null if the port cannot be opened (e.g. invalid state).
      * 
      * @exception binder::Status EX_ILLEGAL_STATE 
+     *
      * 
      * @pre The resource must be in State::CLOSED.
      * 
@@ -209,6 +224,7 @@ interface IHDMIInput
      * @retval true     Successfully closed.
      * @retval false    Invalid state or unrecognised parameter.
      *
+     *
      * @pre The resource must be in State::READY.
      *
      * @see open()
@@ -226,6 +242,7 @@ interface IHDMIInput
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
      *
+     *
      * @see unregisterEventListener()
      */
     boolean registerEventListener(in IHDMIInputEventListener hdmiInputEventListener);
@@ -238,6 +255,7 @@ interface IHDMIInput
      * @return boolean
      * @retval true     The event listener was unregistered.
      * @retval false    The event listener was not found registered.
+     *
      *
      * @see registerEventListener()
      */

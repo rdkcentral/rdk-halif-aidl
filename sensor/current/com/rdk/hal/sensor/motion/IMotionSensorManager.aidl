@@ -33,6 +33,7 @@ import com.rdk.hal.sensor.motion.IMotionSensor;
  * @interface IMotionSensorManager
  * @brief Top-level manager interface for Motion Sensor HAL access.
  */
+@VintfStability
 interface IMotionSensorManager {
     /**
      * @brief Binder service registration name.

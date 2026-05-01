@@ -28,5 +28,5 @@ package com.rdk.hal.planecontrol;
 @VintfStability
 oneway interface IPlaneControlListener 
 {
-/* TODO: Check use cases where plane monitoring/events are need by RDK MW, otherwise remove. */
+    /* Add callbacks. If none - delete */
 }

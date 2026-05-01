@@ -25,6 +25,7 @@ package com.rdk.hal.sensor.motion;
 
 import com.rdk.hal.sensor.motion.OperationalMode;
 
+@VintfStability
 oneway interface IMotionSensorEventListener {
     /**
      * @brief Invoked when the sensor detects an event that matches the active operational mode.

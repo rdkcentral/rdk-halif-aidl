@@ -25,6 +25,13 @@ import com.rdk.hal.panel.WhiteBalance2PointSettings;
  *              The functionality covers writing configuration settings to factory persistent storage
  *              and to execute test modes needed by the Factory Test Application.
  *  @authors    Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
 
 @VintfStability
@@ -53,6 +60,7 @@ interface IFactoryPanel
      * @return boolean
      * @retval true     The configuration data was successfully written.
      * @retval false    Write error or invalid parameter.
+     *
      */
     boolean setFactoryPanelConfiguration(in int panelId); 
 
@@ -73,6 +81,7 @@ interface IFactoryPanel
      * @return boolean
      * @retval true     The calibration data was successfully written.
      * @retval false    Write error or invalid parameter.
+     *
      * 
      * @see getFactoryWhiteBalanceCalibration()
      */
@@ -104,6 +113,7 @@ interface IFactoryPanel
      * @retval true     The calibration data was successfully written.
      * @retval false    Write error or invalid parameter.
      *
+     *
      * @see getFactoryGammaTable()
      */
     boolean setFactoryGammaTable(in int colorTemperature, in int[] red, in int[] green, in int[] blue, in SaveTo saveTo);
@@ -133,6 +143,7 @@ interface IFactoryPanel
      * @return boolean
      * @retval true     The peak brightness data was successfully written.
      * @retval false        Write error or invalid parameter.
+     *
      *
      * @see getFactoryPeakBrightness()
      */
@@ -187,6 +198,7 @@ interface IFactoryPanel
      * @return boolean
      * @retval true     The illumination pattern was presented and the duration timer started.
      * @retval false    Invalid parameter(s) or hardware fault.
+     *
      */
     boolean setFactoryLocalDimming(in LocalDimmingZone[] zones, in int durationMs);
 
@@ -203,6 +215,7 @@ interface IFactoryPanel
      * @return boolean
      * @retval true     The test mode was run and the duration timer started.
      * @retval false    Invalid parameter(s) or hardware fault.
+     *
      */
     boolean setFactoryLocalDimmingTestMode(in int mode, in int durationMs);
 
@@ -214,6 +227,7 @@ interface IFactoryPanel
      * @return boolean
      * @retval true     The setting was successfully changed.
      * @retval false    Driver or hardware error.
+     *
      * 
      * @see getFactoryLocalDimmingPixelCompensation()
      */
@@ -225,6 +239,7 @@ interface IFactoryPanel
      * @return boolean
      * @retval true     Local dimming pixel compensation is enabled.
      * @retval false    Local dimming pixel compensation is disabled.
+     *
      * 
      * @see setFactoryLocalDimmingPixelCompensation()
      */

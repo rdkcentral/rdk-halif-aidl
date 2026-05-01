@@ -19,29 +19,56 @@
 
 package com.rdk.hal.compositeinput;
 
+import com.rdk.hal.compositeinput.ICompositeInputController;
+import com.rdk.hal.compositeinput.ICompositeInputControllerListener;
+import com.rdk.hal.compositeinput.ICompositeInputEventListener;
 import com.rdk.hal.compositeinput.Port;
 import com.rdk.hal.compositeinput.PortCapabilities;
+import com.rdk.hal.compositeinput.PortProperty;
 import com.rdk.hal.compositeinput.PortStatus;
 import com.rdk.hal.compositeinput.PropertyKVPair;
-import com.rdk.hal.compositeinput.PortMetrics;
-import com.rdk.hal.compositeinput.IPortEventListener;
-import com.rdk.hal.compositeinput.IPortTelemetryListener;
+import com.rdk.hal.compositeinput.State;
 import com.rdk.hal.PropertyValue;
 
 /**
- * @brief Composite Input Port interface.
+ * @brief     Composite Input Port HAL interface.
  *
- * Provides control and monitoring for an individual composite video input port.
- * Each port can be independently controlled, configured, and monitored.
+ *            Provides control and monitoring for a single composite video input port.
+ *            State lifecycle is managed via open() / close() on this interface and
+ *            start() / stop() on the ICompositeInputController returned by open().
+ *
+ *            State transitions:
+ *              CLOSED → (open) → OPENING → READY → (start) → STARTING → STARTED
+ *              STARTED → (stop) → STOPPING → READY → (close) → CLOSING → CLOSED
+ *
+ *            If the client that opened the controller crashes, stop() and close()
+ *            are implicitly called to perform cleanup.
+ *
+ *            Runtime state and telemetry metrics are both exposed as read-only
+ *            PortProperty keys read via getProperty() / getPropertyMulti(). There
+ *            is no separate metrics parcelable.
+ *
+ * @note Video scaling, positioning and aspect-ratio control are intentionally
+ *       not exposed on this interface. Composite input video, once presented
+ *       via ICompositeInputController.start(), is scaled and positioned by the display pipeline
+ *       through the planecontrol HAL (package com.rdk.hal.planecontrol, see
+ *       IPlaneControl and its Property enum: X, Y, WIDTH, HEIGHT, ASPECT_RATIO,
+ *       OVERSCAN). Clients migrating from the legacy dsCompositeInScaleVideo()
+ *       API should configure the video plane via IPlaneControl rather than
+ *       looking for an equivalent method on this interface.
+ *
+ * @author    Gerald Weatherup
+ *
+ * <h3>Exception Handling</h3>
+ * Unless otherwise specified:
+ * - Success: returns EX_NONE; all output parameters are valid.
+ * - Failure: returns a service-specific exception; output parameters are undefined.
  */
 @VintfStability
 interface ICompositeInputPort
 {
     /**
      * Gets the port ID.
-     *
-     * Returns the unique identifier for this port instance. This ID matches
-     * the ID used in ICompositeInputManager.getPort().
      *
      * @returns Port ID for this port instance (0 to maxPorts-1).
      */
@@ -50,12 +77,9 @@ interface ICompositeInputPort
     /**
      * Gets port metadata.
      *
-     * Returns the port's metadata including its human-readable name
-     * and description. The returned value is constant and must not change
-     * between calls.
+     * Returns constant human-readable metadata. Value does not change between calls.
      *
      * @returns Port parcelable containing port metadata.
-     *
      * @see Port
      */
     Port getPortInfo();
@@ -63,211 +87,146 @@ interface ICompositeInputPort
     /**
      * Gets the capabilities of this specific port.
      *
-     * Returns port-specific capabilities which may differ from platform
-     * capabilities if ports have different features. This can be called
-     * at any time and returns a constant value.
+     * Returns constant port-specific capabilities. Value does not change between calls.
      *
-     * @returns PortCapabilities parcelable containing port-specific capabilities.
-     *
+     * @returns PortCapabilities parcelable.
      * @see PortCapabilities, ICompositeInputManager.getPlatformCapabilities()
      */
     PortCapabilities getCapabilities();
 
     /**
+     * Gets the current state of this port.
+     *
+     * @returns State enum value.
+     * @see ICompositeInputEventListener.onStateChanged()
+     */
+    State getState();
+
+    /**
      * Gets the current status of this port.
      *
-     * Returns current connection state, signal status, detected video mode,
-     * and other runtime state information. This should be polled or used in
-     * conjunction with event listeners for real-time updates.
+     * Returns a polled snapshot of connection state, signal status, and detected
+     * video mode. For async updates, register an ICompositeInputControllerListener
+     * via open() (signal events) and/or an ICompositeInputEventListener via
+     * registerEventListener() (lifecycle and property events).
      *
      * @returns PortStatus parcelable with current port state.
-     *
-     * @exception binder::Status EX_ILLEGAL_STATE if service is not ready.
-     *
-     * @see PortStatus, IPortEventListener
+     * @see PortStatus, ICompositeInputControllerListener, ICompositeInputEventListener
      */
     PortStatus getStatus();
 
     /**
-     * Sets this port as active or inactive.
+     * Gets a property value for this port.
      *
-     * Activates or deactivates video presentation from this port. When activated,
-     * the port's video signal is displayed. Only one port can be active for
-     * presentation at a time; activating a port deactivates any currently active port.
+     * PortProperty keys identify both runtime status (e.g. SIGNAL_STRENGTH) and
+     * telemetry metrics (e.g. METRIC_SIGNAL_DROPS). Supported keys are declared
+     * by the platform in hfp-compositeinput.yaml under ports[].supportedProperties
+     * and discoverable via PortCapabilities.supportedProperties.
      *
-     * @param[in] active     True to activate this port, false to deactivate.
+     * @param[in] property  Property key (from PortProperty enum).
+     * @returns PropertyValue, or null if the property is unknown or unavailable.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE if port cannot be activated (e.g., no stable signal).
-     * @pre Port should have a stable signal (SignalStatus.STABLE) to activate successfully.
-     * @post If successful, this port becomes the active video source.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if property is not a valid enum value.
      *
-     * @see getStatus(), SignalStatus
+     * @see PortProperty, getPropertyMulti(), ICompositeInputController.setProperty()
      */
-    void setActive(in boolean active);
-
-    /**
-     * Gets a property value for this port by string key.
-     *
-     * Retrieves runtime property values such as signal strength, detected video
-     * standard, or audio presence. Property keys are defined in the HFP YAML and
-     * discoverable via getCapabilities().supportedProperties.
-     *
-     * Clients should check the port's supportedProperties array before calling
-     * this method to ensure the property is available on this port.
-     *
-     * @param[in] propertyKey     Property key string (e.g., "SIGNAL_STRENGTH", "VIDEO_STANDARD").
-     * @returns PropertyValue for the requested property, or null if not supported.
-     *
-     * @retval PropertyValue      Valid property value (check appropriate union field based on property type).
-     * @retval null               Property key is unknown or not supported by this port.
-     *
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if propertyKey is null or empty.
-     *
-     * @see PropertyValue, getCapabilities(), setProperty(), getPropertyMulti()
-     */
-    @nullable PropertyValue getProperty(in @utf8InCpp String propertyKey);
-
-    /**
-     * Sets a property value for this port by string key.
-     *
-     * Configures port-specific settings. Not all properties are writable; most
-     * properties are read-only status values. Property keys and writability are
-     * defined in the HFP YAML and discoverable via PropertyMetadata.
-     *
-     * @param[in] propertyKey     Property key string to set.
-     * @param[in] value          The value to set (use appropriate PropertyValue union field).
-     *
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if propertyKey or value is invalid or type mismatch.
-     * @exception binder::Status EX_UNSUPPORTED_OPERATION if property is read-only or not supported by this port.
-     *
-     * @see PropertyValue, getProperty(), setPropertyMulti()
-     */
-    void setProperty(in @utf8InCpp String propertyKey, in PropertyValue value);
+    @nullable PropertyValue getProperty(in PortProperty property);
 
     /**
      * Gets multiple property values in a single call.
      *
-     * Efficient batch retrieval of multiple properties. Reduces IPC overhead
-     * when querying multiple properties simultaneously. Entries for unsupported
-     * properties will have default-initialized values.
+     * Efficient batch read. If any property in the array is unknown,
+     * EX_ILLEGAL_ARGUMENT is thrown and no values are returned.
      *
-     * @param[in] propertyKeys     Array of property key strings to retrieve.
-     * @returns Array of PropertyKVPair with keys and values populated.
+     * @param[in] properties  Array of PortProperty enum values to retrieve.
+     * @returns Array of PropertyKVPair with keys and values populated;
+     *          same length and order as the input array.
      *
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if propertyKeys is null or empty.
-     * @post Returned array length matches input array length.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if properties is empty or
+     *            contains an unknown PortProperty value.
      *
-     * @see PropertyKVPair, getProperty(), setPropertyMulti()
+     * @see PropertyKVPair, getProperty()
      */
-    PropertyKVPair[] getPropertyMulti(in @utf8InCpp String[] propertyKeys);
+    PropertyKVPair[] getPropertyMulti(in PortProperty[] properties);
 
     /**
-     * Sets multiple property values in a single call.
+     * Opens this composite input port for runtime control.
      *
-     * Efficient batch setting of multiple properties. All properties are validated
-     * before any are applied, ensuring atomic operation (all succeed or all fail).
+     * On success the port transitions from CLOSED through OPENING to READY.
+     * onStateChanged() is fired for each transition on any registered
+     * ICompositeInputEventListener — register via registerEventListener()
+     * before calling open() if you need to observe these transitions.
      *
-     * @param[in] properties     Array of PropertyKVPair with keys and values to set.
+     * ICompositeInputControllerListener.onConnectionChanged() always fires at
+     * least once during the OPENING transition to report the current
+     * connected/disconnected state before READY is reached.
      *
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if properties is null, empty, or contains invalid entries.
-     * @exception binder::Status EX_UNSUPPORTED_OPERATION if any property is read-only or not supported.
-     * @pre All properties in the array must be valid and writable.
-     * @post Either all properties are updated successfully, or none are (atomic operation).
+     * onSignalStatusChanged() is not fired during OPENING — it is guaranteed
+     * during the STARTING transition (driven by ICompositeInputController.start())
+     * to report the current signal state before STARTED is reached.
      *
-     * @see PropertyKVPair, setProperty(), getPropertyMulti()
+     * The returned ICompositeInputController is used to start/stop the port
+     * and mutate properties. If the client that opened the controller crashes,
+     * stop() and close() are implicitly called.
+     *
+     * @param[in] listener  Listener for controller callbacks (connection,
+     *                      signal status, video mode).
+     * @returns ICompositeInputController, or null on failure.
+     *
+     * @exception binder::Status EX_ILLEGAL_STATE if port is not in CLOSED state.
+     * @exception binder::Status EX_NULL_POINTER if listener is null.
+     *
+     * @see close(), ICompositeInputController, registerEventListener(), State
      */
-    void setPropertyMulti(in PropertyKVPair[] properties);
+    @nullable ICompositeInputController open(in ICompositeInputControllerListener listener);
 
     /**
-     * Gets telemetry metrics for this port.
+     * Closes this composite input port.
      *
-     * Returns statistical information about port operation, including signal
-     * lock times, drop counts, and uptime. Metrics availability depends on
-     * port capabilities (PortCapabilities.metricsSupported).
+     * The port must be in READY state. On success it transitions through
+     * CLOSING to CLOSED. ICompositeInputEventListener.onStateChanged() is
+     * fired for each transition on any registered event listener.
      *
-     * @returns PortMetrics parcelable with telemetry data.
+     * @param[in] controller  The ICompositeInputController instance returned by open().
+     * @returns Success flag indicating whether the port was closed.
+     * @retval true   Successfully closed.
+     * @retval false  The supplied controller is not the instance returned by open().
      *
-     * @exception binder::Status EX_UNSUPPORTED_OPERATION if metrics are not supported by this port.
-     * @pre Port must support metrics (PortCapabilities.metricsSupported == true).
+     * @exception binder::Status EX_ILLEGAL_STATE if port is not in READY state.
+     * @exception binder::Status EX_NULL_POINTER if controller is null.
      *
-     * @see PortMetrics, resetMetrics(), getCapabilities()
+     * @see open()
      */
-    PortMetrics getMetrics();
-
-    /**
-     * Resets telemetry metrics for this port.
-     *
-     * Clears accumulated metrics counters and restarts telemetry collection.
-     * Useful for measuring performance over a specific time period.
-     *
-     * @exception binder::Status EX_UNSUPPORTED_OPERATION if metrics are not supported by this port.
-     * @pre Port must support metrics (PortCapabilities.metricsSupported == true).
-     * @post All metric counters are reset to zero, lastResetTimestampMs is updated to current time.
-     *
-     * @see getMetrics()
-     */
-    void resetMetrics();
+    boolean close(in ICompositeInputController controller);
 
     /**
      * Registers an event listener for this port.
      *
-     * Registers callbacks for connection, signal status, and video mode events.
-     * Multiple listeners can be registered. Callbacks are delivered asynchronously
-     * via oneway binder calls.
+     * Multiple listeners may be registered. Callbacks are delivered asynchronously
+     * via oneway binder calls. Registration does not require the port to be open.
      *
-     * @param[in] listener     The event listener to register.
+     * Event listeners receive state transition and property change notifications.
+     * Real-time A/V signal events (connection, signal status, video mode) are
+     * delivered exclusively to the ICompositeInputControllerListener passed into
+     * open() — register an event listener before calling open() to observe the
+     * CLOSED → OPENING → READY transitions.
+     *
+     * @param[in] listener  The event listener to register.
      *
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if listener is null.
-     * @post listener receives event callbacks for this port.
      *
-     * @see IPortEventListener, unregisterEventListener()
+     * @see ICompositeInputEventListener, unregisterEventListener()
      */
-    void registerEventListener(in IPortEventListener listener);
+    void registerEventListener(in ICompositeInputEventListener listener);
 
     /**
      * Unregisters a previously registered event listener.
      *
-     * Removes a listener from receiving event callbacks. After unregistration,
-     * no further callbacks will be delivered to this listener.
+     * @param[in] listener  The event listener to unregister.
      *
-     * @param[in] listener     The event listener to unregister.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if listener is null or not registered.
      *
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if listener is null or was not previously registered.
-     * @post listener no longer receives event callbacks.
-     *
-     * @see IPortEventListener, registerEventListener()
+     * @see registerEventListener()
      */
-    void unregisterEventListener(in IPortEventListener listener);
-
-    /**
-     * Registers a telemetry listener for this port.
-     *
-     * Registers callbacks for signal quality changes and metrics updates.
-     * Requires port metrics support (PortCapabilities.metricsSupported).
-     *
-     * @param[in] listener     The telemetry listener to register.
-     *
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if listener is null.
-     * @exception binder::Status EX_UNSUPPORTED_OPERATION if metrics are not supported by this port.
-     * @pre Port must support metrics (PortCapabilities.metricsSupported == true).
-     * @post listener receives telemetry callbacks for this port.
-     *
-     * @see IPortTelemetryListener, unregisterTelemetryListener(), getCapabilities()
-     */
-    void registerTelemetryListener(in IPortTelemetryListener listener);
-
-    /**
-     * Unregisters a previously registered telemetry listener.
-     *
-     * Removes a telemetry listener from receiving callbacks. After unregistration,
-     * no further telemetry callbacks will be delivered to this listener.
-     *
-     * @param[in] listener     The telemetry listener to unregister.
-     *
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if listener is null or was not previously registered.
-     * @post listener no longer receives telemetry callbacks.
-     *
-     * @see IPortTelemetryListener, registerTelemetryListener()
-     */
-    void unregisterTelemetryListener(in IPortTelemetryListener listener);
+    void unregisterEventListener(in ICompositeInputEventListener listener);
 }

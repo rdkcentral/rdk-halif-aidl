@@ -28,6 +28,13 @@ import com.rdk.hal.hdmicec.State;
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
 
 @VintfStability
@@ -44,6 +51,7 @@ interface IHdmiCec
      *
      * @returns State enum value.
      *
+     *
      * @see IHdmiCecEventListener.onStateChanged().
      */  
     State getState();
@@ -54,6 +62,7 @@ interface IHdmiCec
      * @param[in] property              The key of a property from the Property enum.
      *
      * @returns PropertyValue or null if the property key is unknown.
+     *
      * 
      * @see setProperty()
      */
@@ -66,6 +75,7 @@ interface IHdmiCec
      * not returned in this array.
      *
      * @returns int[] - an array of addresses. The size of the array will be zero if no additional addresses have been set.
+     *
      * 
      * @see addLogicalAddress(), removeLogicalAddress()
      */
@@ -95,6 +105,7 @@ interface IHdmiCec
      * @exception binder::Status EX_ILLEGAL_STATE 
      * 
      * @returns IHdmiCecController or null on error.
+     *
      * 
      * @pre The resource must be in State::CLOSED.
      * 
@@ -118,6 +129,7 @@ interface IHdmiCec
      * @retval true     Successfully closed.
      * @retval false    Invalid state or unrecognised parameter.
      *
+     *
      * @pre The resource must be in State::STARTED.
      *
      * @see open()
@@ -135,6 +147,7 @@ interface IHdmiCec
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
      *
+     *
      * @see unregisterEventListener()
      */
     boolean registerEventListener(in IHdmiCecEventListener cecEventListener);
@@ -147,6 +160,7 @@ interface IHdmiCec
      * @return boolean
      * @retval true     The event listener was unregistered.
      * @retval false    The event listener was not found registered.
+     *
      *
      * @see registerEventListener()
      */

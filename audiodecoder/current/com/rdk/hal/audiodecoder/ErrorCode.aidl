@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiodecoder;
- 
-/** 
+
+/**
  *  @brief     Audio decoder error code definitions.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz

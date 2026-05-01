@@ -36,15 +36,31 @@ enum ResetType {
     FULL_SYSTEM_RESET = 0,
 
     /** 
-     * Upon restart, the current application image is invalidated and will be selected for loading on the next boot.
-     * If the platform supports multiple application image banks then the other bank should be selected.
+     * Upon restart, the current application image is invalidated and shall NOT be selected for loading
+     * on the next boot. If the platform supports multiple application image banks then the alternate
+     * bank should be selected; otherwise the Disaster Recovery Image (DRI) will be loaded.
      * BootReason will be reported as WARM_RESET
+     * @note After the next boot, the running image cannot determine from BootReason alone that this
+     *       reset type caused the transition. The exact boot-selection behaviour is platform-dependent.
+     * @note The precise semantics and sequencing of this reset type are under review. A sequence
+     *       diagram documenting entry, exit and observable state should be provided.
      */
     INVALIDATE_CURRENT_APPLICATION_IMAGE = 1,
 
     /** 
-     * Upon restart, the system shall enter disaster recovery mode.
+     * Upon restart, the system shall enter disaster recovery mode by loading the
+     * Disaster Recovery Image (DRI).
      * BootReason will be reported as WARM_RESET
+     * @note From a Primary/Current Image (PCI) perspective there is no visibility that the system
+     *       entered disaster recovery mode. Only the DRI itself knows it was force-loaded. After the
+     *       DRI completes recovery and the system returns to normal operation, the BootReason will not
+     *       reflect that a forced disaster recovery occurred.
+     * @note This reset type may not be supported on all platforms (e.g. platforms without a dedicated
+     *       disaster recovery image). Clients **MUST** verify platform support by checking
+     *       Capabilities.supportedResetTypes before requesting this reset type.
+     * @note The precise semantics, sequencing and terminology for this reset type are under review.
+     *       A sequence diagram documenting how the system enters, executes and exits disaster recovery
+     *       mode should be provided.
      */
     FORCE_DISASTER_RECOVERY = 2,
 

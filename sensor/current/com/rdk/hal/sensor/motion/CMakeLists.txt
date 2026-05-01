@@ -33,9 +33,13 @@ set(SRC_DIR com/rdk/hal/sensor/motion)
 set(SRC
     ${SRC_DIR}/Capabilities.aidl
     ${SRC_DIR}/IMotionSensor.aidl
+    ${SRC_DIR}/IMotionSensorController.aidl
+    ${SRC_DIR}/IMotionSensorControllerListener.aidl
     ${SRC_DIR}/IMotionSensorEventListener.aidl
     ${SRC_DIR}/IMotionSensorManager.aidl
+    ${SRC_DIR}/LastEventInfo.aidl
     ${SRC_DIR}/OperationalMode.aidl
+    ${SRC_DIR}/StartConfig.aidl
     ${SRC_DIR}/State.aidl
     ${SRC_DIR}/TimeWindow.aidl
 )

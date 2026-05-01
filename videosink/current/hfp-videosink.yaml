@@ -22,8 +22,33 @@
 
 # HAL Feature Profile for videosink
 
-videosink:                      # Component object begins
+videosink:
   interfaceVersion: current
-  IVideoSink:               # Resource list
-    - 0
-    - 1
+
+  IVideoSink:
+    - id: 0
+      supportedPixelFormats:
+        - NV12
+        - I420
+        - P010
+      supportedMemoryTypes:
+        - DMABuf
+        - NativeHandle
+      sinkQueueDepth: 4
+      supportsAVSync: true
+      vsyncDisplayLatencyNs: 2000000
+      supportsHoldLastFrame: true
+      supportsSecure: true
+      planeIndex: 0
+
+  platformCapabilities:
+    metrics:
+      - METRIC_FRAMES_PRESENTED
+      - METRIC_FRAMES_DROPPED_LATE
+      - METRIC_FRAMES_REPEATED_FRC
+      - METRIC_UNDERFLOWED
+    supportsPlaneMapping: true
+    supportsFlushNotification: true
+    requiresFrameMetadata: true
+    supportsTunnelledPlayback: true
+
