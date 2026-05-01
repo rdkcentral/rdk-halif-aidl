@@ -21,35 +21,12 @@ import com.rdk.hal.videodecoder.IVideoDecoder;
 import com.rdk.hal.videodecoder.FrameMetadata;
 import com.rdk.hal.videosink.Property;
 import com.rdk.hal.PropertyValue;
-import com.rdk.hal.avclock.IAVClock;
 
 /**
  *  @brief     Video Sink Controller HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
- *
- *  <h3>AVClock association and video output</h3>
- *  A video sink presents output only when an AVClock is attached and started.
- *  The clock association is owned by the sink — clients call `attachClock()` /
- *  `detachClock()` / `getClock()` on this controller to manage it. The AVClock
- *  itself does not need to be made aware of which sinks present against it.
- *  <ul>
- *  <li><b>No AVClock attached</b> (the default after `open()`, or after
- *      `detachClock()`): the sink does NOT consume frames and does NOT
- *      present output. Frames passed to `queueVideoFrame()` accumulate in the
- *      internal queue until the queue fills, after which `queueVideoFrame()`
- *      returns `false` until queue space becomes available again. Frames
- *      remain in the queue across the no-clock period.</li>
- *  <li><b>AVClock attached and started</b>: the sink consumes queued frames
- *      at the rate dictated by the clock and renders them on the mapped video
- *      plane — AV synchronisation is in effect (lip-synced with any audio
- *      sink presenting against the same clock). If the clock is paused,
- *      consumption pauses with it and the queue will eventually fill.</li>
- *  </ul>
- *  `attachClock()` / `detachClock()` are callable in `READY` or `STARTED` and
- *  do not change the sink's state-machine state. Detaching during `STARTED`
- *  suspends consumption but does not flush the queue or stop the sink.
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
@@ -117,84 +94,6 @@ interface IVideoSinkController
     IVideoDecoder.Id getVideoDecoder();
 
     /**
-     * Attaches an AVClock to this video sink for AV synchronisation.
-     *
-     * The sink consumes queued frames and renders them on the mapped video
-     * plane only while the attached clock is started. With no clock attached,
-     * frames queued via `queueVideoFrame()` accumulate but are not consumed
-     * or rendered. See the interface @brief for the full AVClock-association
-     * contract.
-     *
-     * The same AVClock may be attached to multiple sinks (typically one audio
-     * sink and one video sink for AV-synchronised playback). The sink owns its
-     * clock relationship; the AVClock does not need to be made aware.
-     *
-     * If a different clock is already attached, this call replaces the
-     * attachment. Calling with `IAVClock.Id.UNDEFINED` is equivalent to
-     * `detachClock()`.
-     *
-     * Can be called in `READY` or `STARTED` state. Attaching during `STARTED`
-     * causes the sink to begin clock-paced presentation from the next frame
-     * once the clock is started; the call does not change the sink's
-     * state-machine state.
-     *
-     * @param[in] clockId   The ID of the AVClock to attach, or
-     *                      `IAVClock.Id.UNDEFINED` to detach.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if `clockId`
-     *            does not refer to an existing AVClock instance.
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the sink is
-     *            not in `READY` or `STARTED`.
-     *
-     * @pre The resource must be in State::READY or State::STARTED.
-     *
-     * @see detachClock(), getClock(), IAVClockManager.getAVClockIds()
-     */
-    void attachClock(in IAVClock.Id clockId);
-
-    /**
-     * Detaches the currently attached AVClock from this video sink.
-     *
-     * After this call the sink does NOT consume or render further frames
-     * until a clock is attached again. Equivalent to calling
-     * `attachClock(IAVClock.Id.UNDEFINED)`. See the interface @brief for the
-     * full AVClock-association contract.
-     *
-     * Idempotent: calling when no clock is attached is a no-op.
-     *
-     * Does not change the sink's state-machine state and does not flush the
-     * internal queue — frames already queued remain queued and will be
-     * presented once a clock is attached and started.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the sink is
-     *            not in `READY` or `STARTED`.
-     *
-     * @pre The resource must be in State::READY or State::STARTED.
-     *
-     * @see attachClock(), getClock()
-     */
-    void detachClock();
-
-    /**
-     * Gets the AVClock ID currently attached to this video sink.
-     *
-     * @returns IAVClock.Id, which is `IAVClock.Id.UNDEFINED` when no clock is
-     *          attached. With no clock attached the sink does not consume or
-     *          render output — see the interface @brief.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the sink is
-     *            not in `READY` or `STARTED`.
-     *
-     * @pre The resource must be in State::READY or State::STARTED.
-     *
-     * @see attachClock(), detachClock()
-     */
-    IAVClock.Id getClock();
-
-    /**
 	 * Starts the Video Sink.
      *
      * The Video Sink must be in a READY state before it can be started.
@@ -229,18 +128,8 @@ interface IVideoSinkController
      * When the presentation time occurs for the video frame the current mapped video plane is used
      * to render the video frame.
      *
-     * Consumption is gated by the AVClock attachment — see the interface
-     * @brief for the full contract. Summary: the sink consumes queued frames
-     * and renders them on the mapped video plane only while an AVClock
-     * attached via `attachClock()` is started. With no clock attached (default
-     * after `open()` or after `detachClock()`), or with the clock paused, this
-     * method accepts frames into the internal queue but the sink does NOT
-     * consume or render them; once the queue fills, the method returns `false`
-     * until queue space becomes available again.
-     *
-     * When an AVClock is attached and started, the presentation time of the
-     * video frame is controlled by the clock and will be lip-synced with an
-     * audio sink presenting against the same clock.
+     * The presentation time of the video frame is controlled by the AV Clock
+     * and will be lip synced with an Audio Sink delivered stream if linked.
      *
      *
      * Buffer Ownership: Ownership of the buffer transfers to the Video Sink HAL only

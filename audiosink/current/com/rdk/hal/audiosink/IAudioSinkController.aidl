@@ -21,35 +21,12 @@ import com.rdk.hal.audiosink.Volume;
 import com.rdk.hal.audiosink.VolumeRamp;
 import com.rdk.hal.audiodecoder.IAudioDecoder;
 import com.rdk.hal.audiodecoder.FrameMetadata;
-import com.rdk.hal.avclock.IAVClock;
 
 /**
  *  @brief     Audio Sink Controller HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
- *
- *  <h3>AVClock association and audio output</h3>
- *  An audio sink presents output only when an AVClock is attached and started.
- *  The clock association is owned by the sink — clients call `attachClock()` /
- *  `detachClock()` / `getClock()` on this controller to manage it. The AVClock
- *  itself does not need to be made aware of which sinks present against it.
- *  <ul>
- *  <li><b>No AVClock attached</b> (the default after `open()`, or after
- *      `detachClock()`): the sink does NOT produce audio output. Frames passed
- *      to `queueAudioFrame()` accumulate in the internal queue until the queue
- *      fills, after which `queueAudioFrame()` returns `false` until queue
- *      space becomes available again. Frames remain in the queue across the
- *      no-clock period.</li>
- *  <li><b>AVClock attached and started</b>: the sink consumes queued frames
- *      at the rate dictated by the clock — AV synchronisation is in effect.
- *      If the clock is paused, consumption pauses with it and the queue will
- *      eventually fill in the same way as the no-clock state.</li>
- *  </ul>
- *  `attachClock()` / `detachClock()` are callable in `READY` or `STARTED` and
- *  do not change the sink's state-machine state. Detaching during `STARTED`
- *  suspends consumption but does not flush the queue or stop the sink; the
- *  same is true of attaching to a clock that is paused.
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
@@ -96,83 +73,6 @@ interface IAudioSinkController {
     IAudioDecoder.Id getAudioDecoder();
 
     /**
-     * Attaches an AVClock to this audio sink for AV synchronisation.
-     *
-     * The sink consumes and presents queued frames only while the attached
-     * clock is started. With no clock attached, frames queued via
-     * `queueAudioFrame()` accumulate but are not consumed. See the interface
-     * @brief for the full AVClock-association contract.
-     *
-     * The same AVClock may be attached to multiple sinks (typically one audio
-     * sink and one video sink for AV-synchronised playback). The sink owns its
-     * clock relationship; the AVClock does not need to be made aware.
-     *
-     * If a different clock is already attached, this call replaces the
-     * attachment. Calling with `IAVClock.Id.UNDEFINED` is equivalent to
-     * `detachClock()`.
-     *
-     * Can be called in `READY` or `STARTED` state. Attaching during `STARTED`
-     * causes the sink to begin clock-paced consumption from the next frame
-     * once the clock is started; the call does not change the sink's
-     * state-machine state.
-     *
-     * @param[in] clockId   The ID of the AVClock to attach, or
-     *                      `IAVClock.Id.UNDEFINED` to detach.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if `clockId`
-     *            does not refer to an existing AVClock instance.
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the sink is
-     *            not in `READY` or `STARTED`.
-     *
-     * @pre The resource must be in State::READY or State::STARTED.
-     *
-     * @see detachClock(), getClock(), IAVClockManager.getAVClockIds()
-     */
-    void attachClock(in IAVClock.Id clockId);
-
-    /**
-     * Detaches the currently attached AVClock from this audio sink.
-     *
-     * After this call the sink does NOT consume or present further frames
-     * until a clock is attached again. Equivalent to calling
-     * `attachClock(IAVClock.Id.UNDEFINED)`. See the interface @brief for the
-     * full AVClock-association contract.
-     *
-     * Idempotent: calling when no clock is attached is a no-op.
-     *
-     * Does not change the sink's state-machine state and does not flush the
-     * internal queue — frames already queued remain queued and will be
-     * consumed once a clock is attached and started.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the sink is
-     *            not in `READY` or `STARTED`.
-     *
-     * @pre The resource must be in State::READY or State::STARTED.
-     *
-     * @see attachClock(), getClock()
-     */
-    void detachClock();
-
-    /**
-     * Gets the AVClock ID currently attached to this audio sink.
-     *
-     * @returns IAVClock.Id, which is `IAVClock.Id.UNDEFINED` when no clock is
-     *          attached. With no clock attached the sink does not consume or
-     *          present output — see the interface @brief.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the sink is
-     *            not in `READY` or `STARTED`.
-     *
-     * @pre The resource must be in State::READY or State::STARTED.
-     *
-     * @see attachClock(), detachClock()
-     */
-    IAVClock.Id getClock();
-
-    /**
 	 * Starts the audio sink.
      *
      * The audio sink must be in a `READY` state before it can be started.
@@ -207,16 +107,13 @@ interface IAudioSinkController {
      * The audio sink must be in the `STARTED` state.
      * Buffers can be either non-secure or secure to support SAP (Secure Audio Path).
      * Each call shall reference a single audio frame with a presentation timestamp.
-     *
-     * Consumption is gated by the AVClock attachment — see the interface
-     * @brief for the full contract. Summary: the sink consumes queued frames
-     * only while an AVClock attached via `attachClock()` is started. With no
-     * clock attached (default after `open()` or after `detachClock()`), or
-     * with the clock paused, this method accepts frames into the internal
-     * queue but the sink does NOT consume them; once the queue fills, the
-     * method returns `false` until queue space becomes available again.
-     *
-     * The audio sink may also refuse the buffer if its internal resource usage prevents it from accepting it at that time.
+     * The sink will not consume queued frames until an AVClock has been linked to this sink
+     * (via `IAVClockController.setAudioSink()`) and the clock has been started. Until then,
+     * depending on the implementation, the internal queue will fill and the method will return
+     * `false`. If the hardware does not support clockless queuing, the method returns `false`
+     * immediately. Pausing the clock has the same effect: data cannot be consumed out of the
+     * sink, so the queue will eventually fill.
+     * The audio sink may refuse the buffer if its internal resource usage prevents it from accepting it at that time.
      *
      * Buffer Ownership: Ownership of the buffer transfers to the Audio Sink HAL only
      * when `queueAudioFrame()` accepts the buffer (returns true). Once accepted, the HAL is

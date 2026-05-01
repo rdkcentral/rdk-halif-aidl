@@ -30,7 +30,6 @@ if (NOT COMMAND compile_aidl)
 endif()
 
 # version of other modules that `videosink` depends on
-set(AVCLOCK_VERSION "current")
 set(COMMON_VERSION "current")
 set(VIDEO_DECODER_VERSION "current")
 
@@ -55,7 +54,6 @@ set(INCLUDE_DIRECTORY
 	.
 	${COMMON_MODULE_PATH}/${COMMON_VERSION}
 	${VIDEO_DECODER_MODULE_PATH}/${VIDEO_DECODER_VERSION}
-	${AVCLOCK_MODULE_PATH}/${AVCLOCK_VERSION}
 )
 
 set(COMPILE_AIDL_ARGV "")
