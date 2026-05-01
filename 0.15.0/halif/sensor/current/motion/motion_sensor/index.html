@@ -1,0 +1,4107 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://www.github.com/rdkcentral/rdk-halif-aidl/0.15.0/halif/sensor/current/motion/motion_sensor/">
+      
+      
+        <link rel="prev" href="../../../../sec_api/current/sec_api/">
+      
+      
+        <link rel="next" href="../../thermal/thermal_sensor/">
+      
+      
+      <link rel="icon" href="../../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.2">
+    
+    
+      
+        <title>Motion - RDK Hardware Porting Kit</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/main.d7758b05.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#motion-sensor-hal" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../../.." title="RDK Hardware Porting Kit" class="md-header__button md-logo" aria-label="RDK Hardware Porting Kit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            RDK Hardware Porting Kit
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Motion
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/rdkcentral/rdk-halif-aidl" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rdkcentral/rdk-halif-aidl
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../../.." title="RDK Hardware Porting Kit" class="md-nav__button md-logo" aria-label="RDK Hardware Porting Kit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    RDK Hardware Porting Kit
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/rdkcentral/rdk-halif-aidl" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rdkcentral/rdk-halif-aidl
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../introduction/the_software_stack/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    The Software Stack
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Hardware Abstraction Layer
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Hardware Abstraction Layer
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../introduction/aidl_and_binder/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Key Concepts
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Key Concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../key_concepts/hal/hal_properties/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HAL Properties
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../key_concepts/hal/hal_feature_profiles/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HAL Feature Profiles
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../key_concepts/hal/hal_naming_conventions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HAL Naming Conventions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../key_concepts/hal/hal_session_state_management/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HAL Session State Management
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../key_concepts/hal/hal_api_deprecation_governance/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HAL API Deprecation Governance
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Standards
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Standards
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../standards/direct_branching/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Core Development Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../standards/forked_based_branching/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Fork-Based Contribution Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../standards/git_flow_branching_strategy/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Git Flow Branching Strategy
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../standards/semantic_versioning/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Semantic Versioning
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Vendor HAL Interfaces (VHI)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Vendor HAL Interfaces (VHI)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../key_concepts/hal/hal_interfaces/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../introduction/interface_generation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Interface Generation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    AV Subsystem
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            AV Subsystem
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../audio_decoder/current/audio_decoder/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audio Decoder
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../audio_mixer/current/audio_mixer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audio Mixer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../audio_sink/current/audio_sink/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audio Sink
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../av_buffer/current/av_buffer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AV Buffer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../av_clock/current/av_clock/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AV Clock
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../video_decoder/current/video_decoder/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Video Decoder
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../video_sink/current/video_sink/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Video Sink
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../boot/current/boot/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Boot
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../broadcast/current/broadcast/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Broadcast
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../cdm/current/cdm/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CDM
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../drm/current/drm/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DRM
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_8" id="__nav_4_8_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    HDMI
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_8">
+            <span class="md-nav__icon md-icon"></span>
+            HDMI
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../hdmi_cec/current/hdmi_cec/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HDMI CEC
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../hdmi_input/current/hdmi_input/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HDMI Input
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../hdmi_output/current/hdmi_output/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HDMI Output
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../common/current/common/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Common
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../deep_sleep/current/deep_sleep/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Deep Sleep
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../device_info/current/device_info/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Device Info
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../flash/current/flash/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Flash
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../indicator/current/indicator/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Indicator
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../panel/current/panel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Panel
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../plane_control/current/plane_control/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Plane Control
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../sec_api/current/sec_api/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Secure API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_17" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_17" id="__nav_4_17_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Sensor
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_17_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_17">
+            <span class="md-nav__icon md-icon"></span>
+            Sensor
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Motion
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Motion
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sensor-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sensor Types
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use Cases
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Features
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Implementation Requirements
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interface-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interface Definition
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#initialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Initialization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      System Context
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lifecycle-and-state-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      Lifecycle and State Machine
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#controller-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      Controller Pattern
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#capabilities-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Capabilities Structure
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#startconfig-and-operational-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      StartConfig and Operational Modes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Diagnostics
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#active-time-windows" class="md-nav__link">
+    <span class="md-ellipsis">
+      Active Time Windows
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#controller-listener-imotionsensorcontrollerlistener" class="md-nav__link">
+    <span class="md-ellipsis">
+      Controller Listener (IMotionSensorControllerListener)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-listener-imotionsensoreventlistener" class="md-nav__link">
+    <span class="md-ellipsis">
+      Event Listener (IMotionSensorEventListener)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interaction-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interaction Flow
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Interaction Flow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#motion-trigger-motion-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Motion Trigger (MOTION mode)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#no-motion-window-no_motion-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      No-Motion Window (NO_MOTION mode)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance &amp; Behaviour
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hardware-configuration-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hardware Configuration Example
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      Validation Checklist
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../thermal/thermal_sensor/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Thermal
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Vendor System Interfaces (VSI)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Vendor System Interfaces (VSI)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_1" id="__nav_5_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    File System
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            File System
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vsi/filesystem/current/file_system_architecture/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    System Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vsi/filesystem/current/directory_and_dynamic_linking_specification/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Directory And Dynamic Linking
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vsi/filesystem/current/logging_system/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Logging System
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vsi/bluetooth/current/bluetooth/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bluetooth
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vsi/graphics/current/graphics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Graphics
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vsi/service_manager/current/service_manager/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Service Manager
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vsi/wifi/current/wifi/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Wi-Fi
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vsi/systemd/current/systemd/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Systemd
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../vsi/kernel/current/kernel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Kernel
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Vendor Tests Suites (VTS)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Vendor Tests Suites (VTS)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../external_content/ut-core-wiki/3.-Standards%3A-Levels-of-Test-for-Vendor-Layer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Levels of Test
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_2" id="__nav_6_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Level 4
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            Level 4
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../external_content/ut-core-wiki/3.3.-Standards%3A-L4-%E2%80%90-System-Interface-Testing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    L4 System Interface (VSI)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../external_content/ut-core-wiki/3.4.-Standards%3A-L4%3A-Vendor-Full-Stack-%E2%80%90-Video-%E2%80%90-Smoke-Regression-Test/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    L4 Smoke Test (VST)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Testing Framework
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Testing Framework
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../external_content/ut-core-wiki/3.2.-Standards%3A-Requirements-for-building-testing-suites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Framework Usage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_2" id="__nav_7_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Key Concepts
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_2">
+            <span class="md-nav__icon md-icon"></span>
+            Key Concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../external_content/ut-core-wiki/3.1.-Standards%3A-Overview-of-Test%E2%80%90Driven-Development/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Test Driven Development
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../external_content/ut-core-wiki/FAQ%3A-Black%E2%80%90Box-Testing-and-Code-Coverage-Metrics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Black Box Testing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../external_content/ut-core-wiki/3.0.1-Standards%3A-Testing-Feedback-Loops/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Feedback Loops
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_3" id="__nav_7_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    UT-Core Test Framework
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_3">
+            <span class="md-nav__icon md-icon"></span>
+            UT-Core Test Framework
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../external_content/ut-core-wiki/Home/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    UT-Core Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../external_content/ut-core-wiki/FAQ%3A-UT-Core-Framework-Overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Level Actors
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Virtual Device
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Virtual Device
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../external_content/ut-core-wiki/5.0%3A-Standards%3A-vDevice-Overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    What is the vDevice
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../external_content/ut-core-wiki/5.0.1%3A-Standards%3A-vDevice-Architecture-Overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_8_3" id="__nav_8_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Key Concepts
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_3">
+            <span class="md-nav__icon md-icon"></span>
+            Key Concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../external_content/ut-core-wiki/5.1.0%3A-Standards%3A-vDevice-Controller/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Controller
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../external_content/ut-core-wiki/5.1.1%3A-Standards%3A-vDevice-Control-Plane/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Control Plane
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Misc
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            Misc
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../references/references/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    References
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_9_2" id="__nav_9_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Documentation Standards
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9_2">
+            <span class="md-nav__icon md-icon"></span>
+            Documentation Standards
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../introduction/documentation_getting_started/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../standards/interface_template/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Interface Template
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_9_3" id="__nav_9_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Governance
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9_3">
+            <span class="md-nav__icon md-icon"></span>
+            Governance
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../governance/rdk-release-documentation-structure/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    RDK Documentation Structure
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../governance/rdk-engineering-validation-framework/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    RDK Engineering Validation Framework
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../governance/versioning-sop/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    HAL Delivery & Versioning SOP
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_9_4" id="__nav_9_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    White Papers
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9_4">
+            <span class="md-nav__icon md-icon"></span>
+            White Papers
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../whitepapers/documentation_in_git/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Documentation in Git
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../whitepapers/branching_strategies/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Branching Strategies
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../whitepapers/doxygen_code_documentation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Doxygen Code Documentation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../whitepapers/engineering_goals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Achieving Engineering Goal
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../whitepapers/standardizing_git_commit_messages/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Commit Message Standards
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../whitepapers/interface_version_alignment/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Interface Version Alignment
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../whitepapers/client_usage_of_stable_aidl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Client Usage of Stable AIDL
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../whitepapers/right_format_right_job/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Right Format for the Right Job
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../external_content/ut-core-wiki/1.2.-Standards%3A-Issue-Description-Guideline/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Filing an Issue
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_9_6" id="__nav_9_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    FAQ
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9_6">
+            <span class="md-nav__icon md-icon"></span>
+            FAQ
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../external_content/ut-core-wiki/FAQ%3A-Comparing-Python-Development-Platforms/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Python Development
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../releases/0.14.0/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Release Notes 0.14.0
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../../CHANGELOG/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ChangeLog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sensor-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sensor Types
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use Cases
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Features
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Implementation Requirements
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interface-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interface Definition
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#initialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Initialization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      System Context
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lifecycle-and-state-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      Lifecycle and State Machine
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#controller-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      Controller Pattern
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#capabilities-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Capabilities Structure
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#startconfig-and-operational-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      StartConfig and Operational Modes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Diagnostics
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#active-time-windows" class="md-nav__link">
+    <span class="md-ellipsis">
+      Active Time Windows
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#controller-listener-imotionsensorcontrollerlistener" class="md-nav__link">
+    <span class="md-ellipsis">
+      Controller Listener (IMotionSensorControllerListener)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-listener-imotionsensoreventlistener" class="md-nav__link">
+    <span class="md-ellipsis">
+      Event Listener (IMotionSensorEventListener)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interaction-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interaction Flow
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Interaction Flow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#motion-trigger-motion-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Motion Trigger (MOTION mode)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#no-motion-window-no_motion-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      No-Motion Window (NO_MOTION mode)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance &amp; Behaviour
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hardware-configuration-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hardware Configuration Example
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      Validation Checklist
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="motion-sensor-hal">Motion Sensor HAL</h1>
+<p>The <strong>Motion Sensor HAL</strong> provides a standard interface for motion detection on RDK-E devices (e.g., PIR, radar).<br />
+It abstracts platform drivers and exposes a consistent API to discover sensors, configure detection modes, handle timing windows, and receive motion/no-motion events.</p>
+<p>The HAL supports multiple motion sensors and delivers immutable capabilities per sensor.<br />
+A clear lifecycle state machine ensures dependable operation and predictable event delivery.</p>
+<hr />
+<div class="admonition info">
+<p class="admonition-title">References</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Interface Definition</strong></td>
+<td><a href="https://github.com/rdkcentral/rdk-halif-aidl/tree/main/sensor/current/com/rdk/hal/sensor/motion"><code>sensor/current/com/rdk/hal/sensor/motion</code></a></td>
+</tr>
+<tr>
+<td><strong>HAL Interface Type</strong></td>
+<td><a href="../../../introduction/aidl_and_binder.md">AIDL and Binder</a></td>
+</tr>
+<tr>
+<td><strong>Initialization</strong></td>
+<td><a href="../../../vsi/systemd/current/systemd.md">systemd</a> – <strong>hal-sensor-motion.service</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Related Pages</p>
+<ul>
+<li><a href="../../thermal/thermal_sensor/">Sensor Thermal HAL</a></li>
+</ul>
+</div>
+<hr />
+<h2 id="overview">Overview</h2>
+<p>The Motion HAL enables RDK Middleware to configure and receive <strong>event-driven motion status</strong> from platform sensors.</p>
+<h3 id="sensor-types">Sensor Types</h3>
+<p>The HAL supports various motion/presence detection technologies:</p>
+<ul>
+<li><strong>PIR (Passive Infrared)</strong>: Detects heat signatures and movement</li>
+<li><strong>Microwave/Radar</strong>: Active sensors measuring reflected waves</li>
+<li><strong>Hybrid</strong>: Combination of multiple sensor types for improved accuracy</li>
+</ul>
+<p>Each sensor type has different characteristics (range, field-of-view, sensitivity) exposed via <code>Capabilities</code>.</p>
+<h3 id="use-cases">Use Cases</h3>
+<ul>
+<li><strong>Wake on Motion</strong>: Resume from standby when user approaches device</li>
+<li><strong>Power Savings</strong>: Enter low-power mode after period of no activity</li>
+<li><strong>Presence Detection</strong>: Adapt UI/behaviour based on user presence</li>
+<li><strong>Security Flows</strong>: Detect unauthorized movement</li>
+<li><strong>Energy Management</strong>: Automated standby during scheduled inactive periods</li>
+</ul>
+<h3 id="key-features">Key Features</h3>
+<ul>
+<li><strong>Controller pattern</strong>: Exclusive ownership via <code>open()</code>/<code>close()</code> with binder death cleanup</li>
+<li><strong>Event-driven architecture</strong>: Async callbacks eliminate polling overhead</li>
+<li><strong>Configurable timing</strong>: Control activation delays, inactivity windows, and scheduled active periods via <code>StartConfig</code></li>
+<li><strong>Optional deep-sleep autonomy</strong>: Sensor can operate and wake system from low-power states</li>
+<li><strong>Per-sensor capabilities</strong>: Static properties describe hardware limits and features</li>
+<li><strong>Diagnostics</strong>: <code>getStartConfig()</code> and <code>getLastEventInfo()</code> for runtime inspection</li>
+</ul>
+<hr />
+<h2 id="implementation-requirements">Implementation Requirements</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Requirement</th>
+<th>Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>HAL.MOTION.1</strong></td>
+<td>Shall expose per-sensor capabilities via <code>getCapabilities()</code>; values remain immutable during runtime.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.MOTION.2</strong></td>
+<td>Shall provide start/stop APIs on <code>IMotionSensorController</code> to control detection.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.MOTION.3</strong></td>
+<td>Shall support querying current state via <code>IMotionSensor.getState()</code> and current config via <code>IMotionSensorController.getStartConfig()</code>.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.MOTION.4</strong></td>
+<td>Shall deliver motion/no-motion events via <code>IMotionSensorEventListener.onEvent(mode)</code> according to the <code>StartConfig</code>.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.MOTION.5</strong></td>
+<td>If sensitivity is supported (<code>minSensitivity</code>/<code>maxSensitivity</code> &gt; 0), <code>setSensitivity()</code> shall enforce range and require <code>State==STOPPED</code>.</td>
+<td>Returns <code>false</code> for out-of-range; throws <code>EX_ILLEGAL_STATE</code> if not stopped.</td>
+</tr>
+<tr>
+<td><strong>HAL.MOTION.6</strong></td>
+<td>Event listener registration shall be idempotent; duplicate registrations return <code>false</code>, as do unregisters of unknown listeners.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.MOTION.7</strong></td>
+<td>If deep-sleep autonomy is supported, <code>setAutonomousDuringDeepSleep()</code> shall require <code>State==STOPPED</code>; when unsupported it shall return <code>false</code>.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.MOTION.8</strong></td>
+<td>Active time windows shall only suppress events outside configured periods; motion detection continues but notifications are deferred or cancelled.</td>
+<td>See <code>IMotionSensorController.setActiveWindows()</code>.</td>
+</tr>
+<tr>
+<td><strong>HAL.MOTION.9</strong></td>
+<td>When active windows are configured, events shall only fire during the union of all configured windows. Empty array or windows with both times = 0 enables 24-hour monitoring.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.MOTION.10</strong></td>
+<td>Shall register the service under the name <code>"sensor.motion"</code> and become operational at startup.</td>
+<td>Matches <code>IMotionSensorManager.serviceName</code>.</td>
+</tr>
+<tr>
+<td><strong>HAL.MOTION.11</strong></td>
+<td><code>IMotionSensorControllerListener.onStateChanged()</code> shall fire for every lifecycle state transition.</td>
+<td>Matches the pattern used by all other HAL modules.</td>
+</tr>
+<tr>
+<td><strong>HAL.MOTION.12</strong></td>
+<td>If the controller-owning client crashes, the HAL shall implicitly call <code>stop()</code> and <code>close()</code> to release the sensor.</td>
+<td>Binder death cleanup.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="interface-definition">Interface Definition</h2>
+<table>
+<thead>
+<tr>
+<th>Interface Definition File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>IMotionSensorManager.aidl</code></td>
+<td>Manager interface to enumerate and acquire motion sensors.</td>
+</tr>
+<tr>
+<td><code>IMotionSensor.aidl</code></td>
+<td>Per-sensor interface: capabilities, state, open/close, event listener registration.</td>
+</tr>
+<tr>
+<td><code>IMotionSensorController.aidl</code></td>
+<td>Exclusive controller: start/stop, config, sensitivity, deep sleep, active windows, diagnostics.</td>
+</tr>
+<tr>
+<td><code>IMotionSensorControllerListener.aidl</code></td>
+<td>Controller callbacks: <code>onStateChanged</code>, <code>onActiveWindowEntered</code>, <code>onActiveWindowExited</code>.</td>
+</tr>
+<tr>
+<td><code>IMotionSensorEventListener.aidl</code></td>
+<td>Multi-observer callback: <code>onEvent(mode)</code> for motion/no-motion detection.</td>
+</tr>
+<tr>
+<td><code>Capabilities.aidl</code></td>
+<td>Immutable capabilities (<code>sensorName</code>, sensitivity range, autonomy support).</td>
+</tr>
+<tr>
+<td><code>StartConfig.aidl</code></td>
+<td>Parcelable: operational mode + timing parameters for <code>start()</code>.</td>
+</tr>
+<tr>
+<td><code>LastEventInfo.aidl</code></td>
+<td>Diagnostic parcelable: last event mode + timestamp.</td>
+</tr>
+<tr>
+<td><code>OperationalMode.aidl</code></td>
+<td>Mode enum: <code>MOTION</code>, <code>NO_MOTION</code>.</td>
+</tr>
+<tr>
+<td><code>State.aidl</code></td>
+<td>Lifecycle states: <code>STOPPED</code>, <code>STARTING</code>, <code>STARTED</code>, <code>STOPPING</code>, <code>ERROR</code>.</td>
+</tr>
+<tr>
+<td><code>TimeWindow.aidl</code></td>
+<td>Daily time window for active period scheduling.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="initialization">Initialization</h2>
+<p>Vendors shall provide a <code>hal-sensor-motion.service</code> systemd unit to launch the Motion HAL.<br />
+The service shall register <code>IMotionSensorManager</code> with the Service Manager using <code>serviceName = "MotionSensorManager"</code>.</p>
+<p>Dependencies on drivers or low-level services must be expressed using systemd <code>Requires=</code> or <code>Wants=</code>.</p>
+<hr />
+<h2 id="system-context">System Context</h2>
+<pre class="mermaid"><code>flowchart TD
+    Client[RDK Middleware]
+    Manager[IMotionSensorManager]
+    Sensor[IMotionSensor]
+    Controller[IMotionSensorController]
+    CtrlListener[IMotionSensorControllerListener]
+    EventListener[IMotionSensorEventListener]
+    Hardware[PIR / Radar Sensor]
+
+    Client --&gt; Manager
+    Manager --&gt; Sensor
+    Sensor --&gt;|open| Controller
+    Controller --&gt;|state + window events| CtrlListener
+    Sensor --&gt;|motion events| EventListener
+    Sensor --&gt; Hardware
+
+    classDef blue fill:#1565C0,stroke:#E0E0E0,stroke-width:2px,color:#E0E0E0;
+    classDef wheat fill:#FFB74D,stroke:#424242,stroke-width:2px,color:#000000;
+    classDef green fill:#4CAF50,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
+
+    class Client blue;
+    class Manager,Sensor,Controller,CtrlListener,EventListener wheat;
+    class Hardware green;</code></pre>
+<hr />
+<h2 id="lifecycle-and-state-machine">Lifecycle and State Machine</h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>STOPPED → STARTING → STARTED → STOPPING → STOPPED
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>                 ↘
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>                 ERROR
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>State</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>STOPPED</strong></td>
+<td>Detection inactive; configuration changes allowed.</td>
+</tr>
+<tr>
+<td><strong>STARTING</strong></td>
+<td>Arming detection (stabilization windows may apply).</td>
+</tr>
+<tr>
+<td><strong>STARTED</strong></td>
+<td>Detection active; events may be delivered.</td>
+</tr>
+<tr>
+<td><strong>STOPPING</strong></td>
+<td>Disarming detection.</td>
+</tr>
+<tr>
+<td><strong>ERROR</strong></td>
+<td>Failure occurred; requires recovery or re-init.</td>
+</tr>
+</tbody>
+</table>
+<p><code>IMotionSensorControllerListener.onStateChanged(oldState, newState)</code> fires for every transition.</p>
+<hr />
+<h2 id="controller-pattern">Controller Pattern</h2>
+<p>The motion sensor uses an exclusive controller pattern:</p>
+<ol>
+<li><strong><code>IMotionSensor.open(controllerListener)</code></strong> — acquires exclusive <code>IMotionSensorController</code></li>
+<li>Controller provides: <code>start()</code>, <code>stop()</code>, <code>getStartConfig()</code>, <code>getLastEventInfo()</code>, sensitivity, deep sleep autonomy, active windows</li>
+<li><strong><code>IMotionSensor.close(controller)</code></strong> — releases the controller</li>
+<li>If the owning client crashes, the HAL implicitly calls <code>stop()</code> + <code>close()</code></li>
+</ol>
+<p>Event listeners (<code>IMotionSensorEventListener</code>) are registered separately on <code>IMotionSensor</code> and do not require ownership — any client can observe motion events.</p>
+<hr />
+<h2 id="capabilities-structure">Capabilities Structure</h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>parcelable Capabilities {
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    String sensorName;
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    int minSensitivity;      // 0 if unsupported
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    int maxSensitivity;      // 0 if unsupported
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    boolean supportsDeepSleepAutonomy;
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>}
+</span></code></pre></div>
+<ul>
+<li>Capabilities are immutable for the process lifetime.</li>
+<li>Sensitivity is unsupported when <strong>both</strong> min/max are <code>0</code>.</li>
+</ul>
+<hr />
+<h2 id="startconfig-and-operational-modes">StartConfig and Operational Modes</h2>
+<p><code>IMotionSensorController.start(StartConfig config)</code>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>parcelable StartConfig {
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    OperationalMode operationalMode;
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    int noMotionSeconds;
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    int activeStartSeconds;
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    int activeStopSeconds;
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>}
+</span></code></pre></div>
+<ul>
+<li><strong>operationalMode</strong>:</li>
+<li><code>MOTION</code>: fire event when motion is detected after activation window.</li>
+<li><code>NO_MOTION</code>: fire event after <strong>contiguous</strong> <code>noMotionSeconds</code> of inactivity.</li>
+<li><strong>noMotionSeconds</strong>: inactivity window (only for <code>NO_MOTION</code>); <code>0</code> disables it.</li>
+<li><strong>activeStartSeconds</strong>: delay after <code>start()</code> before the sensor becomes active (<code>0</code> = immediate).</li>
+<li><strong>activeStopSeconds</strong>: automatic stop after duration (<code>0</code> = continuous until <code>stop()</code>).</li>
+</ul>
+<p>The current config is retrievable via <code>IMotionSensorController.getStartConfig()</code>.</p>
+<hr />
+<h2 id="diagnostics">Diagnostics</h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>parcelable LastEventInfo {
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    OperationalMode mode;
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    long timestampNs;
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>}
+</span></code></pre></div>
+<p><code>IMotionSensorController.getLastEventInfo()</code> returns the mode and timestamp of the most recent event, or null if no event has occurred since <code>start()</code>. Elapsed time since the event is <code>System.nanoTime() - timestampNs</code>.</p>
+<hr />
+<h2 id="active-time-windows">Active Time Windows</h2>
+<p><code>IMotionSensorController.setActiveWindows()</code> schedules when the sensor should actively report events:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>parcelable TimeWindow {
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    int startTimeOfDaySeconds;  // 0-86399 (seconds since midnight)
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    int endTimeOfDaySeconds;    // 0-86399 (seconds since midnight)
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>}
+</span></code></pre></div>
+<ul>
+<li><strong>Multiple Windows</strong>: Array of <code>TimeWindow</code> objects; events fire during ANY configured window (union semantics)</li>
+<li><strong>Midnight Wrapping</strong>: Windows can span midnight when <code>endTime &lt; startTime</code> (e.g., 22:00-02:00)</li>
+<li><strong>24-Hour Monitoring</strong>: Empty array or single window with both values = 0</li>
+<li><strong>Configuration Timing</strong>: Must be set in <code>STOPPED</code> state; takes effect on next <code>start()</code></li>
+<li><strong>Event Suppression</strong>: Outside active windows, the sensor may continue detecting but <strong>SHALL NOT</strong> deliver events</li>
+<li><strong>Window Callbacks</strong>: <code>IMotionSensorControllerListener.onActiveWindowEntered()</code> / <code>onActiveWindowExited()</code> fire on transitions (only when windows are configured)</li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">DST Shifts</p>
+<p>On days when DST shifts occur (23-hour or 25-hour days), applications should reprogram active windows to ensure reliable operation. If windows are updated daily, this occurs automatically.</p>
+</div>
+<hr />
+<h2 id="controller-listener-imotionsensorcontrollerlistener">Controller Listener (IMotionSensorControllerListener)</h2>
+<p>Delivered exclusively to the controller owner (passed into <code>open()</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Description</th>
+<th>When fired</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>onStateChanged(old, new)</code></td>
+<td>Lifecycle state transition</td>
+<td>Every start/stop/error transition</td>
+</tr>
+<tr>
+<td><code>onActiveWindowEntered()</code></td>
+<td>Sensor entered active monitoring window</td>
+<td>Only when windows configured</td>
+</tr>
+<tr>
+<td><code>onActiveWindowExited()</code></td>
+<td>Sensor exited active monitoring window</td>
+<td>Only when windows configured</td>
+</tr>
+</tbody>
+</table>
+<h2 id="event-listener-imotionsensoreventlistener">Event Listener (IMotionSensorEventListener)</h2>
+<p>Available to any registered observer.</p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>onEvent(mode)</code></td>
+<td>Motion or no-motion condition detected</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="interaction-flow">Interaction Flow</h2>
+<h3 id="motion-trigger-motion-mode">Motion Trigger (MOTION mode)</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    participant MW as Middleware
+    participant Sensor as IMotionSensor
+    participant Ctrl as IMotionSensorController
+    participant CtrlL as IMotionSensorControllerListener
+    participant EvtL as IMotionSensorEventListener
+    participant HW as Motion Sensor
+
+    MW-&gt;&gt;Sensor: registerEventListener(evtListener)
+    MW-&gt;&gt;Sensor: open(ctrlListener)
+    Sensor--&gt;&gt;MW: IMotionSensorController
+    Note over Ctrl: sensor remains in STOPPED state
+
+    MW-&gt;&gt;Ctrl: start({MOTION, 0, 0, 0})
+    CtrlL--&gt;&gt;MW: onStateChanged(STOPPED, STARTING)
+    Ctrl-&gt;&gt;HW: Arm detection
+    CtrlL--&gt;&gt;MW: onStateChanged(STARTING, STARTED)
+
+    HW--&gt;&gt;Ctrl: Motion detected
+    EvtL--&gt;&gt;MW: onEvent(MOTION)
+
+    MW-&gt;&gt;Ctrl: stop()
+    CtrlL--&gt;&gt;MW: onStateChanged(STARTED, STOPPING)
+    CtrlL--&gt;&gt;MW: onStateChanged(STOPPING, STOPPED)
+
+    MW-&gt;&gt;Sensor: close(controller)</code></pre>
+<h3 id="no-motion-window-no_motion-mode">No-Motion Window (NO_MOTION mode)</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    participant MW as Middleware
+    participant Ctrl as IMotionSensorController
+    participant CtrlL as IMotionSensorControllerListener
+    participant EvtL as IMotionSensorEventListener
+    participant HW as Motion Sensor
+
+    MW-&gt;&gt;Ctrl: start({NO_MOTION, 5, 0, 0})
+    CtrlL--&gt;&gt;MW: onStateChanged(STOPPED, STARTING)
+    CtrlL--&gt;&gt;MW: onStateChanged(STARTING, STARTED)
+    Ctrl-&gt;&gt;HW: Arm detection with 5s inactivity window
+    HW--&gt;&gt;Ctrl: No motion for 5s
+    EvtL--&gt;&gt;MW: onEvent(NO_MOTION)</code></pre>
+<hr />
+<h2 id="performance-behaviour">Performance &amp; Behaviour</h2>
+<ul>
+<li>Event latency should be <strong>≤ 500 ms</strong> from physical motion to callback under typical conditions (non-normative but recommended).</li>
+<li>Timing parameters in <code>StartConfig</code> must be honoured precisely.</li>
+<li>When deep-sleep autonomy is enabled and supported, the sensor should continue operating per vendor constraints during low-power states.</li>
+</ul>
+<hr />
+<h2 id="hardware-configuration-example">Hardware Configuration Example</h2>
+<p>The HAL Feature Profile (HFP) defines platform-specific capabilities and defaults:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">sensor</span><span class="p">:</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">motion</span><span class="p">:</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">      </span><span class="nt">sensorName</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;PIR-Front-1&quot;</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">      </span><span class="nt">sensitivity_range</span><span class="p">:</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">        </span><span class="nt">minSensitivity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">        </span><span class="nt">maxSensitivity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">      </span><span class="nt">supportsDeepSleepAutonomy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">      </span><span class="nt">operational_modes</span><span class="p">:</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MOTION</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NO_MOTION</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">      </span><span class="c1"># Factory default StartConfig values (maps to StartConfig.aidl fields)</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">      </span><span class="nt">defaultStartConfig</span><span class="p">:</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="w">        </span><span class="nt">operationalMode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MOTION</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="w">        </span><span class="nt">noMotionSeconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="w">        </span><span class="nt">activeStartSeconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="w">        </span><span class="nt">activeStopSeconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>
+</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a><span class="w">      </span><span class="nt">active_windows</span><span class="p">:</span>
+</span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">startTimeOfDaySeconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">32400</span><span class="w">  </span><span class="c1"># 09:00</span>
+</span><span id="__span-5-23"><a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="w">          </span><span class="nt">endTimeOfDaySeconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">61200</span><span class="w">    </span><span class="c1"># 17:00</span>
+</span><span id="__span-5-24"><a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">startTimeOfDaySeconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">72000</span><span class="w">  </span><span class="c1"># 20:00</span>
+</span><span id="__span-5-25"><a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a><span class="w">          </span><span class="nt">endTimeOfDaySeconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">79200</span><span class="w">    </span><span class="c1"># 22:00</span>
+</span><span id="__span-5-26"><a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>
+</span><span id="__span-5-27"><a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a><span class="w">      </span><span class="nt">requirements</span><span class="p">:</span>
+</span><span id="__span-5-28"><a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a><span class="w">        </span><span class="nt">min_reaction_time_ms</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">500</span>
+</span><span id="__span-5-29"><a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a><span class="w">      </span><span class="nt">notes</span><span class="p">:</span>
+</span><span id="__span-5-30"><a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;Front-facing</span><span class="nv"> </span><span class="s">PIR</span><span class="nv"> </span><span class="s">motion</span><span class="nv"> </span><span class="s">detector.&quot;</span>
+</span><span id="__span-5-31"><a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;Supports</span><span class="nv"> </span><span class="s">autonomous</span><span class="nv"> </span><span class="s">operation</span><span class="nv"> </span><span class="s">during</span><span class="nv"> </span><span class="s">deep</span><span class="nv"> </span><span class="s">sleep.&quot;</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Purpose</th>
+<th>Mutability</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code>, <code>sensorName</code>, <code>sensitivity_range</code>, <code>supportsDeepSleepAutonomy</code></td>
+<td>Hardware capabilities via <code>getCapabilities()</code></td>
+<td><strong>Immutable</strong> at runtime</td>
+</tr>
+<tr>
+<td><code>operational_modes</code>, <code>defaultStartConfig</code>, <code>active_windows</code></td>
+<td>Platform defaults for testing/validation</td>
+<td>Configuration values</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="validation-checklist">Validation Checklist</h2>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Expected Behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Capabilities Stability</td>
+<td>Values constant across calls.</td>
+</tr>
+<tr>
+<td>Open/Close Lifecycle</td>
+<td><code>open()</code> returns controller; <code>close()</code> releases it; double-open fails.</td>
+</tr>
+<tr>
+<td>Start/Stop Sequence</td>
+<td>State transitions follow the model; <code>onStateChanged()</code> fires for each.</td>
+</tr>
+<tr>
+<td>StartConfig Retrieval</td>
+<td><code>getStartConfig()</code> matches the config passed to <code>start()</code>.</td>
+</tr>
+<tr>
+<td>LastEventInfo</td>
+<td>Returns null before first event; populated after <code>onEvent()</code> fires.</td>
+</tr>
+<tr>
+<td>Sensitivity Control</td>
+<td>Enforced only in <code>STOPPED</code>; range-checked or returns <code>false</code> if unsupported.</td>
+</tr>
+<tr>
+<td>Listener Semantics</td>
+<td>Idempotent register/unregister; single delivery per event condition.</td>
+</tr>
+<tr>
+<td>NO_MOTION Window</td>
+<td>Event fires only after contiguous inactivity equals <code>noMotionSeconds</code>.</td>
+</tr>
+<tr>
+<td>Deep-Sleep Autonomy</td>
+<td><code>setAutonomousDuringDeepSleep()</code> behaviour matches capability flag.</td>
+</tr>
+<tr>
+<td>Active Window Callbacks</td>
+<td><code>onActiveWindowEntered</code>/<code>onActiveWindowExited</code> fire at window boundaries.</td>
+</tr>
+<tr>
+<td>Crash Cleanup</td>
+<td>Controller owner crash triggers implicit <code>stop()</code> + <code>close()</code>.</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../../../../sec_api/current/sec_api/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Secure API">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Secure API
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../thermal/thermal_sensor/" class="md-footer__link md-footer__link--next" aria-label="Next: Thermal">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Thermal
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../../../..", "features": ["navigation.footer", "navigation.sections", "navigation.top", "navigation.tracking", "navigation.instant", "toc.follow", "content.code.copy", "content.code.annotate", "content.tooltips", "content.print.stylesheet", "search.highlight", "search.suggest", "search.share", "header.autohide", "announce.dismiss"], "search": "../../../../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../../../../assets/javascripts/bundle.f13b1293.min.js"></script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.1/mermaid.min.js"></script>
+      
+        <script src="../../../../../javascript/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>
