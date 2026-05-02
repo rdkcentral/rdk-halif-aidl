@@ -19,23 +19,29 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- *  @brief     TuneStatus enum
- *  @author    Jan Pedersen
- *  @author    Christian George
- *  @author    Philipp Trommler 
+ * @brief Roll Off enumeration
+ * @author Jan Pedersen
+ * @author Christian George
+ * @author Philipp Trommler
  */
 
 @VintfStability
 @Backing(type="int")
-enum TuneStatus {
+enum RollOff {
     /** Clean value when default initialized */
     UNDEFINED = 0,
-    /** The frontend is currently idle */
-    IDLE,
-    /** The frontend is trying to optain lock */
-    TUNING,
-    /** The frontend was not able to lock to the requested tune parameters */
-    NO_SIGNAL,
-    /** The frontend is locked to a signal */
-    LOCKED,
+    /** Auto-selected */
+    AUTO,
+    /** Roll off value 0.35 used by DVB-S2 and DVB-S2X */
+    ROLL_OFF_0_35,
+    /** Roll off value 0.25 used by DVB-S2 and DVB-S2X */
+    ROLL_OFF_0_25,
+    /** Roll off value 0.20 used by DVB-S2 and DVB-S2X */
+    ROLL_OFF_0_20,
+    /** Roll off value 0.15 used by DVB-S2X */
+    ROLL_OFF_0_15,
+    /** Roll off value 0.10 used by DVB-S2X */
+    ROLL_OFF_0_10,
+    /** Roll off value 0.05 used by DVB-S2X */
+    ROLL_OFF_0_05,
 }

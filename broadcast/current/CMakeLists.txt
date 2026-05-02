@@ -1,4 +1,4 @@
-#** *****************************************************************************
+# ** *****************************************************************************
 # *
 # * If not stated otherwise in this file or this component's LICENSE file the
 # * following copyright and licenses apply:
@@ -18,17 +18,17 @@
 # * See the License for the specific language governing permissions and
 # * limitations under the License.
 # *
-#** ******************************************************************************
+# ** ******************************************************************************
 cmake_minimum_required(VERSION 3.8)
 
-# TODO: `demux` module is still referecing Android related code and IBroadcastManager relays on `demux`
+# TODO: `demux` module is still referencing Android related code and IBroadcastManager relies on `demux`
 message(FATAL_ERROR "`Broadcast` module is not ready yet. Do not use it!")
 
 project(Broadcast
 	LANGUAGES NONE
 	VERSION 1.0)
 
-if (NOT COMMAND compile_aidl)
+if(NOT COMMAND compile_aidl)
 	message(FATAL_ERROR "Do not invoke module level CMake directly!\nInvoke CMake at root level instead!")
 endif()
 
@@ -39,6 +39,8 @@ set(SRC_DIR com/rdk/hal/broadcast)
 
 set(SRC
 	${SRC_DIR}/IBroadcastManager.aidl
+	${SRC_DIR}/Version.aidl
+	${SRC_DIR}/ImplementationVersion.aidl
 	${SRC_DIR}/frontend/AtscCapabilities.aidl
 	${SRC_DIR}/frontend/AtscTuneParameters.aidl
 	${SRC_DIR}/frontend/Bandwidth.aidl
@@ -47,6 +49,7 @@ set(SRC
 	${SRC_DIR}/frontend/DvbCAnnex.aidl
 	${SRC_DIR}/frontend/DvbCCapabilities.aidl
 	${SRC_DIR}/frontend/DvbCTuneParameters.aidl
+	${SRC_DIR}/frontend/DvbSStandard.aidl
 	${SRC_DIR}/frontend/DvbTCapabilities.aidl
 	${SRC_DIR}/frontend/DvbTStandard.aidl
 	${SRC_DIR}/frontend/DvbTTuneParameters.aidl
@@ -56,16 +59,24 @@ set(SRC
 	${SRC_DIR}/frontend/IFrontendController.aidl
 	${SRC_DIR}/frontend/IFrontendControllerListener.aidl
 	${SRC_DIR}/frontend/IFrontendListener.aidl
+	${SRC_DIR}/frontend/ILnbController.aidl
+	${SRC_DIR}/frontend/LnbTone.aidl
+	${SRC_DIR}/frontend/LnbVoltage.aidl
 	${SRC_DIR}/frontend/Modulation.aidl
+	${SRC_DIR}/frontend/RollOff.aidl
+	${SRC_DIR}/frontend/SignalDetectMode.aidl
 	${SRC_DIR}/frontend/SignalInfoProperty.aidl
 	${SRC_DIR}/frontend/SignalInfoValue.aidl
 	${SRC_DIR}/frontend/TransmissionMode.aidl
 	${SRC_DIR}/frontend/TuneParameters.aidl
 	${SRC_DIR}/frontend/TuneStatus.aidl
 	${SRC_DIR}/demux/DataPacket.aidl
+	${SRC_DIR}/demux/DemuxCapabilities.aidl
 	${SRC_DIR}/demux/DemuxFilterParameters.aidl
 	${SRC_DIR}/demux/FilterType.aidl
 	${SRC_DIR}/demux/IDemux.aidl
+	${SRC_DIR}/demux/IDemuxController.aidl
+	${SRC_DIR}/demux/IDemuxDataProvider.aidl
 	${SRC_DIR}/demux/IFilter.aidl
 	${SRC_DIR}/demux/ISoftwareSinkListener.aidl
 	${SRC_DIR}/demux/Mpeg2TsDemuxFilterParameters.aidl
@@ -80,11 +91,11 @@ set(INCLUDE_DIRECTORY
 
 set(COMPILE_AIDL_ARGV "")
 
-if (DEFINED AIDL_GEN_DIR)
+if(DEFINED AIDL_GEN_DIR)
 	list(APPEND COMPILE_AIDL_ARGV TARGET_DIRECTORY ${AIDL_GEN_DIR})
 endif()
 
-if (DEFINED AIDL_BIN)
+if(DEFINED AIDL_BIN)
 	list(APPEND COMPILE_AIDL_ARGV AIDL_BIN ${AIDL_BIN})
 endif()
 
