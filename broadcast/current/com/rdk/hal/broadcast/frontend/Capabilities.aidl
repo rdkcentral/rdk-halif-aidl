@@ -19,6 +19,7 @@
 package com.rdk.hal.broadcast.frontend;
 import com.rdk.hal.broadcast.frontend.DvbTCapabilities;
 import com.rdk.hal.broadcast.frontend.DvbCCapabilities;
+import com.rdk.hal.broadcast.frontend.DvbSCapabilities;
 import com.rdk.hal.broadcast.frontend.AtscCapabilities;
 import com.rdk.hal.broadcast.frontend.SignalInfoProperty;
 
@@ -26,7 +27,7 @@ import com.rdk.hal.broadcast.frontend.SignalInfoProperty;
  *  @brief     Capabilities for the Frontend
  *  @author    Jan Pedersen
  *  @author    Christian George
- *  @author    Philipp Trommler 
+ *  @author    Philipp Trommler
  */
 
 @VintfStability
@@ -38,7 +39,7 @@ parcelable Capabilities {
     long minFrequencyHz;
     /** Maximum frequency range of the tuner */
     long maxFrequencyHz;
-    
+
     /**
      * Range in Hertz that will result in the Tuner obtaining a lock
      */
@@ -56,7 +57,8 @@ parcelable Capabilities {
     union SpecificCapabilities {
         DvbTCapabilities dvbTCapabilities;
         DvbCCapabilities dvbCCapabilities;
-        AtscCapabilities atscCapabilities;        
+        DvbSCapabilities dvbSCapabilities;
+        AtscCapabilities atscCapabilities;
     }
 
     /** Reserverd for future use */

@@ -20,6 +20,7 @@ package com.rdk.hal.broadcast.demux;
 
 import com.rdk.hal.broadcast.demux.DataPacket;
 import com.rdk.hal.broadcast.demux.DemuxFilterParameters;
+import com.rdk.hal.broadcast.demux.FilterType;
 import com.rdk.hal.broadcast.demux.ISoftwareSinkListener;
 import com.rdk.hal.broadcast.demux.SoftwareSink;
 
@@ -41,6 +42,13 @@ import com.rdk.hal.broadcast.demux.SoftwareSink;
 
 @VintfStability
 interface IFilter {
+    /**
+     * Get the type of this filter.
+     *
+     * @returns FilterType the type of data this filter captures.
+     */
+    FilterType getType();
+
     /**
      * Set a new filter
      *
