@@ -20,6 +20,7 @@ package com.rdk.hal.broadcast;
 
 import com.rdk.hal.broadcast.demux.IDemux;
 import com.rdk.hal.broadcast.frontend.IFrontend;
+import com.rdk.hal.broadcast.ca.ICaSlot;
 import com.rdk.hal.broadcast.Version;
 import com.rdk.hal.broadcast.ImplementationVersion;
 
@@ -58,7 +59,7 @@ interface IBroadcastManager {
 
     /**
 	 * Gets the platform list of frontend IDs.
-     * 
+     *
      * @returns IFrontEnd.Id[]
      *
      */
@@ -89,4 +90,20 @@ interface IBroadcastManager {
      * @returns IDemux or null if the ID is invalid.
      */
     @nullable IDemux getDemux(in IDemux.Id demuxId);
+
+    /**
+     * Gets the list of CA slot IDs available on this platform.
+     *
+     * @returns ICaSlot.Id array
+     */
+    ICaSlot.Id[] getCaSlotIds();
+
+    /**
+     * Get the CA slot interface for the given ID.
+     *
+     * @param[in] slotId    The ID of the CA slot.
+     *
+     * @returns ICaSlot or null if the ID is invalid.
+     */
+    @nullable ICaSlot getCaSlot(in ICaSlot.Id slotId);
 }

@@ -82,6 +82,9 @@ set(SRC
 	${SRC_DIR}/demux/Mpeg2TsDemuxFilterParameters.aidl
 	${SRC_DIR}/demux/SoftwareSink.aidl
 	${SRC_DIR}/demux/SoftwareSource.aidl
+	${SRC_DIR}/ca/CaCapabilities.aidl
+	${SRC_DIR}/ca/ICaSlot.aidl
+	${SRC_DIR}/ca/PowerControl.aidl
 )
 
 set(INCLUDE_DIRECTORY
