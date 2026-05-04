@@ -25,6 +25,13 @@ import com.rdk.hal.broadcast.demux.IFilter;
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
+ *    The caller must ignore any output variables.
  */
 
 @VintfStability
@@ -35,16 +42,22 @@ interface IDemuxController {
      * The returned filters are not active by default. The filter has to be configured with
      * one or more PIDs to enable it.
      *
-     * @param[in] filterType    The type of filter to create
+     * @param[in] filterType    The type of filter to create.
      *
-     * @returns IFilter or null on error (e.g. no filter available for the given type)
+     * @returns IFilter or null on error (e.g. no filter available for the given type).
      */
     @nullable IFilter openFilter(in FilterType filterType);
 
     /**
      * Closes the given filter. The Filter object will be invalidated.
      *
-     * @param[in] filter    The filter to close (must have been stopped first)
+     * @param[in] filter    The filter to close.
+     *
+     * @exception binder::Status EX_ILLEGAL_STATE if the filter has not been stopped.
+     *
+     * @pre The filter must have been stopped by calling IFilter.stop() before calling this method.
+     *
+     * @see IFilter.stop()
      */
     void closeFilter(in IFilter filter);
 }
