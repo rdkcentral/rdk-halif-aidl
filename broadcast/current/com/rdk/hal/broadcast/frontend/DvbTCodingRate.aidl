@@ -2,7 +2,7 @@
  * If not stated otherwise in this file or this component's LICENSE file the
  * following copyright and licenses apply:
  *
- * Copyright 2024 RDK Management
+ * Copyright 2025 RDK Management
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,28 +16,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.broadcast.demux;
+package com.rdk.hal.broadcast.frontend;
+
+import com.rdk.hal.broadcast.frontend.CodingRate;
 
 /**
- *  @brief     Demux Filter type
- *  @author    Jan Pedersen
- *  @author    Christian George
- *  @author    Philipp Trommler
+ *  @brief  DVB-T LP and HP coding rates, used as a signal info value.
+ *
+ *  Returned for @ref SignalInfoProperty::DVB_T_CODING_RATE.
  */
-
 @VintfStability
-@Backing(type="int")
-enum FilterType {
-    /** Clean value when default initialized */
-    UNDEFINED = 0,
-    /** Mpeg2 transport stream data packets */
-    MPEG2TS_DATA,
-    /** Mpeg2 transport stream clock packets */
-    MPEG2TS_CLOCK,
-    /** Mpeg2 transport stream video packets */
-    MPEG2TS_VIDEO,
-    /** Mpeg2 transport stream audio packets */
-    MPEG2TS_AUDIO,
-    /** Mpeg2 transport stream supplementary audio packets */
-    MPEG2TS_SUPPLEMENTARY_AUDIO,
+parcelable DvbTCodingRate {
+    /** Low-priority stream coding rate */
+    CodingRate lp = CodingRate.UNDEFINED;
+    /** High-priority stream coding rate */
+    CodingRate hp = CodingRate.UNDEFINED;
 }
