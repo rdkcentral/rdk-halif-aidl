@@ -28,7 +28,7 @@ import com.rdk.hal.broadcast.frontend.CodingRate;
 @VintfStability
 parcelable DvbTCodingRate {
     /** Low-priority stream coding rate */
-    CodingRate lp = CodingRate.UNDEFINED;
+    CodingRate lp;
     /** High-priority stream coding rate */
-    CodingRate hp = CodingRate.UNDEFINED;
+    CodingRate hp;
 }

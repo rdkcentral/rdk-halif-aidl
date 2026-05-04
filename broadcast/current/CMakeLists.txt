@@ -49,7 +49,9 @@ set(SRC
 	${SRC_DIR}/frontend/DvbCAnnex.aidl
 	${SRC_DIR}/frontend/DvbCCapabilities.aidl
 	${SRC_DIR}/frontend/DvbCTuneParameters.aidl
+	${SRC_DIR}/frontend/DvbSCapabilities.aidl
 	${SRC_DIR}/frontend/DvbSStandard.aidl
+	${SRC_DIR}/frontend/DvbSTuneParameters.aidl
 	${SRC_DIR}/frontend/DvbTCapabilities.aidl
 	${SRC_DIR}/frontend/DvbTCodingRate.aidl
 	${SRC_DIR}/frontend/DvbTStandard.aidl
@@ -75,6 +77,7 @@ set(SRC
 	${SRC_DIR}/demux/DemuxCapabilities.aidl
 	${SRC_DIR}/demux/DemuxFilterParameters.aidl
 	${SRC_DIR}/demux/FilterType.aidl
+	${SRC_DIR}/demux/IDataFromSoftwareInjector.aidl
 	${SRC_DIR}/demux/IDemux.aidl
 	${SRC_DIR}/demux/IDemuxController.aidl
 	${SRC_DIR}/demux/IDemuxDataProvider.aidl
