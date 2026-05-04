@@ -51,6 +51,7 @@ set(SRC
 	${SRC_DIR}/frontend/DvbCTuneParameters.aidl
 	${SRC_DIR}/frontend/DvbSStandard.aidl
 	${SRC_DIR}/frontend/DvbTCapabilities.aidl
+	${SRC_DIR}/frontend/DvbTCodingRate.aidl
 	${SRC_DIR}/frontend/DvbTStandard.aidl
 	${SRC_DIR}/frontend/DvbTTuneParameters.aidl
 	${SRC_DIR}/frontend/FrontendType.aidl
