@@ -63,6 +63,29 @@ interface ILnbController {
     void setTone(in LnbTone tone);
 
     /**
+     * Get the overload state of the LNB controller.
+     *
+     * Returns true if the LNB power line is overloaded (e.g. possible short circuit on the
+     * LNB voltage line), false otherwise.
+     *
+     * @returns boolean true if the LNB is overloaded, false otherwise.
+     */
+    boolean isOverloaded();
+
+    /**
+     * Send a DiSEqC (Digital Satellite Equipment Control) command.
+     *
+     * Sends a DiSEqC command to the connected LNB equipment as specified by the EUTELSAT Bus
+     * Functional Specification Version 4.2. Blocks until the entire command has been transmitted.
+     *
+     * @param[in] command   The DiSEqC command bytes to transmit.
+     *
+     * @exception binder::Status EX_ILLEGAL_STATE if the LNB controller is not open.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if the command is empty or malformed.
+     */
+    void sendDiseqc(in byte[] command);
+
+    /**
      * Close the LNB controller.
      *
      * Cleans up all attached (hardware) resources and brings the LNB controller back into a

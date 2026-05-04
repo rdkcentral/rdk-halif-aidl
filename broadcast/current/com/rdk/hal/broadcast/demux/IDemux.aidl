@@ -18,11 +18,12 @@
  */
 package com.rdk.hal.broadcast.demux;
 import com.rdk.hal.broadcast.demux.DemuxCapabilities;
+import com.rdk.hal.broadcast.demux.IDataFromSoftwareInjector;
 import com.rdk.hal.broadcast.demux.IDemuxDataProvider;
 import com.rdk.hal.broadcast.demux.IDemuxController;
 
 /**
- *  @brief     Interface for a demux. 
+ *  @brief     Interface for a demux.
  *  @author    Jan Pedersen
  *  @author    Christian George
  *  @author    Philipp Trommler
@@ -92,4 +93,21 @@ interface IDemux {
      * @returns IDemuxDataProvider the provider instance passed to connect()
      */
     @nullable IDemuxDataProvider disconnect(in IDemuxController controller);
+
+    /**
+     * Create a software injector to feed data into this Demux.
+     *
+     * The client takes ownership of the returned object. Resources are only bound to the returned
+     * object; they are released when the injector is no longer referenced.
+     *
+     * Only available when DemuxCapabilities.acceptsDataFromSoftware is true.
+     * The number of simultaneous injector objects may be limited by the implementation.
+     *
+     * @returns IDataFromSoftwareInjector or null on error (e.g. software input not supported,
+     *          or resource limit reached).
+     *
+     * @see DemuxCapabilities.acceptsDataFromSoftware
+     * @see IDataFromSoftwareInjector.acquireDataProvider()
+     */
+    @nullable IDataFromSoftwareInjector createInjector();
 }

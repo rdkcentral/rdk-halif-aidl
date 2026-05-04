@@ -26,5 +26,5 @@ import com.rdk.hal.broadcast.ca.PowerControl;
 @VintfStability
 parcelable CaCapabilities {
     /** @brief How the power line control is managed for this slot */
-    PowerControl powerControl = PowerControl.UNDEFINED;
+    PowerControl powerControl;
 }
