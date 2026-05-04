@@ -22,7 +22,7 @@ package com.rdk.hal.broadcast.frontend;
  *  @brief     Available frontend info types
  *  @author    Jan Pedersen
  *  @author    Christian George
- *  @author    Philipp Trommler 
+ *  @author    Philipp Trommler
  */
 
 /**
@@ -35,7 +35,7 @@ package com.rdk.hal.broadcast.frontend;
 enum SignalInfoProperty {
     /** Clean value when default initialized */
     UNDEFINED = 0,
-    /** Demod Lock status */    
+    /** Demod Lock status */
     DEMOD_LOCK,
     /** RF Lock status */
     RF_LOCK,
@@ -75,4 +75,8 @@ enum SignalInfoProperty {
     DVB_T_STANDARD,
     /** DVB-S Standard */
     DVB_S_STANDARD,
+    /** Coding rate */
+    CODING_RATE,
+    /** DVB-T LP and HP coding rate */
+    DVB_T_CODING_RATE,
 }
