@@ -19,16 +19,19 @@
 package com.rdk.hal.broadcast.demux;
 
 /**
- * @brief Interface for demux data provider
+ * @brief Polymorphic base interface for components that can feed data to a Demux.
+ *
+ * This interface is implemented by both hardware frontend sources (via IFrontend.acquireDataProvider())
+ * and software sources. Pass an instance to IDemux.connect() to attach the data source.
+ *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
+ *
+ * @see IDemux.connect()
+ * @see IFrontend.acquireDataProvider()
  */
 
 @VintfStability
 interface IDemuxDataProvider {
-    /**
-     * Polymorphic base interface for components that can feed data to a Demux.
-     * This can be implemented by frontend sources or software sources.
-     */
 }
