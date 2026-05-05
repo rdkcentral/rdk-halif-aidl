@@ -20,9 +20,7 @@ package com.rdk.hal.audiomixer;
 
 import com.rdk.hal.audiomixer.OutputPortProperty;
 import com.rdk.hal.audiomixer.OutputFormat;
-import com.rdk.hal.audiomixer.TranscodeFormat;
 import com.rdk.hal.audiomixer.AQProcessor;
-import com.rdk.hal.audiomixer.AQParameter;
 
 /**
  * @brief    Capabilities for an audio output port.
@@ -52,17 +50,7 @@ parcelable OutputPortCapabilities {
     OutputFormat[] supportedOutputFormats;
 
     /**
-     * Supported audio transcoding output formats.
-     */
-    TranscodeFormat[] supportedTranscodeFormats;
-
-    /**
      * List of AQ processor instances supported (first is default).
      */
     AQProcessor[] supportedAQProcessors;
-
-    /**
-     * List of supported AQ parameters.
-     */
-    AQParameter[] supportedAQ;
 }

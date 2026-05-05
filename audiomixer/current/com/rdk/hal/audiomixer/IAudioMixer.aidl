@@ -21,6 +21,7 @@
 import com.rdk.hal.audiomixer.Capabilities;
 import com.rdk.hal.audiomixer.IAudioMixerController;
 import com.rdk.hal.audiomixer.IAudioMixerEventListener;
+import com.rdk.hal.audiomixer.IMS12_2_6_Dap;
 import com.rdk.hal.audiomixer.IAudioOutputPort;
 import com.rdk.hal.audiomixer.Property;
 import com.rdk.hal.audiomixer.InputRouting;
@@ -84,6 +85,13 @@ interface IAudioMixer {
      * @returns Capabilities description for the mixer.
      */
     Capabilities getCapabilities();
+
+    /**
+     * @brief Creates a Dolby MS12 2.6 DAP command interface for this mixer.
+     * @returns IMS12_2_6_Dap interface, or null if the platform does not expose it.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if property not supported.
+     */
+    @nullable IMS12_2_6_Dap createMS12_2_6_Dap();
 
     /**
      * @brief     Gets a property value from the mixer instance.

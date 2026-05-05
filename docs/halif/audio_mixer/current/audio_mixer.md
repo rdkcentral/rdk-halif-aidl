@@ -48,6 +48,7 @@ Mixer instances are accessed and controlled via `IAudioMixer`, with additional l
 | AIDL File                     | Description                                            |
 | ----------------------------- | ------------------------------------------------------ |
 | IAudioMixer.aidl              | Main resource control interface                        |
+| IMS12_2_6_Dap.aidl            | Dolby MS12 2.6 runtime command interface              |
 | IAudioMixerManager.aidl       | Interface for mixer enumeration                        |
 | IAudioMixerController.aidl    | Stateful runtime mixer control                         |
 | IAudioMixerEventListener.aidl | Event callbacks (errors, state changes, codec updates) |
@@ -57,11 +58,15 @@ Mixer instances are accessed and controlled via `IAudioMixer`, with additional l
 | MixerInput.aidl               | Per-input supported codec and content type definitions |
 | OutputPortCapabilities.aidl   | Describes per-port format and property support         |
 | OutputFormat.aidl             | Enumerates output encoding formats                     |
-| TranscodeFormat.aidl          | Enumerates supported transcode formats                 |
 | Property.aidl                 | Mixer-level configurable properties                    |
 | OutputPortProperty.aidl       | Output port-level configurable properties              |
 | AQProcessor.aidl              | Supported audio post-processing processor types        |
-| AQParameter.aidl              | Audio quality configuration parameters                 |
+| MS12LevellerMode.aidl         | MS12 volume leveller mode enum                         |
+| MS12VirtualizerMode.aidl      | MS12 surround virtualizer mode enum                    |
+| MS12IeqMode.aidl              | MS12 intelligent equalizer mode enum                   |
+| MS12GeqMode.aidl              | MS12 graphic equalizer mode enum                       |
+| MS12DrcMode.aidl              | MS12 dynamic range control mode enum                   |
+| MS12DownmixMode.aidl          | MS12 downmix mode enum                                 |
 | ContentType.aidl              | Classifies audio input usage (STREAM, CLIP, TTS)       |
 | AudioSourceType.aidl          | Audio source types for mixer input routing             |
 | InputRouting.aidl             | Maps audio sources to mixer inputs                     |
@@ -171,6 +176,28 @@ Mixers can operate in secure and non-secure paths. Properties such as `MIXING_MO
 
 ---
 
+## Dolby MS12 Runtime Commands
+
+The `IMS12_2_6_Dap` interface exposes one method per MS12 runtime command and is created from `IAudioMixer.createMS12_2_6_Dap()`.
+
+Non-boolean argument constraints are declared in `audiomixer/current/hfp-audiomixer.yaml` under `ms12RuntimeRanges`.
+
+| Method | Non-boolean constraints |
+| ------ | ----------------------- |
+| `setBassEnhancer(boost)` | `boost` 0..100 |
+| `setVolumeLeveller(mode, level)` | `mode` in {0,1,2}, `level` 0..10 |
+| `setSurroundVirtualizer(mode, boost)` | `mode` in {0,1,2}, `boost` 0..96 |
+| `setDialogueEnhancer(level)` | `level` 0..16 (`ac4Max` 12) |
+| `setIntelligentEqualizerMode(mode)` | `mode` in {0,1,2,3,4,5,6} |
+| `setGraphicEqualizerMode(mode)` | `mode` in {0,1,2,3} |
+| `setDRCMode(mode)` | `mode` in {0,1} |
+| `setPostGain(gain)` | `gain` -2080..480 |
+| `setDownmixMode(mode)` | `mode` in {0,1} |
+
+For these constrained arguments, out-of-range values shall raise `EX_ILLEGAL_ARGUMENT`.
+
+---
+
 ## Event Handling
 
 | Event                 | Interface                | Description                                         |
@@ -221,11 +248,9 @@ Methods like `start()`, `stop()`, `flush(reset)`, and `signalEOS()` are valid on
 
 Declared in the HFP YAML:
 
-* `maxMixers`: Maximum number of concurrent mixer instances
-* `supportsDolbyMS12`: Boolean flag for Dolby post-processing
-* `supportsDTS`: DTS processing availability
-* `supportsConcurrentApps`: Whether concurrent apps can use the mixer simultaneously
-* `maxInputsPerMixer`: Maximum number of logical inputs per mixer
+* `resources`: Mixer instances, supported source types, and input codec/content capability
+* `outputPorts`: Output port properties, formats, and AQ processors
+* `ms12RuntimeRanges`: Non-boolean argument constraints for `IMS12_2_6_Dap` methods
 
 ---
 

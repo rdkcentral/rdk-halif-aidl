@@ -43,8 +43,8 @@ enum OutputFormat {
     /** Output is passed through as received (bitstream, no re-encoding). */
     PASSTHROUGH = 1,
 
-    /** Output as uncompressed PCM. */
-    PCM = 2,
+    /** Output as uncompressed STEREO PCM. */
+    PCM_STEREO = 2,
 
     /** Output as AC-3 (Dolby Digital) bitstream. */
     AC3 = 3,
@@ -62,5 +62,8 @@ enum OutputFormat {
     DTS = 7,
 
     /** Output as DTS-HD Master Audio bitstream. */
-    DTS_HD = 8
+    DTS_HD = 8,
+
+    /** Output as uncompressed Multichannel PCM. */
+    PCM_MULICHANNEL = 9,
 }

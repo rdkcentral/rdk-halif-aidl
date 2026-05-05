@@ -35,8 +35,8 @@ enum AQProcessor {
     /** Undefined or no AQ processor. */
     UNDEFINED = 0,
 
-    /** Dolby MS12 audio processor. */
-    DOLBY_MS12 = 1,
+    /** Dolby MS12 2.6 audio processor (compatible with MS12 2.5). */
+    DOLBY_MS12_2_6 = 1,
 
     /** DTS:X Ultra processor. */
     DTS_ULTRA = 2,

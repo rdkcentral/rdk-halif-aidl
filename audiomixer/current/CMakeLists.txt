@@ -49,16 +49,21 @@ set(SRC
     ${SRC_DIR}/Property.aidl
     ${SRC_DIR}/OutputPortProperty.aidl
     ${SRC_DIR}/AQProcessor.aidl
-    ${SRC_DIR}/AQParameter.aidl
     ${SRC_DIR}/OutputFormat.aidl
-    ${SRC_DIR}/TranscodeFormat.aidl
     ${SRC_DIR}/MixingMode.aidl
     ${SRC_DIR}/OutputPortCapabilities.aidl
+    ${SRC_DIR}/MS12DrcMode.aidl
+    ${SRC_DIR}/MS12DownmixMode.aidl
+    ${SRC_DIR}/MS12GeqMode.aidl
+    ${SRC_DIR}/MS12IeqMode.aidl
+    ${SRC_DIR}/MS12LevellerMode.aidl
+    ${SRC_DIR}/MS12VirtualizerMode.aidl
     # Interfaces
     ${SRC_DIR}/IAudioMixer.aidl
     ${SRC_DIR}/IAudioMixerController.aidl
     ${SRC_DIR}/IAudioMixerEventListener.aidl
     ${SRC_DIR}/IAudioMixerManager.aidl
+    ${SRC_DIR}/IMS12_2_6_Dap.aidl
     ${SRC_DIR}/IAudioOutputPort.aidl
     ${SRC_DIR}/IAudioOutputPortListener.aidl
     # External dependencies

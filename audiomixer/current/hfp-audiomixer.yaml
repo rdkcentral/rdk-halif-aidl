@@ -24,6 +24,47 @@
 audiomixer:
   interfaceVersion: current
 
+  # Non-boolean runtime argument constraints for IMS12_2_6_Dap methods.
+  # These values are used by platform validation and argument contract checks.
+  ms12RuntimeRanges:
+    bassEnhancer:
+      boost:
+        min: 0
+        max: 100
+    volumeLeveller:
+      mode:
+        allowed: [0, 1, 2]
+      level:
+        min: 0
+        max: 10
+    surroundVirtualizer:
+      mode:
+        allowed: [0, 1, 2]
+      boost:
+        min: 0
+        max: 96
+    dialogueEnhancer:
+      level:
+        min: 0
+        max: 16
+      ac4Max: 12
+    intelligentEqualizer:
+      mode:
+        allowed: [0, 1, 2, 3, 4, 5, 6]
+    graphicEqualizer:
+      mode:
+        allowed: [0, 1, 2, 3]
+    drc:
+      mode:
+        allowed: [0, 1]
+    postGain:
+      gain:
+        min: -2080
+        max: 480
+    downmix:
+      mode:
+        allowed: [0, 1]
+
   # List of mixer resources available on this platform.
   # Each resources entry describes a single logical audio mixer instance and its input capabilities
   resources:
@@ -93,18 +134,12 @@ audiomixer:
         - DELAY_MS
         - OUTPUT_FORMAT
       supportedOutputFormats:
+        - AUTO
         - PCM
         - AC3
         - EAC3
-        - MAT
-      supportedTranscodeFormats:
-        - DOLBY_AC3
       supportedAQProcessors:
         - UNDEFINED
-      supportedAQ:
-        - GRAPHIC_EQUALIZER
-        - BASS_ENHANCER_GAIN
-        - DIALOGUE_ENHANCER
 
     - id: 1
       portName: SPDIF
@@ -114,10 +149,5 @@ audiomixer:
       supportedOutputFormats:
         - PCM
         - AC3
-      supportedTranscodeFormats:
-        - DOLBY_AC3
       supportedAQProcessors:
         - UNDEFINED
-      supportedAQ:
-        - DIALOGUE_ENHANCER
-        - BASS_ENHANCER_CUTOFF

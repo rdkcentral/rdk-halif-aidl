@@ -102,14 +102,6 @@ enum OutputPortProperty {
     STATE = 7,
 
     /**
-    * Audio transcoding output format.
-    * Type: int (TranscodeFormat enum @see com.rdk.hal.audiomixer.TranscodeFormat)
-    * Access: Read-write.
-    * Writeable in states: READY
-    */
-    TRANSCODE_FORMAT = 8,
-
-    /**
      * Physical/logical connection state.
      * Type: int (@see com.rdk.hal.audiomixer.ConnectionState enum)
      * Access: Read-only.

@@ -52,14 +52,10 @@ enum Property {
      * Access: Read-write
      * Writeable States: READY, STARTED
      *
-     * The value must correspond to a named AQ parameter configuration supported
-     * by the system. These profiles internally control one or more parameters
-     * defined in @see AQParameter, such as DIALOGUE_ENHANCER, BASS_ENHANCER_GAIN,
-     * or GRAPHIC_EQUALIZER.
+     * The value must correspond to a platform-defined AQ profile configuration
+     * supported by the system.
      *
      * Example values: "DIALOGUE_ENHANCER", "GRAPHIC_EQUALIZER", "SURROUND_VIRTUALIZER"
-     *
-     * @see com.rdk.hal.audiomixer.AQParameter
      */
     ACTIVE_AQ_PROFILE = 2,
 
