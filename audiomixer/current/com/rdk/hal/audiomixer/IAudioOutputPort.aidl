@@ -61,4 +61,11 @@ interface IAudioOutputPort {
      * @brief    Un-registers a previously registered listener.
      */
     void unregisterListener(in IAudioOutputPortListener listener);
+
+    /**
+     * @brief Creates a Dolby MS12 2.6 DAP command interface for this port.
+     * @returns IMS12_2_6_Dap interface, or null if the platform does not expose it.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if property not supported.
+     */
+    @nullable IDolbyMs12_2_6_Dap createDolbyMs12_2_6_Dap();
 }

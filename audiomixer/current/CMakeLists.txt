@@ -58,6 +58,7 @@ set(SRC
     ${SRC_DIR}/MS12IeqMode.aidl
     ${SRC_DIR}/MS12LevellerMode.aidl
     ${SRC_DIR}/MS12VirtualizerMode.aidl
+    ${SRC_DIR}/Dolby_MS12_2_6_DapCapabilities.aidl
     # Interfaces
     ${SRC_DIR}/IAudioMixer.aidl
     ${SRC_DIR}/IAudioMixerController.aidl

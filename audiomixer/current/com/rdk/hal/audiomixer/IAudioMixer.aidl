@@ -87,13 +87,6 @@ interface IAudioMixer {
     Capabilities getCapabilities();
 
     /**
-     * @brief Creates a Dolby MS12 2.6 DAP command interface for this mixer.
-     * @returns IMS12_2_6_Dap interface, or null if the platform does not expose it.
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if property not supported.
-     */
-    @nullable IMS12_2_6_Dap createMS12_2_6_Dap();
-
-    /**
      * @brief     Gets a property value from the mixer instance.
      * @param[in] property      The property key (from Property enum).
      * @returns   The current property value.

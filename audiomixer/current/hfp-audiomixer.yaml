@@ -24,47 +24,6 @@
 audiomixer:
   interfaceVersion: current
 
-  # Non-boolean runtime argument constraints for IMS12_2_6_Dap methods.
-  # These values are used by platform validation and argument contract checks.
-  ms12RuntimeRanges:
-    bassEnhancer:
-      boost:
-        min: 0
-        max: 100
-    volumeLeveller:
-      mode:
-        allowed: [0, 1, 2]
-      level:
-        min: 0
-        max: 10
-    surroundVirtualizer:
-      mode:
-        allowed: [0, 1, 2]
-      boost:
-        min: 0
-        max: 96
-    dialogueEnhancer:
-      level:
-        min: 0
-        max: 16
-      ac4Max: 12
-    intelligentEqualizer:
-      mode:
-        allowed: [0, 1, 2, 3, 4, 5, 6]
-    graphicEqualizer:
-      mode:
-        allowed: [0, 1, 2, 3]
-    drc:
-      mode:
-        allowed: [0, 1]
-    postGain:
-      gain:
-        min: -2080
-        max: 480
-    downmix:
-      mode:
-        allowed: [0, 1]
-
   # List of mixer resources available on this platform.
   # Each resources entry describes a single logical audio mixer instance and its input capabilities
   resources:
@@ -139,7 +98,115 @@ audiomixer:
         - AC3
         - EAC3
       supportedAQProcessors:
-        - UNDEFINED
+        - name: DOLBY_MS12_2_6
+          # If this AQ processor is present on the output port,
+          # createDolbyMs12_2_6_Dap() is supported for that port.
+          supportsCreateDolbyMs12_2_6_Dap: true
+          setFunctions:
+            setSurroundDecoderEnabled:
+              supportsSurroundDecoderEnabled: true
+              range:
+                enabled: [true, false]
+              default:
+                enabled: false
+            setBassEnhancer:
+              supportsBassEnhancer: true
+              range:
+                boost:
+                  min: 0
+                  max: 100
+              default:
+                boost: 50
+            setVolumeLeveller:
+              supportsVolumeLeveller: true
+              range:
+                mode: [OFF, MANUAL, AUTO]
+                level:
+                  min: 0
+                  max: 10
+              default:
+                mode: AUTO
+                level: 5
+            setSurroundVirtualizer:
+              supportsSurroundVirtualizer: true
+              range:
+                mode: [OFF, MANUAL, AUTO]
+                boost:
+                  min: 0
+                  max: 96
+              default:
+                mode: AUTO
+                boost: 48
+            setMediaIntelligentSteering:
+              supportsMediaIntelligentSteering: true
+              range:
+                enabled: [true, false]
+              default:
+                enabled: true
+            setPostGain:
+              supportsPostGain: true
+              range:
+                gain:
+                  min: -2080.0
+                  max: 480.0
+              default:
+                gain: 0.0
+            setDialogueEnhancer:
+              supportsDialogueEnhancer: true
+              range:
+                level:
+                  min: 0
+                  max: 16
+              default:
+                level: 8
+            setIntelligentEqualizerMode:
+              supportsIntelligentEqualizerMode: true
+              range:
+                mode: [OFF, OPEN, RICH, FOCUSED, BALANCED, WARM, DETAILED]
+              default:
+                mode: BALANCED
+            setGraphicEqualizerMode:
+              supportsGraphicEqualizerMode: true
+              range:
+                mode: [OFF, OPEN, RICH, FOCUSED]
+              default:
+                mode: OPEN
+            setDynamicRangeControlMode:
+              supportsDynamicRangeControlMode: true
+              range:
+                mode: [LINE, RF]
+              default:
+                mode: LINE
+            setAtmosLock:
+              supportsAtmosLock: true
+              range:
+                enabled: [true, false]
+              default:
+                enabled: false
+            setDownmixMode:
+              supportsDownmixMode: true
+              range:
+                mode: [LT_RT, LO_RO]
+              default:
+                mode: LT_RT
+            setVolumeModelerEnabled:
+              supportsVolumeModelerEnabled: true
+              range:
+                enabled: [true, false]
+              default:
+                enabled: false
+            setCenterSpreadingEnabled:
+              supportsCenterSpreadingEnabled: true
+              range:
+                enabled: [true, false]
+              default:
+                enabled: false
+            setActiveDownmixEnabled:
+              supportsActiveDownmixEnabled: true
+              range:
+                enabled: [true, false]
+              default:
+                enabled: false
 
     - id: 1
       portName: SPDIF
