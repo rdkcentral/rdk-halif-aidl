@@ -19,11 +19,13 @@
 package com.rdk.hal.audiomixer;
 
 /**
- * @brief Dynamic range control mode for Dolby MS12 runtime command control.
+ * @brief Graphic equalizer preset mode for Dolby MS12 runtime command control.
  */
 @VintfStability
 @Backing(type="int")
-enum MS12DrcMode {
-    LINE = 0,
-    RF = 1,
+enum DolbyMs12_2_6_GeqMode {
+    OFF = 0,
+    OPEN = 1,
+    RICH = 2,
+    FOCUSED = 3,
 }

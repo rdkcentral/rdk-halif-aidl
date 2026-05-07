@@ -19,16 +19,12 @@
 package com.rdk.hal.audiomixer;
 
 /**
- * @brief Intelligent equalizer preset mode for Dolby MS12 runtime command control.
+ * @brief Volume leveller operating mode for Dolby MS12 runtime command control.
  */
 @VintfStability
 @Backing(type="int")
-enum MS12IeqMode {
+enum DolbyMs12_2_6_LevellerMode {
     OFF = 0,
-    OPEN = 1,
-    RICH = 2,
-    FOCUSED = 3,
-    BALANCED = 4,
-    WARM = 5,
-    DETAILED = 6,
+    MANUAL = 1,
+    AUTO = 2,
 }

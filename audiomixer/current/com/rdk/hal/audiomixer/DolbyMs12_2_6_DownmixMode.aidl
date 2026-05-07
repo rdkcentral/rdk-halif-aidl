@@ -19,12 +19,11 @@
 package com.rdk.hal.audiomixer;
 
 /**
- * @brief Volume leveller operating mode for Dolby MS12 runtime command control.
+ * @brief Downmix mode for Dolby MS12 runtime command control.
  */
 @VintfStability
 @Backing(type="int")
-enum MS12LevellerMode {
-    OFF = 0,
-    MANUAL = 1,
-    AUTO = 2,
+enum DolbyMs12_2_6_DownmixMode {
+    LT_RT = 0,
+    LO_RO = 1,
 }

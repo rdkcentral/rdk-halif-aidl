@@ -52,12 +52,12 @@ set(SRC
     ${SRC_DIR}/OutputFormat.aidl
     ${SRC_DIR}/MixingMode.aidl
     ${SRC_DIR}/OutputPortCapabilities.aidl
-    ${SRC_DIR}/MS12DrcMode.aidl
-    ${SRC_DIR}/MS12DownmixMode.aidl
-    ${SRC_DIR}/MS12GeqMode.aidl
-    ${SRC_DIR}/MS12IeqMode.aidl
-    ${SRC_DIR}/MS12LevellerMode.aidl
-    ${SRC_DIR}/MS12VirtualizerMode.aidl
+    ${SRC_DIR}/DolbyMs12_2_6_DrcMode.aidl
+    ${SRC_DIR}/DolbyMs12_2_6_DownmixMode.aidl
+    ${SRC_DIR}/DolbyMs12_2_6_GeqMode.aidl
+    ${SRC_DIR}/DolbyMs12_2_6_IeqMode.aidl
+    ${SRC_DIR}/DolbyMs12_2_6_LevellerMode.aidl
+    ${SRC_DIR}/DolbyMs12_2_6_VirtualizerMode.aidl
     ${SRC_DIR}/Dolby_MS12_2_6_DapCapabilities.aidl
     # Interfaces
     ${SRC_DIR}/IAudioMixer.aidl

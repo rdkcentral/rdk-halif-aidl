@@ -19,11 +19,11 @@
 package com.rdk.hal.audiomixer;
 
 /**
- * @brief Downmix mode for Dolby MS12 runtime command control.
+ * @brief Dynamic range control mode for Dolby MS12 runtime command control.
  */
 @VintfStability
 @Backing(type="int")
-enum MS12DownmixMode {
-    LT_RT = 0,
-    LO_RO = 1,
+enum DolbyMs12_2_6_DrcMode {
+    LINE = 0,
+    RF = 1,
 }

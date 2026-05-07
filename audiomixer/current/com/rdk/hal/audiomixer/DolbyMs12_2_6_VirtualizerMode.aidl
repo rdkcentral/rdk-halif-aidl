@@ -19,13 +19,12 @@
 package com.rdk.hal.audiomixer;
 
 /**
- * @brief Graphic equalizer preset mode for Dolby MS12 runtime command control.
+ * @brief Surround virtualizer operating mode for Dolby MS12 runtime command control.
  */
 @VintfStability
 @Backing(type="int")
-enum MS12GeqMode {
+enum DolbyMs12_2_6_VirtualizerMode {
     OFF = 0,
-    OPEN = 1,
-    RICH = 2,
-    FOCUSED = 3,
+    MANUAL = 1,
+    AUTO = 2,
 }
