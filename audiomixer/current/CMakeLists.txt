@@ -59,6 +59,10 @@ set(SRC
     ${SRC_DIR}/DolbyMs12_2_6_LevellerMode.aidl
     ${SRC_DIR}/DolbyMs12_2_6_VirtualizerMode.aidl
     ${SRC_DIR}/Dolby_MS12_2_6_DapCapabilities.aidl
+    ${SRC_DIR}/AudioCaptureFormat.aidl
+    ${SRC_DIR}/AudioCapturePcmInfo.aidl
+    ${SRC_DIR}/AudioCaptureData.aidl
+    ${SRC_DIR}/AudioCaptureStatus.aidl
     # Interfaces
     ${SRC_DIR}/IAudioMixer.aidl
     ${SRC_DIR}/IAudioMixerController.aidl
@@ -67,6 +71,8 @@ set(SRC
     ${SRC_DIR}/IMS12_2_6_Dap.aidl
     ${SRC_DIR}/IAudioOutputPort.aidl
     ${SRC_DIR}/IAudioOutputPortListener.aidl
+    ${SRC_DIR}/IAudioCapture.aidl
+    ${SRC_DIR}/IAudioCaptureListener.aidl
     # External dependencies
     ${AUDIO_DECODER_SRC_DIR}/Codec.aidl
     ${COMMON_SRC_DIR}/PropertyValue.aidl

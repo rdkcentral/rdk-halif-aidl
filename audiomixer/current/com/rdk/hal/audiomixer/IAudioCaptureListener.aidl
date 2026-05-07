@@ -1,0 +1,57 @@
+/*
+ * If not stated otherwise in this file or in the LICENSE file distributed with this
+ * file, this file is distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+package com.rdk.hal.audiomixer;
+
+/**
+ * @brief Audio capture event listener interface.
+ * Asynchronous callback interface for receiving audio capture events from an output port.
+ * All methods are one-way (fire-and-forget) to avoid blocking the capture thread.
+ */
+@VintfStability
+oneway interface IAudioCaptureListener {
+    /**
+     * @brief Called when a new audio data frame is available for capture.
+     * 
+     * @param[in] data Audio frame containing raw/decoded samples and metadata (channels, sample rate, timestamp, format).
+     * 
+     * @returns Void (one-way result does not wait for callback completion).
+     */
+    void onDataAvailable(in AudioCaptureData data);
+
+    /**
+     * @brief Called when audio capture stream has successfully started.
+     * 
+     * Signals that the capture interface has transitioned to active/streaming state
+     * and audio frames are being delivered via onDataAvailable() calls.
+     * 
+     * @returns Void (one-way result does not wait for callback completion).
+     */
+    void onStarted();
+
+    /**
+     * @brief Called when audio capture stream has stopped.
+     * 
+     * Signals that the capture interface has transitioned to idle/stopped state.
+     * No further onDataAvailable() callbacks will be delivered.
+     * 
+     * @returns Void (one-way result does not wait for callback completion).
+     */
+    void onStopped();
+
+    /**
+     * @brief Called when an error occurs during audio capture.
+     * 
+     * @param[in] status Error code indicating the type of failure.
+     * @param[in] message Human-readable error description.
+     * 
+     * @returns Void (one-way result does not wait for callback completion).
+     * 
+     * @exception None (one-way interface never throws).
+     */
+    void onError(in AudioCaptureStatus status, in String message);
+}
