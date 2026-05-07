@@ -64,8 +64,26 @@ interface IAudioOutputPort {
 
     /**
      * @brief Creates a Dolby MS12 2.6 DAP command interface for this port.
-     * @returns IMS12_2_6_Dap interface, or null if the platform does not expose it.
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if property not supported.
+     * 
+     * If DOLBY_MS12_2_6 is reported as a supported AQProcessor in supportedAQProcessors then this function will return an interface to allow its control.
+     *
+     * @returns IDolbyMS12_2_6_Dap interface
+     * @exception binder::Status EX_UNSUPPORTED_OPERATION if Dolby MS12 v2.6 DAP is not supported.
+     *
+     * @see com.rdk.hal.audiomixer.OutputPortCapabilities.supportedAQProcessors
      */
-    @nullable IDolbyMs12_2_6_Dap createDolbyMs12_2_6_Dap();
+    IDolbyMs12_2_6_Dap getDolbyMs12_2_6_Dap();
+
+
+    /**
+     * @brief Creates an audio capture interface for this port.
+     * 
+     * If supportsAudioCapture is true then this function will return an interface to allow its control.
+     *
+     * @returns IAudioCaputure interface
+     * @exception binder::Status EX_UNSUPPORTED_OPERATION if audio capture from this port is not supported.
+     *
+     * @see com.rdk.hal.audiomixer.OutputPortCapabilities.supportsAudioCapture
+     */
+    IAudioCapture getAudioCapture(in IAudioCaptureListener audioCaptureListener );
 }

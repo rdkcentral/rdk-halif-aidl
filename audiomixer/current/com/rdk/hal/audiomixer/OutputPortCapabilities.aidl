@@ -59,4 +59,9 @@ parcelable OutputPortCapabilities {
      * If there are no defined MS12 Audio Profiles DolbyMs12AudioProfiles is not populated with profile strings.
      */
     String[] DolbyMs12AudioProfiles;
+
+    /**
+     * If true the output port supports Audio Caputure interface creation.
+     */
+    Boolean supportsAudioCapture;
 }
