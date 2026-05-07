@@ -46,20 +46,6 @@ enum Property {
     DEBUG_TAP_ENABLED = 1,
 
     /**
-     * Gets or sets the currently active AQ (Audio Quality) profile or preset.
-     *
-     * Type: String
-     * Access: Read-write
-     * Writeable States: READY, STARTED
-     *
-     * The value must correspond to a platform-defined AQ profile configuration
-     * supported by the system.
-     *
-     * Example values: "DIALOGUE_ENHANCER", "GRAPHIC_EQUALIZER", "SURROUND_VIRTUALIZER"
-     */
-    ACTIVE_AQ_PROFILE = 2,
-
-    /**
     * Mixer operating mode (e.g., NORMAL, DUCKED).
     *
     * Designed for runtime changes in response to policy or stream priority.
@@ -71,7 +57,7 @@ enum Property {
     *
     * @see MixingMode
     */
-    MIXING_MODE = 3,
+    MIXING_MODE = 2,
 
     /**
      * Mute state for the mixer output path.
@@ -82,5 +68,6 @@ enum Property {
      * - false: unmuted (default on open)
      * - true: muted
      */
-    MUTE = 4
+    MUTE = 3
+
 }

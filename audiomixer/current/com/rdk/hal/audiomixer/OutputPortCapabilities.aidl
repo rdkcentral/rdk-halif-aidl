@@ -53,4 +53,10 @@ parcelable OutputPortCapabilities {
      * List of AQ processor instances supported (first is default).
      */
     AQProcessor[] supportedAQProcessors;
+
+    /**
+     * List Dolby MS12 Audio Profiles (first is default).
+     * If there are no defined MS12 Audio Profiles DolbyMs12AudioProfiles is not populated with profile strings.
+     */
+    String[] DolbyMs12AudioProfiles;
 }

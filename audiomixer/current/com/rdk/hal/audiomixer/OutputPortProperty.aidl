@@ -109,12 +109,17 @@ enum OutputPortProperty {
     CONNECTION_STATE = 9,
 
     /**
-    * Select active AQ processor instance.
-    * Type: int (AQProcessor enum @see com.rdk.hal.audiomixer.AQProcessor)
-    * Access: Read-write.
-    * Writeable in states: READY
-    */
-    AQ_PROCESSOR_ID = 10,
+     * Sets the Dolby MS12 Audio Profile/Preset (e.g. "Music", "Movie", "Sports", etc)
+     * 
+     * Type: String 
+     * Access: Read-write.
+     * Writeable in states: READY, STARTED
+     * 
+     * The value must correspond to a platform-defined AQ profile configuration
+     *
+     * @see om.rdk.hal.audiomixer.OutputPortCapabilities.DolbyMs12AudioProfiles
+     */
+     DOLBY_MS12_AUDIO_PROFILE = 10
 
     /**
      * Vendor-specific extension.
