@@ -11,7 +11,7 @@ package com.rdk.hal.audiomixer;
  * @brief PCM sample format descriptor for captured audio.
  * 
  * Describes the binary encoding of PCM samples within an AudioCaptureData frame.
- * Only populated when AudioCaptureData.format is AudioCaptureFormat.PCM_DECODED.
+ * Only populated when AudioCaptureData.format is PCM.
  */
 @VintfStability
 parcelable AudioCapturePcmInfo {

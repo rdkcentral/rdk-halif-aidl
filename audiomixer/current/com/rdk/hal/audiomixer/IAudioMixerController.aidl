@@ -24,7 +24,7 @@ import com.rdk.hal.PropertyValue;
 
 /**
  * @brief     Audio Mixer Controller HAL interface.
- * @details   Provides stateful and runtime control over a specific platform audio mixer resource.
+ * Provides stateful and runtime control over a specific platform audio mixer resource.
  *            This includes lifecycle management (start/stop), flushing, signalling end-of-stream,
  *            routing configuration, and property configuration. Intended for use by the
  *            middleware audio server and platform integrators.
@@ -39,7 +39,7 @@ interface IAudioMixerController {
 
     /**
      * @brief     Sets the audio source routing for one or more inputs on this mixer instance.
-     * @details   Allows multiple audio [source -> mixer input] mappings to be configured.
+     * Allows multiple audio [source -> mixer input] mappings to be configured.
      *            This enables operations such as switching between decoders, routing
      *            HDMI input audio, or connecting application audio to mixer inputs.
      *
@@ -77,7 +77,7 @@ interface IAudioMixerController {
 
     /**
      * @brief     Starts audio mixing for this mixer instance.
-     * @details   The mixer transitions to the STARTED state and processes configured audio inputs and outputs.
+     * The mixer transitions to the STARTED state and processes configured audio inputs and outputs.
      * @exception binder::Status EX_ILLEGAL_STATE if already started or not ready.
      * @pre       The mixer must be in READY state.
      * @see       stop(), flush()
@@ -86,7 +86,7 @@ interface IAudioMixerController {
 
     /**
      * @brief     Stops audio mixing for this mixer instance.
-     * @details   The mixer transitions through STOPPING to READY state, ceasing output and freeing any buffered resources.
+     * The mixer transitions through STOPPING to READY state, ceasing output and freeing any buffered resources.
      * @exception binder::Status EX_ILLEGAL_STATE if not started.
      * @pre       The mixer must be in STARTED state.
      * @see       start(), flush()
@@ -103,7 +103,7 @@ interface IAudioMixerController {
 
     /**
      * @brief     Signals a stream discontinuity in the mixer pipeline.
-     * @details   Used when a break or change in input PTS or format occurs, such as switching sources or seeking.
+     * Used when a break or change in input PTS or format occurs, such as switching sources or seeking.
      * @exception binder::Status EX_ILLEGAL_STATE if not started.
      * @pre       The mixer must be in STARTED state.
      */
@@ -111,7 +111,7 @@ interface IAudioMixerController {
 
     /**
      * @brief     Signals end-of-stream for all active mixer inputs.
-     * @details   After all buffered frames are processed, the mixer drains remaining data
+     * After all buffered frames are processed, the mixer drains remaining data
      *            and transitions through STOPPING to READY state.
      * @exception binder::Status EX_ILLEGAL_STATE if not started.
      * @pre       The mixer must be in STARTED state.

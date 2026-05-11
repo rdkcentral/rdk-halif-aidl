@@ -8,21 +8,18 @@
 package com.rdk.hal.audiomixer;
 
 import com.rdk.hal.audiomixer.AudioCapturePcmInfo;
+import com.rdk.hal.audiomixer.OutputFormat;
 
 /**
  * @brief Audio capture data frame with metadata.
- * Encapsulates a single audio frame and its associated metadata (channels, sample rate, timestamp, format).
+ * Encapsulates metadata for a single audio frame stored in shared-memory ring buffer.
  *
- * When format is AudioCaptureFormat.PCM_DECODED, the pcmInfo field is populated with PCM sample
- * encoding details (bit depth, signedness, byte order).
+ * The data captured by the Audio Capture interface is the same as the data output by the port.
+ * When a capture port provides a capture interface for a physical output (e.g. HDMI, Speakers, etc.) 
+ * then the captured data is a copy. 
  */
 @VintfStability
 parcelable AudioCaptureData {
-    /**
-     * Raw audio data bytes. Format and encoding determined by the `format` field.
-     */
-    byte[] audioData;
-
     /**
      * Number of audio channels (e.g., 1 for mono, 2 for stereo, 6 for 5.1 surround).
      */
@@ -40,9 +37,9 @@ parcelable AudioCaptureData {
     long timestampUs;
 
     /**
-     * Format of captured audio (raw encoded or decoded PCM).
+     * Format of captured audio.
      */
-    AudioCaptureFormat format;
+    OutputFormat format;
 
     /**
      * Human-readable codec name (e.g., "AC3", "AAC", "PCM", "AAC-LC").
@@ -52,7 +49,7 @@ parcelable AudioCaptureData {
 
     /**
      * PCM sample encoding details (bit depth, signedness, byte order).
-     * Populated only when format is AudioCaptureFormat.PCM_DECODED; null otherwise.
+     * Populated only when format is PCM, null otherwise.
      */
     @nullable AudioCapturePcmInfo pcmInfo;
 }

@@ -23,7 +23,7 @@ import com.rdk.hal.PropertyValue;
 
 /**
  * @brief     Listener interface for audio output port events.
- * @details   Provides callbacks for changes in port connection state, supported formats,
+ * Provides callbacks for changes in port connection state, supported formats,
  *            output format changes, state transitions, and feature support (e.g., Dolby Atmos).
  *            Registered by clients interested in monitoring real-time output port events.
  * @author    Luc Kennedy-Lamb

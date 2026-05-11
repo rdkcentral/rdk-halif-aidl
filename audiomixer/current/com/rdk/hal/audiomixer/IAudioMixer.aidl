@@ -21,7 +21,7 @@
 import com.rdk.hal.audiomixer.Capabilities;
 import com.rdk.hal.audiomixer.IAudioMixerController;
 import com.rdk.hal.audiomixer.IAudioMixerEventListener;
-import com.rdk.hal.audiomixer.IMS12_2_6_Dap;
+import com.rdk.hal.audiomixer.IDolbyMs12_2_6_Dap;
 import com.rdk.hal.audiomixer.IAudioOutputPort;
 import com.rdk.hal.audiomixer.Property;
 import com.rdk.hal.audiomixer.InputRouting;
@@ -158,7 +158,7 @@ interface IAudioMixer {
 
     /**
      * @brief     Gets the current audio source routing for all mixer inputs.
-     * @details   Returns an array with one element for each mixer input (as declared in Capabilities.inputs).
+     * Returns an array with one element for each mixer input (as declared in Capabilities.inputs).
      *            If a mixer input has no source connected, `AudioSourceType.NONE` is indicated.
      *
      * @returns   Array of audio source to mixer tree input routing configurations.

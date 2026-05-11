@@ -56,7 +56,7 @@ parcelable MixerInput {
 
     /**
      * @brief Human-readable name for this audio mixer input.
-     * @details May be null if not set by the platform.
+     * May be null if not set by the platform.
      *          Examples: "main", "assoc", "pcm1", "pcm2", "aux".
      *          Although optional, this field aids debugging, logging, and platform introspection.
      */

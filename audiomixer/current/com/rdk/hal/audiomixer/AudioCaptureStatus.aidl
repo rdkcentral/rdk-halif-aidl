@@ -37,4 +37,10 @@ enum AudioCaptureStatus {
      * Audio capture operation invalid for current state (e.g., stop called when not started).
      */
     ERROR_INVALID_STATE = 4,
+
+    /**
+     * Ring buffer overflow occurred because client consumption was too slow.
+     * New incoming audio data was dropped and is lost.
+     */
+    ERROR_OVERFLOW = 5,
 }

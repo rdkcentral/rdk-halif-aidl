@@ -20,7 +20,7 @@ package com.rdk.hal.audiomixer;
 
 /**
  * @brief    Enumerates extensible property keys for Audio Output Port.
- * @details  Used as the key in setProperty/getProperty and onPropertyChanged for 
+ * Used as the key in setProperty/getProperty and onPropertyChanged for 
  *           forward-compatible and vendor-specific configuration. 
  *           All properties can be read in any state unless otherwise specified.
  *
@@ -117,9 +117,31 @@ enum OutputPortProperty {
      * 
      * The value must correspond to a platform-defined AQ profile configuration
      *
-     * @see om.rdk.hal.audiomixer.OutputPortCapabilities.DolbyMs12AudioProfiles
+     * @see com.rdk.hal.audiomixer.OutputPortCapabilities.DolbyMs12AudioProfiles
      */
-     DOLBY_MS12_AUDIO_PROFILE = 10
+    DOLBY_MS12_AUDIO_PROFILE = 10
+
+    /**
+     * Output port underflows.
+     * Type: int
+     * Access: Read-only.
+     *
+     * A count of the underflows (starvation) events that the consumer of the output port has experienced since the port was enabled.
+     * A single underflow event is considered to be when the consumer unexpectedly has no data to consume until normal data flow resumes.
+     * When the port is disabled the port the last count should be held until the port is re-enabled and the count reset.
+     */
+    METRIC_UNDERFLOWS = 11
+
+    /**
+     * Output port overflows.
+     * Type: int
+     * Access: Read-only.
+     *
+     * A count of the overflow events that the producer has experienced since the port was enabled.
+     * A single overflow event is considered to be when the producer unexpectedly has no buffers space available to write the data.
+     * When the port is disabled the port the last count should be held until the port is re-enabled and the count reset.
+     */
+    METRIC_OVERFLOWS = 12
 
     /**
      * Vendor-specific extension.

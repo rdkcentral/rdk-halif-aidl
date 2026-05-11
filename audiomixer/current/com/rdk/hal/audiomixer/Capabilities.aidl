@@ -62,7 +62,7 @@ parcelable Capabilities {
 
     /**
     * @brief Human-readable name for this audio mixer instance.
-    * @details May be null if not set by the platform.
+    * May be null if not set by the platform.
     *          Although optional, this field is intended to aid debugging, logging, and platform introspection.
     */
     @nullable String name;

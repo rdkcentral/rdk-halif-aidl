@@ -42,7 +42,8 @@ audiomixer:
           supportedCodecs:
             - DOLBY_AC3
             - DOLBY_AC3_PLUS
-            - PCM
+            - PCM_STEREO
+            - PCM_MULTICHANNEL
             - AAC_LC
         - name: assoc
           supportedContentTypes:
@@ -50,7 +51,8 @@ audiomixer:
           supportedCodecs:
             - DOLBY_AC3
             - DOLBY_AC3_PLUS
-            - PCM
+            - PCM_STEREO
+            - PCM_MULTICHANNEL
             - AAC_LC
         - name: pcm1
           supportedContentTypes:
@@ -58,14 +60,14 @@ audiomixer:
             - CLIP
             - TTS
           supportedCodecs:
-            - PCM
+            - PCM_STEREO
         - name: pcm2
           supportedContentTypes:
             - STREAM
             - CLIP
             - TTS
           supportedCodecs:
-            - PCM
+            - PCM_STEREO
 
     - id: 1  # Mixer instance 1 (non-secure)
       supportsSecure: false
@@ -74,14 +76,16 @@ audiomixer:
           supportedContentTypes:
             - STREAM
           supportedCodecs:
-            - PCM
+            - PCM_STEREO
+            - PCM_MULTICHANNEL
             - AAC_LC
         - name: aux
           supportedContentTypes:
             - CLIP
             - TTS
           supportedCodecs:
-            - PCM
+            - PCM_STEREO
+            - PCM_MULTICHANNEL
 
   # List of output ports and their capabilities.
   # These define what each physical/logical output supports (e.g., HDMI, SPDIF).
@@ -94,7 +98,7 @@ audiomixer:
         - OUTPUT_FORMAT
       supportedOutputFormats:
         - AUTO
-        - PCM
+        - PCM_STEREO
         - AC3
         - EAC3
       supportedAQProcessors:
@@ -207,6 +211,7 @@ audiomixer:
                 enabled: [true, false]
               default:
                 enabled: false
+      supportsAudioCapture: false
 
     - id: 1
       portName: SPDIF
@@ -214,7 +219,17 @@ audiomixer:
         - VOLUME
         - OUTPUT_FORMAT
       supportedOutputFormats:
-        - PCM
+        - PCM_STEREO
         - AC3
       supportedAQProcessors:
         - UNDEFINED
+      supportsAudioCapture: false
+
+      - id: 2
+      portName: PCM_CAPTURE
+      supportedProperties: []
+      supportedOutputFormats:
+        - PCM_STEREO
+        - PCM_MULTICHANNEL
+      supportedAQProcessors: []
+      supportsAudioCapture: true

@@ -19,10 +19,10 @@
 package com.rdk.hal.audiomixer;
 
 /**
- * @brief Capability flags for IMS12_2_6_Dap runtime command support.
+ * @brief Capability flags for IDolbyMs12_2_6_Dap runtime command support.
  *
  * Each field indicates whether the corresponding set function in
- * IMS12_2_6_Dap is supported for the current output port.
+ * IDolbyMs12_2_6_Dap is supported for the current output port.
  */
 @VintfStability
 parcelable DolbyMs12_2_6_DapCapabilities {

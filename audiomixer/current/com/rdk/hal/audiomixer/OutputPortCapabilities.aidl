@@ -24,7 +24,7 @@ import com.rdk.hal.audiomixer.AQProcessor;
 
 /**
  * @brief    Capabilities for an audio output port.
- * @details  Enumerates which properties can be set or queried for a given port,
+ * Enumerates which properties can be set or queried for a given port,
  *           plus codec/format support and AQ processors.
  * @note: This structure is descriptive only. All runtime configuration must be performed using setProperty() / getProperty()
  */
@@ -33,7 +33,7 @@ parcelable OutputPortCapabilities {
 
     /**
     * @brief Human-readable name or role for this output port (e.g., "HDMI", "SPDIF", "Speakers").
-    * @details May be null if the platform does not expose a name for this output port.
+    * May be null if the platform does not expose a name for this output port.
     *          Although optional, this field is expected to aid debugging, logging, and user-facing diagnostics.
     */
     @nullable String portName;
@@ -56,7 +56,8 @@ parcelable OutputPortCapabilities {
 
     /**
      * List Dolby MS12 Audio Profiles (first is default).
-     * If there are no defined MS12 Audio Profiles DolbyMs12AudioProfiles is not populated with profile strings.
+     * If there are no defined MS12 Audio Profiles for this audio port then
+     * DolbyMs12AudioProfiles is not populated with profile strings.
      */
     String[] DolbyMs12AudioProfiles;
 

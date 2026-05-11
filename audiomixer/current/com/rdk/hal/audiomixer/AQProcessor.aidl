@@ -20,7 +20,7 @@
 
 /**
  * @brief     Audio Quality Processor type.
- * @details   Enumerates available audio quality processors supported by the platform,
+ * Enumerates available audio quality processors supported by the platform,
  *            such as Dolby MS12, DTS, or vendor-specific implementations. Used for
  *            selection and capability discovery on audio output ports.
  * @author   Luc Kennedy-Lamb

@@ -20,7 +20,7 @@ package com.rdk.hal.audiomixer;
 
 /**
  * @brief     Supported audio output formats for an output port.
- * @details   Enumerates the possible encoded or uncompressed audio formats
+ * Enumerates the possible encoded or uncompressed audio formats
  *            that may be supported by an audio output port (HDMI, SPDIF, speakers, etc.).
  *            Used to configure the desired output, or query available modes
  *            for format negotiation and passthrough.
@@ -65,5 +65,5 @@ enum OutputFormat {
     DTS_HD = 8,
 
     /** Output as uncompressed Multichannel PCM. */
-    PCM_MULICHANNEL = 9,
+    PCM_MULTICHANNEL = 9,
 }

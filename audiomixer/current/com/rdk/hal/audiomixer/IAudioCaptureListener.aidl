@@ -15,13 +15,24 @@ package com.rdk.hal.audiomixer;
 @VintfStability
 oneway interface IAudioCaptureListener {
     /**
-     * @brief Called when a new audio data frame is available for capture.
-     * 
-     * @param[in] data Audio frame containing raw/decoded samples and metadata (channels, sample rate, timestamp, format).
+     * @brief Called when a new audio data frame is available in shared-memory ring buffer.
+     *
+     * Wrap-around semantics:
+     * If (offsetBytes + lengthBytes) <= ringBufferSizeBytes, the frame is contiguous.
+     * If (offsetBytes + lengthBytes) > ringBufferSizeBytes, the frame wraps and must be read
+     * as two segments:
+     * segment1: [offsetBytes, ringBufferSizeBytes)
+     * segment2: [0, (offsetBytes + lengthBytes) - ringBufferSizeBytes)
+     *
+     * @param[in] offsetBytes Byte offset from the start of the ring buffer.
+     * @param[in] lengthBytes Number of valid bytes for this frame.
+     * @param[in] metadata Audio frame metadata (channels, sample rate, timestamp, format).
+     *
+     * The client must call IAudioCapture.releaseData(offsetBytes, lengthBytes) after reading.
      * 
      * @returns Void (one-way result does not wait for callback completion).
      */
-    void onDataAvailable(in AudioCaptureData data);
+    void onDataAvailable(in long offsetBytes, in int lengthBytes, in AudioCaptureData metadata);
 
     /**
      * @brief Called when audio capture stream has successfully started.
@@ -45,6 +56,7 @@ oneway interface IAudioCaptureListener {
 
     /**
      * @brief Called when an error occurs during audio capture.
+     * ERROR_OVERFLOW indicates new incoming data was dropped and is lost.
      * 
      * @param[in] status Error code indicating the type of failure.
      * @param[in] message Human-readable error description.

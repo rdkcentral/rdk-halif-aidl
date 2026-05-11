@@ -27,7 +27,7 @@ import com.rdk.hal.audiomixer.IAudioCaptureListener;
 
 /**
  * @brief    Audio Output Port HAL interface, property-based design.
- * @details  All dynamic/query/settable configuration is via get/setProperty,
+ * All dynamic/query/settable configuration is via get/setProperty,
  *           with supported properties enumerated in OutputPortCapabilities.
  */
 @VintfStability
@@ -82,7 +82,7 @@ interface IAudioOutputPort {
      * 
      * If supportsAudioCapture is true then this function will return an interface to allow its control.
      *
-     * @returns IAudioCaputure interface
+     * @returns IAudioCapture interface
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if audio capture from this port is not supported.
      *
      * @see com.rdk.hal.audiomixer.OutputPortCapabilities.supportsAudioCapture

@@ -11,50 +11,55 @@ package com.rdk.hal.audiomixer;
  * @brief Audio capture interface for output ports.
  * 
  * Provides stateful control over audio capture sessions on an output port.
- * Clients register a listener, call start() to begin streaming, receive async callbacks
- * via IAudioCaptureListener, then call stop() to end the session.
+ * Clients obtain shared memory, register a listener, configure capture format,
+ * call start() to begin streaming, receive async callbacks via IAudioCaptureListener,
+ * acknowledge consumed data with releaseData(), then call stop() to end the session.
  * 
  * Example lifecycle:
  * @code
- *   capture.start(AudioCaptureFormat.PCM_DECODED);  // Listener receives onStarted()
- *   // Listener receives multiple onDataAvailable(AudioCaptureData) calls
- *   capture.stop();                                   // Listener receives onStopped()
+ *   ParcelFileDescriptor pfd = capture.getSharedMemory();
+ *   capture.start();
+ *   // Listener receives onDataAvailable(offset, length, metadata) callbacks.
+ *   // Client reads from shared memory then calls releaseData(offset, length).
+ *   capture.stop();
  * @endcode
  * 
- * Thread safety:
- * All methods are serialised by the binder layer. Concurrent calls from multiple threads
- * are safe but serialised through the underlying service implementation.
+ * The data format captured is that of the output port.
+ * Where an output port is physical, the capture interface captures the data format currently being output.
+ * Where the output port is a dedicated capture port setting the OUTPUT_FORMAT directly controls the format of captured data. 
  */
 @VintfStability
 interface IAudioCapture {
     /**
-     * @brief Queries supported audio capture formats for this output port.
-     * 
-     * Returns list of AudioCaptureFormat values that this output port can provide.
-     * Returned array must contain at least one format (typically PCM_DECODED or RAW_ENCODED).
-     * 
-     * @returns Array of supported AudioCaptureFormat enum values (non-empty).
-     * 
-     * @exception binder::Status EX_UNSUPPORTED_OPERATION if capture not supported on this port.
+     * @brief Returns the shared-memory ring buffer descriptor for zero-copy capture.
+     *
+     * This method is decoupled from start() and stop().
+     *
+     * @returns ParcelFileDescriptor identifying the shared-memory ring buffer.
      */
-    AudioCaptureFormat[] getSupportedFormats();
+    ParcelFileDescriptor getSharedMemory();
 
     /**
-     * @brief Start audio capture stream in the specified format.
+     * @brief Returns the total ring buffer size in bytes.
+     *
+     * @returns Ring buffer size in bytes.
+     */
+    int getSharedMemorySizeBytes();
+
+     /**
+      * @brief Start audio capture stream using the configured format.
      * 
      * Transitions capture interface from stopped to started state. Listener will receive
      * onStarted() callback, followed by repeated onDataAvailable() callbacks as audio
      * frames become available. Call stop() to end the stream.
-     * 
-     * @param[in] format Desired capture output format (RAW_ENCODED, PCM_DECODED, or AUTO).
-     *                    Use getSupportedFormats() to discover available formats.
+      *
+      * Ring buffer state is reset on every start() following a stop() transition.
      * 
      * @returns true if capture stream started successfully.
      * 
      * @exception binder::Status EX_ILLEGAL_STATE if capture already started.
-     * @exception binder::Status EX_UNSUPPORTED_OPERATION if requested format not supported by this port.
      */
-    boolean start(in AudioCaptureFormat format);
+     boolean start();
 
     /**
      * @brief Stop audio capture stream.
@@ -68,4 +73,17 @@ interface IAudioCapture {
      * @exception binder::Status EX_ILLEGAL_STATE if capture not started.
      */
     boolean stop();
+
+    /**
+     * @brief Acknowledges that previously signalled data has been consumed by the client.
+     *
+     * The offset and length must match a previously received onDataAvailable() callback.
+     *
+     * @param[in] offsetBytes Byte offset previously received from onDataAvailable().
+     * @param[in] lengthBytes Length in bytes previously received from onDataAvailable().
+     *
+     * @exception binder::Status EX_ILLEGAL_STATE if capture not started.
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT for invalid region.
+     */
+    oneway void releaseData(in long offsetBytes, in int lengthBytes);
 }
