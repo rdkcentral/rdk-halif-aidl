@@ -17,7 +17,8 @@ package com.rdk.hal.audiomixer;
  * 
  * Example lifecycle:
  * @code
- *   ParcelFileDescriptor pfd = capture.getSharedMemory();
+ *   int ringBufferSizeBytes;
+ *   ParcelFileDescriptor pfd = capture.getSharedMemory(out ringBufferSizeBytes);
  *   capture.start();
  *   // Listener receives onDataAvailable(offset, length, metadata) callbacks.
  *   // Client reads from shared memory then calls releaseData(offset, length).
@@ -35,16 +36,10 @@ interface IAudioCapture {
      *
      * This method is decoupled from start() and stop().
      *
+     * @param[out] sharedMemorySizeBytes Total ring buffer size in bytes.
      * @returns ParcelFileDescriptor identifying the shared-memory ring buffer.
      */
-    ParcelFileDescriptor getSharedMemory();
-
-    /**
-     * @brief Returns the total ring buffer size in bytes.
-     *
-     * @returns Ring buffer size in bytes.
-     */
-    int getSharedMemorySizeBytes();
+    ParcelFileDescriptor getSharedMemory(out int sharedMemorySizeBytes);
 
      /**
       * @brief Start audio capture stream using the configured format.
