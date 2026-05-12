@@ -269,6 +269,71 @@ The same rules for frame metadata apply to all operational modes.
 
 When operating exclusively in tunnelled mode, if there is no frame metadata to be passed, then no call to `onFrameOutput()` should be made because there is no frame buffer handle or frame metadata to return to the client.
 
+## Stream Hints vs Bitstream Truth
+
+The video decoder accepts a set of **stream-description hints** before decoding begins, via setters on `IVideoDecoderController`:
+
+* `setStreamResolution(width, height)` — coded frame dimensions
+* `setFrameRate(numerator, denominator)` — frame rate as a rational
+* `setColorimetry(colorimetry)` — colour primaries / matrix
+* `setMasteringDisplayInfo(info)` — HDR mastering display volume (SMPTE ST 2086)
+* `setContentLightLevel(info)` — HDR MaxCLL / MaxFALL (CTA-861.3)
+* `setDolbyVisionLayerFlags(blPresent, elPresent)` — DV layer configuration
+* `setPixelAspectRatio(parX, parY)` — pixel aspect ratio (e.g. 10:11 for NTSC SD)
+
+These hints are sourced from **container or codec-config metadata** (MP4 boxes, DASH MPD, HLS playlist, GstCaps from upstream parser elements). They are always available in the clear — even under SVP — because the container and codec-config (`avcC` / `hvcC`) are never encrypted.
+
+### Precedence — bitstream wins
+
+When the decoder later finds an explicit value in the bitstream (H.264/HEVC VUI parameters, in-stream SEI, DV RPU), the bitstream value **takes precedence over the hint**. The hint is only used as a fallback when the bitstream is silent on that field.
+
+This matters for legacy or partial streams where the bitstream omits VUI / SEI metadata that the container carries (e.g. SD MPEG-2 with PAR only in `pasp`, some packagers' H.264 output with no VUI colour_description). In those cases the hint is the only source of the value, and downstream display configuration would otherwise be incorrect.
+
+The decoder reports the value it actually used — bitstream-derived or hint-derived — in `FrameMetadata`:
+
+| Hint setter | Reported in FrameMetadata as |
+|---|---|
+| `setStreamResolution` | `codedWidth`, `codedHeight` |
+| `setFrameRate` | `frameRateNumerator`, `frameRateDenominator` |
+| `setColorimetry` | `colorimetry` |
+| `setMasteringDisplayInfo` | `masteringDisplayInfo` |
+| `setContentLightLevel` | `contentLightLevel` |
+| `setDolbyVisionLayerFlags` | (decoder-internal; reflected in decode behaviour) |
+| `setPixelAspectRatio` | `parX`, `parY` |
+
+### Persistence
+
+Hints describe the stream, not the playback session. They:
+
+* **Persist across `flush()`** — middleware does not need to re-set them after every flush; the same stream description still applies.
+* **Are cleared on `close()`** — when the decoder instance is closed and re-opened against a different stream, the new caller is responsible for re-seeding the hints from the new container metadata.
+
+### State precondition
+
+All hint setters require `State::READY`. They are setup-time configuration, not runtime reconfiguration. Bitstream-derived changes mid-playback (e.g. ABR rep switch carrying new SPS) flow through the bitstream automatically and surface via `FrameMetadata` without middleware action.
+
+### Behaviour under SVP / encrypted pipeline
+
+Secure Video Path (SVP) makes the hint setters more important, not less. Under SVP the input pipeline splits cleanly between what middleware can read and what only the decoder can read after decryption:
+
+| Data | Always clear? | Visible to middleware? | Visible to decoder (after decrypt)? |
+|---|---|---|---|
+| Container metadata (MP4 `colr`/`mdcv`/`pasp`, DASH MPD, HLS playlist) | Yes | Yes — passed via hint setters | Not directly |
+| Codec config (`avcC` / `hvcC` SPS/PPS array) | Yes (CENC requires) | Yes — `h264parse` / `h265parse` extract VUI fields, also surfaced via hints | Yes — same data passed by middleware on init |
+| Non-VCL NAL units (SPS / PPS / SEI / AUD) in stream | Implementation-defined per packager (typically clear, can be encrypted) | Only if packager left them clear | Yes — after decrypt |
+| VCL NAL units (slices) | Encrypted | No | Yes — after decrypt |
+
+**Implications:**
+
+* **Hints are the only reliable middleware-visible source** of stream description under SVP. The middleware path (demuxer → parser → caps) extracts everything it can from clear container + codec-config data and must push it via the hint setters because the bitstream slices are opaque to it.
+* **Decoder is the only place** that has clear access to in-band SEI under SVP (mastering display SEI 137, content light level SEI 144, ATC tone mapping SEI 147, DV RPU SEI 4). For these fields:
+  - If middleware can derive them from the container (e.g. `mdcv` / `cclv` MP4 boxes), the hint setter is the path.
+  - If the value only exists in encrypted in-band SEI, the decoder parses internally and reports via `FrameMetadata` — middleware cannot pre-set them.
+* **Bitstream-precedence still applies.** Even under SVP, when the decoder finds a value in the (decrypted) bitstream it overrides the hint and is reported via `FrameMetadata`.
+* **No information is leaked** by the hint flow — hints carry only data the middleware already has from the always-clear container / codec-config; they don't expose anything from the encrypted slice payload.
+
+This is also why the decoder must own a "secure parser" path for any metadata that can only be recovered from encrypted in-band SEI — middleware cannot substitute for it. See discussion #367 for the broader secure-parser design conversation.
+
 ## Low Latency Mode
 
 A media pipeline is operating in low latency mode when the video decoder and audio decoder (if present) are set with a `LOW_LATENCY_MODE` property to 1 (enabled).
