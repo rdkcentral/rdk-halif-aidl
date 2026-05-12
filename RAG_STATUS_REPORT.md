@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Generated** | 2026-05-01 |
+| **Generated** | 2026-05-12 |
 | **Components** | 33 |
 | 🟢 **GREEN** | 14 |
 | 🟡 **AMBER** | 15 |
@@ -34,7 +34,7 @@
 | 🟢 | hdmicec | 0.1.0.0 | HDMI CEC protocol messaging and device control | 4/4 | Architecture + AV_Architecture |
 | 🟢 | hdmiinput | 0.1.0.0 | HDMI input port management and signal detection | 3/4 | Architecture + AV_Architecture |
 | 🟢 | hdmioutput | 0.1.0.0 | HDMI output port configuration and display control | 3/4 | Architecture + AV_Architecture |
-| 🟢 | videodecoder | 0.1.0.0 | Video decoder resource management and codec support | 4/4 | Architecture + AV_Architecture |
+| 🟢 | videodecoder | 0.1.1.0 | Video decoder resource management and codec support | 4/4 | Architecture + AV_Architecture |
 | 🟢 | videosink | 0.1.0.0 | Video output rendering and display sink management | 4/4 | Architecture + AV_Architecture |
 
 

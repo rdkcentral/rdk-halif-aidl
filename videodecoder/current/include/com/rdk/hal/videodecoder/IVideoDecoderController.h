@@ -39,6 +39,7 @@ public:
   virtual ::android::binder::Status setStreamResolution(int32_t width, int32_t height) = 0;
   virtual ::android::binder::Status setFrameRate(int32_t numerator, int32_t denominator) = 0;
   virtual ::android::binder::Status setDolbyVisionLayerFlags(bool blPresent, bool elPresent) = 0;
+  virtual ::android::binder::Status setPixelAspectRatio(int32_t parX, int32_t parY) = 0;
   virtual int32_t getInterfaceVersion() = 0;
   virtual std::string getInterfaceHash() = 0;
 };  // class IVideoDecoderController
@@ -85,6 +86,9 @@ public:
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status setDolbyVisionLayerFlags(bool /*blPresent*/, bool /*elPresent*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status setPixelAspectRatio(int32_t /*parX*/, int32_t /*parY*/) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   int32_t getInterfaceVersion() override {
