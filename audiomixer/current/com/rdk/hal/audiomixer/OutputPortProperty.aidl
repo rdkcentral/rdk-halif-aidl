@@ -118,7 +118,7 @@ enum OutputPortProperty {
      *
      * @see com.rdk.hal.audiomixer.OutputPortCapabilities.DolbyMs12AudioProfiles
      */
-    DOLBY_MS12_AUDIO_PROFILE = 10
+    DOLBY_MS12_AUDIO_PROFILE = 10,
 
     /**
      * Output port underflows.
@@ -129,7 +129,7 @@ enum OutputPortProperty {
      * A single underflow event is considered to be when the consumer unexpectedly has no data to consume until normal data flow resumes.
      * When the port is disabled the port the last count should be held until the port is re-enabled and the count reset.
      */
-    METRIC_UNDERFLOWS = 11
+    METRIC_UNDERFLOWS = 11,
 
     /**
      * Output port overflows.
@@ -140,12 +140,12 @@ enum OutputPortProperty {
      * A single overflow event is considered to be when the producer unexpectedly has no buffers space available to write the data.
      * When the port is disabled the port the last count should be held until the port is re-enabled and the count reset.
      */
-    METRIC_OVERFLOWS = 12
+    METRIC_OVERFLOWS = 12,
 
     /**
      * Vendor-specific extension.
      * Type: Implementation-defined.
      * Access: Read-write or read-only as documented.
      */
-    VENDOR_EXTENSION = 1000
+    VENDOR_EXTENSION = 1000,
 }
