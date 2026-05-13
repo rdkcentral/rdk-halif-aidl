@@ -49,6 +49,7 @@ Mixer instances are accessed and controlled via `IAudioMixer`, with additional l
 | ----------------------------- | ------------------------------------------------------ |
 | IAudioMixer.aidl              | Main resource control interface                        |
 | IDolbyMs12_2_6_Dap.aidl       | Dolby MS12 2.6 runtime command interface              |
+| DolbyMs12_2_6_DapCapabilities.aidl | Supported Dolby MS12 2.6 runtime commands         |
 | IAudioMixerManager.aidl       | Interface for mixer enumeration                        |
 | IAudioMixerController.aidl    | Stateful runtime mixer control                         |
 | IAudioMixerEventListener.aidl | Event callbacks (errors, state changes, codec updates) |
