@@ -33,7 +33,6 @@ package com.rdk.hal.audiomixer;
  * @author   Luc Kennedy-Lamb
  * @author   Peter Stieglitz
  * @author   Douglas Adler
- * @copyright Copyright 2024 RDK Management
  */
 @VintfStability
 @Backing(type="int")
