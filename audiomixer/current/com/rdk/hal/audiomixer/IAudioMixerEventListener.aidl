@@ -30,7 +30,6 @@ import com.rdk.hal.audiomixer.State;
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
  * @author    Douglas Adler
- * @copyright Copyright 2024 RDK Management
  */
 @VintfStability
 oneway interface IAudioMixerEventListener {
