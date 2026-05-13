@@ -34,25 +34,39 @@ interface IAudioCapture {
     /**
      * @brief Returns the shared-memory ring buffer descriptor for zero-copy capture.
      *
-     * This method is decoupled from start() and stop().
+     * This method must be called before capturing of audio data has been started with a call to start().
      *
      * @param[out] sharedMemorySizeBytes Total ring buffer size in bytes.
      * @returns ParcelFileDescriptor identifying the shared-memory ring buffer.
+     *
+     * @exception binder::Status EX_ILLEGAL_STATE if capture already started.
      */
     ParcelFileDescriptor getSharedMemory(out int sharedMemorySizeBytes);
 
-     /**
-      * @brief Start audio capture stream using the configured format.
+    /**
+     * @brief Release the shared-memory ring buffer 
+     *
+     * This method must be called only when capturing of audio data is stopped.
+     * Calling releaseSharedMemory() before getSharedMemory() is not an error.
+     *
+     * @exception binder::Status EX_ILLEGAL_STATE if capture is not stopped.
+     */
+    void releaseSharedMemory();
+
+    /**
+     * @brief Start audio capture stream using the configured format.
      * 
      * Transitions capture interface from stopped to started state. Listener will receive
      * onStarted() callback, followed by repeated onDataAvailable() callbacks as audio
      * frames become available. Call stop() to end the stream.
-      *
-      * Ring buffer state is reset on every start() following a stop() transition.
+     *
+     * Ring buffer state is reset on every start() following a stop() transition.
      * 
      * @returns true if capture stream started successfully.
      * 
-     * @exception binder::Status EX_ILLEGAL_STATE if capture already started.
+     * @exception binder::Status EX_ILLEGAL_STATE if a shared memory ring buffer has not been aquired by the client.
+     * It is not considered an error if start() is called while already started.
+     * 
      */
      boolean start();
 
@@ -66,6 +80,7 @@ interface IAudioCapture {
      * @returns true if capture stream stopped successfully, false if already stopped.
      * 
      * @exception binder::Status EX_ILLEGAL_STATE if capture not started.
+     * It is not considered an error if stop() is called while already stopped.
      */
     boolean stop();
 

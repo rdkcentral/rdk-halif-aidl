@@ -220,7 +220,7 @@ For these constrained arguments, out-of-range values shall raise `EX_ILLEGAL_ARG
 
 ---
 
-## State Machine / Lifecycle
+## Audio Mixer State Machine / Lifecycle
 
 Mixer sessions follow this typical state progression:
 
