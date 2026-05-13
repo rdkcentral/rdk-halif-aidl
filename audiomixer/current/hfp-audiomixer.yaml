@@ -105,7 +105,6 @@ audiomixer:
         - DOLBY_MS12_2_6
           # If this AQ processor is present on the output port,
           # getDolbyMs12_2_6_Dap() is supported for that port.
-          supportsGetDolbyMs12_2_6_Dap: true
           setFunctions:
             setSurroundDecoderEnabled:
               supportsSurroundDecoderEnabled: true
