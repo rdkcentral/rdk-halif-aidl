@@ -226,7 +226,8 @@ audiomixer:
 
       - id: 2
       portName: PCM_CAPTURE
-      supportedProperties: []
+      supportedProperties:
+        - OUTPUT_FORMAT
       supportedOutputFormats:
         - PCM_STEREO
         - PCM_MULTICHANNEL
