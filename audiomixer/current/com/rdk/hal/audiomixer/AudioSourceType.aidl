@@ -26,7 +26,6 @@ package com.rdk.hal.audiomixer;
  * @author    Peter Stieglitz
  * @author    Douglas Adler
  * @author    Gerald Weatherup
- * @copyright Copyright 2024 RDK Management
  */
 @VintfStability
 @Backing(type="int")
