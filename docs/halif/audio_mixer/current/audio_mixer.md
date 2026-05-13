@@ -193,14 +193,14 @@ Non-boolean argument constraints are declared per output port in `audiomixer/cur
 | Method | Non-boolean constraints |
 | ------ | ----------------------- |
 | `setBassEnhancer(boost)` | `boost` 0..100 |
-| `setVolumeLeveller(mode, level)` | `mode` in {0,1,2}, `level` 0..10 |
-| `setSurroundVirtualizer(mode, boost)` | `mode` in {0,1,2}, `boost` 0..96 |
+| `setVolumeLeveller(mode, level)` | `mode` in {OFF, MANUAL, AUTO}, `level` 0..10 |
+| `setSurroundVirtualizer(mode, boost)` | `mode` in {OFF, MANUAL, AUTO}, `boost` 0..96 |
 | `setDialogueEnhancer(level)` | `level` 0..16 (`ac4Max` 12) |
 | `setIntelligentEqualizerMode(mode)` | `mode` in {0,1,2,3,4,5,6} |
 | `setGraphicEqualizerMode(mode)` | `mode` in {0,1,2,3} |
 | `setDynamicRangeControlMode(mode)` | `mode` in {LINE, RF} |
 | `setPostGain(gain)` | `gain` -2080..480 |
-| `setDownmixMode(mode)` | `mode` in {0,1} |
+| `setDownmixMode(mode)` | `mode` in {LT_RT, LO_RO} |
 
 For these constrained arguments, out-of-range values shall raise `EX_ILLEGAL_ARGUMENT`.
 
