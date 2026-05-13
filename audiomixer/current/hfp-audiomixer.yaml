@@ -102,7 +102,7 @@ audiomixer:
         - AC3
         - EAC3
       supportedAQProcessors:
-        - id: DOLBY_MS12_2_DAP
+        - id: DOLBY_MS12_2_6
           # If this AQ processor is present on the output port,
           # getDolbyMs12_2_6_Dap() is supported for that port.
           setFunctions:
