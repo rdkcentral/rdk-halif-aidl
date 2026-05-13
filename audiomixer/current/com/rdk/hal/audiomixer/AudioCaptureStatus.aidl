@@ -24,6 +24,7 @@ package com.rdk.hal.audiomixer;
  * Enumeration of status/error codes used in IAudioCaptureListener callbacks.
  */
 @VintfStability
+@Backing(type="int")
 enum AudioCaptureStatus {
     /**
      * Operation completed successfully.
