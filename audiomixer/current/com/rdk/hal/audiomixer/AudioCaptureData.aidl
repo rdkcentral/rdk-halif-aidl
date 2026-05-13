@@ -61,7 +61,8 @@ parcelable AudioCaptureData {
 
     /**
      * PCM sample encoding details (bit depth, signedness, byte order).
-     * Populated only when format is PCM, null otherwise.
+     * Populated only when format is OutputFormat.PCM_STEREO or
+     * OutputFormat.PCM_MULTICHANNEL, null otherwise.
      */
     @nullable AudioCapturePcmInfo pcmInfo;
 }
