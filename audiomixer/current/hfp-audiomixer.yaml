@@ -224,7 +224,7 @@ audiomixer:
         - id: UNDEFINED
       supportsAudioCapture: false
 
-      - id: 2
+    - id: 2
       portName: PCM_CAPTURE
       supportedProperties:
         - OUTPUT_FORMAT
