@@ -29,7 +29,6 @@ import com.rdk.hal.PropertyValue;
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
  * @author    Douglas Adler
- * @copyright Copyright 2024 RDK Management
  */
 @VintfStability
 oneway interface IAudioOutputPortListener {
