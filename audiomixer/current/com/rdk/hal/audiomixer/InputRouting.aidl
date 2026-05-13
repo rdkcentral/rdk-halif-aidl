@@ -36,7 +36,6 @@ import com.rdk.hal.audiomixer.AudioSourceType;
  * @author    Peter Stieglitz
  * @author    Douglas Adler
  * @author    Gerald Weatherup
- * @copyright Copyright 2024 RDK Management
  */
 @VintfStability
 parcelable InputRouting
