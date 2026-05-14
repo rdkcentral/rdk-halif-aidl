@@ -19,6 +19,8 @@
 
 package com.rdk.hal.audiomixer;
 
+import audiomixer/current/com/rdk/hal/audiomixer/Channel.aidl
+
 /**
  * @brief PCM sample format descriptor for captured audio.
  * 
