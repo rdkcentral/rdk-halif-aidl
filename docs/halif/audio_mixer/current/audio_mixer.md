@@ -256,10 +256,8 @@ stateDiagram-v2
   SHM_READY --> STOPPED
   STOPPED --> STARTED : start()
   STARTED --> STOPPED : stop()
-  STARTED --> STARTED : onDataAvailable()/releaseData()
-  STARTED --> ERROR : onError(status,message)
-  ERROR --> STOPPED : stop() or recovery
-  STOPPED --> [*]
+  STARTED --> STARTED : onDataAvailable()/releaseData()/onError(status,message)
+  STOPPED --> [*] : releaseSharedMemory()
 ```
 
 Capture data arrives through callbacks that reference shared-memory offsets and lengths, and clients must call `releaseData()` for consumed regions; calling `start()` or `stop()` out of sequence raises illegal-state errors.
@@ -287,7 +285,7 @@ For each `onDataAvailable(offsetBytes, lengthBytes, metadata)` callback:
     - Call `releaseData(offsetBytes, lengthBytes)` only after consuming the complete region.
     - Do not alter or split the tuple when acknowledging.
 
-Clients should process callbacks in order and recover from `onError(status, message)` by stopping and restarting capture as required by platform policy.
+Clients should process callbacks in order.
 
 ## Platform Capabilities
 
