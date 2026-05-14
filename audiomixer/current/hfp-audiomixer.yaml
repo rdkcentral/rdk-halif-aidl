@@ -42,8 +42,7 @@ audiomixer:
           supportedCodecs:
             - DOLBY_AC3
             - DOLBY_AC3_PLUS
-            - PCM_STEREO
-            - PCM_MULTICHANNEL
+            - PCM
             - AAC_LC
         - name: assoc
           supportedContentTypes:
@@ -59,14 +58,14 @@ audiomixer:
             - CLIP
             - TTS
           supportedCodecs:
-            - PCM_STEREO
+            - PCM
         - name: pcm2
           supportedContentTypes:
             - STREAM
             - CLIP
             - TTS
           supportedCodecs:
-            - PCM_STEREO
+            - PCM
 
     - id: 1  # Mixer instance 1 (non-secure)
       supportsSecure: false
@@ -82,8 +81,7 @@ audiomixer:
             - CLIP
             - TTS
           supportedCodecs:
-            - PCM_STEREO
-            - PCM_MULTICHANNEL
+            - PCM
 
   # List of output ports and their capabilities.
   # These define what each physical/logical output supports (e.g., HDMI, SPDIF).
