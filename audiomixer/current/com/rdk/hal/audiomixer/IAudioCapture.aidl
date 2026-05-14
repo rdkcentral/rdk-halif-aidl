@@ -76,7 +76,7 @@ interface IAudioCapture {
      * @returns true if capture stream started successfully.
      * @returns false if the shared memory ring buffer has not been aquired by the client.
      * 
-     * @exception binder::Status EX_ILLEGAL_STATE if stop is called when not stopped
+     * @exception binder::Status EX_ILLEGAL_STATE if start is called when capture is not stopped.
      * 
      */
      boolean start();
