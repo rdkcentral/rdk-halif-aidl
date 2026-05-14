@@ -69,5 +69,5 @@ parcelable OutputPortCapabilities {
      * 
      * @see IAudioOutputPort.getAudioCapture()
      */
-    Boolean supportsAudioCapture;
+    boolean supportsAudioCapture;
 }
