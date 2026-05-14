@@ -186,7 +186,7 @@ Mixers can operate in secure and non-secure paths. Mixer properties such as `MIX
 
 ## Dolby MS12 Runtime Commands
 
-The `IDolbyMs12_2_6_Dap` interface exposes one method per MS12 runtime command and is created from `IAudioOutputPort.getDolbyMs12_2_6_Dap()`.
+The `IDolbyMs12_2_6_Dap` interface exposes one method per MS12 IDK 2.6 runtime command and is created from `IAudioOutputPort.getDolbyMs12_2_6_Dap()`.
 
 Non-boolean argument constraints are declared per output port in `audiomixer/current/hfp-audiomixer.yaml` under `outputPorts[].supportedAQProcessors[].setFunctions`.
 
@@ -195,7 +195,7 @@ Non-boolean argument constraints are declared per output port in `audiomixer/cur
 | `setBassEnhancer(boost)` | `boost` 0..100 |
 | `setVolumeLeveller(mode, level)` | `mode` in {OFF, MANUAL, AUTO}, `level` 0..10 |
 | `setSurroundVirtualizer(mode, boost)` | `mode` in {OFF, MANUAL, AUTO}, `boost` 0..96 |
-| `setDialogueEnhancer(level)` | `level` 0..16 (`ac4Max` 12) |
+| `setDialogueEnhancer(level)` | `level` 0..12 |
 | `setIntelligentEqualizerMode(mode)` | `mode` in {0,1,2,3,4,5,6} |
 | `setGraphicEqualizerMode(mode)` | `mode` in {0,1,2,3} |
 | `setDynamicRangeControlMode(mode)` | `mode` in {LINE, RF} |
