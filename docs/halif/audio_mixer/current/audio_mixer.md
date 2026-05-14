@@ -272,19 +272,19 @@ Use `getSharedMemory(out sharedMemorySizeBytes)` once before `start()` to obtain
 For each `onDataAvailable(offsetBytes, lengthBytes, metadata)` callback:
 
 1. Validate the region against `sharedMemorySizeBytes`.
-- `offsetBytes` must be in `[0, sharedMemorySizeBytes)`.
-- `lengthBytes` must be `> 0` and `<= sharedMemorySizeBytes`.
+    - `offsetBytes` must be in `[0, sharedMemorySizeBytes)`.
+    - `lengthBytes` must be `> 0` and `<= sharedMemorySizeBytes`.
 2. Determine whether the region is contiguous or wrapped.
-- Contiguous: `offsetBytes + lengthBytes <= sharedMemorySizeBytes`.
-- Wrapped: `offsetBytes + lengthBytes > sharedMemorySizeBytes`.
+    - Contiguous: `offsetBytes + lengthBytes <= sharedMemorySizeBytes`.
+    - Wrapped: `offsetBytes + lengthBytes > sharedMemorySizeBytes`.
 3. Read data accordingly.
-- Contiguous read uses one segment: `[offsetBytes, offsetBytes + lengthBytes)`.
-- Wrapped read uses two segments:
-  - Segment 1: `[offsetBytes, sharedMemorySizeBytes)`
-  - Segment 2: `[0, (offsetBytes + lengthBytes) - sharedMemorySizeBytes)`
+    - Contiguous read uses one segment: `[offsetBytes, offsetBytes + lengthBytes)`.
+    - Wrapped read uses two segments:
+      - Segment 1: `[offsetBytes, sharedMemorySizeBytes)`
+      - Segment 2: `[0, (offsetBytes + lengthBytes) - sharedMemorySizeBytes)`
 4. Acknowledge consumption with the exact callback tuple.
-- Call `releaseData(offsetBytes, lengthBytes)` only after consuming the complete region.
-- Do not alter or split the tuple when acknowledging.
+    - Call `releaseData(offsetBytes, lengthBytes)` only after consuming the complete region.
+    - Do not alter or split the tuple when acknowledging.
 
 Clients should process callbacks in order and recover from `onError(status, message)` by stopping and restarting capture as required by platform policy.
 
