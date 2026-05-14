@@ -53,7 +53,7 @@ enum Channel {
 
     // Height / overhead channels
     CH_TFL = 9,  // Top Front Left
-    CH_TFR = 10  // Top Front Right
+    CH_TFR = 10,  // Top Front Right
     CH_TFC = 11,  // Top Front Centre
     CH_TSL = 12,  // Top Side Left
     CH_TSR = 13,  // Top Side Right
