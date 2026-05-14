@@ -81,10 +81,13 @@ interface IAudioOutputPort {
     /**
      * @brief Creates an audio capture interface for this port.
      * 
+     * @param[in] audioCaptureListener a Listener for capture callbacks.
+     * 
      * If supportsAudioCapture is true then this function will return an interface to allow its control.
      *
      * @returns IAudioCapture interface
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if audio capture from this port is not supported.
+     * @exception binder::Status EX_NULL_POINTER if audioCaptureListener is null.
      *
      * @see com.rdk.hal.audiomixer.OutputPortCapabilities.supportsAudioCapture
      */
