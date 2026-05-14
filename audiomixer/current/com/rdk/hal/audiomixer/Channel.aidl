@@ -37,30 +37,30 @@ package com.rdk.hal.audiomixer;
 @Backing(type="int")
 enum Channel {
     // Front channels
-    CH_FL,   // Front Left
-    CH_FR,   // Front Right
-    CH_FC,   // Front Centre
+    CH_FL = 0,   // Front Left
+    CH_FR = 1,   // Front Right
+    CH_FC = 2,   // Front Centre
 
     // Low-frequency channel
-    CH_LFE,  // Subwoofer / Low-Frequency Effects
+    CH_LFE = 3,  // Subwoofer / Low-Frequency Effects
 
     // Surround / rear channels
-    CH_SL,   // Side Left
-    CH_SR,   // Side Right
-    CH_RL,   // Rear Left
-    CH_RR,   // Rear Right
-    CH_RC,   // Rear Centre
+    CH_SL = 4,   // Side Left
+    CH_SR = 5,   // Side Right
+    CH_RL = 6,   // Rear Left
+    CH_RR = 7,   // Rear Right
+    CH_RC = 8,   // Rear Centre
 
     // Height / overhead channels
-    CH_TFL,  // Top Front Left
-    CH_TFR,  // Top Front Right
-    CH_TFC,  // Top Front Centre
-    CH_TSL,  // Top Side Left
-    CH_TSR,  // Top Side Right
-    CH_TRL,  // Top Rear Left
-    CH_TRR,  // Top Rear Right
+    CH_TFL = 9,  // Top Front Left
+    CH_TFR = 10  // Top Front Right
+    CH_TFC = 11,  // Top Front Centre
+    CH_TSL = 12,  // Top Side Left
+    CH_TSR = 13,  // Top Side Right
+    CH_TRL = 14,  // Top Rear Left
+    CH_TRR = 15,  // Top Rear Right
 
     // Wide channels
-    CH_WL,   // Wide Left
-    CH_WR,   // Wide Right
+    CH_WL = 16,   // Wide Left
+    CH_WR = 17,   // Wide Right
 }
