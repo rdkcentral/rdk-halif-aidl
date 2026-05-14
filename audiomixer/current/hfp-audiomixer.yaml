@@ -232,3 +232,50 @@ audiomixer:
       supportedAQProcessors:
         - id: UNDEFINED
       supportsAudioCapture: true
+
+      # Supported channel configurations for audio capture
+      supportedChannelLayouts:
+        # Stereo: Front Left, Front Right
+        - format: PCM_STEREO
+          channels: [CH_FL, CH_FR]
+
+        # 5.1 Surround: Front Left, Front Right, Front Centre, LFE, Rear Left, Rear Right
+        - format: PCM_MULTICHANNEL
+          channels: [CH_FL, CH_FR, CH_FC, CH_LFE, CH_RL, CH_RR]
+          description: "5.1 surround configuration"
+
+        # 7.1 Surround: Front Left, Front Right, Front Centre, LFE, Side Left, Side Right, Rear Left, Rear Right
+        - format: PCM_MULTICHANNEL
+          channels: [CH_FL, CH_FR, CH_FC, CH_LFE, CH_SL, CH_SR, CH_RL, CH_RR]
+          description: "7.1 surround configuration"
+
+        # 5.1.2 Atmos: 5.1 + Top Front Left, Top Front Right
+        - format: PCM_MULTICHANNEL
+          channels: [CH_FL, CH_FR, CH_FC, CH_LFE, CH_RL, CH_RR, CH_TFL, CH_TFR]
+          description: "5.1.2 Atmos configuration"
+
+        # 5.1.4 Atmos: 5.1 + Top Front Left, Top Front Right, Top Rear Left, Top Rear Right
+        - format: PCM_MULTICHANNEL
+          channels: [CH_FL, CH_FR, CH_FC, CH_LFE, CH_RL, CH_RR, CH_TFL, CH_TFR, CH_TRL, CH_TRR]
+          description: "5.1.4 Atmos configuration"
+
+      # Supported channel definitions for AudioCapturePcmInfo.channelMap
+      supportedChannels:
+        - CH_FL   # Front Left
+        - CH_FR   # Front Right
+        - CH_FC   # Front Centre
+        - CH_LFE  # Low-Frequency Effects (Subwoofer)
+        - CH_SL   # Side Left
+        - CH_SR   # Side Right
+        - CH_RL   # Rear Left
+        - CH_RR   # Rear Right
+        - CH_RC   # Rear Centre
+        - CH_TFL  # Top Front Left
+        - CH_TFR  # Top Front Right
+        - CH_TFC  # Top Front Centre
+        - CH_TSL  # Top Side Left
+        - CH_TSR  # Top Side Right
+        - CH_TRL  # Top Rear Left
+        - CH_TRR  # Top Rear Right
+        - CH_WL   # Wide Left
+        - CH_WR   # Wide Right

@@ -51,4 +51,21 @@ parcelable AudioCapturePcmInfo {
      * Little-endian is standard on x86/ARM platforms.
      */
     boolean isLittleEndian;
+
+    /**
+     * @brief Channel position map for multi-channel PCM audio.
+     *
+     * Describes the order and position of audio channels within the captured PCM frame.
+     * The array index represents the channel number (0-based), and the Channel enum value
+     * at that index indicates the physical or logical placement of that channel.
+     *
+     * Only populated when AudioCaptureData.format is PCM_MULTICHANNEL.
+     * For PCM_STEREO, this array will contain two entries: [CH_FL, CH_FR].
+     *
+     * @returns Array of Channel positions in frame order. Empty array if channel mapping is not provided.
+     *
+     * Example for 5.1 surround (Left, Right, Centre, LFE, Rear Left, Rear Right):
+     * [CH_FL, CH_FR, CH_FC, CH_LFE, CH_RL, CH_RR]
+     */
+    Channel[] channelMap;
 }
