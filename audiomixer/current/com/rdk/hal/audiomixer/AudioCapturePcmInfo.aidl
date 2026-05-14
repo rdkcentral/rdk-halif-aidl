@@ -57,14 +57,12 @@ parcelable AudioCapturePcmInfo {
     /**
      * @brief Channel position map for multi-channel PCM audio.
      *
-     * Describes the order and position of audio channels within the captured PCM frame.
+     * Channel positions in captured PCM frame order.
      * The array index represents the channel number (0-based), and the Channel enum value
      * at that index indicates the physical or logical placement of that channel.
      *
      * Populated when AudioCaptureData.format is PCM_MULTICHANNEL or PCM_STEREO.
-     * For PCM_STEREO, this array will contain two entries: [CH_FL, CH_FR].
-     *
-     * Contains Channel positions in frame order.
+     * For PCM_STEREO, this array contains two entries: [CH_FL, CH_FR].
      *
      * Example for 5.1 surround (Left, Right, Centre, LFE, Rear Left, Rear Right):
      * [CH_FL, CH_FR, CH_FC, CH_LFE, CH_RL, CH_RR]
