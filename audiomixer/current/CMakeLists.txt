@@ -62,7 +62,7 @@ set(SRC
     ${SRC_DIR}/Channel.aidl
     ${SRC_DIR}/AudioCapturePcmInfo.aidl
     ${SRC_DIR}/AudioCaptureData.aidl
-    ${SRC_DIR}/AudioCaptureStatus.aidl
+    ${SRC_DIR}/AudioCaptureError.aidl
     # Interfaces
     ${SRC_DIR}/IAudioMixer.aidl
     ${SRC_DIR}/IAudioMixerController.aidl

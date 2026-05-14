@@ -119,7 +119,7 @@ audiomixer:
             setVolumeLeveller:
               supportsVolumeLeveller: true
               range:
-                mode: [OFF, MANUAL, AUTO]
+                mode: ["OFF", MANUAL, AUTO]
                 level:
                   min: 0
                   max: 10
@@ -129,7 +129,7 @@ audiomixer:
             setSurroundVirtualizer:
               supportsSurroundVirtualizer: true
               range:
-                mode: [OFF, MANUAL, AUTO]
+                mode: ["OFF", MANUAL, AUTO]
                 boost:
                   min: 0
                   max: 96
@@ -161,13 +161,13 @@ audiomixer:
             setIntelligentEqualizerMode:
               supportsIntelligentEqualizerMode: true
               range:
-                mode: [OFF, OPEN, RICH, FOCUSED, BALANCED, WARM, DETAILED]
+                mode: ["OFF", OPEN, RICH, FOCUSED, BALANCED, WARM, DETAILED]
               default:
                 mode: BALANCED
             setGraphicEqualizerMode:
               supportsGraphicEqualizerMode: true
               range:
-                mode: [OFF, OPEN, RICH, FOCUSED]
+                mode: ["OFF", OPEN, RICH, FOCUSED]
               default:
                 mode: OPEN
             setDynamicRangeControlMode:

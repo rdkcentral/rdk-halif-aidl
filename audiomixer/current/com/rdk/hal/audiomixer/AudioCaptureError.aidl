@@ -20,8 +20,8 @@
 package com.rdk.hal.audiomixer;
 
 /**
- * @brief Audio capture operation status codes.
- * Enumeration of status/error codes used in IAudioCaptureListener callbacks.
+ * @brief Audio capture operation error codes.
+ * Enumeration of error codes used in IAudioCaptureListener callbacks.
  */
 @VintfStability
 @Backing(type="int")

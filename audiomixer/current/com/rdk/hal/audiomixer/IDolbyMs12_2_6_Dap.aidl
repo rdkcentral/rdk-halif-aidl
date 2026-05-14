@@ -50,10 +50,8 @@ interface IDolbyMs12_2_6_Dap {
      * @param[in] enabled True to enable, false to disable.
      * 
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
-     * @returns true if the command was applied.
-     * 
      */
-    boolean setSurroundDecoderEnabled(in boolean enabled);
+    void setSurroundDecoderEnabled(in boolean enabled);
 
     /**
      * @brief Gets DAP surround decoder processing state.
@@ -70,9 +68,8 @@ interface IDolbyMs12_2_6_Dap {
      * 
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if argument is out of range.
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
-     * @returns true if the command was applied.
      */
-    boolean setBassEnhancer(in int boost);
+    void setBassEnhancer(in int boost);
 
     /**
      * @brief Gets DAP bass enhancer boost value.
@@ -88,9 +85,8 @@ interface IDolbyMs12_2_6_Dap {
      * 
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if argument is out of range.
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
-     * @returns true if the command was applied.
      */
-    boolean setVolumeLeveller(in DolbyMs12_2_6_LevellerMode mode, in int level);
+    void setVolumeLeveller(in DolbyMs12_2_6_LevellerMode mode, in int level);
 
     /**
      * @brief Gets DAP volume leveller mode and level.
@@ -107,9 +103,8 @@ interface IDolbyMs12_2_6_Dap {
      * 
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if argument is out of range.
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
-     * @returns true if the command was applied.
      */
-    boolean setSurroundVirtualizer(in DolbyMs12_2_6_VirtualizerMode mode, in int boost);
+    void setSurroundVirtualizer(in DolbyMs12_2_6_VirtualizerMode mode, in int boost);
 
     /**
      * @brief Gets DAP surround virtualizer mode and boost.
@@ -124,9 +119,8 @@ interface IDolbyMs12_2_6_Dap {
      * @param[in] enabled True to enable, false to disable.
      * 
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
-     * @returns true if the command was applied.
      */
-    boolean setMediaIntelligentSteering(in boolean enabled);
+    void setMediaIntelligentSteering(in boolean enabled);
 
     /**
      * @brief Gets media intelligent steering state.
@@ -141,9 +135,8 @@ interface IDolbyMs12_2_6_Dap {
      * 
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if argument is out of range.
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
-     * @returns true if the command was applied.
      */
-    boolean setPostGain(in float gain);
+    void setPostGain(in float gain);
 
     /**
      * @brief Gets DAP post gain.
@@ -158,9 +151,8 @@ interface IDolbyMs12_2_6_Dap {
      * 
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if argument is out of range.
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
-     * @returns true if the command was applied.
      */
-    boolean setDialogueEnhancer(in int level);
+    void setDialogueEnhancer(in int level);
 
     /**
      * @brief Gets DAP dialogue enhancer level.
@@ -175,9 +167,8 @@ interface IDolbyMs12_2_6_Dap {
      * 
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if argument does not comply with the constrained set.
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
-     * @returns true if the command was applied.
      */
-    boolean setIntelligentEqualizerMode(in DolbyMs12_2_6_IeqMode mode);
+    void setIntelligentEqualizerMode(in DolbyMs12_2_6_IeqMode mode);
 
     /**
      * @brief Gets DAP intelligent equalizer mode.
@@ -192,9 +183,8 @@ interface IDolbyMs12_2_6_Dap {
      * 
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if argument does not comply with the constrained set.
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
-     * @returns true if the command was applied.
      */
-    boolean setGraphicEqualizerMode(in DolbyMs12_2_6_GeqMode mode);
+    void setGraphicEqualizerMode(in DolbyMs12_2_6_GeqMode mode);
 
     /**
      * @brief Gets DAP graphic equalizer mode.
@@ -209,9 +199,8 @@ interface IDolbyMs12_2_6_Dap {
      * 
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if argument does not comply with the constrained set.
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
-     * @returns true if the command was applied.
      */
-    boolean setDynamicRangeControlMode(in DolbyMs12_2_6_DrcMode mode);
+    void setDynamicRangeControlMode(in DolbyMs12_2_6_DrcMode mode);
 
     /**
      * @brief Gets DAP dynamic range control mode.
@@ -225,9 +214,8 @@ interface IDolbyMs12_2_6_Dap {
      * @param[in] enabled True to lock Atmos output, false to unlock.
      * 
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
-     * @returns true if the command was applied.
      */
-    boolean setAtmosLock(in boolean enabled);
+    void setAtmosLock(in boolean enabled);
 
     /**
      * @brief Gets Dolby Atmos lock mode.
@@ -242,9 +230,8 @@ interface IDolbyMs12_2_6_Dap {
      * 
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if argument does not comply with the constrained set.
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
-     * @returns true if the command was applied.
      */
-    boolean setDownmixMode(in DolbyMs12_2_6_DownmixMode mode);
+    void setDownmixMode(in DolbyMs12_2_6_DownmixMode mode);
 
     /**
      * @brief Gets downmix mode.
@@ -258,10 +245,8 @@ interface IDolbyMs12_2_6_Dap {
      * @param[in] enabled True to enable, false to disable.
      * 
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
-     * @returns true if the command was applied.
-     * 
      */
-    boolean setVolumeModelerEnabled(in boolean enabled);
+    void setVolumeModelerEnabled(in boolean enabled);
 
     /**
      * @brief Gets volume modeler state.
@@ -276,9 +261,8 @@ interface IDolbyMs12_2_6_Dap {
      * @param[in] enabled True to enable, false to disable.
      * 
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
-     * @returns true if the command was applied.
      */
-    boolean setCenterSpreadingEnabled(in boolean enabled);
+    void setCenterSpreadingEnabled(in boolean enabled);
 
     /**
      * @brief Gets centre spreading state.
@@ -293,9 +277,8 @@ interface IDolbyMs12_2_6_Dap {
      * @param[in] enabled True to enable, false to disable.
      * 
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
-     * @returns true if the command was applied.
      */
-    boolean setActiveDownmixEnabled(in boolean enabled);
+    void setActiveDownmixEnabled(in boolean enabled);
 
     /**
      * @brief Gets active downmix state.

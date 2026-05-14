@@ -127,7 +127,7 @@ enum OutputPortProperty {
      *
      * A count of the underflow (starvation) events that the consumer of the output port has experienced since the port was enabled.
      * A single underflow event is considered to be when the consumer, unexpectedly, has no data to consume until normal data flow resumes.
-     * When the port is disabled, the last count should be held until the port is re-enabled and the count reset.
+     * When the port is disabled, the last count should be held until the port is re-enabled, and the count reset.
      */
     METRIC_UNDERFLOWS = 11,
 
@@ -138,7 +138,7 @@ enum OutputPortProperty {
      *
      * A count of the overflow events that the producer has experienced since the port was enabled.
      * A single overflow event is considered to be when the producer, unexpectedly, has no buffer space available to write the data.
-     * When the port is disabled, the last count should be held until the port is re-enabled and the count reset.
+     * When the port is disabled, the last count should be held until the port is re-enabled, and the count reset.
      */
     METRIC_OVERFLOWS = 12,
 

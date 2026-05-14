@@ -60,7 +60,7 @@ Mixer instances are accessed and controlled via `IAudioMixer`, with additional l
 | AudioCaptureData.aidl         | Audio capture metadata payload                         |
 | AudioCapturePcmInfo.aidl      | PCM capture format metadata                            |
 | Channel.aidl                  | PCM channel position enum for `AudioCapturePcmInfo.channelMap` |
-| AudioCaptureStatus.aidl       | Audio capture status/error codes                       |
+| AudioCaptureError.aidl        | Audio capture error codes                              |
 | Capabilities.aidl             | Supported input types, codecs, secure path flag        |
 | MixerInput.aidl               | Per-input supported codec and content type definitions |
 | OutputPortCapabilities.aidl   | Describes per-port format and property support         |
@@ -95,7 +95,7 @@ The AudioMixer HAL service is initialized by systemd, registered with the Binder
 * Mixers are uniquely identified via `IAudioMixer.Id` enum values.
 * Capabilities are queried using `getCapabilities()` and may differ per instance.
 * Mixer resources are declared in the HFP YAML including `supportsSecure`, input configurations, and multi-instance support.
-* Output ports may vary in capability (formats, transcode support, AQ processors, and `supportsAudioCapture`).
+* Output ports may vary in capability (formats, passthrough support, AQ processors, and `supportsAudioCapture`).
 
 ---
 
@@ -175,7 +175,7 @@ flowchart TD
 * AQ processors and parameters can be configured where supported.
 * Where `OutputPortCapabilities.supportsAudioCapture` is true, capture is created from `IAudioOutputPort.getAudioCapture(listener)`.
 * Audio capture uses a shared-memory ring buffer returned by `getSharedMemory(out sharedMemorySizeBytes)`, with `releaseData()` acknowledgements after `onDataAvailable()` callbacks.
-* Transcode or passthrough output formats are dynamically switchable if capabilities permit.
+* Output formats, including passthrough where supported, are dynamically switchable if capabilities permit.
 
 ---
 
@@ -256,7 +256,7 @@ stateDiagram-v2
   SHM_READY --> STOPPED
   STOPPED --> STARTED : start()
   STARTED --> STOPPED : stop()
-  STARTED --> STARTED : onDataAvailable()/releaseData()/onError(status,message)
+  STARTED --> STARTED : onDataAvailable()/releaseData()/onError(error,message)
   STOPPED --> [*] : releaseSharedMemory()
 ```
 
