@@ -64,7 +64,7 @@ parcelable AudioCapturePcmInfo {
      * Populated when AudioCaptureData.format is PCM_MULTICHANNEL or PCM_STEREO.
      * For PCM_STEREO, this array will contain two entries: [CH_FL, CH_FR].
      *
-     * @returns Array of Channel positions in frame order. Empty array if channel mapping is not provided.
+     * @returns Array of Channel positions in frame order.
      *
      * Example for 5.1 surround (Left, Right, Centre, LFE, Rear Left, Rear Right):
      * [CH_FL, CH_FR, CH_FC, CH_LFE, CH_RL, CH_RR]
