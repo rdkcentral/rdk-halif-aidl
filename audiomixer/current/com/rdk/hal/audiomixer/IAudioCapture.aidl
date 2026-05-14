@@ -23,8 +23,7 @@ package com.rdk.hal.audiomixer;
  * @brief Audio capture interface for output ports.
  * 
  * Provides stateful control over audio capture sessions on an output port.
- * Clients obtain shared memory, register a listener, configure capture format,
- * call start() to begin streaming, receive async callbacks via IAudioCaptureListener,
+ * Clients obtain shared memory, call start() to begin streaming, receive async callbacks via IAudioCaptureListener,
  * acknowledge consumed data with releaseData(), then call stop() to end the session.
  * 
  * Example lifecycle:
