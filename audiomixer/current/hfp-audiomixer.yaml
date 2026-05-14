@@ -100,7 +100,7 @@ audiomixer:
         - AC3
         - EAC3
       supportedAQProcessors:
-        - id: DOLBY_MS12_2_6
+        - id: DOLBY_MS12_2_6 # Dolby MS12 IDK 2.6
           # If this AQ processor is present on the output port,
           # getDolbyMs12_2_6_Dap() is supported for that port.
           setFunctions:
@@ -157,7 +157,7 @@ audiomixer:
               range:
                 level:
                   min: 0
-                  max: 16
+                  max: 12
               default:
                 level: 8
             setIntelligentEqualizerMode:
