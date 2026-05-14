@@ -61,7 +61,7 @@ parcelable AudioCapturePcmInfo {
      * The array index represents the channel number (0-based), and the Channel enum value
      * at that index indicates the physical or logical placement of that channel.
      *
-     * Only populated when AudioCaptureData.format is PCM_MULTICHANNEL.
+     * Populated when AudioCaptureData.format is PCM_MULTICHANNEL and PCM_STEREO
      * For PCM_STEREO, this array will contain two entries: [CH_FL, CH_FR].
      *
      * @returns Array of Channel positions in frame order. Empty array if channel mapping is not provided.
