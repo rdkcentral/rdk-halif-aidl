@@ -173,6 +173,7 @@ interface IDolbyMs12_2_6_Dap {
      * @brief Sets DAP intelligent equalizer mode.
      * @param[in] mode Intelligent equalizer mode.
      * 
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if argument does not comply with the constrained set.
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
      * @returns true if the command was applied.
      */
@@ -189,6 +190,7 @@ interface IDolbyMs12_2_6_Dap {
      * @brief Sets DAP graphic equalizer mode.
      * @param[in] mode Graphic equalizer mode.
      * 
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if argument does not comply with the constrained set.
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
      * @returns true if the command was applied.
      */
@@ -205,6 +207,7 @@ interface IDolbyMs12_2_6_Dap {
      * @brief Sets DAP dynamic range control mode.
      * @param[in] mode Dynamic range control mode.
      * 
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if argument does not comply with the constrained set.
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
      * @returns true if the command was applied.
      */
@@ -237,6 +240,7 @@ interface IDolbyMs12_2_6_Dap {
      * @brief Sets downmix mode.
      * @param[in] mode Downmix mode.
      * 
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if argument does not comply with the constrained set.
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
      * @returns true if the command was applied.
      */
