@@ -59,7 +59,7 @@ interface IDolbyMs12_2_6_Dap {
      * @brief Gets DAP surround decoder processing state.
      * 
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
-     * @returns true if the command was applied.
+     * @returns Current surround decoder enabled state.
      *
      */
     boolean getSurroundDecoderEnabled();
