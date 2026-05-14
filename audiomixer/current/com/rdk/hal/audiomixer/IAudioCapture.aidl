@@ -57,10 +57,12 @@ interface IAudioCapture {
     /**
      * @brief Release the shared-memory ring buffer 
      *
-     * This method must be called only when capturing of audio data is stopped.
-     * Calling releaseSharedMemory() before getSharedMemory() is not an error.
+     * This method may be called only when capturing of audio data has not been started
+     * yet, or after a previous capture session has been stopped.
+     * Calling releaseSharedMemory() before getSharedMemory() is not an error and has
+     * no effect.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE if capture is not stopped.
+     * @exception binder::Status EX_ILLEGAL_STATE if capture is started.
      */
     void releaseSharedMemory();
 
