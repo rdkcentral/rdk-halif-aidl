@@ -196,8 +196,8 @@ Non-boolean argument constraints are declared per output port in `audiomixer/cur
 | `setVolumeLeveller(mode, level)` | `mode` in {OFF, MANUAL, AUTO}, `level` 0..10 |
 | `setSurroundVirtualizer(mode, boost)` | `mode` in {OFF, MANUAL, AUTO}, `boost` 0..96 |
 | `setDialogueEnhancer(level)` | `level` 0..12 |
-| `setIntelligentEqualizerMode(mode)` | `mode` in {0,1,2,3,4,5,6} |
-| `setGraphicEqualizerMode(mode)` | `mode` in {0,1,2,3} |
+| `setIntelligentEqualizerMode(mode)` | `mode` in {OFF, OPEN, RICH, FOCUSED, BALANCED, WARM, DETAILED} |
+| `setGraphicEqualizerMode(mode)` | `mode` in {OFF, OPEN, RICH, FOCUSED} |
 | `setDynamicRangeControlMode(mode)` | `mode` in {LINE, RF} |
 | `setPostGain(gain)` | `gain` -2080..480 |
 | `setDownmixMode(mode)` | `mode` in {LT_RT, LO_RO} |
