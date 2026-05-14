@@ -89,10 +89,11 @@ interface IAudioCapture {
      * onStopped() callback after this method returns. No further onDataAvailable() callbacks
      * will be delivered.
      * 
-     * @returns true if capture stream stopped successfully, false if already stopped.
-     * 
-     * @exception binder::Status EX_ILLEGAL_STATE if capture not started.
-     * It is not considered an error if stop() is called while already stopped.
+     * @returns Success flag indicating whether the capture state changed.
+     * @retval true Capture stream stopped successfully.
+     * @retval false Capture was already stopped.
+     *
+     * Calling stop() while already stopped is not considered an error.
      */
     boolean stop();
 
