@@ -73,10 +73,11 @@ interface IAudioCapture {
      *
      * Ring buffer state is reset on every start() following a stop() transition.
      * 
-     * @returns true if capture stream started successfully.
-     * @returns false if the shared memory ring buffer has not been acquired by the client.
+     * @returns Success flag indicating whether capture started.
+     * @retval true Capture stream started successfully.
      * 
-     * @exception binder::Status EX_ILLEGAL_STATE if start is called when capture is not stopped.
+     * @exception binder::Status EX_ILLEGAL_STATE if start is called when capture is not stopped
+     * or if the shared memory ring buffer has not been acquired by the client.
      * 
      */
      boolean start();
