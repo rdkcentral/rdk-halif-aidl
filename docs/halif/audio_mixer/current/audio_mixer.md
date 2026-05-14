@@ -95,7 +95,7 @@ The AudioMixer HAL service is initialized by systemd, registered with the Binder
 * Mixers are uniquely identified via `IAudioMixer.Id` enum values.
 * Capabilities are queried using `getCapabilities()` and may differ per instance.
 * Mixer resources are declared in the HFP YAML including `supportsSecure`, input configurations, and multi-instance support.
-* Output ports may vary in capability (formats, passthrough support, AQ processors, and `supportsAudioCapture`).
+* Output ports may vary in capability (formats, pass-through support, AQ processors, and `supportsAudioCapture`).
 
 ---
 

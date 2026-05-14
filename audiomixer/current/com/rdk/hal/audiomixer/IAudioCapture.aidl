@@ -75,8 +75,6 @@ interface IAudioCapture {
      *
      * Ring buffer state is reset on every start() following a stop() transition.
      * 
-     * @returns None.
-     *
      * @exception binder::Status EX_ILLEGAL_STATE if start is called when capture is not stopped
      * or if the shared memory ring buffer has not been acquired by the client.
      * 
@@ -90,8 +88,6 @@ interface IAudioCapture {
      * onStopped() callback after this method returns. No further onDataAvailable() callbacks
      * will be delivered.
      * 
-     * @returns None.
-     *
      * @exception binder::Status EX_ILLEGAL_STATE if stop is called when not started.
      * 
      */
