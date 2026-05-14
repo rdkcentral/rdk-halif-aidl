@@ -289,23 +289,6 @@ For each `onDataAvailable(offsetBytes, lengthBytes, metadata)` callback:
 
 Clients should process callbacks in order and recover from `onError(status, message)` by stopping and restarting capture as required by platform policy.
 
----
-
-## Data Format / Protocol Support
-
-| Format Enum         | Use Case                                 | Support Level |
-| ------------------- | ---------------------------------------- | ------------- |
-| `PCM_STEREO`        | Default uncompressed stereo output       | Platform-defined |
-| `PCM_MULTICHANNEL`  | Uncompressed multichannel output         | Optional      |
-| `AC3`               | Legacy surround sound                    | Optional      |
-| `EAC3`              | Enhanced surround sound                  | Optional      |
-| `MAT`               | Dolby MAT output                         | Optional      |
-| `PASSTHROUGH`       | Bitstream passthrough                    | Optional      |
-| `TRUEHD`            | Dolby TrueHD output                      | Optional      |
-| `DTS` / `DTS_HD`    | DTS output modes                         | Optional      |
-
----
-
 ## Platform Capabilities
 
 Declared in the HFP YAML:
