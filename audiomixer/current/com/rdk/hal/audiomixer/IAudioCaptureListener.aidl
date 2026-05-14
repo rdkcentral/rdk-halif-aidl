@@ -73,12 +73,12 @@ oneway interface IAudioCaptureListener {
      * @brief Called when an error occurs during audio capture.
      * ERROR_OVERFLOW indicates new incoming data was dropped and is lost.
      * 
-     * @param[in] status Error code indicating the type of failure.
+     * @param[in] Error code indicating the type of failure.
      * @param[in] message Human-readable error description.
      * 
      * @returns Void (one-way result does not wait for callback completion).
      * 
      * @exception None (one-way interface never throws).
      */
-    void onError(in AudioCaptureStatus status, in String message);
+    void onError(in AudioCaptureError error, in String message);
 }
