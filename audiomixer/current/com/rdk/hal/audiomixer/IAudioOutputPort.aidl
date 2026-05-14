@@ -70,7 +70,7 @@ interface IAudioOutputPort {
      * 
      * If DOLBY_MS12_2_6 is reported as a supported AQProcessor in supportedAQProcessors then this function will return an interface to allow its control.
      *
-     * @returns IDolbyMS12_2_6_Dap interface
+     * @returns IDolbyMs12_2_6_Dap interface
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if Dolby MS12 v2.6 DAP is not supported.
      *
      * @see com.rdk.hal.audiomixer.OutputPortCapabilities.supportedAQProcessors
