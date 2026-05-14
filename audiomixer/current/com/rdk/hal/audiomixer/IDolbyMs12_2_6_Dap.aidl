@@ -144,7 +144,7 @@ interface IDolbyMs12_2_6_Dap {
 
     /**
      * @brief Sets DAP dialogue enhancer level.
-     * @param[in] level Dialogue enhancer level in range 0 to 16.
+     * @param[in] level Dialogue enhancer level in range 0 to 12.
      * @returns True if the command was applied; false on command failure.
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if argument is out of range.
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
@@ -153,7 +153,7 @@ interface IDolbyMs12_2_6_Dap {
 
     /**
      * @brief Gets DAP dialogue enhancer level.
-     * @returns Dialogue enhancer level in range 0 to 16.
+     * @returns Dialogue enhancer level in range 0 to 12.
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
      */
     int getDialogueEnhancer();
