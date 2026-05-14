@@ -57,8 +57,8 @@ parcelable AudioCaptureData {
     /**
      * Human-readable codec name (e.g., "AC3", "AAC", "PCM", "AAC-LC").
      * Populated only when relevant to the captured format, null otherwise.
-     * codecName expected to be purely informative and for diagnostic purposes.
-     * Do not rely string consistency for logical operations.
+     * codecName is expected to be purely informative and for diagnostic purposes.
+     * Do not rely on string consistency for logical operations.
      */
     @nullable String codecName;
 
