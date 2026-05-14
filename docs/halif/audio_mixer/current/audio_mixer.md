@@ -59,6 +59,7 @@ Mixer instances are accessed and controlled via `IAudioMixer`, with additional l
 | IAudioCaptureListener.aidl    | Audio capture callbacks                                |
 | AudioCaptureData.aidl         | Audio capture metadata payload                         |
 | AudioCapturePcmInfo.aidl      | PCM capture format metadata                            |
+| Channel.aidl                  | PCM channel position enum for `AudioCapturePcmInfo.channelMap` |
 | AudioCaptureStatus.aidl       | Audio capture status/error codes                       |
 | Capabilities.aidl             | Supported input types, codecs, secure path flag        |
 | MixerInput.aidl               | Per-input supported codec and content type definitions |
