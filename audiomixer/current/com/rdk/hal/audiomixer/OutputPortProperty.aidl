@@ -125,7 +125,7 @@ enum OutputPortProperty {
      * Type: int
      * Access: Read-only.
      *
-     * A count of the underflows (starvation) events that the consumer of the output port has experienced since the port was enabled.
+     * A count of the underflow (starvation) events that the consumer of the output port has experienced since the port was enabled.
      * A single underflow event is considered to be when the consumer, unexpectedly, has no data to consume until normal data flow resumes.
      * When the port is disabled, the last count should be held until the port is re-enabled and the count reset.
      */
