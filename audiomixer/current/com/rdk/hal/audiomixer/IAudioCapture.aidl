@@ -107,5 +107,5 @@ interface IAudioCapture {
      * @exception binder::Status EX_ILLEGAL_STATE if capture not started.
      * @exception binder::Status EX_ILLEGAL_ARGUMENT for invalid region.
      */
-    oneway void releaseData(in long offsetBytes, in int lengthBytes);
+    void releaseData(in long offsetBytes, in int lengthBytes);
 }
