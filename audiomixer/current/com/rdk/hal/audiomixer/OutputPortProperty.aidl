@@ -138,7 +138,7 @@ enum OutputPortProperty {
      *
      * A count of the overflow events that the producer has experienced since the port was enabled.
      * A single overflow event is considered to be when the producer, unexpectedly, has no buffer space available to write the data.
-     * When the port is disabled the last count should be held until the port is re-enabled and the count reset.
+     * When the port is disabled, the last count should be held until the port is re-enabled and the count reset.
      */
     METRIC_OVERFLOWS = 12,
 
