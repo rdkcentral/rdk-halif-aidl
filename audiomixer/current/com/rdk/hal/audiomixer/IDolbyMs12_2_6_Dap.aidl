@@ -18,6 +18,7 @@
  */
 package com.rdk.hal.audiomixer;
 
+import com.rdk.hal.audiomixer.DolbyMs12_2_6_DapCapabilities;
 import com.rdk.hal.audiomixer.DolbyMs12_2_6_DownmixMode;
 import com.rdk.hal.audiomixer.DolbyMs12_2_6_DrcMode;
 import com.rdk.hal.audiomixer.DolbyMs12_2_6_GeqMode;

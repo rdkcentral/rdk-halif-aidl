@@ -19,6 +19,9 @@
 
 package com.rdk.hal.audiomixer;
 
+import com.rdk.hal.audiomixer.AudioCaptureData;
+import com.rdk.hal.audiomixer.AudioCaptureStatus;
+
 /**
  * @brief Audio capture event listener interface.
  * Asynchronous callback interface for receiving audio capture events from an output port.

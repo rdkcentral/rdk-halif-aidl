@@ -59,6 +59,7 @@ set(SRC
     ${SRC_DIR}/DolbyMs12_2_6_LevellerMode.aidl
     ${SRC_DIR}/DolbyMs12_2_6_VirtualizerMode.aidl
     ${SRC_DIR}/DolbyMs12_2_6_DapCapabilities.aidl
+    ${SRC_DIR}/Channel.aidl
     ${SRC_DIR}/AudioCapturePcmInfo.aidl
     ${SRC_DIR}/AudioCaptureData.aidl
     ${SRC_DIR}/AudioCaptureStatus.aidl

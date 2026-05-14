@@ -20,6 +20,7 @@
 package com.rdk.hal.audiomixer;
 
 import com.rdk.hal.audiomixer.Channel;
+
 /**
  * @brief PCM sample format descriptor for captured audio.
  * 
