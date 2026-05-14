@@ -43,8 +43,9 @@ parcelable AudioCaptureData {
     int sampleRateHz;
 
     /**
-     * Timestamp in microseconds (μs).
-     * Typically monotonic time or frame-relative timestamp depending on implementation.
+     * Timestamp in microseconds (μs) from the system monotonic clock.
+     * This value shall use a single monotonic time base for all implementations and
+     * shall not be frame-relative.
      */
     long timestampUs;
 
