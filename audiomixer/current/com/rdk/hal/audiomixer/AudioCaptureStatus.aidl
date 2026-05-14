@@ -25,35 +25,10 @@ package com.rdk.hal.audiomixer;
  */
 @VintfStability
 @Backing(type="int")
-enum AudioCaptureStatus {
-    /**
-     * Operation completed successfully.
-     */
-    SUCCESS = 0,
-
-    /**
-     * Requested audio capture format is not valid or not supported.
-     */
-    ERROR_INVALID_FORMAT = 1,
-
-    /**
-     * Audio capture operation is not supported by this output port.
-     */
-    ERROR_NOT_SUPPORTED = 2,
-
-    /**
-     * Audio capture resource is unavailable (e.g., already in use, port disconnected).
-     */
-    ERROR_RESOURCE_UNAVAILABLE = 3,
-
-    /**
-     * Audio capture operation invalid for current state (e.g., stop called when not started).
-     */
-    ERROR_INVALID_STATE = 4,
-
+enum AudioCaptureError {
     /**
      * Ring buffer overflow occurred because client consumption was too slow.
      * New incoming audio data was dropped and is lost.
      */
-    ERROR_OVERFLOW = 5,
+    ERROR_OVERFLOW = 0,
 }
