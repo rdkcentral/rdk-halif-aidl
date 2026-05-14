@@ -75,9 +75,9 @@ interface IAudioCapture {
      * Ring buffer state is reset on every start() following a stop() transition.
      * 
      * @returns true if capture stream started successfully.
+     * @returns false if the shared memory ring buffer has not been aquired by the client.
      * 
-     * @exception binder::Status EX_ILLEGAL_STATE if a shared memory ring buffer has not been aquired by the client.
-     * It is not considered an error if start() is called while already started.
+     * @exception binder::Status EX_ILLEGAL_STATE if stop is called when not stopped
      * 
      */
      boolean start();
@@ -91,9 +91,9 @@ interface IAudioCapture {
      * 
      * @returns Success flag indicating whether the capture state changed.
      * @retval true Capture stream stopped successfully.
-     * @retval false Capture was already stopped.
      *
-     * Calling stop() while already stopped is not considered an error.
+     * @exception binder::Status EX_ILLEGAL_STATE if stop is called when not started.
+     * 
      */
     boolean stop();
 
