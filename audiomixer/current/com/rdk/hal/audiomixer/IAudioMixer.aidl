@@ -21,7 +21,6 @@
 import com.rdk.hal.audiomixer.Capabilities;
 import com.rdk.hal.audiomixer.IAudioMixerController;
 import com.rdk.hal.audiomixer.IAudioMixerEventListener;
-import com.rdk.hal.audiomixer.IDolbyMs12_2_6_Dap;
 import com.rdk.hal.audiomixer.IAudioOutputPort;
 import com.rdk.hal.audiomixer.Property;
 import com.rdk.hal.audiomixer.InputRouting;
