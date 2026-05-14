@@ -55,9 +55,9 @@ parcelable AudioCaptureData {
 
     /**
      * Human-readable codec name (e.g., "AC3", "AAC", "PCM", "AAC-LC").
-     * Populated only when relevant to the captured format.
+     * Populated only when relevant to the captured format, null otherwise.
      */
-    String codecName;
+    @nullable String codecName;
 
     /**
      * PCM sample encoding details (bit depth, signedness, byte order).
