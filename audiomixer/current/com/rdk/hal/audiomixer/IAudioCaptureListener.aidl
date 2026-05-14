@@ -20,7 +20,7 @@
 package com.rdk.hal.audiomixer;
 
 import com.rdk.hal.audiomixer.AudioCaptureData;
-import com.rdk.hal.audiomixer.AudioCaptureStatus;
+import com.rdk.hal.audiomixer.AudioCaptureError;
 
 /**
  * @brief Audio capture event listener interface.
