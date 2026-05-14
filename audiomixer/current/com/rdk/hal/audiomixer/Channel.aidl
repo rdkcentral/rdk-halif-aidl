@@ -34,6 +34,7 @@ package com.rdk.hal.audiomixer;
  * - **Wide**: Wide Left, Wide Right
  */
 @VintfStability
+@Backing(type="int")
 enum Channel {
     // Front channels
     CH_FL,   // Front Left
