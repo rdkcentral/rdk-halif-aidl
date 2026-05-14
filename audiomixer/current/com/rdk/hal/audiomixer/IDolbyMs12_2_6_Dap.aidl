@@ -27,7 +27,7 @@ import com.rdk.hal.audiomixer.DolbyMs12_2_6_VirtualizerMode;
 
 /**
  * @brief Dolby MS12 2.6 DAP runtime command control interface.
- * Provides one API method for each the supported ms12 functionality.
+ * Provides one API method for each supported MS12 function.
  */
 @VintfStability
 interface IDolbyMs12_2_6_Dap {
