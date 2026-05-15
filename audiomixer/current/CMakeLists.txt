@@ -18,71 +18,15 @@
 # * limitations under the License.
 # *
 #** ******************************************************************************
-
 cmake_minimum_required(VERSION 3.8)
 
-project(AudioMixer
-    LANGUAGES NONE
-    VERSION 1.0)
+# 1. Define the Interface Identity
+set(INTERFACE_TARGET audiomixer)
+set(INTERFACE_VERSION current)
 
-if (NOT COMMAND compile_aidl)
-    message(FATAL_ERROR "Do not invoke module level CMake directly!\nInvoke CMake at root level instead!")
-endif()
-
-# Versioned dependency modules
-set(AUDIO_DECODER_VERSION "current")
-set(COMMON_VERSION "current")
-
-set(SRC_DIR com/rdk/hal/audiomixer)
-set(COMMON_SRC_DIR ${COMMON_MODULE_PATH}/${COMMON_VERSION}/com/rdk/hal)
-set(AUDIO_DECODER_SRC_DIR ${AUDIO_DECODER_MODULE_PATH}/${AUDIO_DECODER_VERSION}/com/rdk/hal/audiodecoder)
-
-set(SRC
-    # Parcelables and Enums
-    ${SRC_DIR}/Capabilities.aidl
-    ${SRC_DIR}/MixerInput.aidl
-    ${SRC_DIR}/AudioSourceType.aidl
-    ${SRC_DIR}/InputRouting.aidl
-    ${SRC_DIR}/ContentType.aidl
-    ${SRC_DIR}/State.aidl
-    ${SRC_DIR}/ConnectionState.aidl
-    ${SRC_DIR}/Property.aidl
-    ${SRC_DIR}/OutputPortProperty.aidl
-    ${SRC_DIR}/AQProcessor.aidl
-    ${SRC_DIR}/AQParameter.aidl
-    ${SRC_DIR}/OutputFormat.aidl
-    ${SRC_DIR}/TranscodeFormat.aidl
-    ${SRC_DIR}/MixingMode.aidl
-    ${SRC_DIR}/OutputPortCapabilities.aidl
-    # Interfaces
-    ${SRC_DIR}/IAudioMixer.aidl
-    ${SRC_DIR}/IAudioMixerController.aidl
-    ${SRC_DIR}/IAudioMixerEventListener.aidl
-    ${SRC_DIR}/IAudioMixerManager.aidl
-    ${SRC_DIR}/IAudioOutputPort.aidl
-    ${SRC_DIR}/IAudioOutputPortListener.aidl
-    # External dependencies
-    ${AUDIO_DECODER_SRC_DIR}/Codec.aidl
-    ${COMMON_SRC_DIR}/PropertyValue.aidl
-)
-
-set(INCLUDE_DIRECTORY
-    .
-    ${COMMON_MODULE_PATH}/${COMMON_VERSION}
-    ${AUDIO_DECODER_MODULE_PATH}/${AUDIO_DECODER_VERSION}
-)
-
-set(COMPILE_AIDL_ARGV "")
-
-if (DEFINED AIDL_GEN_DIR)
-    list(APPEND COMPILE_AIDL_ARGV TARGET_DIRECTORY ${AIDL_GEN_DIR})
-endif()
-
-if (DEFINED AIDL_BIN)
-    list(APPEND COMPILE_AIDL_ARGV AIDL_BIN ${AIDL_BIN})
-endif()
-
-compile_aidl(${SRC}
-    INCLUDE_DIRECTORY ${INCLUDE_DIRECTORY}
-    ${COMPILE_AIDL_ARGV}
-)
+# 2. Trigger the Build
+# This function (from CMakeLists.inc) will:
+#   a. Run 'aidl_ops -g' to generate the C++ code
+#   b. Find the generated files in 'stable/generated/audiomixer/src/current'
+#   c. Create the library target 'audiomixer-vcurrent-cpp'
+target_build_interfaces_libraries()
