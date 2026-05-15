@@ -17,8 +17,6 @@
  * limitations under the License.
  */
 package com.rdk.hal.avclock;
-import com.rdk.hal.audiosink.IAudioSink;
-import com.rdk.hal.videosink.IVideoSink;
 import com.rdk.hal.avclock.ClockMode;
 import com.rdk.hal.avclock.ClockTime;
 
@@ -69,121 +67,6 @@ interface IAVClockController {
     void stop();
 
 	/**
-	 * Sets the primary audio sink for presentation against the AV Clock.
-     * 
-     * When the AV Clock is opened, the default is set to `IAudioSink.Id.UNDEFINED`.
-	 * When set to `IAudioSink.Id.UNDEFINED` then no audio sink is set.  
-     * 
- 	 * @param[in] audioSinkId				    The ID of the Audio Sink source.
-     * 
-     * @returns boolean
-     * @retval true     Successfully set the audio sink.
-     * @retval false    The ID is invalid or not `IAudioSink.Id.UNDEFINED`.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     *
-     * 
-     * @pre AV Clock is in State::READY or State::STARTED state.
-     * 
-     * @see getAudioSink()
-	 */
-	boolean setAudioSink(in IAudioSink.Id audioSinkId);
-
-    /**
-     * Gets the primary Audio Sink ID for presentation against the AV Clock.
-     * 
-     * @returns IAudioSink.Id which can be `IAudioSink.Id.UNDEFINED`.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     *
-     * 
-     * @pre AV Clock is in State::READY or State::STARTED state.
-     * 
-     * @see setAudioSink()
-     */
-    IAudioSink.Id getAudioSink();
-    
- 	/**
-	 * Sets the supplementary Audio Sink ID for presentation against the AV Clock.
-     * 
-	 * The supplementary Audio Sink is only used for receiver side mixing where
-	 * the primary audio and supplementary audio are mixed from 2 separate Audio Sinks.
-     * e.g. A primary audio language track and an audio description track.
-     * 
-     * Both audio tracks sources must be from the same stream sharing a common clock source.
-     * Receiver mixing is most commonly found in TV broadcast networks.
-	 *
-	 * @param[in] supplementaryAudioSinkId	    Supplementary Audio Sink ID source.
-     * 
-     * @returns boolean
-     * @retval true     Successfully set the supplementary audio sink.
-     * @retval false    The ID is invalid or not `IAudioSink.Id.UNDEFINED`.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     *
-     * 
-     * @pre AV Clock is in State::READY or State::STARTED state.
-     * 
-     * @see getSupplementaryAudioSink()
-	 */
-    boolean setSupplementaryAudioSink(in IAudioSink.Id supplementaryAudioSinkId);
-
-    /**
-     * Gets the supplementary Audio Sink ID for presentation against the AV Clock.
-     * 
-     * @returns IAudioSink.Id which can be `IAudioSink.Id.UNDEFINED`.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     *
-     * 
-     * @pre AV Clock is in State::READY or State::STARTED state.
-     * 
-     * @see setSupplementaryAudioSink()
-     */
-    IAudioSink.Id getSupplementaryAudioSink();
-
-	/**
-	 * Sets the Video Sink for presentation against the AV Clock.
-     * 
-     * When the AV Clock is opened, the default is set to `IVideoSink.Id.UNDEFINED`.
-	 * When set to `IVideoSink.Id.UNDEFINED` then no video sink is set.  
-     * 
- 	 * @param[in] videoSinkId				    The ID of the Video Sink source.
-     * 
-     * @returns boolean
-     * @retval true     Successfully set the video sink.
-     * @retval false    The ID is invalid or not `IVideoSink.Id.UNDEFINED`.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     *
-     * 
-     * @pre AV Clock is in State::READY or State::STARTED state.
-     * 
-     * @see getVideoSink()
-	 */
-	boolean setVideoSink(in IVideoSink.Id videoSinkId);
-
-    /**
-     * Gets the Video Sink ID for presentation against the AV Clock.
-     * 
-     * @returns IVideoSink.Id which can be `IVideoSink.Id.UNDEFINED`.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     *
-     * 
-     * @pre AV Clock is in State::READY or State::STARTED state.
-     * 
-     * @see setVideoSink()
-     */
-    IVideoSink.Id getVideoSink();
-
-	/** 
 	 * Sets the mode of the AV Clock.
      * 
      * The default mode is `ClockMode::AUTO` and can only be changed in the `READY` state.

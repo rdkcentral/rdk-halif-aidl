@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| **Generated** | 2026-04-23 |
-| **Components** | 32 |
+| **Generated** | 2026-05-01 |
+| **Components** | 33 |
 | 🟢 **GREEN** | 14 |
 | 🟡 **AMBER** | 15 |
-| 🔴 **RED** | 3 |
+| 🔴 **RED** | 4 |
 
 ---
 
@@ -16,7 +16,7 @@
 |--------|-------|---------|
 | 🟢 GREEN | **14** | Reviewed & Approved — Interface stable on develop |
 | 🟡 AMBER | **15** | Under Active Ingestion — Will enter sprint review when ready |
-| 🔴 RED | **3** | Not Started / Blocked — Strategy or definition required |
+| 🔴 RED | **4** | Not Started / Blocked — Strategy or definition required |
 
 ---
 
@@ -88,6 +88,7 @@
 
 | | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
 |---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
+| 🔴 | drm | 0.1.0.0 | 1 | Initial interface definition — under review | Architecture review and vendor alignment | — | — | Architecture + AV_Architecture |
 | 🔴 | vsi/crypto | 0.0.0.1 | 1 | Security API definition required | HAL lower-layer requirement - define Security API contracts and integration boundaries | — | — | Architecture + Kernel_Architecture |
 | 🔴 | vsi/keyvault | 0.0.0.1 | 1 | Encrypted storage architecture required | HAL lower-layer requirement - define Key Vault interface for encrypted storage | — | — | Architecture + Kernel_Architecture |
 
@@ -132,6 +133,7 @@
 
 | | Component | Progress | Arch | Prod | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel | Vendor |
 |---|-----------|----------|------|------|-----|-----------|----------|----------|--------------|--------|--------|
+| 🔴 | drm | 0/5 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | N/A |
 | 🔴 | vsi/crypto | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |
 | 🔴 | vsi/keyvault | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |
 
