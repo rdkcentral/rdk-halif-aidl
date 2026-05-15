@@ -3,7 +3,5 @@ aidl_interface:
   srcs:
     - com/rdk/hal/avclock/*.aidl
   imports:
-    - audiosink
     - common
-    - videosink
   stability: vintf
