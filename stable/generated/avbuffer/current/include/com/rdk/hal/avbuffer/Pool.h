@@ -33,7 +33,6 @@ public:
     return std::tie(handle) >= std::tie(rhs.handle);
   }
 
-  enum : int8_t { INVALID_POOL = -1 };
   ::android::Parcelable::Stability getStability() const override { return ::android::Parcelable::Stability::STABILITY_VINTF; }
   ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
   ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;

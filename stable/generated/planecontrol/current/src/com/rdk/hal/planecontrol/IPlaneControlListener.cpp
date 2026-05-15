@@ -1,4 +1,3 @@
-#include <mutex>
 #include <com/rdk/hal/planecontrol/IPlaneControlListener.h>
 #include <com/rdk/hal/planecontrol/BpPlaneControlListener.h>
 namespace com {

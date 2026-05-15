@@ -12,11 +12,11 @@ public:
   static constexpr uint32_t TRANSACTION_setProperty = ::android::IBinder::FIRST_CALL_TRANSACTION + 0;
   static constexpr uint32_t TRANSACTION_start = ::android::IBinder::FIRST_CALL_TRANSACTION + 1;
   static constexpr uint32_t TRANSACTION_stop = ::android::IBinder::FIRST_CALL_TRANSACTION + 2;
-  static constexpr uint32_t TRANSACTION_decodeBuffer = ::android::IBinder::FIRST_CALL_TRANSACTION + 3;
+  static constexpr uint32_t TRANSACTION_decodeBufferWithMetadata = ::android::IBinder::FIRST_CALL_TRANSACTION + 3;
   static constexpr uint32_t TRANSACTION_flush = ::android::IBinder::FIRST_CALL_TRANSACTION + 4;
   static constexpr uint32_t TRANSACTION_signalDiscontinuity = ::android::IBinder::FIRST_CALL_TRANSACTION + 5;
-  static constexpr uint32_t TRANSACTION_signalEOS = ::android::IBinder::FIRST_CALL_TRANSACTION + 6;
-  static constexpr uint32_t TRANSACTION_parseCodecSpecificData = ::android::IBinder::FIRST_CALL_TRANSACTION + 7;
+  static constexpr uint32_t TRANSACTION_parseCodecSpecificData = ::android::IBinder::FIRST_CALL_TRANSACTION + 6;
+  static constexpr uint32_t TRANSACTION_setAudioFormat = ::android::IBinder::FIRST_CALL_TRANSACTION + 7;
   static constexpr uint32_t TRANSACTION_getInterfaceVersion = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777214;
   static constexpr uint32_t TRANSACTION_getInterfaceHash = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777213;
   explicit BnAudioDecoderController();
@@ -38,8 +38,8 @@ public:
   ::android::binder::Status stop() override {
     return _aidl_delegate->stop();
   }
-  ::android::binder::Status decodeBuffer(int64_t nsPresentationTime, int64_t bufferHandle, int32_t trimStartNs, int32_t trimEndNs, bool* _aidl_return) override {
-    return _aidl_delegate->decodeBuffer(nsPresentationTime, bufferHandle, trimStartNs, trimEndNs, _aidl_return);
+  ::android::binder::Status decodeBufferWithMetadata(int64_t bufferHandle, const ::com::rdk::hal::audiodecoder::InputBufferMetadata& metadata, bool* _aidl_return) override {
+    return _aidl_delegate->decodeBufferWithMetadata(bufferHandle, metadata, _aidl_return);
   }
   ::android::binder::Status flush(bool reset) override {
     return _aidl_delegate->flush(reset);
@@ -47,11 +47,11 @@ public:
   ::android::binder::Status signalDiscontinuity() override {
     return _aidl_delegate->signalDiscontinuity();
   }
-  ::android::binder::Status signalEOS() override {
-    return _aidl_delegate->signalEOS();
-  }
   ::android::binder::Status parseCodecSpecificData(::com::rdk::hal::audiodecoder::CSDAudioFormat csdAudioFormat, const ::std::vector<uint8_t>& codecData, bool* _aidl_return) override {
     return _aidl_delegate->parseCodecSpecificData(csdAudioFormat, codecData, _aidl_return);
+  }
+  ::android::binder::Status setAudioFormat(int32_t channels, int32_t sampleRate) override {
+    return _aidl_delegate->setAudioFormat(channels, sampleRate);
   }
   int32_t getInterfaceVersion() override {
     int32_t _delegator_ver = BnAudioDecoderController::getInterfaceVersion();

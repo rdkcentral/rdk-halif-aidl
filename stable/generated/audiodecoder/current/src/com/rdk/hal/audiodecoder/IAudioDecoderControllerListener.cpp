@@ -1,4 +1,3 @@
-#include <mutex>
 #include <com/rdk/hal/audiodecoder/IAudioDecoderControllerListener.h>
 #include <com/rdk/hal/audiodecoder/BpAudioDecoderControllerListener.h>
 namespace com {
@@ -24,7 +23,7 @@ BpAudioDecoderControllerListener::BpAudioDecoderControllerListener(const ::andro
     : BpInterface<IAudioDecoderControllerListener>(_aidl_impl){
 }
 
-::android::binder::Status BpAudioDecoderControllerListener::onFrameOutput(int64_t nsPresentationTime, int64_t frameBufferHandle, const ::std::optional<::com::rdk::hal::audiodecoder::FrameMetadata>& metadata) {
+::android::binder::Status BpAudioDecoderControllerListener::onFrameOutput(int64_t nsPresentationTime, int64_t frameAVBufferHandle, const ::std::optional<::com::rdk::hal::audiodecoder::FrameMetadata>& metadata) {
   ::android::Parcel _aidl_data;
   _aidl_data.markForBinder(remoteStrong());
   ::android::Parcel _aidl_reply;
@@ -38,7 +37,7 @@ BpAudioDecoderControllerListener::BpAudioDecoderControllerListener(const ::andro
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = _aidl_data.writeInt64(frameBufferHandle);
+  _aidl_ret_status = _aidl_data.writeInt64(frameAVBufferHandle);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
@@ -48,7 +47,29 @@ BpAudioDecoderControllerListener::BpAudioDecoderControllerListener(const ::andro
   }
   _aidl_ret_status = remote()->transact(BnAudioDecoderControllerListener::TRANSACTION_onFrameOutput, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_ONEWAY);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IAudioDecoderControllerListener::getDefaultImpl())) {
-     return IAudioDecoderControllerListener::getDefaultImpl()->onFrameOutput(nsPresentationTime, frameBufferHandle, metadata);
+     return IAudioDecoderControllerListener::getDefaultImpl()->onFrameOutput(nsPresentationTime, frameAVBufferHandle, metadata);
+  }
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
+
+::android::binder::Status BpAudioDecoderControllerListener::onDecodeBufferAvailable() {
+  ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remoteStrong());
+  ::android::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::binder::Status _aidl_status;
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnAudioDecoderControllerListener::TRANSACTION_onDecodeBufferAvailable, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_ONEWAY);
+  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IAudioDecoderControllerListener::getDefaultImpl())) {
+     return IAudioDecoderControllerListener::getDefaultImpl()->onDecodeBufferAvailable();
   }
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -118,7 +139,7 @@ BnAudioDecoderControllerListener::BnAudioDecoderControllerListener()
   case BnAudioDecoderControllerListener::TRANSACTION_onFrameOutput:
   {
     int64_t in_nsPresentationTime;
-    int64_t in_frameBufferHandle;
+    int64_t in_frameAVBufferHandle;
     ::std::optional<::com::rdk::hal::audiodecoder::FrameMetadata> in_metadata;
     if (!(_aidl_data.checkInterface(this))) {
       _aidl_ret_status = ::android::BAD_TYPE;
@@ -128,7 +149,7 @@ BnAudioDecoderControllerListener::BnAudioDecoderControllerListener()
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
-    _aidl_ret_status = _aidl_data.readInt64(&in_frameBufferHandle);
+    _aidl_ret_status = _aidl_data.readInt64(&in_frameAVBufferHandle);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
@@ -140,7 +161,16 @@ BnAudioDecoderControllerListener::BnAudioDecoderControllerListener()
       _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
-    ::android::binder::Status _aidl_status(onFrameOutput(in_nsPresentationTime, in_frameBufferHandle, in_metadata));
+    ::android::binder::Status _aidl_status(onFrameOutput(in_nsPresentationTime, in_frameAVBufferHandle, in_metadata));
+  }
+  break;
+  case BnAudioDecoderControllerListener::TRANSACTION_onDecodeBufferAvailable:
+  {
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    ::android::binder::Status _aidl_status(onDecodeBufferAvailable());
   }
   break;
   case BnAudioDecoderControllerListener::TRANSACTION_getInterfaceVersion:

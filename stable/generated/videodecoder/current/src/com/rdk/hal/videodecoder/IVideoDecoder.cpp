@@ -1,4 +1,3 @@
-#include <mutex>
 #include <com/rdk/hal/videodecoder/IVideoDecoder.h>
 #include <com/rdk/hal/videodecoder/BpVideoDecoder.h>
 namespace com {
@@ -197,6 +196,59 @@ BpVideoDecoder::BpVideoDecoder(const ::android::sp<::android::IBinder>& _aidl_im
   _aidl_ret_status = remote()->transact(BnVideoDecoder::TRANSACTION_open, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IVideoDecoder::getDefaultImpl())) {
      return IVideoDecoder::getDefaultImpl()->open(codec, secure, videoDecoderControllerListener, _aidl_return);
+  }
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  if (!_aidl_status.isOk()) {
+    return _aidl_status;
+  }
+  _aidl_ret_status = _aidl_reply.readNullableStrongBinder(_aidl_return);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
+
+::android::binder::Status BpVideoDecoder::openWithResolution(::com::rdk::hal::videodecoder::Codec codec, bool secure, const ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderControllerListener>& videoDecoderControllerListener, int32_t maxWidth, int32_t maxHeight, ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderController>* _aidl_return) {
+  ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remoteStrong());
+  ::android::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::binder::Status _aidl_status;
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeInt32(static_cast<int32_t>(codec));
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeBool(secure);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeStrongBinder(videoDecoderControllerListener);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeInt32(maxWidth);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeInt32(maxHeight);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnVideoDecoder::TRANSACTION_openWithResolution, _aidl_data, &_aidl_reply, 0);
+  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IVideoDecoder::getDefaultImpl())) {
+     return IVideoDecoder::getDefaultImpl()->openWithResolution(codec, secure, videoDecoderControllerListener, maxWidth, maxHeight, _aidl_return);
   }
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -523,6 +575,56 @@ BnVideoDecoder::BnVideoDecoder()
       break;
     }
     ::android::binder::Status _aidl_status(open(in_codec, in_secure, in_videoDecoderControllerListener, &_aidl_return));
+    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (!_aidl_status.isOk()) {
+      break;
+    }
+    _aidl_ret_status = _aidl_reply->writeStrongBinder(_aidl_return);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+  }
+  break;
+  case BnVideoDecoder::TRANSACTION_openWithResolution:
+  {
+    ::com::rdk::hal::videodecoder::Codec in_codec;
+    bool in_secure;
+    ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderControllerListener> in_videoDecoderControllerListener;
+    int32_t in_maxWidth;
+    int32_t in_maxHeight;
+    ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderController> _aidl_return;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readInt32(reinterpret_cast<int32_t *>(&in_codec));
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readBool(&in_secure);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readStrongBinder(&in_videoDecoderControllerListener);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readInt32(&in_maxWidth);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readInt32(&in_maxHeight);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
+    ::android::binder::Status _aidl_status(openWithResolution(in_codec, in_secure, in_videoDecoderControllerListener, in_maxWidth, in_maxHeight, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;

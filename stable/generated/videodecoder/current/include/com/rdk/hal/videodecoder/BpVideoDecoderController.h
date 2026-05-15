@@ -17,11 +17,16 @@ public:
   ::android::binder::Status start() override;
   ::android::binder::Status stop() override;
   ::android::binder::Status setProperty(::com::rdk::hal::videodecoder::Property property, const ::com::rdk::hal::PropertyValue& propertyValue, bool* _aidl_return) override;
-  ::android::binder::Status decodeBuffer(int64_t nsPresentationTime, int64_t bufferHandle, bool* _aidl_return) override;
+  ::android::binder::Status decodeBufferWithMetadata(int64_t bufferHandle, const ::com::rdk::hal::videodecoder::InputBufferMetadata& metadata, bool* _aidl_return) override;
   ::android::binder::Status flush(bool reset) override;
   ::android::binder::Status signalDiscontinuity() override;
-  ::android::binder::Status signalEOS() override;
   ::android::binder::Status parseCodecSpecificData(::com::rdk::hal::videodecoder::CSDVideoFormat csdVideoFormat, const ::std::vector<uint8_t>& codecData, bool* _aidl_return) override;
+  ::android::binder::Status setMasteringDisplayInfo(const ::std::optional<::com::rdk::hal::videodecoder::MasteringDisplayInfo>& info) override;
+  ::android::binder::Status setContentLightLevel(const ::std::optional<::com::rdk::hal::videodecoder::ContentLightLevel>& info) override;
+  ::android::binder::Status setColorimetry(::com::rdk::hal::videodecoder::Colorimetry colorimetry) override;
+  ::android::binder::Status setStreamResolution(int32_t width, int32_t height) override;
+  ::android::binder::Status setFrameRate(int32_t numerator, int32_t denominator) override;
+  ::android::binder::Status setDolbyVisionLayerFlags(bool blPresent, bool elPresent) override;
   int32_t getInterfaceVersion() override;
   std::string getInterfaceHash() override;
 private:

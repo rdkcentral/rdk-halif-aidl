@@ -1,4 +1,3 @@
-#include <mutex>
 #include <com/rdk/hal/avclock/IAVClockController.h>
 #include <com/rdk/hal/avclock/BpAVClockController.h>
 namespace com {
@@ -76,216 +75,6 @@ BpAVClockController::BpAVClockController(const ::android::sp<::android::IBinder>
   }
   if (!_aidl_status.isOk()) {
     return _aidl_status;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpAVClockController::setAudioSink(const ::com::rdk::hal::audiosink::IAudioSink::Id& audioSinkId, bool* _aidl_return) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeParcelable(audioSinkId);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnAVClockController::TRANSACTION_setAudioSink, _aidl_data, &_aidl_reply, 0);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IAVClockController::getDefaultImpl())) {
-     return IAVClockController::getDefaultImpl()->setAudioSink(audioSinkId, _aidl_return);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readBool(_aidl_return);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpAVClockController::getAudioSink(::com::rdk::hal::audiosink::IAudioSink::Id* _aidl_return) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnAVClockController::TRANSACTION_getAudioSink, _aidl_data, &_aidl_reply, 0);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IAVClockController::getDefaultImpl())) {
-     return IAVClockController::getDefaultImpl()->getAudioSink(_aidl_return);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readParcelable(_aidl_return);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpAVClockController::setSupplementaryAudioSink(const ::com::rdk::hal::audiosink::IAudioSink::Id& supplementaryAudioSinkId, bool* _aidl_return) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeParcelable(supplementaryAudioSinkId);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnAVClockController::TRANSACTION_setSupplementaryAudioSink, _aidl_data, &_aidl_reply, 0);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IAVClockController::getDefaultImpl())) {
-     return IAVClockController::getDefaultImpl()->setSupplementaryAudioSink(supplementaryAudioSinkId, _aidl_return);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readBool(_aidl_return);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpAVClockController::getSupplementaryAudioSink(::com::rdk::hal::audiosink::IAudioSink::Id* _aidl_return) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnAVClockController::TRANSACTION_getSupplementaryAudioSink, _aidl_data, &_aidl_reply, 0);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IAVClockController::getDefaultImpl())) {
-     return IAVClockController::getDefaultImpl()->getSupplementaryAudioSink(_aidl_return);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readParcelable(_aidl_return);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpAVClockController::setVideoSink(const ::com::rdk::hal::videosink::IVideoSink::Id& videoSinkId, bool* _aidl_return) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeParcelable(videoSinkId);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnAVClockController::TRANSACTION_setVideoSink, _aidl_data, &_aidl_reply, 0);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IAVClockController::getDefaultImpl())) {
-     return IAVClockController::getDefaultImpl()->setVideoSink(videoSinkId, _aidl_return);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readBool(_aidl_return);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpAVClockController::getVideoSink(::com::rdk::hal::videosink::IVideoSink::Id* _aidl_return) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnAVClockController::TRANSACTION_getVideoSink, _aidl_data, &_aidl_reply, 0);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IAVClockController::getDefaultImpl())) {
-     return IAVClockController::getDefaultImpl()->getVideoSink(_aidl_return);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readParcelable(_aidl_return);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
   }
   _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
@@ -403,7 +192,7 @@ BpAVClockController::BpAVClockController(const ::android::sp<::android::IBinder>
   return _aidl_status;
 }
 
-::android::binder::Status BpAVClockController::getCurrentClockTime(::com::rdk::hal::avclock::ClockTime* _aidl_return) {
+::android::binder::Status BpAVClockController::getCurrentClockTime(::std::optional<::com::rdk::hal::avclock::ClockTime>* _aidl_return) {
   ::android::Parcel _aidl_data;
   _aidl_data.markForBinder(remoteStrong());
   ::android::Parcel _aidl_reply;
@@ -595,159 +384,6 @@ BnAVClockController::BnAVClockController()
     }
   }
   break;
-  case BnAVClockController::TRANSACTION_setAudioSink:
-  {
-    ::com::rdk::hal::audiosink::IAudioSink::Id in_audioSinkId;
-    bool _aidl_return;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readParcelable(&in_audioSinkId);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
-      break;
-    }
-    ::android::binder::Status _aidl_status(setAudioSink(in_audioSinkId, &_aidl_return));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeBool(_aidl_return);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
-  case BnAVClockController::TRANSACTION_getAudioSink:
-  {
-    ::com::rdk::hal::audiosink::IAudioSink::Id _aidl_return;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    ::android::binder::Status _aidl_status(getAudioSink(&_aidl_return));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeParcelable(_aidl_return);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
-  case BnAVClockController::TRANSACTION_setSupplementaryAudioSink:
-  {
-    ::com::rdk::hal::audiosink::IAudioSink::Id in_supplementaryAudioSinkId;
-    bool _aidl_return;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readParcelable(&in_supplementaryAudioSinkId);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
-      break;
-    }
-    ::android::binder::Status _aidl_status(setSupplementaryAudioSink(in_supplementaryAudioSinkId, &_aidl_return));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeBool(_aidl_return);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
-  case BnAVClockController::TRANSACTION_getSupplementaryAudioSink:
-  {
-    ::com::rdk::hal::audiosink::IAudioSink::Id _aidl_return;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    ::android::binder::Status _aidl_status(getSupplementaryAudioSink(&_aidl_return));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeParcelable(_aidl_return);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
-  case BnAVClockController::TRANSACTION_setVideoSink:
-  {
-    ::com::rdk::hal::videosink::IVideoSink::Id in_videoSinkId;
-    bool _aidl_return;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readParcelable(&in_videoSinkId);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
-      break;
-    }
-    ::android::binder::Status _aidl_status(setVideoSink(in_videoSinkId, &_aidl_return));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeBool(_aidl_return);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
-  case BnAVClockController::TRANSACTION_getVideoSink:
-  {
-    ::com::rdk::hal::videosink::IVideoSink::Id _aidl_return;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    ::android::binder::Status _aidl_status(getVideoSink(&_aidl_return));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeParcelable(_aidl_return);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
   case BnAVClockController::TRANSACTION_setClockMode:
   {
     ::com::rdk::hal::avclock::ClockMode in_clockMode;
@@ -836,7 +472,7 @@ BnAVClockController::BnAVClockController()
   break;
   case BnAVClockController::TRANSACTION_getCurrentClockTime:
   {
-    ::com::rdk::hal::avclock::ClockTime _aidl_return;
+    ::std::optional<::com::rdk::hal::avclock::ClockTime> _aidl_return;
     if (!(_aidl_data.checkInterface(this))) {
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
@@ -849,7 +485,7 @@ BnAVClockController::BnAVClockController()
     if (!_aidl_status.isOk()) {
       break;
     }
-    _aidl_ret_status = _aidl_reply->writeParcelable(_aidl_return);
+    _aidl_ret_status = _aidl_reply->writeNullableParcelable(_aidl_return);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }

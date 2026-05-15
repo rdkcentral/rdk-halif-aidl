@@ -29,8 +29,8 @@ class IVideoDecoder : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(VideoDecoder)
   static const int32_t VERSION = 1;
-  const std::string HASH = "d83340f728c7a177fbf5dd725b346b3579fd9aab";
-  static constexpr char* HASHVALUE = "d83340f728c7a177fbf5dd725b346b3579fd9aab";
+  const std::string HASH = "afc6bd3166231467a3288c4956b6b4322e039c38";
+  static constexpr char* HASHVALUE = "afc6bd3166231467a3288c4956b6b4322e039c38";
   class Id : public ::android::Parcelable {
   public:
     int32_t value = 0;
@@ -74,6 +74,7 @@ public:
   virtual ::android::binder::Status getPropertyMulti(const ::std::vector<::com::rdk::hal::videodecoder::Property>& properties, ::std::vector<::com::rdk::hal::videodecoder::PropertyKVPair>* propertyKVList, bool* _aidl_return) = 0;
   virtual ::android::binder::Status getState(::com::rdk::hal::State* _aidl_return) = 0;
   virtual ::android::binder::Status open(::com::rdk::hal::videodecoder::Codec codec, bool secure, const ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderControllerListener>& videoDecoderControllerListener, ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderController>* _aidl_return) = 0;
+  virtual ::android::binder::Status openWithResolution(::com::rdk::hal::videodecoder::Codec codec, bool secure, const ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderControllerListener>& videoDecoderControllerListener, int32_t maxWidth, int32_t maxHeight, ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderController>* _aidl_return) = 0;
   virtual ::android::binder::Status close(const ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderController>& videoDecoderController, bool* _aidl_return) = 0;
   virtual ::android::binder::Status registerEventListener(const ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderEventListener>& videoDecoderEventListener, bool* _aidl_return) = 0;
   virtual ::android::binder::Status unregisterEventListener(const ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderEventListener>& videoDecoderEventListener, bool* _aidl_return) = 0;
@@ -99,6 +100,9 @@ public:
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status open(::com::rdk::hal::videodecoder::Codec /*codec*/, bool /*secure*/, const ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderControllerListener>& /*videoDecoderControllerListener*/, ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderController>* /*_aidl_return*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status openWithResolution(::com::rdk::hal::videodecoder::Codec /*codec*/, bool /*secure*/, const ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderControllerListener>& /*videoDecoderControllerListener*/, int32_t /*maxWidth*/, int32_t /*maxHeight*/, ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderController>* /*_aidl_return*/) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status close(const ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderController>& /*videoDecoderController*/, bool* /*_aidl_return*/) override {

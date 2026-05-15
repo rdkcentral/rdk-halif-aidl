@@ -179,6 +179,30 @@ namespace videodecoder {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
+  _aidl_ret_status = _aidl_parcel->readInt32(reinterpret_cast<int32_t *>(&colorimetry));
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
+    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->readParcelable(&masteringDisplayInfo);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
+    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->readParcelable(&contentLightLevel);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
+    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
+    return _aidl_ret_status;
+  }
   _aidl_ret_status = _aidl_parcel->readInt32(reinterpret_cast<int32_t *>(&source));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -283,6 +307,18 @@ namespace videodecoder {
     return _aidl_ret_status;
   }
   _aidl_ret_status = _aidl_parcel->writeBool(lowLatency);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->writeInt32(static_cast<int32_t>(colorimetry));
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->writeNullableParcelable(masteringDisplayInfo);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->writeNullableParcelable(contentLightLevel);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }

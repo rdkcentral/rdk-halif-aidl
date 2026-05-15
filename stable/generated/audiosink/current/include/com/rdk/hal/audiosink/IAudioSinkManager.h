@@ -20,8 +20,8 @@ class IAudioSinkManager : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioSinkManager)
   static const int32_t VERSION = 1;
-  const std::string HASH = "2c1b84b1b69a8f134c625cde43cdcc185d464a99";
-  static constexpr char* HASHVALUE = "2c1b84b1b69a8f134c625cde43cdcc185d464a99";
+  const std::string HASH = "d0dbeab60f70e3979cffc360ef24d7b283503a32";
+  static constexpr char* HASHVALUE = "d0dbeab60f70e3979cffc360ef24d7b283503a32";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getAudioSinkIds(::std::vector<::com::rdk::hal::audiosink::IAudioSink::Id>* _aidl_return) = 0;
   virtual ::android::binder::Status getPlatformCapabilities(::com::rdk::hal::audiosink::PlatformCapabilities* _aidl_return) = 0;

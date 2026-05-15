@@ -17,6 +17,9 @@ public:
   ::android::binder::Status setProperty(::com::rdk::hal::videosink::Property property, const ::com::rdk::hal::PropertyValue& propertyValue, bool* _aidl_return) override;
   ::android::binder::Status setVideoDecoder(const ::com::rdk::hal::videodecoder::IVideoDecoder::Id& videoDecoderId, bool* _aidl_return) override;
   ::android::binder::Status getVideoDecoder(::com::rdk::hal::videodecoder::IVideoDecoder::Id* _aidl_return) override;
+  ::android::binder::Status attachClock(const ::com::rdk::hal::avclock::IAVClock::Id& clockId) override;
+  ::android::binder::Status detachClock() override;
+  ::android::binder::Status getClock(::com::rdk::hal::avclock::IAVClock::Id* _aidl_return) override;
   ::android::binder::Status start() override;
   ::android::binder::Status stop() override;
   ::android::binder::Status queueVideoFrame(int64_t nsPresentationTime, int64_t frameBufferHandle, const ::com::rdk::hal::videodecoder::FrameMetadata& metadata, bool* _aidl_return) override;

@@ -15,6 +15,7 @@ public:
   static constexpr uint32_t TRANSACTION_onAudioUnderflow = ::android::IBinder::FIRST_CALL_TRANSACTION + 3;
   static constexpr uint32_t TRANSACTION_onAudioResumed = ::android::IBinder::FIRST_CALL_TRANSACTION + 4;
   static constexpr uint32_t TRANSACTION_onFlushComplete = ::android::IBinder::FIRST_CALL_TRANSACTION + 5;
+  static constexpr uint32_t TRANSACTION_onFrameBufferAvailable = ::android::IBinder::FIRST_CALL_TRANSACTION + 6;
   static constexpr uint32_t TRANSACTION_getInterfaceVersion = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777214;
   static constexpr uint32_t TRANSACTION_getInterfaceHash = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777213;
   explicit BnAudioSinkControllerListener();
@@ -44,6 +45,9 @@ public:
   }
   ::android::binder::Status onFlushComplete() override {
     return _aidl_delegate->onFlushComplete();
+  }
+  ::android::binder::Status onFrameBufferAvailable() override {
+    return _aidl_delegate->onFrameBufferAvailable();
   }
   int32_t getInterfaceVersion() override {
     int32_t _delegator_ver = BnAudioSinkControllerListener::getInterfaceVersion();

@@ -17,8 +17,8 @@ class IAudioDecoderEventListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioDecoderEventListener)
   static const int32_t VERSION = 1;
-  const std::string HASH = "cc94c1ee2e601adf7110f14537ecc115ffc83ed9";
-  static constexpr char* HASHVALUE = "cc94c1ee2e601adf7110f14537ecc115ffc83ed9";
+  const std::string HASH = "d1b99af228345a73442defd7876f5d3c03ed3013";
+  static constexpr char* HASHVALUE = "d1b99af228345a73442defd7876f5d3c03ed3013";
   virtual ::android::binder::Status onDecodeError(::com::rdk::hal::audiodecoder::ErrorCode errorCode, int32_t vendorErrorCode) = 0;
   virtual ::android::binder::Status onStateChanged(::com::rdk::hal::audiodecoder::State oldState, ::com::rdk::hal::audiodecoder::State newState) = 0;
   virtual int32_t getInterfaceVersion() = 0;

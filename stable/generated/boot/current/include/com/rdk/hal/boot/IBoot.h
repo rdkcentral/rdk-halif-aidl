@@ -20,8 +20,8 @@ class IBoot : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(Boot)
   static const int32_t VERSION = 1;
-  const std::string HASH = "80e31b1e4037b6988846f183be9c68c2f7427a3f";
-  static constexpr char* HASHVALUE = "80e31b1e4037b6988846f183be9c68c2f7427a3f";
+  const std::string HASH = "49a428927bc13862aa735616e198bdac390fe171";
+  static constexpr char* HASHVALUE = "49a428927bc13862aa735616e198bdac390fe171";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getCapabilities(::com::rdk::hal::boot::Capabilities* _aidl_return) = 0;
   virtual ::android::binder::Status getBootReason(::com::rdk::hal::boot::BootReason* _aidl_return) = 0;

@@ -15,8 +15,8 @@ class IAVBufferSpaceListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AVBufferSpaceListener)
   static const int32_t VERSION = 1;
-  const std::string HASH = "c62a3479ce54c9d91be8a5a959a39b40ce7296b8";
-  static constexpr char* HASHVALUE = "c62a3479ce54c9d91be8a5a959a39b40ce7296b8";
+  const std::string HASH = "0225ada4d8b84372f0289a7bd4d9f59599d285e7";
+  static constexpr char* HASHVALUE = "0225ada4d8b84372f0289a7bd4d9f59599d285e7";
   virtual ::android::binder::Status onSpaceAvailable() = 0;
   virtual int32_t getInterfaceVersion() = 0;
   virtual std::string getInterfaceHash() = 0;

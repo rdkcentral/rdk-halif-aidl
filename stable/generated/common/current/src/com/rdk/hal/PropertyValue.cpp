@@ -132,6 +132,16 @@ namespace hal {
       set<stringValue>(std::move(_aidl_value));
     }
     return ::android::OK; }
+  case intArrayValue: {
+    ::std::vector<int32_t> _aidl_value;
+    if ((_aidl_ret_status = _aidl_parcel->readInt32Vector(&_aidl_value)) != ::android::OK) return _aidl_ret_status;
+    if constexpr (std::is_trivially_copyable_v<::std::vector<int32_t>>) {
+      set<intArrayValue>(_aidl_value);
+    } else {
+      // NOLINTNEXTLINE(performance-move-const-arg)
+      set<intArrayValue>(std::move(_aidl_value));
+    }
+    return ::android::OK; }
   }
   return ::android::BAD_VALUE;
 }
@@ -147,6 +157,7 @@ namespace hal {
   case floatValue: return _aidl_parcel->writeFloat(get<floatValue>());
   case doubleValue: return _aidl_parcel->writeDouble(get<doubleValue>());
   case stringValue: return _aidl_parcel->writeString16(get<stringValue>());
+  case intArrayValue: return _aidl_parcel->writeInt32Vector(get<intArrayValue>());
   }
   __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "can't reach here");
 }

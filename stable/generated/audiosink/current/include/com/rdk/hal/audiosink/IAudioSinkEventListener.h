@@ -16,8 +16,8 @@ class IAudioSinkEventListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioSinkEventListener)
   static const int32_t VERSION = 1;
-  const std::string HASH = "2c1b84b1b69a8f134c625cde43cdcc185d464a99";
-  static constexpr char* HASHVALUE = "2c1b84b1b69a8f134c625cde43cdcc185d464a99";
+  const std::string HASH = "d0dbeab60f70e3979cffc360ef24d7b283503a32";
+  static constexpr char* HASHVALUE = "d0dbeab60f70e3979cffc360ef24d7b283503a32";
   virtual ::android::binder::Status onStateChanged(::com::rdk::hal::State oldState, ::com::rdk::hal::State newState) = 0;
   virtual ::android::binder::Status onFirstFrameRendered(int64_t nsPresentationTime) = 0;
   virtual ::android::binder::Status onEndOfStream(int64_t nsPresentationTime) = 0;

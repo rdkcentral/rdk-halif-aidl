@@ -1,17 +1,21 @@
 common-vcurrent-cpp: 
-videodecoder-vcurrent-cpp: common-vcurrent-cpp
+avclock-vcurrent-cpp: common-vcurrent-cpp
 audiodecoder-vcurrent-cpp: common-vcurrent-cpp
-videosink-vcurrent-cpp: common-vcurrent-cpp videodecoder-vcurrent-cpp
-audiosink-vcurrent-cpp: audiodecoder-vcurrent-cpp common-vcurrent-cpp
-deepsleep-vcurrent-cpp: 
-avbuffer-vcurrent-cpp: audiodecoder-vcurrent-cpp videodecoder-vcurrent-cpp
+videodecoder-vcurrent-cpp: common-vcurrent-cpp
 hdmioutput-vcurrent-cpp: common-vcurrent-cpp
-boot-vcurrent-cpp: 
-flash-vcurrent-cpp: 
-panel-vcurrent-cpp: common-vcurrent-cpp videodecoder-vcurrent-cpp
-deviceinfo-vcurrent-cpp: 
+audiosink-vcurrent-cpp: audiodecoder-vcurrent-cpp avclock-vcurrent-cpp common-vcurrent-cpp
 hdmiinput-vcurrent-cpp: common-vcurrent-cpp
-avclock-vcurrent-cpp: audiosink-vcurrent-cpp common-vcurrent-cpp videosink-vcurrent-cpp
-planecontrol-vcurrent-cpp: common-vcurrent-cpp videodecoder-vcurrent-cpp
+avbuffer-vcurrent-cpp: audiodecoder-vcurrent-cpp videodecoder-vcurrent-cpp
+panel-vcurrent-cpp: common-vcurrent-cpp videodecoder-vcurrent-cpp
+flash-vcurrent-cpp: 
+videosink-vcurrent-cpp: avclock-vcurrent-cpp common-vcurrent-cpp videodecoder-vcurrent-cpp
+deepsleep-vcurrent-cpp: 
 indicator-vcurrent-cpp: 
+sensor-vcurrent-cpp: 
+audiomixer-vcurrent-cpp: audiodecoder-vcurrent-cpp common-vcurrent-cpp
+drm-vcurrent-cpp: 
+boot-vcurrent-cpp: 
+planecontrol-vcurrent-cpp: common-vcurrent-cpp videodecoder-vcurrent-cpp
+deviceinfo-vcurrent-cpp: 
+compositeinput-vcurrent-cpp: common-vcurrent-cpp
 hdmicec-vcurrent-cpp: common-vcurrent-cpp

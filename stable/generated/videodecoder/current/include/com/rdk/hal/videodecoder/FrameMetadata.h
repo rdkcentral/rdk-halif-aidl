@@ -5,10 +5,14 @@
 #include <binder/ParcelableHolder.h>
 #include <binder/Status.h>
 #include <com/rdk/hal/AVSource.h>
+#include <com/rdk/hal/videodecoder/Colorimetry.h>
+#include <com/rdk/hal/videodecoder/ContentLightLevel.h>
 #include <com/rdk/hal/videodecoder/DynamicRange.h>
+#include <com/rdk/hal/videodecoder/MasteringDisplayInfo.h>
 #include <com/rdk/hal/videodecoder/PixelFormat.h>
 #include <com/rdk/hal/videodecoder/ScanType.h>
 #include <cstdint>
+#include <optional>
 #include <tuple>
 #include <utils/String16.h>
 #include <vector>
@@ -39,26 +43,29 @@ public:
   bool endOfStream = false;
   bool discontinuity = false;
   bool lowLatency = false;
+  ::com::rdk::hal::videodecoder::Colorimetry colorimetry = ::com::rdk::hal::videodecoder::Colorimetry(0);
+  ::std::optional<::com::rdk::hal::videodecoder::MasteringDisplayInfo> masteringDisplayInfo;
+  ::std::optional<::com::rdk::hal::videodecoder::ContentLightLevel> contentLightLevel;
   ::com::rdk::hal::AVSource source = ::com::rdk::hal::AVSource(0);
   ::std::vector<uint8_t> sha1;
   ::android::os::ParcelableHolder extension { ::android::Parcelable::Stability::STABILITY_VINTF };
   inline bool operator!=(const FrameMetadata& rhs) const {
-    return std::tie(parX, parY, sarX, sarY, codedWidth, codedHeight, activeX, activeY, activeWidth, activeHeight, colorDepth, pixelFormat, dynamicRange, scanType, afd, frameRateNumerator, frameRateDenominator, endOfStream, discontinuity, lowLatency, source, sha1, extension) != std::tie(rhs.parX, rhs.parY, rhs.sarX, rhs.sarY, rhs.codedWidth, rhs.codedHeight, rhs.activeX, rhs.activeY, rhs.activeWidth, rhs.activeHeight, rhs.colorDepth, rhs.pixelFormat, rhs.dynamicRange, rhs.scanType, rhs.afd, rhs.frameRateNumerator, rhs.frameRateDenominator, rhs.endOfStream, rhs.discontinuity, rhs.lowLatency, rhs.source, rhs.sha1, rhs.extension);
+    return std::tie(parX, parY, sarX, sarY, codedWidth, codedHeight, activeX, activeY, activeWidth, activeHeight, colorDepth, pixelFormat, dynamicRange, scanType, afd, frameRateNumerator, frameRateDenominator, endOfStream, discontinuity, lowLatency, colorimetry, masteringDisplayInfo, contentLightLevel, source, sha1, extension) != std::tie(rhs.parX, rhs.parY, rhs.sarX, rhs.sarY, rhs.codedWidth, rhs.codedHeight, rhs.activeX, rhs.activeY, rhs.activeWidth, rhs.activeHeight, rhs.colorDepth, rhs.pixelFormat, rhs.dynamicRange, rhs.scanType, rhs.afd, rhs.frameRateNumerator, rhs.frameRateDenominator, rhs.endOfStream, rhs.discontinuity, rhs.lowLatency, rhs.colorimetry, rhs.masteringDisplayInfo, rhs.contentLightLevel, rhs.source, rhs.sha1, rhs.extension);
   }
   inline bool operator<(const FrameMetadata& rhs) const {
-    return std::tie(parX, parY, sarX, sarY, codedWidth, codedHeight, activeX, activeY, activeWidth, activeHeight, colorDepth, pixelFormat, dynamicRange, scanType, afd, frameRateNumerator, frameRateDenominator, endOfStream, discontinuity, lowLatency, source, sha1, extension) < std::tie(rhs.parX, rhs.parY, rhs.sarX, rhs.sarY, rhs.codedWidth, rhs.codedHeight, rhs.activeX, rhs.activeY, rhs.activeWidth, rhs.activeHeight, rhs.colorDepth, rhs.pixelFormat, rhs.dynamicRange, rhs.scanType, rhs.afd, rhs.frameRateNumerator, rhs.frameRateDenominator, rhs.endOfStream, rhs.discontinuity, rhs.lowLatency, rhs.source, rhs.sha1, rhs.extension);
+    return std::tie(parX, parY, sarX, sarY, codedWidth, codedHeight, activeX, activeY, activeWidth, activeHeight, colorDepth, pixelFormat, dynamicRange, scanType, afd, frameRateNumerator, frameRateDenominator, endOfStream, discontinuity, lowLatency, colorimetry, masteringDisplayInfo, contentLightLevel, source, sha1, extension) < std::tie(rhs.parX, rhs.parY, rhs.sarX, rhs.sarY, rhs.codedWidth, rhs.codedHeight, rhs.activeX, rhs.activeY, rhs.activeWidth, rhs.activeHeight, rhs.colorDepth, rhs.pixelFormat, rhs.dynamicRange, rhs.scanType, rhs.afd, rhs.frameRateNumerator, rhs.frameRateDenominator, rhs.endOfStream, rhs.discontinuity, rhs.lowLatency, rhs.colorimetry, rhs.masteringDisplayInfo, rhs.contentLightLevel, rhs.source, rhs.sha1, rhs.extension);
   }
   inline bool operator<=(const FrameMetadata& rhs) const {
-    return std::tie(parX, parY, sarX, sarY, codedWidth, codedHeight, activeX, activeY, activeWidth, activeHeight, colorDepth, pixelFormat, dynamicRange, scanType, afd, frameRateNumerator, frameRateDenominator, endOfStream, discontinuity, lowLatency, source, sha1, extension) <= std::tie(rhs.parX, rhs.parY, rhs.sarX, rhs.sarY, rhs.codedWidth, rhs.codedHeight, rhs.activeX, rhs.activeY, rhs.activeWidth, rhs.activeHeight, rhs.colorDepth, rhs.pixelFormat, rhs.dynamicRange, rhs.scanType, rhs.afd, rhs.frameRateNumerator, rhs.frameRateDenominator, rhs.endOfStream, rhs.discontinuity, rhs.lowLatency, rhs.source, rhs.sha1, rhs.extension);
+    return std::tie(parX, parY, sarX, sarY, codedWidth, codedHeight, activeX, activeY, activeWidth, activeHeight, colorDepth, pixelFormat, dynamicRange, scanType, afd, frameRateNumerator, frameRateDenominator, endOfStream, discontinuity, lowLatency, colorimetry, masteringDisplayInfo, contentLightLevel, source, sha1, extension) <= std::tie(rhs.parX, rhs.parY, rhs.sarX, rhs.sarY, rhs.codedWidth, rhs.codedHeight, rhs.activeX, rhs.activeY, rhs.activeWidth, rhs.activeHeight, rhs.colorDepth, rhs.pixelFormat, rhs.dynamicRange, rhs.scanType, rhs.afd, rhs.frameRateNumerator, rhs.frameRateDenominator, rhs.endOfStream, rhs.discontinuity, rhs.lowLatency, rhs.colorimetry, rhs.masteringDisplayInfo, rhs.contentLightLevel, rhs.source, rhs.sha1, rhs.extension);
   }
   inline bool operator==(const FrameMetadata& rhs) const {
-    return std::tie(parX, parY, sarX, sarY, codedWidth, codedHeight, activeX, activeY, activeWidth, activeHeight, colorDepth, pixelFormat, dynamicRange, scanType, afd, frameRateNumerator, frameRateDenominator, endOfStream, discontinuity, lowLatency, source, sha1, extension) == std::tie(rhs.parX, rhs.parY, rhs.sarX, rhs.sarY, rhs.codedWidth, rhs.codedHeight, rhs.activeX, rhs.activeY, rhs.activeWidth, rhs.activeHeight, rhs.colorDepth, rhs.pixelFormat, rhs.dynamicRange, rhs.scanType, rhs.afd, rhs.frameRateNumerator, rhs.frameRateDenominator, rhs.endOfStream, rhs.discontinuity, rhs.lowLatency, rhs.source, rhs.sha1, rhs.extension);
+    return std::tie(parX, parY, sarX, sarY, codedWidth, codedHeight, activeX, activeY, activeWidth, activeHeight, colorDepth, pixelFormat, dynamicRange, scanType, afd, frameRateNumerator, frameRateDenominator, endOfStream, discontinuity, lowLatency, colorimetry, masteringDisplayInfo, contentLightLevel, source, sha1, extension) == std::tie(rhs.parX, rhs.parY, rhs.sarX, rhs.sarY, rhs.codedWidth, rhs.codedHeight, rhs.activeX, rhs.activeY, rhs.activeWidth, rhs.activeHeight, rhs.colorDepth, rhs.pixelFormat, rhs.dynamicRange, rhs.scanType, rhs.afd, rhs.frameRateNumerator, rhs.frameRateDenominator, rhs.endOfStream, rhs.discontinuity, rhs.lowLatency, rhs.colorimetry, rhs.masteringDisplayInfo, rhs.contentLightLevel, rhs.source, rhs.sha1, rhs.extension);
   }
   inline bool operator>(const FrameMetadata& rhs) const {
-    return std::tie(parX, parY, sarX, sarY, codedWidth, codedHeight, activeX, activeY, activeWidth, activeHeight, colorDepth, pixelFormat, dynamicRange, scanType, afd, frameRateNumerator, frameRateDenominator, endOfStream, discontinuity, lowLatency, source, sha1, extension) > std::tie(rhs.parX, rhs.parY, rhs.sarX, rhs.sarY, rhs.codedWidth, rhs.codedHeight, rhs.activeX, rhs.activeY, rhs.activeWidth, rhs.activeHeight, rhs.colorDepth, rhs.pixelFormat, rhs.dynamicRange, rhs.scanType, rhs.afd, rhs.frameRateNumerator, rhs.frameRateDenominator, rhs.endOfStream, rhs.discontinuity, rhs.lowLatency, rhs.source, rhs.sha1, rhs.extension);
+    return std::tie(parX, parY, sarX, sarY, codedWidth, codedHeight, activeX, activeY, activeWidth, activeHeight, colorDepth, pixelFormat, dynamicRange, scanType, afd, frameRateNumerator, frameRateDenominator, endOfStream, discontinuity, lowLatency, colorimetry, masteringDisplayInfo, contentLightLevel, source, sha1, extension) > std::tie(rhs.parX, rhs.parY, rhs.sarX, rhs.sarY, rhs.codedWidth, rhs.codedHeight, rhs.activeX, rhs.activeY, rhs.activeWidth, rhs.activeHeight, rhs.colorDepth, rhs.pixelFormat, rhs.dynamicRange, rhs.scanType, rhs.afd, rhs.frameRateNumerator, rhs.frameRateDenominator, rhs.endOfStream, rhs.discontinuity, rhs.lowLatency, rhs.colorimetry, rhs.masteringDisplayInfo, rhs.contentLightLevel, rhs.source, rhs.sha1, rhs.extension);
   }
   inline bool operator>=(const FrameMetadata& rhs) const {
-    return std::tie(parX, parY, sarX, sarY, codedWidth, codedHeight, activeX, activeY, activeWidth, activeHeight, colorDepth, pixelFormat, dynamicRange, scanType, afd, frameRateNumerator, frameRateDenominator, endOfStream, discontinuity, lowLatency, source, sha1, extension) >= std::tie(rhs.parX, rhs.parY, rhs.sarX, rhs.sarY, rhs.codedWidth, rhs.codedHeight, rhs.activeX, rhs.activeY, rhs.activeWidth, rhs.activeHeight, rhs.colorDepth, rhs.pixelFormat, rhs.dynamicRange, rhs.scanType, rhs.afd, rhs.frameRateNumerator, rhs.frameRateDenominator, rhs.endOfStream, rhs.discontinuity, rhs.lowLatency, rhs.source, rhs.sha1, rhs.extension);
+    return std::tie(parX, parY, sarX, sarY, codedWidth, codedHeight, activeX, activeY, activeWidth, activeHeight, colorDepth, pixelFormat, dynamicRange, scanType, afd, frameRateNumerator, frameRateDenominator, endOfStream, discontinuity, lowLatency, colorimetry, masteringDisplayInfo, contentLightLevel, source, sha1, extension) >= std::tie(rhs.parX, rhs.parY, rhs.sarX, rhs.sarY, rhs.codedWidth, rhs.codedHeight, rhs.activeX, rhs.activeY, rhs.activeWidth, rhs.activeHeight, rhs.colorDepth, rhs.pixelFormat, rhs.dynamicRange, rhs.scanType, rhs.afd, rhs.frameRateNumerator, rhs.frameRateDenominator, rhs.endOfStream, rhs.discontinuity, rhs.lowLatency, rhs.colorimetry, rhs.masteringDisplayInfo, rhs.contentLightLevel, rhs.source, rhs.sha1, rhs.extension);
   }
 
   ::android::Parcelable::Stability getStability() const override { return ::android::Parcelable::Stability::STABILITY_VINTF; }
@@ -91,6 +98,9 @@ public:
     os << ", endOfStream: " << ::android::internal::ToString(endOfStream);
     os << ", discontinuity: " << ::android::internal::ToString(discontinuity);
     os << ", lowLatency: " << ::android::internal::ToString(lowLatency);
+    os << ", colorimetry: " << ::android::internal::ToString(colorimetry);
+    os << ", masteringDisplayInfo: " << ::android::internal::ToString(masteringDisplayInfo);
+    os << ", contentLightLevel: " << ::android::internal::ToString(contentLightLevel);
     os << ", source: " << ::android::internal::ToString(source);
     os << ", sha1: " << ::android::internal::ToString(sha1);
     os << ", extension: " << ::android::internal::ToString(extension);

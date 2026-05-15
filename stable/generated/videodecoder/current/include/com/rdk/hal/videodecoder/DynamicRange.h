@@ -14,7 +14,7 @@ enum class DynamicRange : int32_t {
   SDR = 1,
   HLG = 2,
   HDR10 = 3,
-  HDR10PLUS = 4,
+  HDR10_PLUS = 4,
   DOLBY_VISION = 5,
 };
 }  // namespace videodecoder
@@ -35,8 +35,8 @@ namespace videodecoder {
     return "HLG";
   case DynamicRange::HDR10:
     return "HDR10";
-  case DynamicRange::HDR10PLUS:
-    return "HDR10PLUS";
+  case DynamicRange::HDR10_PLUS:
+    return "HDR10_PLUS";
   case DynamicRange::DOLBY_VISION:
     return "DOLBY_VISION";
   default:
@@ -57,7 +57,7 @@ constexpr inline std::array<::com::rdk::hal::videodecoder::DynamicRange, 6> enum
   ::com::rdk::hal::videodecoder::DynamicRange::SDR,
   ::com::rdk::hal::videodecoder::DynamicRange::HLG,
   ::com::rdk::hal::videodecoder::DynamicRange::HDR10,
-  ::com::rdk::hal::videodecoder::DynamicRange::HDR10PLUS,
+  ::com::rdk::hal::videodecoder::DynamicRange::HDR10_PLUS,
   ::com::rdk::hal::videodecoder::DynamicRange::DOLBY_VISION,
 };
 #pragma clang diagnostic pop

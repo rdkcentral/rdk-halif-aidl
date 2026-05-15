@@ -23,6 +23,14 @@ namespace audiosink {
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }
+  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
+    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->readEnumVector(&supportedContentTypes);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
   _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
   return _aidl_ret_status;
 }
@@ -31,6 +39,10 @@ namespace audiosink {
   auto _aidl_start_pos = _aidl_parcel->dataPosition();
   _aidl_parcel->writeInt32(0);
   _aidl_ret_status = _aidl_parcel->writeBool(supportsSecure);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->writeEnumVector(supportedContentTypes);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }

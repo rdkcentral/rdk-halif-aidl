@@ -1,4 +1,3 @@
-#include <mutex>
 #include <com/rdk/hal/hdmiinput/IHDMIInputControllerListener.h>
 #include <com/rdk/hal/hdmiinput/BpHDMIInputControllerListener.h>
 namespace com {
@@ -76,7 +75,7 @@ BpHDMIInputControllerListener::BpHDMIInputControllerListener(const ::android::sp
   return _aidl_status;
 }
 
-::android::binder::Status BpHDMIInputControllerListener::onVideoFormatChanged(::com::rdk::hal::hdmiinput::VIC vic) {
+::android::binder::Status BpHDMIInputControllerListener::onVIChanged(::com::rdk::hal::hdmiinput::VIC vic) {
   ::android::Parcel _aidl_data;
   _aidl_data.markForBinder(remoteStrong());
   ::android::Parcel _aidl_reply;
@@ -90,9 +89,9 @@ BpHDMIInputControllerListener::BpHDMIInputControllerListener(const ::android::sp
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = remote()->transact(BnHDMIInputControllerListener::TRANSACTION_onVideoFormatChanged, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_ONEWAY);
+  _aidl_ret_status = remote()->transact(BnHDMIInputControllerListener::TRANSACTION_onVIChanged, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_ONEWAY);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IHDMIInputControllerListener::getDefaultImpl())) {
-     return IHDMIInputControllerListener::getDefaultImpl()->onVideoFormatChanged(vic);
+     return IHDMIInputControllerListener::getDefaultImpl()->onVIChanged(vic);
   }
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -393,7 +392,7 @@ BnHDMIInputControllerListener::BnHDMIInputControllerListener()
     ::android::binder::Status _aidl_status(onSignalStateChanged(in_signalState));
   }
   break;
-  case BnHDMIInputControllerListener::TRANSACTION_onVideoFormatChanged:
+  case BnHDMIInputControllerListener::TRANSACTION_onVIChanged:
   {
     ::com::rdk::hal::hdmiinput::VIC in_vic;
     if (!(_aidl_data.checkInterface(this))) {
@@ -408,7 +407,7 @@ BnHDMIInputControllerListener::BnHDMIInputControllerListener()
       _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
-    ::android::binder::Status _aidl_status(onVideoFormatChanged(in_vic));
+    ::android::binder::Status _aidl_status(onVIChanged(in_vic));
   }
   break;
   case BnHDMIInputControllerListener::TRANSACTION_onVRRChanged:

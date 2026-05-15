@@ -20,6 +20,7 @@ public:
   ::android::binder::Status onAudioUnderflow() override;
   ::android::binder::Status onAudioResumed(int64_t nsPresentationTime) override;
   ::android::binder::Status onFlushComplete() override;
+  ::android::binder::Status onFrameBufferAvailable() override;
   int32_t getInterfaceVersion() override;
   std::string getInterfaceHash() override;
 private:

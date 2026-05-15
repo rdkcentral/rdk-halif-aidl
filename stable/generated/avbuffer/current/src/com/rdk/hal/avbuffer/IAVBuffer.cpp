@@ -1,4 +1,3 @@
-#include <mutex>
 #include <com/rdk/hal/avbuffer/IAVBuffer.h>
 #include <com/rdk/hal/avbuffer/BpAVBuffer.h>
 namespace com {

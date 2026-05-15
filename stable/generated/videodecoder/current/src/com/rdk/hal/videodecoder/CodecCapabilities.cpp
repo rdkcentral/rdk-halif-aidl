@@ -63,6 +63,14 @@ namespace videodecoder {
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }
+  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
+    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->readEnumVector(&supportedOutputPixelFormats);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
   _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
   return _aidl_ret_status;
 }
@@ -91,6 +99,10 @@ namespace videodecoder {
     return _aidl_ret_status;
   }
   _aidl_ret_status = _aidl_parcel->writeInt32(maxFrameHeight);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->writeEnumVector(supportedOutputPixelFormats);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }

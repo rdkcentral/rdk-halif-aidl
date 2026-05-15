@@ -20,8 +20,8 @@ class IVideoDecoderManager : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(VideoDecoderManager)
   static const int32_t VERSION = 1;
-  const std::string HASH = "d83340f728c7a177fbf5dd725b346b3579fd9aab";
-  static constexpr char* HASHVALUE = "d83340f728c7a177fbf5dd725b346b3579fd9aab";
+  const std::string HASH = "afc6bd3166231467a3288c4956b6b4322e039c38";
+  static constexpr char* HASHVALUE = "afc6bd3166231467a3288c4956b6b4322e039c38";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getVideoDecoderIds(::std::vector<::com::rdk::hal::videodecoder::IVideoDecoder::Id>* _aidl_return) = 0;
   virtual ::android::binder::Status getSupportedOperationalModes(::std::vector<::com::rdk::hal::videodecoder::OperationalMode>* _aidl_return) = 0;

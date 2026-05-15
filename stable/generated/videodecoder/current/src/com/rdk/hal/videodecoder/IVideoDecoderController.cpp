@@ -1,4 +1,3 @@
-#include <mutex>
 #include <com/rdk/hal/videodecoder/IVideoDecoderController.h>
 #include <com/rdk/hal/videodecoder/BpVideoDecoderController.h>
 namespace com {
@@ -123,7 +122,7 @@ BpVideoDecoderController::BpVideoDecoderController(const ::android::sp<::android
   return _aidl_status;
 }
 
-::android::binder::Status BpVideoDecoderController::decodeBuffer(int64_t nsPresentationTime, int64_t bufferHandle, bool* _aidl_return) {
+::android::binder::Status BpVideoDecoderController::decodeBufferWithMetadata(int64_t bufferHandle, const ::com::rdk::hal::videodecoder::InputBufferMetadata& metadata, bool* _aidl_return) {
   ::android::Parcel _aidl_data;
   _aidl_data.markForBinder(remoteStrong());
   ::android::Parcel _aidl_reply;
@@ -133,17 +132,17 @@ BpVideoDecoderController::BpVideoDecoderController(const ::android::sp<::android
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = _aidl_data.writeInt64(nsPresentationTime);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
   _aidl_ret_status = _aidl_data.writeInt64(bufferHandle);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = remote()->transact(BnVideoDecoderController::TRANSACTION_decodeBuffer, _aidl_data, &_aidl_reply, 0);
+  _aidl_ret_status = _aidl_data.writeParcelable(metadata);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnVideoDecoderController::TRANSACTION_decodeBufferWithMetadata, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IVideoDecoderController::getDefaultImpl())) {
-     return IVideoDecoderController::getDefaultImpl()->decodeBuffer(nsPresentationTime, bufferHandle, _aidl_return);
+     return IVideoDecoderController::getDefaultImpl()->decodeBufferWithMetadata(bufferHandle, metadata, _aidl_return);
   }
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -226,35 +225,6 @@ BpVideoDecoderController::BpVideoDecoderController(const ::android::sp<::android
   return _aidl_status;
 }
 
-::android::binder::Status BpVideoDecoderController::signalEOS() {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnVideoDecoderController::TRANSACTION_signalEOS, _aidl_data, &_aidl_reply, 0);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IVideoDecoderController::getDefaultImpl())) {
-     return IVideoDecoderController::getDefaultImpl()->signalEOS();
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
 ::android::binder::Status BpVideoDecoderController::parseCodecSpecificData(::com::rdk::hal::videodecoder::CSDVideoFormat csdVideoFormat, const ::std::vector<uint8_t>& codecData, bool* _aidl_return) {
   ::android::Parcel _aidl_data;
   _aidl_data.markForBinder(remoteStrong());
@@ -290,6 +260,216 @@ BpVideoDecoderController::BpVideoDecoderController(const ::android::sp<::android
   _aidl_ret_status = _aidl_reply.readBool(_aidl_return);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
+  }
+  _aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
+
+::android::binder::Status BpVideoDecoderController::setMasteringDisplayInfo(const ::std::optional<::com::rdk::hal::videodecoder::MasteringDisplayInfo>& info) {
+  ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remoteStrong());
+  ::android::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::binder::Status _aidl_status;
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeNullableParcelable(info);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnVideoDecoderController::TRANSACTION_setMasteringDisplayInfo, _aidl_data, &_aidl_reply, 0);
+  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IVideoDecoderController::getDefaultImpl())) {
+     return IVideoDecoderController::getDefaultImpl()->setMasteringDisplayInfo(info);
+  }
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  if (!_aidl_status.isOk()) {
+    return _aidl_status;
+  }
+  _aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
+
+::android::binder::Status BpVideoDecoderController::setContentLightLevel(const ::std::optional<::com::rdk::hal::videodecoder::ContentLightLevel>& info) {
+  ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remoteStrong());
+  ::android::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::binder::Status _aidl_status;
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeNullableParcelable(info);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnVideoDecoderController::TRANSACTION_setContentLightLevel, _aidl_data, &_aidl_reply, 0);
+  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IVideoDecoderController::getDefaultImpl())) {
+     return IVideoDecoderController::getDefaultImpl()->setContentLightLevel(info);
+  }
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  if (!_aidl_status.isOk()) {
+    return _aidl_status;
+  }
+  _aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
+
+::android::binder::Status BpVideoDecoderController::setColorimetry(::com::rdk::hal::videodecoder::Colorimetry colorimetry) {
+  ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remoteStrong());
+  ::android::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::binder::Status _aidl_status;
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeInt32(static_cast<int32_t>(colorimetry));
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnVideoDecoderController::TRANSACTION_setColorimetry, _aidl_data, &_aidl_reply, 0);
+  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IVideoDecoderController::getDefaultImpl())) {
+     return IVideoDecoderController::getDefaultImpl()->setColorimetry(colorimetry);
+  }
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  if (!_aidl_status.isOk()) {
+    return _aidl_status;
+  }
+  _aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
+
+::android::binder::Status BpVideoDecoderController::setStreamResolution(int32_t width, int32_t height) {
+  ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remoteStrong());
+  ::android::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::binder::Status _aidl_status;
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeInt32(width);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeInt32(height);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnVideoDecoderController::TRANSACTION_setStreamResolution, _aidl_data, &_aidl_reply, 0);
+  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IVideoDecoderController::getDefaultImpl())) {
+     return IVideoDecoderController::getDefaultImpl()->setStreamResolution(width, height);
+  }
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  if (!_aidl_status.isOk()) {
+    return _aidl_status;
+  }
+  _aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
+
+::android::binder::Status BpVideoDecoderController::setFrameRate(int32_t numerator, int32_t denominator) {
+  ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remoteStrong());
+  ::android::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::binder::Status _aidl_status;
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeInt32(numerator);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeInt32(denominator);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnVideoDecoderController::TRANSACTION_setFrameRate, _aidl_data, &_aidl_reply, 0);
+  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IVideoDecoderController::getDefaultImpl())) {
+     return IVideoDecoderController::getDefaultImpl()->setFrameRate(numerator, denominator);
+  }
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  if (!_aidl_status.isOk()) {
+    return _aidl_status;
+  }
+  _aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
+
+::android::binder::Status BpVideoDecoderController::setDolbyVisionLayerFlags(bool blPresent, bool elPresent) {
+  ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remoteStrong());
+  ::android::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::binder::Status _aidl_status;
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeBool(blPresent);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeBool(elPresent);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnVideoDecoderController::TRANSACTION_setDolbyVisionLayerFlags, _aidl_data, &_aidl_reply, 0);
+  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IVideoDecoderController::getDefaultImpl())) {
+     return IVideoDecoderController::getDefaultImpl()->setDolbyVisionLayerFlags(blPresent, elPresent);
+  }
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  if (!_aidl_status.isOk()) {
+    return _aidl_status;
   }
   _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
@@ -420,20 +600,20 @@ BnVideoDecoderController::BnVideoDecoderController()
     }
   }
   break;
-  case BnVideoDecoderController::TRANSACTION_decodeBuffer:
+  case BnVideoDecoderController::TRANSACTION_decodeBufferWithMetadata:
   {
-    int64_t in_nsPresentationTime;
     int64_t in_bufferHandle;
+    ::com::rdk::hal::videodecoder::InputBufferMetadata in_metadata;
     bool _aidl_return;
     if (!(_aidl_data.checkInterface(this))) {
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
     }
-    _aidl_ret_status = _aidl_data.readInt64(&in_nsPresentationTime);
+    _aidl_ret_status = _aidl_data.readInt64(&in_bufferHandle);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
-    _aidl_ret_status = _aidl_data.readInt64(&in_bufferHandle);
+    _aidl_ret_status = _aidl_data.readParcelable(&in_metadata);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
@@ -441,7 +621,7 @@ BnVideoDecoderController::BnVideoDecoderController()
       _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
-    ::android::binder::Status _aidl_status(decodeBuffer(in_nsPresentationTime, in_bufferHandle, &_aidl_return));
+    ::android::binder::Status _aidl_status(decodeBufferWithMetadata(in_bufferHandle, in_metadata, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
@@ -496,22 +676,6 @@ BnVideoDecoderController::BnVideoDecoderController()
     }
   }
   break;
-  case BnVideoDecoderController::TRANSACTION_signalEOS:
-  {
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    ::android::binder::Status _aidl_status(signalEOS());
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-  }
-  break;
   case BnVideoDecoderController::TRANSACTION_parseCodecSpecificData:
   {
     ::com::rdk::hal::videodecoder::CSDVideoFormat in_csdVideoFormat;
@@ -543,6 +707,171 @@ BnVideoDecoderController::BnVideoDecoderController()
     }
     _aidl_ret_status = _aidl_reply->writeBool(_aidl_return);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+  }
+  break;
+  case BnVideoDecoderController::TRANSACTION_setMasteringDisplayInfo:
+  {
+    ::std::optional<::com::rdk::hal::videodecoder::MasteringDisplayInfo> in_info;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readParcelable(&in_info);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
+    ::android::binder::Status _aidl_status(setMasteringDisplayInfo(in_info));
+    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (!_aidl_status.isOk()) {
+      break;
+    }
+  }
+  break;
+  case BnVideoDecoderController::TRANSACTION_setContentLightLevel:
+  {
+    ::std::optional<::com::rdk::hal::videodecoder::ContentLightLevel> in_info;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readParcelable(&in_info);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
+    ::android::binder::Status _aidl_status(setContentLightLevel(in_info));
+    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (!_aidl_status.isOk()) {
+      break;
+    }
+  }
+  break;
+  case BnVideoDecoderController::TRANSACTION_setColorimetry:
+  {
+    ::com::rdk::hal::videodecoder::Colorimetry in_colorimetry;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readInt32(reinterpret_cast<int32_t *>(&in_colorimetry));
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
+    ::android::binder::Status _aidl_status(setColorimetry(in_colorimetry));
+    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (!_aidl_status.isOk()) {
+      break;
+    }
+  }
+  break;
+  case BnVideoDecoderController::TRANSACTION_setStreamResolution:
+  {
+    int32_t in_width;
+    int32_t in_height;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readInt32(&in_width);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readInt32(&in_height);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
+    ::android::binder::Status _aidl_status(setStreamResolution(in_width, in_height));
+    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (!_aidl_status.isOk()) {
+      break;
+    }
+  }
+  break;
+  case BnVideoDecoderController::TRANSACTION_setFrameRate:
+  {
+    int32_t in_numerator;
+    int32_t in_denominator;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readInt32(&in_numerator);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readInt32(&in_denominator);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
+    ::android::binder::Status _aidl_status(setFrameRate(in_numerator, in_denominator));
+    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (!_aidl_status.isOk()) {
+      break;
+    }
+  }
+  break;
+  case BnVideoDecoderController::TRANSACTION_setDolbyVisionLayerFlags:
+  {
+    bool in_blPresent;
+    bool in_elPresent;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readBool(&in_blPresent);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readBool(&in_elPresent);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
+    ::android::binder::Status _aidl_status(setDolbyVisionLayerFlags(in_blPresent, in_elPresent));
+    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (!_aidl_status.isOk()) {
       break;
     }
   }

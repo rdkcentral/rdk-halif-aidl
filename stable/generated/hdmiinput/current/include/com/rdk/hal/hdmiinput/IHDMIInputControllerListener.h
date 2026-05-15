@@ -20,11 +20,11 @@ class IHDMIInputControllerListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(HDMIInputControllerListener)
   static const int32_t VERSION = 1;
-  const std::string HASH = "82e8e5917a80b0598944ae1e7c36f1eba27fac32";
-  static constexpr char* HASHVALUE = "82e8e5917a80b0598944ae1e7c36f1eba27fac32";
+  const std::string HASH = "7946019ce36bd9a8290f938cebf478d23b12f11c";
+  static constexpr char* HASHVALUE = "7946019ce36bd9a8290f938cebf478d23b12f11c";
   virtual ::android::binder::Status onConnectionStateChanged(bool connectionState) = 0;
   virtual ::android::binder::Status onSignalStateChanged(::com::rdk::hal::hdmiinput::SignalState signalState) = 0;
-  virtual ::android::binder::Status onVideoFormatChanged(::com::rdk::hal::hdmiinput::VIC vic) = 0;
+  virtual ::android::binder::Status onVIChanged(::com::rdk::hal::hdmiinput::VIC vic) = 0;
   virtual ::android::binder::Status onVRRChanged(bool vrrActive, bool M_CONST, bool fastVActive, double frameRate) = 0;
   virtual ::android::binder::Status onAVIInfoFrame(const ::std::vector<uint8_t>& data) = 0;
   virtual ::android::binder::Status onAudioInfoFrame(const ::std::vector<uint8_t>& data) = 0;
@@ -47,7 +47,7 @@ public:
   ::android::binder::Status onSignalStateChanged(::com::rdk::hal::hdmiinput::SignalState /*signalState*/) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
-  ::android::binder::Status onVideoFormatChanged(::com::rdk::hal::hdmiinput::VIC /*vic*/) override {
+  ::android::binder::Status onVIChanged(::com::rdk::hal::hdmiinput::VIC /*vic*/) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status onVRRChanged(bool /*vrrActive*/, bool /*M_CONST*/, bool /*fastVActive*/, double /*frameRate*/) override {

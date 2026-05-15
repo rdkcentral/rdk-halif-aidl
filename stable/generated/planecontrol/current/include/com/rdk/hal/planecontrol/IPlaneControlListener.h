@@ -15,8 +15,8 @@ class IPlaneControlListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(PlaneControlListener)
   static const int32_t VERSION = 1;
-  const std::string HASH = "bed7512d891c70602f0bd173dd855823d7382423";
-  static constexpr char* HASHVALUE = "bed7512d891c70602f0bd173dd855823d7382423";
+  const std::string HASH = "78a76d308d6d3f298f0283e8962a4a88719c93f0";
+  static constexpr char* HASHVALUE = "78a76d308d6d3f298f0283e8962a4a88719c93f0";
   virtual int32_t getInterfaceVersion() = 0;
   virtual std::string getInterfaceHash() = 0;
 };  // class IPlaneControlListener

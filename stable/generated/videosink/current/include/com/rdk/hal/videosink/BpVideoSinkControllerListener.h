@@ -20,6 +20,7 @@ public:
   ::android::binder::Status onVideoResumed() override;
   ::android::binder::Status onFlushComplete() override;
   ::android::binder::Status onStateChanged(::com::rdk::hal::State oldState, ::com::rdk::hal::State newState) override;
+  ::android::binder::Status onFrameBufferAvailable() override;
   int32_t getInterfaceVersion() override;
   std::string getInterfaceHash() override;
 private:

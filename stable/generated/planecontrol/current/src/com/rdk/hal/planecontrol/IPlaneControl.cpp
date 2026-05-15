@@ -1,4 +1,3 @@
-#include <mutex>
 #include <com/rdk/hal/planecontrol/IPlaneControl.h>
 #include <com/rdk/hal/planecontrol/BpPlaneControl.h>
 namespace com {
@@ -28,7 +27,7 @@ BpPlaneControl::BpPlaneControl(const ::android::sp<::android::IBinder>& _aidl_im
     : BpInterface<IPlaneControl>(_aidl_impl){
 }
 
-::android::binder::Status BpPlaneControl::getCapabilities(::std::vector<::com::rdk::hal::planecontrol::Capabilities>* _aidl_return) {
+::android::binder::Status BpPlaneControl::getCapabilities(::std::vector<::com::rdk::hal::planecontrol::PlaneCapabilities>* _aidl_return) {
   ::android::Parcel _aidl_data;
   _aidl_data.markForBinder(remoteStrong());
   ::android::Parcel _aidl_reply;
@@ -53,117 +52,6 @@ BpPlaneControl::BpPlaneControl(const ::android::sp<::android::IBinder>& _aidl_im
     return _aidl_status;
   }
   _aidl_ret_status = _aidl_reply.readParcelableVector(_aidl_return);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpPlaneControl::getNativeGraphicsWindowHandle(int32_t planeResourceIndex, int64_t* _aidl_return) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeInt32(planeResourceIndex);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnPlaneControl::TRANSACTION_getNativeGraphicsWindowHandle, _aidl_data, &_aidl_reply, 0);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IPlaneControl::getDefaultImpl())) {
-     return IPlaneControl::getDefaultImpl()->getNativeGraphicsWindowHandle(planeResourceIndex, _aidl_return);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readInt64(_aidl_return);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpPlaneControl::releaseNativeGraphicsWindowHandle(int32_t planeResourceIndex, int64_t nativeWindowHandle) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeInt32(planeResourceIndex);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeInt64(nativeWindowHandle);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnPlaneControl::TRANSACTION_releaseNativeGraphicsWindowHandle, _aidl_data, &_aidl_reply, 0);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IPlaneControl::getDefaultImpl())) {
-     return IPlaneControl::getDefaultImpl()->releaseNativeGraphicsWindowHandle(planeResourceIndex, nativeWindowHandle);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
-::android::binder::Status BpPlaneControl::flipGraphicsBuffer(int32_t planeResourceIndex, bool* _aidl_return) {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeInt32(planeResourceIndex);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnPlaneControl::TRANSACTION_flipGraphicsBuffer, _aidl_data, &_aidl_reply, 0);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IPlaneControl::getDefaultImpl())) {
-     return IPlaneControl::getDefaultImpl()->flipGraphicsBuffer(planeResourceIndex, _aidl_return);
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_ret_status = _aidl_reply.readBool(_aidl_return);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
@@ -492,6 +380,47 @@ BpPlaneControl::BpPlaneControl(const ::android::sp<::android::IBinder>& _aidl_im
   return _aidl_status;
 }
 
+::android::binder::Status BpPlaneControl::getGraphicsFbProvider(int32_t planeResourceIndex, const ::android::sp<::com::rdk::hal::planecontrol::IGraphicsFbProviderListener>& graphicsFbProviderListener, ::android::sp<::com::rdk::hal::planecontrol::IGraphicsFbProvider>* _aidl_return) {
+  ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remoteStrong());
+  ::android::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::binder::Status _aidl_status;
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeInt32(planeResourceIndex);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeStrongBinder(graphicsFbProviderListener);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnPlaneControl::TRANSACTION_getGraphicsFbProvider, _aidl_data, &_aidl_reply, 0);
+  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IPlaneControl::getDefaultImpl())) {
+     return IPlaneControl::getDefaultImpl()->getGraphicsFbProvider(planeResourceIndex, graphicsFbProviderListener, _aidl_return);
+  }
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  if (!_aidl_status.isOk()) {
+    return _aidl_status;
+  }
+  _aidl_ret_status = _aidl_reply.readNullableStrongBinder(_aidl_return);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
+
 int32_t BpPlaneControl::getInterfaceVersion() {
   if (cached_version_ == -1) {
     ::android::Parcel data;
@@ -551,7 +480,7 @@ BnPlaneControl::BnPlaneControl()
   switch (_aidl_code) {
   case BnPlaneControl::TRANSACTION_getCapabilities:
   {
-    ::std::vector<::com::rdk::hal::planecontrol::Capabilities> _aidl_return;
+    ::std::vector<::com::rdk::hal::planecontrol::PlaneCapabilities> _aidl_return;
     if (!(_aidl_data.checkInterface(this))) {
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
@@ -565,96 +494,6 @@ BnPlaneControl::BnPlaneControl()
       break;
     }
     _aidl_ret_status = _aidl_reply->writeParcelableVector(_aidl_return);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
-  case BnPlaneControl::TRANSACTION_getNativeGraphicsWindowHandle:
-  {
-    int32_t in_planeResourceIndex;
-    int64_t _aidl_return;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readInt32(&in_planeResourceIndex);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
-      break;
-    }
-    ::android::binder::Status _aidl_status(getNativeGraphicsWindowHandle(in_planeResourceIndex, &_aidl_return));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeInt64(_aidl_return);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-  }
-  break;
-  case BnPlaneControl::TRANSACTION_releaseNativeGraphicsWindowHandle:
-  {
-    int32_t in_planeResourceIndex;
-    int64_t in_nativeWindowHandle;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readInt32(&in_planeResourceIndex);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readInt64(&in_nativeWindowHandle);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
-      break;
-    }
-    ::android::binder::Status _aidl_status(releaseNativeGraphicsWindowHandle(in_planeResourceIndex, in_nativeWindowHandle));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-  }
-  break;
-  case BnPlaneControl::TRANSACTION_flipGraphicsBuffer:
-  {
-    int32_t in_planeResourceIndex;
-    bool _aidl_return;
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readInt32(&in_planeResourceIndex);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
-      break;
-    }
-    ::android::binder::Status _aidl_status(flipGraphicsBuffer(in_planeResourceIndex, &_aidl_return));
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-    _aidl_ret_status = _aidl_reply->writeBool(_aidl_return);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
@@ -920,6 +759,41 @@ BnPlaneControl::BnPlaneControl()
       break;
     }
     _aidl_ret_status = _aidl_reply->writeBool(_aidl_return);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+  }
+  break;
+  case BnPlaneControl::TRANSACTION_getGraphicsFbProvider:
+  {
+    int32_t in_planeResourceIndex;
+    ::android::sp<::com::rdk::hal::planecontrol::IGraphicsFbProviderListener> in_graphicsFbProviderListener;
+    ::android::sp<::com::rdk::hal::planecontrol::IGraphicsFbProvider> _aidl_return;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readInt32(&in_planeResourceIndex);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readStrongBinder(&in_graphicsFbProviderListener);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
+    ::android::binder::Status _aidl_status(getGraphicsFbProvider(in_planeResourceIndex, in_graphicsFbProviderListener, &_aidl_return));
+    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (!_aidl_status.isOk()) {
+      break;
+    }
+    _aidl_ret_status = _aidl_reply->writeStrongBinder(_aidl_return);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }

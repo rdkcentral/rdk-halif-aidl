@@ -3,8 +3,10 @@
 #include <android/binder_to_string.h>
 #include <binder/Parcel.h>
 #include <binder/Status.h>
+#include <com/rdk/hal/audiosink/ContentType.h>
 #include <tuple>
 #include <utils/String16.h>
+#include <vector>
 
 namespace com {
 namespace rdk {
@@ -13,23 +15,24 @@ namespace audiosink {
 class Capabilities : public ::android::Parcelable {
 public:
   bool supportsSecure = false;
+  ::std::vector<::com::rdk::hal::audiosink::ContentType> supportedContentTypes;
   inline bool operator!=(const Capabilities& rhs) const {
-    return std::tie(supportsSecure) != std::tie(rhs.supportsSecure);
+    return std::tie(supportsSecure, supportedContentTypes) != std::tie(rhs.supportsSecure, rhs.supportedContentTypes);
   }
   inline bool operator<(const Capabilities& rhs) const {
-    return std::tie(supportsSecure) < std::tie(rhs.supportsSecure);
+    return std::tie(supportsSecure, supportedContentTypes) < std::tie(rhs.supportsSecure, rhs.supportedContentTypes);
   }
   inline bool operator<=(const Capabilities& rhs) const {
-    return std::tie(supportsSecure) <= std::tie(rhs.supportsSecure);
+    return std::tie(supportsSecure, supportedContentTypes) <= std::tie(rhs.supportsSecure, rhs.supportedContentTypes);
   }
   inline bool operator==(const Capabilities& rhs) const {
-    return std::tie(supportsSecure) == std::tie(rhs.supportsSecure);
+    return std::tie(supportsSecure, supportedContentTypes) == std::tie(rhs.supportsSecure, rhs.supportedContentTypes);
   }
   inline bool operator>(const Capabilities& rhs) const {
-    return std::tie(supportsSecure) > std::tie(rhs.supportsSecure);
+    return std::tie(supportsSecure, supportedContentTypes) > std::tie(rhs.supportsSecure, rhs.supportedContentTypes);
   }
   inline bool operator>=(const Capabilities& rhs) const {
-    return std::tie(supportsSecure) >= std::tie(rhs.supportsSecure);
+    return std::tie(supportsSecure, supportedContentTypes) >= std::tie(rhs.supportsSecure, rhs.supportedContentTypes);
   }
 
   ::android::Parcelable::Stability getStability() const override { return ::android::Parcelable::Stability::STABILITY_VINTF; }
@@ -43,6 +46,7 @@ public:
     std::ostringstream os;
     os << "Capabilities{";
     os << "supportsSecure: " << ::android::internal::ToString(supportsSecure);
+    os << ", supportedContentTypes: " << ::android::internal::ToString(supportedContentTypes);
     os << "}";
     return os.str();
   }

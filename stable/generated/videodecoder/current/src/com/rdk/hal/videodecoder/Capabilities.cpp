@@ -35,6 +35,14 @@ namespace videodecoder {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
+  _aidl_ret_status = _aidl_parcel->readEnumVector(&supportedColorimetries);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
+    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
+    return _aidl_ret_status;
+  }
   _aidl_ret_status = _aidl_parcel->readBool(&supportsSecure);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -51,6 +59,10 @@ namespace videodecoder {
     return _aidl_ret_status;
   }
   _aidl_ret_status = _aidl_parcel->writeEnumVector(supportedDynamicRanges);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->writeEnumVector(supportedColorimetries);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }

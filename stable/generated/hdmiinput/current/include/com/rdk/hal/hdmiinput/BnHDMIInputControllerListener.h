@@ -11,7 +11,7 @@ class BnHDMIInputControllerListener : public ::android::BnInterface<IHDMIInputCo
 public:
   static constexpr uint32_t TRANSACTION_onConnectionStateChanged = ::android::IBinder::FIRST_CALL_TRANSACTION + 0;
   static constexpr uint32_t TRANSACTION_onSignalStateChanged = ::android::IBinder::FIRST_CALL_TRANSACTION + 1;
-  static constexpr uint32_t TRANSACTION_onVideoFormatChanged = ::android::IBinder::FIRST_CALL_TRANSACTION + 2;
+  static constexpr uint32_t TRANSACTION_onVIChanged = ::android::IBinder::FIRST_CALL_TRANSACTION + 2;
   static constexpr uint32_t TRANSACTION_onVRRChanged = ::android::IBinder::FIRST_CALL_TRANSACTION + 3;
   static constexpr uint32_t TRANSACTION_onAVIInfoFrame = ::android::IBinder::FIRST_CALL_TRANSACTION + 4;
   static constexpr uint32_t TRANSACTION_onAudioInfoFrame = ::android::IBinder::FIRST_CALL_TRANSACTION + 5;
@@ -37,8 +37,8 @@ public:
   ::android::binder::Status onSignalStateChanged(::com::rdk::hal::hdmiinput::SignalState signalState) override {
     return _aidl_delegate->onSignalStateChanged(signalState);
   }
-  ::android::binder::Status onVideoFormatChanged(::com::rdk::hal::hdmiinput::VIC vic) override {
-    return _aidl_delegate->onVideoFormatChanged(vic);
+  ::android::binder::Status onVIChanged(::com::rdk::hal::hdmiinput::VIC vic) override {
+    return _aidl_delegate->onVIChanged(vic);
   }
   ::android::binder::Status onVRRChanged(bool vrrActive, bool M_CONST, bool fastVActive, double frameRate) override {
     return _aidl_delegate->onVRRChanged(vrrActive, M_CONST, fastVActive, frameRate);

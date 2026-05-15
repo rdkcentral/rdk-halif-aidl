@@ -17,8 +17,6 @@ public:
   ::android::binder::Status getConnectionState(bool* _aidl_return) override;
   ::android::binder::Status start() override;
   ::android::binder::Status stop() override;
-  ::android::binder::Status setProperty(::com::rdk::hal::hdmiinput::Property property, const ::com::rdk::hal::PropertyValue& propertyValue, bool* _aidl_return) override;
-  ::android::binder::Status setPropertyMulti(const ::std::vector<::com::rdk::hal::hdmiinput::PropertyKVPair>& propertyKVList, bool* _aidl_return) override;
   ::android::binder::Status setEDID(const ::std::vector<uint8_t>& edid, bool* _aidl_return) override;
   int32_t getInterfaceVersion() override;
   std::string getInterfaceHash() override;

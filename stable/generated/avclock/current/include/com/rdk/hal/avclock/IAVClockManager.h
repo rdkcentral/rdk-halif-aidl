@@ -19,8 +19,8 @@ class IAVClockManager : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AVClockManager)
   static const int32_t VERSION = 1;
-  const std::string HASH = "01c503f66097c7c8de4f50e3d8f23792d09d8291";
-  static constexpr char* HASHVALUE = "01c503f66097c7c8de4f50e3d8f23792d09d8291";
+  const std::string HASH = "d051db1ab923600cfd13f483cfb327fb70c083af";
+  static constexpr char* HASHVALUE = "d051db1ab923600cfd13f483cfb327fb70c083af";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getAVClockIds(::std::vector<::com::rdk::hal::avclock::IAVClock::Id>* _aidl_return) = 0;
   virtual ::android::binder::Status getAVClock(const ::com::rdk::hal::avclock::IAVClock::Id& avClockId, ::android::sp<::com::rdk::hal::avclock::IAVClock>* _aidl_return) = 0;

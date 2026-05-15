@@ -24,8 +24,8 @@ class IFactoryPanel : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(FactoryPanel)
   static const int32_t VERSION = 1;
-  const std::string HASH = "cdc73f570c9b30e5c89acdbde61c0f2c8312ef91";
-  static constexpr char* HASHVALUE = "cdc73f570c9b30e5c89acdbde61c0f2c8312ef91";
+  const std::string HASH = "bb511b0c1499b255ed2becdb75ea3a89a852afb6";
+  static constexpr char* HASHVALUE = "bb511b0c1499b255ed2becdb75ea3a89a852afb6";
   enum class SaveTo : int8_t {
     DISPLAY = 1,
     FLASH = 2,

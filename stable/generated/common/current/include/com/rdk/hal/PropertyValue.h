@@ -15,6 +15,7 @@
 #include <utility>
 #include <utils/String16.h>
 #include <variant>
+#include <vector>
 
 #ifndef __BIONIC__
 #define __assert2(a,b,c,d) ((void)0)
@@ -36,6 +37,7 @@ public:
       floatValue = 5,
       doubleValue = 6,
       stringValue = 7,
+      intArrayValue = 8,
     };
     // Expose tag symbols for legacy code
     static const inline Tag booleanValue = Tag::booleanValue;
@@ -46,6 +48,7 @@ public:
     static const inline Tag floatValue = Tag::floatValue;
     static const inline Tag doubleValue = Tag::doubleValue;
     static const inline Tag stringValue = Tag::stringValue;
+    static const inline Tag intArrayValue = Tag::intArrayValue;
 
     template<typename _Tp>
     static constexpr bool _not_self = !std::is_same_v<std::remove_cv_t<std::remove_reference_t<_Tp>>, Value>;
@@ -130,12 +133,13 @@ public:
       case floatValue: os << "floatValue: " << ::android::internal::ToString(get<floatValue>()); break;
       case doubleValue: os << "doubleValue: " << ::android::internal::ToString(get<doubleValue>()); break;
       case stringValue: os << "stringValue: " << ::android::internal::ToString(get<stringValue>()); break;
+      case intArrayValue: os << "intArrayValue: " << ::android::internal::ToString(get<intArrayValue>()); break;
       }
       os << "}";
       return os.str();
     }
   private:
-    std::variant<bool, int8_t, char16_t, int32_t, int64_t, float, double, ::android::String16> _value;
+    std::variant<bool, int8_t, char16_t, int32_t, int64_t, float, double, ::android::String16, ::std::vector<int32_t>> _value;
   };  // class Value
   ::std::optional<::com::rdk::hal::PropertyValue::Value> value;
   inline bool operator!=(const PropertyValue& rhs) const {
@@ -196,6 +200,8 @@ namespace hal {
     return "doubleValue";
   case PropertyValue::Value::Tag::stringValue:
     return "stringValue";
+  case PropertyValue::Value::Tag::intArrayValue:
+    return "intArrayValue";
   default:
     return std::to_string(static_cast<int32_t>(val));
   }
@@ -208,7 +214,7 @@ namespace internal {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc++17-extensions"
 template <>
-constexpr inline std::array<::com::rdk::hal::PropertyValue::Value::Tag, 8> enum_values<::com::rdk::hal::PropertyValue::Value::Tag> = {
+constexpr inline std::array<::com::rdk::hal::PropertyValue::Value::Tag, 9> enum_values<::com::rdk::hal::PropertyValue::Value::Tag> = {
   ::com::rdk::hal::PropertyValue::Value::Tag::booleanValue,
   ::com::rdk::hal::PropertyValue::Value::Tag::byteValue,
   ::com::rdk::hal::PropertyValue::Value::Tag::charValue,
@@ -217,6 +223,7 @@ constexpr inline std::array<::com::rdk::hal::PropertyValue::Value::Tag, 8> enum_
   ::com::rdk::hal::PropertyValue::Value::Tag::floatValue,
   ::com::rdk::hal::PropertyValue::Value::Tag::doubleValue,
   ::com::rdk::hal::PropertyValue::Value::Tag::stringValue,
+  ::com::rdk::hal::PropertyValue::Value::Tag::intArrayValue,
 };
 #pragma clang diagnostic pop
 }  // namespace internal

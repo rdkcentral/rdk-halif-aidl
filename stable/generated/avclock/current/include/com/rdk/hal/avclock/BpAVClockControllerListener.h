@@ -15,6 +15,7 @@ public:
   explicit BpAVClockControllerListener(const ::android::sp<::android::IBinder>& _aidl_impl);
   virtual ~BpAVClockControllerListener() = default;
   ::android::binder::Status onStateChanged(::com::rdk::hal::State oldState, ::com::rdk::hal::State newState) override;
+  ::android::binder::Status onPrimed(const ::com::rdk::hal::avclock::ClockTime& currentClockTime) override;
   int32_t getInterfaceVersion() override;
   std::string getInterfaceHash() override;
 private:

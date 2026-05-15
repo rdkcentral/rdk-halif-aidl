@@ -23,8 +23,8 @@ class IHdmiCec : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(HdmiCec)
   static const int32_t VERSION = 1;
-  const std::string HASH = "5790bea2dfbdfc34cbbe010cecda4694d0bd432d";
-  static constexpr char* HASHVALUE = "5790bea2dfbdfc34cbbe010cecda4694d0bd432d";
+  const std::string HASH = "70a901cf2b5493b59578cf5ad220fcf10f96b3b1";
+  static constexpr char* HASHVALUE = "70a901cf2b5493b59578cf5ad220fcf10f96b3b1";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getState(::com::rdk::hal::hdmicec::State* _aidl_return) = 0;
   virtual ::android::binder::Status getProperty(::com::rdk::hal::hdmicec::Property property, ::std::optional<::com::rdk::hal::PropertyValue>* _aidl_return) = 0;

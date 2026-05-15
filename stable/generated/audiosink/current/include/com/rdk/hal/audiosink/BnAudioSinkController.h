@@ -11,13 +11,16 @@ class BnAudioSinkController : public ::android::BnInterface<IAudioSinkController
 public:
   static constexpr uint32_t TRANSACTION_setAudioDecoder = ::android::IBinder::FIRST_CALL_TRANSACTION + 0;
   static constexpr uint32_t TRANSACTION_getAudioDecoder = ::android::IBinder::FIRST_CALL_TRANSACTION + 1;
-  static constexpr uint32_t TRANSACTION_start = ::android::IBinder::FIRST_CALL_TRANSACTION + 2;
-  static constexpr uint32_t TRANSACTION_stop = ::android::IBinder::FIRST_CALL_TRANSACTION + 3;
-  static constexpr uint32_t TRANSACTION_queueAudioFrame = ::android::IBinder::FIRST_CALL_TRANSACTION + 4;
-  static constexpr uint32_t TRANSACTION_flush = ::android::IBinder::FIRST_CALL_TRANSACTION + 5;
-  static constexpr uint32_t TRANSACTION_getVolume = ::android::IBinder::FIRST_CALL_TRANSACTION + 6;
-  static constexpr uint32_t TRANSACTION_setVolume = ::android::IBinder::FIRST_CALL_TRANSACTION + 7;
-  static constexpr uint32_t TRANSACTION_setVolumeRamp = ::android::IBinder::FIRST_CALL_TRANSACTION + 8;
+  static constexpr uint32_t TRANSACTION_attachClock = ::android::IBinder::FIRST_CALL_TRANSACTION + 2;
+  static constexpr uint32_t TRANSACTION_detachClock = ::android::IBinder::FIRST_CALL_TRANSACTION + 3;
+  static constexpr uint32_t TRANSACTION_getClock = ::android::IBinder::FIRST_CALL_TRANSACTION + 4;
+  static constexpr uint32_t TRANSACTION_start = ::android::IBinder::FIRST_CALL_TRANSACTION + 5;
+  static constexpr uint32_t TRANSACTION_stop = ::android::IBinder::FIRST_CALL_TRANSACTION + 6;
+  static constexpr uint32_t TRANSACTION_queueAudioFrame = ::android::IBinder::FIRST_CALL_TRANSACTION + 7;
+  static constexpr uint32_t TRANSACTION_flush = ::android::IBinder::FIRST_CALL_TRANSACTION + 8;
+  static constexpr uint32_t TRANSACTION_getVolume = ::android::IBinder::FIRST_CALL_TRANSACTION + 9;
+  static constexpr uint32_t TRANSACTION_setVolume = ::android::IBinder::FIRST_CALL_TRANSACTION + 10;
+  static constexpr uint32_t TRANSACTION_setVolumeRamp = ::android::IBinder::FIRST_CALL_TRANSACTION + 11;
   static constexpr uint32_t TRANSACTION_getInterfaceVersion = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777214;
   static constexpr uint32_t TRANSACTION_getInterfaceHash = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777213;
   explicit BnAudioSinkController();
@@ -35,6 +38,15 @@ public:
   }
   ::android::binder::Status getAudioDecoder(::com::rdk::hal::audiodecoder::IAudioDecoder::Id* _aidl_return) override {
     return _aidl_delegate->getAudioDecoder(_aidl_return);
+  }
+  ::android::binder::Status attachClock(const ::com::rdk::hal::avclock::IAVClock::Id& clockId) override {
+    return _aidl_delegate->attachClock(clockId);
+  }
+  ::android::binder::Status detachClock() override {
+    return _aidl_delegate->detachClock();
+  }
+  ::android::binder::Status getClock(::com::rdk::hal::avclock::IAVClock::Id* _aidl_return) override {
+    return _aidl_delegate->getClock(_aidl_return);
   }
   ::android::binder::Status start() override {
     return _aidl_delegate->start();

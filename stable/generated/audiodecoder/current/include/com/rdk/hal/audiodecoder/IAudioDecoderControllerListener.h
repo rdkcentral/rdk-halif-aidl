@@ -17,9 +17,10 @@ class IAudioDecoderControllerListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioDecoderControllerListener)
   static const int32_t VERSION = 1;
-  const std::string HASH = "cc94c1ee2e601adf7110f14537ecc115ffc83ed9";
-  static constexpr char* HASHVALUE = "cc94c1ee2e601adf7110f14537ecc115ffc83ed9";
-  virtual ::android::binder::Status onFrameOutput(int64_t nsPresentationTime, int64_t frameBufferHandle, const ::std::optional<::com::rdk::hal::audiodecoder::FrameMetadata>& metadata) = 0;
+  const std::string HASH = "d1b99af228345a73442defd7876f5d3c03ed3013";
+  static constexpr char* HASHVALUE = "d1b99af228345a73442defd7876f5d3c03ed3013";
+  virtual ::android::binder::Status onFrameOutput(int64_t nsPresentationTime, int64_t frameAVBufferHandle, const ::std::optional<::com::rdk::hal::audiodecoder::FrameMetadata>& metadata) = 0;
+  virtual ::android::binder::Status onDecodeBufferAvailable() = 0;
   virtual int32_t getInterfaceVersion() = 0;
   virtual std::string getInterfaceHash() = 0;
 };  // class IAudioDecoderControllerListener
@@ -29,7 +30,10 @@ public:
   ::android::IBinder* onAsBinder() override {
     return nullptr;
   }
-  ::android::binder::Status onFrameOutput(int64_t /*nsPresentationTime*/, int64_t /*frameBufferHandle*/, const ::std::optional<::com::rdk::hal::audiodecoder::FrameMetadata>& /*metadata*/) override {
+  ::android::binder::Status onFrameOutput(int64_t /*nsPresentationTime*/, int64_t /*frameAVBufferHandle*/, const ::std::optional<::com::rdk::hal::audiodecoder::FrameMetadata>& /*metadata*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status onDecodeBufferAvailable() override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   int32_t getInterfaceVersion() override {

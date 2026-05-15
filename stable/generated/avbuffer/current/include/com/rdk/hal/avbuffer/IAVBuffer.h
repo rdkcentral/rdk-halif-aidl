@@ -23,10 +23,9 @@ class IAVBuffer : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AVBuffer)
   static const int32_t VERSION = 1;
-  const std::string HASH = "c62a3479ce54c9d91be8a5a959a39b40ce7296b8";
-  static constexpr char* HASHVALUE = "c62a3479ce54c9d91be8a5a959a39b40ce7296b8";
+  const std::string HASH = "0225ada4d8b84372f0289a7bd4d9f59599d285e7";
+  static constexpr char* HASHVALUE = "0225ada4d8b84372f0289a7bd4d9f59599d285e7";
   static const ::std::string& serviceName();
-  enum : int64_t { INVALID_HANDLE = -1L };
   virtual ::android::binder::Status getHeapMetrics(bool secureHeap, ::com::rdk::hal::avbuffer::HeapMetrics* _aidl_return) = 0;
   virtual ::android::binder::Status createVideoPool(bool secureHeap, const ::com::rdk::hal::videodecoder::IVideoDecoder::Id& videoDecoderId, const ::android::sp<::com::rdk::hal::avbuffer::IAVBufferSpaceListener>& listener, ::com::rdk::hal::avbuffer::Pool* _aidl_return) = 0;
   virtual ::android::binder::Status createAudioPool(bool secureHeap, const ::com::rdk::hal::audiodecoder::IAudioDecoder::Id& audioDecoderId, const ::android::sp<::com::rdk::hal::avbuffer::IAVBufferSpaceListener>& listener, ::com::rdk::hal::avbuffer::Pool* _aidl_return) = 0;

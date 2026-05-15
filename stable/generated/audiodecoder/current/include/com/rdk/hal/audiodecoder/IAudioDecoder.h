@@ -27,8 +27,8 @@ class IAudioDecoder : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioDecoder)
   static const int32_t VERSION = 1;
-  const std::string HASH = "cc94c1ee2e601adf7110f14537ecc115ffc83ed9";
-  static constexpr char* HASHVALUE = "cc94c1ee2e601adf7110f14537ecc115ffc83ed9";
+  const std::string HASH = "d1b99af228345a73442defd7876f5d3c03ed3013";
+  static constexpr char* HASHVALUE = "d1b99af228345a73442defd7876f5d3c03ed3013";
   class Id : public ::android::Parcelable {
   public:
     int32_t value = 0;

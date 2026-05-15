@@ -17,8 +17,8 @@ class IFlashListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(FlashListener)
   static const int32_t VERSION = 1;
-  const std::string HASH = "ac43ccbd6a0c0ee9e7cff2cfdde25a77122dd8ae";
-  static constexpr char* HASHVALUE = "ac43ccbd6a0c0ee9e7cff2cfdde25a77122dd8ae";
+  const std::string HASH = "78378d5495bc2fb3472b4f1413ef3a50ef9fbe22";
+  static constexpr char* HASHVALUE = "78378d5495bc2fb3472b4f1413ef3a50ef9fbe22";
   virtual ::android::binder::Status onProgress(int32_t percentComplete) = 0;
   virtual ::android::binder::Status onCompleted(::com::rdk::hal::flash::FlashImageResult result, const ::std::string& report) = 0;
   virtual int32_t getInterfaceVersion() = 0;

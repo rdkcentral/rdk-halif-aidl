@@ -4,6 +4,7 @@
 #include <binder/Parcel.h>
 #include <binder/Status.h>
 #include <com/rdk/hal/videodecoder/CodecCapabilities.h>
+#include <com/rdk/hal/videodecoder/Colorimetry.h>
 #include <com/rdk/hal/videodecoder/DynamicRange.h>
 #include <tuple>
 #include <utils/String16.h>
@@ -17,24 +18,25 @@ class Capabilities : public ::android::Parcelable {
 public:
   ::std::vector<::com::rdk::hal::videodecoder::CodecCapabilities> supportedCodecs;
   ::std::vector<::com::rdk::hal::videodecoder::DynamicRange> supportedDynamicRanges;
+  ::std::vector<::com::rdk::hal::videodecoder::Colorimetry> supportedColorimetries;
   bool supportsSecure = false;
   inline bool operator!=(const Capabilities& rhs) const {
-    return std::tie(supportedCodecs, supportedDynamicRanges, supportsSecure) != std::tie(rhs.supportedCodecs, rhs.supportedDynamicRanges, rhs.supportsSecure);
+    return std::tie(supportedCodecs, supportedDynamicRanges, supportedColorimetries, supportsSecure) != std::tie(rhs.supportedCodecs, rhs.supportedDynamicRanges, rhs.supportedColorimetries, rhs.supportsSecure);
   }
   inline bool operator<(const Capabilities& rhs) const {
-    return std::tie(supportedCodecs, supportedDynamicRanges, supportsSecure) < std::tie(rhs.supportedCodecs, rhs.supportedDynamicRanges, rhs.supportsSecure);
+    return std::tie(supportedCodecs, supportedDynamicRanges, supportedColorimetries, supportsSecure) < std::tie(rhs.supportedCodecs, rhs.supportedDynamicRanges, rhs.supportedColorimetries, rhs.supportsSecure);
   }
   inline bool operator<=(const Capabilities& rhs) const {
-    return std::tie(supportedCodecs, supportedDynamicRanges, supportsSecure) <= std::tie(rhs.supportedCodecs, rhs.supportedDynamicRanges, rhs.supportsSecure);
+    return std::tie(supportedCodecs, supportedDynamicRanges, supportedColorimetries, supportsSecure) <= std::tie(rhs.supportedCodecs, rhs.supportedDynamicRanges, rhs.supportedColorimetries, rhs.supportsSecure);
   }
   inline bool operator==(const Capabilities& rhs) const {
-    return std::tie(supportedCodecs, supportedDynamicRanges, supportsSecure) == std::tie(rhs.supportedCodecs, rhs.supportedDynamicRanges, rhs.supportsSecure);
+    return std::tie(supportedCodecs, supportedDynamicRanges, supportedColorimetries, supportsSecure) == std::tie(rhs.supportedCodecs, rhs.supportedDynamicRanges, rhs.supportedColorimetries, rhs.supportsSecure);
   }
   inline bool operator>(const Capabilities& rhs) const {
-    return std::tie(supportedCodecs, supportedDynamicRanges, supportsSecure) > std::tie(rhs.supportedCodecs, rhs.supportedDynamicRanges, rhs.supportsSecure);
+    return std::tie(supportedCodecs, supportedDynamicRanges, supportedColorimetries, supportsSecure) > std::tie(rhs.supportedCodecs, rhs.supportedDynamicRanges, rhs.supportedColorimetries, rhs.supportsSecure);
   }
   inline bool operator>=(const Capabilities& rhs) const {
-    return std::tie(supportedCodecs, supportedDynamicRanges, supportsSecure) >= std::tie(rhs.supportedCodecs, rhs.supportedDynamicRanges, rhs.supportsSecure);
+    return std::tie(supportedCodecs, supportedDynamicRanges, supportedColorimetries, supportsSecure) >= std::tie(rhs.supportedCodecs, rhs.supportedDynamicRanges, rhs.supportedColorimetries, rhs.supportsSecure);
   }
 
   ::android::Parcelable::Stability getStability() const override { return ::android::Parcelable::Stability::STABILITY_VINTF; }
@@ -49,6 +51,7 @@ public:
     os << "Capabilities{";
     os << "supportedCodecs: " << ::android::internal::ToString(supportedCodecs);
     os << ", supportedDynamicRanges: " << ::android::internal::ToString(supportedDynamicRanges);
+    os << ", supportedColorimetries: " << ::android::internal::ToString(supportedColorimetries);
     os << ", supportsSecure: " << ::android::internal::ToString(supportsSecure);
     os << "}";
     return os.str();

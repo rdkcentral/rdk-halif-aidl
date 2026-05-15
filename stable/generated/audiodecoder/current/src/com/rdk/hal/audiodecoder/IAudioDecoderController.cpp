@@ -1,4 +1,3 @@
-#include <mutex>
 #include <com/rdk/hal/audiodecoder/IAudioDecoderController.h>
 #include <com/rdk/hal/audiodecoder/BpAudioDecoderController.h>
 namespace com {
@@ -123,7 +122,7 @@ BpAudioDecoderController::BpAudioDecoderController(const ::android::sp<::android
   return _aidl_status;
 }
 
-::android::binder::Status BpAudioDecoderController::decodeBuffer(int64_t nsPresentationTime, int64_t bufferHandle, int32_t trimStartNs, int32_t trimEndNs, bool* _aidl_return) {
+::android::binder::Status BpAudioDecoderController::decodeBufferWithMetadata(int64_t bufferHandle, const ::com::rdk::hal::audiodecoder::InputBufferMetadata& metadata, bool* _aidl_return) {
   ::android::Parcel _aidl_data;
   _aidl_data.markForBinder(remoteStrong());
   ::android::Parcel _aidl_reply;
@@ -133,25 +132,17 @@ BpAudioDecoderController::BpAudioDecoderController(const ::android::sp<::android
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = _aidl_data.writeInt64(nsPresentationTime);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
   _aidl_ret_status = _aidl_data.writeInt64(bufferHandle);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = _aidl_data.writeInt32(trimStartNs);
+  _aidl_ret_status = _aidl_data.writeParcelable(metadata);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = _aidl_data.writeInt32(trimEndNs);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnAudioDecoderController::TRANSACTION_decodeBuffer, _aidl_data, &_aidl_reply, 0);
+  _aidl_ret_status = remote()->transact(BnAudioDecoderController::TRANSACTION_decodeBufferWithMetadata, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IAudioDecoderController::getDefaultImpl())) {
-     return IAudioDecoderController::getDefaultImpl()->decodeBuffer(nsPresentationTime, bufferHandle, trimStartNs, trimEndNs, _aidl_return);
+     return IAudioDecoderController::getDefaultImpl()->decodeBufferWithMetadata(bufferHandle, metadata, _aidl_return);
   }
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -234,35 +225,6 @@ BpAudioDecoderController::BpAudioDecoderController(const ::android::sp<::android
   return _aidl_status;
 }
 
-::android::binder::Status BpAudioDecoderController::signalEOS() {
-  ::android::Parcel _aidl_data;
-  _aidl_data.markForBinder(remoteStrong());
-  ::android::Parcel _aidl_reply;
-  ::android::status_t _aidl_ret_status = ::android::OK;
-  ::android::binder::Status _aidl_status;
-  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnAudioDecoderController::TRANSACTION_signalEOS, _aidl_data, &_aidl_reply, 0);
-  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IAudioDecoderController::getDefaultImpl())) {
-     return IAudioDecoderController::getDefaultImpl()->signalEOS();
-  }
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  if (!_aidl_status.isOk()) {
-    return _aidl_status;
-  }
-  _aidl_error:
-  _aidl_status.setFromStatusT(_aidl_ret_status);
-  return _aidl_status;
-}
-
 ::android::binder::Status BpAudioDecoderController::parseCodecSpecificData(::com::rdk::hal::audiodecoder::CSDAudioFormat csdAudioFormat, const ::std::vector<uint8_t>& codecData, bool* _aidl_return) {
   ::android::Parcel _aidl_data;
   _aidl_data.markForBinder(remoteStrong());
@@ -298,6 +260,43 @@ BpAudioDecoderController::BpAudioDecoderController(const ::android::sp<::android
   _aidl_ret_status = _aidl_reply.readBool(_aidl_return);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
+  }
+  _aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
+
+::android::binder::Status BpAudioDecoderController::setAudioFormat(int32_t channels, int32_t sampleRate) {
+  ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remoteStrong());
+  ::android::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::binder::Status _aidl_status;
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeInt32(channels);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeInt32(sampleRate);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnAudioDecoderController::TRANSACTION_setAudioFormat, _aidl_data, &_aidl_reply, 0);
+  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IAudioDecoderController::getDefaultImpl())) {
+     return IAudioDecoderController::getDefaultImpl()->setAudioFormat(channels, sampleRate);
+  }
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  if (!_aidl_status.isOk()) {
+    return _aidl_status;
   }
   _aidl_error:
   _aidl_status.setFromStatusT(_aidl_ret_status);
@@ -428,30 +427,20 @@ BnAudioDecoderController::BnAudioDecoderController()
     }
   }
   break;
-  case BnAudioDecoderController::TRANSACTION_decodeBuffer:
+  case BnAudioDecoderController::TRANSACTION_decodeBufferWithMetadata:
   {
-    int64_t in_nsPresentationTime;
     int64_t in_bufferHandle;
-    int32_t in_trimStartNs;
-    int32_t in_trimEndNs;
+    ::com::rdk::hal::audiodecoder::InputBufferMetadata in_metadata;
     bool _aidl_return;
     if (!(_aidl_data.checkInterface(this))) {
       _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readInt64(&in_nsPresentationTime);
-    if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
     _aidl_ret_status = _aidl_data.readInt64(&in_bufferHandle);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
-    _aidl_ret_status = _aidl_data.readInt32(&in_trimStartNs);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readInt32(&in_trimEndNs);
+    _aidl_ret_status = _aidl_data.readParcelable(&in_metadata);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
@@ -459,7 +448,7 @@ BnAudioDecoderController::BnAudioDecoderController()
       _aidl_ret_status = st.writeToParcel(_aidl_reply);
       break;
     }
-    ::android::binder::Status _aidl_status(decodeBuffer(in_nsPresentationTime, in_bufferHandle, in_trimStartNs, in_trimEndNs, &_aidl_return));
+    ::android::binder::Status _aidl_status(decodeBufferWithMetadata(in_bufferHandle, in_metadata, &_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
@@ -514,22 +503,6 @@ BnAudioDecoderController::BnAudioDecoderController()
     }
   }
   break;
-  case BnAudioDecoderController::TRANSACTION_signalEOS:
-  {
-    if (!(_aidl_data.checkInterface(this))) {
-      _aidl_ret_status = ::android::BAD_TYPE;
-      break;
-    }
-    ::android::binder::Status _aidl_status(signalEOS());
-    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (!_aidl_status.isOk()) {
-      break;
-    }
-  }
-  break;
   case BnAudioDecoderController::TRANSACTION_parseCodecSpecificData:
   {
     ::com::rdk::hal::audiodecoder::CSDAudioFormat in_csdAudioFormat;
@@ -561,6 +534,36 @@ BnAudioDecoderController::BnAudioDecoderController()
     }
     _aidl_ret_status = _aidl_reply->writeBool(_aidl_return);
     if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+  }
+  break;
+  case BnAudioDecoderController::TRANSACTION_setAudioFormat:
+  {
+    int32_t in_channels;
+    int32_t in_sampleRate;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readInt32(&in_channels);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readInt32(&in_sampleRate);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
+    ::android::binder::Status _aidl_status(setAudioFormat(in_channels, in_sampleRate));
+    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (!_aidl_status.isOk()) {
       break;
     }
   }

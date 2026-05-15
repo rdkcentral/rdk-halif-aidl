@@ -17,8 +17,8 @@ class IVideoDecoderEventListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(VideoDecoderEventListener)
   static const int32_t VERSION = 1;
-  const std::string HASH = "d83340f728c7a177fbf5dd725b346b3579fd9aab";
-  static constexpr char* HASHVALUE = "d83340f728c7a177fbf5dd725b346b3579fd9aab";
+  const std::string HASH = "afc6bd3166231467a3288c4956b6b4322e039c38";
+  static constexpr char* HASHVALUE = "afc6bd3166231467a3288c4956b6b4322e039c38";
   virtual ::android::binder::Status onDecodeError(::com::rdk::hal::videodecoder::ErrorCode errorCode, int32_t vendorErrorCode) = 0;
   virtual ::android::binder::Status onStateChanged(::com::rdk::hal::State oldState, ::com::rdk::hal::State newState) = 0;
   virtual int32_t getInterfaceVersion() = 0;

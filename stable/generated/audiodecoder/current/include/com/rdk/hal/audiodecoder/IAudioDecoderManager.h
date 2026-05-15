@@ -19,8 +19,8 @@ class IAudioDecoderManager : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioDecoderManager)
   static const int32_t VERSION = 1;
-  const std::string HASH = "cc94c1ee2e601adf7110f14537ecc115ffc83ed9";
-  static constexpr char* HASHVALUE = "cc94c1ee2e601adf7110f14537ecc115ffc83ed9";
+  const std::string HASH = "d1b99af228345a73442defd7876f5d3c03ed3013";
+  static constexpr char* HASHVALUE = "d1b99af228345a73442defd7876f5d3c03ed3013";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getAudioDecoderIds(::std::vector<::com::rdk::hal::audiodecoder::IAudioDecoder::Id>* _aidl_return) = 0;
   virtual ::android::binder::Status getAudioDecoder(const ::com::rdk::hal::audiodecoder::IAudioDecoder::Id& decoderResourceId, ::android::sp<::com::rdk::hal::audiodecoder::IAudioDecoder>* _aidl_return) = 0;

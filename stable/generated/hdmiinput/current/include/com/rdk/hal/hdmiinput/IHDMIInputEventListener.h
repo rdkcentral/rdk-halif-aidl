@@ -17,8 +17,8 @@ class IHDMIInputEventListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(HDMIInputEventListener)
   static const int32_t VERSION = 1;
-  const std::string HASH = "82e8e5917a80b0598944ae1e7c36f1eba27fac32";
-  static constexpr char* HASHVALUE = "82e8e5917a80b0598944ae1e7c36f1eba27fac32";
+  const std::string HASH = "7946019ce36bd9a8290f938cebf478d23b12f11c";
+  static constexpr char* HASHVALUE = "7946019ce36bd9a8290f938cebf478d23b12f11c";
   virtual ::android::binder::Status onStateChanged(::com::rdk::hal::hdmiinput::State oldState, ::com::rdk::hal::hdmiinput::State newState) = 0;
   virtual ::android::binder::Status onEDIDChange(const ::std::vector<uint8_t>& edid) = 0;
   virtual int32_t getInterfaceVersion() = 0;

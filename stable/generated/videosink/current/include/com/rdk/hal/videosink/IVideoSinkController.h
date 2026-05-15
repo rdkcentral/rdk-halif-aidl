@@ -4,6 +4,7 @@
 #include <binder/IInterface.h>
 #include <binder/Status.h>
 #include <com/rdk/hal/PropertyValue.h>
+#include <com/rdk/hal/avclock/IAVClock.h>
 #include <com/rdk/hal/videodecoder/FrameMetadata.h>
 #include <com/rdk/hal/videodecoder/IVideoDecoder.h>
 #include <com/rdk/hal/videosink/Property.h>
@@ -19,11 +20,14 @@ class IVideoSinkController : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(VideoSinkController)
   static const int32_t VERSION = 1;
-  const std::string HASH = "4dc98af4f8977cf8c6c7e7f353161287f0b7b106";
-  static constexpr char* HASHVALUE = "4dc98af4f8977cf8c6c7e7f353161287f0b7b106";
+  const std::string HASH = "633f2c6cf34a8de6e303e55c2a0c66ae26db4059";
+  static constexpr char* HASHVALUE = "633f2c6cf34a8de6e303e55c2a0c66ae26db4059";
   virtual ::android::binder::Status setProperty(::com::rdk::hal::videosink::Property property, const ::com::rdk::hal::PropertyValue& propertyValue, bool* _aidl_return) = 0;
   virtual ::android::binder::Status setVideoDecoder(const ::com::rdk::hal::videodecoder::IVideoDecoder::Id& videoDecoderId, bool* _aidl_return) = 0;
   virtual ::android::binder::Status getVideoDecoder(::com::rdk::hal::videodecoder::IVideoDecoder::Id* _aidl_return) = 0;
+  virtual ::android::binder::Status attachClock(const ::com::rdk::hal::avclock::IAVClock::Id& clockId) = 0;
+  virtual ::android::binder::Status detachClock() = 0;
+  virtual ::android::binder::Status getClock(::com::rdk::hal::avclock::IAVClock::Id* _aidl_return) = 0;
   virtual ::android::binder::Status start() = 0;
   virtual ::android::binder::Status stop() = 0;
   virtual ::android::binder::Status queueVideoFrame(int64_t nsPresentationTime, int64_t frameBufferHandle, const ::com::rdk::hal::videodecoder::FrameMetadata& metadata, bool* _aidl_return) = 0;
@@ -45,6 +49,15 @@ public:
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status getVideoDecoder(::com::rdk::hal::videodecoder::IVideoDecoder::Id* /*_aidl_return*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status attachClock(const ::com::rdk::hal::avclock::IAVClock::Id& /*clockId*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status detachClock() override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status getClock(::com::rdk::hal::avclock::IAVClock::Id* /*_aidl_return*/) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status start() override {

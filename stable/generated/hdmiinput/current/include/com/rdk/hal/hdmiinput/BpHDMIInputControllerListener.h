@@ -16,7 +16,7 @@ public:
   virtual ~BpHDMIInputControllerListener() = default;
   ::android::binder::Status onConnectionStateChanged(bool connectionState) override;
   ::android::binder::Status onSignalStateChanged(::com::rdk::hal::hdmiinput::SignalState signalState) override;
-  ::android::binder::Status onVideoFormatChanged(::com::rdk::hal::hdmiinput::VIC vic) override;
+  ::android::binder::Status onVIChanged(::com::rdk::hal::hdmiinput::VIC vic) override;
   ::android::binder::Status onVRRChanged(bool vrrActive, bool M_CONST, bool fastVActive, double frameRate) override;
   ::android::binder::Status onAVIInfoFrame(const ::std::vector<uint8_t>& data) override;
   ::android::binder::Status onAudioInfoFrame(const ::std::vector<uint8_t>& data) override;

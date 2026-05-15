@@ -1,4 +1,3 @@
-#include <mutex>
 #include <com/rdk/hal/audiosink/IAudioSinkControllerListener.h>
 #include <com/rdk/hal/audiosink/BpAudioSinkControllerListener.h>
 namespace com {
@@ -176,6 +175,28 @@ BpAudioSinkControllerListener::BpAudioSinkControllerListener(const ::android::sp
   return _aidl_status;
 }
 
+::android::binder::Status BpAudioSinkControllerListener::onFrameBufferAvailable() {
+  ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remoteStrong());
+  ::android::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::binder::Status _aidl_status;
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnAudioSinkControllerListener::TRANSACTION_onFrameBufferAvailable, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_ONEWAY);
+  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IAudioSinkControllerListener::getDefaultImpl())) {
+     return IAudioSinkControllerListener::getDefaultImpl()->onFrameBufferAvailable();
+  }
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
+
 int32_t BpAudioSinkControllerListener::getInterfaceVersion() {
   if (cached_version_ == -1) {
     ::android::Parcel data;
@@ -326,6 +347,15 @@ BnAudioSinkControllerListener::BnAudioSinkControllerListener()
       break;
     }
     ::android::binder::Status _aidl_status(onFlushComplete());
+  }
+  break;
+  case BnAudioSinkControllerListener::TRANSACTION_onFrameBufferAvailable:
+  {
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    ::android::binder::Status _aidl_status(onFrameBufferAvailable());
   }
   break;
   case BnAudioSinkControllerListener::TRANSACTION_getInterfaceVersion:

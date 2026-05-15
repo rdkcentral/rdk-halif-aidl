@@ -6,9 +6,11 @@
 #include <com/rdk/hal/videodecoder/Codec.h>
 #include <com/rdk/hal/videodecoder/CodecLevel.h>
 #include <com/rdk/hal/videodecoder/CodecProfile.h>
+#include <com/rdk/hal/videodecoder/PixelFormat.h>
 #include <cstdint>
 #include <tuple>
 #include <utils/String16.h>
+#include <vector>
 
 namespace com {
 namespace rdk {
@@ -22,23 +24,24 @@ public:
   int32_t maxFrameRate = 0;
   int32_t maxFrameWidth = 0;
   int32_t maxFrameHeight = 0;
+  ::std::vector<::com::rdk::hal::videodecoder::PixelFormat> supportedOutputPixelFormats;
   inline bool operator!=(const CodecCapabilities& rhs) const {
-    return std::tie(codec, profile, level, maxFrameRate, maxFrameWidth, maxFrameHeight) != std::tie(rhs.codec, rhs.profile, rhs.level, rhs.maxFrameRate, rhs.maxFrameWidth, rhs.maxFrameHeight);
+    return std::tie(codec, profile, level, maxFrameRate, maxFrameWidth, maxFrameHeight, supportedOutputPixelFormats) != std::tie(rhs.codec, rhs.profile, rhs.level, rhs.maxFrameRate, rhs.maxFrameWidth, rhs.maxFrameHeight, rhs.supportedOutputPixelFormats);
   }
   inline bool operator<(const CodecCapabilities& rhs) const {
-    return std::tie(codec, profile, level, maxFrameRate, maxFrameWidth, maxFrameHeight) < std::tie(rhs.codec, rhs.profile, rhs.level, rhs.maxFrameRate, rhs.maxFrameWidth, rhs.maxFrameHeight);
+    return std::tie(codec, profile, level, maxFrameRate, maxFrameWidth, maxFrameHeight, supportedOutputPixelFormats) < std::tie(rhs.codec, rhs.profile, rhs.level, rhs.maxFrameRate, rhs.maxFrameWidth, rhs.maxFrameHeight, rhs.supportedOutputPixelFormats);
   }
   inline bool operator<=(const CodecCapabilities& rhs) const {
-    return std::tie(codec, profile, level, maxFrameRate, maxFrameWidth, maxFrameHeight) <= std::tie(rhs.codec, rhs.profile, rhs.level, rhs.maxFrameRate, rhs.maxFrameWidth, rhs.maxFrameHeight);
+    return std::tie(codec, profile, level, maxFrameRate, maxFrameWidth, maxFrameHeight, supportedOutputPixelFormats) <= std::tie(rhs.codec, rhs.profile, rhs.level, rhs.maxFrameRate, rhs.maxFrameWidth, rhs.maxFrameHeight, rhs.supportedOutputPixelFormats);
   }
   inline bool operator==(const CodecCapabilities& rhs) const {
-    return std::tie(codec, profile, level, maxFrameRate, maxFrameWidth, maxFrameHeight) == std::tie(rhs.codec, rhs.profile, rhs.level, rhs.maxFrameRate, rhs.maxFrameWidth, rhs.maxFrameHeight);
+    return std::tie(codec, profile, level, maxFrameRate, maxFrameWidth, maxFrameHeight, supportedOutputPixelFormats) == std::tie(rhs.codec, rhs.profile, rhs.level, rhs.maxFrameRate, rhs.maxFrameWidth, rhs.maxFrameHeight, rhs.supportedOutputPixelFormats);
   }
   inline bool operator>(const CodecCapabilities& rhs) const {
-    return std::tie(codec, profile, level, maxFrameRate, maxFrameWidth, maxFrameHeight) > std::tie(rhs.codec, rhs.profile, rhs.level, rhs.maxFrameRate, rhs.maxFrameWidth, rhs.maxFrameHeight);
+    return std::tie(codec, profile, level, maxFrameRate, maxFrameWidth, maxFrameHeight, supportedOutputPixelFormats) > std::tie(rhs.codec, rhs.profile, rhs.level, rhs.maxFrameRate, rhs.maxFrameWidth, rhs.maxFrameHeight, rhs.supportedOutputPixelFormats);
   }
   inline bool operator>=(const CodecCapabilities& rhs) const {
-    return std::tie(codec, profile, level, maxFrameRate, maxFrameWidth, maxFrameHeight) >= std::tie(rhs.codec, rhs.profile, rhs.level, rhs.maxFrameRate, rhs.maxFrameWidth, rhs.maxFrameHeight);
+    return std::tie(codec, profile, level, maxFrameRate, maxFrameWidth, maxFrameHeight, supportedOutputPixelFormats) >= std::tie(rhs.codec, rhs.profile, rhs.level, rhs.maxFrameRate, rhs.maxFrameWidth, rhs.maxFrameHeight, rhs.supportedOutputPixelFormats);
   }
 
   ::android::Parcelable::Stability getStability() const override { return ::android::Parcelable::Stability::STABILITY_VINTF; }
@@ -57,6 +60,7 @@ public:
     os << ", maxFrameRate: " << ::android::internal::ToString(maxFrameRate);
     os << ", maxFrameWidth: " << ::android::internal::ToString(maxFrameWidth);
     os << ", maxFrameHeight: " << ::android::internal::ToString(maxFrameHeight);
+    os << ", supportedOutputPixelFormats: " << ::android::internal::ToString(supportedOutputPixelFormats);
     os << "}";
     return os.str();
   }

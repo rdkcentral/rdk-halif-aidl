@@ -12,9 +12,7 @@ public:
   static constexpr uint32_t TRANSACTION_getConnectionState = ::android::IBinder::FIRST_CALL_TRANSACTION + 0;
   static constexpr uint32_t TRANSACTION_start = ::android::IBinder::FIRST_CALL_TRANSACTION + 1;
   static constexpr uint32_t TRANSACTION_stop = ::android::IBinder::FIRST_CALL_TRANSACTION + 2;
-  static constexpr uint32_t TRANSACTION_setProperty = ::android::IBinder::FIRST_CALL_TRANSACTION + 3;
-  static constexpr uint32_t TRANSACTION_setPropertyMulti = ::android::IBinder::FIRST_CALL_TRANSACTION + 4;
-  static constexpr uint32_t TRANSACTION_setEDID = ::android::IBinder::FIRST_CALL_TRANSACTION + 5;
+  static constexpr uint32_t TRANSACTION_setEDID = ::android::IBinder::FIRST_CALL_TRANSACTION + 3;
   static constexpr uint32_t TRANSACTION_getInterfaceVersion = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777214;
   static constexpr uint32_t TRANSACTION_getInterfaceHash = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777213;
   explicit BnHDMIInputController();
@@ -35,12 +33,6 @@ public:
   }
   ::android::binder::Status stop() override {
     return _aidl_delegate->stop();
-  }
-  ::android::binder::Status setProperty(::com::rdk::hal::hdmiinput::Property property, const ::com::rdk::hal::PropertyValue& propertyValue, bool* _aidl_return) override {
-    return _aidl_delegate->setProperty(property, propertyValue, _aidl_return);
-  }
-  ::android::binder::Status setPropertyMulti(const ::std::vector<::com::rdk::hal::hdmiinput::PropertyKVPair>& propertyKVList, bool* _aidl_return) override {
-    return _aidl_delegate->setPropertyMulti(propertyKVList, _aidl_return);
   }
   ::android::binder::Status setEDID(const ::std::vector<uint8_t>& edid, bool* _aidl_return) override {
     return _aidl_delegate->setEDID(edid, _aidl_return);

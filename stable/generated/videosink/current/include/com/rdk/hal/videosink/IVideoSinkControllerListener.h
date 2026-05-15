@@ -16,14 +16,15 @@ class IVideoSinkControllerListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(VideoSinkControllerListener)
   static const int32_t VERSION = 1;
-  const std::string HASH = "4dc98af4f8977cf8c6c7e7f353161287f0b7b106";
-  static constexpr char* HASHVALUE = "4dc98af4f8977cf8c6c7e7f353161287f0b7b106";
+  const std::string HASH = "633f2c6cf34a8de6e303e55c2a0c66ae26db4059";
+  static constexpr char* HASHVALUE = "633f2c6cf34a8de6e303e55c2a0c66ae26db4059";
   virtual ::android::binder::Status onFirstFrameRendered(int64_t nsPresentationTime) = 0;
   virtual ::android::binder::Status onEndOfStream(int64_t nsPresentationTime) = 0;
   virtual ::android::binder::Status onVideoUnderflow() = 0;
   virtual ::android::binder::Status onVideoResumed() = 0;
   virtual ::android::binder::Status onFlushComplete() = 0;
   virtual ::android::binder::Status onStateChanged(::com::rdk::hal::State oldState, ::com::rdk::hal::State newState) = 0;
+  virtual ::android::binder::Status onFrameBufferAvailable() = 0;
   virtual int32_t getInterfaceVersion() = 0;
   virtual std::string getInterfaceHash() = 0;
 };  // class IVideoSinkControllerListener
@@ -49,6 +50,9 @@ public:
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status onStateChanged(::com::rdk::hal::State /*oldState*/, ::com::rdk::hal::State /*newState*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status onFrameBufferAvailable() override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   int32_t getInterfaceVersion() override {

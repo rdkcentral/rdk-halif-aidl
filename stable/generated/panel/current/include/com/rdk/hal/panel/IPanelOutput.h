@@ -29,8 +29,8 @@ class IPanelOutput : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(PanelOutput)
   static const int32_t VERSION = 1;
-  const std::string HASH = "cdc73f570c9b30e5c89acdbde61c0f2c8312ef91";
-  static constexpr char* HASHVALUE = "cdc73f570c9b30e5c89acdbde61c0f2c8312ef91";
+  const std::string HASH = "bb511b0c1499b255ed2becdb75ea3a89a852afb6";
+  static constexpr char* HASHVALUE = "bb511b0c1499b255ed2becdb75ea3a89a852afb6";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getCapabilities(::com::rdk::hal::panel::Capabilities* _aidl_return) = 0;
   virtual ::android::binder::Status getFactoryInterface(::android::sp<::com::rdk::hal::panel::IFactoryPanel>* _aidl_return) = 0;

@@ -19,8 +19,8 @@ class IVideoSinkManager : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(VideoSinkManager)
   static const int32_t VERSION = 1;
-  const std::string HASH = "4dc98af4f8977cf8c6c7e7f353161287f0b7b106";
-  static constexpr char* HASHVALUE = "4dc98af4f8977cf8c6c7e7f353161287f0b7b106";
+  const std::string HASH = "633f2c6cf34a8de6e303e55c2a0c66ae26db4059";
+  static constexpr char* HASHVALUE = "633f2c6cf34a8de6e303e55c2a0c66ae26db4059";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getVideoSinkIds(::std::vector<::com::rdk::hal::videosink::IVideoSink::Id>* _aidl_return) = 0;
   virtual ::android::binder::Status getVideoSink(const ::com::rdk::hal::videosink::IVideoSink::Id& videoSinkId, ::android::sp<::com::rdk::hal::videosink::IVideoSink>* _aidl_return) = 0;

@@ -18,10 +18,11 @@ class IVideoDecoderControllerListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(VideoDecoderControllerListener)
   static const int32_t VERSION = 1;
-  const std::string HASH = "d83340f728c7a177fbf5dd725b346b3579fd9aab";
-  static constexpr char* HASHVALUE = "d83340f728c7a177fbf5dd725b346b3579fd9aab";
-  virtual ::android::binder::Status onFrameOutput(int64_t nsPresentationTime, int64_t frameBufferHandle, const ::std::optional<::com::rdk::hal::videodecoder::FrameMetadata>& metadata) = 0;
+  const std::string HASH = "afc6bd3166231467a3288c4956b6b4322e039c38";
+  static constexpr char* HASHVALUE = "afc6bd3166231467a3288c4956b6b4322e039c38";
+  virtual ::android::binder::Status onFrameOutput(int64_t nsPresentationTime, int64_t frameAVBufferHandle, const ::std::optional<::com::rdk::hal::videodecoder::FrameMetadata>& metadata) = 0;
   virtual ::android::binder::Status onUserDataOutput(int64_t nsPresentationTime, const ::std::vector<uint8_t>& userData) = 0;
+  virtual ::android::binder::Status onDecodeBufferAvailable() = 0;
   virtual int32_t getInterfaceVersion() = 0;
   virtual std::string getInterfaceHash() = 0;
 };  // class IVideoDecoderControllerListener
@@ -31,10 +32,13 @@ public:
   ::android::IBinder* onAsBinder() override {
     return nullptr;
   }
-  ::android::binder::Status onFrameOutput(int64_t /*nsPresentationTime*/, int64_t /*frameBufferHandle*/, const ::std::optional<::com::rdk::hal::videodecoder::FrameMetadata>& /*metadata*/) override {
+  ::android::binder::Status onFrameOutput(int64_t /*nsPresentationTime*/, int64_t /*frameAVBufferHandle*/, const ::std::optional<::com::rdk::hal::videodecoder::FrameMetadata>& /*metadata*/) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status onUserDataOutput(int64_t /*nsPresentationTime*/, const ::std::vector<uint8_t>& /*userData*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status onDecodeBufferAvailable() override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   int32_t getInterfaceVersion() override {

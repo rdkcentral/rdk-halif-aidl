@@ -1,4 +1,3 @@
-#include <mutex>
 #include <com/rdk/hal/avclock/IAVClockControllerListener.h>
 #include <com/rdk/hal/avclock/BpAVClockControllerListener.h>
 namespace com {
@@ -45,6 +44,32 @@ BpAVClockControllerListener::BpAVClockControllerListener(const ::android::sp<::a
   _aidl_ret_status = remote()->transact(BnAVClockControllerListener::TRANSACTION_onStateChanged, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_ONEWAY);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IAVClockControllerListener::getDefaultImpl())) {
      return IAVClockControllerListener::getDefaultImpl()->onStateChanged(oldState, newState);
+  }
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
+
+::android::binder::Status BpAVClockControllerListener::onPrimed(const ::com::rdk::hal::avclock::ClockTime& currentClockTime) {
+  ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remoteStrong());
+  ::android::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::binder::Status _aidl_status;
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeParcelable(currentClockTime);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnAVClockControllerListener::TRANSACTION_onPrimed, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_ONEWAY);
+  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IAVClockControllerListener::getDefaultImpl())) {
+     return IAVClockControllerListener::getDefaultImpl()->onPrimed(currentClockTime);
   }
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -132,6 +157,24 @@ BnAVClockControllerListener::BnAVClockControllerListener()
       break;
     }
     ::android::binder::Status _aidl_status(onStateChanged(in_oldState, in_newState));
+  }
+  break;
+  case BnAVClockControllerListener::TRANSACTION_onPrimed:
+  {
+    ::com::rdk::hal::avclock::ClockTime in_currentClockTime;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readParcelable(&in_currentClockTime);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
+    ::android::binder::Status _aidl_status(onPrimed(in_currentClockTime));
   }
   break;
   case BnAVClockControllerListener::TRANSACTION_getInterfaceVersion:

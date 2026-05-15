@@ -14,9 +14,10 @@ public:
   static constexpr uint32_t TRANSACTION_getPropertyMulti = ::android::IBinder::FIRST_CALL_TRANSACTION + 2;
   static constexpr uint32_t TRANSACTION_getState = ::android::IBinder::FIRST_CALL_TRANSACTION + 3;
   static constexpr uint32_t TRANSACTION_open = ::android::IBinder::FIRST_CALL_TRANSACTION + 4;
-  static constexpr uint32_t TRANSACTION_close = ::android::IBinder::FIRST_CALL_TRANSACTION + 5;
-  static constexpr uint32_t TRANSACTION_registerEventListener = ::android::IBinder::FIRST_CALL_TRANSACTION + 6;
-  static constexpr uint32_t TRANSACTION_unregisterEventListener = ::android::IBinder::FIRST_CALL_TRANSACTION + 7;
+  static constexpr uint32_t TRANSACTION_openWithResolution = ::android::IBinder::FIRST_CALL_TRANSACTION + 5;
+  static constexpr uint32_t TRANSACTION_close = ::android::IBinder::FIRST_CALL_TRANSACTION + 6;
+  static constexpr uint32_t TRANSACTION_registerEventListener = ::android::IBinder::FIRST_CALL_TRANSACTION + 7;
+  static constexpr uint32_t TRANSACTION_unregisterEventListener = ::android::IBinder::FIRST_CALL_TRANSACTION + 8;
   static constexpr uint32_t TRANSACTION_getInterfaceVersion = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777214;
   static constexpr uint32_t TRANSACTION_getInterfaceHash = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777213;
   explicit BnVideoDecoder();
@@ -43,6 +44,9 @@ public:
   }
   ::android::binder::Status open(::com::rdk::hal::videodecoder::Codec codec, bool secure, const ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderControllerListener>& videoDecoderControllerListener, ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderController>* _aidl_return) override {
     return _aidl_delegate->open(codec, secure, videoDecoderControllerListener, _aidl_return);
+  }
+  ::android::binder::Status openWithResolution(::com::rdk::hal::videodecoder::Codec codec, bool secure, const ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderControllerListener>& videoDecoderControllerListener, int32_t maxWidth, int32_t maxHeight, ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderController>* _aidl_return) override {
+    return _aidl_delegate->openWithResolution(codec, secure, videoDecoderControllerListener, maxWidth, maxHeight, _aidl_return);
   }
   ::android::binder::Status close(const ::android::sp<::com::rdk::hal::videodecoder::IVideoDecoderController>& videoDecoderController, bool* _aidl_return) override {
     return _aidl_delegate->close(videoDecoderController, _aidl_return);

@@ -17,8 +17,8 @@ class IPanelOutputListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(PanelOutputListener)
   static const int32_t VERSION = 1;
-  const std::string HASH = "cdc73f570c9b30e5c89acdbde61c0f2c8312ef91";
-  static constexpr char* HASHVALUE = "cdc73f570c9b30e5c89acdbde61c0f2c8312ef91";
+  const std::string HASH = "bb511b0c1499b255ed2becdb75ea3a89a852afb6";
+  static constexpr char* HASHVALUE = "bb511b0c1499b255ed2becdb75ea3a89a852afb6";
   virtual ::android::binder::Status onPictureModeChanged(const ::android::String16& pictureMode) = 0;
   virtual ::android::binder::Status onVideoSourceChanged(::com::rdk::hal::AVSource avSource) = 0;
   virtual ::android::binder::Status onVideoFormatChanged(::com::rdk::hal::videodecoder::DynamicRange dynamicRange) = 0;

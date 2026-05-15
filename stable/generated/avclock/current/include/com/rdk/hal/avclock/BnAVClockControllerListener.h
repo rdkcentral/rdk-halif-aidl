@@ -10,6 +10,7 @@ namespace avclock {
 class BnAVClockControllerListener : public ::android::BnInterface<IAVClockControllerListener> {
 public:
   static constexpr uint32_t TRANSACTION_onStateChanged = ::android::IBinder::FIRST_CALL_TRANSACTION + 0;
+  static constexpr uint32_t TRANSACTION_onPrimed = ::android::IBinder::FIRST_CALL_TRANSACTION + 1;
   static constexpr uint32_t TRANSACTION_getInterfaceVersion = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777214;
   static constexpr uint32_t TRANSACTION_getInterfaceHash = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777213;
   explicit BnAVClockControllerListener();
@@ -24,6 +25,9 @@ public:
 
   ::android::binder::Status onStateChanged(::com::rdk::hal::State oldState, ::com::rdk::hal::State newState) override {
     return _aidl_delegate->onStateChanged(oldState, newState);
+  }
+  ::android::binder::Status onPrimed(const ::com::rdk::hal::avclock::ClockTime& currentClockTime) override {
+    return _aidl_delegate->onPrimed(currentClockTime);
   }
   int32_t getInterfaceVersion() override {
     int32_t _delegator_ver = BnAVClockControllerListener::getInterfaceVersion();

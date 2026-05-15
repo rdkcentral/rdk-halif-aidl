@@ -1,4 +1,3 @@
-#include <mutex>
 #include <com/rdk/hal/flash/IFlash.h>
 #include <com/rdk/hal/flash/BpFlash.h>
 namespace com {
@@ -6,6 +5,10 @@ namespace rdk {
 namespace hal {
 namespace flash {
 DO_NOT_DIRECTLY_USE_ME_IMPLEMENT_META_INTERFACE(Flash, "com.rdk.hal.flash.IFlash")
+const ::std::string& IFlash::serviceName() {
+  static const ::std::string value("flash");
+  return value;
+}
 }  // namespace flash
 }  // namespace hal
 }  // namespace rdk
