@@ -20,6 +20,7 @@ package com.rdk.hal.audiomixer;
 
 import com.rdk.hal.audiomixer.InputRouting;
 import com.rdk.hal.audiomixer.Property;
+import com.rdk.hal.audiosink.VolumeRamp;
 import com.rdk.hal.PropertyValue;
 
 /**
@@ -28,11 +29,28 @@ import com.rdk.hal.PropertyValue;
  *            This includes lifecycle management (start/stop), flushing, signalling end-of-stream,
  *            routing configuration, and property configuration. Intended for use by the
  *            middleware audio server and platform integrators.
+ *
+ *            <h3>Mix policy and clipping</h3>
+ *            The mixer guarantees the output signal will not clip. When the sum of active
+ *            input contributions (per-input volume × input signal level) would exceed full
+ *            scale, the HAL applies headroom management — typically a soft limiter on the
+ *            master mix bus or master attenuation. The exact mechanism is a vendor
+ *            implementation detail; what is guaranteed is that the output stays within
+ *            full scale.
+ *
+ *            Per-input volumes set via setInputVolume() / setInputVolumeRamp() are the
+ *            subjective gains the application requests. The HAL handles the math to keep
+ *            the output safe. Applications do not need to compute their own normalisation
+ *            budget.
+ *
+ *            For predictable mixes during overlapping audio events (e.g. system sound
+ *            over main programme), applications should explicitly duck the main input via
+ *            setInputVolumeRamp() rather than relying on the limiter — see the audio_mixer
+ *            documentation "Use case 2 — Ducking a system sound over main audio".
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
  * @author    Douglas Adler
  * @author    Gerald Weatherup
- * @copyright Copyright 2024 RDK Management
  */
 @VintfStability
 interface IAudioMixerController {
@@ -117,4 +135,103 @@ interface IAudioMixerController {
      * @pre       The mixer must be in STARTED state.
      */
     void signalEOS();
+
+    /**
+     * @brief     Sets the volume (attenuation) for a specific mixer input.
+     * @details   Per-input attenuation lets clients balance multiple sources
+     *            mixed into the same output (e.g., reduce main programme volume
+     *            while a system sound plays). Value range is 0..100 where 100
+     *            is unity gain (no attenuation) and 0 is silence.
+     *
+     *            Independent of the mixer-level FADER_LEVEL property which
+     *            controls main/associated audio balance, and the output port
+     *            VOLUME property which controls overall output volume.
+     *
+     *            <b>Mute behaviour:</b> setting volume to 0 removes that input's
+     *            contribution from the mix budget. Remaining active inputs
+     *            retain their requested levels (no auto-scale-up). Restoring
+     *            the volume re-introduces the input at the new level.
+     *
+     *            <b>Mix policy:</b> the mixer prevents output clipping — see
+     *            the interface header "Mix policy and clipping" notes. High
+     *            per-input volumes across multiple active inputs will not
+     *            cause output clipping; the HAL applies headroom management.
+     *
+     *            <b>Instant change:</b> this call applies the new volume
+     *            immediately. For changes during active playback, prefer
+     *            setInputVolumeRamp() to avoid audible clicks (zipper noise).
+     *
+     * @param[in] inputIndex  Mixer input index (0..Capabilities.inputs.length-1).
+     * @param[in] volume      Volume level 0..100.
+     *
+     * @returns   true on success, false if the input is unsupported on this
+     *            mixer (e.g. input is unrouted / has no source). Out-of-range
+     *            inputIndex or volume values throw EX_ILLEGAL_ARGUMENT.
+     *
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if inputIndex is outside
+     *            [0, Capabilities.inputs.length-1] or volume is outside [0, 100].
+     *
+     * @see       getInputVolume(), setInputVolumeRamp()
+     */
+    boolean setInputVolume(in int inputIndex, in int volume);
+
+    /**
+     * @brief     Gets the current volume for a specific mixer input.
+     *
+     * @param[in] inputIndex  Mixer input index (0..Capabilities.inputs.length-1).
+     * @returns   Current volume level 0..100. While a ramp is in progress
+     *            (setInputVolumeRamp), returns the instantaneous current
+     *            volume along the ramp, not the target.
+     *
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if inputIndex is invalid.
+     *
+     * @see       setInputVolume(), setInputVolumeRamp()
+     */
+    int getInputVolume(in int inputIndex);
+
+    /**
+     * @brief     Smoothly ramps the volume of a specific mixer input.
+     * @details   Walks the input's volume from its current value to
+     *            targetVolume over overMs milliseconds, following the chosen
+     *            VolumeRamp curve. Use this for any volume change that
+     *            happens while audio is flowing — instantaneous changes
+     *            cause audible clicks (zipper noise).
+     *
+     *            Typical durations are 50–500 ms — long enough to avoid
+     *            clicks, short enough to feel responsive. Common ducking
+     *            pattern: 200 ms attack to duck the main input, hold while
+     *            the system sound plays, 300 ms release to restore.
+     *
+     *            If a ramp is already in progress on this input, it is
+     *            stopped at its current instantaneous volume and replaced by
+     *            this new ramp starting from that point.
+     *
+     *            Ducking with this API works uniformly across all input
+     *            source types — sink-routed, tunnelled decoder, and direct
+     *            (HDMI / Composite) inputs alike. This is the only API that
+     *            does so; sink-side IAudioSinkController.setVolumeRamp()
+     *            applies only to sink-routed sources.
+     *
+     * @param[in] inputIndex    Mixer input index (0..Capabilities.inputs.length-1).
+     * @param[in] targetVolume  Target volume at end of ramp (0..100).
+     * @param[in] overMs        Duration of the ramp in milliseconds. Must be > 0.
+     *                          A value of 0 is rejected; use setInputVolume()
+     *                          for instantaneous changes.
+     * @param[in] curve         Ramp curve from VolumeRamp enum
+     *                          (LINEAR, IN_CUBIC, OUT_CUBIC).
+     *
+     * @returns   true on success, false if the input is unsupported on this
+     *            mixer (e.g. input is unrouted / has no source). Out-of-range
+     *            inputIndex, targetVolume, or overMs values throw
+     *            EX_ILLEGAL_ARGUMENT.
+     *
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if inputIndex is outside
+     *            [0, Capabilities.inputs.length-1], targetVolume is outside
+     *            [0, 100], or overMs is <= 0.
+     * @exception binder::Status EX_ILLEGAL_STATE if the mixer is not in
+     *            STARTED state.
+     *
+     * @see       setInputVolume(), getInputVolume(), VolumeRamp
+     */
+    boolean setInputVolumeRamp(in int inputIndex, in int targetVolume, in int overMs, in VolumeRamp curve);
 }
