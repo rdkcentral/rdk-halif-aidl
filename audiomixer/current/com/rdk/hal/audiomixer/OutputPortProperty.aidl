@@ -20,7 +20,7 @@ package com.rdk.hal.audiomixer;
 
 /**
  * @brief    Enumerates extensible property keys for Audio Output Port.
- * @details  Used as the key in setProperty/getProperty and onPropertyChanged for 
+ * Used as the key in setProperty/getProperty and onPropertyChanged for 
  *           forward-compatible and vendor-specific configuration. 
  *           All properties can be read in any state unless otherwise specified.
  *
@@ -33,7 +33,6 @@ package com.rdk.hal.audiomixer;
  * @author   Luc Kennedy-Lamb
  * @author   Peter Stieglitz
  * @author   Douglas Adler
- * @copyright Copyright 2024 RDK Management
  */
 @VintfStability
 @Backing(type="int")
@@ -102,14 +101,6 @@ enum OutputPortProperty {
     STATE = 7,
 
     /**
-    * Audio transcoding output format.
-    * Type: int (TranscodeFormat enum @see com.rdk.hal.audiomixer.TranscodeFormat)
-    * Access: Read-write.
-    * Writeable in states: READY
-    */
-    TRANSCODE_FORMAT = 8,
-
-    /**
      * Physical/logical connection state.
      * Type: int (@see com.rdk.hal.audiomixer.ConnectionState enum)
      * Access: Read-only.
@@ -117,17 +108,44 @@ enum OutputPortProperty {
     CONNECTION_STATE = 9,
 
     /**
-    * Select active AQ processor instance.
-    * Type: int (AQProcessor enum @see com.rdk.hal.audiomixer.AQProcessor)
-    * Access: Read-write.
-    * Writeable in states: READY
-    */
-    AQ_PROCESSOR_ID = 10,
+     * Sets the Dolby MS12 Audio Profile/Preset (e.g. "Music", "Movie", "Sports", etc)
+     * 
+     * Type: String 
+     * Access: Read-write.
+     * Writeable in states: READY, STARTED
+     * 
+     * The value must correspond to a platform-defined AQ profile configuration
+     *
+     * @see com.rdk.hal.audiomixer.OutputPortCapabilities.DolbyMs12AudioProfiles
+     */
+    DOLBY_MS12_AUDIO_PROFILE = 10,
+
+    /**
+     * Output port underflows.
+     * Type: int
+     * Access: Read-only.
+     *
+     * A count of the underflow (starvation) events that the consumer of the output port has experienced since the port was enabled.
+     * A single underflow event is considered to be when the consumer, unexpectedly, has no data to consume until normal data flow resumes.
+     * When the port is disabled, the last count should be held until the port is re-enabled, and the count reset.
+     */
+    METRIC_UNDERFLOWS = 11,
+
+    /**
+     * Output port overflows.
+     * Type: int
+     * Access: Read-only.
+     *
+     * A count of the overflow events that the producer has experienced since the port was enabled.
+     * A single overflow event is considered to be when the producer, unexpectedly, has no buffer space available to write the data.
+     * When the port is disabled, the last count should be held until the port is re-enabled, and the count reset.
+     */
+    METRIC_OVERFLOWS = 12,
 
     /**
      * Vendor-specific extension.
      * Type: Implementation-defined.
      * Access: Read-write or read-only as documented.
      */
-    VENDOR_EXTENSION = 1000
+    VENDOR_EXTENSION = 1000,
 }

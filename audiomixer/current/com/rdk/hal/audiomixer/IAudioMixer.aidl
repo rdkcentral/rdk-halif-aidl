@@ -39,7 +39,6 @@ import com.rdk.hal.audiodecoder.Codec;
  * @author    Peter Stieglitz
  * @author    Douglas Adler
  * @author    Gerald Weatherup
- * @copyright Copyright 2024 RDK Management
  */
 @VintfStability
 interface IAudioMixer {
@@ -157,7 +156,7 @@ interface IAudioMixer {
 
     /**
      * @brief     Gets the current audio source routing for all mixer inputs.
-     * @details   Returns an array with one element for each mixer input (as declared in Capabilities.inputs).
+     * Returns an array with one element for each mixer input (as declared in Capabilities.inputs).
      *            If a mixer input has no source connected, `AudioSourceType.NONE` is indicated.
      *
      * @returns   Array of audio source to mixer tree input routing configurations.

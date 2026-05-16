@@ -24,13 +24,12 @@ import com.rdk.hal.audiomixer.State;
 
 /**
  * @brief     Listener interface for asynchronous Audio Mixer events.
- * @details   Provides callbacks for runtime events such as input codec changes, error notifications,
+ * Provides callbacks for runtime events such as input codec changes, error notifications,
  *            resource state changes, and other dynamic mixer events. 
  *            Intended to be registered with the IAudioMixer.
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
  * @author    Douglas Adler
- * @copyright Copyright 2024 RDK Management
  */
 @VintfStability
 oneway interface IAudioMixerEventListener {

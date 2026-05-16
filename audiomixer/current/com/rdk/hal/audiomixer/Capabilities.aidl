@@ -31,7 +31,6 @@ import com.rdk.hal.audiomixer.MixerInput;
  * @author    Peter Stieglitz
  * @author    Douglas Adler
  * @author    Gerald Weatherup
- * @copyright Copyright 2024 RDK Management
  */
 @VintfStability
 parcelable Capabilities {
@@ -62,7 +61,7 @@ parcelable Capabilities {
 
     /**
     * @brief Human-readable name for this audio mixer instance.
-    * @details May be null if not set by the platform.
+    * May be null if not set by the platform.
     *          Although optional, this field is intended to aid debugging, logging, and platform introspection.
     */
     @nullable String name;

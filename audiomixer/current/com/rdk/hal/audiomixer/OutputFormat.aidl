@@ -20,7 +20,7 @@ package com.rdk.hal.audiomixer;
 
 /**
  * @brief     Supported audio output formats for an output port.
- * @details   Enumerates the possible encoded or uncompressed audio formats
+ * Enumerates the possible encoded or uncompressed audio formats
  *            that may be supported by an audio output port (HDMI, SPDIF, speakers, etc.).
  *            Used to configure the desired output, or query available modes
  *            for format negotiation and passthrough.
@@ -32,7 +32,6 @@ package com.rdk.hal.audiomixer;
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
  * @author    Douglas Adler
- * @copyright Copyright 2024 RDK Management
  */
 @VintfStability
 @Backing(type="int")
@@ -43,8 +42,8 @@ enum OutputFormat {
     /** Output is passed through as received (bitstream, no re-encoding). */
     PASSTHROUGH = 1,
 
-    /** Output as uncompressed PCM. */
-    PCM = 2,
+    /** Output as uncompressed STEREO PCM. */
+    PCM_STEREO = 2,
 
     /** Output as AC-3 (Dolby Digital) bitstream. */
     AC3 = 3,
@@ -62,5 +61,8 @@ enum OutputFormat {
     DTS = 7,
 
     /** Output as DTS-HD Master Audio bitstream. */
-    DTS_HD = 8
+    DTS_HD = 8,
+
+    /** Output as uncompressed Multichannel PCM. */
+    PCM_MULTICHANNEL = 9,
 }

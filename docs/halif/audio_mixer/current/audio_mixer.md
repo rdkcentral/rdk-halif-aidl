@@ -48,20 +48,32 @@ Mixer instances are accessed and controlled via `IAudioMixer`, with additional l
 | AIDL File                     | Description                                            |
 | ----------------------------- | ------------------------------------------------------ |
 | IAudioMixer.aidl              | Main resource control interface                        |
+| IDolbyMs12_2_6_Dap.aidl       | Dolby MS12 2.6 runtime command interface              |
+| DolbyMs12_2_6_DapCapabilities.aidl | Supported Dolby MS12 2.6 runtime commands         |
 | IAudioMixerManager.aidl       | Interface for mixer enumeration                        |
 | IAudioMixerController.aidl    | Stateful runtime mixer control                         |
 | IAudioMixerEventListener.aidl | Event callbacks (errors, state changes, codec updates) |
 | IAudioOutputPort.aidl         | Output port control interface                          |
 | IAudioOutputPortListener.aidl | Listener interface for port events                     |
+| IAudioCapture.aidl            | Output-port audio capture control interface            |
+| IAudioCaptureListener.aidl    | Audio capture callbacks                                |
+| AudioCaptureData.aidl         | Audio capture metadata payload                         |
+| AudioCapturePcmInfo.aidl      | PCM capture format metadata                            |
+| Channel.aidl                  | PCM channel position enum for `AudioCapturePcmInfo.channelMap` |
+| AudioCaptureError.aidl        | Audio capture error codes                              |
 | Capabilities.aidl             | Supported input types, codecs, secure path flag        |
 | MixerInput.aidl               | Per-input supported codec and content type definitions |
 | OutputPortCapabilities.aidl   | Describes per-port format and property support         |
 | OutputFormat.aidl             | Enumerates output encoding formats                     |
-| TranscodeFormat.aidl          | Enumerates supported transcode formats                 |
 | Property.aidl                 | Mixer-level configurable properties                    |
 | OutputPortProperty.aidl       | Output port-level configurable properties              |
 | AQProcessor.aidl              | Supported audio post-processing processor types        |
-| AQParameter.aidl              | Audio quality configuration parameters                 |
+| DolbyMs12_2_6_LevellerMode.aidl | MS12 volume leveller mode enum                      |
+| DolbyMs12_2_6_VirtualizerMode.aidl | MS12 surround virtualizer mode enum               |
+| DolbyMs12_2_6_IeqMode.aidl    | MS12 intelligent equalizer mode enum                   |
+| DolbyMs12_2_6_GeqMode.aidl    | MS12 graphic equalizer mode enum                       |
+| DolbyMs12_2_6_DrcMode.aidl    | MS12 dynamic range control mode enum                   |
+| DolbyMs12_2_6_DownmixMode.aidl | MS12 downmix mode enum                                |
 | ContentType.aidl              | Classifies audio input usage (STREAM, CLIP, TTS)       |
 | AudioSourceType.aidl          | Audio source types for mixer input routing             |
 | InputRouting.aidl             | Maps audio sources to mixer inputs                     |
@@ -83,7 +95,7 @@ The AudioMixer HAL service is initialized by systemd, registered with the Binder
 * Mixers are uniquely identified via `IAudioMixer.Id` enum values.
 * Capabilities are queried using `getCapabilities()` and may differ per instance.
 * Mixer resources are declared in the HFP YAML including `supportsSecure`, input configurations, and multi-instance support.
-* Output ports may vary in capability (formats, transcode support, AQ processors).
+* Output ports may vary in capability (formats, pass-through support, AQ processors, and `supportsAudioCapture`).
 
 ---
 
@@ -161,13 +173,37 @@ flowchart TD
 * Inputs are processed and mixed into one or more outputs.
 * Output formats can be negotiated and configured using `setProperty(OUTPUT_FORMAT)`.
 * AQ processors and parameters can be configured where supported.
-* Transcode or passthrough output formats are dynamically switchable if capabilities permit.
+* Where `OutputPortCapabilities.supportsAudioCapture` is true, capture is created from `IAudioOutputPort.getAudioCapture(listener)`.
+* Audio capture uses a shared-memory ring buffer returned by `getSharedMemory(out sharedMemorySizeBytes)`, with `releaseData()` acknowledgements after `onDataAvailable()` callbacks.
+* Output formats, including passthrough where supported, are dynamically switchable if capabilities permit.
 
 ---
 
 ## Modes of Operation
 
-Mixers can operate in secure and non-secure paths. Properties such as `MIXING_MODE`, `ACTIVE_AQ_PROFILE`, `MUTE`, and `DEBUG_TAP_ENABLED` affect runtime behavior and are accessible via the controller’s property interface.
+Mixers can operate in secure and non-secure paths. Mixer properties such as `MIXING_MODE`, `MUTE`, and `DEBUG_TAP_ENABLED` affect runtime behaviour via the controller property interface. Output-port properties such as `DOLBY_MS12_AUDIO_PROFILE` are configured via `IAudioOutputPort.setProperty()`.
+
+---
+
+## Dolby MS12 Runtime Commands
+
+The `IDolbyMs12_2_6_Dap` interface exposes one method per MS12 IDK 2.6 runtime command and is created from `IAudioOutputPort.getDolbyMs12_2_6_Dap()`.
+
+Non-boolean argument constraints are declared per output port in `audiomixer/current/hfp-audiomixer.yaml` under `outputPorts[].supportedAQProcessors[].setFunctions`.
+
+| Method | Non-boolean constraints |
+| ------ | ----------------------- |
+| `setBassEnhancer(boost)` | `boost` 0..100 |
+| `setVolumeLeveller(mode, level)` | `mode` in {OFF, MANUAL, AUTO}, `level` 0..10 |
+| `setSurroundVirtualizer(mode, boost)` | `mode` in {OFF, MANUAL, AUTO}, `boost` 0..96 |
+| `setDialogueEnhancer(level)` | `level` 0..12 |
+| `setIntelligentEqualizerMode(mode)` | `mode` in {OFF, OPEN, RICH, FOCUSED, BALANCED, WARM, DETAILED} |
+| `setGraphicEqualizerMode(mode)` | `mode` in {OFF, OPEN, RICH, FOCUSED} |
+| `setDynamicRangeControlMode(mode)` | `mode` in {LINE, RF} |
+| `setPostGain(gain)` | `gain` -2080..480 |
+| `setDownmixMode(mode)` | `mode` in {LT_RT, LO_RO} |
+
+For these constrained arguments, out-of-range values shall raise `EX_ILLEGAL_ARGUMENT`.
 
 ---
 
@@ -179,10 +215,14 @@ Mixers can operate in secure and non-secure paths. Properties such as `MIXING_MO
 | `onError`             | IAudioMixerEventListener | Platform or HAL runtime error                       |
 | `onStateChanged`      | IAudioMixerEventListener | Mixer state transition notification                 |
 | `onPropertyChanged`   | IAudioOutputPortListener | Property change on output port (e.g., format, mute) |
+| `onDataAvailable`     | IAudioCaptureListener    | Audio capture frame available in shared ring buffer |
+| `onStarted`           | IAudioCaptureListener    | Capture stream entered started state                |
+| `onStopped`           | IAudioCaptureListener    | Capture stream entered stopped state                |
+| `onError`             | IAudioCaptureListener    | Capture error notification                          |
 
 ---
 
-## State Machine / Lifecycle
+## Audio Mixer State Machine / Lifecycle
 
 Mixer sessions follow this typical state progression:
 
@@ -205,27 +245,55 @@ Methods like `start()`, `stop()`, `flush(reset)`, and `signalEOS()` are valid on
 
 ---
 
-## Data Format / Protocol Support
+## Audio Capture Interface Lifecycle
 
-| Format       | Use Case                    | Support Level |
-| ------------ | --------------------------- | ------------- |
-| PCM          | Default uncompressed output | Mandatory     |
-| AC3 / AC3+   | Legacy surround sound       | Optional      |
-| Dolby MAT    | Advanced surround           | Optional      |
-| AAC          | Streaming                   | Optional      |
-| DTS / TrueHD | Future/vendor-specific      | Optional      |
+Audio capture on an output port follows a dedicated interface lifecycle:
+
+```mermaid
+stateDiagram-v2
+  [*] --> CREATED
+  CREATED --> SHM_READY : getSharedMemory(out sharedMemorySizeBytes)
+  SHM_READY --> STOPPED
+  STOPPED --> STARTED : start()
+  STARTED --> STOPPED : stop()
+  STARTED --> STARTED : onDataAvailable()/releaseData()/onError(error,message)
+  STOPPED --> [*] : releaseSharedMemory()
+```
+
+Capture data arrives through callbacks that reference shared-memory offsets and lengths, and clients must call `releaseData()` for consumed regions; calling `start()` or `stop()` out of sequence raises illegal-state errors.
 
 ---
+
+## Shared-Memory Offset/Length Usage
+
+Use `getSharedMemory(out sharedMemorySizeBytes)` once before `start()` to obtain both the ring-buffer descriptor and the total buffer size.
+
+For each `onDataAvailable(offsetBytes, lengthBytes, metadata)` callback:
+
+1. Validate the region against `sharedMemorySizeBytes`.
+    - `offsetBytes` must be in `[0, sharedMemorySizeBytes)`.
+    - `lengthBytes` must be `> 0` and `<= sharedMemorySizeBytes`.
+2. Determine whether the region is contiguous or wrapped.
+    - Contiguous: `offsetBytes + lengthBytes <= sharedMemorySizeBytes`.
+    - Wrapped: `offsetBytes + lengthBytes > sharedMemorySizeBytes`.
+3. Read data accordingly.
+    - Contiguous read uses one segment: `[offsetBytes, offsetBytes + lengthBytes)`.
+    - Wrapped read uses two segments:
+      - Segment 1: `[offsetBytes, sharedMemorySizeBytes)`
+      - Segment 2: `[0, (offsetBytes + lengthBytes) - sharedMemorySizeBytes)`
+4. Acknowledge consumption with the exact callback tuple.
+    - Call `releaseData(offsetBytes, lengthBytes)` only after consuming the complete region.
+    - Do not alter or split the tuple when acknowledging.
+
+Clients should process callbacks in order.
 
 ## Platform Capabilities
 
 Declared in the HFP YAML:
 
-* `maxMixers`: Maximum number of concurrent mixer instances
-* `supportsDolbyMS12`: Boolean flag for Dolby post-processing
-* `supportsDTS`: DTS processing availability
-* `supportsConcurrentApps`: Whether concurrent apps can use the mixer simultaneously
-* `maxInputsPerMixer`: Maximum number of logical inputs per mixer
+* `resources`: Mixer instances, supported source types, and input codec/content capability
+* `outputPorts`: Output port properties, formats, AQ processors, and `supportsAudioCapture`
+* `outputPorts[].supportedAQProcessors[].setFunctions`: Non-boolean argument constraints and defaults for `IDolbyMs12_2_6_Dap` methods
 
 ---
 

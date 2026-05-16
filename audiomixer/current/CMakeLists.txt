@@ -49,18 +49,30 @@ set(SRC
     ${SRC_DIR}/Property.aidl
     ${SRC_DIR}/OutputPortProperty.aidl
     ${SRC_DIR}/AQProcessor.aidl
-    ${SRC_DIR}/AQParameter.aidl
     ${SRC_DIR}/OutputFormat.aidl
-    ${SRC_DIR}/TranscodeFormat.aidl
     ${SRC_DIR}/MixingMode.aidl
     ${SRC_DIR}/OutputPortCapabilities.aidl
+    ${SRC_DIR}/DolbyMs12_2_6_DrcMode.aidl
+    ${SRC_DIR}/DolbyMs12_2_6_DownmixMode.aidl
+    ${SRC_DIR}/DolbyMs12_2_6_GeqMode.aidl
+    ${SRC_DIR}/DolbyMs12_2_6_IeqMode.aidl
+    ${SRC_DIR}/DolbyMs12_2_6_LevellerMode.aidl
+    ${SRC_DIR}/DolbyMs12_2_6_VirtualizerMode.aidl
+    ${SRC_DIR}/DolbyMs12_2_6_DapCapabilities.aidl
+    ${SRC_DIR}/Channel.aidl
+    ${SRC_DIR}/AudioCapturePcmInfo.aidl
+    ${SRC_DIR}/AudioCaptureData.aidl
+    ${SRC_DIR}/AudioCaptureError.aidl
     # Interfaces
     ${SRC_DIR}/IAudioMixer.aidl
     ${SRC_DIR}/IAudioMixerController.aidl
     ${SRC_DIR}/IAudioMixerEventListener.aidl
     ${SRC_DIR}/IAudioMixerManager.aidl
+    ${SRC_DIR}/IDolbyMs12_2_6_Dap.aidl
     ${SRC_DIR}/IAudioOutputPort.aidl
     ${SRC_DIR}/IAudioOutputPortListener.aidl
+    ${SRC_DIR}/IAudioCapture.aidl
+    ${SRC_DIR}/IAudioCaptureListener.aidl
     # External dependencies
     ${AUDIO_DECODER_SRC_DIR}/Codec.aidl
     ${COMMON_SRC_DIR}/PropertyValue.aidl

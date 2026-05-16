@@ -18,14 +18,17 @@
  */
 package com.rdk.hal.audiomixer;
 
+import com.rdk.hal.audiomixer.IAudioCapture;
+import com.rdk.hal.audiomixer.IAudioCaptureListener;
+import com.rdk.hal.audiomixer.IAudioOutputPortListener;
+import com.rdk.hal.audiomixer.IDolbyMs12_2_6_Dap;
 import com.rdk.hal.audiomixer.OutputPortCapabilities;
 import com.rdk.hal.audiomixer.OutputPortProperty;
 import com.rdk.hal.PropertyValue;
-import com.rdk.hal.audiomixer.IAudioOutputPortListener;
 
 /**
  * @brief    Audio Output Port HAL interface, property-based design.
- * @details  All dynamic/query/settable configuration is via get/setProperty,
+ * All dynamic/query/settable configuration is via get/setProperty,
  *           with supported properties enumerated in OutputPortCapabilities.
  */
 @VintfStability
@@ -61,4 +64,32 @@ interface IAudioOutputPort {
      * @brief    Un-registers a previously registered listener.
      */
     void unregisterListener(in IAudioOutputPortListener listener);
+
+    /**
+     * @brief Creates a Dolby MS12 2.6 DAP command interface for this port.
+     * 
+     * If DOLBY_MS12_2_6 is reported as a supported AQProcessor in supportedAQProcessors then this function will return an interface to allow its control.
+     *
+     * @returns IDolbyMs12_2_6_Dap interface
+     * @exception binder::Status EX_UNSUPPORTED_OPERATION if Dolby MS12 v2.6 DAP is not supported.
+     *
+     * @see com.rdk.hal.audiomixer.OutputPortCapabilities.supportedAQProcessors
+     */
+    IDolbyMs12_2_6_Dap getDolbyMs12_2_6_Dap();
+
+
+    /**
+     * @brief Creates an audio capture interface for this port.
+     * 
+     * @param[in] audioCaptureListener a Listener for capture callbacks.
+     * 
+     * If supportsAudioCapture is true then this function will return an interface to allow its control.
+     *
+     * @returns IAudioCapture interface
+     * @exception binder::Status EX_UNSUPPORTED_OPERATION if audio capture from this port is not supported.
+     * @exception binder::Status EX_NULL_POINTER if audioCaptureListener is null.
+     *
+     * @see com.rdk.hal.audiomixer.OutputPortCapabilities.supportsAudioCapture
+     */
+    IAudioCapture getAudioCapture(in IAudioCaptureListener audioCaptureListener );
 }

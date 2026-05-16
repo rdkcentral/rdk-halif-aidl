@@ -21,7 +21,7 @@ import com.rdk.hal.audiomixer.AudioSourceType;
 
 /**
  * @brief     Audio source to mixer input routing definition.
- * @details   Specifies which audio source is connected to a mixer input.
+ * Specifies which audio source is connected to a mixer input.
  *            The target mixer input is determined by the position in the
  *            InputRouting[] array passed to setInputRouting()/returned by
  *            getInputRouting():
@@ -36,7 +36,6 @@ import com.rdk.hal.audiomixer.AudioSourceType;
  * @author    Peter Stieglitz
  * @author    Douglas Adler
  * @author    Gerald Weatherup
- * @copyright Copyright 2024 RDK Management
  */
 @VintfStability
 parcelable InputRouting
