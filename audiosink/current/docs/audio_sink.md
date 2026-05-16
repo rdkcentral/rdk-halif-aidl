@@ -23,17 +23,17 @@ The interaction between the RDK GStreamer Audio Sink element and the Audio Sink 
     |-|-|
     |**Interface Definition**|[audio_sink/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiosink/current)|
     | **API Documentation** | *TBD - Doxygen* |
-    |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
+    |**HAL Interface Type**|[AIDL and Binder](../../../docs/introduction/aidl_and_binder.md)|
     |**VTS Tests**| TBC |
     |**Reference Implementation - vComponent**|**TBD**|
 
 ## Related Pages
 
 !!! tip "Related Pages"
-    - [Audio Decoder](../../audio_decoder/current/audio_decoder.md)
-    - [AV Buffer](../../av_buffer/current/av_buffer.md)
-    - [AV Clock](../../av_clock/current/av_clock.md)
-    - [Session State Management](../../key_concepts/hal/hal_session_state_management.md)
+    - [Audio Decoder](../../../audiodecoder/current/docs/audio_decoder.md)
+    - [AV Buffer](../../../avbuffer/current/docs/av_buffer.md)
+    - [AV Clock](../../../avclock/current/docs/av_clock.md)
+    - [Session State Management](../../../docs/key_concepts/hal/hal_session_state_management.md)
 
 ## Implementation Requirements
 
@@ -63,11 +63,11 @@ The interaction between the RDK GStreamer Audio Sink element and the Audio Sink 
 
 ## Initialization
 
-The [systemd](../../../vsi/systemd/current/systemd.md) `hal-audios_sink_manager.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
+The [systemd](../../../docs/vsi/systemd/current/systemd.md) `hal-audios_sink_manager.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
-The Audio Sink Manager service depends on the [Service Manager](../../key_concepts/hal/hal_session_state_management.md) to register itself as a service.
+The Audio Sink Manager service depends on the [Service Manager](../../../docs/key_concepts/hal/hal_session_state_management.md) to register itself as a service.
 
-Upon starting, the service shall register the `IAudioSinkManager` interface with the [Service Manager](../../../vsi/service_manager/current/service_manager.md) using the string `IAudioSinkManager.serviceName` and immediately become operational.
+Upon starting, the service shall register the `IAudioSinkManager` interface with the [Service Manager](../../../docs/vsi/service_manager/current/service_manager.md) using the string `IAudioSinkManager.serviceName` and immediately become operational.
 
 ## Product Customization
 
@@ -81,7 +81,7 @@ An audio sink instance can only operate on one audio stream in an open session. 
 
 The Audio Sink HAL can provide functionality to multiple clients.
 
-Typically an RDK middleware GStreamer audio sink element will work with a single `IAudioSink` instance and pass it PCM audio in [AV Buffer](../../av_buffer/current/av_buffer.md) handles for mixing.
+Typically an RDK middleware GStreamer audio sink element will work with a single `IAudioSink` instance and pass it PCM audio in [AV Buffer](../../../avbuffer/current/docs/av_buffer.md) handles for mixing.
 
 The RDK middleware resource management system will examine the number of audio sink resources and their capabilities, so they can be allocated to streaming sessions.
 
@@ -189,9 +189,9 @@ graph LR
 
 ## Audio Buffers
 
-Audio buffers entering the Audio Sink shall be delivered as AV Buffer handles (allocated from either an [AV Buffer](../../av_buffer/current/av_buffer.md) audio pool or the audio frame pool) with a presentation timestamp and metadata describing the audio frame through the `IAudioSinkController.queueAudioFrame()` function.
+Audio buffers entering the Audio Sink shall be delivered as AV Buffer handles (allocated from either an [AV Buffer](../../../avbuffer/current/docs/av_buffer.md) audio pool or the audio frame pool) with a presentation timestamp and metadata describing the audio frame through the `IAudioSinkController.queueAudioFrame()` function.
 
-An [AV Buffer](../../av_buffer/current/av_buffer.md) audio pool would be used for PCM data which has come from system memory (e.g. PCM sound clip) or from a soft audio decoder. In this case the audio pool is created against `IAudioDecoder.Id.UNDEFINED`.
+An [AV Buffer](../../../avbuffer/current/docs/av_buffer.md) audio pool would be used for PCM data which has come from system memory (e.g. PCM sound clip) or from a soft audio decoder. In this case the audio pool is created against `IAudioDecoder.Id.UNDEFINED`.
 
 The audio data must be in the PCM audio format and sample rate, as reported in `PlatformCapabilities` returned from the `IAudioSinkManager.getPlatformCapabilities()` function.
 
@@ -213,7 +213,7 @@ If any audio decoder supports SAP in non-tunnelled mode then the Audio Sink HAL 
 
 PCM stream data can originate in the RDK media pipeline from multiple sources; from an application, from the RDK middleware or from a software audio decoder. In these cases the PCM data is passed directly to the Audio Sink HAL.
 
-Clear PCM audio is copied into a non-secure [AV Buffer](../../av_buffer/current/av_buffer.md) and is routed to the `IAudioSinkController` where it is queued for mixing.
+Clear PCM audio is copied into a non-secure [AV Buffer](../../../avbuffer/current/docs/av_buffer.md) and is routed to the `IAudioSinkController` where it is queued for mixing.
 
 ## Tunnelled Audio & Passthrough Mode
 
@@ -237,7 +237,7 @@ All audio frame buffers queued up in the Audio Sink continue to be fed into the 
 
 ## Audio Sink States
 
-The Audio Sink HAL follows the standard [Session State Management](../../key_concepts/hal/hal_session_state_management.md) paradigm.
+The Audio Sink HAL follows the standard [Session State Management](../../../docs/key_concepts/hal/hal_session_state_management.md) paradigm.
 
 When an Audio Sink session enters a `FLUSHING` or `STOPPING` transitory state it shall free any AV buffers it is holding.
 

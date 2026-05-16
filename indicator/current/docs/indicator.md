@@ -28,8 +28,8 @@ For RDK reference implementations, the indicator is designed to reflect the glob
       | ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
       | **Interface Definition**     | [indicator/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/indicator/current)                     |
       | **API Documentation**        | TBD                                                                                                               |
-      | **HAL Interface Type**       | [AIDL and Binder](../../../introduction/aidl_and_binder.md)                                                       |
-      | **Initialization Unit**      | [systemd service](../../../vsi/systemd/current/systemd.md)                                                        |
+      | **HAL Interface Type**       | [AIDL and Binder](../../../docs/introduction/aidl_and_binder.md)                                                       |
+      | **Initialization Unit**      | [systemd service](../../../docs/vsi/systemd/current/systemd.md)                                                        |
       | **VTS Tests**                | TBD                                                                                                               |
       | **Reference Implementation** | TBD                                                                                                               |
       | **HAL Feature Profile**      | [hfp-indicator.yaml](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/indicator/current/hfp-indicator.yaml) |
@@ -37,8 +37,8 @@ For RDK reference implementations, the indicator is designed to reflect the glob
 ## Related Pages
 
 !!! tip "Related Pages"
-      - [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
-      - [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
+      - [HAL Feature Profile](../../../docs/key_concepts/hal/hal_feature_profiles.md)
+      - [HAL Interface Overview](../../../docs/key_concepts/hal/hal_interfaces.md)
       - [Other HALs or Framework Components](link)
 
 ---

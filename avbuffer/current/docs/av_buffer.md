@@ -15,18 +15,18 @@ The **AV Buffer HAL** manages both secure and non-secure memory heaps and pools 
     |-|-|
     |**Interface Definition**|[av_buffer/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_buffer/current)|
     | **API Documentation** | *TBD - Doxygen* |
-    |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
+    |**HAL Interface Type**|[AIDL and Binder](../../../docs/introduction/aidl_and_binder.md)|
     |**VTS Tests**| TBC |
     |**Reference Implementation - vComponent**|**TBD**|
 
 ## Related Pages
 
 !!! tip "Related Pages"
-    - [Audio Decoder](../../audio_decoder/current/audio_decoder.md)
-    - [Audio Sink](../../audio_sink/current/audio_sink.md)
-    - [AV Clock](../../av_clock/current/av_clock.md)
-    - [Session State Management](../../key_concepts/hal/hal_session_state_management.md)
-    - [Video Decoder](../../video_decoder/current/video_decoder.md)
+    - [Audio Decoder](../../../audiodecoder/current/docs/audio_decoder.md)
+    - [Audio Sink](../../../audiosink/current/docs/audio_sink.md)
+    - [AV Clock](../../../avclock/current/docs/av_clock.md)
+    - [Session State Management](../../../docs/key_concepts/hal/hal_session_state_management.md)
+    - [Video Decoder](../../../videodecoder/current/docs/video_decoder.md)
 
 ## Implementation Requirements
 
@@ -54,9 +54,9 @@ The **AV Buffer HAL** manages both secure and non-secure memory heaps and pools 
 
 ## Initialization
 
-The [systemd](../../../vsi/systemd/current/systemd.md) `hal-av_buffer.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
+The [systemd](../../../docs/vsi/systemd/current/systemd.md) `hal-av_buffer.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
-The AV Buffer service depends on the [Service Manager](../../../vsi/service_manager/current/service_manager.md) to register itself as a service.
+The AV Buffer service depends on the [Service Manager](../../../docs/vsi/service_manager/current/service_manager.md) to register itself as a service.
 
 Upon starting, the service shall register the IAVBuffer interface with the Service Manager using the String `IAVBuffer.serviceName` and immediately become operational.
 

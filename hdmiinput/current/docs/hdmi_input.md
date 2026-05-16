@@ -6,7 +6,7 @@ The HDMI Input HAL provides control and monitoring of HDMI input ports on the pl
 
 This interface is intended to be used by the HDMI input management components in the RDK platform. It supports multiple HDMI ports, each with its own capabilities, state machine, and controller interface.
 
-This HAL excludes HDMI_CEC and video plane attachment logic, which are managed by [plane_control](../../plane_control/current/plane_control.md) and [HDMI_CEC](../../cec/current/cec.md).
+This HAL excludes HDMI_CEC and video plane attachment logic, which are managed by [plane_control](../../../planecontrol/current/docs/plane_control.md) and [HDMI_CEC](../../../docs/halif/cec/current/cec.md).
 
 ---
 
@@ -15,16 +15,16 @@ This HAL excludes HDMI_CEC and video plane attachment logic, which are managed b
     |-|-|
     | **Interface Definition**     | [hdmiinput](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/hdmiinput/current/com/rdk/hal/hdmiinput)                                     |
     | **API Documentation**        | TBD                                                         |
-    | **HAL Interface Type**       | [AIDL and Binder](../../../introduction/aidl_and_binder.md) |
+    | **HAL Interface Type**       | [AIDL and Binder](../../../docs/introduction/aidl_and_binder.md) |
     | **VTS Tests**                | TBD                                                         |
     | **vDevice Reference Implementation** | [GitHub/Repo link - TBD]                                         |
 
 ---
 
 !!! tip "Related Pages"
-    - [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
-    - [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
-    - [HAL HDMI Output](../../hdmi_output/current/hdmi_output.md)
+    - [HAL Feature Profile](../../../docs/key_concepts/hal/hal_feature_profiles.md)
+    - [HAL Interface Overview](../../../docs/key_concepts/hal/hal_interfaces.md)
+    - [HAL HDMI Output](../../../hdmioutput/current/docs/hdmi_output.md)
 
 ## Functional Overview
 

@@ -12,14 +12,14 @@ This HAL does not manage audio routing (delegated to `AudioSink`) or video plane
     |||
     | ------------------------------------ | ------------------------------------------------------------- |
     | **Interface Definition**             | [hdmioutput](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/hdmioutput/current/com/rdk/hal/hdmioutput) |
-    | **HAL Interface Type**               | [AIDL and Binder](../../../introduction/aidl_and_binder.md)   |
+    | **HAL Interface Type**               | [AIDL and Binder](../../../docs/introduction/aidl_and_binder.md)   |
 
 ---
 
 !!! tip "Related Pages"
-    * [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
-    * [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
-    * [Display Pipeline Overview](../../display/architecture.md)
+    * [HAL Feature Profile](../../../docs/key_concepts/hal/hal_feature_profiles.md)
+    * [HAL Interface Overview](../../../docs/key_concepts/hal/hal_interfaces.md)
+    * [Display Pipeline Overview](../../../docs/halif/display/architecture.md)
 
 ---
 

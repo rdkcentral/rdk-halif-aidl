@@ -16,17 +16,17 @@ To declare the static feature set and ensure alignment between implementation an
     |||
     |-|-|
     |**Interface Definition**|[panel/current/com/rdk/hal/panel](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/panel/current/com/rdk/hal/panel)|
-    |**HAL Feature Profile**|[`hfp-panel.yaml`](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/panel/current/hfp-panel.yaml) – [Learn more](../../key_concepts/hal/hal_feature_profiles.md)|
-    |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
-    |**Initialization Unit**|[systemd](../../../vsi/systemd/current/systemd.md) – **hal-panel.service**|
+    |**HAL Feature Profile**|[`hfp-panel.yaml`](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/panel/current/hfp-panel.yaml) – [Learn more](../../../docs/key_concepts/hal/hal_feature_profiles.md)|
+    |**HAL Interface Type**|[AIDL and Binder](../../../docs/introduction/aidl_and_binder.md)|
+    |**Initialization Unit**|[systemd](../../../docs/vsi/systemd/current/systemd.md) – **hal-panel.service**|
 
 ---
 
 ## Related Pages
 
 !!! tip "Related Pages"
-    * [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
-    * [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
+    * [HAL Feature Profile](../../../docs/key_concepts/hal/hal_feature_profiles.md)
+    * [HAL Interface Overview](../../../docs/key_concepts/hal/hal_interfaces.md)
 
 ---
 
@@ -214,5 +214,5 @@ These files are machine-readable and used for:
 * Runtime feature gating in middleware.
 * Reference values for functions like `getCapabilities()`.
 
-> See the [HAL Feature Profile documentation](../../key_concepts/hal/hal_feature_profiles.md) for full details and schema format.
+> See the [HAL Feature Profile documentation](../../../docs/key_concepts/hal/hal_feature_profiles.md) for full details and schema format.
 

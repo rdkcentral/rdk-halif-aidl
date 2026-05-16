@@ -6,7 +6,7 @@ The `CompositeInput` HAL interface manages analog composite video input ports on
 
 This interface is intended to be used by the composite input management components in the RDK platform. It supports multiple composite input ports, each with its own capabilities, state machine, and controller interface.
 
-Video scaling, positioning, and aspect-ratio control are handled separately by the [Plane Control](../../plane_control/current/plane_control.md) HAL. Audio routing (if supported) is handled by the platform's audio subsystem.
+Video scaling, positioning, and aspect-ratio control are handled separately by the [Plane Control](../../../planecontrol/current/docs/plane_control.md) HAL. Audio routing (if supported) is handled by the platform's audio subsystem.
 
 ---
 
@@ -14,15 +14,15 @@ Video scaling, positioning, and aspect-ratio control are handled separately by t
     |||
     |-|-|
     | **Interface Definition**     | [compositeinput](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/compositeinput/current/com/rdk/hal/compositeinput) |
-    | **HAL Interface Type**       | [AIDL and Binder](../../../introduction/aidl_and_binder.md) |
+    | **HAL Interface Type**       | [AIDL and Binder](../../../docs/introduction/aidl_and_binder.md) |
 
 ---
 
 !!! tip "Related Pages"
-    - [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
-    - [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
-    - [HDMI Input](../../hdmi_input/current/hdmi_input.md)
-    - [Plane Control](../../plane_control/current/plane_control.md)
+    - [HAL Feature Profile](../../../docs/key_concepts/hal/hal_feature_profiles.md)
+    - [HAL Interface Overview](../../../docs/key_concepts/hal/hal_interfaces.md)
+    - [HDMI Input](../../../hdmiinput/current/docs/hdmi_input.md)
+    - [Plane Control](../../../planecontrol/current/docs/plane_control.md)
 
 ## Functional Overview
 

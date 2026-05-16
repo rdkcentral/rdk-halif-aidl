@@ -20,16 +20,16 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
     |-|-|
     |**Interface Definition**|[video_decoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videodecoder/current)|
     |**API Documentation**| *TBD* |
-    |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
+    |**HAL Interface Type**|[AIDL and Binder](../../../docs/introduction/aidl_and_binder.md)|
     |**VTS Tests**| TBC |
     |**Reference Implementation - vComponent**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videodecoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videodecoder/current)|
 
 ## Related Pages
 
 !!! tip "Related Pages"
-    - [Video Sink](../../video_sink/current/video_sink.md)
-    - [AV Buffer](../../av_buffer/current/av_buffer.md)
-    - [Session State Management](../../key_concepts/hal/hal_session_state_management.md)
+    - [Video Sink](../../../videosink/current/docs/video_sink.md)
+    - [AV Buffer](../../../avbuffer/current/docs/av_buffer.md)
+    - [Session State Management](../../../docs/key_concepts/hal/hal_session_state_management.md)
 
 ## Implementation Requirements
 
@@ -39,7 +39,7 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 | **HAL.VIDEODECODER.2** | Encoded video data is passed one frame at a time to the video decoder in stream, file or broadcast delivered order. |
 | **HAL.VIDEODECODER.3** | Decoded video frames are output from the decoder in presentation order. |
 | **HAL.VIDEODECODER.4** | Only one video frame shall be output per output frame callback from the video decoder. |
-| **HAL.VIDEODECODER.5** | Encoded video data shall be passed in shared memory buffers by handle and shall be in either secure or non-secure buffer types. |The pool implementation of memory buffers for secure and non-secure memory is implemented by the vendor. See [AV Buffer](../../av_buffer/current/av_buffer.md) for details. |
+| **HAL.VIDEODECODER.5** | Encoded video data shall be passed in shared memory buffers by handle and shall be in either secure or non-secure buffer types. |The pool implementation of memory buffers for secure and non-secure memory is implemented by the vendor. See [AV Buffer](../../../avbuffer/current/docs/av_buffer.md) for details. |
 | **HAL.VIDEODECODER.6** | The video decoder shall support a secure video pipeline where encoded and decoded data in secure buffers shall not be exposed to any process outside of the secure video pipeline. Secure coded video input buffers to the video decoder shall always be output in secure decoded frame buffers. |
 | **HAL.VIDEODECODER.7** | The video decoder shall operate in either a tunnelled or non-tunnelled operational mode. |Only one of these operational modes needs be supported by the video decoder. |
 | **HAL.VIDEODECODER.8** | The video decoder may optionally operate in a textured video operational mode. |
@@ -73,7 +73,7 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 
 ## Initialization
 
-The [systemd](../../../vsi/systemd/current/systemd.md) `hal-video_decoder_manager.service` unit file is provided by the vendor layer to start the service and should include  [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
+The [systemd](../../../docs/vsi/systemd/current/systemd.md) `hal-video_decoder_manager.service` unit file is provided by the vendor layer to start the service and should include  [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
 The Video Decoder Manager service depends on the Service Manager to register itself as a service.
 
@@ -277,7 +277,7 @@ A media pipeline is operating in low latency mode when the video decoder and aud
 
 Where the client has knowledge of PTS discontinuities in the video stream, it shall call `IVideoDecoderController.signalDiscontinuity()` between the AV buffers passed to `decodeBufferWithMetadata()`.
 
-For the first input [AV Buffer](../../av_buffer/current/av_buffer.md) video frame passed in for decode after the discontinuity, it shall indicate the discontinuity in its next output `FrameMetadata`.
+For the first input [AV Buffer](../../../avbuffer/current/docs/av_buffer.md) video frame passed in for decode after the discontinuity, it shall indicate the discontinuity in its next output `FrameMetadata`.
 
 ## End of Stream Signalling
 
@@ -295,7 +295,7 @@ After the EOS callback the decoder remains in `State::STARTED` but is drained. N
 
 Decoded video frame buffers are only passed from the video decoder to the client when operating in the non-tunnelled operational mode.
 
-If the input [AV Buffer](../../av_buffer/current/av_buffer.md) that contained the coded video frame was passed in a secure buffer, then the corresponding decoded video frame must be output in a secure video frame buffer.
+If the input [AV Buffer](../../../avbuffer/current/docs/av_buffer.md) that contained the coded video frame was passed in a secure buffer, then the corresponding decoded video frame must be output in a secure video frame buffer.
 
 Video frame buffers are passed back as handles in the `IVideoDecoderControllerListener.onFrameOutput()` function `frameBufferHandle` parameter.  In tunnelled mode, `-1` is passed as the handle value to indicate that no frame buffer handle is being provided since the video is consumed internally by the vendor layer.
 
@@ -319,7 +319,7 @@ Continuing to call `decodeBufferWithMetadata()` while the queue is full is permi
 
 The presentation time base units for video frames is nanoseconds and passed in an int64 (long in AIDL definition) variable type. Audio buffers shared the same time base units of nanoseconds.
 
-When coded video frames are passed in through [AV Buffer](../../av_buffer/current/av_buffer.md) handles to `IVideoDecoderController.decodeBufferWithMetadata()` the `InputBufferMetadata.nsPresentationTime` field represents the video frame presentation time.
+When coded video frames are passed in through [AV Buffer](../../../avbuffer/current/docs/av_buffer.md) handles to `IVideoDecoderController.decodeBufferWithMetadata()` the `InputBufferMetadata.nsPresentationTime` field represents the video frame presentation time.
 
 Calls to `IVideoDecoderControllerListener.onFrameOutput()` with frame buffer handles (non-tunnelled mode) and/or frame metadata shall use the same `nsPresentationTime`.
 

@@ -9,16 +9,16 @@ This document provides an overview of the Audio Decoder Hardware Abstraction Lay
     |-|-|
     |**Interface Definition**|[audio_decoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiodecoder/current)|
     |**API Documentation**| *TBD* |
-    |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
+    |**HAL Interface Type**|[AIDL and Binder](../../../docs/introduction/aidl_and_binder.md)|
     |**VTS Tests**| TBC |
     |**Reference Implementation - vComponent**|TBC|
 
 ## Related Pages
 
 !!! tip "Related Pages"
-    - [Audio Sink](../../audio_sink/current/audio_sink.md)
-    - [AV Buffer](../../av_buffer/current/av_buffer.md)
-    - [Session State Management](../../key_concepts/hal/hal_session_state_management.md)
+    - [Audio Sink](../../../audiosink/current/docs/audio_sink.md)
+    - [AV Buffer](../../../avbuffer/current/docs/av_buffer.md)
+    - [Session State Management](../../../docs/key_concepts/hal/hal_session_state_management.md)
 
 ## Functionality
 
@@ -36,7 +36,7 @@ The choice between tunnelled and non-tunnelled mode is made on a per-codec basis
 
 ## PCM Handling
 
-Uncompressed PCM audio streams do not require decoding. Therefore, they bypass the Audio Decoder HAL entirely. Instead, they are routed directly to the [Audio Sink](../../audio_sink/current/audio_sink.md) service for mixing and playback. This is an important distinction to make for clarity.
+Uncompressed PCM audio streams do not require decoding. Therefore, they bypass the Audio Decoder HAL entirely. Instead, they are routed directly to the [Audio Sink](../../../audiosink/current/docs/audio_sink.md) service for mixing and playback. This is an important distinction to make for clarity.
 
 ## Implementation Requirements
 
@@ -77,11 +77,11 @@ The interface can be found by following this link [audiodecoder](https://github.
 
 ## Initialization
 
-The [systemd](../../../vsi/systemd/current/systemd.md) `hal-audio_decoder_manager.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
+The [systemd](../../../docs/vsi/systemd/current/systemd.md) `hal-audio_decoder_manager.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
-The Audio Decoder Manager service depends on the [Service Manager](../../../vsi/service_manager/current/service_manager.md) to register itself as a service.
+The Audio Decoder Manager service depends on the [Service Manager](../../../docs/vsi/service_manager/current/service_manager.md) to register itself as a service.
 
-Upon starting, the service shall register the `IAudioDecoderManager` interface with the [Service Manager](../../../vsi/service_manager/current/service_manager.md) using the String `IAudioDecoderManager.serviceName` and immediately become operational.
+Upon starting, the service shall register the `IAudioDecoderManager` interface with the [Service Manager](../../../docs/vsi/service_manager/current/service_manager.md) using the String `IAudioDecoderManager.serviceName` and immediately become operational.
 
 ## Product Customization
 
@@ -95,7 +95,7 @@ An audio decoder instance may support any number of audio codecs, but can only o
 
 The Audio Decoder HAL can provide functionality to multiple clients.
 
-Typically an RDK middleware GStreamer audio decoder element will work with a single `IAudioDecoder` instance and pass it [AV Buffer](../../av_buffer/current/av_buffer.md) handles for decode.
+Typically an RDK middleware GStreamer audio decoder element will work with a single `IAudioDecoder` instance and pass it [AV Buffer](../../../avbuffer/current/docs/av_buffer.md) handles for decode.
 
 The RDK middleware resource management system will examine the number of audio decoder resources and their capabilities, so they can be allocated to streaming sessions.
 
@@ -254,7 +254,7 @@ If any audio decoder supports SAP in non-tunnelled mode then the Audio Sink HAL 
 
 PCM stream data can originate in the RDK media pipeline from multiple sources; from an application, from the RDK middleware or from a software audio decoder.  In these cases the PCM data does not enter an Audio Decoder and is passed directly to the Audio Sink HAL.
 
-Clear PCM audio is copied into a non-secure [AV Buffer](../../av_buffer/current/av_buffer.md) and then queued at the Audio Sink where it is then mixed for audio output.
+Clear PCM audio is copied into a non-secure [AV Buffer](../../../avbuffer/current/docs/av_buffer.md) and then queued at the Audio Sink where it is then mixed for audio output.
 
 No buffer decryption or audio decode is required for clear PCM audio buffers.
 
@@ -308,7 +308,7 @@ Any metadata associated with the supplementary/primary audio mix levels is left 
 
 Where the client has knowledge of PTS discontinuities in the audio stream, it shall call `IAudioDecoderController.signalDiscontinuity()` between the AV buffers passed to `decodeBufferWithMetadata()`.
 
-For the first input [AV Buffer](../../av_buffer/current/av_buffer.md) audio frame passed in for decode after the discontinuity, it shall indicate the discontinuity in its next output `FrameMetadata`.
+For the first input [AV Buffer](../../../avbuffer/current/docs/av_buffer.md) audio frame passed in for decode after the discontinuity, it shall indicate the discontinuity in its next output `FrameMetadata`.
 
 ## End of Stream Signalling
 
@@ -324,7 +324,7 @@ After the EOS callback the decoder remains in `State::STARTED` but is drained. N
 
 Decoded audio frame buffers are only passed from the audio decoder to the client when operating in non-tunnelled mode.
 
-If the input [AV Buffer](../../av_buffer/current/av_buffer.md) that contained the coded audio frame was passed in a secure buffer, then the corresponding decoded audio frame must be output in a secure audio frame buffer.
+If the input [AV Buffer](../../../avbuffer/current/docs/av_buffer.md) that contained the coded audio frame was passed in a secure buffer, then the corresponding decoded audio frame must be output in a secure audio frame buffer.
 
 Audio frame buffers are passed back as handles in the `IAudioDecoderControllerListener.onFrameOutput()` function `frameBufferHandle` parameter. In tunnelled mode, -1 is passed as the handle value to indicate that no frame buffer handle is being provided since the audio is consumed internally by the vendor layer.
 
@@ -348,7 +348,7 @@ Continuing to call `decodeBufferWithMetadata()` while the queue is full is permi
 
 The presentation time base units for audio frames is nanoseconds and passed in an int64 (long in AIDL definition) variable type. Video buffers shared the same time base units of nanoseconds.
 
-When coded audio frames are passed in through [AV Buffer](../../av_buffer/current/av_buffer.md) handles to `IAudioDecoderController.decodeBufferWithMetadata()` the `InputBufferMetadata.nsPresentationTime` field represents the audio frame presentation time.
+When coded audio frames are passed in through [AV Buffer](../../../avbuffer/current/docs/av_buffer.md) handles to `IAudioDecoderController.decodeBufferWithMetadata()` the `InputBufferMetadata.nsPresentationTime` field represents the audio frame presentation time.
 
 Calls to `IAudioDecoderControllerListener.onFrameOutput()` with frame buffer handles (non-tunnelled mode) and/or frame metadata shall use the same `nsPresentationTime`.
 

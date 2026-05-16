@@ -12,13 +12,13 @@ Multiple mixer instances can exist on a platform, each capable of mixing multipl
     |||
     |-|-|
     |**Interface Definition**|[audio_mixer/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/audiomixer/current)|
-    |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
+    |**HAL Interface Type**|[AIDL and Binder](../../../docs/introduction/aidl_and_binder.md)|
 
 ---
 
 !!! tip "Related Pages"
-    * [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
-    * [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
+    * [HAL Feature Profile](../../../docs/key_concepts/hal/hal_feature_profiles.md)
+    * [HAL Interface Overview](../../../docs/key_concepts/hal/hal_interfaces.md)
 
 ---
 
