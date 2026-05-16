@@ -20,6 +20,9 @@ package com.rdk.hal.broadcast;
 
 import com.rdk.hal.broadcast.demux.IDemux;
 import com.rdk.hal.broadcast.frontend.IFrontend;
+import com.rdk.hal.broadcast.ca.ICaSlot;
+import com.rdk.hal.broadcast.Version;
+import com.rdk.hal.broadcast.ImplementationVersion;
 
 /**
  *  @brief     BroadcastManager HAL interface.
@@ -27,10 +30,10 @@ import com.rdk.hal.broadcast.frontend.IFrontend;
  *  @author    Christian George
  *  @author    Philipp Trommler
  *
- *  <h3>Exception Handling</h3>
+ *  ### Exception Handling
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *  - **Success**: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - **Failure (Exception)**: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
  *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
  *    The caller must ignore any output variables.
  */
@@ -41,8 +44,22 @@ interface IBroadcastManager {
     const @utf8InCpp String serviceName = "BroadcastManager";
 
     /**
+     * The HAL API Version that the vendor layer was compiled against.
+     *
+     * @returns Version structure containing major and minor version numbers
+     */
+    Version getVersion();
+
+    /**
+     * Gets the HAL implementation version.
+     *
+     * @returns ImplementationVersion structure containing name and version
+     */
+    ImplementationVersion getImplVersion();
+
+    /**
 	 * Gets the platform list of frontend IDs.
-     * 
+     *
      * @returns IFrontEnd.Id[]
      *
      */
@@ -58,12 +75,35 @@ interface IBroadcastManager {
      */
     @nullable IFrontend getFrontend(in IFrontend.Id frontendId);
 
-    /*
-     * Open a instance of Demux.
+    /**
+     * Gets the list of demux IDs available on this platform
      *
-     * The opened demux can afterwards be used on a tuner or a software input
-     *
-     * @returns IDemux or null if we are out of demux resources.
+     * @returns IDemux.Id array
      */
-    @nullable IDemux openDemux();
+    IDemux.Id[] getDemuxIds();
+
+    /**
+     * Get the demux interface for the given ID
+     *
+     * @param[in] demuxId    The ID of the demux.
+     *
+     * @returns IDemux or null if the ID is invalid.
+     */
+    @nullable IDemux getDemux(in IDemux.Id demuxId);
+
+    /**
+     * Gets the list of CA slot IDs available on this platform.
+     *
+     * @returns ICaSlot.Id array
+     */
+    ICaSlot.Id[] getCaSlotIds();
+
+    /**
+     * Get the CA slot interface for the given ID.
+     *
+     * @param[in] slotId    The ID of the CA slot.
+     *
+     * @returns ICaSlot or null if the ID is invalid.
+     */
+    @nullable ICaSlot getCaSlot(in ICaSlot.Id slotId);
 }

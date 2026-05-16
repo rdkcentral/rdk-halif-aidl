@@ -22,13 +22,22 @@ package com.rdk.hal.broadcast.demux;
  *  @brief     Demux Filter type
  *  @author    Jan Pedersen
  *  @author    Christian George
- *  @author    Philipp Trommler 
+ *  @author    Philipp Trommler
  */
 
 @VintfStability
+@Backing(type="int")
 enum FilterType {
     /** Clean value when default initialized */
     UNDEFINED = 0,
-    /** Mpeg2 transport stream packets */
-    MPEG2TS,
+    /** Mpeg2 transport stream data packets */
+    MPEG2TS_DATA,
+    /** Mpeg2 transport stream clock packets */
+    MPEG2TS_CLOCK,
+    /** Mpeg2 transport stream video packets */
+    MPEG2TS_VIDEO,
+    /** Mpeg2 transport stream audio packets */
+    MPEG2TS_AUDIO,
+    /** Mpeg2 transport stream supplementary audio packets */
+    MPEG2TS_SUPPLEMENTARY_AUDIO,
 }

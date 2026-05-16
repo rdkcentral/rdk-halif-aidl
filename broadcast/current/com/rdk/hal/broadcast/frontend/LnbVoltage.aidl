@@ -19,23 +19,29 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- *  @brief     TuneStatus enum
- *  @author    Jan Pedersen
- *  @author    Christian George
- *  @author    Philipp Trommler 
+ * @brief LNB Voltage enumeration
+ * @author Jan Pedersen
+ * @author Christian George
+ * @author Philipp Trommler
  */
 
 @VintfStability
 @Backing(type="int")
-enum TuneStatus {
+enum LnbVoltage {
     /** Clean value when default initialized */
     UNDEFINED = 0,
-    /** The frontend is currently idle */
-    IDLE,
-    /** The frontend is trying to optain lock */
-    TUNING,
-    /** The frontend was not able to lock to the requested tune parameters */
-    NO_SIGNAL,
-    /** The frontend is locked to a signal */
-    LOCKED,
+    /** No voltage on the LNB Controller - The voltage is zero */
+    NONE = 1,
+    /** The voltage is 13 volt */
+    V13 = 13,
+    /** The voltage is 14 volt */
+    V14 = 14,
+    /** The voltage is 15 volt */
+    V15 = 15,
+    /** The voltage is 18 volt */
+    V18 = 18,
+    /** The voltage is 19 volt */
+    V19 = 19,
+    /** The voltage is 20 volt */
+    V20 = 20,
 }

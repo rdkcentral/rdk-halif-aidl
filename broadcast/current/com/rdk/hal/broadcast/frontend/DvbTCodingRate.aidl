@@ -2,7 +2,7 @@
  * If not stated otherwise in this file or this component's LICENSE file the
  * following copyright and licenses apply:
  *
- * Copyright 2024 RDK Management
+ * Copyright 2025 RDK Management
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,24 +18,17 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-/**
- *  @brief     TuneStatus enum
- *  @author    Jan Pedersen
- *  @author    Christian George
- *  @author    Philipp Trommler 
- */
+import com.rdk.hal.broadcast.frontend.CodingRate;
 
+/**
+ *  @brief  DVB-T LP and HP coding rates, used as a signal info value.
+ *
+ *  Returned for @ref SignalInfoProperty::DVB_T_CODING_RATE.
+ */
 @VintfStability
-@Backing(type="int")
-enum TuneStatus {
-    /** Clean value when default initialized */
-    UNDEFINED = 0,
-    /** The frontend is currently idle */
-    IDLE,
-    /** The frontend is trying to optain lock */
-    TUNING,
-    /** The frontend was not able to lock to the requested tune parameters */
-    NO_SIGNAL,
-    /** The frontend is locked to a signal */
-    LOCKED,
+parcelable DvbTCodingRate {
+    /** Low-priority stream coding rate */
+    CodingRate lp;
+    /** High-priority stream coding rate */
+    CodingRate hp;
 }

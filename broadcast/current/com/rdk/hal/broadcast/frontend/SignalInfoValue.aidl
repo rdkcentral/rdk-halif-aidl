@@ -21,11 +21,15 @@ import com.rdk.hal.broadcast.frontend.Modulation;
 import com.rdk.hal.broadcast.frontend.GuardInterval;
 import com.rdk.hal.broadcast.frontend.TransmissionMode;
 import com.rdk.hal.broadcast.frontend.Bandwidth;
+import com.rdk.hal.broadcast.frontend.DvbTStandard;
+import com.rdk.hal.broadcast.frontend.DvbSStandard;
+import com.rdk.hal.broadcast.frontend.CodingRate;
+import com.rdk.hal.broadcast.frontend.DvbTCodingRate;
 
 /**
  *  @brief     SignalInfo values
  *  @author    Christian George
- *  @author    Philipp Trommler 
+ *  @author    Philipp Trommler
  */
 
 /**
@@ -34,7 +38,7 @@ import com.rdk.hal.broadcast.frontend.Bandwidth;
  */
 @VintfStability
 union SignalInfoValue {
-    /** Demod Lock status */    
+    /** Demod Lock status */
     boolean isDemodLocked;
 
     /** RF Lock status */
@@ -48,7 +52,7 @@ union SignalInfoValue {
 
     /** Bit error rate - The number of error bit per 1 billion bits */
     int ber;
-    
+
     /** Pre Viterbi BER - The number of error bit per 1 billion bits before correction */
     int preBer;
 
@@ -75,7 +79,7 @@ union SignalInfoValue {
 
     /** The used modulation / sub-modulation. */
     Modulation modulation;
-    
+
     /** The used guard interval. (enum value) */
     GuardInterval guardInterval;
 
@@ -84,7 +88,19 @@ union SignalInfoValue {
 
     /** Bandwidth */
     Bandwidth bandwidth;
-     
+
     /** Symbols per second */
-    int symbolRate;   
+    int symbolRate;
+
+    /** DVB-T Standard */
+    DvbTStandard dvbTStandard;
+
+    /** DVB-S Standard */
+    DvbSStandard dvbSStandard;
+
+    /** Coding rate */
+    CodingRate codingRate;
+
+    /** DVB-T LP and HP coding rates */
+    DvbTCodingRate dvbTCodingRate;
 }

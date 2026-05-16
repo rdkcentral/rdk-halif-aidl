@@ -20,6 +20,7 @@ package com.rdk.hal.broadcast.demux;
 
 import com.rdk.hal.broadcast.demux.DataPacket;
 import com.rdk.hal.broadcast.demux.DemuxFilterParameters;
+import com.rdk.hal.broadcast.demux.FilterType;
 import com.rdk.hal.broadcast.demux.ISoftwareSinkListener;
 import com.rdk.hal.broadcast.demux.SoftwareSink;
 
@@ -30,10 +31,10 @@ import com.rdk.hal.broadcast.demux.SoftwareSink;
  *  @author    Christian George
  *  @author    Philipp Trommler
  *
- *  <h3>Exception Handling</h3>
+ *  ### Exception Handling
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *  - **Success**: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - **Failure (Exception)**: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
  *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
  *    The caller must ignore any output variables.
  */
@@ -41,6 +42,13 @@ import com.rdk.hal.broadcast.demux.SoftwareSink;
 
 @VintfStability
 interface IFilter {
+    /**
+     * Get the type of this filter.
+     *
+     * @returns FilterType the type of data this filter captures.
+     */
+    FilterType getType();
+
     /**
      * Set a new filter
      *

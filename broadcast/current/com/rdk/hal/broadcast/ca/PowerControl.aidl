@@ -2,7 +2,7 @@
  * If not stated otherwise in this file or this component's LICENSE file the
  * following copyright and licenses apply:
  *
- * Copyright 2024 RDK Management
+ * Copyright 2025 RDK Management
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,26 +16,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.broadcast.frontend;
+package com.rdk.hal.broadcast.ca;
 
 /**
- *  @brief     TuneStatus enum
- *  @author    Jan Pedersen
- *  @author    Christian George
- *  @author    Philipp Trommler 
+ *  @brief  Describes how power line control is managed for a CA slot.
  */
-
 @VintfStability
 @Backing(type="int")
-enum TuneStatus {
-    /** Clean value when default initialized */
+enum PowerControl {
+    /** @brief Clean value when default initialized */
     UNDEFINED = 0,
-    /** The frontend is currently idle */
-    IDLE,
-    /** The frontend is trying to optain lock */
-    TUNING,
-    /** The frontend was not able to lock to the requested tune parameters */
-    NO_SIGNAL,
-    /** The frontend is locked to a signal */
-    LOCKED,
+    /** @brief Power line can not be controlled */
+    NONE = 1,
+    /** @brief The power line is shared with other components */
+    SHARED = 2,
+    /** @brief The power line is dedicated to this slot */
+    DEDICATED = 3,
 }

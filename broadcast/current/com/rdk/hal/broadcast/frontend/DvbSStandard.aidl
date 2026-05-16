@@ -19,23 +19,23 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- *  @brief     TuneStatus enum
- *  @author    Jan Pedersen
- *  @author    Christian George
- *  @author    Philipp Trommler 
+ * @brief DVB-S Standard enumeration
+ * @author Jan Pedersen
+ * @author Christian George
+ * @author Philipp Trommler
  */
 
 @VintfStability
 @Backing(type="int")
-enum TuneStatus {
+enum DvbSStandard {
     /** Clean value when default initialized */
     UNDEFINED = 0,
-    /** The frontend is currently idle */
-    IDLE,
-    /** The frontend is trying to optain lock */
-    TUNING,
-    /** The frontend was not able to lock to the requested tune parameters */
-    NO_SIGNAL,
-    /** The frontend is locked to a signal */
-    LOCKED,
+    /** Auto-select the standard to use */
+    AUTO,
+    /** Use S only */
+    S,
+    /** Use S2 only */
+    S2,
+    /** Use S2X only */
+    S2X
 }

@@ -31,6 +31,7 @@ package com.rdk.hal.broadcast.frontend;
  * modes from the frontend before using any of them.
  */
 @VintfStability
+@Backing(type="int")
 enum TransmissionMode {
     /** Clean value when default initialized */
     UNDEFINED = 0,

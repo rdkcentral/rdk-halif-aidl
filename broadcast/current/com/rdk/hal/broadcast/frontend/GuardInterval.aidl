@@ -22,7 +22,7 @@ package com.rdk.hal.broadcast.frontend;
  *  @brief     Available guard intervals
  *  @author    Jan Pedersen
  *  @author    Christian George
- *  @author    Philipp Trommler 
+ *  @author    Philipp Trommler
  */
 
 /**
@@ -31,6 +31,7 @@ package com.rdk.hal.broadcast.frontend;
  * intervals from the frontend before using any of them.
  */
 @VintfStability
+@Backing(type="int")
 enum GuardInterval {
     /** Clean value when default initialized */
     UNDEFINED = 0,
@@ -44,4 +45,10 @@ enum GuardInterval {
     GI_1_16,
     /** 1/32 */
     GI_1_32,
+    /** 1/128 */
+    GI_1_128,
+    /** 19/128 */
+    GI_19_128,
+    /** 19/256 */
+    GI_19_256,
 }

@@ -22,7 +22,7 @@ package com.rdk.hal.broadcast.frontend;
  *  @brief     Available frontend info types
  *  @author    Jan Pedersen
  *  @author    Christian George
- *  @author    Philipp Trommler 
+ *  @author    Philipp Trommler
  */
 
 /**
@@ -31,10 +31,11 @@ package com.rdk.hal.broadcast.frontend;
  * properties from the frontend before using any of them.
  */
 @VintfStability
+@Backing(type="int")
 enum SignalInfoProperty {
     /** Clean value when default initialized */
     UNDEFINED = 0,
-    /** Demod Lock status */    
+    /** Demod Lock status */
     DEMOD_LOCK,
     /** RF Lock status */
     RF_LOCK,
@@ -60,14 +61,22 @@ enum SignalInfoProperty {
     PLP_IDS,
     /** DVB-T2 System Id */
     T2_SYSTEM_ID,
-    /** The used modulation / submodulation. @ref Modulation */
+    /** The used modulation / sub-modulation. @ref Modulation */
     MODULATION,
     /** The used guard interval. @ref GuardInterval */
     GUARD_INTERVAL,
-    /** The used tranmission mode. @ref TransmissionMode */
+    /** The used transmission mode. @ref TransmissionMode */
     TRANSMISSION_MODE,
     /** Bandwidth */
     BANDWIDTH,
     /** Symbol Rate */
     SYMBOL_RATE,
+    /** DVB-T Standard */
+    DVB_T_STANDARD,
+    /** DVB-S Standard */
+    DVB_S_STANDARD,
+    /** Coding rate */
+    CODING_RATE,
+    /** DVB-T LP and HP coding rate */
+    DVB_T_CODING_RATE,
 }

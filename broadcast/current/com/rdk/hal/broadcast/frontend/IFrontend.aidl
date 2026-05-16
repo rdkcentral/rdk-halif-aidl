@@ -22,6 +22,8 @@ import com.rdk.hal.broadcast.frontend.FrontendType;
 import com.rdk.hal.broadcast.frontend.IFrontendListener;
 import com.rdk.hal.broadcast.frontend.IFrontendController;
 import com.rdk.hal.broadcast.frontend.IFrontendControllerListener;
+import com.rdk.hal.broadcast.frontend.ILnbController;
+import com.rdk.hal.broadcast.demux.IDemuxDataProvider;
 import com.rdk.hal.State;
 
 /**
@@ -30,10 +32,10 @@ import com.rdk.hal.State;
  *  @author    Christian George
  *  @author    Philipp Trommler
  *
- *  <h3>Exception Handling</h3>
+ *  ### Exception Handling
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
+ *  - **Success**: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
+ *  - **Failure (Exception)**: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
  *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
  *    The caller must ignore any output variables.
  */
@@ -51,10 +53,24 @@ interface IFrontend {
         int value;
     }
 
+    /**
+     * Get the ID of this frontend
+     *
+     * @returns Id the unique identifier for this frontend
+     */
+    Id getId();
+
+    /**
+     * Check whether the frontend is already opened
+     *
+     * @returns boolean true if opened, false otherwise
+     */
+    boolean isOpen();
+
     /** 
      * Gets the supported frontend types
      *
-     * Can be called any time and is not depended o
+     * Can be called any time and is not dependent on state
      *
      * @returns FrontendType array
      *
@@ -139,4 +155,37 @@ interface IFrontend {
      * @see registerListener()
      */
     boolean unregisterListener(in IFrontendListener frontendListener);
+
+    /**
+     * Acquire a DemuxDataProvider that must be passed to a DemuxController.
+     *
+     * @returns IDemuxDataProvider or null on error (e.g. frontend not opened)
+     */
+    @nullable IDemuxDataProvider acquireDataProvider();
+
+    /**
+     * Releases the DemuxDataProvider previously acquired.
+     *
+     * @param[in] provider A non-null provider obtained from acquireDataProvider() on the same FrontEnd
+     */
+    void releaseDataProvider(in IDemuxDataProvider provider);
+
+    /**
+     * Opens the LNB controller. Non-blocking.
+     *
+     * The returned `ILnbController` interface is used for controlling satellite equipment.
+     *
+     * @returns ILnbController or null on error (e.g. LNB controller already opened)
+     */
+    @nullable ILnbController openLnb();
+
+    /**
+     * Closes the LNB controller and invalidates the LnbController.
+     *
+     * Cleanup all attached (hardware) resources and brings the lnb controller back into a state
+     * where it can be opened again.
+     *
+     * @param[in] controller non-null controller obtained from openLnb() on the same FrontEnd
+     */
+    void closeLnb(in ILnbController controller);
 }
