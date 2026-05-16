@@ -28,7 +28,7 @@
 # Two-stage build process:
 #
 # Stage 1 - Build Binder SDK (once):
-#   ./install_binder.sh
+#   ./build_binder.sh
 #   → Creates out/target/ with binder runtime
 #
 # Stage 2 - Build HAL module:
@@ -136,7 +136,7 @@ if (NOT EXISTS "${BINDER_SDK_DIR}/.sdk_ready")
     message("The Binder SDK must be built before building modules.")
     message("")
     message("Please run Stage 1 first:")
-    message("  ./install_binder.sh")
+    message("  ./build_binder.sh")
     message("")
     message("This will create the Binder SDK in: ${BINDER_SDK_DIR}")
     message("")
