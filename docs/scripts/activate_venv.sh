@@ -23,15 +23,36 @@
 MY_PATH="$(realpath ${BASH_SOURCE[0]})"
 SCRIPTS_DIR="$(dirname ${MY_PATH})"
 DOCS_DIR="${SCRIPTS_DIR}/.."
-VENV_DIR="${DOCS_DIR}/python_venv"  # Default virtual environment directory name
+VENV_DIR="${DOCS_DIR}/python_venv"
 
-# Check if the script is sourced
+# Check if the script is sourced (required to activate venv in the current shell)
 if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
-    source "$VENV_DIR"/bin/activate
-    echo "Virtual environment '$VENV_DIR' activated."
-    . ${SCRIPTS_DIR}/install.sh --quiet
-else
-    echo "The script must be sourced. run 'source ./activate_venv.sh'"
-    echo "Once activated you can deactivate with 'deactivate' command"
-fi
+    
+    # 1. Activate the Venv
+    if [ -f "$VENV_DIR/bin/activate" ]; then
+        source "$VENV_DIR"/bin/activate
+        echo "Virtual environment '$VENV_DIR' activated."
+    else
+        # If venv doesn't exist yet, we can't activate it, but install.sh might create it.
+        # We'll let install.sh handle the creation.
+        echo "Virtual environment not found. install.sh will attempt to create it."
+    fi
 
+    # 2. Run the install script safely
+    # We use source (.) so it runs in this shell, but we don't use set -e
+    . ${SCRIPTS_DIR}/install.sh --quiet
+    
+    # 3. Check if install.sh succeeded
+    if [ $? -ne 0 ]; then
+        echo "------------------------------------------------"
+        echo "⚠️  Setup encountered errors. Please check logs."
+        echo "------------------------------------------------"
+        # We do NOT exit here because that would close the terminal.
+        # We just stop processing.
+        return 1
+    fi
+
+else
+    echo "Error: This script must be sourced."
+    echo "Usage: source ./activate_venv.sh"
+fi

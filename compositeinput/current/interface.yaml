@@ -1,0 +1,7 @@
+aidl_interface:
+  name: compositeinput
+  srcs:
+    - com/rdk/hal/compositeinput/*.aidl
+  imports:
+    - common
+  stability: vintf

@@ -1,0 +1,28 @@
+# Define the compiler
+CXX = g++
+CXXFLAGS = -std=c++11
+
+# Define the source files
+SOURCES = CarServer.cpp CarService.cpp
+
+# Define the executable
+EXECUTABLE = CarService
+
+# Define the libraries to link against
+LIBS_FROM_MAKE = -lcom.demo.hal.car-V3-cpp
+
+# Include the additional Makefile
+include /home/ape967/aidl_versioning/linux_binder_idl/CMakeLists.inc
+
+# Rule to build the executable
+$(EXECUTABLE): $(SOURCES)
+$(CXX) $(CXXFLAGS) -o $(EXECUTABLE) $(SOURCES) $(LIBS)
+
+# Rule to install the executable
+install: $(EXECUTABLE)
+cp $(EXECUTABLE) $(INSTALL_DIR)
+
+# Clean rule
+clean:
+rm -f $(EXECUTABLE)
+

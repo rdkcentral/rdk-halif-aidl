@@ -1,0 +1,6 @@
+aidl_interface:
+  name: drm
+  srcs:
+    - com/rdk/hal/drm/*.aidl
+  imports: []
+  stability: vintf

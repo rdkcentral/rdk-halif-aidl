@@ -100,20 +100,17 @@ function main()
 
   case "${CMD}" in
     serve)
-      ${PWD}/docs/scripts/sync_src.sh  --quiet
       echo "[INFO] Serving MkDocs locally..."
       mkdocs serve -a 0.0.0.0:8000 "$@"
       ;;
 
     build)
-      ${PWD}/docs/scripts/sync_src.sh  --quiet
       echo "[INFO] Building MkDocs site..."
       mkdocs build 
       ;;
 
     deploy)
       echo "[INFO] Deploying MkDocs site to gh-pages..."
-      ${PWD}/docs/scripts/sync_src.sh --quiet
       # Check if the second argument (the version) is provided
       # "$#" is the number of positional parameters
       # If "$2" is empty, it means no version was provided after "deploy"
@@ -173,11 +170,11 @@ function main()
 # ----------------------------------------------------------------------------
 # Setup and run the install and the venv
 # ----------------------------------------------------------------------------
-{
-  cd ./docs
-  ${PWD}/scripts/install.sh --quiet
-  source ${PWD}/scripts/activate_venv.sh
-}
+(
+  cd ./docs || exit 1
+  ./scripts/install.sh --quiet || { echo "[ERROR] install.sh failed"; exit 1; }
+  source ./scripts/activate_venv.sh || { echo "[ERROR] activate_venv.sh failed"; exit 1; }
+)
 
 # ----------------------------------------------------------------------------
 # Run main() with all script arguments.
@@ -188,4 +185,7 @@ main "$@"
 # ----------------------------------------------------------------------------
 # deactivate pyenv
 # ----------------------------------------------------------------------------
-deactivate
+# Only deactivate if it exists (and we’re in a venv)
+if command -v deactivate >/dev/null 2>&1; then
+  deactivate
+fi

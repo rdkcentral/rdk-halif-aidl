@@ -2,13 +2,13 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 out
+CMakeLists.binder.txt
+cmake_stage_modules.cmake
+.api_temp
 build
-src_link
 __pycache__/
-python_venv
 src_link
 .lastlogin
-gen
 .DS_Store
 site/
 linux_binder_idl/
@@ -22,15 +22,15 @@ linux_binder_idl/
 */cpp
 **/x64
 **/aidl
-/audiodecoder/docs/html
-/audiodecoder/docs/latex
 .*sw*
+**/out
 
 # CMake related files
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 Makefile
+build-tools/linux_binder_idl/build-target-cmake
 
 # Compiled aidl output per module
 */gen/

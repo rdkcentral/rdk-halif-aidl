@@ -1,0 +1,8 @@
+aidl_interface:
+  name: planecontrol
+  srcs:
+    - com/rdk/hal/planecontrol/*.aidl
+  imports:
+    - common
+    - videodecoder
+  stability: vintf

@@ -1,0 +1,6 @@
+aidl_interface:
+  name: deepsleep
+  srcs:
+    - com/rdk/hal/deepsleep/*.aidl
+  imports: []
+  stability: vintf

@@ -1,0 +1,6 @@
+aidl_interface:
+  name: common
+  srcs:
+    - com/rdk/hal/*.aidl
+  imports: []
+  stability: vintf
