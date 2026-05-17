@@ -1,0 +1,36 @@
+component: cryptoengine
+version: 0.1.0.0
+generation: 1
+status: GREEN
+description: >
+  Crypto Engine HAL providing standalone cryptographic operations (encrypt,
+  decrypt, hash, sign, verify, random) independent of key storage. Engines
+  can be attached to a KeyVault to operate on vault-managed keys, or used
+  standalone with caller-provided key material. Supports platform-specific
+  hardware crypto acceleration (TEE) or software fallback.
+type: SOC
+
+lifecycle:
+  review_started: ~
+  review_deadline: ~
+  target_green_date: ~
+
+scope:
+  - AES encrypt/decrypt (CBC, CTR, GCM)
+  - SHA-256/384/512 digest
+  - HMAC-SHA256 sign/verify
+  - EC operations (ECDSA, ECDH) - Phase 2
+  - Cryptographically secure random number generation
+  - Streaming operation model (begin/update/finish)
+  - Hardware crypto acceleration when available
+
+notes:
+  owners: "Architecture + Security"
+  dependencies: "None"
+
+reviewers:
+  RTAB_Group: pending
+  Architecture: pending
+  Product_Architecture: pending
+  Kernel_Architecture: pending
+  VTS_Team: pending
