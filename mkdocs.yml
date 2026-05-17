@@ -73,6 +73,7 @@ nav:
       - HDMI Input: '!include hdmiinput/current/mkdocs.yml'
       - HDMI Output: '!include hdmioutput/current/mkdocs.yml'
     - Common: '!include common/current/mkdocs.yml'
+    - Composite Input: '!include compositeinput/current/mkdocs.yml'
     - Deep Sleep: '!include deepsleep/current/mkdocs.yml'
     - Device Info: '!include deviceinfo/current/mkdocs.yml'
     - Flash: '!include flash/current/mkdocs.yml'
@@ -88,6 +89,7 @@ nav:
     - Wi-Fi: '!include vsi/wifi/current/mkdocs.yml'
     - Systemd: vsi/systemd/current/systemd.md
     - Kernel: '!include vsi/kernel/current/mkdocs.yml'
+    - Linux Input: '!include vsi/linuxinput/current/mkdocs.yml'
   - Vendor Tests Suites (VTS):
     - Levels of Test: external_content/ut-core-wiki/3.-Standards:-Levels-of-Test-for-Vendor-Layer.md
     - Level 4:

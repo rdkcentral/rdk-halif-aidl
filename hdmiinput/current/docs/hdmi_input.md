@@ -6,7 +6,7 @@ The HDMI Input HAL provides control and monitoring of HDMI input ports on the pl
 
 This interface is intended to be used by the HDMI input management components in the RDK platform. It supports multiple HDMI ports, each with its own capabilities, state machine, and controller interface.
 
-This HAL excludes HDMI_CEC and video plane attachment logic, which are managed by [plane_control](../planecontrol/plane_control.md) and [HDMI_CEC](../halif/cec/current/cec.md).
+This HAL excludes HDMI_CEC and video plane attachment logic, which are managed by [plane_control](../planecontrol/plane_control.md) and [HDMI_CEC](../hdmicec/hdmi_cec.md).
 
 ---
 
