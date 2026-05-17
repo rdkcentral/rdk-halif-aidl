@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Generated** | 2026-05-01 |
+| **Generated** | 2026-05-12 |
 | **Components** | 33 |
 | 🟢 **GREEN** | 14 |
 | 🟡 **AMBER** | 15 |
@@ -26,7 +26,7 @@
 
 | | Component | Current Version | Description | Reviews | Owners |
 |---|-----------|---------|-------------|---------|--------|
-| 🟢 | audiodecoder | 0.1.0.0 | Audio decoder resource management and codec format support | 4/4 | Architecture + AV_Architecture |
+| 🟢 | audiodecoder | 0.1.0.1 | Audio decoder resource management and codec format support | 4/4 | Architecture + AV_Architecture |
 | 🟢 | audiomixer | 0.1.0.1 | Audio mixing and routing for multi-stream output | 4/4 | Architecture + Vendor_Layer_Team + AV_Architecture |
 | 🟢 | audiosink | 0.1.0.0 | Audio output rendering and sink device management | 4/4 | Architecture + AV_Architecture |
 | 🟢 | avbuffer | 0.1.0.0 | AV buffer allocation and secure video path management | 4/4 | Architecture + AV_Architecture |

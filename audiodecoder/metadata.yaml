@@ -21,7 +21,7 @@
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: audiodecoder
-version: 0.1.0.0
+version: 0.1.0.1
 status: GREEN
 description: "Audio decoder resource management and codec format support"
 type: SOC
