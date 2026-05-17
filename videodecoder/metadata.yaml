@@ -21,7 +21,7 @@
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: videodecoder
-version: 0.1.0.0
+version: 0.1.1.0
 status: GREEN
 description: "Video decoder resource management and codec support"
 type: SOC
