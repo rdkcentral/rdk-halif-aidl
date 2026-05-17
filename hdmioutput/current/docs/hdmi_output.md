@@ -19,7 +19,6 @@ This HAL does not manage audio routing (delegated to `AudioSink`) or video plane
 !!! tip "Related Pages"
     * [HAL Feature Profile](../key_concepts/hal/hal_feature_profiles.md)
     * [HAL Interface Overview](../key_concepts/hal/hal_interfaces.md)
-    * [Display Pipeline Overview](../halif/display/architecture.md)
 
 ---
 

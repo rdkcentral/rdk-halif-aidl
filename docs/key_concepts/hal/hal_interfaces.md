@@ -112,4 +112,4 @@ flowchart TD
 
 ## Interface / Testing / vComponent Status
 
-> **Note:** For the current review and approval status of each component (GREEN / AMBER / RED), see the [RAG Status Report](../../RAG_STATUS_REPORT.md).
+> **Note:** For the current review and approval status of each component (GREEN / AMBER / RED), see the [RAG Status Report](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/RAG_STATUS_REPORT.md).

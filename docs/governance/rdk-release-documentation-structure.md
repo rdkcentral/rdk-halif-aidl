@@ -125,7 +125,7 @@ If a component is undocumented:
 
   * A **support branch** must be created and documentation committed against the existing tag.
   * Alternatively, documentation may be updated in a new release if `main` still reflects the current release state.
-* See also: [git_flow_branching_strategy.md](git_flow_branching_strategy.md)
+* See also: [git_flow_branching_strategy.md](../standards/git_flow_branching_strategy.md)
 
 ```mermaid
 graph TD
