@@ -53,6 +53,7 @@ nav:
     - Overview: halif/key_concepts/hal/hal_interfaces.md
     - Interface Generation: introduction/interface_generation.md
     - AV Subsystem:
+      - Audio System Architecture: halif/audio_mixer/current/audio_system_architecture.md
       - Audio Decoder: halif/audio_decoder/current/audio_decoder.md
       - Audio Mixer: halif/audio_mixer/current/audio_mixer.md
       - Audio Sink: halif/audio_sink/current/audio_sink.md
