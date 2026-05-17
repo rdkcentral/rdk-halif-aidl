@@ -57,7 +57,7 @@ This generates the site into the `site` directory.
 
 The file **`mkdocs.yml`**, located at the root of the repository, defines how your documentation is structured and navigated. Any additions, removals, or reorganizations of documentation pages require corresponding updates to **`mkdocs.yml`** to keep the site navigation current.
 
-For more information on naming conventions used, see [Key Concepts and Naming Conventions](../halif/key_concepts/hal/hal_naming_conventions.md).
+For more information on naming conventions used, see [Key Concepts and Naming Conventions](../key_concepts/hal/hal_naming_conventions.md).
 
 ---
 

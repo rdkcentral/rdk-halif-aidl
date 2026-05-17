@@ -23,7 +23,7 @@ The **Service Manager** is a crucial **Binder service** included in the vendor l
 
 ## Interface Definition
 
-Client code accesses the [Service Manager](../../../vsi/service_manager/current/service_manager.md) by including C++ `IServiceManager.h` header and using the `getService()` function to access registered binder service interfaces.
+Client code accesses the [Service Manager](./service_manager.md) by including C++ `IServiceManager.h` header and using the `getService()` function to access registered binder service interfaces.
 
 See [https://android.googlesource.com/platform/frameworks/native/+/android-13.0.0_r74/libs/binder/include/binder/IServiceManager.h](https://android.googlesource.com/platform/frameworks/native/+/android-13.0.0_r74/libs/binder/include/binder/IServiceManager.h)
 
@@ -33,7 +33,7 @@ See [https://android.googlesource.com/platform/frameworks/native/+/android-13.0.
 
 ## Initialization
 
-The [systemd](../../../vsi/systemd/current/systemd.md) `hal-service_manager.service` unit file is provided by the vendor layer to start the service.
+The [systemd](../../systemd/current/systemd.md) `hal-service_manager.service` unit file is provided by the vendor layer to start the service.
 
 The Service Manager depends on the kernel binder driver.
 

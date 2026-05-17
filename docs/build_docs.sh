@@ -21,7 +21,17 @@
 # *
 #* ******************************************************************************
 
-cd ..
+# ----------------------------------------------------------------------------
+# Resolve paths from the script's own location, so the script works no matter
+# what directory it is invoked from (e.g. ./docs/build_docs.sh or ./build_docs.sh).
+# ----------------------------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)"   # the docs/ directory
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"                                # repo root (holds mkdocs.yml)
+VENV_DIR="${SCRIPT_DIR}/python_venv"
+MKDOCS="${VENV_DIR}/bin/mkdocs"
+MIKE="${VENV_DIR}/bin/mike"
+
+cd "${REPO_ROOT}" || { echo "[ERROR] cannot cd to repo root ${REPO_ROOT}"; exit 1; }
 
 # ----------------------------------------------------------------------------
 # Function to enhance echo
@@ -101,12 +111,12 @@ function main()
   case "${CMD}" in
     serve)
       echo "[INFO] Serving MkDocs locally..."
-      mkdocs serve -a 0.0.0.0:8000 "$@"
+      "${MKDOCS}" serve -a 0.0.0.0:8000 "$@"
       ;;
 
     build)
       echo "[INFO] Building MkDocs site..."
-      mkdocs build 
+      "${MKDOCS}" build
       ;;
 
     deploy)
@@ -121,7 +131,7 @@ function main()
           exit 1 # Exit with an error code
       fi
       # Extract the version from the arguments
-      mike deploy "${VERSION_TO_DEPLOY}" --push
+      "${MIKE}" deploy "${VERSION_TO_DEPLOY}" --push
       ;;
 
     set-default)
@@ -136,7 +146,7 @@ function main()
           exit 1 # Exit with an error code
       fi
       # Extract the version from the arguments
-      mike set-default ${VERSION_TO_DEPLOY} --push
+      "${MIKE}" set-default ${VERSION_TO_DEPLOY} --push
       ;;
 
     delete)
@@ -151,7 +161,7 @@ function main()
           exit 1 # Exit with an error code
       fi
       # Extract the version from the arguments
-      mike delete ${VERSION_TO_DEPLOY} --push
+      "${MIKE}" delete ${VERSION_TO_DEPLOY} --push
       ;;
 
     help|-h|--h|--help|"")
@@ -168,24 +178,20 @@ function main()
 }
 
 # ----------------------------------------------------------------------------
-# Setup and run the install and the venv
+# Set up the Python virtual environment (idempotent).
+# The venv's binaries are invoked by absolute path, so no activation /
+# PATH manipulation is needed and there is no PEP 668 system-pip conflict.
 # ----------------------------------------------------------------------------
-(
-  cd ./docs || exit 1
-  ./scripts/install.sh --quiet || { echo "[ERROR] install.sh failed"; exit 1; }
-  source ./scripts/activate_venv.sh || { echo "[ERROR] activate_venv.sh failed"; exit 1; }
-)
+if [ ! -x "${VENV_DIR}/bin/python" ]; then
+  echo "[INFO] Creating Python virtual environment: ${VENV_DIR}"
+  python3 -m venv "${VENV_DIR}" || { echo "[ERROR] failed to create venv"; exit 1; }
+fi
+
+echo "[INFO] Installing documentation requirements..."
+"${VENV_DIR}/bin/pip" install --quiet --upgrade pip || { echo "[ERROR] pip upgrade failed"; exit 1; }
+"${VENV_DIR}/bin/pip" install --quiet -r "${SCRIPT_DIR}/requirements.txt" || { echo "[ERROR] pip install failed"; exit 1; }
 
 # ----------------------------------------------------------------------------
 # Run main() with all script arguments.
 # ----------------------------------------------------------------------------
-cd ..
 main "$@"
-
-# ----------------------------------------------------------------------------
-# deactivate pyenv
-# ----------------------------------------------------------------------------
-# Only deactivate if it exists (and we’re in a venv)
-if command -v deactivate >/dev/null 2>&1; then
-  deactivate
-fi

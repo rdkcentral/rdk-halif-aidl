@@ -446,12 +446,12 @@ interface IBootNew {
 
 ## References
 
-- **Live Examples:** [examples/aidl_versioning/](../../examples/aidl_versioning/)
+- **Live Examples:** [examples/aidl_versioning/](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/examples/aidl_versioning)
 - **Client Patterns:** [client-patterns.md](client-patterns.md)
 - **Migration Guide:** [migration-guide.md](migration-guide.md)
 - **Android AIDL Docs:** [Android AIDL Versioning](https://source.android.com/docs/core/architecture/aidl/aidl-versioning)
-- **Build Script:** [build_interfaces.sh](../../build_interfaces.sh)
-- **Freeze Script:** [freeze_interface.sh](../../freeze_interface.sh)
+- **Build Script:** [build_interfaces.sh](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/build_interfaces.sh)
+- **Freeze Script:** [freeze_interface.sh](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/freeze_interface.sh)
 
 ## Quick Reference
 
