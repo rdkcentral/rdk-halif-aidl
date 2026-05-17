@@ -242,7 +242,7 @@ The repository contains **33 components** across two responsibility types:
 | `vsi/wifi` | Wi-Fi driver integration and network management |
 
 Each component is independently tracked through the RED → AMBER → GREEN
-pipeline. The automated [RAG Status Report](../../RAG_STATUS_REPORT.md) provides
+pipeline. The automated [RAG Status Report](../RAG_STATUS_REPORT.md) provides
 a live view of overall progress.
 
 ### What "GREEN at 0.x" Means
@@ -398,7 +398,7 @@ Every component directory contains a `metadata.yaml` that captures:
 
 ### RAG Status Report
 
-The [RAG Status Report](../../RAG_STATUS_REPORT.md) is auto-generated from all
+The [RAG Status Report](../RAG_STATUS_REPORT.md) is auto-generated from all
 `metadata.yaml` files:
 
 ```bash

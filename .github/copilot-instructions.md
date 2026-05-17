@@ -329,7 +329,7 @@ set(COMMON_VERSION "current")
 ### Logging Policy
 
 - All interface and wrapper layers **MUST** use the platform's `syslog-ng` via the standard POSIX `syslog()` API
-- Use macros from a shared logging header for consistent log levels (see `docs/vsi/filesystem/current/logging_system.md`):
+- Use macros from a shared logging header for consistent log levels (see `vsi/filesystem/current/docs/logging_system.md`):
   - `LOG_CRIT`, `LOG_ERR`, `LOG_WARNING`, `LOG_NOTICE` (always enabled)
   - `LOG_INFO`, `LOG_DEBUG` (controlled by `ENABLE_LOG_INFO`, `ENABLE_LOG_DEBUG` build flags)
 - Log verbosity is controlled by build flags. Production builds log NOTICE and above; debug builds enable INFO/DEBUG
@@ -341,17 +341,17 @@ set(COMMON_VERSION "current")
 - Log at appropriate levels (CRIT for critical failures, ERR for errors, WARNING for warnings, etc.)
 - Include module/component context in log messages
 - Avoid excessive DEBUG logging in hot paths
-- See `docs/vsi/filesystem/current/logging_system.md` for detailed patterns
+- See `vsi/filesystem/current/docs/logging_system.md` for detailed patterns
 
 ## Documentation Structure
 
-- **Interface Docs**: `docs/halif/{module}/current/` contains detailed HAL specifications
+- **Interface Docs**: `{module}/current/docs/` contains detailed HAL specifications
 - **Generated Docs**: MkDocs site at `https://rdkcentral.github.io/rdk-halif-aidl/`
 - **Requirements**: Each HAL doc includes numbered requirements (e.g., `HAL.{Module}.1`)
 - **Architecture**: `docs/introduction/aidl_and_binder.md` – IPC and AIDL architecture
 - **Build Workflow**: `docs/introduction/interface_generation.md` – Build/generation workflow
 - **Software Stack**: `docs/introduction/the_software_stack.md` – Software stack overview
-- **Naming Standards**: `docs/halif/key_concepts/hal/hal_naming_conventions.md`
+- **Naming Standards**: `docs/key_concepts/hal/hal_naming_conventions.md`
 
 ## Doxygen Documentation Standards
 
@@ -407,7 +407,7 @@ State getState();
 3. **Add @VintfStability**: Ensure all interfaces have `@VintfStability` annotation
 4. **Update HFP**: Define static capabilities in `hfp-{module}.yaml` (this is the max capabilities of the module from the API definition, and will be tailored per platform later)
 5. **Build**: Use root-level CMake with `INTERFACE_TARGET` set to your module (in module's CMakeLists.txt)
-6. **Document**: Follow established documentation patterns in `docs/halif/`
+6. **Document**: Follow established documentation patterns in each component's `current/docs/`
 7. **Add Logging**: Use syslog-ng macros for all logging
 
 ## Testing & Validation
@@ -455,8 +455,8 @@ State getState();
 - `docs/introduction/aidl_and_binder.md` – IPC and AIDL architecture
 - `docs/introduction/interface_generation.md` – Build/generation workflow
 - `docs/introduction/the_software_stack.md` – Software stack overview
-- `docs/vsi/filesystem/current/logging_system.md` – Logging policy
-- `docs/halif/key_concepts/hal/hal_naming_conventions.md` – Naming standards
+- `vsi/filesystem/current/docs/logging_system.md` – Logging policy
+- `docs/key_concepts/hal/hal_naming_conventions.md` – Naming standards
 - `CMakeModules/CompileAidl.cmake` – AIDL build integration
 - `build-tools/linux_binder_idl/BUILD.md` – Binder SDK production build guide (Yocto recipes, cross-compilation, runtime setup)
 - Example modules: `audiodecoder/current/`, `deviceinfo/current/`, `boot/current/`

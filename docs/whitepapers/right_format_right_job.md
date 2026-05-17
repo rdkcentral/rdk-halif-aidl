@@ -12,7 +12,7 @@ The selection of a configuration format is often treated as a secondary concern,
 
 ## The Documentation Mandate
 
-Configuration values are rarely self-explanatory. Whether you are managing an application's API keys or defining a **[Hardware Feature Profile (HFP)](../halif/key_concepts/hal/hal_feature_profiles.md)**, adding context through documentation is vital for maintainability.
+Configuration values are rarely self-explanatory. Whether you are managing an application's API keys or defining a **[Hardware Feature Profile (HFP)](../key_concepts/hal/hal_feature_profiles.md)**, adding context through documentation is vital for maintainability.
 
 * **Context and Intent:** Comments explain the "Why" (e.g., *“Voltage capped for thermal safety”*) and the "What" (e.g., *“Disables legacy pre-fetcher”*).
 * **Team Onboarding:** Well-documented configuration acts as "living documentation," allowing new members to understand system logic without deep-diving into source code.

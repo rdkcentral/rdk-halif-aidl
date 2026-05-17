@@ -598,5 +598,5 @@ done | grep "version"
 
 - **Versioning Guide:** [versioning-guide.md](versioning-guide.md)
 - **Client Patterns:** [client-patterns.md](client-patterns.md)
-- **Build System:** [build_interfaces.sh](../../build_interfaces.sh)
-- **Example Migrations:** [examples/aidl_versioning/](../../examples/aidl_versioning/)
+- **Build System:** [build_interfaces.sh](../build_interfaces.sh)
+- **Example Migrations:** [examples/aidl_versioning/](../examples/aidl_versioning)

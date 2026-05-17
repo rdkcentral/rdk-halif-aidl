@@ -82,14 +82,14 @@ function install_pip_requirements() {
     fi
 
     # Pip install with error check
-    if pip install -r "${requirements_file}" >/dev/null 2>&1; then
+    if "${VENV_DIR}/bin/pip" install -r "${requirements_file}" >/dev/null 2>&1; then
         INFO "pip install completed"
         echo "${current_sha}" > "${requirements_sha_file}" || { ERROR "Failed to write SHA file"; return 1; }
         return 0
     else
         # Capture the output to show the user why it failed
         ERROR "pip install failed. Running again without silence to show error:"
-        pip install -r "${requirements_file}"
+        "${VENV_DIR}/bin/pip" install -r "${requirements_file}"
         return 1
     fi
 }

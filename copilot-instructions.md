@@ -129,7 +129,7 @@ set(COMMON_VERSION "current")
 
 ## Documentation Structure
 
-- **Interface Docs**: `docs/halif/{module}/current/` contains detailed HAL specifications
+- **Interface Docs**: `{module}/current/docs/` contains detailed HAL specifications
 - **Generated Docs**: MkDocs site at `https://rdkcentral.github.io/rdk-halif-aidl/`
 - **Requirements**: Each HAL doc includes numbered requirements (e.g., `HAL.{Module}.1`)
 
@@ -139,7 +139,7 @@ set(COMMON_VERSION "current")
 2. **Design AIDL**: Start with main interface, add supporting types
 3. **Update HFP**: Define static capabilities in `hfp-{module}.yaml`, this is the max caps of the module from the API definition, and will be tailored per platform later.
 4. **Build**: Use root-level CMake with `AIDL_TARGET` set to your module
-5. **Document**: Follow established documentation patterns in `docs/halif/`
+5. **Document**: Follow established documentation patterns in each component's `current/docs/`
 
 ## Testing & Validation
 
