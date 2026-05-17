@@ -11,15 +11,15 @@ The HAL is primarily used for reading the provisioning data. All returned values
 !!! info "References"
     |                              |                                                                                                  |
     | ---------------------------- | ------------------------------------------------------------------------------------------------ |
-    | **Interface Definition**     | [com/rdk/hal/deviceinfo](..) |
-    | **HAL Interface Type**       | [AIDL and Binder](../../../docs/introduction/aidl_and_binder.md)                                      |
+    | **Interface Definition**     | [com/rdk/hal/deviceinfo](./current) |
+    | **HAL Interface Type**       | [AIDL and Binder](../introduction/aidl_and_binder.md)                                      |
 
 ---
 
 !!! tip "Related Pages"
-    * [HAL Feature Profile](../../../docs/key_concepts/hal/hal_feature_profiles.md)
-    * [HAL Interface Overview](../../../docs/key_concepts/hal/hal_interfaces.md)
-    * [Other HALs or Framework Components](../../../docs/key_concepts/hal/hal_interfaces.md)
+    * [HAL Feature Profile](../key_concepts/hal/hal_feature_profiles.md)
+    * [HAL Interface Overview](../key_concepts/hal/hal_interfaces.md)
+    * [Other HALs or Framework Components](../key_concepts/hal/hal_interfaces.md)
 
 ---
 
@@ -40,10 +40,10 @@ All property accesses are string-based, and property keys are pre-defined by the
 | ---------------- | ------------------------------------------------------------------------ | ---------------------------------- |
 | **HAL.DeviceInfo.1** | The service shall expose a binder interface named `"DeviceInfo"`         | Defined via `serviceName` constant |
 | **HAL.DeviceInfo.2** | The service shall support the properties listed in `supportedProperties` | Validated via `getCapabilities()`  |
-| **HAL.DeviceInfo.3** | All properties are read-only; formatting is enforced according to PropertyType and Property definitions. | Enforced via [`PropertyType`](../com/rdk/hal/deviceinfo/PropertyType.aidl) and [`Property`](../com/rdk/hal/deviceinfo/Property.aidl) |
+| **HAL.DeviceInfo.3** | All properties are read-only; formatting is enforced according to PropertyType and Property definitions. | Enforced via [`PropertyType`](./current/com/rdk/hal/deviceinfo/PropertyType.aidl) and [`Property`](./current/com/rdk/hal/deviceinfo/Property.aidl) |
 | **HAL.DeviceInfo.4** | ISO3166 and ISO639 codes are 2 bytes and not zero-terminated            | Enforced in `Property`            |
 | **HAL.DeviceInfo.5** | The HAL shall enforce max size and zero-termination as specified         | Validation in implementation       |
-| **HAL.DeviceInfo.6** | Property types are defined in the HAL as `PropertyType` enum             | See [PropertyType.aidl](../com/rdk/hal/deviceinfo/PropertyType.aidl)|
+| **HAL.DeviceInfo.6** | Property types are defined in the HAL as `PropertyType` enum             | See [PropertyType.aidl](./current/com/rdk/hal/deviceinfo/PropertyType.aidl)|
 
 ---
 

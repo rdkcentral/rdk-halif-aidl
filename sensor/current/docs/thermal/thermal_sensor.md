@@ -17,8 +17,8 @@ This layered model keeps thermal management flexible across hardware implementat
     |-|-|
     |**Interface Definition**|[sensor/current/thermal](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/sensor/current/thermal)|
     |**API Documentation**| *TBD* |
-    |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
-    |**Initialization - TBC**| [systemd](../../../vsi/systemd/current/systemd.md) - **hal-sensor-thermal.service** |
+    |**HAL Interface Type**|[AIDL and Binder](../../introduction/aidl_and_binder.md)|
+    |**Initialization - TBC**| [systemd](../../vsi/systemd/current/systemd.md) - **hal-sensor-thermal.service** |
     |**VTS Tests**| TBC |
 
 ---
@@ -68,7 +68,7 @@ The Thermal HAL allows RDK Middleware to receive high-level **thermal action eve
 
 ## Initialization
 
-The [systemd](../../../vsi/systemd/current/systemd.md) `hal-sensor-thermal.service` unit file is provided by the vendor layer to start the service and should include  
+The [systemd](../../vsi/systemd/current/systemd.md) `hal-sensor-thermal.service` unit file is provided by the vendor layer to start the service and should include  
 [`Wants`](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [`Requires`](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
 Upon starting, the service shall register the `IThermalSensor` interface with the Service Manager using the string `IThermalSensor.serviceName` and immediately become operational.

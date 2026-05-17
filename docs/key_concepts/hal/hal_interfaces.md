@@ -32,7 +32,7 @@ Interfaces / Testing Suites / Component code must progress through multiple stag
 !!! note
     - Not all components will undergo every testing phase, as some require interaction with other component groups to operate effectively.
 
-For More detailed information see [Testing Suite Levels](../../../external_content/ut-core-wiki/3.-Standards:-Levels-of-Test-for-Vendor-Layer.md)
+For More detailed information see [Testing Suite Levels](../../external_content/ut-core-wiki/3.-Standards:-Levels-of-Test-for-Vendor-Layer.md)
 
 ### Testing Suite Phases
 
@@ -56,7 +56,7 @@ For More detailed information see [Testing Suite Levels](../../../external_conte
 | **vDevice** | Virtual Vendor Layer |
 | **vComponent** | Independent Virtual component part of the vDevice |
 
-For more information on the Virtual device please see [vDevice Overview](../../../external_content/ut-core-wiki/5.0:-Standards:-vDevice-Overview.md)
+For more information on the Virtual device please see [vDevice Overview](../../external_content/ut-core-wiki/5.0:-Standards:-vDevice-Overview.md)
 
 | **Development Phase** | **Goal** | **Description** |
 | --- | --- | --- |
@@ -112,4 +112,4 @@ flowchart TD
 
 ## Interface / Testing / vComponent Status
 
-> **Note:** For the current review and approval status of each component (GREEN / AMBER / RED), see the [RAG Status Report](../../../../RAG_STATUS_REPORT.md).
+> **Note:** For the current review and approval status of each component (GREEN / AMBER / RED), see the [RAG Status Report](../../RAG_STATUS_REPORT.md).

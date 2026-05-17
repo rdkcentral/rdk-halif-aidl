@@ -626,5 +626,5 @@ if (!status.isOk()) {
 
 - **Versioning Guide:** [versioning-guide.md](versioning-guide.md)
 - **Migration Guide:** [migration-guide.md](migration-guide.md)
-- **Example Clients:** [examples/aidl_versioning/clients/](../../examples/aidl_versioning/clients/)
+- **Example Clients:** [examples/aidl_versioning/clients/](../examples/aidl_versioning/clients)
 - **Android Binder:** [Android Binder Overview](https://source.android.com/docs/core/architecture/aidl)

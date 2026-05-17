@@ -22,12 +22,12 @@ The significant differences:
     |||
     |-|-|
     |**Interface Definition**|[drm/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/drm/current)|
-    |**HAL Interface Type**|[AIDL and Binder](../../../docs/introduction/aidl_and_binder.md)|
+    |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
 
 !!! tip "Related Pages"
-    - [HAL Interface Overview](../../../docs/key_concepts/hal/hal_interfaces.md)
-    - [HAL Feature Profile](../../../docs/key_concepts/hal/hal_feature_profiles.md)
-    - [CDM](../../../cdm/docs/cdm.md)
+    - [HAL Interface Overview](../key_concepts/hal/hal_interfaces.md)
+    - [HAL Feature Profile](../key_concepts/hal/hal_feature_profiles.md)
+    - [CDM](../cdm/cdm.md)
 
 ---
 

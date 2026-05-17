@@ -15,16 +15,16 @@ Audio and video sinks associated with a given AV Clock instance comprise a synch
     |-|-|
     |**Interface Definition**|[av_clock/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/av_clock/current)|
     | **API Documentation** | *TBD - Doxygen* |
-    |**HAL Interface Type**|[AIDL and Binder](../../../docs/introduction/aidl_and_binder.md)|
+    |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
     |**VTS Tests**| TBC |
     |**Reference Implementation - vComponent**|**TBD**|
 
 ## Related Pages
 
 !!! tip "Related Pages"
-    - [Audio Sink](../../../audiosink/current/docs/audio_sink.md)
-    - [Video Sink](../../../videosink/current/docs/video_sink.md)
-    - [Plane Control](../../../planecontrol/current/docs/plane_control.md)
+    - [Audio Sink](../audiosink/audio_sink.md)
+    - [Video Sink](../videosink/video_sink.md)
+    - [Plane Control](../planecontrol/plane_control.md)
 
 ### Implementation Requirements
 
@@ -57,11 +57,11 @@ Audio and video sinks associated with a given AV Clock instance comprise a synch
 
 ### Initialization
 
-The [systemd](../../../docs/vsi/systemd/current/systemd.md) `hal-av_clock_manager.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
+The [systemd](../vsi/systemd/current/systemd.md) `hal-av_clock_manager.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
 
-The AV Clock Manager service depends on the [Service Manager](../../../docs/vsi/service_manager/current/service_manager.md) to register itself as a service.
+The AV Clock Manager service depends on the [Service Manager](../vsi/service_manager/current/service_manager.md) to register itself as a service.
 
-Upon starting, the service shall register the `IAVClockManager` interface with the [Service Manager](../../../docs/vsi/service_manager/current/service_manager.md) using the String `IAVClockManager.serviceName` and immediately become operational.
+Upon starting, the service shall register the `IAVClockManager` interface with the [Service Manager](../vsi/service_manager/current/service_manager.md) using the String `IAVClockManager.serviceName` and immediately become operational.
 
 ### Product Customization
 

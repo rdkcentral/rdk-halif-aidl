@@ -972,7 +972,7 @@ This testing strategy enables **version-adaptive L1/L2 testing** using ut-core f
 - [Client Patterns](client-patterns.md) - Version discovery and graceful degradation patterns (referenced throughout)
 - [Migration Guide](migration-guide.md) - Upgrading between interface versions
 - [ut-core Documentation](https://github.com/rdkcentral/ut-core/wiki) - Testing framework reference
-- [HFP Files](../../boot/current/hfp-boot.yaml) - HAL Feature Profile examples
+- [HFP Files](../boot/current/hfp-boot.yaml) - HAL Feature Profile examples
 
 ---
 

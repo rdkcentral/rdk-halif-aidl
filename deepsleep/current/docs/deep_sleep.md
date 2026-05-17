@@ -18,8 +18,8 @@ It manages entry into **DeepSleep**:
     | ---------------------------- | ----------------------------------------------------------------------------------------------------- |
     | **Interface Definition**     | [com/rdk/hal/deepsleep](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/deepsleep/current/com/rdk/hal/deepsleep) |
     | **API Documentation**        | TBD                                                                                                   |
-    | **HAL Interface Type**       | [AIDL and Binder](../../../docs/introduction/aidl_and_binder.md)                                           |
-    | **Initialization Unit**      | [systemd service](../../../docs/vsi/systemd/current/systemd.md)                                            |
+    | **HAL Interface Type**       | [AIDL and Binder](../introduction/aidl_and_binder.md)                                           |
+    | **Initialization Unit**      | [systemd service](../vsi/systemd/current/systemd.md)                                            |
     | **VTS Tests**                | TBD                                                                                                   |
     | **Reference Implementation** | TBD                                                                                                   |
 
@@ -28,8 +28,8 @@ It manages entry into **DeepSleep**:
 ## Related Pages
 
 !!! tip "Related Pages"
-    * [HAL Feature Profile](../../../docs/key_concepts/hal/hal_feature_profiles.md)
-    * [HAL Interface Overview](../../../docs/key_concepts/hal/hal_interfaces.md)
+    * [HAL Feature Profile](../key_concepts/hal/hal_feature_profiles.md)
+    * [HAL Interface Overview](../key_concepts/hal/hal_interfaces.md)
 
 ---
 

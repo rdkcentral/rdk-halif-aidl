@@ -13,17 +13,17 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
     |-|-|
     |**Interface Definition**|[video_sink/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videosink/current)|
     | **API Documentation** | *TBD - Doxygen* |
-    |**HAL Interface Type**|[AIDL and Binder](../../../docs/introduction/aidl_and_binder.md)|
+    |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
     |**VTS Tests**| TBC |
     |**Reference Implementation - vComponent**|[https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videosink/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videosink/current)|
 
 ## Related Pages
 
 !!! tip "Related Pages"
-    - [Video Decoder](../../../videodecoder/current/docs/video_decoder.md)
-    - [AV Buffer](../../../avbuffer/current/docs/av_buffer.md)
-    - [AV Clock](../../../avclock/current/docs/av_clock.md)
-    - [Session State Management](../../../docs/key_concepts/hal/hal_session_state_management.md)
+    - [Video Decoder](../videodecoder/video_decoder.md)
+    - [AV Buffer](../avbuffer/av_buffer.md)
+    - [AV Clock](../avclock/av_clock.md)
+    - [Session State Management](../key_concepts/hal/hal_session_state_management.md)
 
 ## Implementation Requirements
 
@@ -53,7 +53,7 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
 
 ## Initialization
 
-The [systemd](../../../docs/vsi/systemd/current/systemd.md) `hal-video_sink_manager.service` unit file is provided by the vendor layer to start the service and should include Wants or Requires directives to start any platform driver services it depends upon.
+The [systemd](../vsi/systemd/current/systemd.md) `hal-video_sink_manager.service` unit file is provided by the vendor layer to start the service and should include Wants or Requires directives to start any platform driver services it depends upon.
 
 The Video Sink Manager service depends on the Service Manager to register itself as a service.
 
@@ -220,7 +220,7 @@ The display of decoded video frames are made on the video plane that has been ma
 
 Setting and changing the mapping requires a call to `IPlaneControl.setVideoSourceDestinationPlaneMapping()`.
 
-Full details are covered in the [Plane Control HAL](../../../planecontrol/current/docs/plane_control.md).
+Full details are covered in the [Plane Control HAL](../planecontrol/plane_control.md).
 
 ## Video Sink States
 

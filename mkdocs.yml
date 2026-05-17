@@ -30,6 +30,10 @@ exclude_docs: |
   scripts/
   external_content/*/.git/
 
+plugins:
+  - search
+  - monorepo
+
 repo_name: rdkcentral/rdk-halif-aidl
 repo_url: https://github.com/rdkcentral/rdk-halif-aidl
 
@@ -39,57 +43,51 @@ nav:
   - Hardware Abstraction Layer:
     - Introduction: introduction/aidl_and_binder.md
     - Key Concepts:
-      - HAL Properties: halif/key_concepts/hal/hal_properties.md
-      - HAL Feature Profiles: halif/key_concepts/hal/hal_feature_profiles.md
-      - HAL Naming Conventions: halif/key_concepts/hal/hal_naming_conventions.md
-      - HAL Session State Management: halif/key_concepts/hal/hal_session_state_management.md
-      - HAL API Deprecation Governance: halif/key_concepts/hal/hal_api_deprecation_governance.md
+      - HAL Properties: key_concepts/hal/hal_properties.md
+      - HAL Feature Profiles: key_concepts/hal/hal_feature_profiles.md
+      - HAL Naming Conventions: key_concepts/hal/hal_naming_conventions.md
+      - HAL Session State Management: key_concepts/hal/hal_session_state_management.md
+      - HAL API Deprecation Governance: key_concepts/hal/hal_api_deprecation_governance.md
     - Standards:
       - Core Development Guide: standards/direct_branching.md
       - Fork-Based Contribution Guide: standards/forked_based_branching.md
       - Git Flow Branching Strategy: standards/git_flow_branching_strategy.md
       - Semantic Versioning: standards/semantic_versioning.md
   - Vendor HAL Interfaces (VHI):
-    - Overview: halif/key_concepts/hal/hal_interfaces.md
+    - Overview: key_concepts/hal/hal_interfaces.md
     - Interface Generation: introduction/interface_generation.md
     - AV Subsystem:
-      - Audio Decoder: halif/audio_decoder/current/audio_decoder.md
-      - Audio Mixer: halif/audio_mixer/current/audio_mixer.md
-      - Audio Sink: halif/audio_sink/current/audio_sink.md
-      - AV Buffer: halif/av_buffer/current/av_buffer.md
-      - AV Clock: halif/av_clock/current/av_clock.md
-      - Video Decoder: halif/video_decoder/current/video_decoder.md
-      - Video Sink: halif/video_sink/current/video_sink.md
-    - Boot: halif/boot/current/boot.md
-    - Broadcast: halif/broadcast/current/broadcast.md
-    - CDM: halif/cdm/current/cdm.md
-    - DRM: halif/drm/current/drm.md
+      - Audio Decoder: '!include audiodecoder/current/mkdocs.yml'
+      - Audio Mixer: '!include audiomixer/current/mkdocs.yml'
+      - Audio Sink: '!include audiosink/current/mkdocs.yml'
+      - AV Buffer: '!include avbuffer/current/mkdocs.yml'
+      - AV Clock: '!include avclock/current/mkdocs.yml'
+      - Video Decoder: '!include videodecoder/current/mkdocs.yml'
+      - Video Sink: '!include videosink/current/mkdocs.yml'
+    - Boot: '!include boot/current/mkdocs.yml'
+    - Broadcast: '!include broadcast/current/mkdocs.yml'
+    - CDM: '!include cdm/mkdocs.yml'
+    - DRM: '!include drm/current/mkdocs.yml'
     - HDMI:
-      - HDMI CEC: halif/hdmi_cec/current/hdmi_cec.md
-      - HDMI Input: halif/hdmi_input/current/hdmi_input.md
-      - HDMI Output: halif/hdmi_output/current/hdmi_output.md
-    - Common: halif/common/current/common.md
-    - Deep Sleep: halif/deep_sleep/current/deep_sleep.md
-    - Device Info: halif/device_info/current/device_info.md
-    - Flash: halif/flash/current/flash.md
-    - Indicator: halif/indicator/current/indicator.md
-    - Panel: halif/panel/current/panel.md
-    - Plane Control: halif/plane_control/current/plane_control.md
-    - Secure API: halif/sec_api/current/sec_api.md
-    - Sensor:
-      - Motion: halif/sensor/current/motion/motion_sensor.md
-      - Thermal: halif/sensor/current/thermal/thermal_sensor.md
+      - HDMI CEC: '!include hdmicec/current/mkdocs.yml'
+      - HDMI Input: '!include hdmiinput/current/mkdocs.yml'
+      - HDMI Output: '!include hdmioutput/current/mkdocs.yml'
+    - Common: '!include common/current/mkdocs.yml'
+    - Deep Sleep: '!include deepsleep/current/mkdocs.yml'
+    - Device Info: '!include deviceinfo/current/mkdocs.yml'
+    - Flash: '!include flash/current/mkdocs.yml'
+    - Indicator: '!include indicator/current/mkdocs.yml'
+    - Panel: '!include panel/current/mkdocs.yml'
+    - Plane Control: '!include planecontrol/current/mkdocs.yml'
+    - Sensor: '!include sensor/current/mkdocs.yml'
   - Vendor System Interfaces (VSI):
-    - File System:
-        - System Architecture: vsi/filesystem/current/file_system_architecture.md
-        - Directory And Dynamic Linking: vsi/filesystem/current/directory_and_dynamic_linking_specification.md
-        - Logging System: vsi/filesystem/current/logging_system.md
-    - Bluetooth: vsi/bluetooth/current/bluetooth.md
-    - Graphics: vsi/graphics/current/graphics.md
+    - File System: '!include vsi/filesystem/current/mkdocs.yml'
+    - Bluetooth: '!include vsi/bluetooth/current/mkdocs.yml'
+    - Graphics: '!include vsi/graphics/current/mkdocs.yml'
     - Service Manager: vsi/service_manager/current/service_manager.md
-    - Wi-Fi: vsi/wifi/current/wifi.md
+    - Wi-Fi: '!include vsi/wifi/current/mkdocs.yml'
     - Systemd: vsi/systemd/current/systemd.md
-    - Kernel: vsi/kernel/current/kernel.md
+    - Kernel: '!include vsi/kernel/current/mkdocs.yml'
   - Vendor Tests Suites (VTS):
     - Levels of Test: external_content/ut-core-wiki/3.-Standards:-Levels-of-Test-for-Vendor-Layer.md
     - Level 4:

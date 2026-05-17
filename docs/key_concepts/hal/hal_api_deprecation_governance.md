@@ -74,7 +74,7 @@ Deprecated methods remain callable but should not be used in new implementations
 ### **New Interface Version**
 
 * Add the replacement method(s) in a new AIDL interface version (additive-only — no changes to existing methods).
-* Bump the `minor` field in `metadata.yaml` (see [Versioning SOP](../../../governance/versioning-sop.md)).
+* Bump the `minor` field in `metadata.yaml` (see [Versioning SOP](../../governance/versioning-sop.md)).
 * The deprecated method remains in the interface unchanged.
 
 ### **Migration Guide**
