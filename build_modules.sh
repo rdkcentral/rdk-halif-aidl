@@ -259,34 +259,25 @@ fi
 
 echo "✓ Binder SDK found at $SDK_DIR"
 
-# Check for generated code
-STABLE_GEN="$ROOT_DIR/stable/generated"
-if [[ ! -d "$STABLE_GEN" ]]; then
-    echo "❌ ERROR: Generated code not found at $STABLE_GEN"
-    echo ""
-    echo "Pre-generated C++ code must exist before building."
-    echo ""
-    echo "Development: Run ./build_interfaces.sh <module>"
-    echo "Production:  Generated code should be committed to repo"
-    echo ""
-    exit 1
-fi
-
-# Count available modules
-MODULE_COUNT=$(find "$STABLE_GEN" -mindepth 1 -maxdepth 1 -type d | wc -l)
-echo "✓ Found $MODULE_COUNT module(s) in stable/generated/"
+# Module-local layout: each component holds its own AIDL and generates its
+# own C++ into <module>/current/{include,src}. The CMake configure step
+# generates any missing sources, so there is no central stable/generated
+# tree to pre-check here.
+MODULE_COUNT=$(ls -d "$ROOT_DIR"/*/current/interface.yaml 2>/dev/null | wc -l)
+echo "✓ Found $MODULE_COUNT component interface(s)"
 
 # Validate specific module exists if not building all
 if [[ "$MODULE" != "all" ]]; then
-    if [[ ! -d "$STABLE_GEN/$MODULE" ]]; then
-        echo "❌ ERROR: Module '$MODULE' not found in stable/generated/"
+    if [[ ! -f "$ROOT_DIR/$MODULE/current/interface.yaml" ]]; then
+        echo "❌ ERROR: Component '$MODULE' not found ($ROOT_DIR/$MODULE/current/interface.yaml)"
         echo ""
-        echo "Available modules:"
-        find "$STABLE_GEN" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort
+        echo "Available components:"
+        ls -d "$ROOT_DIR"/*/current/interface.yaml 2>/dev/null \
+            | sed -E 's#.*/([^/]+)/current/interface.yaml#  \1#' | sort
         echo ""
         exit 1
     fi
-    echo "✓ Module '$MODULE' exists"
+    echo "✓ Component '$MODULE' exists"
 fi
 
 echo ""
