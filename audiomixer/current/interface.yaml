@@ -6,3 +6,4 @@ aidl_interface:
     - audiodecoder
     - common
   stability: vintf
+  layout: module-local

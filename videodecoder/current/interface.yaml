@@ -5,3 +5,4 @@ aidl_interface:
   imports:
     - common
   stability: vintf
+  layout: module-local

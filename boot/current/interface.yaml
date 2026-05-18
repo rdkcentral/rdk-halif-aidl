@@ -4,3 +4,4 @@ aidl_interface:
     - com/rdk/hal/boot/*.aidl
   imports: []
   stability: vintf
+  layout: module-local
