@@ -22,6 +22,7 @@ The significant differences:
     |||
     |-|-|
     |**Interface Definition**|[drm/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/drm/current)|
+    |**Interface Version**|`current`|
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
 
 !!! tip "Related Pages"

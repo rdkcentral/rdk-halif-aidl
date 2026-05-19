@@ -22,6 +22,7 @@ The interaction between the RDK GStreamer Audio Sink element and the Audio Sink 
     |||
     |-|-|
     |**Interface Definition**|[audio_sink/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiosink/current)|
+    |**Interface Version**|`current`|
     | **API Documentation** | *TBD - Doxygen* |
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
     |**VTS Tests**| TBC |

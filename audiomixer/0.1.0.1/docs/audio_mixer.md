@@ -11,7 +11,8 @@ Multiple mixer instances can exist on a platform, each capable of mixing multipl
 !!! info "References"
     |||
     |-|-|
-    |**Interface Definition**|[audio_mixer/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/audiomixer/current)|
+    |**Interface Definition**|[audio_mixer/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/audiomixer/0.1.0.1)|
+    |**Interface Version**|`0.1.0.1`|
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
 
 ---

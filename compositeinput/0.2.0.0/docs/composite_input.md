@@ -13,7 +13,8 @@ Video scaling, positioning, and aspect-ratio control are handled separately by t
 !!! info "References"
     |||
     |-|-|
-    | **Interface Definition**     | [compositeinput](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/compositeinput/current/com/rdk/hal/compositeinput) |
+    | **Interface Definition**     | [compositeinput](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/compositeinput/0.2.0.0/com/rdk/hal/compositeinput) |
+    |**Interface Version**|`0.2.0.0`|
     | **HAL Interface Type**       | [AIDL and Binder](../introduction/aidl_and_binder.md) |
 
 ---

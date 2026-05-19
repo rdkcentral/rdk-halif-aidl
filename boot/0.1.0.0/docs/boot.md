@@ -9,7 +9,8 @@ The Boot HAL provides a platform-independent interface for managing device boot,
 !!! info "References"
     |||
     |-|-|
-    |**Interface Definition**|[boot/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/boot/current)|
+    |**Interface Definition**|[boot/0.1.0.0](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/boot/0.1.0.0)|
+    |**Interface Version**|`0.1.0.0`|
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
 
 !!! tip "Related Pages"

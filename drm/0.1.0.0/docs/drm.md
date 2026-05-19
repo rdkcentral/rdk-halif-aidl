@@ -21,7 +21,8 @@ The significant differences:
 !!! info "References"
     |||
     |-|-|
-    |**Interface Definition**|[drm/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/drm/current)|
+    |**Interface Definition**|[drm/0.1.0.0](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/drm/0.1.0.0)|
+    |**Interface Version**|`0.1.0.0`|
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
 
 !!! tip "Related Pages"
@@ -300,6 +301,6 @@ DRM HAL implementations must pass:
 
 ## References
 
-- AIDL interface definitions in `drm/current/com/rdk/hal/drm/`
-- HAL Feature Profile: `drm/current/hfp-drm.yaml`
-- Build configuration: `drm/current/CMakeLists.txt`
+- AIDL interface definitions in `drm/0.1.0.0/com/rdk/hal/drm/`
+- HAL Feature Profile: `drm/0.1.0.0/hfp-drm.yaml`
+- Build configuration: `drm/0.1.0.0/CMakeLists.txt`

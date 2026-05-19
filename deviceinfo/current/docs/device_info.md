@@ -12,6 +12,7 @@ The HAL is primarily used for reading the provisioning data. All returned values
     |                              |                                                                                                  |
     | ---------------------------- | ------------------------------------------------------------------------------------------------ |
     | **Interface Definition**     | [com/rdk/hal/deviceinfo](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/deviceinfo/current/com/rdk/hal/deviceinfo) |
+    |**Interface Version**|`current`|
     | **HAL Interface Type**       | [AIDL and Binder](../introduction/aidl_and_binder.md)                                      |
 
 ---

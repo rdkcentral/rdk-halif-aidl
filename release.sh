@@ -90,6 +90,19 @@ for component in "${COMPONENTS[@]}"; do
             "${target}/CMakeLists.txt"
     fi
 
+    # Freeze the interface version in the copied documentation. Each component
+    # doc carries an "Interface Version" row in its References section; in
+    # current/ it reads `current`, and the Interface Definition link points at
+    # <component>/current. A release pins both to the released <version>.
+    if [ -d "${target}/docs" ]; then
+        while IFS= read -r -d '' doc; do
+            sed -i \
+                -e "s/|\*\*Interface Version\*\*|\`current\`|/|**Interface Version**|\`${version}\`|/" \
+                -e "s#${component}/current#${component}/${version}#g" \
+                "${doc}"
+        done < <(find "${target}/docs" -name '*.md' -type f -print0)
+    fi
+
     # Integrity hash of the released AIDL contract - a controlled release is
     # not to be edited; the .hash makes any change tamper-evident.
     find "${target}" -name '*.aidl' -type f | LC_ALL=C sort \
