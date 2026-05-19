@@ -26,7 +26,7 @@ For RDK reference implementations, the indicator is designed to reflect the glob
 !!! info References
       |                     |                                                                                                          |
       | ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-      | **Interface Definition**     | [indicator/0.1.0.0](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/indicator/0.1.0.0)                     |
+      |**Interface Definition**|[indicator/0.1.0.0](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/indicator/0.1.0.0)|
       |**Interface Version**|`0.1.0.0`|
       | **API Documentation**        | TBD                                                                                                               |
       | **HAL Interface Type**       | [AIDL and Binder](../introduction/aidl_and_binder.md)                                                       |

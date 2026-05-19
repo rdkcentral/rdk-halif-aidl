@@ -16,7 +16,7 @@ It manages entry into **DeepSleep**:
 !!! info References
     |                              |                                                                                                       |
     | ---------------------------- | ----------------------------------------------------------------------------------------------------- |
-    | **Interface Definition**     | [com/rdk/hal/deepsleep](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/deepsleep/0.1.0.0/com/rdk/hal/deepsleep) |
+    |**Interface Definition**|[deepsleep/0.1.0.0](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/deepsleep/0.1.0.0)|
     |**Interface Version**|`0.1.0.0`|
     | **API Documentation**        | TBD                                                                                                   |
     | **HAL Interface Type**       | [AIDL and Binder](../introduction/aidl_and_binder.md)                                           |

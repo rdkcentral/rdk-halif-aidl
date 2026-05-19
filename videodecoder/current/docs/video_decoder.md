@@ -18,7 +18,7 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 !!! info References
     |||
     |-|-|
-    |**Interface Definition**|[video_decoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videodecoder/current)|
+    |**Interface Definition**|[videodecoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videodecoder/current)|
     |**Interface Version**|`current`|
     |**API Documentation**| *TBD* |
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
