@@ -47,6 +47,7 @@ nav:
       - HAL Feature Profiles: key_concepts/hal/hal_feature_profiles.md
       - HAL Naming Conventions: key_concepts/hal/hal_naming_conventions.md
       - HAL Session State Management: key_concepts/hal/hal_session_state_management.md
+      - HAL Resource Lifecycle: key_concepts/hal/hal_resource_lifecycle.md
       - HAL API Deprecation Governance: key_concepts/hal/hal_api_deprecation_governance.md
     - Standards:
       - Core Development Guide: standards/direct_branching.md
