@@ -118,13 +118,26 @@ Compiles the committed module-local C++ into `lib<module>-vcurrent-cpp.so` and
 installs to `${OUT_DIR}/target/lib/halif/`. Requires only CMake, a C++ compiler
 and the linux_binder SDK — no Python, no AIDL compiler.
 
+### Version manifest (`versions.yaml`)
+
+`versions.yaml` is the manifest of which version of each component to build —
+`current` (the in-development interface) or a released `<version>/` snapshot.
+`./build_modules.sh manifest` builds the set it lists:
+
+```bash
+./build_modules.sh manifest               # build everything in versions.yaml
+./build_modules.sh manifest --file alt.yaml
+```
+
+A component absent from the manifest falls back to its `default:` entry.
+
 ## Scripts
 
 | Script | Role |
 | ------ | ---- |
 | `build_binder.sh` | **Stage 1** — clone, build and install the Binder SDK into `out/target/`. |
-| `build_modules.sh` | **Stage 3** — compile the HAL libraries (`.so`) from each component's generated C++. The CMake configure step regenerates any missing sources. |
-| `build_interfaces.sh` | **Admin / orchestration** — update, build, test and clean helpers for interface authors. |
+| `build_modules.sh` | **Stage 3** — compile the HAL libraries (`.so`) from each component's generated C++. The CMake configure step regenerates any missing sources. `build_modules.sh manifest` builds the set in `versions.yaml`. |
+| `build_interfaces.sh` | **Admin / orchestration** — stages the Binder SDK then delegates the build to `build_modules.sh`; also test/clean helpers. |
 | `release.sh` | Snapshot a component's `current/` into a versioned, controlled release directory (`<module>/<version>/`). |
 | `check_aidl_changes.sh` | Hash-based detection of AIDL source changes. |
 | `docs/build_docs.sh` | Build or serve the documentation site (mkdocs). |

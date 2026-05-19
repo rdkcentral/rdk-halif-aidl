@@ -50,6 +50,8 @@ Arguments:
              - <name> : Build specific module (e.g., boot, videodecoder)
 
 Commands:
+  manifest   Build the component set from versions.yaml (each at its
+             pinned version). Use --file <path> for an alternate manifest.
   clean      Remove out/ directory (build artifacts)
   cleanall   Remove out/ and build/ directories
 
@@ -179,6 +181,58 @@ case "${1:-}" in
 
         # Execute build_binder.sh
         exec "$BUILD_BINDER_SCRIPT" "${@:2}"
+        ;;
+    manifest)
+        # Build the component set described by versions.yaml, each at the
+        # version the manifest pins it to.
+        MANIFEST="$ROOT_DIR/versions.yaml"
+        if [[ "${2:-}" == "--file" && -n "${3:-}" ]]; then
+            MANIFEST="$3"
+        fi
+        if [[ ! -f "$MANIFEST" ]]; then
+            echo "❌ ERROR: version manifest not found: $MANIFEST"
+            exit 1
+        fi
+
+        DEFAULT_VER="$(grep -E '^default:' "$MANIFEST" | head -1 | awk '{print $2}')"
+        DEFAULT_VER="${DEFAULT_VER:-current}"
+
+        # Read "<component> <version>" pairs from the components: map.
+        mapfile -t MANIFEST_PAIRS < <(awk -v def="$DEFAULT_VER" '
+            /^components:/      { inmap=1; next }
+            inmap && /^[^[:space:]#]/ { inmap=0 }
+            inmap && /^[[:space:]]+[A-Za-z0-9_]+:/ {
+                gsub(/:/, " "); print $1, ($2 == "" ? def : $2)
+            }' "$MANIFEST")
+
+        if [[ ${#MANIFEST_PAIRS[@]} -eq 0 ]]; then
+            echo "❌ ERROR: no components listed in $MANIFEST"
+            exit 1
+        fi
+
+        echo "📋 Version manifest: $MANIFEST"
+        echo "   ${#MANIFEST_PAIRS[@]} component(s), default version '${DEFAULT_VER}'"
+        echo ""
+
+        # Components pinned to 'current' build together in one pass; any
+        # component pinned to a released version is built individually.
+        ALL_CURRENT=true
+        for pair in "${MANIFEST_PAIRS[@]}"; do
+            read -r _ ver <<< "$pair"
+            [[ "$ver" != "current" ]] && ALL_CURRENT=false
+        done
+
+        rc=0
+        if $ALL_CURRENT; then
+            "$0" all || rc=$?
+        else
+            for pair in "${MANIFEST_PAIRS[@]}"; do
+                read -r comp ver <<< "$pair"
+                echo "── building ${comp} (version ${ver}) ──"
+                "$0" "$comp" --version "$ver" || rc=$?
+            done
+        fi
+        exit $rc
         ;;
 esac
 

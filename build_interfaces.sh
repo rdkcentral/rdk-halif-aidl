@@ -18,22 +18,23 @@
 # * SPDX-License-Identifier: Apache-2.0
 # */
 
-# Helper script to update AIDL APIs and build interface libraries.
+# Orchestration helper to build AIDL interface libraries.
 #
-#
-# This script:
-#   1. Runs aidl_ops -u to copy {module}/current/*.aidl → stable/aidl/{module}/current/
-#   2. Generates C++ code → stable/generated/{module}/current/
-#   3. Builds libraries from generated code
+# Module-local layout (Phase B, #493): each component keeps its AIDL and
+# generated C++ together under <module>/current/. This script:
+#   1. Stages the Binder SDK (Stage 1, via build_binder.sh).
+#   2. Delegates generation + compilation to build_modules.sh, which
+#      regenerates module-local C++ as needed during CMake configure.
+# The central stable/ tree is retired; build_modules.sh does the build.
 #
 # Usage:
 #   ./build_interfaces.sh [module]
 #       module: "all" (default) or specific module name (e.g., "boot", "videodecoder")
 #
 # Examples:
-#   ./build_interfaces.sh              # Update API and build all modules
-#   ./build_interfaces.sh all          # Update API and build all modules
-#   ./build_interfaces.sh videodecoder # Update API and build only videodecoder
+#   ./build_interfaces.sh              # Build all modules
+#   ./build_interfaces.sh all          # Build all modules
+#   ./build_interfaces.sh videodecoder # Build only videodecoder
 
 set -euo pipefail
 
@@ -66,20 +67,17 @@ Commands:
 
 Options:
   --version <ver>    Version to build (default: current)
-                     - "current" : Working development version
-                     - "v1"      : Frozen version 1
-                     - "v2"      : Frozen version 2, etc.
-
-  --force-copy       Force copy AIDL files even if no changes detected
-                     Use when hash check fails or to ensure fresh copy
+                     - "current" : in-development interface
+                     - "0.1.0.0" : a released snapshot directory
 
   --help, -h         Show this help message
 
 Description:
   This script performs a complete build:
   1. Stage 1: Stage Binder SDK from toolchain to out/target/
-  2. Stage 2: Update AIDL APIs and generate C++ code to stable/
+  2. Stage 2: Generate module-local C++ into <module>/current/{include,src}
   3. Stage 3: Compile libraries and stage to out/
+  Stages 2-3 are delegated to build_modules.sh.
 
   Use 'sdk' or 'sdk-only' command to only perform Stage 1 (SDK staging).
 
@@ -95,7 +93,6 @@ Examples:
   ./build_interfaces.sh boot                   # Build boot module (all stages)
   ./build_interfaces.sh sdk                    # Stage SDK only (Stage 1)
   ./build_interfaces.sh boot --version current # Explicit version
-  ./build_interfaces.sh videodecoder --version v1  # Build frozen v1
 
   # Cleaning
   ./build_interfaces.sh clean                  # Remove build outputs (out/)
@@ -107,10 +104,8 @@ Examples:
   ./build_interfaces.sh test-all               # Test all modules individually
 
 Output Structure:
-  stable/
-    aidl/<module>/<version>/            # Copied AIDL definitions
-    generated/<module>/<version>/       # Generated C++ code
-    dependencies.txt                    # Module dependency graph
+  <module>/current/
+    include/  src/                      # Generated C++ (module-local, committed)
   out/target/
     lib/
       binder/                           # Binder runtime libraries (*.so)
@@ -121,11 +116,11 @@ Output Structure:
     .sdk_ready                          # SDK marker file
 
 Workflow:
-  1. Edit:   vim <module>/current/com/rdk/hal/<module>/*.aidl
-  2. Build:  ./build_interfaces.sh all
-  3. Test:   ./build_interfaces.sh test
-  4. Deploy: scp -r out/target/* device:/usr/
-  5. Freeze: ./freeze_interface.sh <module>
+  1. Edit:    vim <module>/current/com/rdk/hal/<module>/*.aidl
+  2. Build:   ./build_interfaces.sh all
+  3. Test:    ./build_interfaces.sh test
+  4. Deploy:  scp -r out/target/* device:/usr/
+  5. Release: ./release.sh <module>   # snapshot current/ -> <version>/
 
 EOF
     exit 0
@@ -780,226 +775,48 @@ echo "  Output:     $OUT_DIR"
 echo "=========================================="
 
 mkdir -p "$OUT_DIR"
-mkdir -p "$BUILD_DIR"
 
-# Create Python helper script for dependency resolution
-cat > /tmp/resolve_deps_$$.py << 'EOFPY'
-import sys
+#######################################################################
+# Module-local build (Phase B, #493)
+#
+# The central stable/ tree is retired: each component generates its C++
+# in place under <module>/current/{include,src}. AIDL update/generation
+# (Stage 2) and compilation (Stage 3) are both handled by
+# build_modules.sh, whose CMake configure step regenerates any missing
+# module-local sources. build_interfaces.sh stays the orchestration
+# entry point - it stages the Binder SDK (above) and then delegates.
+#
+# The legacy aidl_ops -u / stable/ machinery is intentionally retained
+# in the toolchain but is no longer driven from here.
+#######################################################################
 
-if len(sys.argv) != 3:
-    print("Usage: resolve_deps.py <module> <deps_file>")
-    sys.exit(1)
-
-target = sys.argv[1]
-deps_file = sys.argv[2]
-
-# Read dependency file
-deps = {}
-order = []
-with open(deps_file, 'r') as f:
-    for line in f:
-        line = line.strip()
-        if ':' in line:
-            module, dependencies = line.split(':', 1)
-            module = module.replace('-vcurrent-cpp', '').strip()
-            order.append(module)
-            dep_list = [d.replace('-vcurrent-cpp', '').strip()
-                       for d in dependencies.split() if d.strip()]
-            deps[module] = dep_list
-
-# Check if target exists
-if target not in deps:
-    print(target)
-    sys.exit(0)
-
-# Recursively collect all dependencies
-def collect_deps(mod, collected=None):
-    if collected is None:
-        collected = set()
-    if mod in collected:
-        return collected
-    if mod not in deps:
-        return collected
-    collected.add(mod)
-    for dep in deps.get(mod, []):
-        collect_deps(dep, collected)
-    return collected
-
-# Get all dependencies including the target
-all_needed = collect_deps(target)
-
-# Print in topological order (order from deps file)
-result = [m for m in order if m in all_needed]
-print(' '.join(result))
-EOFPY
-
-RESOLVE_DEPS_SCRIPT="/tmp/resolve_deps_$$.py"
-
-# Determine which modules to process
-echo "--> [Step 1/4] Analyzing dependencies..."
-if [ "$MODULE" == "all" ]; then
-    $AIDL_OPS -a -r "$ROOT_DIR" -o "$STABLE_DIR" > /dev/null
-    DEPS_FILE="${STABLE_DIR}/dependencies.txt"
-    if [ -f "$DEPS_FILE" ]; then
-        MODULES=$(grep -- "-vcurrent-cpp:" "$DEPS_FILE" | cut -d: -f1 | sed 's/-vcurrent-cpp//')
-        echo "    Build Order: [ $(echo $MODULES | tr '\n' ' ') ]"
-    else
-        echo "❌ Failed to generate dependency tree"
-        exit 1
-    fi
-else
-    # Building a specific module - calculate full dependency tree
-    $AIDL_OPS -a -r "$ROOT_DIR" -o "$STABLE_DIR" >/dev/null 2>&1
-    DEPS_FILE="${STABLE_DIR}/dependencies.txt"
-
-    if [ -f "$DEPS_FILE" ]; then
-        # Use Python helper script to resolve transitive dependencies
-        if [ ! -f "$RESOLVE_DEPS_SCRIPT" ]; then
-            echo "    ERROR: Dependency resolution script not found: $RESOLVE_DEPS_SCRIPT"
-            MODULES="$MODULE"
-        else
-            MODULES=$(python3 "$RESOLVE_DEPS_SCRIPT" "$MODULE" "$DEPS_FILE" 2>&1)
-
-            if [ $? -ne 0 ]; then
-                echo "    ERROR: Dependency resolution failed: $MODULES"
-                MODULES="$MODULE"
-            fi
-        fi
-
-        if [ -n "$MODULES" ]; then
-            # Count dependencies (all except the target module)
-            # Note: grep -v returns 1 if no matches, so we use || true to prevent exit
-            DEP_LIST=$(echo "$MODULES" | tr ' ' '\n' | { grep -v "^${MODULE}$" || true; })
-            if [ -n "$DEP_LIST" ]; then
-                DEP_COUNT=$(echo "$DEP_LIST" | wc -l)
-                DEPS=$(echo "$DEP_LIST" | tr '\n' ' ')
-                echo "    Dependencies: [ $DEPS]"
-            else
-                DEP_COUNT=0
-                echo "    No dependencies"
-            fi
-            echo "    Build Order: [ $MODULES ]"
-        else
-            echo "    Module not found in dependency tree"
-            MODULES="$MODULE"
-        fi
-    else
-        echo "    No dependency tree available"
-        MODULES="$MODULE"
-    fi
-fi
-
-# Update APIs for each module
-echo "--> [Step 3/4] Updating APIs..."
-HASH_CHECKER="${SCRIPT_DIR}/check_aidl_changes.sh"
-COPY_NEEDED_MODULES=""
-
-for mod in $MODULES; do
-    # Check if we should force copy
-    HASH_CHECK_FLAGS="--quiet"
-    if [ "$FORCE_COPY" = true ]; then
-        HASH_CHECK_FLAGS="$HASH_CHECK_FLAGS --force"
-    fi
-
-    # Always check if source has changed using hash comparison
-    if "$HASH_CHECKER" "$mod" "$ROOT_DIR" "$STABLE_DIR" "$VERSION" $HASH_CHECK_FLAGS; then
-        # Return code 0 = no changes
-        echo "    ✓ $mod - no changes detected (using cached)"
-        continue
-    else
-        HASH_CHECK_RC=$?
-        if [ $HASH_CHECK_RC -eq 1 ]; then
-            # Return code 1 = changes detected or first build
-            echo "    → $mod - changes detected, copying..."
-            COPY_NEEDED_MODULES="$COPY_NEEDED_MODULES $mod"
-        else
-            # Return code 2 = error
-            echo "    ⚠ $mod - hash check failed, forcing copy..."
-            COPY_NEEDED_MODULES="$COPY_NEEDED_MODULES $mod"
-        fi
-    fi
-done
-
-# Copy AIDL files for modules that have changes
-if [ -n "$COPY_NEEDED_MODULES" ]; then
-    for mod in $COPY_NEEDED_MODULES; do
-        echo "    Copying AIDL files: $mod"
-        $AIDL_OPS -u -r "$ROOT_DIR" -o "$STABLE_DIR" "$mod" || {
-            echo "❌ Error: Failed to copy AIDL files for $mod"
-            echo "   This usually means syntax errors in AIDL files"
-            echo ""
-            echo "   Common issues:"
-            echo "   • Missing semicolons or braces"
-            echo "   • Incorrect import statements"
-            echo "   • Invalid AIDL syntax"
-            echo ""
-            echo "   Check the AIDL files in: $ROOT_DIR/$mod/$VERSION/"
-            exit 1
-        }
-    done
-else
-    echo "    No modules require AIDL file updates"
-fi
-
-# Note: C++ code generation is handled by CMake via CMakeLists.inc
-# which calls aidl_ops -g automatically during the build
-
-# Sanitize generated files (mutex include fix)
-if [ -d "$STABLE_DIR/generated" ]; then
-    grep -rl "std::mutex" "$STABLE_DIR/generated" 2>/dev/null | while read -r file; do
-        [ -f "$file" ] || continue
-        if ! grep -q "#include <mutex>" "$file"; then
-            if grep -q "^#include" "$file"; then
-                sed -i '0,/^#include/s//#include <mutex>\n&/' "$file"
-            elif grep -q "^#pragma once" "$file"; then
-                sed -i 's/^#pragma once/#pragma once\n#include <mutex>/' "$file"
-            else
-                sed -i '1i #include <mutex>' "$file"
-            fi
-        fi
-    done || true  # Don't exit if grep finds no files
-fi
-
-# Build with CMake (Stage 3)
-echo "--> [Step 3/4] Building libraries..."
-
-# Delegate to build_modules.sh for consistency
 BUILD_MODULES_SCRIPT="${ROOT_DIR}/build_modules.sh"
-
 if [ ! -x "$BUILD_MODULES_SCRIPT" ]; then
     echo "❌ build_modules.sh not found or not executable: $BUILD_MODULES_SCRIPT"
     exit 1
 fi
 
-# Use single-threaded build for clear sequential output
+echo "--> Building '${MODULE}' (version ${VERSION}) via build_modules.sh ..."
 echo ""
-echo "Building (single-threaded for clarity)..."
-echo "────────────────────────────────────────────────────────────────"
-cmake --build "${BUILD_DIR}" -- -j1
 
-if [ $? -eq 0 ]; then
-    echo ""
-    echo "✅ Build Complete - SDK Ready for Deployment"
-    echo ""
-
-    # Verify deployment structure
-    BINDER_LIBS=$(ls out/target/lib/binder/*.so 2>/dev/null | wc -l || echo 0)
-    MODULE_LIBS=$(ls out/target/lib/halif/*.so 2>/dev/null | wc -l || echo 0)
-
-    echo "   📦 Runtime libraries ready for deployment:"
-    echo "      • Binder servicemanager: 1 file (out/target/bin/)"
-    echo "      • Binder libraries: ${BINDER_LIBS} files (out/target/lib/binder/)"
-    echo "      • HAL libraries: ${MODULE_LIBS} files (out/target/lib/halif/)"
-    echo ""
-    echo "   📂 Deploy to target device:"
-    echo "      scp -r out/target/bin/* device:/usr/bin/"
-    echo "      scp -r out/target/lib/* device:/usr/lib/"
-    echo ""
-    echo "   ℹ️  Headers (build-time only, not needed on target):"
-    echo "      • Binder SDK: out/build/include/binder_sdk/"
-    echo "      • HAL interfaces: stable/generated/"
-    echo ""
-else
+if ! "$BUILD_MODULES_SCRIPT" "$MODULE" --version "$VERSION"; then
     echo "❌ Build failed"
     exit 1
 fi
+
+BINDER_LIBS=$(ls out/target/lib/binder/*.so 2>/dev/null | wc -l || echo 0)
+MODULE_LIBS=$(ls out/target/lib/halif/*.so 2>/dev/null | wc -l || echo 0)
+
+echo ""
+echo "✅ Build Complete - SDK Ready for Deployment"
+echo ""
+echo "   📦 Runtime libraries:"
+echo "      • Binder libraries: ${BINDER_LIBS} files (out/target/lib/binder/)"
+echo "      • HAL libraries:    ${MODULE_LIBS} files (out/target/lib/halif/)"
+echo ""
+echo "   📂 Generated C++ is module-local: <module>/current/{include,src}/"
+echo ""
+echo "   📂 Deploy to target device:"
+echo "      scp -r out/target/bin/* device:/usr/bin/"
+echo "      scp -r out/target/lib/* device:/usr/lib/"
+echo ""
