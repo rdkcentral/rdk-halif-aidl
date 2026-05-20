@@ -334,6 +334,69 @@ if [[ "$MODULE" != "all" ]]; then
     echo "✓ Component '$MODULE' exists"
 fi
 
+#######################################################################
+# Snapshot build (released version)
+#
+# A non-'current' version selects a released snapshot at <MODULE>/<VERSION>/.
+# The snapshot carries committed pre-generated C++ and a standalone
+# CMakeLists.txt written by release.sh - we just compile and install it.
+# No toolchain involvement, no code generation.
+#######################################################################
+
+if [[ "$VERSION" != "current" ]]; then
+    if [[ "$MODULE" == "all" ]]; then
+        echo "❌ ERROR: --version $VERSION cannot be combined with 'all'."
+        echo "   Specify a component, e.g. './build_modules.sh boot --version $VERSION'"
+        echo "   or use './build_modules.sh manifest' for mixed-version builds."
+        exit 1
+    fi
+    SNAPSHOT_DIR="$ROOT_DIR/$MODULE/$VERSION"
+    if [[ ! -f "$SNAPSHOT_DIR/CMakeLists.txt" ]]; then
+        echo "❌ ERROR: snapshot $MODULE/$VERSION not found at $SNAPSHOT_DIR."
+        echo "   Run './release.sh $MODULE' to produce it, or check the version number."
+        exit 1
+    fi
+
+    SNAPSHOT_BUILD_DIR="$ROOT_DIR/build/$MODULE-$VERSION"
+    if [[ "$CLEAN" == true ]]; then
+        echo "🧹 Cleaning snapshot build directory: $SNAPSHOT_BUILD_DIR"
+        rm -rf "$SNAPSHOT_BUILD_DIR"
+    fi
+
+    echo ""
+    echo "📸 Snapshot build: $MODULE/$VERSION"
+    echo "    source: $SNAPSHOT_DIR"
+    echo "    build:  $SNAPSHOT_BUILD_DIR"
+    echo ""
+
+    # The local dev layout splits binder headers (out/build/include/binder_sdk)
+    # from libs (out/target/lib/binder); BINDER_SDK_INCLUDE_DIR lets the
+    # snapshot CMakeLists find the headers. Yocto stages a flat SDK so
+    # BINDER_SDK_DIR alone resolves both.
+    cmake -S "$SNAPSHOT_DIR" -B "$SNAPSHOT_BUILD_DIR" \
+        -DBINDER_SDK_DIR="$SDK_DIR" \
+        -DBINDER_SDK_INCLUDE_DIR="$ROOT_DIR/out/build" \
+        -DHALIF_LIB_DIR="$ROOT_DIR/out/target/lib/halif" \
+        -DHALIF_INCLUDE_DIR="$ROOT_DIR/out/build/include" \
+        -DCMAKE_INSTALL_PREFIX="$ROOT_DIR/out/target" || {
+            echo "❌ Snapshot CMake configuration failed"; exit 1; }
+
+    cmake --build "$SNAPSHOT_BUILD_DIR" -j"$JOBS" || {
+        echo "❌ Snapshot build failed"; exit 1; }
+
+    cmake --install "$SNAPSHOT_BUILD_DIR" >/dev/null || {
+        echo "❌ Snapshot install failed"; exit 1; }
+
+    SO_PATH="$ROOT_DIR/out/target/lib/halif/lib${MODULE}-v${VERSION}-cpp.so"
+    if [[ -f "$SO_PATH" ]]; then
+        echo "✅ Snapshot built and installed:"
+        echo "    $SO_PATH"
+    else
+        echo "❌ Snapshot library not found at $SO_PATH"; exit 1
+    fi
+    exit 0
+fi
+
 echo ""
 
 #######################################################################

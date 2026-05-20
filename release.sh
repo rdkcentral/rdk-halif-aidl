@@ -84,11 +84,103 @@ for component in "${COMPONENTS[@]}"; do
     # Snapshot current/ -> <version>/ (a plain copy, no regeneration).
     cp -r "${current}" "${target}"
 
-    # Pin the version in the copied module CMakeLists.txt.
-    if [ -f "${target}/CMakeLists.txt" ]; then
-        sed -i "s/set(INTERFACE_VERSION current)/set(INTERFACE_VERSION ${version})/" \
-            "${target}/CMakeLists.txt"
+    # Parse imports: from interface.yaml so the snapshot CMakeLists can link
+    # against the right dependency libraries. Handles both inline (`[a, b]`)
+    # and block (`- a\n  - b`) YAML list forms.
+    deps=""
+    if [ -f "${target}/interface.yaml" ]; then
+        deps="$(awk '
+            /^[[:space:]]*imports:[[:space:]]*\[/ {
+                line=$0; gsub(/.*\[|\].*/,"",line); gsub(/,/," ",line)
+                print line; exit
+            }
+            /^[[:space:]]*imports:/ { inmap=1; next }
+            inmap && /^[[:space:]]+-[[:space:]]*/ {
+                gsub(/^[[:space:]]+-[[:space:]]*/,""); printf "%s ", $0; next
+            }
+            inmap && /^[^[:space:]-]/ { exit }
+        ' "${target}/interface.yaml" | xargs)"
     fi
+    dep_libs=""
+    dep_includes=""
+    for d in ${deps}; do
+        dep_libs+=" ${d}-vcurrent-cpp"
+        dep_includes+="
+    \"\${HALIF_INCLUDE_DIR}/${d}/current/include\""
+    done
+
+    # Write the snapshot's CMakeLists.txt as a standalone, direct-compile
+    # build. A released snapshot is frozen pre-generated code - the toolchain
+    # is not involved; we just compile what's committed in src/ and include/
+    # into lib<component>-v<version>-cpp.so.
+    cat > "${target}/CMakeLists.txt" << SNAPSHOT_CMAKE_EOF
+# Auto-written by release.sh - do not hand-edit.
+#
+# Standalone direct-compile build for the released ${component} snapshot
+# (version ${version}). The committed C++ in src/ and include/ is compiled
+# into lib${component}-v${version}-cpp.so. No code generation, no toolchain
+# dependency - the snapshot is frozen pre-generated code.
+#
+# Inputs (set by the caller, typically build_modules.sh --version ${version}):
+#   BINDER_SDK_DIR  - linux_binder SDK root (lib/binder + include/binder_sdk)
+#   HALIF_LIB_DIR   - directory holding dependency lib<dep>-vcurrent-cpp.so
+cmake_minimum_required(VERSION 3.8)
+project(${component}-v${version}-cpp LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+set(LIB_NAME "${component}-v${version}-cpp")
+
+if (NOT DEFINED BINDER_SDK_DIR)
+    message(FATAL_ERROR "BINDER_SDK_DIR must be set for snapshot build")
+endif()
+
+# Resolve binder include path. Yocto stages a flat SDK so headers live under
+# \${BINDER_SDK_DIR}/include/binder_sdk. The local dev layout splits headers
+# (out/build/include/binder_sdk) from runtime libs (out/target/lib/binder),
+# so allow BINDER_SDK_INCLUDE_DIR to point at the headers root.
+set(_BINDER_INC "\${BINDER_SDK_DIR}/include/binder_sdk")
+if (NOT IS_DIRECTORY "\${_BINDER_INC}")
+    if (DEFINED BINDER_SDK_INCLUDE_DIR AND
+        IS_DIRECTORY "\${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk")
+        set(_BINDER_INC "\${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk")
+    else()
+        message(FATAL_ERROR
+            "Binder SDK headers not found at \${_BINDER_INC}. "
+            "Set BINDER_SDK_INCLUDE_DIR to the headers root.")
+    endif()
+endif()
+
+file(GLOB_RECURSE SRCS CONFIGURE_DEPENDS "\${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+if (NOT SRCS)
+    message(FATAL_ERROR "No sources under src/. The snapshot must carry committed generated C++.")
+endif()
+
+add_library(\${LIB_NAME} SHARED \${SRCS})
+
+target_include_directories(\${LIB_NAME} PRIVATE
+    "\${CMAKE_CURRENT_SOURCE_DIR}/include"
+    "\${_BINDER_INC}"
+)
+# Dependency component headers (staged by the current/ build into HALIF_INCLUDE_DIR).
+if (DEFINED HALIF_INCLUDE_DIR)
+    target_include_directories(\${LIB_NAME} PRIVATE${dep_includes})
+endif()
+target_link_directories(\${LIB_NAME} PRIVATE
+    "\${BINDER_SDK_DIR}/lib/binder"
+)
+if (DEFINED HALIF_LIB_DIR)
+    target_link_directories(\${LIB_NAME} PRIVATE "\${HALIF_LIB_DIR}")
+endif()
+
+target_link_libraries(\${LIB_NAME} PRIVATE binder utils${dep_libs})
+target_link_options(\${LIB_NAME} PRIVATE -Wl,--allow-shlib-undefined)
+
+set_target_properties(\${LIB_NAME} PROPERTIES OUTPUT_NAME "\${LIB_NAME}")
+
+include(GNUInstallDirs)
+install(TARGETS \${LIB_NAME} LIBRARY DESTINATION lib/halif)
+SNAPSHOT_CMAKE_EOF
 
     # Freeze the interface version in the copied documentation. Each component
     # doc carries an "Interface Version" row in its References section; in

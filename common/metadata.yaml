@@ -22,7 +22,7 @@
 # type        - Responsibility: SOC or OEM                                [manual]
 component: common
 version: 0.1.0.0
-status: AMBER
+status: GREEN
 description: "Shared base AIDL types and definitions used across all HAL interfaces"
 type: SOC
 
