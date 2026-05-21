@@ -19,6 +19,7 @@
 package com.rdk.hal.audiomixer;
 
 import com.rdk.hal.audiomixer.MixerInput;
+import com.rdk.hal.audiomixer.Property;
 
 /**
  * @brief Capabilities structure for Audio Mixer.
@@ -38,6 +39,12 @@ parcelable Capabilities {
      * @brief Indicates if this mixer instance supports secure audio path mode.
      */
     boolean supportsSecure;
+
+    /**
+     * List of property keys supported by this mixer.
+     * e.g. MIXING_MODE and MUTE.
+     */
+    properties[] supportedProperties; 
 
     /**
      * @brief Describes the available audio mixer input specifications.
