@@ -61,7 +61,7 @@ Mixer instances are accessed and controlled via `IAudioMixer`, with additional l
 | AudioCapturePcmInfo.aidl      | PCM capture format metadata                            |
 | Channel.aidl                  | PCM channel position enum for `AudioCapturePcmInfo.channelMap` |
 | AudioCaptureError.aidl        | Audio capture error codes                              |
-| Capabilities.aidl             | Supported input types, codecs, secure path flag        |
+| Capabilities.aidl             | Supported input types, codecs, secure path flag and supported properties |
 | MixerInput.aidl               | Per-input supported codec and content type definitions |
 | OutputPortCapabilities.aidl   | Describes per-port format and property support         |
 | OutputFormat.aidl             | Enumerates output encoding formats                     |
