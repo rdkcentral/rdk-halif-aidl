@@ -2,7 +2,7 @@
  * If not stated otherwise in this file or this component's LICENSE file the
  * following copyright and licenses apply:
  *
- * Copyright 2024 RDK Management
+ * Copyright 2026 RDK Management
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,27 +16,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package com.rdk.hal.audiomixer;
+package com.rdk.hal.audiomixer;
+
+import com.rdk.hal.audiomixer.DolbyMs12_2_6_LevellerMode;
 
 /**
- * @brief     Audio Quality Processor type.
- * Enumerates available audio quality processors supported by the platform,
- *            such as Dolby MS12, DTS, or vendor-specific implementations. Used for
- *            selection and capability discovery on audio output ports.
- * @author   Luc Kennedy-Lamb
- * @author   Peter Stieglitz
- * @author   Douglas Adler
- * @author   Gerald Weatherup
+ * @brief Volume leveller settings returned by IDolbyMs12_2_6_Dap.getVolumeLeveller().
+ *
+ * Packages the current leveller mode and level into a single parcelable so the
+ * accessor can return both atomically. AIDL primitive parameters cannot be
+ * `out`, which forces a parcelable return shape for paired accessors that
+ * combine an enum with a primitive.
  */
 @VintfStability
-@Backing(type="int")
-enum AQProcessor {
-    /** Undefined or no AQ processor. */
-    UNDEFINED = 0,
+parcelable DolbyMs12_2_6_LevellerSettings {
+    /** Current volume leveller mode. */
+    DolbyMs12_2_6_LevellerMode mode;
 
-    /** Dolby MS12 2.6 audio processor (compatible with MS12 2.5). */
-    DOLBY_MS12_2_6 = 1,
-
-    /** DTS:X Ultra processor. */
-    DTS_ULTRA = 2,
+    /** Current volume leveller level in range 0 to 10. */
+    int level;
 }

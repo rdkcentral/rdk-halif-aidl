@@ -20,13 +20,12 @@ package com.rdk.hal.audiomixer;
 
 /**
  * @brief     Audio source types for mixer input routing.
- * @details   Defines the types of audio sources that can be routed to mixer inputs.
+ * Defines the types of audio sources that can be routed to mixer inputs.
  *            Follows the pattern established by planecontrol::SourceType.
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
  * @author    Douglas Adler
  * @author    Gerald Weatherup
- * @copyright Copyright 2024 RDK Management
  */
 @VintfStability
 @Backing(type="int")
