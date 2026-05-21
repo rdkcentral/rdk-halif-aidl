@@ -59,7 +59,7 @@ parcelable OutputPortCapabilities {
      * If there are no defined MS12 Audio Profiles for this audio port then
      * DolbyMs12AudioProfiles is not populated with profile strings.
      */
-    String[] DolbyMs12AudioProfiles;
+    @nullable String[] DolbyMs12AudioProfiles;
 
     /**
      * Indicates whether this output port supports audio capture via getAudioCapture().
