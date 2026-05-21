@@ -299,16 +299,31 @@ echo "Jobs:       $JOBS"
 echo "========================================="
 echo ""
 
-# Check for Binder SDK
+# Check for Binder SDK. In local dev (SDK at the default out/target path)
+# we auto-stage it via build_binder.sh so './build_modules.sh all' works
+# out of the box. In Yocto the SDK is staged by the linux-binder recipe
+# (DEPENDS = "linux-binder") and SDK_DIR points outside the repo, so we
+# never auto-build there - that case is a recipe configuration error.
 if [[ ! -f "$SDK_DIR/.sdk_ready" ]]; then
-    echo "❌ ERROR: Binder SDK not found at $SDK_DIR"
-    echo ""
-    echo "The Binder SDK must be installed before building modules."
-    echo ""
-    echo "Development: Run ./build_interfaces.sh <module>"
-    echo "Production:  Ensure linux-binder recipe is built (Yocto)"
-    echo ""
-    exit 1
+    if [[ "$SDK_DIR" == "$ROOT_DIR/out/target" && -x "$ROOT_DIR/build_binder.sh" ]]; then
+        echo "ℹ️  Binder SDK not found at $SDK_DIR — staging it via build_binder.sh"
+        echo "    (one-time prerequisite; subsequent builds reuse it)"
+        echo ""
+        if ! "$ROOT_DIR/build_binder.sh"; then
+            echo ""
+            echo "❌ build_binder.sh failed; cannot continue."
+            exit 1
+        fi
+        echo ""
+    fi
+    if [[ ! -f "$SDK_DIR/.sdk_ready" ]]; then
+        echo "❌ ERROR: Binder SDK not found at $SDK_DIR"
+        echo ""
+        echo "Production (Yocto): the linux-binder recipe must stage the SDK to"
+        echo "                    \${BINDER_SDK_DIR}; declare DEPENDS = \"linux-binder\"."
+        echo ""
+        exit 1
+    fi
 fi
 
 echo "✓ Binder SDK found at $SDK_DIR"
