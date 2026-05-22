@@ -24,16 +24,16 @@ For RDK reference implementations, the indicator is designed to reflect the glob
 ## References
 
 !!! info References
-      |                     |                                                                                                          |
-      | ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+      |||
+      |-|-|
       |**Interface Definition**|[indicator/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/indicator/current)|
       |**Interface Version**|`current`|
-      | **API Documentation**        | TBD                                                                                                               |
-      | **HAL Interface Type**       | [AIDL and Binder](../introduction/aidl_and_binder.md)                                                       |
-      | **Initialization Unit**      | [systemd service](../vsi/systemd/current/systemd.md)                                                        |
-      | **VTS Tests**                | TBD                                                                                                               |
-      | **Reference Implementation** | TBD                                                                                                               |
-      | **HAL Feature Profile**      | [hfp-indicator.yaml](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/indicator/current/hfp-indicator.yaml) |
+      |**API Documentation**|TBD|
+      |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
+      |**Initialization Unit**|[systemd service](../vsi/systemd/current/systemd.md)|
+      |**VTS Tests**|TBD|
+      |**Reference Implementation**|TBD|
+      |**HAL Feature Profile**|[hfp-indicator.yaml](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/indicator/current/hfp-indicator.yaml)|
 
 ## Related Pages
 

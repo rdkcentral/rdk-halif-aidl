@@ -102,12 +102,23 @@ for component in "${COMPONENTS[@]}"; do
         ' "${target}/interface.yaml" | xargs)"
     fi
     dep_libs=""
-    dep_includes=""
+    dep_inc_lines=""
     for d in ${deps}; do
         dep_libs+=" ${d}-vcurrent-cpp"
-        dep_includes+="
+        dep_inc_lines+="
     \"\${HALIF_INCLUDE_DIR}/${d}/current/include\""
     done
+    # Only emit the dependency-include block when the component has imports;
+    # an empty target_include_directories() call is invalid-looking noise.
+    dep_include_block=""
+    if [ -n "${dep_inc_lines}" ]; then
+        dep_include_block="
+
+# Dependency component headers (staged by the current/ build into HALIF_INCLUDE_DIR).
+if (DEFINED HALIF_INCLUDE_DIR)
+    target_include_directories(\${LIB_NAME} PRIVATE${dep_inc_lines})
+endif()"
+    fi
 
     # Write the snapshot's CMakeLists.txt as a standalone, direct-compile
     # build. A released snapshot is frozen pre-generated code - the toolchain
@@ -161,11 +172,8 @@ add_library(\${LIB_NAME} SHARED \${SRCS})
 target_include_directories(\${LIB_NAME} PRIVATE
     "\${CMAKE_CURRENT_SOURCE_DIR}/include"
     "\${_BINDER_INC}"
-)
-# Dependency component headers (staged by the current/ build into HALIF_INCLUDE_DIR).
-if (DEFINED HALIF_INCLUDE_DIR)
-    target_include_directories(\${LIB_NAME} PRIVATE${dep_includes})
-endif()
+)${dep_include_block}
+
 target_link_directories(\${LIB_NAME} PRIVATE
     "\${BINDER_SDK_DIR}/lib/binder"
 )
@@ -174,12 +182,15 @@ if (DEFINED HALIF_LIB_DIR)
 endif()
 
 target_link_libraries(\${LIB_NAME} PRIVATE binder utils${dep_libs})
-target_link_options(\${LIB_NAME} PRIVATE -Wl,--allow-shlib-undefined)
 
 set_target_properties(\${LIB_NAME} PROPERTIES OUTPUT_NAME "\${LIB_NAME}")
 
 include(GNUInstallDirs)
-install(TARGETS \${LIB_NAME} LIBRARY DESTINATION lib/halif)
+install(TARGETS \${LIB_NAME}
+    LIBRARY DESTINATION lib/halif
+            PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                        GROUP_READ GROUP_EXECUTE
+                        WORLD_READ WORLD_EXECUTE)
 SNAPSHOT_CMAKE_EOF
 
     # Freeze the interface version in the copied documentation. Each component

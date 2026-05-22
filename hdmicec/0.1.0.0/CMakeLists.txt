@@ -46,11 +46,13 @@ target_include_directories(${LIB_NAME} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${_BINDER_INC}"
 )
+
 # Dependency component headers (staged by the current/ build into HALIF_INCLUDE_DIR).
 if (DEFINED HALIF_INCLUDE_DIR)
     target_include_directories(${LIB_NAME} PRIVATE
     "${HALIF_INCLUDE_DIR}/common/current/include")
 endif()
+
 target_link_directories(${LIB_NAME} PRIVATE
     "${BINDER_SDK_DIR}/lib/binder"
 )
@@ -59,9 +61,12 @@ if (DEFINED HALIF_LIB_DIR)
 endif()
 
 target_link_libraries(${LIB_NAME} PRIVATE binder utils common-vcurrent-cpp)
-target_link_options(${LIB_NAME} PRIVATE -Wl,--allow-shlib-undefined)
 
 set_target_properties(${LIB_NAME} PROPERTIES OUTPUT_NAME "${LIB_NAME}")
 
 include(GNUInstallDirs)
-install(TARGETS ${LIB_NAME} LIBRARY DESTINATION lib/halif)
+install(TARGETS ${LIB_NAME}
+    LIBRARY DESTINATION lib/halif
+            PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                        GROUP_READ GROUP_EXECUTE
+                        WORLD_READ WORLD_EXECUTE)

@@ -51,8 +51,9 @@ scope:
 #   owners        - Responsible architecture teams
 notes:
   priority: 5
-  status_detail: "PR under review"
-  action: "Review Required - Start the PR Review"
+  status_detail: "Not integrated into the AIDL build - blocked on FMQ (#494)"
+  action: "Blocked: needs the android.hardware.common.fmq AIDL package in the binder SDK (linux_binder_idl#18); then add broadcast/current/interface.yaml - see #494."
+  risk: "broadcast has no interface.yaml and is excluded from the build; SoftwareSink/SoftwareSource use FMQ which the binder SDK does not yet ship."
   owners: "Vendor_Layer_Team + Broadcast_Team"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]

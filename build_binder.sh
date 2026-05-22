@@ -92,7 +92,14 @@ fi
 MY_PATH="$(realpath "${BASH_SOURCE[0]}")"
 MY_DIR="$(dirname "${MY_PATH}")"
 REPO_URL="https://github.com/rdkcentral/linux_binder_idl"
-BINDER_VERSION="${BINDER_VERSION:-2.0.0}"  # Default to 2.0.0, override with tag/commit/branch
+
+# Pinned toolchain revision. The default is the first non-comment line of
+# binder_sdk.version (committed to the repo so the module-local generated C++
+# stays matched to the generator that produced it); override with the
+# BINDER_VERSION environment variable for a one-off build.
+_BINDER_VERSION_FILE="${MY_DIR}/binder_sdk.version"
+_PINNED_BINDER_VERSION="$(grep -vE '^[[:space:]]*(#|$)' "${_BINDER_VERSION_FILE}" 2>/dev/null | head -1 | tr -d '[:space:]')"
+BINDER_VERSION="${BINDER_VERSION:-${_PINNED_BINDER_VERSION:-2.0.0}}"
 
 # Parse arguments
 CLEAN=false
@@ -128,11 +135,16 @@ clone_repo() {
     if [ -d "$BINDER_REPO_DIR" ]; then
         echo "✓ Binder source already cloned at $BINDER_REPO_DIR"
 
-        # Show current branch/commit for information only
+        # Show current ref and warn if it differs from the pinned version.
         if [ "$CLEAN" != true ]; then
             cd "$BINDER_REPO_DIR"
             CURRENT_REF=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null)
-            echo "   Current: $CURRENT_REF"
+            CURRENT_SHA=$(git rev-parse --short HEAD 2>/dev/null)
+            echo "   Current: $CURRENT_REF ($CURRENT_SHA) - pinned: $BINDER_VERSION"
+            if [ "$CURRENT_REF" != "$BINDER_VERSION" ] && [ "$CURRENT_SHA" != "$BINDER_VERSION" ]; then
+                echo "   ⚠️  toolchain checkout differs from the binder_sdk.version pin;"
+                echo "      run './build_binder.sh clean' then re-run to re-stage at the pin."
+            fi
             cd - > /dev/null
         fi
 
