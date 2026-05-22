@@ -108,8 +108,12 @@ from the component's `metadata.yaml`:
 ### Production build (Yocto/BitBake)
 
 ```bash
-# linux_binder SDK is staged by the Yocto dependency system (DEPENDS = "linux-binder")
-cmake -S . -B build -DINTERFACE_TARGET=all -DBINDER_SDK_DIR=${STAGING_DIR}/usr
+# linux_binder SDK is staged by the Yocto dependency system (DEPENDS = "linux-binder").
+# A staged SDK is flat, so headers and libs share one prefix — pass both
+# BINDER_SDK_DIR and BINDER_SDK_INCLUDE_DIR (they differ only in the local dev tree).
+cmake -S . -B build -DINTERFACE_TARGET=all \
+      -DBINDER_SDK_DIR=${STAGING_DIR}/usr \
+      -DBINDER_SDK_INCLUDE_DIR=${STAGING_DIR}/usr
 cmake --build build
 cmake --install build
 ```
@@ -158,7 +162,8 @@ do_configure() {
     CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" LDFLAGS="${LDFLAGS}" \
     cmake -S ${S} -B ${B} \
           -DINTERFACE_TARGET=all \
-          -DBINDER_SDK_DIR=${STAGING_DIR}${prefix}
+          -DBINDER_SDK_DIR=${STAGING_DIR}${prefix} \
+          -DBINDER_SDK_INCLUDE_DIR=${STAGING_DIR}${prefix}
 }
 
 do_compile() {
@@ -193,12 +198,17 @@ Yocto's build system automatically provides these variables with appropriate cro
 
 Used when building HAL libraries for deployment:
 
-| Variable            | Purpose                     | Default                 | Required |
-|---------------------|-----------------------------|-------------------------|----------|
-| `INTERFACE_TARGET`  | Module(s) to build          | `all`                   | No       |
-| `AIDL_SRC_VERSION`  | Version to build            | `current`               | No       |
-| `BINDER_SDK_DIR`    | linux_binder SDK location   | `out/target`            | **Yes**  |
-| `OUT_DIR`           | Output directory            | `out`                   | No       |
+| Variable                 | Purpose                           | Default      | Required |
+|--------------------------|-----------------------------------|--------------|----------|
+| `INTERFACE_TARGET`       | Module(s) to build                | `all`        | No       |
+| `AIDL_SRC_VERSION`       | Version to build                  | `current`    | No       |
+| `BINDER_SDK_DIR`         | linux_binder SDK libs location    | `out/target` | **Yes**  |
+| `BINDER_SDK_INCLUDE_DIR` | linux_binder SDK headers location | `out/build`  | Yocto    |
+| `OUT_DIR`                | Output directory                  | `out`        | No       |
+
+`BINDER_SDK_DIR` and `BINDER_SDK_INCLUDE_DIR` differ only in the local dev
+tree (libs in `out/target`, headers in `out/build`). A Yocto-staged SDK is
+flat, so set both to the same staging prefix.
 
 **Example**:
 
@@ -231,6 +241,10 @@ See [TWO_STAGE_BUILD.md](TWO_STAGE_BUILD.md) for detailed workflows.
   - 32-bit userspace on 64-bit kernel support
 
 - **[TWO_STAGE_BUILD.md](TWO_STAGE_BUILD.md)** - Detailed build workflows for both development and production
+
+- **[tests/README.md](tests/README.md)** - On-demand build verification
+  - `tests/smoke_test.sh` - exercises the `all`, `manifest` and per-version build paths
+  - `tests/fake-yocto/` - emulates the Yocto production build offline
 
 ## Copyright and License
 
