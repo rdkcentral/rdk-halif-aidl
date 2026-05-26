@@ -214,13 +214,12 @@ The repository contains **33 components** across two responsibility types:
 | `vsi/kernel` | Kernel interface strategy and system abstraction |
 | `vsi/keyvault` | HAL lower-layer key vault and encrypted storage requirements |
 
-#### OEM Components (18)
+#### OEM Components (17)
 
 | Component | Description |
 |-----------|-------------|
 | `boot` | Boot reason tracking and reboot management |
 | `broadcast` | Broadcast tuner and RF frontend interface |
-| `cdm` | Content decryption module and DRM key management |
 | `common` | Common types, enumerations, and shared interface definitions |
 | `compositeinput` | Composite video input capture and control |
 | `deepsleep` | Deep sleep and low-power state management |

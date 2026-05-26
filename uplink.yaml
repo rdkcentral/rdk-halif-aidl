@@ -321,20 +321,7 @@ vsi/filesystem:
   vts_team: ~
   vdevice: ~
 
-vsi/crypto:
-  metadata: vsi/crypto/metadata.yaml
-  feature: { id: ENT-8666, url: "https://ccp.sys.comcast.net/browse/ENT-8666", title: "RDK-E Crypto", status: Ideation }
-  hal_spec: ~
-  mw_review: ~
-  mw_teams: ~
-  vts_team: ~
-  vdevice: ~
-
-vsi/keyvault:
-  metadata: vsi/keyvault/metadata.yaml
-  feature: { id: ENT-8665, url: "https://ccp.sys.comcast.net/browse/ENT-8665", title: "RDK-E Key Vault", status: Ideation }
-  hal_spec: ~
-  mw_review: ~
-  mw_teams: ~
-  vts_team: ~
-  vdevice: ~
+# vsi/crypto and vsi/keyvault entries removed — these were placeholder
+# vsi-namespaced metadata; the real HALs are added as top-level
+# cryptoengine/ and keyvault/ components by #387 and will be indexed
+# here once that PR lands.

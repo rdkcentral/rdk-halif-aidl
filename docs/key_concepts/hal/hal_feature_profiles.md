@@ -140,19 +140,12 @@ The HFP must explicitly list all supported HAL components. Each HAL or resource 
 Fields that are not supported may be omitted, but explicit negation is recommended for clarity:
 
 ```yaml
-cdm:
+drm:
   interfaceVersion: current
   mandatory: true
-
-  - id: 0
-    name: "PlayReady"
-    version: "4.4"
-    mandatory: true
-
-  - id: 1
-    name: "Widevine"
-    version: "L3"
-    optional: true
+  supportedSchemes:
+    - { name: "PlayReady", mandatory: true }
+    - { name: "Widevine", optional: true }
 ```
 
 ---
