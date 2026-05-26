@@ -113,6 +113,8 @@ nav:
     - RingBuffer:
       - Current: '!include ringbuffer/current/mkdocs.yml'
       - 0.1.0.0: '!include ringbuffer/0.1.0.0/mkdocs.yml'
+    - Crypto Engine:
+      - Current: '!include cryptoengine/current/mkdocs.yml'
     - DRM:
       - Current: '!include drm/current/mkdocs.yml'
       - 0.2.0.0: '!include drm/0.2.0.0/mkdocs.yml'
@@ -155,6 +157,8 @@ nav:
       - Current: '!include indicator/current/mkdocs.yml'
       - 0.2.0.0: '!include indicator/0.2.0.0/mkdocs.yml'
       - 0.1.0.0: '!include indicator/0.1.0.0/mkdocs.yml'
+    - Key Vault:
+      - Current: '!include keyvault/current/mkdocs.yml'
     - Panel:
       - Current: '!include panel/current/mkdocs.yml'
       - 0.2.0.0: '!include panel/0.2.0.0/mkdocs.yml'

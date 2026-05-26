@@ -29,6 +29,7 @@ components:
   broadcast:      current
   common:         current
   compositeinput: current
+  cryptoengine:   current
   deepsleep:      current
   deviceinfo:     current
   drm:            current
@@ -37,6 +38,7 @@ components:
   hdmiinput:      current
   hdmioutput:     current
   indicator:      current
+  keyvault:       current
   panel:          current
   planecontrol:   current
   ringbuffer:     current
