@@ -10,21 +10,22 @@ Excluded: key storage, key lifecycle, and access policy.
 
 ## References
 
-!!! info References
-|||
-|-|-|
-|**Interface Definition**|[cryptoengine/current](./com/rdk/hal/cryptoengine/)|
-|**API Documentation**| Generated from AIDL Javadoc comments |
-|**HAL Interface Type**| AIDL and Binder |
-|**HAL Feature Profile**| [hfp-cryptoengine.yaml](./hfp-cryptoengine.yaml) |
+!!! info "References"
+    |||
+    |-|-|
+    |**Interface Definition**|[cryptoengine/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/cryptoengine/current)|
+    |**Interface Version**|`current`|
+    |**HAL Interface Type**|[AIDL and Binder](../../introduction/aidl_and_binder.md)|
+    |**HAL Feature Profile**|[hfp-cryptoengine.yaml](../hfp-cryptoengine.yaml)|
 
 ---
 
 ## Related Pages
 
 !!! tip "Related Pages"
-- [KeyVault HAL](../../key_vault/current/key_vault.md) — key storage and lifecycle; attaches a CryptoEngine for operations on vault-managed keys
-- [HAL Feature Profile](./hfp-cryptoengine.yaml) — platform-specific capability declaration
+    - [KeyVault HAL](../../keyvault/current/docs/keyvault.md) — key storage and lifecycle; attaches a CryptoEngine for operations on vault-managed keys
+    - [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
+    - [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
 
 ---
 
