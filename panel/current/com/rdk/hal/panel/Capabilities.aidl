@@ -94,6 +94,16 @@ parcelable Capabilities
     }
 
     /**
+     * All AV sources supported by the panel, independent of picture mode.
+     */
+    AVSource[] supportedAVSources;
+
+    /**
+     * All video formats (dynamic ranges) supported by the panel, independent of picture mode.
+     */
+    DynamicRange[] supportedVideoFormats;
+
+    /**
      * Array of picture modes and their capabilities, listing the video formats and AV sources supported.
      */
     PictureModeCapabilities[] pictureModeCapabilities;

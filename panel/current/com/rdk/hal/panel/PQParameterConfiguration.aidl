@@ -18,6 +18,8 @@
  */
 package com.rdk.hal.panel;
 import com.rdk.hal.panel.PQParameter;
+import com.rdk.hal.panel.DolbyVisionCalibrationSettings;
+import com.rdk.hal.panel.TwoPointWBSettings;
 import com.rdk.hal.videodecoder.DynamicRange;
 import com.rdk.hal.AVSource;
 
@@ -54,6 +56,18 @@ parcelable PQParameterConfiguration
 	
 	/**
 	 * The value for the PQ parameter.
+	 * For all PQ parameters except PQParameter.DV_CALIBRATION and PQParameter.TWO_POINT_WB,
+	 * use the `intValue` variant.
+	 * For PQParameter.DV_CALIBRATION, use the `dvCalibrationSettings` variant.
+	 * For PQParameter.TWO_POINT_WB, use the `twoPointWBSettings` variant.
 	 */
-	int value;
+	union Value {
+		/** Integer value used by all PQ parameters except DV_CALIBRATION and TWO_POINT_WB. */
+		int intValue;
+		/** Dolby Vision calibration settings used when pqParameter == PQParameter.DV_CALIBRATION. */
+		DolbyVisionCalibrationSettings dvCalibrationSettings;
+		/** 2-point white balance settings used when pqParameter == PQParameter.TWO_POINT_WB. */
+		TwoPointWBSettings.TwoPointWB twoPointWBSettings;
+	}
+	Value value;
 }

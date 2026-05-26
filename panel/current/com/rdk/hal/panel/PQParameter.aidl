@@ -120,4 +120,26 @@ enum PQParameter
      */
     AMBIENT_LIGHT_SENSOR_CONTROL = 34,
 
+    /**
+     * Precision detail enhancement level.
+     * integer 0..n (0=off, n=maximum level)
+     */
+    PRECISION_DETAIL = 35,
+
+    /**
+     * Dolby Vision calibration settings.
+     * Value is represented as a DolbyVisionCalibrationSettings parcelable.
+     * Use getPQParameters() / setPQParameters() with the dvCalibrationSettings
+     * field of PQParameterConfiguration for this parameter.
+     */
+    DV_CALIBRATION = 36,
+
+    /**
+     * 2-point white balance calibration settings.
+     * Value is represented as a TwoPointWBSettings.TwoPointWB parcelable.
+     * Use getPQParameters() / setPQParameters() with the twoPointWBSettings
+     * field of PQParameterConfiguration for this parameter.
+     */
+    TWO_POINT_WB = 37,
+
 }
