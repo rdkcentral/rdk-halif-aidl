@@ -18,6 +18,8 @@
  */
 package com.rdk.hal.panel;
 import com.rdk.hal.panel.PQParameter;
+import com.rdk.hal.panel.DolbyVisionCalibrationSettings;
+import com.rdk.hal.panel.TwoPointWBSettings;
 import com.rdk.hal.videodecoder.DynamicRange;
 import com.rdk.hal.AVSource;
 
@@ -49,17 +51,78 @@ parcelable PQParameterCapabilities
     boolean isGlobal;
 
     /**
-     * The minimum and maximum values for this PQ parameter.
+     * Scalar integer minimum/maximum bounds used by all PQ parameters except DV_CALIBRATION.
      */
-    int minValue;
-    int maxValue;
+    parcelable IntBounds {
+        /** The minimum value for this PQ parameter. */
+        int minValue;
+        /** The maximum value for this PQ parameter. */
+        int maxValue;
+    }
 
     /**
-     * The list of specific values ranging from minValue to maxValue inclusive, which are supported.
-     * This array of values only needs to be specified if not all integer values
-     * between minValue and maxValue are supported.  e.g. From an enum list of values.
+     * Dolby Vision calibration bounds used when pqParameter == PQParameter.DV_CALIBRATION.
+     * minBound and maxBound contain the per-field minimum and maximum calibration values.
      */
-    int[] values;
+    parcelable DvCalibrationBounds {
+        /** Per-field minimum calibration values. */
+        DolbyVisionCalibrationSettings minBound;
+        /** Per-field maximum calibration values. */
+        DolbyVisionCalibrationSettings maxBound;
+    }
+
+    /**
+     * 2-point white balance bounds used when pqParameter == PQParameter.TWO_POINT_WB.
+     * minBound and maxBound contain the per-field minimum and maximum WB values.
+     */
+    parcelable TwoPointWBBounds {
+        /** Per-field minimum 2-point WB values. */
+        TwoPointWBSettings.TwoPointWB minBound;
+        /** Per-field maximum 2-point WB values. */
+        TwoPointWBSettings.TwoPointWB maxBound;
+    }
+
+    /**
+     * Union of scalar integer range bounds, Dolby Vision calibration bounds, or
+     * 2-point white balance bounds.
+     * For all PQ parameters except DV_CALIBRATION and TWO_POINT_WB, use `intBounds`.
+     * For PQParameter.DV_CALIBRATION, use `dvCalibrationBounds`.
+     * For PQParameter.TWO_POINT_WB, use `twoPointWBBounds`.
+     */
+    union RangeBound {
+        IntBounds intBounds;
+        DvCalibrationBounds dvCalibrationBounds;
+        TwoPointWBBounds twoPointWBBounds;
+    }
+    RangeBound rangeBound;
+
+    /**
+     * Union of a list of supported integer values or a list of supported Dolby Vision
+     * calibration settings values.
+     * For all PQ parameters except DV_CALIBRATION, use the `intValues` variant.
+     * For PQParameter.DV_CALIBRATION, use the `dvCalibrationValues` variant.
+     * This only needs to be populated if not all values between min and max are supported.
+     */
+    union SupportedValues {
+        /**
+         * Specific integer values between minValue and maxValue that are supported.
+         * Empty array means all integer values in [minValue, maxValue] are valid.
+         */
+        int[] intValues;
+
+        /**
+         * Specific DolbyVisionCalibrationSettings presets that are supported.
+         * Empty array means any value within the DvCalibrationBounds range is valid.
+         */
+        DolbyVisionCalibrationSettings[] dvCalibrationValues;
+
+        /**
+         * Specific TwoPointWB presets that are supported.
+         * Empty array means any value within the TwoPointWBBounds range is valid.
+         */
+        TwoPointWBSettings.TwoPointWB[] twoPointWBValues;
+    }
+    SupportedValues supportedValues;
 
     /**
      * Nested PQ parameter picture mode capabilities definition.

@@ -18,7 +18,6 @@
  */
 package com.rdk.hal.panel;
 import com.rdk.hal.panel.Capabilities;
-import com.rdk.hal.panel.IFactoryPanel;
 import com.rdk.hal.panel.PictureModeConfiguration;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.PQParameterConfiguration;
@@ -31,8 +30,8 @@ import com.rdk.hal.AVSource;
 /** 
  *  @brief     Display Panel Output Control HAL interface.
  *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
- *
- *
+ */
+
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
@@ -40,7 +39,6 @@ import com.rdk.hal.AVSource;
  *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
  *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
  *    The caller must ignore any output variables.
- */
 @VintfStability
 interface IPanelOutput
 {
@@ -56,12 +54,6 @@ interface IPanelOutput
      */
     Capabilities getCapabilities();
 
-    /**
-     * Gets the factory interface for the panel.
-     *
-     * @return IFactoryPanel or null on error.
-     */
-    @nullable IFactoryPanel getFactoryInterface();
 
   	/**
 	 * Sets the panel enabled state.
@@ -409,6 +401,43 @@ interface IPanelOutput
      * @return WhiteBalanceMultiPointSettings
      */
     WhiteBalanceMultiPointSettings getMultiPointWhiteBalance(in int colorTemperature);
+
+	/**
+	 * Enables or disables calibration mode for the PQ pipeline.
+     * 
+     * When enabled, all PQ processing blocks (e.g. brightness, contrast, sharpness, saturation, hue,
+     * dimming, noise reduction, CMS, etc.) are set to a neutral or disabled state to allow accurate
+     * measurement of the panel output without interference from PQ processing.
+     * The white balance (WB) and gamma blocks are also set to a neutral or disabled state.
+     * 
+     * When disabled, all PQ blocks, the WB block and the gamma block are restored to the last known
+     * state that was in effect before calibration mode was enabled.
+     * 
+     * Calibration mode is disabled by default.
+	 *
+	 * @param[in] enabled   The new calibration mode state.
+     *                      true to enable calibration mode, false to restore the previous state.
+     * 
+	 * @return boolean
+     * @retval true     The calibration mode state was successfully set.
+     * @retval false    The calibration mode state could not be set.
+     *
+     * 
+     * @see getCalibrationMode()
+	 */
+    boolean enableCalibrationMode(in boolean enabled);
+
+    /**
+     * Gets the current calibration mode state.
+     *
+     * @return boolean
+     * @retval true     Calibration mode is enabled.
+     * @retval false    Calibration mode is disabled.
+     *
+     * 
+     * @see enableCalibrationMode()
+     */
+    boolean getCalibrationMode();
 
 	/**
 	 * Starts a display fade up or down operation.
