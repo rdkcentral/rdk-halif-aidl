@@ -8,19 +8,20 @@ Excluded: cryptographic operations themselves — these are the responsibility o
 
 ## References
 
-!!! info References
+!!! info "References"
     |||
     |-|-|
-    |**Interface Definition**|[key_vault/current](./com/rdk/hal/keyvault/)|
-    |**API Documentation**| Generated from AIDL Javadoc comments |
-    |**HAL Interface Type**| AIDL and Binder |
-    |**HAL Feature Profile**| [hfp-keyvault.yaml](./hfp-keyvault.yaml) |
+    |**Interface Definition**|[keyvault/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/keyvault/current)|
+    |**Interface Version**|`current`|
+    |**HAL Interface Type**|[AIDL and Binder](../../introduction/aidl_and_binder.md)|
+    |**HAL Feature Profile**|[hfp-keyvault.yaml](../hfp-keyvault.yaml)|
 
 ## Related Pages
 
 !!! tip "Related Pages"
-    - [CryptoEngine HAL](../../crypto_engine/current/crypto_engine.md) — crypto operations; attached to a vault via `attachCryptoEngine()`
-    - [HAL Feature Profile](./hfp-keyvault.yaml) — platform-provisioned vaults and constraints
+    - [CryptoEngine HAL](../../cryptoengine/current/docs/cryptoengine.md) — crypto operations; attached to a vault via `attachCryptoEngine()`
+    - [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
+    - [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
 
 ---
 
