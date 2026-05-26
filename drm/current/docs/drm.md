@@ -27,7 +27,6 @@ The significant differences:
 !!! tip "Related Pages"
     - [HAL Interface Overview](../key_concepts/hal/hal_interfaces.md)
     - [HAL Feature Profile](../key_concepts/hal/hal_feature_profiles.md)
-    - [CDM](../cdm/cdm.md)
 
 ---
 

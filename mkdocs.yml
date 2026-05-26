@@ -66,7 +66,6 @@ nav:
       - Video Sink: '!include videosink/current/mkdocs.yml'
     - Boot: '!include boot/current/mkdocs.yml'
     - Broadcast: '!include broadcast/current/mkdocs.yml'
-    - CDM: '!include cdm/mkdocs.yml'
     - DRM: '!include drm/current/mkdocs.yml'
     - HDMI:
       - HDMI CEC: '!include hdmicec/current/mkdocs.yml'
