@@ -60,6 +60,11 @@ fi
 
 $DRY_RUN && echo "=== DRY RUN — no changes will be made ===" && echo
 
+# Counter for non-fatal issues — surfaced at end of run and used to set a
+# non-zero exit code so CI can detect partial failures (failed gh pr edit
+# calls, unmapped reviewer teams, etc.).
+WARN_COUNT=0
+
 # --- Team mapping -----------------------------------------------------------
 declare -A TEAM_MAP
 while IFS=': ' read -r key value; do
@@ -107,14 +112,25 @@ print(" ".join(sorted(comps)))
     for c in $components; do desired_labels+="component:${c}\n"; done
     # breaking-change: conventional-commit "!" before the colon
     if [[ "$title" =~ ^[a-z]+(\([^\)]*\))?!: ]]; then desired_labels+="breaking-change\n"; fi
-    # documentation: every changed file is a .md or under a docs/ dir
+    # documentation-change: every changed file is doc-like. Predicate mirrors
+    # scripts/release.sh:is_doc_like_path so the two scripts agree on what
+    # counts as docs-only (release.sh consumes this label to drive a patch bump).
     local docs_only
     docs_only=$(echo "$meta" | python3 -c '
-import json,sys
+import json,sys,os.path
+def is_doc(p):
+    if p.startswith("docs/") or "/docs/" in p: return True
+    if p.endswith(".md") or p.endswith(".rst") or p.endswith(".txt"): return True
+    base = os.path.basename(p)
+    if base == "README" or base.startswith("README."): return True
+    if base == "CHANGELOG" or base.startswith("CHANGELOG."): return True
+    if base == "metadata.yaml": return True
+    if base.startswith("hfp-") and base.endswith(".yaml"): return True
+    return False
 fs=[f["path"] for f in json.load(sys.stdin)["files"]]
-print("yes" if fs and all(p.endswith(".md") or "/docs/" in p or p.startswith("docs/") for p in fs) else "no")
+print("yes" if fs and all(is_doc(p) for p in fs) else "no")
 ')
-    [ "$docs_only" = "yes" ] && desired_labels+="documentation\n"
+    [ "$docs_only" = "yes" ] && desired_labels+="documentation-change\n"
 
     local add_labels=()
     while IFS= read -r lbl; do
@@ -128,7 +144,12 @@ print("yes" if fs and all(p.endswith(".md") or "/docs/" in p or p.startswith("do
         echo "  labels: + ${add_labels[*]}"
         if ! $DRY_RUN; then
             local args=(); for l in "${add_labels[@]}"; do args+=(--add-label "$l"); done
-            gh pr edit "$pr" --repo "$REPO" "${args[@]}" >/dev/null && echo "    applied"
+            if gh pr edit "$pr" --repo "$REPO" "${args[@]}" >/dev/null; then
+                echo "    applied"
+            else
+                echo "    WARN: gh pr edit failed to add labels" >&2
+                WARN_COUNT=$((WARN_COUNT + 1))
+            fi
         fi
     fi
 
@@ -141,12 +162,18 @@ print("yes" if fs and all(p.endswith(".md") or "/docs/" in p or p.startswith("do
         echo "  assignee: ${author} already set"
     else
         echo "  assignee: + ${author}"
-        $DRY_RUN || { gh pr edit "$pr" --repo "$REPO" --add-assignee "$author" >/dev/null && echo "    applied"; }
+        if ! $DRY_RUN; then
+            if gh pr edit "$pr" --repo "$REPO" --add-assignee "$author" >/dev/null; then
+                echo "    applied"
+            else
+                echo "    WARN: gh pr edit failed to add assignee '${author}'" >&2
+                WARN_COUNT=$((WARN_COUNT + 1))
+            fi
+        fi
     fi
 
     # -- Reviewer teams: union of all teams in affected components' metadata --
     local -A want_teams=()
-    local have_teams=true
     for c in $components; do
         local md="${REPO_ROOT}/${c}/metadata.yaml"
         [ -f "$md" ] || continue
@@ -159,7 +186,8 @@ print("yes" if fs and all(p.endswith(".md") or "/docs/" in p or p.startswith("do
                 if [ -n "${TEAM_MAP[$team]:-}" ]; then
                     want_teams["${TEAM_MAP[$team]}"]=1
                 else
-                    echo "    WARN: no GitHub team mapping for '${team}' (${c})"
+                    echo "    WARN: no GitHub team mapping for '${team}' (${c}) — add an entry to ${MAPPING_FILE#${REPO_ROOT}/}" >&2
+                    WARN_COUNT=$((WARN_COUNT + 1))
                 fi
             fi
         done < "$md"
@@ -230,3 +258,9 @@ else
 fi
 echo "──────────────────────────────────────────────────────────────"
 $DRY_RUN && echo "Dry run complete — re-run without --dry-run to apply." || echo "Done."
+
+if [ "$WARN_COUNT" -gt 0 ]; then
+    echo
+    echo "Completed with ${WARN_COUNT} warning(s) — see WARN lines above."
+    exit 1
+fi
