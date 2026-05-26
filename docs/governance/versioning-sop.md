@@ -1,9 +1,5 @@
 # HAL Delivery & Versioning Standard Operating Procedure
 
-> **See also:** [Definition of Done](definition-of-done.md) — checklists for
-> each gate transition (RED→AMBER, AMBER→GREEN, Baseline 1.0 freeze,
-> post-baseline changes).
-
 ## 1. Goal: AIDL Baseline 1.0
 
 This repository contains all RDK HAL interface definitions written in AIDL. The
@@ -218,13 +214,12 @@ The repository contains **33 components** across two responsibility types:
 | `vsi/kernel` | Kernel interface strategy and system abstraction |
 | `vsi/keyvault` | HAL lower-layer key vault and encrypted storage requirements |
 
-#### OEM Components (18)
+#### OEM Components (17)
 
 | Component | Description |
 |-----------|-------------|
 | `boot` | Boot reason tracking and reboot management |
 | `broadcast` | Broadcast tuner and RF frontend interface |
-| `cdm` | Content decryption module and DRM key management |
 | `common` | Common types, enumerations, and shared interface definitions |
 | `compositeinput` | Composite video input capture and control |
 | `deepsleep` | Deep sleep and low-power state management |
@@ -242,7 +237,7 @@ The repository contains **33 components** across two responsibility types:
 | `vsi/wifi` | Wi-Fi driver integration and network management |
 
 Each component is independently tracked through the RED → AMBER → GREEN
-pipeline. The automated [RAG Status Report](../../RAG_STATUS_REPORT.md) provides
+pipeline. The automated [RAG Status Report](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/RAG_STATUS_REPORT.md) provides
 a live view of overall progress.
 
 ### What "GREEN at 0.x" Means
@@ -398,7 +393,7 @@ Every component directory contains a `metadata.yaml` that captures:
 
 ### RAG Status Report
 
-The [RAG Status Report](../../RAG_STATUS_REPORT.md) is auto-generated from all
+The [RAG Status Report](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/RAG_STATUS_REPORT.md) is auto-generated from all
 `metadata.yaml` files:
 
 ```bash

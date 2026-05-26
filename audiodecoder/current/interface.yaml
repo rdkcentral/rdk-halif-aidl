@@ -1,0 +1,8 @@
+aidl_interface:
+  name: audiodecoder
+  srcs:
+    - com/rdk/hal/audiodecoder/*.aidl
+  imports:
+    - common
+  stability: vintf
+  layout: module-local
