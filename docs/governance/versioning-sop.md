@@ -85,6 +85,91 @@ interface is right.
   patch to `0`
 - A documentation-only change bumps patch
 
+### How PRs Drive the Version Bump
+
+Pre-baseline component versions advance one PR at a time. The bump that each
+PR implies is signalled by **labels on the PR**. `scripts/configure_pr.sh`
+applies them automatically from the PR title and changed files; reviewers may
+add or correct them as needed.
+
+| PR label | Implied bump | Applied when |
+|----------|--------------|--------------|
+| `breaking-change` | **Generation** (`0.g.m.p` → `0.(g+1).0.0`) | Conventional-commit `!:` marker in the PR title (e.g. `feat(avclock)!: ...`) |
+| `documentation-change` | **Patch** (`0.g.m.p` → `0.g.m.(p+1)`) | Every changed file is doc-like (see `scripts/configure_pr.sh:is_doc()`) |
+| (no specific label) | **Minor** (`0.g.m.p` → `0.g.(m+1).0`) | Default for any feature addition or non-breaking change |
+
+The PR author edits the component's `metadata.yaml` `version:` to the new
+value as part of the PR's diff. Reviewers check that the version bump matches
+the label and the actual change.
+
+#### The Subsume Rule
+
+Between releases, `metadata.yaml` `version:` represents the **intent for the
+next release** — the highest bump that has been declared since the last
+release tag. A PR bumps `version:` *only if its change is more significant
+than what is already pending.*
+
+| Last released | Already pending on `develop` | This PR is… | Action |
+|---|---|---|---|
+| `0.1.0.0` | `0.1.0.0` (unchanged since release) | patch | bump → `0.1.0.1` |
+| `0.1.0.0` | `0.1.0.0` | minor | bump → `0.1.1.0` |
+| `0.1.0.0` | `0.1.0.0` | breaking | bump → `0.2.0.0` |
+| `0.1.0.0` | `0.1.1.0` (a prior PR already bumped minor) | another minor | **no bump — already covered** |
+| `0.1.0.0` | `0.1.1.0` | patch (smaller than pending) | **no bump — subsumed by minor** |
+| `0.1.0.0` | `0.1.1.0` | breaking | bump → `0.2.0.0` (subsumes the minor) |
+| `0.1.0.0` | `0.2.0.0` (a prior PR already bumped breaking) | minor or patch | **no bump — already covered** |
+| `0.1.0.0` | `0.2.0.0` | another breaking | **no bump** (one generation tick per release window) |
+| new component (no prior release) | `0.1.0.0` | anything | no bump — first release is `0.1.0.0` regardless of how many PRs accumulate |
+
+**Net rule:** `next_version = max(current_pending, this_PR_would_imply)`. The
+release version is the aggregate delta since the last tag, not a per-PR
+count. Multiple breaking changes in a single release window batch into one
+generation; multiple feature additions batch into one minor; multiple
+docs-only changes batch into one patch.
+
+This is **human-side discipline**, not script-enforced. Reviewers verify
+that the bump (or non-bump) is appropriate for the PR's change.
+
+#### When the Snapshot is Created
+
+`metadata.yaml` `version:` is a **forward-looking declaration** of what the
+next release will tag the component as. The `<component>/<version>/`
+snapshot directory is **not** created in feature PRs. It is materialised at
+release time by the top-level `./release.sh`, which reads `metadata.yaml`
+and copies `current/` to `<version>/`.
+
+Feature PRs touch `current/` only:
+
+- `current/com/.../*.aidl` — authored AIDL source
+- `current/include/`, `current/src/` — regenerated C++ (committed in the same
+  PR; see [Component Structure](#2-component-structure) for layout)
+- `current/docs/<component>.md` — documentation
+- `current/CMakeLists.txt`, `current/interface.yaml`, `current/hfp-*.yaml` —
+  build wiring + manifest + hardware feature profile
+
+Multiple PRs can accumulate bumps on `develop` without any of them creating
+snapshot directories. The next release event (`release.sh` run during
+release prep) materialises all of the snapshots together and the repo is
+tagged.
+
+This separation means a single coherent release contains all of the
+component changes from the release window batched into one set of new
+snapshots — see [Release Cadence](#release-cadence) below.
+
+#### Release Cadence
+
+Releases are **milestone-driven** with **patch releases on demand**:
+
+- A new milestone (e.g. `0.20.0 - Convergance`) closes when its content is
+  complete. A release is then cut from `develop` to `main`, `release.sh`
+  materialises all the pending component snapshots, and the repo is tagged.
+- An urgent fix that cannot wait for the next milestone is shipped as a
+  patch release (e.g. `0.15.1`) using the same release ceremony.
+
+Releases are **not** cut on every PR merge. Multiple changes batch into one
+coherent release narrative. See [`0.15.0` and `0.20.0` release notes](../releases/)
+for the pattern.
+
 ### Post-Baseline: AIDL Stable Versioning
 
 Once a component reaches AIDL Baseline and is frozen, it follows **AIDL
