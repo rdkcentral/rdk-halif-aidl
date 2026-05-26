@@ -44,14 +44,18 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
 fi
 
 # Resolve the component list: explicit args, or every component with an
-# interface definition under <module>/current/.
+# interface definition under <module>/current/. Uses globstar so nested
+# component paths (e.g. vsi/<x>/current/interface.yaml) are picked up,
+# not just top-level components.
 if [ "$#" -gt 0 ]; then
     COMPONENTS=("$@")
 else
     COMPONENTS=()
-    for f in */current/interface.yaml; do
+    shopt -s globstar nullglob
+    for f in **/current/interface.yaml; do
         COMPONENTS+=("${f%/current/interface.yaml}")
     done
+    shopt -u globstar nullglob
 fi
 
 released=0
