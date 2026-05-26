@@ -5,13 +5,11 @@
 #include <binder/IInterface.h>
 #include <binder/Parcel.h>
 #include <binder/Status.h>
-#include <com/rdk/hal/PropertyValue.h>
 #include <com/rdk/hal/State.h>
 #include <com/rdk/hal/avclock/Capabilities.h>
 #include <com/rdk/hal/avclock/IAVClockController.h>
 #include <com/rdk/hal/avclock/IAVClockControllerListener.h>
 #include <com/rdk/hal/avclock/IAVClockEventListener.h>
-#include <com/rdk/hal/avclock/Property.h>
 #include <cstdint>
 #include <optional>
 #include <tuple>
@@ -68,8 +66,6 @@ public:
   };  // class Id
   virtual ::android::binder::Status getCapabilities(::com::rdk::hal::avclock::Capabilities* _aidl_return) = 0;
   virtual ::android::binder::Status getState(::com::rdk::hal::State* _aidl_return) = 0;
-  virtual ::android::binder::Status getProperty(::com::rdk::hal::avclock::Property property, ::std::optional<::com::rdk::hal::PropertyValue>* _aidl_return) = 0;
-  virtual ::android::binder::Status setProperty(::com::rdk::hal::avclock::Property property, const ::com::rdk::hal::PropertyValue& propertyValue, bool* _aidl_return) = 0;
   virtual ::android::binder::Status open(const ::android::sp<::com::rdk::hal::avclock::IAVClockControllerListener>& avClockControllerListener, ::android::sp<::com::rdk::hal::avclock::IAVClockController>* _aidl_return) = 0;
   virtual ::android::binder::Status close(const ::android::sp<::com::rdk::hal::avclock::IAVClockController>& avClockController, bool* _aidl_return) = 0;
   virtual ::android::binder::Status registerEventListener(const ::android::sp<::com::rdk::hal::avclock::IAVClockEventListener>& avClockEventListener, bool* _aidl_return) = 0;
@@ -87,12 +83,6 @@ public:
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status getState(::com::rdk::hal::State* /*_aidl_return*/) override {
-    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
-  }
-  ::android::binder::Status getProperty(::com::rdk::hal::avclock::Property /*property*/, ::std::optional<::com::rdk::hal::PropertyValue>* /*_aidl_return*/) override {
-    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
-  }
-  ::android::binder::Status setProperty(::com::rdk::hal::avclock::Property /*property*/, const ::com::rdk::hal::PropertyValue& /*propertyValue*/, bool* /*_aidl_return*/) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status open(const ::android::sp<::com::rdk::hal::avclock::IAVClockControllerListener>& /*avClockControllerListener*/, ::android::sp<::com::rdk::hal::avclock::IAVClockController>* /*_aidl_return*/) override {

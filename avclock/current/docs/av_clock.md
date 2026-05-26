@@ -27,6 +27,13 @@ Audio and video sinks associated with a given AV Clock instance comprise a synch
     - [Video Sink](../videosink/video_sink.md)
     - [Plane Control](../planecontrol/plane_control.md)
 
+## Versioning
+
+| Version | Notes |
+|---|---|
+| `0.1.0.0` | Initial baseline. `getProperty()` / `setProperty()` lived on `IAVClock`. |
+| `0.2.0.0` | **Breaking change.** `getProperty()` and `setProperty()` moved from `IAVClock` to `IAVClockController`. Property access now requires an opened `IAVClockController` (i.e. callers must `IAVClock.open()` first). This aligns AV Clock with the rest of the HAL family where mutators live on the controller interface, not the service-level resource handle. See issue #503. |
+
 ### Implementation Requirements
 
 |#| Requirement | Comments |
@@ -119,8 +126,8 @@ flowchart TD
     end
       platformAVSync("Platform AV Sync")
     RDKClientComponent -- getAVClockIds() <br> getAVClock() --> IAVClockManager
-    RDKClientComponent -- getCapabilities() <br> getProperty() <br> getState() <br> open() <br> close() <br> registerEventListener() <br> unregisterEventListener() --> IAVClock
-    RDKClientComponent -- start() <br> stop() <br> setClockMode() <br> getClockMode() <br> notifyPCRSample() <br> getCurrentClockTime() <br> setPlaybackRate() <br> getPlaybackRate() --> IAVClockController
+    RDKClientComponent -- getCapabilities() <br> getState() <br> open() <br> close() <br> registerEventListener() <br> unregisterEventListener() --> IAVClock
+    RDKClientComponent -- start() <br> stop() <br> setClockMode() <br> getClockMode() <br> notifyPCRSample() <br> getCurrentClockTime() <br> setPlaybackRate() <br> getPlaybackRate() <br> getProperty() <br> setProperty() --> IAVClockController
     IAVClockManager --> IAVClock --> IAVClockController
     IAVClock -- onStateChanged() --> IAVClockEventListener
     IAVClockController -- onStateChanged() <br> onPrimed() --> IAVClockControllerListener
@@ -153,7 +160,7 @@ flowchart TD
 
 The `IAVClockManager` provides access to one or more `IAVClock` sub-interfaces which each represent an AV Clock resource instance offered by the platform.
 
-Each `IAVClock` resource instance is assigned a unique integer ID, which is used in `IAVClock.Id.value` and can be read from `RESOURCE_ID` using the `IAVClock.getProperty()` function.
+Each `IAVClock` resource instance is assigned a unique integer ID, which is used in `IAVClock.Id.value` and can be read from `RESOURCE_ID` using the `IAVClockController.getProperty()` function once the AV Clock has been opened.
 
 To use an `IAVClock` resource instance it must be opened by a client, which returns an `IAVClockController` sub-interface to access clock modes, clock time, the PCR sample notification function and playback rate control.
 

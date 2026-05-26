@@ -21,9 +21,7 @@ import com.rdk.hal.avclock.Capabilities;
 import com.rdk.hal.avclock.IAVClockController;
 import com.rdk.hal.avclock.IAVClockControllerListener;
 import com.rdk.hal.avclock.IAVClockEventListener;
-import com.rdk.hal.avclock.Property;
-import com.rdk.hal.PropertyValue;
-import com.rdk.hal.State; 
+import com.rdk.hal.State;
 
 /** 
  *  @brief     AV Clock HAL interface.
@@ -77,39 +75,6 @@ interface IAVClock
      * @see IAVClockEventListener.onStateChanged(),  IAVClockControllerListener.onStateChanged().
      */  
     State getState();
-
-    /**
-     * Gets a property.
-     *
-     * @param[in] property              The key of a property from the Property enum.
-     *
-     * @returns PropertyValue or null if property is invalid.
-     * 
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value.
-     *
-     *
-     * @see setProperty()
-     */
-    @nullable PropertyValue getProperty(in Property property);
- 
-    /**
-     * Sets a property.
-     *
-     * @param[in] property              The key of a property from the Property enum.
-     * @param[in] propertyValue         Holds the value to set.
-     *
-     * @returns boolean
-     * @retval true     Property was successfully set.
-     * @retval false    A parameter is invalid.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters. 
-     *
-     *
-     * @see getProperty()
-     */
-    boolean setProperty(in Property property, in PropertyValue propertyValue);
 
     /**
 	 * Opens the AV Clock.

@@ -3,8 +3,10 @@
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
 #include <binder/Status.h>
+#include <com/rdk/hal/PropertyValue.h>
 #include <com/rdk/hal/avclock/ClockMode.h>
 #include <com/rdk/hal/avclock/ClockTime.h>
+#include <com/rdk/hal/avclock/Property.h>
 #include <cstdint>
 #include <optional>
 #include <utils/String16.h>
@@ -20,6 +22,8 @@ public:
   static const int32_t VERSION = 1;
   const std::string HASH = "notfrozen";
   static constexpr char* HASHVALUE = "notfrozen";
+  virtual ::android::binder::Status getProperty(::com::rdk::hal::avclock::Property property, ::std::optional<::com::rdk::hal::PropertyValue>* _aidl_return) = 0;
+  virtual ::android::binder::Status setProperty(::com::rdk::hal::avclock::Property property, const ::com::rdk::hal::PropertyValue& propertyValue, bool* _aidl_return) = 0;
   virtual ::android::binder::Status start() = 0;
   virtual ::android::binder::Status stop() = 0;
   virtual ::android::binder::Status setClockMode(::com::rdk::hal::avclock::ClockMode clockMode, bool* _aidl_return) = 0;
@@ -36,6 +40,12 @@ class IAVClockControllerDefault : public IAVClockController {
 public:
   ::android::IBinder* onAsBinder() override {
     return nullptr;
+  }
+  ::android::binder::Status getProperty(::com::rdk::hal::avclock::Property /*property*/, ::std::optional<::com::rdk::hal::PropertyValue>* /*_aidl_return*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status setProperty(::com::rdk::hal::avclock::Property /*property*/, const ::com::rdk::hal::PropertyValue& /*propertyValue*/, bool* /*_aidl_return*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status start() override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);

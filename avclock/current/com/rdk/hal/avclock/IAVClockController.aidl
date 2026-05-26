@@ -19,6 +19,8 @@
 package com.rdk.hal.avclock;
 import com.rdk.hal.avclock.ClockMode;
 import com.rdk.hal.avclock.ClockTime;
+import com.rdk.hal.avclock.Property;
+import com.rdk.hal.PropertyValue;
 
 /** 
  *  @brief     AV Clock Controller HAL interface.
@@ -36,6 +38,39 @@ import com.rdk.hal.avclock.ClockTime;
 
 @VintfStability
 interface IAVClockController {
+
+    /**
+     * Gets a property.
+     *
+     * @param[in] property              The key of a property from the Property enum.
+     *
+     * @returns PropertyValue or null if property is invalid.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value.
+     *
+     *
+     * @see setProperty()
+     */
+    @nullable PropertyValue getProperty(in Property property);
+
+    /**
+     * Sets a property.
+     *
+     * @param[in] property              The key of a property from the Property enum.
+     * @param[in] propertyValue         Holds the value to set.
+     *
+     * @returns boolean
+     * @retval true     Property was successfully set.
+     * @retval false    A parameter is invalid.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
+     *
+     *
+     * @see getProperty()
+     */
+    boolean setProperty(in Property property, in PropertyValue propertyValue);
 
     /**
 	 * Starts the AV Clock.
