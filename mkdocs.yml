@@ -130,7 +130,10 @@ nav:
     - Filing an Issue: external_content/ut-core-wiki/1.2.-Standards:-Issue-Description-Guideline.md
     - FAQ:
       - Python Development: external_content/ut-core-wiki/FAQ:-Comparing-Python-Development-Platforms.md
-    - Release Notes 0.14.0: releases/0.14.0.md
+    - Release Notes:
+      - 0.15.1: releases/0.15.1.md
+      - 0.15.0: releases/0.15.0.md
+      - 0.14.0: releases/0.14.0.md
     - ChangeLog: CHANGELOG.md
 
 markdown_extensions:
