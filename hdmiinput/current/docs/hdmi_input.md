@@ -13,7 +13,8 @@ This HAL excludes HDMI_CEC and video plane attachment logic, which are managed b
 !!! info "References"
     |||
     |-|-|
-    | **Interface Definition**     | [hdmiinput](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/hdmiinput/current/com/rdk/hal/hdmiinput)                                     |
+    |**Interface Definition**|[hdmiinput/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/hdmiinput/current)|
+    |**Interface Version**|`current`|
     | **API Documentation**        | TBD                                                         |
     | **HAL Interface Type**       | [AIDL and Binder](../introduction/aidl_and_binder.md) |
     | **VTS Tests**                | TBD                                                         |

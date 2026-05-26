@@ -1,0 +1,13 @@
+# linux_binder_idl version - the Binder SDK / AIDL toolchain revision this
+# rdk-halif-aidl snapshot is built against.
+#
+# build_binder.sh checks out this git ref (commit, tag or branch) when it
+# clones the toolchain. Keep it pinned so the committed module-local
+# generated C++ always matches the generator that produced it.
+#
+# Pinned to the module-local generator commit on
+# feature/19-module-local-generated-output (linux_binder_idl#20). Bump to a
+# release tag once that PR merges.
+#
+# Override for a one-off build with:  BINDER_VERSION=<ref> ./build_binder.sh
+b3b6d69

@@ -50,6 +50,8 @@ Arguments:
              - <name> : Build specific module (e.g., boot, videodecoder)
 
 Commands:
+  manifest   Build the component set from versions.yaml (each at its
+             pinned version). Use --file <path> for an alternate manifest.
   clean      Remove out/ directory (build artifacts)
   cleanall   Remove out/ and build/ directories
 
@@ -180,6 +182,58 @@ case "${1:-}" in
         # Execute build_binder.sh
         exec "$BUILD_BINDER_SCRIPT" "${@:2}"
         ;;
+    manifest)
+        # Build the component set described by versions.yaml, each at the
+        # version the manifest pins it to.
+        MANIFEST="$ROOT_DIR/versions.yaml"
+        if [[ "${2:-}" == "--file" && -n "${3:-}" ]]; then
+            MANIFEST="$3"
+        fi
+        if [[ ! -f "$MANIFEST" ]]; then
+            echo "❌ ERROR: version manifest not found: $MANIFEST"
+            exit 1
+        fi
+
+        DEFAULT_VER="$(grep -E '^default:' "$MANIFEST" | head -1 | awk '{print $2}')"
+        DEFAULT_VER="${DEFAULT_VER:-current}"
+
+        # Read "<component> <version>" pairs from the components: map.
+        mapfile -t MANIFEST_PAIRS < <(awk -v def="$DEFAULT_VER" '
+            /^components:/      { inmap=1; next }
+            inmap && /^[^[:space:]#]/ { inmap=0 }
+            inmap && /^[[:space:]]+[A-Za-z0-9_]+:/ {
+                gsub(/:/, " "); print $1, ($2 == "" ? def : $2)
+            }' "$MANIFEST")
+
+        if [[ ${#MANIFEST_PAIRS[@]} -eq 0 ]]; then
+            echo "❌ ERROR: no components listed in $MANIFEST"
+            exit 1
+        fi
+
+        echo "📋 Version manifest: $MANIFEST"
+        echo "   ${#MANIFEST_PAIRS[@]} component(s), default version '${DEFAULT_VER}'"
+        echo ""
+
+        # Components pinned to 'current' build together in one pass; any
+        # component pinned to a released version is built individually.
+        ALL_CURRENT=true
+        for pair in "${MANIFEST_PAIRS[@]}"; do
+            read -r _ ver <<< "$pair"
+            [[ "$ver" != "current" ]] && ALL_CURRENT=false
+        done
+
+        rc=0
+        if $ALL_CURRENT; then
+            "$0" all || rc=$?
+        else
+            for pair in "${MANIFEST_PAIRS[@]}"; do
+                read -r comp ver <<< "$pair"
+                echo "── building ${comp} (version ${ver}) ──"
+                "$0" "$comp" --version "$ver" || rc=$?
+            done
+        fi
+        exit $rc
+        ;;
 esac
 
 MODULE="${1:-all}"
@@ -245,48 +299,117 @@ echo "Jobs:       $JOBS"
 echo "========================================="
 echo ""
 
-# Check for Binder SDK
+# Check for Binder SDK. In local dev (SDK at the default out/target path)
+# we auto-stage it via build_binder.sh so './build_modules.sh all' works
+# out of the box. In Yocto the SDK is staged by the linux-binder recipe
+# (DEPENDS = "linux-binder") and SDK_DIR points outside the repo, so we
+# never auto-build there - that case is a recipe configuration error.
 if [[ ! -f "$SDK_DIR/.sdk_ready" ]]; then
-    echo "❌ ERROR: Binder SDK not found at $SDK_DIR"
-    echo ""
-    echo "The Binder SDK must be installed before building modules."
-    echo ""
-    echo "Development: Run ./build_interfaces.sh <module>"
-    echo "Production:  Ensure linux-binder recipe is built (Yocto)"
-    echo ""
-    exit 1
+    if [[ "$SDK_DIR" == "$ROOT_DIR/out/target" && -x "$ROOT_DIR/build_binder.sh" ]]; then
+        echo "ℹ️  Binder SDK not found at $SDK_DIR — staging it via build_binder.sh"
+        echo "    (one-time prerequisite; subsequent builds reuse it)"
+        echo ""
+        if ! "$ROOT_DIR/build_binder.sh"; then
+            echo ""
+            echo "❌ build_binder.sh failed; cannot continue."
+            exit 1
+        fi
+        echo ""
+    fi
+    if [[ ! -f "$SDK_DIR/.sdk_ready" ]]; then
+        echo "❌ ERROR: Binder SDK not found at $SDK_DIR"
+        echo ""
+        echo "Production (Yocto): the linux-binder recipe must stage the SDK to"
+        echo "                    \${BINDER_SDK_DIR}; declare DEPENDS = \"linux-binder\"."
+        echo ""
+        exit 1
+    fi
 fi
 
 echo "✓ Binder SDK found at $SDK_DIR"
 
-# Check for generated code
-STABLE_GEN="$ROOT_DIR/stable/generated"
-if [[ ! -d "$STABLE_GEN" ]]; then
-    echo "❌ ERROR: Generated code not found at $STABLE_GEN"
-    echo ""
-    echo "Pre-generated C++ code must exist before building."
-    echo ""
-    echo "Development: Run ./build_interfaces.sh <module>"
-    echo "Production:  Generated code should be committed to repo"
-    echo ""
-    exit 1
-fi
-
-# Count available modules
-MODULE_COUNT=$(find "$STABLE_GEN" -mindepth 1 -maxdepth 1 -type d | wc -l)
-echo "✓ Found $MODULE_COUNT module(s) in stable/generated/"
+# Module-local layout: each component holds its own AIDL and generates its
+# own C++ into <module>/current/{include,src}. The CMake configure step
+# generates any missing sources, so there is no central stable/generated
+# tree to pre-check here.
+MODULE_COUNT=$(ls -d "$ROOT_DIR"/*/current/interface.yaml 2>/dev/null | wc -l)
+echo "✓ Found $MODULE_COUNT component interface(s)"
 
 # Validate specific module exists if not building all
 if [[ "$MODULE" != "all" ]]; then
-    if [[ ! -d "$STABLE_GEN/$MODULE" ]]; then
-        echo "❌ ERROR: Module '$MODULE' not found in stable/generated/"
+    if [[ ! -f "$ROOT_DIR/$MODULE/current/interface.yaml" ]]; then
+        echo "❌ ERROR: Component '$MODULE' not found ($ROOT_DIR/$MODULE/current/interface.yaml)"
         echo ""
-        echo "Available modules:"
-        find "$STABLE_GEN" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort
+        echo "Available components:"
+        ls -d "$ROOT_DIR"/*/current/interface.yaml 2>/dev/null \
+            | sed -E 's#.*/([^/]+)/current/interface.yaml#  \1#' | sort
         echo ""
         exit 1
     fi
-    echo "✓ Module '$MODULE' exists"
+    echo "✓ Component '$MODULE' exists"
+fi
+
+#######################################################################
+# Snapshot build (released version)
+#
+# A non-'current' version selects a released snapshot at <MODULE>/<VERSION>/.
+# The snapshot carries committed pre-generated C++ and a standalone
+# CMakeLists.txt written by release.sh - we just compile and install it.
+# No toolchain involvement, no code generation.
+#######################################################################
+
+if [[ "$VERSION" != "current" ]]; then
+    if [[ "$MODULE" == "all" ]]; then
+        echo "❌ ERROR: --version $VERSION cannot be combined with 'all'."
+        echo "   Specify a component, e.g. './build_modules.sh boot --version $VERSION'"
+        echo "   or use './build_modules.sh manifest' for mixed-version builds."
+        exit 1
+    fi
+    SNAPSHOT_DIR="$ROOT_DIR/$MODULE/$VERSION"
+    if [[ ! -f "$SNAPSHOT_DIR/CMakeLists.txt" ]]; then
+        echo "❌ ERROR: snapshot $MODULE/$VERSION not found at $SNAPSHOT_DIR."
+        echo "   Run './release.sh $MODULE' to produce it, or check the version number."
+        exit 1
+    fi
+
+    SNAPSHOT_BUILD_DIR="$ROOT_DIR/build/$MODULE-$VERSION"
+    if [[ "$CLEAN" == true ]]; then
+        echo "🧹 Cleaning snapshot build directory: $SNAPSHOT_BUILD_DIR"
+        rm -rf "$SNAPSHOT_BUILD_DIR"
+    fi
+
+    echo ""
+    echo "📸 Snapshot build: $MODULE/$VERSION"
+    echo "    source: $SNAPSHOT_DIR"
+    echo "    build:  $SNAPSHOT_BUILD_DIR"
+    echo ""
+
+    # The local dev layout splits binder headers (out/build/include/binder_sdk)
+    # from libs (out/target/lib/binder); BINDER_SDK_INCLUDE_DIR lets the
+    # snapshot CMakeLists find the headers. Yocto stages a flat SDK so
+    # BINDER_SDK_DIR alone resolves both.
+    cmake -S "$SNAPSHOT_DIR" -B "$SNAPSHOT_BUILD_DIR" \
+        -DBINDER_SDK_DIR="$SDK_DIR" \
+        -DBINDER_SDK_INCLUDE_DIR="$ROOT_DIR/out/build" \
+        -DHALIF_LIB_DIR="$ROOT_DIR/out/target/lib/halif" \
+        -DHALIF_INCLUDE_DIR="$ROOT_DIR/out/build/include" \
+        -DCMAKE_INSTALL_PREFIX="$ROOT_DIR/out/target" || {
+            echo "❌ Snapshot CMake configuration failed"; exit 1; }
+
+    cmake --build "$SNAPSHOT_BUILD_DIR" -j"$JOBS" || {
+        echo "❌ Snapshot build failed"; exit 1; }
+
+    cmake --install "$SNAPSHOT_BUILD_DIR" >/dev/null || {
+        echo "❌ Snapshot install failed"; exit 1; }
+
+    SO_PATH="$ROOT_DIR/out/target/lib/halif/lib${MODULE}-v${VERSION}-cpp.so"
+    if [[ -f "$SO_PATH" ]]; then
+        echo "✅ Snapshot built and installed:"
+        echo "    $SO_PATH"
+    else
+        echo "❌ Snapshot library not found at $SO_PATH"; exit 1
+    fi
+    exit 0
 fi
 
 echo ""

@@ -28,7 +28,8 @@
 # Expected variables:
 #   OUT_DIR           - Base output directory (e.g., out/)
 #   BUILD_DIR         - CMake build directory
-#   STABLE_DIR        - Stable directory with generated headers
+#   REPO_ROOT         - Repository root (module-local generated headers live
+#                       at <REPO_ROOT>/<module>/current/include/)
 #   INTERFACE_TARGET  - Module name or "all"
 #   AIDL_SRC_VERSION  - Version being built
 
@@ -86,22 +87,20 @@ endif()
 # Stage module headers to out/build/include/
 #######################################################################
 
-message(STATUS "Staging module headers from ${STABLE_DIR}...")
+message(STATUS "Staging module headers from ${REPO_ROOT}...")
 
-# Copy headers from stable/generated/<module>/
+# Module-local layout: generated headers live in <module>/current/include/
 if (INTERFACE_TARGET STREQUAL "all")
     # Stage all module headers
-    file(GLOB MODULE_DIRS LIST_DIRECTORIES true "${STABLE_DIR}/generated/*")
-    
+    file(GLOB MODULE_INC_DIRS LIST_DIRECTORIES true "${REPO_ROOT}/*/current/include")
+
     set(HEADER_COUNT 0)
-    foreach(module_dir ${MODULE_DIRS})
-        if (IS_DIRECTORY "${module_dir}")
-            get_filename_component(module_name "${module_dir}" NAME)
-            
-            # Find all headers in this module
-            file(GLOB_RECURSE MODULE_HEADERS "${module_dir}/*.h")
+    foreach(inc_dir ${MODULE_INC_DIRS})
+        if (IS_DIRECTORY "${inc_dir}")
+            # Find all headers in this module's include tree
+            file(GLOB_RECURSE MODULE_HEADERS "${inc_dir}/*.h")
             foreach(header ${MODULE_HEADERS})
-                file(RELATIVE_PATH rel_path "${STABLE_DIR}/generated" "${header}")
+                file(RELATIVE_PATH rel_path "${REPO_ROOT}" "${header}")
                 get_filename_component(dest_dir "${HALIF_INC_OUT_DIR}/${rel_path}" DIRECTORY)
                 file(MAKE_DIRECTORY "${dest_dir}")
                 file(COPY_FILE "${header}" "${HALIF_INC_OUT_DIR}/${rel_path}")
@@ -109,24 +108,24 @@ if (INTERFACE_TARGET STREQUAL "all")
             endforeach()
         endif()
     endforeach()
-    
+
     message(STATUS "Staged ${HEADER_COUNT} HAL interface headers to ${HALIF_INC_OUT_DIR}")
 else()
     # Stage single module headers
-    set(MODULE_HEADER_DIR "${STABLE_DIR}/generated/${INTERFACE_TARGET}")
-    
+    set(MODULE_HEADER_DIR "${REPO_ROOT}/${INTERFACE_TARGET}/current/include")
+
     if (EXISTS "${MODULE_HEADER_DIR}")
         file(GLOB_RECURSE MODULE_HEADERS "${MODULE_HEADER_DIR}/*.h")
-        
+
         set(HEADER_COUNT 0)
         foreach(header ${MODULE_HEADERS})
-            file(RELATIVE_PATH rel_path "${STABLE_DIR}/generated" "${header}")
+            file(RELATIVE_PATH rel_path "${REPO_ROOT}" "${header}")
             get_filename_component(dest_dir "${HALIF_INC_OUT_DIR}/${rel_path}" DIRECTORY)
             file(MAKE_DIRECTORY "${dest_dir}")
             file(COPY_FILE "${header}" "${HALIF_INC_OUT_DIR}/${rel_path}")
             math(EXPR HEADER_COUNT "${HEADER_COUNT} + 1")
         endforeach()
-        
+
         message(STATUS "Staged ${HEADER_COUNT} headers for ${INTERFACE_TARGET} to ${HALIF_INC_OUT_DIR}")
     else()
         message(WARNING "No headers found for ${INTERFACE_TARGET} in ${MODULE_HEADER_DIR}")
@@ -142,7 +141,7 @@ message(STATUS "  ${OUT_DIR}/target/bin/                - Binder servicemanager 
 message(STATUS "  ${OUT_DIR}/target/lib/binder/        - Binder runtime libraries")
 message(STATUS "  ${OUT_DIR}/target/lib/halif/         - HAL interface libraries")
 message(STATUS "  ${OUT_DIR}/build/include/binder_sdk/ - Binder headers (build-time)")
-message(STATUS "  ${STABLE_DIR}/generated/             - HAL interface headers (build-time)")
+message(STATUS "  ${OUT_DIR}/build/include/            - HAL interface headers (build-time)")
 message(STATUS "")
 message(STATUS "Deploy to target: scp -r ${OUT_DIR}/target/{bin,lib} device:/usr/")
 message(STATUS "                  (headers not needed on target)")

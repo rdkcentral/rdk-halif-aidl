@@ -151,9 +151,13 @@ message(STATUS "✓ Binder SDK found at ${BINDER_SDK_DIR}")
 # Set up paths for module builds to use binder SDK
 #######################################################################
 
-# Point binder build system to where generated code should be placed
-# The binder system uses this directly without knowing about project structure
-set(LINUX_BINDER_AIDL_ROOT_OUT "${CMAKE_SOURCE_DIR}/stable/generated")
+# Module-local generation: each component's generated C++ lives in its own
+# directory, <module>/<version>/{include,src}. LINUX_BINDER_AIDL_GENERATED_ROOT
+# is the base the binder build system resolves <module>/<version>/ against, so
+# it is the repo root. LINUX_BINDER_AIDL_ROOT_OUT is the intermediate out/ tree
+# (dependency graph, preprocessed AIDL) and is kept separate.
+set(LINUX_BINDER_AIDL_GENERATED_ROOT "${CMAKE_SOURCE_DIR}")
+set(LINUX_BINDER_AIDL_ROOT_OUT "${OUT_DIR}/aidl")
 
 # Separate base directories for headers (build-time) vs runtime (libs/bins)
 if (NOT DEFINED BINDER_SDK_INCLUDE_DIR)
@@ -221,20 +225,19 @@ target_build_interfaces_libraries()
 
 message(STATUS "Staging generated headers to ${OUT_DIR}/target/include/halif/...")
 
-# Determine which modules to stage headers for
+# Module-local layout: generated headers live in <module>/current/include/.
 if (INTERFACE_TARGET STREQUAL "all")
-    file(GLOB MODULE_DIRS LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/stable/generated/*")
+    file(GLOB MODULE_INC_DIRS LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/*/current/include")
 else()
-    set(MODULE_DIRS "${CMAKE_SOURCE_DIR}/stable/generated/${INTERFACE_TARGET}")
+    set(MODULE_INC_DIRS "${CMAKE_SOURCE_DIR}/${INTERFACE_TARGET}/current/include")
 endif()
 
-# Copy headers from stable/generated/ to out/build/include/
-foreach(module_dir ${MODULE_DIRS})
-    if (IS_DIRECTORY "${module_dir}")
-        get_filename_component(module_name "${module_dir}" NAME)
-        file(GLOB_RECURSE MODULE_HEADERS "${module_dir}/*.h")
+# Copy generated headers from <module>/current/include/ to out/build/include/
+foreach(inc_dir ${MODULE_INC_DIRS})
+    if (IS_DIRECTORY "${inc_dir}")
+        file(GLOB_RECURSE MODULE_HEADERS "${inc_dir}/*.h")
         foreach(header ${MODULE_HEADERS})
-            file(RELATIVE_PATH rel_path "${CMAKE_SOURCE_DIR}/stable/generated" "${header}")
+            file(RELATIVE_PATH rel_path "${CMAKE_SOURCE_DIR}" "${header}")
             get_filename_component(dest_dir "${OUT_DIR}/build/include/${rel_path}" DIRECTORY)
             file(MAKE_DIRECTORY "${dest_dir}")
             file(COPY_FILE "${header}" "${OUT_DIR}/build/include/${rel_path}")
@@ -251,7 +254,7 @@ add_custom_target(stage_modules ALL
     COMMAND ${CMAKE_COMMAND}
         -DOUT_DIR=${OUT_DIR}
         -DBUILD_DIR=${CMAKE_BINARY_DIR}
-        -DSTABLE_DIR=${CMAKE_SOURCE_DIR}/stable
+        -DREPO_ROOT=${CMAKE_SOURCE_DIR}
         -DINTERFACE_TARGET=${INTERFACE_TARGET}
         -DAIDL_SRC_VERSION=${AIDL_SRC_VERSION}
         -P ${CMAKE_SOURCE_DIR}/cmake_stage_modules.cmake

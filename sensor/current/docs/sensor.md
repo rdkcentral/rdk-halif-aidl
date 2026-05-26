@@ -6,6 +6,7 @@
     |||
     |-|-|
     |**Interface Definition**|[sensor/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/sensor/current)|
+    |**Interface Version**|`current`|
     |**API Documentation**| *TBD* |
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
     |**VTS Tests**| TBC |

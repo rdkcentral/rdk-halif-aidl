@@ -11,7 +11,8 @@ The HAL performs comprehensive validation both before and after writing, includi
 !!! info "References"
     |||
     |-|-|
-    |**Interface Definition**|[flash/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/flash/current)|
+    |**Interface Definition**|[flash/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/flash/current)|
+    |**Interface Version**|`current`|
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
 
 ---

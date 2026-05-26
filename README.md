@@ -20,11 +20,10 @@ graph TB
         B --> C[libbinder.so<br/>libutils.so<br/>AIDL compiler]
     end
 
-    subgraph "Stage 2: HAL Modules"
-        D[stable/aidl/] --> E[Pre-generated C++<br/>stable/generated/]
-        E -->|cmake build| F[Module Libraries]
+    subgraph "Stage 2: HAL Modules (module-local)"
+        D["&lt;module&gt;/current/<br/>AIDL + generated C++"] -->|cmake build| F[Module Libraries]
         C -->|links against| F
-        F --> G[out/lib/<br/>out/include/]
+        F --> G[out/target/lib/halif/]
     end
 
     B -.->|SDK dependency| F
@@ -37,145 +36,116 @@ graph TB
 
 ### Directory Structure
 
+Each component is **self-contained**: its AIDL, generated C++, docs and build
+configuration all live within the component directory. A component has a
+`current/` (in-development) directory and one directory per **released
+version**. There is no central `stable/` tree.
+
 ```text
 rdk-halif-aidl/
 ├── build-tools/
 │   └── linux_binder_idl/     # Android Binder SDK (independent project)
-├── stable/
-│   ├── aidl/                 # AIDL interface definitions (versioned)
-│   ├── generated/            # Pre-generated C++ code (committed)
-│   └── dependencies.txt      # Module dependency graph
 ├── out/
-│   ├── target/               # Complete deployment SDK
-│   │   ├── lib/
-│   │   │   ├── binder/       # Binder runtime libraries
-│   │   │   └── halif/        # HAL interface libraries
-│   │   ├── include/
-│   │   │   ├── binder_sdk/   # Binder headers
-│   │   │   └── halif/        # HAL interface headers
-│   │   ├── bin/              # AIDL compiler
-│   │   └── .sdk_ready        # Completion marker
-└── <module>/                 # HAL module directories (boot, videodecoder, etc.)
-    └── current/
-        ├── CMakeLists.txt    # Module build configuration
-        ├── hfp-*.yaml        # HAL Feature Profile
-        └── com/rdk/hal/      # AIDL source files
+│   └── target/               # Complete deployment SDK
+│       ├── lib/
+│       │   ├── binder/       # Binder runtime libraries
+│       │   └── halif/        # HAL interface libraries (lib<module>-vcurrent-cpp.so)
+│       ├── bin/              # AIDL compiler
+│       └── .sdk_ready        # Completion marker
+├── versions.yaml             # Which version of each component to build
+└── <module>/                 # HAL component directory (boot, videodecoder, ...)
+    ├── metadata.yaml         # Component identity, version, RAG status
+    ├── current/              # In-development version
+    │   ├── interface.yaml    # AIDL interface definition (layout: module-local)
+    │   ├── CMakeLists.txt    # Component build configuration
+    │   ├── hfp-*.yaml        # HAL Feature Profile
+    │   ├── com/rdk/hal/      # AIDL source files
+    │   ├── include/ src/     # Generated C++ (committed)
+    │   └── docs/             # Component documentation
+    └── <version>/            # A released snapshot (e.g. 0.1.0.0) — same layout
+        └── .hash             # Integrity hash of the released AIDL contract
 ```
+
+A **release** is a plain copy of `current/` into a `<version>/` directory
+(`./release.sh`), where `<version>` is the component's `metadata.yaml`
+`version:`. Released directories are controlled, immutable snapshots.
 
 ## Quick Start
 
-### Development Environment (Interface Authors)
+### Development workflow (interface authors)
 
-**Purpose**: Modify AIDL interfaces, generate C++ code, validate compatibility
+**Purpose**: modify AIDL interfaces, regenerate C++, build the libraries.
 
 ```bash
-# 1. Build Binder SDK for development
+# 1. Build the Binder SDK (once)
 ./build_binder.sh
 
-# 2. Modify AIDL interfaces in <module>/current/
+# 2. Edit AIDL in a component's current/ directory
 vim boot/current/com/rdk/hal/boot/IBoot.aidl
 
-# 3. Build and validate interface
-./build_interfaces.sh boot
+# 3. Build — regenerates the module-local C++ and compiles the library
+./build_modules.sh boot          # one component
+./build_modules.sh all           # every component
 
-# 4. Commit generated code
-git add stable/
+# 4. Commit — AIDL and generated C++ live together in the component
+git add boot/current/
 git commit -m "Update boot interface"
 ```
 
-**Development Tools**: `build_binder.sh`, `build_interfaces.sh`, `freeze_interface.sh`
+Generated C++ is written into `boot/current/{include,src}/` and committed, so a
+production build needs no Python or AIDL toolchain.
 
-⚠️ **These scripts are NOT used in production builds**
+### Releasing a component
 
-### Production Build (Yocto/BitBake)
-
-**Purpose**: Compile pre-generated C++ code into production libraries
+A release snapshots `current/` into a versioned directory, taking the version
+from the component's `metadata.yaml`:
 
 ```bash
-# Prerequisites:
-# - linux_binder SDK (Yocto recipe dependency: DEPENDS = "linux-binder")
-# - Pre-generated code in stable/generated/ (committed to repo)
-
-# Build HAL libraries using CMake
-cmake -S . -B build \
-      -DINTERFACE_TARGET=all \
-      -DAIDL_SRC_VERSION=current \
-      -DBINDER_SDK_DIR=${STAGING_DIR}/usr
-
-cmake --build build -j$(nproc)
-
-# Output: out/target/lib/halif/*.so
-#         out/build/include/*
+./release.sh boot     # snapshot boot/current/ -> boot/<version>/
+./release.sh          # release every component not yet released
 ```
 
-**Production Requirements**:
-
-- ✅ CMake 3.8+
-- ✅ linux_binder SDK (Yocto dependency: `DEPENDS = "linux-binder"` - see [BUILD.md](build-tools/linux_binder_idl/BUILD.md) for recipe)
-- ✅ Pre-generated C++ code (stable/generated/)
-- ❌ Does NOT require: Python, AIDL compiler, interface generation
-
-## Build Workflows
-
-### Development Workflow (Interface Authors Only)
-
-**When to use**: Modifying AIDL interface definitions
+### Production build (Yocto/BitBake)
 
 ```bash
-# 1. Build Binder SDK with AIDL compiler (development only)
-./build_binder.sh
-
-# 2. Modify interfaces, generate C++, validate
-./build_interfaces.sh <module>
-
-# 3. Freeze versions when stable
-./freeze_interface.sh <module>
-```
-
-**What happens**:
-
-- AIDL compiler generates C++ from `.aidl` files
-- Generated code placed in `stable/generated/`
-- Compatibility validation runs
-- Generated code is committed to repository
-
-**Tools used**: Python scripts, AIDL compiler, validation framework
-
----
-
-### Production Workflow (Yocto/BitBake)
-
-**When to use**: Building deployable HAL libraries from pre-generated code
-
-```bash
-# Prerequisites (provided by Yocto dependency system):
-# - linux_binder SDK automatically staged to ${STAGING_DIR}/usr
-#   (via DEPENDS = "linux-binder" in recipe)
-# - libbinder.so, libutils.so, aidl-cpp headers
-
-# Build HAL libraries
-cmake -S . -B build \
-      -DINTERFACE_TARGET=all \
-      -DBINDER_SDK_DIR=${STAGING_DIR}/usr
-
+# linux_binder SDK is staged by the Yocto dependency system (DEPENDS = "linux-binder").
+# A staged SDK is flat, so headers and libs share one prefix — pass both
+# BINDER_SDK_DIR and BINDER_SDK_INCLUDE_DIR (they differ only in the local dev tree).
+cmake -S . -B build -DINTERFACE_TARGET=all \
+      -DBINDER_SDK_DIR=${STAGING_DIR}/usr \
+      -DBINDER_SDK_INCLUDE_DIR=${STAGING_DIR}/usr
 cmake --build build
 cmake --install build
 ```
 
-**What happens**:
+Compiles the committed module-local C++ into `lib<module>-vcurrent-cpp.so` and
+installs to `${OUT_DIR}/target/lib/halif/`. Requires only CMake, a C++ compiler
+and the linux_binder SDK — no Python, no AIDL compiler.
 
-- CMake compiles pre-generated C++ (stable/generated/)
-- Links against system-provided linux_binder SDK
-- Produces `lib{module}-vcurrent-cpp.so` libraries
-- Installs to `${OUT_DIR}/target/lib/halif/`
+### Version manifest (`versions.yaml`)
 
-**Tools used**: CMake, C++ compiler, system linker
+`versions.yaml` is the manifest of which version of each component to build —
+`current` (the in-development interface) or a released `<version>/` snapshot.
+`./build_modules.sh manifest` builds the set it lists:
 
-**Does NOT require**:
+```bash
+./build_modules.sh manifest               # build everything in versions.yaml
+./build_modules.sh manifest --file alt.yaml
+```
 
-- ❌ `build_binder.sh` (SDK from build system)
-- ❌ `build_interfaces.sh` (C++ pre-generated)
-- ❌ Python or AIDL compiler
+A component absent from the manifest falls back to its `default:` entry.
+
+## Scripts
+
+| Script | Role |
+| ------ | ---- |
+| `build_binder.sh` | **Stage 1** — clone, build and install the Binder SDK into `out/target/`. |
+| `build_modules.sh` | **Stage 3** — compile the HAL libraries (`.so`) from each component's generated C++. The CMake configure step regenerates any missing sources. `build_modules.sh manifest` builds the set in `versions.yaml`. |
+| `build_interfaces.sh` | **Admin / orchestration** — stages the Binder SDK then delegates the build to `build_modules.sh`; also test/clean helpers. |
+| `release.sh` | Snapshot a component's `current/` into a versioned, controlled release directory (`<module>/<version>/`). |
+| `check_aidl_changes.sh` | Hash-based detection of AIDL source changes. |
+| `docs/build_docs.sh` | Build or serve the documentation site (mkdocs). |
+| `freeze_interface.sh` | Legacy AIDL-freeze tooling — retained for reference, not used by the module-local release model. |
 
 ---
 
@@ -192,7 +162,8 @@ do_configure() {
     CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" LDFLAGS="${LDFLAGS}" \
     cmake -S ${S} -B ${B} \
           -DINTERFACE_TARGET=all \
-          -DBINDER_SDK_DIR=${STAGING_DIR}${prefix}
+          -DBINDER_SDK_DIR=${STAGING_DIR}${prefix} \
+          -DBINDER_SDK_INCLUDE_DIR=${STAGING_DIR}${prefix}
 }
 
 do_compile() {
@@ -227,12 +198,17 @@ Yocto's build system automatically provides these variables with appropriate cro
 
 Used when building HAL libraries for deployment:
 
-| Variable            | Purpose                     | Default                 | Required |
-|---------------------|-----------------------------|-------------------------|----------|
-| `INTERFACE_TARGET`  | Module(s) to build          | `all`                   | No       |
-| `AIDL_SRC_VERSION`  | Version to build            | `current`               | No       |
-| `BINDER_SDK_DIR`    | linux_binder SDK location   | `out/target`            | **Yes**  |
-| `OUT_DIR`           | Output directory            | `out`                   | No       |
+| Variable                 | Purpose                           | Default      | Required |
+|--------------------------|-----------------------------------|--------------|----------|
+| `INTERFACE_TARGET`       | Module(s) to build                | `all`        | No       |
+| `AIDL_SRC_VERSION`       | Version to build                  | `current`    | No       |
+| `BINDER_SDK_DIR`         | linux_binder SDK libs location    | `out/target` | **Yes**  |
+| `BINDER_SDK_INCLUDE_DIR` | linux_binder SDK headers location | `out/build`  | Yocto    |
+| `OUT_DIR`                | Output directory                  | `out`        | No       |
+
+`BINDER_SDK_DIR` and `BINDER_SDK_INCLUDE_DIR` differ only in the local dev
+tree (libs in `out/target`, headers in `out/build`). A Yocto-staged SDK is
+flat, so set both to the same staging prefix.
 
 **Example**:
 
@@ -265,6 +241,10 @@ See [TWO_STAGE_BUILD.md](TWO_STAGE_BUILD.md) for detailed workflows.
   - 32-bit userspace on 64-bit kernel support
 
 - **[TWO_STAGE_BUILD.md](TWO_STAGE_BUILD.md)** - Detailed build workflows for both development and production
+
+- **[tests/README.md](tests/README.md)** - On-demand build verification
+  - `tests/smoke_test.sh` - exercises the `all`, `manifest` and per-version build paths
+  - `tests/fake-yocto/` - emulates the Yocto production build offline
 
 ## Copyright and License
 
