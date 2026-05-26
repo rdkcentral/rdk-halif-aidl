@@ -1,8 +1,0 @@
-aidl_interface:
-  name: keyvault
-  srcs:
-    - com/rdk/hal/keyvault/*.aidl
-  imports:
-    - cryptoengine
-  stability: vintf
-  layout: module-local
