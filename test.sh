@@ -654,7 +654,7 @@ test_10() {
     echo ""
     echo "==> Test 10.4: Build with CMAKE_BUILD_TYPE=Debug"
     if cmake -S . -B build/test10-debug \
-        -DINTERFACE_TARGET=flash \
+        -DINTERFACE_TARGET=firmwareupdate \
         -DAIDL_SRC_VERSION=current \
         -DCMAKE_BUILD_TYPE=Debug \
         -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
@@ -662,7 +662,7 @@ test_10() {
        cmake --build build/test10-debug -- -j"$(nproc)" \
         >/tmp/cmake_test10_debug_build.log 2>&1; then
         echo "✅ Debug build successful"
-        test -f ./out/target/lib/halif/libflash-vcurrent-cpp.so && echo "✅ Debug library created"
+        test -f ./out/target/lib/halif/libfirmwareupdate-vcurrent-cpp.so && echo "✅ Debug library created"
     else
         echo "❌ Debug build failed!"
         return 1

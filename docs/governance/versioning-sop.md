@@ -310,7 +310,7 @@ The repository contains **33 components** across two responsibility types:
 | `deepsleep` | Deep sleep and low-power state management |
 | `deviceinfo` | Device information and platform capability reporting |
 | `ffv` | Far-field voice capture and mic array processing |
-| `flash` | Firmware image storage and update management |
+| `firmwareupdate` | Update lifecycle for multiple firmware types at multiple locations across the system |
 | `indicator` | LED and visual indicator state management |
 | `panel` | Front panel display and button control |
 | `r4ce` | RF4CE remote control protocol and pairing |

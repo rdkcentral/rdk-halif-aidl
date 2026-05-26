@@ -101,6 +101,11 @@ for comp in $COMPONENTS; do
     create_label "component:${comp}" "$COMPONENT_COLOR" "HAL component: ${comp}"
 done
 
+# Deprecated component labels — kept so historical PRs retain their labels.
+# `flash` was renamed to `firmwareupdate` in #523. Do not remove this label;
+# the directory is gone so it will not be auto-recreated above.
+create_label "component:flash" "$COMPONENT_COLOR" "HAL component: flash (deprecated — renamed to firmwareupdate, #523)"
+
 echo ""
 
 # ---------------------------------------------------------------------------

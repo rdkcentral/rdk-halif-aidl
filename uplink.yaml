@@ -16,7 +16,7 @@
 #
 # Jira statuses last refreshed: 2026-03-20T23:00Z (must be re-pulled from
 # Confluence before this file is relied on for current status).
-# Last edited: 2026-05-25 — added drm (placeholders); removed cdm (deprecated).
+# Last edited: 2026-05-26 — renamed flash -> firmwareupdate (see #523).
 
 # SOC Components
 videodecoder:
@@ -225,9 +225,10 @@ broadcast:
   vts_team: ~
   vdevice: ~
 
-flash:
-  metadata: flash/metadata.yaml
-  feature: { id: ENT-8658, url: "https://ccp.sys.comcast.net/browse/ENT-8658", title: "RDK-E Flash HAL", status: Ideation }
+firmwareupdate:
+  metadata: firmwareupdate/metadata.yaml
+  # Renamed from `flash` (see #523). Reuses the ENT-8658 initiative, retitled in Jira to "RDK-E Firmware Update HAL".
+  feature: { id: ENT-8658, url: "https://ccp.sys.comcast.net/browse/ENT-8658", title: "RDK-E Firmware Update HAL (formerly Flash)", status: Ideation }
   hal_spec: ~
   mw_review: ~
   mw_teams: ~

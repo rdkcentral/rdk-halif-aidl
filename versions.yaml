@@ -31,7 +31,7 @@ components:
   deepsleep:      current
   deviceinfo:     current
   drm:            current
-  flash:          current
+  firmwareupdate: current
   hdmicec:        current
   hdmiinput:      current
   hdmioutput:     current
