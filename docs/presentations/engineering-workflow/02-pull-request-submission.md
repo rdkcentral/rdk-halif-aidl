@@ -3,7 +3,7 @@
 When a feature branch is ready, a **Pull Request** is raised:
 
 - PR targets the **develop** branch
-- Labels applied: `breaking-change`, `documentation`, or none
+- Labels applied: `breaking-change`, `documentation`, or none (default minor)
 - **CODEOWNERS** auto-assigns the `rdk-halif-aidl-pr-review-team`
 - Automated CI/CD checks triggered immediately
 
