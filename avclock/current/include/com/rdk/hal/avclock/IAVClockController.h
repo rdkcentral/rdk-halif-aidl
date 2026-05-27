@@ -22,7 +22,6 @@ public:
   static const int32_t VERSION = 1;
   const std::string HASH = "notfrozen";
   static constexpr char* HASHVALUE = "notfrozen";
-  virtual ::android::binder::Status getProperty(::com::rdk::hal::avclock::Property property, ::std::optional<::com::rdk::hal::PropertyValue>* _aidl_return) = 0;
   virtual ::android::binder::Status setProperty(::com::rdk::hal::avclock::Property property, const ::com::rdk::hal::PropertyValue& propertyValue, bool* _aidl_return) = 0;
   virtual ::android::binder::Status start() = 0;
   virtual ::android::binder::Status stop() = 0;
@@ -40,9 +39,6 @@ class IAVClockControllerDefault : public IAVClockController {
 public:
   ::android::IBinder* onAsBinder() override {
     return nullptr;
-  }
-  ::android::binder::Status getProperty(::com::rdk::hal::avclock::Property /*property*/, ::std::optional<::com::rdk::hal::PropertyValue>* /*_aidl_return*/) override {
-    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status setProperty(::com::rdk::hal::avclock::Property /*property*/, const ::com::rdk::hal::PropertyValue& /*propertyValue*/, bool* /*_aidl_return*/) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
