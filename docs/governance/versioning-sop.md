@@ -95,7 +95,7 @@ add or correct them as needed.
 | PR label | Implied bump | Applied when |
 |----------|--------------|--------------|
 | `breaking-change` | **Generation** (`0.g.m.p` → `0.(g+1).0.0`) | Conventional-commit `!:` marker in the PR title (e.g. `feat(avclock)!: ...`) |
-| `documentation-change` | **Patch** (`0.g.m.p` → `0.g.m.(p+1)`) | Every changed file is doc-like (see `scripts/configure_pr.sh:is_doc()`) |
+| `documentation` | **Patch** (`0.g.m.p` → `0.g.m.(p+1)`) | Every changed file is doc-like (see `scripts/configure_pr.sh:is_doc()`) |
 | (no specific label) | **Minor** (`0.g.m.p` → `0.g.(m+1).0`) | Default for any feature addition or non-breaking change |
 
 The PR author edits the component's `metadata.yaml` `version:` to the new
@@ -167,8 +167,8 @@ Releases are **milestone-driven** with **patch releases on demand**:
   patch release (e.g. `0.15.1`) using the same release ceremony.
 
 Releases are **not** cut on every PR merge. Multiple changes batch into one
-coherent release narrative. See [`0.15.0` and `0.20.0` release notes](../releases/)
-for the pattern.
+coherent release narrative. See the [0.20.0](../releases/0.20.0.md) and
+[0.15.0](../releases/0.15.0.md) release notes for the pattern.
 
 ### Post-Baseline: AIDL Stable Versioning
 
@@ -513,28 +513,34 @@ Idempotent — safe to re-run.
 |-------|---------|
 | `component:<name>` | Maps PRs to a specific HAL/VSI component (auto-detected from metadata.yaml) |
 | `breaking-change` | Breaking interface change — bumps generation |
-| `documentation-change` | Documentation-only change — no interface change, bumps patch |
+| `documentation` | Documentation-only change — no interface change, bumps patch |
 | `scope:infrastructure` | Repo tooling, CI/CD, governance |
 | `scope:overview` | Tracking ticket spanning multiple components |
 
-The label determines the version bump category at release time:
+The label signals the bump intent; the PR author bumps `metadata.yaml`
+`version:` accordingly as part of the PR diff (see [How PRs Drive the
+Version Bump](#how-prs-drive-the-version-bump) above for the full subsume
+rule and snapshot-timing model):
 
 | Label | Version bump | Example |
 |-------|-------------|---------|
 | `breaking-change` | Bump generation, reset minor + patch | `0.1.2.1` → `0.2.0.0` |
 | *(no label)* | Bump minor, reset patch | `0.1.0.0` → `0.1.1.0` |
-| `documentation-change` | Bump patch | `0.1.1.0` → `0.1.1.1` |
+| `documentation` | Bump patch | `0.1.1.0` → `0.1.1.1` |
 
 Release-time execution (manual):
 
 ```bash
-# Preview component version bumps since the previous release tag
-./scripts/release.sh
-
-# Apply updates to component metadata.yaml files
-./scripts/release.sh --apply
+# Snapshot every component whose metadata.yaml version: differs from
+# its currently-released <module>/<version>/ directory. Idempotent.
+./release.sh
 ```
 
-All other state (RAG status, reviewer sign-off, lifecycle dates) is tracked in
-`metadata.yaml` — the Single Source of Truth. PRs are assigned directly to
-GitHub teams for review.
+`./release.sh` reads `metadata.yaml` `version:` verbatim — it does not
+compute bumps; that's the PR author's job, signalled by the label and
+validated by reviewers. Snapshots materialise only at release time, never
+in feature PRs.
+
+All other state (RAG status, reviewer sign-off, lifecycle dates) is tracked
+in `metadata.yaml` — the Single Source of Truth. PRs are assigned directly
+to GitHub teams for review.
