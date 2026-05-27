@@ -80,6 +80,36 @@ parcelable FrameMetadata {
 	boolean lowLatency;
 
 	/**
+	 * In-bitstream end-of-stream marker.
+	 *
+	 * Set true by the HAL on an output frame when it parses a codec-level
+	 * end-of-stream marker from the audio elementary stream itself - for
+	 * example, Dolby TrueHD substream termination, or any analogous
+	 * end-of-sequence indicator defined by the source codec.
+	 *
+	 * Many common audio formats (raw PCM, MP3, AAC LC, AC-3) carry no
+	 * in-stream EOS marker; for those, this flag is always false.
+	 *
+	 * Advisory and informational only:
+	 * - It does NOT end the decode session and never triggers teardown.
+	 * - It may appear more than once in a session - at a splice or
+	 *   concatenation point an end-of-sequence is a sequence boundary, not
+	 *   necessarily end-of-presentation.
+	 * - No callback fires for it; it is surfaced purely as this flag for any
+	 *   consumer that cares (e.g. splice-aware middleware).
+	 *
+	 * Client-signalled EOS is NOT carried here. The discrete EOS signal flows
+	 * via `IAudioDecoderController.signalEndOfStream()`: the HAL drains every
+	 * held frame, and then fires
+	 * `IAudioDecoderControllerListener.onEndOfStream()` exactly once after the
+	 * final `onFrameOutput()`.
+	 *
+	 * @see IAudioDecoderController.signalEndOfStream()
+	 * @see IAudioDecoderControllerListener.onEndOfStream()
+	 */
+	boolean bitstreamEOS;
+
+	/**
 	 * Discontinuity indicator where the PTS for this frame is likely to be discontinuous to the previous.
 	 */
 	boolean discontinuity;

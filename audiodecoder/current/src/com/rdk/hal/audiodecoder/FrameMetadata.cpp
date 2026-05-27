@@ -67,6 +67,14 @@ namespace audiodecoder {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
+  _aidl_ret_status = _aidl_parcel->readBool(&bitstreamEOS);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
+    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
+    return _aidl_ret_status;
+  }
   _aidl_ret_status = _aidl_parcel->readBool(&discontinuity);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -131,6 +139,10 @@ namespace audiodecoder {
     return _aidl_ret_status;
   }
   _aidl_ret_status = _aidl_parcel->writeBool(lowLatency);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->writeBool(bitstreamEOS);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }

@@ -23,6 +23,7 @@ public:
   static constexpr uint32_t TRANSACTION_setStreamResolution = ::android::IBinder::FIRST_CALL_TRANSACTION + 11;
   static constexpr uint32_t TRANSACTION_setFrameRate = ::android::IBinder::FIRST_CALL_TRANSACTION + 12;
   static constexpr uint32_t TRANSACTION_setDolbyVisionLayerFlags = ::android::IBinder::FIRST_CALL_TRANSACTION + 13;
+  static constexpr uint32_t TRANSACTION_setPixelAspectRatio = ::android::IBinder::FIRST_CALL_TRANSACTION + 14;
   static constexpr uint32_t TRANSACTION_getInterfaceVersion = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777214;
   static constexpr uint32_t TRANSACTION_getInterfaceHash = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777213;
   explicit BnVideoDecoderController();
@@ -76,6 +77,9 @@ public:
   }
   ::android::binder::Status setDolbyVisionLayerFlags(bool blPresent, bool elPresent) override {
     return _aidl_delegate->setDolbyVisionLayerFlags(blPresent, elPresent);
+  }
+  ::android::binder::Status setPixelAspectRatio(int32_t parX, int32_t parY) override {
+    return _aidl_delegate->setPixelAspectRatio(parX, parY);
   }
   int32_t getInterfaceVersion() override {
     int32_t _delegator_ver = BnVideoDecoderController::getInterfaceVersion();
