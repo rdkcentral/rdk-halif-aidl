@@ -28,15 +28,25 @@ package com.rdk.hal.farfieldvoice;
 oneway interface IFarFieldVoiceControllerListener {
 
     /**
-	 * Callback when a keyword is detected on the Keyword channel.
+     * Invoked when a keyword (wake word) is detected on the Keyword Audio channel.
+     *
+     * Audio samples corresponding to the detected utterance begin streaming on the
+     * channel's pipe immediately after this callback fires.
      */
     void onKeywordDetected();
 
     /**
-	 * Callback when an End of voice command is detected on the Keyword channel following the keyword.
+     * Invoked when the end of a spoken command is detected on the Keyword Audio
+     * channel, immediately following the wake word/keyword.
      *
-     * @param[in] sampleOffset      Keyword channel sample offset to the end of voice command.
-     * @param[in] timedOut          Indicates if timed out detecting end of command.
+     * @param[in] sampleOffset  The sample offset (relative to the Keyword Audio
+     *                          channel) marking the end of the detected voice
+     *                          command. A value of zero means the first sample
+     *                          written after the channel was opened.
+     * @param[in] timedOut      `true` if the end of command was not detected
+     *                          within the expected timeframe (i.e. detection
+     *                          timed out); `false` if the end was successfully
+     *                          detected.
      */
-    void onEndOfCommand(in int sampleOffset, boolean timedOut);
+    void onEndOfCommand(in int sampleOffset, in boolean timedOut);
 }
