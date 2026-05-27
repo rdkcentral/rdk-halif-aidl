@@ -7,8 +7,8 @@
 #include <com/rdk/hal/audiomixer/AQProcessor.h>
 #include <com/rdk/hal/audiomixer/OutputFormat.h>
 #include <com/rdk/hal/audiomixer/OutputPortProperty.h>
+#include <com/rdk/hal/audiomixer/OutputPortType.h>
 #include <com/rdk/hal/audiomixer/TranscodeFormat.h>
-#include <optional>
 #include <tuple>
 #include <utils/String16.h>
 #include <vector>
@@ -19,29 +19,30 @@ namespace hal {
 namespace audiomixer {
 class OutputPortCapabilities : public ::android::Parcelable {
 public:
-  ::std::optional<::android::String16> portName;
+  ::android::String16 portName;
+  ::com::rdk::hal::audiomixer::OutputPortType portType = ::com::rdk::hal::audiomixer::OutputPortType(0);
   ::std::vector<::com::rdk::hal::audiomixer::OutputPortProperty> supportedProperties;
   ::std::vector<::com::rdk::hal::audiomixer::OutputFormat> supportedOutputFormats;
   ::std::vector<::com::rdk::hal::audiomixer::TranscodeFormat> supportedTranscodeFormats;
   ::std::vector<::com::rdk::hal::audiomixer::AQProcessor> supportedAQProcessors;
   ::std::vector<::com::rdk::hal::audiomixer::AQParameter> supportedAQ;
   inline bool operator!=(const OutputPortCapabilities& rhs) const {
-    return std::tie(portName, supportedProperties, supportedOutputFormats, supportedTranscodeFormats, supportedAQProcessors, supportedAQ) != std::tie(rhs.portName, rhs.supportedProperties, rhs.supportedOutputFormats, rhs.supportedTranscodeFormats, rhs.supportedAQProcessors, rhs.supportedAQ);
+    return std::tie(portName, portType, supportedProperties, supportedOutputFormats, supportedTranscodeFormats, supportedAQProcessors, supportedAQ) != std::tie(rhs.portName, rhs.portType, rhs.supportedProperties, rhs.supportedOutputFormats, rhs.supportedTranscodeFormats, rhs.supportedAQProcessors, rhs.supportedAQ);
   }
   inline bool operator<(const OutputPortCapabilities& rhs) const {
-    return std::tie(portName, supportedProperties, supportedOutputFormats, supportedTranscodeFormats, supportedAQProcessors, supportedAQ) < std::tie(rhs.portName, rhs.supportedProperties, rhs.supportedOutputFormats, rhs.supportedTranscodeFormats, rhs.supportedAQProcessors, rhs.supportedAQ);
+    return std::tie(portName, portType, supportedProperties, supportedOutputFormats, supportedTranscodeFormats, supportedAQProcessors, supportedAQ) < std::tie(rhs.portName, rhs.portType, rhs.supportedProperties, rhs.supportedOutputFormats, rhs.supportedTranscodeFormats, rhs.supportedAQProcessors, rhs.supportedAQ);
   }
   inline bool operator<=(const OutputPortCapabilities& rhs) const {
-    return std::tie(portName, supportedProperties, supportedOutputFormats, supportedTranscodeFormats, supportedAQProcessors, supportedAQ) <= std::tie(rhs.portName, rhs.supportedProperties, rhs.supportedOutputFormats, rhs.supportedTranscodeFormats, rhs.supportedAQProcessors, rhs.supportedAQ);
+    return std::tie(portName, portType, supportedProperties, supportedOutputFormats, supportedTranscodeFormats, supportedAQProcessors, supportedAQ) <= std::tie(rhs.portName, rhs.portType, rhs.supportedProperties, rhs.supportedOutputFormats, rhs.supportedTranscodeFormats, rhs.supportedAQProcessors, rhs.supportedAQ);
   }
   inline bool operator==(const OutputPortCapabilities& rhs) const {
-    return std::tie(portName, supportedProperties, supportedOutputFormats, supportedTranscodeFormats, supportedAQProcessors, supportedAQ) == std::tie(rhs.portName, rhs.supportedProperties, rhs.supportedOutputFormats, rhs.supportedTranscodeFormats, rhs.supportedAQProcessors, rhs.supportedAQ);
+    return std::tie(portName, portType, supportedProperties, supportedOutputFormats, supportedTranscodeFormats, supportedAQProcessors, supportedAQ) == std::tie(rhs.portName, rhs.portType, rhs.supportedProperties, rhs.supportedOutputFormats, rhs.supportedTranscodeFormats, rhs.supportedAQProcessors, rhs.supportedAQ);
   }
   inline bool operator>(const OutputPortCapabilities& rhs) const {
-    return std::tie(portName, supportedProperties, supportedOutputFormats, supportedTranscodeFormats, supportedAQProcessors, supportedAQ) > std::tie(rhs.portName, rhs.supportedProperties, rhs.supportedOutputFormats, rhs.supportedTranscodeFormats, rhs.supportedAQProcessors, rhs.supportedAQ);
+    return std::tie(portName, portType, supportedProperties, supportedOutputFormats, supportedTranscodeFormats, supportedAQProcessors, supportedAQ) > std::tie(rhs.portName, rhs.portType, rhs.supportedProperties, rhs.supportedOutputFormats, rhs.supportedTranscodeFormats, rhs.supportedAQProcessors, rhs.supportedAQ);
   }
   inline bool operator>=(const OutputPortCapabilities& rhs) const {
-    return std::tie(portName, supportedProperties, supportedOutputFormats, supportedTranscodeFormats, supportedAQProcessors, supportedAQ) >= std::tie(rhs.portName, rhs.supportedProperties, rhs.supportedOutputFormats, rhs.supportedTranscodeFormats, rhs.supportedAQProcessors, rhs.supportedAQ);
+    return std::tie(portName, portType, supportedProperties, supportedOutputFormats, supportedTranscodeFormats, supportedAQProcessors, supportedAQ) >= std::tie(rhs.portName, rhs.portType, rhs.supportedProperties, rhs.supportedOutputFormats, rhs.supportedTranscodeFormats, rhs.supportedAQProcessors, rhs.supportedAQ);
   }
 
   ::android::Parcelable::Stability getStability() const override { return ::android::Parcelable::Stability::STABILITY_VINTF; }
@@ -55,6 +56,7 @@ public:
     std::ostringstream os;
     os << "OutputPortCapabilities{";
     os << "portName: " << ::android::internal::ToString(portName);
+    os << ", portType: " << ::android::internal::ToString(portType);
     os << ", supportedProperties: " << ::android::internal::ToString(supportedProperties);
     os << ", supportedOutputFormats: " << ::android::internal::ToString(supportedOutputFormats);
     os << ", supportedTranscodeFormats: " << ::android::internal::ToString(supportedTranscodeFormats);

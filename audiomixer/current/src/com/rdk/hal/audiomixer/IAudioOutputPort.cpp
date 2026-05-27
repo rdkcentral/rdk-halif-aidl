@@ -56,7 +56,7 @@ BpAudioOutputPort::BpAudioOutputPort(const ::android::sp<::android::IBinder>& _a
   return _aidl_status;
 }
 
-::android::binder::Status BpAudioOutputPort::setProperty(::com::rdk::hal::audiomixer::OutputPortProperty property, const ::com::rdk::hal::PropertyValue& value, bool* _aidl_return) {
+::android::binder::Status BpAudioOutputPort::getState(::com::rdk::hal::audiomixer::State* _aidl_return) {
   ::android::Parcel _aidl_data;
   _aidl_data.markForBinder(remoteStrong());
   ::android::Parcel _aidl_reply;
@@ -66,17 +66,9 @@ BpAudioOutputPort::BpAudioOutputPort(const ::android::sp<::android::IBinder>& _a
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = _aidl_data.writeInt32(static_cast<int32_t>(property));
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = _aidl_data.writeParcelable(value);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    goto _aidl_error;
-  }
-  _aidl_ret_status = remote()->transact(BnAudioOutputPort::TRANSACTION_setProperty, _aidl_data, &_aidl_reply, 0);
+  _aidl_ret_status = remote()->transact(BnAudioOutputPort::TRANSACTION_getState, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IAudioOutputPort::getDefaultImpl())) {
-     return IAudioOutputPort::getDefaultImpl()->setProperty(property, value, _aidl_return);
+     return IAudioOutputPort::getDefaultImpl()->getState(_aidl_return);
   }
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -88,7 +80,7 @@ BpAudioOutputPort::BpAudioOutputPort(const ::android::sp<::android::IBinder>& _a
   if (!_aidl_status.isOk()) {
     return _aidl_status;
   }
-  _aidl_ret_status = _aidl_reply.readBool(_aidl_return);
+  _aidl_ret_status = _aidl_reply.readInt32(reinterpret_cast<int32_t *>(_aidl_return));
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
@@ -126,6 +118,80 @@ BpAudioOutputPort::BpAudioOutputPort(const ::android::sp<::android::IBinder>& _a
     return _aidl_status;
   }
   _aidl_ret_status = _aidl_reply.readParcelable(_aidl_return);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
+
+::android::binder::Status BpAudioOutputPort::open(const ::android::sp<::com::rdk::hal::audiomixer::IAudioOutputPortControllerListener>& listener, ::android::sp<::com::rdk::hal::audiomixer::IAudioOutputPortController>* _aidl_return) {
+  ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remoteStrong());
+  ::android::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::binder::Status _aidl_status;
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeStrongBinder(listener);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnAudioOutputPort::TRANSACTION_open, _aidl_data, &_aidl_reply, 0);
+  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IAudioOutputPort::getDefaultImpl())) {
+     return IAudioOutputPort::getDefaultImpl()->open(listener, _aidl_return);
+  }
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  if (!_aidl_status.isOk()) {
+    return _aidl_status;
+  }
+  _aidl_ret_status = _aidl_reply.readNullableStrongBinder(_aidl_return);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
+
+::android::binder::Status BpAudioOutputPort::close(const ::android::sp<::com::rdk::hal::audiomixer::IAudioOutputPortController>& controller, bool* _aidl_return) {
+  ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remoteStrong());
+  ::android::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::binder::Status _aidl_status;
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_data.writeStrongBinder(controller);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnAudioOutputPort::TRANSACTION_close, _aidl_data, &_aidl_reply, 0);
+  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IAudioOutputPort::getDefaultImpl())) {
+     return IAudioOutputPort::getDefaultImpl()->close(controller, _aidl_return);
+  }
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = _aidl_status.readFromParcel(_aidl_reply);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  if (!_aidl_status.isOk()) {
+    return _aidl_status;
+  }
+  _aidl_ret_status = _aidl_reply.readBool(_aidl_return);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
@@ -278,28 +344,14 @@ BnAudioOutputPort::BnAudioOutputPort()
     }
   }
   break;
-  case BnAudioOutputPort::TRANSACTION_setProperty:
+  case BnAudioOutputPort::TRANSACTION_getState:
   {
-    ::com::rdk::hal::audiomixer::OutputPortProperty in_property;
-    ::com::rdk::hal::PropertyValue in_value;
-    bool _aidl_return;
+    ::com::rdk::hal::audiomixer::State _aidl_return;
     if (!(_aidl_data.checkInterface(this))) {
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
     }
-    _aidl_ret_status = _aidl_data.readInt32(reinterpret_cast<int32_t *>(&in_property));
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    _aidl_ret_status = _aidl_data.readParcelable(&in_value);
-    if (((_aidl_ret_status) != (::android::OK))) {
-      break;
-    }
-    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
-      _aidl_ret_status = st.writeToParcel(_aidl_reply);
-      break;
-    }
-    ::android::binder::Status _aidl_status(setProperty(in_property, in_value, &_aidl_return));
+    ::android::binder::Status _aidl_status(getState(&_aidl_return));
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
@@ -307,7 +359,7 @@ BnAudioOutputPort::BnAudioOutputPort()
     if (!_aidl_status.isOk()) {
       break;
     }
-    _aidl_ret_status = _aidl_reply->writeBool(_aidl_return);
+    _aidl_ret_status = _aidl_reply->writeInt32(static_cast<int32_t>(_aidl_return));
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
@@ -338,6 +390,66 @@ BnAudioOutputPort::BnAudioOutputPort()
       break;
     }
     _aidl_ret_status = _aidl_reply->writeParcelable(_aidl_return);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+  }
+  break;
+  case BnAudioOutputPort::TRANSACTION_open:
+  {
+    ::android::sp<::com::rdk::hal::audiomixer::IAudioOutputPortControllerListener> in_listener;
+    ::android::sp<::com::rdk::hal::audiomixer::IAudioOutputPortController> _aidl_return;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readStrongBinder(&in_listener);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
+    ::android::binder::Status _aidl_status(open(in_listener, &_aidl_return));
+    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (!_aidl_status.isOk()) {
+      break;
+    }
+    _aidl_ret_status = _aidl_reply->writeStrongBinder(_aidl_return);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+  }
+  break;
+  case BnAudioOutputPort::TRANSACTION_close:
+  {
+    ::android::sp<::com::rdk::hal::audiomixer::IAudioOutputPortController> in_controller;
+    bool _aidl_return;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    _aidl_ret_status = _aidl_data.readStrongBinder(&in_controller);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
+    ::android::binder::Status _aidl_status(close(in_controller, &_aidl_return));
+    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (!_aidl_status.isOk()) {
+      break;
+    }
+    _aidl_ret_status = _aidl_reply->writeBool(_aidl_return);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }

@@ -15,7 +15,10 @@ public:
   static constexpr uint32_t TRANSACTION_stop = ::android::IBinder::FIRST_CALL_TRANSACTION + 3;
   static constexpr uint32_t TRANSACTION_flush = ::android::IBinder::FIRST_CALL_TRANSACTION + 4;
   static constexpr uint32_t TRANSACTION_signalDiscontinuity = ::android::IBinder::FIRST_CALL_TRANSACTION + 5;
-  static constexpr uint32_t TRANSACTION_signalEndOfStream = ::android::IBinder::FIRST_CALL_TRANSACTION + 6;
+  static constexpr uint32_t TRANSACTION_signalEOS = ::android::IBinder::FIRST_CALL_TRANSACTION + 6;
+  static constexpr uint32_t TRANSACTION_setInputVolume = ::android::IBinder::FIRST_CALL_TRANSACTION + 7;
+  static constexpr uint32_t TRANSACTION_getInputVolume = ::android::IBinder::FIRST_CALL_TRANSACTION + 8;
+  static constexpr uint32_t TRANSACTION_setInputVolumeRamp = ::android::IBinder::FIRST_CALL_TRANSACTION + 9;
   static constexpr uint32_t TRANSACTION_getInterfaceVersion = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777214;
   static constexpr uint32_t TRANSACTION_getInterfaceHash = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777213;
   explicit BnAudioMixerController();
@@ -46,8 +49,17 @@ public:
   ::android::binder::Status signalDiscontinuity() override {
     return _aidl_delegate->signalDiscontinuity();
   }
-  ::android::binder::Status signalEndOfStream() override {
-    return _aidl_delegate->signalEndOfStream();
+  ::android::binder::Status signalEOS() override {
+    return _aidl_delegate->signalEOS();
+  }
+  ::android::binder::Status setInputVolume(int32_t inputIndex, int32_t volume, bool* _aidl_return) override {
+    return _aidl_delegate->setInputVolume(inputIndex, volume, _aidl_return);
+  }
+  ::android::binder::Status getInputVolume(int32_t inputIndex, int32_t* _aidl_return) override {
+    return _aidl_delegate->getInputVolume(inputIndex, _aidl_return);
+  }
+  ::android::binder::Status setInputVolumeRamp(int32_t inputIndex, int32_t targetVolume, int32_t overMs, ::com::rdk::hal::audiosink::VolumeRamp curve, bool* _aidl_return) override {
+    return _aidl_delegate->setInputVolumeRamp(inputIndex, targetVolume, overMs, curve, _aidl_return);
   }
   int32_t getInterfaceVersion() override {
     int32_t _delegator_ver = BnAudioMixerController::getInterfaceVersion();

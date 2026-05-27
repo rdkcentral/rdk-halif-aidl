@@ -27,6 +27,14 @@ namespace audiomixer {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
+  _aidl_ret_status = _aidl_parcel->readInt32(reinterpret_cast<int32_t *>(&portType));
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
+    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
+    return _aidl_ret_status;
+  }
   _aidl_ret_status = _aidl_parcel->readEnumVector(&supportedProperties);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -71,6 +79,10 @@ namespace audiomixer {
   auto _aidl_start_pos = _aidl_parcel->dataPosition();
   _aidl_parcel->writeInt32(0);
   _aidl_ret_status = _aidl_parcel->writeString16(portName);
+  if (((_aidl_ret_status) != (::android::OK))) {
+    return _aidl_ret_status;
+  }
+  _aidl_ret_status = _aidl_parcel->writeInt32(static_cast<int32_t>(portType));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }

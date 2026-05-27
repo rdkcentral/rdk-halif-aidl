@@ -6,6 +6,7 @@
 #include <com/rdk/hal/PropertyValue.h>
 #include <com/rdk/hal/audiomixer/InputRouting.h>
 #include <com/rdk/hal/audiomixer/Property.h>
+#include <com/rdk/hal/audiosink/VolumeRamp.h>
 #include <cstdint>
 #include <utils/String16.h>
 #include <utils/StrongPointer.h>
@@ -27,7 +28,10 @@ public:
   virtual ::android::binder::Status stop() = 0;
   virtual ::android::binder::Status flush(bool reset) = 0;
   virtual ::android::binder::Status signalDiscontinuity() = 0;
-  virtual ::android::binder::Status signalEndOfStream() = 0;
+  virtual ::android::binder::Status signalEOS() = 0;
+  virtual ::android::binder::Status setInputVolume(int32_t inputIndex, int32_t volume, bool* _aidl_return) = 0;
+  virtual ::android::binder::Status getInputVolume(int32_t inputIndex, int32_t* _aidl_return) = 0;
+  virtual ::android::binder::Status setInputVolumeRamp(int32_t inputIndex, int32_t targetVolume, int32_t overMs, ::com::rdk::hal::audiosink::VolumeRamp curve, bool* _aidl_return) = 0;
   virtual int32_t getInterfaceVersion() = 0;
   virtual std::string getInterfaceHash() = 0;
 };  // class IAudioMixerController
@@ -55,7 +59,16 @@ public:
   ::android::binder::Status signalDiscontinuity() override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
-  ::android::binder::Status signalEndOfStream() override {
+  ::android::binder::Status signalEOS() override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status setInputVolume(int32_t /*inputIndex*/, int32_t /*volume*/, bool* /*_aidl_return*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status getInputVolume(int32_t /*inputIndex*/, int32_t* /*_aidl_return*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status setInputVolumeRamp(int32_t /*inputIndex*/, int32_t /*targetVolume*/, int32_t /*overMs*/, ::com::rdk::hal::audiosink::VolumeRamp /*curve*/, bool* /*_aidl_return*/) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   int32_t getInterfaceVersion() override {

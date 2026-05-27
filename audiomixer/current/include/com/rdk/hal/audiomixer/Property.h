@@ -15,6 +15,7 @@ enum class Property : int32_t {
   ACTIVE_AQ_PROFILE = 2,
   MIXING_MODE = 3,
   MUTE = 4,
+  FADER_LEVEL = 5,
 };
 }  // namespace audiomixer
 }  // namespace hal
@@ -36,6 +37,8 @@ namespace audiomixer {
     return "MIXING_MODE";
   case Property::MUTE:
     return "MUTE";
+  case Property::FADER_LEVEL:
+    return "FADER_LEVEL";
   default:
     return std::to_string(static_cast<int32_t>(val));
   }
@@ -49,12 +52,13 @@ namespace internal {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc++17-extensions"
 template <>
-constexpr inline std::array<::com::rdk::hal::audiomixer::Property, 5> enum_values<::com::rdk::hal::audiomixer::Property> = {
+constexpr inline std::array<::com::rdk::hal::audiomixer::Property, 6> enum_values<::com::rdk::hal::audiomixer::Property> = {
   ::com::rdk::hal::audiomixer::Property::LATENCY_MS,
   ::com::rdk::hal::audiomixer::Property::DEBUG_TAP_ENABLED,
   ::com::rdk::hal::audiomixer::Property::ACTIVE_AQ_PROFILE,
   ::com::rdk::hal::audiomixer::Property::MIXING_MODE,
   ::com::rdk::hal::audiomixer::Property::MUTE,
+  ::com::rdk::hal::audiomixer::Property::FADER_LEVEL,
 };
 #pragma clang diagnostic pop
 }  // namespace internal

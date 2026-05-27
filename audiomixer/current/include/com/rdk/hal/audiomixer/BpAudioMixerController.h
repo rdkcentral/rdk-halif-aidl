@@ -20,7 +20,10 @@ public:
   ::android::binder::Status stop() override;
   ::android::binder::Status flush(bool reset) override;
   ::android::binder::Status signalDiscontinuity() override;
-  ::android::binder::Status signalEndOfStream() override;
+  ::android::binder::Status signalEOS() override;
+  ::android::binder::Status setInputVolume(int32_t inputIndex, int32_t volume, bool* _aidl_return) override;
+  ::android::binder::Status getInputVolume(int32_t inputIndex, int32_t* _aidl_return) override;
+  ::android::binder::Status setInputVolumeRamp(int32_t inputIndex, int32_t targetVolume, int32_t overMs, ::com::rdk::hal::audiosink::VolumeRamp curve, bool* _aidl_return) override;
   int32_t getInterfaceVersion() override;
   std::string getInterfaceHash() override;
 private:
