@@ -17,16 +17,83 @@
  * limitations under the License.
  */
 package com.rdk.hal.videosink;
+import com.rdk.hal.videosink.MemoryType;
+import com.rdk.hal.videosink.PixelFormat;
 
 /**
- *  @brief     Video Sink resource definition.
+ *  @brief     Video Sink capabilities parcelable definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
+ *  @author    Gerald Weatherup
+ *
+ *  Per-instance, immutable Video Sink capabilities, populated by the SoC
+ *  vendor from the HAL Feature Profile (`hfp-videosink.yaml`). The values
+ *  returned by `IVideoSink.getCapabilities()` must not change between calls
+ *  for the lifetime of the Video Sink instance.
  */
-
 @VintfStability
 parcelable Capabilities
 {
+    /**
+     * Array of `PixelFormat` values that this Video Sink instance is able
+     * to consume. Mirrors `IVideoSink[i].supportedPixelFormats` in the HFP.
+     */
+    PixelFormat[] supportedPixelFormats;
 
+    /**
+     * Array of `MemoryType` values supported by this Video Sink instance
+     * for buffer transport. Mirrors `IVideoSink[i].supportedMemoryTypes`
+     * in the HFP.
+     */
+    MemoryType[] supportedMemoryTypes;
+
+    /**
+     * Maximum number of frames the sink queues internally for display.
+     * Used by clients to size their upstream buffer pools so frames are
+     * not dropped on submission. Mirrors `IVideoSink[i].sinkQueueDepth`
+     * in the HFP.
+     */
+    int sinkQueueDepth;
+
+    /**
+     * Indicates whether this Video Sink instance can synchronise frame
+     * presentation against an AV Clock. When `false`, the sink presents
+     * frames as soon as they are decoded (best-effort display).
+     * Mirrors `IVideoSink[i].supportsAVSync` in the HFP.
+     */
+    boolean supportsAVSync;
+
+    /**
+     * Vendor-characterised latency, in nanoseconds, between the moment a
+     * frame is committed for display and the moment it is actually scanned
+     * out on the display. Used by AV-sync logic to compensate for sink
+     * pipeline delay. Mirrors `IVideoSink[i].vsyncDisplayLatencyNs` in the
+     * HFP.
+     */
+    long vsyncDisplayLatencyNs;
+
+    /**
+     * Indicates whether this Video Sink instance can hold and continue to
+     * display the most recent frame after the upstream source stops
+     * delivering frames (for example on `stop()` or underflow), rather than
+     * blanking the output. Mirrors `IVideoSink[i].supportsHoldLastFrame`
+     * in the HFP.
+     */
+    boolean supportsHoldLastFrame;
+
+    /**
+     * Indicates whether this Video Sink instance is able to operate in
+     * Secure Video Path (SVP) mode and consume buffers carrying protected
+     * content. Mirrors `IVideoSink[i].supportsSecure` in the HFP.
+     */
+    boolean supportsSecure;
+
+    /**
+     * Zero-based index of the graphics / video plane that this Video Sink
+     * instance composes onto. Used by clients to coordinate Z-order and
+     * plane configuration with the plane control HAL. Mirrors
+     * `IVideoSink[i].planeIndex` in the HFP.
+     */
+    int planeIndex;
 }
