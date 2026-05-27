@@ -32,17 +32,19 @@ import com.rdk.hal.farfieldvoice.IFarFieldVoiceControllerListener;
  */
 
 /**
- *  The Far Field Voice HAL provides a stream of far field audio input to the client
- *  upon detection of a keyword in the audio stream. Following detection of the keyword,
- *  the HAL detects a voice command in the stream and reports it's occurrence to the client.
- *  This stream is referred to as the Keyword channel. This stream is typically forwarded to
- *  a voice recognition server for interpretation of user intent.
+ *  The Far Field Voice HAL provides a stream of far-field audio input to the client
+ *  upon detection of a keyword (wake word) in the audio stream. Following detection of
+ *  the keyword, the HAL detects a voice command in the stream and reports its
+ *  occurrence to the client. This stream is the **Keyword Audio channel**, and is
+ *  typically forwarded to a voice recognition server for interpretation of user intent.
  *
- *  The Far Field Voice HAL may also provide other vendor/product specific streams of audio
- *  to the client. These streams are typically forwarded to feature dependent end points.
+ *  The HAL may additionally expose a **Continual Audio channel** (continuous capture,
+ *  not gated on a keyword) and a **Microphones Audio channel** (raw per-microphone
+ *  capture). Channel types are advertised in `Capabilities.channelTypes` and are
+ *  opened individually via `IFarFieldVoiceController.openChannel()`.
  *
- *  Multiple clients may obtain information from the service but only one client at a time
- *  may control the service.
+ *  Multiple clients may obtain information from the service but only one client at a
+ *  time may control the service.
  */
 
 @VintfStability

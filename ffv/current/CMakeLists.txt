@@ -15,7 +15,7 @@ set(SRC_DIR com/rdk/hal/farfieldvoice)
 
 set(SRC
 	${SRC_DIR}/Capabilities.aidl
-	${SRC_DIR}/PowerMode.aidl
+	${SRC_DIR}/ListeningMode.aidl
 	${SRC_DIR}/ChannelStatus.aidl
 	${SRC_DIR}/Status.aidl
 	${SRC_DIR}/State.aidl

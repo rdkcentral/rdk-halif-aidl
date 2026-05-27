@@ -18,20 +18,29 @@
 # * limitations under the License.
 # *
 
-# HAL Feature Profile (HFP) - Far Field Voice (FFV) Maximum Configuration Reference
-#  This file establishes the baseline maximum configuration for the Far Field Voice (FFV) component, serving as a worst-case scenario reference for test suite execution.
-#  Platform-specific FFV configurations, tailored to unique hardware and software requirements, are derived from this reference. 
-#     During testing, these platform-specific HFP files are used to validate accurate reporting of supported FFV capabilities by the interface.
-#  The FFV interface's runtime behavior is managed by an internal state machine, ensuring adherence to the declared configurations.
+# HAL Feature Profile (HFP) — Far Field Voice (FFV)
+#
+# This file describes platform support for the Far Field Voice HAL.
+# Every key here mirrors a field name in the AIDL Capabilities parcelable
+# (see ffv/current/com/rdk/hal/farfieldvoice/Capabilities.aidl) so a single
+# grep finds both the API surface and the per-platform value.
+#
+# This is a reference HFP — SOC vendors derive platform-specific variants
+# from it. Only static capabilities belong here; runtime status
+# (current listening mode, privacy flag, hardware-failure flag, etc.)
+# is reported through Status / IFarFieldVoiceEventListener at runtime,
+# not declared here.
 
-hal:
-  components:
-    far_field_voice:
-      microphone_channel_count: 1 # channels
-      power_state: "FULL_POWER" # Enum: FULL_POWER, STANDBY, DEEP_SLEEP
-      privacy_mode: false
-      hardware_failure: false
-      noise_reduction: true # Indicates noise reduction support
-      beamforming: true # Indicates beamforming support
-      beamforming_type: "fixed" # Optional: fixed, adaptive, etc.
-      noise_reduction_type: "spectral" # Optional: spectral, etc.
+farfieldvoice:
+  interfaceVersion: current
+
+  capabilities:                       # Capabilities parcelable
+    microphoneChannelCount: 1         # Capabilities.microphoneChannelCount
+    channelTypes:                     # Capabilities.channelTypes[]
+      - KEYWORD                       # Keyword Audio channel (wake-word-gated)
+      - CONTINUAL                     # Continual Audio channel (continuous capture)
+      - MICROPHONES                   # Microphones Audio channel (raw per-mic)
+    supportedListeningModes:          # Capabilities.supportedListeningModes[]
+      - ACTIVE_LISTEN
+      - KEYWORD_ALERT
+      - POWERED_OFF

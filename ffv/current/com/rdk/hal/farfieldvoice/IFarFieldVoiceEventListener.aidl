@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.farfieldvoice;
 import com.rdk.hal.farfieldvoice.State;
-import com.rdk.hal.farfieldvoice.PowerMode;
+import com.rdk.hal.farfieldvoice.ListeningMode;
 import com.rdk.hal.farfieldvoice.FailureCode;
 
 /**
@@ -39,9 +39,12 @@ oneway interface IFarFieldVoiceEventListener {
     void onStateChanged(in State oldState, in State newState);
 
     /**
-	 * Callback when Far Field Voice has transitioned to a new power mode.
+     * Callback when Far Field Voice has transitioned to a new listening mode.
+     *
+     * @param[in] listeningMode  The new listening mode the module has entered.
+     *                           See {@link ListeningMode} for the meaning of each value.
      */
-    void onEnteredPowerMode(in PowerMode powerMode);
+    void onEnteredListeningMode(in ListeningMode listeningMode);
 
     /**
 	 * Callback when Far Field Voice has failed.
