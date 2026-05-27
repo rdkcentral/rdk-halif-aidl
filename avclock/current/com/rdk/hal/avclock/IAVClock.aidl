@@ -21,6 +21,8 @@ import com.rdk.hal.avclock.Capabilities;
 import com.rdk.hal.avclock.IAVClockController;
 import com.rdk.hal.avclock.IAVClockControllerListener;
 import com.rdk.hal.avclock.IAVClockEventListener;
+import com.rdk.hal.avclock.Property;
+import com.rdk.hal.PropertyValue;
 import com.rdk.hal.State;
 
 /** 
@@ -73,8 +75,28 @@ interface IAVClock
      *
      *
      * @see IAVClockEventListener.onStateChanged(),  IAVClockControllerListener.onStateChanged().
-     */  
+     */
     State getState();
+
+    /**
+     * Gets a property.
+     *
+     * Read-only property accessor. Stays on `IAVClock` (not the controller)
+     * so callers can discover identity properties such as `RESOURCE_ID`
+     * before opening the clock — read access does not mutate state and
+     * does not require holding the single-writer controller handle.
+     *
+     * @param[in] property              The key of a property from the Property enum.
+     *
+     * @returns PropertyValue or null if the property key is invalid for this clock.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for an invalid property key.
+     *
+     *
+     * @see IAVClockController.setProperty()
+     */
+    @nullable PropertyValue getProperty(in Property property);
 
     /**
 	 * Opens the AV Clock.
