@@ -88,10 +88,10 @@ interface IAVClock
      *
      * @param[in] property              The key of a property from the Property enum.
      *
-     * @returns PropertyValue or null if the property key is invalid for this clock.
+     * @returns PropertyValue holding the current value, or null if the
+     *          property key is not supported by this AV Clock instance.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for an invalid property key.
      *
      *
      * @see IAVClockController.setProperty()

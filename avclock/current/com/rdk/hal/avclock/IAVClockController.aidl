@@ -49,9 +49,8 @@ interface IAVClockController {
      *
      * Validation pattern:
      *  - `EX_ILLEGAL_ARGUMENT` indicates a caller bug — the `property` key is
-     *    not a member of the Property enum, or `propertyValue` is null. The
-     *    caller should fix the call; retrying with the same arguments will
-     *    keep failing.
+     *    not a member of the Property enum. The caller should fix the call;
+     *    retrying with the same arguments will keep failing.
      *  - `false` indicates a runtime rejection — the key is valid and the
      *    value is well-formed, but the write could not be applied (value out
      *    of range for this clock instance, property is read-only on this
@@ -67,8 +66,8 @@ interface IAVClockController {
      *                  read-only on this platform, etc.).
      *
      * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for an invalid
-     *            property key or null propertyValue (caller bug).
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT when `property`
+     *            is not a member of the Property enum (caller bug).
      *
      *
      * @see IAVClock.getProperty()
