@@ -20,7 +20,7 @@ public:
   ::android::binder::Status stop() override;
   ::android::binder::Status flush(bool reset) override;
   ::android::binder::Status signalDiscontinuity() override;
-  ::android::binder::Status signalEOS() override;
+  ::android::binder::Status signalEndOfStream() override;
   int32_t getInterfaceVersion() override;
   std::string getInterfaceHash() override;
 private:

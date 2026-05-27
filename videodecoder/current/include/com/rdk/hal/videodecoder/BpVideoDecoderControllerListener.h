@@ -15,6 +15,7 @@ public:
   explicit BpVideoDecoderControllerListener(const ::android::sp<::android::IBinder>& _aidl_impl);
   virtual ~BpVideoDecoderControllerListener() = default;
   ::android::binder::Status onFrameOutput(int64_t nsPresentationTime, int64_t frameAVBufferHandle, const ::std::optional<::com::rdk::hal::videodecoder::FrameMetadata>& metadata) override;
+  ::android::binder::Status onEndOfStream() override;
   ::android::binder::Status onUserDataOutput(int64_t nsPresentationTime, const ::std::vector<uint8_t>& userData) override;
   ::android::binder::Status onDecodeBufferAvailable() override;
   int32_t getInterfaceVersion() override;

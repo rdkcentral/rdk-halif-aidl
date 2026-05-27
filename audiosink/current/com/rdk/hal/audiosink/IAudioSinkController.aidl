@@ -224,23 +224,23 @@ interface IAudioSinkController {
      * access the buffer after a successful call. If the call returns false or throws an
      * exception, ownership remains with the caller.
      *
-     * End-of-stream signalling: the client signals EOS by setting
-     * `metadata.endOfStream = true` on the final queued frame. Both
-     * `bufferHandle` and `nsPresentationTime` MUST be valid for the final real
-     * frame - the same as for any other frame submitted to this method. The
-     * other fields of `FrameMetadata` describe the final frame as normal. The
-     * sink shall continue to mix all previously queued frames in the usual way
-     * and deliver `IAudioSinkControllerListener.onEndOfStream()` once the final
-     * frame has been completely passed to the mixer. If an audio frame is
-     * passed to `queueAudioFrame()` after EOS, then the
-     * `binder::Status EX_ILLEGAL_STATE` exception is raised. The audio sink must
-     * be stopped and restarted or flushed to accept new buffers.
+     * End-of-stream signalling: this method only queues frames - it carries
+     * no end-of-stream flag. After queuing its final frame the client calls
+     * `signalEndOfStream()`, which tells the sink no more frames will be
+     * queued.
+     *
+     * Throws `binder::Status::Exception::EX_ILLEGAL_STATE` if called after
+     * `signalEndOfStream()` has been invoked on this session.
+     *
+     * Throws `binder::Status::Exception::EX_UNSUPPORTED_OPERATION` when the
+     * controller is configured for tunnel mode - this API is not part of the
+     * data path in tunnel; the sink is fed by the decoder internally and the
+     * vendor is responsible for the internal EOS propagation. See
+     * [Discussion #492](https://github.com/rdkcentral/rdk-halif-aidl/discussions/492).
      *
      * @param[in] nsPresentationTime The presentation time of the audio frame in nanoseconds.
      * @param[in] bufferHandle       A handle to the AV buffer containing the audio frame.
      * @param[in] metadata           A FrameMetadata parcelable describing the audio frame.
-     *                               Set `endOfStream = true` on the final queued frame to
-     *                               signal EOS.
      *
      * @returns boolean
      * @retval true  Buffer successfully queued for mixing. Buffer ownership transfers to HAL.
@@ -251,12 +251,48 @@ interface IAudioSinkController {
      *               until space is available.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE    If the resource is not in the `STARTED` state or an audio frame is passed after EOS.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the `STARTED` state, or if an audio frame is passed after `signalEndOfStream()`.
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if the controller is configured for tunnel mode.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT If an invalid argument is provided.
      *
      * @pre The resource must be in the `STARTED` state.
      */
     boolean queueAudioFrame(in long nsPresentationTime, in long bufferHandle, in FrameMetadata metadata);
+
+    /**
+     * Signals end-of-stream to the audio sink.
+     *
+     * Asserts that no further frames will be queued via `queueAudioFrame()`.
+     * The sink mixes every already-queued frame in the usual way and then
+     * fires `IAudioSinkControllerListener.onEndOfStream(nsPresentationTime)`
+     * with the presentation time of the final frame passed to the mixer.
+     *
+     * If no frames are queued when this is called, the sink fires
+     * `onEndOfStream()` with an undefined-time sentinel
+     * (`IAVClock.UNDEFINED_TIME`) so the client sees the same callback in all
+     * cases.
+     *
+     * A second call is a no-op. After this call `queueAudioFrame()` throws
+     * `EX_ILLEGAL_STATE` until the sink is flushed or stopped and restarted.
+     *
+     * Behaviour is identical in tunnel and non-tunnel modes - the MW calls this
+     * method the same way. In tunnel mode the decoder->sink data flow is
+     * vendor-internal; the vendor must implement the EOS signal propagation
+     * from decoder to sink so the sink can fire
+     * `onEndOfStream(nsPresentationTime)` with the correct presentation
+     * timing. The MW observes the same sequencing in both modes:
+     * `decoder.onEndOfStream()` (decode complete) followed by
+     * `sink.onEndOfStream(nsPresentationTime)` (presentation complete).
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource
+     *            is not in the `STARTED` state.
+     *
+     * @pre The resource must be in the `STARTED` state.
+     *
+     * @see IAudioSinkControllerListener.onEndOfStream()
+     */
+    void signalEndOfStream();
 
     /**
 	 * Starts a flush operation on the sink.

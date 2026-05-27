@@ -221,7 +221,7 @@ BpAudioMixerController::BpAudioMixerController(const ::android::sp<::android::IB
   return _aidl_status;
 }
 
-::android::binder::Status BpAudioMixerController::signalEOS() {
+::android::binder::Status BpAudioMixerController::signalEndOfStream() {
   ::android::Parcel _aidl_data;
   _aidl_data.markForBinder(remoteStrong());
   ::android::Parcel _aidl_reply;
@@ -231,9 +231,9 @@ BpAudioMixerController::BpAudioMixerController(const ::android::sp<::android::IB
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = remote()->transact(BnAudioMixerController::TRANSACTION_signalEOS, _aidl_data, &_aidl_reply, 0);
+  _aidl_ret_status = remote()->transact(BnAudioMixerController::TRANSACTION_signalEndOfStream, _aidl_data, &_aidl_reply, 0);
   if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IAudioMixerController::getDefaultImpl())) {
-     return IAudioMixerController::getDefaultImpl()->signalEOS();
+     return IAudioMixerController::getDefaultImpl()->signalEndOfStream();
   }
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
@@ -445,13 +445,13 @@ BnAudioMixerController::BnAudioMixerController()
     }
   }
   break;
-  case BnAudioMixerController::TRANSACTION_signalEOS:
+  case BnAudioMixerController::TRANSACTION_signalEndOfStream:
   {
     if (!(_aidl_data.checkInterface(this))) {
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
     }
-    ::android::binder::Status _aidl_status(signalEOS());
+    ::android::binder::Status _aidl_status(signalEndOfStream());
     _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;

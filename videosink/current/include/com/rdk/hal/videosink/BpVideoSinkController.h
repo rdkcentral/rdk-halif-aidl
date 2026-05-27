@@ -23,6 +23,7 @@ public:
   ::android::binder::Status start() override;
   ::android::binder::Status stop() override;
   ::android::binder::Status queueVideoFrame(int64_t nsPresentationTime, int64_t frameBufferHandle, const ::com::rdk::hal::videodecoder::FrameMetadata& metadata, bool* _aidl_return) override;
+  ::android::binder::Status signalEndOfStream() override;
   ::android::binder::Status flush(bool holdLastFrame) override;
   ::android::binder::Status discardFramesUntil(int64_t nsPresentationTime) override;
   int32_t getInterfaceVersion() override;

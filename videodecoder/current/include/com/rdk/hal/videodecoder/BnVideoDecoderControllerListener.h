@@ -10,8 +10,9 @@ namespace videodecoder {
 class BnVideoDecoderControllerListener : public ::android::BnInterface<IVideoDecoderControllerListener> {
 public:
   static constexpr uint32_t TRANSACTION_onFrameOutput = ::android::IBinder::FIRST_CALL_TRANSACTION + 0;
-  static constexpr uint32_t TRANSACTION_onUserDataOutput = ::android::IBinder::FIRST_CALL_TRANSACTION + 1;
-  static constexpr uint32_t TRANSACTION_onDecodeBufferAvailable = ::android::IBinder::FIRST_CALL_TRANSACTION + 2;
+  static constexpr uint32_t TRANSACTION_onEndOfStream = ::android::IBinder::FIRST_CALL_TRANSACTION + 1;
+  static constexpr uint32_t TRANSACTION_onUserDataOutput = ::android::IBinder::FIRST_CALL_TRANSACTION + 2;
+  static constexpr uint32_t TRANSACTION_onDecodeBufferAvailable = ::android::IBinder::FIRST_CALL_TRANSACTION + 3;
   static constexpr uint32_t TRANSACTION_getInterfaceVersion = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777214;
   static constexpr uint32_t TRANSACTION_getInterfaceHash = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777213;
   explicit BnVideoDecoderControllerListener();
@@ -26,6 +27,9 @@ public:
 
   ::android::binder::Status onFrameOutput(int64_t nsPresentationTime, int64_t frameAVBufferHandle, const ::std::optional<::com::rdk::hal::videodecoder::FrameMetadata>& metadata) override {
     return _aidl_delegate->onFrameOutput(nsPresentationTime, frameAVBufferHandle, metadata);
+  }
+  ::android::binder::Status onEndOfStream() override {
+    return _aidl_delegate->onEndOfStream();
   }
   ::android::binder::Status onUserDataOutput(int64_t nsPresentationTime, const ::std::vector<uint8_t>& userData) override {
     return _aidl_delegate->onUserDataOutput(nsPresentationTime, userData);

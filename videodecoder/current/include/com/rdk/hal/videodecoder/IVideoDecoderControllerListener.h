@@ -21,6 +21,7 @@ public:
   const std::string HASH = "notfrozen";
   static constexpr char* HASHVALUE = "notfrozen";
   virtual ::android::binder::Status onFrameOutput(int64_t nsPresentationTime, int64_t frameAVBufferHandle, const ::std::optional<::com::rdk::hal::videodecoder::FrameMetadata>& metadata) = 0;
+  virtual ::android::binder::Status onEndOfStream() = 0;
   virtual ::android::binder::Status onUserDataOutput(int64_t nsPresentationTime, const ::std::vector<uint8_t>& userData) = 0;
   virtual ::android::binder::Status onDecodeBufferAvailable() = 0;
   virtual int32_t getInterfaceVersion() = 0;
@@ -33,6 +34,9 @@ public:
     return nullptr;
   }
   ::android::binder::Status onFrameOutput(int64_t /*nsPresentationTime*/, int64_t /*frameAVBufferHandle*/, const ::std::optional<::com::rdk::hal::videodecoder::FrameMetadata>& /*metadata*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status onEndOfStream() override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status onUserDataOutput(int64_t /*nsPresentationTime*/, const ::std::vector<uint8_t>& /*userData*/) override {

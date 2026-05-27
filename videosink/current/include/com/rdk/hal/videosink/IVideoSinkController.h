@@ -31,6 +31,7 @@ public:
   virtual ::android::binder::Status start() = 0;
   virtual ::android::binder::Status stop() = 0;
   virtual ::android::binder::Status queueVideoFrame(int64_t nsPresentationTime, int64_t frameBufferHandle, const ::com::rdk::hal::videodecoder::FrameMetadata& metadata, bool* _aidl_return) = 0;
+  virtual ::android::binder::Status signalEndOfStream() = 0;
   virtual ::android::binder::Status flush(bool holdLastFrame) = 0;
   virtual ::android::binder::Status discardFramesUntil(int64_t nsPresentationTime) = 0;
   virtual int32_t getInterfaceVersion() = 0;
@@ -67,6 +68,9 @@ public:
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status queueVideoFrame(int64_t /*nsPresentationTime*/, int64_t /*frameBufferHandle*/, const ::com::rdk::hal::videodecoder::FrameMetadata& /*metadata*/, bool* /*_aidl_return*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status signalEndOfStream() override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status flush(bool /*holdLastFrame*/) override {

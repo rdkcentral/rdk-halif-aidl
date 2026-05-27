@@ -20,6 +20,7 @@ public:
   ::android::binder::Status decodeBufferWithMetadata(int64_t bufferHandle, const ::com::rdk::hal::audiodecoder::InputBufferMetadata& metadata, bool* _aidl_return) override;
   ::android::binder::Status flush(bool reset) override;
   ::android::binder::Status signalDiscontinuity() override;
+  ::android::binder::Status signalEndOfStream() override;
   ::android::binder::Status parseCodecSpecificData(::com::rdk::hal::audiodecoder::CSDAudioFormat csdAudioFormat, const ::std::vector<uint8_t>& codecData, bool* _aidl_return) override;
   ::android::binder::Status setAudioFormat(int32_t channels, int32_t sampleRate) override;
   int32_t getInterfaceVersion() override;

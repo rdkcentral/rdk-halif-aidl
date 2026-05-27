@@ -17,10 +17,11 @@ public:
   static constexpr uint32_t TRANSACTION_start = ::android::IBinder::FIRST_CALL_TRANSACTION + 5;
   static constexpr uint32_t TRANSACTION_stop = ::android::IBinder::FIRST_CALL_TRANSACTION + 6;
   static constexpr uint32_t TRANSACTION_queueAudioFrame = ::android::IBinder::FIRST_CALL_TRANSACTION + 7;
-  static constexpr uint32_t TRANSACTION_flush = ::android::IBinder::FIRST_CALL_TRANSACTION + 8;
-  static constexpr uint32_t TRANSACTION_getVolume = ::android::IBinder::FIRST_CALL_TRANSACTION + 9;
-  static constexpr uint32_t TRANSACTION_setVolume = ::android::IBinder::FIRST_CALL_TRANSACTION + 10;
-  static constexpr uint32_t TRANSACTION_setVolumeRamp = ::android::IBinder::FIRST_CALL_TRANSACTION + 11;
+  static constexpr uint32_t TRANSACTION_signalEndOfStream = ::android::IBinder::FIRST_CALL_TRANSACTION + 8;
+  static constexpr uint32_t TRANSACTION_flush = ::android::IBinder::FIRST_CALL_TRANSACTION + 9;
+  static constexpr uint32_t TRANSACTION_getVolume = ::android::IBinder::FIRST_CALL_TRANSACTION + 10;
+  static constexpr uint32_t TRANSACTION_setVolume = ::android::IBinder::FIRST_CALL_TRANSACTION + 11;
+  static constexpr uint32_t TRANSACTION_setVolumeRamp = ::android::IBinder::FIRST_CALL_TRANSACTION + 12;
   static constexpr uint32_t TRANSACTION_getInterfaceVersion = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777214;
   static constexpr uint32_t TRANSACTION_getInterfaceHash = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777213;
   explicit BnAudioSinkController();
@@ -56,6 +57,9 @@ public:
   }
   ::android::binder::Status queueAudioFrame(int64_t nsPresentationTime, int64_t bufferHandle, const ::com::rdk::hal::audiodecoder::FrameMetadata& metadata, bool* _aidl_return) override {
     return _aidl_delegate->queueAudioFrame(nsPresentationTime, bufferHandle, metadata, _aidl_return);
+  }
+  ::android::binder::Status signalEndOfStream() override {
+    return _aidl_delegate->signalEndOfStream();
   }
   ::android::binder::Status flush() override {
     return _aidl_delegate->flush();

@@ -250,24 +250,24 @@ interface IVideoSinkController
      * exception, ownership remains with the caller.
      *
      *
-     * End-of-stream signalling: the client signals EOS by setting
-     * `metadata.endOfStream = true` on the final queued frame. Both
-     * `frameBufferHandle` and `nsPresentationTime` MUST be valid for the final
-     * real frame - the same as for any other frame submitted to this method.
-     * The other fields of `FrameMetadata` describe the final frame as normal.
-     * The sink shall continue to render all previously queued frames in the
-     * usual way and deliver `IVideoSinkControllerListener.onEndOfStream()` once
-     * the final frame has been rendered. If a video frame is passed to
-     * `queueVideoFrame()` after EOS, then the `binder::Status EX_ILLEGAL_STATE`
-     * exception is raised. The video sink must be stopped and restarted or
-     * flushed to accept new buffers.
+     * End-of-stream signalling: this method only queues frames - it carries
+     * no end-of-stream flag. After queuing its final frame the client calls
+     * `signalEndOfStream()`, which tells the sink no more frames will be
+     * queued.
+     *
+     * Throws `binder::Status::Exception::EX_ILLEGAL_STATE` if called after
+     * `signalEndOfStream()` has been invoked on this session.
+     *
+     * Throws `binder::Status::Exception::EX_UNSUPPORTED_OPERATION` when the
+     * controller is configured for tunnel mode - this API is not part of the
+     * data path in tunnel; the sink is fed by the decoder internally and the
+     * vendor is responsible for the internal EOS propagation. See
+     * [Discussion #492](https://github.com/rdkcentral/rdk-halif-aidl/discussions/492).
      *
      *
      * @param[in] nsPresentationTime    The presentation time of the video frame in nanoseconds.
      * @param[in] frameBufferHandle     A handle to the video frame buffer.
      * @param[in] metadata              A FrameMetadata object with metadata relating to the video frame.
-     *                                  Set `endOfStream = true` on the final queued frame to
-     *                                  signal EOS.
      *
      * @returns boolean
      * @retval true  Frame successfully queued for display. Buffer ownership transfers to HAL.
@@ -278,12 +278,48 @@ interface IVideoSinkController
      *               until space is available.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in `STARTED`, or if a video frame is passed after `signalEndOfStream()`.
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if the controller is configured for tunnel mode.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      *
      * @pre The resource must be in State::STARTED.
      */
     boolean queueVideoFrame(in long nsPresentationTime, in long frameBufferHandle, in FrameMetadata metadata);
+
+    /**
+     * Signals end-of-stream to the video sink.
+     *
+     * Asserts that no further frames will be queued via `queueVideoFrame()`.
+     * The sink renders every already-queued frame in the usual way and then
+     * fires `IVideoSinkControllerListener.onEndOfStream(nsPresentationTime)`
+     * with the presentation time of the final rendered frame.
+     *
+     * If no frames are queued when this is called, the sink fires
+     * `onEndOfStream()` with an undefined-time sentinel
+     * (`IAVClock.UNDEFINED_TIME`) so the client sees the same callback in all
+     * cases.
+     *
+     * A second call is a no-op. After this call `queueVideoFrame()` throws
+     * `EX_ILLEGAL_STATE` until the sink is flushed or stopped and restarted.
+     *
+     * Behaviour is identical in tunnel and non-tunnel modes - the MW calls this
+     * method the same way. In tunnel mode the decoder->sink data flow is
+     * vendor-internal; the vendor must implement the EOS signal propagation
+     * from decoder to sink so the sink can fire
+     * `onEndOfStream(nsPresentationTime)` with the correct presentation
+     * timing. The MW observes the same sequencing in both modes:
+     * `decoder.onEndOfStream()` (decode complete) followed by
+     * `sink.onEndOfStream(nsPresentationTime)` (presentation complete).
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource
+     *            is not in State::STARTED.
+     *
+     * @pre The resource must be in State::STARTED.
+     *
+     * @see IVideoSinkControllerListener.onEndOfStream()
+     */
+    void signalEndOfStream();
 
     /**
      * Flushes the internal queue of video frames.

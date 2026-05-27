@@ -104,38 +104,31 @@ parcelable FrameMetadata {
 	int frameRateDenominator;
 
 	/**
-	 * End-of-stream marker delivered to the client on the FINAL
-	 * `IVideoDecoderControllerListener.onFrameOutput()` callback of the
-	 * decode session.
+	 * In-bitstream end-of-stream marker.
 	 *
-	 * When true, this is the final `onFrameOutput()` callback of the session.
-	 * The HAL delivers it exactly once per session. There is no separate
-	 * EOS-only marker callback - `endOfStream = true` rides on the metadata
-	 * of the last real decoded frame in non-tunnelled mode, or on the final
-	 * tunnelled-mode metadata callback in tunnelled mode (where
-	 * `frameAVBufferHandle = -1` is the normal case).
+	 * Set true by the HAL on an output frame when it parses an end-of-stream /
+	 * sequence-end marker from the elementary stream itself - MPEG-2
+	 * sequence_end_code, H.264/H.265 end_of_stream NAL, MPEG-4 Part 2
+	 * visual_object_sequence_end_code.
 	 *
-	 * The HAL MUST deliver a non-null `FrameMetadata` on the EOS callback so
-	 * clients can reliably detect EOS via `metadata.endOfStream`. This follows
-	 * from the existing "metadata is non-null when it changes" rule -
-	 * `endOfStream` transitioning from false to true is a metadata change.
-	 * The other fields of this parcelable describe the final frame as normal.
+	 * Advisory and informational only:
+	 * - It does NOT end the decode session and never triggers teardown.
+	 * - It may appear more than once in a session - at a splice or
+	 *   concatenation point an end-of-sequence is a sequence boundary, not
+	 *   necessarily end-of-presentation.
+	 * - No callback fires for it; it is surfaced purely as this flag for any
+	 *   consumer that cares (e.g. splice-aware middleware).
 	 *
-	 * EOS originates either from the HAL detecting an in-bitstream EOS marker
-	 * (MPEG-2 sequence_end_code, H.264/H.265 end_of_stream NAL, MPEG-4 Part 2
-	 * visual_object_sequence_end_code) or from the client submitting a final
-	 * buffer via `IVideoDecoderController.decodeBufferWithMetadata()` with
-	 * `InputBufferMetadata.endOfStream = true`. Both sources collapse to a
-	 * single event on this side.
+	 * Client-signalled EOS is NOT carried here. The discrete EOS signal flows
+	 * via `IVideoDecoderController.signalEndOfStream()`: the HAL drains every
+	 * held frame, and then fires
+	 * `IVideoDecoderControllerListener.onEndOfStream()` exactly once after the
+	 * final `onFrameOutput()`.
 	 *
-	 * After this callback the decoder remains in `State::STARTED` but is
-	 * drained. No further `onFrameOutput()` is delivered until `flush()` or
-	 * `stop()` + `start()`.
-	 *
-	 * @see IVideoDecoderController.decodeBufferWithMetadata()
-	 * @see InputBufferMetadata.endOfStream
+	 * @see IVideoDecoderController.signalEndOfStream()
+	 * @see IVideoDecoderControllerListener.onEndOfStream()
 	 */
-	boolean endOfStream;
+	boolean bitstreamEOS;
 
 	/**
 	 * Discontinuity indicator where the PTS for this frame is likely to be discontinuous to the previous.

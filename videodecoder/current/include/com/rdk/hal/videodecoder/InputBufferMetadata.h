@@ -14,25 +14,24 @@ namespace videodecoder {
 class InputBufferMetadata : public ::android::Parcelable {
 public:
   int64_t nsPresentationTime = 0L;
-  bool endOfStream = false;
   bool discontinuity = false;
   inline bool operator!=(const InputBufferMetadata& rhs) const {
-    return std::tie(nsPresentationTime, endOfStream, discontinuity) != std::tie(rhs.nsPresentationTime, rhs.endOfStream, rhs.discontinuity);
+    return std::tie(nsPresentationTime, discontinuity) != std::tie(rhs.nsPresentationTime, rhs.discontinuity);
   }
   inline bool operator<(const InputBufferMetadata& rhs) const {
-    return std::tie(nsPresentationTime, endOfStream, discontinuity) < std::tie(rhs.nsPresentationTime, rhs.endOfStream, rhs.discontinuity);
+    return std::tie(nsPresentationTime, discontinuity) < std::tie(rhs.nsPresentationTime, rhs.discontinuity);
   }
   inline bool operator<=(const InputBufferMetadata& rhs) const {
-    return std::tie(nsPresentationTime, endOfStream, discontinuity) <= std::tie(rhs.nsPresentationTime, rhs.endOfStream, rhs.discontinuity);
+    return std::tie(nsPresentationTime, discontinuity) <= std::tie(rhs.nsPresentationTime, rhs.discontinuity);
   }
   inline bool operator==(const InputBufferMetadata& rhs) const {
-    return std::tie(nsPresentationTime, endOfStream, discontinuity) == std::tie(rhs.nsPresentationTime, rhs.endOfStream, rhs.discontinuity);
+    return std::tie(nsPresentationTime, discontinuity) == std::tie(rhs.nsPresentationTime, rhs.discontinuity);
   }
   inline bool operator>(const InputBufferMetadata& rhs) const {
-    return std::tie(nsPresentationTime, endOfStream, discontinuity) > std::tie(rhs.nsPresentationTime, rhs.endOfStream, rhs.discontinuity);
+    return std::tie(nsPresentationTime, discontinuity) > std::tie(rhs.nsPresentationTime, rhs.discontinuity);
   }
   inline bool operator>=(const InputBufferMetadata& rhs) const {
-    return std::tie(nsPresentationTime, endOfStream, discontinuity) >= std::tie(rhs.nsPresentationTime, rhs.endOfStream, rhs.discontinuity);
+    return std::tie(nsPresentationTime, discontinuity) >= std::tie(rhs.nsPresentationTime, rhs.discontinuity);
   }
 
   ::android::Parcelable::Stability getStability() const override { return ::android::Parcelable::Stability::STABILITY_VINTF; }
@@ -46,7 +45,6 @@ public:
     std::ostringstream os;
     os << "InputBufferMetadata{";
     os << "nsPresentationTime: " << ::android::internal::ToString(nsPresentationTime);
-    os << ", endOfStream: " << ::android::internal::ToString(endOfStream);
     os << ", discontinuity: " << ::android::internal::ToString(discontinuity);
     os << "}";
     return os.str();

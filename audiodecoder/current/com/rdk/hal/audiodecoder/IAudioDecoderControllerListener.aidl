@@ -42,34 +42,40 @@ oneway interface IAudioDecoderControllerListener {
     * - The client is responsible for managing the handle's lifecycle: either passing it to the next
     *   module (e.g., audio sink) or explicitly freeing it via IAVBuffer.free() when no longer needed.
     *
-    * End-of-stream delivery:
-    * - EOS is signalled on the FINAL `onFrameOutput()` callback of the decode
-    *   session by `metadata.endOfStream = true`. There is no separate EOS-only
-    *   marker callback after the last frame — `endOfStream = true` rides on
-    *   the metadata of the last real frame in non-tunnelled mode, or on the
-    *   final tunnelled-mode metadata callback in tunnelled mode (where
-    *   `frameAVBufferHandle = -1` is the normal case).
-    * - Fires exactly once per decode session.
-    * - On the EOS callback, `metadata` is GUARANTEED to be non-null even though
-    *   the parameter is annotated `@nullable`. This follows from the existing
-    *   "metadata is non-null when it changes" rule — `endOfStream` transitioning
-    *   from false to true is a metadata change. Clients can rely on
-    *   `metadata != null && metadata.endOfStream` for unambiguous EOS detection,
-    *   including in tunnelled mode where `frameAVBufferHandle = -1` is normal.
-    * - All other fields of `FrameMetadata` describe the final frame as normal.
-    * - See `FrameMetadata.endOfStream` for the full contract.
+    * End-of-stream is NOT delivered on this callback. Client-signalled EOS
+    * is a discrete event - see `onEndOfStream()`, which the HAL fires exactly
+    * once after the final `onFrameOutput()` of a session drained by
+    * `IAudioDecoderController.signalEndOfStream()`.
     *
     * @param[in] nsPresentationTime    The presentation timestamp in nanoseconds, or -1 if only metadata is being returned.
     * @param[in] frameAVBufferHandle   AVBuffer handle to the decoded audio frame buffer. Valid handle in
     *                                   non-tunnelled mode; -1 in tunnelled mode.
     * @param[in] metadata              FrameMetadata for the audio frame. Nullable on routine
-    *                                  callbacks (in tunnelled mode or when unchanged); guaranteed
-    *                                  non-null on the final callback that carries EOS.
+    *                                  callbacks (in tunnelled mode or when unchanged).
     *
     * @see IAudioDecoderController.decodeBufferWithMetadata(), IAVBuffer.free(),
-    *      FrameMetadata.endOfStream
+    *      onEndOfStream()
     */
     void onFrameOutput(in long nsPresentationTime, in long frameAVBufferHandle, in @nullable FrameMetadata metadata);
+
+    /**
+     * Callback signalling client-signalled end-of-stream.
+     *
+     * Fired exactly once per decode session, after the final `onFrameOutput()`
+     * of a session drained by `IAudioDecoderController.signalEndOfStream()`.
+     * It is delivered on this same listener and is ordered in-band - it
+     * follows the last frame on the same ordered callback channel.
+     *
+     * Audio EOS is always client-signalled, so this callback is the sole
+     * end-of-stream event for the audio decoder.
+     *
+     * After this callback the decoder remains in `State::STARTED` but is
+     * drained; no further `onFrameOutput()` is delivered until `flush()` or
+     * `stop()` + `start()`.
+     *
+     * @see IAudioDecoderController.signalEndOfStream()
+     */
+    void onEndOfStream();
 
     /**
      * Callback that signals the audio decoder input buffer queue has space again.

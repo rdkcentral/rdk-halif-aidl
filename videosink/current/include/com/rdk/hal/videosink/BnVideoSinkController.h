@@ -18,8 +18,9 @@ public:
   static constexpr uint32_t TRANSACTION_start = ::android::IBinder::FIRST_CALL_TRANSACTION + 6;
   static constexpr uint32_t TRANSACTION_stop = ::android::IBinder::FIRST_CALL_TRANSACTION + 7;
   static constexpr uint32_t TRANSACTION_queueVideoFrame = ::android::IBinder::FIRST_CALL_TRANSACTION + 8;
-  static constexpr uint32_t TRANSACTION_flush = ::android::IBinder::FIRST_CALL_TRANSACTION + 9;
-  static constexpr uint32_t TRANSACTION_discardFramesUntil = ::android::IBinder::FIRST_CALL_TRANSACTION + 10;
+  static constexpr uint32_t TRANSACTION_signalEndOfStream = ::android::IBinder::FIRST_CALL_TRANSACTION + 9;
+  static constexpr uint32_t TRANSACTION_flush = ::android::IBinder::FIRST_CALL_TRANSACTION + 10;
+  static constexpr uint32_t TRANSACTION_discardFramesUntil = ::android::IBinder::FIRST_CALL_TRANSACTION + 11;
   static constexpr uint32_t TRANSACTION_getInterfaceVersion = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777214;
   static constexpr uint32_t TRANSACTION_getInterfaceHash = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777213;
   explicit BnVideoSinkController();
@@ -58,6 +59,9 @@ public:
   }
   ::android::binder::Status queueVideoFrame(int64_t nsPresentationTime, int64_t frameBufferHandle, const ::com::rdk::hal::videodecoder::FrameMetadata& metadata, bool* _aidl_return) override {
     return _aidl_delegate->queueVideoFrame(nsPresentationTime, frameBufferHandle, metadata, _aidl_return);
+  }
+  ::android::binder::Status signalEndOfStream() override {
+    return _aidl_delegate->signalEndOfStream();
   }
   ::android::binder::Status flush(bool holdLastFrame) override {
     return _aidl_delegate->flush(holdLastFrame);

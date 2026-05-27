@@ -23,9 +23,8 @@ package com.rdk.hal.audiodecoder;
  *             `IAudioDecoderController.decodeBufferWithMetadata()`.
  *
  *  Describes properties of the encoded audio frame that cannot be derived from
- *  the buffer contents alone (presentation time, trim) or that signal
- *  decode-pipeline events (end of stream) which must be ordered precisely with
- *  respect to buffer flow.
+ *  the buffer contents alone, such as its presentation time and trim
+ *  durations.
  *
  *  Each `decodeBufferWithMetadata()` call is self-describing: the HAL MUST NOT
  *  carry state from this parcelable across calls. In particular, `trimStartNs`
@@ -44,29 +43,6 @@ parcelable InputBufferMetadata {
      * Presentation time of the encoded audio frame in nanoseconds.
      */
     long nsPresentationTime;
-
-    /**
-     * End-of-stream marker.
-     *
-     * When true, this is the final input buffer of the current decode session.
-     * The buffer referenced by the `bufferHandle` parameter of
-     * `decodeBufferWithMetadata()` MUST be a valid encoded frame - EOS is
-     * always carried on a real final buffer, never signalled after it and
-     * never on an EOS-only marker.
-     *
-     * The HAL shall decode this buffer, drain any held frames, and deliver
-     * the final `IAudioDecoderControllerListener.onFrameOutput()` callback
-     * with `FrameMetadata.endOfStream = true`.
-     *
-     * A client that has no more data to send ends the session via
-     * `IAudioDecoderController.stop()` (or `flush(reset=true)` if the decoder
-     * is to be reused). There is no way to signal EOS without data.
-     *
-     * No supported audio elementary stream (MP3, AAC, AC-3/E-AC-3, Opus,
-     * Vorbis) carries an in-bitstream EOS marker, so audio EOS is always
-     * application-driven via this field.
-     */
-    boolean endOfStream;
 
     /**
      * Reserved for a future release. Clients MUST set this to false in v1.

@@ -27,7 +27,7 @@ public:
   virtual ::android::binder::Status stop() = 0;
   virtual ::android::binder::Status flush(bool reset) = 0;
   virtual ::android::binder::Status signalDiscontinuity() = 0;
-  virtual ::android::binder::Status signalEOS() = 0;
+  virtual ::android::binder::Status signalEndOfStream() = 0;
   virtual int32_t getInterfaceVersion() = 0;
   virtual std::string getInterfaceHash() = 0;
 };  // class IAudioMixerController
@@ -55,7 +55,7 @@ public:
   ::android::binder::Status signalDiscontinuity() override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
-  ::android::binder::Status signalEOS() override {
+  ::android::binder::Status signalEndOfStream() override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   int32_t getInterfaceVersion() override {
