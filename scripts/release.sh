@@ -227,7 +227,7 @@ for sha in "${FP_COMMITS[@]}"; do
     while IFS= read -r lbl; do
         [[ -n "${lbl}" ]] || continue
         [[ "${lbl}" == "breaking-change" ]] && has_breaking_label=1
-        [[ "${lbl}" == "documentation-change" ]] && has_doc_label=1
+        [[ "${lbl}" == "documentation" ]] && has_doc_label=1
     done <<< "${labels}"
 
     declare -A COMMIT_COMP_TOUCHED=()

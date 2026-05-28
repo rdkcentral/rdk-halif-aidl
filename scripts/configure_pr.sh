@@ -130,7 +130,7 @@ def is_doc(p):
 fs=[f["path"] for f in json.load(sys.stdin)["files"]]
 print("yes" if fs and all(is_doc(p) for p in fs) else "no")
 ')
-    [ "$docs_only" = "yes" ] && desired_labels+="documentation-change\n"
+    [ "$docs_only" = "yes" ] && desired_labels+="documentation\n"
 
     local add_labels=()
     while IFS= read -r lbl; do
