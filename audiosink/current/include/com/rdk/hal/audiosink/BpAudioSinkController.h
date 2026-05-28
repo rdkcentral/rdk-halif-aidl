@@ -22,6 +22,7 @@ public:
   ::android::binder::Status start() override;
   ::android::binder::Status stop() override;
   ::android::binder::Status queueAudioFrame(int64_t nsPresentationTime, int64_t bufferHandle, const ::com::rdk::hal::audiodecoder::FrameMetadata& metadata, bool* _aidl_return) override;
+  ::android::binder::Status signalEndOfStream() override;
   ::android::binder::Status flush() override;
   ::android::binder::Status getVolume(::com::rdk::hal::audiosink::Volume* _aidl_return) override;
   ::android::binder::Status setVolume(const ::com::rdk::hal::audiosink::Volume& volume, bool* _aidl_return) override;

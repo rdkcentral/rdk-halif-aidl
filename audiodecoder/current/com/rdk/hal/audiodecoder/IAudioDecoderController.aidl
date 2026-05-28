@@ -105,11 +105,15 @@ interface IAudioDecoderController {
      * modify or access the buffer after a successful call. If the call returns false
      * or throws an exception, ownership remains with the caller.
      *
-     * `bufferHandle` MUST reference a valid encoded frame. EOS is signalled by
-     * setting `metadata.endOfStream = true` on the final real buffer of the
-     * decode session. There is no EOS-only marker form and no path to signal
-     * EOS without data - a client that has no more data to send ends the session
-     * via `stop()` or `flush(reset=true)`, not via this method.
+     * `bufferHandle` MUST reference a valid encoded frame. This method only
+     * submits data - it carries no end-of-stream signal. A client that has
+     * submitted its final buffer ends the decode session out-of-band via
+     * `signalEndOfStream()`, which drains the decoder.
+     *
+     * Throws `binder::Status::Exception::EX_ILLEGAL_STATE` if called after
+     * `signalEndOfStream()` has been invoked on this session. This applies in
+     * both tunnel and non-tunnel modes - the decoder input path is not
+     * tunnelled.
      *
      * Each call is self-describing; the HAL MUST NOT carry any field of
      * `InputBufferMetadata` (including `trimStartNs`/`trimEndNs`) across calls.
@@ -175,6 +179,47 @@ interface IAudioDecoderController {
      * @pre The resource must be in State::STARTED.
      */
     void signalDiscontinuity();
+
+    /**
+     * Signals client-driven end-of-stream and drains the decoder.
+     *
+     * This is the discrete, authoritative "I will submit no further buffers"
+     * signal. It is the only end-of-stream path on the input side - there is
+     * no per-buffer EOS flag. Audio EOS is always client-signalled: no
+     * supported audio elementary stream carries an in-bitstream EOS marker.
+     *
+     * On this call the HAL MUST decode and emit every held frame in
+     * presentation order via `IAudioDecoderControllerListener.onFrameOutput()`
+     * (each with its `FrameMetadata`), and then fire
+     * `IAudioDecoderControllerListener.onEndOfStream()` exactly once after the
+     * final frame. No held frame may be dropped on EOS.
+     *
+     * This is distinct from `stop()` and `flush()`, which abruptly discard any
+     * held frames rather than draining them.
+     *
+     * A second call is a no-op. After this call any `decodeBufferWithMetadata()`
+     * throws `EX_ILLEGAL_STATE`. The decoder remains in `STARTED` (drained)
+     * until `flush()` or `stop()` + `start()`.
+     *
+     * Behaviour is identical in tunnel and non-tunnel modes - the MW calls this
+     * method the same way. In tunnel mode the decoder->sink data flow is
+     * vendor-internal; the vendor must implement the EOS signal propagation
+     * from decoder to sink so the sink can fire
+     * `onEndOfStream(nsPresentationTime)` with the correct presentation
+     * timing. The MW observes the same sequencing in both modes:
+     * `decoder.onEndOfStream()` (decode complete) followed by
+     * `sink.onEndOfStream(nsPresentationTime)` (presentation complete).
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource
+     *            is not in State::STARTED, or if no buffers have ever been
+     *            submitted on this session (no stream has started).
+     *
+     * @pre The resource must be in State::STARTED.
+     *
+     * @see IAudioDecoderControllerListener.onEndOfStream()
+     */
+    void signalEndOfStream();
 
     /**
      * Sends codec-specific data to initialise the audio decoder.

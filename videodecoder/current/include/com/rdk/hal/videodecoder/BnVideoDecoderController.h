@@ -15,14 +15,15 @@ public:
   static constexpr uint32_t TRANSACTION_decodeBufferWithMetadata = ::android::IBinder::FIRST_CALL_TRANSACTION + 3;
   static constexpr uint32_t TRANSACTION_flush = ::android::IBinder::FIRST_CALL_TRANSACTION + 4;
   static constexpr uint32_t TRANSACTION_signalDiscontinuity = ::android::IBinder::FIRST_CALL_TRANSACTION + 5;
-  static constexpr uint32_t TRANSACTION_parseCodecSpecificData = ::android::IBinder::FIRST_CALL_TRANSACTION + 6;
-  static constexpr uint32_t TRANSACTION_setMasteringDisplayInfo = ::android::IBinder::FIRST_CALL_TRANSACTION + 7;
-  static constexpr uint32_t TRANSACTION_setContentLightLevel = ::android::IBinder::FIRST_CALL_TRANSACTION + 8;
-  static constexpr uint32_t TRANSACTION_setColorimetry = ::android::IBinder::FIRST_CALL_TRANSACTION + 9;
-  static constexpr uint32_t TRANSACTION_setStreamResolution = ::android::IBinder::FIRST_CALL_TRANSACTION + 10;
-  static constexpr uint32_t TRANSACTION_setFrameRate = ::android::IBinder::FIRST_CALL_TRANSACTION + 11;
-  static constexpr uint32_t TRANSACTION_setDolbyVisionLayerFlags = ::android::IBinder::FIRST_CALL_TRANSACTION + 12;
-  static constexpr uint32_t TRANSACTION_setPixelAspectRatio = ::android::IBinder::FIRST_CALL_TRANSACTION + 13;
+  static constexpr uint32_t TRANSACTION_signalEndOfStream = ::android::IBinder::FIRST_CALL_TRANSACTION + 6;
+  static constexpr uint32_t TRANSACTION_parseCodecSpecificData = ::android::IBinder::FIRST_CALL_TRANSACTION + 7;
+  static constexpr uint32_t TRANSACTION_setMasteringDisplayInfo = ::android::IBinder::FIRST_CALL_TRANSACTION + 8;
+  static constexpr uint32_t TRANSACTION_setContentLightLevel = ::android::IBinder::FIRST_CALL_TRANSACTION + 9;
+  static constexpr uint32_t TRANSACTION_setColorimetry = ::android::IBinder::FIRST_CALL_TRANSACTION + 10;
+  static constexpr uint32_t TRANSACTION_setStreamResolution = ::android::IBinder::FIRST_CALL_TRANSACTION + 11;
+  static constexpr uint32_t TRANSACTION_setFrameRate = ::android::IBinder::FIRST_CALL_TRANSACTION + 12;
+  static constexpr uint32_t TRANSACTION_setDolbyVisionLayerFlags = ::android::IBinder::FIRST_CALL_TRANSACTION + 13;
+  static constexpr uint32_t TRANSACTION_setPixelAspectRatio = ::android::IBinder::FIRST_CALL_TRANSACTION + 14;
   static constexpr uint32_t TRANSACTION_getInterfaceVersion = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777214;
   static constexpr uint32_t TRANSACTION_getInterfaceHash = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777213;
   explicit BnVideoDecoderController();
@@ -52,6 +53,9 @@ public:
   }
   ::android::binder::Status signalDiscontinuity() override {
     return _aidl_delegate->signalDiscontinuity();
+  }
+  ::android::binder::Status signalEndOfStream() override {
+    return _aidl_delegate->signalEndOfStream();
   }
   ::android::binder::Status parseCodecSpecificData(::com::rdk::hal::videodecoder::CSDVideoFormat csdVideoFormat, const ::std::vector<uint8_t>& codecData, bool* _aidl_return) override {
     return _aidl_delegate->parseCodecSpecificData(csdVideoFormat, codecData, _aidl_return);

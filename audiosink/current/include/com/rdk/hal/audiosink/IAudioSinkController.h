@@ -30,6 +30,7 @@ public:
   virtual ::android::binder::Status start() = 0;
   virtual ::android::binder::Status stop() = 0;
   virtual ::android::binder::Status queueAudioFrame(int64_t nsPresentationTime, int64_t bufferHandle, const ::com::rdk::hal::audiodecoder::FrameMetadata& metadata, bool* _aidl_return) = 0;
+  virtual ::android::binder::Status signalEndOfStream() = 0;
   virtual ::android::binder::Status flush() = 0;
   virtual ::android::binder::Status getVolume(::com::rdk::hal::audiosink::Volume* _aidl_return) = 0;
   virtual ::android::binder::Status setVolume(const ::com::rdk::hal::audiosink::Volume& volume, bool* _aidl_return) = 0;
@@ -65,6 +66,9 @@ public:
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status queueAudioFrame(int64_t /*nsPresentationTime*/, int64_t /*bufferHandle*/, const ::com::rdk::hal::audiodecoder::FrameMetadata& /*metadata*/, bool* /*_aidl_return*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status signalEndOfStream() override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status flush() override {

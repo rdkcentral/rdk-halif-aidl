@@ -15,6 +15,7 @@ public:
   explicit BpAudioDecoderControllerListener(const ::android::sp<::android::IBinder>& _aidl_impl);
   virtual ~BpAudioDecoderControllerListener() = default;
   ::android::binder::Status onFrameOutput(int64_t nsPresentationTime, int64_t frameAVBufferHandle, const ::std::optional<::com::rdk::hal::audiodecoder::FrameMetadata>& metadata) override;
+  ::android::binder::Status onEndOfStream() override;
   ::android::binder::Status onDecodeBufferAvailable() override;
   int32_t getInterfaceVersion() override;
   std::string getInterfaceHash() override;

@@ -52,17 +52,19 @@ oneway interface IAudioSinkControllerListener {
     /**
      * Callback when the last audio frame has been completely passed to the mixer.
      *
-     * Triggered after the client signalled EOS by passing a frame to
-     * `IAudioSinkController.queueAudioFrame()` with `FrameMetadata.endOfStream = true`.
-     * Fires exactly once per session, ordered strictly after that final frame
-     * has been completely passed to the mixer.
+     * Triggered after the client called `IAudioSinkController.signalEndOfStream()`
+     * to assert that no further frames will be queued. Fires exactly once per
+     * session, ordered strictly after the final queued frame has been completely
+     * passed to the mixer. If no frames were queued, `nsPresentationTime` is the
+     * undefined-time sentinel (`IAVClock.UNDEFINED_TIME`).
      *
      * The behaviour is the same for tunnelled and non-tunnelled audio.
      * The audio may not immediately be heard due to audio mixer and output latencies.
      *
-     * @param[in] nsPresentationTime	The presentation time of the final audio frame in nanoseconds.
+     * @param[in] nsPresentationTime	The presentation time of the final audio frame in nanoseconds,
+     *                                  or `IAVClock.UNDEFINED_TIME` if no frames were queued.
      *
-     * @see IAudioSinkController.queueAudioFrame()
+     * @see IAudioSinkController.signalEndOfStream()
      */
     void onEndOfStream(in long nsPresentationTime);
 

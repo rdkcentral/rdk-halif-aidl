@@ -26,29 +26,29 @@ public:
   int32_t trimStartNs = 0;
   int32_t trimEndNs = 0;
   bool lowLatency = false;
-  bool endOfStream = false;
+  bool bitstreamEOS = false;
   bool discontinuity = false;
   ::com::rdk::hal::AVSource source = ::com::rdk::hal::AVSource(0);
   ::std::optional<::com::rdk::hal::audiodecoder::PCMMetadata> metadata;
   ::std::vector<uint8_t> SoCPrivate;
   ::android::os::ParcelableHolder extension { ::android::Parcelable::Stability::STABILITY_VINTF };
   inline bool operator!=(const FrameMetadata& rhs) const {
-    return std::tie(type, sourceCodec, isDolbyAtmos, trimStartNs, trimEndNs, lowLatency, endOfStream, discontinuity, source, metadata, SoCPrivate, extension) != std::tie(rhs.type, rhs.sourceCodec, rhs.isDolbyAtmos, rhs.trimStartNs, rhs.trimEndNs, rhs.lowLatency, rhs.endOfStream, rhs.discontinuity, rhs.source, rhs.metadata, rhs.SoCPrivate, rhs.extension);
+    return std::tie(type, sourceCodec, isDolbyAtmos, trimStartNs, trimEndNs, lowLatency, bitstreamEOS, discontinuity, source, metadata, SoCPrivate, extension) != std::tie(rhs.type, rhs.sourceCodec, rhs.isDolbyAtmos, rhs.trimStartNs, rhs.trimEndNs, rhs.lowLatency, rhs.bitstreamEOS, rhs.discontinuity, rhs.source, rhs.metadata, rhs.SoCPrivate, rhs.extension);
   }
   inline bool operator<(const FrameMetadata& rhs) const {
-    return std::tie(type, sourceCodec, isDolbyAtmos, trimStartNs, trimEndNs, lowLatency, endOfStream, discontinuity, source, metadata, SoCPrivate, extension) < std::tie(rhs.type, rhs.sourceCodec, rhs.isDolbyAtmos, rhs.trimStartNs, rhs.trimEndNs, rhs.lowLatency, rhs.endOfStream, rhs.discontinuity, rhs.source, rhs.metadata, rhs.SoCPrivate, rhs.extension);
+    return std::tie(type, sourceCodec, isDolbyAtmos, trimStartNs, trimEndNs, lowLatency, bitstreamEOS, discontinuity, source, metadata, SoCPrivate, extension) < std::tie(rhs.type, rhs.sourceCodec, rhs.isDolbyAtmos, rhs.trimStartNs, rhs.trimEndNs, rhs.lowLatency, rhs.bitstreamEOS, rhs.discontinuity, rhs.source, rhs.metadata, rhs.SoCPrivate, rhs.extension);
   }
   inline bool operator<=(const FrameMetadata& rhs) const {
-    return std::tie(type, sourceCodec, isDolbyAtmos, trimStartNs, trimEndNs, lowLatency, endOfStream, discontinuity, source, metadata, SoCPrivate, extension) <= std::tie(rhs.type, rhs.sourceCodec, rhs.isDolbyAtmos, rhs.trimStartNs, rhs.trimEndNs, rhs.lowLatency, rhs.endOfStream, rhs.discontinuity, rhs.source, rhs.metadata, rhs.SoCPrivate, rhs.extension);
+    return std::tie(type, sourceCodec, isDolbyAtmos, trimStartNs, trimEndNs, lowLatency, bitstreamEOS, discontinuity, source, metadata, SoCPrivate, extension) <= std::tie(rhs.type, rhs.sourceCodec, rhs.isDolbyAtmos, rhs.trimStartNs, rhs.trimEndNs, rhs.lowLatency, rhs.bitstreamEOS, rhs.discontinuity, rhs.source, rhs.metadata, rhs.SoCPrivate, rhs.extension);
   }
   inline bool operator==(const FrameMetadata& rhs) const {
-    return std::tie(type, sourceCodec, isDolbyAtmos, trimStartNs, trimEndNs, lowLatency, endOfStream, discontinuity, source, metadata, SoCPrivate, extension) == std::tie(rhs.type, rhs.sourceCodec, rhs.isDolbyAtmos, rhs.trimStartNs, rhs.trimEndNs, rhs.lowLatency, rhs.endOfStream, rhs.discontinuity, rhs.source, rhs.metadata, rhs.SoCPrivate, rhs.extension);
+    return std::tie(type, sourceCodec, isDolbyAtmos, trimStartNs, trimEndNs, lowLatency, bitstreamEOS, discontinuity, source, metadata, SoCPrivate, extension) == std::tie(rhs.type, rhs.sourceCodec, rhs.isDolbyAtmos, rhs.trimStartNs, rhs.trimEndNs, rhs.lowLatency, rhs.bitstreamEOS, rhs.discontinuity, rhs.source, rhs.metadata, rhs.SoCPrivate, rhs.extension);
   }
   inline bool operator>(const FrameMetadata& rhs) const {
-    return std::tie(type, sourceCodec, isDolbyAtmos, trimStartNs, trimEndNs, lowLatency, endOfStream, discontinuity, source, metadata, SoCPrivate, extension) > std::tie(rhs.type, rhs.sourceCodec, rhs.isDolbyAtmos, rhs.trimStartNs, rhs.trimEndNs, rhs.lowLatency, rhs.endOfStream, rhs.discontinuity, rhs.source, rhs.metadata, rhs.SoCPrivate, rhs.extension);
+    return std::tie(type, sourceCodec, isDolbyAtmos, trimStartNs, trimEndNs, lowLatency, bitstreamEOS, discontinuity, source, metadata, SoCPrivate, extension) > std::tie(rhs.type, rhs.sourceCodec, rhs.isDolbyAtmos, rhs.trimStartNs, rhs.trimEndNs, rhs.lowLatency, rhs.bitstreamEOS, rhs.discontinuity, rhs.source, rhs.metadata, rhs.SoCPrivate, rhs.extension);
   }
   inline bool operator>=(const FrameMetadata& rhs) const {
-    return std::tie(type, sourceCodec, isDolbyAtmos, trimStartNs, trimEndNs, lowLatency, endOfStream, discontinuity, source, metadata, SoCPrivate, extension) >= std::tie(rhs.type, rhs.sourceCodec, rhs.isDolbyAtmos, rhs.trimStartNs, rhs.trimEndNs, rhs.lowLatency, rhs.endOfStream, rhs.discontinuity, rhs.source, rhs.metadata, rhs.SoCPrivate, rhs.extension);
+    return std::tie(type, sourceCodec, isDolbyAtmos, trimStartNs, trimEndNs, lowLatency, bitstreamEOS, discontinuity, source, metadata, SoCPrivate, extension) >= std::tie(rhs.type, rhs.sourceCodec, rhs.isDolbyAtmos, rhs.trimStartNs, rhs.trimEndNs, rhs.lowLatency, rhs.bitstreamEOS, rhs.discontinuity, rhs.source, rhs.metadata, rhs.SoCPrivate, rhs.extension);
   }
 
   ::android::Parcelable::Stability getStability() const override { return ::android::Parcelable::Stability::STABILITY_VINTF; }
@@ -67,7 +67,7 @@ public:
     os << ", trimStartNs: " << ::android::internal::ToString(trimStartNs);
     os << ", trimEndNs: " << ::android::internal::ToString(trimEndNs);
     os << ", lowLatency: " << ::android::internal::ToString(lowLatency);
-    os << ", endOfStream: " << ::android::internal::ToString(endOfStream);
+    os << ", bitstreamEOS: " << ::android::internal::ToString(bitstreamEOS);
     os << ", discontinuity: " << ::android::internal::ToString(discontinuity);
     os << ", source: " << ::android::internal::ToString(source);
     os << ", metadata: " << ::android::internal::ToString(metadata);

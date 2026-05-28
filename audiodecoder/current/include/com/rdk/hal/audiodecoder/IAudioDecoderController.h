@@ -28,6 +28,7 @@ public:
   virtual ::android::binder::Status decodeBufferWithMetadata(int64_t bufferHandle, const ::com::rdk::hal::audiodecoder::InputBufferMetadata& metadata, bool* _aidl_return) = 0;
   virtual ::android::binder::Status flush(bool reset) = 0;
   virtual ::android::binder::Status signalDiscontinuity() = 0;
+  virtual ::android::binder::Status signalEndOfStream() = 0;
   virtual ::android::binder::Status parseCodecSpecificData(::com::rdk::hal::audiodecoder::CSDAudioFormat csdAudioFormat, const ::std::vector<uint8_t>& codecData, bool* _aidl_return) = 0;
   virtual ::android::binder::Status setAudioFormat(int32_t channels, int32_t sampleRate) = 0;
   virtual int32_t getInterfaceVersion() = 0;
@@ -55,6 +56,9 @@ public:
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status signalDiscontinuity() override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status signalEndOfStream() override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status parseCodecSpecificData(::com::rdk::hal::audiodecoder::CSDAudioFormat /*csdAudioFormat*/, const ::std::vector<uint8_t>& /*codecData*/, bool* /*_aidl_return*/) override {

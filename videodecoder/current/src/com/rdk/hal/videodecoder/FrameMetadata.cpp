@@ -155,7 +155,7 @@ namespace videodecoder {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = _aidl_parcel->readBool(&endOfStream);
+  _aidl_ret_status = _aidl_parcel->readBool(&bitstreamEOS);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }
@@ -298,7 +298,7 @@ namespace videodecoder {
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }
-  _aidl_ret_status = _aidl_parcel->writeBool(endOfStream);
+  _aidl_ret_status = _aidl_parcel->writeBool(bitstreamEOS);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }

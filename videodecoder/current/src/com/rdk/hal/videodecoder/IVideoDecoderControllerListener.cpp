@@ -57,6 +57,28 @@ BpVideoDecoderControllerListener::BpVideoDecoderControllerListener(const ::andro
   return _aidl_status;
 }
 
+::android::binder::Status BpVideoDecoderControllerListener::onEndOfStream() {
+  ::android::Parcel _aidl_data;
+  _aidl_data.markForBinder(remoteStrong());
+  ::android::Parcel _aidl_reply;
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  ::android::binder::Status _aidl_status;
+  _aidl_ret_status = _aidl_data.writeInterfaceToken(getInterfaceDescriptor());
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_ret_status = remote()->transact(BnVideoDecoderControllerListener::TRANSACTION_onEndOfStream, _aidl_data, &_aidl_reply, ::android::IBinder::FLAG_ONEWAY);
+  if (UNLIKELY(_aidl_ret_status == ::android::UNKNOWN_TRANSACTION && IVideoDecoderControllerListener::getDefaultImpl())) {
+     return IVideoDecoderControllerListener::getDefaultImpl()->onEndOfStream();
+  }
+  if (((_aidl_ret_status) != (::android::OK))) {
+    goto _aidl_error;
+  }
+  _aidl_error:
+  _aidl_status.setFromStatusT(_aidl_ret_status);
+  return _aidl_status;
+}
+
 ::android::binder::Status BpVideoDecoderControllerListener::onUserDataOutput(int64_t nsPresentationTime, const ::std::vector<uint8_t>& userData) {
   ::android::Parcel _aidl_data;
   _aidl_data.markForBinder(remoteStrong());
@@ -192,6 +214,15 @@ BnVideoDecoderControllerListener::BnVideoDecoderControllerListener()
       break;
     }
     ::android::binder::Status _aidl_status(onFrameOutput(in_nsPresentationTime, in_frameAVBufferHandle, in_metadata));
+  }
+  break;
+  case BnVideoDecoderControllerListener::TRANSACTION_onEndOfStream:
+  {
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    ::android::binder::Status _aidl_status(onEndOfStream());
   }
   break;
   case BnVideoDecoderControllerListener::TRANSACTION_onUserDataOutput:

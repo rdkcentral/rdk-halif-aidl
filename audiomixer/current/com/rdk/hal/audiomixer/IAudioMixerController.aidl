@@ -113,8 +113,10 @@ interface IAudioMixerController {
      * @brief     Signals end-of-stream for all active mixer inputs.
      * @details   After all buffered frames are processed, the mixer drains remaining data
      *            and transitions through STOPPING to READY state.
+     *            Named `signalEndOfStream()` for consistency with the decoder
+     *            and sink controllers.
      * @exception binder::Status EX_ILLEGAL_STATE if not started.
      * @pre       The mixer must be in STARTED state.
      */
-    void signalEOS();
+    void signalEndOfStream();
 }

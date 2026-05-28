@@ -15,7 +15,7 @@ public:
   static constexpr uint32_t TRANSACTION_stop = ::android::IBinder::FIRST_CALL_TRANSACTION + 3;
   static constexpr uint32_t TRANSACTION_flush = ::android::IBinder::FIRST_CALL_TRANSACTION + 4;
   static constexpr uint32_t TRANSACTION_signalDiscontinuity = ::android::IBinder::FIRST_CALL_TRANSACTION + 5;
-  static constexpr uint32_t TRANSACTION_signalEOS = ::android::IBinder::FIRST_CALL_TRANSACTION + 6;
+  static constexpr uint32_t TRANSACTION_signalEndOfStream = ::android::IBinder::FIRST_CALL_TRANSACTION + 6;
   static constexpr uint32_t TRANSACTION_getInterfaceVersion = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777214;
   static constexpr uint32_t TRANSACTION_getInterfaceHash = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777213;
   explicit BnAudioMixerController();
@@ -46,8 +46,8 @@ public:
   ::android::binder::Status signalDiscontinuity() override {
     return _aidl_delegate->signalDiscontinuity();
   }
-  ::android::binder::Status signalEOS() override {
-    return _aidl_delegate->signalEOS();
+  ::android::binder::Status signalEndOfStream() override {
+    return _aidl_delegate->signalEndOfStream();
   }
   int32_t getInterfaceVersion() override {
     int32_t _delegator_ver = BnAudioMixerController::getInterfaceVersion();

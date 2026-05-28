@@ -80,38 +80,34 @@ parcelable FrameMetadata {
 	boolean lowLatency;
 
 	/**
-	 * End-of-stream marker delivered to the client on the FINAL
-	 * `IAudioDecoderControllerListener.onFrameOutput()` callback of the
-	 * decode session.
+	 * In-bitstream end-of-stream marker.
 	 *
-	 * When true, this is the final `onFrameOutput()` callback of the session.
-	 * The HAL delivers it exactly once per session. There is no separate
-	 * EOS-only marker callback - `endOfStream = true` rides on the metadata
-	 * of the last real decoded frame in non-tunnelled mode, or on the final
-	 * tunnelled-mode metadata callback in tunnelled mode (where
-	 * `frameAVBufferHandle = -1` is the normal case).
+	 * Set true by the HAL on an output frame when it parses a codec-level
+	 * end-of-stream marker from the audio elementary stream itself - for
+	 * example, Dolby TrueHD substream termination, or any analogous
+	 * end-of-sequence indicator defined by the source codec.
 	 *
-	 * The HAL MUST deliver a non-null `FrameMetadata` on the EOS callback so
-	 * clients can reliably detect EOS via `metadata.endOfStream` even in
-	 * tunnelled mode. This follows from the existing "metadata is non-null
-	 * when it changes" rule - `endOfStream` transitioning from false to true
-	 * is a metadata change. The other fields of this parcelable describe
-	 * the final frame as normal.
+	 * Many common audio formats (raw PCM, MP3, AAC LC, AC-3) carry no
+	 * in-stream EOS marker; for those, this flag is always false.
 	 *
-	 * Audio EOS is always application-driven. No supported audio elementary
-	 * stream (MP3, AAC, AC-3/E-AC-3, Opus, Vorbis) carries an in-bitstream
-	 * EOS marker, so EOS originates only from the client submitting a final
-	 * buffer via `IAudioDecoderController.decodeBufferWithMetadata()` with
-	 * `InputBufferMetadata.endOfStream = true`.
+	 * Advisory and informational only:
+	 * - It does NOT end the decode session and never triggers teardown.
+	 * - It may appear more than once in a session - at a splice or
+	 *   concatenation point an end-of-sequence is a sequence boundary, not
+	 *   necessarily end-of-presentation.
+	 * - No callback fires for it; it is surfaced purely as this flag for any
+	 *   consumer that cares (e.g. splice-aware middleware).
 	 *
-	 * After this callback the decoder remains in `State::STARTED` but is
-	 * drained. No further `onFrameOutput()` is delivered until `flush()` or
-	 * `stop()` + `start()`.
+	 * Client-signalled EOS is NOT carried here. The discrete EOS signal flows
+	 * via `IAudioDecoderController.signalEndOfStream()`: the HAL drains every
+	 * held frame, and then fires
+	 * `IAudioDecoderControllerListener.onEndOfStream()` exactly once after the
+	 * final `onFrameOutput()`.
 	 *
-	 * @see IAudioDecoderController.decodeBufferWithMetadata()
-	 * @see InputBufferMetadata.endOfStream
+	 * @see IAudioDecoderController.signalEndOfStream()
+	 * @see IAudioDecoderControllerListener.onEndOfStream()
 	 */
-	boolean endOfStream;
+	boolean bitstreamEOS;
 
 	/**
 	 * Discontinuity indicator where the PTS for this frame is likely to be discontinuous to the previous.
