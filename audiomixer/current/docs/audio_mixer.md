@@ -33,13 +33,13 @@ Mixer instances are accessed and controlled via `IAudioMixer`, with additional l
 
 ## Implementation Requirements
 
-| #                | Requirement                                                                      | Comments               |
-| ---------------- | -------------------------------------------------------------------------------- | ---------------------- |
-| HAL.AUDIOMIXER.1 | The service shall expose all available mixers through `IAudioMixerManager`.      |                        |
-| HAL.AUDIOMIXER.2 | Each `IAudioMixer` shall expose at least one `IAudioOutputPort`.                 |                        |
-| HAL.AUDIOMIXER.3 | The mixer shall support querying `Capabilities` via `getCapabilities()`.         |                        |
-| HAL.AUDIOMIXER.4 | The controller shall support `start`, `stop`, `flush`, and `signalEOS`.          |                        |
-| HAL.AUDIOMIXER.5 | Output port properties shall be accessible via `getProperty` and `setProperty`.  |                        |
+| # | Requirement | Comments |
+| - | ----------- | -------- |
+| HAL.AUDIOMIXER.1 | The service shall expose all available mixers through `IAudioMixerManager`. | |
+| HAL.AUDIOMIXER.2 | Each `IAudioMixer` shall expose at least one `IAudioOutputPort`. | |
+| HAL.AUDIOMIXER.3 | The mixer shall support querying `Capabilities` via `getCapabilities()`. | |
+| HAL.AUDIOMIXER.4 | The controller shall support `start`, `stop`, `flush`, and `signalEOS`. | |
+| HAL.AUDIOMIXER.5 | Output port properties shall be readable via `IAudioOutputPort.getProperty()` and writable via `IAudioOutputPortController.setProperty()` (controller acquired via `IAudioOutputPort.open()`). | |
 | HAL.AUDIOMIXER.6 | Null values for `Capabilities.name` or `OutputPortCapabilities.portName` are allowed but discouraged. | For debugging support. |
 
 ---
@@ -160,7 +160,7 @@ flowchart TD
 
 * Mixer accepts input streams with declared `ContentType` and `Codec`.
 * Inputs are processed and mixed into one or more outputs.
-* Output formats can be negotiated and configured using `setProperty(OUTPUT_FORMAT)`.
+* Output formats can be negotiated and configured using `IAudioOutputPortController.setProperty(OUTPUT_FORMAT, ...)` (controller acquired via `IAudioOutputPort.open()`).
 * AQ processors and parameters can be configured where supported.
 * Transcode or passthrough output formats are dynamically switchable if capabilities permit.
 
@@ -334,7 +334,7 @@ Two ways to silence an input:
 | `IAudioSinkController.setVolume()` / `setVolumeRamp()` | Per-stream (sink output) | Yes | Per-app or per-stream level; fade-out before stop |
 | `IAudioMixerController.setInputVolume()` / `setInputVolumeRamp()` | Per mixer input | Yes | Cross-source balance; **ducking**; works for tunnelled, sink-routed, and direct (HDMI/Composite) inputs |
 | `IAudioMixerController.setProperty(FADER_LEVEL)` | Main vs associated balance | No (instantaneous) | Accessibility (descriptive audio balance) |
-| `IAudioOutputPort` `VOLUME` property | Per output port | Vendor-specific | Master/speaker volume |
+| `IAudioOutputPort.open()` -> `IAudioOutputPortController.setProperty(VOLUME, ...)` | Per output port | Vendor-specific | Master/speaker volume |
 | `IAudioMixerController.setProperty(MUTE)` | Whole mixer output | No | Hard mute of all output |
 
 The ducking pattern (use case 2) uses `setInputVolumeRamp()` because that is the only API that works uniformly across all input source types — sinks, tunnelled decoders, and direct HDMI/Composite inputs.
@@ -363,7 +363,7 @@ Each output port declares both a human-readable `portName` (for logs / diagnosti
 
 ### Allowed output combinations
 
-Multiple output ports may be active simultaneously, subject to platform constraints. The HAL declares supported combinations indirectly via the per-port HFP entries; the runtime enforces them by rejecting incompatible `setProperty()` calls (returning `false`).
+Multiple output ports may be active simultaneously, subject to platform constraints. The HAL declares supported combinations indirectly via the per-port HFP entries; the runtime enforces them by rejecting incompatible `IAudioOutputPortController.setProperty()` calls (controller acquired via `IAudioOutputPort.open()`) — typically returning `false`.
 
 Common constraints across platforms:
 
@@ -372,11 +372,11 @@ Common constraints across platforms:
 * **Internal speakers are PCM only** — they receive the decoded mix; passthrough does not apply.
 * **ARC / eARC are mutually exclusive** — a port operates as one or the other based on the connected sink's capability negotiation, not both at once.
 
-There is no API to query the full allowed-combination matrix at runtime — applications should attempt the configuration via `setProperty()` and react to a `false` return. The HFP declares per-port capabilities; the cross-port matrix is platform-specific implementation detail.
+There is no API to query the full allowed-combination matrix at runtime — applications should attempt the configuration via `IAudioOutputPortController.setProperty()` and react to a `false` return. The HFP declares per-port capabilities; the cross-port matrix is platform-specific implementation detail.
 
 ### Hot-plug and hot-unplug
 
-Each output port carries a `CONNECTION_STATE` property (`UNKNOWN` / `DISCONNECTED` / `CONNECTED` / `PENDING` / `FAULT`). Changes are signalled via `IAudioOutputPortListener.onPropertyChanged(CONNECTION_STATE, newValue)` — clients should register the listener rather than poll.
+Output ports whose `supportedProperties` (declared in `OutputPortCapabilities`) include `CONNECTION_STATE` expose that property (`UNKNOWN` / `DISCONNECTED` / `CONNECTED` / `PENDING` / `FAULT`). This typically applies to hotplug-capable ports such as HDMI / ARC / EARC / BLUETOOTH. Changes are signalled via `IAudioOutputPortListener.onPropertyChanged(CONNECTION_STATE, newValue)` — clients should check the port's declared supported properties and register the listener rather than poll.
 
 ```mermaid
 sequenceDiagram
@@ -411,7 +411,7 @@ sequenceDiagram
 * `SUPPORTED_AUDIO_FORMATS` and `DOLBY_ATMOS_SUPPORT` may change on reconnect — the new sink could have a different capability set than the previous one. The HAL fires `onPropertyChanged` for any capability that actually changes.
 * The previously configured `OUTPUT_FORMAT` is re-applied. If the new sink does not support it (e.g. previous sink was MAT-capable, new one is not), `OUTPUT_FORMAT` falls back to `AUTO` and the HAL fires `onPropertyChanged(OUTPUT_FORMAT, ...)` with the resolved format.
 
-For ports without hot-plug detection (`SPDIF`, `SPEAKERS`, `COMPOSITE`), the `CONNECTION_STATE` stays at `UNKNOWN` and no events are fired — the port is treated as always connected.
+For ports without hot-plug detection (`SPDIF`, `SPEAKERS`, `COMPOSITE`), the HFP typically omits `CONNECTION_STATE` from `supportedProperties` — the port is treated as always connected and no events are fired. If a platform does declare `CONNECTION_STATE` for a non-hotplug port, it stays at `UNKNOWN`.
 
 ---
 
