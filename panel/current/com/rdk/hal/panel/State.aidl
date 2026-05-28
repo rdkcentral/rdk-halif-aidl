@@ -2,7 +2,7 @@
  * If not stated otherwise in this file or this component's LICENSE file the
  * following copyright and licenses apply:
  *
- * Copyright 2024 RDK Management
+ * Copyright 2026 RDK Management
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,32 +16,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/**
+ * @file State.aidl
+ * @brief Lifecycle states for a panel output instance.
+ */
 package com.rdk.hal.panel;
 
-/** 
- *  @brief     Display panel 2 point white balance settings.
- *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
- */
- 
 @VintfStability
-parcelable WhiteBalance2PointSettings
-{
-	/* TODO: define what the valid range is - or provide an API for it. */
-
-	parcelable Point {
-        /**
-         * White balance gain value.
-         * Valid range is 0 to 2047.
-         */
-		int gain;
-        /**
-         * White balance offset value.
-         * Valid range is -1024 to 1023.
-         */
-		int offset;
-	}
-
-	Point r;
-	Point g;
-	Point b;
+enum State {
+    STOPPED = 0,
+    STARTING = 1,
+    STARTED = 2,
+    STOPPING = 3,
+    ERROR = 4,
 }
