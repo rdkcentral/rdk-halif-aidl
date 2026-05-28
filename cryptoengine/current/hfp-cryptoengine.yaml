@@ -70,6 +70,7 @@ cryptoengine:
   supportedEcCurves:
     - P_256
     - P_384
+    - P_521
     - ED25519
     - X25519
 

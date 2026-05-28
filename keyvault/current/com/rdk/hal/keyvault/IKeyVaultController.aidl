@@ -128,12 +128,19 @@ interface IKeyVaultController {
      * separate aliases. Only key descriptors are returned from this call;
      * callers must use exportKey(publicAlias) to obtain raw public key bytes.
      *
+     * <h4>Extractability semantics</h4>
+     * The `extractable` flag applies only to the private key. Public keys
+     * are inherently public material and are always exportable via
+     * exportKey(publicAlias) regardless of this flag. The flag is recorded
+     * on the private-key KeyDescriptor; the public-key descriptor always
+     * reports extractable = true.
+     *
      * @param publicAlias Alias for the public key in the vault.
      * @param privateAlias Alias for the private key in the vault.
      * @param algorithm Algorithm for this keypair (EC, RSA, DH).
      * @param keySizeBits Key size in bits.
      * @param usages Allowed usages for the private key as a bitmask of KeyPurpose values.
-     * @param extractable Whether the private key material can be exported.
+     * @param extractable Whether the private key material can be exported. The public key is always exportable.
      * @returns KeyDescriptor[] — two descriptors: [0] = public, [1] = private.
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if aliases already exist or params are invalid.
      * @exception binder::Status EX_SERVICE_SPECIFIC if the vault has reached its key limit.
