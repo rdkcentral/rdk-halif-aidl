@@ -9,14 +9,15 @@ namespace hal {
 namespace avclock {
 class BnAVClockController : public ::android::BnInterface<IAVClockController> {
 public:
-  static constexpr uint32_t TRANSACTION_start = ::android::IBinder::FIRST_CALL_TRANSACTION + 0;
-  static constexpr uint32_t TRANSACTION_stop = ::android::IBinder::FIRST_CALL_TRANSACTION + 1;
-  static constexpr uint32_t TRANSACTION_setClockMode = ::android::IBinder::FIRST_CALL_TRANSACTION + 2;
-  static constexpr uint32_t TRANSACTION_getClockMode = ::android::IBinder::FIRST_CALL_TRANSACTION + 3;
-  static constexpr uint32_t TRANSACTION_notifyPCRSample = ::android::IBinder::FIRST_CALL_TRANSACTION + 4;
-  static constexpr uint32_t TRANSACTION_getCurrentClockTime = ::android::IBinder::FIRST_CALL_TRANSACTION + 5;
-  static constexpr uint32_t TRANSACTION_setPlaybackRate = ::android::IBinder::FIRST_CALL_TRANSACTION + 6;
-  static constexpr uint32_t TRANSACTION_getPlaybackRate = ::android::IBinder::FIRST_CALL_TRANSACTION + 7;
+  static constexpr uint32_t TRANSACTION_setProperty = ::android::IBinder::FIRST_CALL_TRANSACTION + 0;
+  static constexpr uint32_t TRANSACTION_start = ::android::IBinder::FIRST_CALL_TRANSACTION + 1;
+  static constexpr uint32_t TRANSACTION_stop = ::android::IBinder::FIRST_CALL_TRANSACTION + 2;
+  static constexpr uint32_t TRANSACTION_setClockMode = ::android::IBinder::FIRST_CALL_TRANSACTION + 3;
+  static constexpr uint32_t TRANSACTION_getClockMode = ::android::IBinder::FIRST_CALL_TRANSACTION + 4;
+  static constexpr uint32_t TRANSACTION_notifyPCRSample = ::android::IBinder::FIRST_CALL_TRANSACTION + 5;
+  static constexpr uint32_t TRANSACTION_getCurrentClockTime = ::android::IBinder::FIRST_CALL_TRANSACTION + 6;
+  static constexpr uint32_t TRANSACTION_setPlaybackRate = ::android::IBinder::FIRST_CALL_TRANSACTION + 7;
+  static constexpr uint32_t TRANSACTION_getPlaybackRate = ::android::IBinder::FIRST_CALL_TRANSACTION + 8;
   static constexpr uint32_t TRANSACTION_getInterfaceVersion = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777214;
   static constexpr uint32_t TRANSACTION_getInterfaceHash = ::android::IBinder::FIRST_CALL_TRANSACTION + 16777213;
   explicit BnAVClockController();
@@ -29,6 +30,9 @@ class IAVClockControllerDelegator : public BnAVClockController {
 public:
   explicit IAVClockControllerDelegator(::android::sp<IAVClockController> &impl) : _aidl_delegate(impl) {}
 
+  ::android::binder::Status setProperty(::com::rdk::hal::avclock::Property property, const ::com::rdk::hal::PropertyValue& propertyValue, bool* _aidl_return) override {
+    return _aidl_delegate->setProperty(property, propertyValue, _aidl_return);
+  }
   ::android::binder::Status start() override {
     return _aidl_delegate->start();
   }

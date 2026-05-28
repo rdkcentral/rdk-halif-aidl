@@ -14,6 +14,7 @@ class BpAVClockController : public ::android::BpInterface<IAVClockController> {
 public:
   explicit BpAVClockController(const ::android::sp<::android::IBinder>& _aidl_impl);
   virtual ~BpAVClockController() = default;
+  ::android::binder::Status setProperty(::com::rdk::hal::avclock::Property property, const ::com::rdk::hal::PropertyValue& propertyValue, bool* _aidl_return) override;
   ::android::binder::Status start() override;
   ::android::binder::Status stop() override;
   ::android::binder::Status setClockMode(::com::rdk::hal::avclock::ClockMode clockMode, bool* _aidl_return) override;

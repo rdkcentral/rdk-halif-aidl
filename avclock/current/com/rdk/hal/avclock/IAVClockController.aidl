@@ -19,6 +19,8 @@
 package com.rdk.hal.avclock;
 import com.rdk.hal.avclock.ClockMode;
 import com.rdk.hal.avclock.ClockTime;
+import com.rdk.hal.avclock.Property;
+import com.rdk.hal.PropertyValue;
 
 /** 
  *  @brief     AV Clock Controller HAL interface.
@@ -36,6 +38,41 @@ import com.rdk.hal.avclock.ClockTime;
 
 @VintfStability
 interface IAVClockController {
+
+    /**
+     * Sets a property.
+     *
+     * Mutator — lives on the controller because property writes require the
+     * single-writer ownership established by `IAVClock.open()`. Read access
+     * (`getProperty()`) remains on `IAVClock` so identity properties can be
+     * discovered before opening.
+     *
+     * Validation pattern:
+     *  - `EX_ILLEGAL_ARGUMENT` indicates a caller bug — the `property` key is
+     *    not a member of the Property enum. The caller should fix the call;
+     *    retrying with the same arguments will keep failing.
+     *  - `false` indicates a runtime rejection — the key is valid and the
+     *    value is well-formed, but the write could not be applied (value out
+     *    of range for this clock instance, property is read-only on this
+     *    platform, hardware busy, etc.). The caller can retry or pick a
+     *    different value.
+     *
+     * @param[in] property              The key of a property from the Property enum.
+     * @param[in] propertyValue         Holds the value to set.
+     *
+     * @returns boolean
+     * @retval true     Property was successfully set.
+     * @retval false    Runtime rejection (value out of range, property
+     *                  read-only on this platform, etc.).
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT when `property`
+     *            is not a member of the Property enum (caller bug).
+     *
+     *
+     * @see IAVClock.getProperty()
+     */
+    boolean setProperty(in Property property, in PropertyValue propertyValue);
 
     /**
 	 * Starts the AV Clock.
