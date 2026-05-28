@@ -5,12 +5,9 @@
 # clones the toolchain. Keep it pinned so the committed module-local
 # generated C++ always matches the generator that produced it.
 #
-# Pinned to the always-regen-on-build fix commit on
-# feature/530-always-regen-on-build (linux_binder_idl#21). This commit
-# is the tip of the module-local generator branch (linux_binder_idl#20)
-# plus the rdk-halif-aidl#530 fix that drops the "skip regen when
-# current/include is already populated" guard. Bump to a release tag
-# once both PRs merge.
+# Pinned to release tag 2.1.0 (linux_binder_idl) which ships:
+#  - the module-local generated-output layout (linux_binder_idl#19/#20)
+#  - the always-regen-on-build fix (linux_binder_idl#21, closes rdk-halif-aidl#530)
 #
 # Override for a one-off build with:  BINDER_VERSION=<ref> ./build_binder.sh
-1db26cf
+2.1.0
