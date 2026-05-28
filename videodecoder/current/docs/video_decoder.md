@@ -290,7 +290,7 @@ When the decoder later finds an explicit value in the bitstream (H.264/HEVC VUI 
 
 This matters for legacy or partial streams where the bitstream omits VUI / SEI metadata that the container carries (e.g. SD MPEG-2 with PAR only in `pasp`, some packagers' H.264 output with no VUI colour_description). In those cases the hint is the only source of the value, and downstream display configuration would otherwise be incorrect.
 
-The decoder reports the value it actually used — bitstream-derived or hint-derived — in `FrameMetadata`:
+For hints whose contract is "tell the decoder what to render, and the decoder echoes back what it actually used", the decoder reports the value it actually used — bitstream-derived or hint-derived — in `FrameMetadata`:
 
 | Hint setter | Reported in FrameMetadata as |
 |---|---|
@@ -299,8 +299,9 @@ The decoder reports the value it actually used — bitstream-derived or hint-der
 | `setColorimetry` | `colorimetry` |
 | `setMasteringDisplayInfo` | `masteringDisplayInfo` |
 | `setContentLightLevel` | `contentLightLevel` |
-| `setDolbyVisionLayerFlags` | (decoder-internal; reflected in decode behaviour) |
 | `setPixelAspectRatio` | `parX`, `parY` |
+
+`setDolbyVisionLayerFlags` is the one exception: it is a decoder-configuration hint (selects single-layer vs dual-layer DV decode mode) and is **not** mirrored into a `FrameMetadata` field. The bitstream-precedence rule still applies — DV RPU signalling overrides the hint when present — but the result is observable only as a change in decode behaviour, not as a readback field.
 
 ### Persistence
 
@@ -327,7 +328,7 @@ Secure Video Path (SVP) makes the hint setters more important, not less. Under S
 **Implications:**
 
 * **Hints are the only reliable middleware-visible source** of stream description under SVP. The middleware path (demuxer → parser → caps) extracts everything it can from clear container + codec-config data and must push it via the hint setters because the bitstream slices are opaque to it.
-* **Decoder is the only place** that has clear access to in-band SEI under SVP (mastering display SEI 137, content light level SEI 144, ATC tone mapping SEI 147, DV RPU SEI 4). For these fields:
+* **Decoder is the only place** that has clear access to in-band SEI under SVP (H.264/HEVC SEI payload type 137 "mastering display colour volume", type 144 "content light level information", type 147 "alternative transfer characteristics", DV RPU SEI type 4). For these fields:
   - If middleware can derive them from the container (e.g. `mdcv` / `cclv` MP4 boxes), the hint setter is the path.
   - If the value only exists in encrypted in-band SEI, the decoder parses internally and reports via `FrameMetadata` — middleware cannot pre-set them.
 * **Bitstream-precedence still applies.** Even under SVP, when the decoder finds a value in the (decrypted) bitstream it overrides the hint and is reported via `FrameMetadata`.

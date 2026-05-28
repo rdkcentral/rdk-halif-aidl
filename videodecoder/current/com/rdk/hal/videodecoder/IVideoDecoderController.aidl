@@ -232,8 +232,9 @@ interface IVideoDecoderController
      * Pass null to clear any previously set value and revert to stream-signalled metadata.
      *
      * <h4>Hint precedence and persistence</h4>
-     * Bitstream-derived metadata (HEVC SEI type 137) takes precedence over this hint
-     * when present; the hint is the fallback used only when the bitstream is silent.
+     * Bitstream-derived metadata (H.264/HEVC SEI payload type 137 — "mastering display
+     * colour volume") takes precedence over this hint when present; the hint is the
+     * fallback used only when the bitstream is silent.
      * The value the decoder actually used is reported via
      * `FrameMetadata.masteringDisplayInfo`. The hint persists across `flush()` and
      * is cleared on `close()`.
@@ -250,7 +251,8 @@ interface IVideoDecoderController
     void setMasteringDisplayInfo(in @nullable MasteringDisplayInfo info);
 
     /**
-     * Sets the content light level metadata for the stream (CTA-861.3 / HEVC SEI type 144).
+     * Sets the content light level metadata for the stream (CTA-861.3 / H.264/HEVC SEI
+     * payload type 144 — "content light level information").
      *
      * Provides the MaxCLL and MaxFALL values as CTA-861.3 static metadata. This is typically
      * sourced from container-level metadata (e.g. MP4/ISOBMFF 'clli' box, DASH MPD) before
@@ -259,8 +261,9 @@ interface IVideoDecoderController
      * Pass null to clear any previously set value and revert to stream-signalled metadata.
      *
      * <h4>Hint precedence and persistence</h4>
-     * Bitstream-derived metadata (HEVC SEI type 144) takes precedence over this hint
-     * when present; the hint is the fallback used only when the bitstream is silent.
+     * Bitstream-derived metadata (H.264/HEVC SEI payload type 144 — "content light level
+     * information") takes precedence over this hint when present; the hint is the fallback
+     * used only when the bitstream is silent.
      * The value the decoder actually used is reported via
      * `FrameMetadata.contentLightLevel`. The hint persists across `flush()` and
      * is cleared on `close()`.
@@ -404,8 +407,11 @@ interface IVideoDecoderController
      *   - NTSC 480i (Rec.601)  : 10/11
      *   - PAL 576i (Rec.601)   : 59/54
      *
-     * If the pixel aspect ratio is unknown or not present, callers should
-     * pass 0/0.
+     * If the pixel aspect ratio is unknown or not present, callers MUST
+     * pass 0/0. This is the only valid "unknown" encoding — `parX == 0` with
+     * `parY != 0` is rejected as an illegal argument. The decoder treats
+     * 0/0 identically to "hint not set" and falls back to bitstream VUI or
+     * the decoder default (square pixels) per the precedence rules below.
      *
      * <h4>Hint precedence and persistence</h4>
      * Bitstream-derived PAR (H.264/HEVC VUI `aspect_ratio_info_present_flag`)
@@ -414,13 +420,13 @@ interface IVideoDecoderController
      * actually used in `FrameMetadata.parX` / `FrameMetadata.parY`. The hint
      * persists across `flush()` and is cleared on `close()`.
      *
-     * @param[in] parX  Pixel aspect ratio numerator. Must be >= 0.
-     * @param[in] parY  Pixel aspect ratio denominator. Must be > 0 unless parX is 0.
+     * @param[in] parX  Pixel aspect ratio numerator. Must be >= 0. Use 0 (with parY = 0) if unknown.
+     * @param[in] parY  Pixel aspect ratio denominator. Must be > 0 unless parX is also 0.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the READY state.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if parY is 0 and parX is non-zero,
-     *            or if either parameter is negative.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if either parameter is negative,
+     *            or if exactly one of parX / parY is 0 (the only valid "unknown" encoding is 0/0).
      *
      * @pre The resource must be in State::READY.
      *
