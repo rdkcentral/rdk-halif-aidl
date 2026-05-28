@@ -98,9 +98,11 @@ parcelable PQParameterCapabilities
 
     /**
      * Union of a list of supported integer values or a list of supported Dolby Vision
-     * calibration settings values.
-     * For all PQ parameters except DV_CALIBRATION, use the `intValues` variant.
+        * calibration settings values.
+        * For all PQ parameters except DV_CALIBRATION and TWO_POINT_WB,
+        * use the `intValues` variant.
      * For PQParameter.DV_CALIBRATION, use the `dvCalibrationValues` variant.
+        * For PQParameter.TWO_POINT_WB, use the `twoPointWBValues` variant.
      * This only needs to be populated if not all values between min and max are supported.
      */
     union SupportedValues {

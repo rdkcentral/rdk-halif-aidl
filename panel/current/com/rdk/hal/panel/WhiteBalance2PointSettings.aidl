@@ -29,7 +29,15 @@ parcelable WhiteBalance2PointSettings
 	/* TODO: define what the valid range is - or provide an API for it. */
 
 	parcelable Point {
+        /**
+         * White balance gain value.
+         * Valid range is 0 to 2047.
+         */
 		int gain;
+        /**
+         * White balance offset value.
+         * Valid range is -1024 to 1023.
+         */
 		int offset;
 	}
 
