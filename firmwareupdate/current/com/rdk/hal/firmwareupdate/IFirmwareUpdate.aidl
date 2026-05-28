@@ -56,9 +56,6 @@ interface IFirmwareUpdate
      * application partition, peripheral device, etc.) is platform-dependent
      * and is determined by examination of the image file contents.
      *
-     * The types of images that are supported is platform dependent and the
-     * type is detected by examination of the file.
-     *
      * The `updateFirmwareFromFile()` function is non-blocking and requests the
      * firmware update operation in background.
      *
