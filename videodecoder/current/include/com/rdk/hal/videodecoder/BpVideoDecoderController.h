@@ -27,6 +27,7 @@ public:
   ::android::binder::Status setStreamResolution(int32_t width, int32_t height) override;
   ::android::binder::Status setFrameRate(int32_t numerator, int32_t denominator) override;
   ::android::binder::Status setDolbyVisionLayerFlags(bool blPresent, bool elPresent) override;
+  ::android::binder::Status setPixelAspectRatio(int32_t parX, int32_t parY) override;
   int32_t getInterfaceVersion() override;
   std::string getInterfaceHash() override;
 private:
