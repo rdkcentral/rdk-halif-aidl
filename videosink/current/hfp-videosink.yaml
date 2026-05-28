@@ -27,14 +27,6 @@ videosink:
 
   IVideoSink:
     - id: 0
-      supportedPixelFormats:
-        - NV12
-        - I420
-        - P010
-      supportedMemoryTypes:
-        - DMABuf
-        - NativeHandle
-      sinkQueueDepth: 4
       supportsAVSync: true
       vsyncDisplayLatencyNs: 2000000
       supportsHoldLastFrame: true
