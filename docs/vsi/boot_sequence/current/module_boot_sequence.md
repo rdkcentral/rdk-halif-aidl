@@ -8,7 +8,7 @@ A HAL module runs as its own process, launched by [systemd](../../systemd/curren
 <module> --port <port>
 ```
 
-On the [vDevice](#vdevice-configuration), a module additionally presents the hardware capabilities declared in a [HAL Feature Profile (HFP)](../../../key_concepts/hal/hal_feature_profiles.md), supplied with `--hfp`. Because the HFP defines what the module emulates, a vDevice module completes startup only once an HFP is applied. A module backed by real hardware initialises from that hardware and does not depend on an HFP.
+On the [vDevice](#vdevice-configuration), a module additionally presents the hardware capabilities declared in a [HAL Feature Profile (HFP)](../../../key_concepts/hal/hal_feature_profiles.md), supplied with `--hfp` at launch or delivered over Binder afterwards. Because the HFP defines what the module emulates, a vDevice module completes startup only once an HFP is applied. A module backed by real hardware initialises from that hardware and does not depend on an HFP.
 
 ---
 
@@ -96,18 +96,16 @@ stateDiagram-v2
     class STARTING,APPLYING Transitory
 ```
 
-### HFP Resolution Order
+### HFP Resolution
 
-The HFP is resolved at the `REGISTERED` transition, taking the first source that yields one:
+A vDevice module obtains its HFP from one of two sources:
 
-|Priority|Source|Use|
-|-|------|---|
-|1|`--hfp <path>` command-line argument|An operator launching a single module by hand.|
-|2|systemd-provided environment (`EnvironmentFile`)|The on-device vDevice launch.|
-|3|Kernel command-line locator (`/proc/cmdline`)|The default vDevice launch.|
-|4|Binder delivery into `WAITING_FOR_CONFIG`|The HFP is pushed after startup.|
+|Source|When|
+|------|----|
+|`--hfp <path>` command-line argument|Present at launch.|
+|Binder delivery into `WAITING_FOR_CONFIG`|No `--hfp` at launch; the HFP is pushed after startup.|
 
-Sources 1–3 differ only in where the HFP location comes from; the same apply routine consumes all four.
+The module reads only `--hfp`; it does not read `/proc/cmdline`. The `--hfp` value is populated upstream — by an operator launching a single module by hand, or, in the default vDevice launch, by systemd from an environment file the generator derives from the kernel command-line `hfp=` locator.
 
 ### Kernel Command Line to systemd
 
@@ -150,7 +148,7 @@ interface IModuleControl {
 |-|------------|---------|
 |**HAL.VDEVICE.1** |A vDevice module shall accept its HFP file location as the `--hfp` command-line argument.||
 |**HAL.VDEVICE.2** |A vDevice module shall register with the Service Manager before requiring an HFP, entering a registered-but-unconfigured state.|Makes a module launched without an HFP discoverable rather than failed.|
-|**HAL.VDEVICE.3** |A vDevice module shall resolve its HFP from, in priority order: the `--hfp` argument, the systemd-provided environment, then the kernel command line. When none supplies one, the module shall wait for an HFP delivered over Binder.|First source that yields an HFP wins.|
+|**HAL.VDEVICE.3** |A vDevice module launched without `--hfp` shall apply an HFP delivered over Binder before completing startup.|The `--hfp` value, when present, is supplied by an operator or by systemd from the kernel command-line locator.|
 |**HAL.VDEVICE.4** |A vDevice module shall apply its HFP exactly once and retain that configuration for the lifetime of the process.||
 |**HAL.VDEVICE.5** |A vDevice module that fails to apply its HFP shall exit non-zero, leaving recovery to the systemd restart policy.||
 
