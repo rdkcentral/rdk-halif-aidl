@@ -75,7 +75,7 @@ nav:
     - Composite Input: '!include compositeinput/current/mkdocs.yml'
     - Deep Sleep: '!include deepsleep/current/mkdocs.yml'
     - Device Info: '!include deviceinfo/current/mkdocs.yml'
-    - Flash: '!include flash/current/mkdocs.yml'
+    - Firmware Update: '!include firmwareupdate/current/mkdocs.yml'
     - Indicator: '!include indicator/current/mkdocs.yml'
     - Panel: '!include panel/current/mkdocs.yml'
     - Plane Control: '!include planecontrol/current/mkdocs.yml'
