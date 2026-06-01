@@ -22,7 +22,7 @@
 # type        - Responsibility: SOC or OEM                                [manual]
 component: audiomixer
 version: 0.2.0.0
-status: GREEN
+status: AMBER
 description: "Audio mixing and routing for multi-stream output"
 type: SOC
 

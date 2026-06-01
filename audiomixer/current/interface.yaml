@@ -4,6 +4,7 @@ aidl_interface:
     - com/rdk/hal/audiomixer/*.aidl
   imports:
     - audiodecoder
+    - audiosink
     - common
   stability: vintf
   layout: module-local
