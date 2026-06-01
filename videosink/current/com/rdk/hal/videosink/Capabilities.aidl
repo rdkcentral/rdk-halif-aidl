@@ -65,12 +65,4 @@ parcelable Capabilities
      * content. Mirrors `IVideoSink[i].supportsSecure` in the HFP.
      */
     boolean supportsSecure;
-
-    /**
-     * Zero-based index of the graphics / video plane that this Video Sink
-     * instance composes onto. Used by clients to coordinate Z-order and
-     * plane configuration with the plane control HAL. Mirrors
-     * `IVideoSink[i].planeIndex` in the HFP.
-     */
-    int planeIndex;
 }

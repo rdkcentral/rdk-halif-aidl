@@ -17,24 +17,23 @@ public:
   int64_t vsyncDisplayLatencyNs = 0L;
   bool supportsHoldLastFrame = false;
   bool supportsSecure = false;
-  int32_t planeIndex = 0;
   inline bool operator!=(const Capabilities& rhs) const {
-    return std::tie(supportsAVSync, vsyncDisplayLatencyNs, supportsHoldLastFrame, supportsSecure, planeIndex) != std::tie(rhs.supportsAVSync, rhs.vsyncDisplayLatencyNs, rhs.supportsHoldLastFrame, rhs.supportsSecure, rhs.planeIndex);
+    return std::tie(supportsAVSync, vsyncDisplayLatencyNs, supportsHoldLastFrame, supportsSecure) != std::tie(rhs.supportsAVSync, rhs.vsyncDisplayLatencyNs, rhs.supportsHoldLastFrame, rhs.supportsSecure);
   }
   inline bool operator<(const Capabilities& rhs) const {
-    return std::tie(supportsAVSync, vsyncDisplayLatencyNs, supportsHoldLastFrame, supportsSecure, planeIndex) < std::tie(rhs.supportsAVSync, rhs.vsyncDisplayLatencyNs, rhs.supportsHoldLastFrame, rhs.supportsSecure, rhs.planeIndex);
+    return std::tie(supportsAVSync, vsyncDisplayLatencyNs, supportsHoldLastFrame, supportsSecure) < std::tie(rhs.supportsAVSync, rhs.vsyncDisplayLatencyNs, rhs.supportsHoldLastFrame, rhs.supportsSecure);
   }
   inline bool operator<=(const Capabilities& rhs) const {
-    return std::tie(supportsAVSync, vsyncDisplayLatencyNs, supportsHoldLastFrame, supportsSecure, planeIndex) <= std::tie(rhs.supportsAVSync, rhs.vsyncDisplayLatencyNs, rhs.supportsHoldLastFrame, rhs.supportsSecure, rhs.planeIndex);
+    return std::tie(supportsAVSync, vsyncDisplayLatencyNs, supportsHoldLastFrame, supportsSecure) <= std::tie(rhs.supportsAVSync, rhs.vsyncDisplayLatencyNs, rhs.supportsHoldLastFrame, rhs.supportsSecure);
   }
   inline bool operator==(const Capabilities& rhs) const {
-    return std::tie(supportsAVSync, vsyncDisplayLatencyNs, supportsHoldLastFrame, supportsSecure, planeIndex) == std::tie(rhs.supportsAVSync, rhs.vsyncDisplayLatencyNs, rhs.supportsHoldLastFrame, rhs.supportsSecure, rhs.planeIndex);
+    return std::tie(supportsAVSync, vsyncDisplayLatencyNs, supportsHoldLastFrame, supportsSecure) == std::tie(rhs.supportsAVSync, rhs.vsyncDisplayLatencyNs, rhs.supportsHoldLastFrame, rhs.supportsSecure);
   }
   inline bool operator>(const Capabilities& rhs) const {
-    return std::tie(supportsAVSync, vsyncDisplayLatencyNs, supportsHoldLastFrame, supportsSecure, planeIndex) > std::tie(rhs.supportsAVSync, rhs.vsyncDisplayLatencyNs, rhs.supportsHoldLastFrame, rhs.supportsSecure, rhs.planeIndex);
+    return std::tie(supportsAVSync, vsyncDisplayLatencyNs, supportsHoldLastFrame, supportsSecure) > std::tie(rhs.supportsAVSync, rhs.vsyncDisplayLatencyNs, rhs.supportsHoldLastFrame, rhs.supportsSecure);
   }
   inline bool operator>=(const Capabilities& rhs) const {
-    return std::tie(supportsAVSync, vsyncDisplayLatencyNs, supportsHoldLastFrame, supportsSecure, planeIndex) >= std::tie(rhs.supportsAVSync, rhs.vsyncDisplayLatencyNs, rhs.supportsHoldLastFrame, rhs.supportsSecure, rhs.planeIndex);
+    return std::tie(supportsAVSync, vsyncDisplayLatencyNs, supportsHoldLastFrame, supportsSecure) >= std::tie(rhs.supportsAVSync, rhs.vsyncDisplayLatencyNs, rhs.supportsHoldLastFrame, rhs.supportsSecure);
   }
 
   ::android::Parcelable::Stability getStability() const override { return ::android::Parcelable::Stability::STABILITY_VINTF; }
@@ -51,7 +50,6 @@ public:
     os << ", vsyncDisplayLatencyNs: " << ::android::internal::ToString(vsyncDisplayLatencyNs);
     os << ", supportsHoldLastFrame: " << ::android::internal::ToString(supportsHoldLastFrame);
     os << ", supportsSecure: " << ::android::internal::ToString(supportsSecure);
-    os << ", planeIndex: " << ::android::internal::ToString(planeIndex);
     os << "}";
     return os.str();
   }
