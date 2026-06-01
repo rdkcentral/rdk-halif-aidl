@@ -1,36 +1,81 @@
 # Module Boot Sequence
 
-A HAL module runs as its own process launched by [systemd](../../systemd/current/systemd.md). Each module is launched with a port and a [HAL Feature Profile (HFP)](../../../key_concepts/hal/hal_feature_profiles.md):
+## Overview
+
+A HAL module runs as its own process, launched by [systemd](../../systemd/current/systemd.md). It listens on a Binder port and registers its interface with the [Service Manager](../../service_manager/current/service_manager.md), at which point clients can discover and call it.
 
 ```
-<module> --port <port> --hfp <hfp-file>
+<module> --port <port>
 ```
 
-The HFP configures the module against the vendor layer it runs on. A module reaches Binder readiness and registers with the [Service Manager](../../service_manager/current/service_manager.md) **before** it has its HFP, then completes startup once the HFP is applied. This gives one startup path whether the HFP is supplied at launch or delivered afterwards over Binder.
+On the [vDevice](#vdevice-configuration), a module additionally presents the hardware capabilities declared in a [HAL Feature Profile (HFP)](../../../key_concepts/hal/hal_feature_profiles.md), supplied with `--hfp`. Because the HFP defines what the module emulates, a vDevice module completes startup only once an HFP is applied. A module backed by real hardware initialises from that hardware and does not depend on an HFP.
 
-!!! info "References"
-    |Reference|Link|
+---
+
+## References
+
+!!! info References
+    |||
     |-|-|
     |**HAL Interface Type**|[AIDL and Binder](../../../introduction/aidl_and_binder.md)|
+    |**Initialization Unit**|[systemd service](../../systemd/current/systemd.md)|
     |**Service Registration**|[Service Manager](../../service_manager/current/service_manager.md)|
-    |**Configuration**|[HAL Feature Profile (HFP)](../../../key_concepts/hal/hal_feature_profiles.md)|
-    |**Initialization**|[systemd](../../systemd/current/systemd.md)|
+
+---
+
+## Related Pages
+
+!!! tip "Related Pages"
+    - [Service Manager](../../service_manager/current/service_manager.md)
+    - [Systemd](../../systemd/current/systemd.md)
+    - [HAL Feature Profile](../../../key_concepts/hal/hal_feature_profiles.md)
+    - [AIDL and Binder](../../../introduction/aidl_and_binder.md)
+
+---
+
+## Startup Sequence
+
+A module is launched with the Binder port it listens on:
+
+```
+<module> --port <port>
+```
+
+It brings up its Binder interface, registers with the Service Manager, initialises, and becomes ready to serve clients.
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> STARTING
+    STARTING --> REGISTERED: binder up,<br>registered with Service Manager
+    REGISTERED --> RUNNING: initialised<br>sd_notify(READY=1)
+
+    classDef NonTransitory fill:#1976D2, color:white, font-weight:bold;
+    classDef Transitory fill:#90CAF9, color:black, font-weight:bold;
+    class REGISTERED,RUNNING NonTransitory
+    class STARTING Transitory
+```
 
 ## Implementation Requirements
 
 |#|Requirement | Comments|
 |-|------------|---------|
-|**HAL.BOOTSEQ.1** |A module shall accept its listen port and HFP file location as the `--port` and `--hfp` command-line arguments.||
-|**HAL.BOOTSEQ.2** |A module shall bring up its Binder interface and register with the Service Manager before requiring an HFP, entering a registered-but-unconfigured state.|Makes a module launched without an HFP discoverable rather than failed.|
-|**HAL.BOOTSEQ.3** |A module shall resolve its HFP from, in priority order: the `--hfp` argument, the systemd-provided environment, then the kernel command line. When none supplies one, the module shall wait for an HFP delivered over Binder.|First source that yields an HFP wins.|
-|**HAL.BOOTSEQ.4** |A module shall apply its HFP exactly once and retain that configuration for the lifetime of the process.||
-|**HAL.BOOTSEQ.5** |A module using `Type=notify` shall send `sd_notify(READY=1)` only on reaching the running state, after the HFP is applied.|Dependents ordered `After=` the module start against a configured module.|
-|**HAL.BOOTSEQ.6** |A module that fails to apply its HFP shall exit non-zero, leaving recovery to the systemd restart policy.||
-|**HAL.BOOTSEQ.7** |A module and the services it registers with or calls shall share the same Binder domain.|For example `/dev/binder` versus `/dev/vndbinder`.|
+|**HAL.BOOTSEQ.1** |A module shall accept the Binder port it listens on as the `--port` command-line argument.||
+|**HAL.BOOTSEQ.2** |A module shall bring up its Binder interface and register with the Service Manager during startup.|Registration makes the module discoverable to clients.|
+|**HAL.BOOTSEQ.3** |A module and the services it registers with or calls shall share the same Binder domain.|For example `/dev/binder` versus `/dev/vndbinder`.|
+|**HAL.BOOTSEQ.4** |A module using `Type=notify` shall send `sd_notify(READY=1)` only on reaching the running state.|Dependents ordered `After=` the module start against a ready module.|
 
-## Startup State Machine
+---
 
-The module reaches `REGISTERED` without the HFP, then gates the remainder of startup on the HFP arriving. A module launched with an HFP transitions straight through `APPLYING` to `RUNNING`; a module launched without one parks in `WAITING_FOR_CONFIG` until the HFP is delivered over Binder.
+## vDevice Configuration
+
+On the vDevice, a module emulates the hardware described by a [HAL Feature Profile (HFP)](../../../key_concepts/hal/hal_feature_profiles.md). The HFP defines the capabilities the module presents, so a vDevice module registers with the Service Manager but completes startup only once an HFP is applied.
+
+```
+<module> --port <port> --hfp <hfp-file>
+```
+
+A vDevice module reaches `REGISTERED` without the HFP and installs a control callback there, then applies the HFP from the first source that supplies one. When no source does, it parks in `WAITING_FOR_CONFIG` until an HFP is delivered over Binder. This gives one path whether the HFP is supplied at launch or afterwards.
 
 ```mermaid
 stateDiagram-v2
@@ -51,20 +96,20 @@ stateDiagram-v2
     class STARTING,APPLYING Transitory
 ```
 
-## HFP Resolution Order
+### HFP Resolution Order
 
 The HFP is resolved at the `REGISTERED` transition, taking the first source that yields one:
 
 |Priority|Source|Use|
 |-|------|---|
 |1|`--hfp <path>` command-line argument|An operator launching a single module by hand.|
-|2|systemd-provided environment (`EnvironmentFile`)|The on-device launch.|
-|3|Kernel command-line locator (`/proc/cmdline`)|The production default.|
+|2|systemd-provided environment (`EnvironmentFile`)|The on-device vDevice launch.|
+|3|Kernel command-line locator (`/proc/cmdline`)|The default vDevice launch.|
 |4|Binder delivery into `WAITING_FOR_CONFIG`|The HFP is pushed after startup.|
 
 Sources 1–3 differ only in where the HFP location comes from; the same apply routine consumes all four.
 
-## Kernel Command Line to systemd
+### Kernel Command Line to systemd
 
 The kernel command line carries an HFP **locator** — a path, partition, or URI — not the HFP contents:
 
@@ -87,7 +132,7 @@ EnvironmentFile=-/run/hfp/module@%i.env
 ExecStart=/usr/bin/<module> --port %i --hfp ${HFP_FILE}
 ```
 
-## HFP Delivery Over Binder
+### HFP Delivery Over Binder
 
 A module installs a control callback when it registers, so the configuring service drives the HFP in for a module parked in `WAITING_FOR_CONFIG`:
 
@@ -99,9 +144,19 @@ interface IModuleControl {
 
 `applyHfp()` moves the module `WAITING_FOR_CONFIG` → `APPLYING` → `RUNNING`.
 
-## Boot Sequence
+### vDevice Requirements
 
-The production boot, where the kernel command line supplies the HFP locator:
+|#|Requirement | Comments|
+|-|------------|---------|
+|**HAL.VDEVICE.1** |A vDevice module shall accept its HFP file location as the `--hfp` command-line argument.||
+|**HAL.VDEVICE.2** |A vDevice module shall register with the Service Manager before requiring an HFP, entering a registered-but-unconfigured state.|Makes a module launched without an HFP discoverable rather than failed.|
+|**HAL.VDEVICE.3** |A vDevice module shall resolve its HFP from, in priority order: the `--hfp` argument, the systemd-provided environment, then the kernel command line. When none supplies one, the module shall wait for an HFP delivered over Binder.|First source that yields an HFP wins.|
+|**HAL.VDEVICE.4** |A vDevice module shall apply its HFP exactly once and retain that configuration for the lifetime of the process.||
+|**HAL.VDEVICE.5** |A vDevice module that fails to apply its HFP shall exit non-zero, leaving recovery to the systemd restart policy.||
+
+### vDevice Boot Sequence
+
+The default vDevice boot, where the kernel command line supplies the HFP locator:
 
 ```mermaid
 sequenceDiagram
@@ -123,10 +178,9 @@ sequenceDiagram
     Module->>Module: read HFP, applyHfp()
     Note over Module: APPLYING → RUNNING
     Module->>Systemd: sd_notify(READY=1)
-    Module->>Module: start background work
 ```
 
-A module launched without an HFP, configured later over Binder:
+A vDevice module launched without an HFP, configured later over Binder:
 
 ```mermaid
 sequenceDiagram
@@ -141,9 +195,10 @@ sequenceDiagram
     Svc->>SM: getService(module)
     Svc->>Module: applyHfp(cfg)
     Note over Module: APPLYING → RUNNING
-    Module->>Module: start background work
 ```
+
+---
 
 ## Product Customization
 
-The HFP file is a vendor-layer deliverable describing the module's configuration on the target platform. The kernel command line `hfp=` locator and the systemd generator that turns it into `--hfp` are provided by the vendor layer.
+The systemd unit that launches a module is a vendor-layer deliverable. On the vDevice, the HFP file describing the emulated hardware, the kernel command-line `hfp=` locator, and the systemd generator that turns it into `--hfp` are provided alongside it.
