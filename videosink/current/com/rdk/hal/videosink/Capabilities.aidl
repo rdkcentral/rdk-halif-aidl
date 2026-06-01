@@ -17,8 +17,6 @@
  * limitations under the License.
  */
 package com.rdk.hal.videosink;
-import com.rdk.hal.videosink.MemoryType;
-import com.rdk.hal.videosink.PixelFormat;
 
 /**
  *  @brief     Video Sink capabilities parcelable definition.
@@ -35,27 +33,6 @@ import com.rdk.hal.videosink.PixelFormat;
 @VintfStability
 parcelable Capabilities
 {
-    /**
-     * Array of `PixelFormat` values that this Video Sink instance is able
-     * to consume. Mirrors `IVideoSink[i].supportedPixelFormats` in the HFP.
-     */
-    PixelFormat[] supportedPixelFormats;
-
-    /**
-     * Array of `MemoryType` values supported by this Video Sink instance
-     * for buffer transport. Mirrors `IVideoSink[i].supportedMemoryTypes`
-     * in the HFP.
-     */
-    MemoryType[] supportedMemoryTypes;
-
-    /**
-     * Maximum number of frames the sink queues internally for display.
-     * Used by clients to size their upstream buffer pools so frames are
-     * not dropped on submission. Mirrors `IVideoSink[i].sinkQueueDepth`
-     * in the HFP.
-     */
-    int sinkQueueDepth;
-
     /**
      * Indicates whether this Video Sink instance can synchronise frame
      * presentation against an AV Clock. When `false`, the sink presents
@@ -88,12 +65,4 @@ parcelable Capabilities
      * content. Mirrors `IVideoSink[i].supportsSecure` in the HFP.
      */
     boolean supportsSecure;
-
-    /**
-     * Zero-based index of the graphics / video plane that this Video Sink
-     * instance composes onto. Used by clients to coordinate Z-order and
-     * plane configuration with the plane control HAL. Mirrors
-     * `IVideoSink[i].planeIndex` in the HFP.
-     */
-    int planeIndex;
 }

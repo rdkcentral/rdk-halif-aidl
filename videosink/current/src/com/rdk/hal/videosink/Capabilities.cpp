@@ -19,30 +19,6 @@ namespace videosink {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = _aidl_parcel->readEnumVector(&supportedPixelFormats);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readEnumVector(&supportedMemoryTypes);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readInt32(&sinkQueueDepth);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
   _aidl_ret_status = _aidl_parcel->readBool(&supportsAVSync);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -71,14 +47,6 @@ namespace videosink {
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readInt32(&planeIndex);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
   _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
   return _aidl_ret_status;
 }
@@ -86,18 +54,6 @@ namespace videosink {
   ::android::status_t _aidl_ret_status = ::android::OK;
   auto _aidl_start_pos = _aidl_parcel->dataPosition();
   _aidl_parcel->writeInt32(0);
-  _aidl_ret_status = _aidl_parcel->writeEnumVector(supportedPixelFormats);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeEnumVector(supportedMemoryTypes);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeInt32(sinkQueueDepth);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
   _aidl_ret_status = _aidl_parcel->writeBool(supportsAVSync);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
@@ -111,10 +67,6 @@ namespace videosink {
     return _aidl_ret_status;
   }
   _aidl_ret_status = _aidl_parcel->writeBool(supportsSecure);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeInt32(planeIndex);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }
