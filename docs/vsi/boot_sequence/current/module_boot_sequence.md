@@ -2,13 +2,9 @@
 
 ## Overview
 
-A HAL module runs as its own process, launched by [systemd](../../systemd/current/systemd.md). It listens on a Binder port and registers its interface with the [Service Manager](../../service_manager/current/service_manager.md), at which point clients can discover and call it.
+A HAL module runs as its own process, launched by [systemd](../../systemd/current/systemd.md). It registers its Binder interface with the [Service Manager](../../service_manager/current/service_manager.md) under its service name, at which point clients can discover and call it. A module backed by real hardware initialises from that hardware and registers over the kernel Binder driver, taking no command-line configuration.
 
-```
-<module> --port <port>
-```
-
-On the [vDevice](#vdevice-configuration), a module additionally presents the hardware capabilities declared in a [HAL Feature Profile (HFP)](../../../key_concepts/hal/hal_feature_profiles.md), supplied with `--hfp` at launch or delivered over Binder afterwards. Because the HFP defines what the module emulates, a vDevice module completes startup only once an HFP is applied. A module backed by real hardware initialises from that hardware and does not depend on an HFP.
+On the [vDevice](#vdevice-configuration), a module is launched with the transport port it serves on and a [HAL Feature Profile (HFP)](../../../key_concepts/hal/hal_feature_profiles.md) describing the hardware it emulates, supplied with `--hfp` at launch or delivered over Binder afterwards. Because the HFP defines what the module emulates, a vDevice module completes startup only once an HFP is applied.
 
 ---
 
@@ -35,13 +31,7 @@ On the [vDevice](#vdevice-configuration), a module additionally presents the har
 
 ## Startup Sequence
 
-A module is launched with the Binder port it listens on:
-
-```
-<module> --port <port>
-```
-
-It brings up its Binder interface, registers with the Service Manager, initialises, and becomes ready to serve clients.
+A module is launched by systemd. It brings up its Binder interface, registers with the Service Manager under its service name, initialises, and becomes ready to serve clients.
 
 ```mermaid
 stateDiagram-v2
@@ -60,16 +50,15 @@ stateDiagram-v2
 
 |#|Requirement | Comments|
 |-|------------|---------|
-|**HAL.BOOTSEQ.1** |A module shall accept the Binder port it listens on as the `--port` command-line argument.||
-|**HAL.BOOTSEQ.2** |A module shall bring up its Binder interface and register with the Service Manager during startup.|Registration makes the module discoverable to clients.|
-|**HAL.BOOTSEQ.3** |A module and the services it registers with or calls shall share the same Binder domain.|For example `/dev/binder` versus `/dev/vndbinder`.|
-|**HAL.BOOTSEQ.4** |A module using `Type=notify` shall send `sd_notify(READY=1)` only on reaching the running state.|Dependents ordered `After=` the module start against a ready module.|
+|**HAL.BOOTSEQ.1** |A module shall bring up its Binder interface and register with the Service Manager under its service name during startup.|Registration makes the module discoverable to clients.|
+|**HAL.BOOTSEQ.2** |A module and the services it registers with or calls shall share the same Binder domain.|For example `/dev/binder` versus `/dev/vndbinder`.|
+|**HAL.BOOTSEQ.3** |A module using `Type=notify` shall send `sd_notify(READY=1)` only on reaching the running state.|Dependents ordered `After=` the module start against a ready module.|
 
 ---
 
 ## vDevice Configuration
 
-On the vDevice, a module emulates the hardware described by a [HAL Feature Profile (HFP)](../../../key_concepts/hal/hal_feature_profiles.md). The HFP defines the capabilities the module presents, so a vDevice module registers with the Service Manager but completes startup only once an HFP is applied.
+On the vDevice, a module runs against a socket transport rather than the kernel Binder driver, so it is launched with the `--port` it serves on, and it emulates the hardware described by a [HAL Feature Profile (HFP)](../../../key_concepts/hal/hal_feature_profiles.md) given with `--hfp`. The HFP defines the capabilities the module presents, so a vDevice module registers with the Service Manager but completes startup only once an HFP is applied.
 
 ```
 <module> --port <port> --hfp <hfp-file>
@@ -146,7 +135,7 @@ interface IModuleControl {
 
 |#|Requirement | Comments|
 |-|------------|---------|
-|**HAL.VDEVICE.1** |A vDevice module shall accept its HFP file location as the `--hfp` command-line argument.||
+|**HAL.VDEVICE.1** |A vDevice module shall accept the transport port it serves on as the `--port` command-line argument, and its HFP file location as the `--hfp` command-line argument.||
 |**HAL.VDEVICE.2** |A vDevice module shall register with the Service Manager before requiring an HFP, entering a registered-but-unconfigured state.|Makes a module launched without an HFP discoverable rather than failed.|
 |**HAL.VDEVICE.3** |A vDevice module launched without `--hfp` shall apply an HFP delivered over Binder before completing startup.|The `--hfp` value, when present, is supplied by an operator or by systemd from the kernel command-line locator.|
 |**HAL.VDEVICE.4** |A vDevice module shall apply its HFP exactly once and retain that configuration for the lifetime of the process.||
