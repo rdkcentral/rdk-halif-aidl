@@ -23,6 +23,7 @@ import com.rdk.hal.videodecoder.MasteringDisplayInfo;
 import com.rdk.hal.videodecoder.ContentLightLevel;
 import com.rdk.hal.videodecoder.Colorimetry;
 import com.rdk.hal.videodecoder.InputBufferMetadata;
+import com.rdk.hal.videodecoder.VideoDecoderStreamConfig;
 import com.rdk.hal.PropertyValue;
 
 /**
@@ -269,214 +270,48 @@ interface IVideoDecoderController
     boolean parseCodecSpecificData(in CSDVideoFormat csdVideoFormat, in byte[] codecData);
 
     /**
-     * Sets the mastering display colour volume metadata for the stream (SMPTE ST 2086).
+     * Atomically applies a batch of container/manifest-derived
+     * stream-configuration hints in a single binder transaction. This is
+     * the canonical surface for setting all `VideoDecoderStreamConfig`
+     * fields — there are no individual typed setters; every field is
+     * configured through this call.
      *
-     * Provides the display primaries, white point, and peak/floor luminance of the
-     * mastering display. This is typically sourced from container-level metadata
-     * (e.g. MP4/ISOBMFF 'mdcv' box, DASH MPD) before SEI messages arrive in the stream.
-     *
-     * Pass null to clear any previously set value and revert to stream-signalled metadata.
+     * <h4>Atomicity</h4>
+     * Either every non-null field is applied or none are. If any field fails
+     * validation, the call returns `EX_ILLEGAL_ARGUMENT` and the decoder
+     * state is unchanged from before the call.
      *
      * <h4>Hint precedence and persistence</h4>
-     * Bitstream-derived metadata (H.264/HEVC SEI payload type 137 — "mastering display
-     * colour volume") takes precedence over this hint when present; the hint is the
-     * fallback used only when the bitstream is silent.
-     * The value the decoder actually used is reported via
-     * `FrameMetadata.masteringDisplayInfo`. The hint persists across `flush()` and
-     * is cleared on `close()`.
+     * Bitstream-derived metadata wins over the hint when present; the hint
+     * is the fallback used only when the bitstream is silent. The values the
+     * decoder actually used are reported via `FrameMetadata`. Hints persist
+     * across `flush()` and are cleared on `close()`.
      *
-     * @param[in] info  Mastering display metadata, or null to clear.
+     * <h4>Per-field application</h4>
+     * Each non-null field is applied to the decoder's stream-config state:
+     * - `resolution`           — pre-allocation seed for frame buffers
+     * - `frameRate`            — pipeline timing seed
+     * - `pixelAspectRatio`     — PAR fallback when bitstream VUI omits it
+     * - `colorimetry`          — colour primaries / matrix fallback
+     * - `masteringDisplayInfo` — SMPTE ST 2086 fallback (HEVC SEI type 137)
+     * - `contentLightLevel`    — CTA-861.3 MaxCLL/MaxFALL fallback (SEI 144)
+     * - `dolbyVisionLayerFlags`— BL/EL presence; only meaningful for DOLBY_VISION
+     *
+     * @param[in] config  Stream-configuration batch. Fields set to `null`
+     *                    are ignored (no change). Fields with values are
+     *                    applied as hints; see `VideoDecoderStreamConfig`
+     *                    for per-field validation rules.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the READY state.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if any field fails validation
+     *            (e.g. `resolution.width <= 0`, `frameRate.denominator == 0`
+     *            while `numerator != 0`, exactly one of `pixelAspectRatio.numerator` /
+     *            `denominator` is 0).
      *
      * @pre The resource must be in State::READY.
      *
-     * @see MasteringDisplayInfo, FrameMetadata.masteringDisplayInfo
+     * @see VideoDecoderStreamConfig, FrameMetadata
      */
-    void setMasteringDisplayInfo(in @nullable MasteringDisplayInfo info);
-
-    /**
-     * Sets the content light level metadata for the stream (CTA-861.3 / H.264/HEVC SEI
-     * payload type 144 — "content light level information").
-     *
-     * Provides the MaxCLL and MaxFALL values as CTA-861.3 static metadata. This is typically
-     * sourced from container-level metadata (e.g. MP4/ISOBMFF 'clli' box, DASH MPD) before
-     * SEI messages arrive in the stream.
-     *
-     * Pass null to clear any previously set value and revert to stream-signalled metadata.
-     *
-     * <h4>Hint precedence and persistence</h4>
-     * Bitstream-derived metadata (H.264/HEVC SEI payload type 144 — "content light level
-     * information") takes precedence over this hint when present; the hint is the fallback
-     * used only when the bitstream is silent.
-     * The value the decoder actually used is reported via
-     * `FrameMetadata.contentLightLevel`. The hint persists across `flush()` and
-     * is cleared on `close()`.
-     *
-     * @param[in] info  Content light level metadata, or null to clear.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the READY state.
-     *
-     * @pre The resource must be in State::READY.
-     *
-     * @see ContentLightLevel, FrameMetadata.contentLightLevel
-     */
-    void setContentLightLevel(in @nullable ContentLightLevel info);
-
-    /**
-     * Sets the colorimetry (colour primaries and matrix) for the stream.
-     *
-     * Identifies the colour space of the video content. This is typically derived
-     * from container or manifest metadata and used to configure the downstream
-     * display pipeline before decoding begins.
-     *
-     * <h4>Hint precedence and persistence</h4>
-     * Bitstream-derived colorimetry (H.264/HEVC VUI `colour_description_present_flag`
-     * and friends) takes precedence over this hint when present; the hint is the
-     * fallback used only when the bitstream is silent. The value the decoder actually
-     * used is reported via `FrameMetadata.colorimetry`. The hint persists across
-     * `flush()` and is cleared on `close()`.
-     *
-     * @param[in] colorimetry  The colorimetry of the stream. Use Colorimetry::UNKNOWN
-     *                         if not signalled.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the READY state.
-     *
-     * @pre The resource must be in State::READY.
-     *
-     * @see Colorimetry, FrameMetadata.colorimetry
-     */
-    void setColorimetry(in Colorimetry colorimetry);
-
-    /**
-     * Sets the stream resolution hint before decoding begins.
-     *
-     * Provides the coded frame dimensions sourced from container metadata
-     * (e.g. MP4/ISOBMFF track header, DASH MPD). Allows the decoder to
-     * pre-allocate frame buffers at the correct size before the first frame
-     * is decoded.
-     *
-     * <h4>Hint precedence and persistence</h4>
-     * The decoder uses the actual coded dimensions from the bitstream once
-     * decoding starts; this hint is only the pre-allocation seed. If they differ,
-     * `FrameMetadata.codedWidth`/`codedHeight` reflects the true decoded dimensions.
-     * The hint persists across `flush()` and is cleared on `close()`.
-     *
-     * @param[in] width   Coded frame width in pixels. Must be > 0.
-     * @param[in] height  Coded frame height in pixels. Must be > 0.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the READY state.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if width or height is <= 0.
-     *
-     * @pre The resource must be in State::READY.
-     *
-     * @see FrameMetadata.codedWidth, FrameMetadata.codedHeight
-     */
-    void setStreamResolution(in int width, in int height);
-
-    /**
-     * Sets the stream frame rate hint before decoding begins.
-     *
-     * Provides the frame rate as a rational number (numerator/denominator)
-     * sourced from container metadata. Allows the decoder and downstream
-     * pipeline to configure timing before the first frame is decoded.
-     *
-     * e.g. 24fps = 24/1, 29.97fps = 30000/1001, 59.94fps = 60000/1001
-     *
-     * <h4>Hint precedence and persistence</h4>
-     * Bitstream-derived frame rate (H.264/HEVC VUI `vui_timing_info_present_flag`)
-     * takes precedence over this hint when present; the hint is the fallback used
-     * only when the bitstream is silent. The decoder reports the value it actually
-     * used in `FrameMetadata.frameRateNumerator` / `frameRateDenominator`. The hint
-     * persists across `flush()` and is cleared on `close()`.
-     *
-     * @param[in] numerator    Frame rate numerator. Must be >= 0. Use 0/0 if unknown.
-     * @param[in] denominator  Frame rate denominator. Must be > 0 unless numerator is 0.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the READY state.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if denominator is 0 and numerator is non-zero.
-     *
-     * @pre The resource must be in State::READY.
-     *
-     * @see FrameMetadata.frameRateNumerator, FrameMetadata.frameRateDenominator
-     */
-    void setFrameRate(in int numerator, in int denominator);
-
-    /**
-     * Sets the Dolby Vision layer configuration for the stream.
-     *
-     * Indicates whether a Dolby Vision Base Layer (BL) and/or Enhancement
-     * Layer (EL) are present in the bitstream, as signalled in the container.
-     * This allows the decoder to configure the correct dual-stream DV decode
-     * mode before decoding begins.
-     *
-     * A BL-only stream is a standard HEVC/AVC-compatible stream with DV
-     * RPU metadata. A BL+EL stream carries an additional enhancement layer
-     * for full Dolby Vision quality.
-     *
-     * Only applicable when the stream DynamicRange is DOLBY_VISION.
-     *
-     * <h4>Hint precedence and persistence</h4>
-     * Bitstream-derived layer signalling (DV RPU SEI) takes precedence over this hint
-     * when present; the hint is the fallback used only when the bitstream is silent.
-     * The hint persists across `flush()` and is cleared on `close()`.
-     *
-     * @param[in] blPresent  true if a Dolby Vision Base Layer is present.
-     * @param[in] elPresent  true if a Dolby Vision Enhancement Layer is present.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the READY state.
-     *
-     * @pre The resource must be in State::READY.
-     *
-     * @see DynamicRange::DOLBY_VISION
-     */
-    void setDolbyVisionLayerFlags(in boolean blPresent, in boolean elPresent);
-
-    /**
-     * Sets the pixel aspect ratio (PAR) hint before decoding begins.
-     *
-     * Provides the pixel aspect ratio as a rational number (parX/parY)
-     * sourced from container metadata or GstCaps (`pixel-aspect-ratio` field,
-     * MP4/ISOBMFF `pasp` box). This allows the decoder and downstream
-     * pipeline (HAL / display) to correctly derive the Display Aspect Ratio
-     * (DAR) for streams that don't carry PAR in the bitstream VUI (legacy
-     * SD MPEG-2, some packagers' H.264 output, etc.).
-     *
-     * Examples:
-     *   - Square pixels        : 1/1
-     *   - NTSC 480i (Rec.601)  : 10/11
-     *   - PAL 576i (Rec.601)   : 59/54
-     *
-     * If the pixel aspect ratio is unknown or not present, callers MUST
-     * pass 0/0. This is the only valid "unknown" encoding — `parX == 0` with
-     * `parY != 0` is rejected as an illegal argument. The decoder treats
-     * 0/0 identically to "hint not set" and falls back to bitstream VUI or
-     * the decoder default (square pixels) per the precedence rules below.
-     *
-     * <h4>Hint precedence and persistence</h4>
-     * Bitstream-derived PAR (H.264/HEVC VUI `aspect_ratio_info_present_flag`)
-     * takes precedence over this hint when present; the hint is the fallback
-     * used only when the bitstream is silent. The decoder reports the value it
-     * actually used in `FrameMetadata.parX` / `FrameMetadata.parY`. The hint
-     * persists across `flush()` and is cleared on `close()`.
-     *
-     * @param[in] parX  Pixel aspect ratio numerator. Must be >= 0. Use 0 (with parY = 0) if unknown.
-     * @param[in] parY  Pixel aspect ratio denominator. Must be > 0 unless parX is also 0.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the READY state.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if either parameter is negative,
-     *            or if exactly one of parX / parY is 0 (the only valid "unknown" encoding is 0/0).
-     *
-     * @pre The resource must be in State::READY.
-     *
-     * @see FrameMetadata.parX, FrameMetadata.parY
-     */
-    void setPixelAspectRatio(in int parX, in int parY);
+    void setStreamConfig(in VideoDecoderStreamConfig config);
 }

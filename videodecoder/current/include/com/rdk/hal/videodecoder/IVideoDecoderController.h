@@ -5,13 +5,10 @@
 #include <binder/Status.h>
 #include <com/rdk/hal/PropertyValue.h>
 #include <com/rdk/hal/videodecoder/CSDVideoFormat.h>
-#include <com/rdk/hal/videodecoder/Colorimetry.h>
-#include <com/rdk/hal/videodecoder/ContentLightLevel.h>
 #include <com/rdk/hal/videodecoder/InputBufferMetadata.h>
-#include <com/rdk/hal/videodecoder/MasteringDisplayInfo.h>
 #include <com/rdk/hal/videodecoder/Property.h>
+#include <com/rdk/hal/videodecoder/VideoDecoderStreamConfig.h>
 #include <cstdint>
-#include <optional>
 #include <utils/String16.h>
 #include <utils/StrongPointer.h>
 #include <vector>
@@ -34,13 +31,7 @@ public:
   virtual ::android::binder::Status signalDiscontinuity() = 0;
   virtual ::android::binder::Status signalEndOfStream() = 0;
   virtual ::android::binder::Status parseCodecSpecificData(::com::rdk::hal::videodecoder::CSDVideoFormat csdVideoFormat, const ::std::vector<uint8_t>& codecData, bool* _aidl_return) = 0;
-  virtual ::android::binder::Status setMasteringDisplayInfo(const ::std::optional<::com::rdk::hal::videodecoder::MasteringDisplayInfo>& info) = 0;
-  virtual ::android::binder::Status setContentLightLevel(const ::std::optional<::com::rdk::hal::videodecoder::ContentLightLevel>& info) = 0;
-  virtual ::android::binder::Status setColorimetry(::com::rdk::hal::videodecoder::Colorimetry colorimetry) = 0;
-  virtual ::android::binder::Status setStreamResolution(int32_t width, int32_t height) = 0;
-  virtual ::android::binder::Status setFrameRate(int32_t numerator, int32_t denominator) = 0;
-  virtual ::android::binder::Status setDolbyVisionLayerFlags(bool blPresent, bool elPresent) = 0;
-  virtual ::android::binder::Status setPixelAspectRatio(int32_t parX, int32_t parY) = 0;
+  virtual ::android::binder::Status setStreamConfig(const ::com::rdk::hal::videodecoder::VideoDecoderStreamConfig& config) = 0;
   virtual int32_t getInterfaceVersion() = 0;
   virtual std::string getInterfaceHash() = 0;
 };  // class IVideoDecoderController
@@ -74,25 +65,7 @@ public:
   ::android::binder::Status parseCodecSpecificData(::com::rdk::hal::videodecoder::CSDVideoFormat /*csdVideoFormat*/, const ::std::vector<uint8_t>& /*codecData*/, bool* /*_aidl_return*/) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
-  ::android::binder::Status setMasteringDisplayInfo(const ::std::optional<::com::rdk::hal::videodecoder::MasteringDisplayInfo>& /*info*/) override {
-    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
-  }
-  ::android::binder::Status setContentLightLevel(const ::std::optional<::com::rdk::hal::videodecoder::ContentLightLevel>& /*info*/) override {
-    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
-  }
-  ::android::binder::Status setColorimetry(::com::rdk::hal::videodecoder::Colorimetry /*colorimetry*/) override {
-    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
-  }
-  ::android::binder::Status setStreamResolution(int32_t /*width*/, int32_t /*height*/) override {
-    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
-  }
-  ::android::binder::Status setFrameRate(int32_t /*numerator*/, int32_t /*denominator*/) override {
-    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
-  }
-  ::android::binder::Status setDolbyVisionLayerFlags(bool /*blPresent*/, bool /*elPresent*/) override {
-    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
-  }
-  ::android::binder::Status setPixelAspectRatio(int32_t /*parX*/, int32_t /*parY*/) override {
+  ::android::binder::Status setStreamConfig(const ::com::rdk::hal::videodecoder::VideoDecoderStreamConfig& /*config*/) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   int32_t getInterfaceVersion() override {
