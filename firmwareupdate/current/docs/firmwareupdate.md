@@ -160,8 +160,8 @@ After the image is successfully written:
 
 | Step | Check                          | Error Code                                |
 | ---- | ------------------------------ | ----------------------------------------- |
-| 1    | Read-back data integrity check | `ERROR_UPDATE_VERIFY_FAILED`              |
-| 2    | Signature re-verification      | `ERROR_UPDATE_VERIFY_SIGNATURE_FAILED`    |
+| 1    | Read-back data integrity check | `ERROR_FW_UPDATE_VERIFY_FAILED`           |
+| 2    | Signature re-verification      | `ERROR_FW_UPDATE_VERIFY_SIGNATURE_FAILED` |
 
 !!! important
     Post-update validation is a critical security step. The implementation must read back the written data from the target firmware area and verify it against the source image. This detects corruption or tampering that may have occurred during the write process.
@@ -257,9 +257,9 @@ sequenceDiagram
 | `ERROR_IMAGE_INVALID_SIGNATURE`        | 3  | Pre-update  | Image signature verification failed |
 | `ERROR_IMAGE_INVALID_SIZE`             | 4  | Pre-update  | Image does not fit the target firmware area |
 | `ERROR_IMAGE_INVALID_PRODUCT`          | 5  | Pre-update  | Image is incompatible with this product |
-| `ERROR_UPDATE_WRITE_FAILED`            | 6  | Write       | Firmware write operation failed |
-| `ERROR_UPDATE_VERIFY_FAILED`           | 7  | Post-update | Read-back data does not match source image |
-| `ERROR_UPDATE_VERIFY_SIGNATURE_FAILED` | 8  | Post-update | Signature verification failed on written data |
+| `ERROR_FW_UPDATE_WRITE_FAILED`            | 6  | Write       | Firmware write operation failed |
+| `ERROR_FW_UPDATE_VERIFY_FAILED`           | 7  | Post-update | Read-back data does not match source image |
+| `ERROR_FW_UPDATE_VERIFY_SIGNATURE_FAILED` | 8  | Post-update | Signature verification failed on written data |
 
 ---
 
@@ -297,9 +297,9 @@ Migration cheat-sheet for consumers:
 | `FlashImageResult`                               | `FirmwareUpdateResult`                                            |
 | `flashImageFromFile()`                           | `updateFirmwareFromFile()`                                        |
 | service name `"flash"`                           | service name `"firmwareupdate"`                                   |
-| `ERROR_FLASH_WRITE_FAILED`                       | `ERROR_UPDATE_WRITE_FAILED`                                       |
-| `ERROR_FLASH_VERIFY_FAILED`                      | `ERROR_UPDATE_VERIFY_FAILED`                                      |
-| `ERROR_FLASH_VERIFY_SIGNATURE_FAILED`            | `ERROR_UPDATE_VERIFY_SIGNATURE_FAILED`                            |
+| `ERROR_FLASH_WRITE_FAILED`                       | `ERROR_FW_UPDATE_WRITE_FAILED`                                    |
+| `ERROR_FLASH_VERIFY_FAILED`                      | `ERROR_FW_UPDATE_VERIFY_FAILED`                                   |
+| `ERROR_FLASH_VERIFY_SIGNATURE_FAILED`            | `ERROR_FW_UPDATE_VERIFY_SIGNATURE_FAILED`                         |
 | `libflash-vcurrent-cpp.so`                       | `libfirmwareupdate-vcurrent-cpp.so`                               |
 
 The historical `flash/0.1.0.0/` snapshot is retained unchanged so pinned consumers can continue to build against the old interface during the migration window.

@@ -17,9 +17,9 @@ enum class FirmwareUpdateResult : int32_t {
   ERROR_IMAGE_INVALID_SIGNATURE = 3,
   ERROR_IMAGE_INVALID_SIZE = 4,
   ERROR_IMAGE_INVALID_PRODUCT = 5,
-  ERROR_UPDATE_WRITE_FAILED = 6,
-  ERROR_UPDATE_VERIFY_FAILED = 7,
-  ERROR_UPDATE_VERIFY_SIGNATURE_FAILED = 8,
+  ERROR_FW_UPDATE_WRITE_FAILED = 6,
+  ERROR_FW_UPDATE_VERIFY_FAILED = 7,
+  ERROR_FW_UPDATE_VERIFY_SIGNATURE_FAILED = 8,
 };
 }  // namespace firmwareupdate
 }  // namespace hal
@@ -45,12 +45,12 @@ namespace firmwareupdate {
     return "ERROR_IMAGE_INVALID_SIZE";
   case FirmwareUpdateResult::ERROR_IMAGE_INVALID_PRODUCT:
     return "ERROR_IMAGE_INVALID_PRODUCT";
-  case FirmwareUpdateResult::ERROR_UPDATE_WRITE_FAILED:
-    return "ERROR_UPDATE_WRITE_FAILED";
-  case FirmwareUpdateResult::ERROR_UPDATE_VERIFY_FAILED:
-    return "ERROR_UPDATE_VERIFY_FAILED";
-  case FirmwareUpdateResult::ERROR_UPDATE_VERIFY_SIGNATURE_FAILED:
-    return "ERROR_UPDATE_VERIFY_SIGNATURE_FAILED";
+  case FirmwareUpdateResult::ERROR_FW_UPDATE_WRITE_FAILED:
+    return "ERROR_FW_UPDATE_WRITE_FAILED";
+  case FirmwareUpdateResult::ERROR_FW_UPDATE_VERIFY_FAILED:
+    return "ERROR_FW_UPDATE_VERIFY_FAILED";
+  case FirmwareUpdateResult::ERROR_FW_UPDATE_VERIFY_SIGNATURE_FAILED:
+    return "ERROR_FW_UPDATE_VERIFY_SIGNATURE_FAILED";
   default:
     return std::to_string(static_cast<int32_t>(val));
   }
@@ -72,9 +72,9 @@ constexpr inline std::array<::com::rdk::hal::firmwareupdate::FirmwareUpdateResul
   ::com::rdk::hal::firmwareupdate::FirmwareUpdateResult::ERROR_IMAGE_INVALID_SIGNATURE,
   ::com::rdk::hal::firmwareupdate::FirmwareUpdateResult::ERROR_IMAGE_INVALID_SIZE,
   ::com::rdk::hal::firmwareupdate::FirmwareUpdateResult::ERROR_IMAGE_INVALID_PRODUCT,
-  ::com::rdk::hal::firmwareupdate::FirmwareUpdateResult::ERROR_UPDATE_WRITE_FAILED,
-  ::com::rdk::hal::firmwareupdate::FirmwareUpdateResult::ERROR_UPDATE_VERIFY_FAILED,
-  ::com::rdk::hal::firmwareupdate::FirmwareUpdateResult::ERROR_UPDATE_VERIFY_SIGNATURE_FAILED,
+  ::com::rdk::hal::firmwareupdate::FirmwareUpdateResult::ERROR_FW_UPDATE_WRITE_FAILED,
+  ::com::rdk::hal::firmwareupdate::FirmwareUpdateResult::ERROR_FW_UPDATE_VERIFY_FAILED,
+  ::com::rdk::hal::firmwareupdate::FirmwareUpdateResult::ERROR_FW_UPDATE_VERIFY_SIGNATURE_FAILED,
 };
 #pragma clang diagnostic pop
 }  // namespace internal

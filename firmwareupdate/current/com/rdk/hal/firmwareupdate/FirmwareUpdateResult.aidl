@@ -70,7 +70,7 @@ enum FirmwareUpdateResult
     /**
      * Firmware write operation failed.
      */
-    ERROR_UPDATE_WRITE_FAILED = 6,
+    ERROR_FW_UPDATE_WRITE_FAILED = 6,
 
     /**
      * Read-back verify operation failed after writing.
@@ -78,7 +78,7 @@ enum FirmwareUpdateResult
      * image data when read back for verification. This is a data integrity check performed after the
      * firmware write operation completes.
      */
-    ERROR_UPDATE_VERIFY_FAILED = 7,
+    ERROR_FW_UPDATE_VERIFY_FAILED = 7,
 
     /**
      * Firmware image signature failed verification after writing.
@@ -97,5 +97,5 @@ enum FirmwareUpdateResult
      * - The signature verification algorithm and key management are platform-specific
      *   and should align with the platform's secure boot requirements.
      */
-    ERROR_UPDATE_VERIFY_SIGNATURE_FAILED = 8,
+    ERROR_FW_UPDATE_VERIFY_SIGNATURE_FAILED = 8,
 }

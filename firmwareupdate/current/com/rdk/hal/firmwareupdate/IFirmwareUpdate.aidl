@@ -78,9 +78,9 @@ interface IFirmwareUpdate
      *
      * After the image is written, post-update validation is performed:
      *  - The written data is read back from the target firmware area and compared to the source image data
-     *    (ERROR_UPDATE_VERIFY_FAILED if data integrity check fails).
+     *    (ERROR_FW_UPDATE_VERIFY_FAILED if data integrity check fails).
      *  - If a signature exists in the image, it is re-verified against the data read back
-     *    (ERROR_UPDATE_VERIFY_SIGNATURE_FAILED if post-update signature verification fails).
+     *    (ERROR_FW_UPDATE_VERIFY_SIGNATURE_FAILED if post-update signature verification fails).
      *
      * The post-update validation is a critical security step to ensure the integrity of the
      * written image and detect any corruption or tampering during the write process.
