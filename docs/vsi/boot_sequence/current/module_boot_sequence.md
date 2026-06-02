@@ -60,9 +60,9 @@ stateDiagram-v2
 
 ## vDevice Configuration
 
-On the vDevice, a module runs as a vComponent managed by the vDevice Controller. The Controller routes control messages to it over a control plane socket, and the vComponent emulates the hardware described by a [HAL Feature Profile (HFP)](../../../key_concepts/hal/hal_feature_profiles.md). It registers with the Service Manager but completes startup only once an HFP is applied.
+On the vDevice, a module runs as a vComponent managed by the vDevice Controller. Each vComponent serves its own control plane socket, and the Controller routes control messages to the right one. The vComponent emulates the hardware described by a [HAL Feature Profile (HFP)](../../../key_concepts/hal/hal_feature_profiles.md), and registers with the Service Manager but completes startup only once an HFP is applied.
 
-The Controller provides a common control plane socket for all vComponents. A vComponent can also run standalone with its own control plane socket — given by `--port` — to debug a single module, optionally with its HFP on the command line:
+A vComponent's control plane socket is given by `--port`. It can run standalone — launched directly to debug a single module — optionally with its HFP on the command line:
 
 ```
 <module> --port <port> --hfp <hfp-locator>
@@ -127,13 +127,13 @@ ExecStart=/usr/bin/<module> --port %i --hfp ${HFP_FILE}
 
 ### HFP Delivery Over the Control Plane
 
-A vComponent attaches to the control plane when it registers. For a vComponent parked in `WAITING_FOR_CONFIG`, the HFP arrives as a YAML control message on the control plane socket — sent by the vDevice Controller, or, for a standalone vComponent, to its own `--port` socket. Applying that message moves the vComponent `WAITING_FOR_CONFIG` → `APPLYING` → `RUNNING`.
+A vComponent attaches to its control plane socket when it registers. For a vComponent parked in `WAITING_FOR_CONFIG`, the HFP arrives there as a YAML control message — routed by the vDevice Controller, or sent directly to its `--port` socket when standalone. Applying that message moves the vComponent `WAITING_FOR_CONFIG` → `APPLYING` → `RUNNING`.
 
 ### vDevice Requirements
 
 |#|Requirement | Comments|
 |-|------------|---------|
-|**HAL.VDEVICE.1** |A standalone vComponent shall accept the control plane socket it serves on as the `--port` command-line argument, and its HFP locator as the `--hfp` command-line argument.|Under the Controller, a vComponent uses the common control plane socket instead.|
+|**HAL.VDEVICE.1** |A vComponent shall accept the control plane socket it serves on as the `--port` command-line argument, and its HFP locator as the `--hfp` command-line argument.|Each vComponent serves its own socket; the Controller routes control messages to it.|
 |**HAL.VDEVICE.2** |A vComponent shall register and attach to the control plane before requiring an HFP, entering a registered-but-unconfigured state.|Makes a vComponent started without an HFP reachable rather than failed.|
 |**HAL.VDEVICE.3** |A vComponent started without `--hfp` shall apply an HFP delivered as a control plane message before completing startup.|The `--hfp` value, when present, is supplied by an operator or by systemd from the kernel command-line locator.|
 |**HAL.VDEVICE.4** |A vComponent shall apply its HFP exactly once and retain that configuration for the lifetime of the process.||
