@@ -40,7 +40,7 @@ stateDiagram-v2
     direction LR
     [*] --> STARTING
     STARTING --> REGISTERED: binder up,<br>registered with Service Manager
-    REGISTERED --> RUNNING: initialised<br>sd_notify(READY=1)
+    REGISTERED --> RUNNING: initialised<br>signals ready
 
     classDef NonTransitory fill:#1976D2, color:white, font-weight:bold;
     classDef Transitory fill:#90CAF9, color:black, font-weight:bold;
@@ -54,7 +54,7 @@ stateDiagram-v2
 |-|------------|---------|
 |**HAL.BOOTSEQ.1** |A module shall register its Binder interface with the [Service Manager](../../service_manager/current/service_manager.md) under its service name via the standard `publishAndJoinThreadPool()` helper.|Registration uses the Service Manager mechanism, not per-module code; it makes the module discoverable to clients.|
 |**HAL.BOOTSEQ.2** |A module and the services it registers with or calls shall share the same Binder domain.|For example `/dev/binder` versus `/dev/vndbinder`.|
-|**HAL.BOOTSEQ.3** |A module shall signal readiness through the common module bootstrap, which sends `sd_notify(READY=1)` only on reaching the running state.|Readiness is emitted by the shared bootstrap, not re-implemented per module. systemd holds units ordered `After=` this one until it receives `READY=1`.|
+|**HAL.BOOTSEQ.3** |A module shall signal readiness only on reaching the running state, so dependents are not started against an unconfigured module.|Emitted by the common module bootstrap, not re-implemented per module — for example `sd_notify(READY=1)` under systemd `Type=notify`.|
 
 ---
 
@@ -80,7 +80,7 @@ stateDiagram-v2
     REGISTERED --> WAITING_FOR_CONFIG: no HFP
     WAITING_FOR_CONFIG --> APPLYING: HFP control message
 
-    APPLYING --> RUNNING: success<br>sd_notify(READY=1)
+    APPLYING --> RUNNING: success<br>signals ready
     APPLYING --> [*]: <error> exit non-zero
 
     classDef NonTransitory fill:#1976D2, color:white, font-weight:bold;
