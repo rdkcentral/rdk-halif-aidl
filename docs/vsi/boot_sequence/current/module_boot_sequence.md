@@ -52,7 +52,7 @@ stateDiagram-v2
 
 |#|Requirement | Comments|
 |-|------------|---------|
-|**HAL.BOOTSEQ.1** |A module shall register its Binder interface with the [Service Manager](../../service_manager/current/service_manager.md) under its service name via the standard `publishAndJoinThreadPool()` helper.|Registration uses the Service Manager mechanism, not per-module code; it makes the module discoverable to clients.|
+|**HAL.BOOTSEQ.1** |A module shall register its Binder interface with the [Service Manager](../../service_manager/current/service_manager.md) under its service name, using the standard registration mechanism rather than per-module code.|Makes the module discoverable to clients; see the Service Manager page for the registration calls.|
 |**HAL.BOOTSEQ.2** |A module and the services it registers with or calls shall share the same Binder domain.|For example `/dev/binder` versus `/dev/vndbinder`.|
 |**HAL.BOOTSEQ.3** |A module shall signal readiness only on reaching the running state, so dependents are not started against an unconfigured module.|Emitted by the common module bootstrap, not re-implemented per module — for example `sd_notify(READY=1)` under systemd `Type=notify`.|
 
@@ -65,10 +65,10 @@ On the vDevice, a module runs as a vComponent managed by the vDevice Controller.
 The Controller provides a common control plane socket for all vComponents. A vComponent can also run standalone with its own control plane socket — given by `--port` — to debug a single module, optionally with its HFP on the command line:
 
 ```
-<module> --port <port> --hfp <hfp-file>
+<module> --port <port> --hfp <hfp-locator>
 ```
 
-A vComponent reaches `REGISTERED` without the HFP and attaches to the control plane there, then applies the HFP from `--hfp` when given. When it is not, the vComponent parks in `WAITING_FOR_CONFIG` until it receives an HFP as a control plane message. This gives one path whether the HFP is supplied at launch or afterwards.
+A vComponent reaches `REGISTERED` without the HFP and attaches to the control plane there. If `--hfp` was given at launch, it applies that HFP and continues; otherwise it parks in `WAITING_FOR_CONFIG` until an HFP arrives as a control plane message. This gives one path whether the HFP is supplied at launch or afterwards.
 
 ```mermaid
 stateDiagram-v2
@@ -133,7 +133,7 @@ A vComponent attaches to the control plane when it registers. For a vComponent p
 
 |#|Requirement | Comments|
 |-|------------|---------|
-|**HAL.VDEVICE.1** |A standalone vComponent shall accept the control plane socket it serves on as the `--port` command-line argument, and its HFP file location as the `--hfp` command-line argument.|Under the Controller, a vComponent uses the common control plane socket instead.|
+|**HAL.VDEVICE.1** |A standalone vComponent shall accept the control plane socket it serves on as the `--port` command-line argument, and its HFP locator as the `--hfp` command-line argument.|Under the Controller, a vComponent uses the common control plane socket instead.|
 |**HAL.VDEVICE.2** |A vComponent shall register and attach to the control plane before requiring an HFP, entering a registered-but-unconfigured state.|Makes a vComponent started without an HFP reachable rather than failed.|
 |**HAL.VDEVICE.3** |A vComponent started without `--hfp` shall apply an HFP delivered as a control plane message before completing startup.|The `--hfp` value, when present, is supplied by an operator or by systemd from the kernel command-line locator.|
 |**HAL.VDEVICE.4** |A vComponent shall apply its HFP exactly once and retain that configuration for the lifetime of the process.||
