@@ -92,11 +92,28 @@ PR implies is signalled by **labels on the PR**. `scripts/configure_pr.sh`
 applies them automatically from the PR title and changed files; reviewers may
 add or correct them as needed.
 
+Every PR carries **exactly one change-class label**. The label is the
+single signal of intent — there is no implicit-default class. An
+unlabelled PR is an unfinished PR.
+
 | PR label | Implied bump | Applied when |
 |----------|--------------|--------------|
-| `breaking-change` | **Generation** (`0.g.m.p` → `0.(g+1).0.0`) | Conventional-commit `!:` marker in the PR title (e.g. `feat(avclock)!: ...`) |
-| `documentation` | **Patch** (`0.g.m.p` → `0.g.m.(p+1)`) | Every changed file is doc-like (see `scripts/configure_pr.sh:is_doc()`) |
-| (no specific label) | **Minor** (`0.g.m.p` → `0.g.(m+1).0`) | Default for any feature addition or non-breaking change |
+| `Breaking Change` | **Generation** (`0.g.m.p` → `0.(g+1).0.0`) | Conventional-commit `!:` marker in the PR title (e.g. `feat(avclock)!: ...`) — renames, removals, signature changes, design re-direction |
+| `Major Change` | **Minor** (`0.g.m.p` → `0.g.(m+1).0`) | Default for real interface work — new methods, new fields appended to parcelables, new enum values added with fallback handling, new sub-interfaces |
+| `documentation` | **Patch** (`0.g.m.p` → `0.g.m.(p+1)`) | Every changed file is doc-like (see `scripts/configure_pr.sh:is_doc()`) — doc tweaks, metadata corrections, HFP YAML changes, comment-only refactors. Auto-applied by `configure_pr.sh`. |
+| `Minor Change` | **Patch** (`0.g.m.p` → `0.g.m.(p+1)`) | Manually applied for a small non-doc change that still belongs at patch level — typo fix in code, log message tweak, internal comment reword. Equivalent to `documentation` from the release-bump perspective; the distinction is semantic (docs-only vs. small code) and only matters to the human reading the label. |
+
+`documentation` and `Minor Change` produce the same release bump
+(`patch`). They exist as separate labels because they describe different
+classes of work: `documentation` is the auto-applied label for the
+docs-only subset; `Minor Change` is the manually-applied label for the
+non-doc patch-class.
+
+If multiple change-class labels are accidentally applied to a single
+PR, `scripts/release.sh` resolves by severity: `Breaking Change` >
+`Major Change` > `Minor Change` / `documentation` (the latter two are
+equivalent at the patch tier). Reviewers should still clean the
+labelling so each PR carries exactly one.
 
 The PR author edits the component's `metadata.yaml` `version:` to the new
 value as part of the PR's diff. Reviewers check that the version bump matches
@@ -479,7 +496,7 @@ that deployed implementations are never broken by upstream changes.
 
 ### Breaking Changes
 
-Breaking changes are signalled via the `breaking-change` label on the PR or
+Breaking changes are signalled via the `Breaking Change` label on the PR or
 issue at creation time. This is visible to reviewers immediately and drives
 review prioritisation. When the change is merged and the component is released,
 the version is bumped accordingly (generation bump for pre-baseline, new module
@@ -581,21 +598,23 @@ Idempotent — safe to re-run.
 | Label | Purpose |
 |-------|---------|
 | `component:<name>` | Maps PRs to a specific HAL/VSI component (auto-detected from metadata.yaml) |
-| `breaking-change` | Breaking interface change — bumps generation |
-| `documentation` | Documentation-only change — no interface change, bumps patch |
+| `Breaking Change` | Breaking interface change — bumps generation |
+| `Major Change` | Additive interface change — bumps minor (the default for real work) |
+| `Minor Change` | Doc-only / metadata-only / comment-only change — bumps patch |
 | `scope:infrastructure` | Repo tooling, CI/CD, governance |
 | `scope:overview` | Tracking ticket spanning multiple components |
 
-The label signals the bump intent; the PR author bumps `metadata.yaml`
-`version:` accordingly as part of the PR diff (see [How PRs Drive the
-Version Bump](#how-prs-drive-the-version-bump) above for the full subsume
-rule and snapshot-timing model):
+Every PR carries **exactly one** of `Breaking Change` / `Major Change` /
+`Minor Change`. The label signals the bump intent; the PR author bumps
+`metadata.yaml` `version:` accordingly as part of the PR diff (see
+[How PRs Drive the Version Bump](#how-prs-drive-the-version-bump) above
+for the full subsume rule and snapshot-timing model):
 
 | Label | Version bump | Example |
 |-------|-------------|---------|
-| `breaking-change` | Bump generation, reset minor + patch | `0.1.2.1` → `0.2.0.0` |
-| *(no label)* | Bump minor, reset patch | `0.1.0.0` → `0.1.1.0` |
-| `documentation` | Bump patch | `0.1.1.0` → `0.1.1.1` |
+| `Breaking Change` | Bump generation, reset minor + patch | `0.1.2.1` → `0.2.0.0` |
+| `Major Change` | Bump minor, reset patch | `0.1.0.0` → `0.1.1.0` |
+| `Minor Change` | Bump patch | `0.1.1.0` → `0.1.1.1` |
 
 Release-time execution (manual):
 

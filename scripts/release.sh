@@ -5,7 +5,7 @@
 # Manual release-time script that:
 #   1) Looks at first-parent changes since the previous release tag/ref.
 #   2) Maps changes to HAL/VSI components via component-level metadata.yaml.
-#   3) Uses PR labels (breaking-change/documentation-change) when available.
+#   3) Uses PR labels (Breaking Change / Major Change / Minor Change / documentation) when available.
 #   4) Computes version bumps and optionally updates metadata.yaml.
 #
 # Default mode is dry-run. Use --apply to write changes.
@@ -36,11 +36,14 @@ Options:
   --verbose      Print extra diagnostics.
   --help         Show this help.
 
-Behavior:
-  - breaking-change label       => generation bump (0.g.m.p -> 0.(g+1).0.0)
-  - documentation-change label  => patch bump (0.g.m.p -> 0.g.m.(p+1))
-  - no relevant label           => minor bump (default), unless docs-only heuristic
-                                  says patch
+Behavior (#545 change-class labels):
+  - "Breaking Change" label   => generation bump (0.g.m.p -> 0.(g+1).0.0)
+  - "Major Change"    label   => minor bump (0.g.m.p -> 0.g.(m+1).0)
+  - "Minor Change"    label   => patch bump (0.g.m.p -> 0.g.m.(p+1))
+  - "documentation"   label   => patch bump (docs-only; equivalent to Minor Change
+                                 from a release-bump perspective)
+  - no relevant label         => minor bump (default), unless docs-only heuristic
+                                 says patch
 
 Notes:
   - Script is intended for manual release-time usage (not CI).
@@ -222,12 +225,18 @@ for sha in "${FP_COMMITS[@]}"; do
         labels="$(get_pr_labels "${pr_number}")"
     fi
 
+    # Change-class labels (#545). The legacy lowercase forms are still
+    # accepted for backwards compatibility while in-flight PRs migrate.
     has_breaking_label=0
-    has_doc_label=0
+    has_major_label=0
+    has_minor_label=0
     while IFS= read -r lbl; do
         [[ -n "${lbl}" ]] || continue
-        [[ "${lbl}" == "breaking-change" ]] && has_breaking_label=1
-        [[ "${lbl}" == "documentation" ]] && has_doc_label=1
+        case "${lbl}" in
+            "Breaking Change"|"breaking-change")   has_breaking_label=1 ;;
+            "Major Change")                         has_major_label=1 ;;
+            "Minor Change"|"documentation")         has_minor_label=1 ;;
+        esac
     done <<< "${labels}"
 
     declare -A COMMIT_COMP_TOUCHED=()
@@ -253,12 +262,18 @@ for sha in "${FP_COMMITS[@]}"; do
         reason_prefix="commit ${sha:0:8}"
         [[ -n "${pr_number}" ]] && reason_prefix="PR #${pr_number} (${sha:0:8})"
 
+        # Order matters: highest severity wins if multiple change-class
+        # labels are (accidentally) present on a single PR. Breaking >
+        # Major > Minor (a Major+Minor combo resolves to Major, not Minor).
         if [[ "${has_breaking_label}" -eq 1 ]]; then
             COMP_BREAKING[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: breaking-change label"$'\n'
-        elif [[ "${has_doc_label}" -eq 1 ]]; then
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: Breaking Change label"$'\n'
+        elif [[ "${has_major_label}" -eq 1 ]]; then
+            COMP_NON_DOC[$comp]=1
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: Major Change label"$'\n'
+        elif [[ "${has_minor_label}" -eq 1 ]]; then
             COMP_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: documentation-change label"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: Minor Change label"$'\n'
         elif [[ "${COMMIT_COMP_DOCS_ONLY[$comp]}" -eq 1 ]]; then
             COMP_DOC[$comp]=1
             COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: docs-only heuristic"$'\n'
