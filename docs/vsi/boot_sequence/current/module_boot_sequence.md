@@ -4,7 +4,7 @@
 
 A HAL module runs as its own process, launched by [systemd](../../systemd/current/systemd.md). It registers its Binder interface with the [Service Manager](../../service_manager/current/service_manager.md) under its service name, at which point clients can discover and call it. A module backed by real hardware initialises from that hardware and registers over the kernel Binder driver, taking no command-line configuration.
 
-On the [vDevice](#vdevice-configuration), a module is launched with the transport port it serves on and a [HAL Feature Profile (HFP)](../../../key_concepts/hal/hal_feature_profiles.md) describing the hardware it emulates, supplied with `--hfp` at launch or delivered over Binder afterwards. Because the HFP defines what the module emulates, a vDevice module completes startup only once an HFP is applied.
+On the [vDevice](#vdevice-configuration), a module runs as a vComponent and emulates the hardware described by a [HAL Feature Profile (HFP)](../../../key_concepts/hal/hal_feature_profiles.md). The HFP is supplied with `--hfp` at launch, or delivered afterwards as a YAML message over the control plane. Because the HFP defines what the module emulates, a vComponent completes startup only once an HFP is applied.
 
 ---
 
@@ -26,6 +26,8 @@ On the [vDevice](#vdevice-configuration), a module is launched with the transpor
     - [Systemd](../../systemd/current/systemd.md)
     - [HAL Feature Profile](../../../key_concepts/hal/hal_feature_profiles.md)
     - [AIDL and Binder](../../../introduction/aidl_and_binder.md)
+    - [vDevice Controller](../../../external_content/ut-core-wiki/5.1.0:-Standards:-vDevice-Controller.md)
+    - [vDevice Control Plane](../../../external_content/ut-core-wiki/5.1.1:-Standards:-vDevice-Control-Plane.md)
 
 ---
 
@@ -58,23 +60,25 @@ stateDiagram-v2
 
 ## vDevice Configuration
 
-On the vDevice, a module runs against a socket transport rather than the kernel Binder driver, so it is launched with the `--port` it serves on, and it emulates the hardware described by a [HAL Feature Profile (HFP)](../../../key_concepts/hal/hal_feature_profiles.md) given with `--hfp`. The HFP defines the capabilities the module presents, so a vDevice module registers with the Service Manager but completes startup only once an HFP is applied.
+On the vDevice, a module runs as a vComponent managed by the vDevice Controller. The Controller routes control messages to it over a control plane socket, and the vComponent emulates the hardware described by a [HAL Feature Profile (HFP)](../../../key_concepts/hal/hal_feature_profiles.md). It registers with the Service Manager but completes startup only once an HFP is applied.
+
+The Controller provides a common control plane socket for all vComponents. A vComponent can also run standalone with its own control plane socket — given by `--port` — to debug a single module, optionally with its HFP on the command line:
 
 ```
 <module> --port <port> --hfp <hfp-file>
 ```
 
-A vDevice module reaches `REGISTERED` without the HFP and installs a control callback there, then applies the HFP from the first source that supplies one. When no source does, it parks in `WAITING_FOR_CONFIG` until an HFP is delivered over Binder. This gives one path whether the HFP is supplied at launch or afterwards.
+A vComponent reaches `REGISTERED` without the HFP and attaches to the control plane there, then applies the HFP from `--hfp` when given. When it is not, the vComponent parks in `WAITING_FOR_CONFIG` until it receives an HFP as a control plane message. This gives one path whether the HFP is supplied at launch or afterwards.
 
 ```mermaid
 stateDiagram-v2
     direction LR
     [*] --> STARTING
-    STARTING --> REGISTERED: binder up,<br>registered + callback
+    STARTING --> REGISTERED: registered,<br>control plane attached
 
-    REGISTERED --> APPLYING: HFP resolved
+    REGISTERED --> APPLYING: HFP from --hfp
     REGISTERED --> WAITING_FOR_CONFIG: no HFP
-    WAITING_FOR_CONFIG --> APPLYING: applyHfp()
+    WAITING_FOR_CONFIG --> APPLYING: HFP control message
 
     APPLYING --> RUNNING: success<br>sd_notify(READY=1)
     APPLYING --> [*]: <error> exit non-zero
@@ -87,12 +91,12 @@ stateDiagram-v2
 
 ### HFP Resolution
 
-A vDevice module obtains its HFP from one of two sources:
+A vComponent obtains its HFP from one of two sources:
 
 |Source|When|
 |------|----|
 |`--hfp <path>` command-line argument|Present at launch.|
-|Binder delivery into `WAITING_FOR_CONFIG`|No `--hfp` at launch; the HFP is pushed after startup.|
+|Control plane message into `WAITING_FOR_CONFIG`|No `--hfp` at launch; the HFP arrives over the control plane after startup.|
 
 The module reads only `--hfp`; it does not read `/proc/cmdline`. The `--hfp` value is populated upstream — by an operator launching a single module by hand, or, in the default vDevice launch, by systemd from an environment file the generator derives from the kernel command-line `hfp=` locator.
 
@@ -119,28 +123,19 @@ EnvironmentFile=-/run/hfp/module@%i.env
 ExecStart=/usr/bin/<module> --port %i --hfp ${HFP_FILE}
 ```
 
-### HFP Delivery Over Binder
+### HFP Delivery Over the Control Plane
 
-A module installs a control callback when it registers, so the configuring service drives the HFP in for a module parked in `WAITING_FOR_CONFIG`. The control interface carries the HFP as an opaque payload; the shape is illustrated below:
-
-```aidl
-// Illustrative shape, not a defined interface in this repository.
-interface IModuleControl {
-    void applyHfp(in byte[] cfg);
-}
-```
-
-`applyHfp()` moves the module `WAITING_FOR_CONFIG` → `APPLYING` → `RUNNING`.
+A vComponent attaches to the control plane when it registers. For a vComponent parked in `WAITING_FOR_CONFIG`, the HFP arrives as a YAML control message on the control plane socket — sent by the vDevice Controller, or, for a standalone vComponent, to its own `--port` socket. Applying that message moves the vComponent `WAITING_FOR_CONFIG` → `APPLYING` → `RUNNING`.
 
 ### vDevice Requirements
 
 |#|Requirement | Comments|
 |-|------------|---------|
-|**HAL.VDEVICE.1** |A vDevice module shall accept the transport port it serves on as the `--port` command-line argument, and its HFP file location as the `--hfp` command-line argument.||
-|**HAL.VDEVICE.2** |A vDevice module shall register with the Service Manager before requiring an HFP, entering a registered-but-unconfigured state.|Makes a module launched without an HFP discoverable rather than failed.|
-|**HAL.VDEVICE.3** |A vDevice module launched without `--hfp` shall apply an HFP delivered over Binder before completing startup.|The `--hfp` value, when present, is supplied by an operator or by systemd from the kernel command-line locator.|
-|**HAL.VDEVICE.4** |A vDevice module shall apply its HFP exactly once and retain that configuration for the lifetime of the process.||
-|**HAL.VDEVICE.5** |A vDevice module that fails to apply its HFP shall exit non-zero, leaving recovery to the systemd restart policy.||
+|**HAL.VDEVICE.1** |A standalone vComponent shall accept the control plane socket it serves on as the `--port` command-line argument, and its HFP file location as the `--hfp` command-line argument.|Under the Controller, a vComponent uses the common control plane socket instead.|
+|**HAL.VDEVICE.2** |A vComponent shall register and attach to the control plane before requiring an HFP, entering a registered-but-unconfigured state.|Makes a vComponent started without an HFP reachable rather than failed.|
+|**HAL.VDEVICE.3** |A vComponent started without `--hfp` shall apply an HFP delivered as a control plane message before completing startup.|The `--hfp` value, when present, is supplied by an operator or by systemd from the kernel command-line locator.|
+|**HAL.VDEVICE.4** |A vComponent shall apply its HFP exactly once and retain that configuration for the lifetime of the process.||
+|**HAL.VDEVICE.5** |A vComponent that fails to apply its HFP shall exit non-zero, leaving recovery to the systemd restart policy.||
 
 ### vDevice Boot Sequence
 
@@ -153,35 +148,34 @@ sequenceDiagram
         participant Gen as systemd generator
         participant Systemd as systemd
     end
-    box rgb(30,136,229) Module Process
-        participant Module as Module
+    box rgb(30,136,229) vComponent Process
+        participant Module as vComponent
     end
     participant SM as Service Manager
 
     Kernel->>Gen: hfp=/firmware/active/mod.hfp
     Gen->>Systemd: write /run/hfp/module@5051.env
     Systemd->>Module: ExecStart --port 5051 --hfp /firmware/active/mod.hfp
-    Module->>SM: register service + control callback
+    Module->>SM: register service, attach control plane
     Note over Module: REGISTERED
-    Module->>Module: read HFP, applyHfp()
+    Module->>Module: read HFP, apply
     Note over Module: APPLYING → RUNNING
     Module->>Systemd: sd_notify(READY=1)
 ```
 
-A vDevice module launched without an HFP, configured later over Binder:
+A vComponent started without an HFP, configured later over the control plane:
 
 ```mermaid
 sequenceDiagram
-    box rgb(30,136,229) Module Process
-        participant Module as Module
+    participant Ctrl as vDevice Controller
+    box rgb(30,136,229) vComponent Process
+        participant Module as vComponent
     end
     participant SM as Service Manager
-    participant Svc as Configuring Service
 
-    Module->>SM: register service + control callback
+    Module->>SM: register service, attach control plane
     Note over Module: REGISTERED → WAITING_FOR_CONFIG
-    Svc->>SM: getService(module)
-    Svc->>Module: applyHfp(cfg)
+    Ctrl->>Module: HFP as YAML control message
     Note over Module: APPLYING → RUNNING
 ```
 
