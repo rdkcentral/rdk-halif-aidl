@@ -52,7 +52,7 @@ stateDiagram-v2
 |-|------------|---------|
 |**HAL.BOOTSEQ.1** |A module shall bring up its Binder interface and register with the Service Manager under its service name during startup.|Registration makes the module discoverable to clients.|
 |**HAL.BOOTSEQ.2** |A module and the services it registers with or calls shall share the same Binder domain.|For example `/dev/binder` versus `/dev/vndbinder`.|
-|**HAL.BOOTSEQ.3** |A module using `Type=notify` shall send `sd_notify(READY=1)` only on reaching the running state.|Dependents ordered `After=` the module start against a ready module.|
+|**HAL.BOOTSEQ.3** |A module using `Type=notify` shall send `sd_notify(READY=1)` only on reaching the running state.|systemd holds units ordered `After=` this one until it receives `READY=1`, so dependents start only once the module is ready.|
 
 ---
 
@@ -121,11 +121,12 @@ ExecStart=/usr/bin/<module> --port %i --hfp ${HFP_FILE}
 
 ### HFP Delivery Over Binder
 
-A module installs a control callback when it registers, so the configuring service drives the HFP in for a module parked in `WAITING_FOR_CONFIG`:
+A module installs a control callback when it registers, so the configuring service drives the HFP in for a module parked in `WAITING_FOR_CONFIG`. The control interface carries the HFP as an opaque payload; the shape is illustrated below:
 
 ```aidl
+// Illustrative shape, not a defined interface in this repository.
 interface IModuleControl {
-    void applyHfp(in HfpBlob cfg);
+    void applyHfp(in byte[] cfg);
 }
 ```
 
