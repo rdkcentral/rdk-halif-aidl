@@ -95,31 +95,33 @@ A vComponent obtains its HFP from one of two sources:
 
 |Source|When|
 |------|----|
-|`--hfp <path>` command-line argument|Present at launch.|
+|`--hfp <locator>` command-line argument|Present at launch.|
 |Control plane message into `WAITING_FOR_CONFIG`|No `--hfp` at launch; the HFP arrives over the control plane after startup.|
 
-The module reads only `--hfp`; it does not read `/proc/cmdline`. The `--hfp` value is populated upstream — by an operator launching a single module by hand, or, in the default vDevice launch, by systemd from an environment file the generator derives from the kernel command-line `hfp=` locator.
+The module reads only `--hfp`; it does not read `/proc/cmdline`. The `--hfp` value is a locator — supplied by an operator for a standalone module, or, in the default boot, by systemd from the shared environment file the generator derives from the kernel command-line `hfp=` URL.
 
-### Kernel Command Line to systemd
+### HFP Locator via Boot Parameters
 
-The kernel command line carries an HFP **locator** — a path, partition, or URI — not the HFP contents:
+The default vDevice boot configures every module from a single HFP that declares the configuration for all of the platform's modules. When the VM is launched, the launcher passes the HFP locator to the bootloader, which places it on the kernel command line for the boot sequence to read:
 
 ```
-... hfp=/firmware/active/<module>.hfp
+... hfp=https://<host>/<org>/<repo>/raw/<ref>/<platform>.yaml
 ```
 
-A systemd generator reads `/proc/cmdline`, extracts the `hfp=` value, and writes an environment file that the templated unit consumes, so the module sees `--hfp` and never reads `/proc/cmdline` itself:
+The locator is a URL — ut-control resolves URL-defined configuration — pointing to one HFP file held in a git repository. A URL is used because the VM reaches its configuration over the network; the boot sequence fetches this single HFP, and each vComponent applies the section for its own domain.
+
+A systemd generator reads `/proc/cmdline`, extracts the `hfp=` value, and writes a shared environment file the module units consume, so a module sees `--hfp` and never reads `/proc/cmdline` itself:
 
 ```ini
-# /run/hfp/module@<port>.env  (written by the generator)
-HFP_FILE=/firmware/active/<module>.hfp
+# /run/hfp/hfp.env  (written by the generator, shared by all modules)
+HFP_FILE=https://<host>/<org>/<repo>/raw/<ref>/<platform>.yaml
 ```
 
 ```ini
 # module@.service  (templated, one instance per module)
 [Service]
 Type=notify
-EnvironmentFile=-/run/hfp/module@%i.env
+EnvironmentFile=-/run/hfp/hfp.env
 ExecStart=/usr/bin/<module> --port %i --hfp ${HFP_FILE}
 ```
 
@@ -139,7 +141,7 @@ A vComponent attaches to the control plane when it registers. For a vComponent p
 
 ### vDevice Boot Sequence
 
-The default vDevice boot, where the kernel command line supplies the HFP locator:
+The default vDevice boot, where the kernel command line supplies a single HFP URL for all modules:
 
 ```mermaid
 sequenceDiagram
@@ -153,12 +155,12 @@ sequenceDiagram
     end
     participant SM as Service Manager
 
-    Kernel->>Gen: hfp=/firmware/active/mod.hfp
-    Gen->>Systemd: write /run/hfp/module@5051.env
-    Systemd->>Module: ExecStart --port 5051 --hfp /firmware/active/mod.hfp
+    Kernel->>Gen: hfp=https://.../platform.yaml
+    Gen->>Systemd: write /run/hfp/hfp.env
+    Systemd->>Module: ExecStart --port 5051 --hfp https://.../platform.yaml
     Module->>SM: register service, attach control plane
     Note over Module: REGISTERED
-    Module->>Module: read HFP, apply
+    Module->>Module: fetch HFP, apply own section
     Note over Module: APPLYING → RUNNING
     Module->>Systemd: sd_notify(READY=1)
 ```
