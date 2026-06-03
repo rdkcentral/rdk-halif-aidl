@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,69 +18,71 @@
  */
 package com.rdk.hal.videodecoder;
 
+import com.rdk.hal.videodecoder.ColorRange;
+import com.rdk.hal.videodecoder.ColorMatrix;
+import com.rdk.hal.videodecoder.TransferCharacteristics;
+import com.rdk.hal.videodecoder.ColorPrimaries;
+
 /**
- *  @brief     Colorimetry (colour primaries and matrix) of a video stream.
+ *  @brief     Full colorimetry signalling for a video stream — the four
+ *             independent axes carried by the bitstream VUI / container
+ *             metadata.
  *
- *  Identifies the colour space of the decoded video content. This is distinct
- *  from the HDMI output colorimetry signalling (hdmioutput.Colorimetry), which
- *  describes how the signal is carried over the HDMI link.
+ *  Replaces the prior single-enum `Colorimetry` (which conflated all four
+ *  axes into a single "BT709 / BT2020 / ..." label and could not, e.g.,
+ *  distinguish PQ from HLG when primaries are the same). Field shape
+ *  matches:
  *
- *  Values correspond to ITU-R and SMPTE colour primaries standards as
- *  referenced in ISO/IEC 23091-2 (CICP colour primaries).
+ *  - ITU-T H.273 / ISO/IEC 23091-2 CICP (the H.264/HEVC VUI carries these
+ *    four values as `video_full_range_flag`, `matrix_coefficients`,
+ *    `transfer_characteristics`, `colour_primaries`).
+ *  - GStreamer `GstVideoColorimetry` — middleware extracts the same four
+ *    values from caps' `colorimetry` field. See issue #367 for the
+ *    extraction pattern (`vci.range`, `vci.matrix`, `vci.transfer`,
+ *    `vci.primaries`).
+ *
+ *  <h3>Default values</h3>
+ *  All four fields default to their `UNKNOWN` sentinel so an unset
+ *  parcelable equals "no colorimetry signalled". Carriers using this
+ *  parcelable as an `@nullable` field can additionally distinguish
+ *  "no override" (null) from "explicitly all UNKNOWN" (non-null with
+ *  every field = UNKNOWN).
+ *
+ *  <h3>Common configurations</h3>
+ *  - SDR BT.709 :  range=LIMITED, matrix=BT709,      transfer=BT709,            primaries=BT709
+ *  - SDR BT.601 :  range=LIMITED, matrix=BT601_525,  transfer=SMPTE170M,        primaries=BT601_525  (NTSC)
+ *  - HDR10 (PQ) :  range=LIMITED, matrix=BT2020_NCL, transfer=SMPTE2084_PQ,     primaries=BT2020
+ *  - HLG        :  range=LIMITED, matrix=BT2020_NCL, transfer=ARIB_STD_B67_HLG, primaries=BT2020
+ *  - sRGB       :  range=FULL,    matrix=IDENTITY,   transfer=SRGB,             primaries=BT709
  *
  *  @author    Gerald Weatherup
  */
-
 @VintfStability
-@Backing(type="int")
-enum Colorimetry {
+parcelable Colorimetry {
 
     /**
-     * Colorimetry is unknown or not signalled in the stream.
+     * Sample quantisation range (limited / studio vs full / computer).
+     * GStreamer mapping: `GstVideoColorimetry.range` → `hdrColorimetry[0]`.
      */
-    UNKNOWN = 0,
+    ColorRange range = ColorRange.UNKNOWN;
 
     /**
-     * ITU-R BT.601 525-line (NTSC).
-     * Used for standard-definition NTSC content.
+     * YCbCr → RGB conversion matrix coefficients.
+     * GStreamer mapping: `GstVideoColorimetry.matrix` → `hdrColorimetry[1]`.
      */
-    BT601_525 = 1,
+    ColorMatrix matrix = ColorMatrix.UNKNOWN;
 
     /**
-     * ITU-R BT.601 625-line (PAL/SECAM).
-     * Used for standard-definition PAL and SECAM content.
+     * Opto-electrical transfer function (gamma / HDR curve).
+     * GStreamer mapping: `GstVideoColorimetry.transfer` → `hdrColorimetry[2]`.
+     * This is the field that distinguishes HDR systems (PQ vs HLG) when
+     * primaries are the same.
      */
-    BT601_625 = 2,
+    TransferCharacteristics transfer = TransferCharacteristics.UNKNOWN;
 
     /**
-     * ITU-R BT.709.
-     * Used for high-definition content. The default for most HD streams.
+     * Colour primaries (the gamut chromaticities).
+     * GStreamer mapping: `GstVideoColorimetry.primaries` → `hdrColorimetry[3]`.
      */
-    BT709 = 3,
-
-    /**
-     * ITU-R BT.2020 (non-constant luminance).
-     * Used for ultra-high-definition HDR content including HDR10 and HLG.
-     * @see DynamicRange::HDR10, DynamicRange::HLG
-     */
-    BT2020 = 4,
-
-    /**
-     * ITU-R BT.2020 (constant luminance).
-     * Variant of BT.2020 using a constant-luminance signal encoding.
-     */
-    BT2020_CL = 5,
-
-    /**
-     * DCI-P3 with D65 white point.
-     * Used for HDR content mastered for home video display (HDR Blu-ray,
-     * streaming with P3 mastering).
-     */
-    DCI_P3_D65 = 6,
-
-    /**
-     * DCI-P3 with D60 white point.
-     * Used for content mastered for theatrical presentation.
-     */
-    DCI_P3_D60 = 7,
+    ColorPrimaries primaries = ColorPrimaries.UNKNOWN;
 }

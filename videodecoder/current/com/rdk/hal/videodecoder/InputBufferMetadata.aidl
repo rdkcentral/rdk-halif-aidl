@@ -43,9 +43,13 @@ import com.rdk.hal.videodecoder.DolbyVisionLayerFlags;
  *
  *  <h4>Override fields (`colorimetry`, `masteringDisplayInfo`,
  *  `contentLightLevel`, `dolbyVisionLayerFlags`, `pixelAspectRatio`)</h4>
- *  All five are `@nullable` except `colorimetry`, which uses
- *  `Colorimetry::UNKNOWN` as the "no change" sentinel because AIDL
- *  enums cannot be `@nullable`.
+ *  All five are `@nullable`. For `colorimetry`, sub-axes the caller
+ *  doesn't want to override are left at their `UNKNOWN` sentinel within
+ *  a non-null parcelable — e.g. setting `colorimetry.matrix` to
+ *  `BT2020_NCL` while leaving `range`/`transfer`/`primaries` at
+ *  `UNKNOWN` overrides only the matrix axis. (Pass `null` to leave all
+ *  four axes unchanged from the prior override / setStreamConfig
+ *  state.)
  *  These mirror the matching fields on `VideoDecoderStreamConfig` and let
  *  middleware push container-derived metadata that changes mid-stream
  *  (e.g. ABR per-Period HDR transition, SSAI ad insertion, live→VOD switch).
@@ -58,11 +62,6 @@ import com.rdk.hal.videodecoder.DolbyVisionLayerFlags;
  *                              applied override (or the value set in
  *                              `State::READY` via `setStreamConfig()`)
  *                              remains in effect.
- *  - `Colorimetry::UNKNOWN`  — the "no change" form for `colorimetry`
- *                              (which is non-nullable because AIDL enums
- *                              cannot be `@nullable`). Semantics match
- *                              the `null` form above for the other four
- *                              fields.
  *
  *  Override precedence and persistence matches the `VideoDecoderStreamConfig`
  *  contract: bitstream-derived metadata still wins over the override;
@@ -104,13 +103,13 @@ parcelable InputBufferMetadata {
 
     /**
      * Optional colorimetry override applied from this buffer onward.
-     * AIDL enums cannot be `@nullable`, so this
-     * field uses `Colorimetry::UNKNOWN` (the default for an unset enum)
-     * to encode "no change". Any other value applies as an override.
+     * null = no change. Non-null applies the override; sub-axes the
+     * caller doesn't want to override are left at their `UNKNOWN`
+     * sentinel within the non-null parcelable.
      *
      * @see VideoDecoderStreamConfig.colorimetry, IVideoDecoderController.setStreamConfig()
      */
-    Colorimetry colorimetry = Colorimetry.UNKNOWN;
+    @nullable Colorimetry colorimetry;
 
     /**
      * Optional mastering display colour volume override (SMPTE ST 2086)

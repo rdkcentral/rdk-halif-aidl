@@ -141,8 +141,10 @@ parcelable FrameMetadata {
 	boolean lowLatency;
 
 	/**
-	 * Colorimetry (colour primaries and matrix) of the video frame as reported by the decoder.
-	 * Set to Colorimetry::UNKNOWN if not signalled in the stream.
+	 * Colorimetry (range / matrix / transfer / primaries) of the video
+	 * frame as reported by the decoder. Each axis is set to its `UNKNOWN`
+	 * sentinel when not signalled in the stream; the parcelable itself is
+	 * never null on the frame-output path.
 	 */
 	Colorimetry colorimetry;
 
