@@ -22,7 +22,7 @@ import com.rdk.hal.broadcast.frontend.FrontendType;
 import com.rdk.hal.broadcast.frontend.IFrontendListener;
 import com.rdk.hal.broadcast.frontend.IFrontendController;
 import com.rdk.hal.broadcast.frontend.IFrontendControllerListener;
-import com.rdk.hal.State;
+import com.rdk.hal.broadcast.frontend.State;
 
 /**
  *  @brief     FrontEnd HAL interface.

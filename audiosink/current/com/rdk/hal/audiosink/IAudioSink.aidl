@@ -24,7 +24,7 @@ import com.rdk.hal.audiosink.Capabilities;
 import com.rdk.hal.audiosink.ContentType;
 import com.rdk.hal.audiosink.Property;
 import com.rdk.hal.PropertyValue;
-import com.rdk.hal.State;
+import com.rdk.hal.audiosink.State;
 
 /**
  *  @brief     Audio Sink HAL interface.
