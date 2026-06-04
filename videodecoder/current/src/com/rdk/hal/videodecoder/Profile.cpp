@@ -1,10 +1,10 @@
-#include <com/rdk/hal/videodecoder/CodecCapabilities.h>
+#include <com/rdk/hal/videodecoder/Profile.h>
 
 namespace com {
 namespace rdk {
 namespace hal {
 namespace videodecoder {
-::android::status_t CodecCapabilities::readFromParcel(const ::android::Parcel* _aidl_parcel) {
+::android::status_t Profile::readFromParcel(const ::android::Parcel* _aidl_parcel) {
   ::android::status_t _aidl_ret_status = ::android::OK;
   size_t _aidl_start_pos = _aidl_parcel->dataPosition();
   int32_t _aidl_parcelable_raw_size = 0;
@@ -19,7 +19,7 @@ namespace videodecoder {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = _aidl_parcel->readInt32(reinterpret_cast<int32_t *>(&codec));
+  _aidl_ret_status = _aidl_parcel->readInt32(reinterpret_cast<int32_t *>(&profile));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }
@@ -27,7 +27,7 @@ namespace videodecoder {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = _aidl_parcel->readParcelableVector(&profiles);
+  _aidl_ret_status = _aidl_parcel->readInt32(reinterpret_cast<int32_t *>(&maxLevel));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }
@@ -35,62 +35,26 @@ namespace videodecoder {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = _aidl_parcel->readInt32(&maxFrameRate);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readInt32(&maxFrameWidth);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readInt32(&maxFrameHeight);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  if (_aidl_parcel->dataPosition() - _aidl_start_pos >= _aidl_parcelable_size) {
-    _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->readEnumVector(&supportedOutputPixelFormats);
+  _aidl_ret_status = _aidl_parcel->readInt64(&maxBitrateInBps);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }
   _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
   return _aidl_ret_status;
 }
-::android::status_t CodecCapabilities::writeToParcel(::android::Parcel* _aidl_parcel) const {
+::android::status_t Profile::writeToParcel(::android::Parcel* _aidl_parcel) const {
   ::android::status_t _aidl_ret_status = ::android::OK;
   auto _aidl_start_pos = _aidl_parcel->dataPosition();
   _aidl_parcel->writeInt32(0);
-  _aidl_ret_status = _aidl_parcel->writeInt32(static_cast<int32_t>(codec));
+  _aidl_ret_status = _aidl_parcel->writeInt32(static_cast<int32_t>(profile));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }
-  _aidl_ret_status = _aidl_parcel->writeParcelableVector(profiles);
+  _aidl_ret_status = _aidl_parcel->writeInt32(static_cast<int32_t>(maxLevel));
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }
-  _aidl_ret_status = _aidl_parcel->writeInt32(maxFrameRate);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeInt32(maxFrameWidth);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeInt32(maxFrameHeight);
-  if (((_aidl_ret_status) != (::android::OK))) {
-    return _aidl_ret_status;
-  }
-  _aidl_ret_status = _aidl_parcel->writeEnumVector(supportedOutputPixelFormats);
+  _aidl_ret_status = _aidl_parcel->writeInt64(maxBitrateInBps);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }
