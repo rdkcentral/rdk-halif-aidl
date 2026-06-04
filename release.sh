@@ -133,7 +133,7 @@ for component in "${COMPONENTS[@]}"; do
                 ver="$(grep -E '^version:' "${producer_metadata}" | head -1 | awk '{print $2}')"
             fi
             if [ -z "${ver}" ] || [ "${ver}" = "current" ]; then
-                echo "    WARN ${component}@${version} imports ${name}@current but ${name}/metadata.yaml is missing or has no version: — leaving as @current; this snapshot will silent-drift against ${name}'s current sibling."
+                echo "    WARN ${component}@${version} imports ${name}@current but ${name}/metadata.yaml is missing or has no version: — leaving as @current; this snapshot will silently drift against ${name}'s current sibling."
                 ver="current"
             fi
         fi
