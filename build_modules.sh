@@ -50,8 +50,9 @@ Arguments:
              - <name> : Build specific module (e.g., boot, videodecoder)
 
 Commands:
-  manifest   Build the component set from versions.yaml (each at its
-             pinned version). Use --file <path> for an alternate manifest.
+  manifest   Build the component set from versions_released.yaml (each at
+             its pinned version). Use --file <path> for an alternate manifest
+             (e.g. versions_current.yaml for the in-development cohort).
   clean      Remove out/ directory (build artifacts)
   cleanall   Remove out/ and build/ directories
 
@@ -183,9 +184,11 @@ case "${1:-}" in
         exec "$BUILD_BINDER_SCRIPT" "${@:2}"
         ;;
     manifest)
-        # Build the component set described by versions.yaml, each at the
-        # version the manifest pins it to.
-        MANIFEST="$ROOT_DIR/versions.yaml"
+        # Build the component set described by the manifest, each at the
+        # version the manifest pins it to. Default file is the released
+        # cohort (`versions_released.yaml`); dev users override with
+        # `--file versions_current.yaml` to build the in-development tree.
+        MANIFEST="$ROOT_DIR/versions_released.yaml"
         if [[ "${2:-}" == "--file" && -n "${3:-}" ]]; then
             MANIFEST="$3"
         fi
