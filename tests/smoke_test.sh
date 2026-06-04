@@ -85,19 +85,19 @@ if ./build_modules.sh all --clean > /tmp/smoke_all.log 2>&1; then
         fail "all: expected ${EXPECTED_CURRENT} libraries, found ${n}"
     fi
 
-    # Drift check (#564): the toolchain regenerates *.h/*.cpp into the
-    # source tree at build time. If a clean build leaves any
-    # working-tree delta under */current/{include,src}, the committed
-    # snapshot is stale relative to the AIDL — develop is only buildable
-    # because the build silently rewrites the headers. That hides a
-    # real bug from PR authors and bites under incremental builds.
-    drift=$(git -C "${REPO_ROOT}" status --porcelain -- '*/current/include' '*/current/src' 2>/dev/null | wc -l)
-    if [ "${drift}" -eq 0 ]; then
-        pass "drift: clean build left working tree clean (no */current/{include,src} delta)"
+    # Source-only invariant (#566): generated *.h/*.cpp for current/ are
+    # toolchain-emitted on every build into the source tree, but they
+    # are .gitignored and MUST NOT be tracked in git. Any file showing
+    # up in `git ls-files` under */current/{include,src} is a regression
+    # — either the .gitignore was bypassed (`git add -f`) or a new
+    # generator output landed outside of .gitignore's reach.
+    tracked=$(git -C "${REPO_ROOT}" ls-files '*/current/include/*' '*/current/src/*' 2>/dev/null | wc -l)
+    if [ "${tracked}" -eq 0 ]; then
+        pass "source-only: no files tracked under */current/{include,src} (generated bindings live only in working tree + frozen <version>/)"
     else
-        fail "drift: clean build left ${drift} stale files under */current/{include,src} — committed generated snapshot is out of sync with AIDL"
-        git -C "${REPO_ROOT}" status --porcelain -- '*/current/include' '*/current/src' | head -10 | sed 's/^/        /'
-        echo "        → re-run ./build_modules.sh all --clean, then 'git add */current/include */current/src' and commit." >&2
+        fail "source-only: ${tracked} files tracked under */current/{include,src} — generated bindings must not be committed in current/ (see #566)"
+        git -C "${REPO_ROOT}" ls-files '*/current/include/*' '*/current/src/*' | head -10 | sed 's/^/        /'
+        echo "        → 'git rm --cached -r */current/include */current/src' and recommit." >&2
     fi
 else
     fail "all: build_modules.sh exited non-zero (see /tmp/smoke_all.log)"

@@ -141,84 +141,85 @@ and copies `current/` to `<version>/`.
 Feature PRs touch `current/` only:
 
 - `current/com/.../*.aidl` — authored AIDL source
-- `current/include/`, `current/src/` — regenerated C++ (committed in the same
-  PR; see [Component Structure](#2-component-structure) for layout, and
-  [Regenerated Code Must Match the AIDL](#regenerated-code-must-match-the-aidl)
-  below for the rule that enforces this)
 - `current/docs/<component>.md` — documentation
 - `current/CMakeLists.txt`, `current/interface.yaml`, `current/hfp-*.yaml` —
   build wiring + manifest + hardware feature profile
+
+The toolchain-generated C++ bindings (`current/include/*.h` and
+`current/src/*.cpp`) are not in this list — see
+[Generated Code is Not Committed in `current/`](#generated-code-is-not-committed-in-current) below.
 
 Multiple PRs can accumulate bumps on `develop` without any of them creating
 snapshot directories. The next release event (`release.sh` run during
 release prep) materialises all of the snapshots together and the repo is
 tagged.
 
-#### Regenerated Code Must Match the AIDL
+#### Generated Code is Not Committed in `current/`
 
-The toolchain regenerates `<module>/current/include/*.h` and
-`<module>/current/src/*.cpp` from the module's AIDL on every build. Those
-regenerated files are committed snapshots — they MUST match what the
-toolchain produces from the current AIDL. A PR is not done until a clean
-build leaves the working tree clean under every `*/current/include` and
-`*/current/src`.
+`current/include/*.h` and `current/src/*.cpp` are toolchain output —
+regenerated from the module's AIDL by `./build_modules.sh` (or the
+underlying linux_binder_idl) on every build. They are **`.gitignore`d
+under `current/`** and never tracked in git on develop.
+
+Generated bindings only enter the repo when `./release.sh` freezes a
+cohort — at release time, the script regenerates each module's bindings
+and commits them into the new immutable `<module>/<version>/include/`
+and `<module>/<version>/src/` directories alongside the snapshot's
+AIDL. Frozen `<version>/` snapshots are the consumption artifact;
+consumers pin to them (`common@0.1.0.0`), not to `current/`.
 
 ##### The rule
 
-> A PR that changes a module's `current/` AIDL must, in the same commit,
-> contain regenerated `.h`/`.cpp` for that module **and every downstream
-> module whose generated bindings are affected**. `tests/smoke_test.sh`
-> asserts this after `[1/4] ./build_modules.sh all --clean`.
+> Feature PRs touch only AIDL, docs, and manifest/HFP under `current/`.
+> They never `git add` files in `current/include/` or `current/src/`.
+> The build regenerates those locally; the `.gitignore` keeps them out
+> of commits.
 
-##### Cascade scope
+##### Why this model
 
-The cascade is narrow:
+Treating generated output as a versioned artifact in `current/`
+conflated two distinct concerns and caused a class of recurring
+problems:
 
-- **Only `.h`/`.cpp` rebuild — never downstream AIDL.** Downstream
-  modules' `.aidl` files are untouched by upstream changes; only their
-  generated bindings need to be re-run through the toolchain.
-- **Only the `@current → @current` edges of the import DAG cascade.**
-  Frozen `<module>/<version>/` directories are write-once and pinned to
-  versioned imports (e.g. `common@0.1.0.0`) — they never re-regenerate
-  and are untouched by `current/` churn.
-- **Data-driven, not full-fan-out.** A new field added to a parcelable
-  that downstream consumers just pass through (the AIDL `writeToParcel`
-  is encapsulated in the parcelable itself) often produces no change in
-  the downstream bindings. The PR author re-runs the toolchain on every
-  `@current`-pinned downstream; only the ones the toolchain actually
-  rewrites need to be re-committed.
+1. **Drift between committed bindings and the AIDL** that produced
+   them (#564) — a stale committed `.h` paired with a freshly-
+   regenerated `.cpp` mid-rebuild produced cryptic "no declaration
+   matches" errors. The toolchain silently rewrote headers at build
+   time, so a successful build was not proof that the committed
+   snapshot was consistent.
+2. **Cascade-commit discipline per PR** — every AIDL change had to
+   regenerate every downstream module's bindings and commit them.
+   Fragile, easily forgotten.
+3. **Noisy PR diffs** — 10 lines of authored AIDL produced ~200 lines
+   of regenerated bindings. Reviewers lost focus on the actual
+   surface change.
 
-##### Why this rule exists
+The new model eliminates all three: there is no committed `current/`
+binding to drift from, no per-PR cascade because the regen happens at
+build time locally, and PR diffs show only authored content.
 
-A successful `./build_modules.sh all --clean` is not proof that the
-committed snapshot is consistent — the toolchain silently rewrites
-`current/include/*.h` in place at build time. Without the drift check,
-stale snapshots can land on `develop` and surface as cryptic
-"no declaration matches" errors in incremental builds (e.g. a stale
-committed `.h` paired with a freshly-regenerated `.cpp` from a
-mid-state rebuild). Three concrete reasons the rule is enforced:
+##### What's still committed where
 
-1. **Review honesty.** Reviewers must see the full surface a PR causes,
-   including the cascade in downstream modules. Toolchain-rewrites-at-build
-   hides that.
-2. **Incremental-build safety.** A clean tree on every commit makes
-   incremental builds deterministic; mid-state stale-`.h` + fresh-`.cpp`
-   mismatches can't occur.
-3. **Release-time correctness.** `./release.sh` freezes whatever is in
-   `current/` at the moment it runs. Drift at that moment captures stale
-   headers into the new immutable snapshot — a defect that ships even
-   though it doesn't break the next consumer's build.
+- `current/com/.../*.aidl` — authored AIDL ✅ committed
+- `current/docs/`, `current/CMakeLists.txt`, `current/interface.yaml`,
+  `current/hfp-*.yaml` — authored config ✅ committed
+- `current/include/`, `current/src/` — toolchain output ❌
+  `.gitignore`d, regenerated locally on every build
+- `<module>/<version>/com/`, `<module>/<version>/include/`,
+  `<module>/<version>/src/`, etc. — frozen snapshot ✅ committed
+  (write-once at release time by `./release.sh`)
 
 ##### Enforcement
 
-- **Local:** `./tests/smoke_test.sh` after any AIDL-touching rebase. The
-  drift check at the end of phase 1 fails loudly if any
-  `*/current/include` or `*/current/src` file would be rewritten by a
-  clean build.
-- **Pre-release:** `./release.sh` must refuse to freeze a cohort with
-  outstanding drift (tracked separately).
-- **CI:** the drift check is the gate for landing PRs on develop
-  (tracked separately).
+- **Local:** `./tests/smoke_test.sh` asserts no files are tracked
+  under `*/current/include/` or `*/current/src/` after
+  `[1/4] ./build_modules.sh all --clean`. Any regression (someone
+  bypassing `.gitignore` with `git add -f`, or a new generator
+  output not covered by the rule) trips the check.
+- **Release:** `./release.sh` is the only entry point that may
+  commit generated bindings, and only into frozen `<version>/`
+  directories. (Snapshot-creation logic is tracked under #513;
+  the regen-during-freeze step is part of that work.)
 
 This separation means a single coherent release contains all of the
 component changes from the release window batched into one set of new
