@@ -302,4 +302,4 @@ Migration cheat-sheet for consumers:
 | `ERROR_FLASH_VERIFY_SIGNATURE_FAILED`            | `ERROR_FW_UPDATE_VERIFY_SIGNATURE_FAILED`                         |
 | `libflash-vcurrent-cpp.so`                       | `libfirmwareupdate-vcurrent-cpp.so`                               |
 
-The historical `flash/0.1.0.0/` snapshot is retained unchanged so pinned consumers can continue to build against the old interface during the migration window.
+The historical `flash/0.1.0.0/` snapshot has been removed; consumers that previously pinned to it must migrate to `firmwareupdate/0.2.0.0/`. The error-code and library-name table above documents the rename mapping.

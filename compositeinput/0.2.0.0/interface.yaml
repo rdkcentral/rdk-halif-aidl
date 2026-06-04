@@ -3,6 +3,6 @@ aidl_interface:
   srcs:
     - com/rdk/hal/compositeinput/*.aidl
   imports:
-    - common
+    - common@0.1.0.0
   stability: vintf
   layout: module-local
