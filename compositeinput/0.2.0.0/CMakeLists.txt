@@ -7,7 +7,7 @@
 #
 # Inputs (set by the caller, typically build_modules.sh --version 0.2.0.0):
 #   BINDER_SDK_DIR  - linux_binder SDK root (lib/binder + include/binder_sdk)
-#   HALIF_LIB_DIR   - directory holding dependency lib<dep>-vcurrent-cpp.so
+#   HALIF_LIB_DIR   - directory holding dependency lib<dep>-v<X.Y.Z.W>-cpp.so
 cmake_minimum_required(VERSION 3.8)
 project(compositeinput-v0.2.0.0-cpp LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
@@ -35,7 +35,7 @@ if (NOT IS_DIRECTORY "${_BINDER_INC}")
     endif()
 endif()
 
-file(GLOB_RECURSE SRCS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+file(GLOB_RECURSE SRCS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 if (NOT SRCS)
     message(FATAL_ERROR "No sources under src/. The snapshot must carry committed generated C++.")
 endif()
@@ -44,13 +44,13 @@ add_library(${LIB_NAME} SHARED ${SRCS})
 
 target_include_directories(${LIB_NAME} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    "${_BINDER_INC}"
-)
+    "${_BINDER_INC}")
 
-# Dependency component headers (staged by the current/ build into HALIF_INCLUDE_DIR).
+# Dependency component headers (transitive closure — covers headers reachable
+# via direct deps, e.g. common via audiodecoder/videodecoder for avbuffer).
 if (DEFINED HALIF_INCLUDE_DIR)
     target_include_directories(${LIB_NAME} PRIVATE
-    "${HALIF_INCLUDE_DIR}/common/current/include")
+    "${HALIF_INCLUDE_DIR}/common/0.1.0.0/include")
 endif()
 
 target_link_directories(${LIB_NAME} PRIVATE
@@ -60,7 +60,7 @@ if (DEFINED HALIF_LIB_DIR)
     target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
 endif()
 
-target_link_libraries(${LIB_NAME} PRIVATE binder utils common-vcurrent-cpp)
+target_link_libraries(${LIB_NAME} PRIVATE binder utils common-v0.1.0.0-cpp)
 
 set_target_properties(${LIB_NAME} PROPERTIES OUTPUT_NAME "${LIB_NAME}")
 
