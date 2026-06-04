@@ -5,9 +5,11 @@
 # clones the toolchain. Keep it pinned so the committed module-local
 # generated C++ always matches the generator that produced it.
 #
-# Pinned to release tag 2.1.0 (linux_binder_idl) which ships:
+# Pinned to release tag 2.2.0 (linux_binder_idl) which ships:
+#  - version-pinned imports in interface.yaml via name@version syntax
+#    (linux_binder_idl#23/#25, enables rdk-halif-aidl#538)
 #  - the module-local generated-output layout (linux_binder_idl#19/#20)
 #  - the always-regen-on-build fix (linux_binder_idl#21, closes rdk-halif-aidl#530)
 #
 # Override for a one-off build with:  BINDER_VERSION=<ref> ./build_binder.sh
-2.1.0
+2.2.0

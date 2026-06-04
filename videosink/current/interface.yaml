@@ -3,8 +3,8 @@ aidl_interface:
   srcs:
     - com/rdk/hal/videosink/*.aidl
   imports:
-    - avclock
-    - common
-    - videodecoder
+    - avclock@current
+    - common@current
+    - videodecoder@current
   stability: vintf
   layout: module-local

@@ -3,6 +3,6 @@ aidl_interface:
   srcs:
     - com/rdk/hal/audiodecoder/*.aidl
   imports:
-    - common
+    - common@current
   stability: vintf
   layout: module-local
