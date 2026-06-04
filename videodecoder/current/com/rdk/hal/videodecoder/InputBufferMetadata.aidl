@@ -18,19 +18,67 @@
  */
 package com.rdk.hal.videodecoder;
 
+import com.rdk.hal.videodecoder.Fraction;
+import com.rdk.hal.videodecoder.Colorimetry;
+import com.rdk.hal.videodecoder.MasteringDisplayInfo;
+import com.rdk.hal.videodecoder.ContentLightLevel;
+import com.rdk.hal.videodecoder.DolbyVisionLayerFlags;
+
 /**
  *  @brief     Per-buffer metadata carried with input buffers submitted via
  *             `IVideoDecoderController.decodeBufferWithMetadata()`.
  *
  *  Describes properties of the encoded frame that cannot be derived from the
- *  buffer contents alone, such as its presentation time.
+ *  buffer contents alone, such as its presentation time, plus optional
+ *  container-derived metadata overrides that apply from this frame onward.
  *
- *  Each `decodeBufferWithMetadata()` call is self-describing: the HAL MUST NOT
- *  carry state from this parcelable across calls. A subsequent call with
- *  default-valued fields replaces, it does not preserve, the previous call's
- *  values.
+ *  <h3>Field semantics</h3>
+ *  The fields fall into two categories with distinct semantics:
+ *
+ *  <h4>Non-nullable per-buffer fields (`nsPresentationTime`, `discontinuity`)</h4>
+ *  These describe the encoded frame itself. Each `decodeBufferWithMetadata()`
+ *  call is self-describing for these fields: the HAL MUST NOT carry state
+ *  from this parcelable across calls. A subsequent call with default-valued
+ *  fields replaces, it does not preserve, the previous call's values.
+ *
+ *  <h4>Override fields (`colorimetry`, `masteringDisplayInfo`,
+ *  `contentLightLevel`, `dolbyVisionLayerFlags`, `pixelAspectRatio`)</h4>
+ *  All five are `@nullable` except `colorimetry`, which uses
+ *  `Colorimetry::UNKNOWN` as the "no change" sentinel because AIDL
+ *  enums cannot be `@nullable`.
+ *  These mirror the matching fields on `VideoDecoderStreamConfig` and let
+ *  middleware push container-derived metadata that changes mid-stream
+ *  (e.g. ABR per-Period HDR transition, SSAI ad insertion, live→VOD switch).
+ *
+ *  - non-null                — apply this override from this buffer onward;
+ *                              persists for subsequent buffers until a later
+ *                              override (or a `setStreamConfig()` call)
+ *                              replaces it.
+ *  - null                    — no change for this field; the previously
+ *                              applied override (or the value set in
+ *                              `State::READY` via `setStreamConfig()`)
+ *                              remains in effect.
+ *  - `Colorimetry::UNKNOWN`  — the "no change" form for `colorimetry`
+ *                              (which is non-nullable because AIDL enums
+ *                              cannot be `@nullable`). Semantics match
+ *                              the `null` form above for the other four
+ *                              fields.
+ *
+ *  Override precedence and persistence matches the `VideoDecoderStreamConfig`
+ *  contract: bitstream-derived metadata still wins over the override;
+ *  overrides are the fallback used only when the bitstream is silent.
+ *  Overrides persist across `flush()` and are cleared on `close()`.
+ *
+ *  <h3>Scope</h3>
+ *  Bitstream-driven properties (resolution / frame rate) are intentionally
+ *  omitted from the override fields — on modern codecs these are signalled
+ *  per-SPS in the bitstream and middleware should not override them
+ *  mid-stream. Codec or encryption-mode changes are also out of scope and
+ *  require a decoder teardown / `IVideoDecoder.open()` cycle.
  *
  *  @see IVideoDecoderController.decodeBufferWithMetadata()
+ *  @see IVideoDecoderController.setStreamConfig()
+ *  @see VideoDecoderStreamConfig
  *
  *  @author    Gerald Weatherup
  */
@@ -53,4 +101,50 @@ parcelable InputBufferMetadata {
      * @see IVideoDecoderController.signalDiscontinuity()
      */
     boolean discontinuity;
+
+    /**
+     * Optional colorimetry override applied from this buffer onward.
+     * AIDL enums cannot be `@nullable`, so this
+     * field uses `Colorimetry::UNKNOWN` (the default for an unset enum)
+     * to encode "no change". Any other value applies as an override.
+     *
+     * @see VideoDecoderStreamConfig.colorimetry, IVideoDecoderController.setStreamConfig()
+     */
+    Colorimetry colorimetry = Colorimetry.UNKNOWN;
+
+    /**
+     * Optional mastering display colour volume override (SMPTE ST 2086)
+     * applied from this buffer onward. null = no change.
+     *
+     * @see VideoDecoderStreamConfig.masteringDisplayInfo, IVideoDecoderController.setStreamConfig()
+     */
+    @nullable MasteringDisplayInfo masteringDisplayInfo;
+
+    /**
+     * Optional content light level override (CTA-861.3 MaxCLL / MaxFALL)
+     * applied from this buffer onward. null = no change.
+     *
+     * @see VideoDecoderStreamConfig.contentLightLevel, IVideoDecoderController.setStreamConfig()
+     */
+    @nullable ContentLightLevel contentLightLevel;
+
+    /**
+     * Optional Dolby Vision layer-flags override applied from this buffer
+     * onward. Only meaningful when the stream DynamicRange is
+     * DOLBY_VISION.
+     * null = no change.
+     *
+     * @see VideoDecoderStreamConfig.dolbyVisionLayerFlags, IVideoDecoderController.setStreamConfig()
+     */
+    @nullable DolbyVisionLayerFlags dolbyVisionLayerFlags;
+
+    /**
+     * Optional pixel aspect ratio override applied from this buffer onward.
+     * 0/0 encodes "unknown" (matching the
+     * `VideoDecoderStreamConfig.pixelAspectRatio` rule).
+     * null = no change.
+     *
+     * @see VideoDecoderStreamConfig.pixelAspectRatio, IVideoDecoderController.setStreamConfig()
+     */
+    @nullable Fraction pixelAspectRatio;
 }

@@ -22,13 +22,7 @@ public:
   ::android::binder::Status signalDiscontinuity() override;
   ::android::binder::Status signalEndOfStream() override;
   ::android::binder::Status parseCodecSpecificData(::com::rdk::hal::videodecoder::CSDVideoFormat csdVideoFormat, const ::std::vector<uint8_t>& codecData, bool* _aidl_return) override;
-  ::android::binder::Status setMasteringDisplayInfo(const ::std::optional<::com::rdk::hal::videodecoder::MasteringDisplayInfo>& info) override;
-  ::android::binder::Status setContentLightLevel(const ::std::optional<::com::rdk::hal::videodecoder::ContentLightLevel>& info) override;
-  ::android::binder::Status setColorimetry(::com::rdk::hal::videodecoder::Colorimetry colorimetry) override;
-  ::android::binder::Status setStreamResolution(int32_t width, int32_t height) override;
-  ::android::binder::Status setFrameRate(int32_t numerator, int32_t denominator) override;
-  ::android::binder::Status setDolbyVisionLayerFlags(bool blPresent, bool elPresent) override;
-  ::android::binder::Status setPixelAspectRatio(int32_t parX, int32_t parY) override;
+  ::android::binder::Status setStreamConfig(const ::com::rdk::hal::videodecoder::VideoDecoderStreamConfig& config) override;
   int32_t getInterfaceVersion() override;
   std::string getInterfaceHash() override;
 private:
