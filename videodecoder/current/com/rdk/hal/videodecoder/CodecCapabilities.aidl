@@ -18,12 +18,21 @@
  */
 package com.rdk.hal.videodecoder;
 import com.rdk.hal.videodecoder.Codec;
-import com.rdk.hal.videodecoder.CodecProfile;
-import com.rdk.hal.videodecoder.CodecLevel;
 import com.rdk.hal.videodecoder.PixelFormat;
+import com.rdk.hal.videodecoder.Profile;
 
 /**
  *  @brief     Codec capability definition.
+ *
+ *  Each entry describes one codec the decoder supports, the set of
+ *  profiles within that codec it can decode (each with its own
+ *  `maxLevel` and `maxBitrateInBps`), and the resolution / pixel-format
+ *  envelope shared across those profiles.
+ *
+ *  Shape mirrors `rdk-hpk-documentation/hfp-reference/videodecoder/
+ *  hfp-videodecoder.yaml` field-for-field so the HFP YAML reads as a
+ *  direct serialisation of the AIDL parcelable.
+ *
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
@@ -39,14 +48,20 @@ parcelable CodecCapabilities
     Codec codec;
 
   	/**
-     * Defines the profile for this Codec.
+     * Profiles supported for this codec, each with its own `maxLevel`
+     * and `maxBitrateInBps`. A single codec can advertise multiple
+     * profiles independently (e.g. H.265 supporting MAIN, MAIN_10, and
+     * MAIN_10_HDR10 at LEVEL_5_2).
+     *
+     * All lower profiles for the same codec are NOT implicitly
+     * supported — the array enumerates exactly what is supported. (In
+     * contrast, lower levels within each `Profile` entry ARE implicitly
+     * supported per `Profile.maxLevel` semantics.)
+     *
+     * @see Profile
      */
-    CodecProfile profile;
+    Profile[] profiles;
 
-    /**
-     * Defines the level for this Codec.
-     */
-    CodecLevel level;
 	/**
 	 * The maximum frame rate (FPS) supported for decode for this Codec.
 	 * e.g. 25, 30, 50, 60, 120.

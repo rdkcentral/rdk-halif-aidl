@@ -21,39 +21,86 @@
 #** ******************************************************************************
 
 # HAL Feature Profile for videodecoder
+#
+# Mirrors CodecCapabilities.aidl + Profile.aidl field-for-field.
+# Reference implementation aligned with
+# rdk-hpk-documentation/hfp-reference/videodecoder/hfp-videodecoder.yaml.
+#
+# Per-codec capability semantics:
+#   - `profiles[]` enumerates exactly which profiles are supported for the
+#     codec — no implicit "lower profiles also supported" rule.
+#   - Within each profile, `maxLevel` is inclusive — all lower levels for
+#     the same profile are implicitly supported.
+#   - `maxBitrateInBps` is an inclusive ceiling for the profile/level.
+#     Use `0` only if the SoC vendor doesn't publish a real cap.
 
 videodecoder:                   # Component object begins
   interfaceVersion: current
   supportedOperationalModes:
     - NON_TUNNELLED
   IVideoDecoder:                # Resource list
-    - 0:                        # Resource object begins
-      supportedCodecs:          # Array of codec capabilities
-        - MPEG:
+    - 0:                        # Resource object begins (high-tier decoder)
+      supportedCodecs:          # Array of CodecCapabilities
+        - MPEG2_VIDEO:
+            profiles:
+              - profile: MPEG2_MAIN
+                maxLevel: MPEG2_LEVEL_MAIN
+                maxBitrateInBps: 15000000
             maxFrameRate: 60
             maxFrameWidth: 1920
             maxFrameHeight: 1080
             supportedOutputPixelFormats:
               - YCBCR420
-        - H264:
+        - H264_AVC:
+            profiles:
+              - profile: H264_BASELINE
+                maxLevel: H264_LEVEL_4_1
+                maxBitrateInBps: 50000000
+              - profile: H264_MAIN
+                maxLevel: H264_LEVEL_4_1
+                maxBitrateInBps: 50000000
+              - profile: H264_HIGH
+                maxLevel: H264_LEVEL_4_1
+                maxBitrateInBps: 50000000
             maxFrameRate: 60
             maxFrameWidth: 1920
             maxFrameHeight: 1080
             supportedOutputPixelFormats:
               - YCBCR420
-        - H265:
+        - H265_HEVC:
+            profiles:
+              - profile: H265_MAIN
+                maxLevel: H265_LEVEL_5_2
+                maxBitrateInBps: 150000000
+              - profile: H265_MAIN_10
+                maxLevel: H265_LEVEL_5_2
+                maxBitrateInBps: 150000000
+              - profile: H265_MAIN_10_HDR10
+                maxLevel: H265_LEVEL_5_2
+                maxBitrateInBps: 150000000
             maxFrameRate: 60
             maxFrameWidth: 3840
             maxFrameHeight: 2160
             supportedOutputPixelFormats:
               - YCBCR420
         - VP9:
+            profiles:
+              - profile: VP9_PROFILE_0
+                maxLevel: VP9_LEVEL_5_1
+                maxBitrateInBps: 150000000
+              - profile: VP9_PROFILE_2
+                maxLevel: VP9_LEVEL_5_1
+                maxBitrateInBps: 150000000
             maxFrameRate: 60
             maxFrameWidth: 3840
             maxFrameHeight: 2160
             supportedOutputPixelFormats:
               - YCBCR420
         - AV1:
+            profiles:
+              - profile: AV1_MAIN
+                maxLevel: AV1_LEVEL_5_1
+                maxBitrateInBps: 150000000
             maxFrameRate: 60
             maxFrameWidth: 3840
             maxFrameHeight: 2160
@@ -71,33 +118,62 @@ videodecoder:                   # Component object begins
         - BT709
         - BT2020
       supportsSecure: true
-    - 1:                          # Resource object begins
-      supportedCodecs:          # Array of codec capabilities
-        - MPEG:
+    - 1:                          # Resource object begins (secondary HD decoder)
+      supportedCodecs:
+        - MPEG2_VIDEO:
+            profiles:
+              - profile: MPEG2_MAIN
+                maxLevel: MPEG2_LEVEL_MAIN
+                maxBitrateInBps: 15000000
             maxFrameRate: 60
             maxFrameWidth: 1920
             maxFrameHeight: 1080
             supportedOutputPixelFormats:
               - YCBCR420
-        - H264:
+        - H264_AVC:
+            profiles:
+              - profile: H264_BASELINE
+                maxLevel: H264_LEVEL_4_1
+                maxBitrateInBps: 50000000
+              - profile: H264_MAIN
+                maxLevel: H264_LEVEL_4_1
+                maxBitrateInBps: 50000000
+              - profile: H264_HIGH
+                maxLevel: H264_LEVEL_4_1
+                maxBitrateInBps: 50000000
             maxFrameRate: 60
             maxFrameWidth: 1920
             maxFrameHeight: 1080
             supportedOutputPixelFormats:
               - YCBCR420
-        - H265:
+        - H265_HEVC:
+            profiles:
+              - profile: H265_MAIN
+                maxLevel: H265_LEVEL_4_1
+                maxBitrateInBps: 50000000
+              - profile: H265_MAIN_10
+                maxLevel: H265_LEVEL_4_1
+                maxBitrateInBps: 50000000
             maxFrameRate: 60
             maxFrameWidth: 1920
             maxFrameHeight: 1080
             supportedOutputPixelFormats:
               - YCBCR420
         - VP9:
+            profiles:
+              - profile: VP9_PROFILE_0
+                maxLevel: VP9_LEVEL_4_1
+                maxBitrateInBps: 50000000
             maxFrameRate: 60
             maxFrameWidth: 1920
             maxFrameHeight: 1080
             supportedOutputPixelFormats:
               - YCBCR420
         - AV1:
+            profiles:
+              - profile: AV1_MAIN
+                maxLevel: AV1_LEVEL_4_1
+                maxBitrateInBps: 50000000
             maxFrameRate: 60
             maxFrameWidth: 1920
             maxFrameHeight: 1080
