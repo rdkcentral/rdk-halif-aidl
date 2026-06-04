@@ -90,7 +90,7 @@ else
 fi
 
 #######################################################################
-# 2. build_modules.sh manifest          (versions.yaml - released cohort)
+# 2. build_modules.sh manifest          (versions_released.yaml - released cohort)
 #
 # Default-file mode. Pins every component to its latest released snapshot;
 # the produced libs follow the `lib<comp>-v<X.Y.Z.W>-cpp.so` shape. A
@@ -114,12 +114,22 @@ if [ "${EXPECTED_RELEASED}" -lt "${EXPECTED_CURRENT}" ]; then
     fail "manifest (released): parsed ${EXPECTED_RELEASED} entries from versions_released.yaml, expected >= ${EXPECTED_CURRENT} — likely a manifest-format regression"
 fi
 if ./build_modules.sh manifest > /tmp/smoke_manifest_released.log 2>&1; then
-    # Match either -v<X.Y.Z.W>-cpp or -vcurrent-cpp; sum across both.
-    n=$(count_libs 'lib*-v*-cpp.so')
-    if [ "${n}" -ge "${EXPECTED_RELEASED}" ]; then
-        pass "manifest (released): ${n} lib*-v*-cpp.so built (>= ${EXPECTED_RELEASED} expected)"
+    # Count ONLY versioned snapshot libs (`-v<X.Y.Z.W>-cpp.so`) — phase 2
+    # exists specifically to validate the released cohort produces those.
+    # Phase 1's `-vcurrent-cpp.so` libs are excluded from the count so a
+    # silent regression here can't be masked by phase 1's leftover libs.
+    # Components pinned to `current` in the manifest (e.g. new modules
+    # with no snapshot yet) are excluded from both the count and the
+    # EXPECTED_VERSIONED expectation below.
+    EXPECTED_VERSIONED=$(awk '/^components:/ {inmap=1; next}
+                              inmap && /^[^[:space:]#]/ {inmap=0}
+                              inmap && /^[[:space:]]+[A-Za-z0-9_]+:[[:space:]]+[0-9]/ {n++}
+                              END {print n+0}' "${REPO_ROOT}/versions_released.yaml")
+    n=$(count_libs 'lib*-v[0-9]*-cpp.so')
+    if [ "${n}" -ge "${EXPECTED_VERSIONED}" ]; then
+        pass "manifest (released): ${n} lib*-v<X.Y.Z.W>-cpp.so built (>= ${EXPECTED_VERSIONED} versioned-pin entries expected)"
     else
-        fail "manifest (released): expected >= ${EXPECTED_RELEASED} libraries, found ${n}"
+        fail "manifest (released): expected >= ${EXPECTED_VERSIONED} versioned snapshot libraries, found ${n}"
     fi
 else
     fail "manifest (released): build_modules.sh exited non-zero (see /tmp/smoke_manifest_released.log)"
