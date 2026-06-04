@@ -262,21 +262,28 @@ add_custom_target(stage_modules ALL
     VERBATIM
 )
 
-# Ensure staging happens after all libraries are built
+# Ensure staging happens after all libraries are built. The pattern
+# matches both current (`-vcurrent-cpp`) and frozen-snapshot
+# (`-v<X.Y.Z.W>-cpp`) target names so on-disk snapshot libraries that
+# the toolchain auto-discovers (linux_binder_idl#23 / #538) are also
+# staged alongside `current/`.
 if (INTERFACE_TARGET STREQUAL "all")
     # When building all modules, add dependencies on all library targets
     get_property(all_targets DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY BUILDSYSTEM_TARGETS)
     foreach(target ${all_targets})
-        if (target MATCHES ".*-vcurrent-cpp$")
+        if (target MATCHES ".*-v[^-]+-cpp$")
             add_dependencies(stage_modules ${target})
         endif()
     endforeach()
 else()
-    # When building a specific module, depend on its library target
-    set(LIB_TARGET "${INTERFACE_TARGET}-vcurrent-cpp")
-    if (TARGET ${LIB_TARGET})
-        add_dependencies(stage_modules ${LIB_TARGET})
-    endif()
+    # When building a specific module, depend on every variant of its
+    # library target — current plus any registered snapshots.
+    get_property(all_targets DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY BUILDSYSTEM_TARGETS)
+    foreach(target ${all_targets})
+        if (target MATCHES "^${INTERFACE_TARGET}-v[^-]+-cpp$")
+            add_dependencies(stage_modules ${target})
+        endif()
+    endforeach()
 endif()
 
 #######################################################################

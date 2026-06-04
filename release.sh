@@ -90,7 +90,9 @@ for component in "${COMPONENTS[@]}"; do
 
     # Parse imports: from interface.yaml so the snapshot CMakeLists can link
     # against the right dependency libraries. Handles both inline (`[a, b]`)
-    # and block (`- a\n  - b`) YAML list forms.
+    # and block (`- a\n  - b`) YAML list forms. Each entry is either a bare
+    # name (legacy / deprecated) or the `name@version` form introduced in
+    # linux_binder_idl#23 — both are passed through verbatim and split here.
     deps=""
     if [ -f "${target}/interface.yaml" ]; then
         deps="$(awk '
@@ -105,13 +107,149 @@ for component in "${COMPONENTS[@]}"; do
             inmap && /^[^[:space:]-]/ { exit }
         ' "${target}/interface.yaml" | xargs)"
     fi
-    dep_libs=""
-    dep_inc_lines=""
+
+    # Rewrite any `@current` pins in the freshly-cut snapshot's
+    # interface.yaml to concrete frozen versions, so the snapshot is
+    # cohort-locked from the moment it's created (#538). For each
+    # producer, the concrete version comes from its own metadata.yaml
+    # `version:` field — i.e. whatever version that producer is at right
+    # now. This matches the "release everything at once" model used by
+    # the milestone-driven release cadence; if a producer hasn't been
+    # released and its current/ version doesn't match the cohort, the
+    # producer-side version dir simply won't exist and the toolchain
+    # will flag it at configure time.
+    rewritten_deps=""
     for d in ${deps}; do
-        dep_libs+=" ${d}-vcurrent-cpp"
-        dep_inc_lines+="
-    \"\${HALIF_INCLUDE_DIR}/${d}/current/include\""
+        name="${d%@*}"
+        ver="${d#*@}"
+        if [ "${name}" = "${d}" ]; then
+            # Bare-name form — treat as @current per the toolchain's
+            # backward-compat rule, then resolve to a concrete version.
+            ver="current"
+        fi
+        if [ "${ver}" = "current" ]; then
+            producer_metadata="${name}/metadata.yaml"
+            if [ -f "${producer_metadata}" ]; then
+                ver="$(grep -E '^version:' "${producer_metadata}" | head -1 | awk '{print $2}')"
+            fi
+            if [ -z "${ver}" ] || [ "${ver}" = "current" ]; then
+                echo "    WARN ${component}@${version} imports ${name}@current but ${name}/metadata.yaml is missing or has no version: — leaving as @current; this snapshot will silent-drift against ${name}'s current sibling."
+                ver="current"
+            fi
+        fi
+        rewritten_deps+=" ${name}@${ver}"
     done
+
+    if [ -n "${rewritten_deps}" ]; then
+        python3 - "${target}/interface.yaml" <<PY_EOF
+import re, sys
+path = sys.argv[1]
+pins = """${rewritten_deps}""".split()
+pin_map = {}
+for entry in pins:
+    n, _, v = entry.partition("@")
+    pin_map[n] = v
+with open(path) as fh: lines = fh.readlines()
+out = []
+in_imports = False
+RE = re.compile(r'^(\s*-\s*)([A-Za-z_][A-Za-z0-9_]*)(?:@[^\s]+)?\s*$')
+for line in lines:
+    s = line.strip()
+    if s.startswith("imports:"):
+        in_imports = True; out.append(line); continue
+    if in_imports:
+        if s and not s.startswith("-") and ":" in s:
+            in_imports = False
+        elif s == "":
+            pass
+        else:
+            m = RE.match(line.rstrip("\n"))
+            if m and m.group(2) in pin_map:
+                line = f"{m.group(1)}{m.group(2)}@{pin_map[m.group(2)]}\n"
+    out.append(line)
+with open(path, "w") as fh: fh.writelines(out)
+PY_EOF
+        deps="${rewritten_deps# }"
+    fi
+
+    dep_libs=""
+    # Compute the transitive closure of `deps` so the snapshot's include
+    # path picks up headers reachable via a direct dependency (e.g. avbuffer
+    # imports audiodecoder which imports common — avbuffer needs common's
+    # headers on the search path even though it doesn't import common
+    # directly). Without this, fully cohort-locked snapshot builds fail
+    # to find transitive headers because each producer's include dir is
+    # version-pinned rather than catch-all `current/`.
+    declare -a closure_order=()
+    declare -A closure_seen=()
+    _add_closure() {
+        local _name="$1" _ver="$2"
+        [ -n "${closure_seen[$_name]:-}" ] && return
+        closure_seen[$_name]=1
+        closure_order+=("${_name}@${_ver}")
+        # Recurse via the producer's own interface.yaml imports at the
+        # pinned version (which always exists on disk for a snapshot we
+        # are linking).
+        local _yaml
+        if [ "${_ver}" = "current" ]; then
+            _yaml="${_name}/current/interface.yaml"
+        else
+            _yaml="${_name}/${_ver}/interface.yaml"
+        fi
+        [ -f "${_yaml}" ] || return
+        local _inner _inner_name _inner_ver
+        for _inner in $(awk '
+            /^[[:space:]]*imports:[[:space:]]*\[/ {
+                line=$0; gsub(/.*\[|\].*/,"",line); gsub(/,/," ",line)
+                print line; exit
+            }
+            /^[[:space:]]*imports:/ { inmap=1; next }
+            inmap && /^[[:space:]]+-[[:space:]]*/ {
+                gsub(/^[[:space:]]+-[[:space:]]*/,""); printf "%s ", $0; next
+            }
+            inmap && /^[^[:space:]-]/ { exit }
+        ' "${_yaml}" | xargs); do
+            _inner_name="${_inner%@*}"
+            _inner_ver="${_inner#*@}"
+            [ "${_inner_name}" = "${_inner}" ] && _inner_ver="current"
+            _add_closure "${_inner_name}" "${_inner_ver}"
+        done
+    }
+    for d in ${deps}; do
+        name="${d%@*}"
+        ver="${d#*@}"
+        [ "${name}" = "${d}" ] && ver="current"
+        _add_closure "${name}" "${ver}"
+    done
+
+    dep_inc_lines=""
+    for entry in "${closure_order[@]}"; do
+        name="${entry%@*}"
+        ver="${entry#*@}"
+        if [ "${ver}" = "current" ]; then
+            dep_inc_lines+="
+    \"\${HALIF_INCLUDE_DIR}/${name}/current/include\""
+        else
+            dep_inc_lines+="
+    \"\${HALIF_INCLUDE_DIR}/${name}/${ver}/include\""
+        fi
+    done
+
+    # Linker line stays restricted to direct imports — transitive deps
+    # come through the linker via the direct deps' own PUBLIC link
+    # interface (matching the pattern used by `current/CMakeLists.txt`
+    # in #546).
+    for d in ${deps}; do
+        name="${d%@*}"
+        ver="${d#*@}"
+        [ "${name}" = "${d}" ] && ver="current"
+        if [ "${ver}" = "current" ]; then
+            dep_libs+=" ${name}-vcurrent-cpp"
+        else
+            dep_libs+=" ${name}-v${ver}-cpp"
+        fi
+    done
+    unset closure_order closure_seen
     # Only emit the dependency-include block when the component has imports;
     # an empty target_include_directories() call is invalid-looking noise.
     dep_include_block=""
