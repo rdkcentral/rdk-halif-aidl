@@ -85,6 +85,7 @@ nav:
     - Bluetooth: '!include vsi/bluetooth/current/mkdocs.yml'
     - Graphics: '!include vsi/graphics/current/mkdocs.yml'
     - Service Manager: vsi/service_manager/current/service_manager.md
+    - Module Boot Sequence: vsi/boot_sequence/current/module_boot_sequence.md
     - Wi-Fi: '!include vsi/wifi/current/mkdocs.yml'
     - Systemd: vsi/systemd/current/systemd.md
     - Kernel: '!include vsi/kernel/current/mkdocs.yml'
