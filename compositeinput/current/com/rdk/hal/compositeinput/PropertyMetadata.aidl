@@ -20,6 +20,7 @@
 package com.rdk.hal.compositeinput;
 
 import com.rdk.hal.compositeinput.PortProperty;
+import com.rdk.hal.PropertyType;
 
 /**
  * @brief Metadata describing a composite input property.
@@ -27,42 +28,18 @@ import com.rdk.hal.compositeinput.PortProperty;
  * Provides type information and access flags for properties,
  * enabling runtime discovery and validation. Property keys and
  * metadata are defined in the HFP YAML configuration.
+ *
+ * @note  The PropertyType enum was promoted out of this parcelable into
+ *        the shared com.rdk.hal package so multiple HAL components can
+ *        reuse the same type taxonomy without cross-package imports.
  */
 @VintfStability
 parcelable PropertyMetadata
 {
-    /**
-     * @brief Property value type enumeration.
-     *
-     * Indicates which field of PropertyValue union should be used.
-     */
-    @VintfStability
-    @Backing(type="int")
-    enum PropertyType
-    {
-        /** Boolean value - maps to PropertyValue.booleanValue */
-        BOOLEAN = 0,
-
-        /** Integer value - maps to PropertyValue.intValue (often used for enums) */
-        INTEGER = 1,
-
-        /** Long value - maps to PropertyValue.longValue */
-        LONG = 2,
-
-        /** Float value - maps to PropertyValue.floatValue */
-        FLOAT = 3,
-
-        /** Double value - maps to PropertyValue.doubleValue */
-        DOUBLE = 4,
-
-        /** String value - maps to PropertyValue.stringValue */
-        STRING = 5,
-    }
-
     /** Property key (from the PortProperty enum). */
     PortProperty key;
 
-    /** Data type of the property value. */
+    /** Data type of the property value (shared PropertyType enum). */
     PropertyType type;
 
     /** True if property is read-only. */

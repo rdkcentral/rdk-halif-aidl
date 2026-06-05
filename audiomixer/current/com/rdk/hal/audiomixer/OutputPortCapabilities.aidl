@@ -21,64 +21,100 @@ package com.rdk.hal.audiomixer;
 import com.rdk.hal.audiomixer.OutputPortProperty;
 import com.rdk.hal.audiomixer.OutputPortType;
 import com.rdk.hal.audiomixer.OutputFormat;
-import com.rdk.hal.audiomixer.AQProcessor;
 
 /**
+ * @file     OutputPortCapabilities.aidl
  * @brief    Capabilities for an audio output port.
- * Enumerates which properties can be set or queried for a given port,
- *           plus codec/format support and AQ processors.
+ *
+ * @details  Enumerates which properties can be set or queried for a given
+ *           port, plus codec/format support and whether the port routes
+ *           through the AQ (Audio Quality) processing block.
+ *
+ *           AQ processor identity, version, parameter set, value ranges,
+ *           and on/off/default sentinels are runtime-discovered through
+ *           IAudioOutputPort.getAQProcessor() and the IAQProcessor /
+ *           AQParameterMetadata surface — they are NOT enumerated in this
+ *           parcelable.
+ *
  * @note     This structure is descriptive only. Property reads use
  *           IAudioOutputPort.getProperty(); property writes use
- *           IAudioOutputPortController.setProperty() (controller acquired via
- *           IAudioOutputPort.open()).
+ *           IAudioOutputPortController.setProperty() (controller acquired
+ *           via IAudioOutputPort.open()). AQ parameter reads/writes are
+ *           handled by the IAQProcessor surface.
  */
 @VintfStability
 parcelable OutputPortCapabilities {
 
     /**
-    * @brief Human-readable name or role for this output port (e.g., "HDMI", "SPDIF", "Speakers").
-    * @details Required, declared per output port in hfp-audiomixer.yaml under
-    *          outputPorts[].portName. Used for debugging, logging, and
-    *          user-facing diagnostics. For programmatic type identification
-    *          and policy branching, use `portType` instead.
-    */
+     * @brief   Human-readable identifier for this output port
+     *          (e.g. "HDMI", "SPDIF", "SPEAKERS").
+     *
+     * @details Required, declared per output port in hfp-audiomixer.yaml
+     *          under outputPorts[].portName. Used for debugging, logging,
+     *          and user-facing diagnostics. For programmatic type
+     *          identification and policy branching, use @c portType
+     *          instead.
+     *
+     *          Recommended canonical spellings (reserved): @c HDMI,
+     *          @c HDMI_ARC, @c HDMI_EARC, @c SPDIF, @c SPEAKERS,
+     *          @c HEADPHONE, @c LINE_OUT, @c BLUETOOTH, @c USB_AUDIO.
+     *          Platforms may add vendor-specific names but MUST use the
+     *          reserved spelling when one applies.
+     */
     String portName;
 
     /**
-    * @brief Programmatic type of this output port.
-    * @details Declared per output port in hfp-audiomixer.yaml under
-    *          outputPorts[].portType. Middleware should branch on this enum
-    *          (not on the string `portName`) when applying type-specific
-    *          policy — e.g. transcode-to-AC3 only on SPDIF, hot-unplug
-    *          handling only on HDMI/ARC/EARC, pairing flow only on BLUETOOTH.
-    *
-    *          Multiple ports of the same type may exist (e.g. two HDMI
-    *          outputs); use `portName` to distinguish them.
-    */
+     * @brief   Programmatic type of this output port.
+     *
+     * @details Declared per output port in hfp-audiomixer.yaml under
+     *          outputPorts[].portType. Middleware should branch on this
+     *          enum (not on the string @c portName) when applying type-
+     *          specific policy — e.g. transcode-to-AC3 only on SPDIF,
+     *          hot-unplug handling only on HDMI/ARC/EARC, pairing flow
+     *          only on BLUETOOTH.
+     *
+     *          Multiple ports of the same type may exist (e.g. two HDMI
+     *          outputs); use @c portName to distinguish them.
+     */
     OutputPortType portType;
 
     /**
-     * List of property keys supported by this output port (see OutputPortProperty).
-     * E.g., VOLUME, DELAY_MS, OUTPUT_FORMAT, etc.
+     * @brief   List of property keys supported by this output port.
+     *
+     * @details See OutputPortProperty for the enumerator set
+     *          (VOLUME, DELAY_MS, OUTPUT_FORMAT, etc.).
      */
     OutputPortProperty[] supportedProperties;
 
     /**
-     * List of supported output audio formats.
+     * @brief   List of supported output audio formats.
      */
     OutputFormat[] supportedOutputFormats;
 
     /**
-     * List of AQ processor instances supported (first is default).
-     */
-    AQProcessor[] supportedAQProcessors;
-
-    /**
-     * List Dolby MS12 Audio Profiles (first is default).
-     * If there are no defined MS12 Audio Profiles for this audio port then
-     * dolbyMs12AudioProfiles is not populated with profile strings.
+     * @brief   List of Dolby MS12 Audio Profiles (first is default).
+     *
+     * @details If there are no defined MS12 Audio Profiles for this audio
+     *          port then @c dolbyMs12AudioProfiles is not populated.
      */
     @nullable String[] dolbyMs12AudioProfiles;
+
+    /**
+     * @brief   True when this port routes through the AQ (Audio Quality)
+     *          processing block.
+     *
+     * @details When true, IAudioOutputPort.getAQProcessor() returns an
+     *          IAQProcessor surface; the processor family, version,
+     *          parameter inventory, and value ranges are then discovered
+     *          at runtime via IAQProcessor.getProcessorType() /
+     *          getVersion() / getSupportedParameters(). When false,
+     *          getAQProcessor() returns null.
+     *
+     * @see     IAudioOutputPort.isAQRouted()
+     * @see     IAudioOutputPort.getAQProcessor()
+     * @see     IAQProcessor
+     */
+    boolean isAQRouted;
 
     /**
      * @brief   True when this port supports audio capture via

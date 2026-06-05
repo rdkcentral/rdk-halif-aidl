@@ -68,7 +68,13 @@ Mixer instances are accessed and controlled via `IAudioMixer`, with additional l
 | OutputFormat.aidl             | Enumerates output encoding formats                     |
 | Property.aidl                 | Mixer-level configurable properties                    |
 | OutputPortProperty.aidl       | Output port-level configurable properties              |
-| AQProcessor.aidl              | Supported audio post-processing processor types        |
+| AQProcessor.aidl              | Supported audio post-processing processor type family enum |
+| AQParameter.aidl              | Canonical AQ parameter name spellings (docs-only; not on the wire) |
+| AQParameterMetadata.aidl      | Per-parameter metadata (type, range, on/off/default, sound-mode membership) |
+| AQParameterKV.aidl            | Name/value pair for batch AQ parameter read/write       |
+| IAQProcessor.aidl             | Per-port AQ processor: read, observe, open() for write  |
+| IAQProcessorController.aidl   | Exclusive AQ parameter write surface                    |
+| IAQProcessorListener.aidl     | Observer callbacks (parameter / sound-mode / processor reset) |
 | DolbyMs12_2_6_LevellerMode.aidl | MS12 volume leveller mode enum                      |
 | DolbyMs12_2_6_VirtualizerMode.aidl | MS12 surround virtualizer mode enum               |
 | DolbyMs12_2_6_IeqMode.aidl    | MS12 intelligent equalizer mode enum                   |
@@ -96,7 +102,7 @@ The AudioMixer HAL service is initialized by systemd, registered with the Binder
 * Mixers are uniquely identified via `IAudioMixer.Id` enum values.
 * Capabilities are queried using `getCapabilities()` and may differ per instance.
 * Mixer resources are declared in the HFP YAML including `supportsSecure`, input configurations, and multi-instance support.
-* Output ports may vary in capability (formats, pass-through support, AQ processors such as Dolby MS12 2.6 DAP, and `supportsAudioCapture`).
+* Output ports may vary in capability (formats, pass-through support, AQ routing via `isAQRouted`, and `supportsAudioCapture`). AQ processor identity, version, and tunable parameters are runtime-discovered through `IAudioOutputPort.getAQProcessor()` and `IAQProcessor.getSupportedParameters()`.
 
 ---
 
@@ -173,6 +179,7 @@ flowchart TD
 * Mixer accepts input streams with declared `ContentType` and `Codec`.
 * Inputs are processed and mixed into one or more outputs.
 * Output formats can be negotiated and configured using `IAudioOutputPortController.setProperty(OUTPUT_FORMAT, ...)` (controller acquired via `IAudioOutputPort.open()`).
+* AQ (Audio Quality) parameters are configured through `IAudioOutputPort.getAQProcessor()`, which returns an `IAQProcessor` exposing identity (`getProcessorType()` / `getVersion()` / `getName()`), the per-instance parameter set (`getSupportedParameters()` returning `AQParameterMetadata[]`), reads (`getAQParameter` / `getAQParameters`), sound modes (`getAQSoundModes` / `getAQSoundMode`), multi-client observation (`registerListener` / `unregisterListener`), and exclusive write access via `open()` → `IAQProcessorController` for `setAQParameter` / `setAQParameters` (atomic batch) / `setAQSoundMode` / `resetToDefault`. Because the processor is a read-side discovery surface, `getAQProcessor()` needs no port ownership; only its writes (via `IAQProcessorController`) are gated.
 * For Dolby MS12 2.6 ports, `IAudioOutputPortController.getDolbyMs12_2_6_Dap()` returns the `IDolbyMs12_2_6_Dap` runtime command interface (bass enhancer, volume leveller, surround virtualizer, dialogue enhancer, EQ modes, DRC, Atmos lock, downmix, volume modeler, centre spreading, active downmix). Because the interface is acquired from the port controller, the port controller's ownership boundary gates all DAP access — reads as well as writes — for the lifetime of the controller. Port-level MS12 audio profile selection is exposed via `OutputPortProperty.DOLBY_MS12_AUDIO_PROFILE` against the profiles enumerated in `OutputPortCapabilities.dolbyMs12AudioProfiles`.
 * Where `OutputPortCapabilities.supportsAudioCapture` is true, capture is created from `IAudioOutputPortController.getAudioCapture(listener)` — like DAP runtime control, capture acquisition is gated by holding the port controller acquired via `IAudioOutputPort.open()`.
 * Audio capture uses a shared-memory ring buffer returned by `getSharedMemory(out long[] sharedMemorySizeBytes)` (length-1 array carries the buffer size; AIDL primitives cannot be `out` parameters), with `releaseData()` acknowledgements after `onDataAvailable()` callbacks.
@@ -439,7 +446,7 @@ Mixers can operate in secure and non-secure paths. Mixer properties such as `MIX
 
 The `IDolbyMs12_2_6_Dap` interface exposes one method per MS12 IDK 2.6 runtime command. It is obtained from `IAudioOutputPortController.getDolbyMs12_2_6_Dap()`, so DAP access is gated by holding the exclusive port controller acquired via `IAudioOutputPort.open()`. Because the interface is acquired from the controller, the ownership boundary applies to all DAP access — reads as well as writes — for the controller's lifetime. No separate DAP-level open()/close() is required.
 
-Non-boolean argument constraints are declared per output port in `audiomixer/current/hfp-audiomixer.yaml` under `outputPorts[].supportedAQProcessors[].setFunctions`.
+Non-boolean argument constraints for MS12 v2.6 DAP methods are declared in `audiomixer/current/hfp-audiomixer.yaml` under the `aqProcessors[]` block whose `type: DOLBY_MS12_2_6` and matching `version` apply, mirroring the parameter ranges surfaced by `IAQProcessor.getSupportedParameters()`.
 
 | Method | Non-boolean constraints |
 | ------ | ----------------------- |
@@ -542,8 +549,8 @@ Clients should process callbacks in order.
 Declared in the HFP YAML:
 
 * `resources`: Mixer instances, supported source types, and input codec/content capability
-* `outputPorts`: Output port properties, formats, AQ processors, and `supportsAudioCapture`
-* `outputPorts[].supportedAQProcessors[].setFunctions`: Non-boolean argument constraints and defaults for `IDolbyMs12_2_6_Dap` methods
+* `outputPorts`: Output port properties, formats, `isAQRouted`, `aqProcessorId` reference, and `supportsAudioCapture`
+* `aqProcessors`: AQ processor instances declared as `{id, type, version, name, soundModes, parameters[]}`. Each parameter carries `type`, `min`, `max`, `offValue`, `onValue`, `defaultValue`, `isGlobal`, `includedInSoundMode`, and `description` — surfaced at runtime as `AQParameterMetadata` via `IAQProcessor.getSupportedParameters()`
 
 ---
 

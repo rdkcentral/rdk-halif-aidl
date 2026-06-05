@@ -18,6 +18,7 @@
  */
 package com.rdk.hal.audiomixer;
 
+import com.rdk.hal.audiomixer.IAQProcessor;
 import com.rdk.hal.audiomixer.IAudioOutputPortController;
 import com.rdk.hal.audiomixer.IAudioOutputPortControllerListener;
 import com.rdk.hal.audiomixer.IAudioOutputPortListener;
@@ -44,12 +45,19 @@ import com.rdk.hal.PropertyValue;
  *           state. Property writes are gated on holding the controller — see
  *           IAudioOutputPortController.setProperty().
  *
- *           DAP and audio capture are exposed only via the port
- *           controller (not the read-side handle): see
+ *           DAP and audio capture are control surfaces, exposed only via
+ *           the port controller (not the read-side handle): see
  *           IAudioOutputPortController.getDolbyMs12_2_6_Dap() and
  *           IAudioOutputPortController.getAudioCapture(). Write-capable
  *           sub-interface acquisition is gated on the same exclusive-
  *           ownership boundary used for property writes.
+ *
+ *           The AQ processor is a discovery/observe surface and needs no
+ *           ownership: getAQProcessor() is available on this read-side
+ *           handle for ports advertising isAQRouted = true (its type,
+ *           version, parameter set and value ranges are discovered at
+ *           runtime via IAQProcessor). AQ writes self-gate via
+ *           IAQProcessor.open() → IAQProcessorController.
  */
 @VintfStability
 interface IAudioOutputPort {
@@ -176,4 +184,43 @@ interface IAudioOutputPort {
      */
     boolean unregisterEventListener(in IAudioOutputPortListener audioOutputPortEventListener);
 
+    /**
+     * @brief    Indicates whether this output port routes through the AQ
+     *           (Audio Quality) processing block.
+     *
+     *           Mirrors OutputPortCapabilities.isAQRouted at the
+     *           IAudioOutputPort level so clients can branch without
+     *           reading the full capabilities parcelable. When false,
+     *           getAQProcessor() returns null.
+     *
+     * @returns  true if AQ routing is active for this port; false otherwise.
+     *
+     * @see      getAQProcessor()
+     * @see      com.rdk.hal.audiomixer.OutputPortCapabilities.isAQRouted
+     */
+    boolean isAQRouted();
+
+    /**
+     * @brief    Returns the AQ (Audio Quality) processor handle for this port.
+     *
+     *           Returns null when the port is not AQ-routed (i.e.
+     *           isAQRouted() is false) — middleware should treat null as
+     *           "no AQ tuning surface on this port".
+     *
+     *           Use IAQProcessor for runtime discovery of the parameter
+     *           set, current values, sound modes, observation
+     *           (registerListener/unregisterListener), and exclusive write
+     *           access via IAQProcessor.open().
+     *
+     *           Use IAQProcessor.getProcessorType() / getVersion() to
+     *           branch on processor family and version; do not parse
+     *           getName().
+     *
+     * @returns  IAQProcessor handle for this port, or null when the port is
+     *           not AQ-routed.
+     *
+     * @see      isAQRouted()
+     * @see      IAQProcessor
+     */
+    @nullable IAQProcessor getAQProcessor();
 }
