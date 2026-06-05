@@ -21,13 +21,11 @@ package com.rdk.hal.audiomixer;
 import com.rdk.hal.audiomixer.OutputPortProperty;
 import com.rdk.hal.audiomixer.OutputPortType;
 import com.rdk.hal.audiomixer.OutputFormat;
-import com.rdk.hal.audiomixer.TranscodeFormat;
 import com.rdk.hal.audiomixer.AQProcessor;
-import com.rdk.hal.audiomixer.AQParameter;
 
 /**
  * @brief    Capabilities for an audio output port.
- * @details  Enumerates which properties can be set or queried for a given port,
+ * Enumerates which properties can be set or queried for a given port,
  *           plus codec/format support and AQ processors.
  * @note     This structure is descriptive only. Property reads use
  *           IAudioOutputPort.getProperty(); property writes use
@@ -71,17 +69,24 @@ parcelable OutputPortCapabilities {
     OutputFormat[] supportedOutputFormats;
 
     /**
-     * Supported audio transcoding output formats.
-     */
-    TranscodeFormat[] supportedTranscodeFormats;
-
-    /**
      * List of AQ processor instances supported (first is default).
      */
     AQProcessor[] supportedAQProcessors;
 
     /**
-     * List of supported AQ parameters.
+     * List Dolby MS12 Audio Profiles (first is default).
+     * If there are no defined MS12 Audio Profiles for this audio port then
+     * dolbyMs12AudioProfiles is not populated with profile strings.
      */
-    AQParameter[] supportedAQ;
+    @nullable String[] dolbyMs12AudioProfiles;
+
+    /**
+     * Indicates whether this output port supports audio capture via getAudioCapture().
+     * If true, clients may call IAudioOutputPort.getAudioCapture(listener) to obtain
+     * an IAudioCapture interface for streaming audio from this port.
+     * If false, calling getAudioCapture() will throw binder::Status EX_UNSUPPORTED_OPERATION.
+     * 
+     * @see IAudioOutputPort.getAudioCapture()
+     */
+    boolean supportsAudioCapture;
 }
