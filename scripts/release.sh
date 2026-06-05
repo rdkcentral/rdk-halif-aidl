@@ -27,14 +27,35 @@ usage() {
 Release Version Bump Tool
 
 Usage:
-  ./scripts/release.sh [--since <ref>] [--apply] [--no-gh] [--verbose]
+  ./scripts/release.sh [--since <ref>] [--apply] [--release-version X.Y.Z]
+                       [--no-gh] [--no-snapshot] [--no-mkdocs] [--no-git]
+                       [--verbose]
 
 Options:
-  --since <ref>  Base reference to diff from (default: nearest reachable tag).
-  --apply        Apply computed version updates to metadata.yaml.
-  --no-gh        Disable GitHub label lookup and use local heuristics only.
-  --verbose      Print extra diagnostics.
-  --help         Show this help.
+  --since <ref>          Base reference to diff from (default: nearest
+                         reachable tag).
+  --apply                Apply computed version updates to metadata.yaml,
+                         create frozen <module>/<version>/ snapshots for
+                         each bumped component, update mkdocs.yml,
+                         create a release/X.Y.Z branch, and tag the repo
+                         X.Y.Z. The --release-version flag is required
+                         when --apply produces at least one component
+                         bump (and ignored otherwise).
+  --release-version X.Y.Z
+                         Repo-level release version (e.g. "0.21.0"). The
+                         release branch and tag are named from this.
+                         Required with --apply when any component is
+                         bumped.
+  --no-gh                Disable GitHub label lookup; use local heuristics
+                         only.
+  --no-snapshot          With --apply, skip creating <module>/<version>/
+                         frozen snapshots (regenerate-then-copy step).
+                         For testing only — a real release MUST snapshot.
+  --no-mkdocs            With --apply, skip updating mkdocs.yml.
+  --no-git               With --apply, skip creating the release branch
+                         and tag. For testing only.
+  --verbose              Print extra diagnostics.
+  --help                 Show this help.
 
 Behavior (#545 change-class labels):
   - "Breaking Change" label   => generation bump (0.g.m.p -> 0.(g+1).0.0)
@@ -44,6 +65,25 @@ Behavior (#545 change-class labels):
                                  from a release-bump perspective)
   - no relevant label         => minor bump (default), unless docs-only heuristic
                                  says patch
+
+Snapshot creation (--apply default, suppress with --no-snapshot):
+  For each component whose version moved, the script:
+    1. Runs ./build_modules.sh <component> so the toolchain regenerates
+       current/include/*.h and current/src/*.cpp into the working tree.
+       (These directories are .gitignored under current/ per #566.)
+    2. Copies current/ to <component>/<NEXT_VERSION>/, capturing the
+       regenerated bindings into the immutable frozen snapshot.
+    3. Stages the new <version>/ directory for commit.
+
+  Placeholder components (those with no current/ directory — e.g. ffv,
+  r4ce, vsi/abstractfilesystem; tracked under #517) are skipped silently.
+  The metadata.yaml bump still records the cycle; no snapshot is produced
+  because there's no source to snapshot.
+
+No-op when no component changed:
+  If no metadata.yaml moves, the script writes nothing, creates no
+  snapshot, leaves mkdocs.yml unchanged, and does not create a release
+  branch or tag. Exit clean.
 
 Notes:
   - Script is intended for manual release-time usage (not CI).
@@ -64,6 +104,12 @@ die() {
     exit 1
 }
 
+# Defaults for the new flags (added by #513)
+RELEASE_VERSION=""
+NO_SNAPSHOT=0
+NO_MKDOCS=0
+NO_GIT=0
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --since)
@@ -75,8 +121,25 @@ while [[ $# -gt 0 ]]; do
             APPLY=1
             shift
             ;;
+        --release-version)
+            [[ $# -ge 2 ]] || die "--release-version requires a value (e.g. 0.21.0)"
+            RELEASE_VERSION="$2"
+            shift 2
+            ;;
         --no-gh)
             NO_GH=1
+            shift
+            ;;
+        --no-snapshot)
+            NO_SNAPSHOT=1
+            shift
+            ;;
+        --no-mkdocs)
+            NO_MKDOCS=1
+            shift
+            ;;
+        --no-git)
+            NO_GIT=1
             shift
             ;;
         --verbose|-v)
@@ -344,6 +407,221 @@ update_metadata() {
     sed -i -E "s/^version:.*/version: ${new_version}/" "${file}"
 }
 
+# ----------------------------------------------------------------------------
+# Snapshot creation (#513)
+# ----------------------------------------------------------------------------
+#
+# Per the cohort-locked snapshot model, a release tags each bumped
+# component's `current/` state into an immutable `<module>/<version>/`
+# directory. Because `current/include/` and `current/src/` are gitignored
+# (#566/#567), the snapshot creation MUST regenerate the bindings first
+# so they're captured into the frozen tree.
+#
+# Sequence per component:
+#   1. ./build_modules.sh <component>   # regenerate current/include + current/src
+#   2. cp -r <component>/current/ <component>/<version>/
+#   3. git add <component>/<version>/   # snapshot now contains bindings
+#
+# Frozen `<version>/` includes everything from `current/`: AIDL,
+# generated include/src, docs, CMakeLists, interface.yaml, hfp-*.yaml.
+
+create_snapshot() {
+    local comp="$1"
+    local version="$2"
+    local snapshot_dir="${REPO_ROOT}/${comp}/${version}"
+
+    # Placeholder-component guard (#517): components like ffv, r4ce, and
+    # vsi/abstractfilesystem ship as metadata-only stubs — they have a
+    # `metadata.yaml` declaring intent, but no `current/` directory, no
+    # AIDL, no docs, no build wiring. Skip them with a friendly note; the
+    # version bump in `metadata.yaml` still records the cycle.
+    if [[ ! -d "${REPO_ROOT}/${comp}/current" ]]; then
+        log "  [${comp}] no current/ directory — placeholder component (see #517); skipping snapshot."
+        return 0
+    fi
+
+    if [[ -d "${snapshot_dir}" ]]; then
+        warn "${comp}/${version}/ already exists from a prior run."
+        warn "  Refusing to risk a stale snapshot: delete the directory and re-run,"
+        warn "  or run with --no-snapshot if you know the existing snapshot is current."
+        return 1
+    fi
+
+    log "  [${comp}] regenerating bindings via build_modules.sh..."
+    local build_log="${REPO_ROOT}/out/release-snapshot-${comp//\//_}.log"
+    mkdir -p "$(dirname "${build_log}")"
+    if [[ "${VERBOSE}" -eq 1 ]]; then
+        if ! (cd "${REPO_ROOT}" && ./build_modules.sh "${comp}" 2>&1 | tee "${build_log}"); then
+            warn "Failed to regenerate ${comp} bindings — see ${build_log}."
+            return 1
+        fi
+    else
+        if ! (cd "${REPO_ROOT}" && ./build_modules.sh "${comp}" >"${build_log}" 2>&1); then
+            warn "Failed to regenerate ${comp} bindings. Tail of ${build_log}:"
+            tail -20 "${build_log}" | sed 's/^/    /' >&2
+            return 1
+        fi
+    fi
+
+    log "  [${comp}] copying current/ to ${version}/"
+    if ! cp -r "${REPO_ROOT}/${comp}/current" "${snapshot_dir}"; then
+        warn "cp failed for ${comp}/${version}/."
+        return 1
+    fi
+
+    # Stage the snapshot. No -f needed: .gitignore scopes the binding
+    # rules to */current/include/ and */current/src/ only — files under
+    # <module>/<version>/ are outside that scope and stage cleanly with
+    # a plain `git add`. Using -f here would risk staging unrelated
+    # ignored artefacts if any ever leak into the snapshot tree.
+    (cd "${REPO_ROOT}" && git add "${comp}/${version}/") || {
+        warn "git add failed for ${comp}/${version}/."
+        return 1
+    }
+
+    return 0
+}
+
+# ----------------------------------------------------------------------------
+# mkdocs.yml update (#513)
+# ----------------------------------------------------------------------------
+#
+# Add an entry for the new component release into mkdocs.yml so the
+# released doc set is reachable from the built site. Idempotent — skips
+# entries that already exist.
+
+update_mkdocs_for_release() {
+    local comp="$1"
+    local version="$2"
+    local mkdocs="${REPO_ROOT}/mkdocs.yml"
+
+    # Placeholder-component guard (#517): components without a current/
+    # directory have no docs to add a nav entry for. Skip silently — the
+    # metadata.yaml bump already recorded the cycle in create_snapshot().
+    if [[ ! -d "${REPO_ROOT}/${comp}/current" ]]; then
+        log "  [${comp}] no current/ directory — placeholder component (see #517); skipping mkdocs entry."
+        return 0
+    fi
+
+
+    if [[ ! -f "${mkdocs}" ]]; then
+        warn "mkdocs.yml not found — skipping mkdocs update."
+        return 1
+    fi
+
+    local entry="'!include ${comp}/${version}/mkdocs.yml'"
+    if grep -qF "${entry}" "${mkdocs}"; then
+        log "  [${comp}] mkdocs.yml already contains ${version} entry"
+        return 0
+    fi
+
+    # If a `current` !include exists for this component, append a sibling
+    # versioned entry immediately after it, preserving the existing human
+    # label (e.g. "Audio Decoder") rather than inventing a comp@version
+    # label. We extract the label from the matching current line and
+    # construct a "<label> X.Y.Z.W:" prefix for the new entry. Python
+    # for the edit so YAML indentation stays exact byte-for-byte.
+    local current_entry="'!include ${comp}/current/mkdocs.yml'"
+    if ! grep -qF "${current_entry}" "${mkdocs}"; then
+        warn "  [${comp}] no current/ mkdocs entry found; manual mkdocs.yml edit required"
+        return 1
+    fi
+
+    if ! python3 - "${mkdocs}" "${comp}" "${version}" "${current_entry}" "${entry}" <<'PYEOF'; then
+import io, re, sys
+mkdocs_path, comp, version, current_entry, new_entry = sys.argv[1:6]
+with open(mkdocs_path) as f:
+    lines = f.readlines()
+
+# Locate the line containing the current entry. Capture the leading
+# indent ("    - ") and the label preceding the `:` so we can reuse it
+# for the versioned sibling.
+target_idx = None
+indent = ""
+label = ""
+for i, line in enumerate(lines):
+    if current_entry in line:
+        target_idx = i
+        m = re.match(r"^(\s*-\s+)(.*?):\s*'!include", line)
+        if not m:
+            sys.stderr.write(f"could not parse mkdocs label for {comp}\n")
+            sys.exit(1)
+        indent = m.group(1)
+        label = m.group(2)
+        break
+
+if target_idx is None:
+    sys.stderr.write(f"current entry not found in mkdocs.yml: {current_entry}\n")
+    sys.exit(1)
+
+new_line = f"{indent}{label} {version}: {new_entry}\n"
+lines.insert(target_idx + 1, new_line)
+with open(mkdocs_path, "w") as f:
+    f.writelines(lines)
+sys.exit(0)
+PYEOF
+        warn "  [${comp}] python mkdocs edit failed; manual mkdocs.yml edit required"
+        return 1
+    fi
+    log "  [${comp}] added mkdocs.yml entry: ${version}"
+    return 0
+}
+
+# ----------------------------------------------------------------------------
+# Release branch + tag (#513)
+# ----------------------------------------------------------------------------
+
+create_release_branch_and_tag() {
+    local release_version="$1"
+    local branch="release/${release_version}"
+
+    if git -C "${REPO_ROOT}" rev-parse --verify "refs/tags/${release_version}" >/dev/null 2>&1; then
+        die "Tag ${release_version} already exists. Refusing to overwrite."
+    fi
+
+    if git -C "${REPO_ROOT}" rev-parse --verify "refs/heads/${branch}" >/dev/null 2>&1; then
+        log "Branch ${branch} already exists locally — checking it out."
+        (cd "${REPO_ROOT}" && git checkout "${branch}") || die "Failed to checkout existing ${branch}"
+    else
+        log "Creating release branch ${branch}"
+        (cd "${REPO_ROOT}" && git checkout -b "${branch}") || die "Failed to create ${branch}"
+    fi
+
+    # Stage only the explicit release artefacts — never `git add -A`,
+    # which would happily stage unrelated worktree changes onto the
+    # release branch. The snapshot directories were already staged by
+    # create_snapshot(); we add mkdocs.yml here and the per-bumped
+    # metadata.yamls (which release.sh just wrote).
+    local has_staged=0
+    if (cd "${REPO_ROOT}" && git diff --cached --quiet); then
+        has_staged=0
+    else
+        has_staged=1
+    fi
+    if [[ "${NO_MKDOCS}" -eq 0 ]] && [[ -f "${REPO_ROOT}/mkdocs.yml" ]]; then
+        (cd "${REPO_ROOT}" && git add mkdocs.yml) || \
+            die "git add mkdocs.yml failed — release branch left in an inconsistent state."
+    fi
+    for entry in "${BUMPED_COMPONENTS[@]}"; do
+        local _comp="${entry%%:*}"
+        (cd "${REPO_ROOT}" && git add "${_comp}/metadata.yaml") || \
+            die "git add ${_comp}/metadata.yaml failed — bumped version would not be committed."
+    done
+    if [[ "${has_staged}" -eq 1 ]] || ! (cd "${REPO_ROOT}" && git diff --cached --quiet); then
+        log "Committing release artefacts to ${branch}"
+        (cd "${REPO_ROOT}" && \
+            git commit -m "chore(release): cut ${release_version} — frozen snapshots + mkdocs nav") || \
+            die "Failed to commit release artefacts."
+    fi
+
+    log "Tagging ${release_version}"
+    (cd "${REPO_ROOT}" && git tag -a "${release_version}" -m "Release ${release_version}") || \
+        die "Failed to create tag ${release_version}"
+
+    log "Release branch ${branch} and tag ${release_version} created."
+    log "Push with: git push origin ${branch} && git push origin ${release_version}"
+}
+
 MODE="DRY-RUN"
 [[ "${APPLY}" -eq 1 ]] && MODE="APPLY"
 
@@ -364,6 +642,7 @@ printf "%-28s %-12s %-12s %-10s %s\n" "---------" "-------" "----" "----" "-----
 
 changed_count=0
 error_count=0
+BUMPED_COMPONENTS=()
 
 mapfile -t TOUCHED_COMPONENTS < <(printf '%s\n' "${!COMP_TOUCHED[@]}" | sort)
 for comp in "${TOUCHED_COMPONENTS[@]}"; do
@@ -409,6 +688,9 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
         if [[ "${current_version}" != "${NEXT_VERSION}" ]]; then
             if [[ "${status}" == "ok" ]]; then
                 update_metadata "${meta}" "${NEXT_VERSION}"
+                # Record this component as bumped so the snapshot /
+                # mkdocs / release-tag steps below can iterate them.
+                BUMPED_COMPONENTS+=("${comp}:${NEXT_VERSION}")
                 changed_count=$((changed_count + 1))
             fi
         fi
@@ -419,15 +701,83 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
     fi
 done
 
+# ----------------------------------------------------------------------------
+# Snapshot + mkdocs + release-branch/tag pipeline (#513)
+# ----------------------------------------------------------------------------
+#
+# Only run with --apply AND at least one component bumped. No-op otherwise.
+
 if [[ "${APPLY}" -eq 1 && "${changed_count}" -gt 0 ]]; then
     if [[ -x "${REPO_ROOT}/scripts/generate_rag_report.sh" ]]; then
         "${REPO_ROOT}/scripts/generate_rag_report.sh" >/dev/null || warn "Failed to regenerate RAG_STATUS_REPORT.md"
+    fi
+
+    # Hard requirement: --release-version when applying with at least one
+    # component bumped. Required regardless of --no-git, because the value
+    # is also used for log lines, mkdocs labels, and the commit message in
+    # case --no-git is set later by a caller running pieces separately.
+    if [[ -z "${RELEASE_VERSION}" ]]; then
+        die "--release-version is required with --apply when one or more components are bumped. Provide e.g. --release-version 0.21.0"
+    fi
+
+    # 1. Frozen snapshots — regen-during-freeze, copy current/ → <version>/, git add.
+    if [[ "${NO_SNAPSHOT}" -eq 1 ]]; then
+        log ""
+        log "Snapshot creation: SKIPPED (--no-snapshot)"
+    else
+        log ""
+        log "Creating frozen snapshots for ${changed_count} bumped component(s):"
+        snapshot_fail=0
+        for entry in "${BUMPED_COMPONENTS[@]}"; do
+            comp="${entry%%:*}"
+            version="${entry##*:}"
+            if ! create_snapshot "${comp}" "${version}"; then
+                snapshot_fail=$((snapshot_fail + 1))
+            fi
+        done
+        if [[ "${snapshot_fail}" -gt 0 ]]; then
+            die "${snapshot_fail} snapshot(s) failed to create. Aborting release."
+        fi
+    fi
+
+    # 2. mkdocs.yml entries. A real release MUST update the nav so the
+    # frozen docs are reachable from the built site. Failures are fatal
+    # unless suppressed with --no-mkdocs (testing only).
+    if [[ "${NO_MKDOCS}" -eq 1 ]]; then
+        log ""
+        log "mkdocs.yml update: SKIPPED (--no-mkdocs)"
+    else
+        log ""
+        log "Updating mkdocs.yml for ${changed_count} bumped component(s):"
+        mkdocs_fail=0
+        for entry in "${BUMPED_COMPONENTS[@]}"; do
+            comp="${entry%%:*}"
+            version="${entry##*:}"
+            if ! update_mkdocs_for_release "${comp}" "${version}"; then
+                mkdocs_fail=$((mkdocs_fail + 1))
+            fi
+        done
+        if [[ "${mkdocs_fail}" -gt 0 ]]; then
+            die "${mkdocs_fail} mkdocs.yml update(s) failed. Aborting release (re-run with --no-mkdocs to bypass for testing)."
+        fi
+    fi
+
+    # 3. Release branch + tag.
+    if [[ "${NO_GIT}" -eq 1 ]]; then
+        log ""
+        log "Release branch / tag: SKIPPED (--no-git)"
+    else
+        log ""
+        create_release_branch_and_tag "${RELEASE_VERSION}"
     fi
 fi
 
 log ""
 if [[ "${APPLY}" -eq 1 ]]; then
     log "Applied updates to ${changed_count} component metadata file(s)."
+    if [[ "${changed_count}" -eq 0 ]]; then
+        log "No components changed — no release branch, no tag, no doc edits."
+    fi
 else
     log "Would update ${changed_count} component metadata file(s). Re-run with --apply to write."
 fi
