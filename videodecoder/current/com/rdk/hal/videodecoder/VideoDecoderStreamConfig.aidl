@@ -90,13 +90,13 @@ parcelable VideoDecoderStreamConfig {
     @nullable Fraction pixelAspectRatio;
 
     /**
-     * Colorimetry (colour primaries and matrix) for the stream.
-     * AIDL enums cannot be `@nullable`,
-     * so this field uses `Colorimetry::UNKNOWN` (the default for an unset
-     * enum) to encode "leave existing colorimetry hint unchanged".
-     * Any other value applies as a hint.
+     * Colorimetry (range / matrix / transfer / primaries — the four
+     * independent axes carried by the bitstream VUI / container).
+     * null = leave existing colorimetry hint unchanged. Non-null applies
+     * the hint; sub-axes the caller doesn't want to override are left
+     * at their `UNKNOWN` sentinel within the non-null parcelable.
      */
-    Colorimetry colorimetry = Colorimetry.UNKNOWN;
+    @nullable Colorimetry colorimetry;
 
     /**
      * Mastering display colour volume metadata (SMPTE ST 2086).
