@@ -146,6 +146,82 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$SCRIPT_DIR"
 
 #######################################################################
+# Pre-flight checks (#571)
+#######################################################################
+#
+# Surface broken-environment failures as a single actionable error line
+# instead of cryptic CMake output deep in the run. Each check exits
+# non-zero with a remediation hint pointing at the actual fix.
+#
+# Skipped for clean / cleanall / help — those should work in any state.
+
+preflight_check() {
+    # Toolchain artefacts present. Honour BINDER_TOOLCHAIN_ROOT /
+    # BINDER_SOURCE_DIR / BINDER_SDK_DIR overrides used by Yocto and
+    # cross-compile flows (a non-default toolchain location is a
+    # legitimate state and shouldn't fail the local-tree check).
+    local toolchain_root="${BINDER_TOOLCHAIN_ROOT:-${BINDER_SOURCE_DIR:-$ROOT_DIR/build-tools/linux_binder_idl}}"
+    if [[ ! -f "$toolchain_root/host/aidl_ops.py" ]]; then
+        echo "❌ AIDL toolchain not found at $toolchain_root/host/aidl_ops.py." >&2
+        echo "   Fix: run ./build_binder.sh to bootstrap, symlink build-tools/" >&2
+        echo "        from a known-good worktree, or set BINDER_TOOLCHAIN_ROOT" >&2
+        echo "        (or BINDER_SOURCE_DIR) to the toolchain location." >&2
+        exit 1
+    fi
+
+    # Binder SDK runtime present (Stage 1 must have completed).
+    # Honour --sdk-dir <path> flag, BINDER_SDK_DIR env var, or the
+    # default out/target/lib/binder location in order of preference.
+    local sdk_dir="${BINDER_SDK_DIR:-}"
+    # Scan args for --sdk-dir <path>
+    local -a args=("$@")
+    local i=0
+    while [[ $i -lt ${#args[@]} ]]; do
+        if [[ "${args[$i]}" == "--sdk-dir" ]] && [[ $((i+1)) -lt ${#args[@]} ]]; then
+            sdk_dir="${args[$((i+1))]}/lib/binder"
+            break
+        fi
+        i=$((i + 1))
+    done
+    if [[ -z "$sdk_dir" ]]; then
+        sdk_dir="$ROOT_DIR/out/target/lib/binder"
+    fi
+    if [[ ! -d "$sdk_dir" ]]; then
+        echo "❌ Binder SDK runtime not found at $sdk_dir." >&2
+        echo "   Fix: run ./build_interfaces.sh <module> (stages the SDK and" >&2
+        echo "        delegates here), or ./build_binder.sh to stage it directly." >&2
+        echo "        For cross-compile / Yocto, set BINDER_SDK_DIR to the staged path" >&2
+        echo "        or pass --sdk-dir <path>." >&2
+        exit 1
+    fi
+}
+
+# Snapshot-version builds (--version <released>) and toolchain-bootstrap
+# commands (clean / cleanall / sdk / sdk-only / help) bypass preflight —
+# they either don't touch the toolchain at all or are the very mechanism
+# that stages it.
+skip_preflight=0
+case "${1:-}" in
+    clean|cleanall|sdk|sdk-only|--help|-h|--h|"") skip_preflight=1 ;;
+esac
+# Also skip when caller pinned a released snapshot via --version <X>
+# (where X != "current"): the snapshot's own pre-generated bindings are
+# all that's needed; no toolchain regen happens.
+for ((j=1; j<=$#; j++)); do
+    if [[ "${!j}" == "--version" ]]; then
+        next=$((j+1))
+        if [[ $next -le $# ]] && [[ "${!next}" != "current" ]]; then
+            skip_preflight=1
+            break
+        fi
+    fi
+done
+
+if [[ "$skip_preflight" -eq 0 ]]; then
+    preflight_check "$@"
+fi
+
+#######################################################################
 # Parse Arguments
 #######################################################################
 
