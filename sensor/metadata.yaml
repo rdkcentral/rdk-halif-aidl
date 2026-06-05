@@ -21,7 +21,7 @@
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: sensor
-version: 0.1.0.0
+version: 0.2.0.0
 status: GREEN
 description: "Hardware sensor data acquisition and monitoring"
 type: OEM
