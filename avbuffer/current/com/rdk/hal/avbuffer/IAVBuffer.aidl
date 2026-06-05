@@ -59,9 +59,24 @@ interface IAVBuffer
 
     /**
      * Creates a video memory buffer pool of a secure or non-secure type from which allocations can be made.
-     * 
+     *
+     * @note Pools are intended to be **long-lived**: create once per pipeline
+     *       session (e.g. at decoder open), reuse the returned `Pool` handle
+     *       for all `alloc()` / `free()` calls during that session, and call
+     *       `destroyPool()` once at teardown. Calling `createVideoPool()` per
+     *       decode operation is incorrect — see `HAL.AVBUF.10`.
+     * @note The pool size is determined by the vendor implementation from the
+     *       `videoDecoderId` — the API takes no size parameter and exposes no
+     *       method to query the pool's capacity. Pool sizing, handle assignment,
+     *       and internal memory management are vendor-specific behind the binder.
+     * @note The returned `Pool` handle is an opaque token. Callers MUST NOT
+     *       interpret or derive meaning from its value; comparison is limited
+     *       to **equality only**. The vendor MAY reassign a destroyed handle's
+     *       numeric value to a new pool, so callers MUST drop destroyed
+     *       handles immediately.
+     *
      * If the `videoDecoderId` is invalid then the `binder::Status EX_ILLEGAL_ARGUMENT` exception status is returned.
-     * 
+     *
      * If the platform has exhausted all available memory from the requested heap then the exception status
      * `binder::Status::Exception::EX_SERVICE_SPECIFIC` is returned (out-of-memory).
      *
@@ -72,7 +87,7 @@ interface IAVBuffer
      * @param[in] videoDecoderId        The id of the video decoder resource.
      * @param[in] listener              Listener for space available callbacks.
      *
-     * @returns A new `Pool` object with a valid handle.
+     * @returns A new `Pool` object with a valid handle, intended for the full lifetime of the pipeline session.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT  if videoDecoderId is invalid
@@ -86,14 +101,29 @@ interface IAVBuffer
     Pool createVideoPool(in boolean secureHeap, in IVideoDecoder.Id videoDecoderId, in IAVBufferSpaceListener listener);
 
     /**
-     * Creates a audio memory buffer pool of a secure or non-secure type from which allocations can be made.
-     * 
-     * If the audio pool is for audio data not destinated for a vendor audio decoder
+     * Creates an audio memory buffer pool of a secure or non-secure type from which allocations can be made.
+     *
+     * @note Pools are intended to be **long-lived**: create once per pipeline
+     *       session (e.g. at decoder open), reuse the returned `Pool` handle
+     *       for all `alloc()` / `free()` calls during that session, and call
+     *       `destroyPool()` once at teardown. Calling `createAudioPool()` per
+     *       decode operation is incorrect — see `HAL.AVBUF.10`.
+     * @note The pool size is determined by the vendor implementation from the
+     *       `audioDecoderId` — the API takes no size parameter and exposes no
+     *       method to query the pool's capacity. Pool sizing, handle assignment,
+     *       and internal memory management are vendor-specific behind the binder.
+     * @note The returned `Pool` handle is an opaque token. Callers MUST NOT
+     *       interpret or derive meaning from its value; comparison is limited
+     *       to **equality only**. The vendor MAY reassign a destroyed handle's
+     *       numeric value to a new pool, so callers MUST drop destroyed
+     *       handles immediately.
+     *
+     * If the audio pool is for audio data not destined for a vendor audio decoder
      * (e.g. system audio PCM) then the ID must be IAudioDecoder.Id.UNDEFINED.
-     * 
+     *
      * If the platform has exhausted all available memory from the requested heap then the exception status
      * `binder::Status::Exception::EX_SERVICE_SPECIFIC` is returned (out-of-memory).
-     * 
+     *
      * If a `secureHeap` is created and the audio decoder has not been configured then the exception status
      * `binder::Status::Exception::EX_ILLEGAL_STATE` is returned.
      *
@@ -103,7 +133,7 @@ interface IAVBuffer
      * @param[in] audioDecoderId        The ID of the audio decoder resource.
      * @param[in] listener              Listener for space available callbacks.
      *
-     * @returns A new `Pool` object with a valid handle.
+     * @returns A new `Pool` object with a valid handle, intended for the full lifetime of the pipeline session.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if audioDecoderId is invalid
