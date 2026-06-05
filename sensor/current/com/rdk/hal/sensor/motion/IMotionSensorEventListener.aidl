@@ -23,13 +23,16 @@
  */
 package com.rdk.hal.sensor.motion;
 
-import com.rdk.hal.sensor.motion.OperationalMode;
+import com.rdk.hal.sensor.motion.MotionEvent;
 
 @VintfStability
 oneway interface IMotionSensorEventListener {
     /**
      * @brief Invoked when the sensor detects an event that matches the active operational mode.
-     * @param mode The active mode whose condition was met (MOTION or NO_MOTION).
+     * @param event Event payload carrying the active mode and a monotonic
+     *              timestamp for ordering and correlation with other
+     *              system events (thermal, deep sleep, etc.).
+     * @see MotionEvent
      */
-    void onEvent(in OperationalMode mode);
+    void onEvent(in MotionEvent event);
 }
