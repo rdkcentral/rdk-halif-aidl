@@ -28,11 +28,11 @@ This codebase defines **RDK Hardware Abstraction Layer interfaces using Android 
 ./build_binder.sh                    # Build Binder SDK (one-time)
 
 # Development workflow (interface authors)
-./build_interfaces.sh boot           # Build + validate specific module
+./build_interfaces.sh bootreason           # Build + validate specific module
 ./build_interfaces.sh all            # Build all modules
 ./build_interfaces.sh clean          # Clean build outputs
 ./build_interfaces.sh cleanstable    # Remove generated code
-./freeze_interface.sh boot           # Freeze as versioned release (v1, v2, etc.)
+./freeze_interface.sh bootreason           # Freeze as versioned release (v1, v2, etc.)
 
 # Production build (Yocto/BitBake - uses pre-generated code)
 cmake -S . -B build -DINTERFACE_TARGET=all -DBINDER_SDK_DIR=${STAGING_DIR}/usr
@@ -117,11 +117,11 @@ stable/
 
 ```aidl
 // Standard pattern in main interfaces
-package com.rdk.hal.boot;
+package com.rdk.hal.bootreason;
 
 @VintfStability
-interface IBoot {
-    const @utf8InCpp String serviceName = "Boot";  // Note: Check module's existing convention
+interface IBootReason {
+    const @utf8InCpp String serviceName = "BootReason";  // Note: Check module's existing convention
     // ...
 }
 
@@ -175,10 +175,10 @@ Each `hfp-{module}.yaml` declares static capabilities:
 ./build_binder.sh
 
 # 2. Modify AIDL interfaces in {module}/current/
-vim boot/current/com/rdk/hal/boot/IBoot.aidl
+vim bootreason/current/com/rdk/hal/bootreason/IBootReason.aidl
 
 # 3. Build and validate (generates C++, validates compatibility, compiles)
-./build_interfaces.sh boot
+./build_interfaces.sh bootreason
 
 # 4. Commit generated code
 git add stable/
@@ -194,12 +194,12 @@ git commit -m "Update boot interface"
 **Common Commands:**
 ```bash
 ./build_interfaces.sh all                    # Build all modules
-./build_interfaces.sh boot                   # Build specific module
-./build_interfaces.sh boot --version v1      # Build frozen version
+./build_interfaces.sh bootreason                   # Build specific module
+./build_interfaces.sh bootreason --version v1      # Build frozen version
 ./build_interfaces.sh clean                  # Remove out/ directory
 ./build_interfaces.sh cleanstable            # Remove stable/ (generated code)
 ./build_interfaces.sh test                   # Quick validation test
-./freeze_interface.sh boot                   # Freeze as v1, v2, etc.
+./freeze_interface.sh bootreason                   # Freeze as v1, v2, etc.
 ```
 
 ### Production Workflow (Yocto/BitBake)
@@ -459,7 +459,7 @@ State getState();
 - `docs/key_concepts/hal/hal_naming_conventions.md` – Naming standards
 - `CMakeModules/CompileAidl.cmake` – AIDL build integration
 - `build-tools/linux_binder_idl/BUILD.md` – Binder SDK production build guide (Yocto recipes, cross-compilation, runtime setup)
-- Example modules: `audiodecoder/current/`, `deviceinfo/current/`, `boot/current/`
+- Example modules: `audiodecoder/current/`, `deviceinfo/current/`, `bootreason/current/`
 
 ## Versioning & Compatibility
 
@@ -489,7 +489,7 @@ State getState();
 The build system validates compatibility **BEFORE** copying source changes to `stable/aidl/`:
 
 ```bash
-./build_interfaces.sh boot
+./build_interfaces.sh bootreason
 # If incompatible changes detected:
 # ❌ Pre-validation FAILED: Source changes are incompatible with existing stable API
 # Breaking changes are NOT allowed - create new interface (IBootNew) instead
@@ -505,24 +505,24 @@ The build system validates compatibility **BEFORE** copying source changes to `s
 
 ```bash
 # 1. Develop in module/current/ (complete freedom before first freeze)
-vim boot/current/com/rdk/hal/boot/IBoot.aidl
+vim bootreason/current/com/rdk/hal/bootreason/IBootReason.aidl
 
 # 2. Build and validate
-./build_interfaces.sh boot
+./build_interfaces.sh bootreason
 
 # 3. When ready, freeze as v1
-./freeze_interface.sh boot
-# Creates: stable/aidl/boot/1/, lib boot-v1-cpp.so
+./freeze_interface.sh bootreason
+# Creates: stable/aidl/bootreason/1/, lib bootreason-v1-cpp.so
 
-# 4. Continue development for v2 in boot/current/
+# 4. Continue development for v2 in bootreason/current/
 # (Only backward-compatible additions allowed now)
 
 # 5. Build validates compatibility automatically
-./build_interfaces.sh boot
+./build_interfaces.sh bootreason
 # ✅ Pre-validation passed: source changes are backward-compatible
 
 # 6. Freeze v2 when ready
-./freeze_interface.sh boot
+./freeze_interface.sh bootreason
 ```
 
 ### Client Version Discovery
@@ -571,7 +571,7 @@ if (serverVersion >= 2) {
 4. Commit both source and generated code: `git add {module}/current stable/`
 
 ### Create a new HAL module
-1. Copy structure from existing module (e.g., `boot/current/`)
+1. Copy structure from existing module (e.g., `bootreason/current/`)
 2. Update package names in AIDL files (`com.rdk.hal.{newmodule}`)
 3. Create `hfp-{module}.yaml` with capabilities
 4. Add `CMakeLists.txt` (3 lines: `INTERFACE_TARGET`, `INTERFACE_VERSION`, `target_build_interfaces_libraries()`)

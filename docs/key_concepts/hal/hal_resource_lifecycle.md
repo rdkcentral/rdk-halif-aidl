@@ -19,10 +19,10 @@ instances* it exposes. They have separate lifecycles.
 | Layer | Example | Registered with Service Manager? | Reached via |
 |---|---|---|---|
 | **Manager service** | `IAVClockManager`, `IAudioMixerManager` | **Yes** — by `serviceName` | systemd-started process |
-| **Singleton service** | `IDeepSleep`, `IBoot` | **Yes** — by `serviceName` | systemd-started process |
+| **Singleton service** | `IDeepSleep`, `IBootReason` | **Yes** — by `serviceName` | systemd-started process |
 | **Resource instance** ("device") | `IAVClock` id `0`, `mixer0` | **No** | `IxxxManager.getXxx(id)` |
 
-Some HALs expose a single resource directly (no manager + resource split) — `IDeepSleep` and `IBoot` are examples. They register with the Service Manager exactly like a manager service does, but the API surface itself is the resource. The split into `IxxxManager` + `Ixxx` is the multi-resource pattern; the singleton pattern collapses to a single binder service.
+Some HALs expose a single resource directly (no manager + resource split) — `IDeepSleep` and `IBootReason` are examples. They register with the Service Manager exactly like a manager service does, but the API surface itself is the resource. The split into `IxxxManager` + `Ixxx` is the multi-resource pattern; the singleton pattern collapses to a single binder service.
 
 ```mermaid
 flowchart LR

@@ -18,7 +18,7 @@ This white paper proposes a **comment injection tool** (`aidl_comment_inject.py`
 
 ### **1.1 AIDL Source: Rich Documentation**
 
-The AIDL source files follow the project's Doxygen governance guidelines (see [Doxygen Code Documentation](doxygen_code_documentation.md)). For example, `boot/current/com/rdk/hal/boot/IBoot.aidl`:
+The AIDL source files follow the project's Doxygen governance guidelines (see [Doxygen Code Documentation](doxygen_code_documentation.md)). For example, `bootreason/current/com/rdk/hal/bootreason/IBootReason.aidl`:
 
 ```java
 /**
@@ -28,7 +28,7 @@ The AIDL source files follow the project's Doxygen governance guidelines (see [D
  *  @author    Douglas Adler
  */
 @VintfStability
-interface IBoot
+interface IBootReason
 {
     /**
      * Performs a shutdown and warm reboot of the device.
@@ -43,7 +43,7 @@ interface IBoot
 }
 ```
 
-Enum types are similarly documented. From `boot/current/com/rdk/hal/boot/BootReason.aidl`:
+Enum types are similarly documented. From `bootreason/current/com/rdk/hal/bootreason/BootCause.aidl`:
 
 ```java
 /**
@@ -51,7 +51,7 @@ Enum types are similarly documented. From `boot/current/com/rdk/hal/boot/BootRea
  */
 @VintfStability
 @Backing(type="int")
-enum BootReason
+enum BootCause
 {
     /** Boot Reason is unknown. */
     ERROR_UNKNOWN = -1,
@@ -66,26 +66,26 @@ enum BootReason
 
 ### **1.2 Generated C++: Zero Documentation**
 
-The AIDL compiler (`aidl --lang=cpp`) generates C++ headers with no comments whatsoever. The generated `stable/generated/boot/current/include/com/rdk/hal/boot/IBoot.h`:
+The AIDL compiler (`aidl --lang=cpp`) generates C++ headers with no comments whatsoever. The generated `stable/generated/bootreason/current/include/com/rdk/hal/bootreason/IBootReason.h`:
 
 ```cpp
-class IBoot : public ::android::IInterface {
+class IBootReason : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(Boot)
   static const int32_t VERSION = 1;
   const std::string HASH = "80e31b1e4037b6988846f183be9c68c2f7427a3f";
   virtual ::android::binder::Status reboot(
-      ::com::rdk::hal::boot::ResetType resetType,
+      ::com::rdk::hal::bootreason::ResetType resetType,
       const ::android::String16& reasonString) = 0;
   virtual int32_t getInterfaceVersion() = 0;
   virtual std::string getInterfaceHash() = 0;
 };
 ```
 
-The generated `BootReason.h`:
+The generated `BootCause.h`:
 
 ```cpp
-enum class BootReason : int32_t {
+enum class BootCause : int32_t {
   ERROR_UNKNOWN = -1,
   WATCHDOG = 0,
   COLD_BOOT = 4,
@@ -100,15 +100,15 @@ The AIDL compiler also transforms signatures during code generation. Running Dox
 
 | AIDL Source | Generated C++ |
 |---|---|
-| `Capabilities getCapabilities()` | `::android::binder::Status getCapabilities(::com::rdk::hal::boot::Capabilities* _aidl_return)` |
-| `void setBootReason(in BootReason reason, in String reasonString)` | `::android::binder::Status setBootReason(::com::rdk::hal::boot::BootReason reason, const ::android::String16& reasonString)` |
-| `BootReason getBootReason()` | `::android::binder::Status getBootReason(::com::rdk::hal::boot::BootReason* _aidl_return)` |
+| `Capabilities getCapabilities()` | `::android::binder::Status getCapabilities(::com::rdk::hal::bootreason::Capabilities* _aidl_return)` |
+| `void setBootCause(in BootCause reason, in String reasonString)` | `::android::binder::Status setBootCause(::com::rdk::hal::bootreason::BootCause reason, const ::android::String16& reasonString)` |
+| `BootCause getBootCause()` | `::android::binder::Status getBootCause(::com::rdk::hal::bootreason::BootCause* _aidl_return)` |
 
 Key transformations:
 
 - **Return types**: All methods return `::android::binder::Status`. Original return values become output pointer parameters.
 - **String types**: AIDL `String` becomes `const ::android::String16&`.
-- **Array types**: AIDL `BootReason[]` becomes `::std::vector<::com::rdk::hal::boot::BootReason>`.
+- **Array types**: AIDL `BootCause[]` becomes `::std::vector<::com::rdk::hal::bootreason::BootCause>`.
 - **Fully qualified names**: All types are fully namespace-qualified in generated code.
 
 This means Doxygen output from AIDL source files would describe an API surface that does not exist in the actual C++ code engineers consume.
@@ -132,13 +132,13 @@ Supported declaration types:
 
 | AIDL Declaration | Example |
 |---|---|
-| Interface | `interface IBoot` |
+| Interface | `interface IBootReason` |
 | Parcelable | `parcelable Capabilities` |
-| Enum | `enum BootReason` |
+| Enum | `enum BootCause` |
 | Method | `void reboot(in ResetType resetType, in String reasonString)` |
-| Parcelable field | `BootReason[] supportedBootReasons;` |
+| Parcelable field | `BootCause[] supportedBootCauses;` |
 | Enum value | `WATCHDOG = 0,` |
-| Constant | `const @utf8InCpp String serviceName = "Boot"` |
+| Constant | `const @utf8InCpp String serviceName = "BootReason"` |
 
 ### **2.3 C++ Header Matching**
 
@@ -152,7 +152,7 @@ For each module, the tool processes generated headers in `stable/generated/{modu
 These are internal binder machinery and not part of the public API surface. The tool targets:
 
 - `I*.h` files (abstract interface declarations)
-- Enum headers (e.g., `BootReason.h`)
+- Enum headers (e.g., `BootCause.h`)
 - Parcelable headers (e.g., `Capabilities.h`)
 
 ### **2.4 Idempotency**
@@ -225,25 +225,25 @@ The release produces two parallel directory structures, both versioned:
 
 **Pre-AIDL (source)**:
 ```
-boot/current/
-  com/rdk/hal/boot/
-    IBoot.aidl           # Source with Doxygen comments
-    BootReason.aidl      # Source with Doxygen comments
+bootreason/current/
+  com/rdk/hal/bootreason/
+    IBootReason.aidl           # Source with Doxygen comments
+    BootCause.aidl      # Source with Doxygen comments
     Capabilities.aidl    # Source with Doxygen comments
     interface.yaml       # Interface metadata
 ```
 
 **Post-AIDL (generated + annotated)**:
 ```
-stable/generated/boot/current/
-  include/com/rdk/hal/boot/
-    IBoot.h              # Generated C++ with injected Doxygen comments
+stable/generated/bootreason/current/
+  include/com/rdk/hal/bootreason/
+    IBootReason.h              # Generated C++ with injected Doxygen comments
     BpBoot.h             # Proxy (no comments injected)
     BnBoot.h             # Stub (no comments injected)
-    BootReason.h         # Generated enum with injected comments
+    BootCause.h         # Generated enum with injected comments
     Capabilities.h       # Generated parcelable with injected comments
-  com/rdk/hal/boot/
-    IBoot.cpp            # Generated implementation
+  com/rdk/hal/bootreason/
+    IBootReason.cpp            # Generated implementation
     ...
 ```
 
@@ -300,20 +300,20 @@ For the full versioning philosophy, see [Interface Version Alignment](interface_
 
 ## **5. Before and After Examples**
 
-### **5.1 Interface Header (IBoot.h)**
+### **5.1 Interface Header (IBootReason.h)**
 
 **Before injection:**
 
 ```cpp
-class IBoot : public ::android::IInterface {
+class IBootReason : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(Boot)
   static const int32_t VERSION = 1;
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getCapabilities(
-      ::com::rdk::hal::boot::Capabilities* _aidl_return) = 0;
+      ::com::rdk::hal::bootreason::Capabilities* _aidl_return) = 0;
   virtual ::android::binder::Status reboot(
-      ::com::rdk::hal::boot::ResetType resetType,
+      ::com::rdk::hal::bootreason::ResetType resetType,
       const ::android::String16& reasonString) = 0;
 };
 ```
@@ -327,7 +327,7 @@ public:
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
-class IBoot : public ::android::IInterface {
+class IBootReason : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(Boot)
   static const int32_t VERSION = 1;
@@ -339,7 +339,7 @@ public:
    * @returns Capabilities parcelable.
    */
   virtual ::android::binder::Status getCapabilities(
-      ::com::rdk::hal::boot::Capabilities* _aidl_return) = 0;
+      ::com::rdk::hal::bootreason::Capabilities* _aidl_return) = 0;
   /** @aidl-doc
    * Performs a shutdown and warm reboot of the device.
    *
@@ -350,17 +350,17 @@ public:
    * @param[in] reasonString  Free-form reset reason string (64 bytes)
    */
   virtual ::android::binder::Status reboot(
-      ::com::rdk::hal::boot::ResetType resetType,
+      ::com::rdk::hal::bootreason::ResetType resetType,
       const ::android::String16& reasonString) = 0;
 };
 ```
 
-### **5.2 Enum Header (BootReason.h)**
+### **5.2 Enum Header (BootCause.h)**
 
 **Before injection:**
 
 ```cpp
-enum class BootReason : int32_t {
+enum class BootCause : int32_t {
   ERROR_UNKNOWN = -1,
   WATCHDOG = 0,
   MAINTENANCE_REBOOT = 1,
@@ -374,7 +374,7 @@ enum class BootReason : int32_t {
 /** @aidl-doc
  *  @brief     Boot reasons.
  */
-enum class BootReason : int32_t {
+enum class BootCause : int32_t {
   /** @aidl-doc Boot Reason is unknown. */
   ERROR_UNKNOWN = -1,
   /** @aidl-doc Boot Reason is due to Watchdog Timer. */
@@ -393,8 +393,8 @@ enum class BootReason : int32_t {
 ```cpp
 class Capabilities : public ::android::Parcelable {
 public:
-  ::std::vector<::com::rdk::hal::boot::BootReason> supportedBootReasons;
-  ::std::vector<::com::rdk::hal::boot::ResetType> supportedResetTypes;
+  ::std::vector<::com::rdk::hal::bootreason::BootCause> supportedBootCauses;
+  ::std::vector<::com::rdk::hal::bootreason::ResetType> supportedResetTypes;
 };
 ```
 
@@ -406,10 +406,10 @@ public:
  */
 class Capabilities : public ::android::Parcelable {
 public:
-  /** @aidl-doc Array of boot reasons supported by the boot service. */
-  ::std::vector<::com::rdk::hal::boot::BootReason> supportedBootReasons;
+  /** @aidl-doc Array of boot causes supported by the boot service. */
+  ::std::vector<::com::rdk::hal::bootreason::BootCause> supportedBootCauses;
   /** @aidl-doc Array of reset types supported by the boot service. */
-  ::std::vector<::com::rdk::hal::boot::ResetType> supportedResetTypes;
+  ::std::vector<::com::rdk::hal::bootreason::ResetType> supportedResetTypes;
 };
 ```
 

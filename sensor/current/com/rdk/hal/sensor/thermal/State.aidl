@@ -51,8 +51,8 @@ enum State {
      * state) and must not attempt to manage the reboot themselves.
      *
      * The thermal HAL records the shutdown reason so that on the next boot
-     * it can be reported by the Boot HAL via IBoot.getBootReason() as
-     * BootReason.THERMAL_RESET.
+     * it can be reported by the Boot Reason HAL via IBootReason.getBootCause() as
+     * BootCause.THERMAL_RESET.
      */
     CRITICAL_SHUTDOWN_IMMINENT = 3
 }

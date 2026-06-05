@@ -65,7 +65,7 @@ nav:
       - AV Clock: '!include avclock/current/mkdocs.yml'
       - Video Decoder: '!include videodecoder/current/mkdocs.yml'
       - Video Sink: '!include videosink/current/mkdocs.yml'
-    - Boot: '!include boot/current/mkdocs.yml'
+    - Boot Reason: '!include bootreason/current/mkdocs.yml'
     - Broadcast: '!include broadcast/current/mkdocs.yml'
     - DRM: '!include drm/current/mkdocs.yml'
     - HDMI:

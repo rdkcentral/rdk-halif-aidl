@@ -34,7 +34,7 @@ Every new version MUST be fully backward-compatible with all previous versions:
 
 If you need incompatible changes, create a **completely new interface component**:
 
-- Original: `IBoot` → New: `IBootNew` or `IBootV2`
+- Original: `IBootReason` → New: `IBootNew` or `IBootV2`
 - The old interface continues to exist
 - Clients migrate at their own pace
 - Both interfaces can coexist
@@ -45,10 +45,10 @@ If you need incompatible changes, create a **completely new interface component*
 
 ```bash
 # 1. Create/edit AIDL interfaces in module/current/
-vim boot/current/com/rdk/hal/boot/IBoot.aidl
+vim bootreason/current/com/rdk/hal/bootreason/IBootReason.aidl
 
 # 2. Build and test
-./build_interfaces.sh boot
+./build_interfaces.sh bootreason
 
 # 3. Iterate as needed - no versioning constraints yet
 # You can make ANY changes during this phase
@@ -62,31 +62,31 @@ When your interface is stable and ready for production:
 
 ```bash
 # Freeze the current interface as version 1
-./freeze_interface.sh boot
+./freeze_interface.sh bootreason
 
 # This creates:
-# - stable/aidl/boot/1/          (frozen AIDL)
-# - stable/generated/boot/1/     (frozen C++ code)
-# - Builds lib boot-v1-cpp.so    (frozen library)
+# - stable/aidl/bootreason/1/          (frozen AIDL)
+# - stable/generated/bootreason/1/     (frozen C++ code)
+# - Builds lib bootreason-v1-cpp.so    (frozen library)
 ```
 
 **After freezing v1:**
 - Version 1 is **immutable** - no changes allowed
-- `boot/current/` remains editable for v2 development
-- Both `boot-v1-cpp` and `boot-vcurrent-cpp` libraries exist
+- `bootreason/current/` remains editable for v2 development
+- Both `bootreason-v1-cpp` and `bootreason-vcurrent-cpp` libraries exist
 
 ### Evolving to Version 2
 
 ```aidl
 // Version 1 (frozen - immutable)
-interface IBoot {
+interface IBootReason {
     void reboot();
     void shutdown();
 }
 
-// Version 2 development (boot/current/)
+// Version 2 development (bootreason/current/)
 // Add new methods ONLY at the end
-interface IBoot {
+interface IBootReason {
     void reboot();                  // MUST keep v1 methods
     void shutdown();                // MUST keep v1 methods
     void rebootWithReason(String reason);  // NEW in v2
@@ -94,18 +94,18 @@ interface IBoot {
 ```
 
 ```bash
-# 1. Edit boot/current/ to add new methods
-vim boot/current/com/rdk/hal/boot/IBoot.aidl
+# 1. Edit bootreason/current/ to add new methods
+vim bootreason/current/com/rdk/hal/bootreason/IBootReason.aidl
 
 # 2. Update API (validates compatibility)
-./build_interfaces.sh boot
+./build_interfaces.sh bootreason
 
 # 3. If validation fails with compatibility error:
 #    - You made a breaking change
 #    - Revert your changes OR create new interface (IBootNew)
 
 # 4. When ready, freeze v2
-./freeze_interface.sh boot
+./freeze_interface.sh bootreason
 ```
 
 ### Version Evolution Example
@@ -171,7 +171,7 @@ interface IVehicle {
 The build system validates compatibility **BEFORE** copying changes:
 
 ```bash
-$ ./build_interfaces.sh boot
+$ ./build_interfaces.sh bootreason
 --> [Step 3/4] Updating APIs...
     Updating: boot
 Pre-validating compatibility before updating boot
@@ -206,7 +206,7 @@ If you need to make breaking changes:
 When creating version 1 (first freeze), compatibility checks are skipped:
 
 ```bash
-$ ./freeze_interface.sh boot
+$ ./freeze_interface.sh bootreason
 No frozen versions exist for boot - skipping compatibility validation
 Freezing boot as version 1...
 ✅ Version 1 created successfully
@@ -217,13 +217,13 @@ Freezing boot as version 1...
 Clients can detect and adapt to different server versions:
 
 ```cpp
-#include <com/rdk/hal/boot/IBoot.h>
+#include <com/rdk/hal/bootreason/IBootReason.h>
 
 // Connect to service
-std::shared_ptr<IBoot> bootService = IBoot::fromBinder(binder);
+std::shared_ptr<IBootReason> bootService = IBootReason::fromBinder(binder);
 
 // Get server version
-int32_t clientVersion = IBoot::VERSION;  // Compile-time constant
+int32_t clientVersion = IBootReason::VERSION;  // Compile-time constant
 int32_t serverVersion = bootService->getInterfaceVersion();
 std::string serverHash = bootService->getInterfaceHash();
 
@@ -271,8 +271,8 @@ if (serverVersion >= 2) {
 Each version produces a separate library:
 
 ```
-libboot-vcurrent-cpp.so  # Development version (current/)
-libboot-v1-cpp.so        # Frozen version 1
+libbootreason-vcurrent-cpp.so  # Development version (current/)
+libbootreason-v1-cpp.so        # Frozen version 1
 libboot-v2-cpp.so        # Frozen version 2
 ```
 
@@ -282,9 +282,9 @@ Applications choose which version to link at build time:
 
 ```cmake
 # CMakeLists.txt
-target_link_interfaces_libraries(myapp boot-v1-cpp)  # Use frozen v1
+target_link_interfaces_libraries(myapp bootreason-v1-cpp)  # Use frozen v1
 # OR
-target_link_interfaces_libraries(myapp boot-vcurrent-cpp)  # Use latest
+target_link_interfaces_libraries(myapp bootreason-vcurrent-cpp)  # Use latest
 ```
 
 ### Deployment Scenarios
@@ -292,13 +292,13 @@ target_link_interfaces_libraries(myapp boot-vcurrent-cpp)  # Use latest
 **Scenario 1: Single Version Deployment**
 ```bash
 # Deploy only v1 (stable) - runtime library only
-scp out/target/lib/halif/libboot-v1-cpp.so device:/usr/lib/
+scp out/target/lib/halif/libbootreason-v1-cpp.so device:/usr/lib/
 ```
 
 **Scenario 2: Multi-Version Deployment**
 ```bash
 # Deploy both v1 and v2 (transition period) - runtime libraries only
-scp out/target/lib/halif/libboot-v1-cpp.so device:/usr/lib/
+scp out/target/lib/halif/libbootreason-v1-cpp.so device:/usr/lib/
 scp out/target/lib/halif/libboot-v2-cpp.so device:/usr/lib/
 ```
 
@@ -321,15 +321,15 @@ scp out/target/lib/halif/libboot-v2-cpp.so device:/usr/lib/
 
 ```bash
 # 1. Make compatible change (add method)
-vim boot/current/com/rdk/hal/boot/IBoot.aidl
+vim bootreason/current/com/rdk/hal/bootreason/IBootReason.aidl
 # Add: void newMethod();
-./build_interfaces.sh boot
+./build_interfaces.sh bootreason
 # ✅ Should succeed
 
 # 2. Make incompatible change (remove method)
-vim boot/current/com/rdk/hal/boot/IBoot.aidl
+vim bootreason/current/com/rdk/hal/bootreason/IBootReason.aidl
 # Remove: void reboot();
-./build_interfaces.sh boot
+./build_interfaces.sh bootreason
 # ❌ Should fail with clear error message
 ```
 
@@ -340,12 +340,12 @@ vim boot/current/com/rdk/hal/boot/IBoot.aidl
 **Good Pattern:**
 ```aidl
 // v1
-interface IBoot {
+interface IBootReason {
     void reboot();
 }
 
 // v2 - add optional features
-interface IBoot {
+interface IBootReason {
     void reboot();
     void rebootWithReason(String reason);  // Client checks version first
 }
@@ -383,7 +383,7 @@ parcelable BootStatus {
 **Solution 1:** Make method no-op in implementation:
 ```cpp
 // v2 implementation - deprecate but keep method
-Status IBoot::oldDeprecatedMethod() {
+Status IBootReason::oldDeprecatedMethod() {
     ALOGW("oldDeprecatedMethod is deprecated, use newMethod instead");
     return Status::ok();
 }
@@ -440,7 +440,7 @@ interface IBootNew {
 **Problem:** v1 and v2 clients both running, causing conflicts.
 
 **Solution:** This is by design - both versions should coexist. Ensure:
-- Different library names (libboot-v1-cpp.so vs libboot-v2-cpp.so)
+- Different library names (libbootreason-v1-cpp.so vs libboot-v2-cpp.so)
 - Different include paths (boot/1/ vs boot/2/)
 - Service registration uses version-specific names or versioned endpoints
 

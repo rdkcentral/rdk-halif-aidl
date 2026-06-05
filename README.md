@@ -81,18 +81,18 @@ A **release** is a plain copy of `current/` into a `<version>/` directory
 ./build_binder.sh
 
 # 2. Edit AIDL in a component's current/ directory
-vim boot/current/com/rdk/hal/boot/IBoot.aidl
+vim bootreason/current/com/rdk/hal/bootreason/IBootReason.aidl
 
 # 3. Build — regenerates the module-local C++ and compiles the library
-./build_modules.sh boot          # one component
+./build_modules.sh bootreason          # one component
 ./build_modules.sh all           # every component
 
 # 4. Commit — AIDL and generated C++ live together in the component
-git add boot/current/
+git add bootreason/current/
 git commit -m "Update boot interface"
 ```
 
-Generated C++ is written into `boot/current/{include,src}/` and committed, so a
+Generated C++ is written into `bootreason/current/{include,src}/` and committed, so a
 production build needs no Python or AIDL toolchain.
 
 ### Releasing a component
@@ -101,7 +101,7 @@ A release snapshots `current/` into a versioned directory, taking the version
 from the component's `metadata.yaml`:
 
 ```bash
-./release.sh boot     # snapshot boot/current/ -> boot/<version>/
+./release.sh bootreason     # snapshot bootreason/current/ -> bootreason/<version>/
 ./release.sh          # release every component not yet released
 ```
 
