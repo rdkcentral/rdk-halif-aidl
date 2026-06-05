@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.avclock;
-import com.rdk.hal.State;
+import com.rdk.hal.avclock.State;
 import com.rdk.hal.avclock.ClockTime;
 
 /** 

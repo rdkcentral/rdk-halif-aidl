@@ -21,7 +21,7 @@
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: videosink
-version: 0.2.0.0
+version: 0.3.0.0
 status: GREEN
 description: "Video output rendering and display sink management"
 type: SOC
