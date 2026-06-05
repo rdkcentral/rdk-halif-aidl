@@ -42,6 +42,7 @@ The **AV Buffer HAL** manages both secure and non-secure memory heaps and pools 
 |**HAL.AVBUF.7**|Memory buffers allocated from a secure memory pool cannot be mapped into the address space of unprivileged processes and must meet secure video path or secure audio path requirements.| Only vendor layer trusted entities can access secure memory (e.g. TA or secure hardware peripheral).|
 |**HAL.AVBUF.8**|The size of the heaps and pools shall be determined by the vendor to meet the platform and product requirements for audio and video.|
 |**HAL.AVBUF.9**|A helper library shall be provided to allow middleware processes to map and unmap non-secure buffers, and copy data to secure and non-secure buffers.|
+|**HAL.AVBUF.10**|Clients shall create a memory pool **once per pipeline session** via `createAudioPool()` or `createVideoPool()` and **reuse the returned pool handle** for all `alloc()` / `free()` calls during that session. Calling `createAudioPool()` / `createVideoPool()` per decode operation is incorrect — pools are long-lived; allocations within a pool are short-lived.|
 
 ## Interface Definition
 
@@ -112,7 +113,31 @@ A memory pool is created by a client to make buffer allocations from either the 
 
 The size of the memory pool is determined by the vendor layer implementation when the client passes a video or audio resource ID in to `createVideoPool()` or `createAudioPool()`.
 
-Once a pool is created it is referenced by an Pool handle. When the client has finished with a pool it calls destroyPool() with the Pool handle.
+Once a pool is created it is referenced by a Pool handle. When the client has finished with the pool it calls `destroyPool()` with the Pool handle.
+
+**Pools are long-lived; allocations are short-lived.** A pool is created **once per pipeline session** (e.g. at decoder open) and reused for all `alloc()` / `free()` calls during that session. Calling `createAudioPool()` / `createVideoPool()` per decode operation is incorrect — it defeats the vendor's pool-internal memory management and may exhaust the heap. The intended pattern is:
+
+```
+createVideoPool(videoDecoderId)            // once at pipeline setup
+  → alloc / free / alloc / free / ...      // many times during the session
+  → ...                                    // for the lifetime of the decoder
+destroyPool(poolHandle)                    // once at pipeline teardown
+```
+
+This matches the sequence shown in the [Media Pipeline Example](#media-pipeline-example) below.
+
+### Vendor Implementation Boundary
+
+The AV Buffer HAL is intentionally narrow. The API contract covers only **create / destroy / alloc / free / metrics**. Everything else — pool sizing, handle assignment, internal memory layout, allocation strategy — is **vendor-specific implementation detail** behind the binder.
+
+The architectural principles:
+
+- **Handles are opaque tokens.** Middleware MUST NOT interpret or derive meaning from Pool handle values; comparison is limited to **equality only**. A handle is valid from `createAudioPool()` / `createVideoPool()` until the matching `destroyPool()` returns; after that, the handle no longer refers to that pool. The vendor MAY subsequently reassign the same numeric handle value to a different pool (see `### Pool Handles` below for wrap/reuse rules), so middleware MUST drop destroyed handles immediately.
+- **Pool sizing is the vendor's decision.** `createAudioPool()` / `createVideoPool()` take a decoder ID — not a size — because the vendor decides how much memory each decoder's pool needs based on its hardware constraints, codec capabilities, and product configuration. The API intentionally provides no size parameter and no method to query a pool's capacity.
+- **Internal memory management is the vendor's responsibility.** Pool fragmentation, allocation ordering, recycling, alignment, contiguity — all decided by the vendor's implementation. Middleware sees only `alloc()` returning a buffer handle, `free()` releasing it, and `getPoolMetrics()` reporting aggregate usage.
+- **Handle management is the middleware's responsibility.** The middleware creates a pool, holds the handle for the session, hands buffer handles around between its components as needed, and destroys the pool at teardown. There is no "get the existing pool for decoder ID X" API because pool-handle ownership is the middleware's bookkeeping, not the vendor's.
+
+This split keeps the API stable across vendor implementations while leaving each vendor maximum freedom to optimize memory behaviour for their hardware.
 
 ### Pool Handles
 
