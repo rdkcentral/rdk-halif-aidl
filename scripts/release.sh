@@ -855,6 +855,26 @@ for i in range(start, end):
     if m:
         existing[m.group(2)] = (m.group(1), i)
 
+# Strip any stale "<comp>: current" entries — versions_released.yaml is
+# the released-cohort manifest, so by definition no component should pin
+# to `current`. The default: current fallback already covers components
+# that haven't released yet. A `<comp>: current` entry is leftover
+# placeholder state from before the component's first release.
+stale_current = [
+    (comp, idx) for comp, (indent, idx) in existing.items()
+    if lines[idx].rstrip().endswith(": current")
+]
+# Remove from highest idx down so earlier indices stay valid.
+for comp, idx in sorted(stale_current, key=lambda t: -t[1]):
+    del lines[idx]
+    del existing[comp]
+    end -= 1
+    # Shift subsequent indices in `existing` down by 1.
+    existing = {
+        c: (i, (j - 1 if j > idx else j))
+        for c, (i, j) in existing.items()
+    }
+
 # Apply bumps to existing entries; collect components new to the map.
 new_components = []
 for comp, version in bumps.items():
