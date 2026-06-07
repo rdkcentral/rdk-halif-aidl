@@ -36,8 +36,8 @@ die()   { echo "ERROR: $*" >&2; exit 1; }
 # in current/ is release-worthy this cycle.
 #
 # Subcommands:
-#   ./release.sh release   <module> [--version X.Y.Z.W]   add module
-#   ./release.sh unrelease <module>                       remove module
+#   ./release.sh module <module>   [--version X.Y.Z.W]   add module
+#   ./release.sh drop <module>                           remove module
 #   ./release.sh plan                                     show current plan
 #   ./release.sh clear-plan                               wipe plan
 
@@ -47,8 +47,8 @@ plan_init_if_missing() {
 # release_plan.yaml — components flagged for the next release.
 #
 # Manage via:
-#   ./release.sh release   <module> [--version X.Y.Z.W]   add (auto-bump if --version omitted)
-#   ./release.sh unrelease <module>                       remove
+#   ./release.sh module <module>   [--version X.Y.Z.W]   add (auto-bump if --version omitted)
+#   ./release.sh drop <module>                           remove
 #   ./release.sh plan                                     show
 #   ./release.sh clear-plan                               wipe (after a --apply'd release)
 #
@@ -78,7 +78,7 @@ plan_add() {
     local comp="$1"
     local pin="${2:-}"  # explicit version or empty for auto
 
-    [[ -n "${comp}" ]] || die "release: missing <module> argument. Usage: ./release.sh release <module> [--version X.Y.Z.W]"
+    [[ -n "${comp}" ]] || die "module: missing <module> argument. Usage: ./release.sh module <module> [--version X.Y.Z.W]"
     [[ -f "${REPO_ROOT}/${comp}/metadata.yaml" ]] \
         || die "release: ${comp}/metadata.yaml not found — no such component."
 
@@ -146,7 +146,7 @@ PYEOF
 
 plan_remove() {
     local comp="$1"
-    [[ -n "${comp}" ]] || die "unrelease: missing <module> argument."
+    [[ -n "${comp}" ]] || die "drop: missing <module> argument."
     [[ -f "${RELEASE_PLAN_FILE}" ]] || { log "No plan file — nothing to remove."; return 0; }
     python3 - "${RELEASE_PLAN_FILE}" "${comp}" <<'PYEOF' || die "plan: failed to update release_plan.yaml"
 import re, sys
@@ -210,7 +210,7 @@ PYEOF
 # anything. The subcommands edit the plan file and exit; they don't
 # trigger a release run.
 case "${1:-}" in
-    release)
+    module)
         shift
         _add_comp="${1:-}"
         _add_ver=""
@@ -219,13 +219,13 @@ case "${1:-}" in
             case "$1" in
                 --version) [[ $# -ge 2 ]] || die "--version requires a value"
                            _add_ver="$2"; shift 2 ;;
-                *) die "release: unknown option $1" ;;
+                *) die "module: unknown option $1" ;;
             esac
         done
         plan_add "${_add_comp}" "${_add_ver}"
         exit 0
         ;;
-    unrelease)
+    drop)
         shift
         plan_remove "${1:-}"
         exit 0
@@ -238,12 +238,36 @@ case "${1:-}" in
         plan_clear
         exit 0
         ;;
+    check)
+        # `check` shows what's changed and the would-be bump per module —
+        # bypasses the release_plan gate so the operator can see ALL
+        # detected changes before deciding what to `module`. Optional
+        # positional arg restricts to one module:
+        #   ./release.sh check               (all touched modules)
+        #   ./release.sh check bootreason    (just bootreason)
+        shift
+        CHECK_MODE=1
+        DRY_RUN=1
+        # Consume the optional positional module name. Anything starting
+        # with -- is a flag for the main parser, not the module name.
+        if [[ $# -gt 0 && "${1:0:2}" != "--" ]]; then
+            CHECK_MODULE="$1"
+            shift
+        fi
+        # Fall through into the standard arg parser for any --flags.
+        ;;
 esac
 
-APPLY=0
-DRY_RUN=0
-SINCE_REF=""
-NO_GH=0
+# Defaults for arg parser. Use ${VAR:-0} so the `check` subcommand
+# fall-through above can pre-set CHECK_MODE / DRY_RUN without us
+# stomping them here.
+CHECK_MODE="${CHECK_MODE:-0}"
+CHECK_MODULE="${CHECK_MODULE:-}"
+
+APPLY="${APPLY:-0}"
+DRY_RUN="${DRY_RUN:-0}"
+SINCE_REF="${SINCE_REF:-}"
+NO_GH="${NO_GH:-0}"
 VERBOSE=0
 
 usage() {
@@ -251,8 +275,8 @@ usage() {
 Release Version Bump Tool
 
 Subcommands (manage release_plan.yaml — what's queued for the next release):
-  ./release.sh release   <module> [--version X.Y.Z.W]   stage module (auto-bump unless --version pinned)
-  ./release.sh unrelease <module>                       remove module from plan
+  ./release.sh module <module>   [--version X.Y.Z.W]   stage module (auto-bump unless --version pinned)
+  ./release.sh drop <module>                           remove module from plan
   ./release.sh plan                                     show current plan
   ./release.sh clear-plan                               wipe plan
 
@@ -640,17 +664,49 @@ fi
 # The release runs over components LISTED IN release_plan.yaml — not over
 # every component the detector found changes in. This is deliberate: the
 # operator decides per-component whether a change is release-worthy this
-# cycle. Use `./release.sh release <module>` to stage a component, and
+# cycle. Use `./release.sh module <module>` to stage a component, and
 # `./release.sh plan` to view what's queued.
 
 plan_load
-if [[ ${#PLAN_COMPONENTS[@]} -eq 0 ]]; then
+
+# `check` mode bypasses the plan: surfaces all touched components (or just
+# one if a module name was passed) so the operator can preview what would
+# happen before deciding what to stage.
+if [[ "${CHECK_MODE}" -eq 1 ]]; then
+    phase "Check mode — bypassing release_plan gate"
+    if [[ -n "${CHECK_MODULE}" ]]; then
+        [[ -f "${REPO_ROOT}/${CHECK_MODULE}/metadata.yaml" ]] \
+            || die "check: ${CHECK_MODULE}/metadata.yaml not found — no such component."
+        for comp in "${!COMP_TOUCHED[@]}"; do
+            if [[ "${comp}" != "${CHECK_MODULE}" ]]; then
+                unset 'COMP_TOUCHED[$comp]' \
+                      'COMP_BREAKING[$comp]' 'COMP_NON_DOC[$comp]' 'COMP_DOC[$comp]'
+            fi
+        done
+        # If the requested module had no detected change, inject it so
+        # the table still renders with a "no changes" note.
+        if [[ -z "${COMP_TOUCHED[$CHECK_MODULE]:-}" ]]; then
+            COMP_TOUCHED[$CHECK_MODULE]=1
+            COMP_REASONS[$CHECK_MODULE]="check: no commits affecting ${CHECK_MODULE}/current/ in ${SINCE_REF}..HEAD"$'\n'
+        fi
+    fi
+    # Synthesize PLAN_COMPONENTS so the rest of the pipeline runs without
+    # actually requiring a release_plan.yaml file.
+    PLAN_COMPONENTS=()
+    for comp in "${!COMP_TOUCHED[@]}"; do
+        PLAN_COMPONENTS[$comp]=""
+    done
+elif [[ ${#PLAN_COMPONENTS[@]} -eq 0 ]]; then
     log ""
     log "❌ release_plan.yaml is empty — nothing flagged for release."
     log ""
-    log "  Stage one or more components first:"
-    log "    ./release.sh release <module>                   # auto-bump from labels"
-    log "    ./release.sh release <module> --version X.Y.Z.W # explicit version pin"
+    log "  Preview what would change without staging:"
+    log "    ./release.sh check                              # all touched modules"
+    log "    ./release.sh check <module>                     # one specific module"
+    log ""
+    log "  Stage modules for the release:"
+    log "    ./release.sh module <module>                    # auto-bump from labels"
+    log "    ./release.sh module <module> --version X.Y.Z.W  # explicit version pin"
     log ""
     log "  Detector found changes in these components since ${SINCE_REF}:"
     for c in $(printf '%s\n' "${!COMP_TOUCHED[@]}" | sort); do
@@ -676,7 +732,7 @@ for comp in "${!PLAN_COMPONENTS[@]}"; do
         # reason so the bump code processes it.
         COMP_TOUCHED[$comp]=1
         COMP_NON_DOC[$comp]=1  # default minor unless --version overrides
-        COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}plan: manually staged via ./release.sh release ${comp}"$'\n'
+        COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}plan: manually staged via ./release.sh module ${comp}"$'\n'
         PLAN_EXTRA+=("${comp}")
     fi
 done
@@ -1485,7 +1541,7 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
     compute_next_versions "${current_version}" "${bump}"
 
     # Explicit version pin from release_plan.yaml wins over auto-bump:
-    #   ./release.sh release <module> --version X.Y.Z.W
+    #   ./release.sh module <module> --version X.Y.Z.W
     if [[ -n "${PLAN_COMPONENTS[$comp]:-}" ]]; then
         NEXT_VERSION="${PLAN_COMPONENTS[$comp]}"
         bump="pinned"
