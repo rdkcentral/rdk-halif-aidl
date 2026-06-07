@@ -145,6 +145,15 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$SCRIPT_DIR"
 
+# Suppress -Wwrite-strings noise from AOSP aidl-cpp's generated headers.
+# Every I*.h carries `static constexpr char* HASHVALUE = "notfrozen";`
+# which is an ISO C++ violation (should be `const char*`). The bug lives
+# in build-tools/linux_binder_idl/android/aidl/generate_cpp.cpp:904; until
+# that's patched upstream the warning floods every verification build.
+# Both build paths (root cmake for current/, standalone cmake for
+# snapshots) inherit CXXFLAGS, so a single export covers both.
+export CXXFLAGS="${CXXFLAGS:-} -Wno-write-strings"
+
 #######################################################################
 # Pre-flight checks (#571)
 #######################################################################
