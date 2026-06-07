@@ -1130,12 +1130,12 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
     if [[ "${needs_snapshot}" -eq 1 ]]; then
         # Record this component as bumped so the snapshot / mkdocs /
         # release-tag steps and the dry-run preview block can iterate
-        # them.
+        # them. metadata.yaml is NOT written here — that happens in the
+        # snapshot loop below, AFTER the snapshot succeeds, so a partial
+        # release abort doesn't leave behind "metadata says X but no X/
+        # snapshot exists" state.
         BUMPED_COMPONENTS+=("${comp}:${NEXT_VERSION}")
         changed_count=$((changed_count + 1))
-        if [[ "${DO_WRITES}" -eq 1 ]]; then
-            update_metadata "${meta}" "${NEXT_VERSION}"
-        fi
     fi
 done
 
@@ -1293,7 +1293,14 @@ if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
         for entry in "${BUMPED_COMPONENTS[@]}"; do
             comp="${entry%%:*}"
             version="${entry##*:}"
-            if ! create_snapshot "${comp}" "${version}"; then
+            if create_snapshot "${comp}" "${version}"; then
+                # metadata.yaml is bumped only AFTER the snapshot has
+                # been successfully created and staged. Any per-component
+                # failure leaves metadata.yaml untouched, preserving the
+                # invariant: every metadata.yaml `version:` corresponds
+                # to a snapshot dir that actually exists.
+                update_metadata "${REPO_ROOT}/${comp}/metadata.yaml" "${version}"
+            else
                 snapshot_fail=$((snapshot_fail + 1))
                 snapshot_failed_names+=("${comp}")
             fi
