@@ -622,6 +622,24 @@ create_release_branch_and_tag() {
     log "Push with: git push origin ${branch} && git push origin ${release_version}"
 }
 
+# Auto-detect next release version from the last release tag when the
+# caller didn't explicitly provide --release-version. Default rule: bump
+# the minor segment (0.20.0 → 0.21.0). Point releases (0.20.0 → 0.20.1)
+# require --release-version.
+auto_detect_release_version() {
+    [[ -n "${RELEASE_VERSION}" ]] && return 0
+    local last_tag
+    last_tag="$(git -C "${REPO_ROOT}" describe --tags --abbrev=0 2>/dev/null || true)"
+    if [[ "${last_tag}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+        local maj="${BASH_REMATCH[1]}"
+        local min="${BASH_REMATCH[2]}"
+        RELEASE_VERSION="${maj}.$((min + 1)).0"
+        RELEASE_VERSION_AUTO=1
+    fi
+}
+RELEASE_VERSION_AUTO=0
+auto_detect_release_version
+
 MODE="DRY-RUN"
 [[ "${APPLY}" -eq 1 ]] && MODE="APPLY"
 
@@ -630,6 +648,13 @@ log "Release version scan"
 log "  Mode: ${MODE}"
 log "  Base ref: ${SINCE_REF}"
 log "  Range: ${SINCE_REF}..HEAD"
+if [[ -n "${RELEASE_VERSION}" ]]; then
+    if [[ "${RELEASE_VERSION_AUTO}" -eq 1 ]]; then
+        log "  Release version: ${RELEASE_VERSION} (auto-detected; override with --release-version)"
+    else
+        log "  Release version: ${RELEASE_VERSION}"
+    fi
+fi
 if [[ "${ENABLE_GH_LABELS}" -eq 1 ]]; then
     log "  Labels: GitHub PR labels enabled (${GH_REPO})"
 else
@@ -712,12 +737,11 @@ if [[ "${APPLY}" -eq 1 && "${changed_count}" -gt 0 ]]; then
         "${REPO_ROOT}/scripts/generate_rag_report.sh" >/dev/null || warn "Failed to regenerate RAG_STATUS_REPORT.md"
     fi
 
-    # Hard requirement: --release-version when applying with at least one
-    # component bumped. Required regardless of --no-git, because the value
-    # is also used for log lines, mkdocs labels, and the commit message in
-    # case --no-git is set later by a caller running pieces separately.
+    # Require --release-version when applying with bumps AND auto-detect
+    # couldn't infer one (no existing release tag). Otherwise the
+    # auto-detected value is used (announced in the header).
     if [[ -z "${RELEASE_VERSION}" ]]; then
-        die "--release-version is required with --apply when one or more components are bumped. Provide e.g. --release-version 0.21.0"
+        die "--release-version is required with --apply when one or more components are bumped and no prior release tag exists to auto-detect from. Provide e.g. --release-version 0.21.0"
     fi
 
     # 1. Frozen snapshots — regen-during-freeze, copy current/ → <version>/, git add.
@@ -779,7 +803,28 @@ if [[ "${APPLY}" -eq 1 ]]; then
         log "No components changed — no release branch, no tag, no doc edits."
     fi
 else
-    log "Would update ${changed_count} component metadata file(s). Re-run with --apply to write."
+    log "Would update ${changed_count} component metadata file(s)."
+    if [[ "${error_count}" -gt 0 ]]; then
+        log ""
+        log "⚠️  ${error_count} component(s) need manual action above before applying."
+        log "    Resolve those, then re-run as below."
+    fi
+    if [[ "${changed_count}" -gt 0 ]] || [[ -n "${RELEASE_VERSION}" ]]; then
+        log ""
+        log "Next step — apply for real (writes metadata.yaml, creates snapshots,"
+        log "updates mkdocs.yml, creates release branch + tag):"
+        if [[ -n "${RELEASE_VERSION}" ]]; then
+            log ""
+            log "    ./scripts/release.sh --apply --release-version ${RELEASE_VERSION}"
+            if [[ "${RELEASE_VERSION_AUTO}" -eq 1 ]]; then
+                log ""
+                log "    (release version auto-detected; pass --release-version explicitly to override)"
+            fi
+        else
+            log ""
+            log "    ./scripts/release.sh --apply --release-version <X.Y.Z>"
+        fi
+    fi
 fi
 
 if [[ "${error_count}" -gt 0 ]]; then
