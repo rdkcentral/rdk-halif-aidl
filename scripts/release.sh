@@ -698,6 +698,23 @@ printf "%-28s %-12s %-12s %-10s %s\n" "---------" "-------" "----" "----" "-----
 changed_count=0
 error_count=0
 BUMPED_COMPONENTS=()
+declare -A METADATA_DRIFT=()  # comp -> "metadata_says|discovered_truth"
+
+# Auto-discover the "real" current version of a component by inspecting
+# which <comp>/<version>/ directories are actually tracked in git. The
+# value in metadata.yaml is informational; the released snapshot tree is
+# the source of truth. Picks the highest version by `sort -V`.
+discover_current_version() {
+    local comp="$1"
+    # `|| true` swallows the non-zero exit from grep when no tracked
+    # snapshot dirs exist yet (brand-new component) — we want the empty
+    # output and a 0 exit code, not a pipefail-triggered abort.
+    git ls-tree -d --name-only HEAD "${comp}/" 2>/dev/null \
+        | awk -F/ '{print $NF}' \
+        | grep -E '^[0-9]+(\.[0-9]+){2,3}$' \
+        | sort -V \
+        | tail -1 || true
+}
 
 mapfile -t TOUCHED_COMPONENTS < <(printf '%s\n' "${!COMP_TOUCHED[@]}" | sort)
 for comp in "${TOUCHED_COMPONENTS[@]}"; do
@@ -708,7 +725,27 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
         continue
     fi
 
-    current_version="$(awk -F': *' '$1=="version"{print $2; exit}' "${meta}")"
+    metadata_version="$(awk -F': *' '$1=="version"{print $2; exit}' "${meta}")"
+
+    # Source of truth: the highest tracked <comp>/<version>/ in git. If
+    # nothing is tracked yet (component added since last release), seed
+    # the first release at 0.1.0.0 and treat this as the initial cut —
+    # no further bump (the very act of creating 0.1.0.0/ IS the release).
+    current_version="$(discover_current_version "${comp}")"
+    is_initial=0
+    if [[ -z "${current_version}" ]]; then
+        current_version="0.1.0.0"
+        is_initial=1
+    fi
+
+    # Drift detection: metadata.yaml may have been bumped in-flight by
+    # PRs without producing a snapshot. Track it for a diagnostic block
+    # below — but proceed with the discovered version as the source of
+    # truth. The metadata.yaml will be re-written to NEXT_VERSION at
+    # apply, healing the drift.
+    if [[ -n "${metadata_version}" && "${metadata_version}" != "${current_version}" ]]; then
+        METADATA_DRIFT[$comp]="${metadata_version}|${current_version}"
+    fi
 
     bump="none"
     if [[ "${COMP_BREAKING[$comp]:-0}" -eq 1 ]]; then
@@ -717,6 +754,13 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
         bump="minor"
     elif [[ "${COMP_DOC[$comp]:-0}" -eq 1 ]]; then
         bump="patch"
+    fi
+
+    if [[ "${is_initial}" -eq 1 ]]; then
+        # Initial release of a new component — the seed (0.1.0.0) IS the
+        # release. Suppress any label-driven bump so we don't ship a
+        # brand-new component already at 0.2.0.0.
+        bump="none"
     fi
 
     compute_next_versions "${current_version}" "${bump}"
@@ -730,6 +774,13 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
         error_count=$((error_count + 1))
     fi
 
+    # For an initial release, NEXT_VERSION == current_version but we
+    # DO want to ship the snapshot — override changed-detection so the
+    # 0.1.0.0/ dir actually gets created.
+    if [[ "${is_initial}" -eq 1 ]]; then
+        status="initial release"
+    fi
+
     printf "%-28s %-12s %-12s %-10s %s\n" "${comp}" "${current_version}" "${NEXT_VERSION}" "${bump}" "${status}"
 
     if [[ "${VERBOSE}" -eq 1 ]]; then
@@ -739,7 +790,14 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
         done <<< "${COMP_REASONS[$comp]:-}"
     fi
 
-    if [[ "${current_version}" != "${NEXT_VERSION}" && "${status}" == "ok" ]]; then
+    needs_snapshot=0
+    if [[ "${is_initial}" -eq 1 && "${status}" == "initial release" ]]; then
+        needs_snapshot=1
+    elif [[ "${current_version}" != "${NEXT_VERSION}" && "${status}" == "ok" ]]; then
+        needs_snapshot=1
+    fi
+
+    if [[ "${needs_snapshot}" -eq 1 ]]; then
         # Record this component as bumped so the snapshot / mkdocs /
         # release-tag steps (apply) and the dry-run preview block can
         # iterate them.
@@ -750,6 +808,21 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
         fi
     fi
 done
+
+# Surface metadata.yaml drift so the operator understands why "Current"
+# doesn't match what they remember setting. The release heals it
+# automatically — this is informational, not a blocker.
+if [[ ${#METADATA_DRIFT[@]} -gt 0 ]]; then
+    log ""
+    log "ℹ️  metadata.yaml drift detected (file says X, but no X/ snapshot tracked in git):"
+    log "    Source of truth is the highest tracked <module>/<version>/ in git."
+    log "    metadata.yaml will be rewritten to the new release version on --apply."
+    log ""
+    for comp in $(printf '%s\n' "${!METADATA_DRIFT[@]}" | sort); do
+        v="${METADATA_DRIFT[$comp]}"
+        log "    ${comp}: metadata.yaml=${v%|*}   tracked-latest=${v#*|}"
+    done
+fi
 
 # ----------------------------------------------------------------------------
 # Stale-snapshot detection
