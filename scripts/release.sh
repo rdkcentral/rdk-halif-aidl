@@ -87,12 +87,14 @@ Once per release the script:
   5. Update versions_released.yaml components: map entries
   6. Insert mkdocs.yml nav entries for each <component>/<version>/
   7. Generate docs/releases/<release>.md skeleton (if absent)
-  8. ./build_modules.sh all  # verification build
+  8. Prepend CHANGELOG.md section for <release>
+  9. Audit docs + build configs for version-shaped strings (review only)
+ 10. ./build_modules.sh all  # verification build
 
 With --apply, additionally:
-  9. git checkout -b release/<release>
- 10. git commit
- 11. git tag <release>
+ 11. git checkout -b release/<release>
+ 12. git commit
+ 13. git tag <release>
 
 No-op when no component changed:
   If no metadata.yaml moves, the script writes nothing, creates no
@@ -831,6 +833,131 @@ generate_release_notes_skeleton() {
     log "  Generated skeleton: docs/releases/${release_version}.md"
 }
 
+# ----------------------------------------------------------------------------
+# CHANGELOG.md regenerator (#580)
+# ----------------------------------------------------------------------------
+#
+# Prepends a new "#### [X.Y.Z](compare-url)" section to CHANGELOG.md
+# containing every first-parent commit since SINCE_REF. Subject lines
+# are formatted to match the existing auto-changelog style. The PR
+# reference is extracted from the trailing "(#NNN)" pattern in the
+# commit subject.
+#
+# Idempotent: if a section for this release_version is already present,
+# the function leaves the file untouched (the operator may have hand-
+# edited the prose).
+
+regenerate_changelog() {
+    local release_version="$1"
+    local changelog="${REPO_ROOT}/CHANGELOG.md"
+    if [[ ! -f "${changelog}" ]]; then
+        warn "CHANGELOG.md not found — skipping."
+        return 0
+    fi
+
+    if grep -qF "[${release_version}]" "${changelog}"; then
+        log "  CHANGELOG.md already has a section for ${release_version} — preserving."
+        return 0
+    fi
+
+    local gh_owner_repo="${GH_REPO:-rdkcentral/rdk-halif-aidl}"
+    local compare_url="https://github.com/${gh_owner_repo}/compare/${SINCE_REF}...${release_version}"
+
+    # Build the new section in a tempfile to keep the python prepend logic
+    # simple.
+    local tmp_section
+    tmp_section="$(mktemp)"
+    {
+        echo ""
+        echo "#### [${release_version}](${compare_url})"
+        echo ""
+        local _pr_regex='\(#([0-9]+)\)[[:space:]]*$'
+        git -C "${REPO_ROOT}" log --first-parent --pretty='%s' "${SINCE_REF}..HEAD" \
+            | grep -vE '^Merge (branch|tag|pull request)' \
+            | while IFS= read -r subject; do
+                pr=""
+                if [[ "${subject}" =~ $_pr_regex ]]; then
+                    pr="${BASH_REMATCH[1]}"
+                fi
+                if [[ -n "${pr}" ]]; then
+                    echo "- ${subject} [\`#${pr}\`](https://github.com/${gh_owner_repo}/pull/${pr})"
+                else
+                    echo "- ${subject}"
+                fi
+            done
+    } > "${tmp_section}"
+
+    # Prepend the new section after the existing intro lines (before the
+    # first "####" entry, or at the end of the file if no entries exist).
+    python3 - "${changelog}" "${tmp_section}" <<'PYEOF' || { rm -f "${tmp_section}"; return 1; }
+import sys
+changelog_path, section_path = sys.argv[1:3]
+with open(changelog_path) as f:
+    existing = f.read()
+with open(section_path) as f:
+    new_section = f.read()
+# Insert the new section before the first `#### ` heading. If none exists,
+# append to end (intro-only file).
+idx = existing.find("\n#### ")
+if idx == -1:
+    out = existing.rstrip() + "\n" + new_section
+else:
+    out = existing[:idx + 1] + new_section + existing[idx + 1:]
+with open(changelog_path, "w") as f:
+    f.write(out)
+PYEOF
+    rm -f "${tmp_section}"
+    log "  CHANGELOG.md: prepended ${release_version} section"
+}
+
+# ----------------------------------------------------------------------------
+# Doc + build-config version-ref audit (#581 / #582)
+# ----------------------------------------------------------------------------
+#
+# Surfaces every version-shaped string ("0.X.Y.Z") found in:
+#   - <comp>/current/docs/*.md           (#581)
+#   - <comp>/current/CMakeLists.txt      (#582)
+#   - <comp>/current/interface.yaml      (#582)
+#   - <comp>/current/hfp-*.yaml          (#582)
+#   - <comp>/current/mkdocs.yml          (#582)
+#
+# These are NOT auto-rewritten — most are intentional historical /
+# migration / changelog refs that would be corrupted by a blind sed.
+# Instead, the audit prints each hit so the operator can review.
+
+audit_version_refs() {
+    local hits=0
+    local found=()
+    local file
+    while IFS= read -r -d '' file; do
+        local matches
+        matches="$(grep -nE '\b0\.[0-9]+\.[0-9]+\.[0-9]+\b' "${file}" 2>/dev/null || true)"
+        [[ -z "${matches}" ]] || found+=("${file}|${matches}")
+    done < <(find "${REPO_ROOT}" -maxdepth 4 -type f \
+        \( -path '*/current/docs/*.md' \
+        -o -name CMakeLists.txt -path '*/current/*' \
+        -o -name interface.yaml  -path '*/current/*' \
+        -o -name 'hfp-*.yaml'    -path '*/current/*' \
+        -o -name mkdocs.yml      -path '*/current/*' \) -print0)
+
+    [[ ${#found[@]} -eq 0 ]] && return 0
+
+    log ""
+    log "ℹ️  Version-ref audit (review only — not auto-rewritten):"
+    log "    These files mention version-shaped strings (0.X.Y.Z). Most are intentional"
+    log "    (changelog tables, migration notes, CEC physical addresses). Skim before"
+    log "    --apply to confirm none need a manual update."
+    log ""
+    for entry in "${found[@]}"; do
+        local f="${entry%%|*}"
+        local rest="${entry#*|}"
+        log "    ${f#${REPO_ROOT}/}:"
+        while IFS= read -r line; do
+            [[ -n "${line}" ]] && log "        ${line}"
+        done <<< "${rest}"
+    done
+}
+
 MODE="STAGE"  # default: write to working tree, leave staged for review
 [[ "${APPLY}"   -eq 1 ]] && MODE="APPLY (stage + release branch + tag)"
 [[ "${DRY_RUN}" -eq 1 ]] && MODE="DRY-RUN (preview only)"
@@ -1068,12 +1195,14 @@ if [[ "${DRY_RUN}" -eq 1 && ${#BUMPED_COMPONENTS[@]} -gt 0 ]]; then
     log "    5. Update versions_released.yaml components: map"
     log "    6. Insert mkdocs.yml nav entries for the ${#BUMPED_COMPONENTS[@]} new <module>/<version>/ doc sets"
     log "    7. Generate docs/releases/${RELEASE_VERSION}.md release-notes skeleton (if absent)"
-    log "    8. ./build_modules.sh all                 (verification build)"
+    log "    8. Prepend a new ${RELEASE_VERSION} section to CHANGELOG.md"
+    log "    9. Audit docs + build configs for version-shaped strings (review only)"
+    log "   10. ./build_modules.sh all                 (verification build)"
     log ""
     log "  With --apply, additionally:"
-    log "    9. git checkout -b release/${RELEASE_VERSION}"
-    log "   10. git commit  release artefacts (snapshots + manifests + nav + notes)"
-    log "   11. git tag ${RELEASE_VERSION}"
+    log "   11. git checkout -b release/${RELEASE_VERSION}"
+    log "   12. git commit  release artefacts (snapshots + manifests + nav + notes + CHANGELOG)"
+    log "   13. git tag ${RELEASE_VERSION}"
 fi
 
 # ----------------------------------------------------------------------------
@@ -1163,7 +1292,19 @@ if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
     generate_release_notes_skeleton "${RELEASE_VERSION}"
     (cd "${REPO_ROOT}" && git add "docs/releases/${RELEASE_VERSION}.md") 2>/dev/null || true
 
-    # 5. Verification build. Fail loud and refuse to tag if the freshly
+    # 5. CHANGELOG.md — prepend a new section for this release (#580).
+    phase "Regenerating CHANGELOG.md section for ${RELEASE_VERSION}..."
+    log ""
+    regenerate_changelog "${RELEASE_VERSION}"
+    (cd "${REPO_ROOT}" && git add CHANGELOG.md) 2>/dev/null || true
+
+    # 6. Version-ref audit across docs + build configs (#581 / #582).
+    # Informational only — surfaces strings that look like versions so
+    # the operator can manually review before --apply.
+    phase "Auditing docs + build configs for version refs..."
+    audit_version_refs
+
+    # 7. Verification build. Fail loud and refuse to tag if the freshly
     # snapshotted bindings don't build clean — releasing a broken cohort
     # would be much worse than aborting here.
     if [[ "${NO_BUILD}" -eq 1 ]]; then
