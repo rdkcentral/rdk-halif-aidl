@@ -447,7 +447,8 @@ if [[ "$VERSION" != "current" ]]; then
     SNAPSHOT_DIR="$ROOT_DIR/$MODULE/$VERSION"
     if [[ ! -f "$SNAPSHOT_DIR/CMakeLists.txt" ]]; then
         echo "❌ ERROR: snapshot $MODULE/$VERSION not found at $SNAPSHOT_DIR."
-        echo "   Run './release.sh $MODULE' to produce it, or check the version number."
+        echo "   Snapshots are produced by the cohort-wide './release.sh' run;"
+        echo "   verify the version number is one that has been released."
         exit 1
     fi
 
