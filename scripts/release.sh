@@ -89,12 +89,14 @@ Once per release the script:
   7. Generate docs/releases/<release>.md skeleton (if absent)
   8. Prepend CHANGELOG.md section for <release>
   9. Audit docs + build configs for version-shaped strings (review only)
- 10. ./build_modules.sh all  # verification build
+ 10. ./build_modules.sh all                # build current cohort
+ 11. ./build_modules.sh manifest           # build released cohort via
+                                            # versions_released.yaml
 
 With --apply, additionally:
- 11. git checkout -b release/<release>
- 12. git commit
- 13. git tag <release>
+ 12. git checkout -b release/<release>
+ 13. git commit
+ 14. git tag <release>
 
 No-op when no component changed:
   If no metadata.yaml moves, the script writes nothing, creates no
@@ -1251,12 +1253,13 @@ if [[ "${DRY_RUN}" -eq 1 && ${#BUMPED_COMPONENTS[@]} -gt 0 ]]; then
     log "    7. Generate docs/releases/${RELEASE_VERSION}.md release-notes skeleton (if absent)"
     log "    8. Prepend a new ${RELEASE_VERSION} section to CHANGELOG.md"
     log "    9. Audit docs + build configs for version-shaped strings (review only)"
-    log "   10. ./build_modules.sh all                 (verification build)"
+    log "   10. ./build_modules.sh all                 (build current cohort)"
+    log "   11. ./build_modules.sh manifest            (build released cohort via versions_released.yaml)"
     log ""
     log "  With --apply, additionally:"
-    log "   11. git checkout -b release/${RELEASE_VERSION}"
-    log "   12. git commit  release artefacts (snapshots + manifests + nav + notes + CHANGELOG)"
-    log "   13. git tag ${RELEASE_VERSION}"
+    log "   12. git checkout -b release/${RELEASE_VERSION}"
+    log "   13. git commit  release artefacts (snapshots + manifests + nav + notes + CHANGELOG)"
+    log "   14. git tag ${RELEASE_VERSION}"
 fi
 
 # ----------------------------------------------------------------------------
@@ -1377,33 +1380,58 @@ if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
     phase "Auditing docs + build configs for version refs..."
     audit_version_refs
 
-    # 7. Verification build. Fail loud and refuse to tag if the freshly
-    # snapshotted bindings don't build clean — releasing a broken cohort
-    # would be much worse than aborting here.
-    if [[ "${NO_BUILD}" -eq 1 ]]; then
+    # 7. Verification builds. Two passes so each catches a different class
+    # of failure before --apply locks the release in:
+    #   (a) ./build_modules.sh all
+    #       Builds every component from its current/ tree. Proves the
+    #       in-development source compiles before we freeze it. Catches
+    #       broken AIDL in current/ that snapshot creation copied as-is.
+    #   (b) ./build_modules.sh manifest
+    #       Reads versions_released.yaml (which the script just rewrote)
+    #       and builds every component at its newly-pinned snapshot
+    #       version. Proves the freshly-cut <comp>/<version>/ snapshots
+    #       are reachable, intact, and produce valid build artefacts —
+    #       i.e. the manifest update and the snapshots agree.
+    # Either failure aborts the release before the branch/tag is created.
+    run_verification_build() {
+        local label="$1"          # "current cohort" / "released cohort"
+        local log_file="$2"
+        shift 2
+        # Remaining args are the build_modules.sh args
+        mkdir -p "$(dirname "${log_file}")"
+        phase "Verification build (${label}): ./build_modules.sh $*"
         log ""
-        log "Verification build: SKIPPED (--no-build)"
-    else
-        phase "Running verification build (./build_modules.sh all)..."
-        log ""
-        log "Running verification build — output streamed to out/release-build.log"
-        local_build_log="${REPO_ROOT}/out/release-build.log"
-        mkdir -p "$(dirname "${local_build_log}")"
+        log "Verification build (${label}) — output streamed to ${log_file#${REPO_ROOT}/}"
         if [[ "${VERBOSE}" -eq 1 ]]; then
-            if ! (cd "${REPO_ROOT}" && ./build_modules.sh all 2>&1 | tee "${local_build_log}"); then
-                die "Verification build failed — see ${local_build_log}. Aborting release."
+            if ! (cd "${REPO_ROOT}" && ./build_modules.sh "$@" 2>&1 | tee "${log_file}"); then
+                die "Verification build (${label}) failed — see ${log_file}. Aborting release."
             fi
         else
-            if ! (cd "${REPO_ROOT}" && ./build_modules.sh all > "${local_build_log}" 2>&1); then
-                warn "Verification build failed. Tail of ${local_build_log}:"
-                tail -30 "${local_build_log}" | sed 's/^/    /' >&2
-                die "Verification build failed. Aborting release."
+            if ! (cd "${REPO_ROOT}" && ./build_modules.sh "$@" > "${log_file}" 2>&1); then
+                warn "Verification build (${label}) failed. Last error lines from ${log_file}:"
+                grep -E '^(❌|ERROR|FAIL|error:)' "${log_file}" | head -10 | sed 's/^/    /' >&2 \
+                    || tail -30 "${log_file}" | sed 's/^/    /' >&2
+                die "Verification build (${label}) failed. Aborting release."
             fi
         fi
-        log "  Verification build OK"
+        log "  Verification build (${label}) OK"
+    }
+
+    if [[ "${NO_BUILD}" -eq 1 ]]; then
+        log ""
+        log "Verification builds: SKIPPED (--no-build)"
+    else
+        run_verification_build \
+            "current cohort" \
+            "${REPO_ROOT}/out/release-build-current.log" \
+            all
+        run_verification_build \
+            "released cohort via versions_released.yaml" \
+            "${REPO_ROOT}/out/release-build-released.log" \
+            manifest
     fi
 
-    # 6. Release branch + commit + tag (apply only).
+    # 8. Release branch + commit + tag (apply only).
     if [[ "${DO_BRANCH}" -eq 1 ]]; then
         phase "Creating release branch and tag ${RELEASE_VERSION}..."
         log ""
