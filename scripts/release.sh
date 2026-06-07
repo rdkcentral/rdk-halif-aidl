@@ -418,6 +418,82 @@ if [[ ${#COMP_TOUCHED[@]} -eq 0 ]]; then
     exit 0
 fi
 
+# ----------------------------------------------------------------------------
+# Transitive bump propagation (subsume rule)
+# ----------------------------------------------------------------------------
+#
+# When component X bumps, every component that imports X must also bump at
+# AT LEAST the same level — its compiled binary is now linked against a
+# different version of X, and the cohort manifest needs that pin updated.
+# This walks each component's current/interface.yaml `imports:` list and
+# propagates the highest reachable bump level upward via fixed-point
+# iteration. Bump precedence: Breaking > Major (non-doc) > Minor/Patch (doc).
+
+phase "Propagating transitive bumps via interface.yaml imports..."
+
+declare -A COMP_IMPORTS=()       # comp -> "dep1 dep2 ..." (just names, no @version)
+declare -A COMP_TRANSITIVE=()    # comp -> 1 (this comp's bump came from a dep, not direct)
+
+while IFS= read -r iface; do
+    _comp_for_iface="${iface#./}"
+    _comp_for_iface="${_comp_for_iface%/current/interface.yaml}"
+    # Parse the imports: block. Strip the @version suffix; we only care
+    # about the dep name for graph traversal — version is resolved by
+    # versions_released.yaml at build time.
+    deps="$(awk '
+        /^  imports:/      { inblock=1; next }
+        inblock && /^  [^ ]/ { inblock=0 }
+        inblock && /^    - / {
+            sub(/^    - /, "");
+            sub(/@.*/, "");
+            print
+        }' "${iface}" 2>/dev/null | tr "\n" " ")"
+    COMP_IMPORTS[$_comp_for_iface]="${deps}"
+done < <(find . -maxdepth 3 -path '*/current/interface.yaml' -print)
+
+# Fixed-point: keep walking until no new bumps land. Worst-case O(N*depth).
+_iter=0
+_changed=1
+while [[ "${_changed}" -eq 1 ]]; do
+    _changed=0
+    _iter=$((_iter + 1))
+    for comp in "${!COMP_IMPORTS[@]}"; do
+        deps="${COMP_IMPORTS[$comp]}"
+        for dep in ${deps}; do
+            # Apply subsume: dep at level L → comp at min(level >= L).
+            # Breaking > NON_DOC (Major) > DOC (Minor/Patch).
+            if [[ "${COMP_BREAKING[$dep]:-0}" -eq 1 && "${COMP_BREAKING[$comp]:-0}" -ne 1 ]]; then
+                COMP_BREAKING[$comp]=1
+                unset 'COMP_NON_DOC[$comp]' 'COMP_DOC[$comp]' 2>/dev/null || true
+                COMP_TOUCHED[$comp]=1
+                COMP_TRANSITIVE[$comp]=1
+                COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}subsume: ${dep} bumped Breaking → propagating Breaking"$'\n'
+                _changed=1
+            elif [[ "${COMP_NON_DOC[$dep]:-0}" -eq 1 && "${COMP_BREAKING[$comp]:-0}" -ne 1 && "${COMP_NON_DOC[$comp]:-0}" -ne 1 ]]; then
+                COMP_NON_DOC[$comp]=1
+                unset 'COMP_DOC[$comp]' 2>/dev/null || true
+                COMP_TOUCHED[$comp]=1
+                COMP_TRANSITIVE[$comp]=1
+                COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}subsume: ${dep} bumped Major → propagating Major"$'\n'
+                _changed=1
+            elif [[ "${COMP_DOC[$dep]:-0}" -eq 1 && "${COMP_BREAKING[$comp]:-0}" -ne 1 && "${COMP_NON_DOC[$comp]:-0}" -ne 1 && "${COMP_DOC[$comp]:-0}" -ne 1 ]]; then
+                COMP_DOC[$comp]=1
+                COMP_TOUCHED[$comp]=1
+                COMP_TRANSITIVE[$comp]=1
+                COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}subsume: ${dep} bumped Minor/Patch → propagating Minor/Patch"$'\n'
+                _changed=1
+            fi
+        done
+    done
+    [[ "${_iter}" -gt 20 ]] && break  # safety net; real graphs are shallow
+done
+
+# Diagnostic block: list every component that bumped purely transitively
+# so the operator sees WHY a "quiet" component is suddenly on the list.
+if [[ ${#COMP_TRANSITIVE[@]} -gt 0 ]]; then
+    phase "Transitive bumps applied (subsume rule)"
+fi
+
 compute_next_versions() {
     local current_version="$1"
     local bump="$2"
@@ -1168,6 +1244,22 @@ if [[ ${#SKIPPED_NOT_BUILDABLE[@]} -gt 0 ]]; then
     done
     log ""
     log "    These re-enter the release flow as soon as their interface.yaml is added."
+fi
+
+# Transitive-bump diagnostic. Components that didn't have any direct PR-label
+# change but are bumping because a dependency bumped — surface them here so
+# the operator sees the cascade reasoning at a glance.
+if [[ ${#COMP_TRANSITIVE[@]} -gt 0 ]]; then
+    log ""
+    log "ℹ️  Transitive bumps (subsume rule — dependent components inherit the highest dep bump):"
+    for comp in $(printf '%s\n' "${!COMP_TRANSITIVE[@]}" | sort); do
+        # The subsume: line in COMP_REASONS captures which dep caused which level.
+        sub_lines="$(printf '%s' "${COMP_REASONS[$comp]:-}" | grep '^subsume:' | head -3)"
+        log "    ${comp}:"
+        while IFS= read -r r; do
+            [[ -n "${r}" ]] && log "        ${r}"
+        done <<< "${sub_lines}"
+    done
 fi
 
 # ----------------------------------------------------------------------------
