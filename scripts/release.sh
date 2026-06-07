@@ -18,6 +18,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${REPO_ROOT}"
 
 APPLY=0
+DRY_RUN=0
 SINCE_REF=""
 NO_GH=0
 VERBOSE=0
@@ -27,33 +28,43 @@ usage() {
 Release Version Bump Tool
 
 Usage:
-  ./scripts/release.sh [--since <ref>] [--apply] [--release-version X.Y.Z]
-                       [--no-gh] [--no-snapshot] [--no-mkdocs] [--no-git]
-                       [--verbose]
+  ./scripts/release.sh [--dry-run] [--apply] [--since <ref>]
+                       [--release-version X.Y.Z]
+                       [--no-gh] [--no-snapshot] [--no-mkdocs]
+                       [--no-build] [--verbose]
+
+Modes:
+  default       Stage release locally — regenerate bindings, create
+                <module>/<version>/ snapshots, update metadata.yaml,
+                versions_released.yaml, mkdocs.yml, generate
+                docs/releases/X.Y.Z.md skeleton, run a full build to
+                verify, and `git add` the lot. Stops before creating
+                any release branch or tag, so you can review with
+                `git diff --cached` / `git status` before --apply.
+
+  --apply       Above, plus create release/X.Y.Z branch, commit, and
+                tag the repo X.Y.Z. The branch is created locally; the
+                operator pushes manually.
+
+  --dry-run     Preview what default would do without writing anything.
+                Useful for sanity-checking before a release run.
 
 Options:
   --since <ref>          Base reference to diff from (default: nearest
                          reachable tag).
-  --apply                Apply computed version updates to metadata.yaml,
-                         create frozen <module>/<version>/ snapshots for
-                         each bumped component, update mkdocs.yml,
-                         create a release/X.Y.Z branch, and tag the repo
-                         X.Y.Z. The --release-version flag is required
-                         when --apply produces at least one component
-                         bump (and ignored otherwise).
   --release-version X.Y.Z
-                         Repo-level release version (e.g. "0.21.0"). The
-                         release branch and tag are named from this.
-                         Required with --apply when any component is
-                         bumped.
+                         Repo-level release version (e.g. "0.21.0").
+                         Auto-detected from the last release tag by
+                         bumping the minor segment if omitted. Override
+                         only needed for point releases (0.20.0 -> 0.20.1).
   --no-gh                Disable GitHub label lookup; use local heuristics
                          only.
-  --no-snapshot          With --apply, skip creating <module>/<version>/
-                         frozen snapshots (regenerate-then-copy step).
-                         For testing only — a real release MUST snapshot.
-  --no-mkdocs            With --apply, skip updating mkdocs.yml.
-  --no-git               With --apply, skip creating the release branch
-                         and tag. For testing only.
+  --no-snapshot          Skip creating <module>/<version>/ frozen snapshots
+                         (regenerate-then-copy step). Testing only — a
+                         real release MUST snapshot.
+  --no-mkdocs            Skip updating mkdocs.yml.
+  --no-build             Skip the verification build (./build_modules.sh
+                         all). Testing only — a real release MUST build.
   --verbose              Print extra diagnostics.
   --help                 Show this help.
 
@@ -66,19 +77,22 @@ Behavior (#545 change-class labels):
   - no relevant label         => minor bump (default), unless docs-only heuristic
                                  says patch
 
-Snapshot creation (--apply default, suppress with --no-snapshot):
-  For each component whose version moved, the script:
-    1. Runs ./build_modules.sh <component> so the toolchain regenerates
-       current/include/*.h and current/src/*.cpp into the working tree.
-       (These directories are .gitignored under current/ per #566.)
-    2. Copies current/ to <component>/<NEXT_VERSION>/, capturing the
-       regenerated bindings into the immutable frozen snapshot.
-    3. Stages the new <version>/ directory for commit.
+Per bumped component the script:
+  1. ./build_modules.sh <component>        # regenerate current/include + current/src
+  2. cp -r <component>/current/ <component>/<NEXT_VERSION>/
+  3. git add <component>/<NEXT_VERSION>/
+  4. sed -i version: in <component>/metadata.yaml
 
-  Placeholder components (those with no current/ directory — e.g. ffv,
-  r4ce, vsi/abstractfilesystem; tracked under #517) are skipped silently.
-  The metadata.yaml bump still records the cycle; no snapshot is produced
-  because there's no source to snapshot.
+Once per release the script:
+  5. Update versions_released.yaml components: map entries
+  6. Insert mkdocs.yml nav entries for each <component>/<version>/
+  7. Generate docs/releases/<release>.md skeleton (if absent)
+  8. ./build_modules.sh all  # verification build
+
+With --apply, additionally:
+  9. git checkout -b release/<release>
+ 10. git commit
+ 11. git tag <release>
 
 No-op when no component changed:
   If no metadata.yaml moves, the script writes nothing, creates no
@@ -87,7 +101,8 @@ No-op when no component changed:
 
 Notes:
   - Script is intended for manual release-time usage (not CI).
-  - Default is dry-run; no files are modified unless --apply is set.
+  - Default WRITES files locally (regen + snapshot + metadata + manifests +
+    docs + build). Use --dry-run for a pure preview.
 EOF
 }
 
@@ -111,11 +126,10 @@ die() {
     exit 1
 }
 
-# Defaults for the new flags (added by #513)
 RELEASE_VERSION=""
 NO_SNAPSHOT=0
 NO_MKDOCS=0
-NO_GIT=0
+NO_BUILD=0
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -126,6 +140,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --apply)
             APPLY=1
+            shift
+            ;;
+        --dry-run)
+            DRY_RUN=1
             shift
             ;;
         --release-version)
@@ -145,8 +163,8 @@ while [[ $# -gt 0 ]]; do
             NO_MKDOCS=1
             shift
             ;;
-        --no-git)
-            NO_GIT=1
+        --no-build)
+            NO_BUILD=1
             shift
             ;;
         --verbose|-v)
@@ -162,6 +180,21 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+[[ "${DRY_RUN}" -eq 1 && "${APPLY}" -eq 1 ]] && die "--dry-run and --apply are mutually exclusive"
+
+# Three modes consumed by the rest of the script:
+#   DO_WRITES   1 -> regen/snapshot/metadata/manifests/docs/build run for real
+#   DO_BRANCH   1 -> additionally create release branch + tag + commit
+# Default: DO_WRITES=1, DO_BRANCH=0. --apply turns DO_BRANCH on. --dry-run
+# turns both off.
+DO_WRITES=1
+DO_BRANCH=0
+if [[ "${DRY_RUN}" -eq 1 ]]; then
+    DO_WRITES=0
+elif [[ "${APPLY}" -eq 1 ]]; then
+    DO_BRANCH=1
+fi
 
 phase "Resolving base reference..."
 if [[ -z "${SINCE_REF}" ]]; then
@@ -669,8 +702,138 @@ auto_detect_release_version() {
 RELEASE_VERSION_AUTO=0
 auto_detect_release_version
 
-MODE="DRY-RUN"
-[[ "${APPLY}" -eq 1 ]] && MODE="APPLY"
+# ----------------------------------------------------------------------------
+# versions_released.yaml updater
+# ----------------------------------------------------------------------------
+#
+# Rewrites the `components:` map so each bumped component points at its
+# newly-released version. New components (not previously listed) are
+# appended in alphabetic order. Lines outside the components: block are
+# preserved verbatim.
+
+update_versions_released() {
+    local manifest="${REPO_ROOT}/versions_released.yaml"
+    if [[ ! -f "${manifest}" ]]; then
+        warn "versions_released.yaml not found — skipping manifest update."
+        return 1
+    fi
+    if [[ ${#BUMPED_COMPONENTS[@]} -eq 0 ]]; then
+        return 0
+    fi
+    python3 - "${manifest}" "${BUMPED_COMPONENTS[@]}" <<'PYEOF' || return 1
+import re, sys
+manifest_path = sys.argv[1]
+bumps = dict(arg.split(":", 1) for arg in sys.argv[2:])
+
+with open(manifest_path) as f:
+    lines = f.readlines()
+
+# Locate `components:` block.
+start = None
+for i, line in enumerate(lines):
+    if re.match(r'^components:\s*$', line):
+        start = i + 1
+        break
+if start is None:
+    sys.stderr.write("versions_released.yaml: missing 'components:' block\n")
+    sys.exit(1)
+
+end = len(lines)
+for i in range(start, len(lines)):
+    line = lines[i]
+    if line.strip() == "":
+        continue
+    if not (line.startswith("  ") or line.startswith("\t")):
+        end = i
+        break
+
+# Parse existing entries, preserve leading comments / blank lines.
+entry_re = re.compile(r'^(\s+)([A-Za-z][\w/]*):\s*(\S+)\s*$')
+existing = {}
+for i in range(start, end):
+    m = entry_re.match(lines[i])
+    if m:
+        existing[m.group(2)] = (m.group(1), i)
+
+# Apply bumps to existing entries; collect components new to the map.
+new_components = []
+for comp, version in bumps.items():
+    if comp in existing:
+        indent, idx = existing[comp]
+        lines[idx] = f"{indent}{comp}: {version}\n"
+    else:
+        new_components.append((comp, version))
+
+# Append new components alphabetically just before the end of the block.
+if new_components:
+    indent = "  "
+    for _, (i, _) in existing.items():
+        pass
+    for i in range(start, end):
+        m = entry_re.match(lines[i])
+        if m:
+            indent = m.group(1)
+            break
+    insertion = [f"{indent}{c}: {v}\n" for c, v in sorted(new_components)]
+    lines[end:end] = insertion
+
+with open(manifest_path, "w") as f:
+    f.writelines(lines)
+PYEOF
+}
+
+# ----------------------------------------------------------------------------
+# Release notes skeleton generator
+# ----------------------------------------------------------------------------
+#
+# Drops a docs/releases/<release>.md skeleton listing the bumped components.
+# Idempotent: if the file already exists it's left untouched (the operator
+# may have hand-written prose already).
+
+generate_release_notes_skeleton() {
+    local release_version="$1"
+    local notes_dir="${REPO_ROOT}/docs/releases"
+    local notes_file="${notes_dir}/${release_version}.md"
+    mkdir -p "${notes_dir}"
+    if [[ -f "${notes_file}" ]]; then
+        log "  Release notes already exist: docs/releases/${release_version}.md (preserving)"
+        return 0
+    fi
+    {
+        echo "# RDK HALIF AIDL ${release_version} Release Notes"
+        echo ""
+        echo "Release date: TBD"
+        echo ""
+        echo "Base comparison: \`${SINCE_REF}...${release_version}\`"
+        echo ""
+        echo "## Headline"
+        echo ""
+        echo "<!-- One paragraph: what's the headline change for this cohort? -->"
+        echo ""
+        echo "## Component bumps"
+        echo ""
+        for entry in "${BUMPED_COMPONENTS[@]}"; do
+            local comp="${entry%%:*}"
+            local version="${entry##*:}"
+            echo "- \`${comp}\` → ${version}"
+        done
+        echo ""
+        echo "## Highlights"
+        echo ""
+        echo "<!-- Hand-edit the prose. Use the git log on the release branch as source material:"
+        echo "        git log --first-parent --pretty='- %s' ${SINCE_REF}..HEAD"
+        echo "-->"
+        echo ""
+        echo "## Upgrade Guide"
+        echo ""
+        echo "<!-- Hand-edit. -->"
+    } > "${notes_file}"
+    log "  Generated skeleton: docs/releases/${release_version}.md"
+}
+
+MODE="STAGE"  # default: write to working tree, leave staged for review
+[[ "${APPLY}"   -eq 1 ]] && MODE="APPLY (stage + release branch + tag)"
+[[ "${DRY_RUN}" -eq 1 ]] && MODE="DRY-RUN (preview only)"
 
 phase "Computing per-component version bumps..."
 log ""
@@ -799,11 +962,11 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
 
     if [[ "${needs_snapshot}" -eq 1 ]]; then
         # Record this component as bumped so the snapshot / mkdocs /
-        # release-tag steps (apply) and the dry-run preview block can
-        # iterate them.
+        # release-tag steps and the dry-run preview block can iterate
+        # them.
         BUMPED_COMPONENTS+=("${comp}:${NEXT_VERSION}")
         changed_count=$((changed_count + 1))
-        if [[ "${APPLY}" -eq 1 ]]; then
+        if [[ "${DO_WRITES}" -eq 1 ]]; then
             update_metadata "${meta}" "${NEXT_VERSION}"
         fi
     fi
@@ -879,17 +1042,12 @@ if [[ ${#stale_snapshots[@]} -gt 0 ]]; then
 fi
 
 # ----------------------------------------------------------------------------
-# Dry-run preview of the apply pipeline
+# Dry-run preview (--dry-run only)
 # ----------------------------------------------------------------------------
-#
-# When the user runs the script without --apply, show exactly what the
-# real run will do per component. Otherwise the dry-run looks "done"
-# at the table when in fact the regeneration / snapshot / mkdocs / branch
-# steps haven't even been previewed.
 
-if [[ "${APPLY}" -eq 0 && ${#BUMPED_COMPONENTS[@]} -gt 0 ]]; then
+if [[ "${DRY_RUN}" -eq 1 && ${#BUMPED_COMPONENTS[@]} -gt 0 ]]; then
     log ""
-    log "Apply pipeline preview — what --apply will do:"
+    log "Pipeline preview — what default ./release.sh would do:"
     log ""
     log "  For each bumped component (in order):"
     for entry in "${BUMPED_COMPONENTS[@]}"; do
@@ -906,30 +1064,37 @@ if [[ "${APPLY}" -eq 0 && ${#BUMPED_COMPONENTS[@]} -gt 0 ]]; then
         log "        4. sed -i version: in ${comp}/metadata.yaml -> ${version}"
     done
     log ""
-    if [[ -n "${RELEASE_VERSION}" ]]; then
-        log "  Then once per release:"
-        log "    5. Insert mkdocs.yml nav entries for the ${#BUMPED_COMPONENTS[@]} new <module>/<version>/ doc sets"
-        log "    6. git checkout -b release/${RELEASE_VERSION}; git commit; git tag ${RELEASE_VERSION}"
-        log ""
-    fi
+    log "  Then once per release:"
+    log "    5. Update versions_released.yaml components: map"
+    log "    6. Insert mkdocs.yml nav entries for the ${#BUMPED_COMPONENTS[@]} new <module>/<version>/ doc sets"
+    log "    7. Generate docs/releases/${RELEASE_VERSION}.md release-notes skeleton (if absent)"
+    log "    8. ./build_modules.sh all                 (verification build)"
+    log ""
+    log "  With --apply, additionally:"
+    log "    9. git checkout -b release/${RELEASE_VERSION}"
+    log "   10. git commit  release artefacts (snapshots + manifests + nav + notes)"
+    log "   11. git tag ${RELEASE_VERSION}"
 fi
 
 # ----------------------------------------------------------------------------
-# Snapshot + mkdocs + release-branch/tag pipeline (#513)
+# Stage pipeline (default + --apply)
 # ----------------------------------------------------------------------------
 #
-# Only run with --apply AND at least one component bumped. No-op otherwise.
+# Default mode (DO_WRITES=1, DO_BRANCH=0): regenerate, snapshot, update
+# metadata.yaml + versions_released.yaml + mkdocs.yml + release-notes
+# skeleton, run a verification build. Leaves changes in the working tree
+# for review via `git diff --cached`.
+#
+# --apply (DO_WRITES=1, DO_BRANCH=1): all of the above PLUS create
+# release/X.Y.Z branch, commit, tag.
 
-if [[ "${APPLY}" -eq 1 && "${changed_count}" -gt 0 ]]; then
+if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
     if [[ -x "${REPO_ROOT}/scripts/generate_rag_report.sh" ]]; then
         "${REPO_ROOT}/scripts/generate_rag_report.sh" >/dev/null || warn "Failed to regenerate RAG_STATUS_REPORT.md"
     fi
 
-    # Require --release-version when applying with bumps AND auto-detect
-    # couldn't infer one (no existing release tag). Otherwise the
-    # auto-detected value is used (announced in the header).
     if [[ -z "${RELEASE_VERSION}" ]]; then
-        die "--release-version is required with --apply when one or more components are bumped and no prior release tag exists to auto-detect from. Provide e.g. --release-version 0.21.0"
+        die "no --release-version, and auto-detect found no prior release tag to derive from. Provide e.g. --release-version 0.21.0"
     fi
 
     # 1. Frozen snapshots — regen-during-freeze, copy current/ → <version>/, git add.
@@ -953,9 +1118,17 @@ if [[ "${APPLY}" -eq 1 && "${changed_count}" -gt 0 ]]; then
         fi
     fi
 
-    # 2. mkdocs.yml entries. A real release MUST update the nav so the
-    # frozen docs are reachable from the built site. Failures are fatal
-    # unless suppressed with --no-mkdocs (testing only).
+    # 2. versions_released.yaml — the released-cohort build manifest.
+    phase "Updating versions_released.yaml..."
+    log ""
+    log "Updating versions_released.yaml for ${changed_count} bumped component(s)..."
+    if ! update_versions_released; then
+        die "versions_released.yaml update failed. Aborting release."
+    fi
+    (cd "${REPO_ROOT}" && git add versions_released.yaml) \
+        || warn "git add versions_released.yaml failed (file may be untracked)"
+
+    # 3. mkdocs.yml entries.
     if [[ "${NO_MKDOCS}" -eq 1 ]]; then
         log ""
         log "mkdocs.yml update: SKIPPED (--no-mkdocs)"
@@ -976,11 +1149,48 @@ if [[ "${APPLY}" -eq 1 && "${changed_count}" -gt 0 ]]; then
         fi
     fi
 
-    # 3. Release branch + tag.
-    if [[ "${NO_GIT}" -eq 1 ]]; then
+    # Stage the bumped metadata.yaml files so `git status` / `git diff --cached`
+    # shows the operator the full release diff for review before --apply.
+    for entry in "${BUMPED_COMPONENTS[@]}"; do
+        _bm_comp="${entry%%:*}"
+        (cd "${REPO_ROOT}" && git add "${_bm_comp}/metadata.yaml") \
+            || warn "git add ${_bm_comp}/metadata.yaml failed"
+    done
+
+    # 4. Release-notes skeleton.
+    phase "Generating release-notes skeleton..."
+    log ""
+    generate_release_notes_skeleton "${RELEASE_VERSION}"
+    (cd "${REPO_ROOT}" && git add "docs/releases/${RELEASE_VERSION}.md") 2>/dev/null || true
+
+    # 5. Verification build. Fail loud and refuse to tag if the freshly
+    # snapshotted bindings don't build clean — releasing a broken cohort
+    # would be much worse than aborting here.
+    if [[ "${NO_BUILD}" -eq 1 ]]; then
         log ""
-        log "Release branch / tag: SKIPPED (--no-git)"
+        log "Verification build: SKIPPED (--no-build)"
     else
+        phase "Running verification build (./build_modules.sh all)..."
+        log ""
+        log "Running verification build — output streamed to out/release-build.log"
+        local_build_log="${REPO_ROOT}/out/release-build.log"
+        mkdir -p "$(dirname "${local_build_log}")"
+        if [[ "${VERBOSE}" -eq 1 ]]; then
+            if ! (cd "${REPO_ROOT}" && ./build_modules.sh all 2>&1 | tee "${local_build_log}"); then
+                die "Verification build failed — see ${local_build_log}. Aborting release."
+            fi
+        else
+            if ! (cd "${REPO_ROOT}" && ./build_modules.sh all > "${local_build_log}" 2>&1); then
+                warn "Verification build failed. Tail of ${local_build_log}:"
+                tail -30 "${local_build_log}" | sed 's/^/    /' >&2
+                die "Verification build failed. Aborting release."
+            fi
+        fi
+        log "  Verification build OK"
+    fi
+
+    # 6. Release branch + commit + tag (apply only).
+    if [[ "${DO_BRANCH}" -eq 1 ]]; then
         phase "Creating release branch and tag ${RELEASE_VERSION}..."
         log ""
         create_release_branch_and_tag "${RELEASE_VERSION}"
@@ -988,33 +1198,34 @@ if [[ "${APPLY}" -eq 1 && "${changed_count}" -gt 0 ]]; then
 fi
 
 log ""
-if [[ "${APPLY}" -eq 1 ]]; then
-    log "Applied updates to ${changed_count} component metadata file(s)."
+if [[ "${DRY_RUN}" -eq 1 ]]; then
+    log "Dry-run complete — would bump ${changed_count} component metadata file(s) and run the pipeline above."
+    if [[ "${error_count}" -gt 0 ]]; then
+        log ""
+        log "⚠️  ${error_count} component(s) need manual action above before running for real."
+    fi
+elif [[ "${DO_BRANCH}" -eq 1 ]]; then
+    log "Release ${RELEASE_VERSION} applied: ${changed_count} component(s) bumped, branch + tag created."
     if [[ "${changed_count}" -eq 0 ]]; then
         log "No components changed — no release branch, no tag, no doc edits."
     fi
 else
-    log "Would update ${changed_count} component metadata file(s)."
-    if [[ "${error_count}" -gt 0 ]]; then
+    log "Release ${RELEASE_VERSION} staged: ${changed_count} component(s) bumped, files written and git-added."
+    if [[ "${changed_count}" -eq 0 ]]; then
+        log "No components changed — nothing to stage."
+    else
         log ""
-        log "⚠️  ${error_count} component(s) need manual action above before applying."
-        log "    Resolve those, then re-run as below."
-    fi
-    if [[ "${changed_count}" -gt 0 ]] || [[ -n "${RELEASE_VERSION}" ]]; then
+        log "Review the staged changes:"
+        log "    git diff --cached"
+        log "    git status"
         log ""
-        log "Next step — apply for real (writes metadata.yaml, creates snapshots,"
-        log "updates mkdocs.yml, creates release branch + tag):"
-        if [[ -n "${RELEASE_VERSION}" ]]; then
-            log ""
-            log "    ./scripts/release.sh --apply --release-version ${RELEASE_VERSION}"
-            if [[ "${RELEASE_VERSION_AUTO}" -eq 1 ]]; then
-                log ""
-                log "    (release version auto-detected; pass --release-version explicitly to override)"
-            fi
-        else
-            log ""
-            log "    ./scripts/release.sh --apply --release-version <X.Y.Z>"
-        fi
+        log "When happy, apply (creates release/${RELEASE_VERSION} branch + ${RELEASE_VERSION} tag):"
+        log "    ./scripts/release.sh --apply --release-version ${RELEASE_VERSION}"
+        log ""
+        log "Or back out everything:"
+        log "    git reset HEAD ."
+        log "    git checkout -- ."
+        log "    git clean -fd"
     fi
 fi
 
