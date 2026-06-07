@@ -1566,11 +1566,27 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
 
     printf "%-28s %-12s %-12s %-10s %s\n" "${comp}" "${current_version}" "${NEXT_VERSION}" "${bump}" "${status}"
 
-    if [[ "${VERBOSE}" -eq 1 ]]; then
-        echo "  Reasons:"
-        while IFS= read -r line; do
-            [[ -n "${line}" ]] && echo "    - ${line}"
-        done <<< "${COMP_REASONS[$comp]:-}"
+    # Verbose detail: enabled by --verbose, or implicitly by `check` mode
+    # so the operator has enough info to decide whether to stage the
+    # module via `./release.sh module ${comp}`.
+    if [[ "${VERBOSE}" -eq 1 || "${CHECK_MODE}" -eq 1 ]]; then
+        # Reasons (commit/PR → bump-level derivation, plus subsume/plan).
+        if [[ -n "${COMP_REASONS[$comp]:-}" ]]; then
+            echo "    Why this bump:"
+            while IFS= read -r line; do
+                [[ -n "${line}" ]] && echo "      - ${line}"
+            done <<< "${COMP_REASONS[$comp]:-}"
+        fi
+        # File summary — count + first 5 paths.
+        if [[ -n "${COMP_FILES[$comp]:-}" ]]; then
+            _file_count=$(printf '%s' "${COMP_FILES[$comp]}" | grep -c .)
+            echo "    Files touched (${_file_count}):"
+            printf '%s' "${COMP_FILES[$comp]}" | sort -u | head -5 | sed 's/^/      /'
+            if [[ "${_file_count}" -gt 5 ]]; then
+                echo "      ... ($((_file_count - 5)) more)"
+            fi
+        fi
+        echo ""
     fi
 
     needs_snapshot=0
