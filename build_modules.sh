@@ -145,14 +145,26 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$SCRIPT_DIR"
 
-# Suppress -Wwrite-strings noise from AOSP aidl-cpp's generated headers.
-# Every I*.h carries `static constexpr char* HASHVALUE = "notfrozen";`
-# which is an ISO C++ violation (should be `const char*`). The bug lives
-# in build-tools/linux_binder_idl/android/aidl/generate_cpp.cpp:904; until
-# that's patched upstream the warning floods every verification build.
+# Suppress two classes of unfixable upstream noise so the verification
+# build output stays readable.
+#
+#   -Wno-write-strings  AOSP aidl-cpp emits
+#                       `static constexpr char* HASHVALUE = "notfrozen";`
+#                       in every generated I*.h. Should be `const char*`
+#                       — bug in build-tools/linux_binder_idl/android/aidl/
+#                       generate_cpp.cpp:904. 93 occurrences across the
+#                       cohort.
+#
+#   -Wno-attributes     binder_sdk headers (Vector.h, IBinder.h, …) carry
+#                       clang-only attributes — `__attribute__((no_sanitize
+#                       ("cfi")))` via UTILS_VECTOR_NO_CFI, and
+#                       `[[clang::lto_visibility_public]]`. GCC accepts
+#                       them syntactically but warns on every one.
+#                       Vendored binder_sdk code; not ours to patch.
+#
 # Both build paths (root cmake for current/, standalone cmake for
 # snapshots) inherit CXXFLAGS, so a single export covers both.
-export CXXFLAGS="${CXXFLAGS:-} -Wno-write-strings"
+export CXXFLAGS="${CXXFLAGS:-} -Wno-write-strings -Wno-attributes"
 
 #######################################################################
 # Pre-flight checks (#571)
