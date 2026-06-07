@@ -291,6 +291,101 @@ case "${1:-}" in
 
         echo "📋 Version manifest: $MANIFEST"
         echo "   ${#MANIFEST_PAIRS[@]} component(s), default version '${DEFAULT_VER}'"
+
+        # Topologically sort MANIFEST_PAIRS so each component's
+        # dependencies build (and install their headers/libs into
+        # out/target) before the component itself does. Without this,
+        # alphabetical iteration breaks any importer of `common`:
+        # audiodecoder builds before common, can't find common's
+        # PropertyValue.h etc. (#583). The dep graph comes from each
+        # component's <version>/interface.yaml `imports:` list (or
+        # <comp>/current/interface.yaml when version=current).
+        mapfile -t MANIFEST_PAIRS < <(python3 - "$ROOT_DIR" "${MANIFEST_PAIRS[@]}" <<'PYEOF'
+import os, re, sys
+root = sys.argv[1]
+pairs = [arg.split(None, 1) for arg in sys.argv[2:]]
+version_of = {comp: ver for comp, ver in pairs}
+
+def imports_of(comp, ver):
+    """Parse <comp>/<ver>/interface.yaml `imports:` -> [dep names]."""
+    iface = os.path.join(root, comp, ver, "interface.yaml")
+    if not os.path.isfile(iface):
+        return []
+    deps = []
+    in_block = False
+    with open(iface) as f:
+        for line in f:
+            if re.match(r'^  imports:\s*$', line):
+                in_block = True
+                continue
+            if in_block and re.match(r'^  [^ ]', line):
+                break  # next top-level key
+            if in_block:
+                m = re.match(r'^    - ([A-Za-z0-9_]+)(?:@.*)?\s*$', line)
+                if m:
+                    deps.append(m.group(1))
+    return deps
+
+# Build graph + Kahn's BFS toposort.
+graph = {comp: set(imports_of(comp, ver)) for comp, ver in pairs}
+# Restrict edges to deps that are actually in the manifest — external
+# refs (e.g. android.hardware.common.fmq) shouldn't block toposort.
+for comp, deps in graph.items():
+    graph[comp] = {d for d in deps if d in version_of}
+
+indegree = {comp: 0 for comp in graph}
+for comp, deps in graph.items():
+    for d in deps:
+        indegree[comp] += 1
+
+# Reverse map: dep -> [importers]
+importers = {comp: [] for comp in graph}
+for comp, deps in graph.items():
+    for d in deps:
+        importers[d].append(comp)
+
+ready = sorted(c for c, deg in indegree.items() if deg == 0)
+ordered = []
+while ready:
+    c = ready.pop(0)
+    ordered.append(c)
+    for imp in sorted(importers[c]):
+        indegree[imp] -= 1
+        if indegree[imp] == 0:
+            ready.append(imp)
+    ready.sort()
+
+if len(ordered) != len(graph):
+    sys.stderr.write("toposort: cycle detected; falling back to alphabetical\n")
+    ordered = sorted(graph.keys())
+
+for c in ordered:
+    print(f"{c} {version_of[c]}")
+PYEOF
+        )
+
+        # Echo the resolved build order so the operator can see what's
+        # being built when and why.
+        echo "   build order (toposort by imports): $(awk '{print $1}' <<< "$(printf '%s\n' "${MANIFEST_PAIRS[@]}")" | tr '\n' ' ')"
+        echo ""
+
+        # Pre-stage each component's include/ tree into
+        # out/build/include/<comp>/<ver>/include/ so downstream snapshot
+        # builds can satisfy their `${HALIF_INCLUDE_DIR}/<dep>/<ver>/include`
+        # references. The root CMakeLists copy step only handles
+        # */current/include (it pre-dates module-local snapshots), so for
+        # snapshot manifest builds we need this here. Pure copy, no build —
+        # snapshot include/ trees are committed pre-generated C++.
+        echo "   pre-staging snapshot headers into out/build/include/ ..."
+        INC_STAGE="$ROOT_DIR/out/build/include"
+        for pair in "${MANIFEST_PAIRS[@]}"; do
+            read -r comp ver <<< "$pair"
+            src_inc="$ROOT_DIR/$comp/$ver/include"
+            [[ -d "$src_inc" ]] || continue
+            dst_inc="$INC_STAGE/$comp/$ver/include"
+            mkdir -p "$dst_inc"
+            cp -RT "$src_inc" "$dst_inc"
+        done
         echo ""
 
         # Components pinned to 'current' build together in one pass; any
