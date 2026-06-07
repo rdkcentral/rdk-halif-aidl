@@ -25,7 +25,7 @@ components:
   audiosink:      current
   avbuffer:       current
   avclock:        current
-  boot:           current
+  bootreason:  current
   common:         current
   compositeinput: current
   deepsleep:      current

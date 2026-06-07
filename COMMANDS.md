@@ -25,7 +25,7 @@ Run `./build_binder.sh --help` for details.
 
 Examples:
 ```bash
-./build_interfaces.sh boot
+./build_interfaces.sh bootreason
 ./build_interfaces.sh videodecoder
 ./build_interfaces.sh all
 ```
@@ -59,8 +59,8 @@ Output: `stable/<module>/v1/<module>-api/` and `stable/generated/<module>/v1/`
 | Script | Purpose | Example |
 |--------|---------|---------|
 | `./build_binder.sh` | Build AIDL toolchain | `source ./build_binder.sh` |
-| `./build_interfaces.sh` | Build interfaces | `./build_interfaces.sh boot` |
-| `./freeze_interface.sh` | Freeze interface version | `./freeze_interface.sh boot` |
+| `./build_interfaces.sh` | Build interfaces | `./build_interfaces.sh bootreason` |
+| `./freeze_interface.sh` | Freeze interface version | `./freeze_interface.sh bootreason` |
 
 ---
 
@@ -69,10 +69,10 @@ Output: `stable/<module>/v1/<module>-api/` and `stable/generated/<module>/v1/`
 ### Edit and Test Interface
 ```bash
 # 1. Edit source files
-vim boot/current/com/rdk/hal/boot/IBoot.aidl
+vim bootreason/current/com/rdk/hal/bootreason/IBootReason.aidl
 
 # 2. Build and test
-./build_interfaces.sh boot
+./build_interfaces.sh bootreason
 
 # 3. Repeat until satisfied
 ```
