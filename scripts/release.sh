@@ -95,6 +95,13 @@ log() {
     echo "$*"
 }
 
+# phase: prominent stage header so the user can see progress through long
+# silent stretches (GitHub PR/label fetch, snapshot regen, etc.). Single
+# line to stderr to keep stdout clean for piping the report.
+phase() {
+    echo "==> $*" >&2
+}
+
 warn() {
     echo "WARN: $*" >&2
 }
@@ -156,21 +163,27 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+phase "Resolving base reference..."
 if [[ -z "${SINCE_REF}" ]]; then
     if ! SINCE_REF="$(git describe --tags --abbrev=0 2>/dev/null)"; then
         SINCE_REF="$(git rev-list --max-parents=0 HEAD | tail -n 1)"
         warn "No tags found; using first commit as base: ${SINCE_REF}"
     fi
 fi
+phase "    Base: ${SINCE_REF}"
 
 git rev-parse --verify "${SINCE_REF}^{commit}" >/dev/null 2>&1 || die "Invalid --since ref: ${SINCE_REF}"
 
+phase "Walking first-parent commits in ${SINCE_REF}..HEAD..."
 mapfile -t FP_COMMITS < <(git rev-list --first-parent --reverse "${SINCE_REF}..HEAD")
 if [[ ${#FP_COMMITS[@]} -eq 0 ]]; then
+    phase "    0 commits — nothing to release"
     log "No first-parent commits found in ${SINCE_REF}..HEAD. Nothing to release."
     exit 0
 fi
+phase "    ${#FP_COMMITS[@]} commit(s) to analyze"
 
+phase "Scanning component metadata files..."
 mapfile -t COMPONENTS < <(
     find . -name "metadata.yaml" -not -path "./docs/*" -not -path "./scripts/*" -printf '%h\n' \
         | sed 's|^\./||' \
@@ -180,6 +193,7 @@ mapfile -t COMPONENTS < <(
 )
 
 [[ ${#COMPONENTS[@]} -gt 0 ]] || die "No component metadata files found"
+phase "    ${#COMPONENTS[@]} component(s) found"
 
 component_from_path() {
     local path="$1"
@@ -222,6 +236,12 @@ if [[ "${NO_GH}" -eq 0 ]] && command -v gh >/dev/null 2>&1 && [[ -n "${GH_REPO}"
     fi
 elif [[ "${NO_GH}" -eq 0 ]]; then
     warn "GitHub labels unavailable (missing gh or non-GitHub origin); using heuristics"
+fi
+
+if [[ "${ENABLE_GH_LABELS}" -eq 1 ]]; then
+    phase "GitHub PR-label lookup: enabled (${GH_REPO})"
+else
+    phase "GitHub PR-label lookup: disabled (using local heuristics)"
 fi
 
 declare -A PR_LABEL_CACHE=()
@@ -274,8 +294,17 @@ get_pr_labels() {
     printf '%s\n' "${labels}"
 }
 
+phase "Analyzing ${#FP_COMMITS[@]} commit(s) for component impact..."
+_commit_idx=0
+_commit_total=${#FP_COMMITS[@]}
 for sha in "${FP_COMMITS[@]}"; do
+    _commit_idx=$((_commit_idx + 1))
     subject="$(git show -s --format=%s "${sha}")"
+    # one-line per-commit progress: counter, short sha, truncated subject.
+    # Keeps the user oriented during the GH api stretch.
+    _subj_short="${subject:0:72}"
+    [[ "${#subject}" -gt 72 ]] && _subj_short="${_subj_short}..."
+    phase "    [${_commit_idx}/${_commit_total}] ${sha:0:8} ${_subj_short}"
     parent="$(git rev-parse "${sha}^1" 2>/dev/null || true)"
     [[ -n "${parent}" ]] || continue
 
@@ -643,6 +672,7 @@ auto_detect_release_version
 MODE="DRY-RUN"
 [[ "${APPLY}" -eq 1 ]] && MODE="APPLY"
 
+phase "Computing per-component version bumps..."
 log ""
 log "Release version scan"
 log "  Mode: ${MODE}"
@@ -709,22 +739,107 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
         done <<< "${COMP_REASONS[$comp]:-}"
     fi
 
-    if [[ "${APPLY}" -eq 1 ]]; then
-        if [[ "${current_version}" != "${NEXT_VERSION}" ]]; then
-            if [[ "${status}" == "ok" ]]; then
-                update_metadata "${meta}" "${NEXT_VERSION}"
-                # Record this component as bumped so the snapshot /
-                # mkdocs / release-tag steps below can iterate them.
-                BUMPED_COMPONENTS+=("${comp}:${NEXT_VERSION}")
-                changed_count=$((changed_count + 1))
-            fi
-        fi
-    else
-        if [[ "${current_version}" != "${NEXT_VERSION}" ]]; then
-            changed_count=$((changed_count + 1))
+    if [[ "${current_version}" != "${NEXT_VERSION}" && "${status}" == "ok" ]]; then
+        # Record this component as bumped so the snapshot / mkdocs /
+        # release-tag steps (apply) and the dry-run preview block can
+        # iterate them.
+        BUMPED_COMPONENTS+=("${comp}:${NEXT_VERSION}")
+        changed_count=$((changed_count + 1))
+        if [[ "${APPLY}" -eq 1 ]]; then
+            update_metadata "${meta}" "${NEXT_VERSION}"
         fi
     fi
 done
+
+# ----------------------------------------------------------------------------
+# Stale-snapshot detection
+# ----------------------------------------------------------------------------
+#
+# A component's <module>/<version>/ directory should be either (a) tracked
+# in git (a released snapshot) or (b) the next version about to be created
+# by this run. Anything else is leftover from a previous half-run or from
+# the retired per-component release tool — surface it so the operator can
+# clean up before --apply.
+
+declare -A NEXT_VERSION_BY_COMP=()
+for entry in "${BUMPED_COMPONENTS[@]}"; do
+    NEXT_VERSION_BY_COMP["${entry%%:*}"]="${entry##*:}"
+done
+
+stale_snapshots=()
+for comp in "${TOUCHED_COMPONENTS[@]}"; do
+    [[ -d "${REPO_ROOT}/${comp}" ]] || continue
+    while IFS= read -r -d '' versioned_dir; do
+        version="${versioned_dir##*/}"
+        # Skip current/ and non-version dirs (e.g. docs/).
+        [[ "${version}" =~ ^[0-9]+(\.[0-9]+)*$ ]] || continue
+        # Tracked snapshots are fine. A snapshot doesn't carry a
+        # metadata.yaml at the version-dir level (metadata lives at the
+        # component root), so test by asking git whether anything at all
+        # is tracked under <comp>/<version>/.
+        if [[ -n "$(git ls-files -- "${comp}/${version}/" 2>/dev/null | head -1)" ]]; then
+            continue
+        fi
+        # Untracked but matches the about-to-be-created next version: fine,
+        # it'll be created (and the existing-dir check inside
+        # create_snapshot() will catch a stale one with mismatched contents).
+        if [[ "${NEXT_VERSION_BY_COMP[$comp]:-}" == "${version}" ]]; then
+            continue
+        fi
+        stale_snapshots+=("${comp}/${version}")
+    done < <(find "${REPO_ROOT}/${comp}" -maxdepth 1 -mindepth 1 -type d -print0)
+done
+
+if [[ ${#stale_snapshots[@]} -gt 0 ]]; then
+    log ""
+    log "⚠️  Stale snapshot directories detected (untracked, not the next-to-be-created version):"
+    for snap in "${stale_snapshots[@]}"; do
+        log "    ${snap}/"
+    done
+    log ""
+    log "    These look like leftovers from a previous half-run or the retired"
+    log "    per-component release tool. Remove them before --apply, e.g.:"
+    log ""
+    for snap in "${stale_snapshots[@]}"; do
+        log "        rm -rf ${snap}/"
+    done
+fi
+
+# ----------------------------------------------------------------------------
+# Dry-run preview of the apply pipeline
+# ----------------------------------------------------------------------------
+#
+# When the user runs the script without --apply, show exactly what the
+# real run will do per component. Otherwise the dry-run looks "done"
+# at the table when in fact the regeneration / snapshot / mkdocs / branch
+# steps haven't even been previewed.
+
+if [[ "${APPLY}" -eq 0 && ${#BUMPED_COMPONENTS[@]} -gt 0 ]]; then
+    log ""
+    log "Apply pipeline preview — what --apply will do:"
+    log ""
+    log "  For each bumped component (in order):"
+    for entry in "${BUMPED_COMPONENTS[@]}"; do
+        comp="${entry%%:*}"
+        version="${entry##*:}"
+        if [[ ! -d "${REPO_ROOT}/${comp}/current" ]]; then
+            log "    ${comp} ${version}: placeholder component (no current/) — metadata.yaml bump only, no snapshot"
+            continue
+        fi
+        log "    ${comp} ${version}:"
+        log "        1. ./build_modules.sh ${comp}     (regenerate current/include + current/src)"
+        log "        2. cp -r ${comp}/current/  ${comp}/${version}/"
+        log "        3. git add ${comp}/${version}/"
+        log "        4. sed -i version: in ${comp}/metadata.yaml -> ${version}"
+    done
+    log ""
+    if [[ -n "${RELEASE_VERSION}" ]]; then
+        log "  Then once per release:"
+        log "    5. Insert mkdocs.yml nav entries for the ${#BUMPED_COMPONENTS[@]} new <module>/<version>/ doc sets"
+        log "    6. git checkout -b release/${RELEASE_VERSION}; git commit; git tag ${RELEASE_VERSION}"
+        log ""
+    fi
+fi
 
 # ----------------------------------------------------------------------------
 # Snapshot + mkdocs + release-branch/tag pipeline (#513)
@@ -749,6 +864,7 @@ if [[ "${APPLY}" -eq 1 && "${changed_count}" -gt 0 ]]; then
         log ""
         log "Snapshot creation: SKIPPED (--no-snapshot)"
     else
+        phase "Creating frozen snapshots (${changed_count} component(s))..."
         log ""
         log "Creating frozen snapshots for ${changed_count} bumped component(s):"
         snapshot_fail=0
@@ -771,6 +887,7 @@ if [[ "${APPLY}" -eq 1 && "${changed_count}" -gt 0 ]]; then
         log ""
         log "mkdocs.yml update: SKIPPED (--no-mkdocs)"
     else
+        phase "Updating mkdocs.yml..."
         log ""
         log "Updating mkdocs.yml for ${changed_count} bumped component(s):"
         mkdocs_fail=0
@@ -791,6 +908,7 @@ if [[ "${APPLY}" -eq 1 && "${changed_count}" -gt 0 ]]; then
         log ""
         log "Release branch / tag: SKIPPED (--no-git)"
     else
+        phase "Creating release branch and tag ${RELEASE_VERSION}..."
         log ""
         create_release_branch_and_tag "${RELEASE_VERSION}"
     fi
