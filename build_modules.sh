@@ -145,7 +145,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$SCRIPT_DIR"
 
-# Suppress two classes of unfixable upstream noise so the verification
+# Suppress three classes of unfixable upstream noise so the verification
 # build output stays readable.
 #
 #   -Wno-write-strings  AOSP aidl-cpp emits
@@ -162,9 +162,24 @@ ROOT_DIR="$SCRIPT_DIR"
 #                       them syntactically but warns on every one.
 #                       Vendored binder_sdk code; not ours to patch.
 #
-# Both build paths (root cmake for current/, standalone cmake for
-# snapshots) inherit CXXFLAGS, so a single export covers both.
-export CXXFLAGS="${CXXFLAGS:-} -Wno-write-strings -Wno-attributes"
+#   -Wno-return-type    aidl-cpp's parcelable-union writeToParcel/getTag
+#                       dispatch generates an exhaustive switch followed
+#                       by `__assert2(...); }` — but GCC doesn't see
+#                       __assert2 as [[noreturn]], so it warns "control
+#                       reaches end of non-void function". Should be
+#                       `__builtin_unreachable()`. Bites every union
+#                       (PropertyValue, DrmMetricValue, …).
+#
+# Plumbed two ways:
+#   1. Export CXXFLAGS — picked up on first cmake configure of any
+#      build dir (and by build_binder.sh if it's already exported in
+#      this shell).
+#   2. Inject -DCMAKE_CXX_FLAGS_INIT into every cmake invocation below —
+#      defeats stale build/<dir>/CMakeCache.txt where the flags weren't
+#      captured on the original configure (env-CXXFLAGS only seeds the
+#      cache the FIRST time).
+WARNING_SUPPRESSION_FLAGS="-Wno-write-strings -Wno-attributes -Wno-return-type"
+export CXXFLAGS="${CXXFLAGS:-} ${WARNING_SUPPRESSION_FLAGS}"
 
 #######################################################################
 # Pre-flight checks (#571)
@@ -585,6 +600,7 @@ if [[ "$VERSION" != "current" ]]; then
     # snapshot CMakeLists find the headers. Yocto stages a flat SDK so
     # BINDER_SDK_DIR alone resolves both.
     cmake -S "$SNAPSHOT_DIR" -B "$SNAPSHOT_BUILD_DIR" \
+        -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
         -DBINDER_SDK_DIR="$SDK_DIR" \
         -DBINDER_SDK_INCLUDE_DIR="$ROOT_DIR/out/build" \
         -DHALIF_LIB_DIR="$ROOT_DIR/out/target/lib/halif" \
@@ -629,6 +645,7 @@ echo "⚙️  Configuring CMake..."
 echo ""
 
 cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
+    -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
     -DINTERFACE_TARGET="$MODULE" \
     -DAIDL_SRC_VERSION="$VERSION" \
     -DBINDER_SDK_DIR="$SDK_DIR"
