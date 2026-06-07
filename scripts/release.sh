@@ -489,6 +489,17 @@ update_metadata() {
 # Frozen `<version>/` includes everything from `current/`: AIDL,
 # generated include/src, docs, CMakeLists, interface.yaml, hfp-*.yaml.
 
+# A component is considered "buildable" if it has a current/interface.yaml.
+# Components without one (broadcast, ffv, r4ce, …) are incubating — they
+# carry a metadata.yaml declaring intent but their AIDL isn't yet wired
+# into the build (see metadata.yaml `notes.status_detail`). The release
+# script excludes them: no bump, no snapshot, no build. They re-enter the
+# release flow as soon as interface.yaml is added.
+is_buildable_component() {
+    local comp="$1"
+    [[ -f "${REPO_ROOT}/${comp}/current/interface.yaml" ]]
+}
+
 create_snapshot() {
     local comp="$1"
     local version="$2"
@@ -504,11 +515,16 @@ create_snapshot() {
         return 0
     fi
 
+    # Refresh existing snapshot dir rather than refusing. The release flow
+    # is iterative — operators run, review, fix, re-run — and the snapshot
+    # is just a copy of regenerated current/ bindings, so a stale dir from
+    # a prior partial run is safe to wipe and remake.
     if [[ -d "${snapshot_dir}" ]]; then
-        warn "${comp}/${version}/ already exists from a prior run."
-        warn "  Refusing to risk a stale snapshot: delete the directory and re-run,"
-        warn "  or run with --no-snapshot if you know the existing snapshot is current."
-        return 1
+        log "  [${comp}] refreshing existing ${version}/ snapshot (rm -rf + re-create)"
+        rm -rf "${snapshot_dir}" || {
+            warn "Failed to remove existing ${comp}/${version}/ — manual cleanup needed."
+            return 1
+        }
     fi
 
     log "  [${comp}] regenerating bindings via build_modules.sh..."
@@ -521,8 +537,12 @@ create_snapshot() {
         fi
     else
         if ! (cd "${REPO_ROOT}" && ./build_modules.sh "${comp}" >"${build_log}" 2>&1); then
-            warn "Failed to regenerate ${comp} bindings. Tail of ${build_log}:"
-            tail -20 "${build_log}" | sed 's/^/    /' >&2
+            # Surface the actual ERROR line(s) — they're the diagnostic
+            # the operator needs, not the noise of the trailing "Available
+            # components:" list.
+            warn "Failed to regenerate ${comp} bindings (see ${build_log}):"
+            grep -E '^(❌|ERROR|FAIL)' "${build_log}" | head -5 | sed 's/^/    /' >&2 \
+                || tail -10 "${build_log}" | sed 's/^/    /' >&2
             return 1
         fi
     fi
@@ -1007,11 +1027,31 @@ discover_current_version() {
 }
 
 mapfile -t TOUCHED_COMPONENTS < <(printf '%s\n' "${!COMP_TOUCHED[@]}" | sort)
+declare -A SKIPPED_NOT_BUILDABLE=()
 for comp in "${TOUCHED_COMPONENTS[@]}"; do
     meta="${REPO_ROOT}/${comp}/metadata.yaml"
     if [[ ! -f "${meta}" ]]; then
         printf "%-28s %-12s %-12s %-10s %s\n" "${comp}" "-" "-" "-" "metadata missing"
         error_count=$((error_count + 1))
+        continue
+    fi
+
+    # Non-buildable components (no current/interface.yaml — broadcast,
+    # ffv, r4ce, …) get a one-line "skipped" row and are excluded from
+    # bumping/snapshotting. They re-enter as soon as interface.yaml is
+    # added. Reason text is sourced from metadata.yaml notes.status_detail
+    # when present, so the operator sees WHY without spelunking.
+    if ! is_buildable_component "${comp}"; then
+        reason="$(awk '
+            /^notes:/ {in_notes=1; next}
+            in_notes && /^[^ ]/ {in_notes=0}
+            in_notes && /^[[:space:]]+status_detail:/ {
+                sub(/^[[:space:]]+status_detail:[[:space:]]*/, "");
+                gsub(/^"|"$/, "");
+                print; exit
+            }' "${meta}" 2>/dev/null)"
+        printf "%-28s %-12s %-12s %-10s %s\n" "${comp}" "-" "-" "skipped" "not buildable (no current/interface.yaml)"
+        SKIPPED_NOT_BUILDABLE[$comp]="${reason:-no current/interface.yaml}"
         continue
     fi
 
@@ -1112,6 +1152,20 @@ if [[ ${#METADATA_DRIFT[@]} -gt 0 ]]; then
         v="${METADATA_DRIFT[$comp]}"
         log "    ${comp}: metadata.yaml=${v%|*}   tracked-latest=${v#*|}"
     done
+fi
+
+# Non-buildable components — broadcast, ffv, r4ce — have no
+# current/interface.yaml so the build can't snapshot them. Surface them
+# with the metadata.yaml status_detail reason so the operator sees WHY
+# they're skipped, not just that they are.
+if [[ ${#SKIPPED_NOT_BUILDABLE[@]} -gt 0 ]]; then
+    log ""
+    log "ℹ️  Skipped (not yet integrated into the build — no current/interface.yaml):"
+    for comp in $(printf '%s\n' "${!SKIPPED_NOT_BUILDABLE[@]}" | sort); do
+        log "    ${comp}: ${SKIPPED_NOT_BUILDABLE[$comp]}"
+    done
+    log ""
+    log "    These re-enter the release flow as soon as their interface.yaml is added."
 fi
 
 # ----------------------------------------------------------------------------
@@ -1235,15 +1289,27 @@ if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
         log ""
         log "Creating frozen snapshots for ${changed_count} bumped component(s):"
         snapshot_fail=0
+        snapshot_failed_names=()
         for entry in "${BUMPED_COMPONENTS[@]}"; do
             comp="${entry%%:*}"
             version="${entry##*:}"
             if ! create_snapshot "${comp}" "${version}"; then
                 snapshot_fail=$((snapshot_fail + 1))
+                snapshot_failed_names+=("${comp}")
             fi
         done
         if [[ "${snapshot_fail}" -gt 0 ]]; then
-            die "${snapshot_fail} snapshot(s) failed to create. Aborting release."
+            log ""
+            log "❌ Snapshot creation failed for ${snapshot_fail} component(s):"
+            for failed in "${snapshot_failed_names[@]}"; do
+                log "    ${failed}  (build log: out/release-snapshot-${failed//\//_}.log)"
+            done
+            log ""
+            log "    If a failing component isn't ready for release yet, mark it"
+            log "    incubating by removing its current/interface.yaml — the release"
+            log "    script then skips it cleanly. Otherwise inspect the build logs"
+            log "    above and fix the underlying issue."
+            die "Aborting release: ${snapshot_fail} snapshot(s) failed (${snapshot_failed_names[*]})."
         fi
     fi
 
