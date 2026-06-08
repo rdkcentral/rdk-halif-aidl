@@ -375,6 +375,7 @@ APPLY="${APPLY:-0}"
 DRY_RUN="${DRY_RUN:-0}"
 SINCE_REF="${SINCE_REF:-}"
 NO_GH="${NO_GH:-0}"
+ACCEPT_ALL="${ACCEPT_ALL:-0}"
 VERBOSE=0
 
 usage() {
@@ -525,6 +526,15 @@ while [[ $# -gt 0 ]]; do
             ;;
         --no-build)
             NO_BUILD=1
+            shift
+            ;;
+        --accept-all)
+            # Auto-stage every detected module that has a real bump or
+            # is an initial release. Same effect as calling
+            # `./release.sh module <m>` for each qualifying module by
+            # hand. Non-buildable modules (no current/interface.yaml)
+            # and zero-bump modules (AIDL hash unchanged) are skipped.
+            ACCEPT_ALL=1
             shift
             ;;
         --verbose|-v)
@@ -1808,6 +1818,20 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
     # 0.1.0.0/ dir actually gets created.
     if [[ "${is_initial}" -eq 1 ]]; then
         status="initial release"
+    fi
+
+    # Decide qualification for `--accept-all` BEFORE building the table
+    # row, so the Planned column reflects the auto-staged state.
+    _qualifies_for_staging=0
+    if [[ "${is_initial}" -eq 1 && "${status}" == "initial release" ]]; then
+        _qualifies_for_staging=1
+    elif [[ "${current_version}" != "${NEXT_VERSION}" && "${status}" == "ok" ]]; then
+        _qualifies_for_staging=1
+    fi
+    if [[ "${ACCEPT_ALL}" -eq 1 && "${_qualifies_for_staging}" -eq 1 \
+          && -z "${ACTUAL_PLAN[$comp]+x}" ]]; then
+        ACTUAL_PLAN[$comp]=""
+        plan_add "${comp}" "" >/dev/null
     fi
 
     _planned="no"
