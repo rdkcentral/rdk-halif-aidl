@@ -326,6 +326,40 @@ case "${1:-}" in
         fi
         # Fall through into the standard arg parser for any --flags.
         ;;
+    "")
+        # No subcommand — fall through to default plan/check view.
+        ;;
+    -*)
+        # Starts with a flag — fall through to standard arg parser.
+        ;;
+    *)
+        # Positional module name shorthand:
+        #   ./release.sh <module>            → check <module> (preview only)
+        #   ./release.sh <module> --apply    → stage <module> + apply (branch + tag)
+        # Anything else (--flag etc.) falls through unchanged.
+        _positional_module="$1"
+        if [[ ! -f "${REPO_ROOT}/${_positional_module}/metadata.yaml" ]]; then
+            die "Unknown subcommand or module: ${_positional_module}
+  Subcommands: module | drop | plan | check | clean | reset
+  Or a known module name (e.g. ./release.sh bootreason)."
+        fi
+        shift
+        # Scan remaining args — if --apply present, stage this module first
+        # so the release run actually has something in the plan.
+        _has_apply=0
+        for arg in "$@"; do
+            [[ "${arg}" == "--apply" ]] && _has_apply=1
+        done
+        if [[ "${_has_apply}" -eq 1 ]]; then
+            plan_add "${_positional_module}" ""
+            # Fall through; standard arg parser handles --apply.
+        else
+            # Treat as check <module>.
+            CHECK_MODE=1
+            DRY_RUN=1
+            CHECK_MODULE="${_positional_module}"
+        fi
+        ;;
 esac
 
 # Defaults for arg parser. Use ${VAR:-0} so the `check` subcommand
