@@ -1714,14 +1714,10 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
         is_initial=1
     fi
 
-    # Drift detection: metadata.yaml may have been bumped in-flight by
-    # PRs without producing a snapshot. Track it for a diagnostic block
-    # below — but proceed with the discovered version as the source of
-    # truth. The metadata.yaml will be re-written to NEXT_VERSION at
-    # apply, healing the drift.
-    if [[ -n "${metadata_version}" && "${metadata_version}" != "${current_version}" ]]; then
-        METADATA_DRIFT[$comp]="${metadata_version}|${current_version}"
-    fi
+    # (Drift detection happens after compute_next_versions below — we
+    # compare metadata.yaml against the computed NEXT_VERSION, not
+    # against tracked-latest. metadata.yaml is *supposed* to be pre-
+    # bumped to the upcoming version by PR authors; that's not drift.)
 
     bump="none"
     if [[ "${COMP_BREAKING[$comp]:-0}" -eq 1 ]]; then
@@ -1747,6 +1743,16 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
         NEXT_VERSION="${PLAN_COMPONENTS[$comp]}"
         bump="pinned"
         COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}plan: explicit --version ${NEXT_VERSION}"$'\n'
+    fi
+
+    # Drift detection: metadata.yaml is *supposed* to be pre-bumped by
+    # PR authors to the planned next version. If it matches the
+    # detector's NEXT_VERSION, no drift — that's the healthy state.
+    # Real drift = metadata.yaml says X but detector computes Y for the
+    # next release. Surface that case so the operator sees the
+    # mismatch before it's silently healed (overwritten) at apply time.
+    if [[ -n "${metadata_version}" && "${metadata_version}" != "${NEXT_VERSION}" ]]; then
+        METADATA_DRIFT[$comp]="${metadata_version}|${NEXT_VERSION}"
     fi
 
     status="ok"
@@ -1836,13 +1842,16 @@ done
 # automatically — this is informational, not a blocker.
 if [[ ${#METADATA_DRIFT[@]} -gt 0 ]]; then
     log ""
-    log "ℹ️  metadata.yaml drift detected (file says X, but no X/ snapshot tracked in git):"
-    log "    Source of truth is the highest tracked <module>/<version>/ in git."
-    log "    metadata.yaml will be rewritten to the new release version on --apply."
+    log "⚠️  metadata.yaml disagrees with the computed Next version for some modules:"
+    log "    metadata.yaml is normally pre-bumped by PR authors to the next planned"
+    log "    release; when it matches the detector's Next, no warning. The cases"
+    log "    below differ — either a PR set the wrong version, or PR labels imply"
+    log "    a different bump than was anticipated. metadata.yaml will be"
+    log "    overwritten to the Next column value when the module is released."
     log ""
     for comp in $(printf '%s\n' "${!METADATA_DRIFT[@]}" | sort); do
         v="${METADATA_DRIFT[$comp]}"
-        log "    ${comp}: metadata.yaml=${v%|*}   tracked-latest=${v#*|}"
+        log "    ${comp}: metadata.yaml=${v%|*}   detector Next=${v#*|}"
     done
 fi
 
