@@ -732,6 +732,14 @@ fi
 # `./release.sh plan` to view what's queued.
 
 plan_load
+# Merge anything `stage <module>` or positional `./release.sh <module>`
+# pushed onto STAGE_AND_WRITE_MODULES into PLAN_COMPONENTS so the per-
+# component loop processes them. Without this, those modules would
+# never reach the write loop — the loop iterates PLAN_COMPONENTS.
+for _m in "${STAGE_AND_WRITE_MODULES[@]:-}"; do
+    [[ -n "${_m}" ]] || continue
+    PLAN_COMPONENTS[$_m]=""
+done
 # Snapshot the ACTUAL plan-file contents now, BEFORE check mode or the
 # read-only fallback synthesise PLAN_COMPONENTS with every touched
 # module. The "Planned" table column queries ACTUAL_PLAN — a module
