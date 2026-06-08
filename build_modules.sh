@@ -145,6 +145,42 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$SCRIPT_DIR"
 
+# Suppress three classes of unfixable upstream noise so the verification
+# build output stays readable.
+#
+#   -Wno-write-strings  AOSP aidl-cpp emits
+#                       `static constexpr char* HASHVALUE = "notfrozen";`
+#                       in every generated I*.h. Should be `const char*`
+#                       — bug in build-tools/linux_binder_idl/android/aidl/
+#                       generate_cpp.cpp:904. 93 occurrences across the
+#                       cohort.
+#
+#   -Wno-attributes     binder_sdk headers (Vector.h, IBinder.h, …) carry
+#                       clang-only attributes — `__attribute__((no_sanitize
+#                       ("cfi")))` via UTILS_VECTOR_NO_CFI, and
+#                       `[[clang::lto_visibility_public]]`. GCC accepts
+#                       them syntactically but warns on every one.
+#                       Vendored binder_sdk code; not ours to patch.
+#
+#   -Wno-return-type    aidl-cpp's parcelable-union writeToParcel/getTag
+#                       dispatch generates an exhaustive switch followed
+#                       by `__assert2(...); }` — but GCC doesn't see
+#                       __assert2 as [[noreturn]], so it warns "control
+#                       reaches end of non-void function". Should be
+#                       `__builtin_unreachable()`. Bites every union
+#                       (PropertyValue, DrmMetricValue, …).
+#
+# Plumbed two ways:
+#   1. Export CXXFLAGS — picked up on first cmake configure of any
+#      build dir (and by build_binder.sh if it's already exported in
+#      this shell).
+#   2. Inject -DCMAKE_CXX_FLAGS_INIT into every cmake invocation below —
+#      defeats stale build/<dir>/CMakeCache.txt where the flags weren't
+#      captured on the original configure (env-CXXFLAGS only seeds the
+#      cache the FIRST time).
+WARNING_SUPPRESSION_FLAGS="-Wno-write-strings -Wno-attributes -Wno-return-type"
+export CXXFLAGS="${CXXFLAGS:-} ${WARNING_SUPPRESSION_FLAGS}"
+
 #######################################################################
 # Pre-flight checks (#571)
 #######################################################################
@@ -291,6 +327,101 @@ case "${1:-}" in
 
         echo "📋 Version manifest: $MANIFEST"
         echo "   ${#MANIFEST_PAIRS[@]} component(s), default version '${DEFAULT_VER}'"
+
+        # Topologically sort MANIFEST_PAIRS so each component's
+        # dependencies build (and install their headers/libs into
+        # out/target) before the component itself does. Without this,
+        # alphabetical iteration breaks any importer of `common`:
+        # audiodecoder builds before common, can't find common's
+        # PropertyValue.h etc. (#583). The dep graph comes from each
+        # component's <version>/interface.yaml `imports:` list (or
+        # <comp>/current/interface.yaml when version=current).
+        mapfile -t MANIFEST_PAIRS < <(python3 - "$ROOT_DIR" "${MANIFEST_PAIRS[@]}" <<'PYEOF'
+import os, re, sys
+root = sys.argv[1]
+pairs = [arg.split(None, 1) for arg in sys.argv[2:]]
+version_of = {comp: ver for comp, ver in pairs}
+
+def imports_of(comp, ver):
+    """Parse <comp>/<ver>/interface.yaml `imports:` -> [dep names]."""
+    iface = os.path.join(root, comp, ver, "interface.yaml")
+    if not os.path.isfile(iface):
+        return []
+    deps = []
+    in_block = False
+    with open(iface) as f:
+        for line in f:
+            if re.match(r'^  imports:\s*$', line):
+                in_block = True
+                continue
+            if in_block and re.match(r'^  [^ ]', line):
+                break  # next top-level key
+            if in_block:
+                m = re.match(r'^    - ([A-Za-z0-9_]+)(?:@.*)?\s*$', line)
+                if m:
+                    deps.append(m.group(1))
+    return deps
+
+# Build graph + Kahn's BFS toposort.
+graph = {comp: set(imports_of(comp, ver)) for comp, ver in pairs}
+# Restrict edges to deps that are actually in the manifest — external
+# refs (e.g. android.hardware.common.fmq) shouldn't block toposort.
+for comp, deps in graph.items():
+    graph[comp] = {d for d in deps if d in version_of}
+
+indegree = {comp: 0 for comp in graph}
+for comp, deps in graph.items():
+    for d in deps:
+        indegree[comp] += 1
+
+# Reverse map: dep -> [importers]
+importers = {comp: [] for comp in graph}
+for comp, deps in graph.items():
+    for d in deps:
+        importers[d].append(comp)
+
+ready = sorted(c for c, deg in indegree.items() if deg == 0)
+ordered = []
+while ready:
+    c = ready.pop(0)
+    ordered.append(c)
+    for imp in sorted(importers[c]):
+        indegree[imp] -= 1
+        if indegree[imp] == 0:
+            ready.append(imp)
+    ready.sort()
+
+if len(ordered) != len(graph):
+    sys.stderr.write("toposort: cycle detected; falling back to alphabetical\n")
+    ordered = sorted(graph.keys())
+
+for c in ordered:
+    print(f"{c} {version_of[c]}")
+PYEOF
+        )
+
+        # Echo the resolved build order so the operator can see what's
+        # being built when and why.
+        echo "   build order (toposort by imports): $(awk '{print $1}' <<< "$(printf '%s\n' "${MANIFEST_PAIRS[@]}")" | tr '\n' ' ')"
+        echo ""
+
+        # Pre-stage each component's include/ tree into
+        # out/build/include/<comp>/<ver>/include/ so downstream snapshot
+        # builds can satisfy their `${HALIF_INCLUDE_DIR}/<dep>/<ver>/include`
+        # references. The root CMakeLists copy step only handles
+        # */current/include (it pre-dates module-local snapshots), so for
+        # snapshot manifest builds we need this here. Pure copy, no build —
+        # snapshot include/ trees are committed pre-generated C++.
+        echo "   pre-staging snapshot headers into out/build/include/ ..."
+        INC_STAGE="$ROOT_DIR/out/build/include"
+        for pair in "${MANIFEST_PAIRS[@]}"; do
+            read -r comp ver <<< "$pair"
+            src_inc="$ROOT_DIR/$comp/$ver/include"
+            [[ -d "$src_inc" ]] || continue
+            dst_inc="$INC_STAGE/$comp/$ver/include"
+            mkdir -p "$dst_inc"
+            cp -RT "$src_inc" "$dst_inc"
+        done
         echo ""
 
         # Components pinned to 'current' build together in one pass; any
@@ -447,7 +578,8 @@ if [[ "$VERSION" != "current" ]]; then
     SNAPSHOT_DIR="$ROOT_DIR/$MODULE/$VERSION"
     if [[ ! -f "$SNAPSHOT_DIR/CMakeLists.txt" ]]; then
         echo "❌ ERROR: snapshot $MODULE/$VERSION not found at $SNAPSHOT_DIR."
-        echo "   Run './release.sh $MODULE' to produce it, or check the version number."
+        echo "   Snapshots are produced by the cohort-wide './release.sh' run;"
+        echo "   verify the version number is one that has been released."
         exit 1
     fi
 
@@ -468,6 +600,7 @@ if [[ "$VERSION" != "current" ]]; then
     # snapshot CMakeLists find the headers. Yocto stages a flat SDK so
     # BINDER_SDK_DIR alone resolves both.
     cmake -S "$SNAPSHOT_DIR" -B "$SNAPSHOT_BUILD_DIR" \
+        -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
         -DBINDER_SDK_DIR="$SDK_DIR" \
         -DBINDER_SDK_INCLUDE_DIR="$ROOT_DIR/out/build" \
         -DHALIF_LIB_DIR="$ROOT_DIR/out/target/lib/halif" \
@@ -512,6 +645,7 @@ echo "⚙️  Configuring CMake..."
 echo ""
 
 cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
+    -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
     -DINTERFACE_TARGET="$MODULE" \
     -DAIDL_SRC_VERSION="$VERSION" \
     -DBINDER_SDK_DIR="$SDK_DIR"

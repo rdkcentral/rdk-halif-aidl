@@ -20,7 +20,6 @@ components:
   audiosink: 0.1.0.0
   avbuffer: 0.1.0.0
   avclock: 0.1.0.0
-  bootreason: current
   common: 0.1.0.0
   compositeinput: 0.2.0.0
   deepsleep: 0.1.0.0

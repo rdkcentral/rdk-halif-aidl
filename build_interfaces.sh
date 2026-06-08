@@ -114,7 +114,7 @@ Workflow:
   2. Build:   ./build_interfaces.sh all
   3. Verify:  ./build_modules.sh all
   4. Deploy:  scp -r out/target/* device:/usr/
-  5. Release: ./release.sh <module>   # snapshot current/ -> <version>/
+  5. Release: ./release.sh             # cohort-wide release sweep (dry-run first)
 
 EOF
     exit 0
