@@ -283,17 +283,27 @@ case "${1:-}" in
     stage)
         shift
         _add_comp="${1:-}"
-        _add_ver=""
-        shift || true
-        while [[ $# -gt 0 ]]; do
-            case "$1" in
-                --version) [[ $# -ge 2 ]] || die "--version requires a value"
-                           _add_ver="$2"; shift 2 ;;
-                *) die "stage: unknown option $1" ;;
-            esac
-        done
-        plan_add "${_add_comp}" "${_add_ver}"
-        exit 0
+        # `./release.sh stage all` is the bulk path — sets ACCEPT_ALL
+        # and falls through to the main pipeline, which detects every
+        # qualifying module and stages them in one go. Skipped + zero-
+        # bump modules are excluded automatically.
+        if [[ "${_add_comp}" == "all" ]]; then
+            shift
+            ACCEPT_ALL=1
+            # No more positional args expected; any --flags fall through.
+        else
+            _add_ver=""
+            shift || true
+            while [[ $# -gt 0 ]]; do
+                case "$1" in
+                    --version) [[ $# -ge 2 ]] || die "--version requires a value"
+                               _add_ver="$2"; shift 2 ;;
+                    *) die "stage: unknown option $1" ;;
+                esac
+            done
+            plan_add "${_add_comp}" "${_add_ver}"
+            exit 0
+        fi
         ;;
     drop)
         shift
@@ -526,15 +536,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --no-build)
             NO_BUILD=1
-            shift
-            ;;
-        --accept-all)
-            # Auto-stage every detected module that has a real bump or
-            # is an initial release. Same effect as calling
-            # `./release.sh stage <m>` for each qualifying module by
-            # hand. Non-buildable modules (no current/interface.yaml)
-            # and zero-bump modules (AIDL hash unchanged) are skipped.
-            ACCEPT_ALL=1
             shift
             ;;
         --verbose|-v)
