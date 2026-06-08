@@ -24,6 +24,31 @@ phase() { echo "==> $*" >&2; }
 warn()  { echo "WARN: $*" >&2; }
 die()   { echo "ERROR: $*" >&2; exit 1; }
 
+# Verification-build runner. Defined at top-level so it's in scope for
+# both the stage path (DO_WRITES=1) and a pure --apply (DO_WRITES=0).
+run_verification_build() {
+    local label="$1"          # "current cohort" / "released cohort"
+    local log_file="$2"
+    shift 2
+    mkdir -p "$(dirname "${log_file}")"
+    phase "Verification build (${label}): ./build_modules.sh $*"
+    log ""
+    log "Verification build (${label}) — output streamed to ${log_file#${REPO_ROOT}/}"
+    if [[ "${VERBOSE:-0}" -eq 1 ]]; then
+        if ! (cd "${REPO_ROOT}" && ./build_modules.sh "$@" 2>&1 | tee "${log_file}"); then
+            die "Verification build (${label}) failed — see ${log_file}. Aborting release."
+        fi
+    else
+        if ! (cd "${REPO_ROOT}" && ./build_modules.sh "$@" > "${log_file}" 2>&1); then
+            warn "Verification build (${label}) failed. Last error lines from ${log_file}:"
+            grep -E '^(❌|ERROR|FAIL|error:)' "${log_file}" | head -10 | sed 's/^/    /' >&2 \
+                || tail -30 "${log_file}" | sed 's/^/    /' >&2
+            die "Verification build (${label}) failed. Aborting release."
+        fi
+    fi
+    log "  Verification build (${label}) OK"
+}
+
 # ----------------------------------------------------------------------------
 # Release plan helpers (#578)
 # ----------------------------------------------------------------------------
@@ -125,9 +150,13 @@ plan_clean() {
     done < <(find "${REPO_ROOT}/docs/releases" -maxdepth 1 -type f -name '[0-9]*.md' -print0 2>/dev/null)
     [[ ${removed_notes} -gt 0 ]] && log "  Removed ${removed_notes} untracked docs/releases/X.Y.Z.md file(s)."
 
-    # 4. Wipe the release plan.
-    # (No plan-file to wipe — release_plan.yaml retired in this refactor)
-        log "  Plan-file remnants cleared."
+    # 4. Wipe the gh API cache so a fresh run re-pulls PR labels in case
+    # any were changed since the last run. (commit→PR mappings are
+    # immutable, but labels can be re-applied.)
+    if [[ -f "${REPO_ROOT}/out/.gh-cache" ]]; then
+        rm -f "${REPO_ROOT}/out/.gh-cache"
+        log "  Cleared gh API cache (out/.gh-cache)."
+    fi
 
     log "✓ Release state reset. Worktree is back to the pre-release-attempt state."
 }
@@ -612,6 +641,40 @@ declare -A COMP_DOC=()
 declare -A COMP_REASONS=()
 declare -A COMP_FILES=()
 
+# Persistent gh-API cache: commit→PR and PR→labels lookups survive
+# across invocations. SHAs and PR numbers are immutable so the cache
+# never goes stale. Labels CAN change (re-labelled PRs), so we treat
+# label entries as soft cache and refresh ad hoc — but commit-to-PR
+# pairs are forever once recorded.
+#
+# File: out/.gh-cache  (gitignored — out/ already is)
+# Format, tab-delimited:
+#   c<TAB>SHA<TAB>PR_NUMBER          (PR_NUMBER may be empty)
+#   l<TAB>PR_NUMBER<TAB>LABEL1|LABEL2|LABEL3
+# Labels are joined with `|` (which can't appear in label names).
+GH_CACHE_FILE="${REPO_ROOT}/out/.gh-cache"
+
+gh_cache_load() {
+    [[ -f "${GH_CACHE_FILE}" ]] || return 0
+    local kind key value
+    while IFS=$'\t' read -r kind key value; do
+        case "${kind}" in
+            c)  COMMIT_PR_CACHE[$key]="${value}" ;;
+            l)  # Restore newlines from |-encoded labels
+                PR_LABEL_CACHE[$key]="${value//|/$'\n'}"
+                ;;
+        esac
+    done < "${GH_CACHE_FILE}"
+}
+
+gh_cache_append() {
+    local kind="$1" key="$2" value="$3"
+    mkdir -p "$(dirname "${GH_CACHE_FILE}")"
+    printf '%s\t%s\t%s\n' "${kind}" "${key}" "${value}" >> "${GH_CACHE_FILE}"
+}
+
+gh_cache_load
+
 get_pr_for_commit() {
     local sha="$1"
     local subject="$2"
@@ -634,6 +697,7 @@ get_pr_for_commit() {
     fi
 
     COMMIT_PR_CACHE[$sha]="${pr}"
+    gh_cache_append "c" "${sha}" "${pr}"
     printf '%s\n' "${pr}"
 }
 
@@ -650,6 +714,8 @@ get_pr_labels() {
     fi
 
     PR_LABEL_CACHE[$pr]="${labels}"
+    # Encode newlines as | for disk storage.
+    gh_cache_append "l" "${pr}" "${labels//$'\n'/|}"
     printf '%s\n' "${labels}"
 }
 
@@ -2151,30 +2217,6 @@ if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
     #       are reachable, intact, and produce valid build artefacts —
     #       i.e. the manifest update and the snapshots agree.
     # Either failure aborts the release before the branch/tag is created.
-    run_verification_build() {
-        local label="$1"          # "current cohort" / "released cohort"
-        local log_file="$2"
-        shift 2
-        # Remaining args are the build_modules.sh args
-        mkdir -p "$(dirname "${log_file}")"
-        phase "Verification build (${label}): ./build_modules.sh $*"
-        log ""
-        log "Verification build (${label}) — output streamed to ${log_file#${REPO_ROOT}/}"
-        if [[ "${VERBOSE}" -eq 1 ]]; then
-            if ! (cd "${REPO_ROOT}" && ./build_modules.sh "$@" 2>&1 | tee "${log_file}"); then
-                die "Verification build (${label}) failed — see ${log_file}. Aborting release."
-            fi
-        else
-            if ! (cd "${REPO_ROOT}" && ./build_modules.sh "$@" > "${log_file}" 2>&1); then
-                warn "Verification build (${label}) failed. Last error lines from ${log_file}:"
-                grep -E '^(❌|ERROR|FAIL|error:)' "${log_file}" | head -10 | sed 's/^/    /' >&2 \
-                    || tail -30 "${log_file}" | sed 's/^/    /' >&2
-                die "Verification build (${label}) failed. Aborting release."
-            fi
-        fi
-        log "  Verification build (${label}) OK"
-    }
-
     # After all per-module writes land (single `stage <m>` or `stage all`),
     # run the manifest verification build — compiles every component at
     # its versions_released.yaml pin, so the operator sees IMMEDIATELY if
@@ -2226,14 +2268,24 @@ for _row in "${TABLE_ROWS[@]}"; do
     log "${_row}"
 done
 
+# Count modules by Planned state for the summary line below.
+_planned_count=${#ACTUAL_PLAN[@]}
+_qualifying_count=0
+for _comp in "${BUMPED_COMPONENTS[@]}"; do
+    _qualifying_count=$((_qualifying_count + 1))
+done
+_total_touched=${#COMP_TOUCHED[@]}
+
 log ""
 if [[ "${DO_BRANCH}" -eq 1 ]]; then
-    log "Release ${RELEASE_VERSION} applied: branch + tag created."
+    log "Release ${RELEASE_VERSION} applied: ${_planned_count} module(s) — branch + tag created."
 elif [[ "${CHECK_MODE}" -eq 1 ]]; then
     log "Stage modules with: ./release.sh <module>     Apply with: ./release.sh --apply --release-version ${RELEASE_VERSION}"
-elif [[ "${changed_count}" -eq 0 ]]; then
-    log "Nothing staged."
+elif [[ "${_planned_count}" -eq 0 ]]; then
+    log "Plan: 0 / ${_qualifying_count} qualifying module(s) staged (of ${_total_touched} touched)."
+    log "Stage with: ./release.sh stage <module>   or   ./release.sh stage all"
 else
+    log "Plan: ${_planned_count} / ${_qualifying_count} qualifying module(s) staged (of ${_total_touched} touched)."
     if [[ "${error_count}" -gt 0 ]]; then
         log "⚠️  ${error_count} module(s) need manual action above before applying."
     fi
