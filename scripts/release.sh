@@ -1620,8 +1620,8 @@ bump_label() {
 # diagnostic blocks) so the final-decision table is the last thing
 # the operator sees.
 TABLE_ROWS=()
-TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-10s %-8s %s" "Module" "Current" "Next" "Bump" "Planned" "Status")")
-TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-10s %-8s %s" "------" "-------" "----" "----" "-------" "------")")
+TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-16s %-8s %s" "Module" "Current" "Next" "Bump" "Planned" "Status")")
+TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-16s %-8s %s" "------" "-------" "----" "----" "-------" "------")")
 
 changed_count=0
 error_count=0
@@ -1706,7 +1706,7 @@ declare -A SKIPPED_NOT_BUILDABLE=()
 for comp in "${TOUCHED_COMPONENTS[@]}"; do
     meta="${REPO_ROOT}/${comp}/metadata.yaml"
     if [[ ! -f "${meta}" ]]; then
-        TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-10s %-8s %s" "${comp}" "-" "-" "-" "no" "metadata missing")")
+        TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-16s %-8s %s" "${comp}" "-" "-" "-" "no" "metadata missing")")
         error_count=$((error_count + 1))
         continue
     fi
@@ -1725,7 +1725,7 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
                 gsub(/^"|"$/, "");
                 print; exit
             }' "${meta}" 2>/dev/null)"
-        TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-10s %-8s %s" "${comp}" "-" "-" "skipped" "no" "not buildable")")
+        TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-16s %-8s %s" "${comp}" "-" "-" "skipped" "no" "not buildable")")
         SKIPPED_NOT_BUILDABLE[$comp]="${reason:-no current/interface.yaml}"
         continue
     fi
@@ -1837,9 +1837,18 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
     _planned="no"
     [[ -n "${ACTUAL_PLAN[$comp]+x}" ]] && _planned="yes"
 
-    TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-10s %-8s %s" \
+    # Initial release IS the bump — surface it in the Bump column rather
+    # than leaving Bump="-" with Status="initial release" (redundant).
+    _bump_display="$(bump_label "${bump}")"
+    _status_display="${status}"
+    if [[ "${is_initial}" -eq 1 && "${status}" == "initial release" ]]; then
+        _bump_display="initial release"
+        _status_display="ok"
+    fi
+
+    TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-16s %-8s %s" \
         "${comp}" "${current_version}" "${NEXT_VERSION}" \
-        "$(bump_label "${bump}")" "${_planned}" "${status}")")
+        "${_bump_display}" "${_planned}" "${_status_display}")")
 
     # Verbose detail: enabled only by --verbose. Keeps the default view a
     # compact one-line-per-module table; `--verbose` shows AIDL hash status,
