@@ -369,20 +369,22 @@ Release run (no subcommand):
   --version pin from the plan overrides that.
 
 Modes:
-  default       Stage release locally — regenerate bindings, create
+  default       PLAN view (read-only). Reads release_plan.yaml, runs the
+                detector for the staged modules, prints the per-module
+                Current → Next bump table plus the change reasoning.
+                Writes NOTHING. The output ends with the exact --apply
+                command to run when the plan is right.
+
+  --apply       Execute the staged plan: regenerate bindings, create
                 <module>/<version>/ snapshots, update metadata.yaml,
                 versions_released.yaml, mkdocs.yml, generate
-                docs/releases/X.Y.Z.md skeleton, run a full build to
-                verify, and `git add` the lot. Stops before creating
-                any release branch or tag, so you can review with
-                `git diff --cached` / `git status` before --apply.
+                docs/releases/X.Y.Z.md skeleton, prepend the CHANGELOG.md
+                section, run both verification builds, then create the
+                release/X.Y.Z branch + X.Y.Z tag. Operator pushes
+                manually after review.
 
-  --apply       Above, plus create release/X.Y.Z branch, commit, and
-                tag the repo X.Y.Z. The branch is created locally; the
-                operator pushes manually.
-
-  --dry-run     Preview what default would do without writing anything.
-                Useful for sanity-checking before a release run.
+  --dry-run     Alias of the default — same read-only view. Kept for
+                operators who reach for the explicit flag out of habit.
 
 Options:
   --since <ref>          Base reference to diff from (default: nearest
@@ -504,16 +506,16 @@ done
 
 [[ "${DRY_RUN}" -eq 1 && "${APPLY}" -eq 1 ]] && die "--dry-run and --apply are mutually exclusive"
 
-# Three modes consumed by the rest of the script:
-#   DO_WRITES   1 -> regen/snapshot/metadata/manifests/docs/build run for real
+# Two modes consumed by the rest of the script:
+#   DO_WRITES   1 -> regen/snapshot/metadata/manifests/docs/build for real
 #   DO_BRANCH   1 -> additionally create release branch + tag + commit
-# Default: DO_WRITES=1, DO_BRANCH=0. --apply turns DO_BRANCH on. --dry-run
-# turns both off.
-DO_WRITES=1
+# Default: BOTH 0 — bare `./release.sh` is a read-only plan-status view.
+# --apply turns BOTH on (writes + branch + tag). --dry-run is now the
+# same as default (kept for explicitness).
+DO_WRITES=0
 DO_BRANCH=0
-if [[ "${DRY_RUN}" -eq 1 ]]; then
-    DO_WRITES=0
-elif [[ "${APPLY}" -eq 1 ]]; then
+if [[ "${APPLY}" -eq 1 ]]; then
+    DO_WRITES=1
     DO_BRANCH=1
 fi
 
@@ -775,24 +777,29 @@ if [[ "${CHECK_MODE}" -eq 1 ]]; then
         PLAN_COMPONENTS[$comp]=""
     done
 elif [[ ${#PLAN_COMPONENTS[@]} -eq 0 ]]; then
+    # No plan and no explicit subcommand — auto-fall back to a check view
+    # showing ALL detected changes. The operator can then stage what
+    # they want via `./release.sh module <name>`. Only an --apply attempt
+    # against an empty plan is a hard error.
+    if [[ "${DO_BRANCH}" -eq 1 ]]; then
+        log ""
+        log "❌ --apply requested but release_plan.yaml is empty — nothing to release."
+        log ""
+        log "  Stage modules first:"
+        log "    ./release.sh module <module>"
+        log "  Then apply:"
+        log "    ./release.sh --apply --release-version ${RELEASE_VERSION}"
+        exit 1
+    fi
     log ""
-    log "❌ release_plan.yaml is empty — nothing flagged for release."
+    log "ℹ️  release_plan.yaml is empty — showing CHECK view (all detected changes)."
+    log "    Stage with: ./release.sh module <module>"
     log ""
-    log "  Preview what would change without staging:"
-    log "    ./release.sh check                              # all touched modules"
-    log "    ./release.sh check <module>                     # one specific module"
-    log ""
-    log "  Stage modules for the release:"
-    log "    ./release.sh module <module>                    # auto-bump from labels"
-    log "    ./release.sh module <module> --version X.Y.Z.W  # explicit version pin"
-    log ""
-    log "  Detector found changes in these components since ${SINCE_REF}:"
-    for c in $(printf '%s\n' "${!COMP_TOUCHED[@]}" | sort); do
-        log "    ${c}"
+    CHECK_MODE=1
+    PLAN_COMPONENTS=()
+    for comp in "${!COMP_TOUCHED[@]}"; do
+        PLAN_COMPONENTS[$comp]=""
     done
-    log ""
-    log "  View plan: ./release.sh plan"
-    exit 1
 fi
 
 # Apply the gate: drop any TOUCHED component not in the plan, and inject
@@ -1501,9 +1508,10 @@ audit_version_refs() {
     done
 }
 
-MODE="STAGE"  # default: write to working tree, leave staged for review
-[[ "${APPLY}"   -eq 1 ]] && MODE="APPLY (stage + release branch + tag)"
-[[ "${DRY_RUN}" -eq 1 ]] && MODE="DRY-RUN (preview only)"
+MODE="PLAN (read-only — what the staged plan would do)"
+[[ "${APPLY}"   -eq 1 ]] && MODE="APPLY (writes + release branch + tag)"
+[[ "${DRY_RUN}" -eq 1 ]] && MODE="DRY-RUN (preview only — same as bare ./release.sh)"
+[[ "${CHECK_MODE}" -eq 1 ]] && MODE="CHECK (detected-changes preview, bypasses plan)"
 
 phase "Computing per-component version bumps..."
 log ""
@@ -1547,6 +1555,48 @@ discover_current_version() {
         | grep -E '^[0-9]+(\.[0-9]+){2,3}$' \
         | sort -V \
         | tail -1 || true
+}
+
+# Aggregate SHA256 of every .aidl file under a directory tree, sorted by
+# path. Two trees with identical AIDL contents produce the same hash;
+# any add/remove/modify changes the hash. Returns empty string if the
+# directory doesn't exist or has no .aidl files.
+compute_aidl_hash_for_dir() {
+    local dir="$1"
+    [[ -d "${dir}" ]] || { echo ""; return 0; }
+    local h
+    h="$(find "${dir}" -name '*.aidl' -type f 2>/dev/null \
+        | sort \
+        | while IFS= read -r f; do
+            printf '%s:%s\n' "${f#${dir}/}" "$(sha256sum "${f}" 2>/dev/null | awk '{print $1}')"
+          done \
+        | sha256sum 2>/dev/null | awk '{print $1}')"
+    [[ "${h}" == "$(echo -n "" | sha256sum | awk '{print $1}')" ]] && h=""
+    echo "${h}"
+}
+
+# Compare a module's current/ AIDL hash against the highest tracked
+# snapshot. Echoes one of: "unchanged" / "CHANGED" / "new" / "missing".
+aidl_hash_status() {
+    local comp="$1"
+    local latest
+    latest="$(discover_current_version "${comp}")"
+    if [[ -z "${latest}" ]]; then
+        echo "new"      # never released; no baseline to compare against
+        return 0
+    fi
+    local cur_hash snap_hash
+    cur_hash="$(compute_aidl_hash_for_dir "${REPO_ROOT}/${comp}/current")"
+    snap_hash="$(compute_aidl_hash_for_dir "${REPO_ROOT}/${comp}/${latest}")"
+    if [[ -z "${cur_hash}" || -z "${snap_hash}" ]]; then
+        echo "missing"  # one side has no .aidl files
+        return 0
+    fi
+    if [[ "${cur_hash}" == "${snap_hash}" ]]; then
+        echo "unchanged"
+    else
+        echo "CHANGED"
+    fi
 }
 
 mapfile -t TOUCHED_COMPONENTS < <(printf '%s\n' "${!COMP_TOUCHED[@]}" | sort)
@@ -1645,9 +1695,25 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
     printf "%-28s %-12s %-12s %-10s %s\n" "${comp}" "${current_version}" "${NEXT_VERSION}" "${bump}" "${status}"
 
     # Verbose detail: enabled by --verbose, or implicitly by `check` mode
-    # so the operator has enough info to decide whether to stage the
-    # module via `./release.sh module ${comp}`.
-    if [[ "${VERBOSE}" -eq 1 || "${CHECK_MODE}" -eq 1 ]]; then
+    # and the default plan view so the operator has enough info to decide.
+    if [[ "${VERBOSE}" -eq 1 || "${CHECK_MODE}" -eq 1 || "${DO_WRITES}" -eq 0 ]]; then
+        # AIDL hash status — did the .aidl contents actually change since
+        # the latest released snapshot? Catches "silent drift": current/
+        # changed but no PR label was applied, so the auto-bump came out
+        # as `none` despite the interface having moved.
+        _hash_status="$(aidl_hash_status "${comp}")"
+        case "${_hash_status}" in
+            unchanged) echo "    AIDL hash: unchanged since ${current_version}" ;;
+            CHANGED)
+                echo "    AIDL hash: CHANGED since ${current_version} — interface contents differ"
+                if [[ "${bump}" == "none" && "${is_initial}" -ne 1 ]]; then
+                    echo "             ⚠️  No PR label triggered a bump but AIDL changed —"
+                    echo "                operator should review whether a bump is needed."
+                fi
+                ;;
+            new)       echo "    AIDL hash: (new module — no prior snapshot to compare)" ;;
+            missing)   echo "    AIDL hash: (n/a — placeholder component, no .aidl files)" ;;
+        esac
         # Reasons (commit/PR → bump-level derivation, plus subsume/plan).
         if [[ -n "${COMP_REASONS[$comp]:-}" ]]; then
             echo "    Why this bump:"
@@ -2001,34 +2067,36 @@ if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
 fi
 
 log ""
-if [[ "${DRY_RUN}" -eq 1 ]]; then
-    log "Dry-run complete — would bump ${changed_count} component metadata file(s) and run the pipeline above."
-    if [[ "${error_count}" -gt 0 ]]; then
-        log ""
-        log "⚠️  ${error_count} component(s) need manual action above before running for real."
-    fi
-elif [[ "${DO_BRANCH}" -eq 1 ]]; then
+if [[ "${DO_BRANCH}" -eq 1 ]]; then
     log "Release ${RELEASE_VERSION} applied: ${changed_count} component(s) bumped, branch + tag created."
     if [[ "${changed_count}" -eq 0 ]]; then
         log "No components changed — no release branch, no tag, no doc edits."
     fi
 else
-    log "Release ${RELEASE_VERSION} staged: ${changed_count} component(s) bumped, files written and git-added."
-    if [[ "${changed_count}" -eq 0 ]]; then
-        log "No components changed — nothing to stage."
+    # Default (plan-status) view OR --dry-run OR check mode.
+    if [[ "${CHECK_MODE}" -eq 1 ]]; then
+        log "Check complete — ${changed_count} module(s) would bump if all staged."
+        log ""
+        log "Stage the ones you want released:"
+        log "    ./release.sh module <module> [--version X.Y.Z.W]"
+        log "Then review the plan + apply:"
+        log "    ./release.sh                                  # confirm plan"
+        log "    ./release.sh --apply --release-version ${RELEASE_VERSION}"
+    elif [[ "${changed_count}" -eq 0 ]]; then
+        log "Nothing planned would bump."
     else
+        log "Plan summary: ${changed_count} module(s) would release at version ${RELEASE_VERSION}."
+        if [[ "${error_count}" -gt 0 ]]; then
+            log ""
+            log "⚠️  ${error_count} module(s) need manual action above before applying."
+        fi
         log ""
-        log "Review the staged changes:"
-        log "    git diff --cached"
-        log "    git status"
+        log "Apply for real (writes metadata.yaml, snapshots, manifests, builds,"
+        log "creates release/${RELEASE_VERSION} branch + ${RELEASE_VERSION} tag):"
+        log "    ./release.sh --apply --release-version ${RELEASE_VERSION}"
         log ""
-        log "When happy, apply (creates release/${RELEASE_VERSION} branch + ${RELEASE_VERSION} tag):"
-        log "    ./scripts/release.sh --apply --release-version ${RELEASE_VERSION}"
-        log ""
-        log "Or back out everything:"
-        log "    git reset HEAD ."
-        log "    git checkout -- ."
-        log "    git clean -fd"
+        log "Or wipe the plan and start over:"
+        log "    ./release.sh clean"
     fi
 fi
 
