@@ -214,6 +214,11 @@ case "${1:-}" in
         if [[ "${_add_comp}" == "all" ]]; then
             shift
             ACCEPT_ALL=1
+            # `stage all` must ALSO run the writes — ACCEPT_ALL alone only
+            # flips the in-memory Planned flag during the per-component
+            # loop; without STAGE_AND_WRITE=1, DO_WRITES stays 0 and the
+            # snapshot/metadata pipeline never fires.
+            STAGE_AND_WRITE=1
             # No more positional args expected; any --flags fall through.
         else
             _add_ver=""
