@@ -333,40 +333,43 @@ case "${1:-}" in
         # Starts with a flag — fall through to standard arg parser.
         ;;
     *)
-        # Positional module name shorthand:
-        #   ./release.sh <module>            → check <module> (preview only)
-        #   ./release.sh <module> --apply    → stage <module> + apply (branch + tag)
-        # Anything else (--flag etc.) falls through unchanged.
-        _positional_module="$1"
-        if [[ ! -f "${REPO_ROOT}/${_positional_module}/metadata.yaml" ]]; then
-            die "Unknown subcommand or module: ${_positional_module}
+        # Positional module name(s): one or more module names move from
+        # "not planned" to "planned" AND run the per-module write pipeline
+        # (steps 1-5: regen, snapshot, metadata, versions_released.yaml,
+        # mkdocs.yml, docs/releases/<X>.md skeleton, CHANGELOG.md section).
+        # No branch / no tag — those are deferred to a final `--apply`.
+        #
+        #   ./release.sh bootreason             stage + write bootreason
+        #   ./release.sh bootreason common      stage + write both
+        #
+        # Anything that looks like a flag (-prefixed) falls through.
+        STAGE_AND_WRITE_MODULES=()
+        while [[ $# -gt 0 && "${1:0:1}" != "-" ]]; do
+            _m="$1"
+            if [[ ! -f "${REPO_ROOT}/${_m}/metadata.yaml" ]]; then
+                die "Unknown subcommand or module: ${_m}
   Subcommands: module | drop | plan | check | clean | reset
   Or a known module name (e.g. ./release.sh bootreason)."
-        fi
-        shift
-        # Scan remaining args — if --apply present, stage this module first
-        # so the release run actually has something in the plan.
-        _has_apply=0
-        for arg in "$@"; do
-            [[ "${arg}" == "--apply" ]] && _has_apply=1
+            fi
+            STAGE_AND_WRITE_MODULES+=("${_m}")
+            shift
         done
-        if [[ "${_has_apply}" -eq 1 ]]; then
-            plan_add "${_positional_module}" ""
-            # Fall through; standard arg parser handles --apply.
-        else
-            # Treat as check <module>.
-            CHECK_MODE=1
-            DRY_RUN=1
-            CHECK_MODULE="${_positional_module}"
-        fi
+        # Mark intent for the main pipeline: stage each module via plan_add
+        # AND run writes for them (DO_WRITES=1). No branch (DO_BRANCH=0).
+        for _m in "${STAGE_AND_WRITE_MODULES[@]}"; do
+            plan_add "${_m}" ""
+        done
+        # Fall through into the arg parser + main pipeline. DO_WRITES is
+        # forced on; --apply will turn DO_BRANCH on too.
+        STAGE_AND_WRITE=1
         ;;
 esac
 
-# Defaults for arg parser. Use ${VAR:-0} so the `check` subcommand
-# fall-through above can pre-set CHECK_MODE / DRY_RUN without us
-# stomping them here.
+# Defaults for arg parser. Use ${VAR:-0} so the subcommand fall-throughs
+# above can pre-set flags without us stomping them here.
 CHECK_MODE="${CHECK_MODE:-0}"
 CHECK_MODULE="${CHECK_MODULE:-}"
+STAGE_AND_WRITE="${STAGE_AND_WRITE:-0}"
 
 APPLY="${APPLY:-0}"
 DRY_RUN="${DRY_RUN:-0}"
@@ -541,15 +544,20 @@ done
 [[ "${DRY_RUN}" -eq 1 && "${APPLY}" -eq 1 ]] && die "--dry-run and --apply are mutually exclusive"
 
 # Two modes consumed by the rest of the script:
-#   DO_WRITES   1 -> regen/snapshot/metadata/manifests/docs/build for real
-#   DO_BRANCH   1 -> additionally create release branch + tag + commit
-# Default: BOTH 0 — bare `./release.sh` is a read-only plan-status view.
-# --apply turns BOTH on (writes + branch + tag). --dry-run is now the
-# same as default (kept for explicitness).
+#   DO_WRITES   1 -> regen/snapshot/metadata/manifests/docs writes (per-module)
+#   DO_BRANCH   1 -> create release branch + tag + commit (once per release)
+# Mapping:
+#   bare ./release.sh              read-only plan/check view (DO_WRITES=0, DO_BRANCH=0)
+#   ./release.sh <module>...       writes for staged modules (DO_WRITES=1, DO_BRANCH=0)
+#   ./release.sh --apply           branch + commit + tag only (DO_WRITES=0, DO_BRANCH=1).
+#                                  Writes are expected to be done already by
+#                                  prior `./release.sh <module>` invocations.
 DO_WRITES=0
 DO_BRANCH=0
-if [[ "${APPLY}" -eq 1 ]]; then
+if [[ "${STAGE_AND_WRITE}" -eq 1 ]]; then
     DO_WRITES=1
+fi
+if [[ "${APPLY}" -eq 1 ]]; then
     DO_BRANCH=1
 fi
 
@@ -782,6 +790,25 @@ fi
 # `./release.sh plan` to view what's queued.
 
 plan_load
+# Snapshot the ACTUAL plan-file contents now, BEFORE check mode or the
+# read-only fallback synthesise PLAN_COMPONENTS with every touched
+# module. The "Planned" table column queries ACTUAL_PLAN — a module
+# shows `yes` only if it was really staged via `./release.sh <m>`.
+declare -A ACTUAL_PLAN=()
+for _c in "${!PLAN_COMPONENTS[@]}"; do
+    ACTUAL_PLAN[$_c]="${PLAN_COMPONENTS[$_c]}"
+done
+
+# Pure read-only view (no writes, no branch, no check subcommand): show
+# the global picture — every touched module with the Planned column
+# flagging what's staged. The operator uses this to decide what to add
+# next via `./release.sh <module>`.
+if [[ "${DO_WRITES}" -eq 0 && "${DO_BRANCH}" -eq 0 && "${CHECK_MODE}" -eq 0 ]]; then
+    PLAN_COMPONENTS=()
+    for comp in "${!COMP_TOUCHED[@]}"; do
+        PLAN_COMPONENTS[$comp]=""
+    done
+fi
 
 # `check` mode bypasses the plan: surfaces all touched components (or just
 # one if a module name was passed) so the operator can preview what would
@@ -1567,8 +1594,20 @@ else
 fi
 log ""
 
-printf "%-28s %-12s %-12s %-10s %s\n" "Component" "Current" "Next" "Bump" "Status"
-printf "%-28s %-12s %-12s %-10s %s\n" "---------" "-------" "----" "----" "------"
+# Map internal bump tokens to operator-readable change classes.
+bump_label() {
+    case "$1" in
+        generation) echo "Breaking" ;;
+        minor)      echo "Major" ;;
+        patch)      echo "Minor" ;;
+        pinned)     echo "Pinned" ;;
+        none)       echo "-" ;;
+        *)          echo "$1" ;;
+    esac
+}
+
+printf "%-24s %-10s %-10s %-10s %-8s %s\n" "Module" "Current" "Next" "Bump" "Planned" "Status"
+printf "%-24s %-10s %-10s %-10s %-8s %s\n" "------" "-------" "----" "----" "-------" "------"
 
 changed_count=0
 error_count=0
@@ -1638,7 +1677,7 @@ declare -A SKIPPED_NOT_BUILDABLE=()
 for comp in "${TOUCHED_COMPONENTS[@]}"; do
     meta="${REPO_ROOT}/${comp}/metadata.yaml"
     if [[ ! -f "${meta}" ]]; then
-        printf "%-28s %-12s %-12s %-10s %s\n" "${comp}" "-" "-" "-" "metadata missing"
+        printf "%-24s %-10s %-10s %-10s %-8s %s\n" "${comp}" "-" "-" "-" "no" "metadata missing"
         error_count=$((error_count + 1))
         continue
     fi
@@ -1657,7 +1696,7 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
                 gsub(/^"|"$/, "");
                 print; exit
             }' "${meta}" 2>/dev/null)"
-        printf "%-28s %-12s %-12s %-10s %s\n" "${comp}" "-" "-" "skipped" "not buildable (no current/interface.yaml)"
+        printf "%-24s %-10s %-10s %-10s %-8s %s\n" "${comp}" "-" "-" "skipped" "no" "not buildable"
         SKIPPED_NOT_BUILDABLE[$comp]="${reason:-no current/interface.yaml}"
         continue
     fi
@@ -1726,11 +1765,17 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
         status="initial release"
     fi
 
-    printf "%-28s %-12s %-12s %-10s %s\n" "${comp}" "${current_version}" "${NEXT_VERSION}" "${bump}" "${status}"
+    _planned="no"
+    [[ -n "${ACTUAL_PLAN[$comp]+x}" ]] && _planned="yes"
 
-    # Verbose detail: enabled by --verbose, or implicitly by `check` mode
-    # and the default plan view so the operator has enough info to decide.
-    if [[ "${VERBOSE}" -eq 1 || "${CHECK_MODE}" -eq 1 || "${DO_WRITES}" -eq 0 ]]; then
+    printf "%-24s %-10s %-10s %-10s %-8s %s\n" \
+        "${comp}" "${current_version}" "${NEXT_VERSION}" \
+        "$(bump_label "${bump}")" "${_planned}" "${status}"
+
+    # Verbose detail: enabled only by --verbose. Keeps the default view a
+    # compact one-line-per-module table; `--verbose` shows AIDL hash status,
+    # the per-commit/PR derivation, and the file list.
+    if [[ "${VERBOSE}" -eq 1 ]]; then
         # AIDL hash status — did the .aidl contents actually change since
         # the latest released snapshot? Catches "silent drift": current/
         # changed but no PR label was applied, so the auto-bump came out
@@ -2092,12 +2137,33 @@ if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
             manifest
     fi
 
-    # 8. Release branch + commit + tag (apply only).
-    if [[ "${DO_BRANCH}" -eq 1 ]]; then
-        phase "Creating release branch and tag ${RELEASE_VERSION}..."
-        log ""
-        create_release_branch_and_tag "${RELEASE_VERSION}"
+fi
+
+# Branch + commit + tag — runs whenever DO_BRANCH is set, INDEPENDENTLY of
+# DO_WRITES. With the new model, writes happen incrementally per-module
+# (./release.sh <module>), and --apply just wraps the staged work into a
+# release branch + tag. If writes haven't been done and --apply is used,
+# the verification builds still fire (catching the "tried to apply with
+# nothing staged" case).
+if [[ "${DO_BRANCH}" -eq 1 ]]; then
+    if [[ "${changed_count}" -eq 0 ]]; then
+        die "--apply requested but nothing is staged for release. Use ./release.sh <module> first."
     fi
+    # Verification builds: catch broken cohort before tagging. Already ran
+    # if DO_WRITES was on in this invocation; otherwise run them now.
+    if [[ "${DO_WRITES}" -ne 1 && "${NO_BUILD}" -ne 1 ]]; then
+        run_verification_build \
+            "current cohort" \
+            "${REPO_ROOT}/out/release-build-current.log" \
+            all
+        run_verification_build \
+            "released cohort via versions_released.yaml" \
+            "${REPO_ROOT}/out/release-build-released.log" \
+            manifest
+    fi
+    phase "Creating release branch and tag ${RELEASE_VERSION}..."
+    log ""
+    create_release_branch_and_tag "${RELEASE_VERSION}"
 fi
 
 log ""
