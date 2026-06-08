@@ -1606,8 +1606,12 @@ bump_label() {
     esac
 }
 
-printf "%-24s %-10s %-10s %-10s %-8s %s\n" "Module" "Current" "Next" "Bump" "Planned" "Status"
-printf "%-24s %-10s %-10s %-10s %-8s %s\n" "------" "-------" "----" "----" "-------" "------"
+# Buffer table rows — printed at the END of the report (after all
+# diagnostic blocks) so the final-decision table is the last thing
+# the operator sees.
+TABLE_ROWS=()
+TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-10s %-8s %s" "Module" "Current" "Next" "Bump" "Planned" "Status")")
+TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-10s %-8s %s" "------" "-------" "----" "----" "-------" "------")")
 
 changed_count=0
 error_count=0
@@ -1677,7 +1681,7 @@ declare -A SKIPPED_NOT_BUILDABLE=()
 for comp in "${TOUCHED_COMPONENTS[@]}"; do
     meta="${REPO_ROOT}/${comp}/metadata.yaml"
     if [[ ! -f "${meta}" ]]; then
-        printf "%-24s %-10s %-10s %-10s %-8s %s\n" "${comp}" "-" "-" "-" "no" "metadata missing"
+        TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-10s %-8s %s" "${comp}" "-" "-" "-" "no" "metadata missing")")
         error_count=$((error_count + 1))
         continue
     fi
@@ -1696,7 +1700,7 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
                 gsub(/^"|"$/, "");
                 print; exit
             }' "${meta}" 2>/dev/null)"
-        printf "%-24s %-10s %-10s %-10s %-8s %s\n" "${comp}" "-" "-" "skipped" "no" "not buildable"
+        TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-10s %-8s %s" "${comp}" "-" "-" "skipped" "no" "not buildable")")
         SKIPPED_NOT_BUILDABLE[$comp]="${reason:-no current/interface.yaml}"
         continue
     fi
@@ -1733,6 +1737,22 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
         # release. Suppress any label-driven bump so we don't ship a
         # brand-new component already at 0.2.0.0.
         bump="none"
+    fi
+
+    # AIDL-hash gate: the cohort versioning is about INTERFACE STABILITY.
+    # If the .aidl files in current/ hash byte-identical to the latest
+    # tracked snapshot, the binary interface hasn't moved — no bump is
+    # warranted, regardless of what PR labels said. Catches the case
+    # where a Breaking-Change PR (e.g. a build-infrastructure change like
+    # #567 gitignoring */current/include) touched non-interface files
+    # under a component, falsely flagging it Breaking.
+    _hash_for_bump="$(aidl_hash_status "${comp}")"
+    if [[ "${_hash_for_bump}" == "unchanged" && "${bump}" != "none" && "${is_initial}" -ne 1 ]]; then
+        COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}gate: AIDL hash unchanged — interface byte-identical to ${current_version}, label-derived bump (${bump}) suppressed"$'\n'
+        bump="none"
+        # Drop the label flags so the transitive subsume pass doesn't
+        # use them to re-promote downstream importers.
+        unset 'COMP_BREAKING[$comp]' 'COMP_NON_DOC[$comp]' 'COMP_DOC[$comp]' 2>/dev/null || true
     fi
 
     compute_next_versions "${current_version}" "${bump}"
@@ -1774,9 +1794,9 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
     _planned="no"
     [[ -n "${ACTUAL_PLAN[$comp]+x}" ]] && _planned="yes"
 
-    printf "%-24s %-10s %-10s %-10s %-8s %s\n" \
+    TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-10s %-8s %s" \
         "${comp}" "${current_version}" "${NEXT_VERSION}" \
-        "$(bump_label "${bump}")" "${_planned}" "${status}"
+        "$(bump_label "${bump}")" "${_planned}" "${status}")")
 
     # Verbose detail: enabled only by --verbose. Keeps the default view a
     # compact one-line-per-module table; `--verbose` shows AIDL hash status,
@@ -2175,38 +2195,25 @@ if [[ "${DO_BRANCH}" -eq 1 ]]; then
     create_release_branch_and_tag "${RELEASE_VERSION}"
 fi
 
+# Print the buffered table NOW — after all diagnostic blocks above,
+# so the final-decision view is the last thing the operator reads.
+log ""
+for _row in "${TABLE_ROWS[@]}"; do
+    log "${_row}"
+done
+
 log ""
 if [[ "${DO_BRANCH}" -eq 1 ]]; then
-    log "Release ${RELEASE_VERSION} applied: ${changed_count} component(s) bumped, branch + tag created."
-    if [[ "${changed_count}" -eq 0 ]]; then
-        log "No components changed — no release branch, no tag, no doc edits."
-    fi
+    log "Release ${RELEASE_VERSION} applied: branch + tag created."
+elif [[ "${CHECK_MODE}" -eq 1 ]]; then
+    log "Stage modules with: ./release.sh <module>     Apply with: ./release.sh --apply --release-version ${RELEASE_VERSION}"
+elif [[ "${changed_count}" -eq 0 ]]; then
+    log "Nothing staged."
 else
-    # Default (plan-status) view OR --dry-run OR check mode.
-    if [[ "${CHECK_MODE}" -eq 1 ]]; then
-        log "Check complete — ${changed_count} module(s) would bump if all staged."
-        log ""
-        log "Stage the ones you want released:"
-        log "    ./release.sh module <module> [--version X.Y.Z.W]"
-        log "Then review the plan + apply:"
-        log "    ./release.sh                                  # confirm plan"
-        log "    ./release.sh --apply --release-version ${RELEASE_VERSION}"
-    elif [[ "${changed_count}" -eq 0 ]]; then
-        log "Nothing planned would bump."
-    else
-        log "Plan summary: ${changed_count} module(s) would release at version ${RELEASE_VERSION}."
-        if [[ "${error_count}" -gt 0 ]]; then
-            log ""
-            log "⚠️  ${error_count} module(s) need manual action above before applying."
-        fi
-        log ""
-        log "Apply for real (writes metadata.yaml, snapshots, manifests, builds,"
-        log "creates release/${RELEASE_VERSION} branch + ${RELEASE_VERSION} tag):"
-        log "    ./release.sh --apply --release-version ${RELEASE_VERSION}"
-        log ""
-        log "Or wipe the plan and start over:"
-        log "    ./release.sh clean"
+    if [[ "${error_count}" -gt 0 ]]; then
+        log "⚠️  ${error_count} module(s) need manual action above before applying."
     fi
+    log "Apply: ./release.sh --apply --release-version ${RELEASE_VERSION}    |    Reset: ./release.sh clean"
 fi
 
 if [[ "${error_count}" -gt 0 ]]; then
