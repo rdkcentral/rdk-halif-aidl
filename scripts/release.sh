@@ -1618,15 +1618,30 @@ error_count=0
 BUMPED_COMPONENTS=()
 declare -A METADATA_DRIFT=()  # comp -> "metadata_says|discovered_truth"
 
-# Auto-discover the "real" current version of a component by inspecting
-# which <comp>/<version>/ directories are actually tracked in git. The
-# value in metadata.yaml is informational; the released snapshot tree is
-# the source of truth. Picks the highest version by `sort -V`.
+# Auto-discover the "real" current released version of a component.
+# Uses the LAST RELEASE TAG (not HEAD) as the baseline — phantom
+# snapshots committed to develop without being part of a tagged
+# release (e.g. firmwareupdate/0.2.0.0/ added by a "chore" commit
+# after the flash rename, never in 0.20.0) don't count as released.
+# Picks the highest version present at that tag by `sort -V`.
 discover_current_version() {
     local comp="$1"
-    # `|| true` swallows the non-zero exit from grep when no tracked
-    # snapshot dirs exist yet (brand-new component) — we want the empty
-    # output and a 0 exit code, not a pipefail-triggered abort.
+    local baseline
+    baseline="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+    [[ -n "${baseline}" ]] || return 0   # no tags → no released baseline
+    git ls-tree -d --name-only "${baseline}" "${comp}/" 2>/dev/null \
+        | awk -F/ '{print $NF}' \
+        | grep -E '^[0-9]+(\.[0-9]+){2,3}$' \
+        | sort -V \
+        | tail -1 || true
+}
+
+# When a component has no released baseline (new since last tag), check
+# whether the operator has pre-staged a snapshot under <comp>/<version>/
+# in HEAD (committed via a "chore" or release-prep PR). If yes, use
+# that as the initial-release version. If no, seed at 0.1.0.0.
+discover_pre_staged_version() {
+    local comp="$1"
     git ls-tree -d --name-only HEAD "${comp}/" 2>/dev/null \
         | awk -F/ '{print $NF}' \
         | grep -E '^[0-9]+(\.[0-9]+){2,3}$' \
@@ -1714,8 +1729,12 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
     current_version="$(discover_current_version "${comp}")"
     is_initial=0
     if [[ -z "${current_version}" ]]; then
-        current_version="0.1.0.0"
         is_initial=1
+        # Pre-staged snapshot in HEAD (e.g. firmwareupdate/0.2.0.0/
+        # added via a chore commit) IS the operator's intent for the
+        # initial release version. Use it. Otherwise default to 0.1.0.0.
+        current_version="$(discover_pre_staged_version "${comp}")"
+        [[ -n "${current_version}" ]] || current_version="0.1.0.0"
     fi
 
     # (Drift detection happens after compute_next_versions below — we
