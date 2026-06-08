@@ -810,32 +810,46 @@ elif [[ ${#PLAN_COMPONENTS[@]} -eq 0 && "${STAGE_AND_WRITE}" -ne 1 && "${ACCEPT_
     done
 fi
 
-# Apply the gate: drop any TOUCHED component not in the plan, and inject
-# planned components even if the detector didn't see direct changes
-# (operator may have other reasons — re-cut, version pin, etc.).
-phase "Applying release plan (${#PLAN_COMPONENTS[@]} component(s) staged)..."
-declare -A KEEP=()
-PLAN_EXTRA=()       # in plan but no detected change
-PLAN_DROPPED=()     # touched but not in plan
+# Inject planned components even if the detector didn't see direct
+# changes (operator may have other reasons — re-cut, version pin, etc.).
+# Then either drop the rest (when this is a targeted single-module write)
+# or keep them all (read-only display + `stage all`).
+PLAN_EXTRA=()
+PLAN_DROPPED=()
 for comp in "${!PLAN_COMPONENTS[@]}"; do
-    KEEP[$comp]=1
     if [[ -z "${COMP_TOUCHED[$comp]:-}" ]]; then
-        # In plan but no detected change — operator wants it released anyway
-        # (re-cut, explicit version pin, etc.). Mark as touched with a "manual"
-        # reason so the bump code processes it.
         COMP_TOUCHED[$comp]=1
-        COMP_NON_DOC[$comp]=1  # default minor unless --version overrides
+        COMP_NON_DOC[$comp]=1
         COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}plan: manually staged via ./release.sh stage ${comp}"$'\n'
         PLAN_EXTRA+=("${comp}")
     fi
 done
-for comp in "${!COMP_TOUCHED[@]}"; do
-    if [[ -z "${KEEP[$comp]:-}" ]]; then
-        unset 'COMP_TOUCHED[$comp]' \
-              'COMP_BREAKING[$comp]' 'COMP_NON_DOC[$comp]' 'COMP_DOC[$comp]'
-        PLAN_DROPPED+=("${comp}")
-    fi
-done
+
+# Drop touched-but-not-planned ONLY when this is a targeted write
+# (single-module stage). For read-only views and for `stage all`, the
+# table should show every touched module so the operator sees the full
+# picture — the per-component loop's ACCEPT_ALL branch then decides
+# which ones to actually write.
+_should_filter=0
+if [[ "${DO_WRITES}" -eq 1 && "${ACCEPT_ALL}" -ne 1 && "${STAGE_AND_WRITE}" -eq 1 ]]; then
+    # Targeted single-module-stage call (`stage <m>` / positional <m>),
+    # not `stage all`. Filter to only what's planned.
+    _should_filter=1
+fi
+if [[ "${_should_filter}" -eq 1 ]]; then
+    phase "Targeted stage — filtering to ${#PLAN_COMPONENTS[@]} planned component(s)..."
+    declare -A KEEP=()
+    for comp in "${!PLAN_COMPONENTS[@]}"; do
+        KEEP[$comp]=1
+    done
+    for comp in "${!COMP_TOUCHED[@]}"; do
+        if [[ -z "${KEEP[$comp]:-}" ]]; then
+            unset 'COMP_TOUCHED[$comp]' \
+                  'COMP_BREAKING[$comp]' 'COMP_NON_DOC[$comp]' 'COMP_DOC[$comp]'
+            PLAN_DROPPED+=("${comp}")
+        fi
+    done
+fi
 
 if [[ ${#PLAN_DROPPED[@]} -gt 0 ]] || [[ ${#PLAN_EXTRA[@]} -gt 0 ]]; then
     log ""
@@ -2142,35 +2156,21 @@ if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
         log "  Verification build (${label}) OK"
     }
 
-    if [[ "${NO_BUILD}" -eq 1 ]]; then
-        log ""
-        log "Verification builds: SKIPPED (--no-build)"
-    else
-        run_verification_build \
-            "current cohort" \
-            "${REPO_ROOT}/out/release-build-current.log" \
-            all
-        run_verification_build \
-            "released cohort via versions_released.yaml" \
-            "${REPO_ROOT}/out/release-build-released.log" \
-            manifest
-    fi
-
+    # Verification builds DO NOT run here on `stage` calls — staging is
+    # meant to be lightweight (per-module snapshot + manifest write).
+    # The full current+manifest verification happens at --apply time
+    # below, once per release, against the final staged set.
 fi
 
-# Branch + commit + tag — runs whenever DO_BRANCH is set, INDEPENDENTLY of
-# DO_WRITES. With the new model, writes happen incrementally per-module
-# (./release.sh <module>), and --apply just wraps the staged work into a
-# release branch + tag. If writes haven't been done and --apply is used,
-# the verification builds still fire (catching the "tried to apply with
-# nothing staged" case).
+# Branch + commit + tag — runs only with --apply.
 if [[ "${DO_BRANCH}" -eq 1 ]]; then
     if [[ "${changed_count}" -eq 0 ]]; then
-        die "--apply requested but nothing is staged for release. Use ./release.sh <module> first."
+        die "--apply requested but nothing is staged for release. Use ./release.sh stage <module> first."
     fi
-    # Verification builds: catch broken cohort before tagging. Already ran
-    # if DO_WRITES was on in this invocation; otherwise run them now.
-    if [[ "${DO_WRITES}" -ne 1 && "${NO_BUILD}" -ne 1 ]]; then
+    # Verification builds: ALWAYS run before tagging — catch a broken
+    # cohort before it's locked in. Two passes (current + released cohort
+    # via manifest) so each catches a different class of failure.
+    if [[ "${NO_BUILD}" -ne 1 ]]; then
         run_verification_build \
             "current cohort" \
             "${REPO_ROOT}/out/release-build-current.log" \
