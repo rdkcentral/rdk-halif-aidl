@@ -36,10 +36,14 @@ die()   { echo "ERROR: $*" >&2; exit 1; }
 # in current/ is release-worthy this cycle.
 #
 # Subcommands:
-#   ./release.sh module <module>   [--version X.Y.Z.W]   add module
-#   ./release.sh drop <module>                           remove module
-#   ./release.sh plan                                     show current plan
-#   ./release.sh clear-plan                               wipe plan
+#   ./release.sh module <module> [--version X.Y.Z.W]     stage module
+#   ./release.sh drop   <module>                         unstage module
+#   ./release.sh plan                                    show current plan
+#   ./release.sh check  [<module>]                       preview detected changes
+#   ./release.sh clean  (alias: reset)                   full reset — revert
+#                                                        all release artefacts,
+#                                                        remove untracked snapshot
+#                                                        dirs, and wipe the plan
 
 plan_init_if_missing() {
     if [[ ! -f "${RELEASE_PLAN_FILE}" ]]; then
@@ -47,10 +51,11 @@ plan_init_if_missing() {
 # release_plan.yaml — components flagged for the next release.
 #
 # Manage via:
-#   ./release.sh module <module>   [--version X.Y.Z.W]   add (auto-bump if --version omitted)
-#   ./release.sh drop <module>                           remove
-#   ./release.sh plan                                     show
-#   ./release.sh clear-plan                               wipe (after a --apply'd release)
+#   ./release.sh module <module> [--version X.Y.Z.W]     stage (auto-bump if --version omitted)
+#   ./release.sh drop   <module>                         unstage
+#   ./release.sh plan                                    show
+#   ./release.sh check  [<module>]                       preview detected changes
+#   ./release.sh clean | reset                           full reset after --apply or to abort
 #
 # Each entry under `components:` is `<name>: <version-or-tilde>`.
 # Use `~` (null) to let the detector pick the bump level from PR labels
@@ -68,10 +73,75 @@ plan_show() {
     cat "${RELEASE_PLAN_FILE}"
 }
 
-plan_clear() {
+# Full release-state reset: undoes whatever a partial-or-complete
+# default ./release.sh run wrote into the worktree, plus clears the
+# plan. Targeted (not `git checkout -- .`) — only touches the files
+# the release pipeline owns:
+#   - per-component metadata.yaml
+#   - versions_released.yaml
+#   - mkdocs.yml
+#   - CHANGELOG.md
+#   - docs/releases/<release>.md  (removed if untracked)
+#   - <comp>/<version>/  snapshot dirs that aren't tracked in git
+# Operator's unrelated worktree edits are left alone.
+plan_clean() {
+    log "Resetting release state..."
+
+    # 1. Tracked release artefacts — unstage + restore worktree.
+    local touched=()
+    while IFS= read -r f; do
+        [[ -z "${f}" ]] || touched+=("${f}")
+    done < <(
+        git -C "${REPO_ROOT}" diff --cached --name-only \
+            -- '*/metadata.yaml' versions_released.yaml mkdocs.yml CHANGELOG.md RAG_STATUS_REPORT.md 2>/dev/null
+        git -C "${REPO_ROOT}" diff --name-only \
+            -- '*/metadata.yaml' versions_released.yaml mkdocs.yml CHANGELOG.md RAG_STATUS_REPORT.md 2>/dev/null
+    )
+    if [[ ${#touched[@]} -gt 0 ]]; then
+        mapfile -t touched < <(printf '%s\n' "${touched[@]}" | sort -u)
+        for f in "${touched[@]}"; do
+            git -C "${REPO_ROOT}" restore --staged --worktree -- "${f}" 2>/dev/null \
+                || git -C "${REPO_ROOT}" checkout -- "${f}" 2>/dev/null || true
+        done
+        log "  Reverted ${#touched[@]} tracked release-artefact file(s)."
+    fi
+
+    # 2. Untracked snapshot directories — <comp>/<X.Y.Z[.W]>/ that
+    # aren't in git's index. Tracked released snapshots stay.
+    local removed=0
+    while IFS= read -r -d '' d; do
+        local rel="${d#${REPO_ROOT}/}"
+        # Verify the dir name looks like a version (defence in depth).
+        local ver="${rel##*/}"
+        [[ "${ver}" =~ ^[0-9]+(\.[0-9]+){2,3}$ ]] || continue
+        # Skip if anything inside is tracked.
+        if [[ -n "$(git -C "${REPO_ROOT}" ls-files -- "${rel}" 2>/dev/null | head -1)" ]]; then
+            continue
+        fi
+        rm -rf "${d}"
+        removed=$((removed + 1))
+    done < <(find "${REPO_ROOT}" -maxdepth 2 -mindepth 2 -type d \
+                -regex '.*/[a-z][a-z0-9_]*/[0-9][0-9.]*' -print0 2>/dev/null)
+    [[ ${removed} -gt 0 ]] && log "  Removed ${removed} untracked snapshot dir(s)."
+
+    # 3. Untracked release-notes files (we never overwrite pre-existing
+    # ones; safe to delete any docs/releases/X.Y.Z.md not in git).
+    local removed_notes=0
+    while IFS= read -r -d '' nf; do
+        local rel="${nf#${REPO_ROOT}/}"
+        if [[ -z "$(git -C "${REPO_ROOT}" ls-files -- "${rel}" 2>/dev/null)" ]]; then
+            rm -f "${nf}"
+            removed_notes=$((removed_notes + 1))
+        fi
+    done < <(find "${REPO_ROOT}/docs/releases" -maxdepth 1 -type f -name '[0-9]*.md' -print0 2>/dev/null)
+    [[ ${removed_notes} -gt 0 ]] && log "  Removed ${removed_notes} untracked docs/releases/X.Y.Z.md file(s)."
+
+    # 4. Wipe the release plan.
     rm -f "${RELEASE_PLAN_FILE}"
     plan_init_if_missing
-    log "release_plan.yaml cleared."
+    log "  Cleared release_plan.yaml"
+
+    log "✓ Release state reset. Worktree is back to the pre-release-attempt state."
 }
 
 plan_add() {
@@ -234,8 +304,8 @@ case "${1:-}" in
         plan_show
         exit 0
         ;;
-    clear-plan)
-        plan_clear
+    clean|reset)
+        plan_clean
         exit 0
         ;;
     check)
@@ -275,10 +345,18 @@ usage() {
 Release Version Bump Tool
 
 Subcommands (manage release_plan.yaml — what's queued for the next release):
-  ./release.sh module <module>   [--version X.Y.Z.W]   stage module (auto-bump unless --version pinned)
-  ./release.sh drop <module>                           remove module from plan
-  ./release.sh plan                                     show current plan
-  ./release.sh clear-plan                               wipe plan
+  ./release.sh module <module> [--version X.Y.Z.W]     stage module (auto-bump unless --version pinned)
+  ./release.sh drop   <module>                         unstage module
+  ./release.sh plan                                    show current plan
+  ./release.sh check  [<module>]                       preview detected changes for ALL touched
+                                                       modules (or one specific module) without
+                                                       staging. Read-only.
+  ./release.sh clean | reset                           full reset — revert all release artefacts
+                                                       (metadata.yaml, versions_released.yaml,
+                                                       mkdocs.yml, CHANGELOG.md), remove untracked
+                                                       <comp>/<version>/ snapshot dirs and
+                                                       docs/releases/X.Y.Z.md, and wipe the plan.
+                                                       Use after --apply or to abort a half-done run.
 
 Release run (no subcommand):
   ./scripts/release.sh [--dry-run] [--apply] [--since <ref>]
