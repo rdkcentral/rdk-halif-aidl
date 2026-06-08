@@ -76,7 +76,26 @@ plan_clean() {
         log "  Reverted ${#touched[@]} tracked release-artefact file(s)."
     fi
 
-    # 2. Untracked snapshot directories — <comp>/<X.Y.Z[.W]>/ that
+    # 2a. Tracked-snapshot worktree changes — revert any unstaged or
+    # staged modifications inside <comp>/<X.Y.Z[.W]>/ dirs. Snapshots
+    # are supposed to be immutable; if files inside one have been
+    # modified (or deleted) since their commit, `clean` undoes that.
+    # Catches the case where a prior test run regenerated the snapshot
+    # contents in place.
+    local restored=0
+    while IFS= read -r f; do
+        [[ -n "${f}" ]] || continue
+        git -C "${REPO_ROOT}" restore --staged --worktree -- "${f}" 2>/dev/null || true
+        restored=$((restored + 1))
+    done < <(
+        git -C "${REPO_ROOT}" status --short \
+            | awk '{print $NF}' \
+            | grep -E '^[a-z][a-z0-9_]*/[0-9]+(\.[0-9]+){2,3}/' \
+            || true
+    )
+    [[ ${restored} -gt 0 ]] && log "  Restored ${restored} modified file(s) inside tracked snapshot dir(s)."
+
+    # 2b. Untracked snapshot directories — <comp>/<X.Y.Z[.W]>/ that
     # aren't in git's index. Tracked released snapshots stay.
     local removed=0
     while IFS= read -r -d '' d; do
