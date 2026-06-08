@@ -2240,21 +2240,19 @@ if [[ "${DO_BRANCH}" -eq 1 ]]; then
     if [[ "${changed_count}" -eq 0 ]]; then
         die "--apply requested but nothing is staged for release. Use ./release.sh stage <module> first."
     fi
-    # --apply runs the CURRENT cohort verification — catches "in-dev
-    # tree is broken" before we tag. The manifest verification already
-    # ran at stage time, but re-run it here if writes didn't happen in
-    # this invocation (operator ran --apply on a pre-staged worktree).
-    if [[ "${NO_BUILD}" -ne 1 ]]; then
+    # Manifest verification: re-run only if writes didn't happen this
+    # invocation (operator ran --apply cold on a pre-staged worktree).
+    # When writes happened, stage already ran it at the end. The current
+    # cohort verification is intentionally NOT re-run here — if `stage`
+    # succeeded, every per-module build_modules.sh <comp> compile passed
+    # AND the manifest build at end-of-stage validated the released
+    # cohort. A full current-cohort rebuild at --apply time catches
+    # nothing new but costs minutes.
+    if [[ "${NO_BUILD}" -ne 1 && "${DO_WRITES}" -ne 1 ]]; then
         run_verification_build \
-            "current cohort" \
-            "${REPO_ROOT}/out/release-build-current.log" \
-            all
-        if [[ "${DO_WRITES}" -ne 1 ]]; then
-            run_verification_build \
-                "released cohort via versions_released.yaml" \
-                "${REPO_ROOT}/out/release-build-released.log" \
-                manifest
-        fi
+            "released cohort via versions_released.yaml" \
+            "${REPO_ROOT}/out/release-build-released.log" \
+            manifest
     fi
     phase "Creating release branch and tag ${RELEASE_VERSION}..."
     log ""
