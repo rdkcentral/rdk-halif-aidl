@@ -2156,10 +2156,22 @@ if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
         log "  Verification build (${label}) OK"
     }
 
-    # Verification builds DO NOT run here on `stage` calls — staging is
-    # meant to be lightweight (per-module snapshot + manifest write).
-    # The full current+manifest verification happens at --apply time
-    # below, once per release, against the final staged set.
+    # After all per-module writes land (single `stage <m>` or `stage all`),
+    # run the manifest verification build — compiles every component at
+    # its versions_released.yaml pin, so the operator sees IMMEDIATELY if
+    # the staged snapshot breaks cross-component compatibility (videosink
+    # 0.2.0.0 expects common 0.2.0.0 etc.). The current-cohort build is
+    # deferred to --apply (it's slower and catches a different failure
+    # mode — broken in-development tree, which CI also catches).
+    if [[ "${NO_BUILD}" -eq 1 ]]; then
+        log ""
+        log "Manifest verification: SKIPPED (--no-build)"
+    else
+        run_verification_build \
+            "released cohort via versions_released.yaml" \
+            "${REPO_ROOT}/out/release-build-released.log" \
+            manifest
+    fi
 fi
 
 # Branch + commit + tag — runs only with --apply.
@@ -2167,18 +2179,21 @@ if [[ "${DO_BRANCH}" -eq 1 ]]; then
     if [[ "${changed_count}" -eq 0 ]]; then
         die "--apply requested but nothing is staged for release. Use ./release.sh stage <module> first."
     fi
-    # Verification builds: ALWAYS run before tagging — catch a broken
-    # cohort before it's locked in. Two passes (current + released cohort
-    # via manifest) so each catches a different class of failure.
+    # --apply runs the CURRENT cohort verification — catches "in-dev
+    # tree is broken" before we tag. The manifest verification already
+    # ran at stage time, but re-run it here if writes didn't happen in
+    # this invocation (operator ran --apply on a pre-staged worktree).
     if [[ "${NO_BUILD}" -ne 1 ]]; then
         run_verification_build \
             "current cohort" \
             "${REPO_ROOT}/out/release-build-current.log" \
             all
-        run_verification_build \
-            "released cohort via versions_released.yaml" \
-            "${REPO_ROOT}/out/release-build-released.log" \
-            manifest
+        if [[ "${DO_WRITES}" -ne 1 ]]; then
+            run_verification_build \
+                "released cohort via versions_released.yaml" \
+                "${REPO_ROOT}/out/release-build-released.log" \
+                manifest
+        fi
     fi
     phase "Creating release branch and tag ${RELEASE_VERSION}..."
     log ""
