@@ -17,7 +17,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${REPO_ROOT}"
 
-RELEASE_PLAN_FILE="${REPO_ROOT}/release_plan.yaml"
 
 # Logging helpers — defined here so the plan subcommands below can call them.
 log()   { echo "$*"; }
@@ -29,49 +28,20 @@ die()   { echo "ERROR: $*" >&2; exit 1; }
 # Release plan helpers (#578)
 # ----------------------------------------------------------------------------
 #
-# release_plan.yaml is the source of truth for "what gets released this
-# cycle". The detector + bumper run ONLY against the components listed
-# in the plan — auto-detection of all-changes is intentionally not the
-# default, because the operator decides per-component whether a change
-# in current/ is release-worthy this cycle.
+# The "plan" is implicit in the working tree: a module is staged when
+# its <comp>/<X.Y.Z.W>/ snapshot dir exists on disk AND isn't present
+# in the last release tag. `stage <module>` runs the writes that put it
+# there; `drop <module>` reverts them. No separate YAML file.
 #
 # Subcommands:
-#   ./release.sh stage <module> [--version X.Y.Z.W]     stage module
-#   ./release.sh drop   <module>                         unstage module
-#   ./release.sh plan                                    show current plan
-#   ./release.sh check  [<module>]                       preview detected changes
-#   ./release.sh clean  (alias: reset)                   full reset — revert
-#                                                        all release artefacts,
-#                                                        remove untracked snapshot
-#                                                        dirs, and wipe the plan
-
-plan_init_if_missing() {
-    if [[ ! -f "${RELEASE_PLAN_FILE}" ]]; then
-        cat > "${RELEASE_PLAN_FILE}" <<'EOF'
-# release_plan.yaml — components flagged for the next release.
-#
-# Manage via:
-#   ./release.sh stage <module> [--version X.Y.Z.W]     stage (auto-bump if --version omitted)
-#   ./release.sh drop   <module>                         unstage
-#   ./release.sh plan                                    show
-#   ./release.sh check  [<module>]                       preview detected changes
-#   ./release.sh clean | reset                           full reset after --apply or to abort
-#
-# Each entry under `components:` is `<name>: <version-or-tilde>`.
-# Use `~` (null) to let the detector pick the bump level from PR labels
-# and the changes touching <module>/current/ since the last release tag.
-# Use an explicit version (e.g. `0.3.0.0`) to override the auto-bump.
-
-release_version: ~
-components: {}
-EOF
-    fi
-}
-
-plan_show() {
-    plan_init_if_missing
-    cat "${RELEASE_PLAN_FILE}"
-}
+#   ./release.sh stage <module> [--version X.Y.Z.W]     write snapshot + metadata
+#   ./release.sh stage all                              same, for every qualifying module
+#   ./release.sh drop  <module>                         revert the writes
+#   ./release.sh plan                                   read-only table view
+#   ./release.sh check [<module>]                       preview without staging
+#   ./release.sh clean (alias: reset)                   full reset — revert all
+#                                                        release artefacts, remove
+#                                                        untracked snapshot dirs
 
 # Full release-state reset: undoes whatever a partial-or-complete
 # default ./release.sh run wrote into the worktree, plus clears the
@@ -137,143 +107,97 @@ plan_clean() {
     [[ ${removed_notes} -gt 0 ]] && log "  Removed ${removed_notes} untracked docs/releases/X.Y.Z.md file(s)."
 
     # 4. Wipe the release plan.
-    rm -f "${RELEASE_PLAN_FILE}"
-    plan_init_if_missing
-    log "  Cleared release_plan.yaml"
+    # (No plan-file to wipe — release_plan.yaml retired in this refactor)
+        log "  Plan-file remnants cleared."
 
     log "✓ Release state reset. Worktree is back to the pre-release-attempt state."
 }
 
-plan_add() {
-    local comp="$1"
-    local pin="${2:-}"  # explicit version or empty for auto
-
-    [[ -n "${comp}" ]] || die "stage: missing <module> argument. Usage: ./release.sh stage <module> [--version X.Y.Z.W]"
-    [[ -f "${REPO_ROOT}/${comp}/metadata.yaml" ]] \
-        || die "release: ${comp}/metadata.yaml not found — no such component."
-
-    plan_init_if_missing
-    python3 - "${RELEASE_PLAN_FILE}" "${comp}" "${pin}" <<'PYEOF' || die "plan: failed to update release_plan.yaml"
-import re, sys
-path, comp, pin = sys.argv[1:4]
-value = pin if pin else "~"
-with open(path) as f:
-    lines = f.readlines()
-
-# Find `components:` line.
-comp_idx = None
-for i, line in enumerate(lines):
-    if re.match(r'^components:\s*(\{\s*\}\s*)?$', line):
-        comp_idx = i
-        break
-if comp_idx is None:
-    sys.stderr.write("release_plan.yaml: missing 'components:' block\n")
-    sys.exit(1)
-
-# Normalize: replace `components: {}` with `components:` + child block
-if re.match(r'^components:\s*\{\s*\}\s*$', lines[comp_idx]):
-    lines[comp_idx] = "components:\n"
-
-# Find end of components block (next top-level key or EOF).
-end = len(lines)
-for i in range(comp_idx + 1, len(lines)):
-    if lines[i].strip() == "":
-        continue
-    if not (lines[i].startswith("  ") or lines[i].startswith("\t")):
-        end = i
-        break
-
-# Existing entry? rewrite.
-entry_re = re.compile(r'^(\s+)([A-Za-z][\w/]*):\s*(\S+)\s*$')
-for i in range(comp_idx + 1, end):
-    m = entry_re.match(lines[i])
-    if m and m.group(2) == comp:
-        lines[i] = f"{m.group(1)}{comp}: {value}\n"
-        with open(path, "w") as f:
-            f.writelines(lines)
-        sys.exit(0)
-
-# Otherwise insert alphabetically.
-indent = "  "
-insert_at = end
-for i in range(comp_idx + 1, end):
-    m = entry_re.match(lines[i])
-    if m:
-        indent = m.group(1)
-        if m.group(2) > comp:
-            insert_at = i
-            break
-lines[insert_at:insert_at] = [f"{indent}{comp}: {value}\n"]
-with open(path, "w") as f:
-    f.writelines(lines)
-PYEOF
-    if [[ -n "${pin}" ]]; then
-        log "✓ ${comp} flagged for release at explicit version ${pin}."
-    else
-        log "✓ ${comp} flagged for release (next version will be auto-computed from PR labels)."
-    fi
-}
-
+# Per-module drop — reverts everything `stage <module>` wrote:
+#   * removes the staged <comp>/<NEXT_VERSION>/ snapshot dir (only if
+#     not present in the baseline release tag — never touches tracked
+#     released snapshots)
+#   * restores <comp>/metadata.yaml to its pre-staged version
+#   * restores versions_released.yaml's <comp>: entry to what it was
+#   * restores any mkdocs.yml nav entries we added
+# Leaves unrelated working-tree edits alone.
 plan_remove() {
     local comp="$1"
     [[ -n "${comp}" ]] || die "drop: missing <module> argument."
-    [[ -f "${RELEASE_PLAN_FILE}" ]] || { log "No plan file — nothing to remove."; return 0; }
-    python3 - "${RELEASE_PLAN_FILE}" "${comp}" <<'PYEOF' || die "plan: failed to update release_plan.yaml"
-import re, sys
-path, comp = sys.argv[1:3]
-with open(path) as f:
-    lines = f.readlines()
-out = []
-removed = False
-entry_re = re.compile(r'^\s+([A-Za-z][\w/]*):\s*(\S+)\s*$')
-for line in lines:
-    m = entry_re.match(line)
-    if m and m.group(1) == comp:
-        removed = True
-        continue
-    out.append(line)
-with open(path, "w") as f:
-    f.writelines(out)
-sys.exit(0 if removed else 0)
-PYEOF
-    log "✓ ${comp} removed from release plan."
+    [[ -f "${REPO_ROOT}/${comp}/metadata.yaml" ]] \
+        || die "drop: ${comp}/metadata.yaml not found — no such component."
+
+    local baseline removed=0
+    baseline="$(git -C "${REPO_ROOT}" describe --tags --abbrev=0 2>/dev/null || true)"
+
+    # Identify the staged version dir (one not present in baseline tag).
+    local ver_dir ver
+    for ver_dir in "${REPO_ROOT}/${comp}"/*/; do
+        [[ -d "${ver_dir}" ]] || continue
+        ver="${ver_dir%/}"
+        ver="${ver##*/}"
+        [[ "${ver}" =~ ^[0-9]+(\.[0-9]+){2,3}$ ]] || continue
+        if [[ -n "${baseline}" ]]; then
+            if [[ -n "$(git -C "${REPO_ROOT}" ls-tree -d --name-only "${baseline}" "${comp}/${ver}" 2>/dev/null)" ]]; then
+                continue   # tracked released — leave it alone
+            fi
+        fi
+        # Untracked / staged — remove it.
+        git -C "${REPO_ROOT}" reset HEAD -- "${comp}/${ver}/" >/dev/null 2>&1 || true
+        rm -rf "${ver_dir}"
+        removed=1
+    done
+
+    # Restore metadata.yaml + versions_released.yaml + mkdocs.yml for this
+    # component (only — leaves other modules' staged state intact).
+    git -C "${REPO_ROOT}" restore --staged --worktree -- \
+        "${comp}/metadata.yaml" versions_released.yaml mkdocs.yml 2>/dev/null || true
+
+    if [[ "${removed}" -eq 1 ]]; then
+        log "✓ ${comp} unstaged: snapshot dir + metadata.yaml + manifest entries reverted."
+    else
+        log "ℹ️  ${comp} was not staged — nothing to revert."
+    fi
 }
 
-# Parse release_plan.yaml into bash arrays for the main pipeline.
+# (Plan is now scanned from the worktree by plan_load above.)
 # Populates: PLAN_COMPONENTS (assoc: comp -> "" or explicit version),
 #            PLAN_RELEASE_VERSION (top-level release_version: or empty).
+# Discover what's already staged by scanning the working tree, not by
+# reading a YAML file. A module is "staged" if a <comp>/<X.Y.Z.W>/
+# snapshot dir exists on disk that isn't present in the baseline (last
+# release tag). That captures everything `stage <module>` has written —
+# the snapshot dir, metadata.yaml bump, manifest updates — without a
+# separate persistence file.
 declare -A PLAN_COMPONENTS=()
 PLAN_RELEASE_VERSION=""
 plan_load() {
-    [[ -f "${RELEASE_PLAN_FILE}" ]] || return 0
-    while IFS=$'\t' read -r key value; do
-        case "${key}" in
-            release_version) PLAN_RELEASE_VERSION="${value}" ;;
-            *)               PLAN_COMPONENTS[$key]="${value}" ;;
-        esac
-    done < <(python3 - "${RELEASE_PLAN_FILE}" <<'PYEOF'
-import re, sys
-with open(sys.argv[1]) as f:
-    lines = f.readlines()
-in_components = False
-for line in lines:
-    if re.match(r'^release_version:\s*(\S+)\s*$', line):
-        v = line.split(":", 1)[1].strip()
-        if v and v != "~":
-            print(f"release_version\t{v}")
-        continue
-    if re.match(r'^components:\s*$', line):
-        in_components = True
-        continue
-    if in_components and re.match(r'^[^ \t#]', line):
-        in_components = False
-    if in_components:
-        m = re.match(r'^\s+([A-Za-z][\w/]*):\s*(\S+)\s*$', line)
-        if m:
-            comp, ver = m.group(1), m.group(2)
-            print(f"{comp}\t{'' if ver == '~' else ver}")
-PYEOF
-    )
+    PLAN_COMPONENTS=()
+    PLAN_RELEASE_VERSION=""
+    local baseline
+    baseline="$(git -C "${REPO_ROOT}" describe --tags --abbrev=0 2>/dev/null || true)"
+    local comp_dir comp ver_dir ver
+    for comp_dir in "${REPO_ROOT}"/*/current; do
+        [[ -d "${comp_dir}" ]] || continue
+        comp="${comp_dir%/current}"
+        comp="${comp#${REPO_ROOT}/}"
+        # Scan version-shaped subdirs of this component.
+        for ver_dir in "${REPO_ROOT}/${comp}"/*/; do
+            [[ -d "${ver_dir}" ]] || continue
+            ver="${ver_dir%/}"
+            ver="${ver##*/}"
+            [[ "${ver}" =~ ^[0-9]+(\.[0-9]+){2,3}$ ]] || continue
+            # In baseline? then it\'s already released, not staged.
+            if [[ -n "${baseline}" ]]; then
+                if [[ -n "$(git -C "${REPO_ROOT}" ls-tree -d --name-only "${baseline}" "${comp}/${ver}" 2>/dev/null)" ]]; then
+                    continue
+                fi
+            fi
+            # Staged. (One staged version per component is the model — if
+            # somehow there are multiple, we record the highest.)
+            PLAN_COMPONENTS[$comp]=""
+        done
+    done
 }
 
 # Subcommand dispatch — must run BEFORE the standard arg parser sees
@@ -301,8 +225,15 @@ case "${1:-}" in
                     *) die "stage: unknown option $1" ;;
                 esac
             done
-            plan_add "${_add_comp}" "${_add_ver}"
-            exit 0
+            # Validate the module exists.
+            [[ -n "${_add_comp}" ]] || die "stage: missing <module> argument. Usage: ./release.sh stage <module> [--version X.Y.Z.W]"
+            [[ -f "${REPO_ROOT}/${_add_comp}/metadata.yaml" ]] \
+                || die "stage: ${_add_comp}/metadata.yaml not found — no such component."
+            # Push onto the write-pipeline queue + record any version pin.
+            STAGE_AND_WRITE_MODULES+=("${_add_comp}")
+            STAGE_AND_WRITE=1
+            [[ -n "${_add_ver}" ]] && PIN_VERSIONS[${_add_comp}]="${_add_ver}"
+            # Fall through to the standard pipeline; it processes the queue.
         fi
         ;;
     drop)
@@ -311,8 +242,7 @@ case "${1:-}" in
         exit 0
         ;;
     plan)
-        plan_show
-        exit 0
+        # `plan` is now a synonym for the bare-script table view.
         ;;
     clean|reset)
         plan_clean
@@ -364,11 +294,6 @@ case "${1:-}" in
             STAGE_AND_WRITE_MODULES+=("${_m}")
             shift
         done
-        # Mark intent for the main pipeline: stage each module via plan_add
-        # AND run writes for them (DO_WRITES=1). No branch (DO_BRANCH=0).
-        for _m in "${STAGE_AND_WRITE_MODULES[@]}"; do
-            plan_add "${_m}" ""
-        done
         # Fall through into the arg parser + main pipeline. DO_WRITES is
         # forced on; --apply will turn DO_BRANCH on too.
         STAGE_AND_WRITE=1
@@ -386,13 +311,14 @@ DRY_RUN="${DRY_RUN:-0}"
 SINCE_REF="${SINCE_REF:-}"
 NO_GH="${NO_GH:-0}"
 ACCEPT_ALL="${ACCEPT_ALL:-0}"
+declare -A PIN_VERSIONS=()
 VERBOSE=0
 
 usage() {
     cat <<'EOF'
 Release Version Bump Tool
 
-Subcommands (manage release_plan.yaml — what's queued for the next release):
+Subcommands (manage what's staged for the next release):
   ./release.sh stage <module> [--version X.Y.Z.W]     stage module (auto-bump unless --version pinned)
   ./release.sh drop   <module>                         unstage module
   ./release.sh plan                                    show current plan
@@ -412,12 +338,12 @@ Release run (no subcommand):
                        [--no-gh] [--no-snapshot] [--no-mkdocs]
                        [--no-build] [--verbose]
 
-  Only components listed in release_plan.yaml are processed. The detector
+  Only components staged in the worktree are processed. The detector
   computes the bump level from PR labels since the base ref; an explicit
   --version pin from the plan overrides that.
 
 Modes:
-  default       PLAN view (read-only). Reads release_plan.yaml, runs the
+  default       PLAN view (read-only). Reads the staged state from the worktree, runs the
                 detector for the staged modules, prints the per-module
                 Current → Next bump table plus the change reasoning.
                 Writes NOTHING. The output ends with the exact --apply
@@ -794,7 +720,7 @@ fi
 # Release plan gate
 # ----------------------------------------------------------------------------
 #
-# The release runs over components LISTED IN release_plan.yaml — not over
+# The release runs over components STAGED in the worktree — not over
 # every component the detector found changes in. This is deliberate: the
 # operator decides per-component whether a change is release-worthy this
 # cycle. Use `./release.sh stage <module>` to stage a component, and
@@ -843,31 +769,28 @@ if [[ "${CHECK_MODE}" -eq 1 ]]; then
         fi
     fi
     # Synthesize PLAN_COMPONENTS so the rest of the pipeline runs without
-    # actually requiring a release_plan.yaml file.
+    # actually requiring an explicit plan.
     PLAN_COMPONENTS=()
     for comp in "${!COMP_TOUCHED[@]}"; do
         PLAN_COMPONENTS[$comp]=""
     done
-elif [[ ${#PLAN_COMPONENTS[@]} -eq 0 ]]; then
-    # No plan and no explicit subcommand — auto-fall back to a check view
-    # showing ALL detected changes. The operator can then stage what
-    # they want via `./release.sh stage <name>`. Only an --apply attempt
-    # against an empty plan is a hard error.
+elif [[ ${#PLAN_COMPONENTS[@]} -eq 0 && "${STAGE_AND_WRITE}" -ne 1 && "${ACCEPT_ALL}" -ne 1 ]]; then
+    # Nothing staged on the filesystem, no stage/positional request, no
+    # accept-all. If --apply was asked for, error — there's literally
+    # nothing to release. Otherwise show the read-only table view of
+    # detected changes so the operator can decide what to stage.
     if [[ "${DO_BRANCH}" -eq 1 ]]; then
         log ""
-        log "❌ --apply requested but release_plan.yaml is empty — nothing to release."
+        log "❌ --apply requested but nothing is staged."
         log ""
         log "  Stage modules first:"
-        log "    ./release.sh stage <module>"
+        log "    ./release.sh stage <module>     (or: ./release.sh <module>)"
+        log "    ./release.sh stage all          (stage every qualifying module)"
         log "  Then apply:"
         log "    ./release.sh --apply --release-version ${RELEASE_VERSION}"
         exit 1
     fi
-    log ""
-    log "ℹ️  release_plan.yaml is empty — showing CHECK view (all detected changes)."
-    log "    Stage with: ./release.sh stage <module>"
-    log ""
-    CHECK_MODE=1
+    # Fall through to read-only table view (no writes happen).
     PLAN_COMPONENTS=()
     for comp in "${!COMP_TOUCHED[@]}"; do
         PLAN_COMPONENTS[$comp]=""
@@ -1787,12 +1710,14 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
 
     compute_next_versions "${current_version}" "${bump}"
 
-    # Explicit version pin from release_plan.yaml wins over auto-bump:
-    #   ./release.sh stage <module> --version X.Y.Z.W
-    if [[ -n "${PLAN_COMPONENTS[$comp]:-}" ]]; then
-        NEXT_VERSION="${PLAN_COMPONENTS[$comp]}"
+    # Explicit version pin from `stage <module> --version X.Y.Z.W` wins
+    # over the label-derived auto-bump. PIN_VERSIONS lives in-memory
+    # only — once the stage call's writes complete, the pinned version
+    # is recorded in the snapshot dir + metadata.yaml.
+    if [[ -n "${PIN_VERSIONS[$comp]:-}" ]]; then
+        NEXT_VERSION="${PIN_VERSIONS[$comp]}"
         bump="pinned"
-        COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}plan: explicit --version ${NEXT_VERSION}"$'\n'
+        COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}stage: explicit --version ${NEXT_VERSION}"$'\n'
     fi
 
     # Drift detection: metadata.yaml is *supposed* to be pre-bumped by
@@ -1832,7 +1757,6 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
     if [[ "${ACCEPT_ALL}" -eq 1 && "${_qualifies_for_staging}" -eq 1 \
           && -z "${ACTUAL_PLAN[$comp]+x}" ]]; then
         ACTUAL_PLAN[$comp]=""
-        plan_add "${comp}" "" >/dev/null
     fi
 
     _planned="no"

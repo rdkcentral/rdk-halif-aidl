@@ -48,6 +48,3 @@ build-tools/linux_binder_idl/build-target-cmake
 # Claude Code
 .claude/
 
-# Local release-plan working file (./release.sh release <module> populates it).
-# Operator-local by default; force-add if you want the team to review via PR.
-release_plan.yaml
