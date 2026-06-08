@@ -36,7 +36,7 @@ die()   { echo "ERROR: $*" >&2; exit 1; }
 # in current/ is release-worthy this cycle.
 #
 # Subcommands:
-#   ./release.sh module <module> [--version X.Y.Z.W]     stage module
+#   ./release.sh stage <module> [--version X.Y.Z.W]     stage module
 #   ./release.sh drop   <module>                         unstage module
 #   ./release.sh plan                                    show current plan
 #   ./release.sh check  [<module>]                       preview detected changes
@@ -51,7 +51,7 @@ plan_init_if_missing() {
 # release_plan.yaml — components flagged for the next release.
 #
 # Manage via:
-#   ./release.sh module <module> [--version X.Y.Z.W]     stage (auto-bump if --version omitted)
+#   ./release.sh stage <module> [--version X.Y.Z.W]     stage (auto-bump if --version omitted)
 #   ./release.sh drop   <module>                         unstage
 #   ./release.sh plan                                    show
 #   ./release.sh check  [<module>]                       preview detected changes
@@ -148,7 +148,7 @@ plan_add() {
     local comp="$1"
     local pin="${2:-}"  # explicit version or empty for auto
 
-    [[ -n "${comp}" ]] || die "module: missing <module> argument. Usage: ./release.sh module <module> [--version X.Y.Z.W]"
+    [[ -n "${comp}" ]] || die "stage: missing <module> argument. Usage: ./release.sh stage <module> [--version X.Y.Z.W]"
     [[ -f "${REPO_ROOT}/${comp}/metadata.yaml" ]] \
         || die "release: ${comp}/metadata.yaml not found — no such component."
 
@@ -280,7 +280,7 @@ PYEOF
 # anything. The subcommands edit the plan file and exit; they don't
 # trigger a release run.
 case "${1:-}" in
-    module)
+    stage)
         shift
         _add_comp="${1:-}"
         _add_ver=""
@@ -289,7 +289,7 @@ case "${1:-}" in
             case "$1" in
                 --version) [[ $# -ge 2 ]] || die "--version requires a value"
                            _add_ver="$2"; shift 2 ;;
-                *) die "module: unknown option $1" ;;
+                *) die "stage: unknown option $1" ;;
             esac
         done
         plan_add "${_add_comp}" "${_add_ver}"
@@ -348,7 +348,7 @@ case "${1:-}" in
             _m="$1"
             if [[ ! -f "${REPO_ROOT}/${_m}/metadata.yaml" ]]; then
                 die "Unknown subcommand or module: ${_m}
-  Subcommands: module | drop | plan | check | clean | reset
+  Subcommands: stage | drop | plan | check | clean | reset
   Or a known module name (e.g. ./release.sh bootreason)."
             fi
             STAGE_AND_WRITE_MODULES+=("${_m}")
@@ -383,7 +383,7 @@ usage() {
 Release Version Bump Tool
 
 Subcommands (manage release_plan.yaml — what's queued for the next release):
-  ./release.sh module <module> [--version X.Y.Z.W]     stage module (auto-bump unless --version pinned)
+  ./release.sh stage <module> [--version X.Y.Z.W]     stage module (auto-bump unless --version pinned)
   ./release.sh drop   <module>                         unstage module
   ./release.sh plan                                    show current plan
   ./release.sh check  [<module>]                       preview detected changes for ALL touched
@@ -531,7 +531,7 @@ while [[ $# -gt 0 ]]; do
         --accept-all)
             # Auto-stage every detected module that has a real bump or
             # is an initial release. Same effect as calling
-            # `./release.sh module <m>` for each qualifying module by
+            # `./release.sh stage <m>` for each qualifying module by
             # hand. Non-buildable modules (no current/interface.yaml)
             # and zero-bump modules (AIDL hash unchanged) are skipped.
             ACCEPT_ALL=1
@@ -796,7 +796,7 @@ fi
 # The release runs over components LISTED IN release_plan.yaml — not over
 # every component the detector found changes in. This is deliberate: the
 # operator decides per-component whether a change is release-worthy this
-# cycle. Use `./release.sh module <module>` to stage a component, and
+# cycle. Use `./release.sh stage <module>` to stage a component, and
 # `./release.sh plan` to view what's queued.
 
 plan_load
@@ -850,21 +850,21 @@ if [[ "${CHECK_MODE}" -eq 1 ]]; then
 elif [[ ${#PLAN_COMPONENTS[@]} -eq 0 ]]; then
     # No plan and no explicit subcommand — auto-fall back to a check view
     # showing ALL detected changes. The operator can then stage what
-    # they want via `./release.sh module <name>`. Only an --apply attempt
+    # they want via `./release.sh stage <name>`. Only an --apply attempt
     # against an empty plan is a hard error.
     if [[ "${DO_BRANCH}" -eq 1 ]]; then
         log ""
         log "❌ --apply requested but release_plan.yaml is empty — nothing to release."
         log ""
         log "  Stage modules first:"
-        log "    ./release.sh module <module>"
+        log "    ./release.sh stage <module>"
         log "  Then apply:"
         log "    ./release.sh --apply --release-version ${RELEASE_VERSION}"
         exit 1
     fi
     log ""
     log "ℹ️  release_plan.yaml is empty — showing CHECK view (all detected changes)."
-    log "    Stage with: ./release.sh module <module>"
+    log "    Stage with: ./release.sh stage <module>"
     log ""
     CHECK_MODE=1
     PLAN_COMPONENTS=()
@@ -888,7 +888,7 @@ for comp in "${!PLAN_COMPONENTS[@]}"; do
         # reason so the bump code processes it.
         COMP_TOUCHED[$comp]=1
         COMP_NON_DOC[$comp]=1  # default minor unless --version overrides
-        COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}plan: manually staged via ./release.sh module ${comp}"$'\n'
+        COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}plan: manually staged via ./release.sh stage ${comp}"$'\n'
         PLAN_EXTRA+=("${comp}")
     fi
 done
@@ -1787,7 +1787,7 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
     compute_next_versions "${current_version}" "${bump}"
 
     # Explicit version pin from release_plan.yaml wins over auto-bump:
-    #   ./release.sh module <module> --version X.Y.Z.W
+    #   ./release.sh stage <module> --version X.Y.Z.W
     if [[ -n "${PLAN_COMPONENTS[$comp]:-}" ]]; then
         NEXT_VERSION="${PLAN_COMPONENTS[$comp]}"
         bump="pinned"
