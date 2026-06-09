@@ -19,10 +19,40 @@ cd "${REPO_ROOT}"
 
 
 # Logging helpers — defined here so the plan subcommands below can call them.
-log()   { echo "$*"; }
-phase() { echo "==> $*" >&2; }
-warn()  { echo "WARN: $*" >&2; }
-die()   { echo "ERROR: $*" >&2; exit 1; }
+# ANSI colors — only when stdout is a TTY and NO_COLOR isn't set.
+# (Honors the conventional NO_COLOR env var: https://no-color.org/)
+if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
+    _C_RESET=$'\033[0m'
+    _C_BOLD=$'\033[1m'
+    _C_DIM=$'\033[2m'
+    _C_RED=$'\033[31m'
+    _C_GREEN=$'\033[32m'
+    _C_YELLOW=$'\033[33m'
+    _C_BLUE=$'\033[34m'
+    _C_CYAN=$'\033[36m'
+else
+    _C_RESET= _C_BOLD= _C_DIM= _C_RED= _C_GREEN= _C_YELLOW= _C_BLUE= _C_CYAN=
+fi
+
+log() {
+    # Highlight a few common idioms so the right thing draws the eye.
+    local line="$*"
+    case "$line" in
+        '✓'*|'  ✓'*)          line="${_C_GREEN}${line}${_C_RESET}" ;;
+        '❌'*|'  ❌'*)        line="${_C_RED}${line}${_C_RESET}" ;;
+        '⚠️'*|'  ⚠️'*)        line="${_C_YELLOW}${line}${_C_RESET}" ;;
+        'ℹ️'*|'  ℹ️'*)        line="${_C_CYAN}${line}${_C_RESET}" ;;
+        'Module'*)            line="${_C_BOLD}${line}${_C_RESET}" ;;
+        '------'*)            line="${_C_DIM}${line}${_C_RESET}" ;;
+        Apply:*)              line="${_C_BOLD}${line}${_C_RESET}" ;;
+        Plan:*)               line="${_C_BOLD}${line}${_C_RESET}" ;;
+        Release\ scan\ completed*) line="${_C_GREEN}${line}${_C_RESET}" ;;
+    esac
+    echo "${line}"
+}
+phase() { echo "${_C_CYAN}==>${_C_RESET} ${_C_BOLD}$*${_C_RESET}" >&2; }
+warn()  { echo "${_C_YELLOW}WARN:${_C_RESET} $*" >&2; }
+die()   { echo "${_C_RED}${_C_BOLD}ERROR:${_C_RESET} ${_C_RED}$*${_C_RESET}" >&2; exit 1; }
 
 # Verification-build runner. Defined at top-level so it's in scope for
 # both the stage path (DO_WRITES=1) and a pure --apply (DO_WRITES=0).
