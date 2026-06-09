@@ -47,8 +47,22 @@ interface IAudioMixerManager {
     /**
      * @brief Acquires a specific audio mixer interface by ID.
      *
-     * @param id Mixer resource identifier.
-     * @returns IAudioMixer interface for controlling the mixer, or null if unavailable.
+     * The ID must be one of the values returned by `getAudioMixerIds()`.
+     * Identifiers outside the declared `IAudioMixer.Id` enum raise
+     * EX_ILLEGAL_ARGUMENT. A valid declared ID that is not currently
+     * present on the platform returns `null`.
+     *
+     * @param[in] id  Mixer resource identifier.
+     *
+     * @returns       IAudioMixer interface for controlling the mixer, or
+     *                `null` if the ID is declared by the enum but no mixer
+     *                with that ID is mounted on this platform.
+     *
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if @c id is outside the
+     *            range of the IAudioMixer.Id enum.
+     *
+     * @see getAudioMixerIds()
+     * @see IAudioMixer
      */
     @nullable IAudioMixer getAudioMixer(in IAudioMixer.Id id);
 }

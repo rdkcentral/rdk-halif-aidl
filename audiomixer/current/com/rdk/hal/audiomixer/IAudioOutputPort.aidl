@@ -145,14 +145,32 @@ interface IAudioOutputPort {
      * @brief    Registers a listener for port property change events.
      *
      *           Multiple listeners may be registered. Listener registration
-     *           does not require ownership of the controller.
+     *           does not require ownership of the controller — observers
+     *           can attach without holding the IAudioOutputPortController.
+     *           Re-registering the same listener instance is a no-op and
+     *           does not raise an exception.
      *
      * @param[in] listener  Listener for property change notifications.
+     *
+     * @exception binder::Status EX_NULL_POINTER if @c listener is null.
+     *
+     * @see unregisterListener()
+     * @see IAudioOutputPortListener
      */
     void registerListener(in IAudioOutputPortListener listener);
 
     /**
      * @brief    Un-registers a previously registered listener.
+     *
+     *           Unregistering a listener that was never registered (or
+     *           already unregistered) is a no-op and does not raise an
+     *           exception.
+     *
+     * @param[in] listener  Listener previously passed to registerListener().
+     *
+     * @exception binder::Status EX_NULL_POINTER if @c listener is null.
+     *
+     * @see registerListener()
      */
     void unregisterListener(in IAudioOutputPortListener listener);
 

@@ -86,10 +86,31 @@ interface IAudioMixerController {
 
     /**
      * @brief     Sets a property on the controlled mixer instance.
+     *
+     *            The property must be writable in the current mixer state.
+     *            Property writability is documented per-key in Property.aidl.
+     *
      * @param[in] property      The property key (from Property enum).
-     * @param[in] propertyValue The value to set (PropertyValue union).
-     * @returns   true if successfully set, false otherwise.
+     * @param[in] propertyValue The value to set (PropertyValue union; active
+     *                          union field must match the property type).
+     *
+     * @returns   true on successful write; false if the property is not
+     *            supported on this mixer or the value is rejected (e.g.
+     *            out of range for the property).
+     *
+     * @retval    true   The property was written and is now in effect.
+     * @retval    false  The property is unsupported on this mixer instance
+     *                   or the value was rejected; mixer state is unchanged.
+     *
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if @c property is unknown
+     *            or the PropertyValue union's active field does not match
+     *            the property's declared type.
+     * @exception binder::Status EX_ILLEGAL_STATE if the mixer is not in a
+     *            state that permits writing this property.
+     *
      * @see       IAudioMixer.getProperty()
+     * @see       Property
+     * @see       PropertyValue
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);
 
