@@ -67,19 +67,18 @@ interface IAudioMixer {
     /**
     * @brief Gets an audio output port interface by ID.
     *
-    * The ID must be one of the values returned by `getAudioOutputPortIds()`.
-    * Out-of-range or negative identifiers raise `EX_ILLEGAL_ARGUMENT`. An
-    * identifier within range but not currently mounted on this mixer
-    * instance returns `null` — callers should enumerate via
-    * `getAudioOutputPortIds()` rather than probe-by-ID.
+    * Callers should discover valid port identifiers via
+    * `getAudioOutputPortIds()` rather than probe-by-ID. Negative or
+    * otherwise structurally invalid identifiers raise
+    * `EX_ILLEGAL_ARGUMENT`; an identifier that is plausible but not
+    * currently mounted on this mixer instance returns `null`.
     *
     * @param[in] id Output port identifier (as int).
     * @returns      IAudioOutputPort interface, or null if no port with the
     *               given ID is mounted on this mixer instance.
     *
     * @exception binder::Status EX_ILLEGAL_ARGUMENT if @c id is negative or
-    *            outside the range of supported port identifiers for this
-    *            platform.
+    *            structurally invalid for this platform.
     *
     * @see getAudioOutputPortIds()
     */
@@ -178,16 +177,14 @@ interface IAudioMixer {
     * Useful for clients to discover what input formats are currently processed
     * by the mixer for debugging, display, or selection logic.
     *
-    * The length and order of the returned array correspond to the current active
-    * mixer inputs; each entry matches the input at the same index as returned
-    * by capability or enumeration APIs. Inactive inputs report
-    * `Codec.UNDEFINED`.
+    * The length and order of the returned array correspond to the current
+    * active mixer inputs; each entry matches the input at the same index
+    * as returned by capability or enumeration APIs.
     *
     * Requires the mixer to be open (state at or after READY). When the
     * mixer is in CLOSED or OPENING, the call raises EX_ILLEGAL_STATE.
     *
-    * @returns List of codecs for active sources; empty when no inputs
-    *          are currently routed.
+    * @returns List of codecs for active sources.
     *
     * @exception binder::Status EX_ILLEGAL_STATE if the mixer is in CLOSED
     *            or OPENING state.
