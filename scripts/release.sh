@@ -360,6 +360,7 @@ CHECK_MODULE="${CHECK_MODULE:-}"
 STAGE_AND_WRITE="${STAGE_AND_WRITE:-0}"
 
 APPLY="${APPLY:-0}"
+COMMIT="${COMMIT:-0}"
 DRY_RUN="${DRY_RUN:-0}"
 SINCE_REF="${SINCE_REF:-}"
 NO_GH="${NO_GH:-0}"
@@ -490,6 +491,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --apply)
             APPLY=1
+            shift
+            ;;
+        --commit)
+            COMMIT=1
             shift
             ;;
         --dry-run)
@@ -1288,39 +1293,51 @@ create_release_branch_and_tag() {
         (cd "${REPO_ROOT}" && git checkout -b "${branch}") || die "Failed to create ${branch}"
     fi
 
-    # Stage only the explicit release artefacts — never `git add -A`,
-    # which would happily stage unrelated worktree changes onto the
-    # release branch. The snapshot directories were already staged by
-    # create_snapshot(); we add mkdocs.yml here and the per-bumped
-    # metadata.yamls (which release.sh just wrote).
-    local has_staged=0
-    if (cd "${REPO_ROOT}" && git diff --cached --quiet); then
-        has_staged=0
-    else
-        has_staged=1
-    fi
-    if [[ "${NO_MKDOCS}" -eq 0 ]] && [[ -f "${REPO_ROOT}/mkdocs.yml" ]]; then
-        (cd "${REPO_ROOT}" && git add mkdocs.yml) || \
-            die "git add mkdocs.yml failed — release branch left in an inconsistent state."
-    fi
+    # Stage all release artefacts on the release branch — but DO NOT
+    # commit unless --commit was passed. Operator reviews with
+    # `git diff --cached` and commits manually (or re-runs with --commit
+    # to let release.sh commit + tag in one go).
+    #
+    # Never `git add -A` — only release-owned files, so an unrelated
+    # worktree edit doesn't accidentally land in the release commit.
     for entry in "${BUMPED_COMPONENTS[@]}"; do
         local _comp="${entry%%:*}"
         (cd "${REPO_ROOT}" && git add "${_comp}/metadata.yaml") || \
-            die "git add ${_comp}/metadata.yaml failed — bumped version would not be committed."
+            die "git add ${_comp}/metadata.yaml failed."
     done
-    if [[ "${has_staged}" -eq 1 ]] || ! (cd "${REPO_ROOT}" && git diff --cached --quiet); then
+    local rel_notes_file="docs/releases/${release_version}.md"
+    for _f in mkdocs.yml versions_released.yaml CHANGELOG.md RAG_STATUS_REPORT.md "${rel_notes_file}"; do
+        if [[ -f "${REPO_ROOT}/${_f}" ]]; then
+            (cd "${REPO_ROOT}" && git add -- "${_f}") || \
+                die "git add ${_f} failed."
+        fi
+    done
+
+    if [[ "${COMMIT}" -eq 1 ]]; then
         log "Committing release artefacts to ${branch}"
         (cd "${REPO_ROOT}" && \
             git commit -m "chore(release): cut ${release_version} — frozen snapshots + mkdocs nav") || \
             die "Failed to commit release artefacts."
+        log "Tagging ${release_version}"
+        (cd "${REPO_ROOT}" && git tag -a "${release_version}" -m "Release ${release_version}") || \
+            die "Failed to create tag ${release_version}"
+        log ""
+        log "Release branch ${branch} and tag ${release_version} created."
+        log "Push with: git push origin ${branch} && git push origin ${release_version}"
+    else
+        log ""
+        log "Release branch ${branch} created with all release artefacts staged."
+        log "Nothing committed (no --commit flag). Review with:"
+        log "    git status"
+        log "    git diff --cached"
+        log ""
+        log "When ready:"
+        log "    ./release.sh --apply --release-version ${release_version} --commit"
+        log "  or commit + tag manually:"
+        log "    git commit -m 'chore(release): cut ${release_version}'"
+        log "    git tag -a ${release_version} -m 'Release ${release_version}'"
+        log "    git push origin ${branch} && git push origin ${release_version}"
     fi
-
-    log "Tagging ${release_version}"
-    (cd "${REPO_ROOT}" && git tag -a "${release_version}" -m "Release ${release_version}") || \
-        die "Failed to create tag ${release_version}"
-
-    log "Release branch ${branch} and tag ${release_version} created."
-    log "Push with: git push origin ${branch} && git push origin ${release_version}"
 }
 
 # Auto-detect next release version from the last release tag when the
@@ -1946,19 +1963,26 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
     fi
 done
 
-# Surface metadata.yaml drift so the operator understands why "Current"
-# doesn't match what they remember setting. The release heals it
-# automatically — this is informational, not a blocker.
-if [[ ${#METADATA_DRIFT[@]} -gt 0 ]]; then
+# Surface metadata.yaml drift — but only for modules that AREN'T about
+# to be staged this run. Modules in BUMPED_COMPONENTS will have their
+# metadata.yaml rewritten by update_metadata in the write loop below;
+# warning about them here would be misleading ("disagrees" → about to
+# be fixed). Read-only invocations still show every drift case.
+declare -A _staged_now=()
+for entry in "${BUMPED_COMPONENTS[@]}"; do
+    _staged_now[${entry%%:*}]=1
+done
+_unstaged_drift=()
+for comp in $(printf '%s\n' "${!METADATA_DRIFT[@]}" | sort); do
+    [[ -n "${_staged_now[$comp]:-}" ]] && continue
+    _unstaged_drift+=("${comp}")
+done
+if [[ ${#_unstaged_drift[@]} -gt 0 ]]; then
     log ""
-    log "⚠️  metadata.yaml disagrees with the computed Next version for some modules:"
-    log "    metadata.yaml is normally pre-bumped by PR authors to the next planned"
-    log "    release; when it matches the detector's Next, no warning. The cases"
-    log "    below differ — either a PR set the wrong version, or PR labels imply"
-    log "    a different bump than was anticipated. metadata.yaml will be"
-    log "    overwritten to the Next column value when the module is released."
+    log "⚠️  metadata.yaml disagrees with the computed Next version for some modules"
+    log "    (these are NOT in the current stage set — staging them will fix the drift):"
     log ""
-    for comp in $(printf '%s\n' "${!METADATA_DRIFT[@]}" | sort); do
+    for comp in "${_unstaged_drift[@]}"; do
         v="${METADATA_DRIFT[$comp]}"
         log "    ${comp}: metadata.yaml=${v%|*}   detector Next=${v#*|}"
     done
