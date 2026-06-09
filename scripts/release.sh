@@ -757,8 +757,24 @@ if [[ "${COMMIT}" -eq 1 && "${APPLY}" -ne 1 ]]; then
         die "git tag failed."
     log ""
     log "✓ Committed and tagged ${RELEASE_VERSION} on ${branch}."
-    log "Push with: git push origin ${branch} && git push origin ${RELEASE_VERSION}"
+
+    # Push the release branch + tag synchronously. Each push blocks
+    # until the remote acks. If branch push fails, we don't push the
+    # tag either (orphaned tags are confusing).
+    phase "Pushing release branch + tag to origin"
     log ""
+    if ! (cd "${REPO_ROOT}" && git push origin "${branch}"); then
+        die "git push origin ${branch} failed. Tag ${RELEASE_VERSION} exists locally; push manually: git push origin ${branch} && git push origin ${RELEASE_VERSION}"
+    fi
+    if ! (cd "${REPO_ROOT}" && git push origin "${RELEASE_VERSION}"); then
+        die "git push origin ${RELEASE_VERSION} failed. Branch is up; push the tag manually: git push origin ${RELEASE_VERSION}"
+    fi
+    log "✓ Pushed ${branch} and tag ${RELEASE_VERSION} to origin."
+    log ""
+
+    # Versioned docs deploy. deploy_versioned_docs runs mike deploy and
+    # then (only on success) mike set-default — sequential, blocking,
+    # so set-default sees the just-deployed version.
     deploy_versioned_docs "${RELEASE_VERSION}"
     exit 0
 fi
@@ -1344,19 +1360,19 @@ create_snapshot() {
         return 0
     fi
 
-    # Refresh existing snapshot dir rather than refusing. The release flow
-    # is iterative — operators run, review, fix, re-run — and the snapshot
-    # is just a copy of regenerated current/ bindings, so a stale dir from
-    # a prior partial run is safe to wipe and remake.
+    # Verbose mode dumps full per-step progress; default mode buffers
+    # and prints one summary line per module at the end (✓ or ✗).
+    local refresh_marker=""
     if [[ -d "${snapshot_dir}" ]]; then
-        log "  [${comp}] refreshing existing ${version}/ snapshot (rm -rf + re-create)"
+        [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] refreshing existing ${version}/ snapshot (rm -rf + re-create)"
         rm -rf "${snapshot_dir}" || {
             warn "Failed to remove existing ${comp}/${version}/ — manual cleanup needed."
             return 1
         }
+        refresh_marker=" (refreshed)"
     fi
 
-    log "  [${comp}] regenerating bindings via build_modules.sh..."
+    [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] regenerating bindings via build_modules.sh..."
     local build_log="${REPO_ROOT}/out/release-snapshot-${comp//\//_}.log"
     mkdir -p "$(dirname "${build_log}")"
     if [[ "${VERBOSE}" -eq 1 ]]; then
@@ -1366,17 +1382,14 @@ create_snapshot() {
         fi
     else
         if ! (cd "${REPO_ROOT}" && ./build_modules.sh "${comp}" >"${build_log}" 2>&1); then
-            # Surface the actual ERROR line(s) — they're the diagnostic
-            # the operator needs, not the noise of the trailing "Available
-            # components:" list.
-            warn "Failed to regenerate ${comp} bindings (see ${build_log}):"
-            grep -E '^(❌|ERROR|FAIL)' "${build_log}" | head -5 | sed 's/^/    /' >&2 \
+            log "  [${comp}] → ${version}/  ${_C_RED}✗ build failed${_C_RESET} (see ${build_log#${REPO_ROOT}/})"
+            grep -E '^(❌|ERROR|FAIL)' "${build_log}" | head -3 | sed 's/^/    /' >&2 \
                 || tail -10 "${build_log}" | sed 's/^/    /' >&2
             return 1
         fi
     fi
 
-    log "  [${comp}] copying current/ to ${version}/"
+    [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] copying current/ to ${version}/"
     if ! cp -r "${REPO_ROOT}/${comp}/current" "${snapshot_dir}"; then
         warn "cp failed for ${comp}/${version}/."
         return 1
@@ -1392,6 +1405,11 @@ create_snapshot() {
         return 1
     }
 
+    # One summary line per module — visible by default. Verbose output
+    # already showed every step above.
+    if [[ "${VERBOSE}" -ne 1 ]]; then
+        log "  [${comp}] → ${version}/  ${_C_GREEN}✓${_C_RESET}${refresh_marker}"
+    fi
     return 0
 }
 
@@ -1575,8 +1593,20 @@ create_release_branch_and_tag() {
             die "Failed to create tag ${release_version}"
         log ""
         log "Release branch ${branch} and tag ${release_version} created."
-        log "Push with: git push origin ${branch} && git push origin ${release_version}"
+
+        # Push the release branch + tag synchronously.
+        phase "Pushing release branch + tag to origin"
         log ""
+        if ! (cd "${REPO_ROOT}" && git push origin "${branch}"); then
+            die "git push origin ${branch} failed."
+        fi
+        if ! (cd "${REPO_ROOT}" && git push origin "${release_version}"); then
+            die "git push origin ${release_version} failed."
+        fi
+        log "✓ Pushed ${branch} and tag ${release_version} to origin."
+        log ""
+
+        # mike deploy + set-default (sequential, blocking).
         deploy_versioned_docs "${release_version}"
     else
         log ""
