@@ -56,11 +56,109 @@ die()   { echo "${_C_RED}${_C_BOLD}ERROR:${_C_RESET} ${_C_RED}$*${_C_RESET}" >&2
 
 # Verification-build runner. Defined at top-level so it's in scope for
 # both the stage path (DO_WRITES=1) and a pure --apply (DO_WRITES=0).
+# ----------------------------------------------------------------------------
+# Build cache — skip work that's already been done with the same inputs.
+# ----------------------------------------------------------------------------
+#
+# Persisted at out/.build-cache (gitignored — out/ is). Format, tab-delimited:
+#
+#   KIND<TAB>KEY<TAB>SHA256<TAB>STATUS
+#
+# Kinds:
+#   module     KEY=<comp>          inputs: <comp>/current/com/**/*.aidl + interface.yaml + hfp-*.yaml
+#   build      KEY=<args-joined>   inputs: versions_released.yaml + all referenced snapshot .aidl files
+#                                          (or for "all": every */current/*.aidl)
+#
+# A status of "ok" means the last build with that input hash succeeded.
+# Anything else (or absence) = need to re-run.
+BUILD_CACHE_FILE="${REPO_ROOT}/out/.build-cache"
+
+build_cache_lookup() {
+    local kind="$1" key="$2"
+    [[ -f "${BUILD_CACHE_FILE}" ]] || return 1
+    # Return the cached SHA + status for kind/key on stdout.
+    awk -F'\t' -v k="${kind}" -v key="${key}" '
+        $1 == k && $2 == key { print $3"\t"$4; found=1; exit }
+        END { exit (found ? 0 : 1) }
+    ' "${BUILD_CACHE_FILE}"
+}
+
+build_cache_record() {
+    local kind="$1" key="$2" sha="$3" status="$4"
+    mkdir -p "$(dirname "${BUILD_CACHE_FILE}")"
+    # Remove any existing entry for kind/key, then append the new one.
+    if [[ -f "${BUILD_CACHE_FILE}" ]]; then
+        awk -F'\t' -v k="${kind}" -v key="${key}" '
+            !($1 == k && $2 == key) { print }
+        ' "${BUILD_CACHE_FILE}" > "${BUILD_CACHE_FILE}.tmp" && \
+            mv "${BUILD_CACHE_FILE}.tmp" "${BUILD_CACHE_FILE}"
+    fi
+    printf '%s\t%s\t%s\t%s\n' "${kind}" "${key}" "${sha}" "${status}" >> "${BUILD_CACHE_FILE}"
+}
+
+# SHA of every input file relevant to building a single component from
+# current/: AIDL, interface.yaml, hfp-*.yaml. Pure-input hash — doesn't
+# depend on the toolchain version (that's a separate concern; if the
+# toolchain changes the operator should clear the cache).
+build_cache_module_hash() {
+    local comp="$1"
+    local src_dir="${REPO_ROOT}/${comp}/current"
+    [[ -d "${src_dir}" ]] || { echo ""; return; }
+    find "${src_dir}" \
+        \( -name '*.aidl' -o -name 'interface.yaml' -o -name 'hfp-*.yaml' \) \
+        -type f 2>/dev/null \
+        | sort \
+        | xargs -r sha256sum 2>/dev/null \
+        | sha256sum | awk '{print $1}'
+}
+
+# SHA for a verification build invocation. Inputs:
+#   - The args (so "all" vs "manifest" hash differently)
+#   - The relevant source files (every */current/*.aidl for "all";
+#     versions_released.yaml + every */<version>/*.aidl for "manifest")
+build_cache_build_hash() {
+    local args="$*"
+    local files
+    if [[ "$1" == "manifest" ]]; then
+        # versions_released.yaml + every snapshot dir's AIDL
+        files="$(find "${REPO_ROOT}" -maxdepth 3 -path '*/[0-9]*/com' -prune -o \
+                    -name '*.aidl' -path '*/[0-9]*.*.*/com/*' -print 2>/dev/null | sort)"
+        if [[ -f "${REPO_ROOT}/versions_released.yaml" ]]; then
+            files="${REPO_ROOT}/versions_released.yaml
+${files}"
+        fi
+    else
+        # `all` or single-comp: hash every current/*.aidl
+        files="$(find "${REPO_ROOT}" -maxdepth 4 -path '*/current/com/*' -name '*.aidl' \
+                    -type f 2>/dev/null | sort)"
+    fi
+    # Hash the args first, then all file contents.
+    {
+        echo "args:${args}"
+        xargs -r sha256sum <<< "${files}" 2>/dev/null
+    } | sha256sum | awk '{print $1}'
+}
+
 run_verification_build() {
     local label="$1"          # "current cohort" / "released cohort"
     local log_file="$2"
     shift 2
     mkdir -p "$(dirname "${log_file}")"
+
+    # Cache lookup — skip if these exact inputs already built successfully.
+    local key="$*"
+    local input_sha cached
+    input_sha="$(build_cache_build_hash "$@")"
+    cached="$(build_cache_lookup "build" "${key}" 2>/dev/null || true)"
+    if [[ -n "${cached}" ]]; then
+        local cached_sha="${cached%%$'\t'*}"
+        local cached_status="${cached##*$'\t'}"
+        if [[ "${cached_sha}" == "${input_sha}" && "${cached_status}" == "ok" ]]; then
+            log "  Verification build (${label}) SKIPPED — cache hit (inputs unchanged since last success)"
+            return 0
+        fi
+    fi
+
     phase "Verification build (${label}): ./build_modules.sh $*"
     log ""
     log "Verification build (${label}) — output streamed to ${log_file#${REPO_ROOT}/}"
@@ -77,6 +175,7 @@ run_verification_build() {
         fi
     fi
     log "  Verification build (${label}) OK"
+    build_cache_record "build" "${key}" "${input_sha}" "ok"
 }
 
 # ----------------------------------------------------------------------------
@@ -1357,10 +1456,20 @@ create_release_branch_and_tag() {
 
     if git -C "${REPO_ROOT}" rev-parse --verify "refs/heads/${branch}" >/dev/null 2>&1; then
         log "Branch ${branch} already exists locally — checking it out."
-        (cd "${REPO_ROOT}" && git checkout "${branch}") || die "Failed to checkout existing ${branch}"
+        # -q: don't dump the M/A file list. Operator can use --verbose
+        # to see it if they need the diff summary at checkout time.
+        if [[ "${VERBOSE:-0}" -eq 1 ]]; then
+            (cd "${REPO_ROOT}" && git checkout "${branch}") || die "Failed to checkout existing ${branch}"
+        else
+            (cd "${REPO_ROOT}" && git checkout -q "${branch}") || die "Failed to checkout existing ${branch}"
+        fi
     else
         log "Creating release branch ${branch}"
-        (cd "${REPO_ROOT}" && git checkout -b "${branch}") || die "Failed to create ${branch}"
+        if [[ "${VERBOSE:-0}" -eq 1 ]]; then
+            (cd "${REPO_ROOT}" && git checkout -b "${branch}") || die "Failed to create ${branch}"
+        else
+            (cd "${REPO_ROOT}" && git checkout -q -b "${branch}") || die "Failed to create ${branch}"
+        fi
     fi
 
     # Stage all release artefacts on the release branch — but DO NOT
