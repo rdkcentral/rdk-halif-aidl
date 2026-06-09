@@ -625,13 +625,17 @@ Once per release the script:
 
 With --apply, additionally:
  12. git checkout -b release/<release>
- 13. git commit
- 14. git tag <release>
+ 13. git commit  (with --commit)
+ 14. git push origin release/<release>  (with --commit)
+
+The tag is NOT created by this script. `git flow release finish
+<release>` creates the tag on main when it merges the release branch
+in. This script stops at the pushed release branch.
 
 No-op when no component changed:
   If no metadata.yaml moves, the script writes nothing, creates no
   snapshot, leaves mkdocs.yml unchanged, and does not create a release
-  branch or tag. Exit clean.
+  branch. Exit clean.
 
 Notes:
   - Script is intended for manual release-time usage (not CI).
@@ -705,7 +709,7 @@ done
 
 # Two modes consumed by the rest of the script:
 #   DO_WRITES   1 -> regen/snapshot/metadata/manifests/docs writes (per-module)
-#   DO_BRANCH   1 -> create release branch + tag + commit (once per release)
+#   DO_BRANCH   1 -> create release branch + commit (once per release; tag is made by git-flow release finish on main)
 # Mapping:
 #   bare ./release.sh              read-only plan/check view (DO_WRITES=0, DO_BRANCH=0)
 #   ./release.sh <module>...       writes for staged modules (DO_WRITES=1, DO_BRANCH=0)
@@ -737,45 +741,65 @@ if [[ "${COMMIT}" -eq 1 && "${APPLY}" -ne 1 ]]; then
             die "--commit needs --release-version X.Y.Z (no prior release tag to auto-detect from)."
         fi
     fi
-    if (cd "${REPO_ROOT}" && git diff --cached --quiet); then
-        die "--commit: nothing staged in the index. Use ./release.sh --apply first."
-    fi
     branch="$(git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD)"
     if [[ ! "${branch}" =~ ^release/ ]]; then
         warn "Current branch is '${branch}', not a release branch."
         warn "  --commit is normally run on a release/X.Y.Z branch created by --apply."
     fi
-    if git -C "${REPO_ROOT}" rev-parse --verify "refs/tags/${RELEASE_VERSION}" >/dev/null 2>&1; then
-        die "Tag ${RELEASE_VERSION} already exists. Delete it first (git tag -d ${RELEASE_VERSION}) or pass --release-version."
-    fi
-    log "Committing staged release artefacts on ${branch}..."
-    (cd "${REPO_ROOT}" && \
-        git commit -m "chore(release): cut ${RELEASE_VERSION} — frozen snapshots + mkdocs nav") || \
-        die "git commit failed."
-    log "Tagging ${RELEASE_VERSION}"
-    (cd "${REPO_ROOT}" && git tag -a "${RELEASE_VERSION}" -m "Release ${RELEASE_VERSION}") || \
-        die "git tag failed."
-    log ""
-    log "✓ Committed and tagged ${RELEASE_VERSION} on ${branch}."
 
-    # Push the release branch + tag synchronously. Each push blocks
-    # until the remote acks. If branch push fails, we don't push the
-    # tag either (orphaned tags are confusing).
-    phase "Pushing release branch + tag to origin"
-    log ""
-    if ! (cd "${REPO_ROOT}" && git push origin "${branch}"); then
-        die "git push origin ${branch} failed. Tag ${RELEASE_VERSION} exists locally; push manually: git push origin ${branch} && git push origin ${RELEASE_VERSION}"
+    # Idempotency: --apply already did all the regen / snapshot / writes.
+    # --commit's job is just commit + push + mike deploy. If there's
+    # nothing staged AND HEAD already has a release commit AND the branch
+    # is already pushed, skip straight to mike deploy (idempotent re-run).
+    if (cd "${REPO_ROOT}" && git diff --cached --quiet); then
+        if (cd "${REPO_ROOT}" && git log -1 --pretty=%B 2>/dev/null) | \
+                grep -qE "^chore\(release\): cut ${RELEASE_VERSION//./\\.}\b"; then
+            log "Release commit for ${RELEASE_VERSION} already on HEAD — skipping commit."
+            if ! (cd "${REPO_ROOT}" && \
+                    git rev-parse --verify --quiet "origin/${branch}" >/dev/null) || \
+               [[ "$(cd "${REPO_ROOT}" && git rev-parse HEAD)" != \
+                  "$(cd "${REPO_ROOT}" && git rev-parse "origin/${branch}" 2>/dev/null)" ]]; then
+                phase "Pushing release branch to origin"
+                log ""
+                if ! (cd "${REPO_ROOT}" && git push origin "${branch}"); then
+                    die "git push origin ${branch} failed."
+                fi
+                log "✓ Pushed ${branch} to origin."
+            else
+                log "Branch ${branch} already up-to-date on origin — skipping push."
+            fi
+        else
+            die "--commit: nothing staged in the index and HEAD has no ${RELEASE_VERSION} release commit. Use ./release.sh --apply first."
+        fi
+    else
+        log "Committing staged release artefacts on ${branch}..."
+        (cd "${REPO_ROOT}" && \
+            git commit -m "chore(release): cut ${RELEASE_VERSION} — frozen snapshots + mkdocs nav") || \
+            die "git commit failed."
+        log ""
+        log "✓ Committed ${RELEASE_VERSION} release artefacts on ${branch}."
+
+        # Push the release branch — no tag. The tag is made by
+        # `git flow release finish` on main when the release branch
+        # merges in, not on the release branch itself.
+        phase "Pushing release branch to origin"
+        log ""
+        if ! (cd "${REPO_ROOT}" && git push origin "${branch}"); then
+            die "git push origin ${branch} failed."
+        fi
+        log "✓ Pushed ${branch} to origin."
     fi
-    if ! (cd "${REPO_ROOT}" && git push origin "${RELEASE_VERSION}"); then
-        die "git push origin ${RELEASE_VERSION} failed. Branch is up; push the tag manually: git push origin ${RELEASE_VERSION}"
-    fi
-    log "✓ Pushed ${branch} and tag ${RELEASE_VERSION} to origin."
     log ""
 
     # Versioned docs deploy. deploy_versioned_docs runs mike deploy and
     # then (only on success) mike set-default — sequential, blocking,
-    # so set-default sees the just-deployed version.
+    # so set-default sees the just-deployed version. mike treats the
+    # version as a string; no git tag required.
     deploy_versioned_docs "${RELEASE_VERSION}"
+    log ""
+    log "Next step (git-flow):"
+    log "    git flow release finish ${RELEASE_VERSION}"
+    log "  (merges ${branch} → main, tags ${RELEASE_VERSION} on main, merges back to develop)"
     exit 0
 fi
 
@@ -1499,15 +1523,22 @@ PYEOF
 }
 
 # ----------------------------------------------------------------------------
-# Release branch + tag (#513)
+# Release branch (#513)
+#
+# Creates / reuses release/<version> and stages all generated artefacts.
+# Does NOT create a git tag — `git flow release finish <version>` creates
+# the tag on main when the release branch merges in.
 # ----------------------------------------------------------------------------
 
-create_release_branch_and_tag() {
+create_release_branch() {
     local release_version="$1"
     local branch="release/${release_version}"
 
+    # Tag existence is not a failure condition: this script never creates
+    # the tag. `git flow release finish` does. If the tag exists already
+    # (e.g. the operator already finished a prior cycle), warn — don't die.
     if git -C "${REPO_ROOT}" rev-parse --verify "refs/tags/${release_version}" >/dev/null 2>&1; then
-        die "Tag ${release_version} already exists. Refusing to overwrite."
+        warn "Tag ${release_version} already exists. (Tag is created by 'git flow release finish' on main, not by this script.)"
     fi
 
     if git -C "${REPO_ROOT}" rev-parse --verify "refs/heads/${branch}" >/dev/null 2>&1; then
@@ -1584,30 +1615,40 @@ create_release_branch_and_tag() {
                 -regex '.*/[a-z][a-z0-9_]*/[0-9][0-9.]*' -print0 2>/dev/null)
 
     if [[ "${COMMIT}" -eq 1 ]]; then
-        log "Committing release artefacts to ${branch}"
-        (cd "${REPO_ROOT}" && \
-            git commit -m "chore(release): cut ${release_version} — frozen snapshots + mkdocs nav") || \
-            die "Failed to commit release artefacts."
-        log "Tagging ${release_version}"
-        (cd "${REPO_ROOT}" && git tag -a "${release_version}" -m "Release ${release_version}") || \
-            die "Failed to create tag ${release_version}"
-        log ""
-        log "Release branch ${branch} and tag ${release_version} created."
+        # Idempotent: if nothing's staged and HEAD already has the
+        # release commit, skip the commit step (re-run after a prior
+        # --apply --commit). Otherwise commit normally.
+        if (cd "${REPO_ROOT}" && git diff --cached --quiet) && \
+           (cd "${REPO_ROOT}" && git log -1 --pretty=%B 2>/dev/null) | \
+                grep -qE "^chore\(release\): cut ${release_version//./\\.}\b"; then
+            log "Release commit for ${release_version} already on HEAD — skipping commit."
+        else
+            log "Committing release artefacts to ${branch}"
+            (cd "${REPO_ROOT}" && \
+                git commit -m "chore(release): cut ${release_version} — frozen snapshots + mkdocs nav") || \
+                die "Failed to commit release artefacts."
+            log ""
+            log "✓ Release branch ${branch} committed."
+        fi
 
-        # Push the release branch + tag synchronously.
-        phase "Pushing release branch + tag to origin"
+        # Push the release branch — no tag. The tag is made by
+        # `git flow release finish` on main when the release branch
+        # merges in, not on the release branch itself.
+        phase "Pushing release branch to origin"
         log ""
         if ! (cd "${REPO_ROOT}" && git push origin "${branch}"); then
             die "git push origin ${branch} failed."
         fi
-        if ! (cd "${REPO_ROOT}" && git push origin "${release_version}"); then
-            die "git push origin ${release_version} failed."
-        fi
-        log "✓ Pushed ${branch} and tag ${release_version} to origin."
+        log "✓ Pushed ${branch} to origin."
         log ""
 
-        # mike deploy + set-default (sequential, blocking).
+        # mike deploy + set-default (sequential, blocking). mike treats
+        # the version as a string; no git tag required.
         deploy_versioned_docs "${release_version}"
+        log ""
+        log "Next step (git-flow):"
+        log "    git flow release finish ${release_version}"
+        log "  (merges ${branch} → main, tags ${release_version} on main, merges back to develop)"
     else
         log ""
         log "Release branch ${branch} created with all release artefacts staged."
@@ -1617,10 +1658,13 @@ create_release_branch_and_tag() {
         log ""
         log "When ready:"
         log "    ./release.sh --apply --release-version ${release_version} --commit"
-        log "  or commit + tag manually:"
+        log "  or commit manually:"
         log "    git commit -m 'chore(release): cut ${release_version}'"
-        log "    git tag -a ${release_version} -m 'Release ${release_version}'"
-        log "    git push origin ${branch} && git push origin ${release_version}"
+        log "    git push origin ${branch}"
+        log ""
+        log "After --commit (or manual push), finish via git-flow:"
+        log "    git flow release finish ${release_version}"
+        log "  (tags ${release_version} on main and merges back to develop)"
     fi
 }
 
@@ -1917,7 +1961,7 @@ audit_version_refs() {
 }
 
 MODE="PLAN (read-only — what the staged plan would do)"
-[[ "${APPLY}"   -eq 1 ]] && MODE="APPLY (writes + release branch + tag)"
+[[ "${APPLY}"   -eq 1 ]] && MODE="APPLY (writes + release branch; tag made by git-flow release finish)"
 [[ "${DRY_RUN}" -eq 1 ]] && MODE="DRY-RUN (preview only — same as bare ./release.sh)"
 [[ "${CHECK_MODE}" -eq 1 ]] && MODE="CHECK (detected-changes preview, bypasses plan)"
 
@@ -2390,8 +2434,13 @@ if [[ "${DRY_RUN}" -eq 1 && ${#BUMPED_COMPONENTS[@]} -gt 0 ]]; then
     log ""
     log "  With --apply, additionally:"
     log "   12. git checkout -b release/${RELEASE_VERSION}"
+    log "  With --apply --commit, additionally:"
     log "   13. git commit  release artefacts (snapshots + manifests + nav + notes + CHANGELOG)"
-    log "   14. git tag ${RELEASE_VERSION}"
+    log "   14. git push origin release/${RELEASE_VERSION}"
+    log "   15. mike deploy ${RELEASE_VERSION} --push  &&  mike set-default ${RELEASE_VERSION} --push"
+    log ""
+    log "  The tag is created by 'git flow release finish ${RELEASE_VERSION}' on main,"
+    log "  not by this script."
 fi
 
 # ----------------------------------------------------------------------------
@@ -2564,7 +2613,7 @@ if [[ "${DO_BRANCH}" -eq 1 ]]; then
     fi
     phase "Creating release branch and tag ${RELEASE_VERSION}..."
     log ""
-    create_release_branch_and_tag "${RELEASE_VERSION}"
+    create_release_branch "${RELEASE_VERSION}"
 fi
 
 # Print the buffered table NOW — after all diagnostic blocks above,
@@ -2585,9 +2634,10 @@ _total_touched=${#COMP_TOUCHED[@]}
 log ""
 if [[ "${DO_BRANCH}" -eq 1 ]]; then
     if [[ "${COMMIT}" -eq 1 ]]; then
-        log "Release ${RELEASE_VERSION} applied: ${_planned_count} module(s) — branch + commit + tag created."
+        log "Release ${RELEASE_VERSION} applied: ${_planned_count} module(s) — branch + commit + push complete."
+        log "Tag will be created on main by: git flow release finish ${RELEASE_VERSION}"
     else
-        log "Release ${RELEASE_VERSION} staged on branch: ${_planned_count} module(s) — release artefacts in the index, no commit/tag yet."
+        log "Release ${RELEASE_VERSION} staged on branch: ${_planned_count} module(s) — release artefacts in the index, no commit yet."
         log "Review with \`git diff --cached\`, then: ./release.sh --commit"
     fi
 elif [[ "${CHECK_MODE}" -eq 1 ]]; then
