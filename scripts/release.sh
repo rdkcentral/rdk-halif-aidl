@@ -139,6 +139,42 @@ ${files}"
     } | sha256sum | awk '{print $1}'
 }
 
+# Deploy the versioned mkdocs site to gh-pages via the project's
+# build_docs.sh wrapper (uses `mike`). Two steps:
+#   1. `mike deploy <X.Y.Z> --push`        — publishes this version
+#   2. `mike set-default <X.Y.Z> --push`   — marks it as the "latest"
+# Both are synchronous (blocking) and push to origin/gh-pages directly.
+# Caller passes the release version. Bails (warns, doesn't die) on
+# failure — the release artefact commit + tag is already made, so docs
+# deploy is recoverable later (operator can rerun by hand).
+deploy_versioned_docs() {
+    local ver="$1"
+    local docs_script="${REPO_ROOT}/docs/build_docs.sh"
+    if [[ ! -x "${docs_script}" ]]; then
+        warn "Versioned docs deploy: ${docs_script} not found/executable — skipping."
+        return 0
+    fi
+    phase "Deploying versioned docs for ${ver} → gh-pages (mike deploy)"
+    log ""
+    log "Deploying ${ver} via ./docs/build_docs.sh deploy ${ver}"
+    if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh deploy "${ver}"); then
+        warn "mike deploy ${ver} failed."
+        warn "  Release commit + tag are already made; you can retry later:"
+        warn "    ./docs/build_docs.sh deploy ${ver}"
+        warn "    ./docs/build_docs.sh set-default ${ver}"
+        return 1
+    fi
+    phase "Setting ${ver} as default version (mike set-default)"
+    log ""
+    if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh set-default "${ver}"); then
+        warn "mike set-default ${ver} failed — version is deployed but not marked as latest."
+        warn "  Retry with: ./docs/build_docs.sh set-default ${ver}"
+        return 1
+    fi
+    log "✓ Versioned docs deployed and ${ver} set as latest."
+    return 0
+}
+
 run_verification_build() {
     local label="$1"          # "current cohort" / "released cohort"
     local log_file="$2"
@@ -722,6 +758,8 @@ if [[ "${COMMIT}" -eq 1 && "${APPLY}" -ne 1 ]]; then
     log ""
     log "✓ Committed and tagged ${RELEASE_VERSION} on ${branch}."
     log "Push with: git push origin ${branch} && git push origin ${RELEASE_VERSION}"
+    log ""
+    deploy_versioned_docs "${RELEASE_VERSION}"
     exit 0
 fi
 
@@ -1538,6 +1576,8 @@ create_release_branch_and_tag() {
         log ""
         log "Release branch ${branch} and tag ${release_version} created."
         log "Push with: git push origin ${branch} && git push origin ${release_version}"
+        log ""
+        deploy_versioned_docs "${release_version}"
     else
         log ""
         log "Release branch ${branch} created with all release artefacts staged."
