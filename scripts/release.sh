@@ -2382,7 +2382,12 @@ _total_touched=${#COMP_TOUCHED[@]}
 
 log ""
 if [[ "${DO_BRANCH}" -eq 1 ]]; then
-    log "Release ${RELEASE_VERSION} applied: ${_planned_count} module(s) — branch + tag created."
+    if [[ "${COMMIT}" -eq 1 ]]; then
+        log "Release ${RELEASE_VERSION} applied: ${_planned_count} module(s) — branch + commit + tag created."
+    else
+        log "Release ${RELEASE_VERSION} staged on branch: ${_planned_count} module(s) — release artefacts in the index, no commit/tag yet."
+        log "Review with \`git diff --cached\`, then: ./release.sh --commit"
+    fi
 elif [[ "${CHECK_MODE}" -eq 1 ]]; then
     log "Stage modules with: ./release.sh <module>     Apply with: ./release.sh --apply --release-version ${RELEASE_VERSION}"
 elif [[ "${_planned_count}" -eq 0 ]]; then
