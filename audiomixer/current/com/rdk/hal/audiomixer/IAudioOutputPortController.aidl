@@ -57,7 +57,7 @@ interface IAudioOutputPortController {
      * @param[in] value     Property value; union field must match the property type.
      *
      * @returns  true on successful write, false if the property is not supported
-     *            by this port or the value is rejected.
+     *           by this port or the value is rejected.
      *
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if property is unknown or
      *            value type does not match.

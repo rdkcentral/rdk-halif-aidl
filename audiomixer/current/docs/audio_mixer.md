@@ -431,7 +431,7 @@ For ports without hot-plug detection (`SPDIF`, `SPEAKERS`, `COMPOSITE`), the HFP
 
 ## Modes of Operation
 
-Mixers can operate in secure and non-secure paths. Mixer properties such as `MIXING_MODE`, `MUTE`, and `DEBUG_TAP_ENABLED` affect runtime behaviour via the controller property interface. Output-port properties such as `DOLBY_MS12_AUDIO_PROFILE` are configured via `IAudioOutputPort.setProperty()`.
+Mixers can operate in secure and non-secure paths. Mixer properties such as `MIXING_MODE`, `MUTE`, and `DEBUG_TAP_ENABLED` are written via `IAudioMixerController.setProperty()` (controller acquired via `IAudioMixer.open()`). Output-port properties such as `DOLBY_MS12_AUDIO_PROFILE` are written via `IAudioOutputPortController.setProperty()` (controller acquired via `IAudioOutputPort.open()`). Reads on both go through the read-side handle's `getProperty()`.
 
 ---
 
