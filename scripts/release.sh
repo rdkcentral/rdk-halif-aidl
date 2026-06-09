@@ -1384,16 +1384,39 @@ create_release_branch_and_tag() {
     done
 
     # Belt-and-braces: pick up any other tracked-file modifications the
-    # script's writes touched but the explicit list above missed. Safe
-    # because we're on a freshly-cut release branch with a known set of
-    # release-owned files; only -u (tracked) is used so unrelated
-    # untracked junk doesn't sneak in.
+    # script's writes touched but the explicit list above missed.
     (cd "${REPO_ROOT}" && git add -u) || true
     # Also pick up any docs/releases/<X.Y.Z>.md that's been hand-edited
     # and is now untracked.
     if [[ -f "${REPO_ROOT}/docs/releases/${release_version}.md" ]]; then
         (cd "${REPO_ROOT}" && git add -- "docs/releases/${release_version}.md") || true
     fi
+    # Pick up any UNTRACKED snapshot dirs that should be released this
+    # cycle — <comp>/<X.Y.Z.W>/ dirs that aren't in the baseline tag
+    # AND aren't already tracked. Catches the case where `stage` created
+    # the dirs (and git-added them) but they got unstaged before --apply
+    # ran, leaving them untracked. Filtered by version-shape regex so
+    # unrelated junk dirs can't sneak in.
+    local baseline
+    baseline="$(git -C "${REPO_ROOT}" describe --tags --abbrev=0 2>/dev/null || true)"
+    while IFS= read -r -d '' _vd; do
+        local _rel="${_vd#${REPO_ROOT}/}"
+        local _ver="${_rel##*/}"
+        [[ "${_ver}" =~ ^[0-9]+(\.[0-9]+){2,3}$ ]] || continue
+        # Skip if already tracked.
+        if [[ -n "$(git -C "${REPO_ROOT}" ls-files -- "${_rel}" 2>/dev/null | head -1)" ]]; then
+            continue
+        fi
+        # Skip if it's in the baseline release tag (shouldn't happen for
+        # untracked dirs, but defence in depth).
+        if [[ -n "${baseline}" ]] && \
+           [[ -n "$(git -C "${REPO_ROOT}" ls-tree -d --name-only "${baseline}" "${_rel}" 2>/dev/null)" ]]; then
+            continue
+        fi
+        (cd "${REPO_ROOT}" && git add -- "${_rel}/") || \
+            warn "git add ${_rel}/ failed"
+    done < <(find "${REPO_ROOT}" -maxdepth 2 -mindepth 2 -type d \
+                -regex '.*/[a-z][a-z0-9_]*/[0-9][0-9.]*' -print0 2>/dev/null)
 
     if [[ "${COMMIT}" -eq 1 ]]; then
         log "Committing release artefacts to ${branch}"
