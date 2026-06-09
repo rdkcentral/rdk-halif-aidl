@@ -30,8 +30,8 @@ impacting foreground audio, video, or graphics operations.
 !!! info "References"
     |||
     |-|-|
-    |**Interface Definition**|[firmwareupdate/0.2.0.0](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/firmwareupdate/0.2.0.0)|
-    |**Interface Version**|`0.2.0.0`|
+    |**Interface Definition**|[firmwareupdate/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/firmwareupdate/current)|
+    |**Interface Version**|`current`|
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
 
 ---

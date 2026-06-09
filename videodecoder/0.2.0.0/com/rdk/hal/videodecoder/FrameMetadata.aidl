@@ -1,0 +1,179 @@
+/*
+ * If not stated otherwise in this file or this component's LICENSE file the
+ * following copyright and licenses apply:
+ *
+ * Copyright 2024 RDK Management
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.rdk.hal.videodecoder;
+import com.rdk.hal.videodecoder.ScanType;
+import com.rdk.hal.videodecoder.PixelFormat;
+import com.rdk.hal.videodecoder.DynamicRange;
+import com.rdk.hal.videodecoder.MasteringDisplayInfo;
+import com.rdk.hal.videodecoder.ContentLightLevel;
+import com.rdk.hal.videodecoder.Colorimetry;
+import com.rdk.hal.AVSource;
+
+/**
+ *  @brief     Decoded video frame metadata, relating to the frame output from the video decoder.
+ *  @author    Luc Kennedy-Lamb
+ *  @author    Peter Stieglitz
+ *  @author    Douglas Adler
+ */
+
+@VintfStability
+parcelable FrameMetadata {
+
+    /**
+	 * Pixel aspect ratio (PAR) defined as the ratio parX:parY.
+     * e.g. 1:1 for square pixels, 480i=10:11, 576i=59:54
+     * @see Rec.601 and https://en.wikipedia.org/wiki/Pixel_aspect_ratio
+     */
+    int parX;
+    int parY;
+
+    /**
+	 * Source aspect ratio (SAR) defined as the ratio sarX:sarY.
+     * e.g. 720:480, 3840:2160
+     */
+    int sarX;
+    int sarY;
+
+	/**
+	 * The coded width and height of the video frame in pixels.
+	 * Decoded video frame buffers hold the video frame in coded dimensions.
+	 */
+    int codedWidth;
+    int codedHeight;
+
+	/**
+	 * The active display dimensions of the video frame in pixels.
+	 * These dimensions can be smaller than the coded dimensions to specify a
+	 * smaller central region to display inside the coded video frame.
+	 * The active dimensions should reflect any display frame or bar data from the stream.
+	 */
+    int activeX;
+	int activeY;
+    int activeWidth;
+	int activeHeight;
+
+	/**
+	 * The color depth in bits.
+	 * e.g. 8, 10, 12.
+	 */
+    int colorDepth;
+
+	/**
+	 * Pixel format of the video frame.
+	 */
+	PixelFormat pixelFormat;
+
+	/**
+	 * Dynamic range of the video frame.
+	 */
+	DynamicRange dynamicRange;
+
+	/**
+	 * The picture scan type output from the decoder.
+	 */
+    ScanType scanType;
+
+	/**
+	 * Active format description code.
+	 * See https://en.wikipedia.org/wiki/Active_Format_Description
+	 */
+    int afd;
+
+	/**
+	 * Frame rate decoded from the video stream expressed as a fraction.
+	 * Use 0/0 if unknown.e
+	 * e.g. 24fps = 24/1, 59.94fps = 60000/1001
+	 */
+	int frameRateNumerator;
+	int frameRateDenominator;
+
+	/**
+	 * In-bitstream end-of-stream marker.
+	 *
+	 * Set true by the HAL on an output frame when it parses an end-of-stream /
+	 * sequence-end marker from the elementary stream itself - MPEG-2
+	 * sequence_end_code, H.264/H.265 end_of_stream NAL, MPEG-4 Part 2
+	 * visual_object_sequence_end_code.
+	 *
+	 * Advisory and informational only:
+	 * - It does NOT end the decode session and never triggers teardown.
+	 * - It may appear more than once in a session - at a splice or
+	 *   concatenation point an end-of-sequence is a sequence boundary, not
+	 *   necessarily end-of-presentation.
+	 * - No callback fires for it; it is surfaced purely as this flag for any
+	 *   consumer that cares (e.g. splice-aware middleware).
+	 *
+	 * Client-signalled EOS is NOT carried here. The discrete EOS signal flows
+	 * via `IVideoDecoderController.signalEndOfStream()`: the HAL drains every
+	 * held frame, and then fires
+	 * `IVideoDecoderControllerListener.onEndOfStream()` exactly once after the
+	 * final `onFrameOutput()`.
+	 *
+	 * @see IVideoDecoderController.signalEndOfStream()
+	 * @see IVideoDecoderControllerListener.onEndOfStream()
+	 */
+	boolean bitstreamEOS;
+
+	/**
+	 * Discontinuity indicator where the PTS for this frame is likely to be discontinuous to the previous.
+	 */
+	boolean discontinuity;
+
+	/**
+	 * Indicates if the video should be delivered in low latency mode.
+	 */
+	boolean lowLatency;
+
+	/**
+	 * Colorimetry (range / matrix / transfer / primaries) of the video
+	 * frame as reported by the decoder. Each axis is set to its `UNKNOWN`
+	 * sentinel when not signalled in the stream; the parcelable itself is
+	 * never null on the frame-output path.
+	 */
+	Colorimetry colorimetry;
+
+	/**
+	 * Mastering display colour volume metadata (SMPTE ST 2086).
+	 * Extracted from HEVC SEI type 137 or equivalent. Null if not present in the stream.
+	 */
+	@nullable MasteringDisplayInfo masteringDisplayInfo;
+
+	/**
+	 * Content light level static HDR metadata (MaxCLL/MaxFALL as defined in CTA-861.3).
+	 * Extracted from HEVC SEI type 144 or equivalent. Null if not present in the stream.
+	 */
+	@nullable ContentLightLevel contentLightLevel;
+
+	/**
+	 * The source of the video frame.
+	 * When the frame is presented the source may be used to configure the TV picture mode settings.
+	 */
+	AVSource source;
+
+	/**
+	 * SHA1 calculation value.
+	 * Only set when SHA1_CALC is set 1=on
+	 */
+	byte[] sha1;
+
+	/**
+	 * Private extension for future use.
+	 */
+    ParcelableHolder extension;
+}

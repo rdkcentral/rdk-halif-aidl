@@ -15,12 +15,12 @@
 default: current
 
 components:
-  audiodecoder: 0.1.0.0
-  audiomixer: 0.1.0.1
-  audiosink: 0.1.0.0
-  avbuffer: 0.1.0.0
-  avclock: 0.1.0.0
-  common: 0.1.0.0
+  audiodecoder: 0.2.0.0
+  audiomixer: 0.2.0.0
+  audiosink: 0.2.0.0
+  avbuffer: 0.2.0.0
+  avclock: 0.2.0.0
+  common: 0.2.0.0
   compositeinput: 0.2.0.0
   deepsleep: 0.1.0.0
   deviceinfo: 0.1.0.0
@@ -32,6 +32,7 @@ components:
   indicator: 0.1.0.0
   panel: 0.1.0.0
   planecontrol: 0.1.0.0
-  sensor: 0.1.0.0
-  videodecoder: 0.1.0.0
-  videosink: 0.1.0.0
+  sensor: 0.2.0.0
+  videodecoder: 0.2.0.0
+  videosink: 0.2.0.0
+  bootreason: 0.1.0.0
