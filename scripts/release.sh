@@ -556,6 +556,46 @@ if [[ "${APPLY}" -eq 1 ]]; then
     DO_BRANCH=1
 fi
 
+# Standalone `--commit`: commit + tag whatever is staged in the index.
+# Useful after `./release.sh --apply` left the release branch with staged
+# release artefacts and the operator has reviewed `git diff --cached`.
+# Bypasses the detector entirely — just runs the git commands.
+if [[ "${COMMIT}" -eq 1 && "${APPLY}" -ne 1 ]]; then
+    # Auto-detect release version from the last release tag if not pinned.
+    if [[ -z "${RELEASE_VERSION}" ]]; then
+        last_tag="$(git -C "${REPO_ROOT}" describe --tags --abbrev=0 2>/dev/null || true)"
+        if [[ "${last_tag}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            maj="${BASH_REMATCH[1]}"
+            min="${BASH_REMATCH[2]}"
+            RELEASE_VERSION="${maj}.$((min + 1)).0"
+        else
+            die "--commit needs --release-version X.Y.Z (no prior release tag to auto-detect from)."
+        fi
+    fi
+    if (cd "${REPO_ROOT}" && git diff --cached --quiet); then
+        die "--commit: nothing staged in the index. Use ./release.sh --apply first."
+    fi
+    branch="$(git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD)"
+    if [[ ! "${branch}" =~ ^release/ ]]; then
+        warn "Current branch is '${branch}', not a release branch."
+        warn "  --commit is normally run on a release/X.Y.Z branch created by --apply."
+    fi
+    if git -C "${REPO_ROOT}" rev-parse --verify "refs/tags/${RELEASE_VERSION}" >/dev/null 2>&1; then
+        die "Tag ${RELEASE_VERSION} already exists. Delete it first (git tag -d ${RELEASE_VERSION}) or pass --release-version."
+    fi
+    log "Committing staged release artefacts on ${branch}..."
+    (cd "${REPO_ROOT}" && \
+        git commit -m "chore(release): cut ${RELEASE_VERSION} — frozen snapshots + mkdocs nav") || \
+        die "git commit failed."
+    log "Tagging ${RELEASE_VERSION}"
+    (cd "${REPO_ROOT}" && git tag -a "${RELEASE_VERSION}" -m "Release ${RELEASE_VERSION}") || \
+        die "git tag failed."
+    log ""
+    log "✓ Committed and tagged ${RELEASE_VERSION} on ${branch}."
+    log "Push with: git push origin ${branch} && git push origin ${RELEASE_VERSION}"
+    exit 0
+fi
+
 phase "Resolving base reference..."
 if [[ -z "${SINCE_REF}" ]]; then
     if ! SINCE_REF="$(git describe --tags --abbrev=0 2>/dev/null)"; then
