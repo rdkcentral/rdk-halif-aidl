@@ -1383,6 +1383,18 @@ create_release_branch_and_tag() {
         fi
     done
 
+    # Belt-and-braces: pick up any other tracked-file modifications the
+    # script's writes touched but the explicit list above missed. Safe
+    # because we're on a freshly-cut release branch with a known set of
+    # release-owned files; only -u (tracked) is used so unrelated
+    # untracked junk doesn't sneak in.
+    (cd "${REPO_ROOT}" && git add -u) || true
+    # Also pick up any docs/releases/<X.Y.Z>.md that's been hand-edited
+    # and is now untracked.
+    if [[ -f "${REPO_ROOT}/docs/releases/${release_version}.md" ]]; then
+        (cd "${REPO_ROOT}" && git add -- "docs/releases/${release_version}.md") || true
+    fi
+
     if [[ "${COMMIT}" -eq 1 ]]; then
         log "Committing release artefacts to ${branch}"
         (cd "${REPO_ROOT}" && \
