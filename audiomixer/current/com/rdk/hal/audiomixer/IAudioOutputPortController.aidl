@@ -18,14 +18,18 @@
  */
 package com.rdk.hal.audiomixer;
 
+import com.rdk.hal.audiomixer.IDolbyMs12_2_6_Dap;
 import com.rdk.hal.audiomixer.OutputPortProperty;
 import com.rdk.hal.PropertyValue;
 
 /**
  * @brief    Audio Output Port Controller HAL interface.
- * @details  Exclusive write controller returned by IAudioOutputPort.open().
+ *
+ *           Exclusive write controller returned by IAudioOutputPort.open().
  *           Hosts mutating operations on the output port (property writes for
- *           volume, mute, output format, transcode format, AQ processor, etc.).
+ *           volume, mute, output format, transcode format, AQ processor, etc.)
+ *           and factory methods for write-capable sub-interfaces such as the
+ *           Dolby MS12 v2.6 DAP runtime command surface.
  *
  *           Only one client may hold the controller at a time. If the holding
  *           client crashes, the HAL detects the binder death and releases
@@ -53,7 +57,7 @@ interface IAudioOutputPortController {
      * @param[in] value     Property value; union field must match the property type.
      *
      * @returns  true on successful write, false if the property is not supported
-     *           by this port or the value is rejected.
+     *            by this port or the value is rejected.
      *
      * @exception binder::Status EX_ILLEGAL_ARGUMENT if property is unknown or
      *            value type does not match.
@@ -63,4 +67,26 @@ interface IAudioOutputPortController {
      * @see IAudioOutputPort.getProperty()
      */
     boolean setProperty(in OutputPortProperty property, in PropertyValue value);
+
+    /**
+     * @brief    Returns the Dolby MS12 v2.6 DAP runtime command interface
+     *           for this port.
+     *
+     *           Acquiring the DAP interface requires holding this
+     *           IAudioOutputPortController. The exclusive-write boundary on
+     *           the port controller serves as the ownership boundary for DAP
+     *           writes too — no separate DAP-level open()/close() is needed.
+     *
+     *           Supported when the port's IAQProcessor reports
+     *           AQProcessor.DOLBY_MS12_2_6 via getProcessorType().
+     *
+     * @returns  IDolbyMs12_2_6_Dap runtime command interface.
+     *
+     * @exception binder::Status EX_UNSUPPORTED_OPERATION if Dolby MS12 v2.6
+     *            DAP is not supported on this port.
+     *
+     * @see IAudioOutputPort.open()
+     * @see IAQProcessor.getProcessorType()
+     */
+    IDolbyMs12_2_6_Dap getDolbyMs12_2_6_Dap();
 }

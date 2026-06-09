@@ -23,7 +23,6 @@ import com.rdk.hal.audiomixer.IAudioCaptureListener;
 import com.rdk.hal.audiomixer.IAudioOutputPortController;
 import com.rdk.hal.audiomixer.IAudioOutputPortControllerListener;
 import com.rdk.hal.audiomixer.IAudioOutputPortListener;
-import com.rdk.hal.audiomixer.IDolbyMs12_2_6_Dap;
 import com.rdk.hal.audiomixer.OutputPortCapabilities;
 import com.rdk.hal.audiomixer.OutputPortProperty;
 import com.rdk.hal.audiomixer.State;
@@ -47,12 +46,16 @@ import com.rdk.hal.PropertyValue;
  *           state. Property writes are gated on holding the controller — see
  *           IAudioOutputPortController.setProperty().
  *
- *           In addition to property reads/writes, ports expose two factory
- *           methods to obtain feature-specific sub-interfaces:
- *             - getDolbyMs12_2_6_Dap() for MS12 2.6 DAP runtime control on
- *               ports advertising DOLBY_MS12_2_6 in supportedAQProcessors.
+ *           In addition to property reads/writes, ports expose a factory
+ *           method to obtain a feature-specific sub-interface:
  *             - getAudioCapture(listener) for shared-memory ring-buffer
  *               capture on ports advertising supportsAudioCapture = true.
+ *
+ *           Dolby MS12 v2.6 DAP runtime control is exposed via the port
+ *           controller, not the read-side handle — see
+ *           IAudioOutputPortController.getDolbyMs12_2_6_Dap(). This
+ *           gates DAP writes on the same exclusive-ownership boundary
+ *           used for property writes.
  */
 @VintfStability
 interface IAudioOutputPort {
@@ -178,19 +181,6 @@ interface IAudioOutputPort {
      * @see registerEventListener()
      */
     boolean unregisterEventListener(in IAudioOutputPortListener audioOutputPortEventListener);
-
-    /**
-     * @brief Creates a Dolby MS12 2.6 DAP command interface for this port.
-     * 
-     * If DOLBY_MS12_2_6 is reported as a supported AQProcessor in supportedAQProcessors then this function will return an interface to allow its control.
-     *
-     * @returns IDolbyMs12_2_6_Dap interface
-     * @exception binder::Status EX_UNSUPPORTED_OPERATION if Dolby MS12 v2.6 DAP is not supported.
-     *
-     * @see com.rdk.hal.audiomixer.OutputPortCapabilities.supportedAQProcessors
-     */
-    IDolbyMs12_2_6_Dap getDolbyMs12_2_6_Dap();
-
 
     /**
      * @brief Creates an audio capture interface for this port.

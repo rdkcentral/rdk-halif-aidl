@@ -173,7 +173,7 @@ flowchart TD
 * Mixer accepts input streams with declared `ContentType` and `Codec`.
 * Inputs are processed and mixed into one or more outputs.
 * Output formats can be negotiated and configured using `IAudioOutputPortController.setProperty(OUTPUT_FORMAT, ...)` (controller acquired via `IAudioOutputPort.open()`).
-* AQ processors are configured via typed sub-interfaces — for Dolby MS12 2.6 ports, `IAudioOutputPort.getDolbyMs12_2_6_Dap()` returns an `IDolbyMs12_2_6_Dap` for per-setting runtime control (bass enhancer, volume leveller, surround virtualizer, dialogue enhancer, EQ modes, DRC, Atmos lock, downmix, volume modeler, centre spreading, active downmix). Port-level MS12 audio profile selection is exposed via `OutputPortProperty.DOLBY_MS12_AUDIO_PROFILE` against the profiles enumerated in `OutputPortCapabilities.dolbyMs12AudioProfiles`.
+* For Dolby MS12 2.6 ports, `IAudioOutputPortController.getDolbyMs12_2_6_Dap()` returns the `IDolbyMs12_2_6_Dap` runtime command interface (bass enhancer, volume leveller, surround virtualizer, dialogue enhancer, EQ modes, DRC, Atmos lock, downmix, volume modeler, centre spreading, active downmix). DAP access requires holding the port controller — the same exclusive-ownership boundary used for property writes serves as the ownership boundary for DAP writes too. Port-level MS12 audio profile selection is exposed via `OutputPortProperty.DOLBY_MS12_AUDIO_PROFILE` against the profiles enumerated in `OutputPortCapabilities.dolbyMs12AudioProfiles`.
 * Where `OutputPortCapabilities.supportsAudioCapture` is true, capture is created from `IAudioOutputPort.getAudioCapture(listener)`.
 * Audio capture uses a shared-memory ring buffer returned by `getSharedMemory(out long[] sharedMemorySizeBytes)` (length-1 array carries the buffer size; AIDL primitives cannot be `out` parameters), with `releaseData()` acknowledgements after `onDataAvailable()` callbacks.
 * Output formats, including passthrough where supported, are dynamically switchable if capabilities permit.
@@ -437,7 +437,7 @@ Mixers can operate in secure and non-secure paths. Mixer properties such as `MIX
 
 ## Dolby MS12 Runtime Commands
 
-The `IDolbyMs12_2_6_Dap` interface exposes one method per MS12 IDK 2.6 runtime command and is created from `IAudioOutputPort.getDolbyMs12_2_6_Dap()`.
+The `IDolbyMs12_2_6_Dap` interface exposes one method per MS12 IDK 2.6 runtime command. It is obtained from `IAudioOutputPortController.getDolbyMs12_2_6_Dap()`, so DAP access is gated by holding the exclusive port controller acquired via `IAudioOutputPort.open()`. No separate DAP-level open()/close() is required — the port controller's ownership boundary covers DAP writes.
 
 Non-boolean argument constraints are declared per output port in `audiomixer/current/hfp-audiomixer.yaml` under `outputPorts[].supportedAQProcessors[].setFunctions`.
 
