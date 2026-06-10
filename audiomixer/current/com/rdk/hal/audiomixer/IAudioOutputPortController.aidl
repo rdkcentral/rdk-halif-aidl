@@ -18,14 +18,21 @@
  */
 package com.rdk.hal.audiomixer;
 
+import com.rdk.hal.audiomixer.IAudioCapture;
+import com.rdk.hal.audiomixer.IAudioCaptureListener;
+import com.rdk.hal.audiomixer.IDolbyMs12_2_6_Dap;
 import com.rdk.hal.audiomixer.OutputPortProperty;
 import com.rdk.hal.PropertyValue;
 
 /**
  * @brief    Audio Output Port Controller HAL interface.
- * @details  Exclusive write controller returned by IAudioOutputPort.open().
+ *
+ *           Exclusive write controller returned by IAudioOutputPort.open().
  *           Hosts mutating operations on the output port (property writes for
- *           volume, mute, output format, transcode format, AQ processor, etc.).
+ *           volume, mute, output format, transcode format, AQ processor, etc.)
+ *           and factory methods for write-capable sub-interfaces — the
+ *           Dolby MS12 v2.6 DAP runtime command surface and the audio
+ *           capture interface.
  *
  *           Only one client may hold the controller at a time. If the holding
  *           client crashes, the HAL detects the binder death and releases
@@ -63,4 +70,55 @@ interface IAudioOutputPortController {
      * @see IAudioOutputPort.getProperty()
      */
     boolean setProperty(in OutputPortProperty property, in PropertyValue value);
+
+    /**
+     * @brief    Returns the Dolby MS12 v2.6 DAP runtime command interface
+     *           for this port.
+     *
+     *           Acquiring the DAP interface requires holding this
+     *           IAudioOutputPortController. Because the interface itself
+     *           is acquired here, the port controller's ownership boundary
+     *           gates all DAP access — reads as well as writes — for the
+     *           lifetime of the controller. No separate DAP-level
+     *           open()/close() is needed.
+     *
+     *           Supported when the port's IAQProcessor reports
+     *           AQProcessor.DOLBY_MS12_2_6 via getProcessorType().
+     *
+     * @returns  IDolbyMs12_2_6_Dap runtime command interface.
+     *
+     * @exception binder::Status EX_UNSUPPORTED_OPERATION if Dolby MS12 v2.6
+     *            DAP is not supported on this port.
+     *
+     * @see IAudioOutputPort.open()
+     * @see IAQProcessor.getProcessorType()
+     */
+    IDolbyMs12_2_6_Dap getDolbyMs12_2_6_Dap();
+
+    /**
+     * @brief    Creates an audio capture interface for the controlled port.
+     *
+     *           Acquiring the audio capture interface requires holding this
+     *           IAudioOutputPortController. Capture acquisition is gated
+     *           by holding the port controller — the read-side
+     *           IAudioOutputPort handle does not expose getAudioCapture(),
+     *           so only the controller owner can capture from this port.
+     *
+     *           Supported when OutputPortCapabilities.supportsAudioCapture
+     *           is true for this port (note: that field's own docblock
+     *           also references this controller-acquired path).
+     *
+     * @param[in] audioCaptureListener  Listener for capture callbacks.
+     *
+     * @returns  IAudioCapture interface for the controlled port.
+     *
+     * @exception binder::Status EX_UNSUPPORTED_OPERATION if audio capture
+     *            from this port is not supported.
+     * @exception binder::Status EX_NULL_POINTER if @c audioCaptureListener
+     *            is null.
+     *
+     * @see IAudioOutputPort.open()
+     * @see com.rdk.hal.audiomixer.OutputPortCapabilities.supportsAudioCapture
+     */
+    IAudioCapture getAudioCapture(in IAudioCaptureListener audioCaptureListener);
 }
