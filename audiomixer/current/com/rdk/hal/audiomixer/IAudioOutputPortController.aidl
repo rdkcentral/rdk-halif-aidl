@@ -18,6 +18,8 @@
  */
 package com.rdk.hal.audiomixer;
 
+import com.rdk.hal.audiomixer.IAudioCapture;
+import com.rdk.hal.audiomixer.IAudioCaptureListener;
 import com.rdk.hal.audiomixer.IDolbyMs12_2_6_Dap;
 import com.rdk.hal.audiomixer.OutputPortProperty;
 import com.rdk.hal.PropertyValue;
@@ -28,8 +30,9 @@ import com.rdk.hal.PropertyValue;
  *           Exclusive write controller returned by IAudioOutputPort.open().
  *           Hosts mutating operations on the output port (property writes for
  *           volume, mute, output format, transcode format, AQ processor, etc.)
- *           and factory methods for write-capable sub-interfaces such as the
- *           Dolby MS12 v2.6 DAP runtime command surface.
+ *           and factory methods for write-capable sub-interfaces — the
+ *           Dolby MS12 v2.6 DAP runtime command surface and the audio
+ *           capture interface.
  *
  *           Only one client may hold the controller at a time. If the holding
  *           client crashes, the HAL detects the binder death and releases
@@ -89,4 +92,30 @@ interface IAudioOutputPortController {
      * @see IAQProcessor.getProcessorType()
      */
     IDolbyMs12_2_6_Dap getDolbyMs12_2_6_Dap();
+
+    /**
+     * @brief    Creates an audio capture interface for the controlled port.
+     *
+     *           Acquiring the audio capture interface requires holding this
+     *           IAudioOutputPortController. The exclusive-write boundary on
+     *           the port controller serves as the ownership boundary for
+     *           capture too — only the controller owner can capture from
+     *           this port.
+     *
+     *           Supported when OutputPortCapabilities.supportsAudioCapture
+     *           is true for this port.
+     *
+     * @param[in] audioCaptureListener  Listener for capture callbacks.
+     *
+     * @returns  IAudioCapture interface for the controlled port.
+     *
+     * @exception binder::Status EX_UNSUPPORTED_OPERATION if audio capture
+     *            from this port is not supported.
+     * @exception binder::Status EX_NULL_POINTER if @c audioCaptureListener
+     *            is null.
+     *
+     * @see IAudioOutputPort.open()
+     * @see com.rdk.hal.audiomixer.OutputPortCapabilities.supportsAudioCapture
+     */
+    IAudioCapture getAudioCapture(in IAudioCaptureListener audioCaptureListener);
 }

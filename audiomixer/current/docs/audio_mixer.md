@@ -174,7 +174,7 @@ flowchart TD
 * Inputs are processed and mixed into one or more outputs.
 * Output formats can be negotiated and configured using `IAudioOutputPortController.setProperty(OUTPUT_FORMAT, ...)` (controller acquired via `IAudioOutputPort.open()`).
 * For Dolby MS12 2.6 ports, `IAudioOutputPortController.getDolbyMs12_2_6_Dap()` returns the `IDolbyMs12_2_6_Dap` runtime command interface (bass enhancer, volume leveller, surround virtualizer, dialogue enhancer, EQ modes, DRC, Atmos lock, downmix, volume modeler, centre spreading, active downmix). DAP access requires holding the port controller — the same exclusive-ownership boundary used for property writes serves as the ownership boundary for DAP writes too. Port-level MS12 audio profile selection is exposed via `OutputPortProperty.DOLBY_MS12_AUDIO_PROFILE` against the profiles enumerated in `OutputPortCapabilities.dolbyMs12AudioProfiles`.
-* Where `OutputPortCapabilities.supportsAudioCapture` is true, capture is created from `IAudioOutputPort.getAudioCapture(listener)`.
+* Where `OutputPortCapabilities.supportsAudioCapture` is true, capture is created from `IAudioOutputPortController.getAudioCapture(listener)` — like DAP runtime control, capture acquisition is gated by holding the port controller acquired via `IAudioOutputPort.open()`.
 * Audio capture uses a shared-memory ring buffer returned by `getSharedMemory(out long[] sharedMemorySizeBytes)` (length-1 array carries the buffer size; AIDL primitives cannot be `out` parameters), with `releaseData()` acknowledgements after `onDataAvailable()` callbacks.
 * Output formats, including passthrough where supported, are dynamically switchable if capabilities permit.
 
