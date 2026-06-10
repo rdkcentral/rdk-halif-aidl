@@ -76,9 +76,11 @@ interface IAudioOutputPortController {
      *           for this port.
      *
      *           Acquiring the DAP interface requires holding this
-     *           IAudioOutputPortController. The exclusive-write boundary on
-     *           the port controller serves as the ownership boundary for DAP
-     *           writes too — no separate DAP-level open()/close() is needed.
+     *           IAudioOutputPortController. Because the interface itself
+     *           is acquired here, the port controller's ownership boundary
+     *           gates all DAP access — reads as well as writes — for the
+     *           lifetime of the controller. No separate DAP-level
+     *           open()/close() is needed.
      *
      *           Supported when the port's IAQProcessor reports
      *           AQProcessor.DOLBY_MS12_2_6 via getProcessorType().
@@ -97,13 +99,14 @@ interface IAudioOutputPortController {
      * @brief    Creates an audio capture interface for the controlled port.
      *
      *           Acquiring the audio capture interface requires holding this
-     *           IAudioOutputPortController. The exclusive-write boundary on
-     *           the port controller serves as the ownership boundary for
-     *           capture too — only the controller owner can capture from
-     *           this port.
+     *           IAudioOutputPortController. Capture acquisition is gated
+     *           by holding the port controller — the read-side
+     *           IAudioOutputPort handle does not expose getAudioCapture(),
+     *           so only the controller owner can capture from this port.
      *
      *           Supported when OutputPortCapabilities.supportsAudioCapture
-     *           is true for this port.
+     *           is true for this port (note: that field's own docblock
+     *           also references this controller-acquired path).
      *
      * @param[in] audioCaptureListener  Listener for capture callbacks.
      *
