@@ -41,14 +41,32 @@ interface IAudioMixerManager {
      * be stable for the lifetime of the process.
      *
      * @returns Array of IAudioMixer.Id values representing available mixers.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
      */
     IAudioMixer.Id[] getAudioMixerIds();
 
     /**
      * @brief Acquires a specific audio mixer interface by ID.
      *
-     * @param id Mixer resource identifier.
-     * @returns IAudioMixer interface for controlling the mixer, or null if unavailable.
+     * Callers should discover mounted mixer identifiers via
+     * `getAudioMixerIds()` rather than probe-by-ID. Identifiers that are
+     * not a defined value of `IAudioMixer.Id` raise EX_ILLEGAL_ARGUMENT;
+     * a defined enum value for which no mixer is currently mounted on
+     * this platform returns `null`.
+     *
+     * @param[in] id  Mixer resource identifier.
+     *
+     * @returns       IAudioMixer interface for controlling the mixer, or
+     *                `null` if @c id is a defined enum value but no mixer
+     *                with that ID is mounted on this platform.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if @c id
+     *            is not a defined value of `IAudioMixer.Id`.
+     *
+     * @see getAudioMixerIds()
+     * @see IAudioMixer
      */
     @nullable IAudioMixer getAudioMixer(in IAudioMixer.Id id);
 }

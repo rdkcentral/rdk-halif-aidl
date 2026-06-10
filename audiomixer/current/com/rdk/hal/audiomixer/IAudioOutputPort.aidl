@@ -142,19 +142,42 @@ interface IAudioOutputPort {
     boolean close(in IAudioOutputPortController controller);
 
     /**
-     * @brief    Registers a listener for port property change events.
+     * Registers an audio output port event listener.
      *
-     *           Multiple listeners may be registered. Listener registration
-     *           does not require ownership of the controller.
+     * An `IAudioOutputPortListener` can only be registered once and will
+     * fail on subsequent registration attempts with the same instance.
+     * Listener registration does not require ownership of the controller —
+     * observers can attach without holding the IAudioOutputPortController.
      *
-     * @param[in] listener  Listener for property change notifications.
+     * @param[in] audioOutputPortEventListener Listener object for callbacks.
+     *
+     * @returns boolean
+     * @retval true  The event listener was registered.
+     * @retval false The event listener is already registered.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
+     * @see unregisterEventListener()
+     * @see IAudioOutputPortListener
      */
-    void registerListener(in IAudioOutputPortListener listener);
+    boolean registerEventListener(in IAudioOutputPortListener audioOutputPortEventListener);
 
     /**
-     * @brief    Un-registers a previously registered listener.
+     * Unregisters an audio output port event listener.
+     *
+     * @param[in] audioOutputPortEventListener Listener object for callbacks.
+     *
+     * @returns boolean
+     * @retval true  The event listener was unregistered.
+     * @retval false The event listener was not found registered.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
+     * @see registerEventListener()
      */
-    void unregisterListener(in IAudioOutputPortListener listener);
+    boolean unregisterEventListener(in IAudioOutputPortListener audioOutputPortEventListener);
 
     /**
      * @brief Creates a Dolby MS12 2.6 DAP command interface for this port.
