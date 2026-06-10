@@ -81,12 +81,20 @@ parcelable OutputPortCapabilities {
     @nullable String[] dolbyMs12AudioProfiles;
 
     /**
-     * Indicates whether this output port supports audio capture via getAudioCapture().
-     * If true, clients may call IAudioOutputPort.getAudioCapture(listener) to obtain
-     * an IAudioCapture interface for streaming audio from this port.
-     * If false, calling getAudioCapture() will throw binder::Status EX_UNSUPPORTED_OPERATION.
-     * 
-     * @see IAudioOutputPort.getAudioCapture()
+     * @brief   True when this port supports audio capture via
+     *          IAudioOutputPortController.getAudioCapture().
+     *
+     * @details If true, clients holding the port controller (acquired
+     *          via IAudioOutputPort.open()) may call
+     *          IAudioOutputPortController.getAudioCapture(listener) to
+     *          obtain an IAudioCapture interface for streaming audio
+     *          from this port. If false, calling @c getAudioCapture()
+     *          throws binder::Status EX_UNSUPPORTED_OPERATION. Capture
+     *          acquisition is gated by holding the port controller —
+     *          the read-side IAudioOutputPort handle does not expose
+     *          getAudioCapture().
+     *
+     * @see     IAudioOutputPortController.getAudioCapture()
      */
     boolean supportsAudioCapture;
 }
