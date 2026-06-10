@@ -17,8 +17,6 @@
  * limitations under the License.
  */
 package com.rdk.hal.broadcast.demux;
-import android.hardware.common.fmq.MQDescriptor;
-import android.hardware.common.fmq.SynchronizedReadWrite;
 import com.rdk.hal.broadcast.demux.DataPacket;
 
 /**
@@ -49,14 +47,6 @@ parcelable SoftwareSink {
      * This can be used to unregister the sink at the filter.
      */
     Id id;
-
-    /**
-     * The message queue
-     *
-     * Over this queue messages about data being available to read will be sent. Since the queue is
-     * synchronized, it has to be read by the software sink in order to avoid blocking the filter.
-     */
-    MQDescriptor<DataPacket, SynchronizedReadWrite> mqDesc;
 
     /** File descriptor for the shared memory */
     ParcelFileDescriptor fd;
