@@ -67,10 +67,20 @@ interface IAudioMixer {
     /**
     * @brief Gets an audio output port interface by ID.
     *
-    * Returns null if the port is not supported on this mixer instance.
+    * Callers should discover valid port identifiers via
+    * `getAudioOutputPortIds()` rather than probe-by-ID. Negative or
+    * otherwise structurally invalid identifiers raise
+    * `EX_ILLEGAL_ARGUMENT`; an identifier that is plausible but not
+    * currently mounted on this mixer instance returns `null`.
     *
-    * @param id Output port identifier (as int).
-    * @returns IAudioOutputPort interface or null.
+    * @param[in] id Output port identifier (as int).
+    * @returns      IAudioOutputPort interface, or null if no port with the
+    *               given ID is mounted on this mixer instance.
+    *
+    * @exception binder::Status EX_ILLEGAL_ARGUMENT if @c id is negative or
+    *            structurally invalid for this platform.
+    *
+    * @see getAudioOutputPortIds()
     */
     @nullable IAudioOutputPort getAudioOutputPort(in int id);
 
@@ -129,16 +139,42 @@ interface IAudioMixer {
     boolean close(in IAudioMixerController audioMixerController);
 
     /**
-    * @brief Registers a listener to receive events from this mixer instance.
-    * @param[in] listener Instance of IAudioMixerEventListener to receive callbacks.
-    */
-    void registerListener(in IAudioMixerEventListener listener);
+     * Registers an audio mixer event listener.
+     *
+     * An `IAudioMixerEventListener` can only be registered once and will
+     * fail on subsequent registration attempts with the same instance.
+     * Registration does not require ownership of the mixer controller —
+     * observers can attach without holding the IAudioMixerController.
+     *
+     * @param[in] audioMixerEventListener Listener object for callbacks.
+     *
+     * @returns boolean
+     * @retval true  The event listener was registered.
+     * @retval false The event listener is already registered.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
+     * @see unregisterEventListener()
+     * @see IAudioMixerEventListener
+     */
+    boolean registerEventListener(in IAudioMixerEventListener audioMixerEventListener);
 
     /**
-     * @brief     Un-registers a previously registered mixer event listener.
-     * @param[in] listener   Instance of IAudioMixerEventListener to remove.
+     * Unregisters an audio mixer event listener.
+     *
+     * @param[in] audioMixerEventListener Listener object for callbacks.
+     *
+     * @returns boolean
+     * @retval true  The event listener was unregistered.
+     * @retval false The event listener was not found registered.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
+     * @see registerEventListener()
      */
-    void unregisterListener(in IAudioMixerEventListener listener);
+    boolean unregisterEventListener(in IAudioMixerEventListener audioMixerEventListener);
 
     /**
     * @brief Gets the list of currently active source codecs being mixed.
@@ -146,20 +182,41 @@ interface IAudioMixer {
     * Useful for clients to discover what input formats are currently processed
     * by the mixer for debugging, display, or selection logic.
     *
-    * The length and order of the returned array correspond to the current active
-    * mixer inputs; each entry matches the input at the same index as returned
-    * by capability or enumeration APIs.
+    * The length and order of the returned array correspond to the current
+    * active mixer inputs; each entry matches the input at the same index
+    * as returned by capability or enumeration APIs.
+    *
+    * Callable independent of open()/close(), like `getCapabilities()` —
+    * does not require holding the IAudioMixerController and does not gate
+    * on the mixer lifecycle state.
     *
     * @returns List of codecs for active sources.
+    *
+    * @exception binder::Status::Exception::EX_NONE for success.
+    *
+    * @see IAudioMixer.getCapabilities()
+    * @see Codec
     */
     Codec[] getCurrentSourceCodecs();
 
     /**
      * @brief     Gets the current audio source routing for all mixer inputs.
-     * Returns an array with one element for each mixer input (as declared in Capabilities.inputs).
-     *            If a mixer input has no source connected, `AudioSourceType.NONE` is indicated.
      *
-     * @returns   Array of audio source to mixer tree input routing configurations.
+     *            Returns an array with one element for each mixer input (as
+     *            declared in `Capabilities.inputs`). If a mixer input has no
+     *            source connected, `AudioSourceType.NONE` is indicated.
+     *
+     *            Callable independent of open()/close(), like
+     *            `getCapabilities()` — does not require holding the
+     *            IAudioMixerController and does not gate on the mixer
+     *            lifecycle state.
+     *
+     * @returns   Array of audio source to mixer tree input routing
+     *            configurations.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
+     * @see       IAudioMixer.getCapabilities()
      * @see       IAudioMixerController.setInputRouting()
      */
     InputRouting[] getInputRouting();
