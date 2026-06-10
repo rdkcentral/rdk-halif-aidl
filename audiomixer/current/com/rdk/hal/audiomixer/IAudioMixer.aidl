@@ -139,37 +139,42 @@ interface IAudioMixer {
     boolean close(in IAudioMixerController audioMixerController);
 
     /**
-    * @brief Registers a listener to receive events from this mixer instance.
-    *
-    * Multiple listeners may be registered. Registration does not require
-    * ownership of the mixer controller — observers can attach without
-    * holding the IAudioMixerController. Re-registering the same listener
-    * instance is a no-op and does not raise an exception.
-    *
-    * @param[in] listener Instance of IAudioMixerEventListener to receive
-    *                     callbacks.
-    *
-    * @exception binder::Status EX_NULL_POINTER if @c listener is null.
-    *
-    * @see unregisterListener()
-    * @see IAudioMixerEventListener
-    */
-    void registerListener(in IAudioMixerEventListener listener);
+     * Registers an audio mixer event listener.
+     *
+     * An `IAudioMixerEventListener` can only be registered once and will
+     * fail on subsequent registration attempts with the same instance.
+     * Registration does not require ownership of the mixer controller —
+     * observers can attach without holding the IAudioMixerController.
+     *
+     * @param[in] audioMixerEventListener Listener object for callbacks.
+     *
+     * @returns boolean
+     * @retval true  The event listener was registered.
+     * @retval false The event listener is already registered.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
+     * @see unregisterEventListener()
+     * @see IAudioMixerEventListener
+     */
+    boolean registerEventListener(in IAudioMixerEventListener audioMixerEventListener);
 
     /**
-     * @brief     Un-registers a previously registered mixer event listener.
+     * Unregisters an audio mixer event listener.
      *
-     *            Unregistering a listener that was never registered (or
-     *            already unregistered) is a no-op and does not raise an
-     *            exception.
+     * @param[in] audioMixerEventListener Listener object for callbacks.
      *
-     * @param[in] listener  Instance of IAudioMixerEventListener to remove.
+     * @returns boolean
+     * @retval true  The event listener was unregistered.
+     * @retval false The event listener was not found registered.
      *
-     * @exception binder::Status EX_NULL_POINTER if @c listener is null.
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
-     * @see registerListener()
+     * @see registerEventListener()
      */
-    void unregisterListener(in IAudioMixerEventListener listener);
+    boolean unregisterEventListener(in IAudioMixerEventListener audioMixerEventListener);
 
     /**
     * @brief Gets the list of currently active source codecs being mixed.
@@ -181,15 +186,15 @@ interface IAudioMixer {
     * active mixer inputs; each entry matches the input at the same index
     * as returned by capability or enumeration APIs.
     *
-    * Requires the mixer to be open (state at or after READY). When the
-    * mixer is in CLOSED or OPENING, the call raises EX_ILLEGAL_STATE.
+    * Callable independent of open()/close(), like `getCapabilities()` —
+    * does not require holding the IAudioMixerController and does not gate
+    * on the mixer lifecycle state.
     *
     * @returns List of codecs for active sources.
     *
-    * @exception binder::Status EX_ILLEGAL_STATE if the mixer is in CLOSED
-    *            or OPENING state.
+    * @exception binder::Status::Exception::EX_NONE for success.
     *
-    * @see IAudioMixer.open()
+    * @see IAudioMixer.getCapabilities()
     * @see Codec
     */
     Codec[] getCurrentSourceCodecs();
@@ -201,16 +206,17 @@ interface IAudioMixer {
      *            declared in `Capabilities.inputs`). If a mixer input has no
      *            source connected, `AudioSourceType.NONE` is indicated.
      *
-     *            Requires the mixer to be open (state at or after READY).
-     *            When the mixer is in CLOSED or OPENING, the call raises
-     *            EX_ILLEGAL_STATE.
+     *            Callable independent of open()/close(), like
+     *            `getCapabilities()` — does not require holding the
+     *            IAudioMixerController and does not gate on the mixer
+     *            lifecycle state.
      *
      * @returns   Array of audio source to mixer tree input routing
      *            configurations.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE if the mixer is in CLOSED
-     *            or OPENING state.
+     * @exception binder::Status::Exception::EX_NONE for success.
      *
+     * @see       IAudioMixer.getCapabilities()
      * @see       IAudioMixerController.setInputRouting()
      */
     InputRouting[] getInputRouting();

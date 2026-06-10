@@ -41,6 +41,8 @@ interface IAudioMixerManager {
      * be stable for the lifetime of the process.
      *
      * @returns Array of IAudioMixer.Id values representing available mixers.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
      */
     IAudioMixer.Id[] getAudioMixerIds();
 
@@ -59,8 +61,9 @@ interface IAudioMixerManager {
      *                `null` if @c id is a defined enum value but no mixer
      *                with that ID is mounted on this platform.
      *
-     * @exception binder::Status EX_ILLEGAL_ARGUMENT if @c id is not a
-     *            defined value of `IAudioMixer.Id`.
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if @c id
+     *            is not a defined value of `IAudioMixer.Id`.
      *
      * @see getAudioMixerIds()
      * @see IAudioMixer
