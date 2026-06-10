@@ -98,5 +98,5 @@ interface IFilter {
      * @param id The ID of the calling software sink.
      * @param pId The ID of the packet that has been consumed.
      */
-    void onDataPacketConsumed(in SoftwareSink.Id id, DataPacket.Id pId);
+    void onDataPacketConsumed(in SoftwareSink.Id id, in DataPacket.Id pId);
 }
