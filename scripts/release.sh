@@ -774,10 +774,48 @@ if [[ "${COMPLETE}" -eq 1 ]]; then
     fi
     log "  ✓ tag ${RELEASE_VERSION} not yet on origin."
 
-    # 2. Make sure local main + develop are current.
+    # 2. Make sure local main + develop are current. git flow release
+    #    finish refuses to run if either branch has diverged from its
+    #    remote ("Branches 'main' and 'origin/main' have diverged"),
+    #    so fast-forward both — refuse with a clear error if either
+    #    branch has local commits not on origin (in which case the
+    #    operator needs to reconcile manually before we can ship).
     log "Fetching origin main + develop..."
     (cd "${REPO_ROOT}" && git fetch origin main develop) || \
         die "--complete: git fetch origin failed."
+    _curr_branch="$(git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD)"
+    for _ref in main develop; do
+        # Skip the fast-forward if we're currently sitting on the
+        # branch we want to advance — update-ref refuses while the
+        # branch is checked out. We're on release/X.Y.Z anyway, so
+        # this is defence in depth.
+        if [[ "${_curr_branch}" = "${_ref}" ]]; then
+            log "  ⚠️  HEAD is on ${_ref} — unusual for --complete; expecting release/${RELEASE_VERSION}."
+            continue
+        fi
+        _local_sha="$(git -C "${REPO_ROOT}" rev-parse --verify "${_ref}" 2>/dev/null || true)"
+        _remote_sha="$(git -C "${REPO_ROOT}" rev-parse --verify "origin/${_ref}" 2>/dev/null || true)"
+        if [[ -z "${_local_sha}" ]]; then
+            (cd "${REPO_ROOT}" && git branch --track "${_ref}" "origin/${_ref}") || \
+                die "--complete: failed to create local ${_ref} tracking origin/${_ref}."
+            log "  ✓ created local ${_ref} tracking origin/${_ref}."
+            continue
+        fi
+        if [[ "${_local_sha}" = "${_remote_sha}" ]]; then
+            log "  ✓ local ${_ref} already at origin/${_ref}."
+            continue
+        fi
+        # Fast-forward local <ref> to origin/<ref> if it's an ancestor.
+        if git -C "${REPO_ROOT}" merge-base --is-ancestor "${_local_sha}" "${_remote_sha}" 2>/dev/null; then
+            if (cd "${REPO_ROOT}" && git update-ref "refs/heads/${_ref}" "${_remote_sha}"); then
+                log "  ✓ fast-forwarded local ${_ref} → origin/${_ref}."
+            else
+                die "--complete: failed to fast-forward local ${_ref} to origin/${_ref}."
+            fi
+        else
+            die "--complete: local ${_ref} has diverged from origin/${_ref}. Reconcile manually (git checkout ${_ref}; git pull --rebase origin ${_ref}) before re-running."
+        fi
+    done
 
     # 3. git flow release finish — only if the tag isn't already
     #    created locally from a prior partial run.
