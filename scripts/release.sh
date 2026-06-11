@@ -19,18 +19,182 @@ cd "${REPO_ROOT}"
 
 
 # Logging helpers — defined here so the plan subcommands below can call them.
-log()   { echo "$*"; }
-phase() { echo "==> $*" >&2; }
-warn()  { echo "WARN: $*" >&2; }
-die()   { echo "ERROR: $*" >&2; exit 1; }
+# ANSI colors — only when stdout is a TTY and NO_COLOR isn't set.
+# (Honors the conventional NO_COLOR env var: https://no-color.org/)
+if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
+    _C_RESET=$'\033[0m'
+    _C_BOLD=$'\033[1m'
+    _C_DIM=$'\033[2m'
+    _C_RED=$'\033[31m'
+    _C_GREEN=$'\033[32m'
+    _C_YELLOW=$'\033[33m'
+    _C_BLUE=$'\033[34m'
+    _C_CYAN=$'\033[36m'
+else
+    _C_RESET= _C_BOLD= _C_DIM= _C_RED= _C_GREEN= _C_YELLOW= _C_BLUE= _C_CYAN=
+fi
+
+log() {
+    # Highlight a few common idioms so the right thing draws the eye.
+    local line="$*"
+    case "$line" in
+        '✓'*|'  ✓'*)          line="${_C_GREEN}${line}${_C_RESET}" ;;
+        '❌'*|'  ❌'*)        line="${_C_RED}${line}${_C_RESET}" ;;
+        '⚠️'*|'  ⚠️'*)        line="${_C_YELLOW}${line}${_C_RESET}" ;;
+        'ℹ️'*|'  ℹ️'*)        line="${_C_CYAN}${line}${_C_RESET}" ;;
+        'Module'*)            line="${_C_BOLD}${line}${_C_RESET}" ;;
+        '------'*)            line="${_C_DIM}${line}${_C_RESET}" ;;
+        Apply:*)              line="${_C_BOLD}${line}${_C_RESET}" ;;
+        Plan:*)               line="${_C_BOLD}${line}${_C_RESET}" ;;
+        Release\ scan\ completed*) line="${_C_GREEN}${line}${_C_RESET}" ;;
+    esac
+    echo "${line}"
+}
+phase() { echo "${_C_CYAN}==>${_C_RESET} ${_C_BOLD}$*${_C_RESET}" >&2; }
+warn()  { echo "${_C_YELLOW}WARN:${_C_RESET} $*" >&2; }
+die()   { echo "${_C_RED}${_C_BOLD}ERROR:${_C_RESET} ${_C_RED}$*${_C_RESET}" >&2; exit 1; }
 
 # Verification-build runner. Defined at top-level so it's in scope for
 # both the stage path (DO_WRITES=1) and a pure --apply (DO_WRITES=0).
+# ----------------------------------------------------------------------------
+# Build cache — skip work that's already been done with the same inputs.
+# ----------------------------------------------------------------------------
+#
+# Persisted at out/.build-cache (gitignored — out/ is). Format, tab-delimited:
+#
+#   KIND<TAB>KEY<TAB>SHA256<TAB>STATUS
+#
+# Kinds:
+#   module     KEY=<comp>          inputs: <comp>/current/com/**/*.aidl + interface.yaml + hfp-*.yaml
+#   build      KEY=<args-joined>   inputs: versions_released.yaml + all referenced snapshot .aidl files
+#                                          (or for "all": every */current/*.aidl)
+#
+# A status of "ok" means the last build with that input hash succeeded.
+# Anything else (or absence) = need to re-run.
+BUILD_CACHE_FILE="${REPO_ROOT}/out/.build-cache"
+
+build_cache_lookup() {
+    local kind="$1" key="$2"
+    [[ -f "${BUILD_CACHE_FILE}" ]] || return 1
+    # Return the cached SHA + status for kind/key on stdout.
+    awk -F'\t' -v k="${kind}" -v key="${key}" '
+        $1 == k && $2 == key { print $3"\t"$4; found=1; exit }
+        END { exit (found ? 0 : 1) }
+    ' "${BUILD_CACHE_FILE}"
+}
+
+build_cache_record() {
+    local kind="$1" key="$2" sha="$3" status="$4"
+    mkdir -p "$(dirname "${BUILD_CACHE_FILE}")"
+    # Remove any existing entry for kind/key, then append the new one.
+    if [[ -f "${BUILD_CACHE_FILE}" ]]; then
+        awk -F'\t' -v k="${kind}" -v key="${key}" '
+            !($1 == k && $2 == key) { print }
+        ' "${BUILD_CACHE_FILE}" > "${BUILD_CACHE_FILE}.tmp" && \
+            mv "${BUILD_CACHE_FILE}.tmp" "${BUILD_CACHE_FILE}"
+    fi
+    printf '%s\t%s\t%s\t%s\n' "${kind}" "${key}" "${sha}" "${status}" >> "${BUILD_CACHE_FILE}"
+}
+
+# SHA of every input file relevant to building a single component from
+# current/: AIDL, interface.yaml, hfp-*.yaml. Pure-input hash — doesn't
+# depend on the toolchain version (that's a separate concern; if the
+# toolchain changes the operator should clear the cache).
+build_cache_module_hash() {
+    local comp="$1"
+    local src_dir="${REPO_ROOT}/${comp}/current"
+    [[ -d "${src_dir}" ]] || { echo ""; return; }
+    find "${src_dir}" \
+        \( -name '*.aidl' -o -name 'interface.yaml' -o -name 'hfp-*.yaml' \) \
+        -type f 2>/dev/null \
+        | sort \
+        | xargs -r sha256sum 2>/dev/null \
+        | sha256sum | awk '{print $1}'
+}
+
+# SHA for a verification build invocation. Inputs:
+#   - The args (so "all" vs "manifest" hash differently)
+#   - The relevant source files (every */current/*.aidl for "all";
+#     versions_released.yaml + every */<version>/*.aidl for "manifest")
+build_cache_build_hash() {
+    local args="$*"
+    local files
+    if [[ "$1" == "manifest" ]]; then
+        # versions_released.yaml + every snapshot dir's AIDL
+        files="$(find "${REPO_ROOT}" -maxdepth 3 -path '*/[0-9]*/com' -prune -o \
+                    -name '*.aidl' -path '*/[0-9]*.*.*/com/*' -print 2>/dev/null | sort)"
+        if [[ -f "${REPO_ROOT}/versions_released.yaml" ]]; then
+            files="${REPO_ROOT}/versions_released.yaml
+${files}"
+        fi
+    else
+        # `all` or single-comp: hash every current/*.aidl
+        files="$(find "${REPO_ROOT}" -maxdepth 4 -path '*/current/com/*' -name '*.aidl' \
+                    -type f 2>/dev/null | sort)"
+    fi
+    # Hash the args first, then all file contents.
+    {
+        echo "args:${args}"
+        xargs -r sha256sum <<< "${files}" 2>/dev/null
+    } | sha256sum | awk '{print $1}'
+}
+
+# Deploy the versioned mkdocs site to gh-pages via the project's
+# build_docs.sh wrapper (uses `mike`). Two steps:
+#   1. `mike deploy <X.Y.Z> --push`        — publishes this version
+#   2. `mike set-default <X.Y.Z> --push`   — marks it as the "latest"
+# Both are synchronous (blocking) and push to origin/gh-pages directly.
+# Caller passes the release version. Bails (warns, doesn't die) on
+# failure — the release artefact commit + tag is already made, so docs
+# deploy is recoverable later (operator can rerun by hand).
+deploy_versioned_docs() {
+    local ver="$1"
+    local docs_script="${REPO_ROOT}/docs/build_docs.sh"
+    if [[ ! -x "${docs_script}" ]]; then
+        warn "Versioned docs deploy: ${docs_script} not found/executable — skipping."
+        return 0
+    fi
+    phase "Deploying versioned docs for ${ver} → gh-pages (mike deploy)"
+    log ""
+    log "Deploying ${ver} via ./docs/build_docs.sh deploy ${ver}"
+    if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh deploy "${ver}"); then
+        warn "mike deploy ${ver} failed."
+        warn "  Release commit + tag are already made; you can retry later:"
+        warn "    ./docs/build_docs.sh deploy ${ver}"
+        warn "    ./docs/build_docs.sh set-default ${ver}"
+        return 1
+    fi
+    phase "Setting ${ver} as default version (mike set-default)"
+    log ""
+    if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh set-default "${ver}"); then
+        warn "mike set-default ${ver} failed — version is deployed but not marked as latest."
+        warn "  Retry with: ./docs/build_docs.sh set-default ${ver}"
+        return 1
+    fi
+    log "✓ Versioned docs deployed and ${ver} set as latest."
+    return 0
+}
+
 run_verification_build() {
     local label="$1"          # "current cohort" / "released cohort"
     local log_file="$2"
     shift 2
     mkdir -p "$(dirname "${log_file}")"
+
+    # Cache lookup — skip if these exact inputs already built successfully.
+    local key="$*"
+    local input_sha cached
+    input_sha="$(build_cache_build_hash "$@")"
+    cached="$(build_cache_lookup "build" "${key}" 2>/dev/null || true)"
+    if [[ -n "${cached}" ]]; then
+        local cached_sha="${cached%%$'\t'*}"
+        local cached_status="${cached##*$'\t'}"
+        if [[ "${cached_sha}" == "${input_sha}" && "${cached_status}" == "ok" ]]; then
+            log "  Verification build (${label}) SKIPPED — cache hit (inputs unchanged since last success)"
+            return 0
+        fi
+    fi
+
     phase "Verification build (${label}): ./build_modules.sh $*"
     log ""
     log "Verification build (${label}) — output streamed to ${log_file#${REPO_ROOT}/}"
@@ -47,6 +211,7 @@ run_verification_build() {
         fi
     fi
     log "  Verification build (${label}) OK"
+    build_cache_record "build" "${key}" "${input_sha}" "ok"
 }
 
 # ----------------------------------------------------------------------------
@@ -361,6 +526,7 @@ STAGE_AND_WRITE="${STAGE_AND_WRITE:-0}"
 
 APPLY="${APPLY:-0}"
 COMMIT="${COMMIT:-0}"
+COMPLETE="${COMPLETE:-0}"
 DRY_RUN="${DRY_RUN:-0}"
 SINCE_REF="${SINCE_REF:-}"
 NO_GH="${NO_GH:-0}"
@@ -414,6 +580,20 @@ Modes:
   --dry-run     Alias of the default — same read-only view. Kept for
                 operators who reach for the explicit flag out of habit.
 
+  --complete    Ship the release end-to-end from an already-committed
+                release/X.Y.Z branch. Must be run AFTER --apply --commit
+                has staged the cohort, committed snapshots, and pushed
+                the release branch. Performs:
+                  1. git flow release finish X.Y.Z (merges → main, tags,
+                     back-merges to develop)
+                  2. git push --follow-tags --atomic origin main develop
+                  3. ./docs/build_docs.sh release X.Y.Z (deploy + wait
+                     for GitHub Pages publish + set-default — all gated
+                     inside the docs script)
+                  4. gh release create X.Y.Z from docs/releases/X.Y.Z.md
+                Idempotent — re-runs after a partial failure pick up
+                from the first incomplete step.
+
 Options:
   --since <ref>          Base reference to diff from (default: nearest
                          reachable tag).
@@ -460,13 +640,17 @@ Once per release the script:
 
 With --apply, additionally:
  12. git checkout -b release/<release>
- 13. git commit
- 14. git tag <release>
+ 13. git commit  (with --commit)
+ 14. git push origin release/<release>  (with --commit)
+
+The tag is NOT created by this script. `git flow release finish
+<release>` creates the tag on main when it merges the release branch
+in. This script stops at the pushed release branch.
 
 No-op when no component changed:
   If no metadata.yaml moves, the script writes nothing, creates no
   snapshot, leaves mkdocs.yml unchanged, and does not create a release
-  branch or tag. Exit clean.
+  branch. Exit clean.
 
 Notes:
   - Script is intended for manual release-time usage (not CI).
@@ -495,6 +679,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --commit)
             COMMIT=1
+            shift
+            ;;
+        --complete)
+            COMPLETE=1
             shift
             ;;
         --dry-run)
@@ -538,9 +726,289 @@ done
 
 [[ "${DRY_RUN}" -eq 1 && "${APPLY}" -eq 1 ]] && die "--dry-run and --apply are mutually exclusive"
 
+# ----------------------------------------------------------------------------
+# --complete: ship the release end-to-end (#TBD follow-up)
+# ----------------------------------------------------------------------------
+#
+# Assumes --apply --commit has already run on this branch: the cohort
+# is bumped, snapshots are committed and pushed on release/X.Y.Z, the
+# released-cohort verification build passes, release notes + CHANGELOG
+# + mkdocs nav are in place. --complete picks up from there and:
+#
+#   1. Refuses if we're not on a release/X.Y.Z branch.
+#   2. Refuses if the X.Y.Z tag already exists on origin (avoids the
+#      stale-tag trap we hit on 0.21.0).
+#   3. git flow release finish X.Y.Z  — merges → main + creates the
+#      annotated tag on main + back-merges to develop.
+#   4. git push --follow-tags --atomic origin main develop — pushes
+#      branches AND the new tag in one operation.
+#   5. ./docs/build_docs.sh release X.Y.Z — deploys versioned docs,
+#      waits for GitHub Pages to publish, sets X.Y.Z as default
+#      (all gated inside the docs script).
+#   6. gh release create X.Y.Z — publishes the GitHub release from
+#      docs/releases/X.Y.Z.md.
+#
+# Idempotency: each step checks current state before acting, so a
+# re-run after a partial success picks up from the first incomplete
+# step. The git-flow finish + tag-push step is the riskiest — if
+# git-flow already finished locally, --complete detects the tag is
+# present on HEAD's reachable history and skips to the push.
+
+if [[ "${COMPLETE}" -eq 1 ]]; then
+    # Determine RELEASE_VERSION. --complete is RESUMABLE — a partial
+    # run (e.g. git flow finish succeeded locally but push failed) may
+    # have moved HEAD off release/X.Y.Z onto develop. So check, in
+    # order:
+    #   1. HEAD is on release/X.Y.Z    → use it
+    #   2. RELEASE_VERSION pinned via --release-version → use that
+    #   3. exactly one local release/X.Y.Z branch exists → use it
+    #      (typical resume case after git-flow finish moved HEAD)
+    branch="$(git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD)"
+    if [[ "${branch}" =~ ^release/([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+        RELEASE_VERSION="${BASH_REMATCH[1]}"
+    elif [[ -n "${RELEASE_VERSION}" ]]; then
+        : # honour pin
+    else
+        _release_branches=()
+        while IFS= read -r _rb; do
+            [[ -n "${_rb}" ]] && _release_branches+=("${_rb}")
+        done < <(git -C "${REPO_ROOT}" for-each-ref \
+            --format='%(refname:short)' refs/heads/release/)
+        if [[ "${#_release_branches[@]}" -eq 1 ]] \
+                && [[ "${_release_branches[0]}" =~ ^release/([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            RELEASE_VERSION="${BASH_REMATCH[1]}"
+            log "  ℹ️  HEAD is on '${branch}'; resuming --complete for ${RELEASE_VERSION} from local release/${RELEASE_VERSION} branch."
+        else
+            die "--complete must run on a release/X.Y.Z branch or with --release-version pin (current: ${branch}; found ${#_release_branches[@]} release branches locally)."
+        fi
+    fi
+    log ""
+    phase "Completing release ${RELEASE_VERSION} (--complete)"
+    log ""
+
+    # Pre-flight: tag-on-origin state.
+    # If the tag is already on origin, that's the "tag pushed" mile-
+    # stone — DON'T refuse. We can still pick up at docs deploy / gh
+    # release if those didn't run. The stale-tag-from-aborted-cycle
+    # case (the trap 0.21.0 originally hit) is now caught by the
+    # local-state checks below: if the local tag isn't on the same
+    # commit as origin's tag, we die with a clear pointer.
+    _tag_remote="$(git -C "${REPO_ROOT}" ls-remote --tags origin "refs/tags/${RELEASE_VERSION}" 2>/dev/null | head -1)"
+    _tag_remote_sha="${_tag_remote%%[[:space:]]*}"
+    _tag_local_sha="$(git -C "${REPO_ROOT}" rev-parse --verify "refs/tags/${RELEASE_VERSION}" 2>/dev/null || true)"
+    if [[ -n "${_tag_remote_sha}" ]] && [[ -n "${_tag_local_sha}" ]]; then
+        _tag_local_commit="$(git -C "${REPO_ROOT}" rev-parse "refs/tags/${RELEASE_VERSION}^{commit}" 2>/dev/null)"
+        if [[ "${_tag_remote_sha}" != "${_tag_local_sha}" ]] \
+                && [[ "${_tag_remote_sha}" != "${_tag_local_commit}" ]]; then
+            die "--complete: tag ${RELEASE_VERSION} exists on origin at ${_tag_remote_sha:0:10} but local tag points elsewhere. Reconcile manually."
+        fi
+        log "  ✓ tag ${RELEASE_VERSION} already on origin (matches local)."
+    elif [[ -n "${_tag_remote_sha}" ]]; then
+        log "  ✓ tag ${RELEASE_VERSION} already on origin (no local tag — that's fine for resume from later steps)."
+    else
+        log "  ✓ tag ${RELEASE_VERSION} not yet on origin."
+    fi
+
+    # 2. Make sure local main + develop are current. git flow release
+    #    finish refuses to run if either branch has diverged from its
+    #    remote ("Branches 'main' and 'origin/main' have diverged"),
+    #    so fast-forward both — refuse with a clear error if either
+    #    branch has local commits not on origin (in which case the
+    #    operator needs to reconcile manually before we can ship).
+    log "Fetching origin main + develop..."
+    (cd "${REPO_ROOT}" && git fetch origin main develop) || \
+        die "--complete: git fetch origin failed."
+    _curr_branch="$(git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD)"
+    for _ref in main develop; do
+        # Skip the fast-forward if we're currently sitting on the
+        # branch we want to advance — update-ref refuses while the
+        # branch is checked out. We're on release/X.Y.Z anyway, so
+        # this is defence in depth.
+        if [[ "${_curr_branch}" = "${_ref}" ]]; then
+            log "  ⚠️  HEAD is on ${_ref} — unusual for --complete; expecting release/${RELEASE_VERSION}."
+            continue
+        fi
+        _local_sha="$(git -C "${REPO_ROOT}" rev-parse --verify "${_ref}" 2>/dev/null || true)"
+        _remote_sha="$(git -C "${REPO_ROOT}" rev-parse --verify "origin/${_ref}" 2>/dev/null || true)"
+        if [[ -z "${_local_sha}" ]]; then
+            (cd "${REPO_ROOT}" && git branch --track "${_ref}" "origin/${_ref}") || \
+                die "--complete: failed to create local ${_ref} tracking origin/${_ref}."
+            log "  ✓ created local ${_ref} tracking origin/${_ref}."
+            continue
+        fi
+        if [[ "${_local_sha}" = "${_remote_sha}" ]]; then
+            log "  ✓ local ${_ref} already at origin/${_ref}."
+            continue
+        fi
+        # Three relationships matter:
+        #   - local is an ancestor of remote  → local is behind, fast-forward.
+        #   - remote is an ancestor of local  → local is ahead. This is the
+        #                                       normal post-git-flow-finish
+        #                                       state where the back-merge
+        #                                       sits on local main / develop
+        #                                       waiting to be pushed.
+        #                                       Leave it — the push step
+        #                                       will handle it.
+        #   - neither                         → real divergence, die.
+        if git -C "${REPO_ROOT}" merge-base --is-ancestor "${_local_sha}" "${_remote_sha}" 2>/dev/null; then
+            if (cd "${REPO_ROOT}" && git update-ref "refs/heads/${_ref}" "${_remote_sha}"); then
+                log "  ✓ fast-forwarded local ${_ref} → origin/${_ref}."
+            else
+                die "--complete: failed to fast-forward local ${_ref} to origin/${_ref}."
+            fi
+        elif git -C "${REPO_ROOT}" merge-base --is-ancestor "${_remote_sha}" "${_local_sha}" 2>/dev/null; then
+            _ahead_count="$(git -C "${REPO_ROOT}" rev-list --count "${_remote_sha}..${_local_sha}" 2>/dev/null || echo "?")"
+            log "  ✓ local ${_ref} is ${_ahead_count} commit(s) ahead of origin/${_ref} (will push later)."
+        else
+            die "--complete: local ${_ref} has diverged from origin/${_ref} (each side has commits the other doesn't). Reconcile manually before re-running."
+        fi
+    done
+
+    # 3. git flow release finish — only if the tag isn't already
+    #    created locally from a prior partial run.
+    if git -C "${REPO_ROOT}" rev-parse --verify "refs/tags/${RELEASE_VERSION}" >/dev/null 2>&1; then
+        log "  ✓ tag ${RELEASE_VERSION} already exists locally — skipping git flow release finish."
+    else
+        log "Running git flow release finish ${RELEASE_VERSION}..."
+        if ! (cd "${REPO_ROOT}" && \
+                GIT_MERGE_AUTOEDIT=no \
+                git flow release finish -m "Release ${RELEASE_VERSION}" "${RELEASE_VERSION}"); then
+            die "--complete: git flow release finish ${RELEASE_VERSION} failed."
+        fi
+    fi
+    log "  ✓ release ${RELEASE_VERSION} finished locally."
+
+    # 4. Push branches + tag atomically. Idempotent: only push the
+    #    refs that are actually behind origin. If everything's already
+    #    pushed, skip with a ✓.
+    phase "Pushing main + develop + ${RELEASE_VERSION} tag to origin"
+    log ""
+    (cd "${REPO_ROOT}" && git fetch origin main develop --tags) >/dev/null 2>&1 || true
+    _to_push=()
+    for _ref in main develop; do
+        _local="$(git -C "${REPO_ROOT}" rev-parse --verify "${_ref}" 2>/dev/null || true)"
+        _remote="$(git -C "${REPO_ROOT}" rev-parse --verify "origin/${_ref}" 2>/dev/null || true)"
+        if [[ -n "${_local}" ]] && [[ "${_local}" != "${_remote}" ]]; then
+            _to_push+=("${_ref}")
+        else
+            log "  ✓ origin/${_ref} already at ${_local:0:10}."
+        fi
+    done
+    _tag_remote_sha="$(git -C "${REPO_ROOT}" ls-remote --tags origin "refs/tags/${RELEASE_VERSION}" 2>/dev/null | head -1 | awk '{print $1}')"
+    _push_tag=0
+    if [[ -z "${_tag_remote_sha}" ]]; then
+        _push_tag=1
+    else
+        log "  ✓ tag ${RELEASE_VERSION} already on origin."
+    fi
+    if [[ "${#_to_push[@]}" -eq 0 ]] && [[ "${_push_tag}" -eq 0 ]]; then
+        log "  ✓ nothing to push — main, develop, and ${RELEASE_VERSION} tag all up to date."
+    else
+        if [[ "${#_to_push[@]}" -gt 0 ]]; then
+            log "Pushing branch(es): ${_to_push[*]}${_push_tag:+ + tag ${RELEASE_VERSION}}"
+            if ! (cd "${REPO_ROOT}" && \
+                    git push --follow-tags --atomic origin "${_to_push[@]}"); then
+                die "--complete: atomic push of ${_to_push[*]} failed. Inspect remote state before retrying."
+            fi
+            log "  ✓ pushed ${_to_push[*]}."
+        fi
+        # If branches were already at origin but the tag isn't, push
+        # the tag on its own (--follow-tags only pushes tags reachable
+        # from the just-pushed branches, which is empty when we have
+        # nothing to push).
+        if [[ "${_push_tag}" -eq 1 ]] && [[ "${#_to_push[@]}" -eq 0 ]]; then
+            if ! (cd "${REPO_ROOT}" && git push origin "refs/tags/${RELEASE_VERSION}"); then
+                die "--complete: standalone tag push of ${RELEASE_VERSION} failed."
+            fi
+            log "  ✓ pushed tag ${RELEASE_VERSION}."
+        fi
+    fi
+
+    # 4a. Delete the remote release/X.Y.Z branch if git-flow finish
+    #     didn't get to delete it (typical when push failed after the
+    #     local finish completed). Skip if it's already gone.
+    if (cd "${REPO_ROOT}" && \
+            git ls-remote --exit-code --heads origin "release/${RELEASE_VERSION}" >/dev/null 2>&1); then
+        log "Deleting remote release/${RELEASE_VERSION} branch..."
+        if ! (cd "${REPO_ROOT}" && \
+                git push origin --delete "release/${RELEASE_VERSION}"); then
+            warn "Failed to delete remote release/${RELEASE_VERSION}. Delete manually after sorting access:"
+            warn "    git push origin --delete release/${RELEASE_VERSION}"
+        else
+            log "  ✓ deleted remote release/${RELEASE_VERSION}."
+        fi
+    else
+        log "  ✓ remote release/${RELEASE_VERSION} already gone."
+    fi
+
+    # 5. Versioned docs deploy (deploy + wait for GH Pages + set-default,
+    #    all gated inside build_docs.sh).
+    phase "Releasing versioned docs (./docs/build_docs.sh release ${RELEASE_VERSION})"
+    log ""
+    if [[ ! -x "${REPO_ROOT}/docs/build_docs.sh" ]]; then
+        warn "docs/build_docs.sh not found/executable — skipping versioned docs release."
+        warn "  Run manually when ready: ./docs/build_docs.sh release ${RELEASE_VERSION}"
+    else
+        if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh release "${RELEASE_VERSION}"); then
+            warn "./docs/build_docs.sh release ${RELEASE_VERSION} failed."
+            warn "  Tag + branches are pushed; retry the docs release later:"
+            warn "    ./docs/build_docs.sh release ${RELEASE_VERSION}"
+        else
+            log "  ✓ versioned docs released and set as default."
+        fi
+    fi
+
+    # 6. GitHub release from docs/releases/X.Y.Z.md.
+    phase "Publishing GitHub release ${RELEASE_VERSION}"
+    log ""
+    _notes_file="${REPO_ROOT}/docs/releases/${RELEASE_VERSION}.md"
+    if [[ ! -f "${_notes_file}" ]]; then
+        warn "Release notes file ${_notes_file} not found — creating release without notes."
+        _notes_file=""
+    fi
+    if ! command -v gh >/dev/null 2>&1; then
+        warn "gh CLI not available — skipping GitHub release creation."
+        warn "  Run manually: gh release create ${RELEASE_VERSION} --target main"
+    else
+        # Resolve <owner>/<repo> from origin so we don't hard-code.
+        _repo_slug="$(git -C "${REPO_ROOT}" config --get remote.origin.url \
+                       | sed -E 's|.*github.com[:/](.*/.+).git$|\1|; s|.*github.com[:/](.*/.+)$|\1|')"
+        if gh release view "${RELEASE_VERSION}" --repo "${_repo_slug}" >/dev/null 2>&1; then
+            log "  ✓ GitHub release ${RELEASE_VERSION} already exists — skipping create."
+        else
+            if [[ -n "${_notes_file}" ]]; then
+                gh release create "${RELEASE_VERSION}" \
+                    --repo "${_repo_slug}" \
+                    --target main \
+                    --title "${RELEASE_VERSION}" \
+                    --notes-file "${_notes_file}" \
+                    || warn "gh release create failed — create manually."
+            else
+                gh release create "${RELEASE_VERSION}" \
+                    --repo "${_repo_slug}" \
+                    --target main \
+                    --title "${RELEASE_VERSION}" \
+                    --generate-notes \
+                    || warn "gh release create failed — create manually."
+            fi
+            log "  ✓ GitHub release ${RELEASE_VERSION} published."
+        fi
+    fi
+
+    log ""
+    log "🎉 Release ${RELEASE_VERSION} complete."
+    log ""
+    log "  Tag:      ${RELEASE_VERSION} (on main)"
+    log "  Branches: main + develop updated"
+    log "  Docs:     deployed to GitHub Pages, ${RELEASE_VERSION} set as default"
+    log "  Release:  https://github.com/${_repo_slug:-rdkcentral/rdk-halif-aidl}/releases/tag/${RELEASE_VERSION}"
+    exit 0
+fi
+
+
 # Two modes consumed by the rest of the script:
 #   DO_WRITES   1 -> regen/snapshot/metadata/manifests/docs writes (per-module)
-#   DO_BRANCH   1 -> create release branch + tag + commit (once per release)
+#   DO_BRANCH   1 -> create release branch + commit (once per release; tag is made by git-flow release finish on main)
 # Mapping:
 #   bare ./release.sh              read-only plan/check view (DO_WRITES=0, DO_BRANCH=0)
 #   ./release.sh <module>...       writes for staged modules (DO_WRITES=1, DO_BRANCH=0)
@@ -572,27 +1040,65 @@ if [[ "${COMMIT}" -eq 1 && "${APPLY}" -ne 1 ]]; then
             die "--commit needs --release-version X.Y.Z (no prior release tag to auto-detect from)."
         fi
     fi
-    if (cd "${REPO_ROOT}" && git diff --cached --quiet); then
-        die "--commit: nothing staged in the index. Use ./release.sh --apply first."
-    fi
     branch="$(git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD)"
     if [[ ! "${branch}" =~ ^release/ ]]; then
         warn "Current branch is '${branch}', not a release branch."
         warn "  --commit is normally run on a release/X.Y.Z branch created by --apply."
     fi
-    if git -C "${REPO_ROOT}" rev-parse --verify "refs/tags/${RELEASE_VERSION}" >/dev/null 2>&1; then
-        die "Tag ${RELEASE_VERSION} already exists. Delete it first (git tag -d ${RELEASE_VERSION}) or pass --release-version."
+
+    # Idempotency: --apply already did all the regen / snapshot / writes.
+    # --commit's job is just commit + push + mike deploy. If there's
+    # nothing staged AND HEAD already has a release commit AND the branch
+    # is already pushed, skip straight to mike deploy (idempotent re-run).
+    if (cd "${REPO_ROOT}" && git diff --cached --quiet); then
+        if (cd "${REPO_ROOT}" && git log -1 --pretty=%B 2>/dev/null) | \
+                grep -qE "^chore\(release\): cut ${RELEASE_VERSION//./\\.}\b"; then
+            log "Release commit for ${RELEASE_VERSION} already on HEAD — skipping commit."
+            if ! (cd "${REPO_ROOT}" && \
+                    git rev-parse --verify --quiet "origin/${branch}" >/dev/null) || \
+               [[ "$(cd "${REPO_ROOT}" && git rev-parse HEAD)" != \
+                  "$(cd "${REPO_ROOT}" && git rev-parse "origin/${branch}" 2>/dev/null)" ]]; then
+                phase "Pushing release branch to origin"
+                log ""
+                if ! (cd "${REPO_ROOT}" && git push origin "${branch}"); then
+                    die "git push origin ${branch} failed."
+                fi
+                log "✓ Pushed ${branch} to origin."
+            else
+                log "Branch ${branch} already up-to-date on origin — skipping push."
+            fi
+        else
+            die "--commit: nothing staged in the index and HEAD has no ${RELEASE_VERSION} release commit. Use ./release.sh --apply first."
+        fi
+    else
+        log "Committing staged release artefacts on ${branch}..."
+        (cd "${REPO_ROOT}" && \
+            git commit -m "chore(release): cut ${RELEASE_VERSION} — frozen snapshots + mkdocs nav") || \
+            die "git commit failed."
+        log ""
+        log "✓ Committed ${RELEASE_VERSION} release artefacts on ${branch}."
+
+        # Push the release branch — no tag. The tag is made by
+        # `git flow release finish` on main when the release branch
+        # merges in, not on the release branch itself.
+        phase "Pushing release branch to origin"
+        log ""
+        if ! (cd "${REPO_ROOT}" && git push origin "${branch}"); then
+            die "git push origin ${branch} failed."
+        fi
+        log "✓ Pushed ${branch} to origin."
     fi
-    log "Committing staged release artefacts on ${branch}..."
-    (cd "${REPO_ROOT}" && \
-        git commit -m "chore(release): cut ${RELEASE_VERSION} — frozen snapshots + mkdocs nav") || \
-        die "git commit failed."
-    log "Tagging ${RELEASE_VERSION}"
-    (cd "${REPO_ROOT}" && git tag -a "${RELEASE_VERSION}" -m "Release ${RELEASE_VERSION}") || \
-        die "git tag failed."
     log ""
-    log "✓ Committed and tagged ${RELEASE_VERSION} on ${branch}."
-    log "Push with: git push origin ${branch} && git push origin ${RELEASE_VERSION}"
+
+    # Versioned docs deploy. deploy_versioned_docs runs mike deploy and
+    # then (only on success) mike set-default — sequential, blocking,
+    # so set-default sees the just-deployed version. mike treats the
+    # version as a string; no git tag required.
+    deploy_versioned_docs "${RELEASE_VERSION}"
+    log ""
+    log "Next step (git-flow):"
+    log "    git flow release finish ${RELEASE_VERSION}"
+    log "  (merges ${branch} → main, tags ${RELEASE_VERSION} on main, merges back to develop)"
     exit 0
 fi
 
@@ -1177,19 +1683,19 @@ create_snapshot() {
         return 0
     fi
 
-    # Refresh existing snapshot dir rather than refusing. The release flow
-    # is iterative — operators run, review, fix, re-run — and the snapshot
-    # is just a copy of regenerated current/ bindings, so a stale dir from
-    # a prior partial run is safe to wipe and remake.
+    # Verbose mode dumps full per-step progress; default mode buffers
+    # and prints one summary line per module at the end (✓ or ✗).
+    local refresh_marker=""
     if [[ -d "${snapshot_dir}" ]]; then
-        log "  [${comp}] refreshing existing ${version}/ snapshot (rm -rf + re-create)"
+        [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] refreshing existing ${version}/ snapshot (rm -rf + re-create)"
         rm -rf "${snapshot_dir}" || {
             warn "Failed to remove existing ${comp}/${version}/ — manual cleanup needed."
             return 1
         }
+        refresh_marker=" (refreshed)"
     fi
 
-    log "  [${comp}] regenerating bindings via build_modules.sh..."
+    [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] regenerating bindings via build_modules.sh..."
     local build_log="${REPO_ROOT}/out/release-snapshot-${comp//\//_}.log"
     mkdir -p "$(dirname "${build_log}")"
     if [[ "${VERBOSE}" -eq 1 ]]; then
@@ -1199,20 +1705,60 @@ create_snapshot() {
         fi
     else
         if ! (cd "${REPO_ROOT}" && ./build_modules.sh "${comp}" >"${build_log}" 2>&1); then
-            # Surface the actual ERROR line(s) — they're the diagnostic
-            # the operator needs, not the noise of the trailing "Available
-            # components:" list.
-            warn "Failed to regenerate ${comp} bindings (see ${build_log}):"
-            grep -E '^(❌|ERROR|FAIL)' "${build_log}" | head -5 | sed 's/^/    /' >&2 \
+            log "  [${comp}] → ${version}/  ${_C_RED}✗ build failed${_C_RESET} (see ${build_log#${REPO_ROOT}/})"
+            grep -E '^(❌|ERROR|FAIL)' "${build_log}" | head -3 | sed 's/^/    /' >&2 \
                 || tail -10 "${build_log}" | sed 's/^/    /' >&2
             return 1
         fi
     fi
 
-    log "  [${comp}] copying current/ to ${version}/"
+    [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] copying current/ to ${version}/"
     if ! cp -r "${REPO_ROOT}/${comp}/current" "${snapshot_dir}"; then
         warn "cp failed for ${comp}/${version}/."
         return 1
+    fi
+
+    # Patch the copied CMakeLists.txt so the snapshot links + installs
+    # with cohort-pinned versioned names. The `current/CMakeLists.txt`
+    # template uses `<comp>-vcurrent-cpp` for its own LIB_NAME and for
+    # inter-module link/include dep paths (`<dep>-vcurrent-cpp`,
+    # `<dep>/current/include`). Left unpatched, the snapshot build
+    # produces lib<comp>-vcurrent-cpp.so + links against
+    # lib<dep>-vcurrent-cpp.so, and the released-cohort verification
+    # step fails with "Snapshot library not found".
+    #
+    # Rewrite three things using the cohort versions read from
+    # versions_released.yaml (the post-bump file just written by
+    # update_versions_released):
+    #   1. own LIB_NAME: <comp>-vcurrent-cpp → <comp>-v${version}-cpp
+    #   2. dep link names: <dep>-vcurrent-cpp → <dep>-v${cohort}-cpp
+    #   3. dep include paths: <dep>/current/include → <dep>/${cohort}/include
+    local snapshot_cmake="${snapshot_dir}/CMakeLists.txt"
+    if [[ -f "${snapshot_cmake}" ]] && grep -q "vcurrent-cpp\|current/include" "${snapshot_cmake}"; then
+        # Own LIB_NAME first (no cohort lookup needed)
+        sed -i "s/${comp}-vcurrent-cpp/${comp}-v${version}-cpp/g" "${snapshot_cmake}" || {
+            warn "Failed to patch own LIB_NAME in ${comp}/${version}/CMakeLists.txt."
+            return 1
+        }
+        # Dep names + include paths — read each <dep>-vcurrent-cpp occurrence
+        # (own module already replaced above) and resolve to its cohort version
+        # in versions_released.yaml. Then do the same for include paths.
+        local versions_yaml="${REPO_ROOT}/versions_released.yaml"
+        if [[ -f "${versions_yaml}" ]]; then
+            local dep dep_ver
+            while read -r dep; do
+                [[ -z "${dep}" ]] && continue
+                dep_ver="$(awk -v k="${dep}:" '$1==k{print $2; exit}' "${versions_yaml}")"
+                if [[ -n "${dep_ver}" ]]; then
+                    sed -i "s/${dep}-vcurrent-cpp/${dep}-v${dep_ver}-cpp/g" "${snapshot_cmake}"
+                    sed -i "s|HALIF_INCLUDE_DIR}/${dep}/current/|HALIF_INCLUDE_DIR}/${dep}/${dep_ver}/|g" "${snapshot_cmake}"
+                else
+                    warn "  [${comp}/${version}] dep '${dep}' not in versions_released.yaml; left as -vcurrent-cpp (build will fail at verification)."
+                fi
+            done < <(grep -oE '[a-z][a-z0-9_]*-vcurrent-cpp' "${snapshot_cmake}" | grep -oE '^[a-z][a-z0-9_]*' | sort -u)
+        else
+            warn "  [${comp}/${version}] versions_released.yaml missing; dep links left as -vcurrent-cpp."
+        fi
     fi
 
     # Stage the snapshot. No -f needed: .gitignore scopes the binding
@@ -1225,6 +1771,11 @@ create_snapshot() {
         return 1
     }
 
+    # One summary line per module — visible by default. Verbose output
+    # already showed every step above.
+    if [[ "${VERBOSE}" -ne 1 ]]; then
+        log "  [${comp}] → ${version}/  ${_C_GREEN}✓${_C_RESET}${refresh_marker}"
+    fi
     return 0
 }
 
@@ -1314,23 +1865,40 @@ PYEOF
 }
 
 # ----------------------------------------------------------------------------
-# Release branch + tag (#513)
+# Release branch (#513)
+#
+# Creates / reuses release/<version> and stages all generated artefacts.
+# Does NOT create a git tag — `git flow release finish <version>` creates
+# the tag on main when the release branch merges in.
 # ----------------------------------------------------------------------------
 
-create_release_branch_and_tag() {
+create_release_branch() {
     local release_version="$1"
     local branch="release/${release_version}"
 
+    # Tag existence is not a failure condition: this script never creates
+    # the tag. `git flow release finish` does. If the tag exists already
+    # (e.g. the operator already finished a prior cycle), warn — don't die.
     if git -C "${REPO_ROOT}" rev-parse --verify "refs/tags/${release_version}" >/dev/null 2>&1; then
-        die "Tag ${release_version} already exists. Refusing to overwrite."
+        warn "Tag ${release_version} already exists. (Tag is created by 'git flow release finish' on main, not by this script.)"
     fi
 
     if git -C "${REPO_ROOT}" rev-parse --verify "refs/heads/${branch}" >/dev/null 2>&1; then
         log "Branch ${branch} already exists locally — checking it out."
-        (cd "${REPO_ROOT}" && git checkout "${branch}") || die "Failed to checkout existing ${branch}"
+        # -q: don't dump the M/A file list. Operator can use --verbose
+        # to see it if they need the diff summary at checkout time.
+        if [[ "${VERBOSE:-0}" -eq 1 ]]; then
+            (cd "${REPO_ROOT}" && git checkout "${branch}") || die "Failed to checkout existing ${branch}"
+        else
+            (cd "${REPO_ROOT}" && git checkout -q "${branch}") || die "Failed to checkout existing ${branch}"
+        fi
     else
         log "Creating release branch ${branch}"
-        (cd "${REPO_ROOT}" && git checkout -b "${branch}") || die "Failed to create ${branch}"
+        if [[ "${VERBOSE:-0}" -eq 1 ]]; then
+            (cd "${REPO_ROOT}" && git checkout -b "${branch}") || die "Failed to create ${branch}"
+        else
+            (cd "${REPO_ROOT}" && git checkout -q -b "${branch}") || die "Failed to create ${branch}"
+        fi
     fi
 
     # Stage all release artefacts on the release branch — but DO NOT
@@ -1353,17 +1921,76 @@ create_release_branch_and_tag() {
         fi
     done
 
+    # Belt-and-braces: pick up any other tracked-file modifications the
+    # script's writes touched but the explicit list above missed.
+    (cd "${REPO_ROOT}" && git add -u) || true
+    # Also pick up any docs/releases/<X.Y.Z>.md that's been hand-edited
+    # and is now untracked.
+    if [[ -f "${REPO_ROOT}/docs/releases/${release_version}.md" ]]; then
+        (cd "${REPO_ROOT}" && git add -- "docs/releases/${release_version}.md") || true
+    fi
+    # Pick up any UNTRACKED snapshot dirs that should be released this
+    # cycle — <comp>/<X.Y.Z.W>/ dirs that aren't in the baseline tag
+    # AND aren't already tracked. Catches the case where `stage` created
+    # the dirs (and git-added them) but they got unstaged before --apply
+    # ran, leaving them untracked. Filtered by version-shape regex so
+    # unrelated junk dirs can't sneak in.
+    local baseline
+    baseline="$(git -C "${REPO_ROOT}" describe --tags --abbrev=0 2>/dev/null || true)"
+    while IFS= read -r -d '' _vd; do
+        local _rel="${_vd#${REPO_ROOT}/}"
+        local _ver="${_rel##*/}"
+        [[ "${_ver}" =~ ^[0-9]+(\.[0-9]+){2,3}$ ]] || continue
+        # Skip if already tracked.
+        if [[ -n "$(git -C "${REPO_ROOT}" ls-files -- "${_rel}" 2>/dev/null | head -1)" ]]; then
+            continue
+        fi
+        # Skip if it's in the baseline release tag (shouldn't happen for
+        # untracked dirs, but defence in depth).
+        if [[ -n "${baseline}" ]] && \
+           [[ -n "$(git -C "${REPO_ROOT}" ls-tree -d --name-only "${baseline}" "${_rel}" 2>/dev/null)" ]]; then
+            continue
+        fi
+        (cd "${REPO_ROOT}" && git add -- "${_rel}/") || \
+            warn "git add ${_rel}/ failed"
+    done < <(find "${REPO_ROOT}" -maxdepth 2 -mindepth 2 -type d \
+                -regex '.*/[a-z][a-z0-9_]*/[0-9][0-9.]*' -print0 2>/dev/null)
+
     if [[ "${COMMIT}" -eq 1 ]]; then
-        log "Committing release artefacts to ${branch}"
-        (cd "${REPO_ROOT}" && \
-            git commit -m "chore(release): cut ${release_version} — frozen snapshots + mkdocs nav") || \
-            die "Failed to commit release artefacts."
-        log "Tagging ${release_version}"
-        (cd "${REPO_ROOT}" && git tag -a "${release_version}" -m "Release ${release_version}") || \
-            die "Failed to create tag ${release_version}"
+        # Idempotent: if nothing's staged and HEAD already has the
+        # release commit, skip the commit step (re-run after a prior
+        # --apply --commit). Otherwise commit normally.
+        if (cd "${REPO_ROOT}" && git diff --cached --quiet) && \
+           (cd "${REPO_ROOT}" && git log -1 --pretty=%B 2>/dev/null) | \
+                grep -qE "^chore\(release\): cut ${release_version//./\\.}\b"; then
+            log "Release commit for ${release_version} already on HEAD — skipping commit."
+        else
+            log "Committing release artefacts to ${branch}"
+            (cd "${REPO_ROOT}" && \
+                git commit -m "chore(release): cut ${release_version} — frozen snapshots + mkdocs nav") || \
+                die "Failed to commit release artefacts."
+            log ""
+            log "✓ Release branch ${branch} committed."
+        fi
+
+        # Push the release branch — no tag. The tag is made by
+        # `git flow release finish` on main when the release branch
+        # merges in, not on the release branch itself.
+        phase "Pushing release branch to origin"
         log ""
-        log "Release branch ${branch} and tag ${release_version} created."
-        log "Push with: git push origin ${branch} && git push origin ${release_version}"
+        if ! (cd "${REPO_ROOT}" && git push origin "${branch}"); then
+            die "git push origin ${branch} failed."
+        fi
+        log "✓ Pushed ${branch} to origin."
+        log ""
+
+        # mike deploy + set-default (sequential, blocking). mike treats
+        # the version as a string; no git tag required.
+        deploy_versioned_docs "${release_version}"
+        log ""
+        log "Next step (git-flow):"
+        log "    git flow release finish ${release_version}"
+        log "  (merges ${branch} → main, tags ${release_version} on main, merges back to develop)"
     else
         log ""
         log "Release branch ${branch} created with all release artefacts staged."
@@ -1373,19 +2000,33 @@ create_release_branch_and_tag() {
         log ""
         log "When ready:"
         log "    ./release.sh --apply --release-version ${release_version} --commit"
-        log "  or commit + tag manually:"
+        log "  or commit manually:"
         log "    git commit -m 'chore(release): cut ${release_version}'"
-        log "    git tag -a ${release_version} -m 'Release ${release_version}'"
-        log "    git push origin ${branch} && git push origin ${release_version}"
+        log "    git push origin ${branch}"
+        log ""
+        log "After --commit (or manual push), finish via git-flow:"
+        log "    git flow release finish ${release_version}"
+        log "  (tags ${release_version} on main and merges back to develop)"
     fi
 }
 
-# Auto-detect next release version from the last release tag when the
-# caller didn't explicitly provide --release-version. Default rule: bump
-# the minor segment (0.20.0 → 0.21.0). Point releases (0.20.0 → 0.20.1)
-# require --release-version.
+# Auto-detect next release version from (in order of precedence):
+#   1. --release-version pin from the caller
+#   2. Current branch name when on release/X.Y.Z (honours the operator
+#      having already cut the release branch; avoids the stale-tag
+#      footgun where a leftover X.Y.Z tag from an aborted prior cycle
+#      makes the next-minor bump suggest X.(Y+1).0 instead of X.Y.Z)
+#   3. Bump the minor segment of the last release tag (0.20.0 → 0.21.0).
+# Point releases (0.20.0 → 0.20.1) require --release-version.
 auto_detect_release_version() {
     [[ -n "${RELEASE_VERSION}" ]] && return 0
+    local current_branch
+    current_branch="$(git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+    if [[ "${current_branch}" =~ ^release/([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+        RELEASE_VERSION="${BASH_REMATCH[1]}"
+        RELEASE_VERSION_AUTO=1
+        return 0
+    fi
     local last_tag
     last_tag="$(git -C "${REPO_ROOT}" describe --tags --abbrev=0 2>/dev/null || true)"
     if [[ "${last_tag}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
@@ -1673,7 +2314,7 @@ audit_version_refs() {
 }
 
 MODE="PLAN (read-only — what the staged plan would do)"
-[[ "${APPLY}"   -eq 1 ]] && MODE="APPLY (writes + release branch + tag)"
+[[ "${APPLY}"   -eq 1 ]] && MODE="APPLY (writes + release branch; tag made by git-flow release finish)"
 [[ "${DRY_RUN}" -eq 1 ]] && MODE="DRY-RUN (preview only — same as bare ./release.sh)"
 [[ "${CHECK_MODE}" -eq 1 ]] && MODE="CHECK (detected-changes preview, bypasses plan)"
 
@@ -2146,8 +2787,13 @@ if [[ "${DRY_RUN}" -eq 1 && ${#BUMPED_COMPONENTS[@]} -gt 0 ]]; then
     log ""
     log "  With --apply, additionally:"
     log "   12. git checkout -b release/${RELEASE_VERSION}"
+    log "  With --apply --commit, additionally:"
     log "   13. git commit  release artefacts (snapshots + manifests + nav + notes + CHANGELOG)"
-    log "   14. git tag ${RELEASE_VERSION}"
+    log "   14. git push origin release/${RELEASE_VERSION}"
+    log "   15. mike deploy ${RELEASE_VERSION} --push  &&  mike set-default ${RELEASE_VERSION} --push"
+    log ""
+    log "  The tag is created by 'git flow release finish ${RELEASE_VERSION}' on main,"
+    log "  not by this script."
 fi
 
 # ----------------------------------------------------------------------------
@@ -2320,7 +2966,7 @@ if [[ "${DO_BRANCH}" -eq 1 ]]; then
     fi
     phase "Creating release branch and tag ${RELEASE_VERSION}..."
     log ""
-    create_release_branch_and_tag "${RELEASE_VERSION}"
+    create_release_branch "${RELEASE_VERSION}"
 fi
 
 # Print the buffered table NOW — after all diagnostic blocks above,
@@ -2340,7 +2986,13 @@ _total_touched=${#COMP_TOUCHED[@]}
 
 log ""
 if [[ "${DO_BRANCH}" -eq 1 ]]; then
-    log "Release ${RELEASE_VERSION} applied: ${_planned_count} module(s) — branch + tag created."
+    if [[ "${COMMIT}" -eq 1 ]]; then
+        log "Release ${RELEASE_VERSION} applied: ${_planned_count} module(s) — branch + commit + push complete."
+        log "Tag will be created on main by: git flow release finish ${RELEASE_VERSION}"
+    else
+        log "Release ${RELEASE_VERSION} staged on branch: ${_planned_count} module(s) — release artefacts in the index, no commit yet."
+        log "Review with \`git diff --cached\`, then: ./release.sh --commit"
+    fi
 elif [[ "${CHECK_MODE}" -eq 1 ]]; then
     log "Stage modules with: ./release.sh <module>     Apply with: ./release.sh --apply --release-version ${RELEASE_VERSION}"
 elif [[ "${_planned_count}" -eq 0 ]]; then
