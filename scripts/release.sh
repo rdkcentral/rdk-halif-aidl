@@ -526,6 +526,7 @@ STAGE_AND_WRITE="${STAGE_AND_WRITE:-0}"
 
 APPLY="${APPLY:-0}"
 COMMIT="${COMMIT:-0}"
+COMPLETE="${COMPLETE:-0}"
 DRY_RUN="${DRY_RUN:-0}"
 SINCE_REF="${SINCE_REF:-}"
 NO_GH="${NO_GH:-0}"
@@ -578,6 +579,20 @@ Modes:
 
   --dry-run     Alias of the default — same read-only view. Kept for
                 operators who reach for the explicit flag out of habit.
+
+  --complete    Ship the release end-to-end from an already-committed
+                release/X.Y.Z branch. Must be run AFTER --apply --commit
+                has staged the cohort, committed snapshots, and pushed
+                the release branch. Performs:
+                  1. git flow release finish X.Y.Z (merges → main, tags,
+                     back-merges to develop)
+                  2. git push --follow-tags --atomic origin main develop
+                  3. ./docs/build_docs.sh release X.Y.Z (deploy + wait
+                     for GitHub Pages publish + set-default — all gated
+                     inside the docs script)
+                  4. gh release create X.Y.Z from docs/releases/X.Y.Z.md
+                Idempotent — re-runs after a partial failure pick up
+                from the first incomplete step.
 
 Options:
   --since <ref>          Base reference to diff from (default: nearest
@@ -666,6 +681,10 @@ while [[ $# -gt 0 ]]; do
             COMMIT=1
             shift
             ;;
+        --complete)
+            COMPLETE=1
+            shift
+            ;;
         --dry-run)
             DRY_RUN=1
             shift
@@ -706,6 +725,147 @@ while [[ $# -gt 0 ]]; do
 done
 
 [[ "${DRY_RUN}" -eq 1 && "${APPLY}" -eq 1 ]] && die "--dry-run and --apply are mutually exclusive"
+
+# ----------------------------------------------------------------------------
+# --complete: ship the release end-to-end (#TBD follow-up)
+# ----------------------------------------------------------------------------
+#
+# Assumes --apply --commit has already run on this branch: the cohort
+# is bumped, snapshots are committed and pushed on release/X.Y.Z, the
+# released-cohort verification build passes, release notes + CHANGELOG
+# + mkdocs nav are in place. --complete picks up from there and:
+#
+#   1. Refuses if we're not on a release/X.Y.Z branch.
+#   2. Refuses if the X.Y.Z tag already exists on origin (avoids the
+#      stale-tag trap we hit on 0.21.0).
+#   3. git flow release finish X.Y.Z  — merges → main + creates the
+#      annotated tag on main + back-merges to develop.
+#   4. git push --follow-tags --atomic origin main develop — pushes
+#      branches AND the new tag in one operation.
+#   5. ./docs/build_docs.sh release X.Y.Z — deploys versioned docs,
+#      waits for GitHub Pages to publish, sets X.Y.Z as default
+#      (all gated inside the docs script).
+#   6. gh release create X.Y.Z — publishes the GitHub release from
+#      docs/releases/X.Y.Z.md.
+#
+# Idempotency: each step checks current state before acting, so a
+# re-run after a partial success picks up from the first incomplete
+# step. The git-flow finish + tag-push step is the riskiest — if
+# git-flow already finished locally, --complete detects the tag is
+# present on HEAD's reachable history and skips to the push.
+
+if [[ "${COMPLETE}" -eq 1 ]]; then
+    branch="$(git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD)"
+    if [[ ! "${branch}" =~ ^release/([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+        die "--complete must run on a release/X.Y.Z branch (current: ${branch})."
+    fi
+    _release_ver="${BASH_REMATCH[1]}"
+    # Pin RELEASE_VERSION from the branch name so the rest of the
+    # script's auto-detect doesn't second-guess us.
+    RELEASE_VERSION="${_release_ver}"
+    log ""
+    phase "Completing release ${RELEASE_VERSION} (--complete)"
+    log ""
+
+    # 1. Refuse if X.Y.Z tag already exists on origin.
+    _tag_check="$(git -C "${REPO_ROOT}" ls-remote --tags origin "refs/tags/${RELEASE_VERSION}" 2>/dev/null | head -1)"
+    if [[ -n "${_tag_check}" ]]; then
+        die "--complete: tag ${RELEASE_VERSION} already exists on origin (${_tag_check%%[[:space:]]*}). Resolve before re-running."
+    fi
+    log "  ✓ tag ${RELEASE_VERSION} not yet on origin."
+
+    # 2. Make sure local main + develop are current.
+    log "Fetching origin main + develop..."
+    (cd "${REPO_ROOT}" && git fetch origin main develop) || \
+        die "--complete: git fetch origin failed."
+
+    # 3. git flow release finish — only if the tag isn't already
+    #    created locally from a prior partial run.
+    if git -C "${REPO_ROOT}" rev-parse --verify "refs/tags/${RELEASE_VERSION}" >/dev/null 2>&1; then
+        log "  ✓ tag ${RELEASE_VERSION} already exists locally — skipping git flow release finish."
+    else
+        log "Running git flow release finish ${RELEASE_VERSION}..."
+        if ! (cd "${REPO_ROOT}" && \
+                GIT_MERGE_AUTOEDIT=no \
+                git flow release finish -m "Release ${RELEASE_VERSION}" "${RELEASE_VERSION}"); then
+            die "--complete: git flow release finish ${RELEASE_VERSION} failed."
+        fi
+    fi
+    log "  ✓ release ${RELEASE_VERSION} finished locally."
+
+    # 4. Push branches + tag atomically.
+    phase "Pushing main + develop + ${RELEASE_VERSION} tag to origin"
+    log ""
+    if ! (cd "${REPO_ROOT}" && \
+            git push --follow-tags --atomic origin main develop); then
+        die "--complete: atomic push of main + develop + tag failed. Inspect remote state before retrying."
+    fi
+    log "  ✓ pushed main + develop + ${RELEASE_VERSION} tag."
+
+    # 5. Versioned docs deploy (deploy + wait for GH Pages + set-default,
+    #    all gated inside build_docs.sh).
+    phase "Releasing versioned docs (./docs/build_docs.sh release ${RELEASE_VERSION})"
+    log ""
+    if [[ ! -x "${REPO_ROOT}/docs/build_docs.sh" ]]; then
+        warn "docs/build_docs.sh not found/executable — skipping versioned docs release."
+        warn "  Run manually when ready: ./docs/build_docs.sh release ${RELEASE_VERSION}"
+    else
+        if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh release "${RELEASE_VERSION}"); then
+            warn "./docs/build_docs.sh release ${RELEASE_VERSION} failed."
+            warn "  Tag + branches are pushed; retry the docs release later:"
+            warn "    ./docs/build_docs.sh release ${RELEASE_VERSION}"
+        else
+            log "  ✓ versioned docs released and set as default."
+        fi
+    fi
+
+    # 6. GitHub release from docs/releases/X.Y.Z.md.
+    phase "Publishing GitHub release ${RELEASE_VERSION}"
+    log ""
+    _notes_file="${REPO_ROOT}/docs/releases/${RELEASE_VERSION}.md"
+    if [[ ! -f "${_notes_file}" ]]; then
+        warn "Release notes file ${_notes_file} not found — creating release without notes."
+        _notes_file=""
+    fi
+    if ! command -v gh >/dev/null 2>&1; then
+        warn "gh CLI not available — skipping GitHub release creation."
+        warn "  Run manually: gh release create ${RELEASE_VERSION} --target main"
+    else
+        # Resolve <owner>/<repo> from origin so we don't hard-code.
+        _repo_slug="$(git -C "${REPO_ROOT}" config --get remote.origin.url \
+                       | sed -E 's|.*github.com[:/](.*/.+).git$|\1|; s|.*github.com[:/](.*/.+)$|\1|')"
+        if gh release view "${RELEASE_VERSION}" --repo "${_repo_slug}" >/dev/null 2>&1; then
+            log "  ✓ GitHub release ${RELEASE_VERSION} already exists — skipping create."
+        else
+            if [[ -n "${_notes_file}" ]]; then
+                gh release create "${RELEASE_VERSION}" \
+                    --repo "${_repo_slug}" \
+                    --target main \
+                    --title "${RELEASE_VERSION}" \
+                    --notes-file "${_notes_file}" \
+                    || warn "gh release create failed — create manually."
+            else
+                gh release create "${RELEASE_VERSION}" \
+                    --repo "${_repo_slug}" \
+                    --target main \
+                    --title "${RELEASE_VERSION}" \
+                    --generate-notes \
+                    || warn "gh release create failed — create manually."
+            fi
+            log "  ✓ GitHub release ${RELEASE_VERSION} published."
+        fi
+    fi
+
+    log ""
+    log "🎉 Release ${RELEASE_VERSION} complete."
+    log ""
+    log "  Tag:      ${RELEASE_VERSION} (on main)"
+    log "  Branches: main + develop updated"
+    log "  Docs:     deployed to GitHub Pages, ${RELEASE_VERSION} set as default"
+    log "  Release:  https://github.com/${_repo_slug:-rdkcentral/rdk-halif-aidl}/releases/tag/${RELEASE_VERSION}"
+    exit 0
+fi
+
 
 # Two modes consumed by the rest of the script:
 #   DO_WRITES   1 -> regen/snapshot/metadata/manifests/docs writes (per-module)
