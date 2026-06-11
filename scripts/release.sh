@@ -840,15 +840,27 @@ if [[ "${COMPLETE}" -eq 1 ]]; then
             log "  ✓ local ${_ref} already at origin/${_ref}."
             continue
         fi
-        # Fast-forward local <ref> to origin/<ref> if it's an ancestor.
+        # Three relationships matter:
+        #   - local is an ancestor of remote  → local is behind, fast-forward.
+        #   - remote is an ancestor of local  → local is ahead. This is the
+        #                                       normal post-git-flow-finish
+        #                                       state where the back-merge
+        #                                       sits on local main / develop
+        #                                       waiting to be pushed.
+        #                                       Leave it — the push step
+        #                                       will handle it.
+        #   - neither                         → real divergence, die.
         if git -C "${REPO_ROOT}" merge-base --is-ancestor "${_local_sha}" "${_remote_sha}" 2>/dev/null; then
             if (cd "${REPO_ROOT}" && git update-ref "refs/heads/${_ref}" "${_remote_sha}"); then
                 log "  ✓ fast-forwarded local ${_ref} → origin/${_ref}."
             else
                 die "--complete: failed to fast-forward local ${_ref} to origin/${_ref}."
             fi
+        elif git -C "${REPO_ROOT}" merge-base --is-ancestor "${_remote_sha}" "${_local_sha}" 2>/dev/null; then
+            _ahead_count="$(git -C "${REPO_ROOT}" rev-list --count "${_remote_sha}..${_local_sha}" 2>/dev/null || echo "?")"
+            log "  ✓ local ${_ref} is ${_ahead_count} commit(s) ahead of origin/${_ref} (will push later)."
         else
-            die "--complete: local ${_ref} has diverged from origin/${_ref}. Reconcile manually (git checkout ${_ref}; git pull --rebase origin ${_ref}) before re-running."
+            die "--complete: local ${_ref} has diverged from origin/${_ref} (each side has commits the other doesn't). Reconcile manually before re-running."
         fi
     done
 
