@@ -5,9 +5,15 @@
 # clones the toolchain. Keep it pinned so the committed module-local
 # generated C++ always matches the generator that produced it.
 #
-# Pinned to the module-local generator commit on
-# feature/19-module-local-generated-output (linux_binder_idl#20). Bump to a
-# release tag once that PR merges.
+# Pinned to release tag 2.3.0 (linux_binder_idl) which ships:
+#  - Yocto SDK M4 mismatch fix for builds inside rdk-kirkstone docker /
+#    any toolchain env that exports M4 to an old m4 (< 1.4.12) lacking
+#    the --gnu flag required by bison 3.x
+#    (linux_binder_idl#31, closes linux_binder_idl#30)
+#  - Stand-alone regression test suite at tests/test_yocto_m4_regression.sh
+#    so the bug stays fixed (linux_binder_idl#31)
+# Previously 2.2.0 (version-pinned imports + module-local generated-output
+# layout + always-regen-on-build fix from linux_binder_idl#19/#20/#21/#23/#25).
 #
 # Override for a one-off build with:  BINDER_VERSION=<ref> ./build_binder.sh
-b3b6d69
+2.3.0

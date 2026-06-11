@@ -35,13 +35,16 @@
 
 cmake_minimum_required(VERSION 3.8)
 
-# Determine module-specific subdirectory
+# Determine module-specific subdirectory. The glob picks up both current
+# (`-vcurrent-cpp.so`) and frozen-snapshot (`-v<X.Y.Z.W>-cpp.so`) library
+# names, so a single staging step covers everything the toolchain
+# auto-discovered from on-disk snapshots (linux_binder_idl#23 / #538).
 if (INTERFACE_TARGET STREQUAL "all")
     set(MODULE_SUBDIR "")
-    set(SEARCH_PATTERN "lib*-vcurrent-cpp.so")
+    set(SEARCH_PATTERN "lib*-v*-cpp.so")
 else()
     set(MODULE_SUBDIR "${INTERFACE_TARGET}")
-    set(SEARCH_PATTERN "lib${INTERFACE_TARGET}-vcurrent-cpp.so")
+    set(SEARCH_PATTERN "lib${INTERFACE_TARGET}-v*-cpp.so")
 endif()
 
 # Create output directories - separate binder and halif
@@ -90,9 +93,14 @@ endif()
 message(STATUS "Staging module headers from ${REPO_ROOT}...")
 
 # Module-local layout: generated headers live in <module>/current/include/
+# (in-development) and <module>/<X.Y.Z.W>/include/ (released snapshots).
+# Stage both so cohort-locked snapshot builds can find their transitive
+# headers at `${HALIF_INCLUDE_DIR}/<dep>/<version>/include/` (#544 / #538).
 if (INTERFACE_TARGET STREQUAL "all")
-    # Stage all module headers
-    file(GLOB MODULE_INC_DIRS LIST_DIRECTORIES true "${REPO_ROOT}/*/current/include")
+    # Stage all module headers — current/ + every snapshot version.
+    file(GLOB MODULE_INC_DIRS LIST_DIRECTORIES true
+        "${REPO_ROOT}/*/current/include"
+        "${REPO_ROOT}/*/[0-9]*.[0-9]*.[0-9]*.[0-9]*/include")
 
     set(HEADER_COUNT 0)
     foreach(inc_dir ${MODULE_INC_DIRS})
@@ -111,24 +119,29 @@ if (INTERFACE_TARGET STREQUAL "all")
 
     message(STATUS "Staged ${HEADER_COUNT} HAL interface headers to ${HALIF_INC_OUT_DIR}")
 else()
-    # Stage single module headers
-    set(MODULE_HEADER_DIR "${REPO_ROOT}/${INTERFACE_TARGET}/current/include")
+    # Stage headers for the single module — current/ + every snapshot.
+    file(GLOB MODULE_HEADER_DIRS LIST_DIRECTORIES true
+        "${REPO_ROOT}/${INTERFACE_TARGET}/current/include"
+        "${REPO_ROOT}/${INTERFACE_TARGET}/[0-9]*.[0-9]*.[0-9]*.[0-9]*/include")
 
-    if (EXISTS "${MODULE_HEADER_DIR}")
-        file(GLOB_RECURSE MODULE_HEADERS "${MODULE_HEADER_DIR}/*.h")
+    set(HEADER_COUNT 0)
+    foreach(MODULE_HEADER_DIR ${MODULE_HEADER_DIRS})
+        if (IS_DIRECTORY "${MODULE_HEADER_DIR}")
+            file(GLOB_RECURSE MODULE_HEADERS "${MODULE_HEADER_DIR}/*.h")
+            foreach(header ${MODULE_HEADERS})
+                file(RELATIVE_PATH rel_path "${REPO_ROOT}" "${header}")
+                get_filename_component(dest_dir "${HALIF_INC_OUT_DIR}/${rel_path}" DIRECTORY)
+                file(MAKE_DIRECTORY "${dest_dir}")
+                file(COPY_FILE "${header}" "${HALIF_INC_OUT_DIR}/${rel_path}")
+                math(EXPR HEADER_COUNT "${HEADER_COUNT} + 1")
+            endforeach()
+        endif()
+    endforeach()
 
-        set(HEADER_COUNT 0)
-        foreach(header ${MODULE_HEADERS})
-            file(RELATIVE_PATH rel_path "${REPO_ROOT}" "${header}")
-            get_filename_component(dest_dir "${HALIF_INC_OUT_DIR}/${rel_path}" DIRECTORY)
-            file(MAKE_DIRECTORY "${dest_dir}")
-            file(COPY_FILE "${header}" "${HALIF_INC_OUT_DIR}/${rel_path}")
-            math(EXPR HEADER_COUNT "${HEADER_COUNT} + 1")
-        endforeach()
-
-        message(STATUS "Staged ${HEADER_COUNT} headers for ${INTERFACE_TARGET} to ${HALIF_INC_OUT_DIR}")
+    if (HEADER_COUNT EQUAL 0)
+        message(WARNING "No headers found for ${INTERFACE_TARGET} under current/ or any released snapshot")
     else()
-        message(WARNING "No headers found for ${INTERFACE_TARGET} in ${MODULE_HEADER_DIR}")
+        message(STATUS "Staged ${HEADER_COUNT} headers for ${INTERFACE_TARGET} to ${HALIF_INC_OUT_DIR}")
     endif()
 endif()
 

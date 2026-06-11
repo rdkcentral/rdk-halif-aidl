@@ -32,13 +32,13 @@ Tests use ut-core's suite initialization to discover and cache server version on
 ```cpp
 // boot_tests.cpp
 #include <ut.h>
-#include <aidl/com/rdk/hal/boot/IBoot.h>
+#include <aidl/com/rdk/hal/bootreason/IBootReason.h>
 
-using namespace aidl::com::rdk::hal::boot;
+using namespace aidl::com::rdk::hal::bootreason;
 
 // Suite-level context
 struct BootTestContext {
-    std::shared_ptr<IBoot> bootService;
+    std::shared_ptr<IBootReason> bootService;
     int32_t serverVersion;
     std::string serverHash;
 };
@@ -50,8 +50,8 @@ void boot_test_suite_init(void) {
     gContext = new BootTestContext();
     
     // Connect to Boot service
-    const std::string serviceName = std::string() + IBoot::descriptor + "/default";
-    auto bootService = IBoot::fromBinder(
+    const std::string serviceName = std::string() + IBootReason::descriptor + "/default";
+    auto bootService = IBootReason::fromBinder(
         ndk::SpAIBinder(AServiceManager_checkService(serviceName.c_str())));
     
     UT_ASSERT_NOT_NULL(bootService.get());
@@ -365,7 +365,7 @@ void test_l2_capabilities_match_hfp(void) {
     UT_LOG_INFO("Validating runtime capabilities against HFP");
     
     // Parse HFP file
-    std::string hfpPath = "../hfp-boot.yaml";  // Relative to test binary
+    std::string hfpPath = "../hfp-bootreason.yaml";  // Relative to test binary
     HFPCapabilities hfp = parseBootHFP(hfpPath);
     
     UT_LOG_INFO("HFP interface version: %s", hfp.interfaceVersion.c_str());
@@ -691,7 +691,7 @@ if (UT_KVP_PROFILE_HAS_KEY("boot/platform_caps/supportsSecureBoot")) {
 
 **Pros:**
 
-- Each binary links to specific library version (boot-v1-cpp, boot-v2-cpp)
+- Each binary links to specific library version (bootreason-v1-cpp, boot-v2-cpp)
 - Can test exact frozen version behavior
 - Aligns with freeze_interface.sh workflow (snapshot tests with interface)
 - Smaller per-binary size
@@ -788,7 +788,7 @@ void test_l2_capabilities_match_hfp(void) {
 ### Linking Test Binary
 
 ```cmake
-# boot/current/tests/CMakeLists.txt
+# bootreason/current/tests/CMakeLists.txt
 cmake_minimum_required(VERSION 3.10)
 project(boot_tests)
 
@@ -806,7 +806,7 @@ add_executable(boot_tests
 
 # Link against latest Boot library (for version adaptation testing)
 target_link_libraries(boot_tests
-    boot-vcurrent-cpp  # Latest version from stable/generated/boot/current/
+    bootreason-vcurrent-cpp  # Latest version from stable/generated/bootreason/current/
     ut-core::ut-core
     yaml-cpp
     binder_ndk
@@ -814,7 +814,7 @@ target_link_libraries(boot_tests
 
 # Include AIDL generated headers
 target_include_directories(boot_tests PRIVATE
-    ${CMAKE_SOURCE_DIR}/stable/generated/boot/current/include
+    ${CMAKE_SOURCE_DIR}/stable/generated/bootreason/current/include
 )
 
 # Install test binary
@@ -824,7 +824,7 @@ install(TARGETS boot_tests
 
 # Copy HFP file for runtime access
 install(FILES
-    ${CMAKE_SOURCE_DIR}/boot/current/hfp-boot.yaml
+    ${CMAKE_SOURCE_DIR}/bootreason/current/hfp-bootreason.yaml
     DESTINATION share/tests/boot
 )
 ```
@@ -833,7 +833,7 @@ install(FILES
 
 ```bash
 # From workspace root
-cd boot/current/tests
+cd bootreason/current/tests
 mkdir build && cd build
 
 # Configure
@@ -857,9 +857,9 @@ See example implementation structure:
 ```text
 boot/
 ├── current/
-│   ├── hfp-boot.yaml
+│   ├── hfp-bootreason.yaml
 │   ├── com/rdk/hal/boot/
-│   │   ├── IBoot.aidl
+│   │   ├── IBootReason.aidl
 │   │   └── Capabilities.aidl
 │   └── tests/
 │       ├── CMakeLists.txt
@@ -972,7 +972,7 @@ This testing strategy enables **version-adaptive L1/L2 testing** using ut-core f
 - [Client Patterns](client-patterns.md) - Version discovery and graceful degradation patterns (referenced throughout)
 - [Migration Guide](migration-guide.md) - Upgrading between interface versions
 - [ut-core Documentation](https://github.com/rdkcentral/ut-core/wiki) - Testing framework reference
-- [HFP Files](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/boot/current/hfp-boot.yaml) - HAL Feature Profile examples
+- [HFP Files](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/bootreason/current/hfp-bootreason.yaml) - HAL Feature Profile examples
 
 ---
 

@@ -10,7 +10,7 @@
 ## Related Pages
 
 !!! tip "Related Pages"
-    - TBC
+    - [Module Boot Sequence](../../boot_sequence/current/module_boot_sequence.md)
 
 ## 🚧 Document Under Construction
 

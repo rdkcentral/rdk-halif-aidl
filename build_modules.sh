@@ -50,8 +50,9 @@ Arguments:
              - <name> : Build specific module (e.g., boot, videodecoder)
 
 Commands:
-  manifest   Build the component set from versions.yaml (each at its
-             pinned version). Use --file <path> for an alternate manifest.
+  manifest   Build the component set from versions_released.yaml (each at
+             its pinned version). Use --file <path> for an alternate manifest
+             (e.g. versions_current.yaml for the in-development cohort).
   clean      Remove out/ directory (build artifacts)
   cleanall   Remove out/ and build/ directories
 
@@ -144,6 +145,118 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$SCRIPT_DIR"
 
+# Suppress three classes of unfixable upstream noise so the verification
+# build output stays readable.
+#
+#   -Wno-write-strings  AOSP aidl-cpp emits
+#                       `static constexpr char* HASHVALUE = "notfrozen";`
+#                       in every generated I*.h. Should be `const char*`
+#                       — bug in build-tools/linux_binder_idl/android/aidl/
+#                       generate_cpp.cpp:904. 93 occurrences across the
+#                       cohort.
+#
+#   -Wno-attributes     binder_sdk headers (Vector.h, IBinder.h, …) carry
+#                       clang-only attributes — `__attribute__((no_sanitize
+#                       ("cfi")))` via UTILS_VECTOR_NO_CFI, and
+#                       `[[clang::lto_visibility_public]]`. GCC accepts
+#                       them syntactically but warns on every one.
+#                       Vendored binder_sdk code; not ours to patch.
+#
+#   -Wno-return-type    aidl-cpp's parcelable-union writeToParcel/getTag
+#                       dispatch generates an exhaustive switch followed
+#                       by `__assert2(...); }` — but GCC doesn't see
+#                       __assert2 as [[noreturn]], so it warns "control
+#                       reaches end of non-void function". Should be
+#                       `__builtin_unreachable()`. Bites every union
+#                       (PropertyValue, DrmMetricValue, …).
+#
+# Plumbed two ways:
+#   1. Export CXXFLAGS — picked up on first cmake configure of any
+#      build dir (and by build_binder.sh if it's already exported in
+#      this shell).
+#   2. Inject -DCMAKE_CXX_FLAGS_INIT into every cmake invocation below —
+#      defeats stale build/<dir>/CMakeCache.txt where the flags weren't
+#      captured on the original configure (env-CXXFLAGS only seeds the
+#      cache the FIRST time).
+WARNING_SUPPRESSION_FLAGS="-Wno-write-strings -Wno-attributes -Wno-return-type"
+export CXXFLAGS="${CXXFLAGS:-} ${WARNING_SUPPRESSION_FLAGS}"
+
+#######################################################################
+# Pre-flight checks (#571)
+#######################################################################
+#
+# Surface broken-environment failures as a single actionable error line
+# instead of cryptic CMake output deep in the run. Each check exits
+# non-zero with a remediation hint pointing at the actual fix.
+#
+# Skipped for clean / cleanall / help — those should work in any state.
+
+preflight_check() {
+    # Toolchain artefacts present. Honour BINDER_TOOLCHAIN_ROOT /
+    # BINDER_SOURCE_DIR / BINDER_SDK_DIR overrides used by Yocto and
+    # cross-compile flows (a non-default toolchain location is a
+    # legitimate state and shouldn't fail the local-tree check).
+    local toolchain_root="${BINDER_TOOLCHAIN_ROOT:-${BINDER_SOURCE_DIR:-$ROOT_DIR/build-tools/linux_binder_idl}}"
+    if [[ ! -f "$toolchain_root/host/aidl_ops.py" ]]; then
+        echo "❌ AIDL toolchain not found at $toolchain_root/host/aidl_ops.py." >&2
+        echo "   Fix: run ./build_binder.sh to bootstrap, symlink build-tools/" >&2
+        echo "        from a known-good worktree, or set BINDER_TOOLCHAIN_ROOT" >&2
+        echo "        (or BINDER_SOURCE_DIR) to the toolchain location." >&2
+        exit 1
+    fi
+
+    # Binder SDK runtime present (Stage 1 must have completed).
+    # Honour --sdk-dir <path> flag, BINDER_SDK_DIR env var, or the
+    # default out/target/lib/binder location in order of preference.
+    local sdk_dir="${BINDER_SDK_DIR:-}"
+    # Scan args for --sdk-dir <path>
+    local -a args=("$@")
+    local i=0
+    while [[ $i -lt ${#args[@]} ]]; do
+        if [[ "${args[$i]}" == "--sdk-dir" ]] && [[ $((i+1)) -lt ${#args[@]} ]]; then
+            sdk_dir="${args[$((i+1))]}/lib/binder"
+            break
+        fi
+        i=$((i + 1))
+    done
+    if [[ -z "$sdk_dir" ]]; then
+        sdk_dir="$ROOT_DIR/out/target/lib/binder"
+    fi
+    if [[ ! -d "$sdk_dir" ]]; then
+        echo "❌ Binder SDK runtime not found at $sdk_dir." >&2
+        echo "   Fix: run ./build_interfaces.sh <module> (stages the SDK and" >&2
+        echo "        delegates here), or ./build_binder.sh to stage it directly." >&2
+        echo "        For cross-compile / Yocto, set BINDER_SDK_DIR to the staged path" >&2
+        echo "        or pass --sdk-dir <path>." >&2
+        exit 1
+    fi
+}
+
+# Snapshot-version builds (--version <released>) and toolchain-bootstrap
+# commands (clean / cleanall / sdk / sdk-only / help) bypass preflight —
+# they either don't touch the toolchain at all or are the very mechanism
+# that stages it.
+skip_preflight=0
+case "${1:-}" in
+    clean|cleanall|sdk|sdk-only|--help|-h|--h|"") skip_preflight=1 ;;
+esac
+# Also skip when caller pinned a released snapshot via --version <X>
+# (where X != "current"): the snapshot's own pre-generated bindings are
+# all that's needed; no toolchain regen happens.
+for ((j=1; j<=$#; j++)); do
+    if [[ "${!j}" == "--version" ]]; then
+        next=$((j+1))
+        if [[ $next -le $# ]] && [[ "${!next}" != "current" ]]; then
+            skip_preflight=1
+            break
+        fi
+    fi
+done
+
+if [[ "$skip_preflight" -eq 0 ]]; then
+    preflight_check "$@"
+fi
+
 #######################################################################
 # Parse Arguments
 #######################################################################
@@ -183,9 +296,11 @@ case "${1:-}" in
         exec "$BUILD_BINDER_SCRIPT" "${@:2}"
         ;;
     manifest)
-        # Build the component set described by versions.yaml, each at the
-        # version the manifest pins it to.
-        MANIFEST="$ROOT_DIR/versions.yaml"
+        # Build the component set described by the manifest, each at the
+        # version the manifest pins it to. Default file is the released
+        # cohort (`versions_released.yaml`); dev users override with
+        # `--file versions_current.yaml` to build the in-development tree.
+        MANIFEST="$ROOT_DIR/versions_released.yaml"
         if [[ "${2:-}" == "--file" && -n "${3:-}" ]]; then
             MANIFEST="$3"
         fi
@@ -212,6 +327,101 @@ case "${1:-}" in
 
         echo "📋 Version manifest: $MANIFEST"
         echo "   ${#MANIFEST_PAIRS[@]} component(s), default version '${DEFAULT_VER}'"
+
+        # Topologically sort MANIFEST_PAIRS so each component's
+        # dependencies build (and install their headers/libs into
+        # out/target) before the component itself does. Without this,
+        # alphabetical iteration breaks any importer of `common`:
+        # audiodecoder builds before common, can't find common's
+        # PropertyValue.h etc. (#583). The dep graph comes from each
+        # component's <version>/interface.yaml `imports:` list (or
+        # <comp>/current/interface.yaml when version=current).
+        mapfile -t MANIFEST_PAIRS < <(python3 - "$ROOT_DIR" "${MANIFEST_PAIRS[@]}" <<'PYEOF'
+import os, re, sys
+root = sys.argv[1]
+pairs = [arg.split(None, 1) for arg in sys.argv[2:]]
+version_of = {comp: ver for comp, ver in pairs}
+
+def imports_of(comp, ver):
+    """Parse <comp>/<ver>/interface.yaml `imports:` -> [dep names]."""
+    iface = os.path.join(root, comp, ver, "interface.yaml")
+    if not os.path.isfile(iface):
+        return []
+    deps = []
+    in_block = False
+    with open(iface) as f:
+        for line in f:
+            if re.match(r'^  imports:\s*$', line):
+                in_block = True
+                continue
+            if in_block and re.match(r'^  [^ ]', line):
+                break  # next top-level key
+            if in_block:
+                m = re.match(r'^    - ([A-Za-z0-9_]+)(?:@.*)?\s*$', line)
+                if m:
+                    deps.append(m.group(1))
+    return deps
+
+# Build graph + Kahn's BFS toposort.
+graph = {comp: set(imports_of(comp, ver)) for comp, ver in pairs}
+# Restrict edges to deps that are actually in the manifest — external
+# refs (e.g. android.hardware.common.fmq) shouldn't block toposort.
+for comp, deps in graph.items():
+    graph[comp] = {d for d in deps if d in version_of}
+
+indegree = {comp: 0 for comp in graph}
+for comp, deps in graph.items():
+    for d in deps:
+        indegree[comp] += 1
+
+# Reverse map: dep -> [importers]
+importers = {comp: [] for comp in graph}
+for comp, deps in graph.items():
+    for d in deps:
+        importers[d].append(comp)
+
+ready = sorted(c for c, deg in indegree.items() if deg == 0)
+ordered = []
+while ready:
+    c = ready.pop(0)
+    ordered.append(c)
+    for imp in sorted(importers[c]):
+        indegree[imp] -= 1
+        if indegree[imp] == 0:
+            ready.append(imp)
+    ready.sort()
+
+if len(ordered) != len(graph):
+    sys.stderr.write("toposort: cycle detected; falling back to alphabetical\n")
+    ordered = sorted(graph.keys())
+
+for c in ordered:
+    print(f"{c} {version_of[c]}")
+PYEOF
+        )
+
+        # Echo the resolved build order so the operator can see what's
+        # being built when and why.
+        echo "   build order (toposort by imports): $(awk '{print $1}' <<< "$(printf '%s\n' "${MANIFEST_PAIRS[@]}")" | tr '\n' ' ')"
+        echo ""
+
+        # Pre-stage each component's include/ tree into
+        # out/build/include/<comp>/<ver>/include/ so downstream snapshot
+        # builds can satisfy their `${HALIF_INCLUDE_DIR}/<dep>/<ver>/include`
+        # references. The root CMakeLists copy step only handles
+        # */current/include (it pre-dates module-local snapshots), so for
+        # snapshot manifest builds we need this here. Pure copy, no build —
+        # snapshot include/ trees are committed pre-generated C++.
+        echo "   pre-staging snapshot headers into out/build/include/ ..."
+        INC_STAGE="$ROOT_DIR/out/build/include"
+        for pair in "${MANIFEST_PAIRS[@]}"; do
+            read -r comp ver <<< "$pair"
+            src_inc="$ROOT_DIR/$comp/$ver/include"
+            [[ -d "$src_inc" ]] || continue
+            dst_inc="$INC_STAGE/$comp/$ver/include"
+            mkdir -p "$dst_inc"
+            cp -RT "$src_inc" "$dst_inc"
+        done
         echo ""
 
         # Components pinned to 'current' build together in one pass; any
@@ -368,7 +578,8 @@ if [[ "$VERSION" != "current" ]]; then
     SNAPSHOT_DIR="$ROOT_DIR/$MODULE/$VERSION"
     if [[ ! -f "$SNAPSHOT_DIR/CMakeLists.txt" ]]; then
         echo "❌ ERROR: snapshot $MODULE/$VERSION not found at $SNAPSHOT_DIR."
-        echo "   Run './release.sh $MODULE' to produce it, or check the version number."
+        echo "   Snapshots are produced by the cohort-wide './release.sh' run;"
+        echo "   verify the version number is one that has been released."
         exit 1
     fi
 
@@ -389,6 +600,7 @@ if [[ "$VERSION" != "current" ]]; then
     # snapshot CMakeLists find the headers. Yocto stages a flat SDK so
     # BINDER_SDK_DIR alone resolves both.
     cmake -S "$SNAPSHOT_DIR" -B "$SNAPSHOT_BUILD_DIR" \
+        -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
         -DBINDER_SDK_DIR="$SDK_DIR" \
         -DBINDER_SDK_INCLUDE_DIR="$ROOT_DIR/out/build" \
         -DHALIF_LIB_DIR="$ROOT_DIR/out/target/lib/halif" \
@@ -433,6 +645,7 @@ echo "⚙️  Configuring CMake..."
 echo ""
 
 cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
+    -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
     -DINTERFACE_TARGET="$MODULE" \
     -DAIDL_SRC_VERSION="$VERSION" \
     -DBINDER_SDK_DIR="$SDK_DIR"

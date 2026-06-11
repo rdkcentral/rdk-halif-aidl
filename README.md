@@ -81,28 +81,37 @@ A **release** is a plain copy of `current/` into a `<version>/` directory
 ./build_binder.sh
 
 # 2. Edit AIDL in a component's current/ directory
-vim boot/current/com/rdk/hal/boot/IBoot.aidl
+vim bootreason/current/com/rdk/hal/bootreason/IBootReason.aidl
 
 # 3. Build — regenerates the module-local C++ and compiles the library
-./build_modules.sh boot          # one component
+./build_modules.sh bootreason          # one component
 ./build_modules.sh all           # every component
 
 # 4. Commit — AIDL and generated C++ live together in the component
-git add boot/current/
+git add bootreason/current/
 git commit -m "Update boot interface"
 ```
 
-Generated C++ is written into `boot/current/{include,src}/` and committed, so a
+Generated C++ is written into `bootreason/current/{include,src}/` and committed, so a
 production build needs no Python or AIDL toolchain.
 
-### Releasing a component
+### Releasing
 
-A release snapshots `current/` into a versioned directory, taking the version
-from the component's `metadata.yaml`:
+Releases are a full-cohort sweep — every component is bumped together
+according to its change class and snapshotted under `<module>/<version>/`.
+Per-component releases are not supported by design.
+
+To "release just one component", land a focused PR touching only that
+component and run the cohort release. Components with no changes don't
+bump and don't get a new snapshot, so the effect is the same as a
+single-component release would have been.
 
 ```bash
-./release.sh boot     # snapshot boot/current/ -> boot/<version>/
-./release.sh          # release every component not yet released
+./release.sh                 # dry-run: auto-detects next release version
+                             # from the latest tag, prints the --apply line
+./release.sh --apply         # apply the release (writes metadata.yaml,
+                             # creates snapshots, updates mkdocs nav,
+                             # branch + tag)
 ```
 
 ### Production build (Yocto/BitBake)

@@ -15,13 +15,13 @@ This guide provides step-by-step instructions for migrating client applications 
 **What changed in v2?**
 ```bash
 # Compare AIDL definitions
-diff -u stable/aidl/boot/1/com/rdk/hal/boot/IBoot.aidl \
-        stable/aidl/boot/2/com/rdk/hal/boot/IBoot.aidl
+diff -u stable/aidl/bootreason/1/com/rdk/hal/bootreason/IBootReason.aidl \
+        stable/aidl/bootreason/2/com/rdk/hal/bootreason/IBootReason.aidl
 ```
 
 **Example output:**
 ```diff
-interface IBoot {
+interface IBootReason {
     void reboot();
     void shutdown();
 +   void rebootWithReason(String reason);  // NEW in v2
@@ -34,14 +34,14 @@ interface IBoot {
 **Option A: No Changes Required**
 ```cpp
 // Existing v1 client continues to work with v2 server
-auto bootService = IBoot::fromBinder(binder);
+auto bootService = IBootReason::fromBinder(binder);
 bootService->reboot();  // Still works!
 ```
 
 **Option B: Use New Features**
 ```cpp
 // Updated client that uses v2 features when available
-auto bootService = IBoot::fromBinder(binder);
+auto bootService = IBootReason::fromBinder(binder);
 
 int32_t serverVersion;
 bootService->getInterfaceVersion(&serverVersion);
@@ -60,7 +60,7 @@ if (serverVersion >= 2) {
 **Keep linking to v1:**
 ```cmake
 # CMakeLists.txt - no changes needed
-target_link_interfaces_libraries(myapp boot-v1-cpp)
+target_link_interfaces_libraries(myapp bootreason-v1-cpp)
 ```
 
 **OR upgrade to v2:**
@@ -74,8 +74,8 @@ target_link_interfaces_libraries(myapp boot-v2-cpp)
 **Mixed environment (gradual rollout):**
 ```bash
 # Some devices with v1 server
-device1$ ls /usr/lib/libboot-v1-cpp.so
-/usr/lib/libboot-v1-cpp.so
+device1$ ls /usr/lib/libbootreason-v1-cpp.so
+/usr/lib/libbootreason-v1-cpp.so
 
 # Other devices with v2 server
 device2$ ls /usr/lib/libboot-v2-cpp.so
@@ -115,7 +115,7 @@ target_link_interfaces_libraries(myapp boot-v3-cpp)
 
 ```cpp
 // Update includes
-#include <com/rdk/hal/boot/IBoot.h>  // Now v3
+#include <com/rdk/hal/bootreason/IBootReason.h>  // Now v3
 ```
 
 #### Step 3: Implement Version-Aware Code
@@ -123,7 +123,7 @@ target_link_interfaces_libraries(myapp boot-v3-cpp)
 ```cpp
 class BootManager {
 private:
-    std::shared_ptr<IBoot> mService;
+    std::shared_ptr<IBootReason> mService;
     int32_t mServerVersion;
     
 public:
@@ -178,15 +178,15 @@ $ TEST_SERVER_VERSION=3 ./run_tests
 
 ```aidl
 // Old interface (still supported)
-package com.rdk.hal.boot;
-interface IBoot {
+package com.rdk.hal.bootreason;
+interface IBootReason {
     void reboot();
     void shutdown();
     void rebootWithReason(String reason);
 }
 
 // New interface (incompatible changes)
-package com.rdk.hal.boot;
+package com.rdk.hal.bootreason;
 interface IBootNew {
     // Completely redesigned API
     BootResult performAction(BootAction action, BootOptions options);
@@ -201,7 +201,7 @@ interface IBootNew {
 // Support both old and new interfaces
 class BootManager {
 private:
-    std::shared_ptr<IBoot> mLegacyService;
+    std::shared_ptr<IBootReason> mLegacyService;
     std::shared_ptr<IBootNew> mNewService;
     bool mUsingNewInterface = false;
     
@@ -218,7 +218,7 @@ public:
         // Fallback to legacy
         mLegacyService = getBootService();
         if (mLegacyService) {
-            ALOGI("Using legacy boot interface (IBoot)");
+            ALOGI("Using legacy boot interface (IBootReason)");
             return true;
         }
         
@@ -377,7 +377,7 @@ private:
     std::map<std::string, bool> mFeatures;
     
 public:
-    void discoverFeatures(const std::shared_ptr<IBoot>& service) {
+    void discoverFeatures(const std::shared_ptr<IBootReason>& service) {
         int32_t version;
         service->getInterfaceVersion(&version);
         
@@ -456,7 +456,7 @@ $ systemctl restart boot-hal
 
 # Verify registration
 $ service list | grep boot
-com.rdk.hal.boot.IBoot
+com.rdk.hal.bootreason.IBootReason
 ```
 
 ### Problem 2: Version Mismatch
@@ -469,7 +469,7 @@ E/MyApp: secureReboot failed: Method not implemented
 
 **Diagnosis:**
 ```cpp
-int32_t clientVer = IBoot::VERSION;  // 3
+int32_t clientVer = IBootReason::VERSION;  // 3
 int32_t serverVer;
 mService->getInterfaceVersion(&serverVer);  // 2
 // Client expects v3, server is v2
@@ -501,7 +501,7 @@ W/MyApp: Hash validation failed
 $ readelf -p .note.gnu.build-id /usr/lib/libboot-v2-cpp.so
 
 # Compare with expected hash from build
-$ cat stable/aidl/boot/2/.hash
+$ cat stable/aidl/bootreason/2/.hash
 ```
 
 **Solution:**

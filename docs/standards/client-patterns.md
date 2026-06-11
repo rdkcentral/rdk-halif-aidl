@@ -14,7 +14,7 @@ cmake_minimum_required(VERSION 3.8)
 project(MyHALClient)
 
 # Link to specific version
-target_link_interfaces_libraries(myclient boot-v1-cpp)
+target_link_interfaces_libraries(myclient bootreason-v1-cpp)
 
 # OR link to latest (current)
 target_link_interfaces_libraries(myclient boot-vcurrent-cpp)
@@ -26,14 +26,14 @@ target_link_interfaces_libraries(myclient boot-vcurrent-cpp)
 
 ```cpp
 #include <android/binder_manager.h>
-#include <com/rdk/hal/boot/IBoot.h>
+#include <com/rdk/hal/bootreason/IBootReason.h>
 
-using namespace com::rdk::hal::boot;
+using namespace com::rdk::hal::bootreason;
 
 // Get service by name
-std::shared_ptr<IBoot> getBootService() {
+std::shared_ptr<IBootReason> getBootService() {
     ndk::SpAIBinder binder(
-        AServiceManager_getService(IBoot::serviceName.c_str())
+        AServiceManager_getService(IBootReason::serviceName.c_str())
     );
     
     if (binder == nullptr) {
@@ -41,7 +41,7 @@ std::shared_ptr<IBoot> getBootService() {
         return nullptr;
     }
     
-    return IBoot::fromBinder(binder);
+    return IBootReason::fromBinder(binder);
 }
 
 int main() {
@@ -59,11 +59,11 @@ int main() {
 ### Pattern 1: Check Version at Connection
 
 ```cpp
-#include <com/rdk/hal/boot/IBoot.h>
+#include <com/rdk/hal/bootreason/IBootReason.h>
 
 class BootClient {
 private:
-    std::shared_ptr<IBoot> mService;
+    std::shared_ptr<IBootReason> mService;
     int32_t mClientVersion;
     int32_t mServerVersion;
     std::string mServerHash;
@@ -76,7 +76,7 @@ public:
         }
         
         // Get version information
-        mClientVersion = IBoot::VERSION;
+        mClientVersion = IBootReason::VERSION;
         
         auto status = mService->getInterfaceVersion(&mServerVersion);
         if (!status.isOk()) {
@@ -114,7 +114,7 @@ public:
 ```cpp
 class BootClient {
 private:
-    std::shared_ptr<IBoot> mService;
+    std::shared_ptr<IBootReason> mService;
     std::optional<int32_t> mServerVersion;  // Cached version
     
     int32_t getServerVersion() {
@@ -312,7 +312,7 @@ public:
 ```cpp
 class RobustClient {
 private:
-    std::shared_ptr<IBoot> mService;
+    std::shared_ptr<IBootReason> mService;
     
     bool callSafely(std::function<Status()> operation, 
                     const char* opName) {
@@ -423,7 +423,7 @@ void PersistentClient::performOperation() {
 ```cpp
 class UniversalClient {
 private:
-    std::shared_ptr<IBoot> mService;
+    std::shared_ptr<IBootReason> mService;
     int32_t mServerVersion;
     
     enum class RebootMethod {
@@ -521,7 +521,7 @@ private:
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-class MockBoot : public IBoot {
+class MockBoot : public IBootReason {
 public:
     MOCK_METHOD(Status, reboot, (), (override));
     MOCK_METHOD(Status, rebootWithReason, (const std::string&), (override));
@@ -587,7 +587,7 @@ TEST(BootClientTest, UsesV2WhenAvailable) {
 
 ```cpp
 // Get service
-auto service = IBoot::fromBinder(binder);
+auto service = IBootReason::fromBinder(binder);
 
 // Check version
 int32_t serverVer;
@@ -598,7 +598,7 @@ std::string hash;
 service->getInterfaceHash(&hash);
 
 // Compile-time version
-int32_t clientVer = IBoot::VERSION;
+int32_t clientVer = IBootReason::VERSION;
 
 // Use feature with version check
 if (serverVer >= 2) {

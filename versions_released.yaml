@@ -1,0 +1,38 @@
+# versions_released.yaml - released-cohort build manifest.
+#
+# Pins every component to its latest released snapshot. Used by VTS
+# release builds and any consumer that wants a reproducible, cohort-
+# locked SDK build. Devs working on the in-development tree use the
+# `versions_current.yaml` companion manifest:
+#
+#     ./build_modules.sh manifest                                   # this file (default)
+#     ./build_modules.sh manifest --file versions_current.yaml      # dev cohort
+#
+# A component absent from the `components:` map falls back to `default:`.
+# `default: current` ensures any newly-added component (no released
+# snapshot yet) still builds against its current sibling.
+
+default: current
+
+components:
+  audiodecoder: 0.2.0.0
+  audiomixer: 0.3.0.0
+  audiosink: 0.2.0.0
+  avbuffer: 0.2.0.0
+  avclock: 0.2.0.0
+  common: 0.2.0.0
+  compositeinput: 0.2.0.0
+  deepsleep: 0.1.0.0
+  deviceinfo: 0.1.0.0
+  drm: 0.1.0.0
+  firmwareupdate: 0.2.0.0
+  hdmicec: 0.1.0.0
+  hdmiinput: 0.1.0.0
+  hdmioutput: 0.1.0.0
+  indicator: 0.1.0.0
+  panel: 0.1.0.0
+  planecontrol: 0.1.0.0
+  sensor: 0.2.0.0
+  videodecoder: 0.2.0.0
+  videosink: 0.2.0.0
+  bootreason: 0.1.0.0

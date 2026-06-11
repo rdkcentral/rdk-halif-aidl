@@ -114,11 +114,43 @@ Workflow:
   2. Build:   ./build_interfaces.sh all
   3. Verify:  ./build_modules.sh all
   4. Deploy:  scp -r out/target/* device:/usr/
-  5. Release: ./release.sh <module>   # snapshot current/ -> <version>/
+  5. Release: ./release.sh             # cohort-wide release sweep (dry-run first)
 
 EOF
     exit 0
 fi
+
+#######################################################################
+# Pre-flight checks (#571)
+#######################################################################
+#
+# Same purpose as in build_modules.sh: surface broken-env failures as
+# a single actionable line rather than cryptic CMake / Python output
+# deep in the run. Skipped for clean / sdk-only commands which must
+# work in any state.
+
+preflight_check_interfaces() {
+    # Toolchain artefacts present. Honour BINDER_TOOLCHAIN_ROOT /
+    # BINDER_SOURCE_DIR overrides used by Yocto and cross-compile
+    # flows. The 'sdk' / 'sdk-only' commands stage the toolchain
+    # itself and bypass this check via the case statement below.
+    local toolchain_root="${BINDER_TOOLCHAIN_ROOT:-${BINDER_SOURCE_DIR:-$SCRIPT_DIR/build-tools/linux_binder_idl}}"
+    if [[ ! -f "$toolchain_root/host/aidl_ops.py" ]]; then
+        echo "❌ AIDL toolchain not found at $toolchain_root/host/aidl_ops.py." >&2
+        echo "   Fix: run ./build_interfaces.sh sdk to stage the toolchain," >&2
+        echo "        ./build_binder.sh to bootstrap, symlink build-tools/" >&2
+        echo "        from a known-good worktree, or set BINDER_TOOLCHAIN_ROOT" >&2
+        echo "        (or BINDER_SOURCE_DIR) to the toolchain location." >&2
+        exit 1
+    fi
+}
+
+# Run pre-flight unless the user asked for a clean/sdk command — those
+# must work in any environment state.
+case "${1:-}" in
+    clean|cleanstable|cleanall|sdk|sdk-only|--help|-h|"") : ;;  # skip preflight
+    *) preflight_check_interfaces ;;
+esac
 
 # Handle commands
 case "${1:-}" in

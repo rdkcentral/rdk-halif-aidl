@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| **Generated** | 2026-05-01 |
-| **Components** | 33 |
+| **Generated** | 2026-06-11 |
+| **Components** | 31 |
 | 🟢 **GREEN** | 14 |
-| 🟡 **AMBER** | 15 |
-| 🔴 **RED** | 4 |
+| 🟡 **AMBER** | 16 |
+| 🔴 **RED** | 1 |
 
 ---
 
@@ -15,8 +15,8 @@
 | Status | Count | Meaning |
 |--------|-------|---------|
 | 🟢 GREEN | **14** | Reviewed & Approved — Interface stable on develop |
-| 🟡 AMBER | **15** | Under Active Ingestion — Will enter sprint review when ready |
-| 🔴 RED | **4** | Not Started / Blocked — Strategy or definition required |
+| 🟡 AMBER | **16** | Under Active Ingestion — Will enter sprint review when ready |
+| 🔴 RED | **1** | Not Started / Blocked — Strategy or definition required |
 
 ---
 
@@ -26,16 +26,16 @@
 
 | | Component | Current Version | Description | Reviews | Owners |
 |---|-----------|---------|-------------|---------|--------|
-| 🟢 | audiodecoder | 0.1.0.0 | Audio decoder resource management and codec format support | 4/4 | Architecture + AV_Architecture |
-| 🟢 | audiomixer | 0.1.0.1 | Audio mixing and routing for multi-stream output | 4/4 | Architecture + Vendor_Layer_Team + AV_Architecture |
-| 🟢 | audiosink | 0.1.0.0 | Audio output rendering and sink device management | 4/4 | Architecture + AV_Architecture |
-| 🟢 | avbuffer | 0.1.0.0 | AV buffer allocation and secure video path management | 4/4 | Architecture + AV_Architecture |
-| 🟢 | avclock | 0.1.0.0 | Audio/video clock synchronization and timing control | 4/4 | Architecture + AV_Architecture |
+| 🟢 | audiodecoder | 0.2.0.0 | Audio decoder resource management and codec format support | 0/4 | Architecture + AV_Architecture |
+| 🟢 | audiosink | 0.2.0.0 | Audio output rendering and sink device management | 0/4 | Architecture + AV_Architecture |
+| 🟢 | avbuffer | 0.2.0.0 | AV buffer allocation and secure video path management | 4/4 | Architecture + AV_Architecture |
+| 🟢 | avclock | 0.2.0.0 | Audio/video clock synchronization and timing control | 0/4 | Architecture + AV_Architecture |
+| 🟢 | common | 0.2.0.0 | Shared base AIDL types and definitions used across all HAL interfaces | 0/2 | Architecture |
 | 🟢 | hdmicec | 0.1.0.0 | HDMI CEC protocol messaging and device control | 4/4 | Architecture + AV_Architecture |
 | 🟢 | hdmiinput | 0.1.0.0 | HDMI input port management and signal detection | 3/4 | Architecture + AV_Architecture |
 | 🟢 | hdmioutput | 0.1.0.0 | HDMI output port configuration and display control | 3/4 | Architecture + AV_Architecture |
-| 🟢 | videodecoder | 0.1.0.0 | Video decoder resource management and codec support | 4/4 | Architecture + AV_Architecture |
-| 🟢 | videosink | 0.1.0.0 | Video output rendering and display sink management | 4/4 | Architecture + AV_Architecture |
+| 🟢 | videodecoder | 0.2.0.0 | Video decoder resource management and codec support | 0/4 | Architecture + AV_Architecture |
+| 🟢 | videosink | 0.2.0.0 | Video output rendering and display sink management | 0/4 | Architecture + AV_Architecture |
 
 
 ### OEM Components
@@ -45,7 +45,7 @@
 | 🟢 | compositeinput | 0.2.0.0 | Composite video input capture and control | 2/4 | Architecture + AV_Architecture |
 | 🟢 | deviceinfo | 0.1.0.0 | Device information and platform capability reporting | 4/4 | Architecture + Kernel_Architecture |
 | 🟢 | indicator | 0.1.0.0 | LED and visual indicator state management | 4/4 | Architecture + Graphics_Architecture |
-| 🟢 | sensor | 0.1.0.0 | Hardware sensor data acquisition and monitoring | 4/4 | Architecture + Kernel_Architecture |
+| 🟢 | sensor | 0.2.0.0 | Hardware sensor data acquisition and monitoring | 4/4 | Architecture + Kernel_Architecture |
 
 
 ---
@@ -56,7 +56,8 @@
 
 | | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
 |---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
-| 🟡 | avbuffer *(SVP risk)* | 0.1.0.0 | 1 | Encrypted buffer (DRM/SVP) - Pending on DRM strategy | May change due to SVP changes from DRM which is being worked on | — | — | Architecture + AV_Architecture |
+| 🟡 | audiomixer | 0.3.0.0 | — | — | — | — | — | Architecture + Vendor_Layer_Team + AV_Architecture |
+| 🟡 | avbuffer *(SVP risk)* | 0.2.0.0 | 1 | Encrypted buffer (DRM/SVP) - Pending on DRM strategy | May change due to SVP changes from DRM which is being worked on | — | — | Architecture + AV_Architecture |
 | 🟡 | vsi/kernel | 0.0.0.1 | 1 | Strategy required | Not blocking progress - Architecture Strategy | — | — | Architecture |
 | 🟡 | planecontrol | 0.1.0.0 | 3 | Re-review required | Discussions with MW team - Simplify design. Architecture requires simplified design and restructured review. | — | — | Architecture + Graphics_Architecture |
 | 🟡 | vsi/graphics | 0.0.0.1 | 6 | Docs required | Not blocking progress - Define Versions & write up vision and direction, Planning Out Evolution of the platform, RDK-M | — | — | Architecture + Graphics_Architecture |
@@ -68,11 +69,11 @@
 |---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
 | 🟡 | panel | 0.1.0.0 | 3 | Re-review required | Review PQ settings for multiple video and PQ panel mixing | — | — | Architecture + Graphics_Architecture |
 | 🟡 | deepsleep | 0.1.0.0 | 4 | Feedback-loop review | Review design based on learnings from current platforms. Examine findings and investigation on Shutdown issue | — | — | Architecture |
-| 🟡 | boot | 0.1.0.0 | 5 | Migrate -> Reboot Reason | Rename Module | — | — | Architecture + MW_Team |
-| 🟡 | broadcast | 0.0.0.1 | 5 | PR under review | Review Required - Start the PR Review | 2026-03-18 | 2026-03-25 | Vendor_Layer_Team + Broadcast_Team |
-| 🟡 | flash | 0.1.0.0 | 5 | Migrate -> Image | Rename Module | — | — | Architecture + Kernel_Architecture |
+| 🟡 | bootreason | 0.1.0.0 | 5 | Migrate -> Reboot Reason | Rename Module | — | — | Architecture + MW_Team |
+| 🟡 | broadcast | 0.1.0.0 | 5 | Not integrated into the AIDL build - blocked on FMQ (#494) | Blocked: needs the android.hardware.common.fmq AIDL package in the binder SDK (linux_binder_idl#18); then add broadcast/current/interface.yaml - see #494. | — | — | Vendor_Layer_Team + Broadcast_Team |
+| 🟡 | firmwareupdate | 0.2.0.0 | 5 | Renamed from flash — fresh review cycle | Re-review under new name and broadened scope | — | — | Architecture + Kernel_Architecture |
 | 🟡 | r4ce | 0.0.0.1 | 5 | API Definition in progress | Control Manager Team - API Definition started | — | — | Architecture + Control_Manager_Architecture |
-| 🟡 | vsi/bluetooth | 0.0.0.1 | 6 | Docs required | Not blocking progress - Have discussions write up methodology, Discussions with Bluetooth Team | 2026-03-24 | 2026-03-31 | Architecture + Connectivity_Architecture |
+| 🟡 | vsi/bluetooth | 0.0.0.1 | 6 | Docs required | Not blocking progress - Have discussions write up methodology, Discussions with Bluetooth Team | — | — | Architecture + Connectivity_Architecture |
 | 🟡 | vsi/linuxinput | 0.0.0.1 | 6 | Docs required | Not blocking progress - Write up methodology | — | — | Architecture + Kernel_Architecture |
 | 🟡 | vsi/wifi | 0.0.0.1 | 6 | Docs required | Not blocking progress - Have discussions write up methodology, Discussions with WIFI Team | — | — | Architecture + Connectivity_Architecture |
 | 🟡 | vsi/abstractfilesystem | 0.0.0.1 | 7 | Requirements TBD | Not blocking progress - Discussion with MW Team, Review Requirements | — | — | Architecture |
@@ -89,15 +90,12 @@
 | | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
 |---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
 | 🔴 | drm | 0.1.0.0 | 1 | Initial interface definition — under review | Architecture review and vendor alignment | — | — | Architecture + AV_Architecture |
-| 🔴 | vsi/crypto | 0.0.0.1 | 1 | Security API definition required | HAL lower-layer requirement - define Security API contracts and integration boundaries | — | — | Architecture + Kernel_Architecture |
-| 🔴 | vsi/keyvault | 0.0.0.1 | 1 | Encrypted storage architecture required | HAL lower-layer requirement - define Key Vault interface for encrypted storage | — | — | Architecture + Kernel_Architecture |
 
 
 ### OEM Components
 
 | | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
 |---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
-| 🔴 | cdm | 0.0.0.1 | 1 | Architecture strategy in progress | Architecture Strategy | — | — | Architecture + AV_Architecture |
 
 
 ---
@@ -110,16 +108,16 @@
 
 | | Component | Progress | Arch | Prod | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel | Vendor |
 |---|-----------|----------|------|------|-----|-----------|----------|----------|--------------|--------|--------|
-| 🟢 | audiodecoder | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
-| 🟢 | audiomixer | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
-| 🟢 | audiosink | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
+| 🟢 | audiodecoder | 0/4 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
+| 🟢 | audiosink | 0/4 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
 | 🟢 | avbuffer | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
-| 🟢 | avclock | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
+| 🟢 | avclock | 0/4 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
+| 🟢 | common | 0/2 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | N/A | N/A |
 | 🟢 | hdmicec | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
 | 🟢 | hdmiinput | 3/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | 🔄 |
 | 🟢 | hdmioutput | 3/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | 🔄 |
-| 🟢 | videodecoder | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
-| 🟢 | videosink | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
+| 🟢 | videodecoder | 0/4 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
+| 🟢 | videosink | 0/4 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
 
 ### SOC — 🟡 AMBER
 
@@ -128,14 +126,13 @@
 | 🟡 | vsi/kernel | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |
 | 🟡 | planecontrol | 0/5 | ☐ | ☐ | ☐ | N/A | N/A | ☐ | N/A | N/A | ☐ |
 | 🟡 | vsi/graphics | 0/4 | ☐ | ☐ | N/A | N/A | N/A | ☐ | N/A | N/A | ☐ |
+| 🟡 | audiomixer | 0/4 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
 
 ### SOC — 🔴 RED
 
 | | Component | Progress | Arch | Prod | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel | Vendor |
 |---|-----------|----------|------|------|-----|-----------|----------|----------|--------------|--------|--------|
-| 🔴 | drm | 0/5 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | N/A |
-| 🔴 | vsi/crypto | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |
-| 🔴 | vsi/keyvault | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |
+| 🔴 | drm | 0/4 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
 
 ### OEM — 🟢 GREEN
 
@@ -152,9 +149,9 @@
 |---|-----------|----------|------|------|-----|-----------|----------|----------|--------------|--------|--------|
 | 🟡 | panel | 2/4 | ✅ | ✅ | N/A | N/A | N/A | ☐ | N/A | N/A | ☐ |
 | 🟡 | deepsleep | 3/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ | ✅ |
-| 🟡 | boot | 3/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ | ✅ |
+| 🟡 | bootreason | 3/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ | ✅ |
 | 🟡 | broadcast | 0/4 | ☐ | ☐ | N/A | ☐ | N/A | N/A | N/A | N/A | ☐ |
-| 🟡 | flash | 3/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ | ✅ |
+| 🟡 | firmwareupdate | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |
 | 🟡 | r4ce | 0/4 | ☐ | ☐ | N/A | N/A | ☐ | N/A | N/A | N/A | ☐ |
 | 🟡 | vsi/bluetooth | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | ☐ | N/A | ☐ |
 | 🟡 | vsi/linuxinput | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |
@@ -167,7 +164,6 @@
 
 | | Component | Progress | Arch | Prod | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel | Vendor |
 |---|-----------|----------|------|------|-----|-----------|----------|----------|--------------|--------|--------|
-| 🔴 | cdm | 0/4 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
 
 ---
 
