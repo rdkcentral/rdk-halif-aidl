@@ -1419,6 +1419,49 @@ create_snapshot() {
         return 1
     fi
 
+    # Patch the copied CMakeLists.txt so the snapshot links + installs
+    # with cohort-pinned versioned names. The `current/CMakeLists.txt`
+    # template uses `<comp>-vcurrent-cpp` for its own LIB_NAME and for
+    # inter-module link/include dep paths (`<dep>-vcurrent-cpp`,
+    # `<dep>/current/include`). Left unpatched, the snapshot build
+    # produces lib<comp>-vcurrent-cpp.so + links against
+    # lib<dep>-vcurrent-cpp.so, and the released-cohort verification
+    # step fails with "Snapshot library not found".
+    #
+    # Rewrite three things using the cohort versions read from
+    # versions_released.yaml (the post-bump file just written by
+    # update_versions_released):
+    #   1. own LIB_NAME: <comp>-vcurrent-cpp → <comp>-v${version}-cpp
+    #   2. dep link names: <dep>-vcurrent-cpp → <dep>-v${cohort}-cpp
+    #   3. dep include paths: <dep>/current/include → <dep>/${cohort}/include
+    local snapshot_cmake="${snapshot_dir}/CMakeLists.txt"
+    if [[ -f "${snapshot_cmake}" ]] && grep -q "vcurrent-cpp\|current/include" "${snapshot_cmake}"; then
+        # Own LIB_NAME first (no cohort lookup needed)
+        sed -i "s/${comp}-vcurrent-cpp/${comp}-v${version}-cpp/g" "${snapshot_cmake}" || {
+            warn "Failed to patch own LIB_NAME in ${comp}/${version}/CMakeLists.txt."
+            return 1
+        }
+        # Dep names + include paths — read each <dep>-vcurrent-cpp occurrence
+        # (own module already replaced above) and resolve to its cohort version
+        # in versions_released.yaml. Then do the same for include paths.
+        local versions_yaml="${REPO_ROOT}/versions_released.yaml"
+        if [[ -f "${versions_yaml}" ]]; then
+            local dep dep_ver
+            while read -r dep; do
+                [[ -z "${dep}" ]] && continue
+                dep_ver="$(awk -v k="${dep}:" '$1==k{print $2; exit}' "${versions_yaml}")"
+                if [[ -n "${dep_ver}" ]]; then
+                    sed -i "s/${dep}-vcurrent-cpp/${dep}-v${dep_ver}-cpp/g" "${snapshot_cmake}"
+                    sed -i "s|HALIF_INCLUDE_DIR}/${dep}/current/|HALIF_INCLUDE_DIR}/${dep}/${dep_ver}/|g" "${snapshot_cmake}"
+                else
+                    warn "  [${comp}/${version}] dep '${dep}' not in versions_released.yaml; left as -vcurrent-cpp (build will fail at verification)."
+                fi
+            done < <(grep -oE '[a-z][a-z0-9_]*-vcurrent-cpp' "${snapshot_cmake}" | grep -oE '^[a-z][a-z0-9_]*' | sort -u)
+        else
+            warn "  [${comp}/${version}] versions_released.yaml missing; dep links left as -vcurrent-cpp."
+        fi
+    fi
+
     # Stage the snapshot. No -f needed: .gitignore scopes the binding
     # rules to */current/include/ and */current/src/ only — files under
     # <module>/<version>/ are outside that scope and stage cleanly with
@@ -1668,12 +1711,23 @@ create_release_branch() {
     fi
 }
 
-# Auto-detect next release version from the last release tag when the
-# caller didn't explicitly provide --release-version. Default rule: bump
-# the minor segment (0.20.0 → 0.21.0). Point releases (0.20.0 → 0.20.1)
-# require --release-version.
+# Auto-detect next release version from (in order of precedence):
+#   1. --release-version pin from the caller
+#   2. Current branch name when on release/X.Y.Z (honours the operator
+#      having already cut the release branch; avoids the stale-tag
+#      footgun where a leftover X.Y.Z tag from an aborted prior cycle
+#      makes the next-minor bump suggest X.(Y+1).0 instead of X.Y.Z)
+#   3. Bump the minor segment of the last release tag (0.20.0 → 0.21.0).
+# Point releases (0.20.0 → 0.20.1) require --release-version.
 auto_detect_release_version() {
     [[ -n "${RELEASE_VERSION}" ]] && return 0
+    local current_branch
+    current_branch="$(git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+    if [[ "${current_branch}" =~ ^release/([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+        RELEASE_VERSION="${BASH_REMATCH[1]}"
+        RELEASE_VERSION_AUTO=1
+        return 0
+    fi
     local last_tag
     last_tag="$(git -C "${REPO_ROOT}" describe --tags --abbrev=0 2>/dev/null || true)"
     if [[ "${last_tag}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then

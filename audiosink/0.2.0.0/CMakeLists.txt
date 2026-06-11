@@ -48,11 +48,11 @@
 #   HALIF_LIB_DIR           - directory holding dependency lib*-cpp.so
 #   HALIF_INCLUDE_DIR       - directory holding dependency headers
 cmake_minimum_required(VERSION 3.16)
-project(audiosink-vcurrent-cpp LANGUAGES CXX)
+project(audiosink-v0.2.0.0-cpp LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(LIB_NAME "audiosink-vcurrent-cpp")
+set(LIB_NAME "audiosink-v0.2.0.0-cpp")
 
 if (NOT DEFINED BINDER_SDK_DIR)
     message(FATAL_ERROR "BINDER_SDK_DIR must be set")
@@ -90,9 +90,9 @@ if (NOT DEFINED HALIF_INCLUDE_DIR)
 endif()
 if (DEFINED HALIF_INCLUDE_DIR)
     target_include_directories(${LIB_NAME} PRIVATE
-    "${HALIF_INCLUDE_DIR}/audiodecoder/current/include"
-    "${HALIF_INCLUDE_DIR}/common/current/include"
-    "${HALIF_INCLUDE_DIR}/avclock/current/include")
+    "${HALIF_INCLUDE_DIR}/audiodecoder/0.2.0.0/include"
+    "${HALIF_INCLUDE_DIR}/common/0.2.0.0/include"
+    "${HALIF_INCLUDE_DIR}/avclock/0.2.0.0/include")
 endif()
 
 target_link_directories(${LIB_NAME} PRIVATE
@@ -106,7 +106,7 @@ if (DEFINED HALIF_LIB_DIR)
     target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
 endif()
 
-target_link_libraries(${LIB_NAME} PRIVATE binder utils audiodecoder-vcurrent-cpp avclock-vcurrent-cpp common-vcurrent-cpp)
+target_link_libraries(${LIB_NAME} PRIVATE binder utils audiodecoder-v0.2.0.0-cpp avclock-v0.2.0.0-cpp common-v0.2.0.0-cpp)
 
 set_target_properties(${LIB_NAME} PROPERTIES OUTPUT_NAME "${LIB_NAME}")
 

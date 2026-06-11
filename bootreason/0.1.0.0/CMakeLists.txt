@@ -48,11 +48,11 @@
 #   HALIF_LIB_DIR           - directory holding dependency lib*-cpp.so
 #   HALIF_INCLUDE_DIR       - directory holding dependency headers
 cmake_minimum_required(VERSION 3.16)
-project(bootreason-vcurrent-cpp LANGUAGES CXX)
+project(bootreason-v0.1.0.0-cpp LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(LIB_NAME "bootreason-vcurrent-cpp")
+set(LIB_NAME "bootreason-v0.1.0.0-cpp")
 
 if (NOT DEFINED BINDER_SDK_DIR)
     message(FATAL_ERROR "BINDER_SDK_DIR must be set")

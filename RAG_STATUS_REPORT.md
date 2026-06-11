@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Generated** | 2026-06-09 |
+| **Generated** | 2026-06-11 |
 | **Components** | 31 |
 | 🟢 **GREEN** | 14 |
 | 🟡 **AMBER** | 16 |
@@ -56,7 +56,7 @@
 
 | | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
 |---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
-| 🟡 | audiomixer | 0.2.0.0 | — | — | — | — | — | Architecture + Vendor_Layer_Team + AV_Architecture |
+| 🟡 | audiomixer | 0.3.0.0 | — | — | — | — | — | Architecture + Vendor_Layer_Team + AV_Architecture |
 | 🟡 | avbuffer *(SVP risk)* | 0.2.0.0 | 1 | Encrypted buffer (DRM/SVP) - Pending on DRM strategy | May change due to SVP changes from DRM which is being worked on | — | — | Architecture + AV_Architecture |
 | 🟡 | vsi/kernel | 0.0.0.1 | 1 | Strategy required | Not blocking progress - Architecture Strategy | — | — | Architecture |
 | 🟡 | planecontrol | 0.1.0.0 | 3 | Re-review required | Discussions with MW team - Simplify design. Architecture requires simplified design and restructured review. | — | — | Architecture + Graphics_Architecture |

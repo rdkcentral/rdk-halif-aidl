@@ -16,7 +16,7 @@ default: current
 
 components:
   audiodecoder: 0.2.0.0
-  audiomixer: 0.2.0.0
+  audiomixer: 0.3.0.0
   audiosink: 0.2.0.0
   avbuffer: 0.2.0.0
   avclock: 0.2.0.0

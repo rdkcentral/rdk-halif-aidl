@@ -61,6 +61,7 @@ nav:
       - Audio Decoder: '!include audiodecoder/current/mkdocs.yml'
       - Audio Decoder 0.2.0.0: '!include audiodecoder/0.2.0.0/mkdocs.yml'
       - Audio Mixer: '!include audiomixer/current/mkdocs.yml'
+      - Audio Mixer 0.3.0.0: '!include audiomixer/0.3.0.0/mkdocs.yml'
       - Audio Mixer 0.2.0.0: '!include audiomixer/0.2.0.0/mkdocs.yml'
       - Audio Sink: '!include audiosink/current/mkdocs.yml'
       - Audio Sink 0.2.0.0: '!include audiosink/0.2.0.0/mkdocs.yml'
