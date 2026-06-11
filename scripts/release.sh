@@ -755,24 +755,59 @@ done
 # present on HEAD's reachable history and skips to the push.
 
 if [[ "${COMPLETE}" -eq 1 ]]; then
+    # Determine RELEASE_VERSION. --complete is RESUMABLE — a partial
+    # run (e.g. git flow finish succeeded locally but push failed) may
+    # have moved HEAD off release/X.Y.Z onto develop. So check, in
+    # order:
+    #   1. HEAD is on release/X.Y.Z    → use it
+    #   2. RELEASE_VERSION pinned via --release-version → use that
+    #   3. exactly one local release/X.Y.Z branch exists → use it
+    #      (typical resume case after git-flow finish moved HEAD)
     branch="$(git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD)"
-    if [[ ! "${branch}" =~ ^release/([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-        die "--complete must run on a release/X.Y.Z branch (current: ${branch})."
+    if [[ "${branch}" =~ ^release/([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+        RELEASE_VERSION="${BASH_REMATCH[1]}"
+    elif [[ -n "${RELEASE_VERSION}" ]]; then
+        : # honour pin
+    else
+        _release_branches=()
+        while IFS= read -r _rb; do
+            [[ -n "${_rb}" ]] && _release_branches+=("${_rb}")
+        done < <(git -C "${REPO_ROOT}" for-each-ref \
+            --format='%(refname:short)' refs/heads/release/)
+        if [[ "${#_release_branches[@]}" -eq 1 ]] \
+                && [[ "${_release_branches[0]}" =~ ^release/([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            RELEASE_VERSION="${BASH_REMATCH[1]}"
+            log "  ℹ️  HEAD is on '${branch}'; resuming --complete for ${RELEASE_VERSION} from local release/${RELEASE_VERSION} branch."
+        else
+            die "--complete must run on a release/X.Y.Z branch or with --release-version pin (current: ${branch}; found ${#_release_branches[@]} release branches locally)."
+        fi
     fi
-    _release_ver="${BASH_REMATCH[1]}"
-    # Pin RELEASE_VERSION from the branch name so the rest of the
-    # script's auto-detect doesn't second-guess us.
-    RELEASE_VERSION="${_release_ver}"
     log ""
     phase "Completing release ${RELEASE_VERSION} (--complete)"
     log ""
 
-    # 1. Refuse if X.Y.Z tag already exists on origin.
-    _tag_check="$(git -C "${REPO_ROOT}" ls-remote --tags origin "refs/tags/${RELEASE_VERSION}" 2>/dev/null | head -1)"
-    if [[ -n "${_tag_check}" ]]; then
-        die "--complete: tag ${RELEASE_VERSION} already exists on origin (${_tag_check%%[[:space:]]*}). Resolve before re-running."
+    # Pre-flight: tag-on-origin state.
+    # If the tag is already on origin, that's the "tag pushed" mile-
+    # stone — DON'T refuse. We can still pick up at docs deploy / gh
+    # release if those didn't run. The stale-tag-from-aborted-cycle
+    # case (the trap 0.21.0 originally hit) is now caught by the
+    # local-state checks below: if the local tag isn't on the same
+    # commit as origin's tag, we die with a clear pointer.
+    _tag_remote="$(git -C "${REPO_ROOT}" ls-remote --tags origin "refs/tags/${RELEASE_VERSION}" 2>/dev/null | head -1)"
+    _tag_remote_sha="${_tag_remote%%[[:space:]]*}"
+    _tag_local_sha="$(git -C "${REPO_ROOT}" rev-parse --verify "refs/tags/${RELEASE_VERSION}" 2>/dev/null || true)"
+    if [[ -n "${_tag_remote_sha}" ]] && [[ -n "${_tag_local_sha}" ]]; then
+        _tag_local_commit="$(git -C "${REPO_ROOT}" rev-parse "refs/tags/${RELEASE_VERSION}^{commit}" 2>/dev/null)"
+        if [[ "${_tag_remote_sha}" != "${_tag_local_sha}" ]] \
+                && [[ "${_tag_remote_sha}" != "${_tag_local_commit}" ]]; then
+            die "--complete: tag ${RELEASE_VERSION} exists on origin at ${_tag_remote_sha:0:10} but local tag points elsewhere. Reconcile manually."
+        fi
+        log "  ✓ tag ${RELEASE_VERSION} already on origin (matches local)."
+    elif [[ -n "${_tag_remote_sha}" ]]; then
+        log "  ✓ tag ${RELEASE_VERSION} already on origin (no local tag — that's fine for resume from later steps)."
+    else
+        log "  ✓ tag ${RELEASE_VERSION} not yet on origin."
     fi
-    log "  ✓ tag ${RELEASE_VERSION} not yet on origin."
 
     # 2. Make sure local main + develop are current. git flow release
     #    finish refuses to run if either branch has diverged from its
@@ -831,14 +866,68 @@ if [[ "${COMPLETE}" -eq 1 ]]; then
     fi
     log "  ✓ release ${RELEASE_VERSION} finished locally."
 
-    # 4. Push branches + tag atomically.
+    # 4. Push branches + tag atomically. Idempotent: only push the
+    #    refs that are actually behind origin. If everything's already
+    #    pushed, skip with a ✓.
     phase "Pushing main + develop + ${RELEASE_VERSION} tag to origin"
     log ""
-    if ! (cd "${REPO_ROOT}" && \
-            git push --follow-tags --atomic origin main develop); then
-        die "--complete: atomic push of main + develop + tag failed. Inspect remote state before retrying."
+    (cd "${REPO_ROOT}" && git fetch origin main develop --tags) >/dev/null 2>&1 || true
+    _to_push=()
+    for _ref in main develop; do
+        _local="$(git -C "${REPO_ROOT}" rev-parse --verify "${_ref}" 2>/dev/null || true)"
+        _remote="$(git -C "${REPO_ROOT}" rev-parse --verify "origin/${_ref}" 2>/dev/null || true)"
+        if [[ -n "${_local}" ]] && [[ "${_local}" != "${_remote}" ]]; then
+            _to_push+=("${_ref}")
+        else
+            log "  ✓ origin/${_ref} already at ${_local:0:10}."
+        fi
+    done
+    _tag_remote_sha="$(git -C "${REPO_ROOT}" ls-remote --tags origin "refs/tags/${RELEASE_VERSION}" 2>/dev/null | head -1 | awk '{print $1}')"
+    _push_tag=0
+    if [[ -z "${_tag_remote_sha}" ]]; then
+        _push_tag=1
+    else
+        log "  ✓ tag ${RELEASE_VERSION} already on origin."
     fi
-    log "  ✓ pushed main + develop + ${RELEASE_VERSION} tag."
+    if [[ "${#_to_push[@]}" -eq 0 ]] && [[ "${_push_tag}" -eq 0 ]]; then
+        log "  ✓ nothing to push — main, develop, and ${RELEASE_VERSION} tag all up to date."
+    else
+        if [[ "${#_to_push[@]}" -gt 0 ]]; then
+            log "Pushing branch(es): ${_to_push[*]}${_push_tag:+ + tag ${RELEASE_VERSION}}"
+            if ! (cd "${REPO_ROOT}" && \
+                    git push --follow-tags --atomic origin "${_to_push[@]}"); then
+                die "--complete: atomic push of ${_to_push[*]} failed. Inspect remote state before retrying."
+            fi
+            log "  ✓ pushed ${_to_push[*]}."
+        fi
+        # If branches were already at origin but the tag isn't, push
+        # the tag on its own (--follow-tags only pushes tags reachable
+        # from the just-pushed branches, which is empty when we have
+        # nothing to push).
+        if [[ "${_push_tag}" -eq 1 ]] && [[ "${#_to_push[@]}" -eq 0 ]]; then
+            if ! (cd "${REPO_ROOT}" && git push origin "refs/tags/${RELEASE_VERSION}"); then
+                die "--complete: standalone tag push of ${RELEASE_VERSION} failed."
+            fi
+            log "  ✓ pushed tag ${RELEASE_VERSION}."
+        fi
+    fi
+
+    # 4a. Delete the remote release/X.Y.Z branch if git-flow finish
+    #     didn't get to delete it (typical when push failed after the
+    #     local finish completed). Skip if it's already gone.
+    if (cd "${REPO_ROOT}" && \
+            git ls-remote --exit-code --heads origin "release/${RELEASE_VERSION}" >/dev/null 2>&1); then
+        log "Deleting remote release/${RELEASE_VERSION} branch..."
+        if ! (cd "${REPO_ROOT}" && \
+                git push origin --delete "release/${RELEASE_VERSION}"); then
+            warn "Failed to delete remote release/${RELEASE_VERSION}. Delete manually after sorting access:"
+            warn "    git push origin --delete release/${RELEASE_VERSION}"
+        else
+            log "  ✓ deleted remote release/${RELEASE_VERSION}."
+        fi
+    else
+        log "  ✓ remote release/${RELEASE_VERSION} already gone."
+    fi
 
     # 5. Versioned docs deploy (deploy + wait for GH Pages + set-default,
     #    all gated inside build_docs.sh).
