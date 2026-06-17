@@ -7,10 +7,12 @@ transformed to render through the Plane Control HAL's graphics frame buffer
 interface, `IGraphicsFbProvider`, replacing the per-vendor Westeros GL
 backends with a single, platform-agnostic implementation.
 
-The HAL contract is vendor-agnostic and complete: it covers EGL display
-setup, DMA-buf buffer allocation, and presentation. The compositor needs
-exactly those three things, so all SoC-specific graphics code moves below
-the HAL boundary and is implemented once per platform.
+The HAL contract covers DMA-buf buffer allocation and presentation — the two
+concerns that carry the bulk of the per-vendor backend code. The compositor
+renders offscreen to FBOs and presents via `commitGraphicsFb()`, so EGL
+display/context setup needs no native window and is done in the client's platform
+EGL layer. All vendor allocation and presentation code moves below the HAL
+boundary and is implemented once per platform.
 
 Related interface: [`planecontrol/current`](../../planecontrol/current/docs/plane_control.md).
 Related issues: #603 (this work), #329 (PlaneControl controller audit),
@@ -28,21 +30,18 @@ A graphics plane exposes a provider, obtained from `IPlaneControl`:
     in IGraphicsFbProviderListener graphicsFbProviderListener);
 ```
 
-`IGraphicsFbProvider` gives the compositor all three things it needs:
+`IGraphicsFbProvider` gives the compositor the two things that must cross the
+HAL boundary — renderable buffers and presentation:
 
 ```aidl
 @VintfStability
 interface IGraphicsFbProvider {
-    // EGL setup — replaces vendor-specific native display initialisation
-    long getNativeDisplayHandle();
-    int  getEGLPlatformType();
-
-    // Buffer lifecycle — replaces GBM / Nexus allocation
+    // Buffer lifecycle — vendor allocation behind a standard FD
     GraphicsFbCapabilities getCapabilities();
     ParcelFileDescriptor   createGraphicsFb(in int width, in int height, out GraphicsFbInfo outInfo);
     void                   destroyGraphicsFb(in int graphicsFbId);
 
-    // Presentation — replaces drmModeSetPlane / NEXUS_SurfaceClient
+    // Presentation
     boolean commitGraphicsFb(in int graphicsFbId);
 }
 
@@ -131,8 +130,8 @@ re-implements EGL display init, buffer allocation, and presentation:
 Each backend handles the same three concerns differently:
 
 1. **EGL display initialisation** — vendor-specific native display type.
-2. **Buffer allocation** — GBM on DRM, Nexus on Broadcom.
-3. **Buffer presentation** — `drmModeSetPlane` on DRM, `NEXUS_SurfaceClient` on Broadcom.
+2. **Buffer allocation** — GBM on DRM platforms, a vendor allocator otherwise.
+3. **Buffer presentation** — `drmModeSetPlane` on DRM, a vendor presentation API otherwise.
 
 Every new SoC needs a new backend; every bug fix may need porting across all
 of them. The architecture does not scale.
@@ -141,10 +140,13 @@ of them. The architecture does not scale.
 
 ## 4. The transformation: one platform-agnostic Westeros
 
-The provider supplies the EGL display, the renderable buffers, and the
-presentation lifecycle, so one implementation works on every vendor. The
-SoC differences (GBM vs Nexus allocation, DRM vs Nexus presentation) live
-entirely inside the vendor HAL.
+The provider supplies the renderable buffers and the presentation lifecycle, so
+one implementation works on every vendor. The vendor differences in allocation
+and presentation live entirely inside the vendor HAL. EGL display/context
+creation stays client-side: because the compositor renders offscreen to FBOs and
+presents via `commitGraphicsFb()` (never `eglSwapBuffers()` to a native window),
+it needs only an `EGLDisplay`, a context, and the DMA-buf import extension — no
+native window, so nothing about the display has to cross the HAL.
 
 ```cpp
 // ONE Westeros GL backend — works on every vendor
@@ -152,10 +154,10 @@ void init(sp<IPlaneControl> planeControl, int planeIndex) {
     provider = planeControl->getGraphicsFbProvider(planeIndex, listener);
     // provider is @nullable: confirm the plane is GRAPHICS before calling.
 
-    // 1. EGL setup — platform-agnostic, no vendor native-display code path
-    EGLDisplay dpy = eglGetPlatformDisplay(
-        provider->getEGLPlatformType(),
-        (void*)provider->getNativeDisplayHandle(), nullptr);
+    // 1. EGL setup — client-side, offscreen: the compositor renders to FBOs, so
+    //    it needs only an EGLDisplay + context from the platform's offscreen EGL
+    //    (e.g. EGL_MESA_platform_surfaceless / EGL_EXT_platform_device).
+    EGLDisplay dpy = eglGetPlatformDisplay(EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, nullptr);
     eglInitialize(dpy, nullptr, nullptr);
     EGLContext ctx = eglCreateContext(dpy, config, EGL_NO_CONTEXT, ctxAttrs);
 
@@ -211,9 +213,10 @@ void onGraphicsFbReleased(int oldGraphicsFbId, long elapsedRealtimeNanos) {
 }
 ```
 
-This replaces ~13,000 lines of vendor-specific GL backend code with one
-implementation that talks only standard EGL/GL — no GBM, no Nexus, no
-vendor `#include`.
+This replaces ~13,000 lines of vendor-specific GL backend code — buffer
+allocation and presentation, the bulk of each backend — with one implementation
+that talks only standard EGL/GL. Offscreen EGL-display creation stays in the
+client's platform EGL layer.
 
 ---
 
@@ -232,22 +235,21 @@ wrapper, not the memory itself.
                        - importable by GPU, display, video HW
                                   │ backed by
                 ┌─────────────────┼─────────────────┐
-            CMA pages          GEM heap        Nexus-managed
-            (RTK / AML)        (DRM)            (Broadcom)
+            CMA pages          GEM heap        Vendor carveout
 ```
 
-The physical memory may be CMA, a GEM heap, vendor carveout, or Nexus-managed
-memory. Any kernel driver that manages physical memory can implement the
-exporter callbacks (`struct dma_buf_ops`). This is why the interface names no
-allocator: the DMA-buf FD is the universal transport, and the allocation
-behind it is vendor-specific and hidden by the kernel.
+The physical memory may be CMA, a GEM heap, or vendor carveout. Any kernel
+driver that manages physical memory can implement the exporter callbacks
+(`struct dma_buf_ops`). This is why the interface names no allocator: the
+DMA-buf FD is the universal transport, and the allocation behind it is
+vendor-specific and hidden by the kernel.
 
-### DRM platforms (Realtek, Amlogic, Mediatek)
+### DRM/GBM platforms
 
 These use the standard Linux DRM/GBM stack. The vendor HAL wraps it:
 
 ```c
-// DRM vendor HAL — wraps kernel GBM allocation
+// DRM/GBM vendor HAL — wraps kernel GBM allocation
 ParcelFileDescriptor createGraphicsFb(int w, int h, GraphicsFbInfo* info) {
     struct gbm_bo* bo = gbm_bo_create(gbm, w, h,
         GBM_FORMAT_ARGB8888, GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
@@ -259,59 +261,15 @@ ParcelFileDescriptor createGraphicsFb(int w, int h, GraphicsFbInfo* info) {
 }
 ```
 
-### Broadcom (Nexus) — no GBM, same DMA-buf result
+### Platforms without GBM
 
-Broadcom has no DRM/KMS or GBM. Allocation goes through the proprietary
-Nexus userspace API, then exports a kernel DMA-buf FD:
-
-```c
-// Broadcom vendor HAL — Nexus allocation + kernel DMA-buf export
-ParcelFileDescriptor createGraphicsFb(int w, int h, GraphicsFbInfo* info) {
-    NEXUS_SurfaceCreateSettings settings;
-    NEXUS_Surface_GetDefaultCreateSettings(&settings);
-    settings.width = w; settings.height = h;
-    settings.pixelFormat = NEXUS_PixelFormat_eA8_R8_G8_B8;
-    NEXUS_SurfaceHandle surface = NEXUS_Surface_Create(&settings);
-    int fd = nexus_surface_export_dmabuf(surface);   // kernel DMA-buf export
-    info->stride = settings.pitch;
-    info->offset = 0;
-    return ParcelFileDescriptor(fd);
-}
-```
-
-That this works on Broadcom is not speculative. Broadcom's own DME player
-framework already exports Nexus surfaces as DMA-buf FDs and imports them into
-EGL with exactly the metadata this interface carries
-(`BSEAV/lib/dme/player/texturing/TextureData.cpp`, Broadcom refsw
-`refsw_release_unified_URSR_26_*`):
-
-```c
-// TextureData.cpp — Broadcom already uses EGL_LINUX_DMA_BUF_EXT on Nexus surfaces
-uint32_t fourcc; uint64_t modifier;
-NexusToDrm(status.pixelFormat, &fourcc, &modifier);   // Nexus format → DRM fourcc/modifier
-int fd;
-NEXUS_Surface_CreateDescriptor_driver(surface, &fd);  // Nexus → DMA-buf FD export
-
-EGLint attr[] = {
-    EGL_WIDTH,                          (EGLint)status.width,
-    EGL_HEIGHT,                         (EGLint)status.height,
-    EGL_LINUX_DRM_FOURCC_EXT,           (EGLint)fourcc,
-    EGL_DMA_BUF_PLANE0_FD_EXT,          fd,
-    EGL_DMA_BUF_PLANE0_OFFSET_EXT,      (EGLint)properties.pixelMemoryOffset,
-    EGL_DMA_BUF_PLANE0_PITCH_EXT,       (EGLint)status.pitch,
-    EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT, (EGLint)(modifier >> 32),
-    EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT, (EGLint)(modifier & 0xffffffff),
-    EGL_NONE
-};
-eglImage = eglCreateImageKHR(eglGetCurrentDisplay(),
-    EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, nullptr, attr);
-```
-
-`NexusToDrm()` maps Nexus pixel formats to DRM fourcc codes and modifiers
-(including `DRM_FORMAT_MOD_BROADCOM_UIF` for tiled formats). The chain is pure
-Nexus → kernel DMA-buf → EGL, with no GBM anywhere. The Broadcom graphics HAL
-performs this same sequence internally and returns the FD as
-`ParcelFileDescriptor` and the geometry as `GraphicsFbInfo`.
+Platforms with no DRM/GBM stack allocate through their own userspace allocator
+and export the result as a kernel DMA-buf FD. From the compositor's side the
+chain is identical — allocate, export as a DMA-buf FD, import into EGL with
+`EGL_LINUX_DMA_BUF_EXT` — so the interface names no allocator. The vendor HAL
+performs the allocation internally and returns the FD as `ParcelFileDescriptor`
+with geometry in `GraphicsFbInfo`; tiled formats are conveyed through
+`GraphicsFbCapabilities.modifier`.
 
 ---
 
@@ -324,9 +282,9 @@ the display planes support. A "client allocates" model (as in
 [Wayland linux-dmabuf-v1](https://wayland.app/protocols/linux-dmabuf-v1))
 works there because the kernel interface is standard.
 
-It does not work on Broadcom: there is no standard DRM/KMS path, and allocation
-goes through Nexus. A client-allocates model would force the middleware to know
-about Nexus, breaking the abstraction. Allocating in the HAL keeps the vendor
+It does not generalise: on platforms with no standard DRM/KMS path, a
+client-allocates model would force the middleware to know the vendor allocator's
+details, breaking the abstraction. Allocating in the HAL keeps the vendor
 interface difference below the boundary: the compositor calls
 `createGraphicsFb()` and never learns which kernel path was used.
 
@@ -342,8 +300,8 @@ This mirrors Android's proven graphics buffer model:
 | `HardwareBuffer` (FD + metadata) | `ParcelFileDescriptor` + `GraphicsFbInfo` |
 | `eglGetNativeClientBufferANDROID()` → opaque import | `eglCreateImageKHR(EGL_LINUX_DMA_BUF_EXT)` → explicit metadata |
 | `IComposerClient.presentDisplay()` | `commitGraphicsFb()` |
-| `IComposerClient` display config | `getNativeDisplayHandle()` + `getEGLPlatformType()` |
-| Vendor gralloc implementation | Vendor HAL: GBM on DRM, Nexus on Broadcom |
+| `IComposerClient` display config | Client-side offscreen EGL (out of HAL scope) |
+| Vendor gralloc implementation | Vendor HAL: GBM on DRM, vendor allocator otherwise |
 
 The architecture is identical — vendor-opaque allocation behind a standard
 HAL, with the compositor never touching vendor code. The only difference is
@@ -359,7 +317,7 @@ explicit DRM metadata where Android uses an opaque `HardwareBuffer`.
 | `westeros-gl-brcm` (530+ lines) | Eliminated | `IGraphicsFbProvider` vendor HAL |
 | `westeros-gl-drm` (8,384 lines) | Eliminated | `IGraphicsFbProvider` vendor HAL |
 | `westeros-soc-mtk` (3,936 lines) | Eliminated | `IGraphicsFbProvider` vendor HAL |
-| Essos EGL abstraction | Eliminated when retired | `getNativeDisplayHandle()` / `getEGLPlatformType()` |
+| Essos EGL abstraction | Reduced to a thin client-side offscreen-EGL shim | Client-side EGL (out of HAL scope) |
 | Custom FD-transport header (`GraphicsDmaBufFrameFd.h`) | Eliminated | `ParcelFileDescriptor` (built-in AIDL) |
 | `getNativeGraphicsWindowHandle()` | Eliminated | `createGraphicsFb()` returns a DMA-buf FD |
 | `flipGraphicsBuffer()` | Eliminated | `commitGraphicsFb()` |
@@ -385,9 +343,10 @@ is `IGraphicsFbProvider` in all but name:
 | `CommitBufferRequest { buffer_id }` | `commitGraphicsFb(graphicsFbId)` |
 | `ReleaseBufferEvent { buffer_id }` | `onGraphicsFbReleased(oldGraphicsFbId, …)` |
 
-It was tested on Amlogic (`apache-4k-mtc`); Realtek (`xione`) is in progress;
-Broadcom is blocked pending URSR 25.3, which adds the EGL DMA-buf *target*
-support the import path needs.
+It has been validated on DRM/GBM hardware. Platforms without a DRM/GBM stack
+need a kernel DMA-buf export path present in their firmware before the vendor
+HAL can be implemented; where that is a per-vendor enablement dependency it is
+tracked separately.
 
 **What it validates.** The POC confirms the load-bearing parts of this design
 on real hardware:
@@ -407,26 +366,25 @@ on real hardware:
 **What the POC has not yet done — the work this design adds.** Bringing it onto
 the merged interface means closing these gaps:
 
-- **EGL display setup is still vendor-coupled.** The client opens
+- **EGL display setup is still vendor-coupled in the POC.** The client opens
   `/dev/dri/card0`, calls `gbm_create_device()`, and hardcodes
-  `eglGetPlatformDisplay(EGL_PLATFORM_GBM_KHR, gbm, …)`. That is the exact code
-  path `getNativeDisplayHandle()` + `getEGLPlatformType()` exist to remove. Per
-  this design the client must take both from the provider and never touch the
-  DRM node or GBM — this is also what lets Broadcom, which has no `card0`/GBM,
-  work through the same client.
+  `eglGetPlatformDisplay(EGL_PLATFORM_GBM_KHR, gbm, …)`. Per this design the
+  client instead creates an **offscreen** `EGLDisplay` (surfaceless/device EGL)
+  and never opens the DRM node — it only renders to FBOs and presents via
+  `commitGraphicsFb()`, which also lets platforms without `card0`/GBM run the
+  same client.
 - **No modifier is carried.** The protocol transports `format` only and assumes
   linear. The server already knows the modifier (`gbm_bo_get_modifier()`); it
   must be surfaced through `GraphicsFbCapabilities.modifier` and fed to
-  `EGL_DMA_BUF_PLANE0_MODIFIER_LO/HI_EXT`, which tiled formats (Amlogic AFBC,
-  `DRM_FORMAT_MOD_BROADCOM_UIF`) require.
+  `EGL_DMA_BUF_PLANE0_MODIFIER_LO/HI_EXT`, which tiled formats require.
 - **`format` is per-buffer in the POC**, but is constant per provider — it
   belongs in `GraphicsFbCapabilities`, read once.
 - **The transport is a raw socket**, to be replaced by the `IGraphicsFbProvider`
   Binder service.
 
 The POC therefore de-risks the design and is the natural starting point for the
-Amlogic vendor HAL; the transformation is to retarget its client onto the Binder
-interface and drive EGL setup through the provider rather than the DRM node.
+first vendor HAL; the transformation is to retarget its client onto the Binder
+interface and create the EGL display offscreen rather than from the DRM node.
 
 ---
 
@@ -440,11 +398,6 @@ interface and drive EGL setup through the provider rather than the DRM node.
 ### Linux kernel
 - [DMA-BUF driver API](https://docs.kernel.org/driver-api/dma-buf.html)
 - [DMA-BUF heaps](https://docs.kernel.org/userspace-api/dma-buf-heaps.html)
-
-### Broadcom refsw
-- `refsw_release_unified_URSR_26_20260331-bme.tgz` — `BSEAV/lib/dme/player/texturing/TextureData.cpp`:
-  `NEXUS_Surface_CreateDescriptor_driver()` DMA-buf export, `NexusToDrm()` format mapping,
-  `eglCreateImageKHR(EGL_LINUX_DMA_BUF_EXT)` import.
 
 ### RDK vendor GL backends
 - [westeros-gl-brcm](https://github.com/rdkcentral/westeros-gl-brcm) — Broadcom Nexus GL backend (no GBM)
