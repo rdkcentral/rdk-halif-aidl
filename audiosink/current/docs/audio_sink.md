@@ -232,6 +232,8 @@ All audio frame buffers already queued continue to be fed into the audio mixer i
 
 For non-tunnelled audio decoded by the Audio Decoder, the middleware forwards each decoded frame to the Audio Sink via `queueAudioFrame()`; once the decoder has fired its own `onEndOfStream()` and the final frame has been queued, the middleware calls `signalEndOfStream()` on the sink. For PCM audio (no Audio Decoder in the path), the middleware queues its final frame and then calls `signalEndOfStream()` directly.
 
+The middleware calls `signalEndOfStream()` the same way in tunnelled and non-tunnelled modes. In tunnelled mode the decoder→sink data flow is vendor-internal, so no frames pass through `queueAudioFrame()`; the vendor propagates the EOS signal from decoder to sink internally, and the sink still fires `onEndOfStream(nsPresentationTime)` once presentation completes.
+
 ## Audio Sink States
 
 The Audio Sink HAL follows the standard [Session State Management](../key_concepts/hal/hal_session_state_management.md) paradigm.

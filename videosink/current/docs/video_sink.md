@@ -213,6 +213,8 @@ All video frame buffers already queued continue to be displayed in the usual way
 
 For non-tunnelled video, the middleware forwards each decoded frame to the Video Sink via `queueVideoFrame()`; once the Video Decoder has fired its own `onEndOfStream()` and the final frame has been queued, the middleware calls `signalEndOfStream()` on the sink.
 
+The middleware calls `signalEndOfStream()` the same way in tunnelled and non-tunnelled modes. In tunnelled mode the decoder→sink data flow is vendor-internal, so no frames pass through `queueVideoFrame()`; the vendor propagates the EOS signal from decoder to sink internally, and the sink still fires `onEndOfStream(nsPresentationTime)` once presentation completes.
+
 ## Video Plane Mapping
 
 The display of decoded video frames are made on the video plane that has been mapped by a `SourceType::VIDEO_SINK` and index matching the Video Sink resource instance ID which was specified in the ID when `IVideoSinkManager.getVideoSink()` was called and can also be read back in the `RESOURCE_ID` property of the Video Sink.
