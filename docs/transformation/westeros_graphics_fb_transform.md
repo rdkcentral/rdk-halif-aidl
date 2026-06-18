@@ -47,7 +47,7 @@ interface IGraphicsFbProvider {
 
 @VintfStability
 oneway interface IGraphicsFbProviderListener {
-    void onGraphicsFbReleased(in int oldGraphicsFbId, in long elapsedRealtimeNanos);
+    void onGraphicsFbReleased(in int oldGraphicsFbId, in long timestampNs);
 }
 ```
 
@@ -208,7 +208,7 @@ void renderAndPresent() {
 }
 
 // IGraphicsFbProviderListener callback
-void onGraphicsFbReleased(int oldGraphicsFbId, long elapsedRealtimeNanos) {
+void onGraphicsFbReleased(int oldGraphicsFbId, long timestampNs) {
     findFrame(oldGraphicsFbId).available = true;   // oldGraphicsFbId == -1 on first release
 }
 ```
