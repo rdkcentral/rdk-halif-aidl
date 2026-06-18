@@ -172,7 +172,8 @@ void init(sp<IPlaneControl> planeControl, int planeIndex) {
 
         // 4. Import into EGL — identical on every vendor. Note: fd may be shared
         //    across buffers; geometry is per-buffer, so key on info.offset.
-        EGLAttrib attrs[] = {
+        // eglCreateImageKHR takes a const EGLint* attribute list.
+        EGLint attrs[] = {
             EGL_WIDTH,                          info.pixelWidth,
             EGL_HEIGHT,                         info.pixelHeight,
             EGL_LINUX_DRM_FOURCC_EXT,           caps.format,
