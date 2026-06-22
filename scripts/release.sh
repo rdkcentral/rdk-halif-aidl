@@ -1859,7 +1859,12 @@ PYEOF
         while IFS= read -r _f; do
             [[ -z "${_f}" ]] && continue
             log "    ${_f}"
-            (cd "${REPO_ROOT}" && git add "${_f}") || warn "  git add ${_f} failed"
+            # The file was just rewritten on disk; if it can't be staged the
+            # release diff would be incomplete, so abort rather than warn.
+            (cd "${REPO_ROOT}" && git add "${_f}") || {
+                warn "  git add ${_f} failed"
+                return 1
+            }
         done <<< "${changed}"
     else
         log "  All cohort snapshots already reference cohort dependency versions."
