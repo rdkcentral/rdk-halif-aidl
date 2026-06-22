@@ -67,22 +67,37 @@ die()   { echo "${_C_RED}${_C_BOLD}ERROR:${_C_RESET} ${_C_RED}$*${_C_RESET}" >&2
 # resolve in the rendered docs site but not on the raw filesystem — checking
 # them here would produce hundreds of false positives.
 #
+# A link target must resolve to a GIT-TRACKED file or directory — not merely
+# exist on disk. A path that exists locally but is gitignored (e.g. a
+# build-tools/ clone) is a dead link for anyone who lands on the repo via
+# GitHub, so it must be flagged.
+#
 # Prints "<file> -> <link>" per broken link to stdout; returns 1 if any
-# root-level relative link is dead, 0 otherwise (and 0 on tooling failure, so a
-# missing python never blocks a release).
+# root-level relative link is dead, 0 otherwise. Skipped (returns 0) when
+# python3 is unavailable, so a missing toolchain never blocks a release.
 validate_doc_links() {
+    command -v python3 >/dev/null 2>&1 || {
+        echo "link-check skipped: python3 not found" >&2
+        return 0
+    }
     python3 - "${REPO_ROOT}" <<'PYEOF'
 import os, re, subprocess, sys
 repo = sys.argv[1]
 try:
-    files = subprocess.check_output(
-        ["git", "-C", repo, "ls-files", "*.md"], text=True
-    ).splitlines()
+    tracked = set(subprocess.check_output(
+        ["git", "-C", repo, "ls-files"], text=True).splitlines())
 except Exception as e:
     print(f"link-check skipped: {e}", file=sys.stderr)
     sys.exit(0)  # never block a release on a tooling failure
+# Every tracked file implies its parent directories are "tracked" too, so
+# directory links (e.g. src/utils/) resolve.
+dirs = set()
+for t in tracked:
+    parts = t.split("/")
+    for i in range(1, len(parts)):
+        dirs.add("/".join(parts[:i]))
 # Root-level (depth 0) markdown only — GitHub renders these filesystem-relative.
-root = [f for f in files if "/" not in f]
+root = [f for f in tracked if f.endswith(".md") and "/" not in f]
 link_re = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 broken = {}
 for rel in root:
@@ -97,7 +112,8 @@ for rel in root:
         target = url.split("#", 1)[0]
         if not target:
             continue
-        if not os.path.exists(os.path.join(repo, os.path.dirname(rel), target)):
+        norm = os.path.normpath(os.path.join(os.path.dirname(rel), target))
+        if norm not in tracked and norm not in dirs:
             broken.setdefault(rel, []).append(url)
 for f in sorted(broken):
     for u in broken[f]:
