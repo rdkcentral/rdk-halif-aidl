@@ -93,6 +93,13 @@ MY_PATH="$(realpath "${BASH_SOURCE[0]}")"
 MY_DIR="$(dirname "${MY_PATH}")"
 REPO_URL="https://github.com/rdkcentral/linux_binder_idl"
 
+# This is a developer/architecture wrapper — it needs a native host toolchain.
+# Yocto/cross builds must call CMake directly (see BUILD.md). Abort early in a
+# cross/OE environment rather than silently producing broken/empty output (#624).
+# Use 'return' when sourced so an interactive shell isn't killed.
+source "${MY_DIR}/dev_env_guard.sh"
+halif_guard_dev_host_env || return 1 2>/dev/null || exit 1
+
 # Pinned toolchain revision. The default is the first non-comment line of
 # binder_sdk.version (committed to the repo so the module-local generated C++
 # stays matched to the generator that produced it); override with the

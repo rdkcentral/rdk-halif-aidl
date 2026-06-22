@@ -116,6 +116,12 @@ single-component release would have been.
 
 ### Production build (Yocto/BitBake)
 
+Production and third-party build systems **invoke CMake directly** — the
+`build_*.sh` wrapper scripts are developer/architecture tools that require a
+native host toolchain and will refuse to run in a cross/OpenEmbedded
+environment. See [Third-Party Build Integration](docs/standards/build_integration.md)
+for the full integration contract, required variables, and recipe patterns.
+
 libbinder is built and staged by the separate **`linux-binder`** recipe
 (`DEPENDS = "linux-binder"`). The HAL libraries are then built **per component**
 from that staged SDK — each `<module>/<version>/` is self-contained (committed
