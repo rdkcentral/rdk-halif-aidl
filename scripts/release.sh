@@ -73,8 +73,10 @@ die()   { echo "${_C_RED}${_C_BOLD}ERROR:${_C_RESET} ${_C_RED}$*${_C_RESET}" >&2
 # GitHub, so it must be flagged.
 #
 # Prints "<file> -> <link>" per broken link to stdout; returns 1 if any
-# root-level relative link is dead, 0 otherwise. Skipped (returns 0) when
-# python3 is unavailable, so a missing toolchain never blocks a release.
+# root-level relative link is dead, 0 otherwise. When python3 is unavailable
+# this one check is skipped (returns 0) so it never blocks a release — other
+# release steps that need python3 (e.g. mkdocs.yml edits) still require it; the
+# preflight reports the skip rather than a false "OK".
 validate_doc_links() {
     command -v python3 >/dev/null 2>&1 || {
         echo "link-check skipped: python3 not found" >&2
@@ -1098,7 +1100,9 @@ fi
 # plan/check mode. Escape hatch: SKIP_LINK_CHECK=1.
 if [[ "${SKIP_LINK_CHECK:-0}" -ne 1 ]]; then
     phase "Validating root-level markdown links..."
-    if _link_errs="$(validate_doc_links)"; then
+    if ! command -v python3 >/dev/null 2>&1; then
+        warn "    ↷ skipped (python3 not found) — link check did not run"
+    elif _link_errs="$(validate_doc_links)"; then
         log "    ✓ root-level markdown links OK"
     elif [[ "${DO_WRITES}" -eq 1 || "${DO_BRANCH}" -eq 1 || "${COMMIT}" -eq 1 ]]; then
         warn "Broken relative links in repo-root markdown:"
