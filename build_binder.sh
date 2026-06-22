@@ -94,9 +94,14 @@ MY_DIR="$(dirname "${MY_PATH}")"
 REPO_URL="https://github.com/rdkcentral/linux_binder_idl"
 
 # This is a developer/architecture wrapper — it needs a native host toolchain.
-# Yocto/cross builds must call CMake directly (see BUILD.md). Abort early in a
-# cross/OE environment rather than silently producing broken/empty output (#624).
-# Use 'return' when sourced so an interactive shell isn't killed.
+# Yocto/cross builds must call CMake directly (see docs/standards/build_integration.md).
+# Abort early in a cross/OE environment rather than silently producing
+# broken/empty output (#624). Use 'return' when sourced so an interactive shell
+# isn't killed.
+#
+# Note: unlike build_modules.sh / build_interfaces.sh, the `clean` argument here
+# means "force rebuild" (it removes the SDK and rebuilds), so it is a build
+# operation and is intentionally NOT exempt from the guard.
 source "${MY_DIR}/dev_env_guard.sh"
 halif_guard_dev_host_env || return 1 2>/dev/null || exit 1
 

@@ -27,7 +27,7 @@
 # team to test interfaces and cut releases on a developer machine — they are NOT
 # part of the production build path. Production / cross builds (Yocto/BitBake)
 # MUST invoke CMake directly with the correct variables; see
-# build-tools/linux_binder_idl/BUILD.md ("Production Build (CMake Direct)").
+# docs/standards/build_integration.md (the third-party build contract).
 #
 # Run inside a sourced OpenEmbedded cross environment, a wrapper produces broken
 # or empty output: the host AIDL tool gets cross-compiled (and can't run on the
@@ -64,8 +64,11 @@ halif_guard_dev_host_env() {
 
     [ "${#reasons[@]}" -eq 0 ] && return 0
 
+    # Name the wrapper that sourced us. When a wrapper is *sourced*
+    # (e.g. `source ./build_binder.sh`), $0 is the interactive shell, so prefer
+    # the caller's BASH_SOURCE entry.
     local self
-    self="$(basename "${0:-this script}")"
+    self="$(basename "${BASH_SOURCE[1]:-${0:-this script}}")"
     {
         echo ""
         echo "ERROR: ${self} is a developer/architecture wrapper and requires a native host toolchain."
@@ -74,7 +77,7 @@ halif_guard_dev_host_env() {
         echo ""
         echo "   Production / cross (Yocto/BitBake) builds MUST call CMake directly — these"
         echo "   wrappers are not for production recipes. See:"
-        echo "     build-tools/linux_binder_idl/BUILD.md  (\"Production Build (CMake Direct)\")"
+        echo "     docs/standards/build_integration.md  (Third-Party Build Integration)"
         echo ""
         echo "   To proceed anyway (not recommended): BINDER_ALLOW_CROSS_ENV=1 ./${self} ..."
         echo ""

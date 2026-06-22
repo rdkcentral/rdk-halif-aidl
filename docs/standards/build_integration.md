@@ -37,8 +37,12 @@ C++; they are **never required on a build host or target**.
 3. **HAL modules: point at the staged SDK.** Configure the top-level CMake with
    the staged Binder SDK location. A staged SDK is flat, so headers and libraries
    share one prefix — set both `BINDER_SDK_DIR` and `BINDER_SDK_INCLUDE_DIR` to it.
-4. **Pin the interface versions** to build via `versions_released.yaml` (or
-   `INTERFACE_TARGET`/`AIDL_SRC_VERSION` on the CMake command line).
+4. **Select the version on the CMake command line.** `INTERFACE_TARGET` picks
+   the module(s) and `AIDL_SRC_VERSION` picks the version (`current` or a
+   released `X.Y.Z.W`). The top-level CMake builds one target/version per
+   invocation. `versions_released.yaml` is a convenience manifest consumed by
+   `build_modules.sh` — **not** by CMake — so a build system that wants a whole
+   released cohort iterates the versions itself (one CMake invocation each).
 
 ### CMake variables (Stage 2 — HAL modules)
 
@@ -52,8 +56,8 @@ C++; they are **never required on a build host or target**.
 
 ## Recipe pattern (BitBake)
 
-**Stage 1 — Binder SDK** is delivered by the `linux-binder` recipe. See
-[the Binder SDK BUILD guide](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/build-tools/linux_binder_idl/BUILD.md)
+**Stage 1 — Binder SDK** is delivered by the `linux-binder` recipe. See the
+[linux_binder_idl BUILD guide](https://github.com/rdkcentral/linux_binder_idl/blob/develop/BUILD.md)
 for the full recipe, cross-compilation flags, and runtime/systemd setup. The
 essential line:
 
@@ -67,21 +71,17 @@ EXTRA_OECMAKE = "-DBUILD_HOST_AIDL=OFF"
 DEPENDS = "linux-binder"
 inherit cmake
 
-do_configure() {
-    cmake -S ${S} -B ${B} \
-          -DINTERFACE_TARGET=all \
-          -DBINDER_SDK_DIR=${STAGING_DIR}${prefix} \
-          -DBINDER_SDK_INCLUDE_DIR=${STAGING_DIR}${prefix}
-}
+# Let the cmake class run configure / compile / install — don't override the
+# tasks. Pass build options via EXTRA_OECMAKE. The CMake install() rules place
+# the libraries under <prefix>/lib/halif, so the class' install step
+# (cmake --install ${B} --prefix ${D}${prefix}) puts them in the right place.
+EXTRA_OECMAKE = " \
+    -DINTERFACE_TARGET=all \
+    -DBINDER_SDK_DIR=${STAGING_DIR}${prefix} \
+    -DBINDER_SDK_INCLUDE_DIR=${STAGING_DIR}${prefix} \
+"
 
-do_compile() {
-    cmake --build ${B} -j ${PARALLEL_MAKE}
-}
-
-do_install() {
-    install -d ${D}${libdir}
-    install -m 0755 ${B}/out/target/lib/halif/*.so ${D}${libdir}/
-}
+FILES:${PN} += "${libdir}/halif/*.so"
 ```
 
 ## Why not the wrapper scripts
