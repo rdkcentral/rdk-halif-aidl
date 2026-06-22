@@ -1812,49 +1812,64 @@ update_mkdocs_for_release() {
         return 0
     fi
 
-    # If a `current` !include exists for this component, append a sibling
-    # versioned entry immediately after it, preserving the existing human
-    # label (e.g. "Audio Decoder") rather than inventing a comp@version
-    # label. We extract the label from the matching current line and
-    # construct a "<label> X.Y.Z.W:" prefix for the new entry. Python
-    # for the edit so YAML indentation stays exact byte-for-byte.
+    # The nav groups each component as a parent with one child per version:
+    #
+    #   - Sensor:
+    #     - Current: '!include sensor/current/mkdocs.yml'
+    #     - 0.2.0.0: '!include sensor/0.2.0.0/mkdocs.yml'
+    #
+    # Add the new version as a child under the component's parent. Two cases:
+    #   * already nested (a "Current:" child exists) — insert the new version
+    #     child immediately after Current (newest first).
+    #   * still flat (single "<Label>: '!include <comp>/current/...'" line, the
+    #     state of a component getting its first release) — convert it in place
+    #     to the nested parent + Current + versioned children.
+    # Python does the edit so YAML indentation stays exact byte-for-byte.
     local current_entry="'!include ${comp}/current/mkdocs.yml'"
     if ! grep -qF "${current_entry}" "${mkdocs}"; then
         warn "  [${comp}] no current/ mkdocs entry found; manual mkdocs.yml edit required"
         return 1
     fi
 
-    if ! python3 - "${mkdocs}" "${comp}" "${version}" "${current_entry}" "${entry}" <<'PYEOF'; then
-import io, re, sys
-mkdocs_path, comp, version, current_entry, new_entry = sys.argv[1:6]
-with open(mkdocs_path) as f:
-    lines = f.readlines()
+    if ! python3 - "${mkdocs}" "${comp}" "${version}" <<'PYEOF'; then
+import re, sys
+mkdocs_path, comp, version = sys.argv[1:4]
+lines = open(mkdocs_path).read().splitlines(keepends=True)
 
-# Locate the line containing the current entry. Capture the leading
-# indent ("    - ") and the label preceding the `:` so we can reuse it
-# for the versioned sibling.
-target_idx = None
-indent = ""
-label = ""
-for i, line in enumerate(lines):
-    if current_entry in line:
-        target_idx = i
-        m = re.match(r"^(\s*-\s+)(.*?):\s*'!include", line)
-        if not m:
-            sys.stderr.write(f"could not parse mkdocs label for {comp}\n")
-            sys.exit(1)
-        indent = m.group(1)
-        label = m.group(2)
-        break
-
-if target_idx is None:
-    sys.stderr.write(f"current entry not found in mkdocs.yml: {current_entry}\n")
+inc_re = re.compile(rf"'!include\s+{re.escape(comp)}/([^/]+)/mkdocs\.yml'")
+idxs = [i for i, l in enumerate(lines) if inc_re.search(l)]
+cur_idx = next((i for i in idxs if f"{comp}/current/" in lines[i]), None)
+if cur_idx is None:
+    sys.stderr.write(f"current entry not found for {comp}\n")
     sys.exit(1)
+m = re.match(r"^(\s*)-\s+(.*?):\s*'!include", lines[cur_idx])
+if not m:
+    sys.stderr.write(f"could not parse mkdocs label for {comp}\n")
+    sys.exit(1)
+indent, label = m.group(1), m.group(2)
 
-new_line = f"{indent}{label} {version}: {new_entry}\n"
-lines.insert(target_idx + 1, new_line)
-with open(mkdocs_path, "w") as f:
-    f.writelines(lines)
+def vkey(v):
+    return tuple(int(x) for x in v.split("."))
+
+new_inc = f"!include {comp}/{version}/mkdocs.yml"
+if label == "Current":
+    # Already nested — insert the new version child right after Current.
+    lines.insert(cur_idx + 1, f"{indent}- {version}: '{new_inc}'\n")
+else:
+    # Flat — fold the current line (and any legacy flat versioned siblings)
+    # into a nested parent->version block.
+    span = sorted(idxs)
+    versions = {inc_re.search(lines[i]).group(1) for i in span}
+    versions.discard("current")
+    versions.add(version)
+    child = indent + "  "
+    block = [f"{indent}- {label}:\n",
+             f"{child}- Current: '!include {comp}/current/mkdocs.yml'\n"]
+    for v in sorted(versions, key=vkey, reverse=True):
+        block.append(f"{child}- {v}: '!include {comp}/{v}/mkdocs.yml'\n")
+    lines[span[0]:span[-1] + 1] = block
+
+open(mkdocs_path, "w").write("".join(lines))
 sys.exit(0)
 PYEOF
         warn "  [${comp}] python mkdocs edit failed; manual mkdocs.yml edit required"
