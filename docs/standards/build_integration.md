@@ -54,6 +54,19 @@ C++; they are **never required on a build host or target**.
 | `BINDER_SDK_INCLUDE_DIR` | Staged Binder SDK headers prefix                             | Yes      |
 | `OUT_DIR`                | Output directory (default `out`)                             | No       |
 
+## Reference recipes
+
+Copy-me starting templates (not consumed by this repo) live under `examples/`:
+
+- [`rdk-halif-aidl.bb`](examples/rdk-halif-aidl.bb) — BitBake recipe.
+- [`rdk-halif-aidl.yaml`](examples/rdk-halif-aidl.yaml) — [Bob Build Tool](https://bobbuildtool.dev/) recipe.
+
+Both are thin wrappers over the same direct-CMake invocation, so the build is
+build-system-agnostic — porting to another build system means calling the same
+CMake with the same variables. The recipes are reference material and are not
+CI-verified here; pin them to a released tag and adapt the toolchain/sysroot to
+your project.
+
 ## Recipe pattern (BitBake)
 
 **Stage 1 — Binder SDK** is delivered by the `linux-binder` recipe. See the
