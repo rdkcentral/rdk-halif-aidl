@@ -1761,6 +1761,24 @@ create_snapshot() {
         fi
     fi
 
+    # Stage hand-authored module-root headers (e.g. avbufferhelper.h) into the
+    # snapshot's include/ tree (#623). These are public, versioned contract
+    # headers that live at the module root in current/ — current/include/ is
+    # gitignored generator output, so they cannot live there in the dev tree.
+    # Copying them into the snapshot's include/ makes them ship and version with
+    # the generated headers and be picked up by the include/-tree staging copy
+    # that downstream snapshot builds rely on.
+    shopt -s nullglob
+    local _root_hdrs=("${snapshot_dir}"/*.h)
+    shopt -u nullglob
+    if [[ "${#_root_hdrs[@]}" -gt 0 ]]; then
+        mkdir -p "${snapshot_dir}/include"
+        if ! cp "${_root_hdrs[@]}" "${snapshot_dir}/include/"; then
+            warn "Failed to stage module-root header(s) into ${comp}/${version}/include/."
+            return 1
+        fi
+    fi
+
     # Stage the snapshot. No -f needed: .gitignore scopes the binding
     # rules to */current/include/ and */current/src/ only — files under
     # <module>/<version>/ are outside that scope and stage cleanly with
@@ -1775,6 +1793,76 @@ create_snapshot() {
     # already showed every step above.
     if [[ "${VERBOSE}" -ne 1 ]]; then
         log "  [${comp}] → ${version}/  ${_C_GREEN}✓${_C_RESET}${refresh_marker}"
+    fi
+    return 0
+}
+
+# ----------------------------------------------------------------------------
+# Cohort snapshot dependency-version normalization (#623)
+# ----------------------------------------------------------------------------
+#
+# create_snapshot() pins a fresh snapshot's cross-component dependency versions
+# to the cohort at the moment it is cut. But a component whose AIDL did not
+# change in a later release is NOT re-cut — so its snapshot keeps the dependency
+# versions that were current when it was first generated. After a dependency
+# advances (e.g. common 0.1.0.0 -> 0.2.0.0), those stale snapshots reference a
+# version the cohort manifest no longer builds, and the manifest build fails.
+#
+# This pass rewrites, for the cohort snapshot of every component listed in
+# versions_released.yaml, each reference to ANOTHER component to that
+# dependency's cohort version. A snapshot's own library version is never
+# touched, and non-cohort historical snapshots are left frozen.
+normalize_cohort_snapshot_deps() {
+    local changed
+    changed="$(python3 - "${REPO_ROOT}" <<'PYEOF'
+import os, re, sys
+repo = sys.argv[1]
+manifest = os.path.join(repo, "versions_released.yaml")
+cohort = {}
+in_components = False
+with open(manifest) as fh:
+    for line in fh:
+        if re.match(r"^components:\s*$", line):
+            in_components = True
+            continue
+        if in_components:
+            m = re.match(r"^\s+([A-Za-z0-9_]+):\s*(\S+)\s*$", line)
+            if m:
+                cohort[m.group(1)] = m.group(2)
+            elif line.strip() and not line[0].isspace():
+                in_components = False
+changed = []
+for comp, ver in sorted(cohort.items()):
+    if ver == "current":
+        continue
+    cmake = os.path.join(repo, comp, ver, "CMakeLists.txt")
+    if not os.path.isfile(cmake):
+        continue
+    text = orig = open(cmake).read()
+    for dep, dep_ver in cohort.items():
+        if dep == comp or dep_ver == "current":
+            continue
+        text = re.sub(rf"(?<![A-Za-z0-9_]){re.escape(dep)}-v[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+-cpp",
+                      f"{dep}-v{dep_ver}-cpp", text)
+        text = re.sub(rf"(HALIF_INCLUDE_DIR}}/{re.escape(dep)}/)[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/",
+                      rf"\g<1>{dep_ver}/", text)
+    if text != orig:
+        open(cmake, "w").write(text)
+        changed.append(f"{comp}/{ver}/CMakeLists.txt")
+for c in changed:
+    print(c)
+PYEOF
+)" || { warn "  cohort dependency normalization: python step failed"; return 1; }
+
+    if [[ -n "${changed}" ]]; then
+        log "  Rewrote cohort dependency versions in:"
+        while IFS= read -r _f; do
+            [[ -z "${_f}" ]] && continue
+            log "    ${_f}"
+            (cd "${REPO_ROOT}" && git add "${_f}") || warn "  git add ${_f} failed"
+        done <<< "${changed}"
+    else
+        log "  All cohort snapshots already reference cohort dependency versions."
     fi
     return 0
 }
@@ -2866,6 +2954,17 @@ if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
     fi
     (cd "${REPO_ROOT}" && git add versions_released.yaml) \
         || warn "git add versions_released.yaml failed (file may be untracked)"
+
+    # 2b. Normalize cohort snapshot dependency versions (#623). Snapshots not
+    # re-cut this release still reference the dependency versions current when
+    # they were first generated; after versions_released.yaml advances, rewrite
+    # their cross-component dep refs to the cohort versions so the manifest
+    # build below stays internally consistent.
+    phase "Normalizing cohort snapshot dependency versions..."
+    log ""
+    if ! normalize_cohort_snapshot_deps; then
+        die "Cohort snapshot dependency normalization failed. Aborting release."
+    fi
 
     # 3. mkdocs.yml entries.
     if [[ "${NO_MKDOCS}" -eq 1 ]]; then

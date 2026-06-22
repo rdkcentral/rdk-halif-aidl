@@ -50,7 +50,7 @@ target_include_directories(${LIB_NAME} PRIVATE
 # via direct deps, e.g. common via audiodecoder/videodecoder for avbuffer).
 if (DEFINED HALIF_INCLUDE_DIR)
     target_include_directories(${LIB_NAME} PRIVATE
-    "${HALIF_INCLUDE_DIR}/common/0.1.0.0/include")
+    "${HALIF_INCLUDE_DIR}/common/0.2.0.0/include")
 endif()
 
 target_link_directories(${LIB_NAME} PRIVATE
@@ -60,7 +60,7 @@ if (DEFINED HALIF_LIB_DIR)
     target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
 endif()
 
-target_link_libraries(${LIB_NAME} PRIVATE binder utils common-v0.1.0.0-cpp)
+target_link_libraries(${LIB_NAME} PRIVATE binder utils common-v0.2.0.0-cpp)
 
 set_target_properties(${LIB_NAME} PROPERTIES OUTPUT_NAME "${LIB_NAME}")
 
