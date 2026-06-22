@@ -238,7 +238,8 @@ Used by `build_binder.sh` and `build_interfaces.sh` only:
 
 **Not used in production Yocto builds**.
 
-See [TWO_STAGE_BUILD.md](TWO_STAGE_BUILD.md) for detailed workflows.
+The full two-stage dev and production build workflows are covered in the
+[Quick Start](#quick-start) section above.
 
 ## Additional Documentation
 
@@ -248,8 +249,6 @@ See [TWO_STAGE_BUILD.md](TWO_STAGE_BUILD.md) for detailed workflows.
   - Kernel configuration and runtime setup
   - Systemd service configuration
   - 32-bit userspace on 64-bit kernel support
-
-- **[TWO_STAGE_BUILD.md](TWO_STAGE_BUILD.md)** - Detailed build workflows for both development and production
 
 - **[tests/README.md](tests/README.md)** - On-demand build verification
   - `tests/smoke_test.sh` - exercises the `all`, `manifest` and per-version build paths

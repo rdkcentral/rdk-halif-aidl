@@ -54,6 +54,58 @@ phase() { echo "${_C_CYAN}==>${_C_RESET} ${_C_BOLD}$*${_C_RESET}" >&2; }
 warn()  { echo "${_C_YELLOW}WARN:${_C_RESET} $*" >&2; }
 die()   { echo "${_C_RED}${_C_BOLD}ERROR:${_C_RESET} ${_C_RED}$*${_C_RESET}" >&2; exit 1; }
 
+# ----------------------------------------------------------------------------
+# Markdown link validation (#626)
+# ----------------------------------------------------------------------------
+# Validates relative links in GitHub-facing, repo-ROOT markdown files only
+# (README.md, CONTRIBUTING.md, CHANGELOG.md, COMMANDS.md, ...). GitHub renders
+# the repo front page with filesystem-relative links, so a link to a missing
+# file is a dead link for everyone who lands on the project.
+#
+# Component docs (<module>/.../docs/*.md) are deliberately NOT checked: they use
+# mkdocs-context relative links (e.g. ../introduction/aidl_and_binder.md) that
+# resolve in the rendered docs site but not on the raw filesystem — checking
+# them here would produce hundreds of false positives.
+#
+# Prints "<file> -> <link>" per broken link to stdout; returns 1 if any
+# root-level relative link is dead, 0 otherwise (and 0 on tooling failure, so a
+# missing python never blocks a release).
+validate_doc_links() {
+    python3 - "${REPO_ROOT}" <<'PYEOF'
+import os, re, subprocess, sys
+repo = sys.argv[1]
+try:
+    files = subprocess.check_output(
+        ["git", "-C", repo, "ls-files", "*.md"], text=True
+    ).splitlines()
+except Exception as e:
+    print(f"link-check skipped: {e}", file=sys.stderr)
+    sys.exit(0)  # never block a release on a tooling failure
+# Root-level (depth 0) markdown only — GitHub renders these filesystem-relative.
+root = [f for f in files if "/" not in f]
+link_re = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
+broken = {}
+for rel in root:
+    try:
+        text = open(os.path.join(repo, rel), encoding="utf-8", errors="ignore").read()
+    except OSError:
+        continue
+    for m in link_re.finditer(text):
+        url = m.group(1).strip().split()[0]  # drop any optional "title"
+        if url.startswith(("http://", "https://", "#", "mailto:")):
+            continue
+        target = url.split("#", 1)[0]
+        if not target:
+            continue
+        if not os.path.exists(os.path.join(repo, os.path.dirname(rel), target)):
+            broken.setdefault(rel, []).append(url)
+for f in sorted(broken):
+    for u in broken[f]:
+        print(f"  {f} -> {u}")
+sys.exit(1 if broken else 0)
+PYEOF
+}
+
 # Verification-build runner. Defined at top-level so it's in scope for
 # both the stage path (DO_WRITES=1) and a pure --apply (DO_WRITES=0).
 # ----------------------------------------------------------------------------
@@ -1022,6 +1074,24 @@ if [[ "${STAGE_AND_WRITE}" -eq 1 ]]; then
 fi
 if [[ "${APPLY}" -eq 1 ]]; then
     DO_BRANCH=1
+fi
+
+# Preflight: dead relative links in GitHub-facing repo-root markdown (#626).
+# Fatal for any mutating run (staged writes, --apply, --commit) so a release
+# never ships a broken front-page link; a non-fatal warning in read-only
+# plan/check mode. Escape hatch: SKIP_LINK_CHECK=1.
+if [[ "${SKIP_LINK_CHECK:-0}" -ne 1 ]]; then
+    phase "Validating root-level markdown links..."
+    if _link_errs="$(validate_doc_links)"; then
+        log "    ✓ root-level markdown links OK"
+    elif [[ "${DO_WRITES}" -eq 1 || "${DO_BRANCH}" -eq 1 || "${COMMIT}" -eq 1 ]]; then
+        warn "Broken relative links in repo-root markdown:"
+        printf '%s\n' "${_link_errs}" >&2
+        die "Fix the dead links above (or re-run with SKIP_LINK_CHECK=1) before releasing."
+    else
+        warn "Broken relative links in repo-root markdown (non-fatal in read-only mode):"
+        printf '%s\n' "${_link_errs}" >&2
+    fi
 fi
 
 # Standalone `--commit`: commit + tag whatever is staged in the index.
