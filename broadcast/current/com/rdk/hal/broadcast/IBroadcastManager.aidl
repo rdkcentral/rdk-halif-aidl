@@ -1,20 +1,16 @@
 /*
- * If not stated otherwise in this file or this component's LICENSE file the
- * following copyright and licenses apply:
+ * If not stated otherwise in this file or this component's LICENSE file the following copyright and licenses apply:
  *
  * Copyright 2024 RDK Management
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 package com.rdk.hal.broadcast;
 
@@ -25,19 +21,12 @@ import com.rdk.hal.broadcast.Version;
 import com.rdk.hal.broadcast.ImplementationVersion;
 
 /**
- *  @brief     BroadcastManager HAL interface.
- *  @author    Jan Pedersen
- *  @author    Christian George
- *  @author    Philipp Trommler
+ * BroadcastManager HAL interface.
  *
- *  ### Exception Handling
- *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - **Success**: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - **Failure (Exception)**: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ * @author Jan Pedersen
+ * @author Christian George
+ * @author Philipp Trommler
  */
-
 @VintfStability
 interface IBroadcastManager {
     /** The service name to publish. To be returned by getServiceName() in the derived class. */
@@ -58,20 +47,18 @@ interface IBroadcastManager {
     ImplementationVersion getImplVersion();
 
     /**
-	 * Gets the platform list of frontend IDs.
+     * Gets the platform list of frontend IDs.
      *
-     * @returns IFrontEnd.Id[]
-     *
+     * @returns Array of IFrontend.Id values for all frontends on this platform.
      */
     IFrontend.Id[] getFrontendIds();
 
     /**
      * Get the frontend interface for the given ID
      *
-     * @param[in] frontendId    The ID of the frontend.
+     * @param[in] frontendId The ID of the frontend.
      *
-     * @returns IFrontend ID or null if the ID is invalid.
-     *
+     * @returns IFrontend or null if the ID is invalid.
      */
     @nullable IFrontend getFrontend(in IFrontend.Id frontendId);
 
@@ -85,7 +72,7 @@ interface IBroadcastManager {
     /**
      * Get the demux interface for the given ID
      *
-     * @param[in] demuxId    The ID of the demux.
+     * @param[in] demuxId The ID of the demux.
      *
      * @returns IDemux or null if the ID is invalid.
      */
@@ -101,7 +88,7 @@ interface IBroadcastManager {
     /**
      * Get the CA slot interface for the given ID.
      *
-     * @param[in] slotId    The ID of the CA slot.
+     * @param[in] slotId The ID of the CA slot.
      *
      * @returns ICaSlot or null if the ID is invalid.
      */
