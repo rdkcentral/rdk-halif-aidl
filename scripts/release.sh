@@ -1798,7 +1798,7 @@ create_snapshot() {
 }
 
 # ----------------------------------------------------------------------------
-# Cohort snapshot dependency-version normalization (#623)
+# Cohort snapshot dependency-version normalization (#623, #616)
 # ----------------------------------------------------------------------------
 #
 # create_snapshot() pins a fresh snapshot's cross-component dependency versions
@@ -1807,11 +1807,15 @@ create_snapshot() {
 # versions that were current when it was first generated. After a dependency
 # advances (e.g. common 0.1.0.0 -> 0.2.0.0), those stale snapshots reference a
 # version the cohort manifest no longer builds, and the manifest build fails.
+# Snapshots also inherit current/'s `<dep>@current` AIDL imports, which are
+# non-deterministic in a frozen interface (#616).
 #
 # This pass rewrites, for the cohort snapshot of every component listed in
 # versions_released.yaml, each reference to ANOTHER component to that
-# dependency's cohort version. A snapshot's own library version is never
-# touched, and non-cohort historical snapshots are left frozen.
+# dependency's cohort version — in both CMakeLists.txt (link names + include
+# paths) and interface.yaml (AIDL import pins, including `@current`). A
+# snapshot's own version is never touched, and non-cohort historical snapshots
+# are left frozen.
 normalize_cohort_snapshot_deps() {
     local changed
     changed="$(python3 - "${REPO_ROOT}" <<'PYEOF'
@@ -1835,20 +1839,34 @@ changed = []
 for comp, ver in sorted(cohort.items()):
     if ver == "current":
         continue
+    # 1. CMakeLists.txt — link names + include paths (#623).
     cmake = os.path.join(repo, comp, ver, "CMakeLists.txt")
-    if not os.path.isfile(cmake):
-        continue
-    text = orig = open(cmake).read()
-    for dep, dep_ver in cohort.items():
-        if dep == comp or dep_ver == "current":
-            continue
-        text = re.sub(rf"(?<![A-Za-z0-9_]){re.escape(dep)}-v[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+-cpp",
-                      f"{dep}-v{dep_ver}-cpp", text)
-        text = re.sub(rf"(HALIF_INCLUDE_DIR}}/{re.escape(dep)}/)[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/",
-                      rf"\g<1>{dep_ver}/", text)
-    if text != orig:
-        open(cmake, "w").write(text)
-        changed.append(f"{comp}/{ver}/CMakeLists.txt")
+    if os.path.isfile(cmake):
+        text = orig = open(cmake).read()
+        for dep, dep_ver in cohort.items():
+            if dep == comp or dep_ver == "current":
+                continue
+            text = re.sub(rf"(?<![A-Za-z0-9_]){re.escape(dep)}-v[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+-cpp",
+                          f"{dep}-v{dep_ver}-cpp", text)
+            text = re.sub(rf"(HALIF_INCLUDE_DIR}}/{re.escape(dep)}/)[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/",
+                          rf"\g<1>{dep_ver}/", text)
+        if text != orig:
+            open(cmake, "w").write(text)
+            changed.append(f"{comp}/{ver}/CMakeLists.txt")
+    # 2. interface.yaml — AIDL import pins, e.g. common@current -> common@0.2.0.0 (#616).
+    # A frozen snapshot must not import @current (non-deterministic); pin every
+    # cross-component import to the cohort version.
+    iface = os.path.join(repo, comp, ver, "interface.yaml")
+    if os.path.isfile(iface):
+        text = orig = open(iface).read()
+        for dep, dep_ver in cohort.items():
+            if dep == comp or dep_ver == "current":
+                continue
+            text = re.sub(rf"(?<![A-Za-z0-9_]){re.escape(dep)}@[A-Za-z0-9._]+",
+                          f"{dep}@{dep_ver}", text)
+        if text != orig:
+            open(iface, "w").write(text)
+            changed.append(f"{comp}/{ver}/interface.yaml")
 for c in changed:
     print(c)
 PYEOF
