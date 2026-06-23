@@ -1678,13 +1678,15 @@ is_buildable_component() {
 # them, copy that into the snapshot, then restore current/. Needs that
 # generator; with an older generator the `version:` field is simply ignored.
 
-# Monotonic interface-version ordinal = 1-based index of <version> among the
-# component's released versions (including the one being created).
-_snapshot_ordinal() {
-    local comp="$1" version="$2"
-    { ls -d "${REPO_ROOT}/${comp}/"[0-9]*.[0-9]*.[0-9]*.[0-9]*/ 2>/dev/null \
-          | xargs -n1 basename 2>/dev/null; echo "${version}"; } \
-        | sort -uV | grep -nxF "${version}" | head -1 | cut -d: -f1
+# Interface VERSION encodes the X.Y.Z.W version digits: the int32 returned by
+# getInterfaceVersion() is the version with the dots removed (base-10), so
+# 0.2.0.0 -> 0200 -> 200, 0.3.0.0 -> 300, 0.1.0.1 -> 101. (int32 can't carry a
+# leading zero, so 0.2.0.0 reads back as 200 / zero-pad to 4 digits to display
+# "0200".) Assumes single-digit components, which holds for all current
+# versions; a wider fixed-field scheme would be needed if a component reaches 10.
+_snapshot_version_int() {
+    local digits="${1//./}"      # "0.2.0.0" -> "0200"
+    echo "$((10#${digits}))"     # base-10 (avoid octal on the leading zero) -> 200
 }
 
 # Contract hash = sha1 of (sorted per-file .aidl sha1sums + the hashgen version
@@ -1741,15 +1743,15 @@ create_snapshot() {
     # VERSION (ordinal) + contract HASH instead of 1/notfrozen (#633). Restored
     # right after the copy below.
     local _cur="${REPO_ROOT}/${comp}/current"
-    local _ordinal _chash _ifyaml_bak=""
-    _ordinal="$(_snapshot_ordinal "${comp}" "${version}")"
+    local _iface_version _chash _ifyaml_bak=""
+    _iface_version="$(_snapshot_version_int "${version}")"
     _chash="$(_contract_hash "${_cur}")"
-    if [[ -n "${_ordinal}" && -n "${_chash}" && -f "${_cur}/interface.yaml" ]]; then
+    if [[ -n "${_iface_version}" && -n "${_chash}" && -f "${_cur}/interface.yaml" ]]; then
         _ifyaml_bak="$(mktemp)"
         cp "${_cur}/interface.yaml" "${_ifyaml_bak}"
-        _set_interface_version "${_cur}/interface.yaml" "${_ordinal}"
+        _set_interface_version "${_cur}/interface.yaml" "${_iface_version}"
         printf '%s\n' "${_chash}" > "${_cur}/.hash"
-        [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] freezing as interface version ${_ordinal} (hash ${_chash:0:12}…)"
+        [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] freezing ${version} as interface version ${_iface_version} (hash ${_chash:0:12}…)"
     fi
 
     [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] regenerating bindings via build_modules.sh..."
