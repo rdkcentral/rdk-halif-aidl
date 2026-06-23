@@ -1,22 +1,19 @@
 /*
- * If not stated otherwise in this file or this component's LICENSE file the
- * following copyright and licenses apply:
+ * If not stated otherwise in this file or this component's LICENSE file the following copyright and licenses apply:
  *
  * Copyright 2024 RDK Management
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 package com.rdk.hal.broadcast.frontend;
+
 import com.rdk.hal.broadcast.frontend.FrontendType;
 import com.rdk.hal.broadcast.frontend.IFrontendControllerListener;
 import com.rdk.hal.broadcast.frontend.SignalInfoProperty;
@@ -26,47 +23,39 @@ import com.rdk.hal.broadcast.frontend.TuneParameters;
 import com.rdk.hal.broadcast.frontend.State;
 
 /**
- *  @brief     FrontendController HAL interface.
- *  @author    Jan Pedersen
- *  @author    Christian George
- *  @author    Philipp Trommler
+ * FrontendController HAL interface.
  *
- *  ### Exception Handling
- *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - **Success**: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - **Failure (Exception)**: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ * @author Jan Pedersen
+ * @author Christian George
+ * @author Philipp Trommler
  */
-
 @VintfStability
 interface IFrontendController {
-
     /**
-	 * Closes the frontend.
-     * 
-     * Free's all attached (hardware) resources and brings the frontend back into a state where it
-     * can be opened again. Stops the current tuning and all output on TSOUT
-     * If successful the frontend transitions to a CLOSING state and then a CLOSED state.
+     * Closes the frontend.
+     *
+     * Frees all attached (hardware) resources and brings the frontend back into a state where it can be opened again.
+     * Stops the current tuning and all output on TSOUT. If successful the frontend transitions to a CLOSING state and
+     * then a CLOSED state.
      *
      * @exception binder::Status EX_ILLEGAL_STATE
-     * 
+     *
      * @pre The resource must be in State::READY.
-     * 
+     *
      * @see IFrontend.open(), tune()
      */
     void close();
 
     /**
-     * Tune with the given parameters
+     * Tune with the given parameters.
      *
-     * The frontend must be in a ready or started state before it we can tune.
-     * If successful the frontend will transition directly to the STARTED state.
+     * The frontend must be in a ready or started state before it we can tune. If successful the frontend will
+     * transition directly to the STARTED state.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
-     * 
+     * @exception binder::Status EX_ILLEGAL_STATE
+     *
      * @pre The resource must be in State::READY or State::STARTED.
-     * 
+     *
      * @see stopTune(), close()
      *
      * @param[in] tuneParams The tuning parameters of the request.
@@ -74,29 +63,29 @@ interface IFrontendController {
     void tune(in TuneParameters tuneParams);
 
     /**
-     * Will cancel any ongoing tune and set the tuner into unlocked state
-     * The Frontend enters the STOPPING state and then the enters the READY state.
+     * Cancels any ongoing tune and sets the tuner into unlocked state.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
-     * 
+     * The frontend enters the STOPPING state and then the READY state.
+     *
+     * @exception binder::Status EX_ILLEGAL_STATE
+     *
      * @pre The resource must be in State::READY or State::STARTED.
-     * 
+     *
      * @see tune()
      */
     void stopTune();
 
     /**
-	 * Gets the current frontend tuneStatus.
+     * Gets the current frontend tune status.
      *
      * @returns TuneStatus enum value.
      *
-	 *
      * @see IFrontendControllerListener.onTuneStatusChanged().
-     */  
+     */
     TuneStatus getTuneStatus();
 
-    /** 
-     * Return type for @ref IFrontend::getInfo 
+    /**
+     * Return type for @ref IFrontend::getSignalInfo.
      */
     @VintfStability
     parcelable SignalInfoReturn {
@@ -115,29 +104,22 @@ interface IFrontendController {
             STABLE
         }
 
-        /** 
-         * The requested value 
-         */
+        /** The requested value. */
         SignalInfoValue value;
         
-        /** 
-         * The quality of the reading 
-         */
+        /** The quality of the reading. */
         Readiness readiness;
     }
 
     /**
-     * Get frontend signal information
+     * Get frontend signal information.
      *
-     * If the frontend is in any other state than State::STARTED, you can expect that 
-     * Readiness is UNAVAILABLE for supported properties
+     * If the frontend is in any other state than State::STARTED, you can expect that Readiness is UNAVAILABLE for
+     * supported properties.
      *
-     * @param[in] properties A list of information types that shall be returned. Note that this has to
-     *                   be a subset of the information types returned in the Capabilities set for
-     *                   this frontend.
-     * @returns The list of the requested information values that are in the set of the supported
-     *
-     *         types.
+     * @param[in] properties A list of information types that shall be returned. Note that this has to be a subset of
+     * the information types returned in the Capabilities set for this frontend.
+     * @returns The list of the requested information values that are in the set of the supported types.
      */
     SignalInfoReturn[] getSignalInfo(in SignalInfoProperty[] properties);
 }
