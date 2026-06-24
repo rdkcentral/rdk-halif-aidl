@@ -43,8 +43,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT_PATH="$SCRIPT_DIR/$(basename "${BASH_SOURCE[0]}")"
 
 # Host-toolchain guard (#624): build / sdk operations need a native toolchain,
-# and Yocto/cross builds must call CMake directly (see BUILD.md). clean/help do
-# no toolchain work, so they stay usable in any environment.
+# and Yocto/cross builds must call CMake directly (see
+# docs/standards/build_integration.md). clean/help do no toolchain work, so
+# they stay usable in any environment.
 case "${1:-}" in
     clean|cleanstable|cleanall|--help|-h|"") ;;
     *) source "$SCRIPT_DIR/dev_env_guard.sh"; halif_guard_dev_host_env || exit 1 ;;
@@ -92,7 +93,10 @@ Build Configuration:
   Use CC/CXX environment variables to control compiler and flags:
     CC=gcc CXX=g++ ./build_interfaces.sh <module>              # Release (default)
     CC="gcc -g" CXX="g++ -g" ./build_interfaces.sh <module>   # Debug build
-    CC=arm-linux-gnueabihf-gcc ./build_interfaces.sh <module>  # Cross-compile
+
+  Cross-compilation / Yocto: this wrapper is host-only and refuses to run in a
+  cross/OpenEmbedded environment. Production/cross builds invoke CMake directly
+  — see docs/standards/build_integration.md.
 
 Examples:
   # Building
