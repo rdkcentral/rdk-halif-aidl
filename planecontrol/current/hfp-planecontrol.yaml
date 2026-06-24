@@ -41,7 +41,7 @@ planecontrol:                   # Component object begins
           - SDR
           - HLG
           - HDR10
-          - HDR10PLUS
+          - HDR10_PLUS
           - DOLBY_VISION
         colorDepth: 12  # Bit depth of supported pixel formats (e.g. 8, 10, 12)
         maxFrameRate: 60  # Maximum supported refresh rate in Hz (e.g. 60fps)
@@ -83,3 +83,11 @@ planecontrol:                   # Component object begins
         supportsAlpha: true
         supportsZOrder: false
         vsyncDisplayLatency: 1
+        graphicsFbCapabilities:
+          maxGraphicsFrameBuffers: 3
+          maxGraphicsFrameBufferWidth: 1920
+          maxGraphicsFrameBufferHeight: 1080
+          format: 0x34325258
+          modifier: 0x0000000000000000
+
+

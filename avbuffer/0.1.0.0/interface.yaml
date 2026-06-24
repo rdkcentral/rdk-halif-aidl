@@ -1,0 +1,9 @@
+aidl_interface:
+  name: avbuffer
+  srcs:
+    - com/rdk/hal/avbuffer/*.aidl
+  imports:
+    - audiodecoder@0.1.0.0
+    - videodecoder@0.1.0.0
+  stability: vintf
+  layout: module-local

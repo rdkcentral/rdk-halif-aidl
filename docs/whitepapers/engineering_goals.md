@@ -109,13 +109,6 @@ This structure enforces **GitHub as the single source of truth** for all develop
 
 ---
 
-## **Feature Requests, Bug Reporting, and Task Tracking**
-
-All feature requests, bug reports, and tasks are tracked in **GitHub Issues** within the **RDK Central open tracking system**. This ensures complete visibility of work progress, fosters collaboration among contributors, and aligns with the community-driven development model. These GitHub-based tracking mechanisms are publicly accessible and help maintain transparency across all contributions.
-
-!!! Tip
-    The following templates are already enabled in RDK Central
-
 ### **Features**
 
 Feature requests should be well-defined to ensure clarity in their purpose, scope, and impact. The following feature request template is actively used within RDK Central:

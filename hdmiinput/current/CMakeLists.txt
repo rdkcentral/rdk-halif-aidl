@@ -19,57 +19,98 @@
 # * limitations under the License.
 # *
 #** ******************************************************************************
-cmake_minimum_required(VERSION 3.8)
+# Standalone direct-compile build for <component>/current/.
+#
+# Mirrors the shape of the snapshot CMakeLists written by release.sh into
+# <component>/<version>/, so a downstream consumer can build any single
+# component from its own directory:
+#
+#     cmake -S <component>/current -B build/<component> \
+#         -DBINDER_SDK_DIR=/path/to/out/target \
+#         -DBINDER_SDK_INCLUDE_DIR=/path/to/out/build \
+#         -DHALIF_LIB_DIR=/path/to/out/target/lib/halif \
+#         -DHALIF_INCLUDE_DIR=/path/to/out/build/include
+#     cmake --build build/<component>
+#
+# The repo's overall build path (build_modules.sh / build_interfaces.sh)
+# still uses the toolchain's CMakeLists.inc machinery to wire all
+# components together; this file is for the single-module case (#546).
+#
+# PRE-REQUISITE — regenerate the bindings first. Since #566, src/ and
+# include/ under current/ are gitignored toolchain output and do not
+# exist in a fresh clone. Before invoking this standalone CMakeLists,
+# run ./build_interfaces.sh <component> (from the repo root) to
+# regenerate current/src/ and current/include/.
+#
+# Inputs:
+#   BINDER_SDK_DIR          - linux_binder SDK root (lib/binder + include/binder_sdk)
+#   BINDER_SDK_INCLUDE_DIR  - alternate headers root (dev layout splits headers/runtime)
+#   HALIF_LIB_DIR           - directory holding dependency lib*-cpp.so
+#   HALIF_INCLUDE_DIR       - directory holding dependency headers
+cmake_minimum_required(VERSION 3.16)
+project(hdmiinput-vcurrent-cpp LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-project(HDMIInput
-	LANGUAGES NONE
-	VERSION 1.0)
+set(LIB_NAME "hdmiinput-vcurrent-cpp")
 
-if (NOT DEFINED AIDL_BIN)
-	message(FATAL_ERROR "Do not invoke module level CMake directly!\nInvoke CMake at root level instead!")
+if (NOT DEFINED BINDER_SDK_DIR)
+    message(FATAL_ERROR "BINDER_SDK_DIR must be set")
 endif()
 
-# version of other modules that `hdmiinput` depends on
-set(COMMON_VERSION "current")
-
-set(SRC_DIR com/rdk/hal/hdmiinput)
-set(COMMON_SRC_DIR ${COMMON_MODULE_PATH}/${COMMON_VERSION}/com/rdk/hal)
-set(SRC
-	${SRC_DIR}/Capabilities.aidl
-	${SRC_DIR}/FreeSync.aidl
-	${SRC_DIR}/HDCPProtocolVersion.aidl
-	${SRC_DIR}/HDCPStatus.aidl
-	${SRC_DIR}/HDMIVersion.aidl
-	${SRC_DIR}/IHDMIInput.aidl
-	${SRC_DIR}/IHDMIInputController.aidl
-	${SRC_DIR}/IHDMIInputControllerListener.aidl
-	${SRC_DIR}/IHDMIInputEventListener.aidl
-	${SRC_DIR}/IHDMIInputManager.aidl
-	${SRC_DIR}/PlatformCapabilities.aidl
-	${SRC_DIR}/Property.aidl
-	${SRC_DIR}/PropertyKVPair.aidl
-	${SRC_DIR}/SignalState.aidl
-	${SRC_DIR}/VIC.aidl
-	${SRC_DIR}/State.aidl
-	${COMMON_SRC_DIR}/PropertyValue.aidl
-)
-
-set(INCLUDE_DIRECTORY
-	.
-	${COMMON_MODULE_PATH}/${COMMON_VERSION}
-)
-
-set(COMPILE_AIDL_ARGV "")
-
-if (DEFINED AIDL_GEN_DIR)
-	list(APPEND COMPILE_AIDL_ARGV TARGET_DIRECTORY ${AIDL_GEN_DIR})
+set(_BINDER_INC "${BINDER_SDK_DIR}/include/binder_sdk")
+if (NOT IS_DIRECTORY "${_BINDER_INC}")
+    if (DEFINED BINDER_SDK_INCLUDE_DIR AND
+        IS_DIRECTORY "${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk")
+        set(_BINDER_INC "${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk")
+    else()
+        message(FATAL_ERROR
+            "Binder SDK headers not found at ${_BINDER_INC}. "
+            "Set BINDER_SDK_INCLUDE_DIR to the headers root.")
+    endif()
 endif()
 
-if (DEFINED AIDL_BIN)
-	list(APPEND COMPILE_AIDL_ARGV AIDL_BIN ${AIDL_BIN})
+file(GLOB_RECURSE SRCS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+if (NOT SRCS)
+    message(FATAL_ERROR "No sources under src/. Run ./build_interfaces.sh hdmiinput first to regenerate.")
 endif()
 
-compile_aidl(${SRC}
-	INCLUDE_DIRECTORY ${INCLUDE_DIRECTORY}
-	${COMPILE_AIDL_ARGV}
+add_library(${LIB_NAME} SHARED ${SRCS})
+
+target_include_directories(${LIB_NAME} PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    "${_BINDER_INC}")
+
+# Dependency component headers (staged by the toolchain build into HALIF_INCLUDE_DIR).
+# Includes the transitive closure of imports so headers reachable via a direct
+# dependency (e.g. common via audiodecoder) are also on the search path.
+if (NOT DEFINED HALIF_INCLUDE_DIR)
+    message(FATAL_ERROR "HALIF_INCLUDE_DIR is required (this component has HAL dependencies). "
+        "Set it to the directory holding dependency headers (e.g. out/build/include).")
+endif()
+if (DEFINED HALIF_INCLUDE_DIR)
+    target_include_directories(${LIB_NAME} PRIVATE
+    "${HALIF_INCLUDE_DIR}/common/current/include")
+endif()
+
+target_link_directories(${LIB_NAME} PRIVATE
+    "${BINDER_SDK_DIR}/lib/binder"
 )
+if (NOT DEFINED HALIF_LIB_DIR)
+    message(FATAL_ERROR "HALIF_LIB_DIR is required (this component has HAL dependencies). "
+        "Set it to the directory holding dependency lib*-cpp.so (e.g. out/target/lib/halif).")
+endif()
+if (DEFINED HALIF_LIB_DIR)
+    target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
+endif()
+
+target_link_libraries(${LIB_NAME} PRIVATE binder utils common-vcurrent-cpp)
+
+set_target_properties(${LIB_NAME} PROPERTIES OUTPUT_NAME "${LIB_NAME}")
+
+include(GNUInstallDirs)
+install(TARGETS ${LIB_NAME}
+    LIBRARY DESTINATION lib/halif
+            PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                        GROUP_READ GROUP_EXECUTE
+                        WORLD_READ WORLD_EXECUTE)

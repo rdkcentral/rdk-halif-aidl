@@ -1,0 +1,40 @@
+name: Update RAG Status Report
+
+on:
+  push:
+    branches: [develop]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  update-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate RAG report
+        run: bash scripts/generate_rag_report.sh
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BRANCH="chore/update-rag-report"
+          git checkout -b "$BRANCH"
+          git add RAG_STATUS_REPORT.md
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "chore: update RAG status report"
+          git push --force origin "$BRANCH"
+          # Create PR only if one doesn't already exist for this branch
+          if ! gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number' | grep -q .; then
+            gh pr create --base develop --head "$BRANCH" \
+              --title "chore: update RAG status report" \
+              --body "Automated update of RAG_STATUS_REPORT.md triggered by a push to develop." \
+              --label "scope:infrastructure"
+          fi

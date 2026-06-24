@@ -13,8 +13,8 @@ Describe the role of this HAL service. Outline its responsibilities, how it abst
 |-|-|
 |**Interface Definition**|[path-to-aidl-version](link)|
 |**API Documentation**| TBD |
-|**HAL Interface Type**       | [AIDL and Binder](../../../introduction/aidl_and_binder.md)                           |
-|**Initialization Unit**      | [systemd service](../../../vsi/systemd/current/systemd.md)                                                                                |
+|**HAL Interface Type**       | [AIDL and Binder](../introduction/aidl_and_binder.md)                           |
+|**Initialization Unit**      | [systemd service](../vsi/systemd/current/systemd.md)                                                                                |
 |**VTS Tests**| TBD |
 |**Reference Implementation**| TBD |
 
@@ -23,8 +23,8 @@ Describe the role of this HAL service. Outline its responsibilities, how it abst
 ## Related Pages
 
 !!! tip "Related Pages"
-- [HAL Feature Profile](../../key_concepts/hal/hal_feature_profiles.md)
-- [HAL Interface Overview](../../key_concepts/hal/hal_interfaces.md)
+- [HAL Feature Profile](../key_concepts/hal/hal_feature_profiles.md)
+- [HAL Interface Overview](../key_concepts/hal/hal_interfaces.md)
 - [Other HALs or Framework Components](link)
 
 ---

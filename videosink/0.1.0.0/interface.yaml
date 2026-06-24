@@ -1,0 +1,10 @@
+aidl_interface:
+  name: videosink
+  srcs:
+    - com/rdk/hal/videosink/*.aidl
+  imports:
+    - avclock@0.1.0.0
+    - common@0.1.0.0
+    - videodecoder@0.1.0.0
+  stability: vintf
+  layout: module-local

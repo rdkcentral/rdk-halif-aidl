@@ -1,0 +1,122 @@
+#** *****************************************************************************
+# *
+# * If not stated otherwise in this file or this component's LICENSE file the
+# * following copyright and licenses apply:
+# *
+# * Copyright 2025 RDK Management
+# *
+# * Licensed under the Apache License, Version 2.0 (the "License");
+# * you may not use this file except in compliance with the License.
+# * You may obtain a copy of the License at
+# *
+# *
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing, software
+# * distributed under the License is distributed on an "AS IS" BASIS,
+# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# * See the License for the specific language governing permissions and
+# * limitations under the License.
+# *
+#** ******************************************************************************
+
+# HAL Feature Profile for drm
+# NOTE: Use the directory name (lowercase) as the top-level key for consistency with file location
+drm:                  # Component object begins (matches directory name)
+    interfaceVersion: current
+
+    serviceName: com.rdk.hal.drm.IDrmFactory # The service name prefix that each drm is registered with. e.g. com.rdk.hal.drm.IDrmFactory/<instanceName>. See instanceName below.
+
+    maxSessions: 4 # This is the maximum total number of concurrent DRM sessions of all schemes that the platform must support. Adjust as needed based on expected use cases and platform capabilities.
+
+    # The VTS must include tests that verify the platform can handle the specified maxTotalBitrate under realistic conditions.
+    maxTotalBitrate: 40000000 # This is the total real-time bitrate in bits per second (bps) that the drm system must handle. Adjust as needed based on platform capabilities.
+    # Example1: For a system that must support (worst case) encrypted streams of 1xUHD at 18Mbps and 1xFHD @ 12Mbps simultaneously the total bitrate would be 30Mbps.
+    # Example2: For a system that must support (worst case) encrypted streams of 4xFHD at 12Mbps the total bitrate would be 48Mbps.
+
+    # Maximum security level supported by the platform.
+    # Values from SecurityLevel enum (SecurityLevel.aidl).
+    # Platform tailors this per device; best-case is HW_SECURE_ALL.
+    supportedSecurityLevels:
+      - SW_SECURE_CRYPTO
+      - SW_SECURE_DECODE
+      - HW_SECURE_CRYPTO
+      - HW_SECURE_DECODE
+      - HW_SECURE_ALL
+
+    # Maximum HDCP output protection level supported.
+    # Values from HdcpLevel enum (HdcpLevel.aidl).
+    supportedHdcpLevels:
+      - HDCP_NONE
+      - HDCP_V1
+      - HDCP_V2
+      - HDCP_V2_1
+      - HDCP_V2_2
+      - HDCP_V2_3
+      - HDCP_NO_OUTPUT
+
+
+    scheme: 
+      - WIDEVINE:
+          instanceName: "widevine" ## The instance name that IDrmFactory is registered with `com.rdk.hal.drm.IDrmFactory/widevine`
+
+          maxBitrate: 20000000 # This is the maximum real-time bitrate in bits per second (bps) that the drm must support per session. Adjust as needed based on platform capabilities and expected use cases.
+
+          maxSchemeSessions: 4 # This is the maximum number of concurrent DRM scheme sessions that the platform must support. Adjust as needed based on expected use cases and platform capabilities.
+          
+          # Supported cipher modes for content decryption.
+          # Values from Mode enum (Mode.aidl).
+          supportedCipherModes:
+            - UNENCRYPTED
+            - AES_CTR
+            - AES_CBC_CTS
+            - AES_CBC
+
+          # Supported key types.
+          # Values from KeyType enum (KeyType.aidl).
+          supportedKeyTypes:
+            - STREAMING   
+
+          # Whether the platform supports a secure decoder component.
+          # Corresponds to ICryptoPlugin.requiresSecureDecoderComponent().
+          supportsSecureDecoder: true
+
+          # The mimeType informs the DRM engine about the type of media container being used. 
+          # This can affect how the DRM system interprets the initData (initialization data), 
+          # which is typically extracted from the media file and contains information needed to generate the license request.
+          # Adjust as needed based on expected use cases and platform capabilities.
+          supportedContainerMimeTypes:
+            - video/mp4
+            - audio/mp4
+            - video/webm
+            - audio/webm
+
+      - PLAYREADY:
+          instanceName: "playready" ## The instance name that IDrmFactory is registered with `com.rdk.hal.drm.IDrmFactory/playready`
+         
+          maxBitrate: 20000000 # This is the maximum real-time bitrate in bits per second (bps) that the drm must support per session. Adjust as needed based on platform capabilities and expected use cases.
+
+          maxSchemeSessions: 4 # This is the maximum number of concurrent DRM scheme sessions that the platform must support. Adjust as needed based on expected use cases and platform capabilities.
+
+          supportedCipherModes:
+            - UNENCRYPTED
+            - AES_CTR
+            - AES_CBC_CTS
+            - AES_CBC
+
+          supportedKeyTypes:
+            - STREAMING   
+
+          supportsSecureDecoder: true
+
+          # The mimeType informs the DRM engine about the type of media container being used. 
+          # This can affect how the DRM system interprets the initData (initialization data), 
+          # which is typically extracted from the media file and contains information needed to generate the license request.
+          # Adjust as needed based on expected use cases and platform capabilities.
+          supportedContainerMimeTypes:
+            - video/mp4
+            - audio/mp4
+            - video/webm
+            - audio/webm
+
+
