@@ -1768,9 +1768,10 @@ create_snapshot() {
     # Copying them into the snapshot's include/ makes them ship and version with
     # the generated headers and be picked up by the include/-tree staging copy
     # that downstream snapshot builds rely on.
+    local _nullglob_was=0; shopt -q nullglob && _nullglob_was=1
     shopt -s nullglob
     local _root_hdrs=("${snapshot_dir}"/*.h)
-    shopt -u nullglob
+    [[ "${_nullglob_was}" -eq 0 ]] && shopt -u nullglob
     if [[ "${#_root_hdrs[@]}" -gt 0 ]]; then
         mkdir -p "${snapshot_dir}/include"
         if ! cp "${_root_hdrs[@]}" "${snapshot_dir}/include/"; then
