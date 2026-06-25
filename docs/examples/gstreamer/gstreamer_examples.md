@@ -2,9 +2,9 @@
 
 GStreamer Audio and Video pipelines.
 
-In the diagrams below the Vendor Layer components that are shown are conceptual.
-The contract is between MW the Vendor Layer AIDL interfaces and these services must be provided. 
-The vendor component implementations are free to adopt any solutions that best match the underlying infrastructure.    
+In the diagrams below, the Vendor Layer components shown are conceptual.
+The contract is between middleware (MW) and the Vendor Layer AIDL interfaces; these services must be provided.
+Vendor component implementations are free to adopt any solutions that best match the underlying infrastructure.
 
 ## Rialto Gstreamer AV Playback
 
