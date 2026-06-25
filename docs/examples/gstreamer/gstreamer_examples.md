@@ -164,7 +164,7 @@ Two modes are shown:
 - Middleware is bypassed for performance
 
 After the sink:
-- Frames are passed to the **SOC Compositor Manager**
+- Frames are passed to the **SoC Compositor Manager**
 - Composed with graphics
 - Rendered via video and graphics planes
 
