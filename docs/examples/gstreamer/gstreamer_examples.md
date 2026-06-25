@@ -174,7 +174,7 @@ After the sink:
 
 Both diagrams highlight a shared **buffer model**:
 
-- Buffers are allocated in the vendor layer (SOC AV Buffer Manager)
+- Buffers are allocated in the vendor layer (SoC AV Buffer Manager)
 - Memory resides in **non-secure or hardware-specific memory**
 - Middleware interacts only via handles
 
