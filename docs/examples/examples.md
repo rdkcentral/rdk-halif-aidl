@@ -6,7 +6,5 @@ Example uses of the AIDL HAL interfaces.
 
 ### GStreamer
 
-
-
 [GStreamer Audio and Video pipelines.](./gstreamer/gstreamer_examples.md)
 
