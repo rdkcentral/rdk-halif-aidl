@@ -6,7 +6,7 @@ In the diagrams below, the Vendor Layer components shown are conceptual.
 The contract is between middleware (MW) and the Vendor Layer AIDL interfaces; these services must be provided.
 Vendor component implementations are free to adopt any solutions that best match the underlying infrastructure.
 
-## Rialto Gstreamer AV Playback
+## Rialto GStreamer AV Playback
 
 ### Non-secure Video
 
