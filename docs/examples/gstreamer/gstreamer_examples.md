@@ -23,7 +23,7 @@ Vendor component implementations are free to adopt any solutions that best match
 
 ### Overview
 
-The accompanying diagrams illustrate the RDK‑E Audio and Video pipeline architectures built around an AIDL-based Hardware Abstraction Layer (HAL).
+The accompanying diagrams illustrate the RDK-E Audio and Video pipeline architectures built around an AIDL-based Hardware Abstraction Layer (HAL).
 
 They show how media flows from application to hardware, and how the system is structured to provide:
 - A clean separation between middleware and vendor implementations
