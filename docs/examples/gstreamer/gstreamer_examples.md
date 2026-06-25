@@ -86,8 +86,8 @@ This is a key architectural feature:
 
 Across this boundary:
 - No direct memory sharing
-- No function calls
-- All interaction happens via **AIDL interfaces and buffer handles**
+- No direct in-process function calls
+- All interaction happens via **AIDL interfaces (Binder IPC) and buffer handles**
 
 This enforces:
 - Process separation
