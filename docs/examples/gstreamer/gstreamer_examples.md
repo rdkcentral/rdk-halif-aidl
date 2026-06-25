@@ -16,7 +16,7 @@ Vendor component implementations are free to adopt any solutions that best match
 
 ### Non-secure Audio
 
-![Alt text](./gstreamer_audio_pipeline_rialto_not-secure.png)
+![Rialto non-secure audio playback pipeline diagram](./gstreamer_audio_pipeline_rialto_not-secure.png)
 
 ## RDK-E Audio/Video (AV) Pipeline Architecture
 ### Diagram Description (AIDL HAL Model)
