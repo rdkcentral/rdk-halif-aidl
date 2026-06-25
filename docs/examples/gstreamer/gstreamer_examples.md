@@ -10,7 +10,7 @@ Vendor component implementations are free to adopt any solutions that best match
 
 ### Non-secure Video
 
-![Alt text](./gstreamer_video_pipeline_rialto-non_secure.png)
+![Rialto non-secure video playback pipeline diagram](./gstreamer_video_pipeline_rialto-non_secure.png)
 
 
 
