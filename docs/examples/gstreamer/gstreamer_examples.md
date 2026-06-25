@@ -1,4 +1,4 @@
-# Gstreamer Examples
+# GStreamer Examples
 
 GStreamer Audio and Video pipelines.
 
