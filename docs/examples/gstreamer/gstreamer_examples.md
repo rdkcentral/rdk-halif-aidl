@@ -78,7 +78,7 @@ This layer:
 
 ### AIDL HAL Boundary (Dotted Line)
 
-A dotted horizontal line marks the **RDK‑E HAL boundary**.
+A dotted horizontal line marks the **RDK-E HAL boundary**.
 
 This is a key architectural feature:
 - Everything above = **middleware (client side)**
