@@ -134,7 +134,7 @@ In the audio diagram:
 
 - The **Audio Decoder** produces PCM or compressed output
 - The **Audio Sink** forwards audio into the hardware path
-- A **SOC Audio Mixer** distributes audio to multiple outputs:
+- A **SoC Audio Mixer** distributes audio to multiple outputs:
   - Speakers
   - HDMI (ARC/eARC)
   - SPDIF
