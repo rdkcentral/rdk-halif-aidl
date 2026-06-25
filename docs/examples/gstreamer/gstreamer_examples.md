@@ -18,10 +18,10 @@ Vendor component implementations are free to adopt any solutions that best match
 
 ![Alt text](./gstreamer_audio_pipeline_rialto_not-secure.png)
 
-# RDK-E Audio/Video (AV) Pipeline Architecture
-## Diagram Description (AIDL HAL Model)
+## RDK-E Audio/Video (AV) Pipeline Architecture
+### Diagram Description (AIDL HAL Model)
 
-## Overview
+### Overview
 
 The accompanying diagrams illustrate the RDK‑E Audio and Video pipeline architectures built around an AIDL-based Hardware Abstraction Layer (HAL).
 
