@@ -207,13 +207,13 @@ If any video decoder supports SVP in non-tunnelled mode then the Video Sink HAL 
 
 ## End of Stream Signalling
 
-EOS is carried on the framework metadata parcelable. The RDK middleware client signals EOS to the Video Sink by setting `FrameMetadata.endOfStream = true` on the final frame queued via `IVideoSinkController.queueVideoFrame()`. The buffer MUST be a valid final video frame - there is no EOS-only marker form.
+EOS is a discrete signal. After queuing its final frame, the RDK middleware client calls `IVideoSinkController.signalEndOfStream()` to assert that no further frames will be queued. `queueVideoFrame()` only submits a frame and carries no EOS information. The sink must be in `State::STARTED`, otherwise the call throws `EX_ILLEGAL_STATE`. A second call is a no-op, and any subsequent `queueVideoFrame()` throws `EX_ILLEGAL_STATE` until the sink is flushed or stopped and restarted.
 
-When `FrameMetadata.endOfStream = true`, the other fields of `FrameMetadata` describe the final frame as normal — there is no separate EOS-only marker form.
+All video frame buffers already queued continue to be displayed in the usual way. After the final queued frame has been rendered, the sink fires `IVideoSinkControllerListener.onEndOfStream(nsPresentationTime)` exactly once, carrying the presentation time of that final frame. If no frames were queued when `signalEndOfStream()` was called, `nsPresentationTime` is the undefined-time sentinel (`IAVClock.UNDEFINED_TIME`) so the client sees the same callback in all cases.
 
-For non-tunnelled video, the Video Decoder delivers `FrameMetadata.endOfStream = true` on its final `onFrameOutput()` callback; the RDK middleware client forwards that frame and metadata to the Video Sink via `queueVideoFrame()`.
+For non-tunnelled video, the middleware forwards each decoded frame to the Video Sink via `queueVideoFrame()`; once the Video Decoder has fired its own `onEndOfStream()` and the final frame has been queued, the middleware calls `signalEndOfStream()` on the sink.
 
-All video frame buffers queued up in the Video Sink continue to be displayed in the usual way. After the final frame has been rendered, the sink fires `IVideoSinkControllerListener.onEndOfStream()` exactly once. Subsequent calls to `queueVideoFrame()` raise `EX_ILLEGAL_STATE` until the sink is flushed or stopped and restarted.
+The middleware calls `signalEndOfStream()` the same way in tunnelled and non-tunnelled modes. In tunnelled mode the decoder→sink data flow is vendor-internal, so no frames pass through `queueVideoFrame()`; the vendor propagates the EOS signal from decoder to sink internally, and the sink still fires `onEndOfStream(nsPresentationTime)` once presentation completes.
 
 ## Video Plane Mapping
 
