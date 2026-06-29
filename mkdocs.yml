@@ -123,6 +123,8 @@ nav:
     - Systemd: vsi/systemd/current/systemd.md
     - Kernel: '!include vsi/kernel/current/mkdocs.yml'
     - Linux Input: '!include vsi/linuxinput/current/mkdocs.yml'
+  - Transformation Guides:
+    - Westeros onto IGraphicsFbProvider: transformation/westeros_graphics_fb_transform.md
   - Vendor Tests Suites (VTS):
     - Levels of Test: external_content/ut-core-wiki/3.-Standards:-Levels-of-Test-for-Vendor-Layer.md
     - Level 4:
