@@ -54,6 +54,76 @@ phase() { echo "${_C_CYAN}==>${_C_RESET} ${_C_BOLD}$*${_C_RESET}" >&2; }
 warn()  { echo "${_C_YELLOW}WARN:${_C_RESET} $*" >&2; }
 die()   { echo "${_C_RED}${_C_BOLD}ERROR:${_C_RESET} ${_C_RED}$*${_C_RESET}" >&2; exit 1; }
 
+# ----------------------------------------------------------------------------
+# Markdown link validation (#626)
+# ----------------------------------------------------------------------------
+# Validates relative links in GitHub-facing, repo-ROOT markdown files only
+# (README.md, CONTRIBUTING.md, CHANGELOG.md, COMMANDS.md, ...). GitHub renders
+# the repo front page with filesystem-relative links, so a link to a missing
+# file is a dead link for everyone who lands on the project.
+#
+# Component docs (<module>/.../docs/*.md) are deliberately NOT checked: they use
+# mkdocs-context relative links (e.g. ../introduction/aidl_and_binder.md) that
+# resolve in the rendered docs site but not on the raw filesystem — checking
+# them here would produce hundreds of false positives.
+#
+# A link target must resolve to a GIT-TRACKED file or directory — not merely
+# exist on disk. A path that exists locally but is gitignored (e.g. a
+# build-tools/ clone) is a dead link for anyone who lands on the repo via
+# GitHub, so it must be flagged.
+#
+# Prints "<file> -> <link>" per broken link to stdout; returns 1 if any
+# root-level relative link is dead, 0 otherwise. When python3 is unavailable
+# this one check is skipped (returns 0) so it never blocks a release — other
+# release steps that need python3 (e.g. mkdocs.yml edits) still require it; the
+# preflight reports the skip rather than a false "OK".
+validate_doc_links() {
+    command -v python3 >/dev/null 2>&1 || {
+        echo "link-check skipped: python3 not found" >&2
+        return 0
+    }
+    python3 - "${REPO_ROOT}" <<'PYEOF'
+import os, re, subprocess, sys
+repo = sys.argv[1]
+try:
+    tracked = set(subprocess.check_output(
+        ["git", "-C", repo, "ls-files"], text=True).splitlines())
+except Exception as e:
+    print(f"link-check skipped: {e}", file=sys.stderr)
+    sys.exit(0)  # never block a release on a tooling failure
+# Every tracked file implies its parent directories are "tracked" too, so
+# directory links (e.g. src/utils/) resolve.
+dirs = set()
+for t in tracked:
+    parts = t.split("/")
+    for i in range(1, len(parts)):
+        dirs.add("/".join(parts[:i]))
+# Root-level (depth 0) markdown only — GitHub renders these filesystem-relative.
+root = [f for f in tracked if f.endswith(".md") and "/" not in f]
+link_re = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
+broken = {}
+for rel in root:
+    try:
+        text = open(os.path.join(repo, rel), encoding="utf-8", errors="ignore").read()
+    except OSError:
+        continue
+    for m in link_re.finditer(text):
+        url = m.group(1).strip().split()[0]  # drop any optional "title"
+        if url.startswith(("http://", "https://", "#", "mailto:")):
+            continue
+        target = url.split("#", 1)[0]
+        if not target:
+            continue
+        norm = os.path.normpath(os.path.join(os.path.dirname(rel), target))
+        if norm not in tracked and norm not in dirs:
+            broken.setdefault(rel, []).append(url)
+for f in sorted(broken):
+    for u in broken[f]:
+        print(f"  {f} -> {u}")
+sys.exit(1 if broken else 0)
+PYEOF
+}
+
 # Verification-build runner. Defined at top-level so it's in scope for
 # both the stage path (DO_WRITES=1) and a pure --apply (DO_WRITES=0).
 # ----------------------------------------------------------------------------
@@ -1024,6 +1094,26 @@ if [[ "${APPLY}" -eq 1 ]]; then
     DO_BRANCH=1
 fi
 
+# Preflight: dead relative links in GitHub-facing repo-root markdown (#626).
+# Fatal for any mutating run (staged writes, --apply, --commit) so a release
+# never ships a broken front-page link; a non-fatal warning in read-only
+# plan/check mode. Escape hatch: SKIP_LINK_CHECK=1.
+if [[ "${SKIP_LINK_CHECK:-0}" -ne 1 ]]; then
+    phase "Validating root-level markdown links..."
+    if ! command -v python3 >/dev/null 2>&1; then
+        warn "    ↷ skipped (python3 not found) — link check did not run"
+    elif _link_errs="$(validate_doc_links)"; then
+        log "    ✓ root-level markdown links OK"
+    elif [[ "${DO_WRITES}" -eq 1 || "${DO_BRANCH}" -eq 1 || "${COMMIT}" -eq 1 ]]; then
+        warn "Broken relative links in repo-root markdown:"
+        printf '%s\n' "${_link_errs}" >&2
+        die "Fix the dead links above (or re-run with SKIP_LINK_CHECK=1) before releasing."
+    else
+        warn "Broken relative links in repo-root markdown (non-fatal in read-only mode):"
+        printf '%s\n' "${_link_errs}" >&2
+    fi
+fi
+
 # Standalone `--commit`: commit + tag whatever is staged in the index.
 # Useful after `./release.sh --apply` left the release branch with staged
 # release artefacts and the operator has reviewed `git diff --cached`.
@@ -1812,49 +1902,64 @@ update_mkdocs_for_release() {
         return 0
     fi
 
-    # If a `current` !include exists for this component, append a sibling
-    # versioned entry immediately after it, preserving the existing human
-    # label (e.g. "Audio Decoder") rather than inventing a comp@version
-    # label. We extract the label from the matching current line and
-    # construct a "<label> X.Y.Z.W:" prefix for the new entry. Python
-    # for the edit so YAML indentation stays exact byte-for-byte.
+    # The nav groups each component as a parent with one child per version:
+    #
+    #   - Sensor:
+    #     - Current: '!include sensor/current/mkdocs.yml'
+    #     - 0.2.0.0: '!include sensor/0.2.0.0/mkdocs.yml'
+    #
+    # Add the new version as a child under the component's parent. Two cases:
+    #   * already nested (a "Current:" child exists) — insert the new version
+    #     child immediately after Current (newest first).
+    #   * still flat (single "<Label>: '!include <comp>/current/...'" line, the
+    #     state of a component getting its first release) — convert it in place
+    #     to the nested parent + Current + versioned children.
+    # Python does the edit so YAML indentation stays exact byte-for-byte.
     local current_entry="'!include ${comp}/current/mkdocs.yml'"
     if ! grep -qF "${current_entry}" "${mkdocs}"; then
         warn "  [${comp}] no current/ mkdocs entry found; manual mkdocs.yml edit required"
         return 1
     fi
 
-    if ! python3 - "${mkdocs}" "${comp}" "${version}" "${current_entry}" "${entry}" <<'PYEOF'; then
-import io, re, sys
-mkdocs_path, comp, version, current_entry, new_entry = sys.argv[1:6]
-with open(mkdocs_path) as f:
-    lines = f.readlines()
+    if ! python3 - "${mkdocs}" "${comp}" "${version}" <<'PYEOF'; then
+import re, sys
+mkdocs_path, comp, version = sys.argv[1:4]
+lines = open(mkdocs_path).read().splitlines(keepends=True)
 
-# Locate the line containing the current entry. Capture the leading
-# indent ("    - ") and the label preceding the `:` so we can reuse it
-# for the versioned sibling.
-target_idx = None
-indent = ""
-label = ""
-for i, line in enumerate(lines):
-    if current_entry in line:
-        target_idx = i
-        m = re.match(r"^(\s*-\s+)(.*?):\s*'!include", line)
-        if not m:
-            sys.stderr.write(f"could not parse mkdocs label for {comp}\n")
-            sys.exit(1)
-        indent = m.group(1)
-        label = m.group(2)
-        break
-
-if target_idx is None:
-    sys.stderr.write(f"current entry not found in mkdocs.yml: {current_entry}\n")
+inc_re = re.compile(rf"'!include\s+{re.escape(comp)}/([^/]+)/mkdocs\.yml'")
+idxs = [i for i, l in enumerate(lines) if inc_re.search(l)]
+cur_idx = next((i for i in idxs if f"{comp}/current/" in lines[i]), None)
+if cur_idx is None:
+    sys.stderr.write(f"current entry not found for {comp}\n")
     sys.exit(1)
+m = re.match(r"^(\s*)-\s+(.*?):\s*'!include", lines[cur_idx])
+if not m:
+    sys.stderr.write(f"could not parse mkdocs label for {comp}\n")
+    sys.exit(1)
+indent, label = m.group(1), m.group(2)
 
-new_line = f"{indent}{label} {version}: {new_entry}\n"
-lines.insert(target_idx + 1, new_line)
-with open(mkdocs_path, "w") as f:
-    f.writelines(lines)
+def vkey(v):
+    return tuple(int(x) for x in v.split("."))
+
+new_inc = f"!include {comp}/{version}/mkdocs.yml"
+if label == "Current":
+    # Already nested — insert the new version child right after Current.
+    lines.insert(cur_idx + 1, f"{indent}- {version}: '{new_inc}'\n")
+else:
+    # Flat — fold the current line (and any legacy flat versioned siblings)
+    # into a nested parent->version block.
+    span = sorted(idxs)
+    versions = {inc_re.search(lines[i]).group(1) for i in span}
+    versions.discard("current")
+    versions.add(version)
+    child = indent + "  "
+    block = [f"{indent}- {label}:\n",
+             f"{child}- Current: '!include {comp}/current/mkdocs.yml'\n"]
+    for v in sorted(versions, key=vkey, reverse=True):
+        block.append(f"{child}- {v}: '!include {comp}/{v}/mkdocs.yml'\n")
+    lines[span[0]:span[-1] + 1] = block
+
+open(mkdocs_path, "w").write("".join(lines))
 sys.exit(0)
 PYEOF
         warn "  [${comp}] python mkdocs edit failed; manual mkdocs.yml edit required"

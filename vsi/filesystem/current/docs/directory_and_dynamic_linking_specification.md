@@ -14,7 +14,6 @@
 
 !!! tip "Related Pages"
     - [File System](file_system_architecture.md)
-    - [HALIF Logging System Design](halif_logging_system_design.md)
     - [Logging System](logging_system.md)
 
 ## Purpose
