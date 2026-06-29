@@ -245,11 +245,32 @@ deploy_versioned_docs() {
     return 0
 }
 
+# The first verification build of a release run starts from clean staging,
+# so the cohort is proven to compile from a clean checkout — not from
+# incrementally staged headers (out/build/include) or a stale build cache
+# that could mask a missing dependency (see #638). Runs once per invocation
+# (guarded); the Binder SDK in out/target is preserved, so there is no SDK
+# rebuild and the clean is fast.
+_VERIFY_CLEAN_DONE=0
+verification_clean_once() {
+    [[ "${_VERIFY_CLEAN_DONE}" -eq 1 ]] && return 0
+    _VERIFY_CLEAN_DONE=1
+    phase "Pre-verification clean (once): build/, out/build/include, build cache"
+    rm -rf "${REPO_ROOT}/build"
+    rm -rf "${REPO_ROOT}/out/build/include"
+    rm -f "${BUILD_CACHE_FILE}"
+    log "  Cleared build/, out/build/include and ${BUILD_CACHE_FILE#"${REPO_ROOT}/"} —"
+    log "  verification builds from clean staging (Binder SDK in out/target kept)."
+}
+
 run_verification_build() {
     local label="$1"          # "current cohort" / "released cohort"
     local log_file="$2"
     shift 2
     mkdir -p "$(dirname "${log_file}")"
+
+    # Force a from-scratch build for the first verification pass of this run.
+    verification_clean_once
 
     # Cache lookup — skip if these exact inputs already built successfully.
     local key="$*"
