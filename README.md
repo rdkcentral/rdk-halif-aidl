@@ -32,7 +32,7 @@ graph TB
     style G fill:#e1f5e1
 ```
 
-**Stage 1 (Binder SDK)**: The `linux_binder_idl` project in `build-tools/` is an independent Android Binder port built as a separate Yocto recipe (linux-binder). See [build-tools/linux_binder_idl/BUILD.md](build-tools/linux_binder_idl/BUILD.md) for Yocto recipe integration and runtime setup.
+**Stage 1 (Binder SDK)**: The `linux_binder_idl` project in `build-tools/` is an independent Android Binder port built as a separate Yocto recipe (linux-binder). See the [linux_binder_idl BUILD guide](https://github.com/rdkcentral/linux_binder_idl/blob/develop/BUILD.md) for Yocto recipe integration and runtime setup.
 
 ### Directory Structure
 
@@ -238,18 +238,17 @@ Used by `build_binder.sh` and `build_interfaces.sh` only:
 
 **Not used in production Yocto builds**.
 
-See [TWO_STAGE_BUILD.md](TWO_STAGE_BUILD.md) for detailed workflows.
+The full two-stage dev and production build workflows are covered in the
+[Quick Start](#quick-start) section above.
 
 ## Additional Documentation
 
-- **[build-tools/linux_binder_idl/BUILD.md](build-tools/linux_binder_idl/BUILD.md)** - Binder SDK recipe build guide
+- **[linux_binder_idl BUILD guide](https://github.com/rdkcentral/linux_binder_idl/blob/develop/BUILD.md)** - Binder SDK recipe build guide
   - Yocto/BitBake recipe examples for linux-binder SDK
   - Cross-compilation configuration for ARM targets (aarch64, armhf)
   - Kernel configuration and runtime setup
   - Systemd service configuration
   - 32-bit userspace on 64-bit kernel support
-
-- **[TWO_STAGE_BUILD.md](TWO_STAGE_BUILD.md)** - Detailed build workflows for both development and production
 
 - **[tests/README.md](tests/README.md)** - On-demand build verification
   - `tests/smoke_test.sh` - exercises the `all`, `manifest` and per-version build paths
