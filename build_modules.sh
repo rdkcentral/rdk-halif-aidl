@@ -568,6 +568,27 @@ fi
 # No toolchain involvement, no code generation.
 #######################################################################
 
+# Stage a snapshot's committed include/ tree into out/build/include so that
+# dependents resolve their ${HALIF_INCLUDE_DIR}/<comp>/<ver>/include refs.
+# Pure copy — snapshot include/ trees are committed pre-generated C++.
+stage_snapshot_headers() {
+    local comp="$1" ver="$2"
+    local src_inc="$ROOT_DIR/$comp/$ver/include"
+    [[ -d "$src_inc" ]] || return 0
+    local dst_inc="$ROOT_DIR/out/build/include/$comp/$ver/include"
+    mkdir -p "$dst_inc"
+    cp -RT "$src_inc" "$dst_inc"
+}
+
+# Extract the "<comp> <ver>" dependency pairs a snapshot declares via its
+# ${HALIF_INCLUDE_DIR}/<comp>/<ver>/include references in CMakeLists.txt.
+snapshot_deps() {
+    local cmake_file="$1"
+    grep -oE 'HALIF_INCLUDE_DIR\}/[a-z][a-z0-9_]*/[0-9][0-9.]*/include' "$cmake_file" 2>/dev/null \
+        | sed -E 's#HALIF_INCLUDE_DIR\}/([^/]+)/([^/]+)/include#\1 \2#' \
+        | sort -u
+}
+
 if [[ "$VERSION" != "current" ]]; then
     if [[ "$MODULE" == "all" ]]; then
         echo "❌ ERROR: --version $VERSION cannot be combined with 'all'."
@@ -593,6 +614,27 @@ if [[ "$VERSION" != "current" ]]; then
     echo "📸 Snapshot build: $MODULE/$VERSION"
     echo "    source: $SNAPSHOT_DIR"
     echo "    build:  $SNAPSHOT_BUILD_DIR"
+    echo ""
+
+    # Resolve and build this snapshot's dependency closure first, so its
+    # dependency headers (out/build/include) and libraries
+    # (out/target/lib/halif) are present before we configure. Each dependency
+    # is itself a snapshot build, so transitive deps resolve recursively, and
+    # an already-built dependency is skipped. Without this, a standalone
+    # snapshot build on a fresh checkout fails to find a dependency header
+    # such as com/rdk/hal/PropertyValue.h (#638).
+    while read -r dep dep_ver; do
+        [[ -n "$dep" ]] || continue
+        dep_so="$ROOT_DIR/out/target/lib/halif/lib${dep}-v${dep_ver}-cpp.so"
+        dep_inc="$ROOT_DIR/out/build/include/$dep/$dep_ver/include"
+        if [[ -f "$dep_so" && -d "$dep_inc" ]]; then
+            echo "   ✓ dependency ${dep}/${dep_ver} already built"
+            continue
+        fi
+        echo "   ↳ building dependency ${dep}/${dep_ver} ..."
+        "$0" "$dep" --version "$dep_ver" --jobs "$JOBS" --sdk-dir "$SDK_DIR" || {
+            echo "❌ Failed to build dependency ${dep}/${dep_ver} for $MODULE/$VERSION"; exit 1; }
+    done < <(snapshot_deps "$SNAPSHOT_DIR/CMakeLists.txt")
     echo ""
 
     # The local dev layout splits binder headers (out/build/include/binder_sdk)
@@ -621,6 +663,9 @@ if [[ "$VERSION" != "current" ]]; then
     else
         echo "❌ Snapshot library not found at $SO_PATH"; exit 1
     fi
+
+    # Stage this snapshot's headers so a later dependent build resolves them.
+    stage_snapshot_headers "$MODULE" "$VERSION"
     exit 0
 fi
 
