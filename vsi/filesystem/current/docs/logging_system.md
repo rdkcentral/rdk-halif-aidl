@@ -38,17 +38,17 @@ HALIF_LOG_* → sd_journal_send() → journald → syslog-ng → files
 
 Using the journald native API gives the most direct path to the primary collector and avoids the cyclic-loop risk that arises when logs are submitted via `/dev/log` while `journald` is configured to forward to `syslog-ng`. `syslog-ng` sources from journald (`source(s_journald)`) and remains the single downstream transport for filtering, routing, rotation, and file output.
 
-The framework is a thin set of compile-time macros over `sd_journal_send()`; it introduces no runtime logging backend, no RDK Logger dependency, and no log4c dependency, keeping the vendor layer independent of middleware logging.
+The framework is a thin set of compile-time macros over `sd_journal_send()`. Its only runtime dependency is `libsystemd` (already present on the platform); it introduces no logging backend framework, no runtime backend selection, no RDK Logger dependency, and no log4c dependency, keeping the vendor layer independent of middleware logging.
 
 !!! note "Integration with vendor implementations"
     In many environments, **vendors already implement their own logging systems** or frameworks within their deliveries.
     The purpose of this logging design is **not to replace or redefine vendor logging systems**, but rather to:
 
     - Provide a **consistent logging mechanism** for the *wrapper and interface layers* that sit between the RDK HAL Interface (HAL IF) and the vendor implementation.
-    - Ensure messages from these wrapper layers conform to common RDK syslog-ng formatting and severity conventions.
-    - Allow smooth coexistence with existing vendor logging — for example, a HAL wrapper may log both via syslog-ng (for system-wide visibility) and via the vendor’s internal mechanism (for component diagnostics).
+    - Ensure messages from these wrapper layers conform to common RDK formatting and severity conventions in the journald → syslog-ng pipeline.
+    - Allow smooth coexistence with existing vendor logging — for example, a HAL wrapper may log both via journald (for system-wide visibility) and via the vendor’s internal mechanism (for component diagnostics).
 
-    Vendors are **not required to adopt** the syslog-ng based logging macros within their proprietary HAL implementations. Instead, they may continue to use their preferred internal frameworks, provided that the **interface layers exposed to RDK** follow this standardized logging structure.
+    Vendors are **not required to adopt** the HALIF logging macros within their proprietary HAL implementations. Instead, they may continue to use their preferred internal frameworks, provided that the **interface layers exposed to RDK** follow this standardized logging structure.
 
 !!! note "**Governance**"
     - The logging interface, conventions, and requirements described here are managed at the system level, with governance and rules discussed and agreed globally across the RDK ecosystem. These are not per-vendor or per-component decisions, but are established as part of the platform-wide architecture.
@@ -74,7 +74,7 @@ Log levels are aligned with syslog-ng priority semantics. The table defines when
 | `LOG_CRIT`    | ✅ Always           | N/A                | Unrecoverable error; requires restart or recovery action.               |
 | `LOG_ERR`     | ✅ Always           | N/A                | Runtime failure; user-visible fault.                                    |
 | `LOG_WARNING` | ✅ Always           | N/A                | Recoverable condition; degraded operation.                              |
-| `LOG_NOTICE`  | ✅ Always           | N/A                | **System milestone** (e.g., initialization complete, start/stop event). |
+| `LOG_NOTICE`  | ✅ Always           | N/A                | **System milestone** (e.g., initialisation complete, start/stop event). |
 | `LOG_INFO`    | ⚙️ Optional        | `ENABLE_LOG_INFO`  | Routine operational information; enabled in debug builds only.          |
 | `LOG_DEBUG`   | ⚙️ Optional        | `ENABLE_LOG_DEBUG` | Detailed trace-level diagnostics; for engineering builds.               |
 
@@ -95,6 +95,9 @@ System-wide logging will be capped by file size and data throughput. The detaile
 ## Example Logging Macros for Module Inclusion
 
 The following is provided as a **conceptual example** for engineers. It illustrates how you can use macros to control logging output in your module. Messages are submitted to `journald` via `sd_journal_send()`, tagging each entry with `PRIORITY=` (the syslog severity) and a `SYSLOG_IDENTIFIER=` so that `syslog-ng` can filter and route by program name.
+
+!!! note "`fmt` must be a string literal"
+    These macros build the journald field with the string-literal concatenation `"MESSAGE=" fmt`, so `fmt` must be a compile-time string literal. To log a runtime `char*`, use `"MESSAGE=%s"` and pass the pointer as an argument (e.g. `LOGF(LOG_INFO, "%s", msg)`).
 
 ```c
 #include <syslog.h>          /* LOG_* severity constants */
@@ -221,7 +224,7 @@ This approach ensures that all critical, error, and diagnostic information from 
 
 int tuner_init(void)
 {
-    LOGF(LOG_NOTICE,  "Tuner HAL initialization complete");
+    LOGF(LOG_NOTICE,  "Tuner HAL initialisation complete");
     LOGF(LOG_WARNING, "Using fallback configuration");
 
     LOGF_INFO("DSP firmware version %s", dsp_version());
@@ -239,7 +242,7 @@ void tuner_deinit(void)
 ### Example Output (Production)
 
 ```syslog
-Oct 25 10:44:02 TUNER_HAL[1021]: Tuner HAL initialization complete
+Oct 25 10:44:02 TUNER_HAL[1021]: Tuner HAL initialisation complete
 Oct 25 10:44:02 TUNER_HAL[1021]: Using fallback configuration
 Oct 25 10:45:11 TUNER_HAL[1021]: Tuner HAL shutdown
 ```
@@ -271,4 +274,4 @@ log { source(s_journald); filter(f_tuner); filter(f_runtime); destination(d_tune
 ```
 
 !!! warning "Filtering / Routing Control"
-    Modules **do not modify syslog-ng** configuration; any routing or filtering changes are expected to controlled at a system level. Although these can be overridden during development and engineering builds.
+    Modules **do not modify syslog-ng** configuration; any routing or filtering changes are expected to be controlled at a system level. Although these can be overridden during development and engineering builds.
