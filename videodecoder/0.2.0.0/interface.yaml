@@ -3,6 +3,6 @@ aidl_interface:
   srcs:
     - com/rdk/hal/videodecoder/*.aidl
   imports:
-    - common@current
+    - common@0.2.0.0
   stability: vintf
   layout: module-local
