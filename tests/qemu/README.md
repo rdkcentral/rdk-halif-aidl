@@ -25,6 +25,9 @@ A single sentinel line is emitted and parsed by the host runner:
 ## Usage
 
 ```bash
+# 0. Install prerequisites (qemu, busybox, cpio, g++, + Buildroot deps).
+./tests/install.sh           # --minimal to skip the Buildroot kernel-build deps
+
 # 1. Build the kernel matrix (Buildroot; heavy, needs network + toolchain).
 ./tests/qemu/build-kernels.sh
 #    or reuse a checkout / pick versions:
