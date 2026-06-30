@@ -49,7 +49,7 @@ die()  { echo "ERROR: $*" >&2; exit 1; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
 # Buildroot needs a normal build toolchain + the usual fetchers.
-for t in make gcc g++ wget cpio rsync bc flex bison; do
+for t in make gcc g++ wget tar cpio rsync bc flex bison; do
     have "$t" || die "missing build dependency: $t (Buildroot prerequisite)"
 done
 

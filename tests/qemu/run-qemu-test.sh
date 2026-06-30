@@ -45,7 +45,7 @@ TIMEOUT="${QEMU_TIMEOUT:-90}"
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        --kernel) KERNEL_ARG="$2"; shift 2 ;;
+        --kernel) [ $# -ge 2 ] || { echo "--kernel needs a path" >&2; exit 2; }; KERNEL_ARG="$2"; shift 2 ;;
         --keep)   KEEP=true; shift ;;
         -h|--help) sed -n '20,33p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) echo "Unknown option: $1" >&2; exit 2 ;;
@@ -53,14 +53,14 @@ while [ $# -gt 0 ]; do
 done
 
 skip() { echo "  SKIP  qemu binder test — $1"; exit 0; }   # absence of tooling is not a failure
+fail() { echo "  FAIL  qemu binder test — $1"; exit 1; }   # once opted in, real errors must fail
 
 # ---- Prerequisites (skip cleanly when missing) -----------------------------
-command -v "${QEMU}" >/dev/null 2>&1 || skip "${QEMU} not installed"
-BUSYBOX="$(command -v busybox || true)"
-[ -n "${BUSYBOX}" ] || skip "busybox not installed (need a static-ish busybox for the initramfs)"
-command -v cpio >/dev/null 2>&1 || skip "cpio not installed"
 CXX="${CXX:-g++}"
-command -v "${CXX}" >/dev/null 2>&1 || skip "${CXX} not installed"
+for tool in "${QEMU}" busybox cpio "${CXX}" timeout gzip ldd; do
+    command -v "${tool}" >/dev/null 2>&1 || skip "${tool} not installed"
+done
+BUSYBOX="$(command -v busybox)"
 
 # Collect kernels.
 KERNELS_LIST=()
@@ -78,7 +78,7 @@ fi
 # ---- Binder SDK (reuse build_binder.sh) ------------------------------------
 if [ ! -f "${REPO_ROOT}/out/target/.sdk_ready" ]; then
     echo "  building binder SDK (build_binder.sh) ..."
-    (cd "${REPO_ROOT}" && ./build_binder.sh) >/dev/null 2>&1 || skip "build_binder.sh failed"
+    (cd "${REPO_ROOT}" && ./build_binder.sh) >/dev/null 2>&1 || fail "build_binder.sh failed (binder SDK could not be built)"
 fi
 SDK_LIB="${REPO_ROOT}/out/target/lib/binder"
 SDK_INC="${REPO_ROOT}/out/build/include/binder_sdk"
@@ -97,7 +97,7 @@ echo "  compiling binder_roundtrip ..."
     "${HERE}/binder_roundtrip.cpp" \
     -I"${SDK_INC}" -L"${SDK_LIB}" -lbinder -lutils -lbase -lcutils -llog \
     -Wl,-rpath,/opt/binder/lib -o "${WORK}/binder_roundtrip" \
-    || skip "binder_roundtrip failed to compile against the SDK"
+    || fail "binder_roundtrip failed to compile/link against the SDK (ABI or flags regression?)"
 
 # ---- Assemble the initramfs ------------------------------------------------
 mkdir -p "${ROOT}"/{bin,sbin,proc,sys,dev,opt/binder/bin,opt/binder/lib,lib,lib64}

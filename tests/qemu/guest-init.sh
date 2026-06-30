@@ -42,10 +42,10 @@ if [ ! -e /dev/binder ]; then
 fi
 
 # servicemanager must own the context before the test calls defaultServiceManager().
+# It has no readiness file to poll, so give it a brief moment to register as the
+# context manager (BINDER_SET_CONTEXT_MGR) before the test connects.
 /opt/binder/bin/servicemanager >/dev/null 2>&1 &
-i=0
-while [ ! -e /dev/binder ] && [ "$i" -lt 10 ]; do i=$((i + 1)); sleep 1; done
-sleep 1
+sleep 2
 
 echo "QEMU_BINDER_KERNEL: $(uname -r)"
 /opt/binder/bin/binder_roundtrip
