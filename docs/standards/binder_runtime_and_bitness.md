@@ -56,15 +56,18 @@ A 32-bit process can run protocol **8** (64-bit binder handles inside a 32-bit p
 ## Kernel requirements
 
 ```text
-CONFIG_ANDROID_BINDER_IPC=y
-CONFIG_ANDROID_BINDER_DEVICES="binder,hwbinder,vndbinder"
-# All-32-bit-userspace (protocol 7) platforms ONLY:
-CONFIG_ANDROID_BINDER_IPC_32BIT=y
-# Mixed 32/64 (protocol 8) platforms: leave CONFIG_ANDROID_BINDER_IPC_32BIT UNSET
-CONFIG_ANDROID_BINDERFS=y    # optional; kernels >= 5.0
+CONFIG_ANDROID_BINDER_IPC=y          # required
+
+# Device-node provisioning — pick ONE (these are alternatives, not both):
+CONFIG_ANDROID_BINDER_DEVICES="binder,hwbinder,vndbinder"   # static nodes (any kernel)
+CONFIG_ANDROID_BINDERFS=y                                   # OR binderfs (kernels >= 5.0)
+
+# Binder protocol — must match userspace:
+CONFIG_ANDROID_BINDER_IPC_32BIT=y    # all-32-bit-userspace (protocol 7) ONLY;
+                                     # leave UNSET for protocol 8 (mixed 32/64)
 ```
 
-- **Device node.** libbinder opens `/dev/binder` directly; **binderfs is not required** (it is consulted only for an optional feature probe, and its absence is handled cleanly). On kernels < 5.0 use the static node from `CONFIG_ANDROID_BINDER_DEVICES`; ≥ 5.0 may use binderfs.
+- **Device node.** libbinder opens `/dev/binder`. The two provisioning routes are alternatives: a **static node** from `CONFIG_ANDROID_BINDER_DEVICES` (works on any kernel, including < 5.0), or **binderfs** (≥ 5.0) — which creates the node under its mount (e.g. `/dev/binderfs/binder`), which the platform then symlinks/bind-mounts to `/dev/binder`. binderfs is **not required**; libbinder consults it only for an optional feature probe and handles its absence cleanly.
 - **32-bit userspace on a 64-bit kernel.** Served by the Binder `compat_ioctl` path. On a mixed platform the kernel uses protocol 8 (no `BINDER_IPC_32BIT`) and the 32-bit MW must also be a protocol-8 build.
 
 ## Supported kernel range
