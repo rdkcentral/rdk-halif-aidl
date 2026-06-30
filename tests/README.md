@@ -47,3 +47,21 @@ inspection.
 - [`hal-aidl.bb.sample`](fake-yocto/hal-aidl.bb.sample) — the reference
   BitBake recipe whose tasks `run-fake-yocto.sh` emulates. Copy it into a
   layer and pin `SRCREV` to use it for real.
+
+## `qemu/`
+
+Optional, on-demand test that boots a target kernel under QEMU and runs a
+Binder **round-trip** against that kernel's driver — verifying the binder
+runtime across the supported kernel range (4.9 → 5.16). Docker can't do this
+(containers share the host kernel), so it boots real kernels.
+
+```bash
+./tests/qemu/build-kernels.sh        # build the kernel matrix (Buildroot; heavy)
+./tests/qemu/run-qemu-test.sh        # boot each kernel + run the round-trip
+./tests/qemu/run-qemu-test.sh --kernel /path/to/bzImage   # or bring your own
+```
+
+It reuses the repo's binder SDK for the guest userspace and **skips cleanly**
+when QEMU, busybox, a compiler, or kernels are absent. See
+[`qemu/README.md`](qemu/README.md) for the matrix (protocol 7/8), the bitness
+axes, and the hook for extending it to a HALIF interface.
