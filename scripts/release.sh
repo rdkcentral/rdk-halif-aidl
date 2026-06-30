@@ -1678,15 +1678,38 @@ is_buildable_component() {
 # them, copy that into the snapshot, then restore current/. Needs that
 # generator; with an older generator the `version:` field is simply ignored.
 
-# Interface VERSION encodes the X.Y.Z.W version digits: the int32 returned by
-# getInterfaceVersion() is the version with the dots removed (base-10), so
-# 0.2.0.0 -> 0200 -> 200, 0.3.0.0 -> 300, 0.1.0.1 -> 101. (int32 can't carry a
-# leading zero, so 0.2.0.0 reads back as 200 / zero-pad to 4 digits to display
-# "0200".) Assumes single-digit components, which holds for all current
-# versions; a wider fixed-field scheme would be needed if a component reaches 10.
+# Interface VERSION encodes X.Y.Z.W as a fixed-width positional int32: each
+# dotted field is zero-padded to TWO digits and concatenated, so the value is
+# both monotonic and losslessly decodable. Examples:
+#   0.2.0.0 -> 00 02 00 00 ->    20000
+#   0.3.0.0 -> 00 03 00 00 ->    30000
+#   0.1.0.1 -> 00 01 00 01 ->    10001
+#   1.0.0.0 -> 01 00 00 00 -> 1000000
+# Decode (consumer side): field = (v / 10^(2*(3-i))) % 100, i.e.
+#   prefix=(v/1000000)%100  generation=(v/10000)%100  minor=(v/100)%100  patch=v%100.
+# Max 99.99.99.99 -> 99,999,999, well under int32 max (2,147,483,647). Each
+# field must be 0-99 (two digits); a field >= 100 is not encodable and returns
+# empty so the caller leaves the snapshot unfrozen rather than emit a wrong
+# number. This is the collision-safe successor to the old dot-strip scheme
+# (which broke once any field reached 10, e.g. 0.10.0.0 == 1.0.0.0).
+#
+# NOTE: getInterfaceVersion() ordering is only an additive-compatibility test
+# WITHIN a generation. The `generation` field (X.Y.*.*) marks breaking changes,
+# so a correct consumer check is:
+#   compatible := generation(server) == generation(client) && server >= client
+# A bare `server >= client` is WRONG across a generation bump. See #633.
 _snapshot_version_int() {
-    local digits="${1//./}"      # "0.2.0.0" -> "0200"
-    echo "$((10#${digits}))"     # base-10 (avoid octal on the leading zero) -> 200
+    local ver="$1" out="" f
+    local IFS='.'
+    for f in ${ver}; do
+        # Two-digit fixed field; reject non-numeric or >99 (unencodable).
+        if ! [[ "${f}" =~ ^[0-9]+$ ]] || (( 10#${f} > 99 )); then
+            echo ""
+            return 0
+        fi
+        out+=$(printf '%02d' "$((10#${f}))")
+    done
+    echo "$((10#${out}))"        # base-10 (avoid octal on leading zeros)
 }
 
 # Contract hash = sha1 of (sorted per-file .aidl sha1sums + the hashgen version
@@ -1746,6 +1769,9 @@ create_snapshot() {
     local _iface_version _chash _ifyaml_bak=""
     _iface_version="$(_snapshot_version_int "${version}")"
     _chash="$(_contract_hash "${_cur}")"
+    if [[ -z "${_iface_version}" ]]; then
+        warn "  [${comp}] version ${version} is not encodable as a fixed-width int (a field exceeds 99); ${version}/ will be left unfrozen (VERSION=1/notfrozen)."
+    fi
     if [[ -n "${_iface_version}" && -n "${_chash}" && -f "${_cur}/interface.yaml" ]]; then
         _ifyaml_bak="$(mktemp)"
         cp "${_cur}/interface.yaml" "${_ifyaml_bak}"
