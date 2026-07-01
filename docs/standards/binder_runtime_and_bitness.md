@@ -51,7 +51,7 @@ A 32-bit process can run protocol **8** (64-bit binder handles inside a 32-bit p
 | All-32-bit userspace | 32-bit | 32-bit | 7 | `BINDER_IPC_32BIT=1` | `CONFIG_ANDROID_BINDER_IPC_32BIT=y` |
 | Mixed (32-bit MW + 64-bit vendor) | 32-bit | 64-bit | 8 | 32-bit compile, `BINDER_IPC_32BIT` unset | `CONFIG_ANDROID_BINDER_IPC_32BIT` unset |
 
-> **Build gap.** linux_binder_idl currently couples `TARGET_LIB32_VERSION=ON` to `-DBINDER_IPC_32BIT=1` (`CMakeLists.txt:702-707`), so it can only produce the **protocol-7** 32-bit build. The **mixed** configuration needs a 32-bit compile with **protocol 8** (`BINDER_IPC_32BIT` unset). Decoupling the compile bitness from the protocol flag is tracked in linux_binder_idl#35. Until then, a 32-bit MW cannot share a kernel with a 64-bit vendor.
+> **Build gap.** The [linux_binder_idl](https://github.com/rdkcentral/linux_binder_idl) toolchain currently couples `TARGET_LIB32_VERSION=ON` to `-DBINDER_IPC_32BIT=1` (in its top-level `CMakeLists.txt`, ~lines 702-707), so it can only produce the **protocol-7** 32-bit build. The **mixed** configuration needs a 32-bit compile with **protocol 8** (`BINDER_IPC_32BIT` unset). Decoupling the compile bitness from the protocol flag is tracked in [linux_binder_idl#35](https://github.com/rdkcentral/linux_binder_idl/issues/35). Until then, a 32-bit MW cannot share a kernel with a 64-bit vendor.
 
 ## Kernel requirements
 
@@ -77,7 +77,7 @@ CONFIG_ANDROID_BINDER_IPC_32BIT=y    # all-32-bit-userspace (protocol 7) ONLY;
 The upstream AOSP `android-13.0.0_r74` libbinder runtime works across this range: nothing it uses unconditionally is newer than the range, and newer ioctls (process-freeze ~5.10, oneway-spam-detection ~5.11) are runtime-guarded, so on older kernels they degrade non-fatally — `BINDER_SET_CONTEXT_MGR_EXT` (~4.19) falls back to `BINDER_SET_CONTEXT_MGR`, freeze/node-info ioctls return errors only to explicit opt-in callers, and the binderfs probe returns false. The governing constraint is **protocol-version + struct-ABI match**, not individual ioctl availability — libbinder hard-fails the driver open if the kernel's `BINDER_VERSION` is not exactly its own.
 
 !!! warning "Port patch must honour the 4.9 floor"
-    `native.patch` currently disables the pre-5.16 fallback definitions in `binder_module.h` on a "require 5.16+" assumption, which **breaks builds against 4.9 kernel headers**. The fallback shims must be restored so the runtime builds against both old and new headers — tracked in linux_binder_idl#35.
+    [`native.patch`](https://github.com/rdkcentral/linux_binder_idl/blob/develop/patches/native.patch) — in the external [linux_binder_idl](https://github.com/rdkcentral/linux_binder_idl) repo, not this one — currently disables the pre-5.16 fallback definitions in `binder_module.h` on a "require 5.16+" assumption, which **breaks builds against 4.9 kernel headers**. The fallback shims must be restored so the runtime builds against both old and new headers — tracked in [linux_binder_idl#35](https://github.com/rdkcentral/linux_binder_idl/issues/35).
 
 ### Verification
 
