@@ -39,6 +39,7 @@ fi
 if [ ! -e /dev/binder ]; then
     echo "QEMU_BINDER_RESULT: FAIL no /dev/binder on kernel $(uname -r)"
     poweroff -f
+    exit 1            # deterministic stop if poweroff is delayed/fails
 fi
 
 # servicemanager must own the context before the test calls defaultServiceManager().

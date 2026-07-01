@@ -108,13 +108,17 @@ cp "${SM_BIN}"                "${ROOT}/opt/binder/bin/servicemanager"
 cp -a "${SDK_LIB}/." "${ROOT}/opt/binder/lib/"
 cp "${HERE}/guest-init.sh" "${ROOT}/init"; chmod +x "${ROOT}/init"
 
-# Copy each binary's shared-lib closure + the ELF interpreter into the rootfs,
-# preserving paths, so the guest userspace resolves at runtime.
+# Copy each binary's SYSTEM shared-lib closure + the ELF interpreter into the
+# rootfs, preserving paths, so the guest userspace resolves at runtime. SDK libs
+# are skipped here — they're already staged at /opt/binder/lib and found via the
+# binary's rpath; copying them under their host repo paths would only bloat the
+# initramfs and not match the guest layout.
 copy_deps() {
     local bin="$1" dep
     LD_LIBRARY_PATH="${SDK_LIB}" ldd "${bin}" 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i ~ /^\//) print $i}' \
     | while read -r dep; do
         [ -f "${dep}" ] || continue
+        case "${dep}" in "${SDK_LIB}"/*) continue ;; esac   # SDK libs already at /opt/binder/lib
         mkdir -p "${ROOT}$(dirname "${dep}")"
         cp -n "${dep}" "${ROOT}${dep}" 2>/dev/null || true
     done

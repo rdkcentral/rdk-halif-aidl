@@ -64,7 +64,8 @@ else
         wget -qO "${HERE}/.buildroot/br.tar.gz" \
             "https://buildroot.org/downloads/buildroot-${BR_VERSION}.tar.gz" \
             || die "failed to download Buildroot ${BR_VERSION}"
-        tar -xzf "${HERE}/.buildroot/br.tar.gz" -C "${HERE}/.buildroot"
+        tar -xzf "${HERE}/.buildroot/br.tar.gz" -C "${HERE}/.buildroot" \
+            || die "failed to extract Buildroot tarball (partial download / disk full?)"
     fi
 fi
 echo "[buildroot] using ${BUILDROOT}"
