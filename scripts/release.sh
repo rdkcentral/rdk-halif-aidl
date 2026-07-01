@@ -1673,7 +1673,8 @@ is_buildable_component() {
 # ----------------------------------------------------------------------------
 # Module-local snapshots are compile-only (their CMakeLists glob src/*.cpp and
 # never regenerate), so getInterfaceVersion()/getInterfaceHash() can only be
-# baked in at freeze time. We stamp current/ with a monotonic ordinal +
+# baked in at freeze time. We stamp current/ with the fixed-width positional
+# version int (X.Y.Z.W -> e.g. 0.2.0.0 = 20000; see _snapshot_version_int) +
 # contract hash, let the version-aware generator (linux_binder_idl #33) emit
 # them, copy that into the snapshot, then restore current/. Needs that
 # generator; with an older generator the `version:` field is simply ignored.
@@ -1700,10 +1701,17 @@ is_buildable_component() {
 # A bare `server >= client` is WRONG across a generation bump. See #633.
 _snapshot_version_int() {
     local ver="$1" out="" f
+    # Require EXACTLY four numeric dot-separated fields (X.Y.Z.W). This rejects
+    # malformed inputs (0.2.0, 0.2.0.0., 0.2..0) that word-splitting would
+    # otherwise silently accept — which could collide (0.2.0 -> same as 0.2.0.0).
+    if ! [[ "${ver}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo ""
+        return 0
+    fi
     local IFS='.'
     for f in ${ver}; do
-        # Two-digit fixed field; reject non-numeric or >99 (unencodable).
-        if ! [[ "${f}" =~ ^[0-9]+$ ]] || (( 10#${f} > 99 )); then
+        # Two-digit fixed field; reject >99 (unencodable in this scheme).
+        if (( 10#${f} > 99 )); then
             echo ""
             return 0
         fi
@@ -1712,13 +1720,14 @@ _snapshot_version_int() {
     echo "$((10#${out}))"        # base-10 (avoid octal on leading zeros)
 }
 
-# Contract hash = sha1 of (sorted per-file .aidl sha1sums + the hashgen version
-# label). For an unfrozen base the label is 'latest-version', matching the
-# toolchain's version_for_hashgen(next_version()==1).
+# Contract hash = sha256 of (sorted per-file .aidl sha256sums + the hashgen
+# version label). SHA-256 (64 hex) matches the format of the committed
+# <version>/.hash files across the repo. For an unfrozen base the label is
+# 'latest-version', matching the toolchain's version_for_hashgen(next_version()==1).
 _contract_hash() {
     local dir="$1"
     ( cd "${dir}" && find ./ -name '*.aidl' -print0 | LC_ALL=C sort -z \
-        | xargs -0 sha1sum && echo "latest-version" ) | sha1sum | cut -d' ' -f1
+        | xargs -0 sha256sum && echo "latest-version" ) | sha256sum | cut -d' ' -f1
 }
 
 # Insert/replace `version: N` under aidl_interface in an interface.yaml.
@@ -1763,7 +1772,7 @@ create_snapshot() {
     fi
 
     # Freeze-stamp current/ so the generated snapshot carries a real interface
-    # VERSION (ordinal) + contract HASH instead of 1/notfrozen (#633). Restored
+    # VERSION (fixed-width positional int) + contract HASH instead of 1/notfrozen (#633). Restored
     # right after the copy below.
     local _cur="${REPO_ROOT}/${comp}/current"
     local _iface_version _chash _ifyaml_bak=""
