@@ -23,16 +23,25 @@ endif()
 # ${BINDER_SDK_DIR}/include/binder_sdk. The local dev layout splits headers
 # (out/build/include/binder_sdk) from runtime libs (out/target/lib/binder),
 # so allow BINDER_SDK_INCLUDE_DIR to point at the headers root.
-set(_BINDER_INC "${BINDER_SDK_DIR}/include/binder_sdk")
-if (NOT IS_DIRECTORY "${_BINDER_INC}")
-    if (DEFINED BINDER_SDK_INCLUDE_DIR AND
-        IS_DIRECTORY "${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk")
-        set(_BINDER_INC "${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk")
-    else()
-        message(FATAL_ERROR
-            "Binder SDK headers not found at ${_BINDER_INC}. "
-            "Set BINDER_SDK_INCLUDE_DIR to the headers root.")
+# Resolve the Binder header root across the local-dev layout
+# (<prefix>/include/binder_sdk) and Yocto/sysroot layouts (a direct include
+# dir). First existing candidate wins; the dev layout is tried first so local
+# builds are unaffected (#644).
+set(_BINDER_INC "")
+foreach(_cand
+        "${BINDER_SDK_DIR}/include/binder_sdk"
+        "${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk"
+        "${BINDER_SDK_INCLUDE_DIR}"
+        "${BINDER_SDK_DIR}/include/binder")
+    if (IS_DIRECTORY "${_cand}")
+        set(_BINDER_INC "${_cand}")
+        break()
     endif()
+endforeach()
+if (_BINDER_INC STREQUAL "")
+    message(FATAL_ERROR
+        "Binder SDK headers not found. Set BINDER_SDK_INCLUDE_DIR to the headers "
+        "root (local dev: <prefix>/include/binder_sdk; Yocto: the staged include dir).")
 endif()
 
 file(GLOB_RECURSE SRCS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
