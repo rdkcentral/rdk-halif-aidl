@@ -47,3 +47,23 @@ inspection.
 - [`hal-aidl.bb.sample`](fake-yocto/hal-aidl.bb.sample) — the reference
   BitBake recipe whose tasks `run-fake-yocto.sh` emulates. Copy it into a
   layer and pin `SRCREV` to use it for real.
+
+## `fake-layers/`
+
+Emulates the **layer-aggregation** deployment model (from the
+[directory & dynamic-linking spec](../vsi/filesystem/current/docs/directory_and_dynamic_linking_specification.md))
+— independently-mounted `/mw` and `/vendor` layers, each exposing its modules
+through aggregation directories (`lib/`, `ld.so.conf.d/`) of symlinks, wired
+for dynamic linking via `/etc/ld.so.conf.d/<layer>.conf` + `ldconfig`:
+
+```bash
+./tests/fake-layers/run-fake-layers.sh [--keep]
+```
+
+Where `fake-yocto/` proves the flat-sysroot build, this proves the **layered**
+runtime: the MW layer provides the binder runtime + HAL interface libs, a
+vendor-layer library links a HAL lib from the MW layer, and the test asserts
+the cross-layer dependency resolves **through the `ld.so.conf.d` aggregation**
+(not rpath, not a flat sysroot). No root/mount needed — layers are emulated in
+a work dir and validated with `ldconfig` (registration) + `ldd` (resolution).
+It doubles as a demo (prints the emulated layer tree; `--keep` to inspect).
