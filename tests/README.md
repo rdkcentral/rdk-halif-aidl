@@ -12,13 +12,16 @@ the produced HAL libraries:
 ./tests/smoke_test.sh
 ```
 
+Where `<c>` is a component name (e.g. `videosink`) and `<v>` a released
+version (e.g. `0.2.0.0`):
+
 | Command | Assertion |
 | ------- | --------- |
 | `./build_modules.sh all --clean` | one `lib<module>-vcurrent-cpp.so` per `*/current/` component |
 | `./build_modules.sh manifest` | the released cohort from `versions_released.yaml` |
 | `./build_modules.sh manifest --file versions_current.yaml` | the dev cohort, every component at `current/` |
-| `./build_modules.sh <c> --version <v>` | `lib<c>-v<v>-cpp.so` for the first committed release snapshot |
-| `./build_modules.sh <c> --version <v>` with its dependency closure wiped first | the standalone snapshot build auto-resolves and rebuilds its dependencies' libraries + staged headers ([#638](https://github.com/rdkcentral/rdk-halif-aidl/issues/638)) |
+| `./build_modules.sh <c> --version <v>` | builds `lib<c>-v<v>-cpp.so` for the first committed release snapshot |
+| the same build, but with `<c>`'s dependency snapshots deleted first | the standalone snapshot build auto-resolves the dependency closure and rebuilds each dependency's library and staged headers ([#638](https://github.com/rdkcentral/rdk-halif-aidl/issues/638)) |
 
 Exit status is `0` only if every check passes. The Binder SDK is staged
 automatically by `build_modules.sh` if missing.
