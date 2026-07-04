@@ -62,8 +62,11 @@ for dynamic linking via `/etc/ld.so.conf.d/<layer>.conf` + `ldconfig`:
 
 Where `fake-yocto/` proves the flat-sysroot build, this proves the **layered**
 runtime: the MW layer provides the binder runtime + HAL interface libs, a
-vendor-layer library links a HAL lib from the MW layer, and the test asserts
-the cross-layer dependency resolves **through the `ld.so.conf.d` aggregation**
-(not rpath, not a flat sysroot). No root/mount needed — layers are emulated in
-a work dir and validated with `ldconfig` (registration) + `ldd` (resolution).
-It doubles as a demo (prints the emulated layer tree; `--keep` to inspect).
+vendor-layer library links a HAL lib from the MW layer, and the test asserts the
+cross-layer dependency via **layer aggregation** — not rpath, not a flat sysroot.
+Two checks: `ldconfig` **registers** the aggregated libs through the per-layer
+`ld.so.conf.d` entries (verified in the cache), and `ldd` **resolves** the
+vendor→MW dependency against the aggregated `lib/` dirs (host `ldd` can't read
+the work-dir cache, so resolution is checked with `LD_LIBRARY_PATH` pointed at
+those dirs). No root/mount needed — layers are emulated in a work dir. It doubles
+as a demo (prints the emulated layer tree; `--keep` to inspect).

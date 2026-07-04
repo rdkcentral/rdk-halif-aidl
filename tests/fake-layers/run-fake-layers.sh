@@ -103,12 +103,15 @@ aggregate_layer "${MW}"
 
 echo "=== staging /vendor layer (a module that links an MW-provided HAL lib) ==="
 # A vendor library with a NEEDED on an MW HAL lib — the cross-layer dependency.
+# Link against the MW layer's *aggregation* dir (${MW}/lib), not the module-
+# private ${MW}/halif/lib — that is the path a real vendor consumes, so it also
+# proves the aggregation symlinks are usable.
 mkdir -p "${VENDOR}/demovendor/lib" "${VENDOR}/demovendor/ld.so.conf.d"
 echo 'extern "C" int demovendor_probe(){ return 0; }' > "${WORK}/demovendor.cpp"
 "${CXX}" -shared -fPIC "${WORK}/demovendor.cpp" \
-    -L"${MW}/halif/lib" -Wl,--no-as-needed -lcommon-vcurrent-cpp \
+    -L"${MW}/lib" -Wl,--no-as-needed -lcommon-vcurrent-cpp \
     -o "${VENDOR}/demovendor/lib/libdemovendor.so" 2>"${WORK}/vlink.err" \
-    || { sed 's/^/    /' "${WORK}/vlink.err" >&2; fail "vendor lib failed to link an MW HAL lib"; }
+    || { sed 's/^/    /' "${WORK}/vlink.err" >&2; fail "vendor lib failed to link an MW HAL lib via the aggregation dir"; }
 echo "${VENDOR}/demovendor/lib" > "${VENDOR}/demovendor/ld.so.conf.d/vendor-demo.conf"
 aggregate_layer "${VENDOR}"
 
