@@ -63,11 +63,22 @@ endif()
 # dir). First existing candidate wins; the dev layout is tried first so local
 # builds are unaffected (#644).
 set(_BINDER_INC "")
-foreach(_cand
-        "${BINDER_SDK_DIR}/include/binder_sdk"
+# Only consider a candidate whose base variable is actually set — otherwise an
+# unset BINDER_SDK_INCLUDE_DIR would expand to an absolute "/include/..." path
+# that could accidentally match a host directory.
+set(_binder_inc_cands "")
+if (BINDER_SDK_DIR)
+    list(APPEND _binder_inc_cands "${BINDER_SDK_DIR}/include/binder_sdk")
+endif()
+if (BINDER_SDK_INCLUDE_DIR)
+    list(APPEND _binder_inc_cands
         "${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk"
-        "${BINDER_SDK_INCLUDE_DIR}"
-        "${BINDER_SDK_DIR}/include/binder")
+        "${BINDER_SDK_INCLUDE_DIR}")
+endif()
+if (BINDER_SDK_DIR)
+    list(APPEND _binder_inc_cands "${BINDER_SDK_DIR}/include")
+endif()
+foreach(_cand IN LISTS _binder_inc_cands)
     if (IS_DIRECTORY "${_cand}")
         set(_BINDER_INC "${_cand}")
         break()
