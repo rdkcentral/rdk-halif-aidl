@@ -576,15 +576,19 @@ stage_snapshot_headers() {
     local src_inc="$ROOT_DIR/$comp/$ver/include"
     [[ -d "$src_inc" ]] || return 0
     local dst_inc="$ROOT_DIR/out/build/include/$comp/$ver/include"
-    mkdir -p "$dst_inc"
-    cp -RT "$src_inc" "$dst_inc"
+    mkdir -p "$dst_inc" || return 1
+    # Fail fast: a silent cp failure leaves dependents to fail later with
+    # missing headers, obscuring the root cause.
+    cp -RT "$src_inc" "$dst_inc" || return 1
 }
 
 # Extract the "<comp> <ver>" dependency pairs a snapshot declares via its
 # ${HALIF_INCLUDE_DIR}/<comp>/<ver>/include references in CMakeLists.txt.
 snapshot_deps() {
     local cmake_file="$1"
-    grep -oE 'HALIF_INCLUDE_DIR\}/[a-z][a-z0-9_]*/[0-9][0-9.]*/include' "$cmake_file" 2>/dev/null \
+    # `|| true`: grep exits 1 when a snapshot declares no HAL deps — that is a
+    # normal "empty list", not an error, so don't let it trip `set -o pipefail`.
+    { grep -oE 'HALIF_INCLUDE_DIR\}/[a-z][a-z0-9_]*/[0-9][0-9.]*/include' "$cmake_file" 2>/dev/null || true; } \
         | sed -E 's#HALIF_INCLUDE_DIR\}/([^/]+)/([^/]+)/include#\1 \2#' \
         | sort -u
 }
@@ -665,7 +669,8 @@ if [[ "$VERSION" != "current" ]]; then
     fi
 
     # Stage this snapshot's headers so a later dependent build resolves them.
-    stage_snapshot_headers "$MODULE" "$VERSION"
+    stage_snapshot_headers "$MODULE" "$VERSION" \
+        || { echo "❌ Failed to stage snapshot headers for $MODULE/$VERSION"; exit 1; }
     exit 0
 fi
 
