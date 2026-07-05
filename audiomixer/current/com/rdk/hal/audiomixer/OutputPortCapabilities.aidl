@@ -26,7 +26,7 @@ import com.rdk.hal.audiomixer.OutputFormat;
  * @file     OutputPortCapabilities.aidl
  * @brief    Capabilities for an audio output port.
  *
- * @details  Enumerates which properties can be set or queried for a given
+ *           Enumerates which properties can be set or queried for a given
  *           port, plus codec/format support and whether the port routes
  *           through the AQ (Audio Quality) processing block.
  *
@@ -49,7 +49,7 @@ parcelable OutputPortCapabilities {
      * @brief   Human-readable identifier for this output port
      *          (e.g. "HDMI", "SPDIF", "SPEAKERS").
      *
-     * @details Required, declared per output port in hfp-audiomixer.yaml
+     *          Required, declared per output port in hfp-audiomixer.yaml
      *          under outputPorts[].portName. Used for debugging, logging,
      *          and user-facing diagnostics. For programmatic type
      *          identification and policy branching, use @c portType
@@ -66,7 +66,7 @@ parcelable OutputPortCapabilities {
     /**
      * @brief   Programmatic type of this output port.
      *
-     * @details Declared per output port in hfp-audiomixer.yaml under
+     *          Declared per output port in hfp-audiomixer.yaml under
      *          outputPorts[].portType. Middleware should branch on this
      *          enum (not on the string @c portName) when applying type-
      *          specific policy — e.g. transcode-to-AC3 only on SPDIF,
@@ -81,7 +81,7 @@ parcelable OutputPortCapabilities {
     /**
      * @brief   List of property keys supported by this output port.
      *
-     * @details See OutputPortProperty for the enumerator set
+     *          See OutputPortProperty for the enumerator set
      *          (VOLUME, DELAY_MS, OUTPUT_FORMAT, etc.).
      */
     OutputPortProperty[] supportedProperties;
@@ -94,7 +94,7 @@ parcelable OutputPortCapabilities {
     /**
      * @brief   List of Dolby MS12 Audio Profiles (first is default).
      *
-     * @details If there are no defined MS12 Audio Profiles for this audio
+     *          If there are no defined MS12 Audio Profiles for this audio
      *          port then @c dolbyMs12AudioProfiles is not populated.
      */
     @nullable String[] dolbyMs12AudioProfiles;
@@ -103,7 +103,7 @@ parcelable OutputPortCapabilities {
      * @brief   True when this port routes through the AQ (Audio Quality)
      *          processing block.
      *
-     * @details When true, IAudioOutputPort.getAQProcessor() returns an
+     *          When true, IAudioOutputPort.getAQProcessor() returns an
      *          IAQProcessor surface; the processor family, version,
      *          parameter inventory, and value ranges are then discovered
      *          at runtime via IAQProcessor.getProcessorType() /
@@ -120,7 +120,7 @@ parcelable OutputPortCapabilities {
      * @brief   True when this port supports audio capture via
      *          IAudioOutputPortController.getAudioCapture().
      *
-     * @details If true, clients holding the port controller (acquired
+     *          If true, clients holding the port controller (acquired
      *          via IAudioOutputPort.open()) may call
      *          IAudioOutputPortController.getAudioCapture(listener) to
      *          obtain an IAudioCapture interface for streaming audio

@@ -24,7 +24,7 @@ import com.rdk.hal.PropertyValue;
  * @file      IAQProcessorListener.aidl
  * @brief     Observer callback interface for an AQ (Audio Quality) processor.
  *
- * @details   Registered against IAQProcessor via registerListener() and
+ *            Registered against IAQProcessor via registerListener() and
  *            unregisterListener(). Listener registration is independent of
  *            write ownership: a settings UI, diagnostics tool, certification
  *            suite, or firmware migration service can observe parameter
@@ -50,7 +50,7 @@ oneway interface IAQProcessorListener {
     /**
      * @brief     Fired when a single AQ parameter value changes.
      *
-     * @details   The change source may be:
+     *            The change source may be:
      *              - A direct write via IAQProcessorController.setAQParameter().
      *              - A batch write via IAQProcessorController.setAQParameters()
      *                (the listener sees one onParameterChanged() call per
@@ -75,7 +75,7 @@ oneway interface IAQProcessorListener {
     /**
      * @brief     Fired when the active sound mode changes.
      *
-     * @details   The change source may be a direct call to
+     *            The change source may be a direct call to
      *            IAQProcessorController.setAQSoundMode() or a platform-
      *            initiated change (e.g. content-adaptive switch). The
      *            listener will additionally see one onParameterChanged()
@@ -89,7 +89,7 @@ oneway interface IAQProcessorListener {
     /**
      * @brief     Fired when the underlying AQ processor instance is replaced.
      *
-     * @details   Vendor stacks may hot-swap the processor (e.g. a firmware
+     *            Vendor stacks may hot-swap the processor (e.g. a firmware
      *            update replaces MS12 v1.4 with v2.6, or the platform
      *            re-loads the processor after a fault recovery). The
      *            previously cached supported-parameter set, sound-mode

@@ -25,7 +25,7 @@ import com.rdk.hal.PropertyValue;
  * @file      IAQProcessorController.aidl
  * @brief     Exclusive write interface for an AQ (Audio Quality) processor.
  *
- * @details   Returned from IAQProcessor.open(). Only one writer may hold the
+ *            Returned from IAQProcessor.open(). Only one writer may hold the
  *            controller per IAQProcessor instance at a time. If the holding
  *            client crashes, the HAL detects the binder death and implicitly
  *            releases the controller — equivalent to calling
@@ -71,7 +71,7 @@ interface IAQProcessorController {
     /**
      * @brief     Sets a single AQ parameter on this processor.
      *
-     * @details   When AQParameterMetadata.isGlobal is true for @c name,
+     *            When AQParameterMetadata.isGlobal is true for @c name,
      *            the write propagates to every output port whose
      *            IAQProcessor exposes the same parameter name. Listeners
      *            on each affected port see onParameterChanged().
@@ -95,7 +95,7 @@ interface IAQProcessorController {
     /**
      * @brief     Sets a batch of AQ parameters atomically.
      *
-     * @details   Atomicity: the implementation MUST validate every entry in
+     *            Atomicity: the implementation MUST validate every entry in
      *            @c parameters BEFORE applying any of them. If any entry
      *            would fail (unknown name, type mismatch, out-of-range, or
      *            read-only), NO parameter in the batch is applied and the
@@ -128,7 +128,7 @@ interface IAQProcessorController {
     /**
      * @brief     Activates a sound-mode preset.
      *
-     * @details   The vendor stack applies the platform-defined values for
+     *            The vendor stack applies the platform-defined values for
      *            every parameter listed under @c soundMode in the HFP.
      *            Listeners see one onSoundModeChanged() callback followed
      *            by one onParameterChanged() callback per parameter the
@@ -145,7 +145,7 @@ interface IAQProcessorController {
     /**
      * @brief     Resets one or all parameters to their factory defaults.
      *
-     * @details   When @c name is non-null, the single named parameter is
+     *            When @c name is non-null, the single named parameter is
      *            reset to its AQParameterMetadata.defaultValue. When @c name
      *            is null, every parameter on this processor with a
      *            non-null defaultValue is reset.

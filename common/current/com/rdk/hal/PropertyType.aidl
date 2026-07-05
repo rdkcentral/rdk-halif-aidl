@@ -22,7 +22,7 @@ package com.rdk.hal;
  * @file      PropertyType.aidl
  * @brief     Common property value type enumeration shared across HAL interfaces.
  *
- * @details   Indicates which field of the common PropertyValue union should be
+ *            Indicates which field of the common PropertyValue union should be
  *            read or written for a given property. Used by any component that
  *            ships metadata describing a runtime-discovered property set —
  *            e.g. compositeinput's PropertyMetadata, audiomixer's

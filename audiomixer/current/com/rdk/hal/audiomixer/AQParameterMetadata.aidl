@@ -26,7 +26,7 @@ import com.rdk.hal.PropertyValue;
  * @brief     Per-AQ-parameter metadata describing type, range, units, and
  *            on/off/default sentinels for a single tunable parameter.
  *
- * @details   Returned in bulk from IAQProcessor.getSupportedParameters(). The
+ *            Returned in bulk from IAQProcessor.getSupportedParameters(). The
  *            entries are populated by the vendor HAL from the platform HFP
  *            (hfp-audiomixer.yaml -> aqProcessors[].parameters[]) and form the
  *            runtime-discoverable contract for tuning a given processor
@@ -64,7 +64,7 @@ parcelable AQParameterMetadata {
     /**
      * @brief Canonical parameter name from the platform HFP.
      *
-     * @details Matches @c hfp-audiomixer.yaml -> @c aqProcessors[].parameters[].name
+     *          Matches @c hfp-audiomixer.yaml -> @c aqProcessors[].parameters[].name
      *          for this processor instance. Names are case-sensitive and
      *          should follow the spellings listed in AQParameter.aidl when
      *          one applies. New, vendor-specific parameters may be added by
@@ -75,7 +75,7 @@ parcelable AQParameterMetadata {
     /**
      * @brief Data type of the parameter value.
      *
-     * @details Identifies which field of the common PropertyValue.Value
+     *          Identifies which field of the common PropertyValue.Value
      *          union carries this parameter's value across the binder.
      *          Callers must populate the matching union field when writing
      *          and read the matching union field when reading.
@@ -85,7 +85,7 @@ parcelable AQParameterMetadata {
     /**
      * @brief True if this parameter is read-only.
      *
-     * @details A read-only parameter may be observed via
+     *          A read-only parameter may be observed via
      *          IAQProcessor.getAQParameter() but cannot be written via
      *          IAQProcessorController.setAQParameter(); attempting to write
      *          returns @c false.
@@ -95,7 +95,7 @@ parcelable AQParameterMetadata {
     /**
      * @brief Optional human-readable unit string (e.g. "dB", "ms", "%", "Hz").
      *
-     * @details For UI and logging only; not interpreted by the HAL. May be
+     *          For UI and logging only; not interpreted by the HAL. May be
      *          null when the parameter is dimensionless (e.g. an enum-like
      *          INTEGER selector or a BOOLEAN toggle).
      */
@@ -104,7 +104,7 @@ parcelable AQParameterMetadata {
     /**
      * @brief Lower bound of the value range (inclusive).
      *
-     * @details Used by IAQProcessorController.setAQParameter() for range
+     *          Used by IAQProcessorController.setAQParameter() for range
      *          validation. The PropertyValue.Value field carrying the bound
      *          MUST match the @c type field above. May be null for
      *          BOOLEAN-typed parameters or enum-like INTEGERs where a
@@ -115,14 +115,14 @@ parcelable AQParameterMetadata {
     /**
      * @brief Upper bound of the value range (inclusive).
      *
-     * @details Same semantics and constraints as @c min.
+     *          Same semantics and constraints as @c min.
      */
     @nullable PropertyValue max;
 
     /**
      * @brief Optional platform-specific OFF sentinel value.
      *
-     * @details When present, writing this value disables the effect on this
+     *          When present, writing this value disables the effect on this
      *          processor instance. Distinct from @c defaultValue (factory
      *          reset value) — many platforms use a non-zero off sentinel
      *          (e.g. -1 in an integer range whose useful values start at 0).
@@ -132,7 +132,7 @@ parcelable AQParameterMetadata {
     /**
      * @brief Optional platform-specific ON sentinel value.
      *
-     * @details When present, writing this value enables the effect on this
+     *          When present, writing this value enables the effect on this
      *          processor instance with a vendor-recommended "on" setting.
      *          May differ from @c defaultValue when the platform ships in
      *          OFF-by-default state.
@@ -142,7 +142,7 @@ parcelable AQParameterMetadata {
     /**
      * @brief Factory-reset value for this parameter.
      *
-     * @details Restored by IAQProcessorController.resetToDefault(name) and
+     *          Restored by IAQProcessorController.resetToDefault(name) and
      *          by resetToDefault(null) for every parameter. May be null
      *          when the platform does not declare a default for this
      *          parameter; in that case resetToDefault() leaves the
@@ -154,7 +154,7 @@ parcelable AQParameterMetadata {
      * @brief True when the parameter applies globally across all output
      *        ports rather than to a single port.
      *
-     * @details When @c isGlobal is true, writing the parameter on one port's
+     *          When @c isGlobal is true, writing the parameter on one port's
      *          IAQProcessorController instance propagates the change to
      *          every port whose IAQProcessor exposes the same parameter
      *          name. Per-port observers will see onParameterChanged() fire.
@@ -166,7 +166,7 @@ parcelable AQParameterMetadata {
     /**
      * @brief Names of the sound-mode presets that include this parameter.
      *
-     * @details Each entry matches one of the strings returned by
+     *          Each entry matches one of the strings returned by
      *          IAQProcessor.getAQSoundModes(). Activating a sound mode via
      *          IAQProcessorController.setAQSoundMode() applies the
      *          platform-defined values for every parameter listed under
@@ -178,7 +178,7 @@ parcelable AQParameterMetadata {
     /**
      * @brief Human-readable description of the parameter.
      *
-     * @details Free-form vendor text intended for diagnostics, log messages,
+     *          Free-form vendor text intended for diagnostics, log messages,
      *          and tuning-UI labels. Not interpreted by the HAL.
      */
     @utf8InCpp String description;

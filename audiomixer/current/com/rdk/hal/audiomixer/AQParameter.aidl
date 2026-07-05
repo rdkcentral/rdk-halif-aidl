@@ -22,7 +22,7 @@ package com.rdk.hal.audiomixer;
  * @file      AQParameter.aidl
  * @brief     Canonical spelling reference for AQ (Audio Quality) parameter names.
  *
- * @details   IMPORTANT: This enum exists ONLY as a spelling reference for HFP
+ *            IMPORTANT: This enum exists ONLY as a spelling reference for HFP
  *            authors. It is NOT consulted at runtime and NOT used in any
  *            binder signature.
  *
@@ -67,7 +67,7 @@ enum AQParameter {
     VOLUME_MODELER = 13,          /**< Dynamic loudness/volume shaping. */
     AUDIO_OPTIMIZER = 14,         /**< Generic audio post-processing. */
     ACTIVE_DOWNMIX = 15,          /**< Downmix multichannel to stereo. */
-    CENTER_SPREADING = 16,        /**< Center channel spreading. */
+    CENTER_SPREADING = 16,        /**< Centre channel spreading. */
     DRC = 17,                     /**< Dynamic Range Compression. */
     ATMOS_LOCK = 18,              /**< Lock output to Dolby Atmos rendering. */
     DOWNMIX_MODE = 19,            /**< Lt/Rt vs Lo/Ro downmix selection. */

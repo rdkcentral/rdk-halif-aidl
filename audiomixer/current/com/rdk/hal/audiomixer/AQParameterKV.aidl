@@ -25,7 +25,7 @@ import com.rdk.hal.PropertyValue;
  * @brief     Single AQ parameter name/value pair used by batch read and
  *            write entry points on IAQProcessor and IAQProcessorController.
  *
- * @details   The @c name field matches an entry returned from
+ *            The @c name field matches an entry returned from
  *            IAQProcessor.getSupportedParameters() (i.e. the canonical
  *            spelling declared in the platform HFP). The @c value carries
  *            the value in the common PropertyValue union; the active union
@@ -58,7 +58,7 @@ parcelable AQParameterKV {
     /**
      * @brief Parameter value carried in the common PropertyValue union.
      *
-     * @details The active union field MUST match the PropertyType declared
+     *          The active union field MUST match the PropertyType declared
      *          for this name in the matching AQParameterMetadata entry.
      *          Mismatched union fields cause setAQParameters() to fail
      *          atomically with EX_ILLEGAL_ARGUMENT.

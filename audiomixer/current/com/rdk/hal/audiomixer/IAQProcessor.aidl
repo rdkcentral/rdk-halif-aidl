@@ -29,7 +29,7 @@ import com.rdk.hal.PropertyValue;
  * @file      IAQProcessor.aidl
  * @brief     AQ (Audio Quality) processor HAL interface.
  *
- * @details   Per-port handle returned by IAudioOutputPort.getAQProcessor().
+ *            Per-port handle returned by IAudioOutputPort.getAQProcessor().
  *            Provides read access to the parameter set and current values,
  *            multi-client observation via registerListener(), and an
  *            exclusive write controller via open() / close().
@@ -81,7 +81,7 @@ interface IAQProcessor {
      * @brief     Returns a free-form human-readable identifier for this
      *            processor instance.
      *
-     * @details   Intended for diagnostics, log lines, and tuning UI
+     *            Intended for diagnostics, log lines, and tuning UI
      *            headings. Format is vendor-defined and may combine the
      *            processor family and version (e.g. "Dolby MS12-X v2.6.1").
      *            Downstream clients that branch on processor identity
@@ -96,7 +96,7 @@ interface IAQProcessor {
     /**
      * @brief     Returns the processor family enum.
      *
-     * @details   Identifies the processor family for clients that need to
+     *            Identifies the processor family for clients that need to
      *            branch on it (e.g. apply MS12-specific telemetry
      *            different from DTS-specific telemetry). Split from
      *            getName() so type matching does not depend on parsing a
@@ -111,7 +111,7 @@ interface IAQProcessor {
     /**
      * @brief     Returns the vendor version string for this processor.
      *
-     * @details   Distinguishes multiple instances of the same processor
+     *            Distinguishes multiple instances of the same processor
      *            family running on the same platform — e.g. an MS12 v1.4.3
      *            instance routed to SPDIF and an MS12 v2.6.1 instance
      *            routed to HDMI. The version string MUST match the
@@ -131,7 +131,7 @@ interface IAQProcessor {
      * @brief     Returns the full set of supported AQ parameters with
      *            their metadata.
      *
-     * @details   The names in the returned array correspond to the
+     *            The names in the returned array correspond to the
      *            @c parameters[].name field declared in hfp-audiomixer.yaml
      *            under this processor's entry. The list is stable for the
      *            lifetime of the underlying processor instance — clients
@@ -164,7 +164,7 @@ interface IAQProcessor {
     /**
      * @brief     Reads a coherent snapshot of multiple AQ parameter values.
      *
-     * @details   The vendor HAL MUST return values sampled from a single
+     *            The vendor HAL MUST return values sampled from a single
      *            consistent instant — callers can compare cross-parameter
      *            invariants without racing partial updates.
      *
@@ -181,7 +181,7 @@ interface IAQProcessor {
     /**
      * @brief     Returns the list of supported sound-mode preset names.
      *
-     * @details   Sound modes are platform-defined bundles of parameter
+     *            Sound modes are platform-defined bundles of parameter
      *            values (e.g. "MOVIE", "MUSIC", "NEWS"). The membership of
      *            each mode is recorded in AQParameterMetadata.
      *            includedInSoundMode. Empty when the vendor declares no
@@ -194,7 +194,7 @@ interface IAQProcessor {
     /**
      * @brief     Returns the currently active sound-mode name.
      *
-     * @details   Empty when no sound mode is active (i.e. parameters are
+     *            Empty when no sound mode is active (i.e. parameters are
      *            being driven individually rather than via a preset).
      *
      * @returns   Active sound-mode name; one of the strings in
@@ -205,7 +205,7 @@ interface IAQProcessor {
     /**
      * @brief     Registers a listener for AQ processor events.
      *
-     * @details   Multiple listeners may be registered. Registration does
+     *            Multiple listeners may be registered. Registration does
      *            NOT require write ownership of the controller — a
      *            settings UI, diagnostics tool, or firmware migration
      *            service can observe state changes while another client
@@ -229,7 +229,7 @@ interface IAQProcessor {
     /**
      * @brief     Opens exclusive write control over this AQ processor.
      *
-     * @details   Returns an IAQProcessorController for parameter and
+     *            Returns an IAQProcessorController for parameter and
      *            sound-mode writes. Only one controller may exist per
      *            processor instance at a time. If the client holding the
      *            controller crashes, the HAL detects the binder death and
