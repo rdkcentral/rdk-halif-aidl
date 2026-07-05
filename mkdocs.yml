@@ -143,6 +143,9 @@ nav:
     - Key Concepts:
       - Controller: external_content/ut-core-wiki/5.1.0:-Standards:-vDevice-Controller.md
       - Control Plane: external_content/ut-core-wiki/5.1.1:-Standards:-vDevice-Control-Plane.md
+  - Examples:
+    - Overview: examples/examples.md
+    - GStreamer AV Pipelines: examples/gstreamer/gstreamer_examples.md
   - Misc:
     - References: references/references.md
     - Documentation Standards:
