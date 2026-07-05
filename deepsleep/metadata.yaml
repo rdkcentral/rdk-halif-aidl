@@ -22,7 +22,7 @@
 # type        - Responsibility: SOC or OEM                                [manual]
 component: deepsleep
 version: 0.1.0.0
-status: AMBER
+status: GREEN
 description: "Deep sleep and low-power state management"
 type: OEM
 
@@ -51,8 +51,8 @@ scope:
 #   owners        - Responsible architecture teams
 notes:
   priority: 4
-  status_detail: "Feedback-loop review"
-  action: "Review design based on learnings from current platforms. Examine findings and investigation on Shutdown issue"
+  status_detail: "V1 stable"
+  action: "Design feedback tracked in #165"
   owners: "Architecture"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]
