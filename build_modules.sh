@@ -583,7 +583,7 @@ if [[ "$VERSION" != "current" ]]; then
         exit 1
     fi
 
-    SNAPSHOT_BUILD_DIR="$ROOT_DIR/build/$MODULE-$VERSION"
+    SNAPSHOT_BUILD_DIR="$ROOT_DIR/build/$MODULE/$VERSION"
     if [[ "$CLEAN" == true ]]; then
         echo "🧹 Cleaning snapshot build directory: $SNAPSHOT_BUILD_DIR"
         rm -rf "$SNAPSHOT_BUILD_DIR"
