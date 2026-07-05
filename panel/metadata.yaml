@@ -22,7 +22,7 @@
 # type        - Responsibility: SOC or OEM                                [manual]
 component: panel
 version: 0.1.0.0
-status: AMBER
+status: GREEN
 description: "Front panel display and button control"
 type: OEM
 
@@ -51,8 +51,8 @@ scope:
 #   owners        - Responsible architecture teams
 notes:
   priority: 3
-  status_detail: "Re-review required"
-  action: "Review PQ settings for multiple video and PQ panel mixing"
+  status_detail: "V1 stable"
+  action: "PQ capability work tracked in #674, #497, #516, #276"
   owners: "Architecture + Graphics_Architecture"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]

@@ -217,7 +217,7 @@ Use the returned graphics buffer and metadata with the client graphics stack (fo
 Call `IGraphicsFbProvider.commitGraphicsFb(graphicsFbId)` to queue the frame for presentation.
 This call is non-blocking.
 6. Reuse released buffers:
-Wait for `IGraphicsFbProviderListener.onGraphicsFbReleased(oldGraphicsFbId, elapsedRealtimeNanos)` before reusing a previously displayed buffer.
+Wait for `IGraphicsFbProviderListener.onGraphicsFbReleased(oldGraphicsFbId, timestampNs)` before reusing a previously displayed buffer.
 7. Destroy buffers when no longer needed:
 Call `IGraphicsFbProvider.destroyGraphicsFb(graphicsFbId)` for each created buffer during shutdown or reconfiguration.
 
@@ -245,7 +245,7 @@ sequenceDiagram
     Provider->>Plane: Queue frame for display
 
     Plane-->>Provider: Previous frame released
-    Provider-->>Listener: onGraphicsFbReleased(oldGraphicsFbId, elapsedRealtimeNanos)
+    Provider-->>Listener: onGraphicsFbReleased(oldGraphicsFbId, timestampNs)
     Listener-->>Client: Buffer available for reuse
 
     Client->>Provider: destroyGraphicsFb(graphicsFbId)

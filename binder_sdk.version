@@ -5,15 +5,16 @@
 # clones the toolchain. Keep it pinned so the committed module-local
 # generated C++ always matches the generator that produced it.
 #
-# Pinned to release tag 2.3.0 (linux_binder_idl) which ships:
-#  - Yocto SDK M4 mismatch fix for builds inside rdk-kirkstone docker /
-#    any toolchain env that exports M4 to an old m4 (< 1.4.12) lacking
-#    the --gnu flag required by bison 3.x
-#    (linux_binder_idl#31, closes linux_binder_idl#30)
-#  - Stand-alone regression test suite at tests/test_yocto_m4_regression.sh
-#    so the bug stays fixed (linux_binder_idl#31)
-# Previously 2.2.0 (version-pinned imports + module-local generated-output
-# layout + always-regen-on-build fix from linux_binder_idl#19/#20/#21/#23/#25).
+# Pinned to release tag 2.4.0 (linux_binder_idl) which ships:
+#  - aidl-gen emits an explicit interface version ordinal for module-local
+#    snapshots (linux_binder_idl#33)
+#  - 4.9 kernel support: restored pre-5.16 binder freeze fallbacks
+#    (linux_binder_idl#36, closes linux_binder_idl#35)
+#  - CMake 3.8 compatibility: get_filename_component instead of
+#    file(REAL_PATH) (linux_binder_idl#34)
+#  - Aggregate test-suite runner at tests/run-tests.sh (linux_binder_idl#38)
+# Previously 2.3.0 (Yocto SDK M4 mismatch fix + regression test,
+# linux_binder_idl#30/#31).
 #
 # Override for a one-off build with:  BINDER_VERSION=<ref> ./build_binder.sh
-2.3.0
+2.4.0

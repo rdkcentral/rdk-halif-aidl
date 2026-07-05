@@ -119,6 +119,28 @@ The PR author edits the component's `metadata.yaml` `version:` to the new
 value as part of the PR's diff. Reviewers check that the version bump matches
 the label and the actual change.
 
+#### The `CR` Label (independent — not a change-class)
+
+`CR` (Change Request) marks an **ABI change** that must go through wider review
+and deliberate scheduling. It is a **process/governance** label, **independent**
+of the change-class above. The change-class answers *"how does the version
+number move?"*; `CR` answers a **different** question — *"is this an ABI change
+that needs wider review and separate scheduling?"* The two axes are orthogonal,
+so a `CR` carries a change-class label alongside it (an ABI change is a
+`Breaking Change`).
+
+A PR/issue tagged `CR` requires:
+
+1. **Wider review sign-off on approval** — beyond the default CODEOWNERS review
+   team, the relevant `team:*` architecture reviewers must sign off.
+2. **Separate release scheduling** — it is not folded into the normal cohort
+   release sweep; it is scheduled into a release deliberately.
+
+`CR` does **not** affect the version bump — `scripts/release.sh` never reads it.
+It is therefore *not* a rename of `Breaking Change`: `Breaking Change` remains
+the change-class that drives the generation bump, and conflating the two would
+break the label-driven bump logic.
+
 #### The Subsume Rule
 
 Between releases, `metadata.yaml` `version:` represents the **intent for the
@@ -606,6 +628,7 @@ Idempotent — safe to re-run.
 | `Breaking Change` | Breaking interface change — bumps generation |
 | `Major Change` | Additive interface change — bumps minor (the default for real work) |
 | `Minor Change` | Doc-only / metadata-only / comment-only change — bumps patch |
+| `CR` | Change Request — ABI change needing wider review sign-off + separate release scheduling (independent of change-class; no bump effect) |
 | `scope:infrastructure` | Repo tooling, CI/CD, governance |
 | `scope:overview` | Tracking ticket spanning multiple components |
 

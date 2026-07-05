@@ -54,6 +54,76 @@ phase() { echo "${_C_CYAN}==>${_C_RESET} ${_C_BOLD}$*${_C_RESET}" >&2; }
 warn()  { echo "${_C_YELLOW}WARN:${_C_RESET} $*" >&2; }
 die()   { echo "${_C_RED}${_C_BOLD}ERROR:${_C_RESET} ${_C_RED}$*${_C_RESET}" >&2; exit 1; }
 
+# ----------------------------------------------------------------------------
+# Markdown link validation (#626)
+# ----------------------------------------------------------------------------
+# Validates relative links in GitHub-facing, repo-ROOT markdown files only
+# (README.md, CONTRIBUTING.md, CHANGELOG.md, COMMANDS.md, ...). GitHub renders
+# the repo front page with filesystem-relative links, so a link to a missing
+# file is a dead link for everyone who lands on the project.
+#
+# Component docs (<module>/.../docs/*.md) are deliberately NOT checked: they use
+# mkdocs-context relative links (e.g. ../introduction/aidl_and_binder.md) that
+# resolve in the rendered docs site but not on the raw filesystem — checking
+# them here would produce hundreds of false positives.
+#
+# A link target must resolve to a GIT-TRACKED file or directory — not merely
+# exist on disk. A path that exists locally but is gitignored (e.g. a
+# build-tools/ clone) is a dead link for anyone who lands on the repo via
+# GitHub, so it must be flagged.
+#
+# Prints "<file> -> <link>" per broken link to stdout; returns 1 if any
+# root-level relative link is dead, 0 otherwise. When python3 is unavailable
+# this one check is skipped (returns 0) so it never blocks a release — other
+# release steps that need python3 (e.g. mkdocs.yml edits) still require it; the
+# preflight reports the skip rather than a false "OK".
+validate_doc_links() {
+    command -v python3 >/dev/null 2>&1 || {
+        echo "link-check skipped: python3 not found" >&2
+        return 0
+    }
+    python3 - "${REPO_ROOT}" <<'PYEOF'
+import os, re, subprocess, sys
+repo = sys.argv[1]
+try:
+    tracked = set(subprocess.check_output(
+        ["git", "-C", repo, "ls-files"], text=True).splitlines())
+except Exception as e:
+    print(f"link-check skipped: {e}", file=sys.stderr)
+    sys.exit(0)  # never block a release on a tooling failure
+# Every tracked file implies its parent directories are "tracked" too, so
+# directory links (e.g. src/utils/) resolve.
+dirs = set()
+for t in tracked:
+    parts = t.split("/")
+    for i in range(1, len(parts)):
+        dirs.add("/".join(parts[:i]))
+# Root-level (depth 0) markdown only — GitHub renders these filesystem-relative.
+root = [f for f in tracked if f.endswith(".md") and "/" not in f]
+link_re = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
+broken = {}
+for rel in root:
+    try:
+        text = open(os.path.join(repo, rel), encoding="utf-8", errors="ignore").read()
+    except OSError:
+        continue
+    for m in link_re.finditer(text):
+        url = m.group(1).strip().split()[0]  # drop any optional "title"
+        if url.startswith(("http://", "https://", "#", "mailto:")):
+            continue
+        target = url.split("#", 1)[0]
+        if not target:
+            continue
+        norm = os.path.normpath(os.path.join(os.path.dirname(rel), target))
+        if norm not in tracked and norm not in dirs:
+            broken.setdefault(rel, []).append(url)
+for f in sorted(broken):
+    for u in broken[f]:
+        print(f"  {f} -> {u}")
+sys.exit(1 if broken else 0)
+PYEOF
+}
+
 # Verification-build runner. Defined at top-level so it's in scope for
 # both the stage path (DO_WRITES=1) and a pure --apply (DO_WRITES=0).
 # ----------------------------------------------------------------------------
@@ -175,11 +245,32 @@ deploy_versioned_docs() {
     return 0
 }
 
+# The first verification build of a release run starts from clean staging,
+# so the cohort is proven to compile from a clean checkout — not from
+# incrementally staged headers (out/build/include) or a stale build cache
+# that could mask a missing dependency (see #638). Runs once per invocation
+# (guarded); the Binder SDK in out/target is preserved, so there is no SDK
+# rebuild and the clean is fast.
+_VERIFY_CLEAN_DONE=0
+verification_clean_once() {
+    [[ "${_VERIFY_CLEAN_DONE}" -eq 1 ]] && return 0
+    _VERIFY_CLEAN_DONE=1
+    phase "Pre-verification clean (once): build/, out/build/include, build cache"
+    rm -rf "${REPO_ROOT}/build"
+    rm -rf "${REPO_ROOT}/out/build/include"
+    rm -f "${BUILD_CACHE_FILE}"
+    log "  Cleared build/, out/build/include and ${BUILD_CACHE_FILE#"${REPO_ROOT}/"} —"
+    log "  verification builds from clean staging (Binder SDK in out/target kept)."
+}
+
 run_verification_build() {
     local label="$1"          # "current cohort" / "released cohort"
     local log_file="$2"
     shift 2
     mkdir -p "$(dirname "${log_file}")"
+
+    # Force a from-scratch build for the first verification pass of this run.
+    verification_clean_once
 
     # Cache lookup — skip if these exact inputs already built successfully.
     local key="$*"
@@ -1022,6 +1113,26 @@ if [[ "${STAGE_AND_WRITE}" -eq 1 ]]; then
 fi
 if [[ "${APPLY}" -eq 1 ]]; then
     DO_BRANCH=1
+fi
+
+# Preflight: dead relative links in GitHub-facing repo-root markdown (#626).
+# Fatal for any mutating run (staged writes, --apply, --commit) so a release
+# never ships a broken front-page link; a non-fatal warning in read-only
+# plan/check mode. Escape hatch: SKIP_LINK_CHECK=1.
+if [[ "${SKIP_LINK_CHECK:-0}" -ne 1 ]]; then
+    phase "Validating root-level markdown links..."
+    if ! command -v python3 >/dev/null 2>&1; then
+        warn "    ↷ skipped (python3 not found) — link check did not run"
+    elif _link_errs="$(validate_doc_links)"; then
+        log "    ✓ root-level markdown links OK"
+    elif [[ "${DO_WRITES}" -eq 1 || "${DO_BRANCH}" -eq 1 || "${COMMIT}" -eq 1 ]]; then
+        warn "Broken relative links in repo-root markdown:"
+        printf '%s\n' "${_link_errs}" >&2
+        die "Fix the dead links above (or re-run with SKIP_LINK_CHECK=1) before releasing."
+    else
+        warn "Broken relative links in repo-root markdown (non-fatal in read-only mode):"
+        printf '%s\n' "${_link_errs}" >&2
+    fi
 fi
 
 # Standalone `--commit`: commit + tag whatever is staged in the index.
@@ -1873,6 +1984,25 @@ create_snapshot() {
         fi
     fi
 
+    # Stage hand-authored module-root headers (e.g. avbufferhelper.h) into the
+    # snapshot's include/ tree (#623). These are public, versioned contract
+    # headers that live at the module root in current/ — current/include/ is
+    # gitignored generator output, so they cannot live there in the dev tree.
+    # Copying them into the snapshot's include/ makes them ship and version with
+    # the generated headers and be picked up by the include/-tree staging copy
+    # that downstream snapshot builds rely on.
+    local _nullglob_was=0; shopt -q nullglob && _nullglob_was=1
+    shopt -s nullglob
+    local _root_hdrs=("${snapshot_dir}"/*.h)
+    [[ "${_nullglob_was}" -eq 0 ]] && shopt -u nullglob
+    if [[ "${#_root_hdrs[@]}" -gt 0 ]]; then
+        mkdir -p "${snapshot_dir}/include"
+        if ! cp "${_root_hdrs[@]}" "${snapshot_dir}/include/"; then
+            warn "Failed to stage module-root header(s) into ${comp}/${version}/include/."
+            return 1
+        fi
+    fi
+
     # Stage the snapshot. No -f needed: .gitignore scopes the binding
     # rules to */current/include/ and */current/src/ only — files under
     # <module>/<version>/ are outside that scope and stage cleanly with
@@ -1887,6 +2017,99 @@ create_snapshot() {
     # already showed every step above.
     if [[ "${VERBOSE}" -ne 1 ]]; then
         log "  [${comp}] → ${version}/  ${_C_GREEN}✓${_C_RESET}${refresh_marker}"
+    fi
+    return 0
+}
+
+# ----------------------------------------------------------------------------
+# Cohort snapshot dependency-version normalization (#623, #616)
+# ----------------------------------------------------------------------------
+#
+# create_snapshot() pins a fresh snapshot's cross-component dependency versions
+# to the cohort at the moment it is cut. But a component whose AIDL did not
+# change in a later release is NOT re-cut — so its snapshot keeps the dependency
+# versions that were current when it was first generated. After a dependency
+# advances (e.g. common 0.1.0.0 -> 0.2.0.0), those stale snapshots reference a
+# version the cohort manifest no longer builds, and the manifest build fails.
+# Snapshots also inherit current/'s `<dep>@current` AIDL imports, which are
+# non-deterministic in a frozen interface (#616).
+#
+# This pass rewrites, for the cohort snapshot of every component listed in
+# versions_released.yaml, each reference to ANOTHER component to that
+# dependency's cohort version — in both CMakeLists.txt (link names + include
+# paths) and interface.yaml (AIDL import pins, including `@current`). A
+# snapshot's own version is never touched, and non-cohort historical snapshots
+# are left frozen.
+normalize_cohort_snapshot_deps() {
+    local changed
+    changed="$(python3 - "${REPO_ROOT}" <<'PYEOF'
+import os, re, sys
+repo = sys.argv[1]
+manifest = os.path.join(repo, "versions_released.yaml")
+cohort = {}
+in_components = False
+with open(manifest) as fh:
+    for line in fh:
+        if re.match(r"^components:\s*$", line):
+            in_components = True
+            continue
+        if in_components:
+            m = re.match(r"^\s+([A-Za-z0-9_]+):\s*(\S+)\s*$", line)
+            if m:
+                cohort[m.group(1)] = m.group(2)
+            elif line.strip() and not line[0].isspace():
+                in_components = False
+changed = []
+for comp, ver in sorted(cohort.items()):
+    if ver == "current":
+        continue
+    # 1. CMakeLists.txt — link names + include paths (#623).
+    cmake = os.path.join(repo, comp, ver, "CMakeLists.txt")
+    if os.path.isfile(cmake):
+        text = orig = open(cmake).read()
+        for dep, dep_ver in cohort.items():
+            if dep == comp or dep_ver == "current":
+                continue
+            text = re.sub(rf"(?<![A-Za-z0-9_]){re.escape(dep)}-v[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+-cpp",
+                          f"{dep}-v{dep_ver}-cpp", text)
+            text = re.sub(rf"(HALIF_INCLUDE_DIR}}/{re.escape(dep)}/)[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/",
+                          rf"\g<1>{dep_ver}/", text)
+        if text != orig:
+            open(cmake, "w").write(text)
+            changed.append(f"{comp}/{ver}/CMakeLists.txt")
+    # 2. interface.yaml — AIDL import pins, e.g. common@current -> common@0.2.0.0 (#616).
+    # A frozen snapshot must not import @current (non-deterministic); pin every
+    # cross-component import to the cohort version.
+    iface = os.path.join(repo, comp, ver, "interface.yaml")
+    if os.path.isfile(iface):
+        text = orig = open(iface).read()
+        for dep, dep_ver in cohort.items():
+            if dep == comp or dep_ver == "current":
+                continue
+            text = re.sub(rf"(?<![A-Za-z0-9_]){re.escape(dep)}@[A-Za-z0-9._]+",
+                          f"{dep}@{dep_ver}", text)
+        if text != orig:
+            open(iface, "w").write(text)
+            changed.append(f"{comp}/{ver}/interface.yaml")
+for c in changed:
+    print(c)
+PYEOF
+)" || { warn "  cohort dependency normalization: python step failed"; return 1; }
+
+    if [[ -n "${changed}" ]]; then
+        log "  Rewrote cohort dependency versions in:"
+        while IFS= read -r _f; do
+            [[ -z "${_f}" ]] && continue
+            log "    ${_f}"
+            # The file was just rewritten on disk; if it can't be staged the
+            # release diff would be incomplete, so abort rather than warn.
+            (cd "${REPO_ROOT}" && git add "${_f}") || {
+                warn "  git add ${_f} failed"
+                return 1
+            }
+        done <<< "${changed}"
+    else
+        log "  All cohort snapshots already reference cohort dependency versions."
     fi
     return 0
 }
@@ -2993,6 +3216,17 @@ if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
     fi
     (cd "${REPO_ROOT}" && git add versions_released.yaml) \
         || warn "git add versions_released.yaml failed (file may be untracked)"
+
+    # 2b. Normalize cohort snapshot dependency versions (#623). Snapshots not
+    # re-cut this release still reference the dependency versions current when
+    # they were first generated; after versions_released.yaml advances, rewrite
+    # their cross-component dep refs to the cohort versions so the manifest
+    # build below stays internally consistent.
+    phase "Normalizing cohort snapshot dependency versions..."
+    log ""
+    if ! normalize_cohort_snapshot_deps; then
+        die "Cohort snapshot dependency normalization failed. Aborting release."
+    fi
 
     # 3. mkdocs.yml entries.
     if [[ "${NO_MKDOCS}" -eq 1 ]]; then
