@@ -73,7 +73,7 @@ endif()
 if (BINDER_SDK_INCLUDE_DIR)
     list(APPEND _binder_inc_cands
         "${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk"
-        "${BINDER_SDK_INCLUDE_DIR}")
+        "${BINDER_SDK_INCLUDE_DIR}/include")
 endif()
 if (BINDER_SDK_DIR)
     list(APPEND _binder_inc_cands "${BINDER_SDK_DIR}/include")

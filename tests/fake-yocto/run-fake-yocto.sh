@@ -140,10 +140,12 @@ echo "    expected ${EXPECTED} HAL libraries, installed ${INSTALLED}"
 # Task 5 - flexible binder header path: FLAT (Yocto sysroot) layout (#644).
 #######################################################################
 # Tasks 1-4 stage headers under include/binder_sdk (the dev subdir). Real Yocto
-# stages them flat under <sysroot>/usr/include (no binder_sdk subdir). Verify a
-# component's CMake resolves headers there via BINDER_SDK_INCLUDE_DIR as a
-# direct include dir — the #644 fix. Configure-only (fast); the pre-fix logic
-# FATALs at the binder-header check, so absence of that error == resolved.
+# stages them flat under <sysroot>/usr/include (binder/ directly, no binder_sdk
+# subdir). Pass BINDER_SDK_INCLUDE_DIR as the staging *prefix* — the form the
+# README documents (`${STAGING_DIR}/usr`) — and verify the component CMake
+# resolves prefix/include via the #644 flexible candidate. Configure-only
+# (fast); the pre-fix logic FATALs at the binder-header check, so absence of
+# that error == resolved.
 echo ""
 echo "[verify] flat-layout binder header resolution (#644) ..."
 FLAT="${WORK}/flat-sysroot/usr"
@@ -152,7 +154,7 @@ cp -r "${REPO_ROOT}/out/build/include/binder_sdk/." "${FLAT}/include/"   # flat:
 cp -r "${REPO_ROOT}/out/target/lib/binder"          "${FLAT}/lib/"
 cmake -S "${REPO_ROOT}/common/current" -B "${WORK}/flat-build" \
     -DBINDER_SDK_DIR="${FLAT}" \
-    -DBINDER_SDK_INCLUDE_DIR="${FLAT}/include" \
+    -DBINDER_SDK_INCLUDE_DIR="${FLAT}" \
     -DHALIF_INCLUDE_DIR="${FLAT}/include" -DHALIF_LIB_DIR="${FLAT}/lib" \
     > "${WORK}/flat-configure.log" 2>&1 || true
 if grep -q 'Binder SDK headers not found' "${WORK}/flat-configure.log"; then
