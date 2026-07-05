@@ -3,8 +3,8 @@ aidl_interface:
   srcs:
     - com/rdk/hal/audiomixer/*.aidl
   imports:
-    - audiodecoder@current
-    - audiosink@current
-    - common@current
+    - audiodecoder@0.2.0.0
+    - audiosink@0.2.0.0
+    - common@0.2.0.0
   stability: vintf
   layout: module-local

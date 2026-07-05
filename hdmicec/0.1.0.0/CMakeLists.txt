@@ -23,16 +23,36 @@ endif()
 # ${BINDER_SDK_DIR}/include/binder_sdk. The local dev layout splits headers
 # (out/build/include/binder_sdk) from runtime libs (out/target/lib/binder),
 # so allow BINDER_SDK_INCLUDE_DIR to point at the headers root.
-set(_BINDER_INC "${BINDER_SDK_DIR}/include/binder_sdk")
-if (NOT IS_DIRECTORY "${_BINDER_INC}")
-    if (DEFINED BINDER_SDK_INCLUDE_DIR AND
-        IS_DIRECTORY "${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk")
-        set(_BINDER_INC "${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk")
-    else()
-        message(FATAL_ERROR
-            "Binder SDK headers not found at ${_BINDER_INC}. "
-            "Set BINDER_SDK_INCLUDE_DIR to the headers root.")
+# Resolve the Binder header root across the local-dev layout
+# (<prefix>/include/binder_sdk) and Yocto/sysroot layouts (a direct include
+# dir). First existing candidate wins; the dev layout is tried first so local
+# builds are unaffected (#644).
+set(_BINDER_INC "")
+# Only consider a candidate whose base variable is actually set — otherwise an
+# unset BINDER_SDK_INCLUDE_DIR would expand to an absolute "/include/..." path
+# that could accidentally match a host directory.
+set(_binder_inc_cands "")
+if (BINDER_SDK_DIR)
+    list(APPEND _binder_inc_cands "${BINDER_SDK_DIR}/include/binder_sdk")
+endif()
+if (BINDER_SDK_INCLUDE_DIR)
+    list(APPEND _binder_inc_cands
+        "${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk"
+        "${BINDER_SDK_INCLUDE_DIR}/include")
+endif()
+if (BINDER_SDK_DIR)
+    list(APPEND _binder_inc_cands "${BINDER_SDK_DIR}/include")
+endif()
+foreach(_cand IN LISTS _binder_inc_cands)
+    if (IS_DIRECTORY "${_cand}")
+        set(_BINDER_INC "${_cand}")
+        break()
     endif()
+endforeach()
+if (_BINDER_INC STREQUAL "")
+    message(FATAL_ERROR
+        "Binder SDK headers not found. Set BINDER_SDK_INCLUDE_DIR to the headers "
+        "root (local dev: <prefix>/include/binder_sdk; Yocto: the staged include dir).")
 endif()
 
 file(GLOB_RECURSE SRCS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
@@ -50,7 +70,7 @@ target_include_directories(${LIB_NAME} PRIVATE
 # via direct deps, e.g. common via audiodecoder/videodecoder for avbuffer).
 if (DEFINED HALIF_INCLUDE_DIR)
     target_include_directories(${LIB_NAME} PRIVATE
-    "${HALIF_INCLUDE_DIR}/common/0.1.0.0/include")
+    "${HALIF_INCLUDE_DIR}/common/0.2.0.0/include")
 endif()
 
 target_link_directories(${LIB_NAME} PRIVATE
@@ -60,7 +80,7 @@ if (DEFINED HALIF_LIB_DIR)
     target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
 endif()
 
-target_link_libraries(${LIB_NAME} PRIVATE binder utils common-v0.1.0.0-cpp)
+target_link_libraries(${LIB_NAME} PRIVATE binder utils common-v0.2.0.0-cpp)
 
 set_target_properties(${LIB_NAME} PROPERTIES OUTPUT_NAME "${LIB_NAME}")
 

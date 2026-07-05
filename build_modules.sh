@@ -95,15 +95,11 @@ Build Configuration:
     # With custom flags
     CC=gcc CFLAGS="-O2 -g" CXXFLAGS="-O2 -g" ./build_modules.sh all
 
-    # Cross-compilation (Yocto pattern)
-    CC=arm-linux-gnueabihf-gcc \
-    CXX=arm-linux-gnueabihf-g++ \
-    CFLAGS="-march=armv7-a" \
-    CXXFLAGS="-march=armv7-a" \
-    LDFLAGS="-Wl,--hash-style=gnu" \
-    ./build_modules.sh all --sdk-dir /opt/sysroot/usr
-
   Supported variables: CC, CXX, CFLAGS, CXXFLAGS, LDFLAGS
+
+  Cross-compilation / Yocto: this wrapper is host-only and refuses to run in a
+  cross/OpenEmbedded environment. Production and cross builds invoke CMake
+  directly — see docs/standards/build_integration.md.
 
 Examples:
   # Basic usage
@@ -117,16 +113,14 @@ Examples:
   ./build_modules.sh cleanall                         # Remove out/ and build/
   ./build_modules.sh all --clean                      # Clean before build
 
-  # Custom SDK location (for Yocto/cross-compilation)
-  ./build_modules.sh all --sdk-dir /opt/sysroot/usr
+  # Custom SDK location (host dev with a non-default SDK prefix)
+  ./build_modules.sh all --sdk-dir /opt/sdk/usr
 
   # Parallel builds
   ./build_modules.sh all --jobs 8                     # 8 parallel jobs
 
-  # Yocto/BitBake integration
-  CC="${CC}" CXX="${CXX}" \
-  CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" LDFLAGS="${LDFLAGS}" \
-  ./build_modules.sh all --sdk-dir ${STAGING_DIR}${prefix}
+  # Yocto / cross builds do NOT use this script — invoke CMake directly.
+  # See docs/standards/build_integration.md.
 
 Output:
   Libraries: out/target/lib/halif/lib<module>-vcurrent-cpp.so
@@ -144,6 +138,15 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$SCRIPT_DIR"
+
+# Host-toolchain guard (#624): build / sdk operations need a native toolchain,
+# and Yocto/cross builds must call CMake directly (see
+# docs/standards/build_integration.md). clean/help do no toolchain work, so
+# they stay usable in any environment.
+case "${1:-}" in
+    clean|cleanall|--help|-h|--h|"") ;;
+    *) source "$SCRIPT_DIR/dev_env_guard.sh"; halif_guard_dev_host_env || exit 1 ;;
+esac
 
 # Suppress three classes of unfixable upstream noise so the verification
 # build output stays readable.
@@ -568,6 +571,31 @@ fi
 # No toolchain involvement, no code generation.
 #######################################################################
 
+# Stage a snapshot's committed include/ tree into out/build/include so that
+# dependents resolve their ${HALIF_INCLUDE_DIR}/<comp>/<ver>/include refs.
+# Pure copy — snapshot include/ trees are committed pre-generated C++.
+stage_snapshot_headers() {
+    local comp="$1" ver="$2"
+    local src_inc="$ROOT_DIR/$comp/$ver/include"
+    [[ -d "$src_inc" ]] || return 0
+    local dst_inc="$ROOT_DIR/out/build/include/$comp/$ver/include"
+    mkdir -p "$dst_inc" || return 1
+    # Fail fast: a silent cp failure leaves dependents to fail later with
+    # missing headers, obscuring the root cause.
+    cp -RT "$src_inc" "$dst_inc" || return 1
+}
+
+# Extract the "<comp> <ver>" dependency pairs a snapshot declares via its
+# ${HALIF_INCLUDE_DIR}/<comp>/<ver>/include references in CMakeLists.txt.
+snapshot_deps() {
+    local cmake_file="$1"
+    # `|| true`: grep exits 1 when a snapshot declares no HAL deps — that is a
+    # normal "empty list", not an error, so don't let it trip `set -o pipefail`.
+    { grep -oE 'HALIF_INCLUDE_DIR\}/[a-z][a-z0-9_]*/[0-9][0-9.]*/include' "$cmake_file" 2>/dev/null || true; } \
+        | sed -E 's#HALIF_INCLUDE_DIR\}/([^/]+)/([^/]+)/include#\1 \2#' \
+        | sort -u
+}
+
 if [[ "$VERSION" != "current" ]]; then
     if [[ "$MODULE" == "all" ]]; then
         echo "❌ ERROR: --version $VERSION cannot be combined with 'all'."
@@ -583,7 +611,7 @@ if [[ "$VERSION" != "current" ]]; then
         exit 1
     fi
 
-    SNAPSHOT_BUILD_DIR="$ROOT_DIR/build/$MODULE-$VERSION"
+    SNAPSHOT_BUILD_DIR="$ROOT_DIR/build/$MODULE/$VERSION"
     if [[ "$CLEAN" == true ]]; then
         echo "🧹 Cleaning snapshot build directory: $SNAPSHOT_BUILD_DIR"
         rm -rf "$SNAPSHOT_BUILD_DIR"
@@ -593,6 +621,27 @@ if [[ "$VERSION" != "current" ]]; then
     echo "📸 Snapshot build: $MODULE/$VERSION"
     echo "    source: $SNAPSHOT_DIR"
     echo "    build:  $SNAPSHOT_BUILD_DIR"
+    echo ""
+
+    # Resolve and build this snapshot's dependency closure first, so its
+    # dependency headers (out/build/include) and libraries
+    # (out/target/lib/halif) are present before we configure. Each dependency
+    # is itself a snapshot build, so transitive deps resolve recursively, and
+    # an already-built dependency is skipped. Without this, a standalone
+    # snapshot build on a fresh checkout fails to find a dependency header
+    # such as com/rdk/hal/PropertyValue.h (#638).
+    while read -r dep dep_ver; do
+        [[ -n "$dep" ]] || continue
+        dep_so="$ROOT_DIR/out/target/lib/halif/lib${dep}-v${dep_ver}-cpp.so"
+        dep_inc="$ROOT_DIR/out/build/include/$dep/$dep_ver/include"
+        if [[ -f "$dep_so" && -d "$dep_inc" ]]; then
+            echo "   ✓ dependency ${dep}/${dep_ver} already built"
+            continue
+        fi
+        echo "   ↳ building dependency ${dep}/${dep_ver} ..."
+        "$0" "$dep" --version "$dep_ver" --jobs "$JOBS" --sdk-dir "$SDK_DIR" || {
+            echo "❌ Failed to build dependency ${dep}/${dep_ver} for $MODULE/$VERSION"; exit 1; }
+    done < <(snapshot_deps "$SNAPSHOT_DIR/CMakeLists.txt")
     echo ""
 
     # The local dev layout splits binder headers (out/build/include/binder_sdk)
@@ -621,6 +670,10 @@ if [[ "$VERSION" != "current" ]]; then
     else
         echo "❌ Snapshot library not found at $SO_PATH"; exit 1
     fi
+
+    # Stage this snapshot's headers so a later dependent build resolves them.
+    stage_snapshot_headers "$MODULE" "$VERSION" \
+        || { echo "❌ Failed to stage snapshot headers for $MODULE/$VERSION"; exit 1; }
     exit 0
 fi
 

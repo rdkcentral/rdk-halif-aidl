@@ -208,10 +208,31 @@ message(STATUS "Libraries will install to: ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTA
 message(STATUS "Headers will install to: ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
 
 #######################################################################
-# Include binder CMake infrastructure for interface builds
+# Include binder CMake infrastructure for interface builds.
+#
+# Any root build (this top-level CMakeLists, for any INTERFACE_TARGET) includes
+# the linux_binder_idl toolchain's CMakeLists.inc unconditionally, so it needs
+# that source tree present — i.e. the local dev / integrated build. A standalone
+# Yocto/staged-SDK build does NOT have it: there, libbinder is built + staged by
+# the `linux-binder` recipe and
+# the HAL libraries are built PER COMPONENT from the staged SDK, using each
+# component's self-contained CMakeLists (no CMakeLists.inc):
+#     cmake -S <module>/<version> -B build \
+#           -DBINDER_SDK_DIR=<sysroot> -DBINDER_SDK_INCLUDE_DIR=<sysroot>
+# Fail fast with that pointer rather than a cryptic include() error. (#635)
 #######################################################################
-
-include(${HOST_AIDL_DIR}/CMakeLists.inc)
+if (NOT EXISTS "${HOST_AIDL_DIR}/CMakeLists.inc")
+    message(FATAL_ERROR
+        "linux_binder_idl toolchain not found at ${HOST_AIDL_DIR}.\n"
+        "The root build (this top-level CMakeLists, any INTERFACE_TARGET) requires the linux_binder_idl source. "
+        "For a staged-SDK / Yocto build, build components individually from the "
+        "staged SDK instead:\n"
+        "  cmake -S <module>/<version> -B build "
+        "-DBINDER_SDK_DIR=<sysroot> -DBINDER_SDK_INCLUDE_DIR=<sysroot>\n"
+        "Each <module>/<version>/CMakeLists.txt is self-contained. See the "
+        "production-build section of the README.")
+endif()
+include("${HOST_AIDL_DIR}/CMakeLists.inc")
 
 #######################################################################
 # Build interface libraries based on INTERFACE_TARGET and INTERFACE_VERSION

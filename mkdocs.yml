@@ -54,6 +54,7 @@ nav:
       - Fork-Based Contribution Guide: standards/forked_based_branching.md
       - Git Flow Branching Strategy: standards/git_flow_branching_strategy.md
       - Semantic Versioning: standards/semantic_versioning.md
+      - Third-Party Build Integration: standards/build_integration.md
   - Vendor HAL Interfaces (VHI):
     - Overview: key_concepts/hal/hal_interfaces.md
     - Interface Generation: introduction/interface_generation.md
@@ -123,6 +124,8 @@ nav:
     - Systemd: vsi/systemd/current/systemd.md
     - Kernel: '!include vsi/kernel/current/mkdocs.yml'
     - Linux Input: '!include vsi/linuxinput/current/mkdocs.yml'
+  - Transformation Guides:
+    - Westeros onto IGraphicsFbProvider: transformation/westeros_graphics_fb_transform.md
   - Vendor Tests Suites (VTS):
     - Levels of Test: external_content/ut-core-wiki/3.-Standards:-Levels-of-Test-for-Vendor-Layer.md
     - Level 4:

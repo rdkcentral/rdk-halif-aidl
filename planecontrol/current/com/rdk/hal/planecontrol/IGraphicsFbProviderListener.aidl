@@ -30,10 +30,14 @@ oneway interface IGraphicsFbProviderListener
 {
     /**
      * @brief     Called after a call to commitGraphicsFb() when the Graphics Frame Buffer has become current.
-     * @param[in] oldGraphicsFbId    The Frame Id of the old frame replaced by the newly committed frame.
-     * @param[in] elapsedRealtimeNanos  The CLOCK_MONOTONIC time when the old graphics frame was replaced by the new.
+     * @param[in] oldGraphicsFbId  The Frame Id of the old frame replaced by the newly committed frame.
+     * @param[in] timestampNs      The CLOCK_MONOTONIC time, in nanoseconds, at which the old frame was
+     *                             replaced by the new one. The client compares this against the
+     *                             CLOCK_MONOTONIC time of its commitGraphicsFb() call to measure
+     *                             commit-to-present latency; CLOCK_MONOTONIC is system-wide, so the two
+     *                             readings are directly comparable across processes.
      *
      * If no old frame exists (e.g. on the first invocation), this callback is invoked with oldGraphicsFbId set to -1.
      */
-    void onGraphicsFbReleased(in int oldGraphicsFbId, in long elapsedRealtimeNanos);
+    void onGraphicsFbReleased(in int oldGraphicsFbId, in long timestampNs);
 }

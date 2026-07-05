@@ -348,15 +348,17 @@ For the first input [AV Buffer](../avbuffer/av_buffer.md) video frame passed in 
 
 ## End of Stream Signalling
 
-EOS rides entirely on the framework metadata parcelables on both sides of the interface. There is no separate signal method.
+End-of-stream is a discrete signal, not a per-buffer flag. The client drives it with `IVideoDecoderController.signalEndOfStream()` and observes completion through `IVideoDecoderControllerListener.onEndOfStream()`.
 
-**Input side:** the client sets `InputBufferMetadata.endOfStream = true` on the final call to `IVideoDecoderController.decodeBufferWithMetadata()`. `bufferHandle` MUST reference a valid encoded frame - there is no EOS-only marker form and no path to signal EOS without data. If the client has no more data to send, it ends the session via `stop()` (or `flush(reset=true)` if the decoder is to be reused).
+**Input side:** when the client has submitted its final buffer, it calls `IVideoDecoderController.signalEndOfStream()`. This is the authoritative "I will submit no further buffers" signal and the only input-side EOS path. `decodeBufferWithMetadata()` only submits data and carries no EOS information; `InputBufferMetadata` has no EOS field. The call serves the after-the-fact case where the client discovers end-of-stream only once its final buffer was already submitted (async demux, network EOF, pipelined I/O). The decoder must be in `State::STARTED` and at least one buffer must have been submitted on the session, otherwise the call throws `EX_ILLEGAL_STATE`. A second call is a no-op, and any subsequent `decodeBufferWithMetadata()` throws `EX_ILLEGAL_STATE`.
 
-**Output side:** EOS rides on the FINAL `IVideoDecoderControllerListener.onFrameOutput()` callback of the decode session by `FrameMetadata.endOfStream = true`. There is no separate EOS-only marker callback after the last frame. Fires exactly once per session. In non-tunnelled mode the callback delivers the last decoded frame with valid `frameAVBufferHandle` and `FrameMetadata`; in tunnelled mode `frameAVBufferHandle = -1` as normal. `metadata` is guaranteed non-null on the EOS callback (because `endOfStream` transitioning from false to true is a metadata change) so clients can rely on `metadata != null && metadata.endOfStream` for unambiguous EOS detection. The other fields of `FrameMetadata` describe the final frame as normal.
+This is distinct from `stop()` and `flush()`, which abruptly discard the decoder's reorder/DPB tail. `signalEndOfStream()` drains it: the HAL decodes and emits every held frame in presentation order via `onFrameOutput()` (each with its `FrameMetadata`, plus `onUserDataOutput()` for captions), dropping none.
 
-**In-bitstream EOS:** for codecs that carry an elementary-stream EOS marker (MPEG-2 `sequence_end_code`, H.264/H.265 end_of_stream NAL, MPEG-4 Part 2 `visual_object_sequence_end_code`), the HAL absorbs the marker, drains, and delivers the final `onFrameOutput()` with `endOfStream = true`. The client need not additionally set `InputBufferMetadata.endOfStream = true`, but doing so is not an error - the two EOS sources collapse to a single event.
+**Output side:** after the final `onFrameOutput()` of the drained session, the HAL fires `IVideoDecoderControllerListener.onEndOfStream()` exactly once. It is delivered on the same listener and ordered in-band - it follows the last frame on the same ordered callback channel. After this callback the decoder remains in `State::STARTED` but is drained; no further `onFrameOutput()` is delivered until `flush()` or `stop()` + `start()`.
 
-After the EOS callback the decoder remains in `State::STARTED` but is drained. No further `onFrameOutput()` is delivered until `flush()` or `stop()` + `start()`.
+Behaviour is identical in tunnelled and non-tunnelled modes. In tunnelled mode the decoder→sink data flow is vendor-internal, so the vendor propagates the EOS signal from decoder to sink. The middleware observes the same sequencing in both modes: `decoder.onEndOfStream()` (decode complete) followed by `sink.onEndOfStream(nsPresentationTime)` (presentation complete) with the correct presentation timing.
+
+**In-bitstream EOS:** for codecs that carry an elementary-stream sequence-end marker (MPEG-2 `sequence_end_code`, H.264/H.265 end_of_stream NAL, MPEG-4 Part 2 `visual_object_sequence_end_code`), the HAL surfaces it per-frame through `FrameMetadata.bitstreamEOS`. This flag is advisory and informational only: it does not end the decode session, triggers no callback, and may appear more than once in a session - at a splice or concatenation point an end-of-sequence is a sequence boundary, not necessarily end-of-presentation. Authoritative end-of-stream remains the discrete `signalEndOfStream()` / `onEndOfStream()` pair.
 
 ## Decoded Video Frame Buffers
 
@@ -459,8 +461,8 @@ sequenceDiagram
 
     Note over Client: Client can now<br>send AV buffers
 
-    Client->>Controller: decodeBufferWithMetadata(bufferHandle=1, {pts, endOfStream=false, ...})
-    Client->>Controller: decodeBufferWithMetadata(bufferHandle=2, {pts, endOfStream=false, ...})
+    Client->>Controller: decodeBufferWithMetadata(bufferHandle=1, {pts, ...})
+    Client->>Controller: decodeBufferWithMetadata(bufferHandle=2, {pts, ...})
     Controller-->>IVideoDecoderControllerListener: onFrameOutput(pts, frameBufferHandle=1000, metadata)
     Controller->>IAVBuffer: free(bufferHandle=1)
 
@@ -471,13 +473,19 @@ sequenceDiagram
     Controller->>IAVBuffer: free(bufferHandle=2)
     ADC-->>IVideoDecoderEventListener: onStateChanged(FLUSHING -> STARTED)
 
-    Client->>Controller: decodeBufferWithMetadata(bufferHandle=3, {pts, endOfStream=false, ...})
+    Client->>Controller: decodeBufferWithMetadata(bufferHandle=3, {pts, ...})
+
+    Note over Controller: signalEndOfStream() drains the decoder,<br>emits held frames, then fires onEndOfStream() once
+
+    Client->>Controller: signalEndOfStream()
+    Controller-->>IVideoDecoderControllerListener: onFrameOutput(pts, frameBufferHandle=1002, metadata)
+    Controller->>IAVBuffer: free(bufferHandle=3)
+    Controller-->>IVideoDecoderControllerListener: onEndOfStream()
 
     Note over ADC: stop() transitions from STARTED -> STOPPING -> READY
 
     Client->>Controller: stop()
     ADC-->>IVideoDecoderEventListener: onStateChanged(STARTED -> STOPPING)
-    Controller->>IAVBuffer: free(bufferHandle=3)
     ADC-->>IVideoDecoderEventListener: onStateChanged(STOPPING -> READY)
 
     Note over ADC: close() transitions from READY -> CLOSING -> CLOSED

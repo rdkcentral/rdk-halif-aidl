@@ -22,7 +22,7 @@
 #
 # smoke_test.sh - module-local build smoke test.
 #
-# Exercises the four build paths the module-local restructure (#493) +
+# Exercises the build paths the module-local restructure (#493) +
 # versioned-imports work (#538) added, and asserts the produced HAL
 # libraries:
 #
@@ -30,6 +30,7 @@
 #   2. ./build_modules.sh manifest                                     - build the released cohort (versions_released.yaml)
 #   3. ./build_modules.sh manifest --file versions_current.yaml        - build the dev cohort (every component at current/)
 #   4. ./build_modules.sh <c> --version <v>                            - build a single released snapshot
+#   5. ./build_modules.sh <c> --version <v> (deps wiped first)         - standalone snapshot build auto-resolves its dependency closure (#638)
 #
 # It is run on demand (no CI wiring). Exit status is 0 only if every check
 # passes.
@@ -44,7 +45,7 @@ REPO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/.." && pwd)"
 cd "${REPO_ROOT}"
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-    sed -n '23,33p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '23,34p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
     exit 0
 fi
 
@@ -76,7 +77,7 @@ echo ""
 # previous build don't inflate the lib counts. `--clean` clears the build
 # tree but not the staged output.
 rm -rf "${HALIF_LIB_DIR}"
-echo "[1/4] ./build_modules.sh all --clean"
+echo "[1/5] ./build_modules.sh all --clean"
 if ./build_modules.sh all --clean > /tmp/smoke_all.log 2>&1; then
     n=$(count_libs 'lib*-vcurrent-cpp.so')
     if [ "${n}" -eq "${EXPECTED_CURRENT}" ]; then
@@ -113,7 +114,7 @@ fi
 # with no snapshot yet) falls through and stays at `-vcurrent-cpp`.
 #######################################################################
 echo ""
-echo "[2/4] ./build_modules.sh manifest      (versions_released.yaml)"
+echo "[2/5] ./build_modules.sh manifest      (versions_released.yaml)"
 # Count via the *same* awk regex `build_modules.sh manifest` uses, so a
 # manifest-format regression that the parser silently drops (e.g.
 # aligned `name  : version` with spaces before the colon) shows up
@@ -158,7 +159,7 @@ fi
 # the in-development cohort devs work against day-to-day.
 #######################################################################
 echo ""
-echo "[3/4] ./build_modules.sh manifest --file versions_current.yaml  (dev)"
+echo "[3/5] ./build_modules.sh manifest --file versions_current.yaml  (dev)"
 if ./build_modules.sh manifest --file versions_current.yaml > /tmp/smoke_manifest_current.log 2>&1; then
     n=$(count_libs 'lib*-vcurrent-cpp.so')
     if [ "${n}" -eq "${EXPECTED_CURRENT}" ]; then
@@ -178,7 +179,7 @@ fi
 # it. (Released via ./release.sh; the snapshots are committed.)
 #######################################################################
 echo ""
-echo "[4/4] per-version snapshot build"
+echo "[4/5] per-version snapshot build"
 SNAP=""
 for d in */[0-9]*.[0-9]*.[0-9]*.[0-9]*/CMakeLists.txt; do
     [ -f "${d}" ] || continue
@@ -202,6 +203,69 @@ else
     else
         fail "snapshot: build_modules.sh exited non-zero (see /tmp/smoke_snapshot.log)"
         tail -15 /tmp/smoke_snapshot.log | sed 's/^/        /'
+    fi
+fi
+
+#######################################################################
+# 5. Standalone snapshot build with its dependency closure wiped (#638)
+#
+# Steps 1-4 leave out/build/include + out/target fully populated, so a
+# per-version snapshot build never proves it can stand up its own
+# dependencies. Here we pick a released snapshot that HAS dependencies,
+# wipe those dependencies' staged headers + libraries, then build ONLY
+# that snapshot and assert it auto-resolves and rebuilds the closure
+# (the exact failure mode of #638: missing com/rdk/hal/PropertyValue.h).
+#######################################################################
+echo ""
+echo "[5/5] standalone snapshot build resolves its dependency closure (#638)"
+# Find the first released snapshot whose CMakeLists declares HAL deps.
+DEPSNAP=""
+for d in */[0-9]*.[0-9]*.[0-9]*.[0-9]*/CMakeLists.txt; do
+    [ -f "${d}" ] || continue
+    grep -qE 'HALIF_INCLUDE_DIR\}/[a-z][a-z0-9_]*/[0-9][0-9.]*/include' "${d}" || continue
+    DEPSNAP="${d%/CMakeLists.txt}"
+    break
+done
+
+if [ -z "${DEPSNAP}" ]; then
+    pass "dep-closure: no released snapshot with dependencies found — nothing to exercise"
+else
+    dcomp="${DEPSNAP%%/*}"
+    dver="${DEPSNAP#*/}"
+    dcmake="${DEPSNAP}/CMakeLists.txt"
+    # Immediate dependencies declared by the snapshot's CMakeLists.
+    mapfile -t DEPS < <(grep -oE 'HALIF_INCLUDE_DIR\}/[a-z][a-z0-9_]*/[0-9][0-9.]*/include' "${dcmake}" \
+        | sed -E 's#HALIF_INCLUDE_DIR\}/([^/]+)/([^/]+)/include#\1 \2#' | sort -u)
+    echo "       target ${dcomp}/${dver}; wiping ${#DEPS[@]} dependency(ies): ${DEPS[*]}"
+
+    # Wipe the target + each dependency's staged headers, libraries and build
+    # dirs so the build genuinely starts from an unstaged state.
+    rm -rf "build/${dcomp}-${dver}" "build/${dcomp}/${dver}"
+    rm -f  "${HALIF_LIB_DIR}/lib${dcomp}-v${dver}-cpp.so"
+    rm -rf "${REPO_ROOT}/out/build/include/${dcomp}/${dver}"
+    for pair in "${DEPS[@]}"; do
+        set -- ${pair}; dep="$1"; depver="$2"
+        rm -f  "${HALIF_LIB_DIR}/lib${dep}-v${depver}-cpp.so"
+        rm -rf "${REPO_ROOT}/out/build/include/${dep}/${depver}"
+        rm -rf "build/${dep}-${depver}" "build/${dep}/${depver}"
+    done
+
+    if ./build_modules.sh "${dcomp}" --version "${dver}" > /tmp/smoke_depclosure.log 2>&1; then
+        missing=0
+        # The target and every wiped dependency lib must be back.
+        for pair in "${dcomp} ${dver}" "${DEPS[@]}"; do
+            set -- ${pair}; c="$1"; v="$2"
+            [ -f "${HALIF_LIB_DIR}/lib${c}-v${v}-cpp.so" ] || { fail "dep-closure: lib${c}-v${v}-cpp.so not rebuilt"; missing=1; }
+        done
+        # Each dependency's headers must have been re-staged (the #638 symptom).
+        for pair in "${DEPS[@]}"; do
+            set -- ${pair}; dep="$1"; depver="$2"
+            [ -d "${REPO_ROOT}/out/build/include/${dep}/${depver}/include" ] || { fail "dep-closure: ${dep}/${depver} headers not staged"; missing=1; }
+        done
+        [ "${missing}" -eq 0 ] && pass "dep-closure: ${dcomp}/${dver} auto-resolved and rebuilt ${#DEPS[@]} dependency(ies) from a wiped state"
+    else
+        fail "dep-closure: build_modules.sh exited non-zero (see /tmp/smoke_depclosure.log)"
+        tail -15 /tmp/smoke_depclosure.log | sed 's/^/        /'
     fi
 fi
 
