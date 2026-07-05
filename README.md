@@ -116,20 +116,30 @@ single-component release would have been.
 
 ### Production build (Yocto/BitBake)
 
+libbinder is built and staged by the separate **`linux-binder`** recipe
+(`DEPENDS = "linux-binder"`). The HAL libraries are then built **per component**
+from that staged SDK — each `<module>/<version>/` is self-contained (committed
+C++, its own CMakeLists, **no linux_binder_idl toolchain source needed**):
+
 ```bash
-# linux_binder SDK is staged by the Yocto dependency system (DEPENDS = "linux-binder").
-# A staged SDK is flat, so headers and libs share one prefix — pass both
-# BINDER_SDK_DIR and BINDER_SDK_INCLUDE_DIR (they differ only in the local dev tree).
-cmake -S . -B build -DINTERFACE_TARGET=all \
+# For each released <module>/<version>. A staged SDK is flat, so headers and
+# libs share one prefix — point both BINDER_SDK_DIR and BINDER_SDK_INCLUDE_DIR
+# at it (they differ only in the local dev tree).
+cmake -S <module>/<version> -B build \
       -DBINDER_SDK_DIR=${STAGING_DIR}/usr \
       -DBINDER_SDK_INCLUDE_DIR=${STAGING_DIR}/usr
 cmake --build build
 cmake --install build
 ```
 
-Compiles the committed module-local C++ into `lib<module>-vcurrent-cpp.so` and
-installs to `${OUT_DIR}/target/lib/halif/`. Requires only CMake, a C++ compiler
-and the linux_binder SDK — no Python, no AIDL compiler.
+Compiles the committed module-local C++ into `lib<module>-v<version>-cpp.so`.
+Requires only CMake, a C++ compiler and the staged linux_binder SDK — no Python,
+no AIDL compiler, and no linux_binder_idl source.
+
+> **Note (#635):** the one-shot root build (`cmake -S . -DINTERFACE_TARGET=all`)
+> is the **integrated dev** path — it pulls in the linux_binder_idl toolchain
+> (`CMakeLists.inc`) and so requires that source tree. It is **not** for a
+> standalone Yocto recipe; use the per-component build above.
 
 ### Version manifest (`versions.yaml`)
 
