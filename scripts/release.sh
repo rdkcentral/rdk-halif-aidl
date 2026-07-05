@@ -1779,82 +1779,6 @@ is_buildable_component() {
     [[ -f "${REPO_ROOT}/${comp}/current/interface.yaml" ]]
 }
 
-# ----------------------------------------------------------------------------
-# Frozen interface VERSION + contract HASH (#633)
-# ----------------------------------------------------------------------------
-# Module-local snapshots are compile-only (their CMakeLists glob src/*.cpp and
-# never regenerate), so getInterfaceVersion()/getInterfaceHash() can only be
-# baked in at freeze time. We stamp current/ with the fixed-width positional
-# version int (X.Y.Z.W -> e.g. 0.2.0.0 = 20000; see _snapshot_version_int) +
-# contract hash, let the version-aware generator (linux_binder_idl #33) emit
-# them, copy that into the snapshot, then restore current/. Needs that
-# generator; with an older generator the `version:` field is simply ignored.
-
-# Interface VERSION encodes X.Y.Z.W as a fixed-width positional int32: each
-# dotted field is zero-padded to TWO digits and concatenated, so the value is
-# both monotonic and losslessly decodable. Examples:
-#   0.2.0.0 -> 00 02 00 00 ->    20000
-#   0.3.0.0 -> 00 03 00 00 ->    30000
-#   0.1.0.1 -> 00 01 00 01 ->    10001
-#   1.0.0.0 -> 01 00 00 00 -> 1000000
-# Decode (consumer side): field = (v / 10^(2*(3-i))) % 100, i.e.
-#   prefix=(v/1000000)%100  generation=(v/10000)%100  minor=(v/100)%100  patch=v%100.
-# Max 99.99.99.99 -> 99,999,999, well under int32 max (2,147,483,647). Each
-# field must be 0-99 (two digits); a field >= 100 is not encodable and returns
-# empty so the caller leaves the snapshot unfrozen rather than emit a wrong
-# number. This is the collision-safe successor to the old dot-strip scheme
-# (which broke once any field reached 10, e.g. 0.10.0.0 == 1.0.0.0).
-#
-# NOTE: getInterfaceVersion() ordering is only an additive-compatibility test
-# WITHIN a generation. The `generation` field (X.Y.*.*) marks breaking changes,
-# so a correct consumer check is:
-#   compatible := generation(server) == generation(client) && server >= client
-# A bare `server >= client` is WRONG across a generation bump. See #633.
-_snapshot_version_int() {
-    local ver="$1" out="" f
-    # Require EXACTLY four numeric dot-separated fields (X.Y.Z.W). This rejects
-    # malformed inputs (0.2.0, 0.2.0.0., 0.2..0) that word-splitting would
-    # otherwise silently accept — which could collide (0.2.0 -> same as 0.2.0.0).
-    if ! [[ "${ver}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        echo ""
-        return 0
-    fi
-    local IFS='.'
-    for f in ${ver}; do
-        # Two-digit fixed field; reject >99 (unencodable in this scheme).
-        if (( 10#${f} > 99 )); then
-            echo ""
-            return 0
-        fi
-        out+=$(printf '%02d' "$((10#${f}))")
-    done
-    echo "$((10#${out}))"        # base-10 (avoid octal on leading zeros)
-}
-
-# Contract hash = sha256 of (sorted per-file .aidl sha256sums + the hashgen
-# version label). SHA-256 (64 hex) matches the format of the committed
-# <version>/.hash files across the repo. For an unfrozen base the label is
-# 'latest-version', matching the toolchain's version_for_hashgen(next_version()==1).
-_contract_hash() {
-    local dir="$1"
-    ( cd "${dir}" && find ./ -name '*.aidl' -print0 | LC_ALL=C sort -z \
-        | xargs -0 sha256sum && echo "latest-version" ) | sha256sum | cut -d' ' -f1
-}
-
-# Insert/replace `version: N` under aidl_interface in an interface.yaml.
-_set_interface_version() {
-    python3 - "$1" "$2" <<'PYEOF'
-import sys, re
-path, n = sys.argv[1], sys.argv[2]
-s = open(path).read()
-if re.search(r'^\s*version:\s*\d+\s*$', s, re.M):
-    s = re.sub(r'(^\s*version:\s*)\d+(\s*)$', r'\g<1>' + n + r'\2', s, count=1, flags=re.M)
-else:
-    s = re.sub(r'(\n\s*name:[^\n]*\n)', r'\1  version: ' + n + '\n', s, count=1)
-open(path, 'w').write(s)
-PYEOF
-}
-
 create_snapshot() {
     local comp="$1"
     local version="$2"
@@ -1882,31 +1806,12 @@ create_snapshot() {
         refresh_marker=" (refreshed)"
     fi
 
-    # Freeze-stamp current/ so the generated snapshot carries a real interface
-    # VERSION (fixed-width positional int) + contract HASH instead of 1/notfrozen (#633). Restored
-    # right after the copy below.
-    local _cur="${REPO_ROOT}/${comp}/current"
-    local _iface_version _chash _ifyaml_bak=""
-    _iface_version="$(_snapshot_version_int "${version}")"
-    _chash="$(_contract_hash "${_cur}")"
-    if [[ -z "${_iface_version}" ]]; then
-        warn "  [${comp}] version ${version} is not encodable as a fixed-width int (a field exceeds 99); ${version}/ will be left unfrozen (VERSION=1/notfrozen)."
-    fi
-    if [[ -n "${_iface_version}" && -n "${_chash}" && -f "${_cur}/interface.yaml" ]]; then
-        _ifyaml_bak="$(mktemp)"
-        cp "${_cur}/interface.yaml" "${_ifyaml_bak}"
-        _set_interface_version "${_cur}/interface.yaml" "${_iface_version}"
-        printf '%s\n' "${_chash}" > "${_cur}/.hash"
-        [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] freezing ${version} as interface version ${_iface_version} (hash ${_chash:0:12}…)"
-    fi
-
     [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] regenerating bindings via build_modules.sh..."
     local build_log="${REPO_ROOT}/out/release-snapshot-${comp//\//_}.log"
     mkdir -p "$(dirname "${build_log}")"
     if [[ "${VERBOSE}" -eq 1 ]]; then
         if ! (cd "${REPO_ROOT}" && ./build_modules.sh "${comp}" 2>&1 | tee "${build_log}"); then
             warn "Failed to regenerate ${comp} bindings — see ${build_log}."
-            [[ -n "${_ifyaml_bak}" ]] && { mv -f "${_ifyaml_bak}" "${_cur}/interface.yaml"; rm -f "${_cur}/.hash"; }
             return 1
         fi
     else
@@ -1914,32 +1819,15 @@ create_snapshot() {
             log "  [${comp}] → ${version}/  ${_C_RED}✗ build failed${_C_RESET} (see ${build_log#${REPO_ROOT}/})"
             grep -E '^(❌|ERROR|FAIL)' "${build_log}" | head -3 | sed 's/^/    /' >&2 \
                 || tail -10 "${build_log}" | sed 's/^/    /' >&2
-            [[ -n "${_ifyaml_bak}" ]] && { mv -f "${_ifyaml_bak}" "${_cur}/interface.yaml"; rm -f "${_cur}/.hash"; }
             return 1
         fi
     fi
 
     [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] copying current/ to ${version}/"
-    local _cp_rc=0
-    cp -r "${REPO_ROOT}/${comp}/current" "${snapshot_dir}" || _cp_rc=$?
-
-    # Restore current/ to its unfrozen source-of-truth now that the stamped
-    # bindings are copied into the snapshot. current/'s generated code is
-    # regenerated to VERSION=1/notfrozen by the later verification build.
-    if [[ -n "${_ifyaml_bak}" ]]; then
-        mv -f "${_ifyaml_bak}" "${_cur}/interface.yaml"
-        rm -f "${_cur}/.hash"
-    fi
-
-    if [[ "${_cp_rc}" -ne 0 ]]; then
+    if ! cp -r "${REPO_ROOT}/${comp}/current" "${snapshot_dir}"; then
         warn "cp failed for ${comp}/${version}/."
         return 1
     fi
-
-    # Record the snapshot's frozen contract hash (the snapshot is compile-only;
-    # this is the canonical SHA → <version> mapping and the value getInterfaceHash()
-    # now returns).
-    [[ -n "${_chash}" ]] && printf '%s\n' "${_chash}" > "${snapshot_dir}/.hash"
 
     # Patch the copied CMakeLists.txt so the snapshot links + installs
     # with cohort-pinned versioned names. The `current/CMakeLists.txt`
