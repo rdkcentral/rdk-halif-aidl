@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Generated** | 2026-07-03 |
+| **Generated** | 2026-07-05 |
 | **Components** | 31 |
-| 🟢 **GREEN** | 20 |
-| 🟡 **AMBER** | 11 |
+| 🟢 **GREEN** | 19 |
+| 🟡 **AMBER** | 12 |
 | 🔴 **RED** | 0 |
 
 ---
@@ -14,8 +14,8 @@
 
 | Status | Count | Meaning |
 |--------|-------|---------|
-| 🟢 GREEN | **20** | Reviewed & Approved — Interface stable on develop |
-| 🟡 AMBER | **11** | Under Active Ingestion — Will enter sprint review when ready |
+| 🟢 GREEN | **19** | Reviewed & Approved — Interface stable on develop |
+| 🟡 AMBER | **12** | Under Active Ingestion — Will enter sprint review when ready |
 | 🔴 RED | **0** | Not Started / Blocked — Strategy or definition required |
 
 ---
@@ -27,7 +27,6 @@
 | | Component | Current Version | Description | Reviews | Owners |
 |---|-----------|---------|-------------|---------|--------|
 | 🟢 | audiodecoder | 0.2.0.0 | Audio decoder resource management and codec format support | 0/4 | Architecture + AV_Architecture |
-| 🟢 | audiomixer | 0.3.0.0 | Audio mixing and routing for multi-stream output | 0/4 | Architecture + Vendor_Layer_Team + AV_Architecture |
 | 🟢 | audiosink | 0.2.0.0 | Audio output rendering and sink device management | 0/4 | Architecture + AV_Architecture |
 | 🟢 | avbuffer | 0.2.0.0 | AV buffer allocation and secure video path management | 4/4 | Architecture + AV_Architecture |
 | 🟢 | avclock | 0.2.0.0 | Audio/video clock synchronization and timing control | 0/4 | Architecture + AV_Architecture |
@@ -62,6 +61,7 @@
 
 | | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
 |---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
+| 🟡 | audiomixer | 0.3.0.0 | — | AQ parameter API in review | Land the AQ processor interface (#411 / #410, PR #573) — a breaking interface addition still under review; V1 not yet complete. Flip to GREEN on merge. | — | — | Architecture + Vendor_Layer_Team + AV_Architecture |
 | 🟡 | avbuffer *(SVP risk)* | 0.2.0.0 | 1 | Encrypted buffer (DRM/SVP) - Pending on DRM strategy | May change due to SVP changes from DRM which is being worked on | — | — | Architecture + AV_Architecture |
 | 🟡 | vsi/kernel | 0.0.0.1 | 1 | Strategy required | Not blocking progress - Architecture Strategy | — | — | Architecture |
 | 🟡 | vsi/graphics | 0.0.0.1 | 6 | Docs required | Not blocking progress - Define Versions & write up vision and direction, Planning Out Evolution of the platform, RDK-M | — | — | Architecture + Graphics_Architecture |
@@ -109,7 +109,6 @@
 | | Component | Progress | Arch | Prod | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel | Vendor |
 |---|-----------|----------|------|------|-----|-----------|----------|----------|--------------|--------|--------|
 | 🟢 | audiodecoder | 0/4 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
-| 🟢 | audiomixer | 0/4 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
 | 🟢 | audiosink | 0/4 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
 | 🟢 | avbuffer | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
 | 🟢 | avclock | 0/4 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
@@ -128,6 +127,7 @@
 |---|-----------|----------|------|------|-----|-----------|----------|----------|--------------|--------|--------|
 | 🟡 | vsi/kernel | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |
 | 🟡 | vsi/graphics | 0/4 | ☐ | ☐ | N/A | N/A | N/A | ☐ | N/A | N/A | ☐ |
+| 🟡 | audiomixer | 0/4 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
 
 ### SOC — 🔴 RED
 

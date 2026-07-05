@@ -22,7 +22,7 @@
 # type        - Responsibility: SOC or OEM                                [manual]
 component: audiomixer
 version: 0.3.0.0
-status: GREEN
+status: AMBER
 description: "Audio mixing and routing for multi-stream output"
 type: SOC
 
@@ -50,6 +50,8 @@ scope:
 #   risk          - Risk notes (appears as watch item on dashboard)
 #   owners        - Responsible architecture teams
 notes:
+  status_detail: "AQ parameter API in review"
+  action: "Land the AQ processor interface (#411 / #410, PR #573) — a breaking interface addition still under review; V1 not yet complete. Flip to GREEN on merge."
   owners: "Architecture + Vendor_Layer_Team + AV_Architecture"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]
