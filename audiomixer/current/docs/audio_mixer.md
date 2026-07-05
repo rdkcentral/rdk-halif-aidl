@@ -446,7 +446,7 @@ Mixers can operate in secure and non-secure paths. Mixer properties such as `MIX
 
 The `IDolbyMs12_2_6_Dap` interface exposes one method per MS12 IDK 2.6 runtime command. It is obtained from `IAudioOutputPortController.getDolbyMs12_2_6_Dap()`, so DAP access is gated by holding the exclusive port controller acquired via `IAudioOutputPort.open()`. Because the interface is acquired from the controller, the ownership boundary applies to all DAP access — reads as well as writes — for the controller's lifetime. No separate DAP-level open()/close() is required.
 
-Non-boolean argument constraints for MS12 v2.6 DAP methods are declared in `audiomixer/current/hfp-audiomixer.yaml` under the `aqProcessors[]` block whose `type: DOLBY_MS12_2_6` and matching `version` apply, mirroring the parameter ranges surfaced by `IAQProcessor.getSupportedParameters()`.
+Non-boolean argument constraints for the MS12 v2.6 DAP methods are specified in the table below. (These are the DAP command-set ranges of `IDolbyMs12_2_6_Dap`; they are distinct from the `IAQProcessor` AQ parameters declared in the `aqProcessors[]` block of `hfp-audiomixer.yaml`, which cover a different surface.)
 
 | Method | Non-boolean constraints |
 | ------ | ----------------------- |

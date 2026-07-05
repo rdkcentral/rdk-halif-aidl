@@ -91,9 +91,10 @@ audiomixer:
   # List of output ports and their capabilities.
   # These define what each physical/logical output supports (e.g., HDMI, SPDIF).
   #
-  # portName: free-form string (canonical spellings recommended:
-  #   HDMI, HDMI_ARC, HDMI_EARC, SPDIF, SPEAKERS, HEADPHONE,
-  #   LINE_OUT, BLUETOOTH, USB_AUDIO).
+  # portName: free-form string. The canonical spellings are reserved —
+  #   platforms MUST use them when one applies (matches
+  #   OutputPortCapabilities.portName): HDMI, HDMI_ARC, HDMI_EARC, SPDIF,
+  #   SPEAKERS, HEADPHONE, LINE_OUT, BLUETOOTH, USB_AUDIO.
   # portType: programmatic OutputPortType enum (HDMI, SPDIF, INTERNAL, ...).
   # isAQRouted: true when this port routes through the AQ processing block.
   #             When true, the port surfaces an IAQProcessor via
@@ -290,6 +291,10 @@ audiomixer:
           includedInSoundMode: [MOVIE]
           description: "Dynamic Range Control mode (LINE or RF)."
 
+    # 'type' names the processor FAMILY / DAP command-set generation (the "2_6"
+    # is the MS12 DAP command set, not a comparable version); 'version' is the
+    # vendor implementation version. Clients branch on getProcessorType()
+    # (family) then getVersion() (impl) — two separate axes.
     - id: 1
       type: DOLBY_MS12_2_6
       version: "1.4.3"

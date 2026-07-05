@@ -30,8 +30,10 @@ import com.rdk.hal.PropertyType;
  * metadata are defined in the HFP YAML configuration.
  *
  * @note  The PropertyType enum was promoted out of this parcelable into
- *        the shared com.rdk.hal package so multiple HAL components can
- *        reuse the same type taxonomy without cross-package imports.
+ *        the shared com.rdk.hal package so every HAL component reuses one
+ *        common type taxonomy, rather than each depending on a
+ *        component-scoped copy. This file imports the shared
+ *        com.rdk.hal.PropertyType.
  */
 @VintfStability
 parcelable PropertyMetadata
