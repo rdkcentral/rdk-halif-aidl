@@ -114,7 +114,14 @@ single-component release would have been.
                              # branch + tag)
 ```
 
-### Production build (Yocto/BitBake)
+### Consuming the interfaces (build with CMake directly)
+
+Integrators and production build systems (Yocto/BitBake, buildroot, a CMake
+superbuild) **invoke CMake directly** and select what to build through `-D`
+switches. The `build_*.sh` wrapper scripts are developer/architecture-team tools
+that require a native host toolchain and refuse to run in a cross/OpenEmbedded
+environment. See [Third-Party Build Integration](docs/standards/build_integration.md)
+for the full contract and reference recipes.
 
 libbinder is built and staged by the separate **`linux-binder`** recipe
 (`DEPENDS = "linux-binder"`). The HAL libraries are then built **per component**
@@ -155,6 +162,10 @@ no AIDL compiler, and no linux_binder_idl source.
 A component absent from the manifest falls back to its `default:` entry.
 
 ## Scripts
+
+These are developer and architecture-team tools: they require a native host
+toolchain and refuse to run in a cross/OpenEmbedded environment. Integrators
+build with CMake directly — see [Consuming the interfaces](#consuming-the-interfaces-build-with-cmake-directly).
 
 | Script | Role |
 | ------ | ---- |
@@ -249,7 +260,9 @@ Used by `build_binder.sh` and `build_interfaces.sh` only:
 **Not used in production Yocto builds**.
 
 The full two-stage dev and production build workflows are covered in the
-[Quick Start](#quick-start) section above.
+[Quick Start](#quick-start) section above. See
+[Third-Party Build Integration](docs/standards/build_integration.md) for the
+full consumer/integrator build contract.
 
 ## Additional Documentation
 
@@ -259,6 +272,8 @@ The full two-stage dev and production build workflows are covered in the
   - Kernel configuration and runtime setup
   - Systemd service configuration
   - 32-bit userspace on 64-bit kernel support
+
+- **[docs/standards/build_integration.md](docs/standards/build_integration.md)** - Consumer/integrator build contract: direct-CMake switches, required variables, reference BitBake/Bob recipes
 
 - **[tests/README.md](tests/README.md)** - On-demand build verification
   - `tests/smoke_test.sh` - exercises the `all`, `manifest` and per-version build paths

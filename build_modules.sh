@@ -95,15 +95,11 @@ Build Configuration:
     # With custom flags
     CC=gcc CFLAGS="-O2 -g" CXXFLAGS="-O2 -g" ./build_modules.sh all
 
-    # Cross-compilation (Yocto pattern)
-    CC=arm-linux-gnueabihf-gcc \
-    CXX=arm-linux-gnueabihf-g++ \
-    CFLAGS="-march=armv7-a" \
-    CXXFLAGS="-march=armv7-a" \
-    LDFLAGS="-Wl,--hash-style=gnu" \
-    ./build_modules.sh all --sdk-dir /opt/sysroot/usr
-
   Supported variables: CC, CXX, CFLAGS, CXXFLAGS, LDFLAGS
+
+  Cross-compilation / Yocto: this wrapper is host-only and refuses to run in a
+  cross/OpenEmbedded environment. Production and cross builds invoke CMake
+  directly — see docs/standards/build_integration.md.
 
 Examples:
   # Basic usage
@@ -117,16 +113,14 @@ Examples:
   ./build_modules.sh cleanall                         # Remove out/ and build/
   ./build_modules.sh all --clean                      # Clean before build
 
-  # Custom SDK location (for Yocto/cross-compilation)
-  ./build_modules.sh all --sdk-dir /opt/sysroot/usr
+  # Custom SDK location (host dev with a non-default SDK prefix)
+  ./build_modules.sh all --sdk-dir /opt/sdk/usr
 
   # Parallel builds
   ./build_modules.sh all --jobs 8                     # 8 parallel jobs
 
-  # Yocto/BitBake integration
-  CC="${CC}" CXX="${CXX}" \
-  CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" LDFLAGS="${LDFLAGS}" \
-  ./build_modules.sh all --sdk-dir ${STAGING_DIR}${prefix}
+  # Yocto / cross builds do NOT use this script — invoke CMake directly.
+  # See docs/standards/build_integration.md.
 
 Output:
   Libraries: out/target/lib/halif/lib<module>-vcurrent-cpp.so
@@ -144,6 +138,15 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$SCRIPT_DIR"
+
+# Host-toolchain guard (#624): build / sdk operations need a native toolchain,
+# and Yocto/cross builds must call CMake directly (see
+# docs/standards/build_integration.md). clean/help do no toolchain work, so
+# they stay usable in any environment.
+case "${1:-}" in
+    clean|cleanall|--help|-h|--h|"") ;;
+    *) source "$SCRIPT_DIR/dev_env_guard.sh"; halif_guard_dev_host_env || exit 1 ;;
+esac
 
 # Suppress three classes of unfixable upstream noise so the verification
 # build output stays readable.
