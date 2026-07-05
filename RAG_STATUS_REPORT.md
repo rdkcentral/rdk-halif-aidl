@@ -171,17 +171,17 @@
 
 > **Note:** Architecture and Product_Architecture are the same organisational group reviewing as separate stakeholders, with members drawn from various teams.
 
-| Team | Role |
-|------|------|
-| Architecture | All components |
-| Product_Architecture | All components |
-| AV_Architecture | Audio/Video pipeline components |
-| Broadcast_Team | Broadcast/tuner components |
-| Control_Manager_Architecture | Remote control & input management |
-| Graphics_Architecture | Graphics, display & composition |
-| Connectivity_Architecture | Bluetooth, Wi-Fi & connectivity |
-| Kernel_Architecture | System, kernel, boot & platform |
-| Vendor_Layer_Team | Vendor HAL implementation review |
+| Team | Role | GitHub Team (add members here) |
+| ---- | ---- | ------------------------------ |
+| Architecture | All components | [hal-arch-reviewers](https://github.com/orgs/rdkcentral/teams/hal-arch-reviewers) |
+| Product_Architecture | All components | [hal-product-arch-reviewers](https://github.com/orgs/rdkcentral/teams/hal-product-arch-reviewers) |
+| AV_Architecture | Audio/Video pipeline components | [hal-av-arch-reviewers](https://github.com/orgs/rdkcentral/teams/hal-av-arch-reviewers) |
+| Broadcast_Team | Broadcast/tuner components | [hal-broadcast-reviewers](https://github.com/orgs/rdkcentral/teams/hal-broadcast-reviewers) |
+| Control_Manager_Architecture | Remote control & input management | [hal-control-manager-reviewers](https://github.com/orgs/rdkcentral/teams/hal-control-manager-reviewers) |
+| Graphics_Architecture | Graphics, display & composition | [hal-graphics-arch-reviewers](https://github.com/orgs/rdkcentral/teams/hal-graphics-arch-reviewers) |
+| Connectivity_Architecture | Bluetooth, Wi-Fi & connectivity | [hal-connectivity-arch-reviewers](https://github.com/orgs/rdkcentral/teams/hal-connectivity-arch-reviewers) |
+| Kernel_Architecture | System, kernel, boot & platform | [hal-kernel-arch-reviewers](https://github.com/orgs/rdkcentral/teams/hal-kernel-arch-reviewers) |
+| Vendor_Layer_Team | Vendor HAL implementation review | [rdk-halif-aidl-pr-review-team](https://github.com/orgs/rdkcentral/teams/rdk-halif-aidl-pr-review-team) |
 
 ---
 
