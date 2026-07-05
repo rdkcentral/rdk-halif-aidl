@@ -53,10 +53,13 @@ halif_guard_dev_host_env() {
     # A cross CC set outside an OE shell: compare target triples. (Inside an OE
     # shell PATH may already point cc at the cross compiler, so this can match
     # the host triple — the OECORE check above is what catches that case.)
+    # Derive the host triple from a *fixed* /usr/bin compiler first, so a cross
+    # toolchain that prepends PATH can't mask the host triple; fall back to a
+    # PATH-resolved cc/gcc only when the fixed paths are absent.
     if [ -n "${CC:-}" ]; then
         local cc_machine host_machine
         cc_machine="$(${CC} -dumpmachine 2>/dev/null || true)"
-        host_machine="$(cc -dumpmachine 2>/dev/null || gcc -dumpmachine 2>/dev/null || true)"
+        host_machine="$(/usr/bin/gcc -dumpmachine 2>/dev/null || /usr/bin/cc -dumpmachine 2>/dev/null || cc -dumpmachine 2>/dev/null || gcc -dumpmachine 2>/dev/null || true)"
         if [ -n "$cc_machine" ] && [ -n "$host_machine" ] && [ "$cc_machine" != "$host_machine" ]; then
             reasons+=("cross-compiler detected (CC -> ${cc_machine}, host ${host_machine})")
         fi
