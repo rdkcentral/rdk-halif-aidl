@@ -27,7 +27,6 @@ videodecoder:
   mw_teams: [AV_Architecture]
   vts_team:
     - { id: CPESP-9032, url: "https://ccp.sys.comcast.net/browse/CPESP-9032", title: "RDK-E Video Decoder - VTS", status: Closed }
-    - { id: CPESP-8647, url: "https://ccp.sys.comcast.net/browse/CPESP-8647", title: "RDK-E Video Decoder HAL - vDevice", status: In Progress }
   vdevice: { id: CPESP-8649, url: "https://ccp.sys.comcast.net/browse/CPESP-8649", title: "RDK-E Video Decoder HAL - Amlogic", status: In Progress }
 
 audiosink:
