@@ -1783,37 +1783,44 @@ is_buildable_component() {
 # Frozen interface VERSION + contract HASH (#633)
 # ----------------------------------------------------------------------------
 # getInterfaceVersion() reports the RELEASE version itself, encoded as a
-# fixed-width positional int32 — self-describing, no lookup table: each
-# X.Y.Z.W field is zero-padded to two digits and concatenated, so
-#   0.2.0.0 -> 00 02 00 00 ->   20000
-#   0.3.0.0 -> 00 03 00 00 ->   30000
-#   0.1.0.1 -> 00 01 00 01 ->   10001
-#   1.0.0.0 -> 01 00 00 00 -> 1000000
-# Decode: prefix=(v/1000000)%100 generation=(v/10000)%100 minor=(v/100)%100
-# patch=v%100. Monotonic across ALL releases (0.x < 1.x < ...) because the
-# same scheme is used forever — there is no later switch to bare ordinals.
-# Max 99.99.99.99 = 99,999,999, well under int32 max; a field >= 100 is not
-# encodable and leaves the snapshot unfrozen rather than emit a wrong number.
+# fixed-width positional int32 — self-describing, no lookup table. Field
+# widths are 1-2-2-1 over X.Y.Z.W (era.major.minor.doc): era is a single
+# digit (0 = pre-android-versioning, 1 = post), major/minor get two digits,
+# the doc/bugfix respin one digit. So:
+#   0.2.0.0  -> 0|02|00|0 ->   2000
+#   0.3.0.0  -> 0|03|00|0 ->   3000
+#   0.1.0.1  -> 0|01|00|1 ->   1001
+#   0.10.0.0 -> 0|10|00|0 ->  10000
+#   1.0.0.0  -> 1|00|00|0 -> 100000
+# Decode: pad to 6 digits, read 1|2|2|1 — era=v/100000, major=(v/1000)%100,
+# minor=(v/10)%100, doc=v%10. Monotonic across ALL releases (0.x < 1.x)
+# because the same scheme is used forever — there is no later switch to bare
+# ordinals. Max 9.99.99.9 = 999,999, tiny next to int32 max. A field beyond
+# its width (era/doc > 9, major/minor > 99) is not encodable and leaves the
+# snapshot unfrozen rather than emit a wrong number — note the doc field caps
+# at 9: a 10th doc-only respin of the same minor forces a minor bump.
 # getInterfaceHash() is the toolchain's aidl_hash_gen digest. current/ carries
 # neither field, so dev builds report HASH="notfrozen" — the pre-freeze
 # marker. Snapshots are compile-only (their CMakeLists glob src/*.cpp and
 # never regenerate), so both values are baked in at freeze time: stamp
 # current/, regenerate, copy into the snapshot, restore current/.
 _snapshot_version_int() {
-    local ver="$1" out="" f
+    local ver="$1" out="" f i
     # Require EXACTLY four numeric dot-separated fields (X.Y.Z.W); malformed
     # inputs (0.2.0, 0.2.0.0., 0.2..0) could otherwise collide after encoding.
     if ! [[ "${ver}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         echo ""
         return 0
     fi
-    local IFS='.'
-    for f in ${ver}; do
-        if (( 10#${f} > 99 )); then
+    local widths=(1 2 2 1) fields
+    IFS='.' read -ra fields <<< "${ver}"
+    for i in 0 1 2 3; do
+        f="$((10#${fields[i]}))"
+        if (( f >= 10 ** widths[i] )); then
             echo ""
             return 0
         fi
-        out+=$(printf '%02d' "$((10#${f}))")
+        out+=$(printf "%0${widths[i]}d" "${f}")
     done
     echo "$((10#${out}))"        # base-10 (avoid octal on leading zeros)
 }
