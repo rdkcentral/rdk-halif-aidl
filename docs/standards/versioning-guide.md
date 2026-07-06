@@ -2,474 +2,217 @@
 
 ## Overview
 
-This guide explains how to manage AIDL interface versions in the RDK HAL AIDL project. **Version numbers represent backward-compatible evolution**, not breaking changes.
+Every HAL component is released as versioned snapshots (`<component>/<X.Y.Z.W>/`)
+frozen from its development tree (`<component>/current/`). This guide defines
+what the version number means, what a running service reports through
+`getInterfaceVersion()` / `getInterfaceHash()`, and how clients check
+compatibility.
 
-## Core Principles
+## Release Version Format
 
-### 1. **Backward Compatibility is Mandatory**
+A release version has four fields:
 
-Every new version MUST be fully backward-compatible with all previous versions:
-
-- ✅ **Allowed Changes:**
-  - ADD new methods at the END of an interface
-  - ADD new fields at the END of a parcelable/struct
-  - ADD new enum values (with fallback handling)
-  - ADD new optional parameters with defaults
-
-- ❌ **Prohibited Changes:**
-  - Remove methods or fields
-  - Change method signatures or field types
-  - Reorder methods or fields
-  - Rename methods or fields
-  - Change method return types
-
-### 2. **Version Numbers are Incremental**
-
-- **v1** = First frozen/stable version
-- **v2** = v1 + additional features (backward-compatible)
-- **v3** = v2 + additional features (backward-compatible)
-- Each version includes ALL features from previous versions
-
-### 3. **Breaking Changes Require New Interface**
-
-If you need incompatible changes, create a **completely new interface component**:
-
-- Original: `IBootReason` → New: `IBootNew` or `IBootV2`
-- The old interface continues to exist
-- Clients migrate at their own pace
-- Both interfaces can coexist
-
-## Development Workflow
-
-### Initial Development (No Frozen Versions)
-
-```bash
-# 1. Create/edit AIDL interfaces in module/current/
-vim bootreason/current/com/rdk/hal/bootreason/IBootReason.aidl
-
-# 2. Build and test
-./build_interfaces.sh bootreason
-
-# 3. Iterate as needed - no versioning constraints yet
-# You can make ANY changes during this phase
+```text
+<pre-post-aidl> . <major> . <minor> . <bugfix>
 ```
 
-**Note:** Before the first freeze, you have complete freedom to change interfaces.
+| Field | Meaning |
+| --- | --- |
+| `pre-post-aidl` (era) | `0` = pre-AIDL-versioning era: breaking changes are permitted with a major bump. `1` = the component has adopted full AIDL frozen-interface discipline: **breaking changes are no longer allowed, ever**. |
+| `major` | Bumped for a **breaking** interface change (only possible in era `0`). |
+| `minor` | Bumped for a **backwards-compatible addition** (new methods/fields/enum values, appended). |
+| `bugfix` | Bumped for documentation/comment-only respins. The interface surface is unchanged. |
 
-### Freezing Version 1
+### The Era Promise
 
-When your interface is stable and ready for production:
+- **`0.x.y.z`** — the interface may still break between majors: `0.2.*.*` does
+  not promise compatibility with `0.1.*.*` clients. Within one major,
+  additions are backwards-compatible: a `0.2.3.*` server serves any `0.2.y.*`
+  client with `y <= 3`.
+- **`1.x.x.x`** — freezing `1.0.0.0` is the moment the component signs up for
+  "never break again". From then on every change must be additive, exactly as
+  [Android AIDL versioning](https://source.android.com/docs/core/architecture/aidl/aidl-versioning)
+  requires. A truly incompatible redesign requires a **new interface
+  component** (e.g. `IBootReason` → `IBootNew`); the old one keeps working and
+  clients migrate at their own pace.
 
-```bash
-# Freeze the current interface as version 1
-./freeze_interface.sh bootreason
+## What a Service Reports
 
-# This creates:
-# - stable/aidl/bootreason/1/          (frozen AIDL)
-# - stable/generated/bootreason/1/     (frozen C++ code)
-# - Builds lib bootreason-v1-cpp.so    (frozen library)
-```
+Generated interface code carries two identity values, baked in when the
+snapshot is frozen by the release flow:
 
-**After freezing v1:**
-- Version 1 is **immutable** - no changes allowed
-- `bootreason/current/` remains editable for v2 development
-- Both `bootreason-v1-cpp` and `bootreason-vcurrent-cpp` libraries exist
+| State | `getInterfaceVersion()` | `getInterfaceHash()` |
+| --- | --- | --- |
+| Frozen snapshot | the release version, encoded as an int (below) | the toolchain contract hash of the snapshot's AIDL (the committed `<version>/.hash`) |
+| Development build (`current/`) | generator default | `"notfrozen"` |
 
-### Evolving to Version 2
+`getInterfaceHash() == "notfrozen"` is the **pre-freeze marker**: the build
+comes from an unfrozen tree and makes no compatibility promise. A real hash
+identifies exactly one frozen contract.
 
-```aidl
-// Version 1 (frozen - immutable)
-interface IBootReason {
-    void reboot();
-    void shutdown();
-}
+### Version Encoding
 
-// Version 2 development (bootreason/current/)
-// Add new methods ONLY at the end
-interface IBootReason {
-    void reboot();                  // MUST keep v1 methods
-    void shutdown();                // MUST keep v1 methods
-    void rebootWithReason(String reason);  // NEW in v2
-}
-```
+`getInterfaceVersion()` returns the release version packed into an `int32`
+with fixed field widths **1-2-2-1** (era, major, minor, bugfix):
 
-```bash
-# 1. Edit bootreason/current/ to add new methods
-vim bootreason/current/com/rdk/hal/bootreason/IBootReason.aidl
+| Release | `getInterfaceVersion()` |
+| --- | --- |
+| 0.1.0.0 | `1000` |
+| 0.1.0.1 | `1001` |
+| 0.2.0.0 | `2000` |
+| 0.10.0.0 | `10000` |
+| 0.99.99.9 | `99999` (era-0 maximum) |
+| 1.0.0.0 | `100000` |
+| 1.2.3.4 | `102034` |
 
-# 2. Update API (validates compatibility)
-./build_interfaces.sh bootreason
+To decode: zero-pad to 6 digits and read `E|MM|NN|B` —
+`era = v / 100000`, `major = (v / 1000) % 100`, `minor = (v / 10) % 100`,
+`bugfix = v % 10`.
 
-# 3. If validation fails with compatibility error:
-#    - You made a breaking change
-#    - Revert your changes OR create new interface (IBootNew)
+The same encoding is used in every era, so the value is monotonic across a
+component's entire history and never goes backwards. Field limits are
+`major`/`minor` ≤ 99 and `bugfix` ≤ 9 — a tenth doc-only respin of the same
+minor therefore forces a minor bump.
 
-# 4. When ready, freeze v2
-./freeze_interface.sh bootreason
-```
-
-### Version Evolution Example
-
-Real-world example from `examples/aidl_versioning/`:
-
-**Version 1:**
-```aidl
-package com.demo.hal.car;
-
-interface IVehicle {
-    VehicleSpecs getVehicleSpecs();
-    VehicleStatus getVehicleStatus();
-    void startVehicleEngine();
-    void stopVehicleEngine();
-    void startMoving();
-    void stopMoving();
-    void registerVehicleStatusListener(IVehicleStatusListener listener);
-    void unregisterVehicleStatusListener(IVehicleStatusListener listener);
-}
-```
-
-**Version 2** (adds lock/unlock):
-```aidl
-package com.demo.hal.car;
-
-interface IVehicle {
-    // ALL v1 methods remain unchanged
-    VehicleSpecs getVehicleSpecs();
-    VehicleStatus getVehicleStatus();
-    void startVehicleEngine();
-    void stopVehicleEngine();
-    void startMoving();
-    void stopMoving();
-    void registerVehicleStatusListener(IVehicleStatusListener listener);
-    void unregisterVehicleStatusListener(IVehicleStatusListener listener);
-
-    // NEW v2 methods added at the end
-    void lockVehicle();
-    void unlockVehicle();
-}
-```
-
-**Version 3** (adds fuel control):
-```aidl
-package com.demo.hal.car;
-
-interface IVehicle {
-    // ALL v1 and v2 methods remain
-    // ... (v1 methods)
-    void lockVehicle();
-    void unlockVehicle();
-
-    // NEW v3 method
-    void setFuelLevel(float fuelLevel);
-}
-```
-
-## Validation and Error Handling
-
-### Pre-Copy Validation
-
-The build system validates compatibility **BEFORE** copying changes:
-
-```bash
-$ ./build_interfaces.sh bootreason
---> [Step 3/4] Updating APIs...
-    Updating: boot
-Pre-validating compatibility before updating boot
-Pre-validation FAILED: Source changes are incompatible with existing stable API
-
-================================================================================
-AIDL Compatibility Check FAILED for boot
-================================================================================
-ERROR: Removed method "reboot()" - this is a breaking change
-
-IMPORTANT: Breaking changes are NOT permitted in AIDL versioned interfaces.
-Only the following changes are allowed:
-  ✓ ADD new methods at the END of an interface
-  ✓ ADD new fields at the END of a parcelable
-  ✓ ADD new enum values (with fallback handling)
-
-The following changes are FORBIDDEN:
-  ✗ Remove methods or fields
-  ✗ Change method signatures or field types
-  ✗ Reorder methods or fields
-  ✗ Rename methods or fields
-
-If you need to make breaking changes:
-  1. Create a NEW interface component (e.g., IBootNew)
-  2. Leave the existing interface unchanged
-  3. Clients can migrate to the new interface at their own pace
-================================================================================
-```
-
-### First Freeze Special Case
-
-When creating version 1 (first freeze), compatibility checks are skipped:
-
-```bash
-$ ./freeze_interface.sh bootreason
-No frozen versions exist for boot - skipping compatibility validation
-Freezing boot as version 1...
-✅ Version 1 created successfully
-```
-
-## Client Version Discovery
-
-Clients can detect and adapt to different server versions:
+## Client Compatibility Checks
 
 ```cpp
 #include <com/rdk/hal/bootreason/IBootReason.h>
 
-// Connect to service
-std::shared_ptr<IBootReason> bootService = IBootReason::fromBinder(binder);
+std::shared_ptr<IBootReason> service = IBootReason::fromBinder(binder);
 
-// Get server version
-int32_t clientVersion = IBootReason::VERSION;  // Compile-time constant
-int32_t serverVersion = bootService->getInterfaceVersion();
-std::string serverHash = bootService->getInterfaceHash();
+int32_t client = IBootReason::VERSION;            // compile-time constant
+int32_t server = service->getInterfaceVersion();  // runtime value
+std::string hash = service->getInterfaceHash();
 
-// Version-based behavior
-if (serverVersion >= 2) {
-    // Safe to use v2 features
-    bootService->rebootWithReason("system_update");
+if (hash == "notfrozen") {
+    // Development build: no compatibility promise. Acceptable on a dev
+    // image; a production client should treat this as a mismatch.
+}
+
+auto era   = [](int32_t v) { return v / 100000; };
+auto major = [](int32_t v) { return (v / 1000) % 100; };
+
+bool compatible;
+if (era(server) >= 1 && era(client) >= 1) {
+    // Era 1+: additive-only discipline makes ordering sufficient.
+    compatible = (server >= client);
 } else {
-    // Fallback for v1-only servers
-    bootService->reboot();
+    // Era 0: compatibility only holds within one major.
+    compatible = (era(server) == era(client))
+              && (major(server) == major(client))
+              && (server >= client);
 }
 ```
 
-### Client-Server Compatibility Matrix
+Feature detection then works on the encoded value:
 
-| Client Version | Server Version | Result |
-|---------------|----------------|--------|
-| v1 | v1 | ✅ Perfect match |
-| v1 | v2 | ✅ Works - server supports all v1 methods |
-| v1 | v3 | ✅ Works - server supports all v1 methods |
-| v2 | v1 | ⚠️ Partial - v1 methods work, v2 methods return error |
-| v2 | v2 | ✅ Perfect match |
-| v3 | v2 | ⚠️ Partial - v1+v2 methods work, v3 methods return error |
-
-## When to Freeze
-
-### Freeze When:
-- ✅ Interface is stable and ready for production use
-- ✅ External partners need a stable API to develop against
-- ✅ Multiple devices will use this interface version
-- ✅ You want to start developing v2 features while maintaining v1
-
-### Don't Freeze If:
-- ❌ Still actively experimenting with interface design
-- ❌ Only used internally in development
-- ❌ Interface design not yet reviewed/approved
-- ❌ Expect significant changes in near future
-
-**Recommendation:** Freeze conservatively. It's better to iterate in `current/` longer than to create many similar frozen versions.
-
-## Library Naming and Deployment
-
-### Library Names
-
-Each version produces a separate library:
-
-```
-libbootreason-vcurrent-cpp.so  # Development version (current/)
-libbootreason-v1-cpp.so        # Frozen version 1
-libboot-v2-cpp.so        # Frozen version 2
+```cpp
+if (service->getInterfaceVersion() >= 3000) {   // 0.3.0.0 added this API
+    service->rebootWithReason("system_update");
+} else {
+    service->reboot();                          // pre-0.3 fallback
+}
 ```
 
-### Application Linking
+## Allowed and Prohibited Changes
 
-Applications choose which version to link at build time:
+Backwards-compatible (bump **minor**):
+
+- ADD new methods at the END of an interface
+- ADD new fields at the END of a parcelable
+- ADD new enum values (clients handle unknown values)
+- ADD a new parcelable, enum or interface type
+
+Breaking (bump **major**; era `0` only — forbidden once era `1` is declared):
+
+- Remove or rename methods, fields or enum values
+- Change method signatures, return types or field types
+- Reorder methods or fields (declaration order is ABI: it defines binder
+  transaction ids and parcel layout)
+- Change an enum value's backing integer
+- Remove `@VintfStability` or change wire-affecting annotations
+
+Documentation-only (bump **bugfix**): comment and doc changes; the interface
+surface is untouched.
+
+### Mechanical Classification
+
+The binder toolchain classifies interface changes structurally
+(`linux_binder_idl`'s `aidl_ops dump-surface` / `diff-surface`): it dumps the
+declared surface of two trees and reports `breaking`, `major` (additive) or
+`none`. The release flow uses this as the change-class gate:
+
+| `diff-surface` class | Era `0.x.y.z` requires | Era `1.x.x.x` requires |
+| --- | --- | --- |
+| `breaking` | **major** bump | **release fails** — not allowed |
+| `major` (additive) | **minor** bump | **minor** bump |
+| `none`, sources differ | **bugfix** bump | **bugfix** bump |
+| `none`, sources identical | no snapshot | no snapshot |
+
+## Development and Release Workflow
+
+```bash
+# 1. Develop freely in current/ — builds report HASH = "notfrozen"
+vim bootreason/current/com/rdk/hal/bootreason/IBootReason.aidl
+./build_interfaces.sh bootreason
+
+# 2. Choose the bump from the change class (table above) and release.
+#    scripts/release.sh freezes current/ into <component>/<X.Y.Z.W>/:
+#    it stamps the version + contract hash, regenerates so the snapshot's
+#    C++ carries the real getInterfaceVersion()/getInterfaceHash() values,
+#    and restores current/ to its unfrozen state.
+```
+
+A frozen snapshot is **immutable**: its AIDL, generated C++, `interface.yaml`
+version and `.hash` are committed and never edited. Fixes go into `current/`
+and ship in the next snapshot.
+
+## Library Naming and Linking
+
+Each snapshot builds a distinctly named library, so multiple versions coexist
+on one image:
+
+```text
+libbootreason-vcurrent-cpp.so     # development build of current/
+libbootreason-v0.2.0.0-cpp.so     # frozen 0.2.0.0 snapshot
+```
 
 ```cmake
-# CMakeLists.txt
-target_link_interfaces_libraries(myapp bootreason-v1-cpp)  # Use frozen v1
+target_link_interfaces_libraries(myapp bootreason-v0.2.0.0-cpp)  # pinned
 # OR
-target_link_interfaces_libraries(myapp bootreason-vcurrent-cpp)  # Use latest
+target_link_interfaces_libraries(myapp bootreason-vcurrent-cpp)  # development
 ```
 
-### Deployment Scenarios
+## Deprecating Features
 
-**Scenario 1: Single Version Deployment**
-```bash
-# Deploy only v1 (stable) - runtime library only
-scp out/target/lib/halif/libbootreason-v1-cpp.so device:/usr/lib/
-```
+Methods cannot be removed from a released interface. Either keep the method
+as a documented no-op:
 
-**Scenario 2: Multi-Version Deployment**
-```bash
-# Deploy both v1 and v2 (transition period) - runtime libraries only
-scp out/target/lib/halif/libbootreason-v1-cpp.so device:/usr/lib/
-scp out/target/lib/halif/libboot-v2-cpp.so device:/usr/lib/
-```
-
-## Testing Versioned Interfaces
-
-### Automated Tests
-
-```bash
-# Test compatibility validation
-./build_interfaces.sh test-validation
-
-# Tests:
-# ✅ First update succeeds
-# ✅ Adding methods succeeds (compatible)
-# ✅ Removing methods fails (incompatible)
-# ✅ Changing signatures fails (incompatible)
-```
-
-### Manual Testing
-
-```bash
-# 1. Make compatible change (add method)
-vim bootreason/current/com/rdk/hal/bootreason/IBootReason.aidl
-# Add: void newMethod();
-./build_interfaces.sh bootreason
-# ✅ Should succeed
-
-# 2. Make incompatible change (remove method)
-vim bootreason/current/com/rdk/hal/bootreason/IBootReason.aidl
-# Remove: void reboot();
-./build_interfaces.sh bootreason
-# ❌ Should fail with clear error message
-```
-
-## Common Scenarios
-
-### Scenario 1: Adding Optional Features
-
-**Good Pattern:**
-```aidl
-// v1
-interface IBootReason {
-    void reboot();
-}
-
-// v2 - add optional features
-interface IBootReason {
-    void reboot();
-    void rebootWithReason(String reason);  // Client checks version first
-}
-```
-
-**Client Code:**
 ```cpp
-if (bootService->getInterfaceVersion() >= 2) {
-    bootService->rebootWithReason("update");
-} else {
-    bootService->reboot();  // Fallback
-}
-```
-
-### Scenario 2: Extending Data Structures
-
-**Good Pattern:**
-```aidl
-// v1
-parcelable BootStatus {
-    boolean isBooting;
-}
-
-// v2 - add fields at end
-parcelable BootStatus {
-    boolean isBooting;      // v1 field
-    long bootTimeMs;        // NEW v2 field
-}
-```
-
-### Scenario 3: Deprecating Features
-
-**Problem:** Can't remove methods from versioned interface.
-
-**Solution 1:** Make method no-op in implementation:
-```cpp
-// v2 implementation - deprecate but keep method
-Status IBootReason::oldDeprecatedMethod() {
+Status BootReason::oldDeprecatedMethod() {
     ALOGW("oldDeprecatedMethod is deprecated, use newMethod instead");
     return Status::ok();
 }
 ```
 
-**Solution 2:** Create new interface:
-```aidl
-// If truly incompatible, create IBootNew
-interface IBootNew {
-    void modernReboot(RebootOptions options);
-    // No old deprecated methods
-}
-```
+or, for a genuine redesign, introduce a new interface component and let both
+coexist while clients migrate.
 
 ## Best Practices
 
-### DO:
-- ✅ Plan interface design carefully before first freeze
-- ✅ Add comprehensive documentation to interfaces
-- ✅ Use semantic naming for new methods (e.g., `rebootWithReason` not `reboot2`)
-- ✅ Test compatibility before committing changes
-- ✅ Provide migration guides when adding features
-- ✅ Use version checking in client code for optional features
-
-### DON'T:
-- ❌ Remove or modify frozen versions
-- ❌ Make breaking changes to `current/` after freezing v1
-- ❌ Bypass validation by manually editing `stable/aidl/`
-- ❌ Freeze too frequently (creates version sprawl)
-- ❌ Freeze too early (before interface is stable)
-- ❌ Use v2 features without version checking
-
-## Troubleshooting
-
-### "Compatibility validation failed" Error
-
-**Problem:** Build fails with incompatibility error.
-
-**Solution:**
-1. Check error message - identifies specific violation
-2. If you need the breaking change:
-   - Revert your changes, OR
-   - Create new interface (e.g., `IBootNew`)
-3. If change should be compatible, ensure methods added at END
-
-### "No frozen versions exist" Warning
-
-**Problem:** Seeing warnings about no frozen versions.
-
-**Solution:** This is normal before first freeze. Validation is skipped automatically.
-
-### Multiple Frozen Versions Colliding
-
-**Problem:** v1 and v2 clients both running, causing conflicts.
-
-**Solution:** This is by design - both versions should coexist. Ensure:
-- Different library names (libbootreason-v1-cpp.so vs libboot-v2-cpp.so)
-- Different include paths (boot/1/ vs boot/2/)
-- Service registration uses version-specific names or versioned endpoints
+- Plan the interface carefully before its first snapshot; iterate in
+  `current/` rather than churning released versions.
+- Declare era `1` only when the component is ready to never break again.
+- Gate optional features on `getInterfaceVersion()` (encoded values), never on
+  probing calls.
+- Treat `"notfrozen"` from a production service as a deployment error.
+- Never edit a released `<version>/` directory.
 
 ## References
 
-- **Live Examples:** [examples/aidl_versioning/](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/examples/aidl_versioning)
+- **Semantic versioning primer:** [semantic_versioning.md](semantic_versioning.md)
 - **Client Patterns:** [client-patterns.md](client-patterns.md)
 - **Migration Guide:** [migration-guide.md](migration-guide.md)
 - **Android AIDL Docs:** [Android AIDL Versioning](https://source.android.com/docs/core/architecture/aidl/aidl-versioning)
-- **Build Script:** [build_interfaces.sh](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/build_interfaces.sh)
-- **Freeze Script:** [freeze_interface.sh](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/freeze_interface.sh)
-
-## Quick Reference
-
-```bash
-# Development workflow
-vim module/current/com/rdk/hal/module/IModule.aidl
-./build_interfaces.sh module              # Update + validate
-./build_interfaces.sh test-validation     # Test validation logic
-
-# Freeze workflow
-./freeze_interface.sh module              # Create v1, v2, etc.
-
-# Testing
-./build_interfaces.sh test                # Basic build test
-./build_interfaces.sh test-all            # Comprehensive test
-./build_interfaces.sh test-validation     # Validation logic test
-
-# Cleanup
-./build_interfaces.sh clean               # Remove build outputs
-./build_interfaces.sh cleanstable         # Remove generated code
-```
+- **Surface classification tool:** [linux_binder_idl `dump-surface` / `diff-surface`](https://github.com/rdkcentral/linux_binder_idl/blob/develop/README.md)
