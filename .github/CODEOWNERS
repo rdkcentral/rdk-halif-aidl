@@ -1,2 +1,5 @@
 # Default owners for everything in the repo
 *       @rdkcentral/rdk-halif-aidl-pr-review-team
+
+# Test harnesses: request review from the AIDL HAL tester.
+/tests/ @rdkcentral/rdk-halif-aidl-pr-review-team @agampa263
