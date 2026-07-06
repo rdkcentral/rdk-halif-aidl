@@ -1827,17 +1827,20 @@ _snapshot_version_int() {
 
 # Contract hash via the toolchain's own hasher (aidl_hash_gen), so the
 # committed .hash is exactly what the generator bakes into getInterfaceHash()
-# and what future toolchain verification recomputes. The hashgen label is the
-# emitted version int, binding the hash to both content and version.
+# and what its check_integrity() recomputes at every regeneration. The hashgen
+# label MUST be 'latest-version' — check_integrity() rehashes with
+# version_for_hashgen(), which resolves to 'latest-version' for module-local
+# interfaces (gen version 1); any other label fails the integrity check and
+# aborts generation.
 _toolchain_hash() {
-    local aidl_dir="$1" label="$2" out="$3"
+    local aidl_dir="$1" out="$2"
     local hash_gen="${BINDER_TOOLCHAIN_ROOT:-${REPO_ROOT}/build-tools/linux_binder_idl}/host/aidl_hash_gen"
     if [[ ! -x "${hash_gen}" ]]; then
         warn "aidl_hash_gen not found/executable at ${hash_gen} — is the binder toolchain cloned?"
         return 1
     fi
     rm -f "${out}"
-    "${hash_gen}" "${aidl_dir}" "${label}" "${out}"
+    "${hash_gen}" "${aidl_dir}" "latest-version" "${out}"
 }
 
 # Insert/replace `version: N` in an interface.yaml (top-level, after name:).
@@ -1897,7 +1900,7 @@ create_snapshot() {
     if [[ -z "${_iface_version}" ]]; then
         warn "  [${comp}] version ${version} is not encodable (needs X.Y.Z.W, fields 0-99); ${version}/ will be left unfrozen (VERSION=1/notfrozen)."
     elif [[ -f "${_cur}/interface.yaml" ]]; then
-        if _toolchain_hash "${_cur}" "${_iface_version}" "${_cur}/.hash"; then
+        if _toolchain_hash "${_cur}" "${_cur}/.hash"; then
             _ifyaml_bak="$(mktemp)"
             cp "${_cur}/interface.yaml" "${_ifyaml_bak}"
             _set_interface_version "${_cur}/interface.yaml" "${_iface_version}"
