@@ -1782,51 +1782,53 @@ is_buildable_component() {
 # ----------------------------------------------------------------------------
 # Frozen interface VERSION + contract HASH (#633)
 # ----------------------------------------------------------------------------
-# getInterfaceVersion() is the standard AIDL ordinal: a component's 1st frozen
-# snapshot reports 1, the 2nd reports 2, ... The X.Y.Z.W release label stays
-# the snapshot directory name; the snapshot's interface.yaml `version:` and
-# `.hash` record the ordinal <-> label <-> hash mapping. getInterfaceHash() is
-# the toolchain's aidl_hash_gen digest. current/ carries neither field, so dev
-# builds report HASH="notfrozen" — the pre-freeze marker. Snapshots are
-# compile-only (their CMakeLists glob src/*.cpp and never regenerate), so both
-# values are baked in at freeze time: stamp current/, regenerate, copy into
-# the snapshot, restore current/.
-
-# Ordinal of <version> = its 1-based position in the version-sorted list of
-# the component's snapshot dirs (including <version> itself, which may not
-# exist yet). Positional, so refreshing an existing snapshot re-derives the
-# same ordinal.
-_snapshot_ordinal() {
-    local comp="$1" version="$2" i=0 d
-    local vers=("${version}")
-    for d in "${REPO_ROOT}/${comp}"/[0-9]*; do
-        [[ -d "${d}" ]] || continue
-        d="$(basename "${d}")"
-        [[ "${d}" =~ ^[0-9]+(\.[0-9]+){3}$ ]] && vers+=("${d}")
-    done
-    while IFS= read -r d; do
-        i=$((i + 1))
-        if [[ "${d}" == "${version}" ]]; then
-            echo "${i}"
+# getInterfaceVersion() reports the RELEASE version itself, encoded as a
+# fixed-width positional int32 — self-describing, no lookup table: each
+# X.Y.Z.W field is zero-padded to two digits and concatenated, so
+#   0.2.0.0 -> 00 02 00 00 ->   20000
+#   0.3.0.0 -> 00 03 00 00 ->   30000
+#   0.1.0.1 -> 00 01 00 01 ->   10001
+#   1.0.0.0 -> 01 00 00 00 -> 1000000
+# Decode: prefix=(v/1000000)%100 generation=(v/10000)%100 minor=(v/100)%100
+# patch=v%100. Monotonic across ALL releases (0.x < 1.x < ...) because the
+# same scheme is used forever — there is no later switch to bare ordinals.
+# Max 99.99.99.99 = 99,999,999, well under int32 max; a field >= 100 is not
+# encodable and leaves the snapshot unfrozen rather than emit a wrong number.
+# getInterfaceHash() is the toolchain's aidl_hash_gen digest. current/ carries
+# neither field, so dev builds report HASH="notfrozen" — the pre-freeze
+# marker. Snapshots are compile-only (their CMakeLists glob src/*.cpp and
+# never regenerate), so both values are baked in at freeze time: stamp
+# current/, regenerate, copy into the snapshot, restore current/.
+_snapshot_version_int() {
+    local ver="$1" out="" f
+    # Require EXACTLY four numeric dot-separated fields (X.Y.Z.W); malformed
+    # inputs (0.2.0, 0.2.0.0., 0.2..0) could otherwise collide after encoding.
+    if ! [[ "${ver}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo ""
+        return 0
+    fi
+    local IFS='.'
+    for f in ${ver}; do
+        if (( 10#${f} > 99 )); then
+            echo ""
             return 0
         fi
-    done < <(printf '%s\n' "${vers[@]}" | sort -uV)
+        out+=$(printf '%02d' "$((10#${f}))")
+    done
+    echo "$((10#${out}))"        # base-10 (avoid octal on leading zeros)
 }
 
 # Contract hash via the toolchain's own hasher (aidl_hash_gen), so the
 # committed .hash is exactly what the generator bakes into getInterfaceHash()
-# and what future toolchain verification recomputes. Label convention is the
-# toolchain's version_for_hashgen(): the previous ordinal, or 'latest-version'
-# for a component's first freeze.
+# and what future toolchain verification recomputes. The hashgen label is the
+# emitted version int, binding the hash to both content and version.
 _toolchain_hash() {
-    local aidl_dir="$1" ordinal="$2" out="$3"
+    local aidl_dir="$1" label="$2" out="$3"
     local hash_gen="${BINDER_TOOLCHAIN_ROOT:-${REPO_ROOT}/build-tools/linux_binder_idl}/host/aidl_hash_gen"
     if [[ ! -x "${hash_gen}" ]]; then
         warn "aidl_hash_gen not found/executable at ${hash_gen} — is the binder toolchain cloned?"
         return 1
     fi
-    local label="latest-version"
-    (( ordinal > 1 )) && label="$((ordinal - 1))"
     rm -f "${out}"
     "${hash_gen}" "${aidl_dir}" "${label}" "${out}"
 }
@@ -1873,23 +1875,26 @@ create_snapshot() {
     fi
 
     # Freeze-stamp current/ so the regenerated bindings carry the real
-    # interface VERSION (standard AIDL ordinal) + contract HASH instead of
-    # 1/"notfrozen" (#633). Restored right after the copy below; current/'s
-    # own generated code returns to notfrozen at the next dev build.
+    # interface VERSION (positional release int, e.g. 0.2.0.0 -> 20000) +
+    # contract HASH instead of 1/"notfrozen" (#633). Restored right after the
+    # copy below; current/'s own generated code returns to notfrozen at the
+    # next dev build.
     local _cur="${REPO_ROOT}/${comp}/current"
-    local _ordinal _ifyaml_bak=""
-    _ordinal="$(_snapshot_ordinal "${comp}" "${version}")"
+    local _iface_version _ifyaml_bak=""
+    _iface_version="$(_snapshot_version_int "${version}")"
     _restore_current() {
         [[ -n "${_ifyaml_bak}" ]] && mv -f "${_ifyaml_bak}" "${_cur}/interface.yaml"
         rm -f "${_cur}/.hash"
         _ifyaml_bak=""
     }
-    if [[ -f "${_cur}/interface.yaml" ]]; then
-        if _toolchain_hash "${_cur}" "${_ordinal}" "${_cur}/.hash"; then
+    if [[ -z "${_iface_version}" ]]; then
+        warn "  [${comp}] version ${version} is not encodable (needs X.Y.Z.W, fields 0-99); ${version}/ will be left unfrozen (VERSION=1/notfrozen)."
+    elif [[ -f "${_cur}/interface.yaml" ]]; then
+        if _toolchain_hash "${_cur}" "${_iface_version}" "${_cur}/.hash"; then
             _ifyaml_bak="$(mktemp)"
             cp "${_cur}/interface.yaml" "${_ifyaml_bak}"
-            _set_interface_version "${_cur}/interface.yaml" "${_ordinal}"
-            [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] freezing ${version} as interface version ${_ordinal} (hash $(head -c12 "${_cur}/.hash")…)"
+            _set_interface_version "${_cur}/interface.yaml" "${_iface_version}"
+            [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] freezing ${version} as interface version ${_iface_version} (hash $(head -c12 "${_cur}/.hash")…)"
         else
             warn "  [${comp}] contract-hash generation failed; ${version}/ will be left unfrozen (VERSION=1/notfrozen)."
             rm -f "${_cur}/.hash"
