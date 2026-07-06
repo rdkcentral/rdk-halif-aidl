@@ -50,6 +50,10 @@ snapshot is frozen by the release flow:
 comes from an unfrozen tree and makes no compatibility promise. A real hash
 identifies exactly one frozen contract.
 
+These values are baked in by `scripts/release.sh` at freeze time. A snapshot
+frozen before that stamping existed reports the development defaults
+(`VERSION = 1` / `"notfrozen"`) until it is next re-frozen.
+
 ### Version Encoding
 
 `getInterfaceVersion()` returns the release version packed into an `int32`
@@ -109,9 +113,9 @@ Feature detection then works on the encoded value:
 
 ```cpp
 if (service->getInterfaceVersion() >= 3000) {   // 0.3.0.0 added this API
-    service->rebootWithReason("system_update");
+    service->newMethod();
 } else {
-    service->reboot();                          // pre-0.3 fallback
+    service->existingMethod();                  // pre-0.3 fallback
 }
 ```
 
@@ -191,7 +195,7 @@ as a documented no-op:
 
 ```cpp
 Status BootReason::oldDeprecatedMethod() {
-    ALOGW("oldDeprecatedMethod is deprecated, use newMethod instead");
+    LOG_WARNING("oldDeprecatedMethod is deprecated, use newMethod instead");
     return Status::ok();
 }
 ```
