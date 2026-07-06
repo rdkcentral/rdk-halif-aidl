@@ -5,18 +5,17 @@
 # clones the toolchain. Keep it pinned so the committed module-local
 # generated C++ always matches the generator that produced it.
 #
-# Pinned to release tag 2.5.0 (linux_binder_idl) which ships:
-#  - binder wire protocol decoupled from compile bitness: a 32-bit userspace
-#    can run protocol 8 for mixed 32/64-bit platforms (linux_binder_idl#42/#45)
-#  - build-linux-binder-aidl.sh always passes BINDER_IPC_32BIT as a BOOL
-#    (defeats CMake cache-stick) + install.sh installs the -m32 toolchain
-#    (linux_binder_idl#46/#47)
-#  - QEMU kernel-matrix binder round-trip harness (linux_binder_idl#40/#41)
-# The AIDL generator is byte-identical to 2.4.0, so committed module-local C++
+# Pinned to release tag 2.6.0 (linux_binder_idl) which ships:
+#  - AIDL surface dump & structural diff toolchain (linux_binder_idl#27/#48):
+#    aidl_ops dump-surface emits the declared surface as canonical
+#    deterministic text; diff-surface classifies the structural difference
+#    (breaking / major / none) — the engine consumed by the release audit
+#    gate (#633/#568) to validate declared bump classes.
+# The AIDL generator is byte-identical to 2.5.0, so committed module-local C++
 # is unchanged by this bump — it is a toolchain-currency bump, not a regen.
-# Previously 2.4.0, which shipped the version-aware generator (explicit
-# interface version ordinal for module-local snapshots, linux_binder_idl#33) —
-# the generator half consumed by the freeze-time stamping in #634.
+# Previously 2.5.0, which decoupled the binder wire protocol from compile
+# bitness (linux_binder_idl#42/#45/#46/#47) and added the QEMU kernel-matrix
+# round-trip harness (linux_binder_idl#40/#41).
 #
 # Override for a one-off build with:  BINDER_VERSION=<ref> ./build_binder.sh
-2.5.0
+2.6.0
