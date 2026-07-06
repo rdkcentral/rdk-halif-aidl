@@ -1779,6 +1779,72 @@ is_buildable_component() {
     [[ -f "${REPO_ROOT}/${comp}/current/interface.yaml" ]]
 }
 
+# ----------------------------------------------------------------------------
+# Frozen interface VERSION + contract HASH (#633)
+# ----------------------------------------------------------------------------
+# getInterfaceVersion() is the standard AIDL ordinal: a component's 1st frozen
+# snapshot reports 1, the 2nd reports 2, ... The X.Y.Z.W release label stays
+# the snapshot directory name; the snapshot's interface.yaml `version:` and
+# `.hash` record the ordinal <-> label <-> hash mapping. getInterfaceHash() is
+# the toolchain's aidl_hash_gen digest. current/ carries neither field, so dev
+# builds report HASH="notfrozen" — the pre-freeze marker. Snapshots are
+# compile-only (their CMakeLists glob src/*.cpp and never regenerate), so both
+# values are baked in at freeze time: stamp current/, regenerate, copy into
+# the snapshot, restore current/.
+
+# Ordinal of <version> = its 1-based position in the version-sorted list of
+# the component's snapshot dirs (including <version> itself, which may not
+# exist yet). Positional, so refreshing an existing snapshot re-derives the
+# same ordinal.
+_snapshot_ordinal() {
+    local comp="$1" version="$2" i=0 d
+    local vers=("${version}")
+    for d in "${REPO_ROOT}/${comp}"/[0-9]*; do
+        [[ -d "${d}" ]] || continue
+        d="$(basename "${d}")"
+        [[ "${d}" =~ ^[0-9]+(\.[0-9]+){3}$ ]] && vers+=("${d}")
+    done
+    while IFS= read -r d; do
+        i=$((i + 1))
+        if [[ "${d}" == "${version}" ]]; then
+            echo "${i}"
+            return 0
+        fi
+    done < <(printf '%s\n' "${vers[@]}" | sort -uV)
+}
+
+# Contract hash via the toolchain's own hasher (aidl_hash_gen), so the
+# committed .hash is exactly what the generator bakes into getInterfaceHash()
+# and what future toolchain verification recomputes. Label convention is the
+# toolchain's version_for_hashgen(): the previous ordinal, or 'latest-version'
+# for a component's first freeze.
+_toolchain_hash() {
+    local aidl_dir="$1" ordinal="$2" out="$3"
+    local hash_gen="${BINDER_TOOLCHAIN_ROOT:-${REPO_ROOT}/build-tools/linux_binder_idl}/host/aidl_hash_gen"
+    if [[ ! -x "${hash_gen}" ]]; then
+        warn "aidl_hash_gen not found/executable at ${hash_gen} — is the binder toolchain cloned?"
+        return 1
+    fi
+    local label="latest-version"
+    (( ordinal > 1 )) && label="$((ordinal - 1))"
+    rm -f "${out}"
+    "${hash_gen}" "${aidl_dir}" "${label}" "${out}"
+}
+
+# Insert/replace `version: N` in an interface.yaml (top-level, after name:).
+_set_interface_version() {
+    python3 - "$1" "$2" <<'PYEOF'
+import sys, re
+path, n = sys.argv[1], sys.argv[2]
+s = open(path).read()
+if re.search(r'^\s*version:\s*\d+\s*$', s, re.M):
+    s = re.sub(r'(^\s*version:\s*)\d+(\s*)$', r'\g<1>' + n + r'\2', s, count=1, flags=re.M)
+else:
+    s = re.sub(r'(\n\s*name:[^\n]*\n)', r'\1  version: ' + n + '\n', s, count=1)
+open(path, 'w').write(s)
+PYEOF
+}
+
 create_snapshot() {
     local comp="$1"
     local version="$2"
@@ -1806,12 +1872,37 @@ create_snapshot() {
         refresh_marker=" (refreshed)"
     fi
 
+    # Freeze-stamp current/ so the regenerated bindings carry the real
+    # interface VERSION (standard AIDL ordinal) + contract HASH instead of
+    # 1/"notfrozen" (#633). Restored right after the copy below; current/'s
+    # own generated code returns to notfrozen at the next dev build.
+    local _cur="${REPO_ROOT}/${comp}/current"
+    local _ordinal _ifyaml_bak=""
+    _ordinal="$(_snapshot_ordinal "${comp}" "${version}")"
+    _restore_current() {
+        [[ -n "${_ifyaml_bak}" ]] && mv -f "${_ifyaml_bak}" "${_cur}/interface.yaml"
+        rm -f "${_cur}/.hash"
+        _ifyaml_bak=""
+    }
+    if [[ -f "${_cur}/interface.yaml" ]]; then
+        if _toolchain_hash "${_cur}" "${_ordinal}" "${_cur}/.hash"; then
+            _ifyaml_bak="$(mktemp)"
+            cp "${_cur}/interface.yaml" "${_ifyaml_bak}"
+            _set_interface_version "${_cur}/interface.yaml" "${_ordinal}"
+            [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] freezing ${version} as interface version ${_ordinal} (hash $(head -c12 "${_cur}/.hash")…)"
+        else
+            warn "  [${comp}] contract-hash generation failed; ${version}/ will be left unfrozen (VERSION=1/notfrozen)."
+            rm -f "${_cur}/.hash"
+        fi
+    fi
+
     [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] regenerating bindings via build_modules.sh..."
     local build_log="${REPO_ROOT}/out/release-snapshot-${comp//\//_}.log"
     mkdir -p "$(dirname "${build_log}")"
     if [[ "${VERBOSE}" -eq 1 ]]; then
         if ! (cd "${REPO_ROOT}" && ./build_modules.sh "${comp}" 2>&1 | tee "${build_log}"); then
             warn "Failed to regenerate ${comp} bindings — see ${build_log}."
+            _restore_current
             return 1
         fi
     else
@@ -1819,12 +1910,19 @@ create_snapshot() {
             log "  [${comp}] → ${version}/  ${_C_RED}✗ build failed${_C_RESET} (see ${build_log#${REPO_ROOT}/})"
             grep -E '^(❌|ERROR|FAIL)' "${build_log}" | head -3 | sed 's/^/    /' >&2 \
                 || tail -10 "${build_log}" | sed 's/^/    /' >&2
+            _restore_current
             return 1
         fi
     fi
 
+    # Copy current/ (including the stamped interface.yaml + .hash, which the
+    # snapshot keeps as its frozen identity), then restore current/ to its
+    # unfrozen source-of-truth.
     [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] copying current/ to ${version}/"
-    if ! cp -r "${REPO_ROOT}/${comp}/current" "${snapshot_dir}"; then
+    local _cp_rc=0
+    cp -r "${REPO_ROOT}/${comp}/current" "${snapshot_dir}" || _cp_rc=$?
+    _restore_current
+    if [[ "${_cp_rc}" -ne 0 ]]; then
         warn "cp failed for ${comp}/${version}/."
         return 1
     fi
