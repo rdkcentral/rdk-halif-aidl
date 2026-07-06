@@ -17,107 +17,135 @@
  * limitations under the License.
  */
 package com.rdk.hal.panel;
- 
-/** 
- *  @brief     PQ Parameter enumeration.
+
+/**
+ *  @brief     PQ parameter canonical name vocabulary.
  *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
+ *
+ *  PQ parameters are identified by string keys, mirroring the open string set
+ *  already used for picture modes.  The constants below define the canonical
+ *  vocabulary for standard parameters.  A platform declares which parameters it
+ *  supports — and their ranges and applicable contexts — via
+ *  `Capabilities.pqParameters`; clients must rely on that declaration rather
+ *  than assuming any parameter from this vocabulary is present.
+ *
+ *  Vendor-specific parameters use the namespace prefix `vendor.<vendorname>.`
+ *  e.g. "vendor.acme.super_resolution".  Names outside the `vendor.` namespace
+ *  must match a constant defined here; the Vendor Test Suite validates this.
+ *  Vendor parameters are discovered and rendered generically by clients from
+ *  their `PQParameterCapability` (range, discrete values, contexts).
  */
-
-@VintfStability 
-@Backing(type = "int")
-enum PQParameter
+@VintfStability
+parcelable PQParameter
 {
-    // 
-    BRIGHTNESS = 0,                     //!< Picture parameter  is Brightness (video pixels)
-    //
-    CONTRAST = 1,                       //!< Picture parameter  is Contrast (video plane) 
-    //
-    SHARPNESS = 2,                      //!< Picture parameter  is Sharpness (video plane)  
-    //
-    SATURATION = 3,                     //!< Picture parameter  is Saturation (video plane)  
-    //
-    HUE = 4,                            //!< Picture parameter  is Hue (video plane)  
-    //
-    MANUAL_BACKLIGHT = 5,               //!< Picture parameter  is Backlight (fixed/global) (not the ALS value)  Setting will fail if ALS enabled.
-    // Valid gamma values are defined in enum SDRGamma.
-    SDR_GAMMA = 6,                      //!< Picture parameter  is SDR Gamma
-    // 0..n depending on preconfigured number of presets.
-    COLOR_TEMPERATURE = 7,              //!< Picture parameter  is Colour temperature (?)
-    // 0=Fixed 1=Global 2=Local
-    DIMMING_MODE = 8,                   //!< Picture parameter  is Dimming mode
-    // 0..n presets defined by vendor (for global or local dimming)
-    DIMMING_LEVEL = 9,                	//!< Picture parameter  is Local dimming level
-    // Boolean
-    LOW_LATENCY_STATE = 10,             //!< Picture parameter  is Low latency state
-    //
-    SATURATION_RED = 11,                //!< Picture parameter  is Component saturation red
-    //
-    SATURATION_BLUE = 12,               //!< Picture parameter  is Component saturation blue
-    //
-    SATURATION_GREEN = 13,              //!< Picture parameter  is Component saturation green
-    //
-    SATURATION_YELLOW = 14,             //!< Picture parameter  is Component saturation yellow
-    //
-    SATURATION_CYAN = 15,               //!< Picture parameter  is Component saturation cyan
-    //
-    SATURATION_MAGENTA = 16,            //!< Picture parameter  is Component saturation magenta
-    //
-    HUE_RED = 17,                       //!< Picture parameter  is Component hue red
-    //
-    HUE_BLUE = 18,                      //!< Picture parameter  is Component hue blue
-    //
-    HUE_GREEN = 19,                     //!< Picture parameter  is Component hue green
-    //
-    HUE_YELLOW = 20,                    //!< Picture parameter  is Component hue yellow
-    //
-    HUE_CYAN = 21,                      //!< Picture parameter  is Component hue cyan
-    //
-    HUE_MAGENTA = 22,                   //!< Picture parameter  is Component hue magenta
-    //
-    LUMA_RED = 23,                      //!< Picture parameter  is Component luma red
-    //
-    LUMA_BLUE = 24,                     //!< Picture parameter  is Component luma blue
-    //
-    LUMA_GREEN = 25,                    //!< Picture parameter  is Component luma green
-    //
-    LUMA_YELLOW = 26,                   //!< Picture parameter  is Component luma yellow
-    //
-    LUMA_CYAN = 27,                     //!< Picture parameter  is Component luma cyan
-    //
-    LUMA_MAGENTA = 28,                  //!< Picture parameter  is Component luma magenta
-    // TBD: Boolean or Integer scale?
-    MEMC = 29,                  		//!< Picture parameter  is MEMC
-    // 0..n (0=off, n=maximum level)
-    LOCAL_CONTRAST_LEVEL = 30,          //!< Picture parameter  is Local contrast
+    /** Brightness (video pixels). */
+    const @utf8InCpp String BRIGHTNESS = "BRIGHTNESS";
+
+    /** Contrast (video plane). */
+    const @utf8InCpp String CONTRAST = "CONTRAST";
+
+    /** Sharpness (video plane). */
+    const @utf8InCpp String SHARPNESS = "SHARPNESS";
+
+    /** Saturation (video plane). */
+    const @utf8InCpp String SATURATION = "SATURATION";
+
+    /** Hue (video plane). */
+    const @utf8InCpp String HUE = "HUE";
 
     /**
-     * LED backlight local dimming zones matrix dimensions.
+     * Backlight (fixed/global) (not the ALS value).
+     * Setting will fail if ALS is enabled.
      */
-    //LOCAL_DIMMING_ZONES_X = 31,  MOVE TO Caps if needed.
-    //LOCAL_DIMMING_ZONES_Y = 32,
+    const @utf8InCpp String MANUAL_BACKLIGHT = "MANUAL_BACKLIGHT";
+
+    /** SDR gamma.  Valid gamma values are defined in enum SDRGamma. */
+    const @utf8InCpp String SDR_GAMMA = "SDR_GAMMA";
 
     /**
-     * MPEG noise reduction.
-     * integer 0..n (0=off, n=maximum level)
+     * Colour temperature preset index 0..n.
+     * Each index corresponds to an entry in `Capabilities.colorTemperatureNames`.
      */
-    MPEG_NOISE_REDUCTION = 31,
+    const @utf8InCpp String COLOR_TEMPERATURE = "COLOR_TEMPERATURE";
 
-    /**
-     * Noise reduction.
-     * integer 0..n (0=off, n=maximum level)
-     */
-    NOISE_REDUCTION = 32,
+    /** Dimming mode. 0=Fixed 1=Global 2=Local */
+    const @utf8InCpp String DIMMING_MODE = "DIMMING_MODE";
 
-    /**
-     * AI picture quality management engine.
-     * boolean
-     */
-    AI_PQ_ENGINE = 33,
+    /** Local dimming level. 0..n presets defined by vendor (for global or local dimming). */
+    const @utf8InCpp String DIMMING_LEVEL = "DIMMING_LEVEL";
 
-    /**
-     * Ambient light sensor (ALS) control.
-     * boolean
-     */
-    AMBIENT_LIGHT_SENSOR_CONTROL = 34,
+    /** Low latency state. Boolean. */
+    const @utf8InCpp String LOW_LATENCY_STATE = "LOW_LATENCY_STATE";
 
+    /** Component saturation red. */
+    const @utf8InCpp String SATURATION_RED = "SATURATION_RED";
+
+    /** Component saturation blue. */
+    const @utf8InCpp String SATURATION_BLUE = "SATURATION_BLUE";
+
+    /** Component saturation green. */
+    const @utf8InCpp String SATURATION_GREEN = "SATURATION_GREEN";
+
+    /** Component saturation yellow. */
+    const @utf8InCpp String SATURATION_YELLOW = "SATURATION_YELLOW";
+
+    /** Component saturation cyan. */
+    const @utf8InCpp String SATURATION_CYAN = "SATURATION_CYAN";
+
+    /** Component saturation magenta. */
+    const @utf8InCpp String SATURATION_MAGENTA = "SATURATION_MAGENTA";
+
+    /** Component hue red. */
+    const @utf8InCpp String HUE_RED = "HUE_RED";
+
+    /** Component hue blue. */
+    const @utf8InCpp String HUE_BLUE = "HUE_BLUE";
+
+    /** Component hue green. */
+    const @utf8InCpp String HUE_GREEN = "HUE_GREEN";
+
+    /** Component hue yellow. */
+    const @utf8InCpp String HUE_YELLOW = "HUE_YELLOW";
+
+    /** Component hue cyan. */
+    const @utf8InCpp String HUE_CYAN = "HUE_CYAN";
+
+    /** Component hue magenta. */
+    const @utf8InCpp String HUE_MAGENTA = "HUE_MAGENTA";
+
+    /** Component luma red. */
+    const @utf8InCpp String LUMA_RED = "LUMA_RED";
+
+    /** Component luma blue. */
+    const @utf8InCpp String LUMA_BLUE = "LUMA_BLUE";
+
+    /** Component luma green. */
+    const @utf8InCpp String LUMA_GREEN = "LUMA_GREEN";
+
+    /** Component luma yellow. */
+    const @utf8InCpp String LUMA_YELLOW = "LUMA_YELLOW";
+
+    /** Component luma cyan. */
+    const @utf8InCpp String LUMA_CYAN = "LUMA_CYAN";
+
+    /** Component luma magenta. */
+    const @utf8InCpp String LUMA_MAGENTA = "LUMA_MAGENTA";
+
+    /** Motion estimation / motion compensation (MEMC). Integer 0..n (0=off, n=maximum level). */
+    const @utf8InCpp String MEMC = "MEMC";
+
+    /** Local contrast. Integer 0..n (0=off, n=maximum level). */
+    const @utf8InCpp String LOCAL_CONTRAST_LEVEL = "LOCAL_CONTRAST_LEVEL";
+
+    /** MPEG noise reduction. Integer 0..n (0=off, n=maximum level). */
+    const @utf8InCpp String MPEG_NOISE_REDUCTION = "MPEG_NOISE_REDUCTION";
+
+    /** Noise reduction. Integer 0..n (0=off, n=maximum level). */
+    const @utf8InCpp String NOISE_REDUCTION = "NOISE_REDUCTION";
+
+    /** AI picture quality management engine. Boolean. */
+    const @utf8InCpp String AI_PQ_ENGINE = "AI_PQ_ENGINE";
+
+    /** Ambient light sensor (ALS) control. Boolean. */
+    const @utf8InCpp String AMBIENT_LIGHT_SENSOR_CONTROL = "AMBIENT_LIGHT_SENSOR_CONTROL";
 }

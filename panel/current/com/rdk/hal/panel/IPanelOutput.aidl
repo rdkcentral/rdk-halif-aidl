@@ -20,9 +20,8 @@ package com.rdk.hal.panel;
 import com.rdk.hal.panel.Capabilities;
 import com.rdk.hal.panel.IFactoryPanel;
 import com.rdk.hal.panel.PictureModeConfiguration;
-import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.PQParameterConfiguration;
-import com.rdk.hal.panel.PQParameterCapabilities;
+import com.rdk.hal.panel.PQParameterCapability;
 import com.rdk.hal.panel.WhiteBalance2PointSettings;
 import com.rdk.hal.panel.WhiteBalanceMultiPointSettings;
 import com.rdk.hal.videodecoder.DynamicRange;
@@ -172,7 +171,7 @@ interface IPanelOutput
      * @retval false    One or more invalid parameter configurations.
      *
      * 
-     * @see getPQParameters(), getDefaultPQParameters(), getPQParameterCapabilities(), PQParameterConfiguration
+     * @see getPQParameters(), getDefaultPQParameters(), getSupportedPQParameters(), PQParameterConfiguration
      */
     boolean setPQParameters(in PQParameterConfiguration[] configurations);
 
@@ -202,7 +201,7 @@ interface IPanelOutput
      * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
      *
      *
-     * @see setPQParameters(), getDefaultPQParameters(), getPQParameterCapabilities(), PQParameterConfiguration
+     * @see setPQParameters(), getDefaultPQParameters(), getSupportedPQParameters(), PQParameterConfiguration
      */
     boolean getPQParameters(in PQParameterConfiguration[] requestedConfigurations, out PQParameterConfiguration[] returnedConfigurations);
 
@@ -223,23 +222,39 @@ interface IPanelOutput
      * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
      *
      *
-     * @see setPQParameters(), getPQParameters(), getPQParameterCapabilities(), PQParameterConfiguration
+     * @see setPQParameters(), getPQParameters(), getSupportedPQParameters(), PQParameterConfiguration
      */
     boolean getDefaultPQParameters(in PQParameterConfiguration[] requestedConfigurations, out PQParameterConfiguration[] defaultConfigurations);
 
-	/**
-	 * Gets the platform capabilities for a PQ parameter.
-	 * 
-	 * The returned PQCapabilities confirms whether the parameter is supported by the platform and its minimum and maximum allowed values.
-	 * It also contains a list of picture modes, video formats and AV sources that are supported by the PQ parameter.
-	 * 
-	 * @param[in] pqParameter	PQParameter
-	 * 
-	 * @return PQCapabilities
-	 * 
-	 * @see getPQParameters(), setPQParameters(), getDefaultPQParameters(), PQCapabilities
-	 */
-    PQParameterCapabilities getPQParameterCapabilities(in PQParameter pqParameter);
+    /**
+     * Gets the PQ parameters available in a given context, with their ranges.
+     *
+     * The context is addressed by the same (pictureMode, source, format) tuple used
+     * by `setPQParameters()` / `getPQParameters()`, with the same wildcard semantics:
+     * a null `pictureMode`, `AVSource.UNKNOWN` or `DynamicRange.UNKNOWN` matches all
+     * supported values of that axis, returning the intersection of parameters
+     * available across the matched contexts.
+     *
+     * Global parameters (`PQParameterCapability.isGlobal == true`) apply in every
+     * context and are always included.
+     *
+     * A single call answers the typical client question — "which controls are
+     * available right now, with what ranges?" — without requiring the caller to
+     * invert `Capabilities.pqParameters`.  The returned data is static: for a given
+     * context the result is not allowed to change between calls.
+     *
+     * @param[in] pictureMode   The picture mode, or null for all supported picture modes.
+     * @param[in] source        The AV source, or AVSource.UNKNOWN for all supported sources.
+     * @param[in] format        The video format, or DynamicRange.UNKNOWN for all supported formats.
+     *
+     * @return PQParameterCapability[]   The parameters available in the context, with ranges.
+     *
+     * @exception binder::Status::Exception::EX_NONE             Success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Unsupported pictureMode, source or format.
+     *
+     * @see getPQParameters(), setPQParameters(), getDefaultPQParameters(), Capabilities
+     */
+    PQParameterCapability[] getSupportedPQParameters(in @nullable String pictureMode, in AVSource source, in DynamicRange format);
 
     /**
      * Sets the panel refresh rate.

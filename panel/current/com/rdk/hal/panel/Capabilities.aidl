@@ -17,16 +17,22 @@
  * limitations under the License.
  */
 package com.rdk.hal.panel;
-import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.PanelType;
+import com.rdk.hal.panel.PQParameterCapability;
 import com.rdk.hal.videodecoder.DynamicRange;
 import com.rdk.hal.AVSource;
- 
-/** 
+
+/**
  *  @brief     Panel capabilities definition.
  *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
+ *
+ *  PQ capability is modelled as a normalized relation:
+ *  `pqContexts` declares the distinct (picture modes × video formats × AV sources)
+ *  support sets once, and each entry in `pqParameters` references the context(s)
+ *  it applies in by index.  Either orientation — "which contexts does parameter P
+ *  apply in?" or "which parameters apply in context C?" — is a trivial derivation.
+ *  For the latter, `IPanelOutput.getSupportedPQParameters()` answers directly.
  */
-
 @VintfStability
 parcelable Capabilities
 {
@@ -52,51 +58,78 @@ parcelable Capabilities
     boolean fadeDisplaySupported;
 
     /**
-     * The list of supported PQParameters.
-     */
-    PQParameter[] supportedPQParameters;
-
-    /**
      * Panel display refresh rates supported in Hz, used in frame rate matching.
      */
     double[] supportedRefreshRatesHz;
 
-    /*
-     * Defines the video format and AV source capabilities for a picture mode.
+    /**
+     * A named PQ support context — one set of (picture modes × video formats × AV sources).
+     *
+     * A context declares that every listed picture mode supports every listed
+     * video format, restricted per format to the listed AV sources.
+     * Platforms typically need only a small number of contexts
+     * (e.g. "all modes/formats/sources" and "expert-mode only").
      */
-    parcelable PictureModeCapabilities
+    parcelable PQContext
     {
         /**
-         * The picture mode.
+         * The picture modes in this context.
          */
-        String pictureMode;
+        String[] pictureModes;
 
         /**
-         * Defines a video format capability for a picture mode.
+         * The AV sources supported for one video format.
          */
-        parcelable VideoFormatCapabilities
+        parcelable FormatSources
         {
             /**
              * The dynamic range video format.
              */
-            DynamicRange videoFormat;
+            DynamicRange format;
 
             /**
-             * Lists the AV sources supported by this picture mode and video format.
+             * The AV sources supported for this video format.
              */
-            AVSource[] supportedAVSources;
+            AVSource[] sources;
         }
 
         /**
-         * Lists the video format capabilities for a picture mode.
+         * The video formats in this context and their supported AV sources.
          */
-        VideoFormatCapabilities[] videoFormatCapabilities;
+        FormatSources[] formatSources;
     }
 
     /**
-     * Array of picture modes and their capabilities, listing the video formats and AV sources supported.
+     * The distinct PQ support contexts for this platform.
+     * Referenced by index from `PQParameterInfo.contextIndexes`.
+     * The union of `pictureModes` across all contexts is the platform's
+     * complete picture mode list.
      */
-    PictureModeCapabilities[] pictureModeCapabilities;
+    PQContext[] pqContexts;
+
+    /**
+     * A supported PQ parameter and the context(s) it applies in.
+     */
+    parcelable PQParameterInfo
+    {
+        /**
+         * The parameter identity, scope and value range.
+         */
+        PQParameterCapability capability;
+
+        /**
+         * Indexes into `pqContexts` for the context(s) this parameter applies in.
+         * Global parameters (`capability.isGlobal == true`) apply in every
+         * context regardless of this list.
+         */
+        int[] contextIndexes;
+    }
+
+    /**
+     * The PQ parameters supported by this platform.
+     * A parameter's presence implies support; unsupported parameters are not listed.
+     */
+    PQParameterInfo[] pqParameters;
 
     /**
      * Array of color temperature names.
