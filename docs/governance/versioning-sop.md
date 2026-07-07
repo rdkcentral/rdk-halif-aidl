@@ -105,6 +105,13 @@ field it bumps:
 | `Minor Change` | **Minor** (`0.g.m.p` → `0.g.(m+1).0`) | Backwards-compatible addition — the default for real interface work: new methods, new fields appended to parcelables, new enum values added with fallback handling, new sub-interfaces. |
 | `documentation` | **Bugfix** (`0.g.m.p` → `0.g.m.(p+1)`) | The interface surface is untouched — doc tweaks, metadata corrections, HFP YAML changes, comment-only refactors, trivial non-interface fixes. Auto-applied by `configure_pr.sh` when every changed file is doc-like (see `is_doc()`). |
 
+A PR that carries **no** change-class label but whose linked (closing)
+issue is GitHub type **`Bug`** implies the bugfix bump — the native issue
+type carries the signal, no label needed. An explicit change-class label
+always wins over the issue type (a bug whose fix changes the interface
+surface carries `Minor Change` or `Major Change` accordingly, and the
+structural audit checks the declared class either way).
+
 The `Breaking Change` label is retired — breaking IS the major bump, so a
 separate label was redundant. `scripts/release.sh` still accepts it as a
 deprecated alias of `Major Change` while historical and in-flight PRs

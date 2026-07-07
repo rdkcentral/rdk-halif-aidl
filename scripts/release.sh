@@ -1328,6 +1328,7 @@ else
 fi
 
 declare -A PR_LABEL_CACHE=()
+declare -A PR_TYPE_CACHE=()
 declare -A COMMIT_PR_CACHE=()
 declare -A COMP_TOUCHED=()
 declare -A COMP_BREAKING=()
@@ -1358,6 +1359,7 @@ gh_cache_load() {
             l)  # Restore newlines from |-encoded labels
                 PR_LABEL_CACHE[$key]="${value//|/$'\n'}"
                 ;;
+            t)  PR_TYPE_CACHE[$key]="${value}" ;;
         esac
     done < "${GH_CACHE_FILE}"
 }
@@ -1412,6 +1414,30 @@ get_pr_labels() {
     # Encode newlines as | for disk storage.
     gh_cache_append "l" "${pr}" "${labels//$'\n'/|}"
     printf '%s\n' "${labels}"
+}
+
+# GitHub-native issue type of the PR's linked (closing) issue. A PR with
+# no change-class label whose linked issue is type "Bug" implies the
+# bugfix bump (#712) — the type field carries the signal; no label needed.
+# Returns "Bug" when any linked issue is a Bug, else the first linked
+# issue's type, else "".
+get_pr_issue_type() {
+    local pr="$1"
+    if [[ -n "${PR_TYPE_CACHE[$pr]+x}" ]]; then
+        printf '%s\n' "${PR_TYPE_CACHE[$pr]}"
+        return 0
+    fi
+    local t=""
+    if [[ "${ENABLE_GH_LABELS}" -eq 1 ]]; then
+        t="$(gh api graphql \
+            -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){pullRequest(number:$n){closingIssuesReferences(first:5){nodes{issueType{name}}}}}}' \
+            -f o="${GH_REPO%%/*}" -f r="${GH_REPO##*/}" -F n="${pr}" \
+            --jq '[.data.repository.pullRequest.closingIssuesReferences.nodes[].issueType.name // empty] | if any(. == "Bug") then "Bug" else (first // "") end' \
+            2>/dev/null || true)"
+    fi
+    PR_TYPE_CACHE[$pr]="${t}"
+    gh_cache_append "t" "${pr}" "${t}"
+    printf '%s\n' "${t}"
 }
 
 phase "Analyzing ${#FP_COMMITS[@]} commit(s) for component impact..."
@@ -1489,6 +1515,9 @@ for sha in "${FP_COMMITS[@]}"; do
         elif [[ "${has_bugfix_label}" -eq 1 ]]; then
             COMP_DOC[$comp]=1
             COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: documentation label (bugfix)"$'\n'
+        elif [[ -n "${pr_number}" ]] && [[ "$(get_pr_issue_type "${pr_number}")" == "Bug" ]]; then
+            COMP_DOC[$comp]=1
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: linked issue type Bug (bugfix)"$'\n'
         elif [[ "${COMMIT_COMP_DOCS_ONLY[$comp]}" -eq 1 ]]; then
             COMP_DOC[$comp]=1
             COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: docs-only heuristic"$'\n'
