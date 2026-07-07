@@ -39,9 +39,15 @@ package com.rdk.hal;
  *              <li>STRING  -> PropertyValue.value.stringValue</li>
  *            </ul>
  *
- *            Promoted from compositeinput.PropertyMetadata.PropertyType so it
- *            can be shared without cross-package imports between consumer
- *            components.
+ *            This enum intentionally covers only the scalar/string subset of
+ *            PropertyValue.Value used by property-metadata declarations —
+ *            the union's remaining fields (byteValue, charValue,
+ *            intArrayValue) have no enumerator until a consumer needs one
+ *            (added values are backwards-compatible).
+ *
+ *            Promoted from compositeinput.PropertyMetadata.PropertyType so
+ *            consumers share one common type instead of importing a
+ *            component-scoped type from another component's package.
  *
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz

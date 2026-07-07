@@ -95,7 +95,9 @@ parcelable OutputPortCapabilities {
      * @brief   List of Dolby MS12 Audio Profiles (first is default).
      *
      *          If there are no defined MS12 Audio Profiles for this audio
-     *          port then @c dolbyMs12AudioProfiles is not populated.
+     *          port then @c dolbyMs12AudioProfiles is null. Implementations
+     *          MUST use null (not an empty array) for the no-profiles case;
+     *          clients treat null and empty identically as "no profiles".
      */
     @nullable String[] dolbyMs12AudioProfiles;
 
