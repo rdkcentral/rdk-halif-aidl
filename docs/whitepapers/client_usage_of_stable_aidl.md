@@ -24,6 +24,14 @@ The patterns and examples align with the interface style used in this repository
 4. **Consistent error semantics** – handle unknown transactions and unsupported operations explicitly.
 5. **Centralised logic** – version and feature handling belongs in a thin adapter, not scattered across the codebase.  
    All other code should go through this adapter, not call `getInterfaceVersion()` or `getInterfaceHash()` directly.
+   The repository ships this adapter as `halcompat.h`, installed with the
+   `common` component headers (source: `common/current/halcompat.h`;
+   frozen releases carry it in their versioned `include/` tree): `getService<I>()`,
+   `isCompatible(service)` and `atLeast(service, era, major, minor,
+   bugfix)` — the API and era rules are documented in the header's own
+   Doxygen. The `FooClient` below illustrates the adapter pattern in
+   Android's ndk-backend idiom; halcompat is this repository's
+   cpp-backend implementation of the same pattern.
 
 ---
 
