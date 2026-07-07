@@ -55,6 +55,9 @@ nav:
       - Git Flow Branching Strategy: standards/git_flow_branching_strategy.md
       - Semantic Versioning: standards/semantic_versioning.md
       - AIDL Versioning Guide: standards/versioning-guide.md
+      - AIDL Client Patterns: standards/client-patterns.md
+      - AIDL Migration Guide: standards/migration-guide.md
+      - AIDL Testing Strategy: standards/testing-strategy.md
       - Third-Party Build Integration: standards/build_integration.md
   - Vendor HAL Interfaces (VHI):
     - Overview: key_concepts/hal/hal_interfaces.md
