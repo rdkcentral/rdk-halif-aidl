@@ -145,7 +145,17 @@ surface is untouched.
 The binder toolchain classifies interface changes structurally
 (`linux_binder_idl`'s `aidl_ops dump-surface` / `diff-surface`): it dumps the
 declared surface of two trees and reports `breaking`, `major` (additive) or
-`none`. The release flow uses this as the change-class gate:
+`none`. The release flow enforces this as the pre-tag structural audit:
+
+```bash
+./scripts/release.sh --audit --strict
+```
+
+For every component, the audit classifies the last-frozen → `current/` diff
+and fails the release when the declared change class or `metadata.yaml`
+version disagrees with what the AIDL actually changed (see the
+[versioning SOP](../governance/versioning-sop.md) for the full audit
+procedure):
 
 | `diff-surface` class | Era `0.x.y.z` requires | Era `1.x.x.x` requires |
 | --- | --- | --- |
