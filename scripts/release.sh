@@ -1295,7 +1295,7 @@ component_from_path() {
 is_doc_like_path() {
     local path="$1"
     case "$path" in
-        docs/*|*/docs/*|*.md|*.rst|*.txt|*/README|*/README.*|*/CHANGELOG|*/CHANGELOG.*|*/metadata.yaml|*/hfp-*.yaml)
+        docs/*|*/docs/*|*.md|*.rst|*.txt|*/README|*/README.*|*/CHANGELOG|*/CHANGELOG.*|*/metadata.yaml|*/hfp-*.yaml|mkdocs.yml|*/mkdocs.yml)
             return 0
             ;;
         *)
@@ -1455,6 +1455,14 @@ for sha in "${FP_COMMITS[@]}"; do
     phase "    [${_commit_idx}/${_commit_total}] ${sha:0:8} ${_subj_short}"
     parent="$(git rev-parse "${sha}^1" 2>/dev/null || true)"
     [[ -n "${parent}" ]] || continue
+
+    # Skip merge commits (#715): in the squash-merge workflow every
+    # reviewable change is a non-merge commit; merges on develop are
+    # release back-merges (e.g. "Merge tag '0.21.0' into develop") whose
+    # thousand-file diffs would classify every component default-minor.
+    if git rev-parse -q --verify "${sha}^2" >/dev/null 2>&1; then
+        continue
+    fi
 
     mapfile -t changed_files < <(git diff --name-only "${parent}" "${sha}")
     [[ ${#changed_files[@]} -gt 0 ]] || continue

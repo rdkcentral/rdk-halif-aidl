@@ -141,6 +141,7 @@ def is_doc(p):
     if base == "CHANGELOG" or base.startswith("CHANGELOG."): return True
     if base == "metadata.yaml": return True
     if base.startswith("hfp-") and base.endswith(".yaml"): return True
+    if base == "mkdocs.yml": return True
     return False
 fs=[f["path"] for f in json.load(sys.stdin)["files"]]
 print("yes" if fs and all(is_doc(p) for p in fs) else "no")
