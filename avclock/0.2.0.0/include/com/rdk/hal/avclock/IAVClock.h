@@ -25,9 +25,9 @@ namespace avclock {
 class IAVClock : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AVClock)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "746091a1d249271c6ce051d120d292928e6491ab";
+  static constexpr char* HASHVALUE = "746091a1d249271c6ce051d120d292928e6491ab";
   class Id : public ::android::Parcelable {
   public:
     int32_t value = 0;

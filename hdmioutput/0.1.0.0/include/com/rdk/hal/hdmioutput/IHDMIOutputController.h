@@ -22,9 +22,9 @@ namespace hdmioutput {
 class IHDMIOutputController : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(HDMIOutputController)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 1000;
+  const std::string HASH = "19404cdb282a1b4946d330b0bb3cafdfcec8680c";
+  static constexpr char* HASHVALUE = "19404cdb282a1b4946d330b0bb3cafdfcec8680c";
   virtual ::android::binder::Status start() = 0;
   virtual ::android::binder::Status stop() = 0;
   virtual ::android::binder::Status getHotPlugDetectState(bool* _aidl_return) = 0;

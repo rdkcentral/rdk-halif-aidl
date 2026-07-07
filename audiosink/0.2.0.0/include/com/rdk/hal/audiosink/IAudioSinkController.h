@@ -19,9 +19,9 @@ namespace audiosink {
 class IAudioSinkController : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioSinkController)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "057ffa4fe9e339f8590839fafb79ebf81cf96282";
+  static constexpr char* HASHVALUE = "057ffa4fe9e339f8590839fafb79ebf81cf96282";
   virtual ::android::binder::Status setAudioDecoder(const ::com::rdk::hal::audiodecoder::IAudioDecoder::Id& audioDecoderId, bool* _aidl_return) = 0;
   virtual ::android::binder::Status getAudioDecoder(::com::rdk::hal::audiodecoder::IAudioDecoder::Id* _aidl_return) = 0;
   virtual ::android::binder::Status attachClock(const ::com::rdk::hal::avclock::IAVClock::Id& clockId) = 0;

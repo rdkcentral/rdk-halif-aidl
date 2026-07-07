@@ -16,9 +16,9 @@ namespace audiodecoder {
 class IAudioDecoderControllerListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioDecoderControllerListener)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "bd961e2c8ff65805c8b8debbc0701fda8a4dae78";
+  static constexpr char* HASHVALUE = "bd961e2c8ff65805c8b8debbc0701fda8a4dae78";
   virtual ::android::binder::Status onFrameOutput(int64_t nsPresentationTime, int64_t frameAVBufferHandle, const ::std::optional<::com::rdk::hal::audiodecoder::FrameMetadata>& metadata) = 0;
   virtual ::android::binder::Status onEndOfStream() = 0;
   virtual ::android::binder::Status onDecodeBufferAvailable() = 0;

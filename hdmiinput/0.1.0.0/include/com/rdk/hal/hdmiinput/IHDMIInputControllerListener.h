@@ -19,9 +19,9 @@ namespace hdmiinput {
 class IHDMIInputControllerListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(HDMIInputControllerListener)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 1000;
+  const std::string HASH = "7946019ce36bd9a8290f938cebf478d23b12f11c";
+  static constexpr char* HASHVALUE = "7946019ce36bd9a8290f938cebf478d23b12f11c";
   virtual ::android::binder::Status onConnectionStateChanged(bool connectionState) = 0;
   virtual ::android::binder::Status onSignalStateChanged(::com::rdk::hal::hdmiinput::SignalState signalState) = 0;
   virtual ::android::binder::Status onVIChanged(::com::rdk::hal::hdmiinput::VIC vic) = 0;

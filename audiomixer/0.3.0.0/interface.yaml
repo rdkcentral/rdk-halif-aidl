@@ -1,5 +1,6 @@
 aidl_interface:
   name: audiomixer
+  version: 3000
   srcs:
     - com/rdk/hal/audiomixer/*.aidl
   imports:
