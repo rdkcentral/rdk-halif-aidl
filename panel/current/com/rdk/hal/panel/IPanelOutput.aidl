@@ -51,14 +51,14 @@ interface IPanelOutput
      * 
      * This function can be called at any time and the returned value is not allowed to change between calls.
      *
-     * @return Capabilities parcelable.
+     * @returns Capabilities parcelable.
      */
     Capabilities getCapabilities();
 
     /**
      * Gets the factory interface for the panel.
      *
-     * @return IFactoryPanel or null on error.
+     * @returns IFactoryPanel or null on error.
      */
     @nullable IFactoryPanel getFactoryInterface();
 
@@ -82,7 +82,7 @@ interface IPanelOutput
   	/**
 	 * Gets the panel enabled state.
 	 * 
-	 * @return boolean
+	 * @returns boolean
 	 * @retval true				The panel is enabled.
 	 * @retval false			The panel is disabled.
      *
@@ -99,7 +99,7 @@ interface IPanelOutput
      *
      * @param[in] configurations    Array of PictureModeConfiguration values.
      * 
-     * @return boolean
+     * @returns boolean
      * @retval true				The picture modes were successfully set.
      * @retval false			One or more picture mode configurations were invalid and could not be set.
      *
@@ -125,7 +125,7 @@ interface IPanelOutput
      * @param[in] requestedConfigurations   Non-empty list of query criteria (format/source/pictureMode optional).
      * @param[out] returnedConfigurations   Populated picture mode results matching input ordering.
      *
-     * @return boolean
+     * @returns boolean
      * @retval true     All picture modes were successfully returned.
      * @retval false    One or more picture mode configurations were invalid and could not be returned or Invalid criteria or empty input list.
      *
@@ -148,7 +148,7 @@ interface IPanelOutput
      * @param[in] requestedConfigurations   Non-empty list of query criteria.
      * @param[out] defaultConfigurations     Populated default picture modes.
      *
-     * @return boolean
+     * @returns boolean
      * @retval true     All default picture modes were successfully returned.
      * @retval false    One or more picture mode configurations were invalid and could not be returned or Invalid criteria or empty input list.
      *
@@ -166,7 +166,7 @@ interface IPanelOutput
      *
      * @param[in] configurations    Array of PQParameterConfiguration values.
      *
-     * @return boolean
+     * @returns boolean
      * @retval true     The PQ parameters were set.
      * @retval false    One or more invalid parameter configurations.
      *
@@ -192,7 +192,7 @@ interface IPanelOutput
      * @param[in] requestedConfigurations   Non-empty list of PQ parameter query criteria.
      * @param[out] returnedConfigurations   Populated PQ parameter values (value field set).
      *
-     * @return boolean
+     * @returns boolean
      * @retval true     All PQ parameter values were successfully returned.
      * @retval false    Invalid criteria or empty input list.
      *
@@ -213,7 +213,7 @@ interface IPanelOutput
      * @param[in] requestedConfigurations   Non-empty list of PQ parameter query criteria.
      * @param[out] defaultConfigurations    Populated default PQ parameter values.
      *
-     * @return boolean
+     * @returns boolean
      * @retval true     All default PQ parameters were successfully returned.
      * @retval false    Invalid criteria or empty input list.
      *
@@ -247,7 +247,7 @@ interface IPanelOutput
      * @param[in] source        The AV source, or AVSource.UNKNOWN for all supported sources.
      * @param[in] format        The video format, or DynamicRange.UNKNOWN for all supported formats.
      *
-     * @return PQParameterCapability[]   The parameters available in the context, with ranges.
+     * @returns PQParameterCapability[]   The parameters available in the context, with ranges.
      *
      * @exception binder::Status::Exception::EX_NONE             Success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Unsupported pictureMode, source or format.
@@ -263,7 +263,7 @@ interface IPanelOutput
      *
      * @param[in] refreshRateHz   The refresh rate in Hz.
      * 
-     * @return boolean
+     * @returns boolean
      * @retval true     The refresh rate was set.
      * @retval false    Unsupported refresh rate.
      *
@@ -275,7 +275,7 @@ interface IPanelOutput
     /**
      * Gets the current panel refresh rate.
      *
-     * @return double   Refresh rate in Hz.
+     * @returns double   Refresh rate in Hz.
      *
      * @see setRefreshRate()
      */
@@ -294,7 +294,7 @@ interface IPanelOutput
 	 *
 	 * @param[in] enabled   The new frame rate matching state.
      * 
-	 * @return boolean
+	 * @returns boolean
      * @retval true     The new frame rate matching state was set.
      * @retval false    The new frame rate matching state was not set.
      *
@@ -306,7 +306,7 @@ interface IPanelOutput
     /**
      * Gets the frame rate matching enabled state.
      *
-     * @return boolean
+     * @returns boolean
      * @retval true     Frame rate matching is enabled.
      * @retval false    Frame rate matching is disabled.
      *
@@ -337,7 +337,7 @@ interface IPanelOutput
 	 * This returns the value previously set by a call to setVideoSourceOverride()
 	 * or the default is AUTO.
 	 * 
-	 * @return AVSource
+	 * @returns AVSource
 	 * 
 	 * @see setVideoSourceOverride(), AVSource
 	 */ 
@@ -348,7 +348,7 @@ interface IPanelOutput
      * 
      * The returned value is AVSource.UNKNOWN if no video is playing.
      *
-     * @return AVSource     The AV source.
+     * @returns AVSource     The AV source.
      */
     AVSource getVideoSource();
 
@@ -357,7 +357,7 @@ interface IPanelOutput
      * 
      * The returned value is DynamicRange.UNKNOWN if no video is playing.
      *
-     * @return DynamicRange     The current video format.
+     * @returns DynamicRange     The current video format.
      */
     DynamicRange getVideoFormat();
 
@@ -366,7 +366,7 @@ interface IPanelOutput
      * 
      * The returned array is { 0, 0 } if no video is playing.
      *
-     * @return int[2]   Where [0] is the numerator of the frame rate
+     * @returns int[2]   Where [0] is the numerator of the frame rate
      *                  and [1] is the denominator of the frame rate.
      */
 	int[2] getVideoFrameRate();
@@ -376,7 +376,7 @@ interface IPanelOutput
      *
      * The returned array is { 0, 0 } if no video is playing.
      *
-     * @return int[2]   Where [0] is the video width
+     * @returns int[2]   Where [0] is the video width
      *                  and [1] is the video height.
      */
 	int[2] getVideoResolution();
@@ -387,7 +387,7 @@ interface IPanelOutput
      * @param[in] colorTemperature  The color temperature to set.
      * @param[in] whiteBalance      The white balance settings.
      * 
-     * @return boolean
+     * @returns boolean
      * @retval true     The 2-point white balance was set for the color temperature.
      * @retval false    One or more parameters are invalid.
      *
@@ -399,7 +399,7 @@ interface IPanelOutput
      *
      * @param[in] colorTemperature  The color temperature to set.
      * 
-     * @return WhiteBalance2PointSettings
+     * @returns WhiteBalance2PointSettings
      */
     WhiteBalance2PointSettings get2PointWhiteBalance(in int colorTemperature);
 
@@ -409,7 +409,7 @@ interface IPanelOutput
      * @param[in] colorTemperature  The color temperature to set.
      * @param[in] whiteBalance      The white balance settings.
      *
-     * @return boolean
+     * @returns boolean
      * @retval true     The multi-point white balance was set for the color temperature.
      * @retval false    One or more parameters are invalid.
      *
@@ -421,7 +421,7 @@ interface IPanelOutput
      *
      * @param[in] colorTemperature  The color temperature to set.
      *
-     * @return WhiteBalanceMultiPointSettings
+     * @returns WhiteBalanceMultiPointSettings
      */
     WhiteBalanceMultiPointSettings getMultiPointWhiteBalance(in int colorTemperature);
 
@@ -452,7 +452,7 @@ interface IPanelOutput
 	 * @param[in] durationMs    Time duration for the fade to reach the end value. Valid range is 0-10000 ms.
      *                          When a `durationMs` of 0 is specified, the end fade luminance value is immediately set.
      * 
-     * @return boolean
+     * @returns boolean
      * @retval true     The fade operation was started.
      * @retval false    The fade operation was not started because one or more parameters are invalid.
      *
