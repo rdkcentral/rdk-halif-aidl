@@ -15,7 +15,7 @@
 ## Related Pages
 
 !!! tip "Related Pages"
-    - TBC
+    - [halcompat — Client Compatibility Helpers](halcompat.md)
 
 ## 🚧 Document Under Construction
 

@@ -127,21 +127,11 @@ inline android::sp<I> getService()
 }
 
 /**
- * True when the connected server is frozen: it reports a real contract
- * hash rather than the pre-freeze "notfrozen" marker. A development
- * build makes no compatibility promise; production clients treat it as
- * a mismatch.
- */
-template <typename I>
-inline bool isFrozen(const android::sp<I>& service)
-{
-    return service != nullptr && service->getInterfaceHash() != "notfrozen";
-}
-
-/**
  * One-call compatibility check: the service exists, is frozen, and its
  * version satisfies this client's compiled-against I::VERSION under the
- * era rules. Set allowUnfrozen=true only on development images.
+ * era rules. A pre-freeze development server (contract hash "notfrozen")
+ * makes no compatibility promise and is rejected; set allowUnfrozen=true
+ * only on development images.
  */
 template <typename I>
 inline bool isCompatible(const android::sp<I>& service,
@@ -150,7 +140,7 @@ inline bool isCompatible(const android::sp<I>& service,
     if (service == nullptr) {
         return false;
     }
-    if (!isFrozen(service)) {
+    if (service->getInterfaceHash() == "notfrozen") {
         return allowUnfrozen;
     }
     return detail::isCompatible(I::VERSION, service->getInterfaceVersion());
