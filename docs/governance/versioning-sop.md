@@ -195,11 +195,13 @@ tagged.
 
 #### Pre-Tag Structural Audit
 
-Before tagging a release, run the structural audit:
+The release flow enforces the structural audit itself: every stage and
+`--apply` invocation first audits the components being written and refuses
+to proceed while their structural class, PR labels and `metadata.yaml`
+disagree. The full-repo sweep is available at any time:
 
 ```bash
-./scripts/release.sh --audit            # report
-./scripts/release.sh --audit --strict   # gate: non-zero exit on any flag
+./scripts/release.sh --audit   # every component; non-zero exit on any flag
 ```
 
 For **every** component — including ones untouched since the last release —

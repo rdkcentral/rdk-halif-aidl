@@ -649,17 +649,20 @@ Release run (no subcommand):
                        [--no-gh] [--no-snapshot] [--no-mkdocs]
                        [--no-build] [--verbose]
 
-Structural audit (pre-release gate):
-  ./scripts/release.sh --audit [--since <ref>] [--strict] [--verbose]
+Structural audit:
+  ./scripts/release.sh --audit [--since <ref>] [--verbose]
 
-  Read-only. For EVERY component (not just touched ones) classifies the
-  structural AIDL diff between the last frozen snapshot and current/ via
-  the binder toolchain (aidl_ops dump-surface / diff-surface), then
-  cross-checks it against the PR-label-implied change class and the
-  metadata.yaml declared version. Mismatches are flagged; --strict exits
-  non-zero on any flagged row so release tagging can be gated on a clean
-  audit. Detail of every structural change is printed for flagged rows
+  Read-only, always strict (exits non-zero on any flagged row). For EVERY
+  component (not just touched ones) classifies the structural AIDL diff
+  between the last frozen snapshot and current/ via the binder toolchain
+  (aidl_ops dump-surface / diff-surface), then cross-checks it against
+  the PR-label-implied change class and the metadata.yaml declared
+  version. Detail of every structural change is printed for flagged rows
   (all rows with --verbose).
+
+  The gate also runs AUTOMATICALLY on every write/branch path (stage and
+  --apply), scoped to the components being written — no switches needed.
+  --no-audit bypasses it (testing only; a real release MUST audit).
 
   Only components staged in the worktree are processed. The detector
   computes the bump level from PR labels since the base ref; an explicit
@@ -713,8 +716,10 @@ Options:
   --no-mkdocs            Skip updating mkdocs.yml.
   --no-build             Skip the verification build (./build_modules.sh
                          all). Testing only — a real release MUST build.
-  --audit                Structural change-class audit (see above). Read-only.
-  --strict               With --audit: exit non-zero if any row is flagged.
+  --audit                Structural change-class audit (see above). Read-only,
+                         always strict.
+  --no-audit             Skip the automatic write-path audit gate. Testing
+                         only — a real release MUST audit.
   --verbose              Print extra diagnostics.
   --help                 Show this help.
 
@@ -771,7 +776,7 @@ NO_SNAPSHOT=0
 NO_MKDOCS=0
 NO_BUILD=0
 AUDIT=0
-AUDIT_STRICT=0
+NO_AUDIT=0
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -822,7 +827,11 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --strict)
-            AUDIT_STRICT=1
+            warn "--strict is deprecated: the audit is always strict (#714)."
+            shift
+            ;;
+        --no-audit)
+            NO_AUDIT=1
             shift
             ;;
         --verbose|-v)
@@ -2838,7 +2847,12 @@ aidl_hash_status() {
 # classify breaking (standard AIDL discipline) — that row hard-fails
 # regardless of labels. Any disagreement flags the row; --strict turns
 # flags into a non-zero exit so tagging can be gated on a clean audit.
-if [[ "${AUDIT}" -eq 1 ]]; then
+# Runs the structural audit over the given components (all buildable
+# components when none are given). Strict is the only mode: returns
+# non-zero when any row is flagged or errors. (#714)
+run_structural_audit() {
+    local _audit_targets=("$@")
+    [[ ${#_audit_targets[@]} -gt 0 ]] || _audit_targets=("${COMPONENTS[@]}")
     _audit_toolchain="${BINDER_TOOLCHAIN_ROOT:-${REPO_ROOT}/build-tools/linux_binder_idl}"
     _audit_ops="${_audit_toolchain}/host/aidl_ops.py"
     [[ -f "${_audit_ops}" ]] \
@@ -2847,7 +2861,7 @@ if [[ "${AUDIT}" -eq 1 ]]; then
         || die "toolchain at ${_audit_toolchain} predates dump-surface/diff-surface — needs linux_binder_idl >= 2.6.0 (the binder_sdk.version pin); re-run ./build_binder.sh."
 
     log ""
-    phase "Structural change-class audit — ${#COMPONENTS[@]} components"
+    phase "Structural change-class audit — ${#_audit_targets[@]} component(s)"
     log ""
 
     _audit_tmp="$(mktemp -d)"
@@ -2887,7 +2901,7 @@ if [[ "${AUDIT}" -eq 1 ]]; then
     _audit_flagged=0
     _audit_errors=0
 
-    for comp in $(printf '%s\n' "${COMPONENTS[@]}" | sort); do
+    for comp in $(printf '%s\n' "${_audit_targets[@]}" | sort); do
         if ! is_buildable_component "${comp}"; then
             AUDIT_ROWS+=("$(printf "%-24s %-10s %-11s %-11s %-10s %-10s %s" \
                 "${comp}" "-" "-" "-" "-" "-" "skipped (not buildable)")")
@@ -3021,10 +3035,28 @@ if [[ "${AUDIT}" -eq 1 ]]; then
     else
         log "⚠️  Audit flagged ${_audit_flagged} mismatch(es) + ${_audit_errors} error(s) — see rows above."
     fi
-    if [[ "${AUDIT_STRICT}" -eq 1 && "${_audit_total}" -gt 0 ]]; then
-        exit 1
+    [[ "${_audit_total}" -eq 0 ]] || return 1
+    return 0
+}
+
+if [[ "${AUDIT}" -eq 1 ]]; then
+    run_structural_audit
+    exit $?
+fi
+
+# Write and branch paths run the audit automatically (#714): the
+# components being staged (DO_WRITES) or released (--apply/DO_BRANCH)
+# must have agreeing structural class, labels and metadata BEFORE
+# anything is written or branched. The full-repo sweep remains the
+# standalone --audit; --no-audit (testing only) bypasses this gate.
+if [[ ( "${DO_WRITES}" -eq 1 || "${DO_BRANCH}" -eq 1 ) && "${NO_AUDIT}" -ne 1 ]]; then
+    _gate_targets=()
+    for _c in "${!PLAN_COMPONENTS[@]}"; do
+        is_buildable_component "${_c}" && _gate_targets+=("${_c}")
+    done
+    if [[ ${#_gate_targets[@]} -gt 0 ]] && ! run_structural_audit "${_gate_targets[@]}"; then
+        die "structural audit failed for the staged component(s) — fix the label/metadata/AIDL disagreement before writing (full report: ./scripts/release.sh --audit; bypass for testing ONLY: --no-audit)."
     fi
-    exit 0
 fi
 
 mapfile -t TOUCHED_COMPONENTS < <(printf '%s\n' "${!COMP_TOUCHED[@]}" | sort)
