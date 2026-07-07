@@ -16,9 +16,9 @@ namespace videodecoder {
 class IVideoDecoderEventListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(VideoDecoderEventListener)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "63dfe7e803042e7d64526eb9560a9f397a4195fe";
+  static constexpr char* HASHVALUE = "63dfe7e803042e7d64526eb9560a9f397a4195fe";
   virtual ::android::binder::Status onDecodeError(::com::rdk::hal::videodecoder::ErrorCode errorCode, int32_t vendorErrorCode) = 0;
   virtual ::android::binder::Status onStateChanged(::com::rdk::hal::videodecoder::State oldState, ::com::rdk::hal::videodecoder::State newState) = 0;
   virtual int32_t getInterfaceVersion() = 0;

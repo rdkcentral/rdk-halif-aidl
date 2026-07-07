@@ -119,6 +119,28 @@ The PR author edits the component's `metadata.yaml` `version:` to the new
 value as part of the PR's diff. Reviewers check that the version bump matches
 the label and the actual change.
 
+#### The `CR` Label (independent — not a change-class)
+
+`CR` (Change Request) marks an **ABI change** that must go through wider review
+and deliberate scheduling. It is a **process/governance** label, **independent**
+of the change-class above. The change-class answers *"how does the version
+number move?"*; `CR` answers a **different** question — *"is this an ABI change
+that needs wider review and separate scheduling?"* The two axes are orthogonal,
+so a `CR` carries a change-class label alongside it (an ABI change is a
+`Breaking Change`).
+
+A PR/issue tagged `CR` requires:
+
+1. **Wider review sign-off on approval** — beyond the default CODEOWNERS review
+   team, the relevant `team:*` architecture reviewers must sign off.
+2. **Separate release scheduling** — it is not folded into the normal cohort
+   release sweep; it is scheduled into a release deliberately.
+
+`CR` does **not** affect the version bump — `scripts/release.sh` never reads it.
+It is therefore *not* a rename of `Breaking Change`: `Breaking Change` remains
+the change-class that drives the generation bump, and conflating the two would
+break the label-driven bump logic.
+
 #### The Subsume Rule
 
 Between releases, `metadata.yaml` `version:` represents the **intent for the
@@ -170,6 +192,37 @@ Multiple PRs can accumulate bumps on `develop` without any of them creating
 snapshot directories. The next release event (`release.sh` run during
 release prep) materialises all of the snapshots together and the repo is
 tagged.
+
+#### Pre-Tag Structural Audit
+
+Before tagging a release, run the structural audit:
+
+```bash
+./scripts/release.sh --audit            # report
+./scripts/release.sh --audit --strict   # gate: non-zero exit on any flag
+```
+
+For **every** component — including ones untouched since the last release —
+the audit dumps the canonical AIDL surface of the last frozen snapshot and
+of `current/` (binder toolchain `aidl_ops dump-surface`), classifies the
+structural difference (`diff-surface` emits `breaking` / `major` / `none`,
+where `major` means additive and the audit displays it as such;
+surface-identical trees whose sources still differ count as doc-only), and
+cross-checks three signals per component:
+
+| Signal     | Source                                         |
+|------------|------------------------------------------------|
+| Structural | what the AIDL actually changed (code truth)    |
+| Label      | the change class PR labels imply               |
+| Declared   | `metadata.yaml` `version:` (pre-bumped by PRs) |
+
+A row is flagged when the label class contradicts the structural class,
+when `metadata.yaml` declares a version the structural class doesn't
+support, or when an era ≥ 1 component classifies breaking (forbidden — a
+breaking change there requires a new component). Flagged rows print the
+exact structural diff (method/field level) so the fix — relabel the PR,
+correct `metadata.yaml`, or revert the AIDL — is evident from the output.
+Release tagging proceeds only on a clean `--audit --strict` pass.
 
 #### Generated Code is Not Committed in `current/`
 
@@ -606,6 +659,7 @@ Idempotent — safe to re-run.
 | `Breaking Change` | Breaking interface change — bumps generation |
 | `Major Change` | Additive interface change — bumps minor (the default for real work) |
 | `Minor Change` | Doc-only / metadata-only / comment-only change — bumps patch |
+| `CR` | Change Request — ABI change needing wider review sign-off + separate release scheduling (independent of change-class; no bump effect) |
 | `scope:infrastructure` | Repo tooling, CI/CD, governance |
 | `scope:overview` | Tracking ticket spanning multiple components |
 

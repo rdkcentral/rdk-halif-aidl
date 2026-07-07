@@ -23,9 +23,9 @@ namespace panel {
 class IFactoryPanel : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(FactoryPanel)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 1000;
+  const std::string HASH = "bb511b0c1499b255ed2becdb75ea3a89a852afb6";
+  static constexpr char* HASHVALUE = "bb511b0c1499b255ed2becdb75ea3a89a852afb6";
   enum class SaveTo : int8_t {
     DISPLAY = 1,
     FLASH = 2,

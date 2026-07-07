@@ -20,9 +20,9 @@ namespace drm {
 class IDrmFactory : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(DrmFactory)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 1000;
+  const std::string HASH = "77c954ed1bda58039abf0dd6e283f0d896a0cf5d";
+  static constexpr char* HASHVALUE = "77c954ed1bda58039abf0dd6e283f0d896a0cf5d";
   virtual ::android::binder::Status createDrmPlugin(const ::com::rdk::hal::drm::Uuid& uuid, const ::android::String16& appPackageName, ::android::sp<::com::rdk::hal::drm::IDrmPlugin>* _aidl_return) = 0;
   virtual ::android::binder::Status createCryptoPlugin(const ::com::rdk::hal::drm::Uuid& uuid, const ::std::vector<uint8_t>& initData, ::android::sp<::com::rdk::hal::drm::ICryptoPlugin>* _aidl_return) = 0;
   virtual ::android::binder::Status getSupportedCryptoSchemes(::com::rdk::hal::drm::CryptoSchemes* _aidl_return) = 0;

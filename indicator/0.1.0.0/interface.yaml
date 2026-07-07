@@ -1,5 +1,6 @@
 aidl_interface:
   name: indicator
+  version: 1000
   srcs:
     - com/rdk/hal/indicator/*.aidl
   imports: []

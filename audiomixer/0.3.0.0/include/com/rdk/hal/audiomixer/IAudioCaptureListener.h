@@ -16,9 +16,9 @@ namespace audiomixer {
 class IAudioCaptureListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioCaptureListener)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 3000;
+  const std::string HASH = "ff12e597d51955e239d709062d17dd73b32ddb56";
+  static constexpr char* HASHVALUE = "ff12e597d51955e239d709062d17dd73b32ddb56";
   virtual ::android::binder::Status onDataAvailable(int64_t offsetBytes, int32_t lengthBytes, const ::com::rdk::hal::audiomixer::AudioCaptureData& metadata) = 0;
   virtual ::android::binder::Status onStarted() = 0;
   virtual ::android::binder::Status onStopped() = 0;

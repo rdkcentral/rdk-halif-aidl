@@ -127,6 +127,23 @@ create_label "documentation"        "0075ca" "Documentation-only change — bump
 echo ""
 
 # ---------------------------------------------------------------------------
+# Process / governance labels
+#
+# `CR` marks an ABI change that must go through wider review sign-off and be
+# scheduled into a release deliberately. It is INDEPENDENT of the change-class
+# above: the change-class answers "how does the version number move?", `CR`
+# answers "is this an ABI change needing review + scheduling?" — so it is
+# orthogonal and co-exists with a change-class label (an ABI change is a
+# `Breaking Change`). It does NOT affect the version bump; `release.sh` never
+# reads it.
+# ---------------------------------------------------------------------------
+
+echo "Process / governance labels:"
+create_label "CR"                    "5319e7" "Change Request — ABI change needing wider review sign-off + separate release scheduling"
+
+echo ""
+
+# ---------------------------------------------------------------------------
 # Scope labels (for cross-cutting / infrastructure work)
 # ---------------------------------------------------------------------------
 

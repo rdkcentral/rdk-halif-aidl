@@ -58,16 +58,36 @@ if (NOT DEFINED BINDER_SDK_DIR)
     message(FATAL_ERROR "BINDER_SDK_DIR must be set")
 endif()
 
-set(_BINDER_INC "${BINDER_SDK_DIR}/include/binder_sdk")
-if (NOT IS_DIRECTORY "${_BINDER_INC}")
-    if (DEFINED BINDER_SDK_INCLUDE_DIR AND
-        IS_DIRECTORY "${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk")
-        set(_BINDER_INC "${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk")
-    else()
-        message(FATAL_ERROR
-            "Binder SDK headers not found at ${_BINDER_INC}. "
-            "Set BINDER_SDK_INCLUDE_DIR to the headers root.")
+# Resolve the Binder header root across the local-dev layout
+# (<prefix>/include/binder_sdk) and Yocto/sysroot layouts (a direct include
+# dir). First existing candidate wins; the dev layout is tried first so local
+# builds are unaffected (#644).
+set(_BINDER_INC "")
+# Only consider a candidate whose base variable is actually set — otherwise an
+# unset BINDER_SDK_INCLUDE_DIR would expand to an absolute "/include/..." path
+# that could accidentally match a host directory.
+set(_binder_inc_cands "")
+if (BINDER_SDK_DIR)
+    list(APPEND _binder_inc_cands "${BINDER_SDK_DIR}/include/binder_sdk")
+endif()
+if (BINDER_SDK_INCLUDE_DIR)
+    list(APPEND _binder_inc_cands
+        "${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk"
+        "${BINDER_SDK_INCLUDE_DIR}/include")
+endif()
+if (BINDER_SDK_DIR)
+    list(APPEND _binder_inc_cands "${BINDER_SDK_DIR}/include")
+endif()
+foreach(_cand IN LISTS _binder_inc_cands)
+    if (IS_DIRECTORY "${_cand}")
+        set(_BINDER_INC "${_cand}")
+        break()
     endif()
+endforeach()
+if (_BINDER_INC STREQUAL "")
+    message(FATAL_ERROR
+        "Binder SDK headers not found. Set BINDER_SDK_INCLUDE_DIR to the headers "
+        "root (local dev: <prefix>/include/binder_sdk; Yocto: the staged include dir).")
 endif()
 
 file(GLOB_RECURSE SRCS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")

@@ -114,22 +114,39 @@ single-component release would have been.
                              # branch + tag)
 ```
 
-### Production build (Yocto/BitBake)
+### Consuming the interfaces (build with CMake directly)
+
+Integrators and production build systems (Yocto/BitBake, buildroot, a CMake
+superbuild) **invoke CMake directly** and select what to build through `-D`
+switches. The `build_*.sh` wrapper scripts are developer/architecture-team tools
+that require a native host toolchain and refuse to run in a cross/OpenEmbedded
+environment. See [Third-Party Build Integration](docs/standards/build_integration.md)
+for the full contract and reference recipes.
+
+libbinder is built and staged by the separate **`linux-binder`** recipe
+(`DEPENDS = "linux-binder"`). The HAL libraries are then built **per component**
+from that staged SDK — each `<module>/<version>/` is self-contained (committed
+C++, its own CMakeLists, **no linux_binder_idl toolchain source needed**):
 
 ```bash
-# linux_binder SDK is staged by the Yocto dependency system (DEPENDS = "linux-binder").
-# A staged SDK is flat, so headers and libs share one prefix — pass both
-# BINDER_SDK_DIR and BINDER_SDK_INCLUDE_DIR (they differ only in the local dev tree).
-cmake -S . -B build -DINTERFACE_TARGET=all \
+# For each released <module>/<version>. A staged SDK is flat, so headers and
+# libs share one prefix — point both BINDER_SDK_DIR and BINDER_SDK_INCLUDE_DIR
+# at it (they differ only in the local dev tree).
+cmake -S <module>/<version> -B build \
       -DBINDER_SDK_DIR=${STAGING_DIR}/usr \
       -DBINDER_SDK_INCLUDE_DIR=${STAGING_DIR}/usr
 cmake --build build
 cmake --install build
 ```
 
-Compiles the committed module-local C++ into `lib<module>-vcurrent-cpp.so` and
-installs to `${OUT_DIR}/target/lib/halif/`. Requires only CMake, a C++ compiler
-and the linux_binder SDK — no Python, no AIDL compiler.
+Compiles the committed module-local C++ into `lib<module>-v<version>-cpp.so`.
+Requires only CMake, a C++ compiler and the staged linux_binder SDK — no Python,
+no AIDL compiler, and no linux_binder_idl source.
+
+> **Note (#635):** the one-shot root build (`cmake -S . -DINTERFACE_TARGET=all`)
+> is the **integrated dev** path — it pulls in the linux_binder_idl toolchain
+> (`CMakeLists.inc`) and so requires that source tree. It is **not** for a
+> standalone Yocto recipe; use the per-component build above.
 
 ### Version manifest (`versions.yaml`)
 
@@ -145,6 +162,10 @@ and the linux_binder SDK — no Python, no AIDL compiler.
 A component absent from the manifest falls back to its `default:` entry.
 
 ## Scripts
+
+These are developer and architecture-team tools: they require a native host
+toolchain and refuse to run in a cross/OpenEmbedded environment. Integrators
+build with CMake directly — see [Consuming the interfaces](#consuming-the-interfaces-build-with-cmake-directly).
 
 | Script | Role |
 | ------ | ---- |
@@ -239,7 +260,9 @@ Used by `build_binder.sh` and `build_interfaces.sh` only:
 **Not used in production Yocto builds**.
 
 The full two-stage dev and production build workflows are covered in the
-[Quick Start](#quick-start) section above.
+[Quick Start](#quick-start) section above. See
+[Third-Party Build Integration](docs/standards/build_integration.md) for the
+full consumer/integrator build contract.
 
 ## Additional Documentation
 
@@ -249,6 +272,8 @@ The full two-stage dev and production build workflows are covered in the
   - Kernel configuration and runtime setup
   - Systemd service configuration
   - 32-bit userspace on 64-bit kernel support
+
+- **[docs/standards/build_integration.md](docs/standards/build_integration.md)** - Consumer/integrator build contract: direct-CMake switches, required variables, reference BitBake/Bob recipes
 
 - **[tests/README.md](tests/README.md)** - On-demand build verification
   - `tests/smoke_test.sh` - exercises the `all`, `manifest` and per-version build paths

@@ -51,8 +51,8 @@ scope:
 #   owners        - Responsible architecture teams
 notes:
   priority: 3
-  status_detail: "Re-review required"
-  action: "Review PQ settings for multiple video and PQ panel mixing"
+  status_detail: "Breaking change in flight: #688 PQ capability normalization (0.2.0.0) in review; GREEN when shipped"
+  action: "PQ capability work tracked in #674, #497, #516, #276"
   owners: "Architecture + Graphics_Architecture"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]

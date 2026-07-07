@@ -19,9 +19,9 @@ namespace audiosink {
 class IAudioSinkManager : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioSinkManager)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "057ffa4fe9e339f8590839fafb79ebf81cf96282";
+  static constexpr char* HASHVALUE = "057ffa4fe9e339f8590839fafb79ebf81cf96282";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getAudioSinkIds(::std::vector<::com::rdk::hal::audiosink::IAudioSink::Id>* _aidl_return) = 0;
   virtual ::android::binder::Status getPlatformCapabilities(::com::rdk::hal::audiosink::PlatformCapabilities* _aidl_return) = 0;

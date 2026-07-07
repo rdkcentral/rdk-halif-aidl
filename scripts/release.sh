@@ -245,11 +245,32 @@ deploy_versioned_docs() {
     return 0
 }
 
+# The first verification build of a release run starts from clean staging,
+# so the cohort is proven to compile from a clean checkout — not from
+# incrementally staged headers (out/build/include) or a stale build cache
+# that could mask a missing dependency (see #638). Runs once per invocation
+# (guarded); the Binder SDK in out/target is preserved, so there is no SDK
+# rebuild and the clean is fast.
+_VERIFY_CLEAN_DONE=0
+verification_clean_once() {
+    [[ "${_VERIFY_CLEAN_DONE}" -eq 1 ]] && return 0
+    _VERIFY_CLEAN_DONE=1
+    phase "Pre-verification clean (once): build/, out/build/include, build cache"
+    rm -rf "${REPO_ROOT}/build"
+    rm -rf "${REPO_ROOT}/out/build/include"
+    rm -f "${BUILD_CACHE_FILE}"
+    log "  Cleared build/, out/build/include and ${BUILD_CACHE_FILE#"${REPO_ROOT}/"} —"
+    log "  verification builds from clean staging (Binder SDK in out/target kept)."
+}
+
 run_verification_build() {
     local label="$1"          # "current cohort" / "released cohort"
     local log_file="$2"
     shift 2
     mkdir -p "$(dirname "${log_file}")"
+
+    # Force a from-scratch build for the first verification pass of this run.
+    verification_clean_once
 
     # Cache lookup — skip if these exact inputs already built successfully.
     local key="$*"
@@ -628,6 +649,18 @@ Release run (no subcommand):
                        [--no-gh] [--no-snapshot] [--no-mkdocs]
                        [--no-build] [--verbose]
 
+Structural audit (pre-release gate):
+  ./scripts/release.sh --audit [--since <ref>] [--strict] [--verbose]
+
+  Read-only. For EVERY component (not just touched ones) classifies the
+  structural AIDL diff between the last frozen snapshot and current/ via
+  the binder toolchain (aidl_ops dump-surface / diff-surface), then
+  cross-checks it against the PR-label-implied change class and the
+  metadata.yaml declared version. Mismatches are flagged; --strict exits
+  non-zero on any flagged row so release tagging can be gated on a clean
+  audit. Detail of every structural change is printed for flagged rows
+  (all rows with --verbose).
+
   Only components staged in the worktree are processed. The detector
   computes the bump level from PR labels since the base ref; an explicit
   --version pin from the plan overrides that.
@@ -680,6 +713,8 @@ Options:
   --no-mkdocs            Skip updating mkdocs.yml.
   --no-build             Skip the verification build (./build_modules.sh
                          all). Testing only — a real release MUST build.
+  --audit                Structural change-class audit (see above). Read-only.
+  --strict               With --audit: exit non-zero if any row is flagged.
   --verbose              Print extra diagnostics.
   --help                 Show this help.
 
@@ -735,6 +770,8 @@ RELEASE_VERSION=""
 NO_SNAPSHOT=0
 NO_MKDOCS=0
 NO_BUILD=0
+AUDIT=0
+AUDIT_STRICT=0
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -778,6 +815,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         --no-build)
             NO_BUILD=1
+            shift
+            ;;
+        --audit)
+            AUDIT=1
+            shift
+            ;;
+        --strict)
+            AUDIT_STRICT=1
             shift
             ;;
         --verbose|-v)
@@ -1442,7 +1487,7 @@ for sha in "${FP_COMMITS[@]}"; do
     done
 done
 
-if [[ ${#COMP_TOUCHED[@]} -eq 0 ]]; then
+if [[ ${#COMP_TOUCHED[@]} -eq 0 && "${AUDIT}" -ne 1 ]]; then
     log "No component-level changes found in ${SINCE_REF}..HEAD."
     exit 0
 fi
@@ -1758,6 +1803,84 @@ is_buildable_component() {
     [[ -f "${REPO_ROOT}/${comp}/current/interface.yaml" ]]
 }
 
+# ----------------------------------------------------------------------------
+# Frozen interface VERSION + contract HASH (#633)
+# ----------------------------------------------------------------------------
+# getInterfaceVersion() reports the RELEASE version itself, encoded as a
+# fixed-width positional int32 — self-describing, no lookup table. Field
+# widths are 1-2-2-1 over X.Y.Z.W (era.major.minor.doc): era is a single
+# digit (0 = pre-android-versioning, 1 = post), major/minor get two digits,
+# the doc/bugfix respin one digit. So:
+#   0.2.0.0  -> 0|02|00|0 ->   2000
+#   0.3.0.0  -> 0|03|00|0 ->   3000
+#   0.1.0.1  -> 0|01|00|1 ->   1001
+#   0.10.0.0 -> 0|10|00|0 ->  10000
+#   1.0.0.0  -> 1|00|00|0 -> 100000
+# Decode: pad to 6 digits, read 1|2|2|1 — era=v/100000, major=(v/1000)%100,
+# minor=(v/10)%100, doc=v%10. Monotonic across ALL releases (0.x < 1.x)
+# because the same scheme is used forever — there is no later switch to bare
+# ordinals. Max 9.99.99.9 = 999,999, tiny next to int32 max. A field beyond
+# its width (era/doc > 9, major/minor > 99) is not encodable and leaves the
+# snapshot unfrozen rather than emit a wrong number — note the doc field caps
+# at 9: a 10th doc-only respin of the same minor forces a minor bump.
+# getInterfaceHash() is the toolchain's aidl_hash_gen digest. current/ carries
+# neither field, so dev builds report HASH="notfrozen" — the pre-freeze
+# marker. Snapshots are compile-only (their CMakeLists glob src/*.cpp and
+# never regenerate), so both values are baked in at freeze time: stamp
+# current/, regenerate, copy into the snapshot, restore current/.
+_snapshot_version_int() {
+    local ver="$1" out="" f i
+    # Require EXACTLY four numeric dot-separated fields (X.Y.Z.W); malformed
+    # inputs (0.2.0, 0.2.0.0., 0.2..0) could otherwise collide after encoding.
+    if ! [[ "${ver}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo ""
+        return 0
+    fi
+    local widths=(1 2 2 1) fields
+    IFS='.' read -ra fields <<< "${ver}"
+    for i in 0 1 2 3; do
+        f="$((10#${fields[i]}))"
+        if (( f >= 10 ** widths[i] )); then
+            echo ""
+            return 0
+        fi
+        out+=$(printf "%0${widths[i]}d" "${f}")
+    done
+    echo "$((10#${out}))"        # base-10 (avoid octal on leading zeros)
+}
+
+# Contract hash via the toolchain's own hasher (aidl_hash_gen), so the
+# committed .hash is exactly what the generator bakes into getInterfaceHash()
+# and what its check_integrity() recomputes at every regeneration. The hashgen
+# label MUST be 'latest-version' — check_integrity() rehashes with
+# version_for_hashgen(), which resolves to 'latest-version' for module-local
+# interfaces (gen version 1); any other label fails the integrity check and
+# aborts generation.
+_toolchain_hash() {
+    local aidl_dir="$1" out="$2"
+    local hash_gen="${BINDER_TOOLCHAIN_ROOT:-${REPO_ROOT}/build-tools/linux_binder_idl}/host/aidl_hash_gen"
+    if [[ ! -x "${hash_gen}" ]]; then
+        warn "aidl_hash_gen not found/executable at ${hash_gen} — is the binder toolchain cloned?"
+        return 1
+    fi
+    rm -f "${out}"
+    "${hash_gen}" "${aidl_dir}" "latest-version" "${out}"
+}
+
+# Insert/replace `version: N` in an interface.yaml (top-level, after name:).
+_set_interface_version() {
+    python3 - "$1" "$2" <<'PYEOF'
+import sys, re
+path, n = sys.argv[1], sys.argv[2]
+s = open(path).read()
+if re.search(r'^\s*version:\s*\d+\s*$', s, re.M):
+    s = re.sub(r'(^\s*version:\s*)\d+(\s*)$', r'\g<1>' + n + r'\2', s, count=1, flags=re.M)
+else:
+    s = re.sub(r'(\n\s*name:[^\n]*\n)', r'\1  version: ' + n + '\n', s, count=1)
+open(path, 'w').write(s)
+PYEOF
+}
+
 create_snapshot() {
     local comp="$1"
     local version="$2"
@@ -1785,12 +1908,40 @@ create_snapshot() {
         refresh_marker=" (refreshed)"
     fi
 
+    # Freeze-stamp current/ so the regenerated bindings carry the real
+    # interface VERSION (positional release int, e.g. 0.2.0.0 -> 2000) +
+    # contract HASH instead of 1/"notfrozen" (#633). Restored right after the
+    # copy below; current/'s own generated code returns to notfrozen at the
+    # next dev build.
+    local _cur="${REPO_ROOT}/${comp}/current"
+    local _iface_version _ifyaml_bak=""
+    _iface_version="$(_snapshot_version_int "${version}")"
+    _restore_current() {
+        [[ -n "${_ifyaml_bak}" ]] && mv -f "${_ifyaml_bak}" "${_cur}/interface.yaml"
+        rm -f "${_cur}/.hash"
+        _ifyaml_bak=""
+    }
+    if [[ -z "${_iface_version}" ]]; then
+        warn "  [${comp}] version ${version} is not encodable (needs X.Y.Z.W, fields 0-99); ${version}/ will be left unfrozen (VERSION=1/notfrozen)."
+    elif [[ -f "${_cur}/interface.yaml" ]]; then
+        if _toolchain_hash "${_cur}" "${_cur}/.hash"; then
+            _ifyaml_bak="$(mktemp)"
+            cp "${_cur}/interface.yaml" "${_ifyaml_bak}"
+            _set_interface_version "${_cur}/interface.yaml" "${_iface_version}"
+            [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] freezing ${version} as interface version ${_iface_version} (hash $(head -c12 "${_cur}/.hash")…)"
+        else
+            warn "  [${comp}] contract-hash generation failed; ${version}/ will be left unfrozen (VERSION=1/notfrozen)."
+            rm -f "${_cur}/.hash"
+        fi
+    fi
+
     [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] regenerating bindings via build_modules.sh..."
     local build_log="${REPO_ROOT}/out/release-snapshot-${comp//\//_}.log"
     mkdir -p "$(dirname "${build_log}")"
     if [[ "${VERBOSE}" -eq 1 ]]; then
         if ! (cd "${REPO_ROOT}" && ./build_modules.sh "${comp}" 2>&1 | tee "${build_log}"); then
             warn "Failed to regenerate ${comp} bindings — see ${build_log}."
+            _restore_current
             return 1
         fi
     else
@@ -1798,12 +1949,19 @@ create_snapshot() {
             log "  [${comp}] → ${version}/  ${_C_RED}✗ build failed${_C_RESET} (see ${build_log#${REPO_ROOT}/})"
             grep -E '^(❌|ERROR|FAIL)' "${build_log}" | head -3 | sed 's/^/    /' >&2 \
                 || tail -10 "${build_log}" | sed 's/^/    /' >&2
+            _restore_current
             return 1
         fi
     fi
 
+    # Copy current/ (including the stamped interface.yaml + .hash, which the
+    # snapshot keeps as its frozen identity), then restore current/ to its
+    # unfrozen source-of-truth.
     [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] copying current/ to ${version}/"
-    if ! cp -r "${REPO_ROOT}/${comp}/current" "${snapshot_dir}"; then
+    local _cp_rc=0
+    cp -r "${REPO_ROOT}/${comp}/current" "${snapshot_dir}" || _cp_rc=$?
+    _restore_current
+    if [[ "${_cp_rc}" -ne 0 ]]; then
         warn "cp failed for ${comp}/${version}/."
         return 1
     fi
@@ -2534,6 +2692,7 @@ MODE="PLAN (read-only — what the staged plan would do)"
 [[ "${APPLY}"   -eq 1 ]] && MODE="APPLY (writes + release branch; tag made by git-flow release finish)"
 [[ "${DRY_RUN}" -eq 1 ]] && MODE="DRY-RUN (preview only — same as bare ./release.sh)"
 [[ "${CHECK_MODE}" -eq 1 ]] && MODE="CHECK (detected-changes preview, bypasses plan)"
+[[ "${AUDIT}" -eq 1 ]] && MODE="AUDIT (read-only — structural change-class audit, all components)"
 
 phase "Computing per-component version bumps..."
 log ""
@@ -2651,6 +2810,216 @@ aidl_hash_status() {
         echo "CHANGED"
     fi
 }
+
+# ----------------------------------------------------------------------------
+# --audit: structural change-class audit (#633 / #568)
+# ----------------------------------------------------------------------------
+#
+# Cross-checks THREE independent signals for EVERY component — not just the
+# ones touched since the base ref:
+#
+#   structural  what the AIDL actually changed: the binder toolchain's
+#               dump-surface/diff-surface (linux_binder_idl#27) classifies
+#               last-frozen vs current/ as breaking / major / none (the
+#               tool's literal classes; `major` means additive and the
+#               audit table displays it as such).
+#               A surface-identical pair whose .aidl sources still differ
+#               is doc-only (comment/doc edits are stripped from dumps).
+#   label       the change class the PR labels imply (same detector the
+#               release run uses; none when untouched in the window).
+#   declared    metadata.yaml's version field (authors pre-bump it).
+#
+# Gate table (era 0): breaking => generation bump, additive => minor,
+# doc-only => patch, identical => none. Era >= 1 components must never
+# classify breaking (standard AIDL discipline) — that row hard-fails
+# regardless of labels. Any disagreement flags the row; --strict turns
+# flags into a non-zero exit so tagging can be gated on a clean audit.
+if [[ "${AUDIT}" -eq 1 ]]; then
+    _audit_toolchain="${BINDER_TOOLCHAIN_ROOT:-${REPO_ROOT}/build-tools/linux_binder_idl}"
+    _audit_ops="${_audit_toolchain}/host/aidl_ops.py"
+    [[ -f "${_audit_ops}" ]] \
+        || die "aidl_ops.py not found at ${_audit_ops} — clone the pinned toolchain first (./build_binder.sh)."
+    [[ -f "${_audit_toolchain}/host/aidl_surface.py" ]] \
+        || die "toolchain at ${_audit_toolchain} predates dump-surface/diff-surface — needs linux_binder_idl >= 2.6.0 (the binder_sdk.version pin); re-run ./build_binder.sh."
+
+    log ""
+    phase "Structural change-class audit — ${#COMPONENTS[@]} components"
+    log ""
+
+    _audit_tmp="$(mktemp -d)"
+    trap 'rm -rf "${_audit_tmp}"' EXIT
+
+    # Map a diff-surface class (+ source-hash state) to the bump token the
+    # rest of release.sh speaks (generation/minor/patch/none).
+    _audit_structural_bump() {
+        local klass="$1" hash_state="$2"
+        case "${klass}" in
+            breaking) echo "generation" ;;
+            major)    echo "minor" ;;
+            none)     [[ "${hash_state}" == "CHANGED" ]] && echo "patch" || echo "none" ;;
+            *)        echo "" ;;
+        esac
+    }
+
+    # Human-readable class for the table (code-truth column).
+    _audit_class_display() {
+        case "$1" in
+            generation) echo "breaking" ;;
+            minor)      echo "additive" ;;
+            patch)      echo "doc-only" ;;
+            none)       echo "none" ;;
+            *)          echo "$1" ;;
+        esac
+    }
+
+    AUDIT_ROWS=()
+    AUDIT_ROWS+=("$(printf "%-24s %-10s %-11s %-11s %-10s %-10s %s" \
+        "Component" "Frozen" "Structural" "Label" "Expected" "Declared" "Status")")
+    AUDIT_ROWS+=("$(printf "%-24s %-10s %-11s %-11s %-10s %-10s %s" \
+        "---------" "------" "----------" "-----" "--------" "--------" "------")")
+    AUDIT_DETAIL=()          # buffered per-component diff detail blocks
+    _audit_flagged=0
+    _audit_errors=0
+
+    for comp in $(printf '%s\n' "${COMPONENTS[@]}" | sort); do
+        if ! is_buildable_component "${comp}"; then
+            AUDIT_ROWS+=("$(printf "%-24s %-10s %-11s %-11s %-10s %-10s %s" \
+                "${comp}" "-" "-" "-" "-" "-" "skipped (not buildable)")")
+            continue
+        fi
+
+        _meta_ver="$(awk -F': *' '$1=="version"{print $2; exit}' "${REPO_ROOT}/${comp}/metadata.yaml" 2>/dev/null)"
+        _prev="$(discover_current_version "${comp}")"
+
+        if [[ -z "${_prev}" ]]; then
+            AUDIT_ROWS+=("$(printf "%-24s %-10s %-11s %-11s %-10s %-10s %s" \
+                "${comp}" "(none)" "initial" "-" "-" "${_meta_ver:--}" "ok (no released baseline)")")
+            continue
+        fi
+
+        if [[ ! -d "${REPO_ROOT}/${comp}/${_prev}" ]]; then
+            AUDIT_ROWS+=("$(printf "%-24s %-10s %-11s %-11s %-10s %-10s %s" \
+                "${comp}" "${_prev}" "?" "-" "-" "${_meta_ver:--}" "⚠️ frozen snapshot dir missing from worktree")")
+            _audit_errors=$((_audit_errors + 1))
+            continue
+        fi
+
+        # Dump both surfaces; classify. Tool exit != 0 is an audit error,
+        # not a classification.
+        _prev_dump="${_audit_tmp}/${comp//\//_}.prev"
+        _curr_dump="${_audit_tmp}/${comp//\//_}.curr"
+        if ! python3 "${_audit_ops}" dump-surface "${REPO_ROOT}/${comp}/${_prev}" --out "${_prev_dump}" 2>"${_audit_tmp}/err" \
+        || ! python3 "${_audit_ops}" dump-surface "${REPO_ROOT}/${comp}/current" --out "${_curr_dump}" 2>>"${_audit_tmp}/err"; then
+            AUDIT_ROWS+=("$(printf "%-24s %-10s %-11s %-11s %-10s %-10s %s" \
+                "${comp}" "${_prev}" "?" "-" "-" "${_meta_ver:--}" "⚠️ dump-surface failed: $(head -1 "${_audit_tmp}/err")")")
+            _audit_errors=$((_audit_errors + 1))
+            continue
+        fi
+        _diff_out="$(python3 "${_audit_ops}" diff-surface "${_prev_dump}" "${_curr_dump}" 2>"${_audit_tmp}/err")" || {
+            AUDIT_ROWS+=("$(printf "%-24s %-10s %-11s %-11s %-10s %-10s %s" \
+                "${comp}" "${_prev}" "?" "-" "-" "${_meta_ver:--}" "⚠️ diff-surface failed: $(head -1 "${_audit_tmp}/err")")")
+            _audit_errors=$((_audit_errors + 1))
+            continue
+        }
+        _class="$(head -1 <<<"${_diff_out}")"
+        _class="${_class#class: }"
+        _detail="$(tail -n +2 <<<"${_diff_out}")"
+
+        _hash_state="$(aidl_hash_status "${comp}")"
+        _structural="$(_audit_structural_bump "${_class}" "${_hash_state}")"
+        [[ -n "${_structural}" ]] || {
+            AUDIT_ROWS+=("$(printf "%-24s %-10s %-11s %-11s %-10s %-10s %s" \
+                "${comp}" "${_prev}" "${_class}" "-" "-" "${_meta_ver:--}" "⚠️ unknown diff class '${_class}'")")
+            _audit_errors=$((_audit_errors + 1))
+            continue
+        }
+
+        # Label-implied bump from the same detector state the release run
+        # uses (highest severity wins).
+        _label="none"
+        [[ "${COMP_DOC[$comp]:-0}"      -eq 1 ]] && _label="patch"
+        [[ "${COMP_NON_DOC[$comp]:-0}"  -eq 1 ]] && _label="minor"
+        [[ "${COMP_BREAKING[$comp]:-0}" -eq 1 ]] && _label="generation"
+
+        # Expected next version from the STRUCTURAL truth.
+        _era="${_prev%%.*}"
+        _expected="-"
+        if [[ "${_prev}" =~ ^0\. ]]; then
+            compute_next_versions "${_prev}" "${_structural}"
+            _expected="${NEXT_VERSION}"
+        fi
+
+        _flags=()
+        _notes=()
+        if [[ "${_era}" =~ ^[0-9]+$ ]] && (( _era >= 1 )) && [[ "${_structural}" == "generation" ]]; then
+            _flags+=("era ${_era} forbids breaking changes — new component required")
+        fi
+        if [[ "${_structural}" != "${_label}" ]]; then
+            if [[ "${_structural}" == "none" && "${_hash_state}" == "unchanged" && "${_label}" != "none" ]]; then
+                # The release run auto-suppresses label-derived bumps when
+                # the .aidl bytes are identical to the frozen snapshot (the
+                # AIDL-hash gate) — the audit mirrors that, or repo-wide
+                # docs/chore commits would flag every component.
+                _notes+=("label bump auto-suppressed (AIDL unchanged)")
+            elif [[ "${_label}" == "none" && "${_structural}" != "none" ]]; then
+                _flags+=("code is $(_audit_class_display "${_structural}") but no PR label in window")
+            else
+                _flags+=("label says $(_audit_class_display "${_label}"), code is $(_audit_class_display "${_structural}")")
+            fi
+        fi
+        if [[ "${_expected}" != "-" && -n "${_meta_ver}" && "${_meta_ver}" != "${_expected}" ]]; then
+            if [[ "${_meta_ver}" == "${_prev}" && "${_structural}" != "none" ]]; then
+                _flags+=("bump pending — metadata.yaml not yet pre-bumped to ${_expected}")
+            else
+                _flags+=("metadata.yaml says ${_meta_ver}, structural expects ${_expected}")
+            fi
+        fi
+
+        _status="ok"
+        if [[ ${#_flags[@]} -gt 0 ]]; then
+            _status="⚠️ $(IFS='; '; echo "${_flags[*]}")"
+            _audit_flagged=$((_audit_flagged + 1))
+        elif [[ ${#_notes[@]} -gt 0 ]]; then
+            _status="ok ($(IFS='; '; echo "${_notes[*]}"))"
+        fi
+
+        AUDIT_ROWS+=("$(printf "%-24s %-10s %-11s %-11s %-10s %-10s %s" \
+            "${comp}" "${_prev}" "$(_audit_class_display "${_structural}")" \
+            "$(_audit_class_display "${_label}")" "${_expected}" "${_meta_ver:--}" "${_status}")")
+
+        # Buffer diff detail for flagged rows (all rows under --verbose).
+        if [[ -n "${_detail}" && ( ${#_flags[@]} -gt 0 || "${VERBOSE}" -eq 1 ) ]]; then
+            AUDIT_DETAIL+=("${comp} — ${_class}:"$'\n'"${_detail}")
+        fi
+        if [[ ${#_flags[@]} -gt 0 && -n "${COMP_REASONS[$comp]:-}" ]]; then
+            AUDIT_DETAIL+=("${comp} — label derivation:"$'\n'"$(sed 's/^/  /' <<<"${COMP_REASONS[$comp]%$'\n'}")")
+        fi
+    done
+
+    for row in "${AUDIT_ROWS[@]}"; do
+        log "  ${row}"
+    done
+    if [[ ${#AUDIT_DETAIL[@]} -gt 0 ]]; then
+        log ""
+        phase "Structural diff detail"
+        for block in "${AUDIT_DETAIL[@]}"; do
+            log ""
+            while IFS= read -r line; do log "  ${line}"; done <<<"${block}"
+        done
+    fi
+
+    log ""
+    _audit_total=$((_audit_flagged + _audit_errors))
+    if [[ "${_audit_total}" -eq 0 ]]; then
+        log "✅ Audit clean — every component's structural class, PR labels and metadata.yaml agree."
+    else
+        log "⚠️  Audit flagged ${_audit_flagged} mismatch(es) + ${_audit_errors} error(s) — see rows above."
+    fi
+    if [[ "${AUDIT_STRICT}" -eq 1 && "${_audit_total}" -gt 0 ]]; then
+        exit 1
+    fi
+    exit 0
+fi
 
 mapfile -t TOUCHED_COMPONENTS < <(printf '%s\n' "${!COMP_TOUCHED[@]}" | sort)
 declare -A SKIPPED_NOT_BUILDABLE=()
