@@ -118,7 +118,7 @@ flowchart TD
     RDKClientComponent -- getVideoDecoderIds() <br> getVideoDecoder() getSupportedOperationModes()--> IVideoDecoderManager
     RDKClientComponent -- getCapabilities() <br> getProperty() <br> getPropertyMulti() <br> getState() <br> open() <br> close() <br> registerEventListener() <br> unregisterEventListener()--> IVideoDecoder
     RDKClientComponent -- registerEventListener() <br> unregisterEventListener() --> IVideoDecoder
-    RDKClientComponent -- start() <br> stop() <br> setProperty() <br> decodeBufferWithMetadata() <br> flush() <br> signalDiscontinuity() <br> parseCodecSpecificData() --> IVideoDecoderController
+    RDKClientComponent -- start() <br> stop() <br> setProperty() <br> decodeBufferWithMetadata() <br> flush() <br> parseCodecSpecificData() --> IVideoDecoderController
     IVideoDecoderManager --> IVideoDecoder --> IVideoDecoderController
     IVideoDecoder -- onStateChanged() <br> onDecodeError() --> IVideoDecoderEventListener
     IVideoDecoderEventListener --> RDKClientComponent
@@ -342,9 +342,9 @@ A media pipeline is operating in low latency mode when the video decoder and aud
 
 ## Video Stream Discontinuities
 
-Where the client has knowledge of PTS discontinuities in the video stream, it shall call `IVideoDecoderController.signalDiscontinuity()` between the AV buffers passed to `decodeBufferWithMetadata()`.
+Where the client has knowledge of PTS discontinuities in the video stream, it shall set `InputBufferMetadata.discontinuity = true` on the first [AV Buffer](../avbuffer/av_buffer.md) passed to `decodeBufferWithMetadata()` after the discontinuity. The decoder resets its PTS tracking and interpolation state before decoding that buffer.
 
-For the first input [AV Buffer](../avbuffer/av_buffer.md) video frame passed in for decode after the discontinuity, it shall indicate the discontinuity in its next output `FrameMetadata`.
+The first output frame decoded from that buffer indicates the discontinuity in its `FrameMetadata.discontinuity` field.
 
 ## End of Stream Signalling
 

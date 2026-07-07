@@ -121,7 +121,7 @@ flowchart TD
     RDKClientComponent -- getIAudioDecoderIds() <br> getIAudioDecoder() --> IAudioDecoderManager
     RDKClientComponent -- getCapabilities() <br> getState() <br> open() <br> close() --> IAudioDecoder
     RDKClientComponent -- registerEventListener() <br> unregisterEventListener() --> IAudioDecoder
-    RDKClientComponent -- start() <br> stop() <br> setProperty() <br> decodeBufferWithMetadata() <br> flush() <br> signalDiscontinuity() <br> parseCodecSpecificData() --> IAudioDecoderController
+    RDKClientComponent -- start() <br> stop() <br> setProperty() <br> decodeBufferWithMetadata() <br> flush() <br> parseCodecSpecificData() --> IAudioDecoderController
     IAudioDecoderManager --> IAudioDecoder --> IAudioDecoderController
     IAudioDecoder -- onStateChanged() <br> onDecodeError() --> IAudioDecoderEventListener
     IAudioDecoderEventListener --> RDKClientComponent
@@ -307,9 +307,9 @@ Any metadata associated with the supplementary/primary audio mix levels is left 
 
 ## Audio Stream Discontinuities
 
-Where the client has knowledge of PTS discontinuities in the audio stream, it shall call `IAudioDecoderController.signalDiscontinuity()` between the AV buffers passed to `decodeBufferWithMetadata()`.
+Where the client has knowledge of PTS discontinuities in the audio stream, it shall set `InputBufferMetadata.discontinuity = true` on the first [AV Buffer](../avbuffer/av_buffer.md) passed to `decodeBufferWithMetadata()` after the discontinuity. The decoder resets its PTS tracking and interpolation state before decoding that buffer.
 
-For the first input [AV Buffer](../avbuffer/av_buffer.md) audio frame passed in for decode after the discontinuity, it shall indicate the discontinuity in its next output `FrameMetadata`.
+The first output frame decoded from that buffer indicates the discontinuity in its `FrameMetadata.discontinuity` field.
 
 ## End of Stream Signalling
 
