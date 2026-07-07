@@ -17,9 +17,9 @@ namespace videodecoder {
 class IVideoDecoderControllerListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(VideoDecoderControllerListener)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "63dfe7e803042e7d64526eb9560a9f397a4195fe";
+  static constexpr char* HASHVALUE = "63dfe7e803042e7d64526eb9560a9f397a4195fe";
   virtual ::android::binder::Status onFrameOutput(int64_t nsPresentationTime, int64_t frameAVBufferHandle, const ::std::optional<::com::rdk::hal::videodecoder::FrameMetadata>& metadata) = 0;
   virtual ::android::binder::Status onEndOfStream() = 0;
   virtual ::android::binder::Status onUserDataOutput(int64_t nsPresentationTime, const ::std::vector<uint8_t>& userData) = 0;

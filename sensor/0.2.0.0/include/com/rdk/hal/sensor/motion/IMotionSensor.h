@@ -24,9 +24,9 @@ namespace motion {
 class IMotionSensor : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(MotionSensor)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "a1a83f7c04d62edd76436e8afc6af13e7053a62c";
+  static constexpr char* HASHVALUE = "a1a83f7c04d62edd76436e8afc6af13e7053a62c";
   class Id : public ::android::Parcelable {
   public:
     int32_t value = 0;

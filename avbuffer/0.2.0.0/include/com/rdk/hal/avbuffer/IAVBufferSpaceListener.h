@@ -14,9 +14,9 @@ namespace avbuffer {
 class IAVBufferSpaceListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AVBufferSpaceListener)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "73de7f8b8e4821b2b01be1befd6e9fff13f0cd7f";
+  static constexpr char* HASHVALUE = "73de7f8b8e4821b2b01be1befd6e9fff13f0cd7f";
   virtual ::android::binder::Status onSpaceAvailable() = 0;
   virtual int32_t getInterfaceVersion() = 0;
   virtual std::string getInterfaceHash() = 0;

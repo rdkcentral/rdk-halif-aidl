@@ -19,9 +19,9 @@ namespace videodecoder {
 class IVideoDecoderManager : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(VideoDecoderManager)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "63dfe7e803042e7d64526eb9560a9f397a4195fe";
+  static constexpr char* HASHVALUE = "63dfe7e803042e7d64526eb9560a9f397a4195fe";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getVideoDecoderIds(::std::vector<::com::rdk::hal::videodecoder::IVideoDecoder::Id>* _aidl_return) = 0;
   virtual ::android::binder::Status getSupportedOperationalModes(::std::vector<::com::rdk::hal::videodecoder::OperationalMode>* _aidl_return) = 0;

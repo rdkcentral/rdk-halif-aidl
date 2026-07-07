@@ -1,5 +1,6 @@
 aidl_interface:
   name: panel
+  version: 1000
   srcs:
     - com/rdk/hal/panel/*.aidl
   imports:

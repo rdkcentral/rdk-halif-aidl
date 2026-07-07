@@ -27,9 +27,9 @@ namespace audiomixer {
 class IAudioMixer : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioMixer)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 3000;
+  const std::string HASH = "ff12e597d51955e239d709062d17dd73b32ddb56";
+  static constexpr char* HASHVALUE = "ff12e597d51955e239d709062d17dd73b32ddb56";
   enum class Id : int32_t {
     MIXER_SYSTEM = 0,
     MIX1 = 1,

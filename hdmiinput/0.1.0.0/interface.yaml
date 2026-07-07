@@ -1,5 +1,6 @@
 aidl_interface:
   name: hdmiinput
+  version: 1000
   srcs:
     - com/rdk/hal/hdmiinput/*.aidl
   imports:

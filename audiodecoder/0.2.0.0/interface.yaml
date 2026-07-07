@@ -1,5 +1,6 @@
 aidl_interface:
   name: audiodecoder
+  version: 2000
   srcs:
     - com/rdk/hal/audiodecoder/*.aidl
   imports:

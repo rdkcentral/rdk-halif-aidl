@@ -16,9 +16,9 @@ namespace thermal {
 class IThermalEventListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(ThermalEventListener)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "a1a83f7c04d62edd76436e8afc6af13e7053a62c";
+  static constexpr char* HASHVALUE = "a1a83f7c04d62edd76436e8afc6af13e7053a62c";
   virtual ::android::binder::Status onThermalStateChange(const ::com::rdk::hal::sensor::thermal::ActionEvent& event) = 0;
   virtual int32_t getInterfaceVersion() = 0;
   virtual std::string getInterfaceHash() = 0;
