@@ -98,12 +98,17 @@ if (!hc::isCompatible(service)) {
     // hc::isCompatible(service, /*allowUnfrozen=*/true) on dev images.
 }
 
-if (hc::atLeast(service, 0, 3)) {   // server >= 0.3.x.x
-    service->newMethod();           // APIs added in 0.3.0.0
+if (hc::atLeast(service, 0, 2, 1)) {   // release 0.2.1.0 added the API
+    service->newMethod();
 } else {
-    service->existingMethod();      // pre-0.3 fallback
+    service->existingMethod();         // pre-0.2.1.0 fallback
 }
 ```
+
+Feature gates name **additive** releases (minor bumps): in era 0 a major
+bump is a breaking change, so a client compiled before it fails
+`isCompatible()` against the new major — the gate never runs across that
+boundary.
 
 ### What the helper implements
 
@@ -136,8 +141,9 @@ Breaking (bump **major**; era `0` only — forbidden once era `1` is declared):
 - Change an enum value's backing integer
 - Remove `@VintfStability` or change wire-affecting annotations
 
-Documentation-only (bump **bugfix**): comment and doc changes; the interface
-surface is untouched.
+Surface-untouched (bump **bugfix**): documentation and comment changes plus
+trivial non-interface fixes — anything that leaves the declared interface
+surface identical.
 
 ### Mechanical Classification
 
