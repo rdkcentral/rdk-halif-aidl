@@ -21,7 +21,7 @@ A release version has four fields:
 | `pre-post-aidl` (era) | `0` = pre-AIDL-versioning era: breaking changes are permitted with a major bump. `1` = the component has adopted full AIDL frozen-interface discipline: **breaking changes are no longer allowed, ever**. |
 | `major` | Bumped for a **breaking** interface change (only possible in era `0`). |
 | `minor` | Bumped for a **backwards-compatible addition** (new methods/fields/enum values, appended). |
-| `bugfix` | Bumped for documentation/comment-only respins. The interface surface is unchanged. |
+| `bugfix` | Bumped for respins that leave the interface surface untouched — documentation/comment edits and other trivial non-interface fixes (the patch tier of the PR label scheme: `documentation` / `Minor Change`). |
 
 ### The Era Promise
 
