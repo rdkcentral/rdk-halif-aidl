@@ -80,49 +80,43 @@ minor therefore forces a minor bump.
 
 ## Client Compatibility Checks
 
+Clients use the `halcompat` helpers (`common/current/halcompat.h`, installed
+with the common headers) — the same calls in every era, with the encoding
+and the era rules internal to the helper:
+
 ```cpp
-#include <binder/IServiceManager.h>
+#include <halcompat.h>
 #include <com/rdk/hal/bootreason/IBootReason.h>
 
-using namespace com::rdk::hal::bootreason;
+using com::rdk::hal::bootreason::IBootReason;
+namespace hc = com::rdk::hal::halcompat;
 
-android::sp<IBootReason> service = android::interface_cast<IBootReason>(
-    android::defaultServiceManager()->checkService(
-        android::String16(IBootReason::serviceName().c_str())));
+auto service = hc::getService<IBootReason>();
 
-int32_t client = IBootReason::VERSION;            // compile-time constant
-int32_t server = service->getInterfaceVersion();  // runtime value
-std::string hash = service->getInterfaceHash();
-
-if (hash == "notfrozen") {
-    // Development build: no compatibility promise. Acceptable on a dev
-    // image; a production client should treat this as a mismatch.
+if (!hc::isCompatible(service)) {
+    // Absent, unfrozen (dev build), or incompatible server.
+    // hc::isCompatible(service, /*allowUnfrozen=*/true) on dev images.
 }
 
-auto era   = [](int32_t v) { return v / 100000; };
-auto major = [](int32_t v) { return (v / 1000) % 100; };
-
-bool compatible;
-if (era(server) >= 1 && era(client) >= 1) {
-    // Era 1+: additive-only discipline makes ordering sufficient.
-    compatible = (server >= client);
+if (hc::atLeast(service, 0, 3)) {   // server >= 0.3.x.x
+    service->newMethod();           // APIs added in 0.3.0.0
 } else {
-    // Era 0: compatibility only holds within one major.
-    compatible = (era(server) == era(client))
-              && (major(server) == major(client))
-              && (server >= client);
+    service->existingMethod();      // pre-0.3 fallback
 }
 ```
 
-Feature detection then works on the encoded value:
+### What the helper implements
 
-```cpp
-if (service->getInterfaceVersion() >= 3000) {   // 0.3.0.0 added this API
-    service->newMethod();
-} else {
-    service->existingMethod();                  // pre-0.3 fallback
-}
-```
+The predicate over the encoded values (era and major extracted per the
+decode rules above):
+
+- **Era ≥ 1** (both sides): additive-only discipline makes ordering
+  sufficient — compatible when `server >= client`.
+- **Era 0**: compatibility holds only within one major —
+  `era(server) == era(client) && major(server) == major(client)
+  && server >= client`.
+- `getInterfaceHash() == "notfrozen"` means a development build with no
+  compatibility promise: a production client treats it as a mismatch.
 
 ## Allowed and Prohibited Changes
 
