@@ -60,6 +60,23 @@ warn() { echo "WARNING: $*" >&2; }
     || die "aidl_hash_gen not found at ${TOOLCHAIN}/host — clone the pinned toolchain (./build_binder.sh)."
 [[ -f "${MANIFEST}" ]] || die "versions_released.yaml not found."
 
+# Under `set -e`, any unhandled failure between the current/ swap and the
+# restore would otherwise strand the worktree with current/ missing. This
+# EXIT trap restores whichever swap is in flight, on every exit path
+# (normal, die, or unexpected command failure).
+_INFLIGHT_CUR=""
+_INFLIGHT_BAK=""
+_restore_inflight() {
+    if [[ -n "${_INFLIGHT_BAK}" && -d "${_INFLIGHT_BAK}" ]]; then
+        rm -rf "${_INFLIGHT_CUR}"
+        mv "${_INFLIGHT_BAK}" "${_INFLIGHT_CUR}"
+    fi
+    _INFLIGHT_CUR=""
+    _INFLIGHT_BAK=""
+}
+trap _restore_inflight EXIT
+trap 'exit 130' INT TERM
+
 # Positional 1-2-2-1 encoding over X.Y.Z.W (same contract as
 # scripts/release.sh _snapshot_version_int).
 version_int() {
@@ -107,15 +124,22 @@ refreeze_one() {
     restore_current() {
         rm -rf "${cur}"
         mv "${bak}" "${cur}"
+        _INFLIGHT_CUR=""
+        _INFLIGHT_BAK=""
     }
 
     mv "${cur}" "${bak}"
+    _INFLIGHT_CUR="${cur}"
+    _INFLIGHT_BAK="${bak}"
     mkdir "${cur}"
 
     # Stage the snapshot's own sources into the current/ slot. Skip the
     # regenerated trees and the snapshot's cohort-patched CMakeLists —
     # generation runs with current/'s own (vcurrent) CMakeLists so
     # dependency lib names and include paths resolve in the dev build.
+    # NOTE: this function is invoked in an `if` condition, which suppresses
+    # errexit for its whole body — every critical command below must carry
+    # its own failure handling.
     local entry name
     for entry in "${snap}"/* "${snap}"/.hash; do
         [[ -e "${entry}" ]] || continue
@@ -123,9 +147,17 @@ refreeze_one() {
         case "${name}" in
             include|src|CMakeLists.txt|.hash) continue ;;
         esac
-        cp -r "${entry}" "${cur}/"
+        if ! cp -r "${entry}" "${cur}/"; then
+            restore_current
+            warn "[${comp}] failed to stage ${name} into current/ — skipped."
+            return 1
+        fi
     done
-    cp "${bak}/CMakeLists.txt" "${cur}/CMakeLists.txt"
+    if ! cp "${bak}/CMakeLists.txt" "${cur}/CMakeLists.txt"; then
+        restore_current
+        warn "[${comp}] failed to stage CMakeLists.txt — skipped."
+        return 1
+    fi
 
     # Stamp: contract hash over the snapshot's AIDL (label must be
     # 'latest-version' — anything else fails the generator's integrity
@@ -135,7 +167,11 @@ refreeze_one() {
         warn "[${comp}] contract-hash generation failed — skipped."
         return 1
     fi
-    set_interface_version "${cur}/interface.yaml" "${vint}"
+    if ! set_interface_version "${cur}/interface.yaml" "${vint}"; then
+        restore_current
+        warn "[${comp}] version stamping failed — skipped."
+        return 1
+    fi
 
     # Regenerate bindings with the identity baked in.
     local build_log="${REPO_ROOT}/out/refreeze-${comp//\//_}-${ver}.log"
@@ -146,18 +182,28 @@ refreeze_one() {
         return 1
     fi
 
-    # Copy back ONLY the identity artefacts.
+    # Copy back ONLY the identity artefacts. A failure here has already
+    # removed the snapshot's old bindings — tell the operator how to
+    # recover rather than leaving a silently half-written snapshot.
     rm -rf "${snap}/include" "${snap}/src"
-    cp -r "${cur}/include" "${cur}/src" "${snap}/"
-    cp "${cur}/interface.yaml" "${snap}/interface.yaml"
-    cp "${cur}/.hash" "${snap}/.hash"
+    if ! cp -r "${cur}/include" "${cur}/src" "${snap}/" \
+        || ! cp "${cur}/interface.yaml" "${snap}/interface.yaml" \
+        || ! cp "${cur}/.hash" "${snap}/.hash"; then
+        restore_current
+        warn "[${comp}] copy-back into ${ver}/ failed — snapshot is incomplete; recover with: git checkout -- ${comp}/${ver}/"
+        return 1
+    fi
 
     # Re-stage hand-authored module-root headers into the snapshot's
     # include/ tree (same contract as release.sh create_snapshot, #623).
     local hdr
     for hdr in "${snap}"/*.h; do
         [[ -e "${hdr}" ]] || continue
-        cp "${hdr}" "${snap}/include/"
+        if ! cp "${hdr}" "${snap}/include/"; then
+            restore_current
+            warn "[${comp}] failed to re-stage $(basename "${hdr}") into ${ver}/include/ — recover with: git checkout -- ${comp}/${ver}/"
+            return 1
+        fi
     done
 
     restore_current
