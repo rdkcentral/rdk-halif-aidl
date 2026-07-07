@@ -93,6 +93,25 @@ constexpr bool isCompatible(int32_t clientVersion, int32_t serverVersion)
            && serverVersion >= clientVersion);
 }
 
+// Compile-time proofs of the encoding and the era rules — re-verified by
+// every compile that includes this header.
+static_assert(version(0, 1, 0, 0) == 1000,   "encode 0.1.0.0");
+static_assert(version(0, 10, 0, 0) == 10000, "encode 0.10.0.0");
+static_assert(version(1, 0, 0, 0) == 100000, "encode 1.0.0.0");
+static_assert(era(100000) == 1 && major(3000) == 3
+              && minor(3020) == 2 && bugfix(1001) == 1, "decode");
+// Era 0: >= holds only within one major ("at least" means == on major).
+static_assert(isCompatible(3000, 3000), "era0 exact");
+static_assert(isCompatible(3000, 3020), "era0 newer minor, same major");
+static_assert(!isCompatible(3000, 4000), "era0 cross-major rejected");
+static_assert(!isCompatible(3000, 2000), "era0 older rejected");
+// Era 1+: additive-only discipline makes plain ordering sufficient.
+static_assert(isCompatible(100000, 101000), "era1 newer server");
+static_assert(!isCompatible(101000, 100000), "era1 older server rejected");
+// Cross-era and development servers never satisfy a released client.
+static_assert(!isCompatible(3000, 100000), "era-0 gate vs era-1 server");
+static_assert(!isCompatible(1000, 1), "unfrozen dev server rejected");
+
 } // namespace detail
 
 /**
