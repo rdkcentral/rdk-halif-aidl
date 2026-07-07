@@ -52,11 +52,15 @@
 namespace com::rdk::hal::halcompat {
 
 /**
+ * Internal encoding machinery. Clients never handle version values —
+ * everything public below takes a service proxy (and, for atLeast(),
+ * the human-readable release fields of the feature being gated).
+ */
+namespace detail {
+
+/**
  * Encodes a release version as the positional interface-version int.
- * e.g. version(0,1,0,0) == 1000, version(0,3,0,0) == 3000,
- *      version(1,0,0,0) == 100000.
- * Use with atLeast()/isCompatible() so version thresholds are written as
- * the human-readable release fields, never as raw encoded values.
+ * e.g. version(0,1,0,0) == 1000, version(1,0,0,0) == 100000.
  */
 constexpr int32_t version(int32_t era, int32_t major, int32_t minor = 0,
                           int32_t bugfix = 0)
@@ -88,6 +92,8 @@ constexpr bool isCompatible(int32_t clientVersion, int32_t serverVersion)
            && major(serverVersion) == major(clientVersion)
            && serverVersion >= clientVersion);
 }
+
+} // namespace detail
 
 /**
  * Looks up interface I via the service manager using its published
@@ -128,7 +134,7 @@ inline bool isCompatible(const android::sp<I>& service,
     if (!isFrozen(service)) {
         return allowUnfrozen;
     }
-    return isCompatible(I::VERSION, service->getInterfaceVersion());
+    return detail::isCompatible(I::VERSION, service->getInterfaceVersion());
 }
 
 /**
@@ -145,9 +151,9 @@ inline bool atLeast(const android::sp<I>& service, int32_t featureEra,
     if (service == nullptr) {
         return false;
     }
-    const int32_t needed = version(featureEra, featureMajor, featureMinor,
-                                   featureBugfix);
-    return isCompatible(needed, service->getInterfaceVersion());
+    const int32_t needed = detail::version(featureEra, featureMajor,
+                                           featureMinor, featureBugfix);
+    return detail::isCompatible(needed, service->getInterfaceVersion());
 }
 
 } // namespace com::rdk::hal::halcompat
