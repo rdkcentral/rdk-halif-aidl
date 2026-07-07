@@ -111,7 +111,7 @@ interface IAVClock
      * passing this clock's `IAVClock.Id`. The AV Clock holds no sink state.
      * 
      * If successful the AV Clock transitions to the `OPENING` state and then to the `READY` state.
-     * If an internal errors occurs, the AV Clock transitions to the `OPENING` state and then back to the `CLOSED` state
+     * If an internal error occurs, the AV Clock transitions to the `OPENING` state and then back to the `CLOSED` state
      * with a null interface returned.
      *
      * If the client that opened the `IAVClockController` crashes,
