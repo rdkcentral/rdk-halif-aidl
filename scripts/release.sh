@@ -2820,7 +2820,9 @@ aidl_hash_status() {
 #
 #   structural  what the AIDL actually changed: the binder toolchain's
 #               dump-surface/diff-surface (linux_binder_idl#27) classifies
-#               last-frozen vs current/ as breaking / additive / none.
+#               last-frozen vs current/ as breaking / major / none (the
+#               tool's literal classes; `major` means additive and the
+#               audit table displays it as such).
 #               A surface-identical pair whose .aidl sources still differ
 #               is doc-only (comment/doc edits are stripped from dumps).
 #   label       the change class the PR labels imply (same detector the

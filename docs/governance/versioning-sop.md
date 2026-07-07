@@ -205,8 +205,9 @@ Before tagging a release, run the structural audit:
 For **every** component — including ones untouched since the last release —
 the audit dumps the canonical AIDL surface of the last frozen snapshot and
 of `current/` (binder toolchain `aidl_ops dump-surface`), classifies the
-structural difference (`diff-surface`: breaking / additive / none, with
-surface-identical-but-source-differing trees counting as doc-only), and
+structural difference (`diff-surface` emits `breaking` / `major` / `none`,
+where `major` means additive and the audit displays it as such;
+surface-identical trees whose sources still differ count as doc-only), and
 cross-checks three signals per component:
 
 | Signal     | Source                                         |
