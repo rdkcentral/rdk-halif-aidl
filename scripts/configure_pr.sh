@@ -153,18 +153,29 @@ print("yes" if fs and all(is_doc(p) for p in fs) else "no")
     fi
     desired_labels+="${change_class}\n"
 
+    # Exactly one change-class label: remove any other class label already
+    # on the PR (including the retired "Breaking Change") so recalculation
+    # never leaves duplicates behind during the #712 transition.
+    local remove_labels=()
+    local cls
+    for cls in "Major Change" "Minor Change" "documentation" "Breaking Change"; do
+        [ "$cls" = "$change_class" ] && continue
+        if [[ ",${current_labels}," == *",${cls},"* ]]; then remove_labels+=("$cls"); fi
+    done
+
     local add_labels=()
     while IFS= read -r lbl; do
         [ -z "$lbl" ] && continue
         if [[ ",${current_labels}," != *",${lbl},"* ]]; then add_labels+=("$lbl"); fi
     done < <(echo -e "$desired_labels")
 
-    if [ ${#add_labels[@]} -eq 0 ]; then
+    if [ ${#add_labels[@]} -eq 0 ] && [ ${#remove_labels[@]} -eq 0 ]; then
         echo "  labels: up to date"
     else
-        echo "  labels: + ${add_labels[*]}"
+        echo "  labels: + ${add_labels[*]:-} - ${remove_labels[*]:-}"
         if ! $DRY_RUN; then
             local args=(); for l in "${add_labels[@]}"; do args+=(--add-label "$l"); done
+            for l in "${remove_labels[@]}"; do args+=(--remove-label "$l"); done
             if gh pr edit "$pr" --repo "$REPO" "${args[@]}" >/dev/null; then
                 echo "    applied"
             else

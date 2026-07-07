@@ -664,7 +664,9 @@ Structural audit:
   --apply), scoped to the components being written — no switches needed.
   --no-audit bypasses it (testing only; a real release MUST audit).
 
-  Only components staged in the worktree are processed. The detector
+  (Release run only — the standalone --audit above always covers every
+  buildable component.) Only components staged in the worktree are
+  processed. The detector
   computes the bump level from PR labels since the base ref; an explicit
   --version pin from the plan overrides that.
 
@@ -2874,8 +2876,9 @@ aidl_hash_status() {
 # minor, surface-identical respin => bugfix, identical => none. Era >= 1
 # components must never
 # classify breaking (standard AIDL discipline) — that row hard-fails
-# regardless of labels. Any disagreement flags the row; --strict turns
-# flags into a non-zero exit so tagging can be gated on a clean audit.
+# regardless of labels. Any disagreement flags the row, and flags
+# produce a non-zero exit (strict is the only mode, #714) so tagging
+# is gated on a clean audit.
 # Runs the structural audit over the given components (all buildable
 # components when none are given). Strict is the only mode: returns
 # non-zero when any row is flagged or errors. (#714)
