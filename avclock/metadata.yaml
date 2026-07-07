@@ -21,7 +21,7 @@
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: avclock
-version: 0.2.0.0
+version: 0.2.0.1
 status: GREEN
 description: "Audio/video clock synchronization and timing control"
 type: SOC

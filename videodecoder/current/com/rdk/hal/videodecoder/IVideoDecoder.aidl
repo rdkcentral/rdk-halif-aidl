@@ -96,18 +96,19 @@ interface IVideoDecoder
      * the requested key and `propertyValue` is populated on success.
      *
      * Error handling and return semantics:
-     * - Passing an empty `properties` array is an error.
-     * - If any key in `properties` is invalid, no values are populated and the call
-     *   returns `false` with `EX_ILLEGAL_ARGUMENT`.
+     * - Passing an empty `properties` array fails with `EX_ILLEGAL_ARGUMENT`.
+     * - If any key in `properties` is invalid, no values are populated and the
+     *   call fails with `EX_ILLEGAL_ARGUMENT`.
      * - If a required out-parameter is null (e.g. `propertyKVList`), the call fails
      *   with `EX_NULL_POINTER`.
+     * - When an exception is raised, no return value is transmitted.
      *
      * @param[in] properties      Non-empty list of property keys to query.
      * @param[out] propertyKVList Returned key/value pairs corresponding to `properties`.
      *
      * @returns boolean
      * @retval true               All property values were retrieved successfully.
-     * @retval false              One or more keys are invalid, or input list is empty.
+     * @retval false              The property values could not be retrieved.
      *
      * @exception binder::Status::Exception::EX_NONE            Success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid property key(s) or empty input list.

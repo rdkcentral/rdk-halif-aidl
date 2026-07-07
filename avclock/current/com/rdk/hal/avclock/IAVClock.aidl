@@ -102,14 +102,16 @@ interface IAVClock
 	 * Opens the AV Clock.
      * 
      * While the AV Clock is in the `OPENING` state, these defaults are set on the AV Clock:
-     *  - Primary audio sink is set to -1
-     *  - Supplementary audio sink is set to -1
-     *  - Video sink is set to -1
      *  - Mode is set to `ClockMode::AUTO`
      *  - Playback rate is set to 1.0
+     *
+     * Sink association is owned by the sinks, not the AV Clock: clients call
+     * `attachClock()` / `detachClock()` / `getClock()` on the audio and video
+     * sink controllers (`IAudioSinkController`, `IVideoSinkController`),
+     * passing this clock's `IAVClock.Id`. The AV Clock holds no sink state.
      * 
      * If successful the AV Clock transitions to the `OPENING` state and then to the `READY` state.
-     * If an internal errors occurs, the AV Clock transitions to the `OPENING` state and then back to the `CLOSED` state
+     * If an internal error occurs, the AV Clock transitions to the `OPENING` state and then back to the `CLOSED` state
      * with a null interface returned.
      *
      * If the client that opened the `IAVClockController` crashes,
