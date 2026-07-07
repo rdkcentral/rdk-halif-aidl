@@ -28,7 +28,9 @@ The patterns and examples align with the interface style used in this repository
    (installed with the `common` component headers): `getService<I>()`,
    `isCompatible(service)` and `atLeast(service, era, major, minor,
    bugfix)` — the API and era rules are documented in the header's own
-   Doxygen. The `FooClient` below illustrates the pattern it implements.
+   Doxygen. The `FooClient` below illustrates the adapter pattern in
+   Android's ndk-backend idiom; halcompat is this repository's
+   cpp-backend implementation of the same pattern.
 
 ---
 
