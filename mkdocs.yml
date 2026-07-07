@@ -54,6 +54,7 @@ nav:
       - Fork-Based Contribution Guide: standards/forked_based_branching.md
       - Git Flow Branching Strategy: standards/git_flow_branching_strategy.md
       - Semantic Versioning: standards/semantic_versioning.md
+      - AIDL Versioning Guide: standards/versioning-guide.md
       - Third-Party Build Integration: standards/build_integration.md
   - Vendor HAL Interfaces (VHI):
     - Overview: key_concepts/hal/hal_interfaces.md
