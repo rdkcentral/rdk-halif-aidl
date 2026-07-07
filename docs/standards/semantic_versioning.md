@@ -16,11 +16,11 @@ applies to the **repo-level release tags** (e.g. `0.21.0`). Individual HAL
 `<era>.<major>.<minor>.<bugfix>` scheme with its own rules — see the
 [AIDL Versioning Guide](versioning-guide.md).
 
-Note also that the repository's PR change-class labels do not map
-one-to-one onto SemVer tier names: `Breaking Change` drives the
-major/generation bump, `Major Change` drives the **minor** bump (additive
-work), and `Minor Change` / `documentation` drive the **patch** bump. See
-the [versioning SOP](../governance/versioning-sop.md) for the label table.
+The repository's PR change-class labels map directly onto the version
+fields: `Major Change` drives the major bump (breaking), `Minor Change`
+drives the minor bump (additive), and `documentation` drives the bugfix
+bump. See the [versioning SOP](../governance/versioning-sop.md) for the
+label table.
 
 ## SemVer Format: `MAJOR.MINOR.PATCH`
 
