@@ -22,7 +22,7 @@
 # type        - Responsibility: SOC or OEM                                [manual]
 component: planecontrol
 version: 0.1.0.0
-status: GREEN
+status: AMBER
 description: "Graphics and video plane composition control"
 type: SOC
 
@@ -52,7 +52,7 @@ scope:
 #   owners        - Responsible architecture teams
 notes:
   priority: 3
-  status_detail: "V1 stable"
+  status_detail: "Breaking change on develop unreleased: #621 removals (0.2.0.0 at next cut); #622/#329 open; GREEN when shipped"
   action: "Design simplification tracked in #622, #329"
   owners: "Architecture + Graphics_Architecture"
 
