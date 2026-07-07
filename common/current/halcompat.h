@@ -16,8 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef _RDK_HALCOMPAT_H_
-#define _RDK_HALCOMPAT_H_
+#ifndef RDK_HALCOMPAT_H
+#define RDK_HALCOMPAT_H
 
 /**
  * @brief  Client-side interface compatibility helpers for RDK HAL AIDL
@@ -159,7 +159,11 @@ inline bool isCompatible(const android::sp<I>& service,
     if (service == nullptr) {
         return false;
     }
-    if (service->getInterfaceHash() == "notfrozen") {
+    const std::string hash = service->getInterfaceHash();
+    if (hash.empty() || hash == "-1") {
+        return false;   // hash RPC failed — not a dev build, a broken link
+    }
+    if (hash == "notfrozen") {
         return allowUnfrozen;
     }
     return detail::isCompatible(I::VERSION, service->getInterfaceVersion());
@@ -174,10 +178,19 @@ inline bool isCompatible(const android::sp<I>& service,
 template <typename I>
 inline bool atLeast(const android::sp<I>& service, int32_t featureEra,
                     int32_t featureMajor, int32_t featureMinor = 0,
-                    int32_t featureBugfix = 0)
+                    int32_t featureBugfix = 0, bool allowUnfrozen = false)
 {
     if (service == nullptr) {
         return false;
+    }
+    const std::string hash = service->getInterfaceHash();
+    if (hash.empty() || hash == "-1") {
+        return false;   // hash RPC failed — not a dev build, a broken link
+    }
+    if (hash == "notfrozen") {
+        // A development build tracks current/ — a dev image that opted in
+        // assumes the feature is present; production gates stay closed.
+        return allowUnfrozen;
     }
     const int32_t needed = detail::version(featureEra, featureMajor,
                                            featureMinor, featureBugfix);
@@ -186,4 +199,4 @@ inline bool atLeast(const android::sp<I>& service, int32_t featureEra,
 
 } // namespace com::rdk::hal::halcompat
 
-#endif // _RDK_HALCOMPAT_H_
+#endif // RDK_HALCOMPAT_H
