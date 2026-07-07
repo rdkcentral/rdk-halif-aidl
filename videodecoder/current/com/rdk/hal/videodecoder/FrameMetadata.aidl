@@ -131,7 +131,13 @@ parcelable FrameMetadata {
 	boolean bitstreamEOS;
 
 	/**
-	 * Discontinuity indicator where the PTS for this frame is likely to be discontinuous to the previous.
+	 * Discontinuity indicator where the PTS for this frame is discontinuous
+	 * to the previous frame.
+	 *
+	 * Set true on the first output frame decoded from an input buffer that
+	 * carried `InputBufferMetadata.discontinuity = true`.
+	 *
+	 * @see InputBufferMetadata.discontinuity
 	 */
 	boolean discontinuity;
 

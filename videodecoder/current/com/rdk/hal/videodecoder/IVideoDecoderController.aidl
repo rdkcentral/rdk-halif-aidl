@@ -119,8 +119,9 @@ interface IVideoDecoderController
      * Each call is self-describing; the HAL MUST NOT carry any field of
      * `InputBufferMetadata` across calls.
      *
-     * The `metadata.discontinuity` field is reserved in v1 and MUST be false.
-     * Use `signalDiscontinuity()` to signal a PTS discontinuity.
+     * Setting `metadata.discontinuity = true` marks this buffer as the first
+     * following a PTS discontinuity: the decoder MUST reset its PTS tracking
+     * and interpolation state before decoding it. See `InputBufferMetadata`.
      *
      * @param[in] bufferHandle  A handle to the AV buffer containing the encoded
      *                          video frame. MUST be a valid handle.
@@ -137,7 +138,7 @@ interface IVideoDecoderController
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if `bufferHandle` is
-     *            invalid or if `metadata.discontinuity` is true.
+     *            invalid.
      *
      * @pre The resource must be in State::STARTED.
      *
@@ -164,25 +165,6 @@ interface IVideoDecoderController
      * @pre The resource must be in State::STARTED.
      */
     void flush(in boolean reset);
-
-    /**
-     * Signals a discontinuity in the video stream.
-     *
-     * The Video Decoder must be in a state of `STARTED`.
-     * Buffers that follow this call passed in `decodeBufferWithMetadata()` shall be
-     * regarded as PTS discontinuous to any video frames past or already held in the
-     * Video Decoder.
-     *
-     * This method remains the authoritative path for signalling discontinuity in
-     * v1. The `InputBufferMetadata.discontinuity` field is reserved and MUST be
-     * false until a later release migrates the signalling path.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     *
-     * @pre The resource must be in State::STARTED.
-     */
-    void signalDiscontinuity();
 
     /**
      * Signals client-driven end-of-stream and drains the decoder.
