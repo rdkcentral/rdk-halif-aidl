@@ -63,7 +63,9 @@ parcelable Capabilities
     double[] supportedRefreshRatesHz;
 
     /**
-     * A named PQ support context — one set of (picture modes × video formats × AV sources).
+     * A PQ support context — one set of (picture modes × video formats × AV sources).
+     * Contexts are identified by their index in this array; a human-readable
+     * name exists only in the HFP YAML representation, not on the wire.
      *
      * A context declares that every listed picture mode supports every listed
      * video format, restricted per format to the listed AV sources.

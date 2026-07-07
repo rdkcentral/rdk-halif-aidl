@@ -57,7 +57,7 @@ interface IFactoryPanel
      * 
      * @param[in] panelId       The unique panel identifier.
      * 
-     * @return boolean
+     * @returns boolean
      * @retval true     The configuration data was successfully written.
      * @retval false    Write error or invalid parameter.
      *
@@ -67,7 +67,7 @@ interface IFactoryPanel
     /**
      * Gets the panel ID from the factory area persistent storage.
      * 
-     * @return int      The panelId
+     * @returns int      The panelId
      */
     int getFactoryPanelConfiguration(); 
 
@@ -78,7 +78,7 @@ interface IFactoryPanel
      * @param[in] whiteBalance      2-point white balance settings.
      * @param[in] saveTo            Where to save the factory settings to.
      *
-     * @return boolean
+     * @returns boolean
      * @retval true     The calibration data was successfully written.
      * @retval false    Write error or invalid parameter.
      *
@@ -92,7 +92,7 @@ interface IFactoryPanel
      *
      * @param[in] colorTemperature      Index of the color temperature preset.
      *
-     * @return WhiteBalance2PointSettings
+     * @returns WhiteBalance2PointSettings
      * 
      * @see setFactoryWhiteBalanceCalibration()
      */
@@ -109,7 +109,7 @@ interface IFactoryPanel
      * @param[in] blue              Array of blue gamma values.
      * @param[in] saveTo            Where to save the factory settings to.
      *
-     * @return boolean
+     * @returns boolean
      * @retval true     The calibration data was successfully written.
      * @retval false    Write error or invalid parameter.
      *
@@ -126,7 +126,7 @@ interface IFactoryPanel
      * @param[out] green            Array which receives the green gamma values.
      * @param[out] blue             Array which receives the blue gamma values.
      *
-     * @return boolean
+     * @returns boolean
      * @retval true     The calibration data was successfully written.
      * @retval false    Write error or invalid parameter.
      *
@@ -140,7 +140,7 @@ interface IFactoryPanel
      * @param[in] dimmingLevel      Dimming level.  Same value used in `PQParameter.DIMMING_LEVEL`.
      * @param[in] nits              The peak brightness level in nits.
      *
-     * @return boolean
+     * @returns boolean
      * @retval true     The peak brightness data was successfully written.
      * @retval false        Write error or invalid parameter.
      *
@@ -154,7 +154,7 @@ interface IFactoryPanel
      *
      * @param[in] dimmingLevel      Dimming level.  Same value used in `PQParameter.DIMMING_LEVEL`.
      *
-     * @return int      The peak brightness level in nits.
+     * @returns int      The peak brightness level in nits.
      *
      * @see setFactoryPeakBrightness()
      */
@@ -195,7 +195,7 @@ interface IFactoryPanel
      *                          Any zones not listed shall be set off.
      * @param[in] durationMs    The duration to hold the illumination pattern in milliseconds.
      * 
-     * @return boolean
+     * @returns boolean
      * @retval true     The illumination pattern was presented and the duration timer started.
      * @retval false    Invalid parameter(s) or hardware fault.
      *
@@ -212,7 +212,7 @@ interface IFactoryPanel
      * @param[in] mode          The test mode.
      * @param[in] durationMs    The duration to hold the illumination pattern in milliseconds.
      *
-     * @return boolean
+     * @returns boolean
      * @retval true     The test mode was run and the duration timer started.
      * @retval false    Invalid parameter(s) or hardware fault.
      *
@@ -224,7 +224,7 @@ interface IFactoryPanel
      *
      * @param[in] enabled   The enabled state.
      *
-     * @return boolean
+     * @returns boolean
      * @retval true     The setting was successfully changed.
      * @retval false    Driver or hardware error.
      *
@@ -236,7 +236,7 @@ interface IFactoryPanel
     /**
      * Gets the state of the local dimming pixel compensation.
      *
-     * @return boolean
+     * @returns boolean
      * @retval true     Local dimming pixel compensation is enabled.
      * @retval false    Local dimming pixel compensation is disabled.
      *
@@ -250,7 +250,7 @@ interface IFactoryPanel
      * 
      * TODO: How is this used - needs description.  What is the return value indicating???
      * 
-     * @return int   The status value is 0 for OK or >=1 for an LED fault.
+     * @returns int   The status value is 0 for OK or >=1 for an LED fault.
      */
     int getFactoryBacklightHealth();
 }
