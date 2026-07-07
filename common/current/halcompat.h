@@ -21,13 +21,32 @@
 
 /**
  * @brief  Client-side interface compatibility helpers for RDK HAL AIDL
- *         services.
+ *         services — the thin adapter specified by the "Client Usage of
+ *         Stable AIDL" whitepaper (docs/whitepapers/). All version and
+ *         feature handling goes through these helpers; client code never
+ *         calls getInterfaceVersion()/getInterfaceHash() directly.
  *
  * `getInterfaceVersion()` reports the release version as a positional int
  * and behaves identically in every era. The era only changes the
  * COMPATIBILITY PREDICATE, and these helpers keep that internal: clients
  * call the same functions before and after a component adopts frozen AIDL
  * discipline, and never handle the encoding directly.
+ *
+ * The era rules, applied internally:
+ *  - Era 0 (`0.x.y.z`): compatible only within one major generation —
+ *    "at least" means equal major, same or newer within it.
+ *  - Era 1+ (`1.x.y.z`, frozen AIDL): additive-only discipline makes
+ *    plain ordering sufficient.
+ *  - The era transition is a compatibility boundary: a client compiled
+ *    against era-0 headers reports incompatible against an era-1 server
+ *    (rebuild against the new headers).
+ *  - A development server (`getInterfaceHash() == "notfrozen"`) makes no
+ *    compatibility promise and is rejected unless the client opts in.
+ *
+ * Header-only: no library to link beyond the binder libraries every HAL
+ * client already uses. Works with any generated RDK HAL interface via its
+ * `serviceName()`, `VERSION`, `getInterfaceVersion()` and
+ * `getInterfaceHash()` surface.
  *
  * Typical client:
  * @code
@@ -37,7 +56,7 @@
  *   if (!halcompat::isCompatible(service)) {
  *       // absent, unfrozen, or incompatible server
  *   }
- *   if (halcompat::atLeast(service, 0, 3)) {   // server >= 0.3.x.x
+ *   if (halcompat::atLeast(service, 0, 3)) {   // release 0.3.0.0 added it
  *       // safe to use APIs added in 0.3.0.0
  *   }
  * @endcode
