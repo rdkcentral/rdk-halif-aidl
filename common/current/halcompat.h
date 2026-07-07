@@ -56,8 +56,10 @@
  *   if (!halcompat::isCompatible(service)) {
  *       // absent, unfrozen, or incompatible server
  *   }
- *   if (halcompat::atLeast(service, 0, 3)) {   // release 0.3.0.0 added it
- *       // safe to use APIs added in 0.3.0.0
+ *   if (halcompat::atLeast(service, 0, 2, 1)) {  // release 0.2.1.0 added it
+ *       // safe to use APIs added in 0.2.1.0. Gates name ADDITIVE
+ *       // releases: in era 0 a major bump is breaking, so
+ *       // isCompatible() fails before a cross-major gate could run.
  *   }
  * @endcode
  */
