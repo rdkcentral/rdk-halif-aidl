@@ -1,11 +1,5 @@
 # Semantic Versioning
 
-## Document History
-
-|Date|Author|Version|Comment|
-|----|-------|------|-------|
-|1st July 2025 | G. Weatherup| 1.0.0 | Initial Revision|
-
 ## Overview
 
 Semantic Versioning is a Universal Standard for Software Releases, often abbreviated as **SemVer**, is a structured versioning scheme that has become a standard across the software industry. It offers a systematic and meaningful way to number software releases, helping both developers and users understand the nature and impact of each release at a glance.
@@ -13,6 +7,20 @@ Semantic Versioning is a Universal Standard for Software Releases, often abbrevi
 Software development is a rapidly evolving process — new features, improvements, and fixes are constantly introduced. Without a clear and consistent versioning system, it's difficult to communicate changes, manage dependencies, and ensure backward compatibility. Semantic Versioning addresses this problem by offering a standardized format:
 
 The official specification can be found here:- [https://semver.org/](https://semver.org/)
+
+## Scope in This Repository
+
+This page is a general SemVer primer. In this repository, SemVer `X.Y.Z`
+applies to the **repo-level release tags** (e.g. `0.21.0`). Individual HAL
+**component** versions use a four-field
+`<era>.<major>.<minor>.<bugfix>` scheme with its own rules — see the
+[AIDL Versioning Guide](versioning-guide.md).
+
+The repository's PR change-class labels map directly onto the version
+fields: `Major Change` drives the major bump (breaking), `Minor Change`
+drives the minor bump (additive), and `documentation` drives the bugfix
+bump. See the [versioning SOP](../governance/versioning-sop.md) for the
+label table.
 
 ## SemVer Format: `MAJOR.MINOR.PATCH`
 
@@ -106,7 +114,7 @@ Semantic Versioning assumes that your software has a clearly defined **public AP
 ## Points to Keep in Mind
 
 * The initial development version is typically `0.1.0`, not `0.0.1`.
-* In the initial development phase (versions 0.y.z), even MINOR version increments may include breaking changes, as the public API is not yet stable. The MINOR version is often incremented for any significant feature or change.
+* Minor increments are non-ABI-breaking changes, in every phase including initial development (0.y.z). A breaking interface change bumps the major field, enforced by the pre-tag structural audit (`./scripts/release.sh --audit`).
 * Documentation and other non-functional changes can still increment the patch version, especially when considered part of the software's contract.
 * **SemVer is about trust** — it sets expectations about how your software will evolve.
 
