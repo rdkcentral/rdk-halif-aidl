@@ -114,7 +114,7 @@ Semantic Versioning assumes that your software has a clearly defined **public AP
 ## Points to Keep in Mind
 
 * The initial development version is typically `0.1.0`, not `0.0.1`.
-* Minor increments are non-ABI-breaking changes, in every phase including initial development (0.y.z). A breaking interface change bumps the major field, enforced by the pre-tag structural audit (`./scripts/release.sh --audit --strict`).
+* Minor increments are non-ABI-breaking changes, in every phase including initial development (0.y.z). A breaking interface change bumps the major field, enforced by the pre-tag structural audit (`./scripts/release.sh --audit`).
 * Documentation and other non-functional changes can still increment the patch version, especially when considered part of the software's contract.
 * **SemVer is about trust** — it sets expectations about how your software will evolve.
 

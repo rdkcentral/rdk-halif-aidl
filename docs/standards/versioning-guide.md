@@ -147,7 +147,7 @@ declared surface of two trees and reports `breaking`, `major` (additive) or
 `none`. The release flow enforces this as the pre-tag structural audit:
 
 ```bash
-./scripts/release.sh --audit --strict
+./scripts/release.sh --audit
 ```
 
 For every component, the audit classifies the last-frozen → `current/` diff
