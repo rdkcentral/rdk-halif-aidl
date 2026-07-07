@@ -1,11 +1,5 @@
 # Semantic Versioning
 
-## Document History
-
-|Date|Author|Version|Comment|
-|----|-------|------|-------|
-|1st July 2025 | G. Weatherup| 1.0.0 | Initial Revision|
-
 ## Overview
 
 Semantic Versioning is a Universal Standard for Software Releases, often abbreviated as **SemVer**, is a structured versioning scheme that has become a standard across the software industry. It offers a systematic and meaningful way to number software releases, helping both developers and users understand the nature and impact of each release at a glance.
@@ -13,6 +7,20 @@ Semantic Versioning is a Universal Standard for Software Releases, often abbrevi
 Software development is a rapidly evolving process — new features, improvements, and fixes are constantly introduced. Without a clear and consistent versioning system, it's difficult to communicate changes, manage dependencies, and ensure backward compatibility. Semantic Versioning addresses this problem by offering a standardized format:
 
 The official specification can be found here:- [https://semver.org/](https://semver.org/)
+
+## Scope in This Repository
+
+This page is a general SemVer primer. In this repository, SemVer `X.Y.Z`
+applies to the **repo-level release tags** (e.g. `0.21.0`). Individual HAL
+**component** versions use a four-field
+`<era>.<major>.<minor>.<bugfix>` scheme with its own rules — see the
+[AIDL Versioning Guide](versioning-guide.md).
+
+Note also that the repository's PR change-class labels do not map
+one-to-one onto SemVer tier names: `Breaking Change` drives the
+major/generation bump, `Major Change` drives the **minor** bump (additive
+work), and `Minor Change` / `documentation` drive the **patch** bump. See
+the [versioning SOP](../governance/versioning-sop.md) for the label table.
 
 ## SemVer Format: `MAJOR.MINOR.PATCH`
 
@@ -106,7 +114,7 @@ Semantic Versioning assumes that your software has a clearly defined **public AP
 ## Points to Keep in Mind
 
 * The initial development version is typically `0.1.0`, not `0.0.1`.
-* In the initial development phase (versions 0.y.z), even MINOR version increments may include breaking changes, as the public API is not yet stable. The MINOR version is often incremented for any significant feature or change.
+* In the initial development phase (versions 0.y.z), the general SemVer convention allows MINOR increments to include breaking changes, as the public API is not yet stable. **This repository is stricter:** a component's minor field never carries a breaking change, even in era 0 — a breaking interface change always bumps the major (generation) field, enforced by the pre-tag structural audit (`./scripts/release.sh --audit --strict`).
 * Documentation and other non-functional changes can still increment the patch version, especially when considered part of the software's contract.
 * **SemVer is about trust** — it sets expectations about how your software will evolve.
 

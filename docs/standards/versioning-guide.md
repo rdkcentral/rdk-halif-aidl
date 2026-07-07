@@ -81,9 +81,14 @@ minor therefore forces a minor bump.
 ## Client Compatibility Checks
 
 ```cpp
+#include <binder/IServiceManager.h>
 #include <com/rdk/hal/bootreason/IBootReason.h>
 
-std::shared_ptr<IBootReason> service = IBootReason::fromBinder(binder);
+using namespace com::rdk::hal::bootreason;
+
+android::sp<IBootReason> service = android::interface_cast<IBootReason>(
+    android::defaultServiceManager()->checkService(
+        android::String16(IBootReason::serviceName().c_str())));
 
 int32_t client = IBootReason::VERSION;            // compile-time constant
 int32_t server = service->getInterfaceVersion();  // runtime value
@@ -226,7 +231,7 @@ coexist while clients migrate.
 ## References
 
 - **Semantic versioning primer:** [semantic_versioning.md](semantic_versioning.md)
-- **Client Patterns:** [client-patterns.md](client-patterns.md)
-- **Migration Guide:** [migration-guide.md](migration-guide.md)
+- **Worked client example:** [`examples/aidl_versioning/client/`](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/examples/aidl_versioning/client) — version/hash discovery with the cpp backend
+- **Stable-AIDL client usage:** [client_usage_of_stable_aidl.md](../whitepapers/client_usage_of_stable_aidl.md)
 - **Android AIDL Docs:** [Android AIDL Versioning](https://source.android.com/docs/core/architecture/aidl/aidl-versioning)
 - **Surface classification tool:** [linux_binder_idl `dump-surface` / `diff-surface`](https://github.com/rdkcentral/linux_binder_idl/blob/develop/README.md)
