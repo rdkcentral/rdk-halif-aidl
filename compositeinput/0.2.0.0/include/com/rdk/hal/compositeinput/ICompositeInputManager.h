@@ -19,9 +19,9 @@ namespace compositeinput {
 class ICompositeInputManager : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(CompositeInputManager)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "bbad93fa82be1d9624c46072ad235ac4ae274556";
+  static constexpr char* HASHVALUE = "bbad93fa82be1d9624c46072ad235ac4ae274556";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getPlatformCapabilities(::com::rdk::hal::compositeinput::PlatformCapabilities* _aidl_return) = 0;
   virtual ::android::binder::Status getPortIds(::std::vector<int32_t>* _aidl_return) = 0;

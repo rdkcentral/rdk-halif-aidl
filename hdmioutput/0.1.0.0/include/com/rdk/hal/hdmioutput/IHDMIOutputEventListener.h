@@ -15,9 +15,9 @@ namespace hdmioutput {
 class IHDMIOutputEventListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(HDMIOutputEventListener)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 1000;
+  const std::string HASH = "19404cdb282a1b4946d330b0bb3cafdfcec8680c";
+  static constexpr char* HASHVALUE = "19404cdb282a1b4946d330b0bb3cafdfcec8680c";
   virtual ::android::binder::Status onStateChanged(::com::rdk::hal::hdmioutput::State oldState, ::com::rdk::hal::hdmioutput::State newState) = 0;
   virtual int32_t getInterfaceVersion() = 0;
   virtual std::string getInterfaceHash() = 0;

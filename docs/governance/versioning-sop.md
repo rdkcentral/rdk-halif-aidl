@@ -193,6 +193,37 @@ snapshot directories. The next release event (`release.sh` run during
 release prep) materialises all of the snapshots together and the repo is
 tagged.
 
+#### Pre-Tag Structural Audit
+
+Before tagging a release, run the structural audit:
+
+```bash
+./scripts/release.sh --audit            # report
+./scripts/release.sh --audit --strict   # gate: non-zero exit on any flag
+```
+
+For **every** component — including ones untouched since the last release —
+the audit dumps the canonical AIDL surface of the last frozen snapshot and
+of `current/` (binder toolchain `aidl_ops dump-surface`), classifies the
+structural difference (`diff-surface` emits `breaking` / `major` / `none`,
+where `major` means additive and the audit displays it as such;
+surface-identical trees whose sources still differ count as doc-only), and
+cross-checks three signals per component:
+
+| Signal     | Source                                         |
+|------------|------------------------------------------------|
+| Structural | what the AIDL actually changed (code truth)    |
+| Label      | the change class PR labels imply               |
+| Declared   | `metadata.yaml` `version:` (pre-bumped by PRs) |
+
+A row is flagged when the label class contradicts the structural class,
+when `metadata.yaml` declares a version the structural class doesn't
+support, or when an era ≥ 1 component classifies breaking (forbidden — a
+breaking change there requires a new component). Flagged rows print the
+exact structural diff (method/field level) so the fix — relabel the PR,
+correct `metadata.yaml`, or revert the AIDL — is evident from the output.
+Release tagging proceeds only on a clean `--audit --strict` pass.
+
 #### Generated Code is Not Committed in `current/`
 
 `current/include/*.h` and `current/src/*.cpp` are toolchain output —
