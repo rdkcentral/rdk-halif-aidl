@@ -73,9 +73,9 @@ done
 # Legacy workflow labels
 for lbl in "review-cycle" "sprint-required" "scope:multi-component" "scope:documentation" "documentation-change" \
            "breaking-change"; do
-    # `breaking-change` was replaced by `Breaking Change` in #545 — delete
-    # the lowercase form. `documentation` is kept (see Change-class labels
-    # below — it's equivalent to `Minor Change`, both drive a patch bump).
+    # `breaking-change` was replaced in #545 and the class was folded into
+    # `Major Change` in #712 — delete the lowercase form. `documentation`
+    # is kept (see Change-class labels below — the bugfix tier).
     delete_label "$lbl"
 done
 
@@ -118,11 +118,11 @@ echo ""
 # Workflow labels
 # ---------------------------------------------------------------------------
 
-echo "Change-class labels (every PR carries exactly one, see #545):"
-create_label "Breaking Change"      "b60205" "Breaking interface change — bumps version generation segment"
-create_label "Major Change"         "a2eeef" "Additive interface change — bumps minor; the default for real work"
-create_label "Minor Change"         "fef2c0" "Small non-doc change (typo / log message / comment-only refactor) — bumps patch"
-create_label "documentation"        "0075ca" "Documentation-only change — bumps patch; auto-applied when every changed file is doc-like"
+echo "Change-class labels (every PR carries exactly one, see #712 — label names mean what the fields mean):"
+create_label "Major Change"         "b60205" "Breaking interface change (renames/removals/signature changes) — bumps major"
+create_label "Minor Change"         "a2eeef" "Additive, backwards-compatible interface change — bumps minor; the default for real work"
+create_label "documentation"        "0075ca" "Surface-untouched change (docs/comments/metadata/trivial fixes) — bumps bugfix; auto-applied when every changed file is doc-like"
+create_label "Breaking Change"      "d4c5f9" "RETIRED (#712): alias of Major Change accepted during transition — do not apply to new PRs"
 
 echo ""
 

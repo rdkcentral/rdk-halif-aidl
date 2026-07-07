@@ -5,7 +5,7 @@
 # Manual release-time script that:
 #   1) Looks at first-parent changes since the previous release tag/ref.
 #   2) Maps changes to HAL/VSI components via component-level metadata.yaml.
-#   3) Uses PR labels (Breaking Change / Major Change / Minor Change / documentation) when available.
+#   3) Uses PR labels (Major Change / Minor Change / documentation) when available.
 #   4) Computes version bumps and optionally updates metadata.yaml.
 #
 # Default mode is dry-run. Use --apply to write changes.
@@ -718,14 +718,14 @@ Options:
   --verbose              Print extra diagnostics.
   --help                 Show this help.
 
-Behavior (#545 change-class labels):
-  - "Breaking Change" label   => generation bump (0.g.m.p -> 0.(g+1).0.0)
-  - "Major Change"    label   => minor bump (0.g.m.p -> 0.g.(m+1).0)
-  - "Minor Change"    label   => patch bump (0.g.m.p -> 0.g.m.(p+1))
-  - "documentation"   label   => patch bump (docs-only; equivalent to Minor Change
-                                 from a release-bump perspective)
+Behavior (#712 change-class labels — label names mean what the fields mean):
+  - "Major Change"    label   => major bump (0.g.m.p -> 0.(g+1).0.0) — breaking
+  - "Minor Change"    label   => minor bump (0.g.m.p -> 0.g.(m+1).0) — additive
+  - "documentation"   label   => bugfix bump (0.g.m.p -> 0.g.m.(p+1))
+  - "Breaking Change" label   => retired; accepted as a deprecated alias of
+                                 Major Change during transition
   - no relevant label         => minor bump (default), unless docs-only heuristic
-                                 says patch
+                                 says bugfix
 
 Per bumped component the script:
   1. ./build_modules.sh <component>        # regenerate current/include + current/src
@@ -1428,17 +1428,20 @@ for sha in "${FP_COMMITS[@]}"; do
         labels="$(get_pr_labels "${pr_number}")"
     fi
 
-    # Change-class labels (#545). The legacy lowercase forms are still
-    # accepted for backwards compatibility while in-flight PRs migrate.
-    has_breaking_label=0
+    # Change-class labels (#712): the label names mean what the version
+    # fields mean — Major Change = breaking (major bump), Minor Change =
+    # additive (minor bump), documentation = bugfix bump. The retired
+    # "Breaking Change" label (and its legacy lowercase form) is accepted
+    # as a deprecated alias of Major Change while in-flight PRs migrate.
     has_major_label=0
     has_minor_label=0
+    has_bugfix_label=0
     while IFS= read -r lbl; do
         [[ -n "${lbl}" ]] || continue
         case "${lbl}" in
-            "Breaking Change"|"breaking-change")   has_breaking_label=1 ;;
-            "Major Change")                         has_major_label=1 ;;
-            "Minor Change"|"documentation")         has_minor_label=1 ;;
+            "Major Change"|"Breaking Change"|"breaking-change") has_major_label=1 ;;
+            "Minor Change")                                     has_minor_label=1 ;;
+            "documentation")                                    has_bugfix_label=1 ;;
         esac
     done <<< "${labels}"
 
@@ -1466,17 +1469,17 @@ for sha in "${FP_COMMITS[@]}"; do
         [[ -n "${pr_number}" ]] && reason_prefix="PR #${pr_number} (${sha:0:8})"
 
         # Order matters: highest severity wins if multiple change-class
-        # labels are (accidentally) present on a single PR. Breaking >
-        # Major > Minor (a Major+Minor combo resolves to Major, not Minor).
-        if [[ "${has_breaking_label}" -eq 1 ]]; then
+        # labels are (accidentally) present on a single PR. Major >
+        # Minor > documentation (a Minor+doc combo resolves to Minor).
+        if [[ "${has_major_label}" -eq 1 ]]; then
             COMP_BREAKING[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: Breaking Change label"$'\n'
-        elif [[ "${has_major_label}" -eq 1 ]]; then
-            COMP_NON_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: Major Change label"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: Major Change label (breaking)"$'\n'
         elif [[ "${has_minor_label}" -eq 1 ]]; then
+            COMP_NON_DOC[$comp]=1
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: Minor Change label (additive)"$'\n'
+        elif [[ "${has_bugfix_label}" -eq 1 ]]; then
             COMP_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: Minor Change label"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: documentation label (bugfix)"$'\n'
         elif [[ "${COMMIT_COMP_DOCS_ONLY[$comp]}" -eq 1 ]]; then
             COMP_DOC[$comp]=1
             COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: docs-only heuristic"$'\n'
@@ -2717,9 +2720,9 @@ log ""
 # Map internal bump tokens to operator-readable change classes.
 bump_label() {
     case "$1" in
-        generation) echo "Breaking" ;;
-        minor)      echo "Major" ;;
-        patch)      echo "Minor" ;;
+        generation) echo "Major (breaking)" ;;
+        minor)      echo "Minor" ;;
+        patch)      echo "Bugfix" ;;
         pinned)     echo "Pinned" ;;
         none)       echo "-" ;;
         *)          echo "$1" ;;
@@ -2821,16 +2824,17 @@ aidl_hash_status() {
 #   structural  what the AIDL actually changed: the binder toolchain's
 #               dump-surface/diff-surface (linux_binder_idl#27) classifies
 #               last-frozen vs current/ as breaking / major / none (the
-#               tool's literal classes; `major` means additive and the
-#               audit table displays it as such).
+#               tool's literal classes: `breaking` displays as major,
+#               `major` means additive and displays as minor).
 #               A surface-identical pair whose .aidl sources still differ
 #               is doc-only (comment/doc edits are stripped from dumps).
 #   label       the change class the PR labels imply (same detector the
 #               release run uses; none when untouched in the window).
 #   declared    metadata.yaml's version field (authors pre-bump it).
 #
-# Gate table (era 0): breaking => generation bump, additive => minor,
-# doc-only => patch, identical => none. Era >= 1 components must never
+# Gate table (era 0): structural breaking => major bump, additive =>
+# minor, surface-identical respin => bugfix, identical => none. Era >= 1
+# components must never
 # classify breaking (standard AIDL discipline) — that row hard-fails
 # regardless of labels. Any disagreement flags the row; --strict turns
 # flags into a non-zero exit so tagging can be gated on a clean audit.
@@ -2861,12 +2865,14 @@ if [[ "${AUDIT}" -eq 1 ]]; then
         esac
     }
 
-    # Human-readable class for the table (code-truth column).
+    # Human-readable class for the table — field words, matching the
+    # label scheme (#712): major = breaking, minor = additive,
+    # bugfix = surface-identical respin.
     _audit_class_display() {
         case "$1" in
-            generation) echo "breaking" ;;
-            minor)      echo "additive" ;;
-            patch)      echo "doc-only" ;;
+            generation) echo "major" ;;
+            minor)      echo "minor" ;;
+            patch)      echo "bugfix" ;;
             none)       echo "none" ;;
             *)          echo "$1" ;;
         esac

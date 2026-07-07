@@ -22,10 +22,10 @@
 #
 # configure_pr.sh — apply the standard configuration to a pull request:
 #   * Labels       — component:<name> for each affected component, plus
-#                    exactly one change-class label (see #545):
-#                      Breaking Change — conventional-commit "!:" in title
-#                      Minor Change    — every changed file is docs-like
-#                      Major Change    — anything else (the default)
+#                    exactly one change-class label (see #712):
+#                      Major Change    — conventional-commit "!:" in title (breaking)
+#                      documentation   — every changed file is docs-like (bugfix)
+#                      Minor Change    — anything else (additive, the default)
 #   * Assignees    — the PR author.
 #   * Reviewers    — every reviewer team declared in the affected components'
 #                    metadata.yaml, mapped to GitHub team slugs. A PR always
@@ -113,25 +113,22 @@ print(" ".join(sorted(comps)))
     current_labels=$(echo "$meta" | python3 -c 'import json,sys;print(",".join(l["name"] for l in json.load(sys.stdin)["labels"]))')
     for c in $components; do desired_labels+="component:${c}\n"; done
 
-    # Exactly one change-class label per PR. The selection cascade below
-    # is *predicate-based*, not severity-based — each branch checks the
+    # Exactly one change-class label per PR (#712 — label names mean what
+    # the version fields mean). The selection cascade below is
+    # *predicate-based*, not severity-based — each branch checks the
     # condition that signals that class:
-    #   Breaking Change — conventional-commit "!:" marker in the title
-    #   documentation   — every changed file is doc-like (else branch)
-    #   Major Change    — fallback when neither predicate matches
-    #
-    # `Minor Change` is NOT auto-applied — it's a manually-applied label
-    # for non-doc small changes (typo / log message / comment-only refactor
-    # in code) that should still bump only the patch segment. Both
-    # `documentation` and `Minor Change` drive a patch bump in
-    # scripts/release.sh; `documentation` is the narrower form
-    # (docs-only PRs) and is what this cascade detects automatically.
+    #   Major Change    — conventional-commit "!:" marker in the title
+    #                     (breaking => major bump)
+    #   documentation   — every changed file is doc-like (else branch;
+    #                     bugfix bump)
+    #   Minor Change    — fallback when neither predicate matches
+    #                     (additive interface work => minor bump)
     #
     # The `is_doc()` predicate mirrors scripts/release.sh:is_doc_like_path
     # so the two scripts agree on what counts as docs-only.
     local change_class=""
     if [[ "$title" =~ ^[a-z]+(\([^\)]*\))?!: ]]; then
-        change_class="Breaking Change"
+        change_class="Major Change"
     else
         local docs_only
         docs_only=$(echo "$meta" | python3 -c '
@@ -151,7 +148,7 @@ print("yes" if fs and all(is_doc(p) for p in fs) else "no")
         if [ "$docs_only" = "yes" ]; then
             change_class="documentation"
         else
-            change_class="Major Change"
+            change_class="Minor Change"
         fi
     fi
     desired_labels+="${change_class}\n"
