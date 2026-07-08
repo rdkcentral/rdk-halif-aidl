@@ -43,6 +43,7 @@ The **Data Source HAL** defines a common typed buffer descriptor and a single co
 |**HAL.DSRC.9**|The backing file descriptor(s) shall be exchanged at negotiation; the steady-state `acquire` / `release` loop shall not require a per-buffer file-descriptor transfer.|Enables an off-binder frame loop over a shared index.|
 |**HAL.DSRC.10**|A source shall report its origin via `getSource()` using `AVSource`.||
 |**HAL.DSRC.11**|Both backing layouts shall be representable: a single shared backing with offset-addressed planes (single fd, many offsets), and one backing per plane at offset 0 (many fds, zero offset). Where offsets cannot distinguish slots, `id` carries the release identity.|Broadcom NEXUS exports a per-surface fd per slot; other SoCs export one ring fd.|
+|**HAL.DSRC.12**|A source shall report the memory accounting of its buffer pool via `getMemoryStats()`: total allocated backing bytes, the mapped subset, and the pool / acquired buffer counts. `mappedBytes` shall be 0 for a `SECURE_OPAQUE` session.|Each consumer holds its own `IDataSource`, so the figures are attributable to one consumer — pipeline memory usage is visible and a leak is traceable to its owner.|
 
 ## Interface Definition
 
@@ -55,6 +56,7 @@ The **Data Source HAL** defines a common typed buffer descriptor and a single co
 |`Plane.aidl`|One addressable region: `{backingIndex, offset, stride, size}`.|
 |`BufferMeta.aidl`|Optional per-buffer PTS / format / dimensions / flags.|
 |`DeliveryMode.aidl`|`STREAM` (byte-window) or `FRAMED` (whole-buffer).|
+|`MemoryStats.aidl`|Buffer-pool accounting: allocated / mapped bytes + pool / acquired counts.|
 
 ## The Buffer Descriptor
 

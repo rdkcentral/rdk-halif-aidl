@@ -24,6 +24,7 @@ import com.rdk.hal.AVSource;
 import com.rdk.hal.datasource.BufferDescriptor;
 import com.rdk.hal.datasource.DeliveryMode;
 import com.rdk.hal.datasource.MemoryType;
+import com.rdk.hal.datasource.MemoryStats;
 import com.rdk.hal.datasource.IDataSourceListener;
 
 /**
@@ -113,4 +114,17 @@ interface IDataSource {
      * effect when no call is blocked or the source is non-blocking.
      */
     void abortAcquire();
+
+    /**
+     * Returns the current memory accounting for this source's buffer pool.
+     *
+     * Because each consumer holds its own IDataSource, the snapshot is
+     * attributable to one consumer — enough to make pipeline memory usage
+     * visible and a leak (buffers reserved but never released) traceable to
+     * its owner. Callable in any state; before configure() the pool is empty
+     * and all counts are 0.
+     *
+     * @return  A MemoryStats snapshot of the pool.
+     */
+    MemoryStats getMemoryStats();
 }
