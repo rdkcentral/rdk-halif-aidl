@@ -110,9 +110,9 @@ if (NOT DEFINED HALIF_INCLUDE_DIR)
 endif()
 if (DEFINED HALIF_INCLUDE_DIR)
     target_include_directories(${LIB_NAME} PRIVATE
-    "${HALIF_INCLUDE_DIR}/avclock/0.2.0.0/include"
+    "${HALIF_INCLUDE_DIR}/avclock/0.2.0.1/include"
     "${HALIF_INCLUDE_DIR}/common/0.2.0.0/include"
-    "${HALIF_INCLUDE_DIR}/videodecoder/0.2.0.0/include")
+    "${HALIF_INCLUDE_DIR}/videodecoder/0.2.0.1/include")
 endif()
 
 target_link_directories(${LIB_NAME} PRIVATE
@@ -126,7 +126,7 @@ if (DEFINED HALIF_LIB_DIR)
     target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
 endif()
 
-target_link_libraries(${LIB_NAME} PRIVATE binder utils avclock-v0.2.0.0-cpp common-v0.2.0.0-cpp videodecoder-v0.2.0.0-cpp)
+target_link_libraries(${LIB_NAME} PRIVATE binder utils avclock-v0.2.0.1-cpp common-v0.2.0.0-cpp videodecoder-v0.2.0.1-cpp)
 
 set_target_properties(${LIB_NAME} PROPERTIES OUTPUT_NAME "${LIB_NAME}")
 

@@ -22,7 +22,7 @@
 # type        - Responsibility: SOC or OEM                                [manual]
 component: firmwareupdate
 version: 0.2.0.0
-status: AMBER
+status: GREEN
 description: "Update lifecycle for multiple firmware types at multiple locations across the system"
 type: OEM
 
@@ -52,8 +52,7 @@ scope:
 #   owners        - Responsible architecture teams
 notes:
   priority: 5
-  status_detail: "Renamed from flash — fresh review cycle"
-  action: "Re-review under new name and broadened scope"
+  status_detail: "V1 stable at 0.2.0.0 — re-review under firmwareupdate name complete"
   owners: "Architecture + Kernel_Architecture"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]

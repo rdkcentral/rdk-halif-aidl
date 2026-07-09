@@ -126,9 +126,17 @@ rag_icon() {
 }
 
 for f in $METADATA_FILES; do
+    comp=$(yaml_val "$f" "component")
+
+    # Non-reviewable shared components: shared base types/enums with no
+    # independent interface contract to review (e.g. common). They still
+    # version and release normally; they are just omitted from this report.
+    case "$comp" in
+        common) continue ;;
+    esac
+
     TOTAL=$((TOTAL + 1))
 
-    comp=$(yaml_val "$f" "component")
     version=$(yaml_val "$f" "version")
     status=$(yaml_val "$f" "status")
     description=$(yaml_val "$f" "description")
@@ -190,7 +198,7 @@ for f in $METADATA_FILES; do
             append_review_row GREEN_SOC_REVIEW_ROWS GREEN_OEM_REVIEW_ROWS "$detail_row"
             # If component has a risk note, also list it in AMBER as a watch item
             if [ -n "$risk" ]; then
-                amber_row="| ${RAG_AMBER} | ${path} *(SVP risk)* | ${version} | ${priority:-—} | ${status_detail:-—} | ${risk} | ${review_deadline:-—} | ${target_green:-—} | ${owners:-—} |"
+                amber_row="| ${RAG_AMBER} | ${path} *(risk)* | ${version} | ${priority:-—} | ${status_detail:-—} | ${risk} | ${review_deadline:-—} | ${target_green:-—} | ${owners:-—} |"
                 append_row AMBER_SOC_ROWS AMBER_OEM_ROWS AMBER_SHARED_ROWS "$amber_row"
             fi
             ;;
@@ -345,6 +353,8 @@ cat >> "$OUTPUT" << 'REVIEW_SECTION'
 ---
 
 ## Review Status by Component
+
+**Column key:** Arch = Architecture · Prod = Product Architecture · AV = AV Architecture · Broadcast = Broadcast Team · Ctrl Mgr = Control Manager Architecture · Graphics = Graphics Architecture · Connectivity = Connectivity Architecture · Kernel = Kernel Architecture · Vendor = Vendor Layer Team. (Architecture and Product Architecture are the same organisational group reviewing as separate stakeholders.)
 
 > ✅ Reviewed | 🔍 In Review | 🔁 Changes Requested | 🔄 Recheck | ☐ Pending | ➖ Abstained | N/A Not assigned
 
