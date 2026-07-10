@@ -276,7 +276,23 @@ build_sdk() {
 
     echo ""
     echo "Building binder SDK..."
-    cmake --build "$BINDER_BUILD_DIR" -j$(nproc)
+    # The [AIDL] codegen custom commands exec ./aidl but carry no build-graph
+    # dependency on the aidl target (linux_binder_idl#53), so under -j a
+    # generation step can exec ./aidl while its link is still writing the
+    # file -> ETXTBSY ("Text file busy") -> Error 127. Fast path: build
+    # parallel; it compiles every object regardless of whether the race
+    # trips. Fallback: on failure, re-run serially -- -j1 reuses all the
+    # objects the parallel pass already compiled and only serializes the
+    # cheap tail (aidl link -> codegen -> final link), so the codegen never
+    # races the link. Fast when the race does not trip, always correct when
+    # it does. The proper fix is the missing DEPENDS upstream (#53).
+    if ! cmake --build "$BINDER_BUILD_DIR" -j$(nproc); then
+        echo ""
+        echo "⚠️  Parallel build hit the codegen/aidl ETXTBSY race" \
+             "(linux_binder_idl#53); retrying serially to order the codegen" \
+             "after the aidl link..."
+        cmake --build "$BINDER_BUILD_DIR" -j1
+    fi
 
     if [ $? -ne 0 ]; then
         echo ""
