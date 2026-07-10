@@ -26,17 +26,17 @@
 
 | | Component | Current Version | Description | Reviews | Owners |
 |---|-----------|---------|-------------|---------|--------|
-| 🟢 | audiodecoder | 0.2.0.0 | Audio decoder resource management and codec format support | 3/4 | Architecture + AV_Architecture |
-| 🟢 | audiosink | 0.2.0.0 | Audio output rendering and sink device management | 3/4 | Architecture + AV_Architecture |
+| 🟢 | audiodecoder | 0.2.0.0 | Audio decoder resource management and codec format support | 4/4 | Architecture + AV_Architecture |
+| 🟢 | audiosink | 0.2.0.0 | Audio output rendering and sink device management | 4/4 | Architecture + AV_Architecture |
 | 🟢 | avbuffer | 0.2.0.0 | AV buffer allocation and secure video path management | 4/4 | Architecture + AV_Architecture |
-| 🟢 | avclock | 0.2.0.1 | Audio/video clock synchronization and timing control | 3/4 | Architecture + AV_Architecture |
-| 🟢 | drm | 0.1.0.0 | DRM plugin and crypto plugin interfaces for content protection | 3/4 | Architecture + AV_Architecture |
+| 🟢 | avclock | 0.2.0.1 | Audio/video clock synchronization and timing control | 4/4 | Architecture + AV_Architecture |
+| 🟢 | drm | 0.1.0.0 | DRM plugin and crypto plugin interfaces for content protection | 4/4 | Architecture + AV_Architecture |
 | 🟢 | hdmicec | 0.1.0.0 | HDMI CEC protocol messaging and device control | 4/4 | Architecture + AV_Architecture |
-| 🟢 | hdmiinput | 0.1.0.0 | HDMI input port management and signal detection | 3/4 | Architecture + AV_Architecture |
-| 🟢 | hdmioutput | 0.1.0.0 | HDMI output port configuration and display control | 3/4 | Architecture + AV_Architecture |
-| 🟢 | planecontrol | 0.2.0.0 | Graphics and video plane composition control | 4/5 | Architecture + Graphics_Architecture |
-| 🟢 | videodecoder | 0.2.0.1 | Video decoder resource management and codec support | 3/4 | Architecture + AV_Architecture |
-| 🟢 | videosink | 0.2.0.0 | Video output rendering and display sink management | 3/4 | Architecture + AV_Architecture |
+| 🟢 | hdmiinput | 0.1.0.0 | HDMI input port management and signal detection | 4/4 | Architecture + AV_Architecture |
+| 🟢 | hdmioutput | 0.1.0.0 | HDMI output port configuration and display control | 4/4 | Architecture + AV_Architecture |
+| 🟢 | planecontrol | 0.2.0.0 | Graphics and video plane composition control | 5/5 | Architecture + Graphics_Architecture |
+| 🟢 | videodecoder | 0.2.0.1 | Video decoder resource management and codec support | 4/4 | Architecture + AV_Architecture |
+| 🟢 | videosink | 0.2.0.0 | Video output rendering and display sink management | 4/4 | Architecture + AV_Architecture |
 
 
 ### OEM Components
@@ -44,10 +44,10 @@
 | | Component | Current Version | Description | Reviews | Owners |
 |---|-----------|---------|-------------|---------|--------|
 | 🟢 | bootreason | 0.1.0.0 | Boot reason tracking and reboot management | 3/4 | Architecture + MW_Team |
-| 🟢 | compositeinput | 0.2.0.0 | Composite video input capture and control | 2/4 | Architecture + AV_Architecture |
+| 🟢 | compositeinput | 0.2.0.0 | Composite video input capture and control | 3/4 | Architecture + AV_Architecture |
 | 🟢 | deepsleep | 0.1.0.0 | Deep sleep and low-power state management | 3/4 | Architecture |
 | 🟢 | deviceinfo | 0.1.0.0 | Device information and platform capability reporting | 4/4 | Architecture + Kernel_Architecture |
-| 🟢 | firmwareupdate | 0.2.0.0 | Update lifecycle for multiple firmware types at multiple locations across the system | 0/4 | Architecture + Kernel_Architecture |
+| 🟢 | firmwareupdate | 0.2.0.0 | Update lifecycle for multiple firmware types at multiple locations across the system | 1/4 | Architecture + Kernel_Architecture |
 | 🟢 | indicator | 0.1.0.0 | LED and visual indicator state management | 4/4 | Architecture + Graphics_Architecture |
 | 🟢 | sensor | 0.2.0.0 | Hardware sensor data acquisition and monitoring | 4/4 | Architecture + Kernel_Architecture |
 
@@ -108,17 +108,17 @@
 
 | | Component | Progress | Arch | Prod | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel | Vendor |
 |---|-----------|----------|------|------|-----|-----------|----------|----------|--------------|--------|--------|
-| 🟢 | audiodecoder | 3/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ |
-| 🟢 | audiosink | 3/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ |
+| 🟢 | audiodecoder | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
+| 🟢 | audiosink | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
 | 🟢 | avbuffer | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
-| 🟢 | avclock | 3/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ |
-| 🟢 | drm | 3/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ |
+| 🟢 | avclock | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
+| 🟢 | drm | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
 | 🟢 | hdmicec | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
-| 🟢 | hdmiinput | 3/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | 🔄 |
-| 🟢 | hdmioutput | 3/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | 🔄 |
-| 🟢 | planecontrol | 4/5 | ✅ | ✅ | ✅ | N/A | N/A | ✅ | N/A | N/A | ☐ |
-| 🟢 | videodecoder | 3/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ |
-| 🟢 | videosink | 3/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ |
+| 🟢 | hdmiinput | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
+| 🟢 | hdmioutput | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
+| 🟢 | planecontrol | 5/5 | ✅ | ✅ | ✅ | N/A | N/A | ✅ | N/A | N/A | ✅ |
+| 🟢 | videodecoder | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
+| 🟢 | videosink | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
 
 ### SOC — 🟡 AMBER
 
@@ -138,10 +138,10 @@
 | | Component | Progress | Arch | Prod | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel | Vendor |
 |---|-----------|----------|------|------|-----|-----------|----------|----------|--------------|--------|--------|
 | 🟢 | bootreason | 3/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ | ✅ |
-| 🟢 | compositeinput | 2/4 | ✅ | ✅ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
+| 🟢 | compositeinput | 3/4 | ✅ | ✅ | ☐ | N/A | N/A | N/A | N/A | N/A | ✅ |
 | 🟢 | deepsleep | 3/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ | ✅ |
 | 🟢 | deviceinfo | 4/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
-| 🟢 | firmwareupdate | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |
+| 🟢 | firmwareupdate | 1/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ✅ |
 | 🟢 | indicator | 4/4 | ✅ | ✅ | N/A | N/A | N/A | ✅ | N/A | N/A | ✅ |
 | 🟢 | sensor | 4/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
 
