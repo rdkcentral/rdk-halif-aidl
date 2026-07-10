@@ -41,6 +41,10 @@ build-tools/linux_binder_idl/build-target-cmake
 */current/include/
 */current/src/
 
+# aidl_versioning demo: generated C++ is toolchain output, regenerated on
+# build via target_link_interfaces_libraries (#660) — never committed.
+examples/aidl_versioning/stable/generated/
+
 # Generated presentations
 *.pdf
 !docs/presentations/**/*.pdf
