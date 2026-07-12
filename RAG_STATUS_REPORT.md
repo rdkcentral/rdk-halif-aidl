@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Generated** | 2026-07-07 |
+| **Generated** | 2026-07-12 |
 | **Components** | 31 |
 | 🟢 **GREEN** | 17 |
 | 🟡 **AMBER** | 14 |
@@ -29,13 +29,13 @@
 | 🟢 | audiodecoder | 0.2.0.0 | Audio decoder resource management and codec format support | 0/4 | Architecture + AV_Architecture |
 | 🟢 | audiosink | 0.2.0.0 | Audio output rendering and sink device management | 0/4 | Architecture + AV_Architecture |
 | 🟢 | avbuffer | 0.2.0.0 | AV buffer allocation and secure video path management | 4/4 | Architecture + AV_Architecture |
-| 🟢 | avclock | 0.2.0.0 | Audio/video clock synchronization and timing control | 0/4 | Architecture + AV_Architecture |
-| 🟢 | common | 0.2.0.0 | Shared base AIDL types and definitions used across all HAL interfaces | 0/2 | Architecture |
+| 🟢 | avclock | 0.2.0.1 | Audio/video clock synchronization and timing control | 0/4 | Architecture + AV_Architecture |
+| 🟢 | common | 0.2.1.0 | Shared base AIDL types and definitions used across all HAL interfaces | 0/2 | Architecture |
 | 🟢 | drm | 0.1.0.0 | DRM plugin and crypto plugin interfaces for content protection | 0/4 | Architecture + AV_Architecture |
 | 🟢 | hdmicec | 0.1.0.0 | HDMI CEC protocol messaging and device control | 4/4 | Architecture + AV_Architecture |
 | 🟢 | hdmiinput | 0.1.0.0 | HDMI input port management and signal detection | 3/4 | Architecture + AV_Architecture |
 | 🟢 | hdmioutput | 0.1.0.0 | HDMI output port configuration and display control | 3/4 | Architecture + AV_Architecture |
-| 🟢 | videodecoder | 0.2.0.0 | Video decoder resource management and codec support | 0/4 | Architecture + AV_Architecture |
+| 🟢 | videodecoder | 0.2.0.1 | Video decoder resource management and codec support | 0/4 | Architecture + AV_Architecture |
 | 🟢 | videosink | 0.2.0.0 | Video output rendering and display sink management | 0/4 | Architecture + AV_Architecture |
 
 
@@ -43,9 +43,9 @@
 
 | | Component | Current Version | Description | Reviews | Owners |
 |---|-----------|---------|-------------|---------|--------|
-| 🟢 | bootreason | 0.1.0.0 | Boot reason tracking and reboot management | 3/4 | Architecture + MW_Team |
-| 🟢 | compositeinput | 0.2.0.0 | Composite video input capture and control | 2/4 | Architecture + AV_Architecture |
-| 🟢 | deepsleep | 0.1.0.0 | Deep sleep and low-power state management | 3/4 | Architecture |
+| 🟢 | bootreason | 0.1.0.0 | Boot reason tracking and reboot management | 4/4 | Architecture + MW_Team |
+| 🟢 | compositeinput | 0.2.0.0 | Composite video input capture and control | 4/4 | Architecture + AV_Architecture |
+| 🟢 | deepsleep | 0.1.0.0 | Deep sleep and low-power state management | 4/4 | Architecture |
 | 🟢 | deviceinfo | 0.1.0.0 | Device information and platform capability reporting | 4/4 | Architecture + Kernel_Architecture |
 | 🟢 | indicator | 0.1.0.0 | LED and visual indicator state management | 4/4 | Architecture + Graphics_Architecture |
 | 🟢 | sensor | 0.2.0.0 | Hardware sensor data acquisition and monitoring | 4/4 | Architecture + Kernel_Architecture |
@@ -138,9 +138,9 @@
 
 | | Component | Progress | Arch | Prod | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel | Vendor |
 |---|-----------|----------|------|------|-----|-----------|----------|----------|--------------|--------|--------|
-| 🟢 | bootreason | 3/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ | ✅ |
-| 🟢 | compositeinput | 2/4 | ✅ | ✅ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
-| 🟢 | deepsleep | 3/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ | ✅ |
+| 🟢 | bootreason | 4/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
+| 🟢 | compositeinput | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
+| 🟢 | deepsleep | 4/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
 | 🟢 | deviceinfo | 4/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
 | 🟢 | indicator | 4/4 | ✅ | ✅ | N/A | N/A | N/A | ✅ | N/A | N/A | ✅ |
 | 🟢 | sensor | 4/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
