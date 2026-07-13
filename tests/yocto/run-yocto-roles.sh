@@ -24,14 +24,14 @@
 # DIVERGENT component versions from the same meta-rdk-halif recipes, each to its
 # own destination.
 #
-# Offline emulation (no BitBake): for each role it reads that role's versions
-# manifest (versions_vendor.yaml / versions_mw.yaml - the same files the parent
-# meta-<role> layer feeds in via HALIF_VERSIONS_FILE), resolves the build order
-# with scripts/halif_plan.py, builds each pinned snapshot against the staged
-# Binder SDK, installs to a role-specific sysroot, and asserts the pinned
-# versions land there. The vendor cohort is 0.2.x and the MW cohort is 0.1.x, so
-# a pass demonstrates version divergence plus destination isolation from one
-# shared recipe.
+# Offline emulation (no BitBake): for each role it reads that role's config
+# include (halif-vendor.inc / halif-mw.inc), which sets HALIF_COMPONENTS and
+# points HALIF_VERSIONS_FILE at the role's versions_<role>.yaml - the same wiring
+# a real build requires. It resolves the build order with scripts/halif_plan.py,
+# builds each pinned snapshot against the staged Binder SDK, installs to a
+# role-specific sysroot, and asserts the pinned versions land there. The vendor
+# cohort is 0.2.x and the MW cohort is 0.1.x, so a pass demonstrates version
+# divergence plus destination isolation from one shared recipe.
 #
 # Usage:
 #   ./tests/yocto/run-yocto-roles.sh [--keep]
@@ -63,9 +63,12 @@ mkdir -p "${SDK}/include" "${SDK}/lib"
 cp -r "${REPO_ROOT}/out/build/include/binder_sdk" "${SDK}/include/" || fail "binder headers"
 cp -r "${REPO_ROOT}/out/target/lib/binder"        "${SDK}/lib/"     || fail "binder libs"
 
-# read_manifest <file> : print "<comp> <ver>" lines from the components: map
-read_manifest() {
-    sed -n '/^components:/,$ { s/^[[:space:]]\{1,\}\([A-Za-z0-9_]\{1,\}\):[[:space:]]*\([0-9][0-9.]*\).*/\1 \2/p }' "$1"
+# inc_var <inc-file> <VAR> : print a `VAR = "value"` value from a config include,
+# resolving ${THISDIR} to the include's own directory (as BitBake would).
+inc_var() {
+    local val
+    val="$(sed -n "s/^$2 = \"\\(.*\\)\"/\\1/p" "$1")"
+    printf '%s' "${val//\$\{THISDIR\}/$(dirname "$1")}"
 }
 
 # build_into <role-sysroot> <comp> <ver> : build the snapshot and install its
@@ -85,26 +88,27 @@ build_into() {
         || fail "stage headers ${comp}@${ver}"
 }
 
-# build_role <role> : build every component in versions_<role>.yaml, in the
-# topological order scripts/halif_plan.py resolves - exactly what the single
-# rdk-halif recipe's do_compile does.
+# build_role <role> : drive the build from the role's config include
+# (halif-<role>.inc) exactly as BitBake would - read HALIF_COMPONENTS and
+# HALIF_VERSIONS_FILE from it, resolve the topological order with halif_plan.py,
+# and build each snapshot. This exercises the full chain
+# halif-<role>.inc -> versions_<role>.yaml -> halif_plan -> build.
 build_role() {
     local role="$1"
-    local manifest="${REPO_ROOT}/tests/yocto/meta-${role}/conf/versions_${role}.yaml"
+    local inc="${REPO_ROOT}/tests/yocto/meta-${role}/conf/halif-${role}.inc"
     local sys="${WORK}/${role}/usr"
-    [ -f "${manifest}" ] || fail "missing manifest ${manifest}"
+    [ -f "${inc}" ] || fail "missing config include ${inc}"
+    local comps vfile
+    comps="$(inc_var "${inc}" HALIF_COMPONENTS)"
+    vfile="$(inc_var "${inc}" HALIF_VERSIONS_FILE)"
+    [ -f "${vfile}" ] || fail "${inc} points HALIF_VERSIONS_FILE at a missing file: ${vfile}"
     echo ""
-    echo "[${role}] building cohort from $(basename "${manifest}") ..."
-    # Components to build (the manifest's keys); versions come from the manifest
-    # itself via --versions - exactly how the recipe consumes it.
-    local comps="" comp ver
-    while read -r comp ver; do
-        [ -n "${comp}" ] && comps="${comps} ${comp}"
-    done <<< "$(read_manifest "${manifest}")"
-    # topological build order (dependencies first)
+    echo "[${role}] config: $(basename "${inc}")  components: ${comps}  versions: $(basename "${vfile}")"
+    # topological build order (dependencies first), versions pinned by the manifest
     local plan
-    plan="$("${REPO_ROOT}/scripts/halif_plan.py" --versions "${manifest}" ${comps})" \
+    plan="$("${REPO_ROOT}/scripts/halif_plan.py" --versions "${vfile}" ${comps})" \
         || fail "halif_plan for ${role}"
+    local comp ver
     while read -r comp ver; do
         [ -n "${comp}" ] && build_into "${sys}" "${comp}" "${ver}" && echo "    ✓ ${comp}@${ver}"
     done <<< "${plan}"
