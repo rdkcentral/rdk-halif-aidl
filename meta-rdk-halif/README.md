@@ -1,11 +1,18 @@
 # meta-rdk-halif
 
-A Yocto layer for the RDK HAL AIDL interface libraries. Each released snapshot
-under `<component>/<version>/` is available as `rdk-halif-<component>`, built from
-its self-contained CMakeLists — the committed, pre-generated C++, with **no AIDL
-toolchain or Python** on the build host.
+A **reference** Yocto layer for the RDK HAL AIDL interface libraries, generated
+from `interface.yaml` and exercised by this repo's CI (`test.sh` Test 12). Each
+released snapshot under `<component>/<version>/` is available as
+`rdk-halif-<component>`, built from its self-contained CMakeLists — the
+committed, pre-generated C++, with **no AIDL toolchain or Python** on the build
+host.
 
-## Use
+The integration team owns its production recipes. This layer is here to (a) prove
+the per-component build contract works end to end and (b) give you something to
+**use as-is or copy and adapt** — see `docs/standards/build_integration.md` for
+the contract your own recipes must honour.
+
+## Use (or copy)
 
 Add the layer to `BBLAYERS`:
 
