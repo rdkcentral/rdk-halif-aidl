@@ -18,7 +18,7 @@
 
 # rdk-halif - build a chosen set of RDK HAL AIDL interface libraries from their
 # committed, pre-generated C++, and split the output into one package per
-# component (rdk-halif-<comp>). No AIDL toolchain or Python on the target.
+# component (rdk-halif-<comp>). No AIDL / codegen toolchain required.
 #
 # A build configuration controls this with variables (typically injected by a
 # generated include, see scripts/gen_team_conf.py):

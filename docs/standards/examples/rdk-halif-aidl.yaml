@@ -1,13 +1,11 @@
-# REFERENCE Bob Build Tool recipe for the RDK HAL AIDL interface libraries.
+# SUPERSEDED reference - this Bob Build Tool recipe drives the TOP-LEVEL CMake,
+# which runs the AIDL codegen toolchain (aidl_ops.py) and so needs the
+# linux_binder_idl source + Python. It is a developer / integrated build, not a
+# no-toolchain production path (#661). For production, build per component from
+# the self-contained <module>/<version>/CMakeLists.txt (no codegen); see
+# docs/standards/build_integration.md and tests/yocto/meta-rdk-halif.
 #
-# This is a copy-me template, NOT a recipe consumed by this repository. Drop it
-# into your Bob project's recipes/ (the package name is the filename without
-# `.yaml`) and adapt the toolchain, the linux-binder dependency name, and the
-# SDK sysroot layout to your project. See docs/standards/build_integration.md
-# for the full contract.
-#
-# Like the BitBake recipe, this builds the committed, pre-generated C++ via
-# direct CMake — no AIDL compiler or Python is needed on the build host.
+# Kept as a reference for a developer superbuild that already has the toolchain.
 
 checkoutSCM:
     scm: git

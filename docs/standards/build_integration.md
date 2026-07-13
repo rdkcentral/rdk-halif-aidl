@@ -11,9 +11,10 @@ The deliverable is two build stages, run in order:
 | 2 — HAL interface libraries | each `<module>/<version>/` snapshot | `lib<module>-v<version>-cpp.so` | Target cross-toolchain |
 
 A production build compiles the **committed, pre-generated C++** in each released
-`<module>/<version>/` snapshot. The AIDL compiler and Python are used offline by
-the architecture team to regenerate that C++; **they are never required on a
-build host or target** for a released snapshot.
+`<module>/<version>/` snapshot. The AIDL compiler regenerates that C++ offline
+for the architecture team; the **AIDL / codegen toolchain is never required on a
+build host or target** for a released snapshot. (BitBake and the layer's helper
+scripts are Python, so the build host has Python — it just never runs codegen.)
 
 !!! warning "Build per component; the top-level CMake is a developer path"
     The top-level `CMakeLists.txt` runs the AIDL codegen toolchain

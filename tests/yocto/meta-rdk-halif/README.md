@@ -2,9 +2,9 @@
 
 A **reference** Yocto layer for the RDK HAL AIDL interface libraries, exercised
 by this repo's CI (`test.sh` Test 12). A single `rdk-halif` recipe builds a chosen
-set of components from their committed, pre-generated C++ — **no AIDL toolchain
-or Python** on the build host — and splits the output into one package per
-component (`rdk-halif-<comp>`).
+set of components from their committed, pre-generated C++ — **no AIDL / codegen
+toolchain** required — and splits the output into one package per component
+(`rdk-halif-<comp>`).
 
 The integration team owns its production recipe. This layer is here to (a) prove
 the build contract works end to end and (b) be something to **use as-is or copy
