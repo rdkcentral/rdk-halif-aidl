@@ -23,9 +23,10 @@ components in one pass; this prints the order to build them so each component's
 sibling dependencies are built first.
 
 Usage:
-  halif_plan.py <comp[:ver]> ...
-      comp        build the component's latest released snapshot
-      comp:ver    build the given version
+  halif_plan.py [--versions <manifest.yaml>] <comp[:ver]> ...
+      comp        build the component (version from --versions, else the latest)
+      comp:ver    build the given version (overrides --versions)
+      --versions  a versions manifest (components: {comp: ver}) pinning versions
   halif_plan.py            # all components, each at its latest
 
 Output: one "<comp> <ver>" line per component, dependencies first. Exits non-zero
@@ -76,7 +77,35 @@ def links(comp, ver):
     return out
 
 
+def parse_versions(path):
+    """Return {component: version} from a manifest's `components:` map."""
+    pins, in_comp = {}, False
+    with open(path) as fh:
+        for line in fh:
+            s = line.rstrip("\n")
+            if not s.strip() or s.strip().startswith("#"):
+                continue
+            if re.match(r"^components:\s*$", s):
+                in_comp = True
+                continue
+            if in_comp:
+                m = re.match(r"^\s+([A-Za-z0-9_]+):\s*(\S+)\s*$", s)
+                if m:
+                    pins[m.group(1)] = m.group(2)
+                elif not s[0].isspace():
+                    in_comp = False
+    return pins
+
+
 def main(argv):
+    pins = {}
+    if argv and argv[0] == "--versions":
+        if len(argv) < 2:
+            sys.stderr.write("halif_plan: --versions needs a manifest path\n")
+            return 2
+        pins = parse_versions(argv[1])
+        argv = argv[2:]
+
     items = argv or all_components()
     sel = {}
     for item in items:
@@ -85,9 +114,9 @@ def main(argv):
         if not vers:
             sys.stderr.write("halif_plan: no released snapshot for '%s'\n" % comp)
             return 2
-        if not ver:
-            ver = vers[-1]
-        elif ver not in vers:
+        if not ver:                       # not pinned inline; try the manifest, else latest
+            ver = pins.get(comp) or vers[-1]
+        if ver not in vers:
             sys.stderr.write("halif_plan: %s@%s is not a released snapshot\n" % (comp, ver))
             return 2
         sel[comp] = ver

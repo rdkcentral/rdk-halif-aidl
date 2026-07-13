@@ -16,14 +16,11 @@
 # * SPDX-License-Identifier: Apache-2.0
 # */
 
-# versions_mw.yaml - EXAMPLE HAL cohort for the middleware build configuration.
+# versions_mw.yaml - EXAMPLE version pins for the middleware build configuration.
+# Consumed directly by the rdk-halif recipe (via HALIF_VERSIONS_FILE).
 # Deliberately an OLDER cohort than versions_vendor.yaml (0.1.x vs 0.2.x) to show
-# vendor and MW diverging on component versions from the same meta-rdk-halif
-# recipes. Must be a consistent closure; gen_team_conf.py enforces this.
-#
-# Regenerate the include after editing:
-#   scripts/gen_team_conf.py tests/yocto/meta-mw/conf/versions_mw.yaml \
-#       --role mw -o tests/yocto/meta-mw/conf/halif-mw.inc
+# vendor and MW diverging on component versions from the same recipe. The
+# selected set must be a consistent closure; halif_plan.py enforces this.
 
 components:
   common: 0.1.0.0

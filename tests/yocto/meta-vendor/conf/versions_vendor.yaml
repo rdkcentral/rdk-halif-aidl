@@ -16,14 +16,12 @@
 # * SPDX-License-Identifier: Apache-2.0
 # */
 
-# versions_vendor.yaml - EXAMPLE HAL cohort for the vendor build configuration.
-# Pins each HAL component this configuration builds to an exact released
-# snapshot. Must be a consistent closure (a component's linked dependencies are
-# selected at the exact linked version); gen_team_conf.py enforces this.
-#
-# Regenerate the include after editing:
-#   scripts/gen_team_conf.py tests/yocto/meta-vendor/conf/versions_vendor.yaml \
-#       --role vendor -o tests/yocto/meta-vendor/conf/halif-vendor.inc
+# versions_vendor.yaml - EXAMPLE version pins for the vendor build configuration.
+# The rdk-halif recipe consumes this directly (via HALIF_VERSIONS_FILE); a
+# component listed here builds the pinned version, anything else builds its
+# latest. The selected set must be a consistent closure (a component's linked
+# dependencies are pinned at the exact linked version); halif_plan.py enforces
+# this at build time.
 
 components:
   common: 0.2.0.0

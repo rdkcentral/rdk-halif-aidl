@@ -26,7 +26,7 @@
 #
 # Offline emulation (no BitBake): for each role it reads that role's versions
 # manifest (versions_vendor.yaml / versions_mw.yaml - the same files the parent
-# meta-<role> layer feeds into HALIF_VERSION_<comp>), resolves the build order
+# meta-<role> layer feeds in via HALIF_VERSIONS_FILE), resolves the build order
 # with scripts/halif_plan.py, builds each pinned snapshot against the staged
 # Binder SDK, installs to a role-specific sysroot, and asserts the pinned
 # versions land there. The vendor cohort is 0.2.x and the MW cohort is 0.1.x, so
@@ -95,14 +95,16 @@ build_role() {
     [ -f "${manifest}" ] || fail "missing manifest ${manifest}"
     echo ""
     echo "[${role}] building cohort from $(basename "${manifest}") ..."
-    # comp:ver arguments for the plan resolver
-    local args="" comp ver
+    # Components to build (the manifest's keys); versions come from the manifest
+    # itself via --versions - exactly how the recipe consumes it.
+    local comps="" comp ver
     while read -r comp ver; do
-        [ -n "${comp}" ] && args="${args} ${comp}:${ver}"
+        [ -n "${comp}" ] && comps="${comps} ${comp}"
     done <<< "$(read_manifest "${manifest}")"
     # topological build order (dependencies first)
     local plan
-    plan="$("${REPO_ROOT}/scripts/halif_plan.py" ${args})" || fail "halif_plan for ${role}"
+    plan="$("${REPO_ROOT}/scripts/halif_plan.py" --versions "${manifest}" ${comps})" \
+        || fail "halif_plan for ${role}"
     while read -r comp ver; do
         [ -n "${comp}" ] && build_into "${sys}" "${comp}" "${ver}" && echo "    ✓ ${comp}@${ver}"
     done <<< "${plan}"

@@ -942,20 +942,7 @@ test_12() {
     fi
     echo "✅ per-component staged inter-module build OK"
     echo ""
-    echo "==> Test 12.3: team includes match their version manifests (gen_team_conf.py --check)"
-    if ! ./scripts/gen_team_conf.py tests/yocto/meta-vendor/conf/versions_vendor.yaml \
-            --role vendor -o tests/yocto/meta-vendor/conf/halif-vendor.inc --check; then
-        echo "❌ halif-vendor.inc out of date - regenerate from versions_vendor.yaml"
-        return 1
-    fi
-    if ! ./scripts/gen_team_conf.py tests/yocto/meta-mw/conf/versions_mw.yaml \
-            --role mw -o tests/yocto/meta-mw/conf/halif-mw.inc --check; then
-        echo "❌ halif-mw.inc out of date - regenerate from versions_mw.yaml"
-        return 1
-    fi
-    echo "✅ vendor/MW includes in sync with their manifests"
-    echo ""
-    echo "==> Test 12.4: vendor vs MW build divergent cohorts (0.2.x vs 0.1.x) to separate dests"
+    echo "==> Test 12.3: vendor vs MW build divergent cohorts (0.2.x vs 0.1.x) to separate dests"
     if ! ./tests/yocto/run-yocto-roles.sh; then
         echo "❌ vendor/MW divergence build failed"
         return 1

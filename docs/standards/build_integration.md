@@ -116,31 +116,28 @@ layer that implements the HAL, and the **middleware (MW)** that calls it. They
 build from the *same* `rdk-halif` recipe but select their own component versions,
 and those selections diverge over time.
 
-The recipe builds the components named in **`HALIF_COMPONENTS`** (default: every
-released component), each at **`HALIF_VERSION_<comp>`** (default: the latest
-snapshot), and splits the output into one package per component
-(`rdk-halif-<comp>`). With nothing overridden it builds the latest cohort, which
-the generator asserts is internally consistent.
+Two separate knobs:
 
-A configuration pins its cohort in a **versions manifest** (same schema as
-`versions_released.yaml`), and `scripts/gen_team_conf.py` turns that manifest
-into the include the parent layer requires — the role, the destinations,
-`HALIF_COMPONENTS`, and one `HALIF_VERSION_<comp>` per component — validating that
-the cohort is a consistent closure (a component's linked dependencies are pinned
-at the exact linked version). Two worked examples ship under `tests/yocto/`:
+- **Which components** — `HALIF_COMPONENTS`, defaulting to the full list from the
+  generated `halif-components.inc`. Leave it to build every HAL, or set a subset.
+  The recipe splits the output into one package per component (`rdk-halif-<comp>`).
+- **Which version** — a **versions manifest** (`components: {comp: ver}`, same
+  schema as `versions_released.yaml`) that the recipe **consumes directly** via
+  `HALIF_VERSIONS_FILE`. A pinned component builds that version; anything else
+  builds its latest. `halif_plan.py` resolves the build order and rejects an
+  inconsistent set (a component's linked dependencies must be pinned at the exact
+  linked version). With nothing pinned, the full latest cohort builds.
 
-| Layer | Manifest | Cohort | Role |
-| ----- | -------- | ------ | ---- |
-| `meta-vendor` | `versions_vendor.yaml` | 0.2.x | vendor |
-| `meta-mw` | `versions_mw.yaml` | 0.1.x | mw |
+There is no generated per-config include — the manifest is the single source. A
+build configuration just sets the role, the destinations, and the manifest path:
 
-```bash
-# Regenerate a configuration's include after editing its manifest:
-scripts/gen_team_conf.py tests/yocto/meta-vendor/conf/versions_vendor.yaml \
-    --role vendor -o tests/yocto/meta-vendor/conf/halif-vendor.inc
+```bitbake
+# meta-vendor/conf/halif-vendor.inc, required from local.conf / distro
+HALIF_ROLE = "vendor"
+HALIF_VERSIONS_FILE = "${THISDIR}/versions_vendor.yaml"
 ```
 
-The parent layer `require`s that `.inc` from its build (`local.conf` / distro).
-Vendor and MW diverge simply by pinning different versions in their manifests;
-`tests/yocto/run-yocto-roles.sh` builds both cohorts offline to prove they stay
+Two worked examples ship under `tests/yocto/` — `meta-vendor` (0.2.x) and
+`meta-mw` (0.1.x). They diverge simply by pointing at different manifests;
+`tests/yocto/run-yocto-roles.sh` builds both offline to prove they stay
 independent.

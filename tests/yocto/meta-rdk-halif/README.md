@@ -28,15 +28,16 @@ commit for reproducible builds.
 
 The recipe builds the components in **`HALIF_COMPONENTS`** (default: every
 released component, from the generated `halif-components.inc`), each at
-**`HALIF_VERSION_<comp>`** (default: the latest snapshot). It resolves the build
+the version pins in HALIF_VERSIONS_FILE (unpinned: latest). It resolves the build
 order with `scripts/halif_plan.py`, stages each component's lib + headers for its
 dependents, and installs to `HALIF_LIBDIR` / `HALIF_INCDIR` (overridable), tagged
 by `HALIF_ROLE` (`vendor` | `mw`).
 
-A build configuration selects a subset + versions through a generated include;
-the sibling **`meta-vendor`** and **`meta-mw`** example layers pin divergent
-cohorts (0.2.x vs 0.1.x) via `versions_<team>.yaml` + `scripts/gen_team_conf.py`,
-from the *same* recipe.
+A build configuration sets the role, the destinations, and a
+`HALIF_VERSIONS_FILE` pointing at its `versions_<team>.yaml` (consumed directly —
+no generated per-config include). The sibling **`meta-vendor`** and **`meta-mw`**
+example layers pin divergent cohorts (0.2.x vs 0.1.x) that way, from the *same*
+recipe.
 
 ## Layout
 
@@ -44,13 +45,13 @@ from the *same* recipe.
 | ---- | ------- |
 | `conf/layer.conf` | Layer definition |
 | `recipes-halif/rdk-halif/rdk-halif.bb` | The recipe: build loop + per-component `PACKAGES` split |
-| `recipes-halif/rdk-halif/halif-components.inc` | Generated default `HALIF_COMPONENTS` list |
+| `recipes-halif/rdk-halif/halif-components.inc` | Generated default `HALIF_COMPONENTS` (full) list |
 
-## Generated bits — do not hand-edit
+## The one generated file — do not hand-edit
 
-- `halif-components.inc` — the default component list, from `scripts/gen_recipes.py`.
-- `../meta-vendor/conf/halif-vendor.inc`, `../meta-mw/conf/halif-mw.inc` — the
-  per-config includes, from `scripts/gen_team_conf.py`.
+`halif-components.inc` is the default component list, generated from the
+snapshots by `scripts/gen_recipes.py` (the per-config version manifests are
+hand-written and consumed directly):
 
 ```bash
 ./scripts/gen_recipes.py            # regenerate the component list

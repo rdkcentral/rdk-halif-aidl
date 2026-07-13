@@ -20,10 +20,10 @@
 # committed, pre-generated C++, and split the output into one package per
 # component (rdk-halif-<comp>). No AIDL / codegen toolchain required.
 #
-# A build configuration controls this with variables (typically injected by a
-# generated include, see scripts/gen_team_conf.py):
+# A build configuration controls this with variables (see the meta-vendor /
+# meta-mw example includes):
 #   HALIF_COMPONENTS        components to build   (default: all, from the .inc)
-#   HALIF_VERSION_<comp>    version per component (default: the latest snapshot)
+#   HALIF_VERSIONS_FILE     versions manifest     (default: none -> all latest)
 #   HALIF_ROLE              vendor | mw           (labels who is building)
 #   HALIF_LIBDIR/INCDIR     install destinations  (default: ${libdir}/halif etc.)
 #
@@ -45,17 +45,19 @@ B = "${WORKDIR}/build"
 # recipe and staged into the recipe sysroot.
 DEPENDS = "linux-binder"
 
-# Default component set (every released component). A build configuration subsets
-# HALIF_COMPONENTS and pins HALIF_VERSION_<comp> in its own include.
+# Default component set (every released component). A build configuration may
+# subset HALIF_COMPONENTS and set HALIF_VERSIONS_FILE in its own include.
 require ${THISDIR}/halif-components.inc
 
 HALIF_ROLE ??= "vendor"
 HALIF_LIBDIR ??= "${libdir}/halif"
 HALIF_INCDIR ??= "${includedir}/halif"
 
-# comp[:ver] arguments for scripts/halif_plan.py, assembled from the selected
-# components and any per-component version overrides.
-HALIF_PLAN_ARGS = "${@ ' '.join((c + ':' + d.getVar('HALIF_VERSION_' + c)) if d.getVar('HALIF_VERSION_' + c) else c for c in (d.getVar('HALIF_COMPONENTS') or '').split()) }"
+# Optional versions manifest (components: {comp: ver}). A build configuration
+# points this at its versions_<team>.yaml; components it does not pin build their
+# latest released snapshot. The manifest is consumed directly - there is no
+# generated per-config include.
+HALIF_VERSIONS_FILE ??= ""
 
 inherit cmake
 
@@ -66,8 +68,11 @@ do_configure[noexec] = "1"
 do_compile() {
     cmake_do_generate_toolchain_file
 
-    # Resolve the topological build order (dependencies first).
-    "${S}/scripts/halif_plan.py" ${HALIF_PLAN_ARGS} > "${B}/plan.txt" \
+    # Resolve the topological build order (dependencies first), pinning versions
+    # from the configuration's manifest if one is set.
+    versions=""
+    [ -n "${HALIF_VERSIONS_FILE}" ] && versions="--versions ${HALIF_VERSIONS_FILE}"
+    "${S}/scripts/halif_plan.py" ${versions} ${HALIF_COMPONENTS} > "${B}/plan.txt" \
         || bbfatal "halif_plan.py failed to resolve a build order"
 
     # Sibling libs/headers built earlier in the plan are staged here so later
