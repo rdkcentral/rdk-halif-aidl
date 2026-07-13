@@ -80,7 +80,8 @@ build_into() {
         > "${bdir}.build.log" 2>&1 || { tail -15 "${bdir}.build.log" | sed 's/^/    /'; fail "build ${comp}@${ver}"; }
     install -d "${sys}/lib/halif" "${sys}/include/halif/${comp}/${ver}"
     install -m 0755 "${bdir}"/lib${comp}-v${ver}-cpp.so "${sys}/lib/halif/" || fail "stage lib ${comp}@${ver}"
-    cp -r "${REPO_ROOT}/${comp}/${ver}/include" "${sys}/include/halif/${comp}/${ver}/"
+    cp -r "${REPO_ROOT}/${comp}/${ver}/include" "${sys}/include/halif/${comp}/${ver}/" \
+        || fail "stage headers ${comp}@${ver}"
 }
 
 # build_role <role> : build every component in versions_<role>.yaml, deps first.

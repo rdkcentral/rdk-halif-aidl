@@ -24,11 +24,11 @@
 # the released HAL snapshots, the way the generated meta-rdk-halif recipes do.
 #
 # This is the honest counterpart to run-yocto.sh. That script drives the
-# top-level CMake and passes only because it fabricates a ${BINDER_SDK_DIR}/
-# .sdk_ready marker and runs in a dev tree where the codegen toolchain is
-# present - so it cannot catch the failure a real integrator hits. A real
-# linux-binder recipe stages libbinder WITHOUT that marker, and a production
-# host has no AIDL toolchain, so the top-level path is not viable there (#661).
+# top-level CMake and passes only because it runs in a dev tree where the codegen
+# toolchain is present - so it cannot catch the failure a real integrator hits.
+# The top-level path runs the AIDL codegen toolchain (aidl_ops.py), which a
+# production host does not have, so it is not viable there (#661); the supported
+# production path is per component.
 #
 # The supported production path is PER COMPONENT: each released snapshot is
 # built from its self-contained <comp>/<ver>/CMakeLists.txt against the staged
@@ -70,7 +70,7 @@ HALIF_INCS="${SYSROOT}/include/halif"    # dependents look under here for <dep>/
 cleanup() { [ "${KEEP}" = true ] || rm -rf "${WORK}"; }
 trap cleanup EXIT
 
-fail() { echo ""; echo "❌ FAKE-YOCTO(per-component) FAILED: $1"; exit 1; }
+fail() { echo ""; echo "❌ YOCTO(per-component) FAILED: $1"; exit 1; }
 
 echo "========================================="
 echo "  yocto: per-component staged build"
@@ -154,8 +154,10 @@ echo ""
 echo "[negative] build ${MOD_COMP} with ${DEP_COMP} NOT staged (expect failure) ..."
 EMPTY="${WORK}/empty-sysroot/usr"
 mkdir -p "${EMPTY}/include" "${EMPTY}/lib"
-cp -r "${REPO_ROOT}/out/build/include/binder_sdk" "${EMPTY}/include/"
-cp -r "${REPO_ROOT}/out/target/lib/binder"        "${EMPTY}/lib/"
+cp -r "${REPO_ROOT}/out/build/include/binder_sdk" "${EMPTY}/include/" \
+    || fail "staging binder headers for the negative control"
+cp -r "${REPO_ROOT}/out/target/lib/binder"        "${EMPTY}/lib/" \
+    || fail "staging binder libs for the negative control"
 if cmake -S "${REPO_ROOT}/${MOD_COMP}/${MOD_VER}" -B "${WORK}/neg" \
         -DBINDER_SDK_DIR="${EMPTY}" -DBINDER_SDK_INCLUDE_DIR="${EMPTY}" \
         -DHALIF_LIB_DIR="${EMPTY}/lib/halif" -DHALIF_INCLUDE_DIR="${EMPTY}/include/halif" \

@@ -39,6 +39,14 @@ S = "${WORKDIR}/git"
 # recipe and staged flat into the recipe sysroot.
 DEPENDS:prepend = "linux-binder "
 
+# HALIF_VERSION is selected per component by the build configuration (the recipe
+# defaults it to the latest snapshot; a versions manifest overrides it via
+# HALIF_VERSION:pn-rdk-halif-<comp>). PV follows it, and the sibling DEPENDS
+# follow the selected version through HALIF_SIBLINGS.
+PV = "${HALIF_VERSION}"
+HALIF_SIBLINGS ??= ""
+DEPENDS += "${HALIF_SIBLINGS}"
+
 inherit cmake
 
 # ---------------------------------------------------------------------------

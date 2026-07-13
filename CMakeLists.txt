@@ -130,13 +130,19 @@ message(STATUS "====================================")
 # gating on the marker wrongly rejects it (#661).
 #######################################################################
 
-if (NOT IS_DIRECTORY "${BINDER_SDK_DIR}/lib/binder")
+# Binder library subdir - overridable (e.g. lib64 sysroots). Defaulted here so
+# the presence check honours it; the value is reused for link paths below.
+if (NOT DEFINED BINDER_SDK_LIB_SUBDIR)
+    set(BINDER_SDK_LIB_SUBDIR "lib/binder")
+endif()
+
+if (NOT IS_DIRECTORY "${BINDER_SDK_DIR}/${BINDER_SDK_LIB_SUBDIR}")
     message("")
     message("========================================")
     message("  Binder SDK not found at ${BINDER_SDK_DIR}")
     message("========================================")
     message("")
-    message("Expected the Binder runtime libraries under ${BINDER_SDK_DIR}/lib/binder.")
+    message("Expected the Binder runtime libraries under ${BINDER_SDK_DIR}/${BINDER_SDK_LIB_SUBDIR}.")
     message("")
     message("Local development - build the SDK first:")
     message("  ./build_binder.sh")
@@ -168,12 +174,10 @@ if (NOT DEFINED BINDER_SDK_INCLUDE_DIR)
     set(BINDER_SDK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/out/build")
 endif()
 
-# Configure SDK subdirectory structure (overridable for Yocto flat structure)
+# Configure SDK subdirectory structure (overridable for Yocto flat structure).
+# BINDER_SDK_LIB_SUBDIR is defaulted earlier (the presence check uses it).
 if (NOT DEFINED BINDER_SDK_INCLUDE_SUBDIR)
     set(BINDER_SDK_INCLUDE_SUBDIR "include/binder_sdk")
-endif()
-if (NOT DEFINED BINDER_SDK_LIB_SUBDIR)
-    set(BINDER_SDK_LIB_SUBDIR "lib/binder")
 endif()
 
 message(STATUS "Binder include path: ${BINDER_SDK_INCLUDE_DIR}/${BINDER_SDK_INCLUDE_SUBDIR}")

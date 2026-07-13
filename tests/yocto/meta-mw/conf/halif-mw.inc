@@ -5,5 +5,5 @@ HALIF_ROLE = "mw"
 HALIF_LIBDIR = "${libdir}/halif"
 HALIF_INCDIR = "${includedir}/halif"
 
-PREFERRED_VERSION_rdk-halif-avclock = "0.1.0.0"
-PREFERRED_VERSION_rdk-halif-common = "0.1.0.0"
+HALIF_VERSION:pn-rdk-halif-avclock = "0.1.0.0"
+HALIF_VERSION:pn-rdk-halif-common = "0.1.0.0"

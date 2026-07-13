@@ -1,6 +1,6 @@
 # SUPERSEDED - for production Yocto builds use the meta-rdk-halif layer.
 #
-#   BBLAYERS += "${TOPDIR}/../rdk-halif-aidl/meta-rdk-halif"
+#   BBLAYERS += "${TOPDIR}/../rdk-halif-aidl/tests/yocto/meta-rdk-halif"
 #   IMAGE_INSTALL:append = " rdk-halif-<component>"
 #
 # This single recipe drives the TOP-LEVEL CMakeLists.txt, which runs the AIDL

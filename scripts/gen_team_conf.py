@@ -21,8 +21,8 @@
 A team (vendor or middleware) pins the component versions its build configuration
 uses in a manifest (versions_vendor.yaml / versions_mw.yaml). This tool turns
 that manifest into the `.inc` its parent layer requires: the role, the install
-destinations, and one `PREFERRED_VERSION_rdk-halif-<comp>` per selected
-component. Vendor and MW diverge simply by pinning different versions.
+destinations, and one `HALIF_VERSION:pn-rdk-halif-<comp>` per selected component.
+Vendor and MW diverge simply by pinning different versions.
 
 The cohort is validated as a closure: every selected component's linked sibling
 dependencies must also be selected at the exact linked version, so a manifest
@@ -91,7 +91,7 @@ def render(sel, role, libdir, incdir, manifest_name):
         "",
     ]
     for comp, ver in sorted(sel.items()):
-        lines.append('PREFERRED_VERSION_rdk-halif-%s = "%s"' % (comp, ver))
+        lines.append('HALIF_VERSION:pn-rdk-halif-%s = "%s"' % (comp, ver))
     return "\n".join(lines) + "\n"
 
 
