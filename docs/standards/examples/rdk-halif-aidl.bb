@@ -1,10 +1,18 @@
-# REFERENCE BitBake recipe for the RDK HAL AIDL interface libraries.
+# SUPERSEDED - for production Yocto builds use the meta-rdk-halif layer.
 #
-# This is a copy-me template, NOT a recipe consumed by this repository. Drop it
-# into your meta-layer, pin SRCREV/branch to a released tag, and adjust as
-# needed. It builds the committed, pre-generated C++ via direct CMake — no AIDL
-# compiler or Python is required on the build host (see
-# docs/standards/build_integration.md for the full contract).
+#   BBLAYERS += "${TOPDIR}/../rdk-halif-aidl/meta-rdk-halif"
+#   IMAGE_INSTALL:append = " rdk-halif-<component>"
+#
+# This single recipe drives the TOP-LEVEL CMakeLists.txt, which runs the AIDL
+# codegen toolchain (aidl_ops.py) at configure time and therefore requires the
+# linux_binder_idl source and Python - it is the developer / integrated build,
+# NOT a no-toolchain production path (#661). The per-component meta-rdk-halif
+# recipes build the committed C++ from each self-contained
+# <module>/<version>/CMakeLists.txt with no toolchain, and derive inter-component
+# DEPENDS from interface.yaml. See docs/standards/build_integration.md.
+#
+# Kept only as a reference for a developer superbuild that already has the
+# toolchain present.
 
 SUMMARY = "RDK HAL AIDL interface libraries (Polaris HAL)"
 HOMEPAGE = "https://github.com/rdkcentral/rdk-halif-aidl"

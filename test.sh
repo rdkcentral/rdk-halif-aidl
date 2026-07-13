@@ -45,7 +45,7 @@ usage() {
     echo "  --help       Show this help"
 }
 
-TEST_IDS=("1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11")
+TEST_IDS=("1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "12")
 
 list_tests() {
     echo "Available tests:"
@@ -60,6 +60,7 @@ list_tests() {
     echo "  9   Direct CMake build (minimal production flags)"
     echo "  10  CMake multi-module build with version switching"
     echo "  11  Cross-compilation build (sc docker rdk-kirkstone)"
+    echo "  12  Yocto per-component recipes (meta-rdk-halif sync + staged build)"
 }
 
 index_of_test_id() {
@@ -924,6 +925,25 @@ test_11() {
     return 0
 }
 
+test_12() {
+    echo "Validating Yocto per-component integration (meta-rdk-halif)..."
+    echo ""
+    echo "==> Test 12.1: generated recipes match interface.yaml (gen_recipes.py --check)"
+    if ! ./scripts/gen_recipes.py --check; then
+        echo "❌ meta-rdk-halif recipes are out of date - run ./scripts/gen_recipes.py"
+        return 1
+    fi
+    echo "✅ recipes in sync with interface.yaml imports"
+    echo ""
+    echo "==> Test 12.2: per-component staged inter-module build (hdmicec -> common)"
+    if ! ./tests/fake-yocto/run-fake-yocto-per-component.sh; then
+        echo "❌ per-component staged build failed"
+        return 1
+    fi
+    echo "✅ per-component staged inter-module build OK"
+    return 0
+}
+
 ################################################################################
 # Run Tests
 ################################################################################
@@ -939,6 +959,7 @@ run_test "8" "Direct CMake build (default flags)" test_8
 run_test "9" "Direct CMake build (minimal production flags)" test_9
 run_test "10" "CMake multi-module build with version switching" test_10
 run_test "11" "Cross-compilation build (sc docker rdk-kirkstone)" test_11
+run_test "12" "Yocto per-component recipes (meta-rdk-halif sync + staged build)" test_12
 
 ################################################################################
 # Summary

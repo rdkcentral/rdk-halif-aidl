@@ -124,25 +124,29 @@ message(STATUS "Output:      ${OUT_DIR}")
 message(STATUS "====================================")
 
 #######################################################################
-# Verify binder SDK exists (Stage 1 must complete first)
+# Verify the Binder SDK is present. The build links against the binder runtime
+# libraries, so check for those rather than a build_binder.sh-specific marker
+# file: a staged linux-binder sysroot has the libraries but not the marker, so
+# gating on the marker wrongly rejects it (#661).
 #######################################################################
 
-if (NOT EXISTS "${BINDER_SDK_DIR}/.sdk_ready")
+if (NOT IS_DIRECTORY "${BINDER_SDK_DIR}/lib/binder")
     message("")
     message("========================================")
-    message("  Binder SDK not found!")
+    message("  Binder SDK not found at ${BINDER_SDK_DIR}")
     message("========================================")
     message("")
-    message("The Binder SDK must be built before building modules.")
+    message("Expected the Binder runtime libraries under ${BINDER_SDK_DIR}/lib/binder.")
     message("")
-    message("Please run Stage 1 first:")
+    message("Local development - build the SDK first:")
     message("  ./build_binder.sh")
     message("")
-    message("This will create the Binder SDK in: ${BINDER_SDK_DIR}")
-    message("")
-    message("Then retry this module build.")
+    message("Cross / Yocto - this top-level build also runs the AIDL codegen")
+    message("toolchain, so it is not the production path. Build each component")
+    message("from its self-contained <module>/<version>/CMakeLists.txt against the")
+    message("staged SDK instead - see docs/standards/build_integration.md.")
     message("========================================")
-    message(FATAL_ERROR "Binder SDK not ready")
+    message(FATAL_ERROR "Binder SDK not found")
 endif()
 
 message(STATUS "✓ Binder SDK found at ${BINDER_SDK_DIR}")
