@@ -26,11 +26,12 @@
 #
 # Offline emulation (no BitBake): for each role it reads that role's versions
 # manifest (versions_vendor.yaml / versions_mw.yaml - the same files the parent
-# meta-<role> layer feeds into PREFERRED_VERSION), builds each pinned snapshot
-# per component against the staged Binder SDK, installs to a role-specific
-# sysroot, and asserts the pinned versions land there. The vendor cohort is
-# 0.2.x and the MW cohort is 0.1.x, so a pass demonstrates version divergence
-# plus destination isolation with one shared recipe set.
+# meta-<role> layer feeds into HALIF_VERSION_<comp>), resolves the build order
+# with scripts/halif_plan.py, builds each pinned snapshot against the staged
+# Binder SDK, installs to a role-specific sysroot, and asserts the pinned
+# versions land there. The vendor cohort is 0.2.x and the MW cohort is 0.1.x, so
+# a pass demonstrates version divergence plus destination isolation from one
+# shared recipe.
 #
 # Usage:
 #   ./tests/yocto/run-yocto-roles.sh [--keep]
@@ -84,7 +85,9 @@ build_into() {
         || fail "stage headers ${comp}@${ver}"
 }
 
-# build_role <role> : build every component in versions_<role>.yaml, deps first.
+# build_role <role> : build every component in versions_<role>.yaml, in the
+# topological order scripts/halif_plan.py resolves - exactly what the single
+# rdk-halif recipe's do_compile does.
 build_role() {
     local role="$1"
     local manifest="${REPO_ROOT}/tests/yocto/meta-${role}/conf/versions_${role}.yaml"
@@ -92,15 +95,17 @@ build_role() {
     [ -f "${manifest}" ] || fail "missing manifest ${manifest}"
     echo ""
     echo "[${role}] building cohort from $(basename "${manifest}") ..."
-    # Build 'common' (the universal leaf) first, then the rest.
-    local pairs; pairs="$(read_manifest "${manifest}")"
-    local comp ver
+    # comp:ver arguments for the plan resolver
+    local args="" comp ver
     while read -r comp ver; do
-        [ "${comp}" = "common" ] && build_into "${sys}" "${comp}" "${ver}" && echo "    ✓ ${comp}@${ver}"
-    done <<< "${pairs}"
+        [ -n "${comp}" ] && args="${args} ${comp}:${ver}"
+    done <<< "$(read_manifest "${manifest}")"
+    # topological build order (dependencies first)
+    local plan
+    plan="$("${REPO_ROOT}/scripts/halif_plan.py" ${args})" || fail "halif_plan for ${role}"
     while read -r comp ver; do
-        [ "${comp}" != "common" ] && [ -n "${comp}" ] && build_into "${sys}" "${comp}" "${ver}" && echo "    ✓ ${comp}@${ver}"
-    done <<< "${pairs}"
+        [ -n "${comp}" ] && build_into "${sys}" "${comp}" "${ver}" && echo "    ✓ ${comp}@${ver}"
+    done <<< "${plan}"
 }
 
 build_role vendor

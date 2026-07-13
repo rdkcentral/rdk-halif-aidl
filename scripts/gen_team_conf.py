@@ -19,15 +19,14 @@
 """Generate a build-configuration include from a per-team versions manifest.
 
 A team (vendor or middleware) pins the component versions its build configuration
-uses in a manifest (versions_vendor.yaml / versions_mw.yaml). This tool turns
-that manifest into the `.inc` its parent layer requires: the role, the install
-destinations, and one `HALIF_VERSION:pn-rdk-halif-<comp>` per selected component.
-Vendor and MW diverge simply by pinning different versions.
+uses in a manifest (versions_vendor.yaml / versions_mw.yaml). This turns that
+manifest into the `.inc` its parent layer requires: the role, the install
+destinations, the component set (HALIF_COMPONENTS), and one
+`HALIF_VERSION_<comp>` per selected component. The single rdk-halif recipe reads
+these. Vendor and MW diverge simply by pinning different versions.
 
 The cohort is validated as a closure: every selected component's linked sibling
-dependencies must also be selected at the exact linked version, so a manifest
-cannot pin an inconsistent set (e.g. hdmicec@0.1.0.0 with common@0.1.0.0 when
-hdmicec links common@0.2.0.0).
+dependencies must also be selected at the exact linked version.
 
 Usage:
   scripts/gen_team_conf.py <manifest.yaml> --role vendor|mw \\
@@ -40,7 +39,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from gen_recipes import parse_deps, discover_all  # noqa: E402
+from halif_plan import links, released_versions  # noqa: E402
 
 
 def parse_manifest(path):
@@ -64,14 +63,14 @@ def parse_manifest(path):
     return sel
 
 
-def validate(sel, found):
+def validate(sel):
     """Return errors if the selected cohort is not a consistent closure."""
     errors = []
     for comp, ver in sorted(sel.items()):
-        if comp not in found or ver not in found[comp]:
+        if ver not in released_versions(comp):
             errors.append("%s@%s is not a released snapshot" % (comp, ver))
             continue
-        for dep, dver in parse_deps(comp, ver):
+        for dep, dver in links(comp, ver).items():
             if sel.get(dep) != dver:
                 errors.append(
                     "%s@%s links %s@%s but the manifest selects %s=%s"
@@ -88,10 +87,11 @@ def render(sel, role, libdir, incdir, manifest_name):
         'HALIF_ROLE = "%s"' % role,
         'HALIF_LIBDIR = "%s"' % libdir,
         'HALIF_INCDIR = "%s"' % incdir,
+        'HALIF_COMPONENTS = "%s"' % " ".join(sorted(sel)),
         "",
     ]
     for comp, ver in sorted(sel.items()):
-        lines.append('HALIF_VERSION:pn-rdk-halif-%s = "%s"' % (comp, ver))
+        lines.append('HALIF_VERSION_%s = "%s"' % (comp, ver))
     return "\n".join(lines) + "\n"
 
 
@@ -105,13 +105,12 @@ def main():
     ap.add_argument("--check", action="store_true")
     args = ap.parse_args()
 
-    found = discover_all()
     sel = parse_manifest(args.manifest)
     if not sel:
         sys.stderr.write("gen_team_conf: no components selected in %s\n" % args.manifest)
         return 2
 
-    errors = validate(sel, found)
+    errors = validate(sel)
     if errors:
         sys.stderr.write("gen_team_conf: inconsistent cohort in %s:\n" % args.manifest)
         for e in errors:

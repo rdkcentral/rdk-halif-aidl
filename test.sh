@@ -928,12 +928,12 @@ test_11() {
 test_12() {
     echo "Validating Yocto integration (meta-rdk-halif + vendor/MW roles)..."
     echo ""
-    echo "==> Test 12.1: generated recipes match the snapshots (gen_recipes.py --check)"
+    echo "==> Test 12.1: component list matches the snapshots (gen_recipes.py --check)"
     if ! ./scripts/gen_recipes.py --check; then
-        echo "❌ meta-rdk-halif recipes are out of date - run ./scripts/gen_recipes.py"
+        echo "❌ meta-rdk-halif component list is out of date - run ./scripts/gen_recipes.py"
         return 1
     fi
-    echo "✅ recipes in sync"
+    echo "✅ component list in sync"
     echo ""
     echo "==> Test 12.2: per-component staged inter-module build (hdmicec -> common)"
     if ! ./tests/yocto/run-yocto-per-component.sh; then

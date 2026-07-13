@@ -4,6 +4,7 @@
 HALIF_ROLE = "vendor"
 HALIF_LIBDIR = "${libdir}/halif"
 HALIF_INCDIR = "${includedir}/halif"
+HALIF_COMPONENTS = "avclock common"
 
-HALIF_VERSION:pn-rdk-halif-avclock = "0.2.0.0"
-HALIF_VERSION:pn-rdk-halif-common = "0.2.0.0"
+HALIF_VERSION_avclock = "0.2.0.0"
+HALIF_VERSION_common = "0.2.0.0"
