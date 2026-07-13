@@ -38,7 +38,7 @@ import re
 import sys
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LAYER = os.path.join(REPO_ROOT, "meta-rdk-halif")
+LAYER = os.path.join(REPO_ROOT, "tests", "fake-yocto", "meta-rdk-halif")
 RECIPES_DIR = os.path.join(LAYER, "recipes-halif")
 
 VER_RE = re.compile(r"^\d+\.\d+\.\d+\.\d+$")

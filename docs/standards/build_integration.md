@@ -85,7 +85,7 @@ As a starting point and a CI-tested reference, the repo ships `meta-rdk-halif/` 
 a layer whose recipes are generated from `interface.yaml`. Use it directly:
 
 ```bitbake
-BBLAYERS += "${TOPDIR}/../rdk-halif-aidl/meta-rdk-halif"
+BBLAYERS += "${TOPDIR}/../rdk-halif-aidl/tests/fake-yocto/meta-rdk-halif"
 IMAGE_INSTALL:append = " rdk-halif-hdmicec"    # pulls rdk-halif-common via DEPENDS
 ```
 
