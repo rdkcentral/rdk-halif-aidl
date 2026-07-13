@@ -126,8 +126,6 @@ rag_icon() {
 }
 
 for f in $METADATA_FILES; do
-    TOTAL=$((TOTAL + 1))
-
     comp=$(yaml_val "$f" "component")
     version=$(yaml_val "$f" "version")
     status=$(yaml_val "$f" "status")
@@ -144,8 +142,17 @@ for f in $METADATA_FILES; do
     [ "$review_deadline" = "~" ] && review_deadline=""
     [ "$target_green" = "~" ] && target_green=""
     review_progress=$(yaml_review_progress "$f")
-    path=$(component_path "$f")
+    base_path=$(component_path "$f")
     icon=$(rag_icon "$status")
+
+    # Present the single sensor module as its two sub-interfaces
+    # (com.rdk.hal.sensor.motion / .thermal). Report-only: one module, one
+    # metadata.yaml and version — both rows share its status and reviews.
+    PATHS="$base_path"
+    [ "$comp" = "sensor" ] && PATHS="sensor/motion sensor/thermal"
+
+    for path in $PATHS; do
+    TOTAL=$((TOTAL + 1))
 
     # Build row (AMBER/RED use full detail, with lifecycle dates — no Reviews column)
     row="| ${icon} | ${path} | ${version} | ${priority:-—} | ${status_detail:-—} | ${action:-—} | ${review_deadline:-—} | ${target_green:-—} | ${owners:-—} |"
@@ -205,6 +212,7 @@ for f in $METADATA_FILES; do
             append_review_row RED_SOC_REVIEW_ROWS RED_OEM_REVIEW_ROWS "${priority:-99}\t${detail_row}"
             ;;
     esac
+    done  # PATHS (sensor expands to motion + thermal)
 done
 
 # Generate report
