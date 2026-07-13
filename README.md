@@ -277,7 +277,7 @@ full consumer/integrator build contract.
 
 - **[tests/README.md](tests/README.md)** - On-demand build verification
   - `tests/smoke_test.sh` - exercises the `all`, `manifest` and per-version build paths
-  - `tests/fake-yocto/` - emulates the Yocto production build offline
+  - `tests/yocto/` - emulates the Yocto production build offline
 
 ## Copyright and License
 

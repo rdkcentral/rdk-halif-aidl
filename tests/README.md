@@ -26,13 +26,13 @@ version (e.g. `0.2.0.0`):
 Exit status is `0` only if every check passes. The Binder SDK is staged
 automatically by `build_modules.sh` if missing.
 
-## `fake-yocto/`
+## `yocto/`
 
 Emulates a Yocto/BitBake build **without** a real BitBake, so the production
 CMake path can be smoke-tested offline:
 
 ```bash
-./tests/fake-yocto/run-fake-yocto.sh [--keep]
+./tests/yocto/run-yocto.sh [--keep]
 ```
 
 It reproduces, in a throwaway work directory, what the recipes would do:
@@ -49,8 +49,8 @@ layout (vs the local dev split of `out/build` headers and `out/target` libs)
 and the `cmake --install` step. `--keep` preserves the work directory for
 inspection.
 
-- [`hal-aidl.bb.sample`](fake-yocto/hal-aidl.bb.sample) — the reference
-  BitBake recipe whose tasks `run-fake-yocto.sh` emulates. Copy it into a
+- [`hal-aidl.bb.sample`](yocto/hal-aidl.bb.sample) — the reference
+  BitBake recipe whose tasks `run-yocto.sh` emulates. Copy it into a
   layer and pin `SRCREV` to use it for real.
 
 ## `fake-layers/`
@@ -65,7 +65,7 @@ for dynamic linking via `/etc/ld.so.conf.d/<layer>.conf` + `ldconfig`:
 ./tests/fake-layers/run-fake-layers.sh [--keep]
 ```
 
-Where `fake-yocto/` proves the flat-sysroot build, this proves the **layered**
+Where `yocto/` proves the flat-sysroot build, this proves the **layered**
 runtime: the MW layer provides the binder runtime + HAL interface libs, a
 vendor-layer library links a HAL lib from the MW layer, and the test asserts the
 cross-layer dependency via **layer aggregation** — not rpath, not a flat sysroot.

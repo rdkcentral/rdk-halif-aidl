@@ -16,21 +16,27 @@
 # *
 # * SPDX-License-Identifier: Apache-2.0
 # */
-"""Generate the meta-rdk-halif BitBake recipes from each snapshot's interface.yaml.
+"""Generate the meta-rdk-halif BitBake recipes, one per released snapshot.
 
-For every component, the latest released snapshot (highest X.Y.Z.W) is emitted as
-  meta-rdk-halif/recipes-halif/rdk-halif-<comp>/rdk-halif-<comp>_<ver>.bb
-with DEPENDS derived from that snapshot's interface.yaml `imports:`. The recipe
-carries no dependency list of its own beyond what interface.yaml declares - the
-imports are the single source of truth.
+Every released snapshot `<comp>/<X.Y.Z.W>/` is emitted as
+  tests/yocto/meta-rdk-halif/recipes-halif/rdk-halif-<comp>/rdk-halif-<comp>_<ver>.bb
+with `DEPENDS` derived from the exact sibling libraries that snapshot links.
 
-The latest-per-component cohort is internally consistent: every import references
-the latest version of the imported component, so DEPENDS maps by component name
-(rdk-halif-<dep>). The generator asserts this and fails loudly if an import ever
-references a non-latest dependency, so cohort drift cannot ship silently.
+Dependency versions come from the snapshot's own CMakeLists.txt link names
+(`<dep>-v<X.Y.Z.W>-cpp`). release.sh writes those fully resolved - the
+interface.yaml `imports:` are the human declaration and may carry `@current`,
+which release.sh pins there at freeze time - so the link names are the ground
+truth of what the committed C++ was built against.
+
+All released versions are emitted (PN `rdk-halif-<comp>`, PV `<ver>`), so a
+consuming build configuration selects a component's version with
+`PREFERRED_VERSION_rdk-halif-<comp>` (see the meta-vendor / meta-mw examples and
+scripts/gen_team_conf.py). With no preference set, BitBake picks the highest
+version - the latest cohort - which the generator asserts is internally
+consistent so the zero-config default cannot ship broken.
 
 Usage:
-  scripts/gen_recipes.py            # regenerate recipes under meta-rdk-halif/
+  scripts/gen_recipes.py            # regenerate recipes
   scripts/gen_recipes.py --check    # verify recipes are up to date (no writes)
 """
 import os
@@ -38,76 +44,45 @@ import re
 import sys
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LAYER = os.path.join(REPO_ROOT, "tests", "fake-yocto", "meta-rdk-halif")
+LAYER = os.path.join(REPO_ROOT, "tests", "yocto", "meta-rdk-halif")
 RECIPES_DIR = os.path.join(LAYER, "recipes-halif")
 
 VER_RE = re.compile(r"^\d+\.\d+\.\d+\.\d+$")
+LINK_RE = re.compile(r"([a-z0-9]+)-v(\d+\.\d+\.\d+\.\d+)-cpp")
 
 
 def version_tuple(ver):
     return tuple(int(p) for p in ver.split("."))
 
 
-def parse_interface_yaml(path):
-    """Return (name, imports) where imports is [(dep_comp, dep_ver), ...].
-
-    Hand-parsed to avoid a PyYAML dependency (release tooling must run without
-    extra packages). The schema is fixed and simple:
-        aidl_interface:
-          name: <comp>
-          imports:
-            - <dep>@<X.Y.Z.W>
-            - ...
-          imports: []          # (leaf component)
-    """
-    name = None
-    imports = []
-    in_imports = False
-    with open(path) as fh:
-        for line in fh:
-            stripped = line.rstrip("\n")
-            m = re.match(r"^\s+name:\s*(\S+)\s*$", stripped)
-            if m:
-                name = m.group(1)
-                continue
-            m = re.match(r"^\s+imports:\s*(\[\s*\])?\s*$", stripped)
-            if m:
-                in_imports = True
-                continue
-            if in_imports:
-                m = re.match(r"^\s+-\s*(\S+)@(\S+)\s*$", stripped)
-                if m:
-                    imports.append((m.group(1), m.group(2)))
-                    continue
-                # A non-list, less-indented line ends the imports block.
-                if stripped and not stripped[0].isspace():
-                    in_imports = False
-                elif re.match(r"^\s+\S+:", stripped):
-                    in_imports = False
-    return name, imports
+def parse_deps(comp, ver):
+    """Return [(dep_comp, dep_ver), ...] the snapshot links, from its CMakeLists."""
+    cml = os.path.join(REPO_ROOT, comp, ver, "CMakeLists.txt")
+    deps = set()
+    with open(cml) as fh:
+        text = fh.read()
+    for block in re.findall(r"target_link_libraries\(([^)]*)\)", text):
+        for dep, dver in LINK_RE.findall(block):
+            if dep != comp:
+                deps.add((dep, dver))
+    return sorted(deps)
 
 
-def discover_latest():
-    """Map component -> (latest_version, interface_yaml_path)."""
-    latest = {}
+def discover_all():
+    """Map component -> {version: snapshot_dir} for every released snapshot."""
+    found = {}
     for comp in sorted(os.listdir(REPO_ROOT)):
         comp_dir = os.path.join(REPO_ROOT, comp)
         if not os.path.isdir(comp_dir) or comp.startswith("."):
             continue
-        versions = []
         for ver in os.listdir(comp_dir):
-            if VER_RE.match(ver) and os.path.isfile(
-                os.path.join(comp_dir, ver, "interface.yaml")
-            ):
-                versions.append(ver)
-        if not versions:
-            continue
-        top = max(versions, key=version_tuple)
-        latest[comp] = (top, os.path.join(comp_dir, top, "interface.yaml"))
-    return latest
+            snap = os.path.join(comp_dir, ver)
+            if VER_RE.match(ver) and os.path.isfile(os.path.join(snap, "CMakeLists.txt")):
+                found.setdefault(comp, {})[ver] = snap
+    return found
 
 
-HEADER = """# Auto-generated by scripts/gen_recipes.py from {rel}.
+HEADER = """# Auto-generated by scripts/gen_recipes.py for {comp}/{ver}.
 # Do not hand-edit - regenerate with: ./scripts/gen_recipes.py
 """
 
@@ -122,52 +97,60 @@ inherit rdk-halif-module
 """
 
 
-def recipe_text(comp, ver, rel, imports):
-    if imports:
+def recipe_text(comp, ver, deps):
+    if deps:
         dep_line = (
-            "\n# From {rel} imports: {raw}\nDEPENDS += \"{deps}\"\n".format(
-                rel=rel,
-                raw=", ".join("%s@%s" % (d, v) for d, v in imports),
-                deps=" ".join("rdk-halif-%s" % d for d, _ in imports),
+            "\n# Links: {raw}\nDEPENDS += \"{names}\"\n".format(
+                raw=", ".join("%s@%s" % (d, v) for d, v in deps),
+                names=" ".join("rdk-halif-%s" % d for d, _ in deps),
             )
         )
     else:
-        dep_line = "\n# No interface.yaml imports - depends only on the Binder SDK.\n"
-    return HEADER.format(rel=rel) + BODY.format(
-        comp=comp, ver=ver, depends=dep_line
-    )
+        dep_line = "\n# No sibling dependencies - links only the Binder SDK.\n"
+    return HEADER.format(comp=comp, ver=ver) + BODY.format(comp=comp, ver=ver, depends=dep_line)
+
+
+def check_consistency(found):
+    """Return a list of consistency errors (empty when clean)."""
+    errors = []
+    latest = {c: max(v, key=version_tuple) for c, v in found.items()}
+    for comp, versions in found.items():
+        for ver in versions:
+            for dep, dver in parse_deps(comp, ver):
+                if dep not in found:
+                    errors.append("%s@%s links unknown component %s" % (comp, ver, dep))
+                elif dver not in found[dep]:
+                    errors.append(
+                        "%s@%s links %s@%s but no such released snapshot exists"
+                        % (comp, ver, dep, dver)
+                    )
+                # Guard the zero-config default (BitBake picks highest PV):
+                # the latest cohort must reference the latest of each dep.
+                elif ver == latest[comp] and dver != latest[dep]:
+                    errors.append(
+                        "latest %s@%s links %s@%s but latest %s is %s "
+                        "(zero-config default cohort would be inconsistent)"
+                        % (comp, ver, dep, dver, dep, latest[dep])
+                    )
+    return errors
 
 
 def main():
     check = "--check" in sys.argv[1:]
-    latest = discover_latest()
+    found = discover_all()
 
-    # Consistency: every import must reference the latest version of its dep.
-    errors = []
-    for comp, (ver, iface) in latest.items():
-        _, imports = parse_interface_yaml(iface)
-        for dep, dver in imports:
-            if dep not in latest:
-                errors.append(
-                    "%s@%s imports unknown component %s@%s" % (comp, ver, dep, dver)
-                )
-            elif latest[dep][0] != dver:
-                errors.append(
-                    "%s@%s imports %s@%s but latest %s is %s (cohort drift)"
-                    % (comp, ver, dep, dver, dep, latest[dep][0])
-                )
+    errors = check_consistency(found)
     if errors:
-        sys.stderr.write("gen_recipes: cohort inconsistency:\n")
+        sys.stderr.write("gen_recipes: consistency errors:\n")
         for e in errors:
             sys.stderr.write("  - %s\n" % e)
         return 2
 
+    pairs = [(c, v) for c in found for v in found[c]]
     stale = []
     written = 0
-    for comp, (ver, iface) in sorted(latest.items()):
-        name, imports = parse_interface_yaml(iface)
-        rel = os.path.relpath(iface, REPO_ROOT)
-        text = recipe_text(comp, ver, rel, imports)
+    for comp, ver in sorted(pairs):
+        text = recipe_text(comp, ver, parse_deps(comp, ver))
         out_dir = os.path.join(RECIPES_DIR, "rdk-halif-%s" % comp)
         out = os.path.join(out_dir, "rdk-halif-%s_%s.bb" % (comp, ver))
         existing = open(out).read() if os.path.isfile(out) else None
@@ -184,16 +167,15 @@ def main():
 
     if check:
         if stale:
-            sys.stderr.write(
-                "gen_recipes: recipes out of date (run ./scripts/gen_recipes.py):\n"
-            )
+            sys.stderr.write("gen_recipes: recipes out of date (run ./scripts/gen_recipes.py):\n")
             for s in stale:
                 sys.stderr.write("  - %s\n" % s)
             return 1
-        print("gen_recipes: %d recipes up to date." % len(latest))
+        print("gen_recipes: %d recipes up to date." % len(pairs))
         return 0
 
-    print("gen_recipes: generated %d component recipes (%d changed)." % (len(latest), written))
+    print("gen_recipes: generated %d recipes across %d components (%d changed)."
+          % (len(pairs), len(found), written))
     return 0
 
 

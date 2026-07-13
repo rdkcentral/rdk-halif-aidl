@@ -60,7 +60,7 @@ list_tests() {
     echo "  9   Direct CMake build (minimal production flags)"
     echo "  10  CMake multi-module build with version switching"
     echo "  11  Cross-compilation build (sc docker rdk-kirkstone)"
-    echo "  12  Yocto per-component recipes (meta-rdk-halif sync + staged build)"
+    echo "  12  Yocto integration (per-component + vendor/MW version divergence)"
 }
 
 index_of_test_id() {
@@ -926,21 +926,41 @@ test_11() {
 }
 
 test_12() {
-    echo "Validating Yocto per-component integration (meta-rdk-halif)..."
+    echo "Validating Yocto integration (meta-rdk-halif + vendor/MW roles)..."
     echo ""
-    echo "==> Test 12.1: generated recipes match interface.yaml (gen_recipes.py --check)"
+    echo "==> Test 12.1: generated recipes match the snapshots (gen_recipes.py --check)"
     if ! ./scripts/gen_recipes.py --check; then
         echo "❌ meta-rdk-halif recipes are out of date - run ./scripts/gen_recipes.py"
         return 1
     fi
-    echo "✅ recipes in sync with interface.yaml imports"
+    echo "✅ recipes in sync"
     echo ""
     echo "==> Test 12.2: per-component staged inter-module build (hdmicec -> common)"
-    if ! ./tests/fake-yocto/run-fake-yocto-per-component.sh; then
+    if ! ./tests/yocto/run-yocto-per-component.sh; then
         echo "❌ per-component staged build failed"
         return 1
     fi
     echo "✅ per-component staged inter-module build OK"
+    echo ""
+    echo "==> Test 12.3: team includes match their version manifests (gen_team_conf.py --check)"
+    if ! ./scripts/gen_team_conf.py tests/yocto/meta-vendor/conf/versions_vendor.yaml \
+            --role vendor -o tests/yocto/meta-vendor/conf/halif-vendor.inc --check; then
+        echo "❌ halif-vendor.inc out of date - regenerate from versions_vendor.yaml"
+        return 1
+    fi
+    if ! ./scripts/gen_team_conf.py tests/yocto/meta-mw/conf/versions_mw.yaml \
+            --role mw -o tests/yocto/meta-mw/conf/halif-mw.inc --check; then
+        echo "❌ halif-mw.inc out of date - regenerate from versions_mw.yaml"
+        return 1
+    fi
+    echo "✅ vendor/MW includes in sync with their manifests"
+    echo ""
+    echo "==> Test 12.4: vendor vs MW build divergent cohorts (0.2.x vs 0.1.x) to separate dests"
+    if ! ./tests/yocto/run-yocto-roles.sh; then
+        echo "❌ vendor/MW divergence build failed"
+        return 1
+    fi
+    echo "✅ vendor/MW version divergence OK"
     return 0
 }
 
@@ -959,7 +979,7 @@ run_test "8" "Direct CMake build (default flags)" test_8
 run_test "9" "Direct CMake build (minimal production flags)" test_9
 run_test "10" "CMake multi-module build with version switching" test_10
 run_test "11" "Cross-compilation build (sc docker rdk-kirkstone)" test_11
-run_test "12" "Yocto per-component recipes (meta-rdk-halif sync + staged build)" test_12
+run_test "12" "Yocto integration (per-component + vendor/MW version divergence)" test_12
 
 ################################################################################
 # Summary

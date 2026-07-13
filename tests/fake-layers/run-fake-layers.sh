@@ -23,7 +23,7 @@
 # through aggregation directories (lib/, ld.so.conf.d/) of symlinks, wired for
 # dynamic linking via /etc/ld.so.conf.d/<layer>.conf + ldconfig.
 #
-# Unlike tests/fake-yocto (a single flat sysroot), this models the layered
+# Unlike tests/yocto (a single flat sysroot), this models the layered
 # filesystem and proves a consumer resolves libraries ACROSS layers through the
 # ld.so.conf.d aggregation — the MW layer provides the binder runtime + HAL
 # interface libs, and a vendor-layer library links a HAL lib from the MW layer.
