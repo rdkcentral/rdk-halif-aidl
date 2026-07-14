@@ -29,7 +29,8 @@ Usage:
       --versions  a versions manifest (components: {comp: ver}) pinning versions
       --closure   expand each component to its transitive dependencies (so a
                   single component becomes a buildable set)
-  halif_plan.py            # all components, each at its latest
+  halif_plan.py --versions m.yaml   # the manifest's components, at its versions
+  halif_plan.py                     # all discovered components, each at latest
 
 Output: one "<comp> <ver>" line per component, dependencies first. Exits non-zero
 if a selected component links a sibling that is not in the selection (the set
@@ -113,7 +114,14 @@ def main(argv):
             pins = parse_versions(argv[1])
             argv = argv[2:]
 
-    items = argv or all_components()
+    # Component set: explicit args win; else the manifest's components (so a
+    # versions manifest drives what is built); else every discovered component.
+    if argv:
+        items = argv
+    elif pins:
+        items = sorted(pins)
+    else:
+        items = all_components()
     sel = {}
     for item in items:
         comp, _, ver = item.partition(":")
