@@ -942,12 +942,12 @@ test_12() {
     fi
     echo "✅ per-component staged inter-module build OK"
     echo ""
-    echo "==> Test 12.3: vendor + MW build the full HAL to separate dests (+ version-pinning capability)"
-    if ! ./tests/yocto/run-yocto-roles.sh; then
-        echo "❌ vendor/MW full-HAL build failed"
+    echo "==> Test 12.3: vendor example builds the full HAL from versions_released.yaml"
+    if ! ./tests/yocto/yocto_build_vendor.sh; then
+        echo "❌ yocto_build_vendor (full-HAL build) failed"
         return 1
     fi
-    echo "✅ vendor/MW full-HAL builds OK"
+    echo "✅ vendor example built the full HAL from the released cohort"
     return 0
 }
 

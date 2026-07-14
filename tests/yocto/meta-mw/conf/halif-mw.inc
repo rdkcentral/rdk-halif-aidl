@@ -24,10 +24,8 @@ HALIF_ROLE = "mw"
 HALIF_LIBDIR = "${libdir}/halif"
 HALIF_INCDIR = "${includedir}/halif"
 
-# HALIF_COMPONENTS is left at its default - the full component list - so this
-# configuration builds EVERY HAL, each at its latest released version.
-#
-# To pin specific versions, set HALIF_VERSIONS_FILE to a manifest. Note that
-# pinning an older *base* component (e.g. common) constrains the build to that
-# version's closure - you cannot build the full set on an older common - so a
-# whole-HAL build stays on the latest cohort.
+# HALIF_COMPONENTS is left at its default (the full component list) and
+# HALIF_VERSIONS_FILE defaults to the source's versions_released.yaml, so this
+# configuration builds EVERY HAL at its released version - identical to the
+# vendor build but installed to the MW destination. Point HALIF_VERSIONS_FILE at
+# another manifest to build a different cohort.

@@ -36,7 +36,7 @@ stages each component's lib + headers for its dependents, and installs to
 
 The sibling **`meta-vendor`** and **`meta-mw`** example layers both build the
 full HAL at latest, differing only by role + destination;
-`meta-vendor/conf/versions_vendor.yaml` shows the optional pinning-manifest
+the versions manifest defaults to the released cohort (`versions_released.yaml`);
 format.
 
 ## Layout
@@ -60,5 +60,5 @@ hand-written and consumed directly):
 
 The build contract is exercised offline, without BitBake, by
 `tests/yocto/run-yocto-per-component.sh` (per-component staging) and
-`tests/yocto/run-yocto-roles.sh` (vendor + MW full-HAL builds + version pinning). See
+`tests/yocto/yocto_build_vendor.sh` / `yocto_build_mw.sh` (full-HAL example builds). See
 `docs/standards/build_integration.md` for the full integration contract.

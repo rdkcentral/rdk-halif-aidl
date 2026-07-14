@@ -23,11 +23,11 @@
 # A build configuration controls this with variables (see the meta-vendor /
 # meta-mw example includes):
 #   HALIF_COMPONENTS        components to build   (default: all, from the .inc)
-#   HALIF_VERSIONS_FILE     versions manifest     (default: none -> all latest)
+#   HALIF_VERSIONS_FILE     versions manifest     (default: versions_released.yaml)
 #   HALIF_ROLE              vendor | mw           (labels who is building)
 #   HALIF_LIBDIR/INCDIR     install destinations  (default: ${libdir}/halif etc.)
 #
-# The offline contract test tests/yocto/run-yocto-roles.sh exercises the same
+# The offline contract test tests/yocto/yocto_build_*.sh exercise the same
 # build loop without BitBake. This is reference material - adapt SRCREV and the
 # toolchain to your project.
 
@@ -53,11 +53,12 @@ HALIF_ROLE ??= "vendor"
 HALIF_LIBDIR ??= "${libdir}/halif"
 HALIF_INCDIR ??= "${includedir}/halif"
 
-# Optional versions manifest (components: {comp: ver}). A build configuration
-# points this at its versions_<team>.yaml; components it does not pin build their
-# latest released snapshot. The manifest is consumed directly - there is no
-# generated per-config include.
-HALIF_VERSIONS_FILE ??= ""
+# Versions manifest (components: {comp: ver}), consumed directly. Defaults to the
+# source's own versions_released.yaml - the released cohort - so a plain build
+# produces the released versions. A configuration may point this at another
+# manifest; components it does not pin build their latest snapshot. Set it empty
+# to build every component at latest.
+HALIF_VERSIONS_FILE ??= "${S}/versions_released.yaml"
 
 inherit cmake
 

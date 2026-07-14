@@ -136,11 +136,13 @@ role, the destinations, and (optionally) a versions manifest:
 # meta-vendor/conf/halif-vendor.inc, required from local.conf / distro
 HALIF_ROLE = "vendor"
 HALIF_LIBDIR = "${libdir}/halif"
-# HALIF_COMPONENTS left at default → builds every HAL at latest.
-# To pin instead: HALIF_VERSIONS_FILE = "${THISDIR}/versions_vendor.yaml"
+# HALIF_COMPONENTS + HALIF_VERSIONS_FILE left at default →
+# builds every HAL from the source's versions_released.yaml (the released cohort).
 ```
 
-The `tests/yocto/meta-vendor` and `meta-mw` examples both build the full HAL set
-at latest, differing only by role + destination; `versions_vendor.yaml` shows the
-pinning-manifest format. `tests/yocto/run-yocto-roles.sh` builds the full cohort
-offline, installs it to each role's destination, and exercises version pinning.
+The `tests/yocto/meta-vendor` and `meta-mw` examples both build the full HAL from
+`versions_released.yaml`, differing only by role + destination. The offline
+example builds `tests/yocto/yocto_build_vendor.sh` and `yocto_build_mw.sh`
+(wrappers over `yocto_build.sh <role> [manifest]`) do the same without BitBake —
+each takes the versions manifest as an argument, defaulting to the repo's
+`versions_released.yaml`.
