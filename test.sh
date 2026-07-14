@@ -45,7 +45,7 @@ usage() {
     echo "  --help       Show this help"
 }
 
-TEST_IDS=("1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "12")
+TEST_IDS=("1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "12" "13")
 
 list_tests() {
     echo "Available tests:"
@@ -61,6 +61,7 @@ list_tests() {
     echo "  10  CMake multi-module build with version switching"
     echo "  11  Cross-compilation build (sc docker rdk-kirkstone)"
     echo "  12  Yocto integration (per-component + vendor/MW full-HAL builds)"
+    echo "  13  Each component builds individually (fresh sysroot per component)"
 }
 
 index_of_test_id() {
@@ -951,6 +952,17 @@ test_12() {
     return 0
 }
 
+test_13() {
+    echo "Building every released component individually (fresh sysroot each)..."
+    echo "Proves each <comp>/<version>/CMakeLists.txt builds on its own."
+    echo ""
+    if ! ./tests/yocto/yocto_build_each.sh; then
+        echo "❌ a component failed to build individually"
+        return 1
+    fi
+    return 0
+}
+
 ################################################################################
 # Run Tests
 ################################################################################
@@ -967,6 +979,7 @@ run_test "9" "Direct CMake build (minimal production flags)" test_9
 run_test "10" "CMake multi-module build with version switching" test_10
 run_test "11" "Cross-compilation build (sc docker rdk-kirkstone)" test_11
 run_test "12" "Yocto integration (per-component + vendor/MW full-HAL builds)" test_12
+run_test "13" "Each component builds individually (fresh sysroot per component)" test_13
 
 ################################################################################
 # Summary

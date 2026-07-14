@@ -63,24 +63,27 @@ fail() { echo ""; echo "❌ yocto_build(${ROLE}) FAILED: $1"; exit 1; }
 
 echo "========================================="
 echo "  yocto_build: ${ROLE} HAL"
-echo "  versions:    $(basename "${VERSIONS}")"
-echo "  destination: ${DEST}"
+echo "  versions manifest: ${VERSIONS}"
+echo "  destination:       ${DEST}"
 echo "========================================="
 
+# --- resolve the build order at the manifest's versions, and state it upfront ---
+PLAN="$("${REPO_ROOT}/scripts/halif_plan.py" --versions "${VERSIONS}")" \
+    || fail "halif_plan.py --versions ${VERSIONS}"
+N=$(printf '%s\n' "${PLAN}" | grep -c .)
+echo ""
+echo "[plan] ${N} components to build, versions read from ${VERSIONS} (dependency order):"
+printf '%s\n' "${PLAN}" | awk 'NF{printf "         %s@%s\n", $1, $2}'
+echo ""
+
 # --- linux-binder: stage the Binder SDK (flat sysroot, no .sdk_ready marker) ---
+echo "[linux-binder] staging Binder SDK ..."
 if [ ! -f "${REPO_ROOT}/out/target/.sdk_ready" ]; then
     ./build_binder.sh > "${WORK}/build_binder.log" 2>&1 || fail "build_binder.sh"
 fi
 mkdir -p "${SDK}/include" "${SDK}/lib"
 cp -r "${REPO_ROOT}/out/build/include/binder_sdk" "${SDK}/include/" || fail "binder headers"
 cp -r "${REPO_ROOT}/out/target/lib/binder"        "${SDK}/lib/"     || fail "binder libs"
-
-# --- resolve the build order at the manifest's versions ---
-PLAN="$("${REPO_ROOT}/scripts/halif_plan.py" --versions "${VERSIONS}")" \
-    || fail "halif_plan.py --versions ${VERSIONS}"
-N=$(printf '%s\n' "${PLAN}" | grep -c .)
-echo ""
-echo "[plan] ${N} components in dependency order"
 
 # --- build each component against the SDK + already-built siblings ---
 while read -r comp ver; do

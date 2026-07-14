@@ -41,8 +41,13 @@ the production per-component CMake path is exercised offline.
   repo's `versions_released.yaml`), installed to the role's destination. Thin
   wrappers over **`yocto_build.sh <role> [manifest]`**.
 
-**Test:**
+**Tests:**
 
+- **`yocto_build_each.sh`** — builds **every** released component **individually**:
+  each component's dependency closure in a fresh sysroot, verify its library, then
+  remove the output before the next. Proves each `<comp>/<version>/CMakeLists.txt`
+  builds on its own (the cohort on the branch, e.g. `release/0.22.0`) — not only as
+  part of one cumulative build. (`test.sh` Test 13.)
 - **`yocto_staging_check.sh`** — builds `hdmicec → common` from the self-contained
   `<module>/<version>/CMakeLists.txt`, with a negative control proving the
   inter-module dependency staging is required (the regression from #661).

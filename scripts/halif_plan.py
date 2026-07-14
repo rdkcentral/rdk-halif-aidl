@@ -23,10 +23,12 @@ components in one pass; this prints the order to build them so each component's
 sibling dependencies are built first.
 
 Usage:
-  halif_plan.py [--versions <manifest.yaml>] <comp[:ver]> ...
+  halif_plan.py [--closure] [--versions <manifest.yaml>] <comp[:ver]> ...
       comp        build the component (version from --versions, else the latest)
       comp:ver    build the given version (overrides --versions)
       --versions  a versions manifest (components: {comp: ver}) pinning versions
+      --closure   expand each component to its transitive dependencies (so a
+                  single component becomes a buildable set)
   halif_plan.py            # all components, each at its latest
 
 Output: one "<comp> <ver>" line per component, dependencies first. Exits non-zero
@@ -99,12 +101,17 @@ def parse_versions(path):
 
 def main(argv):
     pins = {}
-    if argv and argv[0] == "--versions":
-        if len(argv) < 2:
-            sys.stderr.write("halif_plan: --versions needs a manifest path\n")
-            return 2
-        pins = parse_versions(argv[1])
-        argv = argv[2:]
+    closure = False
+    while argv and argv[0] in ("--versions", "--closure"):
+        if argv[0] == "--closure":
+            closure = True
+            argv = argv[1:]
+        else:  # --versions
+            if len(argv) < 2:
+                sys.stderr.write("halif_plan: --versions needs a manifest path\n")
+                return 2
+            pins = parse_versions(argv[1])
+            argv = argv[2:]
 
     items = argv or all_components()
     sel = {}
@@ -120,6 +127,24 @@ def main(argv):
             sys.stderr.write("halif_plan: %s@%s is not a released snapshot\n" % (comp, ver))
             return 2
         sel[comp] = ver
+
+    # --closure: pull in each selected component's transitive dependencies at
+    # their exact linked versions, so a single component expands to a buildable
+    # set. (Without it a non-closure selection is an error, below.)
+    if closure:
+        queue = list(sel.items())
+        while queue:
+            c, v = queue.pop()
+            for dep, dver in links(c, v).items():
+                if dep not in sel:
+                    sel[dep] = dver
+                    queue.append((dep, dver))
+                elif sel[dep] != dver:
+                    sys.stderr.write(
+                        "halif_plan: closure conflict - %s@%s links %s@%s but %s is "
+                        "already at %s\n" % (c, v, dep, dver, dep, sel[dep])
+                    )
+                    return 2
 
     # Build the dependency graph within the selection and Kahn-sort it.
     edges = {c: set() for c in sel}       # c depends on edges[c]
