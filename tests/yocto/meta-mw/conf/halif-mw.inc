@@ -19,16 +19,15 @@
 # EXAMPLE build-configuration include for the middleware build. Require it from
 # your local.conf / distro:
 #   require ${TOPDIR}/../rdk-halif-aidl/tests/yocto/meta-mw/conf/halif-mw.inc
-#
-# Deliberately pins an OLDER cohort than the vendor example (0.1.x vs 0.2.x) to
-# show the two configurations diverging from the same rdk-halif recipe.
 
 HALIF_ROLE = "mw"
 HALIF_LIBDIR = "${libdir}/halif"
 HALIF_INCDIR = "${includedir}/halif"
 
-# Pinning a base component (common) to an older version constrains the set to
-# that version's closure, so this configuration builds the compatible subset.
-HALIF_COMPONENTS = "avclock common"
-
-HALIF_VERSIONS_FILE = "${THISDIR}/versions_mw.yaml"
+# HALIF_COMPONENTS is left at its default - the full component list - so this
+# configuration builds EVERY HAL, each at its latest released version.
+#
+# To pin specific versions, set HALIF_VERSIONS_FILE to a manifest. Note that
+# pinning an older *base* component (e.g. common) constrains the build to that
+# version's closure - you cannot build the full set on an older common - so a
+# whole-HAL build stays on the latest cohort.

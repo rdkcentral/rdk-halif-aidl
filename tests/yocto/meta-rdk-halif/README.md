@@ -27,17 +27,17 @@ commit for reproducible builds.
 ## One recipe, driven by variables
 
 The recipe builds the components in **`HALIF_COMPONENTS`** (default: every
-released component, from the generated `halif-components.inc`), each at
-the version pins in HALIF_VERSIONS_FILE (unpinned: latest). It resolves the build
-order with `scripts/halif_plan.py`, stages each component's lib + headers for its
-dependents, and installs to `HALIF_LIBDIR` / `HALIF_INCDIR` (overridable), tagged
-by `HALIF_ROLE` (`vendor` | `mw`).
+released component, from the generated `halif-components.inc`), each at its
+latest snapshot — or at the versions in **`HALIF_VERSIONS_FILE`** if a
+configuration pins some. It resolves the build order with `scripts/halif_plan.py`,
+stages each component's lib + headers for its dependents, and installs to
+`HALIF_LIBDIR` / `HALIF_INCDIR` (overridable), tagged by `HALIF_ROLE`
+(`vendor` | `mw`).
 
-A build configuration sets the role, the destinations, and a
-`HALIF_VERSIONS_FILE` pointing at its `versions_<team>.yaml` (consumed directly —
-no generated per-config include). The sibling **`meta-vendor`** and **`meta-mw`**
-example layers pin divergent cohorts (0.2.x vs 0.1.x) that way, from the *same*
-recipe.
+The sibling **`meta-vendor`** and **`meta-mw`** example layers both build the
+full HAL at latest, differing only by role + destination;
+`meta-vendor/conf/versions_vendor.yaml` shows the optional pinning-manifest
+format.
 
 ## Layout
 
@@ -60,5 +60,5 @@ hand-written and consumed directly):
 
 The build contract is exercised offline, without BitBake, by
 `tests/yocto/run-yocto-per-component.sh` (per-component staging) and
-`tests/yocto/run-yocto-roles.sh` (vendor/MW version divergence). See
+`tests/yocto/run-yocto-roles.sh` (vendor + MW full-HAL builds + version pinning). See
 `docs/standards/build_integration.md` for the full integration contract.

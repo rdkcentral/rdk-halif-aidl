@@ -24,10 +24,11 @@ HALIF_ROLE = "vendor"
 HALIF_LIBDIR = "${libdir}/halif"
 HALIF_INCDIR = "${includedir}/halif"
 
-# HALIF_COMPONENTS defaults to the full component list (halif-components.inc);
-# leave it unset to build every HAL. This example subsets it to the components
-# that have divergent versions, purely to show vendor/MW divergence concisely.
-HALIF_COMPONENTS = "avclock common"
-
-# Versions consumed directly from the manifest; unlisted components build latest.
-HALIF_VERSIONS_FILE = "${THISDIR}/versions_vendor.yaml"
+# HALIF_COMPONENTS is left at its default - the full component list - so this
+# configuration builds EVERY HAL at its latest released version.
+#
+# To pin specific versions instead of latest, point HALIF_VERSIONS_FILE at a
+# manifest (see versions_vendor.yaml for the format). Note that pinning an older
+# base component (e.g. common) constrains the build to that version's closure, so
+# a whole-HAL build stays on the latest cohort:
+#   HALIF_VERSIONS_FILE = "${THISDIR}/versions_vendor.yaml"

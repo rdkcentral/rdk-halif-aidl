@@ -60,7 +60,7 @@ list_tests() {
     echo "  9   Direct CMake build (minimal production flags)"
     echo "  10  CMake multi-module build with version switching"
     echo "  11  Cross-compilation build (sc docker rdk-kirkstone)"
-    echo "  12  Yocto integration (per-component + vendor/MW version divergence)"
+    echo "  12  Yocto integration (per-component + vendor/MW full-HAL builds)"
 }
 
 index_of_test_id() {
@@ -942,12 +942,12 @@ test_12() {
     fi
     echo "✅ per-component staged inter-module build OK"
     echo ""
-    echo "==> Test 12.3: vendor vs MW build divergent cohorts (0.2.x vs 0.1.x) to separate dests"
+    echo "==> Test 12.3: vendor + MW build the full HAL to separate dests (+ version-pinning capability)"
     if ! ./tests/yocto/run-yocto-roles.sh; then
-        echo "❌ vendor/MW divergence build failed"
+        echo "❌ vendor/MW full-HAL build failed"
         return 1
     fi
-    echo "✅ vendor/MW version divergence OK"
+    echo "✅ vendor/MW full-HAL builds OK"
     return 0
 }
 
@@ -966,7 +966,7 @@ run_test "8" "Direct CMake build (default flags)" test_8
 run_test "9" "Direct CMake build (minimal production flags)" test_9
 run_test "10" "CMake multi-module build with version switching" test_10
 run_test "11" "Cross-compilation build (sc docker rdk-kirkstone)" test_11
-run_test "12" "Yocto integration (per-component + vendor/MW version divergence)" test_12
+run_test "12" "Yocto integration (per-component + vendor/MW full-HAL builds)" test_12
 
 ################################################################################
 # Summary

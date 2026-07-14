@@ -16,12 +16,13 @@
 # * SPDX-License-Identifier: Apache-2.0
 # */
 
-# versions_vendor.yaml - EXAMPLE version pins for the vendor build configuration.
-# The rdk-halif recipe consumes this directly (via HALIF_VERSIONS_FILE); a
-# component listed here builds the pinned version, anything else builds its
-# latest. The selected set must be a consistent closure (a component's linked
-# dependencies are pinned at the exact linked version); halif_plan.py enforces
-# this at build time.
+# versions_vendor.yaml - EXAMPLE version-pins manifest, showing the format the
+# rdk-halif recipe consumes via HALIF_VERSIONS_FILE. By default the vendor build
+# leaves this unset and builds every component at latest; set HALIF_VERSIONS_FILE
+# to a manifest like this to pin specific versions instead. A component listed
+# here builds the pinned version, anything else builds its latest. The selected
+# set must be a consistent closure (a component's linked dependencies pinned at
+# the exact linked version); halif_plan.py enforces this at build time.
 
 components:
   common: 0.2.0.0

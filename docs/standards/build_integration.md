@@ -109,35 +109,38 @@ staging each component's lib + headers into a shared prefix before building its
 dependents. `build_modules.sh` implements the same ordering for the developer
 tree, and the `rdk-halif` recipe's `do_compile` does it for BitBake.
 
-## Version selection and the vendor / middleware split
+## Component selection, versions, and the vendor / middleware split
 
 The interface libraries are consumed by two build configurations — the **vendor**
-layer that implements the HAL, and the **middleware (MW)** that calls it. They
-build from the *same* `rdk-halif` recipe but select their own component versions,
-and those selections diverge over time.
-
-Two separate knobs:
+layer that implements the HAL, and the **middleware (MW)** that calls it. Both
+build from the *same* `rdk-halif` recipe, to their own destinations, via two
+knobs:
 
 - **Which components** — `HALIF_COMPONENTS`, defaulting to the full list from the
-  generated `halif-components.inc`. Leave it to build every HAL, or set a subset.
-  The recipe splits the output into one package per component (`rdk-halif-<comp>`).
-- **Which version** — a **versions manifest** (`components: {comp: ver}`, same
-  schema as `versions_released.yaml`) that the recipe **consumes directly** via
-  `HALIF_VERSIONS_FILE`. A pinned component builds that version; anything else
-  builds its latest. `halif_plan.py` resolves the build order and rejects an
-  inconsistent set (a component's linked dependencies must be pinned at the exact
-  linked version). With nothing pinned, the full latest cohort builds.
+  generated `halif-components.inc` (every buildable released component;
+  `broadcast` is absent because it has no released snapshot). Leave it at the
+  default to build **every HAL**, or set a subset. The recipe splits the output
+  into one package per component (`rdk-halif-<comp>`).
+- **Which version** — every component builds its **latest** released snapshot by
+  default. To pin specific versions, point `HALIF_VERSIONS_FILE` at a manifest
+  (`components: {comp: ver}`, same schema as `versions_released.yaml`); the recipe
+  **consumes it directly**. `halif_plan.py` resolves the build order and rejects
+  an inconsistent set — a component's linked dependencies must be pinned at the
+  exact linked version, so pinning an older *base* component (e.g. `common`)
+  constrains the build to that version's closure.
 
-There is no generated per-config include — the manifest is the single source. A
-build configuration just sets the role, the destinations, and the manifest path:
+There is no generated per-config include — a build configuration just sets the
+role, the destinations, and (optionally) a versions manifest:
 
 ```bitbake
 # meta-vendor/conf/halif-vendor.inc, required from local.conf / distro
 HALIF_ROLE = "vendor"
-HALIF_VERSIONS_FILE = "${THISDIR}/versions_vendor.yaml"
+HALIF_LIBDIR = "${libdir}/halif"
+# HALIF_COMPONENTS left at default → builds every HAL at latest.
+# To pin instead: HALIF_VERSIONS_FILE = "${THISDIR}/versions_vendor.yaml"
 ```
 
-Two worked examples ship under `tests/yocto/` — `meta-vendor` (0.2.x) and
-`meta-mw` (0.1.x). They diverge simply by pointing at different manifests;
-`tests/yocto/run-yocto-roles.sh` builds both offline to prove they stay
-independent.
+The `tests/yocto/meta-vendor` and `meta-mw` examples both build the full HAL set
+at latest, differing only by role + destination; `versions_vendor.yaml` shows the
+pinning-manifest format. `tests/yocto/run-yocto-roles.sh` builds the full cohort
+offline, installs it to each role's destination, and exercises version pinning.
