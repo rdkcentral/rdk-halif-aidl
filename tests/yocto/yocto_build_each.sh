@@ -91,15 +91,20 @@ for pair in "${PAIRS[@]}"; do
     stage="${ROOT}/stage/usr"
     # this component's dependency closure (dependencies first, component last)
     cplan="$("${REPO_ROOT}/scripts/halif_plan.py" --closure --versions "${VERSIONS}" "${comp}")" \
-        || { echo "  ✗ ${comp}@${ver}  (could not resolve closure)"; failed="${failed} ${comp}"; continue; }
-    nclosure=$(printf '%s\n' "${cplan}" | grep -c .)
+        || { echo "  ✗ ${comp}@${ver}  (could not resolve dependencies)"; failed="${failed} ${comp}"; continue; }
+    # the component's dependencies = the closure minus the component itself
+    deps="$(printf '%s\n' "${cplan}" | awk -v c="${comp}" 'NF && $1 != c {printf "%s@%s ", $1, $2}')"
     ok=true
     while read -r c v; do
         [ -z "${c}" ] && continue
         build_into "${stage}" "${c}" "${v}" || { ok=false; break; }
     done <<< "${cplan}"
     if ${ok} && [ -f "${stage}/lib/halif/lib${comp}-v${ver}-cpp.so" ]; then
-        echo "  ✓ ${comp}@${ver}  (built individually; closure of ${nclosure})"
+        if [ -n "${deps}" ]; then
+            echo "  ✓ ${comp}@${ver}  (deps built first: ${deps% })"
+        else
+            echo "  ✓ ${comp}@${ver}  (no dependencies)"
+        fi
         pass=$((pass + 1))
     else
         echo "  ✗ ${comp}@${ver}  FAILED"
