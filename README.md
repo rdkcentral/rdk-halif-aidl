@@ -276,7 +276,7 @@ full consumer/integrator build contract.
 - **[docs/standards/build_integration.md](docs/standards/build_integration.md)** - Consumer/integrator build contract: direct-CMake switches, required variables, reference BitBake/Bob recipes
 
 - **[tests/README.md](tests/README.md)** - On-demand build verification
-  - `tests/smoke_test.sh` - exercises the `all`, `manifest` and per-version build paths
+  - `tests/smoke/smoke_test.sh` - exercises the `all`, `manifest` and per-version build paths
   - `tests/yocto/` - emulates the Yocto production build offline
 
 ## Copyright and License
