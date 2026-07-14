@@ -935,8 +935,8 @@ test_12() {
     fi
     echo "✅ component list in sync"
     echo ""
-    echo "==> Test 12.2: per-component staged inter-module build (hdmicec -> common)"
-    if ! ./tests/yocto/run-yocto-per-component.sh; then
+    echo "==> Test 12.2: inter-module staging check (hdmicec -> common + negative control)"
+    if ! ./tests/yocto/yocto_staging_check.sh; then
         echo "❌ per-component staged build failed"
         return 1
     fi

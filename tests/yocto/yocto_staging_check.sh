@@ -20,15 +20,8 @@
 # *
 #** ******************************************************************************
 #
-# run-yocto-per-component.sh - emulate a REAL per-component Yocto build of
-# the released HAL snapshots, the way the generated meta-rdk-halif recipes do.
-#
-# This is the honest counterpart to run-yocto.sh. That script drives the
-# top-level CMake and passes only because it runs in a dev tree where the codegen
-# toolchain is present - so it cannot catch the failure a real integrator hits.
-# The top-level path runs the AIDL codegen toolchain (aidl_ops.py), which a
-# production host does not have, so it is not viable there (#661); the supported
-# production path is per component.
+# yocto_staging_check.sh - verify the inter-module dependency STAGING contract of
+# the per-component Yocto build, the way the rdk-halif recipe does it.
 #
 # The supported production path is PER COMPONENT: each released snapshot is
 # built from its self-contained <comp>/<ver>/CMakeLists.txt against the staged
@@ -45,7 +38,7 @@
 #                      SUCCEED and produce libhdmicec-v0.1.0.0-cpp.so.
 #
 # Usage:
-#   ./tests/yocto/run-yocto-per-component.sh [--keep]
+#   ./tests/yocto/yocto_staging_check.sh [--keep]
 #       --keep   do not delete the work directory on exit
 #
 set -uo pipefail
@@ -70,10 +63,10 @@ HALIF_INCS="${SYSROOT}/include/halif"    # dependents look under here for <dep>/
 cleanup() { [ "${KEEP}" = true ] || rm -rf "${WORK}"; }
 trap cleanup EXIT
 
-fail() { echo ""; echo "❌ YOCTO(per-component) FAILED: $1"; exit 1; }
+fail() { echo ""; echo "❌ YOCTO-STAGING-CHECK FAILED: $1"; exit 1; }
 
 echo "========================================="
-echo "  yocto: per-component staged build"
+echo "  yocto: inter-module staging check"
 echo "  ${MOD_COMP}@${MOD_VER} -> ${DEP_COMP}@${DEP_VER}"
 echo "  work dir: ${WORK}"
 echo "========================================="

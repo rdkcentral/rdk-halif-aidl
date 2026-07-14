@@ -59,6 +59,6 @@ hand-written and consumed directly):
 ```
 
 The build contract is exercised offline, without BitBake, by
-`tests/yocto/run-yocto-per-component.sh` (per-component staging) and
+`tests/yocto/yocto_staging_check.sh` (per-component staging) and
 `tests/yocto/yocto_build_vendor.sh` / `yocto_build_mw.sh` (full-HAL example builds). See
 `docs/standards/build_integration.md` for the full integration contract.

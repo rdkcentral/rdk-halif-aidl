@@ -32,18 +32,21 @@ automatically by `build_modules.sh` if missing.
 ## `yocto/`
 
 Emulates the Yocto/BitBake **build** integration **without** a real BitBake, so
-the production per-component CMake path is exercised offline. Three scripts:
+the production per-component CMake path is exercised offline.
 
-- **`yocto_build_vendor.sh`** / **`yocto_build_mw.sh`** — example builds of the
-  **full** HAL for the vendor / MW role, from a versions manifest passed in
-  (default: the repo's `versions_released.yaml`), installed to the role's
-  destination. Both are thin wrappers over **`yocto_build.sh <role> [manifest]`**.
-- **`run-yocto-per-component.sh`** — builds a single pair
-  (`hdmicec → common`) from its self-contained `<module>/<version>/CMakeLists.txt`,
-  with a negative control proving the inter-module dependency staging is required.
-- **`run-yocto.sh`** — the top-level-CMake smoke against a flat staged SDK
-  (developer/codegen path). `--keep` preserves the work directory.
+**Builds** (examples an integrator can run):
 
-`hal-aidl.bb.sample` is a reference recipe. The consumable reference layer is
-`yocto/meta-rdk-halif/` (see `docs/standards/build_integration.md`); `run-yocto-*.sh`
-exercise the contract those recipes implement.
+- **`yocto_build_vendor.sh`** / **`yocto_build_mw.sh`** — build the **full** HAL
+  for the vendor / MW role, from a versions manifest passed in (default: the
+  repo's `versions_released.yaml`), installed to the role's destination. Thin
+  wrappers over **`yocto_build.sh <role> [manifest]`**.
+
+**Test:**
+
+- **`yocto_staging_check.sh`** — builds `hdmicec → common` from the self-contained
+  `<module>/<version>/CMakeLists.txt`, with a negative control proving the
+  inter-module dependency staging is required (the regression from #661).
+
+The consumable BitBake reference layer is `yocto/meta-rdk-halif/` (see
+`docs/standards/build_integration.md`); the scripts above exercise the contract
+its `rdk-halif` recipe implements.

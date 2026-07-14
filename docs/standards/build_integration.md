@@ -70,7 +70,7 @@ cmake --install build/<module> --prefix <sysroot>   # stages lib<module>-v<ver>-
 The module `install()` rule stages the `.so` under `lib/halif`. A dependent also
 needs the dependency's **headers**, so a complete stage additionally copies the
 snapshot's `include/` tree to `<sysroot>/include/halif/<module>/<version>/
-include`. `tests/yocto/run-yocto-per-component.sh` exercises this exact
+include`. `tests/yocto/yocto_staging_check.sh` exercises this exact
 contract offline (build `common` → stage → build `hdmicec` against it) and is the
 executable reference for a recipe.
 
