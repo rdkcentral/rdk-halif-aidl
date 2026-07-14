@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| **Generated** | 2026-07-10 |
-| **Components** | 30 |
-| 🟢 **GREEN** | 18 |
+| **Generated** | 2026-07-14 |
+| **Components** | 31 |
+| 🟢 **GREEN** | 19 |
 | 🟡 **AMBER** | 12 |
 | 🔴 **RED** | 0 |
 
@@ -14,7 +14,7 @@
 
 | Status | Count | Meaning |
 |--------|-------|---------|
-| 🟢 GREEN | **18** | Reviewed & Approved — Interface stable on develop |
+| 🟢 GREEN | **19** | Reviewed & Approved — Interface stable on develop |
 | 🟡 AMBER | **12** | Under Active Ingestion — Will enter sprint review when ready |
 | 🔴 RED | **0** | Not Started / Blocked — Strategy or definition required |
 
@@ -49,7 +49,8 @@
 | 🟢 | deviceinfo | 0.1.0.0 | Device information and platform capability reporting | 4/4 | Architecture + Kernel_Architecture |
 | 🟢 | firmwareupdate | 0.2.0.0 | Update lifecycle for multiple firmware types at multiple locations across the system | 1/4 | Architecture + Kernel_Architecture |
 | 🟢 | indicator | 0.1.0.0 | LED and visual indicator state management | 4/4 | Architecture + Graphics_Architecture |
-| 🟢 | sensor | 0.2.0.0 | Hardware sensor data acquisition and monitoring | 4/4 | Architecture + Kernel_Architecture |
+| 🟢 | sensor/motion | 0.2.0.0 | Hardware sensor data acquisition and monitoring | 4/4 | Architecture + Kernel_Architecture |
+| 🟢 | sensor/thermal | 0.2.0.0 | Hardware sensor data acquisition and monitoring | 4/4 | Architecture + Kernel_Architecture |
 
 
 ---
@@ -143,7 +144,8 @@
 | 🟢 | deviceinfo | 4/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
 | 🟢 | firmwareupdate | 1/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ✅ |
 | 🟢 | indicator | 4/4 | ✅ | ✅ | N/A | N/A | N/A | ✅ | N/A | N/A | ✅ |
-| 🟢 | sensor | 4/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
+| 🟢 | sensor/motion | 4/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
+| 🟢 | sensor/thermal | 4/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
 
 ### OEM — 🟡 AMBER
 
