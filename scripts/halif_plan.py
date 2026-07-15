@@ -62,9 +62,9 @@ def released_versions(comp):
 
 def all_components():
     comps = []
-    for c in sorted(os.listdir(REPO_ROOT)):
-        if not c.startswith(".") and os.path.isdir(os.path.join(REPO_ROOT, c)) and released_versions(c):
-            comps.append(c)
+    for comp in sorted(os.listdir(REPO_ROOT)):
+        if not comp.startswith(".") and os.path.isdir(os.path.join(REPO_ROOT, comp)) and released_versions(comp):
+            comps.append(comp)
     return comps
 
 
@@ -142,20 +142,20 @@ def main(argv):
     if closure:
         queue = list(sel.items())
         while queue:
-            c, v = queue.pop()
-            for dep, dver in links(c, v).items():
+            comp, ver = queue.pop()
+            for dep, dver in links(comp, ver).items():
                 if dep not in sel:
                     sel[dep] = dver
                     queue.append((dep, dver))
                 elif sel[dep] != dver:
                     sys.stderr.write(
                         "halif_plan: closure conflict - %s@%s links %s@%s but %s is "
-                        "already at %s\n" % (c, v, dep, dver, dep, sel[dep])
+                        "already at %s\n" % (comp, ver, dep, dver, dep, sel[dep])
                     )
                     return 2
 
     # Build the dependency graph within the selection and Kahn-sort it.
-    edges = {c: set() for c in sel}       # c depends on edges[c]
+    edges = {comp: set() for comp in sel}  # comp depends on edges[comp]
     for comp, ver in sel.items():
         for dep, dver in links(comp, ver).items():
             if dep not in sel:
@@ -173,14 +173,14 @@ def main(argv):
             edges[comp].add(dep)
 
     order = []
-    ready = sorted(c for c in sel if not edges[c])
-    indeg = {c: set(edges[c]) for c in sel}
+    ready = sorted(comp for comp in sel if not edges[comp])
+    indeg = {comp: set(edges[comp]) for comp in sel}
     while ready:
-        c = ready.pop(0)
-        order.append(c)
+        comp = ready.pop(0)
+        order.append(comp)
         for other in sorted(sel):
-            if c in indeg[other]:
-                indeg[other].discard(c)
+            if comp in indeg[other]:
+                indeg[other].discard(comp)
                 if not indeg[other]:
                     ready.append(other)
         ready.sort()
@@ -189,8 +189,8 @@ def main(argv):
                          % ", ".join(sorted(set(sel) - set(order))))
         return 2
 
-    for c in order:
-        print("%s %s" % (c, sel[c]))
+    for comp in order:
+        print("%s %s" % (comp, sel[comp]))
     return 0
 
 
