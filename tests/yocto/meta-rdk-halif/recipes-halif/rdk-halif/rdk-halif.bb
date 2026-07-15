@@ -74,12 +74,13 @@ do_compile() {
         # Build dir keyed by component AND version, so an incremental rebuild
         # after HALIF_VERSIONS_FILE changes cannot hit a stale CMake cache.
         cmake -S "${S}/${comp}/${ver}" -B "${B}/obj/${comp}/${ver}" \
+            -G "${OECMAKE_GENERATOR}" \
             -DCMAKE_TOOLCHAIN_FILE="${WORKDIR}/toolchain.cmake" \
             -DBINDER_SDK_DIR="${STAGING_DIR_HOST}${prefix}" \
             -DBINDER_SDK_INCLUDE_DIR="${STAGING_DIR_HOST}${prefix}" \
             -DHALIF_LIB_DIR="${B}/staged/lib/halif" \
             -DHALIF_INCLUDE_DIR="${B}/staged/include/halif"
-        cmake --build "${B}/obj/${comp}/${ver}"
+        cmake --build "${B}/obj/${comp}/${ver}" -- ${PARALLEL_MAKE}
         install -m 0755 "${B}/obj/${comp}/${ver}/lib${comp}-v${ver}-cpp.so" "${B}/staged/lib/halif/"
         install -d "${B}/staged/include/halif/${comp}/${ver}"
         cp -R "${S}/${comp}/${ver}/include" "${B}/staged/include/halif/${comp}/${ver}/"
