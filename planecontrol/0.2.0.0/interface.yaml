@@ -1,0 +1,10 @@
+aidl_interface:
+  name: planecontrol
+  version: 2000
+  srcs:
+    - com/rdk/hal/planecontrol/*.aidl
+  imports:
+    - common@0.2.0.0
+    - videodecoder@0.2.0.1
+  stability: vintf
+  layout: module-local

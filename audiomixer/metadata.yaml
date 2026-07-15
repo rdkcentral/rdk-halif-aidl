@@ -51,7 +51,7 @@ scope:
 #   owners        - Responsible architecture teams
 notes:
   status_detail: "AQ parameter API in review"
-  action: "Land the AQ processor interface (#411 / #410, PR #573) — a breaking interface addition still under review; V1 not yet complete. Flip to GREEN on merge."
+  action: "Land AQ processor API (PR #573) + OutputPortType BLUETOOTH→CAPTURE rename (#708) — both batch into one 0.4.0.0 major bump (0.23.0). Flip to GREEN when shipped."
   owners: "Architecture + Vendor_Layer_Team + AV_Architecture"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]

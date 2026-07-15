@@ -55,7 +55,7 @@ list_tests() {
     echo "  4   Clean operations work and exit"
     echo "  5   Stage Binder SDK (./build_interfaces.sh sdk)"
     echo "  6   Production module build (./build_modules.sh all)"
-    echo "  7   Development build (./build_interfaces.sh boot)"
+    echo "  7   Development build (./build_interfaces.sh bootreason)"
     echo "  8   Direct CMake build (default flags)"
     echo "  9   Direct CMake build (minimal production flags)"
     echo "  10  CMake multi-module build with version switching"
@@ -422,11 +422,11 @@ test_6() {
 
 test_7() {
     clean_build_state
-    echo "Development build using ./build_interfaces.sh boot..."
+    echo "Development build using ./build_interfaces.sh bootreason..."
     echo "This tests all 3 stages: SDK staging + AIDL generation + compilation"
     echo ""
     
-    if ./build_interfaces.sh boot >/tmp/build_interfaces.log 2>&1; then
+    if ./build_interfaces.sh bootreason >/tmp/build_interfaces.log 2>&1; then
         warnings=$(grep -ci "warning:" /tmp/build_interfaces.log || echo "0")
         errors=$(grep -ci "error:" /tmp/build_interfaces.log || echo "0")
         echo "✅ Development build completed (warnings: $warnings, errors: $errors)"
@@ -438,9 +438,9 @@ test_7() {
     
     echo ""
     echo "Verifying outputs..."
-    test -d ./stable/aidl/boot/current && echo "✅ AIDL files copied to stable/"
-    test -d ./stable/generated/boot/current && echo "✅ C++ code generated to stable/"
-    verify_module_library boot || return 1
+    test -d ./bootreason/current/include && echo "✅ C++ headers generated (bootreason/current/include)"
+    test -d ./bootreason/current/src && echo "✅ C++ sources generated (bootreason/current/src)"
+    verify_module_library bootreason || return 1
     
     echo ""
     print_tree ./out/target/lib/halif
@@ -460,9 +460,9 @@ test_8() {
     fi
     
     echo ""
-    echo "==> cmake -S . -B build/current -DINTERFACE_TARGET=boot -DAIDL_SRC_VERSION=current"
+    echo "==> cmake -S . -B build/current -DINTERFACE_TARGET=bootreason -DAIDL_SRC_VERSION=current"
     if cmake -S . -B build/current \
-        -DINTERFACE_TARGET=boot \
+        -DINTERFACE_TARGET=bootreason \
         -DAIDL_SRC_VERSION=current \
         -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
         >/tmp/cmake_config.log 2>&1; then
@@ -498,7 +498,7 @@ test_8() {
     
     echo ""
     echo "Verifying outputs..."
-    verify_module_library boot || return 1
+    verify_module_library bootreason || return 1
     
     return 0
 }
@@ -593,20 +593,20 @@ test_10() {
         return 1
     fi
     
-    # Test 1: Build boot module
+    # Test 1: Build bootreason module
     echo ""
-    echo "==> Test 10.1: Build boot module (current version)"
-    if cmake -S . -B build/test10-boot \
-        -DINTERFACE_TARGET=boot \
+    echo "==> Test 10.1: Build bootreason module (current version)"
+    if cmake -S . -B build/test10-bootreason \
+        -DINTERFACE_TARGET=bootreason \
         -DAIDL_SRC_VERSION=current \
         -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
         >/tmp/cmake_test10_boot_config.log 2>&1 && \
-       cmake --build build/test10-boot -- -j"$(nproc)" \
+       cmake --build build/test10-bootreason -- -j"$(nproc)" \
         >/tmp/cmake_test10_boot_build.log 2>&1 && \
-       cmake --install build/test10-boot \
+       cmake --install build/test10-bootreason \
         >/tmp/cmake_test10_boot_install.log 2>&1; then
         echo "✅ Boot module build successful"
-        verify_module_library boot || return 1
+        verify_module_library bootreason || return 1
     else
         echo "❌ Boot module build failed!"
         return 1
@@ -859,7 +859,7 @@ test_11() {
         CC=\"\${CC}\" CXX=\"\${CXX}\" \
         CFLAGS=\"\${CFLAGS}\" CXXFLAGS=\"\${CXXFLAGS}\" LDFLAGS=\"\${LDFLAGS}\" \
         cmake -S . -B build/current \
-          -DINTERFACE_TARGET=boot \
+          -DINTERFACE_TARGET=bootreason \
           -DAIDL_SRC_VERSION=current \
           -DBINDER_SDK_DIR=${current_dir}/out/target \
           -DBINDER_SDK_INCLUDE_DIR=${current_dir}/out/target \
@@ -934,7 +934,7 @@ run_test "3" "Help flags work" test_3
 run_test "4" "Clean operations work and exit" test_4
 run_test "5" "Stage Binder SDK (./build_interfaces.sh sdk)" test_5
 run_test "6" "Production module build (./build_modules.sh all)" test_6
-run_test "7" "Development build (./build_interfaces.sh boot)" test_7
+run_test "7" "Development build (./build_interfaces.sh bootreason)" test_7
 run_test "8" "Direct CMake build (default flags)" test_8
 run_test "9" "Direct CMake build (minimal production flags)" test_9
 run_test "10" "CMake multi-module build with version switching" test_10
