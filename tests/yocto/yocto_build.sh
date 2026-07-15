@@ -30,8 +30,8 @@
 #
 # The versions manifest is PASSED IN; it defaults to the repository's
 # versions_released.yaml - the real released cohort. Point it at any manifest
-# (components: {comp: ver}) to build a different set; unpinned components build
-# their latest snapshot.
+# (components: {comp: ver}) to build a different set - the components it lists,
+# at the versions it pins.
 #
 #   ./tests/yocto/yocto_build.sh vendor
 #   ./tests/yocto/yocto_build.sh mw /path/to/versions.yaml
@@ -48,10 +48,20 @@ esac
 REPO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../.." && pwd)"
 cd "${REPO_ROOT}"
 
-VERSIONS="${2:-${REPO_ROOT}/versions_released.yaml}"
-[ -f "${VERSIONS}" ] || { echo "yocto_build: no versions manifest at ${VERSIONS}" >&2; exit 2; }
+# Args after the role: --keep is a flag (any position); the first non-flag is
+# the versions manifest. This keeps `<role> --keep` working with no manifest.
 KEEP=false
-for a in "$@"; do [ "$a" = "--keep" ] && KEEP=true; done
+VERSIONS=""
+shift
+for a in "$@"; do
+    case "$a" in
+        --keep) KEEP=true ;;
+        *) [ -z "${VERSIONS}" ] && VERSIONS="$a" \
+               || { echo "yocto_build: unexpected argument '$a'" >&2; exit 2; } ;;
+    esac
+done
+VERSIONS="${VERSIONS:-${REPO_ROOT}/versions_released.yaml}"
+[ -f "${VERSIONS}" ] || { echo "yocto_build: no versions manifest at ${VERSIONS}" >&2; exit 2; }
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/yocto-build-${ROLE}.XXXXXX")"
 SDK="${WORK}/sdk/usr"

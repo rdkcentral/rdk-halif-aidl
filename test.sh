@@ -949,6 +949,13 @@ test_12() {
         return 1
     fi
     echo "✅ vendor example built the full HAL from the released cohort"
+    echo ""
+    echo "==> Test 12.4: mw example builds the full HAL from versions_released.yaml"
+    if ! ./tests/yocto/yocto_build_mw.sh; then
+        echo "❌ yocto_build_mw (full-HAL build) failed"
+        return 1
+    fi
+    echo "✅ mw example built the full HAL from the released cohort"
     return 0
 }
 

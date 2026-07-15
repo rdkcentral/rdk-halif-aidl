@@ -78,7 +78,10 @@ def main():
         return 2
 
     text = HEADER + 'HALIF_COMPONENTS ??= "%s"\n' % " ".join(comps)
-    current = open(INC).read() if os.path.isfile(INC) else None
+    current = None
+    if os.path.isfile(INC):
+        with open(INC) as fh:
+            current = fh.read()
 
     if check:
         if current != text:

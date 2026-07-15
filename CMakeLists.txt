@@ -136,7 +136,12 @@ if (NOT DEFINED BINDER_SDK_LIB_SUBDIR)
     set(BINDER_SDK_LIB_SUBDIR "lib/binder")
 endif()
 
-if (NOT IS_DIRECTORY "${BINDER_SDK_DIR}/${BINDER_SDK_LIB_SUBDIR}")
+# Verify the runtime libraries are actually present, not just the directory, so a
+# staged-but-empty sysroot fails here with a clear message rather than at link time.
+file(GLOB _binder_runtime_libs
+     "${BINDER_SDK_DIR}/${BINDER_SDK_LIB_SUBDIR}/libbinder*"
+     "${BINDER_SDK_DIR}/${BINDER_SDK_LIB_SUBDIR}/libutils*")
+if (NOT IS_DIRECTORY "${BINDER_SDK_DIR}/${BINDER_SDK_LIB_SUBDIR}" OR NOT _binder_runtime_libs)
     message("")
     message("========================================")
     message("  Binder SDK not found at ${BINDER_SDK_DIR}")

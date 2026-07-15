@@ -72,6 +72,13 @@ do_configure[noexec] = "1"
 do_compile() {
     cmake_do_generate_toolchain_file
 
+    # An explicitly empty HALIF_COMPONENTS is a misconfiguration: halif_plan.py
+    # with no component list would build every component while PACKAGES (below,
+    # from the same variable) would be empty - so fail fast instead.
+    if [ -z "${HALIF_COMPONENTS}" ]; then
+        bbfatal "HALIF_COMPONENTS is empty - set the components to build (default: all, from halif-components.inc)"
+    fi
+
     # Resolve the topological build order (dependencies first), pinning versions
     # from the configuration's manifest if one is set.
     versions=""
@@ -85,14 +92,16 @@ do_compile() {
 
     while read comp ver; do
         bbnote "rdk-halif: building ${comp}@${ver}"
-        cmake -S "${S}/${comp}/${ver}" -B "${B}/obj/${comp}" \
+        # Build dir keyed by component AND version, so an incremental rebuild
+        # after HALIF_VERSIONS_FILE changes cannot hit a stale CMake cache.
+        cmake -S "${S}/${comp}/${ver}" -B "${B}/obj/${comp}/${ver}" \
             -DCMAKE_TOOLCHAIN_FILE="${WORKDIR}/toolchain.cmake" \
             -DBINDER_SDK_DIR="${STAGING_DIR_HOST}${prefix}" \
             -DBINDER_SDK_INCLUDE_DIR="${STAGING_DIR_HOST}${prefix}" \
             -DHALIF_LIB_DIR="${B}/staged/lib/halif" \
             -DHALIF_INCLUDE_DIR="${B}/staged/include/halif"
-        cmake --build "${B}/obj/${comp}"
-        install -m 0755 "${B}/obj/${comp}/lib${comp}-v${ver}-cpp.so" "${B}/staged/lib/halif/"
+        cmake --build "${B}/obj/${comp}/${ver}"
+        install -m 0755 "${B}/obj/${comp}/${ver}/lib${comp}-v${ver}-cpp.so" "${B}/staged/lib/halif/"
         install -d "${B}/staged/include/halif/${comp}/${ver}"
         cp -R "${S}/${comp}/${ver}/include" "${B}/staged/include/halif/${comp}/${ver}/"
     done < "${B}/plan.txt"
