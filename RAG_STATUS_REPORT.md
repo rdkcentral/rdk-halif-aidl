@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Generated** | 2026-07-14 |
+| **Generated** | 2026-07-15 |
 | **Components** | 31 |
 | 🟢 **GREEN** | 19 |
 | 🟡 **AMBER** | 12 |
@@ -43,9 +43,9 @@
 
 | | Component | Current Version | Description | Reviews | Owners |
 |---|-----------|---------|-------------|---------|--------|
-| 🟢 | bootreason | 0.1.0.0 | Boot reason tracking and reboot management | 3/4 | Architecture + MW_Team |
-| 🟢 | compositeinput | 0.2.0.0 | Composite video input capture and control | 3/4 | Architecture + AV_Architecture |
-| 🟢 | deepsleep | 0.1.0.0 | Deep sleep and low-power state management | 3/4 | Architecture |
+| 🟢 | bootreason | 0.1.0.0 | Boot reason tracking and reboot management | 4/4 | Architecture + MW_Team |
+| 🟢 | compositeinput | 0.2.0.0 | Composite video input capture and control | 4/4 | Architecture + AV_Architecture |
+| 🟢 | deepsleep | 0.1.0.0 | Deep sleep and low-power state management | 4/4 | Architecture |
 | 🟢 | deviceinfo | 0.1.0.0 | Device information and platform capability reporting | 4/4 | Architecture + Kernel_Architecture |
 | 🟢 | firmwareupdate | 0.2.0.0 | Update lifecycle for multiple firmware types at multiple locations across the system | 1/4 | Architecture + Kernel_Architecture |
 | 🟢 | indicator | 0.1.0.0 | LED and visual indicator state management | 4/4 | Architecture + Graphics_Architecture |
@@ -138,9 +138,9 @@
 
 | | Component | Progress | Arch | Prod | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel | Vendor |
 |---|-----------|----------|------|------|-----|-----------|----------|----------|--------------|--------|--------|
-| 🟢 | bootreason | 3/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ | ✅ |
-| 🟢 | compositeinput | 3/4 | ✅ | ✅ | ☐ | N/A | N/A | N/A | N/A | N/A | ✅ |
-| 🟢 | deepsleep | 3/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ☐ | ✅ |
+| 🟢 | bootreason | 4/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
+| 🟢 | compositeinput | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
+| 🟢 | deepsleep | 4/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
 | 🟢 | deviceinfo | 4/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
 | 🟢 | firmwareupdate | 1/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ✅ |
 | 🟢 | indicator | 4/4 | ✅ | ✅ | N/A | N/A | N/A | ✅ | N/A | N/A | ✅ |
