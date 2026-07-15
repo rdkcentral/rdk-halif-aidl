@@ -95,7 +95,7 @@ def parse_versions(path):
                 in_comp = True
                 continue
             if in_comp:
-                m = re.match(r"^\s+([A-Za-z0-9_]+):\s*(\S+)\s*$", s)
+                m = re.match(r"^\s+([A-Za-z0-9_]+):\s*(\S+)\s*(?:#.*)?$", s)
                 if m:
                     pins[m.group(1)] = m.group(2)
                 elif not s[0].isspace():

@@ -66,7 +66,9 @@ do_compile() {
         || bbfatal "halif_plan.py failed to resolve a build order"
 
     # Sibling libs/headers built earlier in the plan are staged here so later
-    # components link them; the Binder SDK comes from the recipe sysroot.
+    # components link them; the Binder SDK comes from the recipe sysroot. Start
+    # clean so a changed HALIF_VERSIONS_FILE can't leave stale per-version libs.
+    rm -rf "${B}/staged"
     install -d "${B}/staged/lib/halif" "${B}/staged/include/halif"
 
     while read comp ver; do
