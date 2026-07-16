@@ -257,7 +257,17 @@ verification_clean_once() {
     _VERIFY_CLEAN_DONE=1
     phase "Pre-verification clean (once): build/, out/build/include, build cache"
     rm -rf "${REPO_ROOT}/build"
+    # Preserve the dev-layout binder SDK headers (out/build/include/binder_sdk):
+    # deleting them while out/target/.sdk_ready survives leaves every snapshot
+    # build unable to find binder/IBinder.h, failing verification.
+    if [[ -d "${REPO_ROOT}/out/build/include/binder_sdk" ]]; then
+        mv "${REPO_ROOT}/out/build/include/binder_sdk" "${REPO_ROOT}/out/build/.binder_sdk.keep"
+    fi
     rm -rf "${REPO_ROOT}/out/build/include"
+    if [[ -d "${REPO_ROOT}/out/build/.binder_sdk.keep" ]]; then
+        mkdir -p "${REPO_ROOT}/out/build/include"
+        mv "${REPO_ROOT}/out/build/.binder_sdk.keep" "${REPO_ROOT}/out/build/include/binder_sdk"
+    fi
     rm -f "${BUILD_CACHE_FILE}"
     log "  Cleared build/, out/build/include and ${BUILD_CACHE_FILE#"${REPO_ROOT}/"} —"
     log "  verification builds from clean staging (Binder SDK in out/target kept)."
@@ -507,6 +517,10 @@ plan_load() {
 # Subcommand dispatch — must run BEFORE the standard arg parser sees
 # anything. The subcommands edit the plan file and exit; they don't
 # trigger a release run.
+# Version pins from `stage <module> --version X` — declared before the
+# subcommand parser assigns into it (assoc assignment before declare -A
+# degrades to arithmetic subscript evaluation).
+declare -A PIN_VERSIONS=()
 case "${1:-}" in
     stage)
         shift
@@ -622,7 +636,6 @@ DRY_RUN="${DRY_RUN:-0}"
 SINCE_REF="${SINCE_REF:-}"
 NO_GH="${NO_GH:-0}"
 ACCEPT_ALL="${ACCEPT_ALL:-0}"
-declare -A PIN_VERSIONS=()
 VERBOSE=0
 
 usage() {
@@ -774,11 +787,11 @@ EOF
 # (log/phase/warn/die now defined above the plan helpers, near the top.)
 
 RELEASE_VERSION=""
-NO_SNAPSHOT=0
-NO_MKDOCS=0
-NO_BUILD=0
+NO_SNAPSHOT="${NO_SNAPSHOT:-0}"
+NO_MKDOCS="${NO_MKDOCS:-0}"
+NO_BUILD="${NO_BUILD:-0}"
 AUDIT=0
-NO_AUDIT=0
+NO_AUDIT="${NO_AUDIT:-0}"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -1691,6 +1704,82 @@ if [[ ${#PLAN_DROPPED[@]} -gt 0 ]] || [[ ${#PLAN_EXTRA[@]} -gt 0 ]]; then
 fi
 
 # ----------------------------------------------------------------------------
+# AIDL-surface helpers (defined here so the propagation gate below can use
+# them; also used by the per-component write loop and the --audit mode).
+# ----------------------------------------------------------------------------
+
+# Highest released <comp>/<version>/ present at the last tag (the released
+# baseline). Empty when the component has never been released.
+discover_current_version() {
+    local comp="$1"
+    local baseline
+    baseline="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+    [[ -n "${baseline}" ]] || return 0   # no tags → no released baseline
+    git ls-tree -d --name-only "${baseline}" "${comp}/" 2>/dev/null \
+        | awk -F/ '{print $NF}' \
+        | grep -E '^[0-9]+(\.[0-9]+){2,3}$' \
+        | sort -V \
+        | tail -1 || true
+}
+
+# When a component has no released baseline (new since last tag), check
+# whether the operator has pre-staged a snapshot under <comp>/<version>/
+# in HEAD (committed via a "chore" or release-prep PR). If yes, use
+# that as the initial-release version. If no, seed at 0.1.0.0.
+discover_pre_staged_version() {
+    local comp="$1"
+    git ls-tree -d --name-only HEAD "${comp}/" 2>/dev/null \
+        | awk -F/ '{print $NF}' \
+        | grep -E '^[0-9]+(\.[0-9]+){2,3}$' \
+        | sort -V \
+        | tail -1 || true
+}
+
+# Aggregate SHA256 of every .aidl file under a directory tree, sorted by
+# path. Two trees with identical AIDL contents produce the same hash;
+# any add/remove/modify changes the hash. Returns empty string if the
+# directory doesn't exist or has no .aidl files. NOTE: only *.aidl files
+# are hashed — hand-authored C++ headers (e.g. halcompat.h) and docs under
+# current/ are deliberately NOT part of the interface hash (#722).
+compute_aidl_hash_for_dir() {
+    local dir="$1"
+    [[ -d "${dir}" ]] || { echo ""; return 0; }
+    local h
+    h="$(find "${dir}" -name '*.aidl' -type f 2>/dev/null \
+        | sort \
+        | while IFS= read -r f; do
+            printf '%s:%s\n' "${f#${dir}/}" "$(sha256sum "${f}" 2>/dev/null | awk '{print $1}')"
+          done \
+        | sha256sum 2>/dev/null | awk '{print $1}')"
+    [[ "${h}" == "$(echo -n "" | sha256sum | awk '{print $1}')" ]] && h=""
+    echo "${h}"
+}
+
+# Compare a module's current/ AIDL hash against the highest tracked
+# snapshot. Echoes one of: "unchanged" / "CHANGED" / "new" / "missing".
+aidl_hash_status() {
+    local comp="$1"
+    local latest
+    latest="$(discover_current_version "${comp}")"
+    if [[ -z "${latest}" ]]; then
+        echo "new"      # never released; no baseline to compare against
+        return 0
+    fi
+    local cur_hash snap_hash
+    cur_hash="$(compute_aidl_hash_for_dir "${REPO_ROOT}/${comp}/current")"
+    snap_hash="$(compute_aidl_hash_for_dir "${REPO_ROOT}/${comp}/${latest}")"
+    if [[ -z "${cur_hash}" || -z "${snap_hash}" ]]; then
+        echo "missing"  # one side has no .aidl files
+        return 0
+    fi
+    if [[ "${cur_hash}" == "${snap_hash}" ]]; then
+        echo "unchanged"
+    else
+        echo "CHANGED"
+    fi
+}
+
+# ----------------------------------------------------------------------------
 # Transitive bump propagation (subsume rule)
 # ----------------------------------------------------------------------------
 #
@@ -1700,6 +1789,25 @@ fi
 # This walks each component's current/interface.yaml `imports:` list and
 # propagates the highest reachable bump level upward via fixed-point
 # iteration. Bump precedence: Breaking > Major (non-doc) > Minor/Patch (doc).
+
+# AIDL-surface gate BEFORE propagation (#722): a component whose declared
+# AIDL surface (its *.aidl files) is byte-identical to its last released
+# snapshot is not an interface change and must not seed the subsume
+# propagation — even when non-AIDL files under current/ changed (a
+# hand-authored C++ helper like halcompat.h, or docs) and a change-class
+# label was applied. Clearing its direct-bump flags here stops a phantom
+# bump propagating to every importer. (The per-component write loop applies
+# the same suppression to the component's own bump; doing it here as well
+# closes the ordering gap where propagation ran on the un-gated flags.)
+for _gc in "${!COMP_TOUCHED[@]}"; do
+    if [[ "$(aidl_hash_status "${_gc}")" == "unchanged" ]] \
+       && { [[ "${COMP_BREAKING[$_gc]:-0}" -eq 1 ]] \
+            || [[ "${COMP_NON_DOC[$_gc]:-0}" -eq 1 ]] \
+            || [[ "${COMP_DOC[$_gc]:-0}" -eq 1 ]]; }; then
+        unset 'COMP_BREAKING[$_gc]' 'COMP_NON_DOC[$_gc]' 'COMP_DOC[$_gc]' 2>/dev/null || true
+        COMP_REASONS[$_gc]="${COMP_REASONS[$_gc]:-}gate: AIDL surface unchanged — not a propagation source (#722)"$'\n'
+    fi
+done
 
 phase "Propagating transitive bumps via interface.yaml imports..."
 
@@ -1949,13 +2057,14 @@ create_snapshot() {
 
     # Verbose mode dumps full per-step progress; default mode buffers
     # and prints one summary line per module at the end (✓ or ✗).
+    # Refresh: the old snapshot is deleted only AFTER regeneration succeeds
+    # (below, just before the copy). Deleting it first leaves a hole in the
+    # interfaces dependency tree — any consumer snapshot cohort-pinned to
+    # this version makes the regeneration itself fail (unresolved
+    # versioned-import target).
     local refresh_marker=""
     if [[ -d "${snapshot_dir}" ]]; then
-        [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] refreshing existing ${version}/ snapshot (rm -rf + re-create)"
-        rm -rf "${snapshot_dir}" || {
-            warn "Failed to remove existing ${comp}/${version}/ — manual cleanup needed."
-            return 1
-        }
+        [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] refreshing existing ${version}/ snapshot (re-create after regen)"
         refresh_marker=" (refreshed)"
     fi
 
@@ -2010,6 +2119,13 @@ create_snapshot() {
     # unfrozen source-of-truth.
     [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] copying current/ to ${version}/"
     local _cp_rc=0
+    if [[ -d "${snapshot_dir}" ]]; then
+        rm -rf "${snapshot_dir}" || {
+            warn "Failed to remove existing ${comp}/${version}/ — manual cleanup needed."
+            _restore_current
+            return 1
+        }
+    fi
     cp -r "${REPO_ROOT}/${comp}/current" "${snapshot_dir}" || _cp_rc=$?
     _restore_current
     if [[ "${_cp_rc}" -ne 0 ]]; then
@@ -2789,78 +2905,6 @@ error_count=0
 BUMPED_COMPONENTS=()
 declare -A METADATA_DRIFT=()  # comp -> "metadata_says|discovered_truth"
 
-# Auto-discover the "real" current released version of a component.
-# Uses the LAST RELEASE TAG (not HEAD) as the baseline — phantom
-# snapshots committed to develop without being part of a tagged
-# release (e.g. firmwareupdate/0.2.0.0/ added by a "chore" commit
-# after the flash rename, never in 0.20.0) don't count as released.
-# Picks the highest version present at that tag by `sort -V`.
-discover_current_version() {
-    local comp="$1"
-    local baseline
-    baseline="$(git describe --tags --abbrev=0 2>/dev/null || true)"
-    [[ -n "${baseline}" ]] || return 0   # no tags → no released baseline
-    git ls-tree -d --name-only "${baseline}" "${comp}/" 2>/dev/null \
-        | awk -F/ '{print $NF}' \
-        | grep -E '^[0-9]+(\.[0-9]+){2,3}$' \
-        | sort -V \
-        | tail -1 || true
-}
-
-# When a component has no released baseline (new since last tag), check
-# whether the operator has pre-staged a snapshot under <comp>/<version>/
-# in HEAD (committed via a "chore" or release-prep PR). If yes, use
-# that as the initial-release version. If no, seed at 0.1.0.0.
-discover_pre_staged_version() {
-    local comp="$1"
-    git ls-tree -d --name-only HEAD "${comp}/" 2>/dev/null \
-        | awk -F/ '{print $NF}' \
-        | grep -E '^[0-9]+(\.[0-9]+){2,3}$' \
-        | sort -V \
-        | tail -1 || true
-}
-
-# Aggregate SHA256 of every .aidl file under a directory tree, sorted by
-# path. Two trees with identical AIDL contents produce the same hash;
-# any add/remove/modify changes the hash. Returns empty string if the
-# directory doesn't exist or has no .aidl files.
-compute_aidl_hash_for_dir() {
-    local dir="$1"
-    [[ -d "${dir}" ]] || { echo ""; return 0; }
-    local h
-    h="$(find "${dir}" -name '*.aidl' -type f 2>/dev/null \
-        | sort \
-        | while IFS= read -r f; do
-            printf '%s:%s\n' "${f#${dir}/}" "$(sha256sum "${f}" 2>/dev/null | awk '{print $1}')"
-          done \
-        | sha256sum 2>/dev/null | awk '{print $1}')"
-    [[ "${h}" == "$(echo -n "" | sha256sum | awk '{print $1}')" ]] && h=""
-    echo "${h}"
-}
-
-# Compare a module's current/ AIDL hash against the highest tracked
-# snapshot. Echoes one of: "unchanged" / "CHANGED" / "new" / "missing".
-aidl_hash_status() {
-    local comp="$1"
-    local latest
-    latest="$(discover_current_version "${comp}")"
-    if [[ -z "${latest}" ]]; then
-        echo "new"      # never released; no baseline to compare against
-        return 0
-    fi
-    local cur_hash snap_hash
-    cur_hash="$(compute_aidl_hash_for_dir "${REPO_ROOT}/${comp}/current")"
-    snap_hash="$(compute_aidl_hash_for_dir "${REPO_ROOT}/${comp}/${latest}")"
-    if [[ -z "${cur_hash}" || -z "${snap_hash}" ]]; then
-        echo "missing"  # one side has no .aidl files
-        return 0
-    fi
-    if [[ "${cur_hash}" == "${snap_hash}" ]]; then
-        echo "unchanged"
-    else
-        echo "CHANGED"
-    fi
-}
 
 # ----------------------------------------------------------------------------
 # --audit: structural change-class audit (#633 / #568)
