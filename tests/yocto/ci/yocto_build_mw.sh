@@ -23,6 +23,10 @@
 # EXAMPLE: build the full RDK HAL for the MIDDLEWARE (MW) layer from the released
 # cohort (versions_released.yaml). Pass an alternate versions manifest as $1.
 #
-#   ./tests/yocto/yocto_build_mw.sh [versions-manifest] [--keep]
+#   ./tests/yocto/ci/yocto_build_mw.sh [versions-manifest] [--keep]
 #
+#
+# Thin role wrapper -> ci/yocto_build.sh. See that script for the directory
+# structure and expectations. tests/yocto/ci/ is our test harness, not
+# consumption material (integrators consume tests/yocto/meta-rdk-halif-aidl/).
 exec "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/yocto_build.sh" mw "$@"

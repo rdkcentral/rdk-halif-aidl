@@ -38,6 +38,27 @@ Usage:
 Output: one "<comp> <ver>" line per component, dependencies first. Exits non-zero
 if a selected component links a sibling that is not in the selection (the set
 must be a closure) or references a version that is not released.
+
+Directory structure it expects (REPO_ROOT is four levels up from this file,
+because this ships inside the layer so the recipe and its planner travel
+together):
+
+  rdk-halif-aidl/                     <- REPO_ROOT
+  |-- versions_released.yaml          {comp: ver} - the released cohort
+  |-- <comp>/<ver>/                   every released snapshot; SEVERAL versions
+  |   |                               of one component coexist, e.g.
+  |   |                               avclock/{0.1.0.0,0.2.0.0,0.2.0.1}
+  |   |-- CMakeLists.txt              parsed: target_link_libraries() gives the
+  |   |                               sibling deps AND their exact versions
+  |   |                               (-l<dep>-v<ver>-cpp)
+  |   `-- interface.yaml              imports: [<dep>@<ver>] - the declared
+  |                                   contract; CMake is parsed instead because
+  |                                   it is what the link actually requires
+  `-- tests/yocto/meta-rdk-halif-aidl/
+      `-- halif_plan.py               <- this file
+
+A component is only discovered if <comp>/<ver>/CMakeLists.txt exists, so
+placeholder directories are ignored.
 """
 import os
 import re

@@ -28,8 +28,22 @@ built when nothing is overridden) is internally consistent, so it cannot ship
 broken.
 
 Usage:
-  tests/yocto/meta-rdk-halif-aidl/gen_recipes.py            # regenerate the component list
-  tests/yocto/meta-rdk-halif-aidl/gen_recipes.py --check    # verify it is up to date (no writes)
+  tests/yocto/meta-rdk-halif-aidl/gen_recipes.py            # regenerate the list
+  tests/yocto/meta-rdk-halif-aidl/gen_recipes.py --check    # verify (no writes)
+
+Directory structure:
+
+  reads   rdk-halif-aidl/<comp>/<ver>/     every released snapshot, via
+                                           halif_plan.all_components()/links()
+  writes  tests/yocto/meta-rdk-halif-aidl/recipes-halif/rdk-halif-aidl/
+              halif-components.inc         HALIF_COMPONENTS ??= "<every comp>"
+
+The .inc is the recipe's DEFAULT component set, so a zero-config build gets the
+whole HAL; a build configuration overrides HALIF_COMPONENTS to subset it.
+
+Only the component LIST is generated - the per-config version manifests are
+hand-written and consumed directly. --check is the CI guard (test.sh Test 12.1)
+that fails if the committed .inc has drifted from the snapshots on disk.
 """
 import os
 import sys

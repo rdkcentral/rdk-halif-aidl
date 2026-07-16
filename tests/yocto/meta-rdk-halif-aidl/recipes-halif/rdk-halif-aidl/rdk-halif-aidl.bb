@@ -6,6 +6,65 @@
 # confused with the legacy C HAL (rdk-halif-*), which it coexists with during
 # migration.
 #
+#
+# WHAT IT READS - the source tree (${S}; one SRC_URI, one SRCREV)
+# -----------------------------------------------------------------------------
+#   rdk-halif-aidl/
+#   |-- versions_released.yaml          the released cohort: {comp: ver}
+#   |-- <comp>/<ver>/                   a committed snapshot. Several versions of
+#   |   |                               the SAME component coexist here, e.g.
+#   |   |                               avclock/{0.1.0.0,0.2.0.0,0.2.0.1}
+#   |   |-- CMakeLists.txt              builds lib<comp>-v<ver>-cpp.so
+#   |   |-- include/com/rdk/hal/...     generated headers (the AIDL namespace)
+#   |   |-- src/...                     generated C++
+#   |   `-- interface.yaml              imports: [<dep>@<ver>]
+#   `-- tests/yocto/
+#       |-- meta-rdk-halif-aidl/        this layer (+ halif_plan/gen_recipes)
+#       |-- meta-vendor/, meta-mw/      example role layers + consumer examples
+#       `-- ci/                         our offline tests - NOT consumption
+#
+#   HALIF_VERSIONS_FILE selects WHICH version of each component is built; every
+#   snapshot is present in the checkout regardless of what is selected.
+#
+#
+# WHAT IT BUILDS - private, inside ${B}
+# -----------------------------------------------------------------------------
+#   ${B}/plan.txt                       topological build order (halif_plan.py)
+#   ${B}/obj/<comp>/<ver>/              one CMake build dir per comp AND version.
+#                                       Versioned because ${B} persists across
+#                                       rebuilds: reusing obj/<comp> after
+#                                       HALIF_VERSIONS_FILE changes trips CMake's
+#                                       "source does not match the cache" error.
+#   ${B}/staged/lib/rdk-halif-aidl/     built siblings, so components later in
+#   ${B}/staged/include/rdk-halif-aidl/ the plan can link/include them
+#
+#
+# WHAT IT SHIPS - the consumption surface
+# -----------------------------------------------------------------------------
+#   ${libdir}/rdk-halif-aidl/lib<comp>-v<ver>-cpp.so
+#                                       -> package rdk-halif-aidl-<comp>
+#   ${includedir}/rdk-halif-aidl/<comp>/<ver>/include/com/rdk/hal/...
+#                                       -> package rdk-halif-aidl-<comp>-dev
+#
+#   The version is in the .so NAME (and its SONAME), so libraries for several
+#   versions sit side by side in one flat directory. Headers have no version in
+#   their filename (BnPropertyValue.h is the same name in every version), so for
+#   them the version has to live in the PATH.
+#
+#
+# WHAT A CONSUMER DOES
+# -----------------------------------------------------------------------------
+#   DEPENDS        = "rdk-halif-aidl"              # stages libs + headers
+#   RDEPENDS:${PN} = "rdk-halif-aidl-hdmicec rdk-halif-aidl-common"
+#
+#   CXXFLAGS += "-I${STAGING_INCDIR}/rdk-halif-aidl/hdmicec/0.1.0.0/include"
+#   LDFLAGS  += "-L${STAGING_LIBDIR}/rdk-halif-aidl -lhdmicec-v0.1.0.0-cpp"
+#
+#   #include <com/rdk/hal/hdmicec/IHdmiCec.h>
+#
+#   Worked examples: meta-vendor/ and meta-mw/ recipes-example/.
+#
+#
 # A build configuration controls this with variables (see the meta-vendor /
 # meta-mw example includes):
 #   HALIF_COMPONENTS        components to build   (default: all, from the .inc)

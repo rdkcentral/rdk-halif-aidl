@@ -38,9 +38,35 @@
 #                      SUCCEED and produce libhdmicec-v0.1.0.0-cpp.so.
 #
 # Usage:
-#   ./tests/yocto/yocto_staging_check.sh [--keep]
+#   ./tests/yocto/ci/yocto_staging_check.sh [--keep]
 #       --keep   do not delete the work directory on exit
 #
+#
+# ---------------------------------------------------------------------------
+# tests/yocto/ci/ is OUR test harness - NOT consumption material. Integrators
+# consume the layer at tests/yocto/meta-rdk-halif-aidl/. These scripts emulate
+# what the rdk-halif-aidl recipe's do_compile/do_install do, WITHOUT BitBake.
+#
+# Reads (repo root is three levels up from this file):
+#   rdk-halif-aidl/<comp>/<ver>/CMakeLists.txt   the committed snapshots
+#   rdk-halif-aidl/versions_released.yaml        the released cohort
+#   tests/yocto/meta-rdk-halif-aidl/halif_plan.py  resolves the build order
+#
+# Work dir - a fresh mktemp EVERY run, nothing persists:
+#   <work>/sdk/usr/{include,lib}                 staged Binder SDK
+#   <work>/obj/<comp>/                           per-component CMake build dir.
+#                                                Keyed by component only, which
+#                                                is safe here precisely because
+#                                                <work> is always new; the recipe
+#                                                versions its obj/ because ${B}
+#                                                persists across rebuilds.
+#   <work>/stage/usr/lib/rdk-halif-aidl/         built siblings, so components
+#   <work>/stage/usr/include/rdk-halif-aidl/     later in the plan can link them
+#
+# Produces - the same layout the recipe's packages ship:
+#   <dest>/lib/rdk-halif-aidl/lib<comp>-v<ver>-cpp.so
+#   <dest>/include/rdk-halif-aidl/<comp>/<ver>/include/com/rdk/hal/...
+# ---------------------------------------------------------------------------
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../../.." && pwd)"
