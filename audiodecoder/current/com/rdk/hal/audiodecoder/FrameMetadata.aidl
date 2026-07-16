@@ -133,6 +133,24 @@ parcelable FrameMetadata {
 	byte[] SoCPrivate;
 
 	/**
+	 * Bitrate of the source elementary stream for this frame, in bits per second.
+	 *
+	 * The encoded bitrate reported by the decoder for the source audio
+	 * (e.g. ~640000 for 640 kbps AC-3, ~1500000 for a DTS core). For variable
+	 * bitrate streams this is the instantaneous/most-recent bitrate the decoder
+	 * derives for this frame.
+	 *
+	 * Informational only — used for metrics, UI reporting, and stream
+	 * diagnostics; it does not affect decoding or presentation.
+	 *
+	 * Set to 0 when the decoder does not know or report a bitrate (e.g. raw PCM,
+	 * or a codec/container that carries no bitrate). Type rationale: `int`
+	 * (not `long`) is sufficient — the maximum lossless audio bitrate (Dolby
+	 * TrueHD, DTS-HD MA) is well under 2^31 bits per second.
+	 */
+	int bitrateBps;
+
+	/**
 	 * Private extension for future use.
 	 */
 	ParcelableHolder extension;
