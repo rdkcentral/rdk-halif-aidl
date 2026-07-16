@@ -155,7 +155,7 @@ ensure_sdk_staged() {
 verify_module_library() {
     local module="$1"
     local version="${2:-current}"
-    local lib_path="./out/target/lib/halif/lib${module}-v${version}-cpp.so"
+    local lib_path="./out/target/lib/rdk-halif-aidl/lib${module}-v${version}-cpp.so"
     
     if [ -f "$lib_path" ]; then
         echo "✅ Library exists: $lib_path"
@@ -393,7 +393,7 @@ test_6() {
     echo ""
     echo "Verifying output libraries..."
     local modules_found=0
-    for lib in ./out/target/lib/halif/*.so; do
+    for lib in ./out/target/lib/rdk-halif-aidl/*.so; do
         if [ -f "$lib" ]; then
             modules_found=$((modules_found + 1))
             echo "✅ $(basename "$lib")"
@@ -412,12 +412,12 @@ test_6() {
     
     # Verify host architecture
     echo ""
-    if ! verify_architecture ./out/target/lib/halif "" "build_modules.sh"; then
+    if ! verify_architecture ./out/target/lib/rdk-halif-aidl "" "build_modules.sh"; then
         return 1
     fi
     
     echo ""
-    print_tree ./out/target/lib/halif
+    print_tree ./out/target/lib/rdk-halif-aidl
     
     return 0
 }
@@ -445,7 +445,7 @@ test_7() {
     verify_module_library bootreason || return 1
     
     echo ""
-    print_tree ./out/target/lib/halif
+    print_tree ./out/target/lib/rdk-halif-aidl
     
     return 0
 }
@@ -556,7 +556,7 @@ test_9() {
     echo ""
     echo "Verifying all module outputs..."
     local modules_found=0
-    for lib in ./out/target/lib/halif/*.so; do
+    for lib in ./out/target/lib/rdk-halif-aidl/*.so; do
         if [ -f "$lib" ]; then
             modules_found=$((modules_found + 1))
         fi
@@ -574,12 +574,12 @@ test_9() {
     
     # Verify architecture
     echo ""
-    if ! verify_architecture ./out/target/lib/halif "" "production CMake build"; then
+    if ! verify_architecture ./out/target/lib/rdk-halif-aidl "" "production CMake build"; then
         return 1
     fi
     
     echo ""
-    print_tree ./out/target/lib/halif
+    print_tree ./out/target/lib/rdk-halif-aidl
     
     return 0
 }
@@ -664,7 +664,7 @@ test_10() {
        cmake --build build/test10-debug -- -j"$(nproc)" \
         >/tmp/cmake_test10_debug_build.log 2>&1; then
         echo "✅ Debug build successful"
-        test -f ./out/target/lib/halif/libfirmwareupdate-vcurrent-cpp.so && echo "✅ Debug library created"
+        test -f ./out/target/lib/rdk-halif-aidl/libfirmwareupdate-vcurrent-cpp.so && echo "✅ Debug library created"
     else
         echo "❌ Debug build failed!"
         return 1
@@ -771,7 +771,7 @@ test_11() {
     echo "Build steps:"
     echo "  1. cmake -S . -B build/current -DINTERFACE_TARGET=all ..."
     echo "  2. cmake --build build/current"
-    echo "  3. cmake --install build/current (modules to out/target/lib/halif/)"
+    echo "  3. cmake --install build/current (modules to out/target/lib/rdk-halif-aidl/)"
     echo ""
     echo "=========================================="
     echo "Starting ARM module build (default paths)..."
@@ -812,34 +812,34 @@ test_11() {
     
     # Step 6: Verify output directory exists (default path)
     echo "==> Step 6: Verifying ARM build outputs (default paths)..."
-    if [ ! -d "${current_dir}/out/target/lib/halif" ]; then
-        echo "❌ HAL library directory not found: ${current_dir}/out/target/lib/halif"
+    if [ ! -d "${current_dir}/out/target/lib/rdk-halif-aidl" ]; then
+        echo "❌ HAL library directory not found: ${current_dir}/out/target/lib/rdk-halif-aidl"
         echo ""
         echo "Contents of out/target/lib:"
         ls -la "${current_dir}/out/target/lib" 2>&1 || echo "Directory doesn't exist"
         return 1
     fi
-    echo "✅ Default output directory exists: ${current_dir}/out/target/lib/halif"
+    echo "✅ Default output directory exists: ${current_dir}/out/target/lib/rdk-halif-aidl"
     echo ""
     
     # Step 7: Count and list built libraries (default path)
     echo "==> Step 7: Listing built ARM libraries (default paths)..."
-    local lib_count=$(find "${current_dir}/out/target/lib/halif" -name "*.so" 2>/dev/null | wc -l)
+    local lib_count=$(find "${current_dir}/out/target/lib/rdk-halif-aidl" -name "*.so" 2>/dev/null | wc -l)
     if [ $lib_count -eq 0 ]; then
-        echo "❌ No .so files found in ${current_dir}/out/target/lib/halif"
+        echo "❌ No .so files found in ${current_dir}/out/target/lib/rdk-halif-aidl"
         echo ""
         echo "Directory contents:"
-        ls -la "${current_dir}/out/target/lib/halif"
+        ls -la "${current_dir}/out/target/lib/rdk-halif-aidl"
         return 1
     fi
     
     echo "Found ${lib_count} HAL libraries:"
-    ls -lh "${current_dir}/out/target/lib/halif"/*.so
+    ls -lh "${current_dir}/out/target/lib/rdk-halif-aidl"/*.so
     echo ""
     
     # Step 8: Verify ARM architecture of built libraries
     echo "==> Step 8: Verifying HAL module ARM architecture (default paths)..."
-    if ! verify_architecture "${current_dir}/out/target/lib/halif" "ARM" "Docker cross-compilation"; then
+    if ! verify_architecture "${current_dir}/out/target/lib/rdk-halif-aidl" "ARM" "Docker cross-compilation"; then
         return 1
     fi
     echo ""
@@ -912,7 +912,7 @@ test_11() {
     # Step 11: Summary
     echo "==> Step 11: Cross-compilation summary..."
     echo "✅ ARM Binder SDK: ${current_dir}/out/target/lib/binder/"
-    echo "✅ ARM HAL Libraries (default): ${lib_count} modules in ${current_dir}/out/target/lib/halif/"
+    echo "✅ ARM HAL Libraries (default): ${lib_count} modules in ${current_dir}/out/target/lib/rdk-halif-aidl/"
     echo "✅ Custom path override: Verified working"
     
     echo ""
@@ -930,28 +930,28 @@ test_12() {
     echo "Validating Yocto integration (meta-rdk-halif + vendor/MW roles)..."
     echo ""
     echo "==> Test 12.1: component list matches the snapshots (gen_recipes.py --check)"
-    if ! ./scripts/gen_recipes.py --check; then
-        echo "❌ meta-rdk-halif component list is out of date - run ./scripts/gen_recipes.py"
+    if ! ./tests/yocto/meta-rdk-halif-aidl/gen_recipes.py --check; then
+        echo "❌ meta-rdk-halif component list is out of date - run ./tests/yocto/meta-rdk-halif-aidl/gen_recipes.py"
         return 1
     fi
     echo "✅ component list in sync"
     echo ""
     echo "==> Test 12.2: inter-module staging check (hdmicec -> common + negative control)"
-    if ! ./tests/yocto/yocto_staging_check.sh; then
+    if ! ./tests/yocto/ci/yocto_staging_check.sh; then
         echo "❌ per-component staged build failed"
         return 1
     fi
     echo "✅ per-component staged inter-module build OK"
     echo ""
     echo "==> Test 12.3: vendor example builds the full HAL from versions_released.yaml"
-    if ! ./tests/yocto/yocto_build_vendor.sh; then
+    if ! ./tests/yocto/ci/yocto_build_vendor.sh; then
         echo "❌ yocto_build_vendor (full-HAL build) failed"
         return 1
     fi
     echo "✅ vendor example built the full HAL from the released cohort"
     echo ""
     echo "==> Test 12.4: mw example builds the full HAL from versions_released.yaml"
-    if ! ./tests/yocto/yocto_build_mw.sh; then
+    if ! ./tests/yocto/ci/yocto_build_mw.sh; then
         echo "❌ yocto_build_mw (full-HAL build) failed"
         return 1
     fi
@@ -963,7 +963,7 @@ test_13() {
     echo "Building every released component individually (fresh sysroot each)..."
     echo "Proves each <comp>/<version>/CMakeLists.txt builds on its own."
     echo ""
-    if ! ./tests/yocto/yocto_build_each.sh; then
+    if ! ./tests/yocto/ci/yocto_build_each.sh; then
         echo "❌ a component failed to build individually"
         return 1
     fi
@@ -1008,6 +1008,6 @@ echo "========================================"
 echo ""
 echo "Build outputs:"
 echo "  SDK:     $(realpath ./out/target 2>/dev/null || echo 'Not found')"
-echo "  HAL Libs: $(realpath ./out/target/lib/halif 2>/dev/null || echo 'Not found')"
+echo "  HAL Libs: $(realpath ./out/target/lib/rdk-halif-aidl 2>/dev/null || echo 'Not found')"
 echo "  Stable:  $(realpath ./stable 2>/dev/null || echo 'Not found')"
 echo ""

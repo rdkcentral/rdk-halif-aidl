@@ -28,7 +28,7 @@
 #     cmake -S <component>/current -B build/<component> \
 #         -DBINDER_SDK_DIR=/path/to/out/target \
 #         -DBINDER_SDK_INCLUDE_DIR=/path/to/out/build \
-#         -DHALIF_LIB_DIR=/path/to/out/target/lib/halif \
+#         -DHALIF_LIB_DIR=/path/to/out/target/lib/rdk-halif-aidl \
 #         -DHALIF_INCLUDE_DIR=/path/to/out/build/include
 #     cmake --build build/<component>
 #
@@ -47,6 +47,8 @@
 #   BINDER_SDK_INCLUDE_DIR  - alternate headers root (dev layout splits headers/runtime)
 #   HALIF_LIB_DIR           - directory holding dependency lib*-cpp.so
 #   HALIF_INCLUDE_DIR       - directory holding dependency headers
+#   HALIF_INSTALL_LIBDIR    - install destination for the built library
+#                             (default: lib/rdk-halif-aidl)
 cmake_minimum_required(VERSION 3.16)
 project(videosink-v0.2.0.0-cpp LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
@@ -120,7 +122,7 @@ target_link_directories(${LIB_NAME} PRIVATE
 )
 if (NOT DEFINED HALIF_LIB_DIR)
     message(FATAL_ERROR "HALIF_LIB_DIR is required (this component has HAL dependencies). "
-        "Set it to the directory holding dependency lib*-cpp.so (e.g. out/target/lib/halif).")
+        "Set it to the directory holding dependency lib*-cpp.so (e.g. out/target/lib/rdk-halif-aidl).")
 endif()
 if (DEFINED HALIF_LIB_DIR)
     target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
@@ -131,8 +133,16 @@ target_link_libraries(${LIB_NAME} PRIVATE binder utils avclock-v0.2.0.1-cpp comm
 set_target_properties(${LIB_NAME} PROPERTIES OUTPUT_NAME "${LIB_NAME}")
 
 include(GNUInstallDirs)
+
+# Install destination for the built interface library. Overridable so the
+# location can be changed by the build (or in future) without editing this
+# snapshot: pass -DHALIF_INSTALL_LIBDIR=<dir>.
+if (NOT DEFINED HALIF_INSTALL_LIBDIR)
+    set(HALIF_INSTALL_LIBDIR "lib/rdk-halif-aidl")
+endif()
+
 install(TARGETS ${LIB_NAME}
-    LIBRARY DESTINATION lib/halif
+    LIBRARY DESTINATION ${HALIF_INSTALL_LIBDIR}
             PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
                         GROUP_READ GROUP_EXECUTE
                         WORLD_READ WORLD_EXECUTE)

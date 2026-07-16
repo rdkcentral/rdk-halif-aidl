@@ -85,8 +85,16 @@ target_link_libraries(${LIB_NAME} PRIVATE binder utils common-v0.1.0.0-cpp)
 set_target_properties(${LIB_NAME} PROPERTIES OUTPUT_NAME "${LIB_NAME}")
 
 include(GNUInstallDirs)
+
+# Install destination for the built interface library. Overridable so the
+# location can be changed by the build (or in future) without editing this
+# snapshot: pass -DHALIF_INSTALL_LIBDIR=<dir>.
+if (NOT DEFINED HALIF_INSTALL_LIBDIR)
+    set(HALIF_INSTALL_LIBDIR "lib/rdk-halif-aidl")
+endif()
+
 install(TARGETS ${LIB_NAME}
-    LIBRARY DESTINATION lib/halif
+    LIBRARY DESTINATION ${HALIF_INSTALL_LIBDIR}
             PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
                         GROUP_READ GROUP_EXECUTE
                         WORLD_READ WORLD_EXECUTE)

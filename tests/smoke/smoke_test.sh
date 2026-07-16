@@ -49,7 +49,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
     exit 0
 fi
 
-HALIF_LIB_DIR="${REPO_ROOT}/out/target/lib/halif"
+HALIF_LIB_DIR="${REPO_ROOT}/out/target/lib/rdk-halif-aidl"
 PASS=0
 FAIL=0
 

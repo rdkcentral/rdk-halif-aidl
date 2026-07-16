@@ -333,7 +333,7 @@ build_sdk() {
     fi
 
     # Create halif placeholder directories
-    mkdir -p "$SDK_INSTALL_DIR/lib/halif"
+    mkdir -p "$SDK_INSTALL_DIR/lib/rdk-halif-aidl"
 
     # Create marker files
     touch "$SDK_INSTALL_DIR/.sdk_ready"

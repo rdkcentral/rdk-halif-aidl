@@ -36,7 +36,7 @@
 #
 set -uo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../../.." && pwd)"
 cd "${REPO_ROOT}"
 
 VERSIONS="${1:-${REPO_ROOT}/versions_released.yaml}"
@@ -69,17 +69,17 @@ build_into() {
     mkdir -p "${bdir}"
     cmake -S "${REPO_ROOT}/${comp}/${ver}" -B "${bdir}" \
         -DBINDER_SDK_DIR="${SDK}" -DBINDER_SDK_INCLUDE_DIR="${SDK}" \
-        -DHALIF_LIB_DIR="${stage}/lib/halif" -DHALIF_INCLUDE_DIR="${stage}/include/halif" \
+        -DHALIF_LIB_DIR="${stage}/lib/rdk-halif-aidl" -DHALIF_INCLUDE_DIR="${stage}/include/rdk-halif-aidl" \
         > "${bdir}.cfg.log" 2>&1 || return 1
     cmake --build "${bdir}" -j"$(nproc 2>/dev/null || echo 4)" > "${bdir}.bld.log" 2>&1 || return 1
-    install -d "${stage}/lib/halif" "${stage}/include/halif/${comp}/${ver}"
-    install -m 0755 "${bdir}/lib${comp}-v${ver}-cpp.so" "${stage}/lib/halif/" || return 1
-    cp -r "${REPO_ROOT}/${comp}/${ver}/include" "${stage}/include/halif/${comp}/${ver}/" || return 1
+    install -d "${stage}/lib/rdk-halif-aidl" "${stage}/include/rdk-halif-aidl/${comp}/${ver}"
+    install -m 0755 "${bdir}/lib${comp}-v${ver}-cpp.so" "${stage}/lib/rdk-halif-aidl/" || return 1
+    cp -r "${REPO_ROOT}/${comp}/${ver}/include" "${stage}/include/rdk-halif-aidl/${comp}/${ver}/" || return 1
     return 0
 }
 
 # every component at the manifest's versions
-mapfile -t PAIRS < <("${REPO_ROOT}/scripts/halif_plan.py" --versions "${VERSIONS}")
+mapfile -t PAIRS < <("${REPO_ROOT}/tests/yocto/meta-rdk-halif-aidl/halif_plan.py" --versions "${VERSIONS}")
 echo ""
 echo "Building ${#PAIRS[@]} components individually:"
 echo ""
@@ -90,7 +90,7 @@ for pair in "${PAIRS[@]}"; do
     [ -z "${comp}" ] && continue
     stage="${ROOT}/stage/usr"
     # this component's dependency closure (dependencies first, component last)
-    cplan="$("${REPO_ROOT}/scripts/halif_plan.py" --closure --versions "${VERSIONS}" "${comp}")" \
+    cplan="$("${REPO_ROOT}/tests/yocto/meta-rdk-halif-aidl/halif_plan.py" --closure --versions "${VERSIONS}" "${comp}")" \
         || { echo "  ✗ ${comp}@${ver}  (could not resolve dependencies)"; failed="${failed} ${comp}"; continue; }
     # the component's dependencies = the closure minus the component itself
     deps="$(printf '%s\n' "${cplan}" | awk -v c="${comp}" 'NF && $1 != c {printf "%s@%s ", $1, $2}')"
@@ -99,7 +99,7 @@ for pair in "${PAIRS[@]}"; do
         [ -z "${c}" ] && continue
         build_into "${stage}" "${c}" "${v}" || { ok=false; break; }
     done <<< "${cplan}"
-    if ${ok} && [ -f "${stage}/lib/halif/lib${comp}-v${ver}-cpp.so" ]; then
+    if ${ok} && [ -f "${stage}/lib/rdk-halif-aidl/lib${comp}-v${ver}-cpp.so" ]; then
         if [ -n "${deps}" ]; then
             echo "  ✓ ${comp}@${ver}  (deps built first: ${deps% })"
         else

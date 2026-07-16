@@ -208,10 +208,10 @@ endif()
 # Set halif subdirectories as defaults BEFORE including GNUInstallDirs
 # This allows caller to override via -DCMAKE_INSTALL_LIBDIR=... while providing sensible defaults
 if (NOT DEFINED CMAKE_INSTALL_LIBDIR)
-    set(CMAKE_INSTALL_LIBDIR "lib/halif" CACHE PATH "Library install directory")
+    set(CMAKE_INSTALL_LIBDIR "lib/rdk-halif-aidl" CACHE PATH "Library install directory")
 endif()
 if (NOT DEFINED CMAKE_INSTALL_INCLUDEDIR)
-    set(CMAKE_INSTALL_INCLUDEDIR "include/halif" CACHE PATH "Header install directory")
+    set(CMAKE_INSTALL_INCLUDEDIR "include/rdk-halif-aidl" CACHE PATH "Header install directory")
 endif()
 
 # Set standard installation directories (will respect variables already set above)
@@ -257,7 +257,7 @@ target_build_interfaces_libraries()
 # Stage headers BEFORE building so compilation uses staged headers
 #######################################################################
 
-message(STATUS "Staging generated headers to ${OUT_DIR}/target/include/halif/...")
+message(STATUS "Staging generated headers to ${OUT_DIR}/target/include/rdk-halif-aidl/...")
 
 # Module-local layout: generated headers live in <module>/current/include/.
 if (INTERFACE_TARGET STREQUAL "all")
@@ -280,7 +280,7 @@ foreach(inc_dir ${MODULE_INC_DIRS})
 endforeach()
 
 #######################################################################
-# Post-build: Stage module libraries to out/target/lib/halif/
+# Post-build: Stage module libraries to out/target/lib/rdk-halif-aidl/
 #######################################################################
 # Invoke cmake_stage_modules.cmake after all libraries are built
 
@@ -326,8 +326,8 @@ endif()
 
 message(STATUS "")
 message(STATUS "Build configured. HAL modules will be staged to:")
-message(STATUS "  Libraries: ${OUT_DIR}/target/lib/halif/")
-message(STATUS "  Headers:   ${OUT_DIR}/target/include/halif/")
+message(STATUS "  Libraries: ${OUT_DIR}/target/lib/rdk-halif-aidl/")
+message(STATUS "  Headers:   ${OUT_DIR}/target/include/rdk-halif-aidl/")
 message(STATUS "")
 message(STATUS "Run 'cmake --build <build-dir>' to build")
 message(STATUS "")

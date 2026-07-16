@@ -45,7 +45,7 @@ case "${ROLE}" in
     *) echo "usage: $0 <vendor|mw> [versions-manifest] [--keep]" >&2; exit 2 ;;
 esac
 
-REPO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../../.." && pwd)"
 cd "${REPO_ROOT}"
 
 # Args after the role: --keep is a flag (any position); the first non-flag is
@@ -78,7 +78,7 @@ echo "  destination:       ${DEST}"
 echo "========================================="
 
 # --- resolve the build order at the manifest's versions, and state it upfront ---
-PLAN="$("${REPO_ROOT}/scripts/halif_plan.py" --versions "${VERSIONS}")" \
+PLAN="$("${REPO_ROOT}/tests/yocto/meta-rdk-halif-aidl/halif_plan.py" --versions "${VERSIONS}")" \
     || fail "halif_plan.py --versions ${VERSIONS}"
 N=$(printf '%s\n' "${PLAN}" | grep -c .)
 echo ""
@@ -101,27 +101,27 @@ while read -r comp ver; do
     bdir="${WORK}/obj/${comp}"; mkdir -p "${bdir}"
     cmake -S "${REPO_ROOT}/${comp}/${ver}" -B "${bdir}" \
         -DBINDER_SDK_DIR="${SDK}" -DBINDER_SDK_INCLUDE_DIR="${SDK}" \
-        -DHALIF_LIB_DIR="${STAGE}/lib/halif" -DHALIF_INCLUDE_DIR="${STAGE}/include/halif" \
+        -DHALIF_LIB_DIR="${STAGE}/lib/rdk-halif-aidl" -DHALIF_INCLUDE_DIR="${STAGE}/include/rdk-halif-aidl" \
         > "${bdir}.cfg.log" 2>&1 || { tail -15 "${bdir}.cfg.log" | sed 's/^/    /'; fail "configure ${comp}@${ver}"; }
     cmake --build "${bdir}" -j"$(nproc 2>/dev/null || echo 4)" \
         > "${bdir}.bld.log" 2>&1 || { tail -15 "${bdir}.bld.log" | sed 's/^/    /'; fail "build ${comp}@${ver}"; }
-    install -d "${STAGE}/lib/halif" "${STAGE}/include/halif/${comp}/${ver}"
-    install -m 0755 "${bdir}/lib${comp}-v${ver}-cpp.so" "${STAGE}/lib/halif/" || fail "stage lib ${comp}@${ver}"
-    cp -r "${REPO_ROOT}/${comp}/${ver}/include" "${STAGE}/include/halif/${comp}/${ver}/" || fail "stage headers ${comp}@${ver}"
+    install -d "${STAGE}/lib/rdk-halif-aidl" "${STAGE}/include/rdk-halif-aidl/${comp}/${ver}"
+    install -m 0755 "${bdir}/lib${comp}-v${ver}-cpp.so" "${STAGE}/lib/rdk-halif-aidl/" || fail "stage lib ${comp}@${ver}"
+    cp -r "${REPO_ROOT}/${comp}/${ver}/include" "${STAGE}/include/rdk-halif-aidl/${comp}/${ver}/" || fail "stage headers ${comp}@${ver}"
     echo "    ✓ ${comp}@${ver}"
 done <<< "${PLAN}"
 
 # --- install the built HAL to the role destination ---
-install -d "${DEST}/lib/halif" "${DEST}/include/halif"
-cp -a "${STAGE}/lib/halif/." "${DEST}/lib/halif/"
-cp -a "${STAGE}/include/halif/." "${DEST}/include/halif/"
-GOT=$(find "${DEST}/lib/halif" -name 'lib*-cpp.so' | wc -l)
+install -d "${DEST}/lib/rdk-halif-aidl" "${DEST}/include/rdk-halif-aidl"
+cp -a "${STAGE}/lib/rdk-halif-aidl/." "${DEST}/lib/rdk-halif-aidl/"
+cp -a "${STAGE}/include/rdk-halif-aidl/." "${DEST}/include/rdk-halif-aidl/"
+GOT=$(find "${DEST}/lib/rdk-halif-aidl" -name 'lib*-cpp.so' | wc -l)
 [ "${GOT}" -eq "${N}" ] || fail "installed ${GOT} of ${N} HAL libraries to ${DEST}"
 
 echo ""
 echo "========================================="
 echo "✅ yocto_build(${ROLE}): ${GOT} HAL libraries from $(basename "${VERSIONS}")"
-echo "   installed to ${DEST}/lib/halif (headers under include/halif/<comp>/<ver>)"
+echo "   installed to ${DEST}/lib/rdk-halif-aidl (headers under include/rdk-halif-aidl/<comp>/<ver>)"
 echo "========================================="
 [ "${KEEP}" = true ] && echo "work dir kept at ${WORK}"
 exit 0

@@ -49,14 +49,14 @@ endif()
 
 # Create output directories - separate binder and halif
 set(BINDER_LIB_OUT_DIR "${OUT_DIR}/target/lib/binder")
-set(HALIF_LIB_OUT_DIR "${OUT_DIR}/target/lib/halif")
+set(HALIF_LIB_OUT_DIR "${OUT_DIR}/target/lib/rdk-halif-aidl")
 set(HALIF_INC_OUT_DIR "${OUT_DIR}/build/include")
 
 file(MAKE_DIRECTORY "${BINDER_LIB_OUT_DIR}")
 file(MAKE_DIRECTORY "${HALIF_LIB_OUT_DIR}")
 
 #######################################################################
-# Stage module libraries to out/target/lib/halif/
+# Stage module libraries to out/target/lib/rdk-halif-aidl/
 #######################################################################
 
 message(STATUS "Staging module libraries from ${BUILD_DIR}...")
@@ -152,7 +152,7 @@ message(STATUS "")
 message(STATUS "Complete SDK structure:")
 message(STATUS "  ${OUT_DIR}/target/bin/                - Binder servicemanager (runtime)")
 message(STATUS "  ${OUT_DIR}/target/lib/binder/        - Binder runtime libraries")
-message(STATUS "  ${OUT_DIR}/target/lib/halif/         - HAL interface libraries")
+message(STATUS "  ${OUT_DIR}/target/lib/rdk-halif-aidl/         - HAL interface libraries")
 message(STATUS "  ${OUT_DIR}/build/include/binder_sdk/ - Binder headers (build-time)")
 message(STATUS "  ${OUT_DIR}/build/include/            - HAL interface headers (build-time)")
 message(STATUS "")

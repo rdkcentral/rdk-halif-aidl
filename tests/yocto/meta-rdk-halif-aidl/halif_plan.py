@@ -43,7 +43,10 @@ import os
 import re
 import sys
 
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# This script ships inside the layer at tests/yocto/meta-rdk-halif-aidl/,
+# four levels below the repo root it scans for component snapshots.
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__)))))
 VER_RE = re.compile(r"^\d+\.\d+\.\d+\.\d+$")
 LINK_RE = re.compile(r"([a-z0-9]+)-v(\d+\.\d+\.\d+\.\d+)-cpp")
 

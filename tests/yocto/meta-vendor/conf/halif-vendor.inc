@@ -3,8 +3,8 @@
 #   require ${TOPDIR}/../rdk-halif-aidl/tests/yocto/meta-vendor/conf/halif-vendor.inc
 
 HALIF_ROLE = "vendor"
-HALIF_LIBDIR = "${libdir}/halif"
-HALIF_INCDIR = "${includedir}/halif"
+HALIF_LIBDIR = "${libdir}/rdk-halif-aidl"
+HALIF_INCDIR = "${includedir}/rdk-halif-aidl"
 
 # HALIF_COMPONENTS is left at its default (the full component list) and
 # HALIF_VERSIONS_FILE defaults to the source's versions_released.yaml, so this

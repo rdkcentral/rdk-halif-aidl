@@ -43,7 +43,7 @@
 #
 set -uo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../../.." && pwd)"
 cd "${REPO_ROOT}"
 
 KEEP=false
@@ -57,8 +57,8 @@ MOD_COMP="hdmicec"; MOD_VER="0.1.0.0"
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/yocto-pc.XXXXXX")"
 SYSROOT="${WORK}/recipe-sysroot/usr"     # mirrors ${STAGING_DIR_HOST}${prefix}
-HALIF_LIBS="${SYSROOT}/lib/halif"        # where module install() drops lib*-cpp.so
-HALIF_INCS="${SYSROOT}/include/halif"    # dependents look under here for <dep>/<ver>/include
+HALIF_LIBS="${SYSROOT}/lib/rdk-halif-aidl"        # where module install() drops lib*-cpp.so
+HALIF_INCS="${SYSROOT}/include/rdk-halif-aidl"    # dependents look under here for <dep>/<ver>/include
 
 cleanup() { [ "${KEEP}" = true ] || rm -rf "${WORK}"; }
 trap cleanup EXIT
@@ -110,7 +110,7 @@ build_one() {
 }
 
 # stage_dep <comp> <ver> <build-dir> : mirror the meta-rdk-halif recipe's
-# do_install - install the built .so (module CMake -> lib/halif) AND stage the
+# do_install - install the built .so (module CMake -> lib/rdk-halif-aidl) AND stage the
 # snapshot's committed headers so dependents resolve
 # ${HALIF_INCLUDE_DIR}/<comp>/<ver>/include. The header step is what the module
 # install() rule does NOT do; the recipe/bbclass adds it.
@@ -153,7 +153,7 @@ cp -r "${REPO_ROOT}/out/target/lib/binder"        "${EMPTY}/lib/" \
     || fail "staging binder libs for the negative control"
 if cmake -S "${REPO_ROOT}/${MOD_COMP}/${MOD_VER}" -B "${WORK}/neg" \
         -DBINDER_SDK_DIR="${EMPTY}" -DBINDER_SDK_INCLUDE_DIR="${EMPTY}" \
-        -DHALIF_LIB_DIR="${EMPTY}/lib/halif" -DHALIF_INCLUDE_DIR="${EMPTY}/include/halif" \
+        -DHALIF_LIB_DIR="${EMPTY}/lib/rdk-halif-aidl" -DHALIF_INCLUDE_DIR="${EMPTY}/include/rdk-halif-aidl" \
         > "${WORK}/neg.configure.log" 2>&1 \
      && cmake --build "${WORK}/neg" > "${WORK}/neg.compile.log" 2>&1; then
     fail "negative control unexpectedly SUCCEEDED - ${MOD_COMP} built without ${DEP_COMP} staged"

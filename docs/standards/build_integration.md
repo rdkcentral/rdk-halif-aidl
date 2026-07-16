@@ -61,15 +61,15 @@ The direct invocation for one snapshot:
 ```bash
 cmake -S <module>/<version> -B build/<module> \
     -DBINDER_SDK_DIR=<sysroot> -DBINDER_SDK_INCLUDE_DIR=<sysroot> \
-    -DHALIF_LIB_DIR=<sysroot>/lib/halif \
-    -DHALIF_INCLUDE_DIR=<sysroot>/include/halif
+    -DHALIF_LIB_DIR=<sysroot>/lib/rdk-halif-aidl \
+    -DHALIF_INCLUDE_DIR=<sysroot>/include/rdk-halif-aidl
 cmake --build build/<module>
-cmake --install build/<module> --prefix <sysroot>   # stages lib<module>-v<ver>-cpp.so to lib/halif
+cmake --install build/<module> --prefix <sysroot>   # stages lib<module>-v<ver>-cpp.so to lib/rdk-halif-aidl
 ```
 
-The module `install()` rule stages the `.so` under `lib/halif`. A dependent also
+The module `install()` rule stages the `.so` under `lib/rdk-halif-aidl`. A dependent also
 needs the dependency's **headers**, so a complete stage additionally copies the
-snapshot's `include/` tree to `<sysroot>/include/halif/<module>/<version>/
+snapshot's `include/` tree to `<sysroot>/include/rdk-halif-aidl/<module>/<version>/
 include`. `tests/yocto/yocto_staging_check.sh` exercises this exact
 contract offline (build `common` → stage → build `hdmicec` against it) and is the
 executable reference for a recipe.
@@ -135,7 +135,7 @@ role, the destinations, and (optionally) a versions manifest:
 ```bitbake
 # meta-vendor/conf/halif-vendor.inc, required from local.conf / distro
 HALIF_ROLE = "vendor"
-HALIF_LIBDIR = "${libdir}/halif"
+HALIF_LIBDIR = "${libdir}/rdk-halif-aidl"
 # HALIF_COMPONENTS + HALIF_VERSIONS_FILE left at default →
 # builds every HAL from the source's versions_released.yaml (the released cohort).
 ```

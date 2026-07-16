@@ -68,7 +68,7 @@ Description:
   This script performs Stage 3 of the build process:
   - Compiles pre-generated C++ from stable/generated/
   - Links against Binder SDK (must exist from Stage 1 or Yocto)
-  - Outputs libraries to out/target/lib/halif/
+  - Outputs libraries to out/target/lib/rdk-halif-aidl/
   - Outputs headers to out/build/include/
 
   ⚠️  This is a Stage 3 (compilation only) script.
@@ -123,7 +123,7 @@ Examples:
   # See docs/standards/build_integration.md.
 
 Output:
-  Libraries: out/target/lib/halif/lib<module>-vcurrent-cpp.so
+  Libraries: out/target/lib/rdk-halif-aidl/lib<module>-vcurrent-cpp.so
   Headers:   out/build/include/<module>/
 
 For Development Workflow:
@@ -625,14 +625,14 @@ if [[ "$VERSION" != "current" ]]; then
 
     # Resolve and build this snapshot's dependency closure first, so its
     # dependency headers (out/build/include) and libraries
-    # (out/target/lib/halif) are present before we configure. Each dependency
+    # (out/target/lib/rdk-halif-aidl) are present before we configure. Each dependency
     # is itself a snapshot build, so transitive deps resolve recursively, and
     # an already-built dependency is skipped. Without this, a standalone
     # snapshot build on a fresh checkout fails to find a dependency header
     # such as com/rdk/hal/PropertyValue.h (#638).
     while read -r dep dep_ver; do
         [[ -n "$dep" ]] || continue
-        dep_so="$ROOT_DIR/out/target/lib/halif/lib${dep}-v${dep_ver}-cpp.so"
+        dep_so="$ROOT_DIR/out/target/lib/rdk-halif-aidl/lib${dep}-v${dep_ver}-cpp.so"
         dep_inc="$ROOT_DIR/out/build/include/$dep/$dep_ver/include"
         if [[ -f "$dep_so" && -d "$dep_inc" ]]; then
             echo "   ✓ dependency ${dep}/${dep_ver} already built"
@@ -652,7 +652,7 @@ if [[ "$VERSION" != "current" ]]; then
         -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
         -DBINDER_SDK_DIR="$SDK_DIR" \
         -DBINDER_SDK_INCLUDE_DIR="$ROOT_DIR/out/build" \
-        -DHALIF_LIB_DIR="$ROOT_DIR/out/target/lib/halif" \
+        -DHALIF_LIB_DIR="$ROOT_DIR/out/target/lib/rdk-halif-aidl" \
         -DHALIF_INCLUDE_DIR="$ROOT_DIR/out/build/include" \
         -DCMAKE_INSTALL_PREFIX="$ROOT_DIR/out/target" || {
             echo "❌ Snapshot CMake configuration failed"; exit 1; }
@@ -663,7 +663,7 @@ if [[ "$VERSION" != "current" ]]; then
     cmake --install "$SNAPSHOT_BUILD_DIR" >/dev/null || {
         echo "❌ Snapshot install failed"; exit 1; }
 
-    SO_PATH="$ROOT_DIR/out/target/lib/halif/lib${MODULE}-v${VERSION}-cpp.so"
+    SO_PATH="$ROOT_DIR/out/target/lib/rdk-halif-aidl/lib${MODULE}-v${VERSION}-cpp.so"
     if [[ -f "$SO_PATH" ]]; then
         echo "✅ Snapshot built and installed:"
         echo "    $SO_PATH"
@@ -737,7 +737,7 @@ echo ""
 #######################################################################
 
 OUT_DIR="$ROOT_DIR/out/target"
-LIB_DIR="$OUT_DIR/lib/halif"
+LIB_DIR="$OUT_DIR/lib/rdk-halif-aidl"
 INC_DIR="$ROOT_DIR/out/build/include"
 
 echo "========================================="
