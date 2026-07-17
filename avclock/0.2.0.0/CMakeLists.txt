@@ -49,6 +49,8 @@
 #   HALIF_INCLUDE_DIR       - directory holding dependency headers
 #   HALIF_INSTALL_LIBDIR    - install destination for the built library
 #                             (default: lib/rdk-halif-aidl)
+#   HALIF_INSTALL_RPATH     - RPATH to embed in the library (default: none, so
+#                             no build paths leak into the shipped .so)
 cmake_minimum_required(VERSION 3.16)
 project(avclock-v0.2.0.0-cpp LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
@@ -128,7 +130,22 @@ endif()
 
 target_link_libraries(${LIB_NAME} PRIVATE binder utils common-v0.2.0.0-cpp)
 
-set_target_properties(${LIB_NAME} PROPERTIES OUTPUT_NAME "${LIB_NAME}")
+# The target_link_directories() above are BUILD-time search paths. By default
+# CMake bakes them into the library as RPATH/RUNPATH, which ships absolute build
+# paths inside the .so - Yocto's do_package_qa rejects that, and the runtime
+# search path belongs to the integrator's image, not to this library.
+#
+# Default to emitting no RPATH. Overridable for builds that genuinely need one:
+# pass -DHALIF_INSTALL_RPATH=<path>.
+if (NOT DEFINED HALIF_INSTALL_RPATH)
+    set(HALIF_INSTALL_RPATH "")
+endif()
+
+set_target_properties(${LIB_NAME} PROPERTIES
+    OUTPUT_NAME "${LIB_NAME}"
+    SKIP_BUILD_RPATH TRUE
+    BUILD_WITH_INSTALL_RPATH TRUE
+    INSTALL_RPATH "${HALIF_INSTALL_RPATH}")
 
 include(GNUInstallDirs)
 
