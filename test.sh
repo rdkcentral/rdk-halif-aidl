@@ -963,6 +963,13 @@ test_12() {
         return 1
     fi
     echo "✅ artifacts are shippable"
+    echo ""
+    echo "==> Test 12.6: example consumer recipes compile + link against the staged HAL"
+    if ! ./tests/yocto/ci/yocto_example_check.sh; then
+        echo "❌ an example recipe failed to build"
+        return 1
+    fi
+    echo "✅ example recipes build"
     return 0
 }
 

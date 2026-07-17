@@ -28,9 +28,10 @@ int main() {
 
     // Linking 0.2.0.1 headers does not guarantee the SERVER is that new. Ask it,
     // and gate newer calls on the answer rather than assuming - see
-    // docs/standards/client-patterns.md.
-    int32_t serverVersion = 0;
-    avclock->getInterfaceVersion(&serverVersion);
+    // docs/standards/client-patterns.md. The generated C++ returns the version
+    // directly (it is not an out-parameter).
+    int32_t serverVersion = avclock->getInterfaceVersion();
+    (void)serverVersion;
     // if (serverVersion >= 2) { ...safe to call methods introduced in v2... }
 
     return 0;

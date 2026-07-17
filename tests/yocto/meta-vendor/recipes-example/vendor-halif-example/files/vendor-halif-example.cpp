@@ -1,10 +1,14 @@
 // EXAMPLE - vendor side: implement an RDK HAL AIDL interface and register it so
-// middleware can find it. A sketch of the include/link contract, not a working
-// HAL: the method overrides are left to the real implementation.
+// middleware can find it.
+//
+// This is a REAL, COMPILING skeleton, not pseudo-code - tests/yocto/ci/
+// yocto_example_check.sh compiles it against the actual interface libraries, so
+// it stays honest. The method bodies are stubs (a real HAL drives hardware
+// here), but the shape is exactly what a vendor implementation looks like.
 //
 // Built against, from the rdk-halif-aidl-hdmicec + -common packages:
 //   -I${STAGING_INCDIR}/rdk-halif-aidl/hdmicec/0.1.0.0/include
-//   -L${STAGING_LIBDIR}/rdk-halif-aidl -lhdmicec-v0.1.0.0-cpp
+//   -L${STAGING_LIBDIR}/rdk-halif-aidl -lhdmicec-v0.1.0.0-cpp -lcommon-v0.2.0.0-cpp
 //
 // The include path above is what makes this namespace path resolvable:
 #include <com/rdk/hal/hdmicec/BnHdmiCec.h>
@@ -14,14 +18,63 @@
 #include <binder/ProcessState.h>
 #include <utils/StrongPointer.h>
 
-using ::com::rdk::hal::hdmicec::BnHdmiCec;
+#include <cstdint>
+#include <optional>
+#include <vector>
 
-// The vendor implementation subclasses the generated Bn<Interface> server stub
-// and overrides the methods declared in the .aidl. Each returns
-// ::android::binder::Status.
+using ::android::binder::Status;
+using ::com::rdk::hal::PropertyValue;
+using ::com::rdk::hal::hdmicec::BnHdmiCec;
+using ::com::rdk::hal::hdmicec::IHdmiCecController;
+using ::com::rdk::hal::hdmicec::IHdmiCecEventListener;
+using ::com::rdk::hal::hdmicec::Property;
+using ::com::rdk::hal::hdmicec::State;
+
+// A vendor implementation subclasses the generated Bn<Interface> server stub and
+// overrides every method the .aidl declares. getInterfaceVersion() and
+// getInterfaceHash() come from BnHdmiCec - do NOT reimplement them; they are what
+// lets a client version-gate its calls.
 class VendorHdmiCec : public BnHdmiCec {
-    // ::android::binder::Status open(...) override { ... }
-    // ::android::binder::Status close(...) override { ... }
+public:
+    Status getState(State* _aidl_return) override {
+        *_aidl_return = State::CLOSED;      // a real HAL reports actual state
+        return Status::ok();
+    }
+
+    Status getProperty(Property /*property*/,
+                       std::optional<PropertyValue>* _aidl_return) override {
+        *_aidl_return = std::nullopt;       // property not supported by this stub
+        return Status::ok();
+    }
+
+    Status getLogicalAddresses(std::vector<int32_t>* _aidl_return) override {
+        _aidl_return->clear();              // a real HAL returns the CEC addresses
+        return Status::ok();
+    }
+
+    Status open(const ::android::sp<IHdmiCecEventListener>& /*listener*/,
+                ::android::sp<IHdmiCecController>* _aidl_return) override {
+        *_aidl_return = nullptr;            // a real HAL returns its controller
+        return Status::ok();
+    }
+
+    Status close(const ::android::sp<IHdmiCecController>& /*controller*/,
+                 bool* _aidl_return) override {
+        *_aidl_return = true;
+        return Status::ok();
+    }
+
+    Status registerEventListener(const ::android::sp<IHdmiCecEventListener>& /*l*/,
+                                 bool* _aidl_return) override {
+        *_aidl_return = true;
+        return Status::ok();
+    }
+
+    Status unregisterEventListener(const ::android::sp<IHdmiCecEventListener>& /*l*/,
+                                   bool* _aidl_return) override {
+        *_aidl_return = true;
+        return Status::ok();
+    }
 };
 
 int main() {
