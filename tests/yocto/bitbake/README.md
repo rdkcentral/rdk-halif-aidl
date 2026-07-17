@@ -8,8 +8,60 @@ reached integrators instead of us.
 `run.sh` closes that gap: it runs **real bitbake** on the `rdk-halif-aidl` recipe
 in a container and **asserts the packaging is correct**. It already earned its
 keep - it found that the per-component `-dbg` split did not work (OE puts every
-`.debug` file in the first `-dbg` package, so 20 shipped empty), which is fixed
-now to a single `rdk-halif-aidl-dbg`.
+`.debug` file in the first `-dbg` package, so 20 shipped empty), now fixed to a
+single `rdk-halif-aidl-dbg`.
+
+## Nothing large is committed - it is all fetched on first run
+
+The repo carries **~32 KB of scripts**. Everything heavy - the container image,
+poky, the toolchain, sstate - is downloaded or built on the **first run** into a
+git-ignored `.work/` (~11 GB). No Dockerfile, no tarballs, no binaries in the
+repo.
+
+```mermaid
+flowchart LR
+    subgraph REPO["Committed to the repo — ~32 KB"]
+        direction TB
+        S["run.sh"]
+        L["meta-halif-ci/<br/>layer.conf · stub linux-binder.bb · bbappend"]
+    end
+    subgraph RUN["Fetched / built on first run — ~11 GB, git-ignored (.work/)"]
+        direction TB
+        I["crops/poky image<br/>Docker Hub"]
+        P["poky kirkstone<br/>git.yoctoproject.org"]
+        W["toolchain · sstate · downloads · build tree"]
+    end
+    S -->|docker pull| I
+    S -->|git clone| P
+    S -->|bitbake builds| W
+```
+
+## How a run flows
+
+```mermaid
+flowchart TD
+    A["./tests/yocto/bitbake/run.sh"] --> B["raise fs.inotify limit if needed"]
+    B --> C["docker pull crops/poky<br/>first run only, cached after"]
+    C --> D["git clone poky kirkstone<br/>first run only, cached after"]
+    D --> E["tar your out/ Binder SDK<br/>into the stub linux-binder recipe"]
+    E --> F["bitbake rdk-halif-aidl -c package<br/>inside the crops/poky container"]
+    F --> G["inspect packages-split/"]
+    G --> H{"assertions pass?"}
+    H -->|yes| OK["✅ exit 0"]
+    H -->|no| NO["❌ exit 1 — names the bad package"]
+```
+
+## What bitbake actually does to the recipe
+
+```mermaid
+flowchart TD
+    SRC["rdk-halif-aidl repo<br/>fetched from the branch under test"] --> CMP
+    STUB["linux-binder stub<br/>stages your prebuilt Binder SDK"] --> CMP
+    CMP["do_compile<br/>halif_plan orders deps, cmake builds 21 components"] --> INST
+    INST["do_install<br/>libs → /vendor/rdk-halif-aidl<br/>headers → /usr/include/rdk-halif-aidl"] --> PKG
+    PKG["do_package<br/>split + strip + debug"] --> OUT
+    OUT["21× rdk-halif-aidl-&lt;comp&gt;  (the .so, on the role mount)<br/>21× rdk-halif-aidl-&lt;comp&gt;-dev  (headers)<br/>1× rdk-halif-aidl-dbg  (all debug symbols)"] --> AS["run.sh assertions"]
+```
 
 ## Run it
 
@@ -28,9 +80,9 @@ cached (minutes). Options:
 
 ## Prerequisites
 
-- **docker**
-- the **Binder SDK built** (`./build_binder.sh` -> `out/`) - the stub recipe
-  stages it so we do not have to reproduce the whole RDK layer stack
+- **docker** (the image is pulled at first run; nothing to install)
+- the **Binder SDK built** (`./build_binder.sh` → `out/`) - the stub recipe
+  stages it so we do not reproduce the whole RDK layer stack
 - **`fs.inotify.max_user_instances` >= 512** - a standard Yocto requirement;
   bitbake's parser fails without it. `run.sh` raises it if it can (passwordless
   sudo), otherwise it prints the one command to run. Persist it in
@@ -51,7 +103,9 @@ After a green `do_package`, on the produced `packages-split/`:
 ```
 tests/yocto/bitbake/
 ├── run.sh                 the test: docker + poky + bitbake + assertions
-└── meta-halif-ci/         a minimal layer that only exists for CI
+├── README.md
+├── .gitignore             ignores .work/ and the staged binder tarball
+└── meta-halif-ci/         a minimal layer that exists only for CI
     ├── conf/layer.conf
     ├── recipes-binder/linux-binder/       stub: stages the prebuilt Binder SDK
     │                                       so the recipe's DEPENDS resolves
@@ -62,6 +116,4 @@ tests/yocto/bitbake/
 The recipe itself lives in the consumable layer `tests/yocto/meta-rdk-halif-aidl/`
 and is fetched from git (not `externalsrc` - that broke fakeroot for `do_package`
 and hashed the in-repo build tree). To test a local commit, push it and point
-`HALIF_TEST_BRANCH`/the bbappend `SRCREV` at it.
-
-`.work/` (poky, the build tree, downloads, sstate) is git-ignored.
+`HALIF_TEST_BRANCH` / the bbappend `SRCREV` at it.
