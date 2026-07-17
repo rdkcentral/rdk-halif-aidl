@@ -28,6 +28,25 @@
 #
 #   Everything is named -aidl so it never collides with the legacy C HAL
 #   (rdk-halif-*) on a rootfs carrying both during migration.
+#
+#
+# WHAT REACHES THE TARGET  (given RDEPENDS / IMAGE_INSTALL)
+# -----------------------------------------------------------------------------
+#   The staging tree above and the device rootfs are NOT the same thing:
+#
+#     /usr/lib/rdk-halif-aidl/
+#     |-- libhdmicec-v0.1.0.0-cpp.so     <- pkg rdk-halif-aidl-hdmicec
+#     `-- libcommon-v0.2.0.0-cpp.so      <- pkg rdk-halif-aidl-common
+#     /usr/bin/
+#     `-- vendor-halif-example           <- this recipe
+#
+#   Libraries ONLY - no headers on the target. Headers are packaged into
+#   rdk-halif-aidl-<comp>-dev, which is a build-time (staging) package and is not
+#   installed into a normal image. That is why RDEPENDS below names the runtime
+#   packages and never the -dev ones.
+#
+#   The libraries carry no RPATH, so the loader resolves libbinder/libutils from
+#   the image's standard paths - keep them installed.
 
 SUMMARY = "EXAMPLE vendor implementation of an RDK HAL AIDL interface"
 HOMEPAGE = "https://github.com/rdkcentral/rdk-halif-aidl"

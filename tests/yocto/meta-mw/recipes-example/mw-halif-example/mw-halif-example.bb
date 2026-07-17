@@ -22,6 +22,27 @@
 #   Everything is named -aidl so it never collides with the legacy C HAL
 #   (rdk-halif-*) on a rootfs carrying both during migration.
 #
+#
+# WHAT REACHES THE TARGET  (given RDEPENDS / IMAGE_INSTALL)
+# -----------------------------------------------------------------------------
+#   The staging tree above and the device rootfs are NOT the same thing:
+#
+#     /usr/lib/rdk-halif-aidl/
+#     |-- libavclock-v0.2.0.1-cpp.so     <- pkg rdk-halif-aidl-avclock
+#     `-- libcommon-v0.2.0.0-cpp.so      <- pkg rdk-halif-aidl-common
+#     /usr/bin/
+#     `-- mw-halif-example               <- this recipe
+#
+#   Libraries ONLY - no headers on the target. Headers are packaged into
+#   rdk-halif-aidl-<comp>-dev, which is a build-time (staging) package and is not
+#   installed into a normal image. That is why RDEPENDS below names the runtime
+#   packages and never the -dev ones.
+#
+#   The libraries carry no RPATH, so the loader resolves libbinder/libutils from
+#   the image's standard paths - keep them installed. The vendor implementation
+#   must also be on the rootfs and running, or the service lookup below returns
+#   null.
+#
 #   Client/server compatibility is a RUNTIME concern as well as a link-time one:
 #   gate newer calls on getInterfaceVersion() rather than assuming the server is
 #   as new as the headers you compiled against. See docs/standards/client-patterns.md.
