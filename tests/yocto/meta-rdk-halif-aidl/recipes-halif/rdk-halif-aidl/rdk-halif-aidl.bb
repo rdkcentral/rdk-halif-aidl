@@ -209,30 +209,35 @@ do_install() {
 }
 
 # Split the output into one package per component: rdk-halif-aidl-<comp> (the .so)
-# and rdk-halif-aidl-<comp>-dev (its headers). The -aidl in the package name keeps
-# these distinct from the legacy C HAL's rdk-halif-* packages on the same rootfs.
-# Built at parse time from HALIF_COMPONENTS.
+# and rdk-halif-aidl-<comp>-dev (its headers), plus a single rdk-halif-aidl-dbg for
+# all debug symbols. The -aidl in the package name keeps these distinct from the
+# legacy C HAL's rdk-halif-* packages on the same rootfs. Built at parse time from
+# HALIF_COMPONENTS.
 python () {
     comps = (d.getVar('HALIF_COMPONENTS') or '').split()
     libdir = d.getVar('HALIF_LIBDIR')
     incdir = d.getVar('HALIF_INCDIR')
-    pkgs = []
+
+    # ONE debug package for the whole recipe. Setting PACKAGES replaces the
+    # defaults - which drops bitbake's own ${PN}-dbg, and then the .debug files
+    # its splitter produces belong to no package and do_package fails with
+    # "installed but not shipped". OE assigns EVERY .debug file to the first -dbg
+    # package in PACKAGES order (it does not honour per-package FILES for debug),
+    # so per-component -dbg packages would pile all symbols into one and leave the
+    # rest empty. A single ${PN}-dbg, listed first, is the idiomatic split.
+    dbg = (d.getVar('PN') or 'rdk-halif-aidl') + '-dbg'
+    d.setVar('SUMMARY:' + dbg, 'RDK HAL AIDL debug symbols')
+    d.setVar('FILES:' + dbg, '%s/.debug' % libdir)
+
+    pkgs = [dbg]
     for c in comps:
         main = 'rdk-halif-aidl-' + c
         dev = '%s-dev' % main
-        dbg = '%s-dbg' % main
-        # Order matters: bitbake assigns each file to the FIRST package whose
-        # FILES matches it, so -dbg and -dev must precede the library package.
-        pkgs += [dbg, dev, main]
+        # -dev before the library package: bitbake assigns each file to the FIRST
+        # package whose FILES matches it.
+        pkgs += [dev, main]
         d.setVar('SUMMARY:' + main, 'RDK HAL AIDL interface library: %s' % c)
         d.setVar('SUMMARY:' + dev, 'RDK HAL AIDL interface headers: %s' % c)
-        d.setVar('SUMMARY:' + dbg, 'RDK HAL AIDL debug symbols: %s' % c)
-        # Setting PACKAGES replaces the defaults, which drops bitbake's own
-        # ${PN}-dbg - and then the debug files its splitter produces belong to no
-        # package and do_package fails with "installed but not shipped". Give
-        # every component its own -dbg rather than reverting to default packaging,
-        # which would collapse all components back into a single package.
-        d.setVar('FILES:' + dbg, '%s/.debug/lib%s-v*-cpp.so*' % (libdir, c))
         d.setVar('FILES:' + dev, '%s/%s' % (incdir, c))
         d.setVar('FILES:' + main, '%s/lib%s-v*-cpp.so' % (libdir, c))
         d.setVar('INSANE_SKIP:' + main, 'dev-so')
