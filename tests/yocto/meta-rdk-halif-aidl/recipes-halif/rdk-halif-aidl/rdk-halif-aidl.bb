@@ -39,17 +39,43 @@
 #   ${B}/staged/include/rdk-halif-aidl/ the plan can link/include them
 #
 #
-# WHAT IT SHIPS - the consumption surface
+# WHAT IT SHIPS - two surfaces: STAGING (build time) and TARGET (runtime)
 # -----------------------------------------------------------------------------
-#   ${libdir}/rdk-halif-aidl/lib<comp>-v<ver>-cpp.so
-#                                       -> package rdk-halif-aidl-<comp>
-#   ${includedir}/rdk-halif-aidl/<comp>/<ver>/include/com/rdk/hal/...
-#                                       -> package rdk-halif-aidl-<comp>-dev
+# do_install lays the files out under ${D}; packaging then splits them, and the
+# two halves land in DIFFERENT places. They are NOT the same tree:
 #
-#   The version is in the .so NAME (and its SONAME), so libraries for several
-#   versions sit side by side in one flat directory. Headers have no version in
-#   their filename (BnPropertyValue.h is the same name in every version), so for
-#   them the version has to live in the PATH.
+#   STAGING - what a consumer COMPILES AND LINKS AGAINST.
+#   Pulled into the consumer's recipe-sysroot by DEPENDS = "rdk-halif-aidl".
+#   Build-time only; never on the device.
+#
+#     ${STAGING_DIR_HOST}/                     <- the consumer's recipe-sysroot
+#     `-- usr/
+#         |-- lib/rdk-halif-aidl/              <- ${STAGING_LIBDIR}/rdk-halif-aidl
+#         |   |-- libcommon-v0.2.0.0-cpp.so
+#         |   `-- libhdmicec-v0.1.0.0-cpp.so
+#         `-- include/rdk-halif-aidl/          <- ${STAGING_INCDIR}/rdk-halif-aidl
+#             |-- common/0.2.0.0/include/com/rdk/hal/...
+#             `-- hdmicec/0.1.0.0/include/com/rdk/hal/hdmicec/IHdmiCec.h
+#
+#   TARGET - what actually lands on the DEVICE ROOTFS.
+#   Pulled in by RDEPENDS / IMAGE_INSTALL of the per-component packages.
+#
+#     /usr/lib/rdk-halif-aidl/
+#     |-- libcommon-v0.2.0.0-cpp.so            <- pkg rdk-halif-aidl-common
+#     `-- libhdmicec-v0.1.0.0-cpp.so           <- pkg rdk-halif-aidl-hdmicec
+#
+#     NOTE: no headers here. They are packaged into rdk-halif-aidl-<comp>-dev,
+#     which is a build-time (staging) package - it is not installed into a normal
+#     image. The rootfs carries libraries only.
+#
+#   Package -> files:
+#     rdk-halif-aidl-<comp>       ${libdir}/rdk-halif-aidl/lib<comp>-v*-cpp.so
+#     rdk-halif-aidl-<comp>-dev   ${includedir}/rdk-halif-aidl/<comp>/
+#
+#   Why the version sits where it does: it is in the .so NAME (and its SONAME),
+#   so libraries for several versions sit side by side in one flat directory.
+#   Headers have no version in their filename (BnPropertyValue.h is identical in
+#   every version), so for them the version has to live in the PATH.
 #
 #
 # WHAT A CONSUMER DOES

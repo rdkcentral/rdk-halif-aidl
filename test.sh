@@ -956,6 +956,13 @@ test_12() {
         return 1
     fi
     echo "✅ mw example built the full HAL from the released cohort"
+    echo ""
+    echo "==> Test 12.5: artifact check - the libraries are shippable, not just built"
+    if ! ./tests/yocto/ci/yocto_artifact_check.sh; then
+        echo "❌ artifact check failed (RPATH / SONAME / binder deps)"
+        return 1
+    fi
+    echo "✅ artifacts are shippable"
     return 0
 }
 
