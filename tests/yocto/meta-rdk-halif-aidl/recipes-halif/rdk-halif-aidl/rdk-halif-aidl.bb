@@ -60,9 +60,18 @@
 #   TARGET - what actually lands on the DEVICE ROOTFS.
 #   Pulled in by RDEPENDS / IMAGE_INSTALL of the per-component packages.
 #
-#     /usr/lib/rdk-halif-aidl/
+#   The rootfs mounts a partition PER LAYER, so this is not an FHS /usr/lib
+#   layout - HALIF_ROLE selects the mount:
+#
+#     /vendor/rdk-halif-aidl/                  <- HALIF_ROLE = "vendor"
 #     |-- libcommon-v0.2.0.0-cpp.so            <- pkg rdk-halif-aidl-common
 #     `-- libhdmicec-v0.1.0.0-cpp.so           <- pkg rdk-halif-aidl-hdmicec
+#
+#     /mw/rdk-halif-aidl/                      <- HALIF_ROLE = "mw"
+#     `-- ...                                  same libraries, middleware mount
+#
+#     Flat: no per-module or per-version subdirectory, because the version is in
+#     the filename (and the SONAME), so versions coexist in one directory.
 #
 #     NOTE: no headers here. They are packaged into rdk-halif-aidl-<comp>-dev,
 #     which is a build-time (staging) package - it is not installed into a normal
@@ -95,8 +104,11 @@
 # meta-mw example includes):
 #   HALIF_COMPONENTS        components to build   (default: all, from the .inc)
 #   HALIF_VERSIONS_FILE     versions manifest     (default: versions_released.yaml)
-#   HALIF_ROLE              vendor | mw           (labels who is building)
-#   HALIF_LIBDIR/INCDIR     install destinations  (default: ${libdir}/rdk-halif-aidl)
+#   HALIF_ROLE              vendor | mw           selects the TARGET MOUNT POINT
+#                                                 (/vendor or /mw) - not a label
+#   HALIF_LIBDIR            target install mount  (default: /${HALIF_ROLE}/rdk-halif-aidl)
+#   HALIF_INCDIR            header staging dir    (default: ${includedir}/rdk-halif-aidl;
+#                                                 headers never reach the target)
 #
 # The offline contract tests tests/yocto/ci/*.sh exercise the same build loop
 # without BitBake. This is reference material - adapt SRCREV and the toolchain to
@@ -120,8 +132,19 @@ DEPENDS = "linux-binder"
 # subset HALIF_COMPONENTS and set HALIF_VERSIONS_FILE in its own include.
 require ${THISDIR}/halif-components.inc
 
+# The role IS the target mount point, not a label: the rootfs mounts a partition
+# per layer, so the vendor layer and the middleware layer are different mounts and
+# their libraries land in different places. Setting HALIF_ROLE therefore picks the
+# destination:
+#     vendor -> /vendor/rdk-halif-aidl/lib<comp>-v<ver>-cpp.so
+#     mw     -> /mw/rdk-halif-aidl/lib<comp>-v<ver>-cpp.so
+# A platform whose mounts differ overrides HALIF_LIBDIR outright.
 HALIF_ROLE ??= "vendor"
-HALIF_LIBDIR ??= "${libdir}/rdk-halif-aidl"
+HALIF_LIBDIR ??= "/${HALIF_ROLE}/rdk-halif-aidl"
+
+# Headers never reach the target - they are packaged into rdk-halif-aidl-<comp>-dev
+# and consumed from the build sysroot - so they follow the sysroot's includedir
+# rather than a target mount point.
 HALIF_INCDIR ??= "${includedir}/rdk-halif-aidl"
 
 # Versions manifest (components: {comp: ver}), consumed directly. Defaults to the
@@ -195,11 +218,23 @@ python () {
     incdir = d.getVar('HALIF_INCDIR')
     pkgs = []
     for c in comps:
-        main, dev = 'rdk-halif-aidl-' + c, 'rdk-halif-aidl-%s-dev' % c
-        pkgs += [dev, main]
+        main = 'rdk-halif-aidl-' + c
+        dev = '%s-dev' % main
+        dbg = '%s-dbg' % main
+        # Order matters: bitbake assigns each file to the FIRST package whose
+        # FILES matches it, so -dbg and -dev must precede the library package.
+        pkgs += [dbg, dev, main]
         d.setVar('SUMMARY:' + main, 'RDK HAL AIDL interface library: %s' % c)
-        d.setVar('FILES:' + main, '%s/lib%s-v*-cpp.so' % (libdir, c))
+        d.setVar('SUMMARY:' + dev, 'RDK HAL AIDL interface headers: %s' % c)
+        d.setVar('SUMMARY:' + dbg, 'RDK HAL AIDL debug symbols: %s' % c)
+        # Setting PACKAGES replaces the defaults, which drops bitbake's own
+        # ${PN}-dbg - and then the debug files its splitter produces belong to no
+        # package and do_package fails with "installed but not shipped". Give
+        # every component its own -dbg rather than reverting to default packaging,
+        # which would collapse all components back into a single package.
+        d.setVar('FILES:' + dbg, '%s/.debug/lib%s-v*-cpp.so*' % (libdir, c))
         d.setVar('FILES:' + dev, '%s/%s' % (incdir, c))
+        d.setVar('FILES:' + main, '%s/lib%s-v*-cpp.so' % (libdir, c))
         d.setVar('INSANE_SKIP:' + main, 'dev-so')
     d.setVar('PACKAGES', ' '.join(pkgs))
 }

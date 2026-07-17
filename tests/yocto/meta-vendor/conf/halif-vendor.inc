@@ -2,9 +2,15 @@
 # local.conf / distro:
 #   require ${TOPDIR}/../rdk-halif-aidl/tests/yocto/meta-vendor/conf/halif-vendor.inc
 
+# The role is the target mount point, not a label - the rootfs mounts a partition
+# per layer. Setting it to vendor puts the libraries on the vendor mount:
+#
+#   /vendor/rdk-halif-aidl/lib<comp>-v<ver>-cpp.so
+#
+# HALIF_LIBDIR derives from this (/${HALIF_ROLE}/rdk-halif-aidl), so it is
+# deliberately NOT set here. Override it only if this platform's vendor mount is
+# somewhere else.
 HALIF_ROLE = "vendor"
-HALIF_LIBDIR = "${libdir}/rdk-halif-aidl"
-HALIF_INCDIR = "${includedir}/rdk-halif-aidl"
 
 # HALIF_COMPONENTS is left at its default (the full component list) and
 # HALIF_VERSIONS_FILE defaults to the source's versions_released.yaml, so this
