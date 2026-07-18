@@ -74,9 +74,15 @@ cached (minutes). Options:
 
 | Env | Effect |
 | --- | ------ |
-| `HALIF_BB_CLEAN=1`   | force a clean re-fetch + rebuild of the recipe |
-| `HALIF_TEST_BRANCH=` | test a different branch (default: the #661 branch) |
-| `HALIF_BB_WORK=`     | put the (large) build tree somewhere else |
+| `HALIF_BB_CLEAN=1`     | force a clean re-fetch + rebuild of the recipe |
+| `HALIF_TEST_BRANCH=`   | test a different branch (default: the #661 branch) |
+| `HALIF_BB_COMPONENTS=` | build only a subset; the planner adds each one's dependency closure |
+| `HALIF_BB_WORK=`       | put the (large) build tree somewhere else |
+
+`HALIF_BB_COMPONENTS` exercises the closure resolution: `"hdmicec"` builds hdmicec
+plus the `common` it links, and `"audiodecoder:0.1.0.0 hdmicec:0.1.0.0"` builds
+BOTH `common` versions those two consumers pin — the assertions confirm the
+`rdk-halif-aidl-common` package then holds both `.so`.
 
 ## Prerequisites
 

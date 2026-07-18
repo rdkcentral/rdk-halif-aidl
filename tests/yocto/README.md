@@ -186,6 +186,29 @@ and `meta-mw/conf/halif-mw.inc` for role configs to `require` from your
 `local.conf`/distro. A platform whose mounts differ overrides `HALIF_LIBDIR`
 outright.
 
+### Dependencies resolve automatically, at the version each consumer links
+
+You name only the components you *want*; their dependencies are pulled in
+automatically (the transitive closure), so `common` is never listed by hand:
+
+```bitbake
+HALIF_COMPONENTS = "hdmicec"     # builds hdmicec AND the common it links
+```
+
+The closure is keyed by **(component, version)**, so different versions of one
+dependency coexist in a single build — the version lives in the `.so` name, so
+they sit side by side. If two consumers pin different versions:
+
+```bitbake
+HALIF_COMPONENTS = "audiodecoder:0.1.0.0 hdmicec:0.1.0.0"
+```
+
+`audiodecoder@0.1.0.0` links `common@0.1.0.0` while `hdmicec@0.1.0.0` links
+`common@0.2.0.0`, so **both** commons are built and land in the
+`rdk-halif-aidl-common` package (`libcommon-v0.1.0.0-cpp.so` and
+`libcommon-v0.2.0.0-cpp.so`). Each consumer's runtime dependency resolves to the
+exact version it links.
+
 ## Running the tests
 
 **Real BitBake** — builds + packages the recipe in a container and asserts the

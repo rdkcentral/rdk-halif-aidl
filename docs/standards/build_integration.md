@@ -121,15 +121,18 @@ knobs:
 - **Which components** — `HALIF_COMPONENTS`, defaulting to the full list from the
   generated `halif-components.inc` (every buildable released component;
   `broadcast` is absent because it has no released snapshot). Leave it at the
-  default to build **every HAL**, or set a subset. The recipe splits the output
-  into one package per component (`rdk-halif-aidl-<comp>`).
+  default to build **every HAL**, or set a subset — you name only what you want,
+  and `halif_plan.py` adds each component's dependency closure automatically, so
+  `common` need never be listed. The recipe splits the output into one package
+  per component (`rdk-halif-aidl-<comp>`).
 - **Which version** — every component builds its **latest** released snapshot by
-  default. To pin specific versions, point `HALIF_VERSIONS_FILE` at a manifest
-  (`components: {comp: ver}`, same schema as `versions_released.yaml`); the recipe
-  **consumes it directly**. `halif_plan.py` resolves the build order and rejects
-  an inconsistent set — a component's linked dependencies must be pinned at the
-  exact linked version, so pinning an older *base* component (e.g. `common`)
-  constrains the build to that version's closure.
+  default; point `HALIF_VERSIONS_FILE` at a manifest (`components: {comp: ver}`,
+  same schema as `versions_released.yaml`) to pin the top-level components. Each
+  dependency follows the exact version its dependent links, and because the
+  closure is keyed by (component, version), **different versions of one dependency
+  coexist** in a single build — one consumer's `common@0.1.0.0` and another's
+  `common@0.2.0.0` are both built and shipped, side by side in the
+  `rdk-halif-aidl-common` package.
 
 There is no generated per-config include — a build configuration just sets the
 mount point and (optionally) a versions manifest:

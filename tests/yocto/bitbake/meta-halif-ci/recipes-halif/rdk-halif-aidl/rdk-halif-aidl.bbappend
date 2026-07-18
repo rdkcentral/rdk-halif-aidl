@@ -10,7 +10,7 @@
 HALIF_TEST_BRANCH ??= "feature/661-yocto-per-component-recipes"
 
 SRC_URI = "git://github.com/rdkcentral/rdk-halif-aidl.git;protocol=https;branch=${HALIF_TEST_BRANCH}"
-SRCREV = "a1657c4180c16139e25ce98fde6b69af76001df1"
+SRCREV = "aeb0e5103a6e85d1ee9ff3f67cfc3663a1ef730f"
 
 # The CI container builds as a non-target uid (crops/poky's pokyuser, 1000). The
 # recipe's do_install cp -a preserves that uid, and do_package rejects ownership
