@@ -39,7 +39,9 @@ REPO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../../.." && pwd)"
 cd "${REPO_ROOT}"
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/yocto-example.XXXXXX")"
-STAGE="${WORK}/sysroot/usr"     # mirrors the consumer's recipe-sysroot
+SYSROOT="${WORK}/sysroot"       # the consumer's recipe-sysroot ROOT. The role mounts
+                                # are siblings of /usr, so the sysroot is the root
+                                # (${STAGING_DIR_HOST}), not /usr.
 trap 'rm -rf "${WORK}"' EXIT
 fail() { echo ""; echo "❌ yocto_example_check FAILED: $1"; exit 1; }
 
@@ -47,40 +49,64 @@ echo "========================================="
 echo "  yocto: example recipes must compile"
 echo "========================================="
 
-# --- stage the full HAL into a sysroot, exactly as DEPENDS='rdk-halif-aidl' would
+# --- stage the HAL for BOTH roles into one sysroot, exactly as DEPENDS=
+#     'rdk-halif-aidl' would: each role installs to its own mount, so the vendor
+#     and mw examples each resolve against their own (${SYSROOT}/vendor/rdk-halif-aidl,
+#     ${SYSROOT}/mw/rdk-halif-aidl).
 echo ""
-echo "[stage] building the HAL into a sysroot ..."
-DEST="${STAGE}" "${REPO_ROOT}/tests/yocto/ci/yocto_build.sh" vendor \
-    > "${WORK}/stage.log" 2>&1 || { tail -20 "${WORK}/stage.log" | sed 's/^/    /'; fail "staging the HAL"; }
+for role in vendor mw; do
+    echo "[stage] building the ${role} HAL into ${SYSROOT}/${role}/rdk-halif-aidl ..."
+    DEST="${SYSROOT}" "${REPO_ROOT}/tests/yocto/ci/yocto_build.sh" "${role}" \
+        > "${WORK}/stage-${role}.log" 2>&1 \
+        || { tail -20 "${WORK}/stage-${role}.log" | sed 's/^/    /'; fail "staging the ${role} HAL"; }
+done
 
-# the Binder SDK the interface libraries link against
+# --- linux-binder: stage the Binder SDK into the sysroot at the non-standard
+#     subdirs the interface headers/libs use (include/binder_sdk, lib/binder), so
+#     the example's own ${STAGING_INCDIR}/binder_sdk + ${STAGING_LIBDIR}/binder resolve.
 SDK_INC="${REPO_ROOT}/out/build/include/binder_sdk"
 SDK_LIB="${REPO_ROOT}/out/target/lib/binder"
 [ -d "${SDK_INC}" ] || fail "Binder SDK headers missing (run build_binder.sh)"
+install -d "${SYSROOT}/usr/include" "${SYSROOT}/usr/lib"
+cp -r "${SDK_INC}" "${SYSROOT}/usr/include/binder_sdk"
+cp -r "${SDK_LIB}" "${SYSROOT}/usr/lib/binder"
 
 CXX="${CXX:-g++}"
 
 # extract_flags <example.bb> <var> : print CXXFLAGS/LDFLAGS from the .bb with the
-# bitbake vars it references resolved to this sysroot. We consume the recipe's
-# OWN flags so the test tracks what integrators are told to use.
+# bitbake vars it references resolved to this sysroot. We consume the recipe's OWN
+# flags - including its derived vars (HALIF_MOUNT_POINT, HALIF_STAGED, BINDER_*) -
+# so the test tracks exactly what integrators are told to use.
 extract_flags() {
-    python3 - "$1" "$2" "${STAGE}" <<'PY'
+    python3 - "$1" "$2" "${SYSROOT}" <<'PY'
 import re, sys
-bb, want, stage = sys.argv[1], sys.argv[2], sys.argv[3]
+bb, want, root = sys.argv[1], sys.argv[2], sys.argv[3]
 text = open(bb).read()
-# HALIF_*_VER ?= "x"  ->  version vars the flag lines interpolate
-vers = dict(re.findall(r'(HALIF_\w+_VER)\s*\?\?=\s*"([^"]+)"', text)
-            + re.findall(r'(HALIF_\w+_VER)\s*\?=\s*"([^"]+)"', text))
-# VAR += "....."  (join line-continuations)
-m = re.search(r'%s\s*\+=\s*"((?:[^"\\]|\\.)*)"' % re.escape(want), text, re.S)
-if not m:
+# Every scalar assignment in the recipe: NAME (??=|?=|=) "value". First one wins,
+# which matches ?= semantics closely enough for these recipes. Skips NAME:append.
+vars = {}
+for name, val in re.findall(
+        r'^[ \t]*([A-Za-z_][A-Za-z0-9_]*)[ \t]*(?:\?\?=|\?=|=)[ \t]*"((?:[^"\\]|\\.)*)"',
+        text, re.M):
+    vars.setdefault(name, val)
+# Staging vars bitbake would set; the mounts are siblings of /usr under the root.
+vars['STAGING_DIR_HOST'] = root
+vars['STAGING_INCDIR']   = root + '/usr/include'
+vars['STAGING_LIBDIR']   = root + '/usr/lib'
+# The wanted flag var (concatenate its += lines, join continuations).
+parts = re.findall(r'%s[ \t]*\+=[ \t]*"((?:[^"\\]|\\.)*)"' % re.escape(want), text, re.S)
+if not parts:
     sys.exit(0)
-val = m.group(1).replace("\\\n", " ")
-val = val.replace("${STAGING_INCDIR}", stage + "/include")
-val = val.replace("${STAGING_LIBDIR}", stage + "/lib")
-for k, v in vers.items():
-    val = val.replace("${%s}" % k, v)
-print(" ".join(val.split()))
+val = ' '.join(p.replace('\\\n', ' ') for p in parts)
+# Iteratively expand ${VAR} until stable: HALIF_STAGED -> ${STAGING_DIR_HOST}
+# ${HALIF_MOUNT_POINT}/... -> the concrete sysroot path.
+for _ in range(25):
+    new = re.sub(r'\$\{([A-Za-z_][A-Za-z0-9_]*)\}',
+                 lambda m: vars.get(m.group(1), m.group(0)), val)
+    if new == val:
+        break
+    val = new
+print(' '.join(val.split()))
 PY
 }
 
@@ -99,10 +125,14 @@ check_example() {
 
     echo ""
     echo "[${name}] compile + link with the recipe's own flags ..."
+    # Source first, then the recipe's own -I/-L/-l (which now name the HAL mount AND
+    # the Binder SDK). rpath-link lets ld follow libbinder.so's NEEDED siblings
+    # (libbase/liblog/libcutils) in the same dir. Host g++ + host-built SDK share an
+    # ABI, so this is a FULL link - no undefined-symbol relaxation needed.
     # shellcheck disable=SC2086
     if "${CXX}" -std=c++17 "${src}" -o "${WORK}/${name}" \
-            -I "${SDK_INC}" ${cxxflags} \
-            -L "${SDK_LIB}" -Wl,-rpath-link,"${SDK_LIB}" ${ldflags} \
+            ${cxxflags} \
+            ${ldflags} -Wl,-rpath-link,"${SYSROOT}/usr/lib/binder" \
             > "${WORK}/${name}.log" 2>&1; then
         echo "    ✓ ${name} builds against the staged HAL"
     else

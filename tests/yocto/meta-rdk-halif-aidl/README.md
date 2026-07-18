@@ -31,11 +31,11 @@ released component, from the generated `halif-components.inc`), each at its
 latest snapshot — or at the versions in **`HALIF_VERSIONS_FILE`** if a
 configuration pins some. It resolves the build order with `scripts/halif_plan.py`,
 stages each component's lib + headers for its dependents, and installs to
-`HALIF_LIBDIR` / `HALIF_INCDIR` (overridable), tagged by `HALIF_ROLE`
-(`vendor` | `mw`).
+`HALIF_LIBDIR` / `HALIF_INCDIR` (overridable), rooted at the mount point
+`HALIF_MOUNT_POINT` (`/vendor` | `/mw`).
 
 The sibling **`meta-vendor`** and **`meta-mw`** example layers both build the
-full HAL at latest, differing only by role + destination;
+full HAL at latest, differing only by mount point;
 the versions manifest defaults to the released cohort (`versions_released.yaml`);
 format.
 

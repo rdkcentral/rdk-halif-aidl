@@ -59,9 +59,11 @@
 #   <work>/stage/usr/lib/rdk-halif-aidl/         built siblings, so components
 #   <work>/stage/usr/include/rdk-halif-aidl/     later in the plan can link them
 #
-# Produces - the same layout the recipe's packages ship:
-#   <dest>/lib/rdk-halif-aidl/lib<comp>-v<ver>-cpp.so
-#   <dest>/include/rdk-halif-aidl/<comp>/<ver>/include/com/rdk/hal/...
+# Produces - the same layout the recipe's packages ship, rooted at the role MOUNT
+# (a partition, sibling of /usr - not an FHS /usr/lib path):
+#   <dest>/<mount>/rdk-halif-aidl/lib<comp>-v<ver>-cpp.so
+#   <dest>/<mount>/rdk-halif-aidl/include/<comp>/<ver>/include/com/rdk/hal/...
+# where <mount> is /vendor or /mw. <dest> is the rootfs ROOT (override with DEST=).
 # ---------------------------------------------------------------------------
 set -uo pipefail
 
@@ -70,6 +72,8 @@ case "${ROLE}" in
     vendor|mw) ;;
     *) echo "usage: $0 <vendor|mw> [versions-manifest] [--keep]" >&2; exit 2 ;;
 esac
+# The role IS the mount point (a partition), matching the recipe's HALIF_MOUNT_POINT.
+MOUNT="/${ROLE}"
 
 REPO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../../.." && pwd)"
 cd "${REPO_ROOT}"
@@ -92,7 +96,9 @@ VERSIONS="${VERSIONS:-${REPO_ROOT}/versions_released.yaml}"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/yocto-build-${ROLE}.XXXXXX")"
 SDK="${WORK}/sdk/usr"
 STAGE="${WORK}/stage/usr"                 # built cohort (dependencies for later builds)
-DEST="${DEST:-${WORK}/image/usr}"         # role destination (override with DEST=...)
+DEST="${DEST:-${WORK}/image}"            # rootfs ROOT (override with DEST=...); the
+                                          # HAL installs under ${DEST}${MOUNT}/rdk-halif-aidl
+HALIF_DEST="${DEST}${MOUNT}/rdk-halif-aidl"
 cleanup() { [ "${KEEP}" = true ] || rm -rf "${WORK}"; }
 trap cleanup EXIT
 fail() { echo ""; echo "❌ yocto_build(${ROLE}) FAILED: $1"; exit 1; }
@@ -137,17 +143,18 @@ while read -r comp ver; do
     echo "    ✓ ${comp}@${ver}"
 done <<< "${PLAN}"
 
-# --- install the built HAL to the role destination ---
-install -d "${DEST}/lib/rdk-halif-aidl" "${DEST}/include/rdk-halif-aidl"
-cp -a "${STAGE}/lib/rdk-halif-aidl/." "${DEST}/lib/rdk-halif-aidl/"
-cp -a "${STAGE}/include/rdk-halif-aidl/." "${DEST}/include/rdk-halif-aidl/"
-GOT=$(find "${DEST}/lib/rdk-halif-aidl" -name 'lib*-cpp.so' | wc -l)
-[ "${GOT}" -eq "${N}" ] || fail "installed ${GOT} of ${N} HAL libraries to ${DEST}"
+# --- install the built HAL to the role MOUNT (do_install: libs flat on the mount,
+#     headers under the mount's include/ subdir - exactly as the recipe ships) ---
+install -d "${HALIF_DEST}" "${HALIF_DEST}/include"
+cp -a "${STAGE}/lib/rdk-halif-aidl/." "${HALIF_DEST}/"
+cp -a "${STAGE}/include/rdk-halif-aidl/." "${HALIF_DEST}/include/"
+GOT=$(find "${HALIF_DEST}" -maxdepth 1 -name 'lib*-cpp.so' | wc -l)
+[ "${GOT}" -eq "${N}" ] || fail "installed ${GOT} of ${N} HAL libraries to ${HALIF_DEST}"
 
 echo ""
 echo "========================================="
 echo "✅ yocto_build(${ROLE}): ${GOT} HAL libraries from $(basename "${VERSIONS}")"
-echo "   installed to ${DEST}/lib/rdk-halif-aidl (headers under include/rdk-halif-aidl/<comp>/<ver>)"
+echo "   installed to ${HALIF_DEST} (headers under include/<comp>/<ver>)"
 echo "========================================="
 [ "${KEEP}" = true ] && echo "work dir kept at ${WORK}"
 exit 0

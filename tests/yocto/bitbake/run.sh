@@ -115,6 +115,7 @@ docker run --rm \
 set -e
 source poky/oe-init-build-env build >/dev/null
 bitbake-layers add-layer '${REPO_ROOT}/tests/yocto/meta-rdk-halif-aidl' 2>/dev/null || true
+bitbake-layers add-layer '${REPO_ROOT}/tests/yocto/meta-vendor' 2>/dev/null || true
 bitbake-layers add-layer '${HARNESS_DIR}/meta-halif-ci' 2>/dev/null || true
 if ! grep -q 'halif-ci-config' conf/local.conf; then
 cat >> conf/local.conf <<EOF
@@ -131,8 +132,13 @@ ${CLEAN_STEP}
 # -f: force do_package to actually run (not restore from sstate), so the
 # packages-split tree exists for the assertions below.
 bitbake ${TARGET} -c package -f
+# Build a REAL consumer against the staged HAL. vendor-halif-example has
+# DEPENDS = 'rdk-halif-aidl' and links -lhdmicec/-lcommon from the role mount, so
+# this only succeeds if SYSROOT_DIRS staged the role mount into its sysroot. It is
+# the regression guard for the staging path - a broken stage fails do_compile here.
+bitbake vendor-halif-example
 "
-[ $? -eq 0 ] || fail "bitbake ${TARGET} -c package failed (see log above)"
+[ $? -eq 0 ] || fail "bitbake failed (HAL package or consumer link - see log above)"
 
 # --- ASSERT the packaging on the host (packages-split is under WORK) --------
 PS="$(find "${WORK}/build/tmp/work" -maxdepth 5 -type d -name packages-split 2>/dev/null | grep "/${TARGET}/" | head -1)"
@@ -164,14 +170,28 @@ ndbg="$(find "${PS}" -maxdepth 1 -type d -name '*-dbg' | wc -l)"
 dbgn="$(find "${PS}/${TARGET}-dbg" -path '*/.debug/*' -name 'lib*-cpp.so' 2>/dev/null | wc -l)"
 [ "${dbgn}" = "${ncomp}" ] || { echo "  ❌ ${TARGET}-dbg holds ${dbgn} debug files (expected ${ncomp})"; errs=$((errs+1)); }
 
+# 4. headers ship in the -dev packages, under the role mount's include/ subdir
+devh="$(find "${PS}" -path '*-dev/*/rdk-halif-aidl/include/*' -name '*.h' 2>/dev/null | head -1)"
+[ -n "${devh}" ] || { echo "  ❌ no -dev headers under a role mount's include/ (staging layout wrong)"; errs=$((errs+1)); }
+
+# 5. THE STAGING PROOF: a real consumer (vendor-halif-example) linked against the
+# staged HAL. If SYSROOT_DIRS did not stage the role mount, its do_compile could
+# not have found -lhdmicec/-lcommon and bitbake above would have failed. Confirm
+# the linked binary actually exists.
+consumer="$(find "${WORK}/build/tmp/work" -type f -name vendor-halif-example -path '*/image/*' 2>/dev/null | head -1)"
+[ -z "${consumer}" ] && consumer="$(find "${WORK}/build/tmp/work" -type f -name vendor-halif-example -perm -u+x 2>/dev/null | grep -v '\.debug' | head -1)"
+[ -n "${consumer}" ] || { echo "  ❌ vendor-halif-example binary not found - consumer did not link against the staged HAL"; errs=$((errs+1)); }
+
 echo ""
 if [ "${errs}" -ne 0 ]; then
-    fail "packaging assertions failed (${errs})"
+    fail "assertions failed (${errs})"
 fi
 echo "========================================="
 echo "✅ ${TARGET} packages correctly (real bitbake do_package):"
 echo "   ${ncomp} runtime packages (lib on the role mount) + ${ncomp} -dev (headers)"
 echo "   + one ${TARGET}-dbg holding all ${dbgn} debug libraries"
-echo "   packages: ${PS}"
+echo "✅ staging proven: vendor-halif-example linked against the staged role mount"
+echo "   consumer binary: ${consumer}"
+echo "   packages:        ${PS}"
 echo "========================================="
 exit 0

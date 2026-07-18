@@ -41,45 +41,48 @@
 #
 # WHAT IT SHIPS - two surfaces: STAGING (build time) and TARGET (runtime)
 # -----------------------------------------------------------------------------
-# do_install lays the files out under ${D}; packaging then splits them, and the
-# two halves land in DIFFERENT places. They are NOT the same tree:
+# Both surfaces are ROOTED AT THE ROLE MOUNT (/vendor/rdk-halif-aidl or
+# /mw/rdk-halif-aidl). This is deliberate: vendor and middleware carry DIFFERENT
+# versions of the same components, so their staging trees must not share a path
+# any more than their target mounts do. HALIF_MOUNT_POINT selects the mount, and
+# that one mount is what both stages and installs.
 #
 #   STAGING - what a consumer COMPILES AND LINKS AGAINST.
-#   Pulled into the consumer's recipe-sysroot by DEPENDS = "rdk-halif-aidl".
-#   Build-time only; never on the device.
+#   The role mount is copied into the consumer's recipe-sysroot by
+#   SYSROOT_DIRS + DEPENDS = "rdk-halif-aidl". Build-time only; never on the device.
 #
 #     ${STAGING_DIR_HOST}/                     <- the consumer's recipe-sysroot
-#     `-- usr/
-#         |-- lib/rdk-halif-aidl/              <- ${STAGING_LIBDIR}/rdk-halif-aidl
-#         |   |-- libcommon-v0.2.0.0-cpp.so
-#         |   `-- libhdmicec-v0.1.0.0-cpp.so
-#         `-- include/rdk-halif-aidl/          <- ${STAGING_INCDIR}/rdk-halif-aidl
+#     `-- vendor/rdk-halif-aidl/               <- ${STAGING_DIR_HOST}${HALIF_LIBDIR}
+#         |-- libcommon-v0.2.0.0-cpp.so            (the .so, for linking)
+#         |-- libhdmicec-v0.1.0.0-cpp.so
+#         `-- include/                             (headers, staging-only)
 #             |-- common/0.2.0.0/include/com/rdk/hal/...
 #             `-- hdmicec/0.1.0.0/include/com/rdk/hal/hdmicec/IHdmiCec.h
 #
+#     A mw build stages the same shape under /mw/rdk-halif-aidl instead - a
+#     distinct subtree, so vendor's and mw's versions never collide in a sysroot.
+#
 #   TARGET - what actually lands on the DEVICE ROOTFS.
-#   Pulled in by RDEPENDS / IMAGE_INSTALL of the per-component packages.
+#   Pulled in by RDEPENDS / IMAGE_INSTALL of the per-component packages. The rootfs
+#   mounts a partition PER LAYER, so this is not an FHS /usr/lib layout - it is the
+#   SAME role mount as staging, carrying libraries only:
 #
-#   The rootfs mounts a partition PER LAYER, so this is not an FHS /usr/lib
-#   layout - HALIF_ROLE selects the mount:
-#
-#     /vendor/rdk-halif-aidl/                  <- HALIF_ROLE = "vendor"
+#     /vendor/rdk-halif-aidl/                  <- HALIF_MOUNT_POINT = "/vendor"
 #     |-- libcommon-v0.2.0.0-cpp.so            <- pkg rdk-halif-aidl-common
 #     `-- libhdmicec-v0.1.0.0-cpp.so           <- pkg rdk-halif-aidl-hdmicec
 #
-#     /mw/rdk-halif-aidl/                      <- HALIF_ROLE = "mw"
-#     `-- ...                                  same libraries, middleware mount
+#     /mw/rdk-halif-aidl/                      <- HALIF_MOUNT_POINT = "/mw"
+#     `-- ...                                  its own libraries, middleware mount
 #
 #     Flat: no per-module or per-version subdirectory, because the version is in
 #     the filename (and the SONAME), so versions coexist in one directory.
 #
-#     NOTE: no headers here. They are packaged into rdk-halif-aidl-<comp>-dev,
-#     which is a build-time (staging) package - it is not installed into a normal
-#     image. The rootfs carries libraries only.
+#     The include/ subdir is staging-only: it goes into rdk-halif-aidl-<comp>-dev,
+#     which is not installed into a normal image. The rootfs carries libraries only.
 #
 #   Package -> files:
-#     rdk-halif-aidl-<comp>       ${libdir}/rdk-halif-aidl/lib<comp>-v*-cpp.so
-#     rdk-halif-aidl-<comp>-dev   ${includedir}/rdk-halif-aidl/<comp>/
+#     rdk-halif-aidl-<comp>       ${HALIF_LIBDIR}/lib<comp>-v*-cpp.so
+#     rdk-halif-aidl-<comp>-dev   ${HALIF_LIBDIR}/include/<comp>/
 #
 #   Why the version sits where it does: it is in the .so NAME (and its SONAME),
 #   so libraries for several versions sit side by side in one flat directory.
@@ -89,11 +92,16 @@
 #
 # WHAT A CONSUMER DOES
 # -----------------------------------------------------------------------------
-#   DEPENDS        = "rdk-halif-aidl"              # stages libs + headers
+#   DEPENDS        = "rdk-halif-aidl linux-binder"  # stages the HAL + the Binder SDK
 #   RDEPENDS:${PN} = "rdk-halif-aidl-hdmicec rdk-halif-aidl-common"
 #
-#   CXXFLAGS += "-I${STAGING_INCDIR}/rdk-halif-aidl/hdmicec/0.1.0.0/include"
-#   LDFLAGS  += "-L${STAGING_LIBDIR}/rdk-halif-aidl -lhdmicec-v0.1.0.0-cpp"
+#   # the HAL is under the mount it was built for (vendor here); the Binder SDK is
+#   # staged by linux-binder at include/binder_sdk + lib/binder (non-standard subdirs).
+#   # The generated Bn/Bp headers #include <binder/*.h>, so the SDK include is required.
+#   CXXFLAGS += "-I${STAGING_DIR_HOST}/vendor/rdk-halif-aidl/include/hdmicec/0.1.0.0/include \
+#                -I${STAGING_INCDIR}/binder_sdk"
+#   LDFLAGS  += "-L${STAGING_DIR_HOST}/vendor/rdk-halif-aidl -lhdmicec-v0.1.0.0-cpp \
+#                -L${STAGING_LIBDIR}/binder -lbinder -lutils"
 #
 #   #include <com/rdk/hal/hdmicec/IHdmiCec.h>
 #
@@ -104,11 +112,13 @@
 # meta-mw example includes):
 #   HALIF_COMPONENTS        components to build   (default: all, from the .inc)
 #   HALIF_VERSIONS_FILE     versions manifest     (default: versions_released.yaml)
-#   HALIF_ROLE              vendor | mw           selects the TARGET MOUNT POINT
-#                                                 (/vendor or /mw) - not a label
-#   HALIF_LIBDIR            target install mount  (default: /${HALIF_ROLE}/rdk-halif-aidl)
-#   HALIF_INCDIR            header staging dir    (default: ${includedir}/rdk-halif-aidl;
-#                                                 headers never reach the target)
+#   HALIF_MOUNT_POINT       /vendor | /mw         the partition MOUNT POINT the
+#                                                 libraries install to - not a label
+#   HALIF_LIBDIR            mount + module dir     (default: ${HALIF_MOUNT_POINT}/rdk-halif-aidl)
+#                          (staged + installed)
+#   HALIF_INCDIR            header staging dir    (default: ${HALIF_LIBDIR}/include;
+#                                                 under the mount, staging-only,
+#                                                 never reaches the target)
 #
 # The offline contract tests tests/yocto/ci/*.sh exercise the same build loop
 # without BitBake. This is reference material - adapt SRCREV and the toolchain to
@@ -132,20 +142,31 @@ DEPENDS = "linux-binder"
 # subset HALIF_COMPONENTS and set HALIF_VERSIONS_FILE in its own include.
 require ${THISDIR}/halif-components.inc
 
-# The role IS the target mount point, not a label: the rootfs mounts a partition
+# The mount point is a real partition, not a label: the rootfs mounts a partition
 # per layer, so the vendor layer and the middleware layer are different mounts and
-# their libraries land in different places. Setting HALIF_ROLE therefore picks the
-# destination:
-#     vendor -> /vendor/rdk-halif-aidl/lib<comp>-v<ver>-cpp.so
-#     mw     -> /mw/rdk-halif-aidl/lib<comp>-v<ver>-cpp.so
-# A platform whose mounts differ overrides HALIF_LIBDIR outright.
-HALIF_ROLE ??= "vendor"
-HALIF_LIBDIR ??= "/${HALIF_ROLE}/rdk-halif-aidl"
+# their libraries land in different places. HALIF_MOUNT_POINT IS that partition
+# mount, and setting it picks the destination:
+#     /vendor -> /vendor/rdk-halif-aidl/lib<comp>-v<ver>-cpp.so
+#     /mw     -> /mw/rdk-halif-aidl/lib<comp>-v<ver>-cpp.so
+# A platform whose mounts differ sets HALIF_MOUNT_POINT (or overrides HALIF_LIBDIR
+# outright). rdk-halif-aidl is the module dir the interface libraries live in under
+# the mount.
+HALIF_MOUNT_POINT ??= "/vendor"
+HALIF_LIBDIR ??= "${HALIF_MOUNT_POINT}/rdk-halif-aidl"
 
 # Headers never reach the target - they are packaged into rdk-halif-aidl-<comp>-dev
-# and consumed from the build sysroot - so they follow the sysroot's includedir
-# rather than a target mount point.
-HALIF_INCDIR ??= "${includedir}/rdk-halif-aidl"
+# and consumed from the build sysroot only. They still live UNDER the mount point
+# (in an include/ subdir), NOT at the shared ${includedir}: vendor and mw carry
+# DIFFERENT versions of the same component, so a shared staging path would make
+# them collide. Rooting each mount's staging at itself keeps them apart.
+HALIF_INCDIR ??= "${HALIF_LIBDIR}/include"
+
+# Stage the whole mount into a consumer's recipe-sysroot (the OE defaults only
+# stage ${includedir}/${libdir}, which no longer hold our files). Because the path
+# carries the mount, vendor stages to .../vendor/rdk-halif-aidl and mw to
+# .../mw/rdk-halif-aidl - distinct subtrees, so their differing library versions
+# never share a staging location. A consumer links -L${STAGING_DIR_HOST}${HALIF_LIBDIR}.
+SYSROOT_DIRS += "${HALIF_LIBDIR}"
 
 # Versions manifest (components: {comp: ver}), consumed directly. Defaults to the
 # source's own versions_released.yaml - the released cohort - so a plain build

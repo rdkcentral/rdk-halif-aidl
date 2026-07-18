@@ -1,9 +1,11 @@
 // EXAMPLE - middleware side: find the vendor's HAL service and call it. A sketch
 // of the include/link contract plus the version-gating pattern.
 //
-// Built against, from the rdk-halif-aidl-avclock + -common packages:
-//   -I${STAGING_INCDIR}/rdk-halif-aidl/avclock/0.2.0.1/include
-//   -L${STAGING_LIBDIR}/rdk-halif-aidl -lavclock-v0.2.0.1-cpp
+// Built against the staged HAL on the mw mount, plus the Binder SDK:
+//   -I<sysroot>/mw/rdk-halif-aidl/include/avclock/0.2.0.1/include -I<sysroot>/usr/include/binder_sdk
+//   -L<sysroot>/mw/rdk-halif-aidl -lavclock-v0.2.0.1-cpp -lcommon-v0.2.0.0-cpp
+//   -L<sysroot>/usr/lib/binder -lbinder -lutils
+// (see mw-halif-example.bb for the recipe form using ${HALIF_STAGED} etc.)
 //
 // Client and server link the SAME interface library - the role difference is
 // what the code does with it, not how it builds.

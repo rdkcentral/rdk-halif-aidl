@@ -58,9 +58,9 @@ flowchart TD
     SRC["rdk-halif-aidl repo<br/>fetched from the branch under test"] --> CMP
     STUB["linux-binder stub<br/>stages your prebuilt Binder SDK"] --> CMP
     CMP["do_compile<br/>halif_plan orders deps, cmake builds 21 components"] --> INST
-    INST["do_install<br/>libs → /vendor/rdk-halif-aidl<br/>headers → /usr/include/rdk-halif-aidl"] --> PKG
+    INST["do_install → the role mount<br/>libs → /vendor/rdk-halif-aidl<br/>headers → /vendor/rdk-halif-aidl/include"] --> PKG
     PKG["do_package<br/>split + strip + debug"] --> OUT
-    OUT["21× rdk-halif-aidl-&lt;comp&gt;  (the .so, on the role mount)<br/>21× rdk-halif-aidl-&lt;comp&gt;-dev  (headers)<br/>1× rdk-halif-aidl-dbg  (all debug symbols)"] --> AS["run.sh assertions"]
+    OUT["21× rdk-halif-aidl-&lt;comp&gt;  (the .so, on the role mount)<br/>21× rdk-halif-aidl-&lt;comp&gt;-dev  (headers under include/)<br/>1× rdk-halif-aidl-dbg  (all debug symbols)"] --> AS["run.sh assertions + consumer link"]
 ```
 
 ## Run it
@@ -95,8 +95,15 @@ After a green `do_package`, on the produced `packages-split/`:
 1. one **`rdk-halif-aidl-<comp>`** per component, each holding exactly its own
    `lib<comp>-v<ver>-cpp.so` on the role mount (`/vendor/rdk-halif-aidl/` etc.)
 2. a matching **`rdk-halif-aidl-<comp>-dev`** holding that component's headers
+   under the role mount's `include/` subdir
 3. exactly one **`rdk-halif-aidl-dbg`**, holding every component's debug library
    (no empty `-dbg` packages)
+
+Then it builds **`vendor-halif-example`** — a real consumer with
+`DEPENDS = "rdk-halif-aidl"` that links `-lhdmicec`/`-lcommon` from the role
+mount. This only compiles if `SYSROOT_DIRS` staged the mount into its sysroot, so
+it is the regression guard for the staging path: a broken stage fails the
+consumer's `do_compile`.
 
 ## How it is wired
 
@@ -117,3 +124,6 @@ The recipe itself lives in the consumable layer `tests/yocto/meta-rdk-halif-aidl
 and is fetched from git (not `externalsrc` - that broke fakeroot for `do_package`
 and hashed the in-repo build tree). To test a local commit, push it and point
 `HALIF_TEST_BRANCH` / the bbappend `SRCREV` at it.
+
+`run.sh` also adds `tests/yocto/meta-vendor/`, whose `vendor-halif-example` recipe
+is the consumer built as the staging regression guard.

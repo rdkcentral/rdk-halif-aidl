@@ -6,9 +6,11 @@
 // it stays honest. The method bodies are stubs (a real HAL drives hardware
 // here), but the shape is exactly what a vendor implementation looks like.
 //
-// Built against, from the rdk-halif-aidl-hdmicec + -common packages:
-//   -I${STAGING_INCDIR}/rdk-halif-aidl/hdmicec/0.1.0.0/include
-//   -L${STAGING_LIBDIR}/rdk-halif-aidl -lhdmicec-v0.1.0.0-cpp -lcommon-v0.2.0.0-cpp
+// Built against the staged HAL on the vendor mount, plus the Binder SDK:
+//   -I<sysroot>/vendor/rdk-halif-aidl/include/hdmicec/0.1.0.0/include -I<sysroot>/usr/include/binder_sdk
+//   -L<sysroot>/vendor/rdk-halif-aidl -lhdmicec-v0.1.0.0-cpp -lcommon-v0.2.0.0-cpp
+//   -L<sysroot>/usr/lib/binder -lbinder -lutils
+// (see vendor-halif-example.bb for the recipe form using ${HALIF_STAGED} etc.)
 //
 // The include path above is what makes this namespace path resolvable:
 #include <com/rdk/hal/hdmicec/BnHdmiCec.h>

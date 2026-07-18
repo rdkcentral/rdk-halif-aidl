@@ -70,7 +70,7 @@ cmake --install build/<module> --prefix <sysroot>   # stages lib<module>-v<ver>-
 The module `install()` rule stages the `.so` under `lib/rdk-halif-aidl`. A dependent also
 needs the dependency's **headers**, so a complete stage additionally copies the
 snapshot's `include/` tree to `<sysroot>/include/rdk-halif-aidl/<module>/<version>/
-include`. `tests/yocto/yocto_staging_check.sh` exercises this exact
+include`. `tests/yocto/ci/yocto_staging_check.sh` exercises this exact
 contract offline (build `common` → stage → build `hdmicec` against it) and is the
 executable reference for a recipe.
 
@@ -83,11 +83,12 @@ snapshot's `interface.yaml` `imports:`. Any `.bb` that honours that contract
 works; the shape of your recipes is yours to decide.
 
 As a starting point and a CI-tested reference, the repo ships a layer at
-`tests/yocto/meta-rdk-halif/` with a single `rdk-halif` recipe. Use it directly:
+`tests/yocto/meta-rdk-halif-aidl/` with a single `rdk-halif-aidl` recipe. Use it
+directly:
 
 ```bitbake
-BBLAYERS += "${TOPDIR}/../rdk-halif-aidl/tests/yocto/meta-rdk-halif"
-IMAGE_INSTALL:append = " rdk-halif-common rdk-halif-avclock"   # the components you need
+BBLAYERS += "${TOPDIR}/../rdk-halif-aidl/tests/yocto/meta-rdk-halif-aidl"
+IMAGE_INSTALL:append = " rdk-halif-aidl-common rdk-halif-aidl-avclock"   # the components you need
 ```
 
 …or copy the recipe into your own layer and adapt it. The recipe builds the
@@ -97,9 +98,10 @@ a dependency not yet staged when a dependent links — does not arise.
 
 The recipe is reference material and is validated in CI (`test.sh` Test 12) — if
 you adopt it, pin `SRCREV` to the released tag's commit for reproducible builds.
-Its install destination is overridable: `HALIF_LIBDIR` (where the `.so` installs)
-and `HALIF_INCDIR` (where headers stage), plus `HALIF_ROLE` (`vendor` | `mw`) to
-label who is building. A build configuration sets these to its partition layout.
+Its install destination is overridable: `HALIF_MOUNT_POINT` (the partition mount,
+`/vendor` | `/mw`), from which `HALIF_LIBDIR` (where the `.so` installs *and*
+stages) and `HALIF_INCDIR` (headers, under the mount) derive. A build
+configuration sets these to its partition layout.
 
 ## Non-Yocto build systems
 
@@ -107,20 +109,20 @@ Drive the same per-component CMake invocation shown above, in dependency order
 (`scripts/halif_plan.py` prints the topological order for a set of components),
 staging each component's lib + headers into a shared prefix before building its
 dependents. `build_modules.sh` implements the same ordering for the developer
-tree, and the `rdk-halif` recipe's `do_compile` does it for BitBake.
+tree, and the `rdk-halif-aidl` recipe's `do_compile` does it for BitBake.
 
 ## Component selection, versions, and the vendor / middleware split
 
 The interface libraries are consumed by two build configurations — the **vendor**
 layer that implements the HAL, and the **middleware (MW)** that calls it. Both
-build from the *same* `rdk-halif` recipe, to their own destinations, via two
+build from the *same* `rdk-halif-aidl` recipe, to their own mounts, via two
 knobs:
 
 - **Which components** — `HALIF_COMPONENTS`, defaulting to the full list from the
   generated `halif-components.inc` (every buildable released component;
   `broadcast` is absent because it has no released snapshot). Leave it at the
   default to build **every HAL**, or set a subset. The recipe splits the output
-  into one package per component (`rdk-halif-<comp>`).
+  into one package per component (`rdk-halif-aidl-<comp>`).
 - **Which version** — every component builds its **latest** released snapshot by
   default. To pin specific versions, point `HALIF_VERSIONS_FILE` at a manifest
   (`components: {comp: ver}`, same schema as `versions_released.yaml`); the recipe
@@ -130,19 +132,19 @@ knobs:
   constrains the build to that version's closure.
 
 There is no generated per-config include — a build configuration just sets the
-role, the destinations, and (optionally) a versions manifest:
+mount point and (optionally) a versions manifest:
 
 ```bitbake
 # meta-vendor/conf/halif-vendor.inc, required from local.conf / distro
-HALIF_ROLE = "vendor"
-HALIF_LIBDIR = "${libdir}/rdk-halif-aidl"
+HALIF_MOUNT_POINT = "/vendor"
+# HALIF_LIBDIR derives as ${HALIF_MOUNT_POINT}/rdk-halif-aidl
 # HALIF_COMPONENTS + HALIF_VERSIONS_FILE left at default →
 # builds every HAL from the source's versions_released.yaml (the released cohort).
 ```
 
 The `tests/yocto/meta-vendor` and `meta-mw` examples both build the full HAL from
-`versions_released.yaml`, differing only by role + destination. The offline
-example builds `tests/yocto/yocto_build_vendor.sh` and `yocto_build_mw.sh`
-(wrappers over `yocto_build.sh <role> [manifest]`) do the same without BitBake —
-each takes the versions manifest as an argument, defaulting to the repo's
+`versions_released.yaml`, differing only by mount point. The offline example
+builds `tests/yocto/ci/yocto_build_vendor.sh` and `yocto_build_mw.sh` (wrappers
+over `yocto_build.sh <role> [manifest]`) do the same without BitBake — each takes
+the versions manifest as an argument, defaulting to the repo's
 `versions_released.yaml`.

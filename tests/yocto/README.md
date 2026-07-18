@@ -1,7 +1,7 @@
 # Yocto integration
 
 Everything an integrator needs to build and consume the RDK HAL AIDL interface
-libraries — plus the offline tests that prove the contract works.
+libraries — plus the tests that prove the contract works.
 
 **Named `-aidl` throughout** (layer, recipe, packages, install paths) so nothing
 here is ever confused with the legacy C HAL (`rdk-halif-*`) it coexists with
@@ -13,7 +13,84 @@ during migration.
 | ---- | ------------- | ------- |
 | `meta-rdk-halif-aidl/` | **yes** | the consumable layer — one `rdk-halif-aidl` recipe, one package per component |
 | `meta-vendor/`, `meta-mw/` | **as examples** | role build-config + a worked consumer recipe each |
-| `ci/` | **no** | our offline test harness. It emulates the recipe without BitBake so CI can prove the contract. Not consumption material. |
+| `bitbake/` | **as a test** | runs *real* BitBake on the recipe in a container and asserts the packaging + staging. See its [README](bitbake/README.md). |
+| `ci/` | **as a test** | offline emulation of the build loop (no BitBake) for fast contract checks |
+
+## How it works
+
+The recipe installs every component to one place — the **mount point**
+(`/vendor/rdk-halif-aidl` or `/mw/rdk-halif-aidl`, chosen by `HALIF_MOUNT_POINT`).
+That single mount feeds both surfaces: it is **staged** into a consumer's sysroot
+for build-time linking, and **packaged** onto the device rootfs at runtime.
+
+```mermaid
+flowchart TD
+    SRC["rdk-halif-aidl source<br/>pre-generated C++, per component × version"] --> CMP
+    CMP["do_compile — cmake builds<br/>lib&lt;comp&gt;-v&lt;ver&gt;-cpp.so"] --> INST
+    INST["do_install → the mount point<br/>&#36;{HALIF_MOUNT_POINT}/rdk-halif-aidl"]
+    INST --> STG
+    INST --> PKG
+    STG["do_populate_sysroot<br/>SYSROOT_DIRS stages the whole mount"] --> SY["consumer recipe-sysroot<br/>&#36;{STAGING_DIR_HOST}/vendor/rdk-halif-aidl/<br/>· lib*-cpp.so &nbsp; · include/"]
+    PKG["do_package — split"] --> P1["rdk-halif-aidl-&lt;comp&gt;<br/>the .so → /vendor/rdk-halif-aidl (device)"]
+    PKG --> P2["rdk-halif-aidl-&lt;comp&gt;-dev<br/>headers under include/ (staging only)"]
+    PKG --> P3["rdk-halif-aidl-dbg<br/>all debug symbols"]
+```
+
+Staging is **role-partitioned on purpose**: vendor and middleware carry different
+versions of the same component, so each role stages to its own mount and their
+libraries never share a path.
+
+```mermaid
+flowchart LR
+    subgraph VB["vendor build — HALIF_MOUNT_POINT=/vendor"]
+        VH["rdk-halif-aidl<br/>vendor cohort"] --> VM["/vendor/rdk-halif-aidl<br/>libcommon-v0.2.0.0-cpp.so"]
+    end
+    subgraph MB["mw build — HALIF_MOUNT_POINT=/mw"]
+        MH["rdk-halif-aidl<br/>mw cohort"] --> MM["/mw/rdk-halif-aidl<br/>libcommon-v0.3.0.0-cpp.so"]
+    end
+    VM --> VC["vendor consumer<br/>-L&#8230;/vendor/rdk-halif-aidl"]
+    MM --> MC["mw consumer<br/>-L&#8230;/mw/rdk-halif-aidl"]
+```
+
+## Layout: staging vs target
+
+Both trees are the same role mount; they differ in what rides along. A vendor
+build of `hdmicec@0.1.0.0` (which imports `common@0.2.0.0`):
+
+**Staging** — the consumer's build-time sysroot (`DEPENDS = "rdk-halif-aidl"`).
+Libraries *and* headers, for compiling and linking:
+
+```
+${STAGING_DIR_HOST}/                              the consumer's recipe-sysroot
+└── vendor/
+    └── rdk-halif-aidl/                           ← -L${STAGING_DIR_HOST}/vendor/rdk-halif-aidl
+        ├── libhdmicec-v0.1.0.0-cpp.so            link: -lhdmicec-v0.1.0.0-cpp
+        ├── libcommon-v0.2.0.0-cpp.so             link: -lcommon-v0.2.0.0-cpp
+        └── include/                              ← -I…/include/<comp>/<ver>/include
+            ├── hdmicec/0.1.0.0/include/com/rdk/hal/hdmicec/
+            │   ├── IHdmiCec.h
+            │   ├── BnHdmiCec.h
+            │   └── …
+            └── common/0.2.0.0/include/com/rdk/hal/
+                └── …
+```
+
+**Target** — the device rootfs (`IMAGE_INSTALL` / `RDEPENDS`). Libraries only;
+the mount is a real partition, so this is not an FHS `/usr/lib` layout:
+
+```
+/                                                 device rootfs
+├── vendor/
+│   └── rdk-halif-aidl/                           the role mount (a partition)
+│       ├── libhdmicec-v0.1.0.0-cpp.so            pkg rdk-halif-aidl-hdmicec
+│       └── libcommon-v0.2.0.0-cpp.so             pkg rdk-halif-aidl-common
+└── usr/
+    └── bin/
+        └── vendor-halif-example                  the consumer binary
+```
+
+An `mw` build is identical with `/mw/rdk-halif-aidl` in place of
+`/vendor/rdk-halif-aidl`, carrying its own cohort's versions.
 
 ## Consume it
 
@@ -30,21 +107,21 @@ to a released tag for reproducible builds.
 
 ## What you get
 
-One package per component, plus its headers:
+One package per component, plus its headers. `<role>` is the mount
+`HALIF_MOUNT_POINT` selects (`/vendor` or `/mw`):
 
 ```
-${libdir}/rdk-halif-aidl/lib<comp>-v<ver>-cpp.so            → rdk-halif-aidl-<comp>
-${includedir}/rdk-halif-aidl/<comp>/<ver>/include/com/rdk/hal/...
-                                                            → rdk-halif-aidl-<comp>-dev
+/<role>/rdk-halif-aidl/lib<comp>-v<ver>-cpp.so                    → rdk-halif-aidl-<comp>       (device + sysroot)
+/<role>/rdk-halif-aidl/include/<comp>/<ver>/include/com/rdk/hal/… → rdk-halif-aidl-<comp>-dev   (sysroot only)
 ```
 
-Concretely, for `hdmicec@0.1.0.0` (which imports `common@0.2.0.0`):
+Concretely, a vendor build for `hdmicec@0.1.0.0` (which imports `common@0.2.0.0`):
 
 ```
-${libdir}/rdk-halif-aidl/libhdmicec-v0.1.0.0-cpp.so
-${libdir}/rdk-halif-aidl/libcommon-v0.2.0.0-cpp.so
-${includedir}/rdk-halif-aidl/hdmicec/0.1.0.0/include/com/rdk/hal/hdmicec/IHdmiCec.h
-${includedir}/rdk-halif-aidl/common/0.2.0.0/include/com/rdk/hal/...
+/vendor/rdk-halif-aidl/libhdmicec-v0.1.0.0-cpp.so
+/vendor/rdk-halif-aidl/libcommon-v0.2.0.0-cpp.so
+/vendor/rdk-halif-aidl/include/hdmicec/0.1.0.0/include/com/rdk/hal/hdmicec/IHdmiCec.h
+/vendor/rdk-halif-aidl/include/common/0.2.0.0/include/com/rdk/hal/…
 ```
 
 **Why the version appears where it does:** it is in the library *name* (and its
@@ -53,14 +130,23 @@ directory and you link an exact one. Headers have no version in the filename —
 `BnPropertyValue.h` is the same name in every version — so for headers the
 version lives in the *path*.
 
+The `include/` subdir belongs to the `-dev` package, which stages into the build
+sysroot; the device rootfs carries the libraries only.
+
 ## Consuming from your recipe
 
 ```bitbake
-DEPENDS        = "rdk-halif-aidl linux-binder"      # stages libs + headers
+DEPENDS        = "rdk-halif-aidl linux-binder"      # stages the role mount
 RDEPENDS:${PN} = "rdk-halif-aidl-hdmicec rdk-halif-aidl-common"
 
-CXXFLAGS += "-I${STAGING_INCDIR}/rdk-halif-aidl/hdmicec/0.1.0.0/include"
-LDFLAGS  += "-L${STAGING_LIBDIR}/rdk-halif-aidl -lhdmicec-v0.1.0.0-cpp -lbinder -lutils"
+# The mount point you build against — match the one the HAL was built with.
+HALIF_MOUNT_POINT ?= "/vendor"
+HALIF_STAGED       = "${STAGING_DIR_HOST}${HALIF_MOUNT_POINT}/rdk-halif-aidl"
+
+# The Binder SDK, staged by linux-binder at non-standard subdirs. Required: the
+# generated Bn/Bp headers #include <binder/*.h>, and the libs link libbinder/libutils.
+CXXFLAGS += "-I${HALIF_STAGED}/include/hdmicec/0.1.0.0/include -I${STAGING_INCDIR}/binder_sdk"
+LDFLAGS  += "-L${HALIF_STAGED} -lhdmicec-v0.1.0.0-cpp -L${STAGING_LIBDIR}/binder -lbinder -lutils"
 ```
 
 then include by the AIDL namespace:
@@ -90,24 +176,27 @@ The recipe builds `HALIF_COMPONENTS` at the versions in `HALIF_VERSIONS_FILE`:
 | -------- | ------- | ------- |
 | `HALIF_COMPONENTS` | every released component (`halif-components.inc`) | which components to build |
 | `HALIF_VERSIONS_FILE` | `${S}/versions_released.yaml` | which version of each |
-| `HALIF_ROLE` | `vendor` | labels who is building (`vendor` \| `mw`) |
-| `HALIF_LIBDIR` / `HALIF_INCDIR` | `${libdir}/rdk-halif-aidl` etc. | install destinations |
+| `HALIF_MOUNT_POINT` | `/vendor` | the target + staging **mount point** (the partition: `/vendor` or `/mw`) |
+| `HALIF_LIBDIR` | `${HALIF_MOUNT_POINT}/rdk-halif-aidl` | mount + module dir — libraries, staged and installed |
+| `HALIF_INCDIR` | `${HALIF_LIBDIR}/include` | header staging dir, under the mount |
 
 Every version of every component is committed side by side in the source, so
 `HALIF_VERSIONS_FILE` *selects* — it does not fetch. See `meta-vendor/conf/halif-vendor.inc`
 and `meta-mw/conf/halif-mw.inc` for role configs to `require` from your
-`local.conf`/distro.
+`local.conf`/distro. A platform whose mounts differ overrides `HALIF_LIBDIR`
+outright.
 
-Relocating the libraries needs no snapshot edits — each snapshot's install
-destination is an overridable input:
+## Running the tests
+
+**Real BitBake** — builds + packages the recipe in a container and asserts the
+packaging and staging (including a consumer that links against the staged HAL):
 
 ```bash
-cmake -S <comp>/<ver> -B <build> -DHALIF_INSTALL_LIBDIR=lib64/rdk-halif-aidl
+./tests/yocto/bitbake/run.sh
 ```
 
-## Running the tests (`ci/`)
-
-Offline — no BitBake, no AIDL toolchain. Each uses a fresh temporary work dir.
+**Offline** (`ci/`) — no BitBake, no AIDL toolchain; each uses a fresh temporary
+work dir:
 
 ```bash
 ./tests/yocto/ci/yocto_staging_check.sh    # inter-module staging + negative control
@@ -124,6 +213,13 @@ The default component list is generated — never hand-edit it:
 ```bash
 ./tests/yocto/meta-rdk-halif-aidl/gen_recipes.py           # regenerate
 ./tests/yocto/meta-rdk-halif-aidl/gen_recipes.py --check   # CI guard
+```
+
+Relocating the libraries needs no snapshot edits — each snapshot's install
+destination is an overridable input:
+
+```bash
+cmake -S <comp>/<ver> -B <build> -DHALIF_INSTALL_LIBDIR=lib64/rdk-halif-aidl
 ```
 
 See [`docs/standards/build_integration.md`](../../docs/standards/build_integration.md)
