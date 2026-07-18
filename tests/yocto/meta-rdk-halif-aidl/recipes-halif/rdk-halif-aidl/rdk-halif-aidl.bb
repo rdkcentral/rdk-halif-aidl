@@ -185,15 +185,17 @@ do_compile() {
     cmake_do_generate_toolchain_file
 
     # An explicitly empty HALIF_COMPONENTS is a misconfiguration: halif_plan.py
-    # with no component list would build every component while PACKAGES (below,
-    # from the same variable) would be empty - so fail fast instead.
+    # with no arguments would plan EVERY component, but the intent here is to build
+    # a chosen set - so fail fast rather than silently build everything.
     if [ -z "${HALIF_COMPONENTS}" ]; then
         bbfatal "HALIF_COMPONENTS is empty - set the components to build (default: all, from halif-components.inc)"
     fi
 
-    # Resolve the topological build order (dependencies first), pinning versions
-    # from the configuration's manifest if one is set. The planner ships with
-    # this layer and is fetched with the source.
+    # Resolve the topological build order: the named components PLUS their
+    # dependency closure (a subset build pulls in what it links - hdmicec pulls
+    # common - so common is never named), each dependency at its exact linked
+    # version. Different versions of one component coexist. Packaging (below) reads
+    # this same plan. The planner ships with this layer and is fetched with the source.
     versions=""
     [ -n "${HALIF_VERSIONS_FILE}" ] && versions="--versions ${HALIF_VERSIONS_FILE}"
     "${S}/tests/yocto/meta-rdk-halif-aidl/halif_plan.py" ${versions} ${HALIF_COMPONENTS} > "${B}/plan.txt" \
@@ -229,31 +231,48 @@ do_install() {
     cp -a "${B}/staged/include/rdk-halif-aidl/." "${D}${HALIF_INCDIR}/"
 }
 
-# Split the output into one package per component: rdk-halif-aidl-<comp> (the .so)
-# and rdk-halif-aidl-<comp>-dev (its headers), plus a single rdk-halif-aidl-dbg for
-# all debug symbols. The -aidl in the package name keeps these distinct from the
-# legacy C HAL's rdk-halif-* packages on the same rootfs. Built at parse time from
-# HALIF_COMPONENTS.
-python () {
-    comps = (d.getVar('HALIF_COMPONENTS') or '').split()
+# Package layout: one package per component - rdk-halif-aidl-<comp> (its versioned
+# .so libraries) and rdk-halif-aidl-<comp>-dev (its headers) - plus a single
+# rdk-halif-aidl-dbg for all debug symbols. The -aidl in the name keeps these
+# distinct from the legacy C HAL's rdk-halif-* packages on the same rootfs.
+#
+# The component set is the build's dependency CLOSURE, which is only known after
+# the source is fetched (a subset build pulls in the deps it links). So the split
+# is driven at do_package time from the plan do_compile wrote - NOT from
+# HALIF_COMPONENTS at parse time, when neither the source nor the closure exists,
+# and an auto-resolved dependency would be installed but belong to no package.
+# PACKAGES_DYNAMIC lets images/other recipes depend on these before parse knows them.
+#
+# ONE debug package: overriding PACKAGES drops bitbake's own ${PN}-dbg, whose
+# .debug files would then belong to no package and fail "installed but not shipped".
+# OE assigns EVERY .debug file to the FIRST -dbg package in PACKAGES order, so a
+# single ${PN}-dbg, listed first, is the split.
+PACKAGES = "${PN}-dbg"
+PACKAGES_DYNAMIC = "^rdk-halif-aidl-.*"
+SUMMARY:${PN}-dbg = "RDK HAL AIDL debug symbols"
+FILES:${PN}-dbg = "${HALIF_LIBDIR}/.debug"
+
+python populate_packages:prepend () {
+    import os
     libdir = d.getVar('HALIF_LIBDIR')
     incdir = d.getVar('HALIF_INCDIR')
 
-    # ONE debug package for the whole recipe. Setting PACKAGES replaces the
-    # defaults - which drops bitbake's own ${PN}-dbg, and then the .debug files
-    # its splitter produces belong to no package and do_package fails with
-    # "installed but not shipped". OE assigns EVERY .debug file to the first -dbg
-    # package in PACKAGES order (it does not honour per-package FILES for debug),
-    # so per-component -dbg packages would pile all symbols into one and leave the
-    # rest empty. A single ${PN}-dbg, listed first, is the idiomatic split.
-    dbg = (d.getVar('PN') or 'rdk-halif-aidl') + '-dbg'
-    d.setVar('SUMMARY:' + dbg, 'RDK HAL AIDL debug symbols')
-    d.setVar('FILES:' + dbg, '%s/.debug' % libdir)
+    # The component set = the plan do_compile resolved (the dependency closure).
+    # A component may appear at several versions; ONE package per component holds
+    # all its versioned .so, because the version is in the .so name - so multiple
+    # versions coexist in one directory and one package.
+    plan = os.path.join(d.getVar('B'), 'plan.txt')
+    comps = []
+    with open(plan) as fh:
+        for line in fh:
+            parts = line.split()
+            if parts and parts[0] not in comps:
+                comps.append(parts[0])
 
-    pkgs = [dbg]
+    pkgs = d.getVar('PACKAGES').split()            # ['<PN>-dbg']
     for c in comps:
         main = 'rdk-halif-aidl-' + c
-        dev = '%s-dev' % main
+        dev = main + '-dev'
         # -dev before the library package: bitbake assigns each file to the FIRST
         # package whose FILES matches it.
         pkgs += [dev, main]

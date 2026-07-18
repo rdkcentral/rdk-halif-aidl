@@ -25,19 +25,26 @@ The single rdk-halif recipe (and the offline role test) build a chosen set of
 components in one pass; this prints the order to build them so each component's
 sibling dependencies are built first.
 
+You name only the components you WANT; their dependencies are resolved
+automatically (the transitive closure), so `common` and other base interfaces
+never have to be listed. The closure is keyed by (component, VERSION), so
+DIFFERENT versions of one component coexist in a single build: if hdmicec links
+common@A and audiodecoder links common@B, this plans BOTH commons, each built at
+the exact version its dependent links.
+
 Usage:
-  halif_plan.py [--closure] [--versions <manifest.yaml>] <comp[:ver]> ...
+  halif_plan.py [--versions <manifest.yaml>] <comp[:ver]> ...
       comp        build the component (version from --versions, else the latest)
       comp:ver    build the given version (overrides --versions)
-      --versions  a versions manifest (components: {comp: ver}) pinning versions
-      --closure   expand each component to its transitive dependencies (so a
-                  single component becomes a buildable set)
-  halif_plan.py --versions m.yaml   # the manifest's components, at its versions
+      --versions  a versions manifest (components: {comp: ver}) pinning the
+                  TOP-LEVEL components' versions; dependencies follow their links
+      --closure   accepted for backward compatibility; closure is always resolved
+  halif_plan.py --versions m.yaml   # the manifest's components + their closure
   halif_plan.py                     # all discovered components, each at latest
 
-Output: one "<comp> <ver>" line per component, dependencies first. Exits non-zero
-if a selected component links a sibling that is not in the selection (the set
-must be a closure) or references a version that is not released.
+Output: one "<comp> <ver>" line per node, dependencies first (the same component
+may appear more than once, at different versions). Exits non-zero only on a real
+error: a referenced version that is not released, or a dependency cycle.
 
 Directory structure it expects (REPO_ROOT is four levels up from this file,
 because this ships inside the layer so the recipe and its planner travel
@@ -129,11 +136,9 @@ def parse_versions(path):
 
 def main(argv):
     pins = {}
-    closure = False
     while argv and argv[0] in ("--versions", "--closure"):
         if argv[0] == "--closure":
-            closure = True
-            argv = argv[1:]
+            argv = argv[1:]              # accepted for back-compat; closure is always on
         else:  # --versions
             if len(argv) < 2:
                 sys.stderr.write("halif_plan: --versions needs a manifest path\n")
@@ -149,75 +154,67 @@ def main(argv):
         items = sorted(pins)
     else:
         items = all_components()
-    sel = {}
+
+    # Seed the selection with the requested (component, version) pairs. Only the
+    # TOP-LEVEL components are named here; their dependencies are resolved below.
+    sel = set()                          # {(comp, ver)}
     for item in items:
         comp, _, ver = item.partition(":")
         vers = released_versions(comp)
         if not vers:
             sys.stderr.write("halif_plan: no released snapshot for '%s'\n" % comp)
             return 2
-        if not ver:                       # not pinned inline; try the manifest, else latest
+        if not ver:                      # not pinned inline; try the manifest, else latest
             ver = pins.get(comp) or vers[-1]
         if ver not in vers:
             sys.stderr.write("halif_plan: %s@%s is not a released snapshot\n" % (comp, ver))
             return 2
-        sel[comp] = ver
+        sel.add((comp, ver))
 
-    # --closure: pull in each selected component's transitive dependencies at
-    # their exact linked versions, so a single component expands to a buildable
-    # set. (Without it a non-closure selection is an error, below.)
-    if closure:
-        queue = list(sel.items())
-        while queue:
-            comp, ver = queue.pop()
-            for dep, dver in links(comp, ver).items():
-                if dep not in sel:
-                    sel[dep] = dver
-                    queue.append((dep, dver))
-                elif sel[dep] != dver:
-                    sys.stderr.write(
-                        "halif_plan: closure conflict - %s@%s links %s@%s but %s is "
-                        "already at %s\n" % (comp, ver, dep, dver, dep, sel[dep])
-                    )
-                    return 2
-
-    # Build the dependency graph within the selection and Kahn-sort it.
-    edges = {comp: set() for comp in sel}  # comp depends on edges[comp]
-    for comp, ver in sel.items():
+    # Resolve the transitive closure, keyed by (component, VERSION). Because the
+    # key carries the version, different versions of the same component coexist:
+    # each dependency is pulled in at the exact version its dependent links, so
+    # hdmicec's common@A and audiodecoder's common@B are BOTH built. This is why a
+    # build never has to name common - it follows from what the selection links.
+    queue = list(sel)
+    while queue:
+        comp, ver = queue.pop()
         for dep, dver in links(comp, ver).items():
-            if dep not in sel:
-                sys.stderr.write(
-                    "halif_plan: %s@%s links %s@%s but %s is not in the selection "
-                    "(the set must be a closure)\n" % (comp, ver, dep, dver, dep)
-                )
+            if dver not in released_versions(dep):
+                sys.stderr.write("halif_plan: %s@%s links %s@%s which is not a "
+                                 "released snapshot\n" % (comp, ver, dep, dver))
                 return 2
-            if sel[dep] != dver:
-                sys.stderr.write(
-                    "halif_plan: %s@%s links %s@%s but the selection pins %s@%s\n"
-                    % (comp, ver, dep, dver, dep, sel[dep])
-                )
-                return 2
-            edges[comp].add(dep)
+            if (dep, dver) not in sel:
+                sel.add((dep, dver))
+                queue.append((dep, dver))
+
+    # Build the dependency graph over (comp, ver) nodes and Kahn-sort it. The
+    # closure above guarantees every linked (dep, dver) is a node.
+    edges = {node: set() for node in sel}          # node depends on edges[node]
+    for (comp, ver) in sel:
+        for dep, dver in links(comp, ver).items():
+            edges[(comp, ver)].add((dep, dver))
 
     order = []
-    ready = sorted(comp for comp in sel if not edges[comp])
-    indeg = {comp: set(edges[comp]) for comp in sel}
+    indeg = {n: set(edges[n]) for n in sel}
+    ready = sorted(n for n in sel if not indeg[n])
     while ready:
-        comp = ready.pop(0)
-        order.append(comp)
+        n = ready.pop(0)
+        order.append(n)
         for other in sorted(sel):
-            if comp in indeg[other]:
-                indeg[other].discard(comp)
+            if n in indeg[other]:
+                indeg[other].discard(n)
                 if not indeg[other]:
                     ready.append(other)
         ready.sort()
     if len(order) != len(sel):
+        stuck = sorted(set(sel) - set(order))
         sys.stderr.write("halif_plan: dependency cycle among %s\n"
-                         % ", ".join(sorted(set(sel) - set(order))))
+                         % ", ".join("%s@%s" % cv for cv in stuck))
         return 2
 
-    for comp in order:
-        print("%s %s" % (comp, sel[comp]))
+    for (comp, ver) in order:
+        print("%s %s" % (comp, ver))
     return 0
 
 

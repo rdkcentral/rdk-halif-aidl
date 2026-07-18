@@ -57,11 +57,16 @@ WORK="${HALIF_BB_WORK:-${HARNESS_DIR}/.work}"
 IMAGE="${HALIF_BB_IMAGE:-crops/poky:ubuntu-22.04}"
 BRANCH="${HALIF_TEST_BRANCH:-feature/661-yocto-per-component-recipes}"
 TARGET="rdk-halif-aidl"
+# Optional: build only a chosen subset instead of the full cohort. The planner
+# adds each named component's dependency closure, so "hdmicec" pulls in common,
+# and "audiodecoder:0.1.0.0 hdmicec:0.1.0.0" pulls in BOTH common versions.
+COMPONENTS="${HALIF_BB_COMPONENTS:-}"
 
 echo "========================================="
 echo "  bitbake packaging test: ${TARGET}"
-echo "  branch:   ${BRANCH}"
-echo "  work dir: ${WORK}"
+echo "  branch:     ${BRANCH}"
+echo "  components: ${COMPONENTS:-<all released>}"
+echo "  work dir:   ${WORK}"
 echo "========================================="
 
 fail() { echo ""; echo "❌ $1"; exit 1; }
@@ -128,6 +133,11 @@ BB_HASHSERVE = 'auto'
 INSANE_SKIP:${TARGET} += 'arch'
 EOF
 fi
+# Refresh the component selection every run (a subset build, or the default cohort
+# when HALIF_BB_COMPONENTS is unset). Kept out of the guarded block so it can change
+# between runs without re-seeding the whole config.
+sed -i '/^HALIF_COMPONENTS /d' conf/local.conf
+[ -n '${COMPONENTS}' ] && echo \"HALIF_COMPONENTS = '${COMPONENTS}'\" >> conf/local.conf
 ${CLEAN_STEP}
 # -f: force do_package to actually run (not restore from sstate), so the
 # packages-split tree exists for the assertions below.
@@ -153,22 +163,26 @@ ncomp="$(echo "${libmount}" | grep -c .)"
 [ "${ncomp}" -ge 1 ] || fail "no runtime component packages produced"
 
 errs=0
-# 1. each runtime package holds exactly its own versioned .so, on the role mount
+# total runtime libraries across all component packages. A component may ship
+# SEVERAL versions (e.g. common at two versions in a multi-version build), so this
+# can exceed the number of packages.
+nlibs="$(find "${PS}" -type f -name 'lib*-v*-cpp.so' -not -path '*/.debug/*' 2>/dev/null | wc -l)"
+# 1. each runtime package holds >=1 versioned .so, and every one is on a role mount
 for pkg in ${libmount}; do
     so="$(find "${PS}/${pkg}" -name 'lib*-v*-cpp.so' -not -path '*/.debug/*' 2>/dev/null)"
     n="$(echo "${so}" | grep -c .)"
-    [ "${n}" = 1 ] || { echo "  ❌ ${pkg}: ${n} libraries (expected 1)"; errs=$((errs+1)); }
-    echo "${so}" | grep -q '/vendor/rdk-halif-aidl/\|/mw/rdk-halif-aidl/' \
-        || { echo "  ❌ ${pkg}: .so not on a role mount: ${so}"; errs=$((errs+1)); }
+    [ "${n}" -ge 1 ] || { echo "  ❌ ${pkg}: no versioned library"; errs=$((errs+1)); }
+    echo "${so}" | grep -qv '/vendor/rdk-halif-aidl/\|/mw/rdk-halif-aidl/' \
+        && { echo "  ❌ ${pkg}: a .so is not on a role mount: ${so}"; errs=$((errs+1)); }
     # 2. matching -dev holds headers
     [ -n "$(find "${PS}/${pkg}-dev" -name '*.h' 2>/dev/null | head -1)" ] \
         || { echo "  ❌ ${pkg}-dev: no headers"; errs=$((errs+1)); }
 done
-# 3. exactly one -dbg, holding every component's debug, none empty
+# 3. exactly one -dbg, holding one debug library per runtime .so (none missing)
 ndbg="$(find "${PS}" -maxdepth 1 -type d -name '*-dbg' | wc -l)"
 [ "${ndbg}" = 1 ] || { echo "  ❌ ${ndbg} -dbg packages (expected 1 single ${TARGET}-dbg)"; errs=$((errs+1)); }
 dbgn="$(find "${PS}/${TARGET}-dbg" -path '*/.debug/*' -name 'lib*-cpp.so' 2>/dev/null | wc -l)"
-[ "${dbgn}" = "${ncomp}" ] || { echo "  ❌ ${TARGET}-dbg holds ${dbgn} debug files (expected ${ncomp})"; errs=$((errs+1)); }
+[ "${dbgn}" = "${nlibs}" ] || { echo "  ❌ ${TARGET}-dbg holds ${dbgn} debug files (expected ${nlibs} - one per runtime .so)"; errs=$((errs+1)); }
 
 # 4. headers ship in the -dev packages, under the role mount's include/ subdir
 devh="$(find "${PS}" -path '*-dev/*/rdk-halif-aidl/include/*' -name '*.h' 2>/dev/null | head -1)"
@@ -188,8 +202,8 @@ if [ "${errs}" -ne 0 ]; then
 fi
 echo "========================================="
 echo "✅ ${TARGET} packages correctly (real bitbake do_package):"
-echo "   ${ncomp} runtime packages (lib on the role mount) + ${ncomp} -dev (headers)"
-echo "   + one ${TARGET}-dbg holding all ${dbgn} debug libraries"
+echo "   ${ncomp} component packages holding ${nlibs} versioned libraries (on the role mount)"
+echo "   + ${ncomp} -dev (headers) + one ${TARGET}-dbg holding all ${nlibs} debug libraries"
 echo "✅ staging proven: vendor-halif-example linked against the staged role mount"
 echo "   consumer binary: ${consumer}"
 echo "   packages:        ${PS}"
