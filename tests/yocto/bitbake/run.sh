@@ -44,7 +44,9 @@
 #     one command to run.
 #
 # Usage:
-#   ./tests/yocto/bitbake/run.sh                  # build + assert packaging
+#   ./tests/yocto/bitbake/run.sh                  # build + assert the full cohort
+#   HALIF_BB_EACH=1 ./tests/yocto/bitbake/run.sh  # sweep: each component on its own
+#   HALIF_BB_COMPONENTS="hdmicec" ./tests/yocto/bitbake/run.sh   # build a subset (+ closure)
 #   HALIF_BB_CLEAN=1 ./tests/yocto/bitbake/run.sh # force a clean re-fetch/rebuild
 #   HALIF_BB_WORK=/big/disk ./tests/yocto/bitbake/run.sh   # relocate the build tree
 #   HALIF_TEST_BRANCH=my-branch ./tests/yocto/bitbake/run.sh
@@ -109,6 +111,75 @@ tar -C "${STAGE}" -czf \
 
 CLEAN_STEP=""
 [ "${HALIF_BB_CLEAN:-0}" = "1" ] && CLEAN_STEP="bitbake ${TARGET} -c cleanall 2>&1 | tail -1"
+
+# --- per-component sweep (HALIF_BB_EACH=1) ----------------------------------
+# Build each component (with its dependency closure) through REAL bitbake, one at
+# a time, to prove every component packages on its own - not just the full cohort.
+# Only the rdk-halif-aidl recipe is cleaned between components (bitbake -c clean),
+# so the cross toolchain, the Binder SDK and the downloads (the expensive, first-
+# run parts) are built ONCE and reused. The first component is therefore slow (it
+# builds the toolchain); the rest are quick.
+if [ "${HALIF_BB_EACH:-0}" = "1" ]; then
+    INC="${REPO_ROOT}/tests/yocto/meta-rdk-halif-aidl/recipes-halif/rdk-halif-aidl/halif-components.inc"
+    ALL_COMPS="$(sed -nE 's/.*HALIF_COMPONENTS[^"]*"([^"]*)".*/\1/p' "${INC}")"
+    [ -n "${ALL_COMPS}" ] || fail "could not read the component list from ${INC}"
+    echo "[each] sweeping $(echo ${ALL_COMPS} | wc -w) components one at a time"
+    echo "       (the FIRST build is long - it builds the cross toolchain once)"
+
+    # The sweep body is written to a file (mounted via WORK) rather than passed as
+    # an escaped bash -c string, so the container-side loop stays readable.
+    SWEEP="${WORK}/each-sweep.sh"
+    cat > "${SWEEP}" <<SWEEPEOF
+source poky/oe-init-build-env build >/dev/null
+bitbake-layers add-layer '${REPO_ROOT}/tests/yocto/meta-rdk-halif-aidl' 2>/dev/null || true
+bitbake-layers add-layer '${HARNESS_DIR}/meta-halif-ci' 2>/dev/null || true
+if ! grep -q 'halif-ci-config' conf/local.conf; then
+cat >> conf/local.conf <<CONF
+
+# --- halif-ci-config ---
+MACHINE = 'qemux86-64'
+HALIF_TEST_BRANCH = '${BRANCH}'
+BB_SIGNATURE_HANDLER = 'OEEquivHash'
+BB_HASHSERVE = 'auto'
+INSANE_SKIP:${TARGET} += 'arch'
+CONF
+fi
+fails=0; n=0; total=\$(echo ${ALL_COMPS} | wc -w)
+for comp in ${ALL_COMPS}; do
+    n=\$((n + 1))
+    sed -i '/^HALIF_COMPONENTS /d' conf/local.conf
+    echo "HALIF_COMPONENTS = '\${comp}'" >> conf/local.conf
+    echo "[each] (\${n}/\${total}) build \${comp} + closure ..."
+    if bitbake ${TARGET} -c package -f > "/tmp/each-\${comp}.log" 2>&1; then
+        ps=\$(find tmp/work -maxdepth 5 -type d -name packages-split 2>/dev/null | grep '/${TARGET}/' | head -1)
+        so=\$(find "\${ps}/${TARGET}-\${comp}" -name "lib\${comp}-v*-cpp.so" -not -path '*/.debug/*' 2>/dev/null | head -1)
+        if [ -n "\${so}" ] && echo "\${so}" | grep -q '/vendor/rdk-halif-aidl/'; then
+            echo "    ok: \${comp} -> \$(basename "\${so}") on the mount"
+        else
+            echo "    FAIL: \${comp} produced no lib\${comp}-*.so on the mount"; fails=\$((fails + 1))
+        fi
+    else
+        echo "    FAIL: \${comp} bitbake do_package failed"; tail -6 "/tmp/each-\${comp}.log" | sed 's/^/        /'; fails=\$((fails + 1))
+    fi
+    # clean ONLY this recipe (keep toolchain / binder / downloads)
+    bitbake ${TARGET} -c clean > /dev/null 2>&1 || true
+done
+echo ""
+[ "\${fails}" -eq 0 ] && echo "SWEEP-OK all \${total} components package individually" && exit 0
+echo "SWEEP-FAIL \${fails}/\${total} component(s) failed"; exit 1
+SWEEPEOF
+
+    docker run --rm \
+        -v "${REPO_ROOT}":"${REPO_ROOT}" \
+        -v "${WORK}":"${WORK}" \
+        --workdir="${WORK}" \
+        "${IMAGE}" --workdir="${WORK}" -- bash "${SWEEP}"
+    [ $? -eq 0 ] || fail "per-component bitbake sweep failed (see log above)"
+    echo "========================================="
+    echo "✅ per-component sweep: every component packages on its own (real bitbake)"
+    echo "========================================="
+    exit 0
+fi
 
 # --- bitbake, inside the container ------------------------------------------
 echo "[bitbake] building + packaging ${TARGET} (first run builds the toolchain) ..."

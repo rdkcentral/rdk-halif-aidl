@@ -984,6 +984,33 @@ test_13() {
     return 0
 }
 
+test_14() {
+    echo "Building every component through REAL bitbake, one at a time..."
+    echo "Proves each component packages on its own (do_package), cleaning only the"
+    echo "rdk-halif-aidl recipe between components so the toolchain is built once."
+    echo ""
+    # This is the bitbake counterpart of Test 13 (which is the offline sweep). It
+    # needs docker + the prebuilt Binder SDK; skip gracefully where they are absent
+    # or when explicitly opted out, so test.sh still runs everywhere.
+    if [ "${HALIF_SKIP_BITBAKE:-0}" = "1" ]; then
+        echo "⏭  SKIP: HALIF_SKIP_BITBAKE=1"
+        return 0
+    fi
+    if ! command -v docker >/dev/null 2>&1; then
+        echo "⏭  SKIP: docker not available (the bitbake sweep needs it)"
+        return 0
+    fi
+    if [ ! -d out/build/include/binder_sdk ] || [ ! -d out/target/lib/binder ]; then
+        echo "⏭  SKIP: Binder SDK not built (run ./build_binder.sh first)"
+        return 0
+    fi
+    if ! HALIF_BB_EACH=1 ./tests/yocto/bitbake/run.sh; then
+        echo "❌ a component failed the per-component bitbake sweep"
+        return 1
+    fi
+    return 0
+}
+
 ################################################################################
 # Run Tests
 ################################################################################
@@ -1001,6 +1028,7 @@ run_test "10" "CMake multi-module build with version switching" test_10
 run_test "11" "Cross-compilation build (sc docker rdk-kirkstone)" test_11
 run_test "12" "Yocto integration (per-component + vendor/MW full-HAL builds)" test_12
 run_test "13" "Each component builds individually (fresh sysroot per component)" test_13
+run_test "14" "Each component packages individually through real bitbake" test_14
 
 ################################################################################
 # Summary

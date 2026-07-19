@@ -74,15 +74,25 @@ cached (minutes). Options:
 
 | Env | Effect |
 | --- | ------ |
+| `HALIF_BB_EACH=1`      | sweep: build **each** component on its own through real bitbake |
+| `HALIF_BB_COMPONENTS=` | build only a subset; the planner adds each one's dependency closure |
 | `HALIF_BB_CLEAN=1`     | force a clean re-fetch + rebuild of the recipe |
 | `HALIF_TEST_BRANCH=`   | test a different branch (default: the #661 branch) |
-| `HALIF_BB_COMPONENTS=` | build only a subset; the planner adds each one's dependency closure |
 | `HALIF_BB_WORK=`       | put the (large) build tree somewhere else |
 
 `HALIF_BB_COMPONENTS` exercises the closure resolution: `"hdmicec"` builds hdmicec
 plus the `common` it links, and `"audiodecoder:0.1.0.0 hdmicec:0.1.0.0"` builds
 BOTH `common` versions those two consumers pin — the assertions confirm the
 `rdk-halif-aidl-common` package then holds both `.so`.
+
+`HALIF_BB_EACH=1` is the **per-component sweep**: it builds every component (with
+its dependency closure) one at a time, asserting each packages its own `.so` on
+the mount. Only the `rdk-halif-aidl` recipe is cleaned between components
+(`bitbake -c clean`), so the cross toolchain, the Binder SDK and the downloads are
+built once and reused — the first component is slow, the rest quick. This is the
+bitbake counterpart of the offline `yocto_build_each.sh`, and runs as `test.sh`
+Test 14 (skipped where docker or the Binder SDK is absent, or with
+`HALIF_SKIP_BITBAKE=1`).
 
 ## Prerequisites
 
