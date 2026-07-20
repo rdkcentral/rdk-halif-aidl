@@ -52,7 +52,9 @@ cd "${REPO_ROOT}"
 
 VERSIONS="${1:-${REPO_ROOT}/versions_released.yaml}"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/yocto-artifact.XXXXXX")"
-DEST="${WORK}/image/usr"
+# yocto_build.sh installs to <DEST>/<mount>/rdk-halif-aidl, where DEST is the rootfs
+# root (the mount is a sibling of /usr, not under it).
+DEST="${WORK}/image"
 trap 'rm -rf "${WORK}"' EXIT
 
 echo "========================================="
@@ -67,7 +69,7 @@ fi
 command -v readelf >/dev/null || { echo "⚠️  readelf unavailable - skipping"; exit 0; }
 
 fail=0 n=0
-for so in "${DEST}"/lib/rdk-halif-aidl/*.so; do
+for so in "${DEST}"/vendor/rdk-halif-aidl/*.so; do
     [ -f "${so}" ] || continue
     n=$((n + 1))
     base="$(basename "${so}")"
