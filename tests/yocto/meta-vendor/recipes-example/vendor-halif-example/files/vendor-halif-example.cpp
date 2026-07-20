@@ -82,9 +82,12 @@ public:
 int main() {
     ::android::sp<VendorHdmiCec> hal = new VendorHdmiCec();
 
-    // Register under the interface's well-known name so clients can look it up.
+    // Register under the interface's published serviceName() - the SAME name a
+    // client resolves via halcompat.h getService<IHdmiCec>(). Registering under a
+    // hard-coded descriptor string would make those lookups miss the service.
     ::android::defaultServiceManager()->addService(
-        ::android::String16("com.rdk.hal.hdmicec.IHdmiCec"), hal);
+        ::android::String16(
+            ::com::rdk::hal::hdmicec::IHdmiCec::serviceName().c_str()), hal);
 
     ::android::ProcessState::self()->startThreadPool();
     ::android::IPCThreadState::self()->joinThreadPool();

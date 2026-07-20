@@ -265,7 +265,7 @@ target_build_interfaces_libraries()
 # Stage headers BEFORE building so compilation uses staged headers
 #######################################################################
 
-message(STATUS "Staging generated headers to ${OUT_DIR}/target/include/rdk-halif-aidl/...")
+message(STATUS "Staging generated headers to ${OUT_DIR}/build/include/...")
 
 # Module-local layout: generated headers live in <module>/current/include/.
 if (INTERFACE_TARGET STREQUAL "all")
@@ -335,7 +335,7 @@ endif()
 message(STATUS "")
 message(STATUS "Build configured. HAL modules will be staged to:")
 message(STATUS "  Libraries: ${OUT_DIR}/target/lib/rdk-halif-aidl/")
-message(STATUS "  Headers:   ${OUT_DIR}/target/include/rdk-halif-aidl/")
+message(STATUS "  Headers:   ${OUT_DIR}/build/include/")
 message(STATUS "")
 message(STATUS "Run 'cmake --build <build-dir>' to build")
 message(STATUS "")

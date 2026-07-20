@@ -52,6 +52,6 @@ the production per-component CMake path is exercised offline.
   `<module>/<version>/CMakeLists.txt`, with a negative control proving the
   inter-module dependency staging is required (the regression from #661).
 
-The consumable BitBake reference layer is `yocto/meta-rdk-halif/` (see
+The consumable BitBake reference layer is `yocto/meta-rdk-halif-aidl/` (see
 `docs/standards/build_integration.md`); the scripts above exercise the contract
-its `rdk-halif` recipe implements.
+its `rdk-halif-aidl` recipe implements.
