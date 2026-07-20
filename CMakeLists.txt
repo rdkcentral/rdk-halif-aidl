@@ -245,6 +245,14 @@ if (NOT EXISTS "${HOST_AIDL_DIR}/CMakeLists.inc")
         "Each <module>/<version>/CMakeLists.txt is self-contained. See the "
         "production-build section of the README.")
 endif()
+
+# The codegen walks INTERFACES_ROOT_DIRS (= CMAKE_SOURCE_DIR, the whole repo) for
+# interface.yaml/json. Keep it out of build-output trees: they can contain unrelated
+# files of the same name that crash the loader - e.g. CMake's own test fixtures under
+# the bitbake harness's tests/yocto/bitbake/.work/ ship a codemodel "interface.json".
+# Real interface defs live only in <module>/<version>/, so skipping these is safe.
+set(ENV{AIDL_VERSIONING_SKIP_DIR} "tests,out,build")
+
 include("${HOST_AIDL_DIR}/CMakeLists.inc")
 
 #######################################################################
