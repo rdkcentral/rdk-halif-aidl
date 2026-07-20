@@ -4,7 +4,7 @@ On-demand build verification for the module-local layout.
 
 | Concern | Where |
 | ------- | ----- |
-| Does the system build? | `./test.sh` — the top-level suite: build paths, direct-CMake, cross-compile, and `yocto/` (Test 12) |
+| Does the system build? | `./tests/test.sh` — the top-level suite: build paths, direct-CMake, cross-compile, and `yocto/` (Test 12) |
 | Module build smoke | `tests/smoke/` — the `build_modules.sh` paths in depth (standalone) |
 | Yocto build integration | `tests/yocto/` — run by `test.sh` Test 12, also standalone |
 | Is a release's structure OK? | `./scripts/release.sh` — link-check, no-untracked-generated-files, and a clean-checkout verification build |

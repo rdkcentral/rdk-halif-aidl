@@ -21,7 +21,9 @@
 set -euo pipefail
 
 # Comprehensive test suite for RDK HAL AIDL Interface Build System
-cd "$(dirname "$0")"
+# This script lives in tests/, so anchor to the repo root (its parent) - every
+# path below is relative to the repo root.
+cd "$(dirname "$0")/.."
 
 # Color codes for output
 RED='\033[0;31m'
