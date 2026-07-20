@@ -14,9 +14,9 @@ single `rdk-halif-aidl-dbg`.
 ## Nothing large is committed - it is all fetched on first run
 
 The repo carries **~32 KB of scripts**. Everything heavy - the container image,
-poky, the toolchain, sstate - is downloaded or built on the **first run** into a
-git-ignored `.work/` (~11 GB). No Dockerfile, no tarballs, no binaries in the
-repo.
+poky, the toolchain, sstate - is downloaded or built on the **first run** into
+`build/bitbake/` (~12 GB), a git-ignored build-output tree. No Dockerfile, no
+tarballs, no binaries committed.
 
 ```mermaid
 flowchart LR
@@ -25,7 +25,7 @@ flowchart LR
         S["run.sh"]
         L["meta-halif-ci/<br/>layer.conf · stub linux-binder.bb · bbappend"]
     end
-    subgraph RUN["Fetched / built on first run — ~11 GB, git-ignored (.work/)"]
+    subgraph RUN["Fetched / built on first run — ~12 GB, git-ignored (build/bitbake/)"]
         direction TB
         I["crops/poky image<br/>Docker Hub"]
         P["poky kirkstone<br/>git.yoctoproject.org"]
@@ -127,7 +127,7 @@ consumer's `do_compile`.
 tests/yocto/bitbake/
 ├── run.sh                 the test: docker + poky + bitbake + assertions
 ├── README.md
-├── .gitignore             ignores .work/ and the staged binder tarball
+├── .gitignore             ignores the staged binder tarball (work tree is in build/)
 └── meta-halif-ci/         a minimal layer that exists only for CI
     ├── conf/layer.conf
     ├── recipes-binder/linux-binder/       stub: stages the prebuilt Binder SDK

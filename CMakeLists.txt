@@ -247,11 +247,11 @@ if (NOT EXISTS "${HOST_AIDL_DIR}/CMakeLists.inc")
 endif()
 
 # The codegen walks INTERFACES_ROOT_DIRS (= CMAKE_SOURCE_DIR, the whole repo) for
-# interface.yaml/json. Keep it out of build-output trees: they can contain unrelated
-# files of the same name that crash the loader - e.g. CMake's own test fixtures under
-# the bitbake harness's tests/yocto/bitbake/.work/ ship a codemodel "interface.json".
+# interface.yaml/json. Keep it out of the build-output trees (out/, build/): they can
+# hold unrelated files of the same name that crash the loader - e.g. CMake's own test
+# fixtures under the bitbake harness's build/bitbake/ ship a codemodel "interface.json".
 # Real interface defs live only in <module>/<version>/, so skipping these is safe.
-set(ENV{AIDL_VERSIONING_SKIP_DIR} "tests,out,build")
+set(ENV{AIDL_VERSIONING_SKIP_DIR} "out,build")
 
 include("${HOST_AIDL_DIR}/CMakeLists.inc")
 

@@ -30,7 +30,7 @@
 #
 # It uses:
 #   crops/poky            an image with bitbake + host tools
-#   poky (kirkstone)      the base layers (cloned once, cached in .work/)
+#   poky (kirkstone)      the base layers (cloned once, cached in build/bitbake/)
 #   meta-halif-ci         a stub linux-binder (stages the prebuilt Binder SDK) and
 #                         a bbappend that fetches the branch under test
 #   the public sstate mirror, so the first build pulls prebuilt native/cross
@@ -55,7 +55,11 @@ set -uo pipefail
 
 HARNESS_DIR="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)"
 REPO_ROOT="$(cd "${HARNESS_DIR}/../../.." && pwd)"
-WORK="${HALIF_BB_WORK:-${HARNESS_DIR}/.work}"
+# The bitbake work tree (poky + toolchain + build, ~12GB) lives under the repo's
+# standard build/ dir - visible, gitignored, and NEVER committed. It is a build
+# output, not source, so it must never sit among the interface sources. Override
+# with HALIF_BB_WORK.
+WORK="${HALIF_BB_WORK:-${REPO_ROOT}/build/bitbake}"
 IMAGE="${HALIF_BB_IMAGE:-crops/poky:ubuntu-22.04}"
 BRANCH="${HALIF_TEST_BRANCH:-feature/661-yocto-per-component-recipes}"
 TARGET="rdk-halif-aidl"
