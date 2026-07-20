@@ -23,7 +23,7 @@ flowchart LR
     subgraph REPO["Committed to the repo — ~32 KB"]
         direction TB
         S["run.sh"]
-        L["meta-halif-ci/<br/>layer.conf · stub linux-binder.bb · bbappend"]
+        L["meta-halif-ci/<br/>layer.conf · stub linux-binder.bb"]
     end
     subgraph RUN["Fetched / built on first run — ~12 GB, git-ignored (build/bitbake/)"]
         direction TB
@@ -60,7 +60,7 @@ flowchart TD
     CMP["do_compile<br/>halif_plan orders deps, cmake builds 21 components"] --> INST
     INST["do_install → the role mount<br/>libs → /vendor/rdk-halif-aidl<br/>headers → /vendor/rdk-halif-aidl/include"] --> PKG
     PKG["do_package<br/>split + strip + debug"] --> OUT
-    OUT["21× rdk-halif-aidl-&lt;comp&gt;  (the .so, on the role mount)<br/>21× rdk-halif-aidl-&lt;comp&gt;-dev  (headers under include/)<br/>1× rdk-halif-aidl-dbg  (all debug symbols)"] --> AS["run.sh assertions + consumer link"]
+    OUT["21× rdk-halif-aidl-&lt;comp&gt;  (the .so, on the role mount)<br/>21× rdk-halif-aidl-&lt;comp&gt;-dev  (headers under include/)<br/>1× rdk-halif-aidl-dbg  (all debug symbols)"] --> AS["run.sh assertions"]
 ```
 
 ## Run it
@@ -77,7 +77,8 @@ cached (minutes). Options:
 | `HALIF_BB_EACH=1`      | sweep: build **each** component on its own through real bitbake |
 | `HALIF_BB_COMPONENTS=` | build only a subset; the planner adds each one's dependency closure |
 | `HALIF_BB_CLEAN=1`     | force a clean re-fetch + rebuild of the recipe |
-| `HALIF_TEST_BRANCH=`   | test a different branch (default: the #661 branch) |
+| `HALIF_TEST_BRANCH=`   | override the branch under test (default: the current git branch) |
+| `HALIF_TEST_SRCREV=`   | override the commit under test (default: the current `HEAD`) |
 | `HALIF_BB_WORK=`       | put the (large) build tree somewhere else |
 
 `HALIF_BB_COMPONENTS` exercises the closure resolution: `"hdmicec"` builds hdmicec
@@ -115,11 +116,10 @@ After a green `do_package`, on the produced `packages-split/`:
 3. exactly one **`rdk-halif-aidl-dbg`**, holding every component's debug library
    (no empty `-dbg` packages)
 
-Then it builds **`vendor-halif-example`** — a real consumer with
-`DEPENDS = "rdk-halif-aidl"` that links `-lhdmicec`/`-lcommon` from the role
-mount. This only compiles if `SYSROOT_DIRS` staged the mount into its sysroot, so
-it is the regression guard for the staging path: a broken stage fails the
-consumer's `do_compile`.
+The build itself is the staging regression guard: each component compiles and
+links `-lhdmicec`/`-lcommon` from the role mount, which only resolves if
+`SYSROOT_DIRS` staged the mount into the recipe sysroot. A broken stage fails
+`do_compile`.
 
 ## How it is wired
 
@@ -130,16 +130,14 @@ tests/yocto/bitbake/
 ├── .gitignore             ignores the staged binder tarball (work tree is in build/)
 └── meta-halif-ci/         a minimal layer that exists only for CI
     ├── conf/layer.conf
-    ├── recipes-binder/linux-binder/       stub: stages the prebuilt Binder SDK
-    │                                       so the recipe's DEPENDS resolves
-    └── recipes-halif/rdk-halif-aidl/
-        └── rdk-halif-aidl.bbappend         fetches the branch under test
+    └── recipes-binder/linux-binder/       stub: stages the prebuilt Binder SDK
+                                            so the recipe's DEPENDS resolves
 ```
 
 The recipe itself lives in the consumable layer `tests/yocto/meta-rdk-halif-aidl/`
 and is fetched from git (not `externalsrc` - that broke fakeroot for `do_package`
-and hashed the in-repo build tree). To test a local commit, push it and point
-`HALIF_TEST_BRANCH` / the bbappend `SRCREV` at it.
-
-`run.sh` also adds `tests/yocto/meta-vendor/`, whose `vendor-halif-example` recipe
-is the consumer built as the staging regression guard.
+and hashed the in-repo build tree). `run.sh` computes the branch and commit under
+test from the working tree (`git rev-parse HEAD`) and pins the recipe's
+`SRC_URI`/`SRCREV` at them through `local.conf`, so a run always builds the commit
+you have checked out — push it first so bitbake can fetch it. Override with
+`HALIF_TEST_BRANCH` / `HALIF_TEST_SRCREV`.

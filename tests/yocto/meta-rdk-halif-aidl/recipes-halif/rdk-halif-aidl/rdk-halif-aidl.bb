@@ -229,6 +229,11 @@ do_install() {
     install -d "${D}${HALIF_LIBDIR}" "${D}${HALIF_INCDIR}"
     cp -a "${B}/staged/lib/rdk-halif-aidl/." "${D}${HALIF_LIBDIR}/"
     cp -a "${B}/staged/include/rdk-halif-aidl/." "${D}${HALIF_INCDIR}/"
+    # do_compile runs without pseudo, so the staged tree is owned by the build
+    # user; cp -a preserves that uid. Rootfs files must be root-owned - reset it
+    # here (under pseudo) so do_package does not choke on an unknown uid and the
+    # device gets root:root libraries.
+    chown -R root:root "${D}${HALIF_LIBDIR}" "${D}${HALIF_INCDIR}"
 }
 
 # Package layout: one package per component - rdk-halif-aidl-<comp> (its versioned

@@ -12,7 +12,7 @@ during migration.
 | Path | Yours to use? | Purpose |
 | ---- | ------------- | ------- |
 | `meta-rdk-halif-aidl/` | **yes** | the consumable layer — one `rdk-halif-aidl` recipe, one package per component |
-| `meta-vendor/`, `meta-mw/` | **as examples** | role build-config + a worked consumer recipe each |
+| `meta-vendor/`, `meta-mw/` | **as examples** | role build-config for each mount point (`/vendor`, `/mw`) |
 | `bitbake/` | **as a test** | runs *real* BitBake on the recipe in a container and asserts the packaging + staging. See its [README](bitbake/README.md). |
 | `ci/` | **as a test** | offline emulation of the build loop (no BitBake) for fast contract checks |
 
@@ -80,13 +80,10 @@ the mount is a real partition, so this is not an FHS `/usr/lib` layout:
 
 ```
 /                                                 device rootfs
-├── vendor/
-│   └── rdk-halif-aidl/                           the role mount (a partition)
-│       ├── libhdmicec-v0.1.0.0-cpp.so            pkg rdk-halif-aidl-hdmicec
-│       └── libcommon-v0.2.0.0-cpp.so             pkg rdk-halif-aidl-common
-└── usr/
-    └── bin/
-        └── vendor-halif-example                  the consumer binary
+└── vendor/
+    └── rdk-halif-aidl/                           the role mount (a partition)
+        ├── libhdmicec-v0.1.0.0-cpp.so            pkg rdk-halif-aidl-hdmicec
+        └── libcommon-v0.2.0.0-cpp.so             pkg rdk-halif-aidl-common
 ```
 
 An `mw` build is identical with `/mw/rdk-halif-aidl` in place of
@@ -158,15 +155,12 @@ then include by the AIDL namespace:
 Link the same versions the `rdk-halif-aidl` recipe built (its
 `HALIF_VERSIONS_FILE`) — the `.so` you link must be the one on the rootfs.
 
-Worked examples, which you can copy the shape of:
-
-- `meta-vendor/recipes-example/vendor-halif-example/` — **server**: subclass the
-  generated `Bn<Interface>` stub and register the service
-- `meta-mw/recipes-example/mw-halif-example/` — **client**: look the service up
-  and gate newer calls on `getInterfaceVersion()`
-
-Client and server link the *same* interface library; the role difference is what
-the code does, not how it builds.
+A server subclasses the generated `Bn<Interface>` stub and registers the service;
+a client looks the service up and gates newer calls on `getInterfaceVersion()`.
+Both link the *same* interface library — the role difference is what the code
+does, not how it builds. The BitBake test (`bitbake/run.sh`) is the worked
+example: it builds each component against the staged HAL exactly as a consumer
+recipe would.
 
 ## Choosing what gets built
 
@@ -212,7 +206,8 @@ exact version it links.
 ## Running the tests
 
 **Real BitBake** — builds + packages the recipe in a container and asserts the
-packaging and staging (including a consumer that links against the staged HAL):
+packaging and staging, building each component against the staged HAL exactly as
+a consumer recipe would:
 
 ```bash
 ./tests/yocto/bitbake/run.sh

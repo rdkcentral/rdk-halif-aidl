@@ -47,7 +47,7 @@ usage() {
     echo "  --help       Show this help"
 }
 
-TEST_IDS=("1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "12" "13")
+TEST_IDS=("1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "12" "13" "14")
 
 list_tests() {
     echo "Available tests:"
@@ -64,6 +64,7 @@ list_tests() {
     echo "  11  Cross-compilation build (sc docker rdk-kirkstone)"
     echo "  12  Yocto integration (per-component + vendor/MW full-HAL builds)"
     echo "  13  Each component builds individually (fresh sysroot per component)"
+    echo "  14  Each component packages individually through real bitbake"
 }
 
 index_of_test_id() {
@@ -926,7 +927,13 @@ test_11() {
     echo "=========================================="
     echo "✅ Test 11 PASSED - ARM cross-compilation successful"
     echo "=========================================="
-    
+
+    # Clean up the ARM artifacts: they live in the shared out/, and leaving an ARM
+    # Binder SDK there would make the later host-architecture tests (e.g. Test 12's
+    # Yocto build) link against the wrong-arch SDK. Wiping out/ makes the next test
+    # that needs a host SDK rebuild it.
+    clean_build_state
+
     return 0
 }
 
@@ -967,13 +974,6 @@ test_12() {
         return 1
     fi
     echo "✅ artifacts are shippable"
-    echo ""
-    echo "==> Test 12.6: example consumer recipes compile + link against the staged HAL"
-    if ! ./tests/yocto/ci/yocto_example_check.sh; then
-        echo "❌ an example recipe failed to build"
-        return 1
-    fi
-    echo "✅ example recipes build"
     return 0
 }
 

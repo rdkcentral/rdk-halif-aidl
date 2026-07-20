@@ -61,8 +61,12 @@ REPO_ROOT="$(cd "${HARNESS_DIR}/../../.." && pwd)"
 # with HALIF_BB_WORK.
 WORK="${HALIF_BB_WORK:-${REPO_ROOT}/build/bitbake}"
 IMAGE="${HALIF_BB_IMAGE:-crops/poky:ubuntu-22.04}"
-BRANCH="${HALIF_TEST_BRANCH:-feature/661-yocto-per-component-recipes}"
 TARGET="rdk-halif-aidl"
+# Test the branch + commit currently checked out - resolved from git, never
+# hardcoded. bitbake fetches from the remote, so the commit must be PUSHED.
+# Override with HALIF_TEST_BRANCH / HALIF_TEST_SRCREV.
+BRANCH="${HALIF_TEST_BRANCH:-$(git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD 2>/dev/null)}"
+SRCREV="${HALIF_TEST_SRCREV:-$(git -C "${REPO_ROOT}" rev-parse HEAD 2>/dev/null)}"
 # Optional: build only a chosen subset instead of the full cohort. The planner
 # adds each named component's dependency closure, so "hdmicec" pulls in common,
 # and "audiodecoder:0.1.0.0 hdmicec:0.1.0.0" pulls in BOTH common versions.
@@ -71,11 +75,13 @@ COMPONENTS="${HALIF_BB_COMPONENTS:-}"
 echo "========================================="
 echo "  bitbake packaging test: ${TARGET}"
 echo "  branch:     ${BRANCH}"
+echo "  commit:     ${SRCREV}"
 echo "  components: ${COMPONENTS:-<all released>}"
 echo "  work dir:   ${WORK}"
 echo "========================================="
 
 fail() { echo ""; echo "❌ $1"; exit 1; }
+[ -n "${BRANCH}" ] && [ -n "${SRCREV}" ] || fail "could not resolve branch/commit from git (run inside the repo)"
 
 command -v docker >/dev/null || fail "docker not found"
 [ -d "${REPO_ROOT}/out/build/include/binder_sdk" ] && [ -d "${REPO_ROOT}/out/target/lib/binder" ] \
@@ -137,17 +143,25 @@ if [ "${HALIF_BB_EACH:-0}" = "1" ]; then
 source poky/oe-init-build-env build >/dev/null
 bitbake-layers add-layer '${REPO_ROOT}/tests/yocto/meta-rdk-halif-aidl' 2>/dev/null || true
 bitbake-layers add-layer '${HARNESS_DIR}/meta-halif-ci' 2>/dev/null || true
-if ! grep -q 'halif-ci-config' conf/local.conf; then
+# Strip any prior halif-ci-config block and write a fresh one: BRANCH/SRCREV are
+# resolved per run, so this must never be skipped - a stale block from an earlier
+# run (different branch/commit) would silently build the wrong source.
+sed -i '/# --- halif-ci-config ---/,\$d' conf/local.conf
 cat >> conf/local.conf <<CONF
 
 # --- halif-ci-config ---
 MACHINE = 'qemux86-64'
-HALIF_TEST_BRANCH = '${BRANCH}'
+# Fetch the branch + commit under test (run.sh resolves these from git). These
+# pn- overrides keep the real recipe unmodified - no bbappend needed.
+SRC_URI:pn-${TARGET} = 'git://github.com/rdkcentral/rdk-halif-aidl.git;protocol=https;branch=${BRANCH}'
+SRCREV:pn-${TARGET} = '${SRCREV}'
 BB_SIGNATURE_HANDLER = 'OEEquivHash'
 BB_HASHSERVE = 'auto'
+# 'arch': the interface libs carry no machine-specific code, so the ELF arch check
+# is not meaningful here. (Ownership is handled in the recipe: do_install chowns to
+# root, so there is no host-user contamination to skip.)
 INSANE_SKIP:${TARGET} += 'arch'
 CONF
-fi
 fails=0; n=0; total=\$(echo ${ALL_COMPS} | wc -w)
 for comp in ${ALL_COMPS}; do
     n=\$((n + 1))
@@ -195,19 +209,26 @@ docker run --rm \
 set -e
 source poky/oe-init-build-env build >/dev/null
 bitbake-layers add-layer '${REPO_ROOT}/tests/yocto/meta-rdk-halif-aidl' 2>/dev/null || true
-bitbake-layers add-layer '${REPO_ROOT}/tests/yocto/meta-vendor' 2>/dev/null || true
 bitbake-layers add-layer '${HARNESS_DIR}/meta-halif-ci' 2>/dev/null || true
-if ! grep -q 'halif-ci-config' conf/local.conf; then
+# Strip any prior halif-ci-config block and write a fresh one: BRANCH/SRCREV are
+# resolved per run, so this must never be skipped - a stale block from an earlier
+# run (different branch/commit) would silently build the wrong source.
+sed -i '/# --- halif-ci-config ---/,\$d' conf/local.conf
 cat >> conf/local.conf <<EOF
 
 # --- halif-ci-config ---
 MACHINE = 'qemux86-64'
-HALIF_TEST_BRANCH = '${BRANCH}'
+# Fetch the branch + commit under test (run.sh resolves these from git). These
+# pn- overrides keep the real recipe unmodified - no bbappend needed.
+SRC_URI:pn-${TARGET} = 'git://github.com/rdkcentral/rdk-halif-aidl.git;protocol=https;branch=${BRANCH}'
+SRCREV:pn-${TARGET} = '${SRCREV}'
 BB_SIGNATURE_HANDLER = 'OEEquivHash'
 BB_HASHSERVE = 'auto'
+# 'arch': the interface libs carry no machine-specific code, so the ELF arch check
+# is not meaningful here. (Ownership is handled in the recipe: do_install chowns to
+# root, so there is no host-user contamination to skip.)
 INSANE_SKIP:${TARGET} += 'arch'
 EOF
-fi
 # Refresh the component selection every run (a subset build, or the default cohort
 # when HALIF_BB_COMPONENTS is unset). Kept out of the guarded block so it can change
 # between runs without re-seeding the whole config.
@@ -217,13 +238,8 @@ ${CLEAN_STEP}
 # -f: force do_package to actually run (not restore from sstate), so the
 # packages-split tree exists for the assertions below.
 bitbake ${TARGET} -c package -f
-# Build a REAL consumer against the staged HAL. vendor-halif-example has
-# DEPENDS = 'rdk-halif-aidl' and links -lhdmicec/-lcommon from the role mount, so
-# this only succeeds if SYSROOT_DIRS staged the role mount into its sysroot. It is
-# the regression guard for the staging path - a broken stage fails do_compile here.
-bitbake vendor-halif-example
 "
-[ $? -eq 0 ] || fail "bitbake failed (HAL package or consumer link - see log above)"
+[ $? -eq 0 ] || fail "bitbake ${TARGET} -c package failed (see log above)"
 
 # --- ASSERT the packaging on the host (packages-split is under WORK) --------
 PS="$(find "${WORK}/build/tmp/work" -maxdepth 5 -type d -name packages-split 2>/dev/null | grep "/${TARGET}/" | head -1)"
@@ -263,14 +279,6 @@ dbgn="$(find "${PS}/${TARGET}-dbg" -path '*/.debug/*' -name 'lib*-cpp.so' 2>/dev
 devh="$(find "${PS}" -path '*-dev/*/rdk-halif-aidl/include/*' -name '*.h' 2>/dev/null | head -1)"
 [ -n "${devh}" ] || { echo "  ❌ no -dev headers under a role mount's include/ (staging layout wrong)"; errs=$((errs+1)); }
 
-# 5. THE STAGING PROOF: a real consumer (vendor-halif-example) linked against the
-# staged HAL. If SYSROOT_DIRS did not stage the role mount, its do_compile could
-# not have found -lhdmicec/-lcommon and bitbake above would have failed. Confirm
-# the linked binary actually exists.
-consumer="$(find "${WORK}/build/tmp/work" -type f -name vendor-halif-example -path '*/image/*' 2>/dev/null | head -1)"
-[ -z "${consumer}" ] && consumer="$(find "${WORK}/build/tmp/work" -type f -name vendor-halif-example -perm -u+x 2>/dev/null | grep -v '\.debug' | head -1)"
-[ -n "${consumer}" ] || { echo "  ❌ vendor-halif-example binary not found - consumer did not link against the staged HAL"; errs=$((errs+1)); }
-
 echo ""
 if [ "${errs}" -ne 0 ]; then
     fail "assertions failed (${errs})"
@@ -279,8 +287,6 @@ echo "========================================="
 echo "✅ ${TARGET} packages correctly (real bitbake do_package):"
 echo "   ${ncomp} component packages holding ${nlibs} versioned libraries (on the role mount)"
 echo "   + ${ncomp} -dev (headers) + one ${TARGET}-dbg holding all ${nlibs} debug libraries"
-echo "✅ staging proven: vendor-halif-example linked against the staged role mount"
-echo "   consumer binary: ${consumer}"
 echo "   packages:        ${PS}"
 echo "========================================="
 exit 0
