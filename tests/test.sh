@@ -734,9 +734,9 @@ test_11() {
     # Build ARM Binder SDK using direct CMake commands (production method)
     # This replicates what production-build.sh does
     # Note: CC/CXX/CFLAGS/CXXFLAGS/LDFLAGS come from RDK environment-setup script
-    if sc docker run rdk-kirkstone \
+    if sc docker run --local rdk-kirkstone \
         ". /opt/toolchains/rdk-glibc-x86_64-arm-toolchain/environment-setup-armv7vet2hf-neon-oe-linux-gnueabi; \
-        unset CMAKE_TOOLCHAIN_FILE; \
+        unset CMAKE_TOOLCHAIN_FILE OECORE_NATIVE_SYSROOT OECORE_TARGET_SYSROOT; \
         cd ${current_dir}; \
         CC=\"\${CC}\" CXX=\"\${CXX}\" \
         CFLAGS=\"\${CFLAGS}\" CXXFLAGS=\"\${CXXFLAGS}\" LDFLAGS=\"\${LDFLAGS}\" \
@@ -766,46 +766,57 @@ test_11() {
     echo "✅ Created SDK marker: ${current_dir}/out/target/.sdk_ready"
     echo ""
     
-    # Step 5: Build ARM HAL modules using direct CMake (production method)
-    echo "==> Step 5: Building ARM HAL modules with CMake (default paths)..."
-    echo "Using ARM SDK from step 4"
+    # Step 5: Cross-compile released component snapshots for ARM (production path)
+    echo "==> Step 5: Cross-compiling released component snapshots for ARM..."
+    echo "Per-component snapshots (pre-generated C++, no codegen), against the ARM SDK"
     echo ""
-    echo "Build steps:"
-    echo "  1. cmake -S . -B build/current -DINTERFACE_TARGET=all ..."
-    echo "  2. cmake --build build/current"
-    echo "  3. cmake --install build/current (modules to out/target/lib/rdk-halif-aidl/)"
+    echo "Build steps (per <module>/<version>):"
+    echo "  1. cmake -S <module>/<version> -B build/arm-<module> -DBINDER_SDK_DIR=out/target ..."
+    echo "  2. cmake --build build/arm-<module>"
+    echo "  3. install lib<module>-v<version>-cpp.so -> out/target/lib/rdk-halif-aidl/"
     echo ""
     echo "=========================================="
-    echo "Starting ARM module build (default paths)..."
+    echo "Starting ARM component cross-compile..."
     echo "Build log: /tmp/arm_module_build.log"
     echo "=========================================="
     echo ""
     
-    # Build ARM HAL modules using direct CMake commands (production method)
-    # Note: CC/CXX/CFLAGS/CXXFLAGS/LDFLAGS come from RDK environment-setup script
-    if sc docker run rdk-kirkstone \
+    # Cross-compile released component SNAPSHOTS for ARM - the PRODUCTION path that
+    # an integrator uses. Each <module>/<version> has a self-contained CMakeLists
+    # that compiles the committed, pre-generated C++ against the staged Binder SDK:
+    # no AIDL codegen and no host AIDL tool are involved. (The top-level codegen
+    # build is the developer path and is NOT the cross/production path - see the
+    # top-level CMakeLists message and docs/standards/build_integration.md.)
+    #
+    # Build a dependency chain - common (no deps), then hdmicec (links common) - so
+    # this also exercises inter-component staging, exactly as yocto_build.sh does.
+    local ARM_LIBDIR="out/target/lib/rdk-halif-aidl"
+    local ARM_INCDIR="out/target/include/rdk-halif-aidl"
+    if sc docker run --local rdk-kirkstone \
         ". /opt/toolchains/rdk-glibc-x86_64-arm-toolchain/environment-setup-armv7vet2hf-neon-oe-linux-gnueabi; \
         unset CMAKE_TOOLCHAIN_FILE; \
-        cd ${current_dir}; \
-        CC=\"\${CC}\" CXX=\"\${CXX}\" \
-        CFLAGS=\"\${CFLAGS}\" CXXFLAGS=\"\${CXXFLAGS}\" LDFLAGS=\"\${LDFLAGS}\" \
-        cmake -S . -B build/current \
-          -DINTERFACE_TARGET=all \
-          -DAIDL_SRC_VERSION=current \
-          -DBINDER_SDK_DIR=${current_dir}/out/target \
-          -DBINDER_SDK_INCLUDE_DIR=${current_dir}/out/target \
-          -DBINDER_SDK_INCLUDE_SUBDIR=include \
-          -DCMAKE_INSTALL_PREFIX=${current_dir}/out/target \
-          -DCMAKE_BUILD_TYPE=Release && \
-        cmake --build build/current -- -j\$(nproc) && \
-        cmake --install build/current" \
+        cd ${current_dir}; set -e; \
+        mkdir -p ${ARM_LIBDIR} ${ARM_INCDIR}; \
+        for cv in 'common 0.2.0.0' 'hdmicec 0.1.0.0'; do \
+          set -- \$cv; comp=\$1; ver=\$2; \
+          echo \"-- cross-compiling \$comp@\$ver for ARM --\"; \
+          cmake -S \$comp/\$ver -B build/arm-\$comp \
+            -DBINDER_SDK_DIR=${current_dir}/out/target \
+            -DBINDER_SDK_INCLUDE_DIR=${current_dir}/out/target \
+            -DHALIF_LIB_DIR=${current_dir}/${ARM_LIBDIR} \
+            -DHALIF_INCLUDE_DIR=${current_dir}/${ARM_INCDIR}; \
+          cmake --build build/arm-\$comp -- -j\$(nproc); \
+          install -m 0755 build/arm-\$comp/lib\$comp-v\$ver-cpp.so ${current_dir}/${ARM_LIBDIR}/; \
+          mkdir -p ${current_dir}/${ARM_INCDIR}/\$comp/\$ver; \
+          cp -r \$comp/\$ver/include ${current_dir}/${ARM_INCDIR}/\$comp/\$ver/; \
+        done" \
         >/tmp/arm_module_build.log 2>&1; then
-        echo "✅ ARM HAL modules built successfully"
+        echo "✅ ARM component snapshots cross-compiled + staged"
         echo ""
     else
-        echo "❌ ARM module build FAILED!"
+        echo "❌ ARM component cross-compile FAILED!"
         echo ""
-        echo "Last 40 lines of module build:"
+        echo "Last 40 lines:"
         tail -40 /tmp/arm_module_build.log
         echo ""
         echo "Full log: /tmp/arm_module_build.log"
@@ -846,33 +857,24 @@ test_11() {
     fi
     echo ""
     
-    # Step 9: Test custom install path override
-    echo "==> Step 9: Testing custom install path override..."
-    echo "Rebuilding with -DCMAKE_INSTALL_LIBDIR=lib/custom_test..."
+    # Step 9: custom install path override. HALIF_INSTALL_LIBDIR relocates a
+    # snapshot's install destination (bootreason links no HAL siblings, so it needs
+    # no dependency staging) - the overridable-install contract from the README.
+    echo "==> Step 9: Testing custom install path override (HALIF_INSTALL_LIBDIR)..."
     echo "Build log: /tmp/arm_module_build_custom.log"
     echo ""
-    
-    # Clean build directory for fresh configuration
-    rm -rf "${current_dir}/build/current" >/dev/null 2>&1
-    
-    # Build with custom install path
-    if sc docker run rdk-kirkstone \
+    rm -rf "${current_dir}/build/arm-custom" "${current_dir}/out/target/lib/custom_test" >/dev/null 2>&1
+    if sc docker run --local rdk-kirkstone \
         ". /opt/toolchains/rdk-glibc-x86_64-arm-toolchain/environment-setup-armv7vet2hf-neon-oe-linux-gnueabi; \
         unset CMAKE_TOOLCHAIN_FILE; \
-        cd ${current_dir}; \
-        CC=\"\${CC}\" CXX=\"\${CXX}\" \
-        CFLAGS=\"\${CFLAGS}\" CXXFLAGS=\"\${CXXFLAGS}\" LDFLAGS=\"\${LDFLAGS}\" \
-        cmake -S . -B build/current \
-          -DINTERFACE_TARGET=bootreason \
-          -DAIDL_SRC_VERSION=current \
+        cd ${current_dir}; set -e; \
+        cmake -S bootreason/0.1.0.0 -B build/arm-custom \
           -DBINDER_SDK_DIR=${current_dir}/out/target \
           -DBINDER_SDK_INCLUDE_DIR=${current_dir}/out/target \
-          -DBINDER_SDK_INCLUDE_SUBDIR=include \
-          -DCMAKE_INSTALL_PREFIX=${current_dir}/out/target \
-          -DCMAKE_INSTALL_LIBDIR=lib/custom_test \
-          -DCMAKE_BUILD_TYPE=Release && \
-        cmake --build build/current -- -j\$(nproc) && \
-        cmake --install build/current" \
+          -DHALIF_INSTALL_LIBDIR=lib/custom_test \
+          -DCMAKE_INSTALL_PREFIX=${current_dir}/out/target; \
+        cmake --build build/arm-custom -- -j\$(nproc); \
+        cmake --install build/arm-custom" \
         >/tmp/arm_module_build_custom.log 2>&1; then
         echo "✅ Custom path build successful"
         echo ""
@@ -900,7 +902,7 @@ test_11() {
     echo ""
     
     # Clean up custom test directory
-    rm -rf "${current_dir}/out/target/lib/custom_test" "${current_dir}/build/current" >/dev/null 2>&1
+    rm -rf "${current_dir}/out/target/lib/custom_test" "${current_dir}/build/arm-custom" >/dev/null 2>&1
     
     # Step 10: Verify ARM architecture of Binder SDK libraries
     echo "==> Step 10: Verifying Binder SDK ARM architecture..."
