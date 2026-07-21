@@ -308,14 +308,14 @@ if ! "$BUILD_MODULES_SCRIPT" "$MODULE" --version "$VERSION"; then
 fi
 
 BINDER_LIBS=$(ls out/target/lib/binder/*.so 2>/dev/null | wc -l || echo 0)
-MODULE_LIBS=$(ls out/target/lib/halif/*.so 2>/dev/null | wc -l || echo 0)
+MODULE_LIBS=$(ls out/target/lib/rdk-halif-aidl/*.so 2>/dev/null | wc -l || echo 0)
 
 echo ""
 echo "✅ Build Complete - SDK Ready for Deployment"
 echo ""
 echo "   📦 Runtime libraries:"
 echo "      • Binder libraries: ${BINDER_LIBS} files (out/target/lib/binder/)"
-echo "      • HAL libraries:    ${MODULE_LIBS} files (out/target/lib/halif/)"
+echo "      • HAL libraries:    ${MODULE_LIBS} files (out/target/lib/rdk-halif-aidl/)"
 echo ""
 echo "   📂 Generated C++ is module-local: <module>/current/{include,src}/"
 echo ""

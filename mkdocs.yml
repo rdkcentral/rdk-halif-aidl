@@ -79,10 +79,12 @@ nav:
         - 0.1.0.0: '!include avbuffer/0.1.0.0/mkdocs.yml'
       - AV Clock:
         - Current: '!include avclock/current/mkdocs.yml'
+        - 0.2.0.1: '!include avclock/0.2.0.1/mkdocs.yml'
         - 0.2.0.0: '!include avclock/0.2.0.0/mkdocs.yml'
         - 0.1.0.0: '!include avclock/0.1.0.0/mkdocs.yml'
       - Video Decoder:
         - Current: '!include videodecoder/current/mkdocs.yml'
+        - 0.2.0.1: '!include videodecoder/0.2.0.1/mkdocs.yml'
         - 0.2.0.0: '!include videodecoder/0.2.0.0/mkdocs.yml'
         - 0.1.0.0: '!include videodecoder/0.1.0.0/mkdocs.yml'
       - Video Sink:
@@ -110,7 +112,9 @@ nav:
       - 0.2.0.0: '!include firmwareupdate/0.2.0.0/mkdocs.yml'
     - Indicator: '!include indicator/current/mkdocs.yml'
     - Panel: '!include panel/current/mkdocs.yml'
-    - Plane Control: '!include planecontrol/current/mkdocs.yml'
+    - Plane Control:
+      - Current: '!include planecontrol/current/mkdocs.yml'
+      - 0.2.0.0: '!include planecontrol/0.2.0.0/mkdocs.yml'
     - Sensor:
       - Current: '!include sensor/current/mkdocs.yml'
       - 0.2.0.0: '!include sensor/0.2.0.0/mkdocs.yml'

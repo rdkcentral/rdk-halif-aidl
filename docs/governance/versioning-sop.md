@@ -290,7 +290,7 @@ build time locally, and PR diffs show only authored content.
 
 ##### Enforcement
 
-- **Local:** `./tests/smoke_test.sh` asserts no files are tracked
+- **Local:** `./tests/smoke/smoke_test.sh` asserts no files are tracked
   under `*/current/include/` or `*/current/src/` after
   `[1/4] ./build_modules.sh all --clean`. Any regression (someone
   bypassing `.gitignore` with `git add -f`, or a new generator
