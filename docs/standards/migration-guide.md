@@ -273,7 +273,7 @@ public:
 # Update servers only
 devices=(device1 device2 device3)
 for device in "${devices[@]}"; do
-    scp out/target/lib/halif/libboot-v2-cpp.so $device:/usr/lib/
+    scp out/target/lib/rdk-halif-aidl/libboot-v2-cpp.so $device:/usr/lib/
     ssh $device "systemctl restart boot-hal"
 done
 
@@ -507,7 +507,7 @@ $ cat stable/aidl/bootreason/2/.hash
 **Solution:**
 ```bash
 # Redeploy correct library
-$ scp out/target/lib/halif/libboot-v2-cpp.so device:/usr/lib/
+$ scp out/target/lib/rdk-halif-aidl/libboot-v2-cpp.so device:/usr/lib/
 $ ssh device "systemctl restart boot-hal"
 ```
 

@@ -30,7 +30,8 @@ CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 Makefile
-build-tools/linux_binder_idl/build-target-cmake
+# build-time clone of linux_binder_idl (build_binder.sh clones it here); never tracked
+/build-tools/
 
 # Compiled aidl output per module
 */gen/

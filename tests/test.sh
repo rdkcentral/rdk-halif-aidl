@@ -21,7 +21,9 @@
 set -euo pipefail
 
 # Comprehensive test suite for RDK HAL AIDL Interface Build System
-cd "$(dirname "$0")"
+# This script lives in tests/, so anchor to the repo root (its parent) - every
+# path below is relative to the repo root.
+cd "$(dirname "$0")/.."
 
 # Color codes for output
 RED='\033[0;31m'
@@ -45,7 +47,7 @@ usage() {
     echo "  --help       Show this help"
 }
 
-TEST_IDS=("1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11")
+TEST_IDS=("1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "12" "13" "14")
 
 list_tests() {
     echo "Available tests:"
@@ -60,6 +62,9 @@ list_tests() {
     echo "  9   Direct CMake build (minimal production flags)"
     echo "  10  CMake multi-module build with version switching"
     echo "  11  Cross-compilation build (sc docker rdk-kirkstone)"
+    echo "  12  Yocto integration (per-component + vendor/MW full-HAL builds)"
+    echo "  13  Each component builds individually (fresh sysroot per component)"
+    echo "  14  Each component packages individually through real bitbake"
 }
 
 index_of_test_id() {
@@ -153,7 +158,7 @@ ensure_sdk_staged() {
 verify_module_library() {
     local module="$1"
     local version="${2:-current}"
-    local lib_path="./out/target/lib/halif/lib${module}-v${version}-cpp.so"
+    local lib_path="./out/target/lib/rdk-halif-aidl/lib${module}-v${version}-cpp.so"
     
     if [ -f "$lib_path" ]; then
         echo "✅ Library exists: $lib_path"
@@ -391,7 +396,7 @@ test_6() {
     echo ""
     echo "Verifying output libraries..."
     local modules_found=0
-    for lib in ./out/target/lib/halif/*.so; do
+    for lib in ./out/target/lib/rdk-halif-aidl/*.so; do
         if [ -f "$lib" ]; then
             modules_found=$((modules_found + 1))
             echo "✅ $(basename "$lib")"
@@ -410,12 +415,12 @@ test_6() {
     
     # Verify host architecture
     echo ""
-    if ! verify_architecture ./out/target/lib/halif "" "build_modules.sh"; then
+    if ! verify_architecture ./out/target/lib/rdk-halif-aidl "" "build_modules.sh"; then
         return 1
     fi
     
     echo ""
-    print_tree ./out/target/lib/halif
+    print_tree ./out/target/lib/rdk-halif-aidl
     
     return 0
 }
@@ -443,7 +448,7 @@ test_7() {
     verify_module_library bootreason || return 1
     
     echo ""
-    print_tree ./out/target/lib/halif
+    print_tree ./out/target/lib/rdk-halif-aidl
     
     return 0
 }
@@ -554,7 +559,7 @@ test_9() {
     echo ""
     echo "Verifying all module outputs..."
     local modules_found=0
-    for lib in ./out/target/lib/halif/*.so; do
+    for lib in ./out/target/lib/rdk-halif-aidl/*.so; do
         if [ -f "$lib" ]; then
             modules_found=$((modules_found + 1))
         fi
@@ -572,12 +577,12 @@ test_9() {
     
     # Verify architecture
     echo ""
-    if ! verify_architecture ./out/target/lib/halif "" "production CMake build"; then
+    if ! verify_architecture ./out/target/lib/rdk-halif-aidl "" "production CMake build"; then
         return 1
     fi
     
     echo ""
-    print_tree ./out/target/lib/halif
+    print_tree ./out/target/lib/rdk-halif-aidl
     
     return 0
 }
@@ -662,7 +667,7 @@ test_10() {
        cmake --build build/test10-debug -- -j"$(nproc)" \
         >/tmp/cmake_test10_debug_build.log 2>&1; then
         echo "✅ Debug build successful"
-        test -f ./out/target/lib/halif/libfirmwareupdate-vcurrent-cpp.so && echo "✅ Debug library created"
+        test -f ./out/target/lib/rdk-halif-aidl/libfirmwareupdate-vcurrent-cpp.so && echo "✅ Debug library created"
     else
         echo "❌ Debug build failed!"
         return 1
@@ -730,9 +735,9 @@ test_11() {
     # Build ARM Binder SDK using direct CMake commands (production method)
     # This replicates what production-build.sh does
     # Note: CC/CXX/CFLAGS/CXXFLAGS/LDFLAGS come from RDK environment-setup script
-    if sc docker run rdk-kirkstone \
+    if sc docker run --local rdk-kirkstone \
         ". /opt/toolchains/rdk-glibc-x86_64-arm-toolchain/environment-setup-armv7vet2hf-neon-oe-linux-gnueabi; \
-        unset CMAKE_TOOLCHAIN_FILE; \
+        unset CMAKE_TOOLCHAIN_FILE OECORE_NATIVE_SYSROOT OECORE_TARGET_SYSROOT; \
         cd ${current_dir}; \
         CC=\"\${CC}\" CXX=\"\${CXX}\" \
         CFLAGS=\"\${CFLAGS}\" CXXFLAGS=\"\${CXXFLAGS}\" LDFLAGS=\"\${LDFLAGS}\" \
@@ -762,46 +767,57 @@ test_11() {
     echo "✅ Created SDK marker: ${current_dir}/out/target/.sdk_ready"
     echo ""
     
-    # Step 5: Build ARM HAL modules using direct CMake (production method)
-    echo "==> Step 5: Building ARM HAL modules with CMake (default paths)..."
-    echo "Using ARM SDK from step 4"
+    # Step 5: Cross-compile released component snapshots for ARM (production path)
+    echo "==> Step 5: Cross-compiling released component snapshots for ARM..."
+    echo "Per-component snapshots (pre-generated C++, no codegen), against the ARM SDK"
     echo ""
-    echo "Build steps:"
-    echo "  1. cmake -S . -B build/current -DINTERFACE_TARGET=all ..."
-    echo "  2. cmake --build build/current"
-    echo "  3. cmake --install build/current (modules to out/target/lib/halif/)"
+    echo "Build steps (per <module>/<version>):"
+    echo "  1. cmake -S <module>/<version> -B build/arm-<module> -DBINDER_SDK_DIR=out/target ..."
+    echo "  2. cmake --build build/arm-<module>"
+    echo "  3. install lib<module>-v<version>-cpp.so -> out/target/lib/rdk-halif-aidl/"
     echo ""
     echo "=========================================="
-    echo "Starting ARM module build (default paths)..."
+    echo "Starting ARM component cross-compile..."
     echo "Build log: /tmp/arm_module_build.log"
     echo "=========================================="
     echo ""
     
-    # Build ARM HAL modules using direct CMake commands (production method)
-    # Note: CC/CXX/CFLAGS/CXXFLAGS/LDFLAGS come from RDK environment-setup script
-    if sc docker run rdk-kirkstone \
+    # Cross-compile released component SNAPSHOTS for ARM - the PRODUCTION path that
+    # an integrator uses. Each <module>/<version> has a self-contained CMakeLists
+    # that compiles the committed, pre-generated C++ against the staged Binder SDK:
+    # no AIDL codegen and no host AIDL tool are involved. (The top-level codegen
+    # build is the developer path and is NOT the cross/production path - see the
+    # top-level CMakeLists message and docs/standards/build_integration.md.)
+    #
+    # Build a dependency chain - common (no deps), then hdmicec (links common) - so
+    # this also exercises inter-component staging, exactly as yocto_build.sh does.
+    local ARM_LIBDIR="out/target/lib/rdk-halif-aidl"
+    local ARM_INCDIR="out/target/include/rdk-halif-aidl"
+    if sc docker run --local rdk-kirkstone \
         ". /opt/toolchains/rdk-glibc-x86_64-arm-toolchain/environment-setup-armv7vet2hf-neon-oe-linux-gnueabi; \
         unset CMAKE_TOOLCHAIN_FILE; \
-        cd ${current_dir}; \
-        CC=\"\${CC}\" CXX=\"\${CXX}\" \
-        CFLAGS=\"\${CFLAGS}\" CXXFLAGS=\"\${CXXFLAGS}\" LDFLAGS=\"\${LDFLAGS}\" \
-        cmake -S . -B build/current \
-          -DINTERFACE_TARGET=all \
-          -DAIDL_SRC_VERSION=current \
-          -DBINDER_SDK_DIR=${current_dir}/out/target \
-          -DBINDER_SDK_INCLUDE_DIR=${current_dir}/out/target \
-          -DBINDER_SDK_INCLUDE_SUBDIR=include \
-          -DCMAKE_INSTALL_PREFIX=${current_dir}/out/target \
-          -DCMAKE_BUILD_TYPE=Release && \
-        cmake --build build/current -- -j\$(nproc) && \
-        cmake --install build/current" \
+        cd ${current_dir}; set -e; \
+        mkdir -p ${ARM_LIBDIR} ${ARM_INCDIR}; \
+        for cv in 'common 0.2.0.0' 'hdmicec 0.1.0.0'; do \
+          set -- \$cv; comp=\$1; ver=\$2; \
+          echo \"-- cross-compiling \$comp@\$ver for ARM --\"; \
+          cmake -S \$comp/\$ver -B build/arm-\$comp \
+            -DBINDER_SDK_DIR=${current_dir}/out/target \
+            -DBINDER_SDK_INCLUDE_DIR=${current_dir}/out/target \
+            -DHALIF_LIB_DIR=${current_dir}/${ARM_LIBDIR} \
+            -DHALIF_INCLUDE_DIR=${current_dir}/${ARM_INCDIR}; \
+          cmake --build build/arm-\$comp -- -j\$(nproc); \
+          install -m 0755 build/arm-\$comp/lib\$comp-v\$ver-cpp.so ${current_dir}/${ARM_LIBDIR}/; \
+          mkdir -p ${current_dir}/${ARM_INCDIR}/\$comp/\$ver; \
+          cp -r \$comp/\$ver/include ${current_dir}/${ARM_INCDIR}/\$comp/\$ver/; \
+        done" \
         >/tmp/arm_module_build.log 2>&1; then
-        echo "✅ ARM HAL modules built successfully"
+        echo "✅ ARM component snapshots cross-compiled + staged"
         echo ""
     else
-        echo "❌ ARM module build FAILED!"
+        echo "❌ ARM component cross-compile FAILED!"
         echo ""
-        echo "Last 40 lines of module build:"
+        echo "Last 40 lines:"
         tail -40 /tmp/arm_module_build.log
         echo ""
         echo "Full log: /tmp/arm_module_build.log"
@@ -810,65 +826,56 @@ test_11() {
     
     # Step 6: Verify output directory exists (default path)
     echo "==> Step 6: Verifying ARM build outputs (default paths)..."
-    if [ ! -d "${current_dir}/out/target/lib/halif" ]; then
-        echo "❌ HAL library directory not found: ${current_dir}/out/target/lib/halif"
+    if [ ! -d "${current_dir}/out/target/lib/rdk-halif-aidl" ]; then
+        echo "❌ HAL library directory not found: ${current_dir}/out/target/lib/rdk-halif-aidl"
         echo ""
         echo "Contents of out/target/lib:"
         ls -la "${current_dir}/out/target/lib" 2>&1 || echo "Directory doesn't exist"
         return 1
     fi
-    echo "✅ Default output directory exists: ${current_dir}/out/target/lib/halif"
+    echo "✅ Default output directory exists: ${current_dir}/out/target/lib/rdk-halif-aidl"
     echo ""
     
     # Step 7: Count and list built libraries (default path)
     echo "==> Step 7: Listing built ARM libraries (default paths)..."
-    local lib_count=$(find "${current_dir}/out/target/lib/halif" -name "*.so" 2>/dev/null | wc -l)
+    local lib_count=$(find "${current_dir}/out/target/lib/rdk-halif-aidl" -name "*.so" 2>/dev/null | wc -l)
     if [ $lib_count -eq 0 ]; then
-        echo "❌ No .so files found in ${current_dir}/out/target/lib/halif"
+        echo "❌ No .so files found in ${current_dir}/out/target/lib/rdk-halif-aidl"
         echo ""
         echo "Directory contents:"
-        ls -la "${current_dir}/out/target/lib/halif"
+        ls -la "${current_dir}/out/target/lib/rdk-halif-aidl"
         return 1
     fi
     
     echo "Found ${lib_count} HAL libraries:"
-    ls -lh "${current_dir}/out/target/lib/halif"/*.so
+    ls -lh "${current_dir}/out/target/lib/rdk-halif-aidl"/*.so
     echo ""
     
     # Step 8: Verify ARM architecture of built libraries
     echo "==> Step 8: Verifying HAL module ARM architecture (default paths)..."
-    if ! verify_architecture "${current_dir}/out/target/lib/halif" "ARM" "Docker cross-compilation"; then
+    if ! verify_architecture "${current_dir}/out/target/lib/rdk-halif-aidl" "ARM" "Docker cross-compilation"; then
         return 1
     fi
     echo ""
     
-    # Step 9: Test custom install path override
-    echo "==> Step 9: Testing custom install path override..."
-    echo "Rebuilding with -DCMAKE_INSTALL_LIBDIR=lib/custom_test..."
+    # Step 9: custom install path override. HALIF_INSTALL_LIBDIR relocates a
+    # snapshot's install destination (bootreason links no HAL siblings, so it needs
+    # no dependency staging) - the overridable-install contract from the README.
+    echo "==> Step 9: Testing custom install path override (HALIF_INSTALL_LIBDIR)..."
     echo "Build log: /tmp/arm_module_build_custom.log"
     echo ""
-    
-    # Clean build directory for fresh configuration
-    rm -rf "${current_dir}/build/current" >/dev/null 2>&1
-    
-    # Build with custom install path
-    if sc docker run rdk-kirkstone \
+    rm -rf "${current_dir}/build/arm-custom" "${current_dir}/out/target/lib/custom_test" >/dev/null 2>&1
+    if sc docker run --local rdk-kirkstone \
         ". /opt/toolchains/rdk-glibc-x86_64-arm-toolchain/environment-setup-armv7vet2hf-neon-oe-linux-gnueabi; \
         unset CMAKE_TOOLCHAIN_FILE; \
-        cd ${current_dir}; \
-        CC=\"\${CC}\" CXX=\"\${CXX}\" \
-        CFLAGS=\"\${CFLAGS}\" CXXFLAGS=\"\${CXXFLAGS}\" LDFLAGS=\"\${LDFLAGS}\" \
-        cmake -S . -B build/current \
-          -DINTERFACE_TARGET=bootreason \
-          -DAIDL_SRC_VERSION=current \
+        cd ${current_dir}; set -e; \
+        cmake -S bootreason/0.1.0.0 -B build/arm-custom \
           -DBINDER_SDK_DIR=${current_dir}/out/target \
           -DBINDER_SDK_INCLUDE_DIR=${current_dir}/out/target \
-          -DBINDER_SDK_INCLUDE_SUBDIR=include \
-          -DCMAKE_INSTALL_PREFIX=${current_dir}/out/target \
-          -DCMAKE_INSTALL_LIBDIR=lib/custom_test \
-          -DCMAKE_BUILD_TYPE=Release && \
-        cmake --build build/current -- -j\$(nproc) && \
-        cmake --install build/current" \
+          -DHALIF_INSTALL_LIBDIR=lib/custom_test \
+          -DCMAKE_INSTALL_PREFIX=${current_dir}/out/target; \
+        cmake --build build/arm-custom -- -j\$(nproc); \
+        cmake --install build/arm-custom" \
         >/tmp/arm_module_build_custom.log 2>&1; then
         echo "✅ Custom path build successful"
         echo ""
@@ -896,7 +903,7 @@ test_11() {
     echo ""
     
     # Clean up custom test directory
-    rm -rf "${current_dir}/out/target/lib/custom_test" "${current_dir}/build/current" >/dev/null 2>&1
+    rm -rf "${current_dir}/out/target/lib/custom_test" "${current_dir}/build/arm-custom" >/dev/null 2>&1
     
     # Step 10: Verify ARM architecture of Binder SDK libraries
     echo "==> Step 10: Verifying Binder SDK ARM architecture..."
@@ -910,7 +917,7 @@ test_11() {
     # Step 11: Summary
     echo "==> Step 11: Cross-compilation summary..."
     echo "✅ ARM Binder SDK: ${current_dir}/out/target/lib/binder/"
-    echo "✅ ARM HAL Libraries (default): ${lib_count} modules in ${current_dir}/out/target/lib/halif/"
+    echo "✅ ARM HAL Libraries (default): ${lib_count} modules in ${current_dir}/out/target/lib/rdk-halif-aidl/"
     echo "✅ Custom path override: Verified working"
     
     echo ""
@@ -920,7 +927,91 @@ test_11() {
     echo "=========================================="
     echo "✅ Test 11 PASSED - ARM cross-compilation successful"
     echo "=========================================="
-    
+
+    # Clean up the ARM artifacts: they live in the shared out/, and leaving an ARM
+    # Binder SDK there would make the later host-architecture tests (e.g. Test 12's
+    # Yocto build) link against the wrong-arch SDK. Wiping out/ makes the next test
+    # that needs a host SDK rebuild it.
+    clean_build_state
+
+    return 0
+}
+
+test_12() {
+    echo "Validating Yocto integration (meta-rdk-halif + vendor/MW roles)..."
+    echo ""
+    echo "==> Test 12.1: component list matches the snapshots (gen_recipes.py --check)"
+    if ! ./tests/yocto/meta-rdk-halif-aidl/gen_recipes.py --check; then
+        echo "❌ meta-rdk-halif component list is out of date - run ./tests/yocto/meta-rdk-halif-aidl/gen_recipes.py"
+        return 1
+    fi
+    echo "✅ component list in sync"
+    echo ""
+    echo "==> Test 12.2: inter-module staging check (hdmicec -> common + negative control)"
+    if ! ./tests/yocto/ci/yocto_staging_check.sh; then
+        echo "❌ per-component staged build failed"
+        return 1
+    fi
+    echo "✅ per-component staged inter-module build OK"
+    echo ""
+    echo "==> Test 12.3: vendor example builds the full HAL from versions_released.yaml"
+    if ! ./tests/yocto/ci/yocto_build_vendor.sh; then
+        echo "❌ yocto_build_vendor (full-HAL build) failed"
+        return 1
+    fi
+    echo "✅ vendor example built the full HAL from the released cohort"
+    echo ""
+    echo "==> Test 12.4: mw example builds the full HAL from versions_released.yaml"
+    if ! ./tests/yocto/ci/yocto_build_mw.sh; then
+        echo "❌ yocto_build_mw (full-HAL build) failed"
+        return 1
+    fi
+    echo "✅ mw example built the full HAL from the released cohort"
+    echo ""
+    echo "==> Test 12.5: artifact check - the libraries are shippable, not just built"
+    if ! ./tests/yocto/ci/yocto_artifact_check.sh; then
+        echo "❌ artifact check failed (RPATH / SONAME / binder deps)"
+        return 1
+    fi
+    echo "✅ artifacts are shippable"
+    return 0
+}
+
+test_13() {
+    echo "Building every released component individually (fresh sysroot each)..."
+    echo "Proves each <comp>/<version>/CMakeLists.txt builds on its own."
+    echo ""
+    if ! ./tests/yocto/ci/yocto_build_each.sh; then
+        echo "❌ a component failed to build individually"
+        return 1
+    fi
+    return 0
+}
+
+test_14() {
+    echo "Building every component through REAL bitbake, one at a time..."
+    echo "Proves each component packages on its own (do_package), cleaning only the"
+    echo "rdk-halif-aidl recipe between components so the toolchain is built once."
+    echo ""
+    # This is the bitbake counterpart of Test 13 (which is the offline sweep). It
+    # needs docker + the prebuilt Binder SDK; skip gracefully where they are absent
+    # or when explicitly opted out, so test.sh still runs everywhere.
+    if [ "${HALIF_SKIP_BITBAKE:-0}" = "1" ]; then
+        echo "⏭  SKIP: HALIF_SKIP_BITBAKE=1"
+        return 0
+    fi
+    if ! command -v docker >/dev/null 2>&1; then
+        echo "⏭  SKIP: docker not available (the bitbake sweep needs it)"
+        return 0
+    fi
+    if [ ! -d out/build/include/binder_sdk ] || [ ! -d out/target/lib/binder ]; then
+        echo "⏭  SKIP: Binder SDK not built (run ./build_binder.sh first)"
+        return 0
+    fi
+    if ! HALIF_BB_EACH=1 ./tests/yocto/bitbake/run.sh; then
+        echo "❌ a component failed the per-component bitbake sweep"
+        return 1
+    fi
     return 0
 }
 
@@ -939,6 +1030,9 @@ run_test "8" "Direct CMake build (default flags)" test_8
 run_test "9" "Direct CMake build (minimal production flags)" test_9
 run_test "10" "CMake multi-module build with version switching" test_10
 run_test "11" "Cross-compilation build (sc docker rdk-kirkstone)" test_11
+run_test "12" "Yocto integration (per-component + vendor/MW full-HAL builds)" test_12
+run_test "13" "Each component builds individually (fresh sysroot per component)" test_13
+run_test "14" "Each component packages individually through real bitbake" test_14
 
 ################################################################################
 # Summary
@@ -960,6 +1054,6 @@ echo "========================================"
 echo ""
 echo "Build outputs:"
 echo "  SDK:     $(realpath ./out/target 2>/dev/null || echo 'Not found')"
-echo "  HAL Libs: $(realpath ./out/target/lib/halif 2>/dev/null || echo 'Not found')"
+echo "  HAL Libs: $(realpath ./out/target/lib/rdk-halif-aidl 2>/dev/null || echo 'Not found')"
 echo "  Stable:  $(realpath ./stable 2>/dev/null || echo 'Not found')"
 echo ""

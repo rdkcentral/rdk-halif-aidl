@@ -124,25 +124,40 @@ message(STATUS "Output:      ${OUT_DIR}")
 message(STATUS "====================================")
 
 #######################################################################
-# Verify binder SDK exists (Stage 1 must complete first)
+# Verify the Binder SDK is present. The build links against the binder runtime
+# libraries, so check for those rather than a build_binder.sh-specific marker
+# file: a staged linux-binder sysroot has the libraries but not the marker, so
+# gating on the marker wrongly rejects it (#661).
 #######################################################################
 
-if (NOT EXISTS "${BINDER_SDK_DIR}/.sdk_ready")
+# Binder library subdir - overridable (e.g. lib64 sysroots). Defaulted here so
+# the presence check honours it; the value is reused for link paths below.
+if (NOT DEFINED BINDER_SDK_LIB_SUBDIR)
+    set(BINDER_SDK_LIB_SUBDIR "lib/binder")
+endif()
+
+# Verify the runtime libraries are actually present, not just the directory, so a
+# staged-but-empty sysroot fails here with a clear message rather than at link time.
+file(GLOB _binder_runtime_libs
+     "${BINDER_SDK_DIR}/${BINDER_SDK_LIB_SUBDIR}/libbinder*"
+     "${BINDER_SDK_DIR}/${BINDER_SDK_LIB_SUBDIR}/libutils*")
+if (NOT IS_DIRECTORY "${BINDER_SDK_DIR}/${BINDER_SDK_LIB_SUBDIR}" OR NOT _binder_runtime_libs)
     message("")
     message("========================================")
-    message("  Binder SDK not found!")
+    message("  Binder SDK not found at ${BINDER_SDK_DIR}")
     message("========================================")
     message("")
-    message("The Binder SDK must be built before building modules.")
+    message("Expected the Binder runtime libraries under ${BINDER_SDK_DIR}/${BINDER_SDK_LIB_SUBDIR}.")
     message("")
-    message("Please run Stage 1 first:")
+    message("Local development - build the SDK first:")
     message("  ./build_binder.sh")
     message("")
-    message("This will create the Binder SDK in: ${BINDER_SDK_DIR}")
-    message("")
-    message("Then retry this module build.")
+    message("Cross / Yocto - this top-level build also runs the AIDL codegen")
+    message("toolchain, so it is not the production path. Build each component")
+    message("from its self-contained <module>/<version>/CMakeLists.txt against the")
+    message("staged SDK instead - see docs/standards/build_integration.md.")
     message("========================================")
-    message(FATAL_ERROR "Binder SDK not ready")
+    message(FATAL_ERROR "Binder SDK not found")
 endif()
 
 message(STATUS "✓ Binder SDK found at ${BINDER_SDK_DIR}")
@@ -164,12 +179,10 @@ if (NOT DEFINED BINDER_SDK_INCLUDE_DIR)
     set(BINDER_SDK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/out/build")
 endif()
 
-# Configure SDK subdirectory structure (overridable for Yocto flat structure)
+# Configure SDK subdirectory structure (overridable for Yocto flat structure).
+# BINDER_SDK_LIB_SUBDIR is defaulted earlier (the presence check uses it).
 if (NOT DEFINED BINDER_SDK_INCLUDE_SUBDIR)
     set(BINDER_SDK_INCLUDE_SUBDIR "include/binder_sdk")
-endif()
-if (NOT DEFINED BINDER_SDK_LIB_SUBDIR)
-    set(BINDER_SDK_LIB_SUBDIR "lib/binder")
 endif()
 
 message(STATUS "Binder include path: ${BINDER_SDK_INCLUDE_DIR}/${BINDER_SDK_INCLUDE_SUBDIR}")
@@ -195,10 +208,10 @@ endif()
 # Set halif subdirectories as defaults BEFORE including GNUInstallDirs
 # This allows caller to override via -DCMAKE_INSTALL_LIBDIR=... while providing sensible defaults
 if (NOT DEFINED CMAKE_INSTALL_LIBDIR)
-    set(CMAKE_INSTALL_LIBDIR "lib/halif" CACHE PATH "Library install directory")
+    set(CMAKE_INSTALL_LIBDIR "lib/rdk-halif-aidl" CACHE PATH "Library install directory")
 endif()
 if (NOT DEFINED CMAKE_INSTALL_INCLUDEDIR)
-    set(CMAKE_INSTALL_INCLUDEDIR "include/halif" CACHE PATH "Header install directory")
+    set(CMAKE_INSTALL_INCLUDEDIR "include/rdk-halif-aidl" CACHE PATH "Header install directory")
 endif()
 
 # Set standard installation directories (will respect variables already set above)
@@ -232,6 +245,14 @@ if (NOT EXISTS "${HOST_AIDL_DIR}/CMakeLists.inc")
         "Each <module>/<version>/CMakeLists.txt is self-contained. See the "
         "production-build section of the README.")
 endif()
+
+# The codegen walks INTERFACES_ROOT_DIRS (= CMAKE_SOURCE_DIR, the whole repo) for
+# interface.yaml/json. Keep it out of the build-output trees (out/, build/): they can
+# hold unrelated files of the same name that crash the loader - e.g. CMake's own test
+# fixtures under the bitbake harness's build/bitbake/ ship a codemodel "interface.json".
+# Real interface defs live only in <module>/<version>/, so skipping these is safe.
+set(ENV{AIDL_VERSIONING_SKIP_DIR} "out,build")
+
 include("${HOST_AIDL_DIR}/CMakeLists.inc")
 
 #######################################################################
@@ -244,7 +265,7 @@ target_build_interfaces_libraries()
 # Stage headers BEFORE building so compilation uses staged headers
 #######################################################################
 
-message(STATUS "Staging generated headers to ${OUT_DIR}/target/include/halif/...")
+message(STATUS "Staging generated headers to ${OUT_DIR}/build/include/...")
 
 # Module-local layout: generated headers live in <module>/current/include/.
 if (INTERFACE_TARGET STREQUAL "all")
@@ -267,7 +288,7 @@ foreach(inc_dir ${MODULE_INC_DIRS})
 endforeach()
 
 #######################################################################
-# Post-build: Stage module libraries to out/target/lib/halif/
+# Post-build: Stage module libraries to out/target/lib/rdk-halif-aidl/
 #######################################################################
 # Invoke cmake_stage_modules.cmake after all libraries are built
 
@@ -313,8 +334,8 @@ endif()
 
 message(STATUS "")
 message(STATUS "Build configured. HAL modules will be staged to:")
-message(STATUS "  Libraries: ${OUT_DIR}/target/lib/halif/")
-message(STATUS "  Headers:   ${OUT_DIR}/target/include/halif/")
+message(STATUS "  Libraries: ${OUT_DIR}/target/lib/rdk-halif-aidl/")
+message(STATUS "  Headers:   ${OUT_DIR}/build/include/")
 message(STATUS "")
 message(STATUS "Run 'cmake --build <build-dir>' to build")
 message(STATUS "")

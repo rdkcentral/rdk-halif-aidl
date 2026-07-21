@@ -28,7 +28,7 @@
 #     cmake -S <component>/current -B build/<component> \
 #         -DBINDER_SDK_DIR=/path/to/out/target \
 #         -DBINDER_SDK_INCLUDE_DIR=/path/to/out/build \
-#         -DHALIF_LIB_DIR=/path/to/out/target/lib/halif \
+#         -DHALIF_LIB_DIR=/path/to/out/target/lib/rdk-halif-aidl \
 #         -DHALIF_INCLUDE_DIR=/path/to/out/build/include
 #     cmake --build build/<component>
 #
@@ -47,6 +47,10 @@
 #   BINDER_SDK_INCLUDE_DIR  - alternate headers root (dev layout splits headers/runtime)
 #   HALIF_LIB_DIR           - directory holding dependency lib*-cpp.so
 #   HALIF_INCLUDE_DIR       - directory holding dependency headers
+#   HALIF_INSTALL_LIBDIR    - install destination for the built library
+#                             (default: lib/rdk-halif-aidl)
+#   HALIF_INSTALL_RPATH     - RPATH to embed in the library (default: none, so
+#                             no build paths leak into the shipped .so)
 cmake_minimum_required(VERSION 3.16)
 project(planecontrol-v0.2.0.0-cpp LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
@@ -119,7 +123,7 @@ target_link_directories(${LIB_NAME} PRIVATE
 )
 if (NOT DEFINED HALIF_LIB_DIR)
     message(FATAL_ERROR "HALIF_LIB_DIR is required (this component has HAL dependencies). "
-        "Set it to the directory holding dependency lib*-cpp.so (e.g. out/target/lib/halif).")
+        "Set it to the directory holding dependency lib*-cpp.so (e.g. out/target/lib/rdk-halif-aidl).")
 endif()
 if (DEFINED HALIF_LIB_DIR)
     target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
@@ -127,11 +131,34 @@ endif()
 
 target_link_libraries(${LIB_NAME} PRIVATE binder utils common-v0.2.0.0-cpp videodecoder-v0.2.0.1-cpp)
 
-set_target_properties(${LIB_NAME} PROPERTIES OUTPUT_NAME "${LIB_NAME}")
+# The target_link_directories() above are BUILD-time search paths. By default
+# CMake bakes them into the library as RPATH/RUNPATH, which ships absolute build
+# paths inside the .so - Yocto's do_package_qa rejects that, and the runtime
+# search path belongs to the integrator's image, not to this library.
+#
+# Default to emitting no RPATH. Overridable for builds that genuinely need one:
+# pass -DHALIF_INSTALL_RPATH=<path>.
+if (NOT DEFINED HALIF_INSTALL_RPATH)
+    set(HALIF_INSTALL_RPATH "")
+endif()
+
+set_target_properties(${LIB_NAME} PROPERTIES
+    OUTPUT_NAME "${LIB_NAME}"
+    SKIP_BUILD_RPATH TRUE
+    BUILD_WITH_INSTALL_RPATH TRUE
+    INSTALL_RPATH "${HALIF_INSTALL_RPATH}")
 
 include(GNUInstallDirs)
+
+# Install destination for the built interface library. Overridable so the
+# location can be changed by the build (or in future) without editing this
+# snapshot: pass -DHALIF_INSTALL_LIBDIR=<dir>.
+if (NOT DEFINED HALIF_INSTALL_LIBDIR)
+    set(HALIF_INSTALL_LIBDIR "lib/rdk-halif-aidl")
+endif()
+
 install(TARGETS ${LIB_NAME}
-    LIBRARY DESTINATION lib/halif
+    LIBRARY DESTINATION ${HALIF_INSTALL_LIBDIR}
             PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
                         GROUP_READ GROUP_EXECUTE
                         WORLD_READ WORLD_EXECUTE)

@@ -36,12 +36,12 @@
 # passes.
 #
 # Usage:
-#   ./tests/smoke_test.sh            Run the full smoke test.
-#   ./tests/smoke_test.sh --help
+#   ./tests/smoke/smoke_test.sh            Run the full smoke test.
+#   ./tests/smoke/smoke_test.sh --help
 #
 set -uo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../.." && pwd)"
 cd "${REPO_ROOT}"
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
@@ -49,7 +49,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
     exit 0
 fi
 
-HALIF_LIB_DIR="${REPO_ROOT}/out/target/lib/halif"
+HALIF_LIB_DIR="${REPO_ROOT}/out/target/lib/rdk-halif-aidl"
 PASS=0
 FAIL=0
 
