@@ -233,5 +233,6 @@ coexist while clients migrate.
 - **Semantic versioning primer:** [semantic_versioning.md](semantic_versioning.md)
 - **Worked client example:** [`examples/aidl_versioning/client/`](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/examples/aidl_versioning/client) — version/hash discovery with the cpp backend
 - **Stable-AIDL client usage:** [client_usage_of_stable_aidl.md](../whitepapers/client_usage_of_stable_aidl.md)
+- **Testing strategy:** [testing-strategy.md](testing-strategy.md) — how conformance suites consume the version and capability contracts
 - **Android AIDL Docs:** [Android AIDL Versioning](https://source.android.com/docs/core/architecture/aidl/aidl-versioning)
 - **Surface classification tool:** [linux_binder_idl `dump-surface` / `diff-surface`](https://github.com/rdkcentral/linux_binder_idl/blob/develop/README.md)
