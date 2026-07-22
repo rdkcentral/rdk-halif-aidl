@@ -24,7 +24,7 @@
 component: drm
 version: 0.1.0.0
 generation: 1
-status: RED
+status: GREEN
 description: "DRM plugin and crypto plugin interfaces for content protection"
 type: SOC
 
@@ -54,14 +54,13 @@ scope:
 #   owners        - Responsible architecture teams
 notes:
   priority: 1
-  status_detail: "Initial interface definition — under review"
-  action: "Architecture review and vendor alignment"
+  status_detail: "V1 interface merged (#341)"
   owners: "Architecture + AV_Architecture"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
-    Architecture: pending
-    Product_Architecture: pending
-    AV_Architecture: pending
-    Vendor_Layer_Team: pending
+    Architecture: reviewed
+    Product_Architecture: reviewed
+    AV_Architecture: reviewed
+    Vendor_Layer_Team: reviewed

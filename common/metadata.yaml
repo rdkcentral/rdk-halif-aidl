@@ -24,7 +24,7 @@ component: common
 version: 0.2.0.0
 status: GREEN
 description: "Shared base AIDL types and definitions used across all HAL interfaces"
-type: SOC
+type: OEM
 
 # lifecycle - 14+5 review cycle dates                                    [pr_cycle.sh]
 #   review_started    - Date the review window opened

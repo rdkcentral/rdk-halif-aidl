@@ -22,9 +22,9 @@ namespace audiomixer {
 class IAudioOutputPort : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioOutputPort)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 3000;
+  const std::string HASH = "ff12e597d51955e239d709062d17dd73b32ddb56";
+  static constexpr char* HASHVALUE = "ff12e597d51955e239d709062d17dd73b32ddb56";
   virtual ::android::binder::Status getCapabilities(::com::rdk::hal::audiomixer::OutputPortCapabilities* _aidl_return) = 0;
   virtual ::android::binder::Status getState(::com::rdk::hal::audiomixer::State* _aidl_return) = 0;
   virtual ::android::binder::Status getProperty(::com::rdk::hal::audiomixer::OutputPortProperty property, ::com::rdk::hal::PropertyValue* _aidl_return) = 0;

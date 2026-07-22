@@ -54,45 +54,71 @@ nav:
       - Fork-Based Contribution Guide: standards/forked_based_branching.md
       - Git Flow Branching Strategy: standards/git_flow_branching_strategy.md
       - Semantic Versioning: standards/semantic_versioning.md
+      - AIDL Versioning Guide: standards/versioning-guide.md
+      - Third-Party Build Integration: standards/build_integration.md
   - Vendor HAL Interfaces (VHI):
     - Overview: key_concepts/hal/hal_interfaces.md
     - Interface Generation: introduction/interface_generation.md
     - AV Subsystem:
-      - Audio Decoder: '!include audiodecoder/current/mkdocs.yml'
-      - Audio Decoder 0.2.0.0: '!include audiodecoder/0.2.0.0/mkdocs.yml'
-      - Audio Mixer: '!include audiomixer/current/mkdocs.yml'
-      - Audio Mixer 0.3.0.0: '!include audiomixer/0.3.0.0/mkdocs.yml'
-      - Audio Mixer 0.2.0.0: '!include audiomixer/0.2.0.0/mkdocs.yml'
-      - Audio Sink: '!include audiosink/current/mkdocs.yml'
-      - Audio Sink 0.2.0.0: '!include audiosink/0.2.0.0/mkdocs.yml'
-      - AV Buffer: '!include avbuffer/current/mkdocs.yml'
-      - AV Buffer 0.2.0.0: '!include avbuffer/0.2.0.0/mkdocs.yml'
-      - AV Clock: '!include avclock/current/mkdocs.yml'
-      - AV Clock 0.2.0.0: '!include avclock/0.2.0.0/mkdocs.yml'
-      - Video Decoder: '!include videodecoder/current/mkdocs.yml'
-      - Video Decoder 0.2.0.0: '!include videodecoder/0.2.0.0/mkdocs.yml'
-      - Video Sink: '!include videosink/current/mkdocs.yml'
-      - Video Sink 0.2.0.0: '!include videosink/0.2.0.0/mkdocs.yml'
-    - Boot Reason: '!include bootreason/current/mkdocs.yml'
-    - Boot Reason 0.1.0.0: '!include bootreason/0.1.0.0/mkdocs.yml'
+      - Audio Decoder:
+        - Current: '!include audiodecoder/current/mkdocs.yml'
+        - 0.2.0.0: '!include audiodecoder/0.2.0.0/mkdocs.yml'
+        - 0.1.0.0: '!include audiodecoder/0.1.0.0/mkdocs.yml'
+      - Audio Mixer:
+        - Current: '!include audiomixer/current/mkdocs.yml'
+        - 0.3.0.0: '!include audiomixer/0.3.0.0/mkdocs.yml'
+        - 0.2.0.0: '!include audiomixer/0.2.0.0/mkdocs.yml'
+        - 0.1.0.1: '!include audiomixer/0.1.0.1/mkdocs.yml'
+      - Audio Sink:
+        - Current: '!include audiosink/current/mkdocs.yml'
+        - 0.2.0.0: '!include audiosink/0.2.0.0/mkdocs.yml'
+        - 0.1.0.0: '!include audiosink/0.1.0.0/mkdocs.yml'
+      - AV Buffer:
+        - Current: '!include avbuffer/current/mkdocs.yml'
+        - 0.2.0.0: '!include avbuffer/0.2.0.0/mkdocs.yml'
+        - 0.1.0.0: '!include avbuffer/0.1.0.0/mkdocs.yml'
+      - AV Clock:
+        - Current: '!include avclock/current/mkdocs.yml'
+        - 0.2.0.1: '!include avclock/0.2.0.1/mkdocs.yml'
+        - 0.2.0.0: '!include avclock/0.2.0.0/mkdocs.yml'
+        - 0.1.0.0: '!include avclock/0.1.0.0/mkdocs.yml'
+      - Video Decoder:
+        - Current: '!include videodecoder/current/mkdocs.yml'
+        - 0.2.0.1: '!include videodecoder/0.2.0.1/mkdocs.yml'
+        - 0.2.0.0: '!include videodecoder/0.2.0.0/mkdocs.yml'
+        - 0.1.0.0: '!include videodecoder/0.1.0.0/mkdocs.yml'
+      - Video Sink:
+        - Current: '!include videosink/current/mkdocs.yml'
+        - 0.2.0.0: '!include videosink/0.2.0.0/mkdocs.yml'
+        - 0.1.0.0: '!include videosink/0.1.0.0/mkdocs.yml'
+    - Boot Reason:
+      - Current: '!include bootreason/current/mkdocs.yml'
+      - 0.1.0.0: '!include bootreason/0.1.0.0/mkdocs.yml'
     - Broadcast: '!include broadcast/current/mkdocs.yml'
     - DRM: '!include drm/current/mkdocs.yml'
     - HDMI:
       - HDMI CEC: '!include hdmicec/current/mkdocs.yml'
       - HDMI Input: '!include hdmiinput/current/mkdocs.yml'
       - HDMI Output: '!include hdmioutput/current/mkdocs.yml'
-    - Common: '!include common/current/mkdocs.yml'
-    - Common 0.2.0.0: '!include common/0.2.0.0/mkdocs.yml'
+    - Common:
+      - Current: '!include common/current/mkdocs.yml'
+      - 0.2.0.0: '!include common/0.2.0.0/mkdocs.yml'
+      - 0.1.0.0: '!include common/0.1.0.0/mkdocs.yml'
     - Composite Input: '!include compositeinput/current/mkdocs.yml'
     - Deep Sleep: '!include deepsleep/current/mkdocs.yml'
     - Device Info: '!include deviceinfo/current/mkdocs.yml'
-    - Firmware Update: '!include firmwareupdate/current/mkdocs.yml'
-    - Firmware Update 0.2.0.0: '!include firmwareupdate/0.2.0.0/mkdocs.yml'
+    - Firmware Update:
+      - Current: '!include firmwareupdate/current/mkdocs.yml'
+      - 0.2.0.0: '!include firmwareupdate/0.2.0.0/mkdocs.yml'
     - Indicator: '!include indicator/current/mkdocs.yml'
     - Panel: '!include panel/current/mkdocs.yml'
-    - Plane Control: '!include planecontrol/current/mkdocs.yml'
-    - Sensor: '!include sensor/current/mkdocs.yml'
-    - Sensor 0.2.0.0: '!include sensor/0.2.0.0/mkdocs.yml'
+    - Plane Control:
+      - Current: '!include planecontrol/current/mkdocs.yml'
+      - 0.2.0.0: '!include planecontrol/0.2.0.0/mkdocs.yml'
+    - Sensor:
+      - Current: '!include sensor/current/mkdocs.yml'
+      - 0.2.0.0: '!include sensor/0.2.0.0/mkdocs.yml'
+      - 0.1.0.0: '!include sensor/0.1.0.0/mkdocs.yml'
   - Vendor System Interfaces (VSI):
     - File System: '!include vsi/filesystem/current/mkdocs.yml'
     - Bluetooth: '!include vsi/bluetooth/current/mkdocs.yml'
@@ -103,6 +129,8 @@ nav:
     - Systemd: vsi/systemd/current/systemd.md
     - Kernel: '!include vsi/kernel/current/mkdocs.yml'
     - Linux Input: '!include vsi/linuxinput/current/mkdocs.yml'
+  - Transformation Guides:
+    - Westeros onto IGraphicsFbProvider: transformation/westeros_graphics_fb_transform.md
   - Vendor Tests Suites (VTS):
     - Levels of Test: external_content/ut-core-wiki/3.-Standards:-Levels-of-Test-for-Vendor-Layer.md
     - Level 4:

@@ -22,9 +22,9 @@ namespace avbuffer {
 class IAVBuffer : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AVBuffer)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "73de7f8b8e4821b2b01be1befd6e9fff13f0cd7f";
+  static constexpr char* HASHVALUE = "73de7f8b8e4821b2b01be1befd6e9fff13f0cd7f";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getHeapMetrics(bool secureHeap, ::com::rdk::hal::avbuffer::HeapMetrics* _aidl_return) = 0;
   virtual ::android::binder::Status createVideoPool(bool secureHeap, const ::com::rdk::hal::videodecoder::IVideoDecoder::Id& videoDecoderId, const ::android::sp<::com::rdk::hal::avbuffer::IAVBufferSpaceListener>& listener, ::com::rdk::hal::avbuffer::Pool* _aidl_return) = 0;

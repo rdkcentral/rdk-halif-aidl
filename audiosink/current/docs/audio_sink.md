@@ -226,15 +226,11 @@ The Audio Sink HAL is still used to control the audio stream volume, mute and vo
 
 ## End of Stream Signalling
 
-EOS is carried on the framework metadata parcelable. The RDK middleware client signals EOS to the Audio Sink by setting `FrameMetadata.endOfStream = true` on the final frame queued via `IAudioSinkController.queueAudioFrame()`. The buffer MUST be a valid final audio frame - there is no EOS-only marker form.
+EOS is a discrete signal. After queuing its final frame, the RDK middleware client calls `IAudioSinkController.signalEndOfStream()` to assert that no further frames will be queued. `queueAudioFrame()` only submits a frame and carries no EOS information. The sink must be in the `STARTED` state, otherwise the call throws `EX_ILLEGAL_STATE`. A second call is a no-op, and any subsequent `queueAudioFrame()` throws `EX_ILLEGAL_STATE` until the sink is flushed or stopped and restarted.
 
-When `FrameMetadata.endOfStream = true`, the other fields of `FrameMetadata` describe the final frame as normal — there is no separate EOS-only marker form.
+All audio frame buffers already queued continue to be fed into the audio mixer in the usual way. After the final queued frame has been completely passed to the mixer, the sink fires `IAudioSinkControllerListener.onEndOfStream(nsPresentationTime)` exactly once, carrying the presentation time of that final frame. If no frames were queued when `signalEndOfStream()` was called, `nsPresentationTime` is the undefined-time sentinel (`IAVClock.UNDEFINED_TIME`) so the client sees the same callback in all cases.
 
-For non-tunnelled audio decoded by the Audio Decoder, the Audio Decoder delivers `FrameMetadata.endOfStream = true` on its final `onFrameOutput()` callback; the RDK middleware client forwards that frame and metadata to the Audio Sink via `queueAudioFrame()`.
-
-For PCM audio (no Audio Decoder in the path), the RDK middleware client generates the EOS metadata itself and queues it on the final frame.
-
-All audio frame buffers queued up in the Audio Sink continue to be fed into the audio mixer in the usual way. After the final frame has been completely passed to the mixer, the sink fires `IAudioSinkControllerListener.onEndOfStream()` exactly once. Subsequent calls to `queueAudioFrame()` raise `EX_ILLEGAL_STATE` until the sink is flushed or stopped and restarted.
+For audio decoded by the Audio Decoder, the middleware forwards each decoded frame to the Audio Sink via `queueAudioFrame()`; once the decoder has fired its own `onEndOfStream()` and the final frame has been queued, the middleware calls `signalEndOfStream()` on the sink. For PCM audio (no Audio Decoder in the path), the middleware queues its final frame and then calls `signalEndOfStream()` directly.
 
 ## Audio Sink States
 

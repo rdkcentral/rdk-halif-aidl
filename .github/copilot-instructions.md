@@ -189,7 +189,7 @@ git commit -m "Update boot interface"
 1. Copies `{module}/current/*.aidl` → `stable/aidl/{module}/current/`
 2. Validates compatibility with existing `stable/aidl/{module}/current/` (if exists)
 3. Generates C++ code → `stable/generated/{module}/current/`
-4. Compiles to `out/target/lib/halif/lib{module}-vcurrent-cpp.so`
+4. Compiles to `out/target/lib/rdk-halif-aidl/lib{module}-vcurrent-cpp.so`
 
 **Common Commands:**
 ```bash
@@ -222,7 +222,7 @@ cmake --build build
 cmake --install build
 ```
 
-**Output:** `out/target/lib/halif/*.so` and `out/build/include/*`
+**Output:** `out/target/lib/rdk-halif-aidl/*.so` and `out/build/include/*`
 
 **Key Difference:** Production NEVER runs AIDL compiler - only compiles pre-generated C++
 

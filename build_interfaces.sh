@@ -42,6 +42,15 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT_PATH="$SCRIPT_DIR/$(basename "${BASH_SOURCE[0]}")"
 
+# Host-toolchain guard (#624): build / sdk operations need a native toolchain,
+# and Yocto/cross builds must call CMake directly (see
+# docs/standards/build_integration.md). clean/help do no toolchain work, so
+# they stay usable in any environment.
+case "${1:-}" in
+    clean|cleanstable|cleanall|--help|-h|"") ;;
+    *) source "$SCRIPT_DIR/dev_env_guard.sh"; halif_guard_dev_host_env || exit 1 ;;
+esac
+
 # Show help if no arguments or help requested
 if [[ $# -eq 0 ]] || [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
     cat << EOF
@@ -84,7 +93,10 @@ Build Configuration:
   Use CC/CXX environment variables to control compiler and flags:
     CC=gcc CXX=g++ ./build_interfaces.sh <module>              # Release (default)
     CC="gcc -g" CXX="g++ -g" ./build_interfaces.sh <module>   # Debug build
-    CC=arm-linux-gnueabihf-gcc ./build_interfaces.sh <module>  # Cross-compile
+
+  Cross-compilation / Yocto: this wrapper is host-only and refuses to run in a
+  cross/OpenEmbedded environment. Production/cross builds invoke CMake directly
+  — see docs/standards/build_integration.md.
 
 Examples:
   # Building
@@ -296,14 +308,14 @@ if ! "$BUILD_MODULES_SCRIPT" "$MODULE" --version "$VERSION"; then
 fi
 
 BINDER_LIBS=$(ls out/target/lib/binder/*.so 2>/dev/null | wc -l || echo 0)
-MODULE_LIBS=$(ls out/target/lib/halif/*.so 2>/dev/null | wc -l || echo 0)
+MODULE_LIBS=$(ls out/target/lib/rdk-halif-aidl/*.so 2>/dev/null | wc -l || echo 0)
 
 echo ""
 echo "✅ Build Complete - SDK Ready for Deployment"
 echo ""
 echo "   📦 Runtime libraries:"
 echo "      • Binder libraries: ${BINDER_LIBS} files (out/target/lib/binder/)"
-echo "      • HAL libraries:    ${MODULE_LIBS} files (out/target/lib/halif/)"
+echo "      • HAL libraries:    ${MODULE_LIBS} files (out/target/lib/rdk-halif-aidl/)"
 echo ""
 echo "   📂 Generated C++ is module-local: <module>/current/{include,src}/"
 echo ""
