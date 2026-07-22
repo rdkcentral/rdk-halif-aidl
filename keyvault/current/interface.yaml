@@ -3,6 +3,6 @@ aidl_interface:
   srcs:
     - com/rdk/hal/keyvault/*.aidl
   imports:
-    - cryptoengine
+    - cryptoengine@current
   stability: vintf
   layout: module-local
