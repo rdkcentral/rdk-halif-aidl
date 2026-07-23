@@ -108,12 +108,56 @@ EOF
 }
 
 # ----------------------------------------------------------------------------
+# normalize_snapshot_site_names() : Ensure every snapshot mkdocs.yml carries a
+# unique site_name.
+#
+# create_snapshot() copies <component>/current/mkdocs.yml verbatim, so a fresh
+# snapshot inherits the bare component site_name. Once the top-level nav
+# registers current/ and the snapshot together, the mkdocs-monorepo plugin
+# rejects the duplicate names and the build aborts. Rewrite each
+# <component>/<X.Y.Z.W>/mkdocs.yml to "site_name: <component>-<version>";
+# current/ keeps the bare component name. Runs before every command that
+# builds the site, so the publish flow needs no manual site-name pass.
+# ----------------------------------------------------------------------------
+function normalize_snapshot_site_names()
+{
+  local fixed=0
+  local snapshot_yml comp_dir version component expected current_name
+
+  while IFS= read -r snapshot_yml; do
+    comp_dir="$(dirname "$(dirname "${snapshot_yml}")")"
+    component="$(basename "${comp_dir}")"
+    version="$(basename "$(dirname "${snapshot_yml}")")"
+    expected="${component}-${version}"
+    current_name="$(sed -n 's/^site_name:[[:space:]]*//p' "${snapshot_yml}" | head -1)"
+    if [ "${current_name}" != "${expected}" ]; then
+      sed -i "s/^site_name:.*/site_name: ${expected}/" "${snapshot_yml}"
+      echo "[INFO]   normalized ${snapshot_yml#"${REPO_ROOT}"/}: site_name '${current_name}' -> '${expected}'"
+      fixed=$((fixed + 1))
+    fi
+  done < <(find "${REPO_ROOT}" -maxdepth 4 \
+             \( -name out -o -name site -o -name build -o -name external_content -o -name python_venv \) -prune \
+             -o -regextype posix-extended \
+             -regex '.*/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/mkdocs\.yml' -print)
+
+  if [ ${fixed} -gt 0 ]; then
+    echo "[INFO] normalized ${fixed} snapshot site_name(s) — commit the corrected mkdocs.yml file(s)."
+  fi
+}
+
+# ----------------------------------------------------------------------------
 # main() : Main entry point. Handle command-line arguments, then run commands.
 # ----------------------------------------------------------------------------
 function main() 
 {
   local CMD=$1
   shift || true  # Shift off the first argument to allow further options
+
+  case "${CMD}" in
+    serve|build|deploy|release)
+      normalize_snapshot_site_names
+      ;;
+  esac
 
   case "${CMD}" in
     serve)
