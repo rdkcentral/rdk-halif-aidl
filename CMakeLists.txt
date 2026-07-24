@@ -27,6 +27,21 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMakeMod
 include(HandleModules)
 
 find_package(Binder REQUIRED)
+
+option(BUILD_CURRENT "Build current version of HAL modules" OFF)
+
+add_subdirectory("CMakeModules")
+
+add_subdirectory("common")
+add_subdirectory("avclock")
+
+cmake_minimum_required(VERSION 3.22)
+project(RDK_HAL_AIDL_Modules LANGUAGES CXX C VERSION 0.21.0)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/")
+include(HandleModules)
+
+find_package(Binder REQUIRED)
 find_package(AndroidUtils REQUIRED)
 
 option(BUILD_CURRENT "Build current version of HAL modules" OFF)
@@ -66,4 +81,3 @@ add_subdirectory("avbuffer")
 add_subdirectory("panel")
 add_subdirectory("planecontrol")
 add_subdirectory("videosink")
-
