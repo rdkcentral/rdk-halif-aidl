@@ -1,0 +1,11 @@
+prefix = @CMAKE_INSTALL_PREFIX@
+includedir = ${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+libdir = ${prefix}/@CMAKE_INSTALL_LIBDIR@
+
+Name: rdk-halif-@MODULE_NAME@
+Version: @MODULE_VERSION@
+URL: https://rdkcentral.github.io/rdk-halif-aidl
+Requires: @MODULE_DEPENDENCIES@
+
+Libs: -L${libdir}
+Cflags: -I${includedir}
