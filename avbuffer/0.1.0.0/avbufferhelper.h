@@ -33,6 +33,12 @@ extern "C" {
 
 using namespace std;
 
+/**
+Note: All vendors shall provide the AV Buffer Helper implementation as libavbufferhelper.so. 
+The middleware will use this predefined library name for dynamic loading, 
+eliminating the need for vendor-specific handling and avoiding build-time dependencies.
+*/
+
 class IAVBufferHelper
 {
 public:
@@ -88,7 +94,24 @@ public:
     virtual bool copySecureHandleWithMap(uint64_t handleTo, uint64_t handleFrom, CopyMap map, uint32_t mapSize) { return false; }
 };
 
-// Factory function to get an instance of the AVBufferHelper
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// Factory function to acquire the AVBufferHelper singleton instance.
+// This API returns the singleton AVBufferHelper instance and increments
+// the internal reference count. The caller must invoke
+// releaseAVBufferHelperInstance() when the instance is no longer needed.
 IAVBufferHelper* getAVBufferHelperInstance();
+
+// Factory function to release the AVBufferHelper singleton instance.
+// This API decrements the internal reference count. The singleton instance
+// shall be destroyed only when the reference count reaches zero.
+// The caller must not directly delete the returned IAVBufferHelper instance.
+void releaseAVBufferHelperInstance(IAVBufferHelper* instance);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //_AVBUFFERHELPER_H_
