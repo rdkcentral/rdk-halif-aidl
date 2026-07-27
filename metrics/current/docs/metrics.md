@@ -1,13 +1,37 @@
 # Metrics
 
-AIDL interface for device metrics. See the `.aidl` files under
-[current/com/rdk/hal/metrics/](current/com/rdk/hal/metrics/) for the full interface,
-and [current/hfp-metrics.yaml](current/hfp-metrics.yaml) for the declaration a product ships.
+The **Metrics HAL** service carries named numeric values from whoever measures them to whoever consumes them. It is a **general device metrics interface, not an A/V one**: values are organised into **domains**, of which A/V playback is one. `cpu` and `memory` are domains a platform may add later without touching the `av` domain or this interface.
 
-**This is a general device metrics interface, not an A/V one.** It carries named
-numeric values from whoever measures them to whoever consumes them, organised
-into **domains**. A/V playback is the `av` domain; `cpu` and `memory` are domains
-a platform may add later without touching it or this interface.
+Playback-quality metrics are a certification requirement across streaming partners — frames dropped and repeated, decode errors, underflow episodes with durations, A/V-sync excursions — with defined freshness and atomicity. Each SoC exposes these ad-hoc today (debug procfs, per-element properties, or not at all), so middleware cannot read them portably and cannot meet the accuracy contracts the certifications state. This HAL is the single vendor pull transport for them.
+
+Middleware is the only client. It polls each source at the declared cadence, caches, and fans out to its own consumers; the HAL is not called per consumer.
+
+## References
+
+!!! info References
+    |||
+    |-|-|
+    |**Interface Definition**|[metrics/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/metrics/current)|
+    |**Interface Version**|`current`|
+    | **API Documentation** | *TBD - Doxygen* |
+    |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
+    |**VTS Tests**| TBC |
+    |**Reference Implementation - vComponent**|**TBD**|
+
+## Related Pages
+
+!!! tip "Related Pages"
+    - [Video Decoder](../videodecoder/video_decoder.md)
+    - [Video Sink](../videosink/video_sink.md)
+    - [Audio Decoder](../audiodecoder/audio_decoder.md)
+    - [Audio Sink](../audiosink/audio_sink.md)
+    - [AV Clock](../avclock/av_clock.md)
+
+## Versioning
+
+| Version | Notes |
+|---|---|
+| `0.1.0.0` | Initial baseline. |
 
 ## Naming
 
@@ -22,115 +46,107 @@ av.clock.0.sync_offset_ms
 cpu.core.3.utilisation_pct
 ```
 
-| Segment | What it is |
+| Segment | Meaning |
 |---|---|
 | **domain** | The subject area, and the unit of extension — a new domain touches nothing that exists |
 | **element** | The thing within that domain which produces figures |
 | **instance** | Which one. Always present, `0` where the element is a singleton |
 | **field** | The metric |
 
-The first three segments address a **source**; the fourth selects a field within
-it. `getSource("av.video_decoder.0")` returns one `IMetricsSource`, and **one read
-of it is one coherent snapshot** — so the atomicity boundary is visible in the name.
+The first three segments address a **source**; the fourth selects a field within it. `getSource("av.video_decoder.0")` returns one `IMetricsSource`, and one read of it is one coherent snapshot — the atomicity boundary is therefore visible in the name.
 
-**The path is the identity.** There is no source-id parcelable: modelling it a
-second time as a struct only creates a way for the two to disagree.
+The path **is** the identity. There is no source-id parcelable, because modelling it a second time only creates a way for the two to disagree.
 
-Names are by **subject, not producer**. Which block sources a figure differs per
-SoC, and for some fields it is middleware rather than the SoC at all, so a
-producer-shaped name would move between products for the same metric.
-`av.video_sink.0.frames_dropped_late` means the same thing whoever measured it.
+Names are by **subject, not producer**. Which block sources a figure differs per SoC, and for some fields it is middleware rather than the SoC at all, so a producer-shaped name would move between products for the same metric.
 
-## What a consumer never does
+### Implementation Requirements
 
-Switch on an enum, index a struct member, or assume a field exists.
+|#| Requirement | Comments |
+|--|---|---|
+| **HAL.METRICS.1** | Every metric name shall be the fully-qualified four-segment path `<domain>.<element>.<instance>.<field>`. | A bare field name is ambiguous once merged: `frames_decoded` from `av.video_decoder.0` and `av.audio_decoder.0` are the same string. |
+| **HAL.METRICS.2** | Every metric value shall be a signed 64-bit integer. | AIDL `long`. Counters use the positive range and never the sign; a signed field such as `sync_offset_ms` uses it; a boolean-shaped field is 0 or 1. |
+| **HAL.METRICS.3** | All values returned by one `getAll()` or `getFieldsByName()` call shall be sampled at a single instant. | An obligation on the implementation, not a property to be discovered — a source spanning two hardware blocks shall latch both. Paired counters must never yield an impossible ratio. |
+| **HAL.METRICS.4** | Counters shall be cumulative since source creation and shall not reset on flush or seek. High-water fields shall be monotone non-decreasing. | Consumers compute deltas. |
+| **HAL.METRICS.5** | A read shall reflect events no older than the element's declared `pollCadenceMs`, which shall not exceed 50 ms. | An element may declare tighter; never looser. Freshness is a partner-facing promise. |
+| **HAL.METRICS.6** | A field the implementation cannot measure shall be left undeclared and omitted from reads. | It shall never be served as `0`. "Cannot measure it" and "measured zero" are different facts. |
+| **HAL.METRICS.7** | Every field returned shall be declared in `hfp-metrics.yaml` with `unit`, `kind` and `writable`, and every name used shall exist in that domain's dictionary at the declared `dictionaryVersion`. | There is no SoC-private namespace: a figure only one SoC can produce still gets a dictionary entry, so no consumer grows per-SoC code. |
+| **HAL.METRICS.8** | Event `seq` shall be monotonic per source from 1. Oldest events shall drop at the buffer cap and the overwrite shall be counted. | Loss is reported, not hidden — a reader can tell it fell behind rather than silently seeing a gap. |
+| **HAL.METRICS.9** | Where a consumer requires exact PTS, `pts_ms` shall be within ±1 frame interval of the event. Where genuinely underivable it shall be omitted. | Never a sentinel value. |
+| **HAL.METRICS.10** | `MetricElementInfo.instances` shall state how many of the element the hardware supports, and shall agree with the owning HAL's own feature profile. | The ceiling, not the live count. No source index `>= instances` shall ever appear. |
+| **HAL.METRICS.11** | The implementation shall not require per-caller cursor state. | Middleware is the single reader and passes the highest `seq` it has seen. Multi-consumer fan-out is a middleware concern. |
+| **HAL.METRICS.12** | Values shall be presented in canonical units and semantics regardless of the SoC's raw representation. | The provider is an adapter, not a passthrough. A transform normalises representation; it cannot manufacture information, so where a SoC reports only a combined figure the finer-grained fields stay undeclared rather than derived by guesswork. |
 
-```cpp
-// Once, at bind.
-Capabilities caps;
-manager->getCapabilities(&caps);
-mSchemaId = caps.schemaId;               // re-resolve only when this changes
+### Interface Definition
 
-// Per tick, per source: one round-trip, one coherent snapshot.
-std::vector<MetricKVPair> values;
-bool ok = false;
-manager->getSource("av.video_decoder.0")->getAll(&values, &ok);
-for (const auto &kv : values)
-    publish(kv.name, kv.value);          // kv.name is already fully qualified
-```
+| Interface Definition File | Description |
+|---|---|
+| `IMetricsManager.aidl` | Metrics Manager HAL interface — catalog and live source enumeration. |
+| `IMetricsSource.aidl` | Metrics HAL interface for a single source (`<domain>.<element>.<instance>`). |
+| `IMetricsSourceEventListener.aidl` | Listener callbacks to clients from an `IMetricsSource`. |
+| `IMetricsManagerEventListener.aidl` | Listener callbacks to clients from the `IMetricsManager` for sources appearing and disappearing. |
+| `Capabilities.aidl` | The catalog — every domain this product serves, with the schema identity. |
+| `MetricDomainInfo.aidl` | One domain and its elements, with the dictionary revision it was written against. |
+| `MetricElementInfo.aidl` | One element — its fields, event kinds, instance count, cadence and buffer depth. |
+| `MetricFieldInfo.aidl` | One declared field — name, unit, kind and writability. |
+| `MetricEventInfo.aidl` | One event kind and the values it carries. |
+| `MetricEventFieldInfo.aidl` | One value carried by an event kind. |
+| `MetricKVPair.aidl` | One metric value, keyed by its fully-qualified name. |
+| `MetricsEvent.aidl` | One event on a source's event buffer. |
 
-A consumer matches the names it understands and ignores the rest, so a product
-that declares more simply delivers more.
+### Declaration
 
-## Three properties
+The metric set is **not part of the ABI**. Adding a field, an element or a whole domain is a declaration change: no interface freeze, no version bump, no coordinated consumer rebuild. This is what lets the metric set track the partner certification set, which moves every year, without the HAL moving with it.
 
-**Every name is a declared string.** No enums for keys, no compiled-in metric
-list, no value union. A product declares what it serves; a consumer asks what is
-present.
+`hfp-metrics.yaml`, validated by `hfp-metrics-schema.yaml`, declares per element: its fields, its event kinds and each kind's values, `instances`, `pollCadenceMs` and `eventBufferCapacity`.
 
-**Every value is int64** (AIDL `long`). A metric is a count, a duration, a byte
-figure or an offset — all signed 64-bit. Counters use the positive range and
-never the sign; a signed field such as `sync_offset_ms` uses it.
+Two conventions to follow when filling one in:
 
-**The metric set is not part of the ABI.** Adding a field, an element or a whole
-domain is a declaration change: no interface freeze, no version bump, no
-coordinated consumer rebuild. That is what lets the metric set track the partner
-certification set, which moves every year, without the HAL moving with it.
+- **Declare the whole dictionary and comment out what you cannot serve**, one line each, with `# NOT SUPPORTED — <reason>` on the same line. The file then reads as a checklist against the dictionary, so a reviewer sees what the SoC does not do rather than having to notice something missing.
+- **`instances` is the ceiling.** It makes capability checkable before the product boots and gives CI a cross-check against the owning HAL's own profile. The live set comes from `getSourcePaths()`, because it is dynamic — a picture-in-picture decoder exists only while the second session does.
 
-## Absence is absence
+### Events
 
-A field a product cannot measure is **left undeclared and omitted from reads** —
-never served as `0`. "This SoC cannot measure it" and "it measured zero" are
-different facts, and the interface keeps them different. The same rule applies to
-event values: a PTS that cannot be derived is omitted, not sent as `-1`.
-
-There is **no SoC-private namespace**. Every name is defined in its domain
-dictionary, whatever produces it, so no consumer ever grows per-SoC code. A
-figure only one SoC can produce still gets one dictionary entry, and simply goes
-undeclared everywhere else.
-
-## Events
+An event is when it happened, what kind it was, and its declared values:
 
 ```text
 { seq, tsUnixMs, kind, values[] }
 ```
 
-`kind` is a declared string **scoped by its source**, so it carries no media
-prefix: `underflow` from `av.video_sink` is a video starvation, and the same kind
-from `av.audio_sink` is an audio one. Each kind declares the values it carries
-(`duration_ms`, `pts_ms`, `trigger`, `code`), so a new kind never widens a
-parcelable to hold a field only it uses.
+`kind` is a declared string **scoped by its source**, so it carries no media prefix: `underflow` from `av.video_sink` is a video starvation, and the same kind from `av.audio_sink` is an audio one. Each kind declares the values it carries — `duration_ms`, `pts_ms`, `trigger`, `code` — so a new kind never widens a parcelable to hold a field only it uses.
 
-The per-source buffer exists to **bridge one poll interval** — default 32,
-sized from the worst-case burst within an interval rather than from a rate. An
-element that out-runs its buffer needs a tighter cadence; the buffer is not
-where that is fixed. Middleware is the only reader, so it holds the cursor:
-pass the highest `seq` you have seen. Loss is counted, not hidden.
+The per-source buffer exists to bridge one poll interval. It is sized from the worst-case burst within an interval rather than from a rate: an element that out-runs its buffer needs a tighter cadence, and the buffer is not where that is fixed.
 
-## Declaring a product
+### Resource Management
 
-[current/hfp-metrics.yaml](current/hfp-metrics.yaml), validated by
-[current/hfp-metrics-schema.yaml](current/hfp-metrics-schema.yaml), declares per
-element: its fields (`name`, `unit`, `kind`, `writable`), its event kinds and
-each kind's values, `instances`, `pollCadenceMs` and `eventBufferCapacity`.
+Sources are discovered, not opened. `getSourcePaths()` returns those live now; `IMetricsManagerEventListener` reports them appearing and disappearing, so a client attaches at source start rather than polling.
 
-Two conventions worth reading before filling one in:
+Reading a source acquires nothing and blocks nothing — there is no open, no controller, and no single-writer ownership, because a metrics read is side-effect free. `setField()` is the exception and applies only to fields declared `writable` (configuration, tunables and test injection).
 
-- **Declare the whole dictionary; comment out what you cannot serve**, one line
-  each, with `# NOT SUPPORTED — <reason>` on the same line. The file then reads
-  as a checklist, so a reviewer sees what the SoC does not do rather than having
-  to notice something missing.
-- **`instances` is the ceiling, not the live count.** It makes capability
-  checkable before the product boots, lets a test assert that no source index
-  `>= instances` ever appears, and must agree with the owning HAL's own feature
-  profile — a cross-check CI can make.
+### Sequence
 
-## Contract
+```mermaid
+sequenceDiagram
+    participant Client as Middleware
+    participant MGR as IMetricsManager
+    participant SRC as IMetricsSource
 
-| Contract | What the implementation commits to |
-|---|---|
-| **Snapshot freshness** | Any read reflects events at most as old as the element's declared cadence, floor 50 ms. An element may declare tighter, never looser |
-| **Atomicity** | Every value of one `getAll()` is sampled at a single instant. An obligation on the implementation, not a property to be discovered — a source spanning two hardware blocks latches both |
-| **Monotonicity** | Counters cumulative since source creation, no reset on flush or seek; high-water marks monotone non-decreasing |
-| **Declaration completeness** | Every field a source returns is declared with unit, kind and writability |
-| **Event PTS** | Within ±1 frame interval where a consumer requires exact PTS; **omitted** where genuinely underivable — never a sentinel |
+    Client->>MGR: getCapabilities()
+    note over Client: Resolve once. Cache-key the name map<br>on Capabilities.schemaId.
+    Client->>MGR: registerEventListener(listener)
+    Client->>MGR: getSourcePaths()
+    MGR-->>Client: ["av.video_decoder.0", "av.video_sink.0", ...]
+    Client->>MGR: getSource("av.video_decoder.0")
+    MGR-->>Client: IMetricsSource
+
+    loop Per poll tick, per source
+        Client->>SRC: getAll()
+        SRC-->>Client: fully-qualified name/value pairs, one coherent snapshot
+        Client->>SRC: getRecentEvents(lastSeq, maxEvents)
+        SRC-->>Client: events with seq > lastSeq
+    end
+
+    note over MGR,Client: A second session starts.
+    MGR-->>Client: onSourceAdded("av.video_decoder.1")
+    note over Client: Attach without polling getSourcePaths().
+    MGR-->>Client: onSourceRemoved("av.video_decoder.1")
+```
