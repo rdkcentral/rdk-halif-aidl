@@ -1,0 +1,208 @@
+#** *****************************************************************************
+# *
+# * If not stated otherwise in this file or this component's LICENSE file the
+# * following copyright and licenses apply:
+# *
+# * Copyright 2026 RDK Management
+# *
+# * Licensed under the Apache License, Version 2.0 (the "License");
+# * you may not use this file except in compliance with the License.
+# * You may obtain a copy of the License at
+# *
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing, software
+# * distributed under the License is distributed on an "AS IS" BASIS,
+# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# * See the License for the specific language governing permissions and
+# * limitations under the License.
+# *
+#** ******************************************************************************
+
+# Pykwalify schema for metrics declarations.
+#
+# ONE schema, validating EVERY metrics declaration on the device: the vendor's
+# hfp-metrics.yaml, Rialto's metrics-rialto.yaml, and any metrics-<component>.yaml
+# a future declaring party adds. getCapabilities() returns their union, which
+# only composes without translation if every declaration has the same shape.
+#
+# Schema Version: 0.1.0
+
+type: map
+mapping:
+  metrics:
+    type: map
+    required: true
+    mapping:
+
+      interfaceVersion:
+        type: str
+        required: true
+
+      schemaVersion:
+        type: str
+        required: true
+        pattern: '^\d+\.\d+\.\d+$'
+
+      domains:
+        type: seq
+        required: true
+        sequence:
+          - type: map
+            mapping:
+
+              # Subject area. The unit of extension: a new domain touches
+              # nothing that exists. Compound names use "_" (e.g. cmcd_v2), so
+              # every "." in a metric path stays a real level.
+              domain:
+                type: str
+                required: true
+                pattern: '^[a-z][a-z0-9_]*$'
+
+              # Revision of THIS domain's dictionary. Per domain, because an
+              # A/V dictionary cannot define cpu.core.utilisation_pct.
+              dictionaryVersion:
+                type: str
+                required: true
+
+              # true  = computed from measured fields; platform-declared only.
+              # false = measured by an instrument. Default false.
+              derived:
+                type: bool
+                required: false
+
+              elements:
+                type: seq
+                required: true
+                sequence:
+                  - type: map
+                    mapping:
+
+                      # The thing within the domain that produces figures.
+                      # Declared ONCE per element type — instances are not
+                      # declared, they are discovered at runtime, because they
+                      # are dynamic (a PiP decoder exists only while the
+                      # second session does).
+                      element:
+                        type: str
+                        required: true
+                        pattern: '^[a-z][a-z0-9_]*$'
+
+                      # How many of this element the hardware SUPPORTS — not
+                      # how many are live. The live set is discovered at
+                      # runtime; this is the ceiling, so dual-decode capability
+                      # is checkable before boot and a test can assert that no
+                      # source index >= instances ever appears. MUST agree with
+                      # the owning HAL's own HFP.
+                      instances:
+                        type: int
+                        required: true
+                        range: { min: 1 }
+
+                      # Cadence this element is polled at. May be TIGHTER than
+                      # the 50 ms platform floor; never looser — the freshness
+                      # contract is a partner-facing promise. Default 50.
+                      pollCadenceMs:
+                        type: int
+                        required: false
+                        range: { min: 1, max: 50 }
+
+                      # Events held between polls. Sized from the worst-case
+                      # burst within ONE poll interval, not from a rate: an
+                      # element that out-runs its buffer needs a tighter
+                      # cadence, not a bigger buffer. Default 32.
+                      eventBufferCapacity:
+                        type: int
+                        required: false
+                        range: { min: 8, max: 1024 }
+
+                      fields:
+                        type: seq
+                        required: true
+                        sequence:
+                          - type: map
+                            mapping:
+
+                              # Field name, unique within its element. Must be
+                              # defined in this domain's dictionary at the
+                              # declared dictionaryVersion — CI-validated.
+                              name:
+                                type: str
+                                required: true
+                                pattern: '^[a-z][a-z0-9_]*$'
+
+                              unit:
+                                type: str
+                                required: true
+                                enum: [frames, ms, us, ns, bytes, events, percent, hz, none]
+
+                              # How the value behaves over time — governs what
+                              # arithmetic a consumer may do:
+                              #   counter    cumulative; may be differenced
+                              #   current    live sample; NEVER sum it
+                              #   high_water monotone max
+                              #   config     a tunable's present value
+                              kind:
+                                type: str
+                                required: true
+                                enum: [counter, current, high_water, config]
+
+                              # setField() accepted. Default false.
+                              writable:
+                                type: bool
+                                required: false
+
+                              # DERIVED domains only: the measured fields this is
+                              # computed from, named the way every declaration
+                              # names a field — <domain>.<element>.<field>, no
+                              # instance. The instance matches positionally at
+                              # runtime (cmcd_v2.video.N derives from
+                              # av.video_sink.N), and the runtime name is fully
+                              # qualified like every other.
+                              # Recorded so a derived value cannot silently
+                              # drift from its base, and so a device's coverage
+                              # of a standard is computable from its measured
+                              # declaration before it ships.
+                              from:
+                                type: seq
+                                required: false
+                                sequence:
+                                  - type: str
+                                    pattern: '^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$'
+
+                      events:
+                        type: seq
+                        required: false
+                        sequence:
+                          - type: map
+                            mapping:
+
+                              # Scoped by the element that raises it, so no
+                              # prefix: "underflow" on video_sink, not
+                              # "video_underflow".
+                              kind:
+                                type: str
+                                required: true
+                                pattern: '^[a-z][a-z0-9_]*$'
+
+                              fields:
+                                type: seq
+                                required: true
+                                sequence:
+                                  - type: map
+                                    mapping:
+
+                                      # Bare name — the kind already scopes it.
+                                      name:
+                                        type: str
+                                        required: true
+                                        pattern: '^[a-z][a-z0-9_]*$'
+
+                                      # The only descriptor an occurrence
+                                      # payload needs. counter/current/... 
+                                      # describes behaviour over time, which is
+                                      # meaningless for a single occurrence.
+                                      unit:
+                                        type: str
+                                        required: true
+                                        enum: [frames, ms, us, ns, bytes, events, percent, hz, none]

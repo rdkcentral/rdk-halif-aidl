@@ -1,0 +1,187 @@
+#** *****************************************************************************
+# *
+# * If not stated otherwise in this file or this component's LICENSE file the
+# * following copyright and licenses apply:
+# *
+# * Copyright 2026 RDK Management
+# *
+# * Licensed under the Apache License, Version 2.0 (the "License");
+# * you may not use this file except in compliance with the License.
+# * You may obtain a copy of the License at
+# *
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing, software
+# * distributed under the License is distributed on an "AS IS" BASIS,
+# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# * See the License for the specific language governing permissions and
+# * limitations under the License.
+# *
+#** ******************************************************************************
+
+# HAL Feature Profile for metrics
+#
+# RDK Metrics Declaration — format "metrics/0.1".
+# VENDOR file: what this SoC measures. Validated by hfp-metrics-schema.yaml.
+#
+# NAMING — every metric name is four segments, fully qualified, no short form:
+#
+#     <domain>.<element>.<instance>.<field>    av.video_decoder.0.frames_decoded
+#
+#   The first three address a source (getSource("av.video_decoder.0")); the
+#   fourth selects a field within it.
+#
+#   THIS FILE DECLARES THE ELEMENT, NOT THE INSTANCE. It states that a
+#   video_decoder reports frames_decoded, once, plus `instances: 2` — it never
+#   enumerates .0 and .1. The live set comes from getSourcePaths() at runtime,
+#   because it is dynamic: a picture-in-picture decoder exists only while the
+#   second session does.
+#
+# ALIGNS WITH
+#   HPK HFP convention        file + schema pair, pykwalify-validated
+#   OpenTelemetry semantic    dotted names against a central registry of
+#     conventions / Prometheus name + unit + type; instance as a dimension
+#                             rather than baked into the name
+#   ethtool -S string tables  the schema travels with the interface; a consumer
+#                             reads what exists and ignores what it does not know
+#   com.rdk.hal.metrics       the AIDL this declares for; getCapabilities()
+#                             returns the union of every declaration on the device
+#
+# RULES THAT BITE
+#   * A name absent from this file is ABSENT at runtime — never served as 0.
+#     "This SoC cannot measure it" and "it measured zero" must stay distinct.
+#   * DECLARE THE WHOLE DICTIONARY, COMMENT OUT WHAT YOU CANNOT SERVE, one line
+#     each, with "# NOT SUPPORTED — <reason>" on the same line. The file then
+#     reads as a checklist against the dictionary: a reviewer scans one column
+#     and sees what this SoC does not do, rather than having to notice
+#     something missing.
+#   * Every name must be defined in the domain dictionary at the declared
+#     dictionaryVersion. There is no SoC-private namespace: a figure only one
+#     SoC can produce still gets a dictionary entry, so no consumer ever grows
+#     per-SoC code.
+#   * pollCadenceMs may be TIGHTER than the 50 ms floor, never looser.
+#   * `instances` is the count the hardware SUPPORTS, not the count that is
+#     live. It makes capability checkable before boot, lets a test assert that
+#     no source index >= instances ever appears, and MUST agree with the owning
+#     HAL's own feature profile — a CI-catchable cross-check.
+#
+# Every value is int64 (AIDL long, signed 64-bit).
+
+metrics:
+  interfaceVersion: "0.1.0.0"     # frozen com.rdk.hal.metrics version
+  schemaVersion: "0.1.0"          # this file's schema revision
+
+  domains:
+    - domain: av
+      dictionaryVersion: "1.1"    # revision of the av field dictionary
+
+      elements:
+
+        # Sources    av.video_decoder.0 (main), av.video_decoder.1 (PiP)
+        # Read       getSource("av.video_decoder.0")->getAll()
+        # Names      av.video_decoder.frames_decoded, ...decode_errors
+        # Aggregate  sum frames_dropped over sources matching av.video_decoder.*
+        - element: video_decoder
+          instances: 2            # dual decode: main + PiP. Must match
+                                  # hfp-videodecoder.yaml. Live sources are a
+                                  # subset: av.video_decoder.0 .. .1
+          pollCadenceMs: 20       # tighter than the 50 ms floor; never looser
+          eventBufferCapacity: 32 # events held between polls
+          fields:
+            - { name: frames_decoded,                unit: frames, kind: counter }
+            - { name: frames_dropped,                unit: frames, kind: counter }
+            - { name: decode_errors,                 unit: events, kind: counter }
+            - { name: decode_latency_sum_us,         unit: us,     kind: counter }
+          events:
+            - kind: decode_error
+              fields:
+                - { name: pts_ms, unit: ms }
+                - { name: code,   unit: none }
+
+        # Sources    av.video_sink.0, av.video_sink.1
+        # Read       getSource("av.video_sink.1")->getFields(["frames_presented",
+        #                                                    "frames_dropped_late"])
+        # Events     getSource("av.video_sink.1")->getRecentEvents(lastSeq, 64)
+        #              -> kind "underflow_end", values { duration_ms }
+        - element: video_sink
+          instances: 2            # one per decode path
+          fields:
+            - { name: frames_received,               unit: frames, kind: counter }
+            - { name: frames_presented,              unit: frames, kind: counter }
+            - { name: frames_dropped_late,           unit: frames, kind: counter }
+          # - { name: frames_dropped_frc,            unit: frames, kind: counter }   # NOT SUPPORTED — one drop count only, FRC not attributable
+            - { name: frames_repeated_frc,           unit: frames, kind: counter }
+          # - { name: frames_repeated_missing_frame, unit: frames, kind: counter }   # NOT SUPPORTED — repeat reason not distinguished
+            - { name: underflowed,                   unit: events, kind: counter }
+            - { name: underflow_duration_ms,         unit: ms,     kind: counter }
+            - { name: freeze_duration_ms,            unit: ms,     kind: counter }
+            - { name: freeze_event_count,            unit: events, kind: counter }
+            - { name: render_latency_sum_us,         unit: us,     kind: counter }
+            - { name: max_freeze_duration_ms,        unit: ms,     kind: high_water }
+            - { name: buffer_depth_ms,               unit: ms,     kind: current }
+          events:
+            - kind: underflow
+              fields:
+                - { name: trigger, unit: none }
+            - kind: underflow_end
+              fields:
+                - { name: duration_ms, unit: ms }
+            - kind: first_frame_presented
+              fields:
+                - { name: pts_ms, unit: ms }
+            - kind: quality_threshold_crossed
+              fields:
+                - { name: metric, unit: none }
+                - { name: count,  unit: frames }
+                - { name: pts_ms, unit: ms }
+
+        # Sources    av.audio_decoder.0
+        # Names      av.audio_decoder.frames_decoded  (same field name as the
+        #            video decoder — different element, same figure, different media)
+        - element: audio_decoder
+          instances: 2            # main + PiP audio, even where only one is audible
+          fields:
+            - { name: frames_decoded,                unit: frames, kind: counter }
+            - { name: frames_dropped,                unit: frames, kind: counter }
+            - { name: decode_errors,                 unit: events, kind: counter }
+            - { name: decode_latency_sum_us,         unit: us,     kind: counter }
+          events:
+            - kind: decode_error
+              fields:
+                - { name: pts_ms, unit: ms }
+                - { name: code,   unit: none }
+
+        # Sources    av.audio_sink.0
+        # Read       getSource("av.audio_sink.0")->getField("buffer_depth_ms")
+        - element: audio_sink
+          instances: 1            # one mixed output path on this product
+          fields:
+            - { name: underflow_duration_ms,         unit: ms,     kind: counter }
+            - { name: silence_duration_ms,           unit: ms,     kind: counter }
+            - { name: silence_event_count,           unit: events, kind: counter }
+            - { name: buffer_depth_ms,               unit: ms,     kind: current }
+          events:
+            - kind: underflow
+              fields:
+                - { name: trigger, unit: none }
+            - kind: underflow_end
+              fields:
+                - { name: duration_ms, unit: ms }
+            - kind: silence
+              fields:
+                - { name: duration_ms, unit: ms }
+
+        # Sources    av.clock.0
+        # Read       getSource("av.clock.0")->getAll()
+        # Write      getSource("av.clock.0")->setField("sync_threshold_ms", 40)
+        #            (the only writable field here; kind: config)
+        - element: clock
+          instances: 1            # one A/V clock, shared across sessions
+          pollCadenceMs: 200      # sync figures move slowly; faster buys nothing
+          fields:
+            - { name: sync_offset_ms,                unit: ms,     kind: current }
+            - { name: sync_max_abs_offset_ms,        unit: ms,     kind: high_water }
+            - { name: sync_time_over_threshold_ms,   unit: ms,     kind: counter }
+            - { name: sync_threshold_ms,             unit: ms,     kind: config, writable: true }
+            - { name: resync_count,                  unit: events, kind: counter }
+          # - { name: resync_magnitude_sum_ms,       unit: ms,     kind: counter }   # NOT SUPPORTED — correction magnitude not reported

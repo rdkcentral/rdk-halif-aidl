@@ -82,6 +82,8 @@ nav:
         - 0.2.0.1: '!include avclock/0.2.0.1/mkdocs.yml'
         - 0.2.0.0: '!include avclock/0.2.0.0/mkdocs.yml'
         - 0.1.0.0: '!include avclock/0.1.0.0/mkdocs.yml'
+      - Metrics:
+        - Current: '!include metrics/current/mkdocs.yml'
       - Video Decoder:
         - Current: '!include videodecoder/current/mkdocs.yml'
         - 0.2.0.1: '!include videodecoder/0.2.0.1/mkdocs.yml'
