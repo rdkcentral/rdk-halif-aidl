@@ -35,6 +35,14 @@ parcelable MetricElementInfo
     String element;
 
     MetricFieldInfo[] fields;
+
+    /**
+     *  The event kinds this element raises, each with the values it carries.
+     *
+     *  EMPTY MEANS THIS ELEMENT NEVER RAISES EVENTS — an A/V clock reports
+     *  samples but has nothing episodic to report. A consumer reads this to
+     *  decide where registering a listener is worth anything.
+     */
     MetricEventInfo[] events;
 
     /**

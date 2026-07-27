@@ -117,12 +117,22 @@ interface IMetricsSource
                             out MetricsEvent[] events);
 
     /**
-     *  @brief Optional push, where the implementation can raise events from a
-     *         schedulable context.
+     *  @brief Registers for event callbacks from THIS source.
      *
-     *  Where offered it removes poll latency on events. The buffer remains the
-     *  delivery of record, because a oneway binder call cannot be made from an
-     *  atomic context.
+     *  Registration is per source, so a consumer subscribes only to the
+     *  elements it cares about rather than filtering a device-wide stream.
+     *
+     *  NOT EVERY ELEMENT RAISES EVENTS. An element declares its event kinds in
+     *  MetricElementInfo.events; where that list is empty the element never
+     *  fires, and registering on it is accepted but silently idle. Check the
+     *  catalog before registering — it is the difference between "this element
+     *  has raised nothing yet" and "this element will never raise anything".
+     *
+     *  Push is optional and offered where the implementation can raise events
+     *  from a schedulable context. Where offered it removes poll latency on
+     *  events, but the buffer remains the delivery of record, because a oneway
+     *  binder call cannot be made from an atomic context — a listener that
+     *  misses a call loses nothing.
      *
      *  @param[in] listener : the listener.
      *  @returns boolean : true on success.

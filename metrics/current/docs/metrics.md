@@ -63,6 +63,12 @@ Three properties shape the interface:
 
 ---
 
+## Field dictionary
+
+The normative `av` field set — what each name means, its unit, its kind, its provider and its population rule — is the [AV Domain Field Dictionary](av_field_dictionary.md). A declaration states *which* fields a product serves; the dictionary states *what each one is*, and a product may not declare a name the dictionary does not define.
+
+---
+
 ## Metric Naming
 
 Every metric name is four segments, fully qualified. There is no short form.
