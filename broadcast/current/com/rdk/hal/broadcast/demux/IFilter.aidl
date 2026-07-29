@@ -14,11 +14,10 @@
  */
 package com.rdk.hal.broadcast.demux;
 
-import com.rdk.hal.broadcast.demux.DataPacket;
+import com.rdk.hal.IRingBufferSource;
+import com.rdk.hal.IRingBufferSourceListener;
 import com.rdk.hal.broadcast.demux.DemuxFilterParameters;
 import com.rdk.hal.broadcast.demux.FilterType;
-import com.rdk.hal.broadcast.demux.ISoftwareSinkListener;
-import com.rdk.hal.broadcast.demux.SoftwareSink;
 
 /**
  * Filter interface created by calling IDemuxController.openFilter().
@@ -59,31 +58,29 @@ interface IFilter {
     void close();
 
     /**
-     * Register a software sink for the filter.
+     * Register a consumer to read the data captured by this filter.
      *
-     * The sink will receive the data from the filter through the means provided in the SoftwareSink return value. It
-     * will further provide callbacks in the softwareSink parameter.
+     * The call is forwarded to the IRingBuffer owned by the filter's IDemuxController. Since a demux
+     * permits a single MPEG2TS_DATA filter (MaxFilterInstances(1)), there is exactly one consumer of
+     * that buffer.
      *
-     * @param[in] softwareSink A set of callbacks the sink wants to receive.
-     * @returns The details the sink needs in order to actually be able to receive data.
+     * @note Only one consumer can be registered at a time. If called when a consumer is already
+     * registered, ::android::binder::Status::EX_ILLEGAL_STATE will be thrown.
+     *
+     * @param[in] listener The listener that will receive IRingBufferSourceListener callbacks.
+     * @returns An IRingBufferSource for the consumer to read data from the ring buffer.
      */
-    SoftwareSink registerSoftwareSink(in ISoftwareSinkListener softwareSink);
+    IRingBufferSource registerConsumer(in IRingBufferSourceListener listener);
 
     /**
-     * Unregister a software sink.
+     * Unregister the current consumer from this filter.
      *
-     * The caller should remember to also close and dispose the shared memory, file descriptor and message queue.
+     * The call is forwarded to the controller's IRingBuffer.
      *
-     * @param[in] id The ID of the sink to be unregistered.
-     * @returns True if a sink with the given ID existed and was removed, false otherwise.
+     * @note If the provided source does not match the currently registered consumer, or if no
+     * consumer is currently registered, ::android::binder::Status::EX_ILLEGAL_ARGUMENT will be thrown.
+     *
+     * @param[in] source The IRingBufferSource returned by the corresponding registerConsumer call.
      */
-    boolean unregisterSoftwareSink(in SoftwareSink.Id id);
-
-    /**
-     * Mark a data packet as consumed
-     *
-     * @param id The ID of the calling software sink.
-     * @param pId The ID of the packet that has been consumed.
-     */
-    void onDataPacketConsumed(in SoftwareSink.Id id, in DataPacket.Id pId);
+    void unregisterConsumer(in IRingBufferSource source);
 }
