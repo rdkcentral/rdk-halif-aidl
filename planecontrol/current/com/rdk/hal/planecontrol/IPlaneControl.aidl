@@ -26,6 +26,8 @@ import com.rdk.hal.planecontrol.PropertyKVPair;
 import com.rdk.hal.PropertyValue;
 import com.rdk.hal.planecontrol.IGraphicsFbProvider;
 import com.rdk.hal.planecontrol.IGraphicsFbProviderListener;
+import com.rdk.hal.planecontrol.ICapture;
+import com.rdk.hal.planecontrol.ICaptureEventListener;
 
  
 /** 
@@ -251,5 +253,33 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      */
-    @nullable IGraphicsFbProvider getGraphicsFbProvider(in int planeResourceIndex, in IGraphicsFbProviderListener graphicsFbProviderListener); 
+    @nullable IGraphicsFbProvider getGraphicsFbProvider(in int planeResourceIndex, in IGraphicsFbProviderListener graphicsFbProviderListener);
+
+    /**
+     * Gets a Capture interface for a video plane resource.
+     *
+     * Capture routes a video decoder's output into a ring of Dma-Buf slots which the
+     * client imports as GPU textures, instead of routing it to the display plane. It is
+     * a destination for a decoder's output, which is the routing this interface owns, so
+     * it is reached through the video plane resource the decoder would otherwise have
+     * been mapped to.
+     *
+     * A capture interface is only available for plane resources of type VIDEO on products
+     * that declare a capture resource for that plane in the HAL Feature Profile. The
+     * method returns `null` rather than throwing an exception.
+     *
+     * @param[in] planeResourceIndex        The index of the plane resource.
+     * @param[in] captureEventListener      Listener for capture resource event callbacks.
+     *
+     * @returns A valid capture instance when the plane resource index refers to a video
+     *          plane that supports capture, or `null` if the plane resource index is
+     *          invalid or the indexed plane does not support capture.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
+     *
+     * @see ICapture, ICapture.open()
+     */
+    @nullable ICapture getCapture(in int planeResourceIndex, in ICaptureEventListener captureEventListener);
 }

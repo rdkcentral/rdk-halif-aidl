@@ -36,6 +36,10 @@ Each plane is configurable through a set of properties that clients can read or 
 | **HAL.PLANECONTROL.7** | Shall provide a graphics frame buffer provider API for graphics planes where plane type is GRAPHICS. |
 | **HAL.PLANECONTROL.8** | Shall provide APIs to create, commit and destroy graphics frame buffers via `IGraphicsFbProvider`.|
 | **HAL.PLANECONTROL.9** | Shall notify clients when committed graphics frame buffers are released and available for reuse via `IGraphicsFbProviderListener`.|
+| **HAL.PLANECONTROL.10** | Shall provide a decoded frame capture API via `ICapture` for video planes declared as capture destinations, binding a video decoder operating in `OperationalMode.GRAPHICS_TEXTURE` to a Dma-Buf ring.|
+| **HAL.PLANECONTROL.11** | Shall deliver captured frames as NV12 linear Dma-Bufs whose per-plane file descriptors, offsets and strides address the actual buffer layout and import directly through `EGL_EXT_image_dma_buf_import` without translation.|
+| **HAL.PLANECONTROL.12** | Shall allow decode to proceed at full rate independently of the rate at which the client acquires frames, and shall never re-deliver a frame already returned by `acquireLatestFrame()`.|
+| **HAL.PLANECONTROL.13** | Shall fail `ICaptureController.start()` with a `CaptureErrorCode` when the requested capture configuration is not supported, and shall not silently fall back to plane output.|
 
 ## Interface Definition
 
@@ -45,13 +49,23 @@ Each plane is configurable through a set of properties that clients can read or 
 | `IPlaneControlListener.aidl` | Plane Control listener for callbacks.|
 | `IGraphicsFbProvider.aidl` | Graphics frame buffer provider interface for a graphics plane.|
 | `IGraphicsFbProviderListener.aidl` | Listener interface for graphics frame release callbacks from the graphics frame buffer provider.|
+| `ICapture.aidl` | Decoded frame capture interface for a video plane used as a capture destination.|
+| `ICaptureController.aidl` | Capture session controller returned by `ICapture.open()`.|
+| `ICaptureControllerListener.aidl` | Listener interface for ring and frame callbacks from a capture session.|
+| `ICaptureEventListener.aidl` | Listener interface for capture resource state and error callbacks.|
 | `AspectRatio.aidl` | Enum list of aspect ratios.|
 | `PlaneCapabilities.aidl` | Parcelable describing a single plane resource capabilities.|
 | `GraphicsFbCapabilities.aidl` | Parcelable describing graphics frame buffer provider capabilities for a graphics plane.|
 | `GraphicsFbInfo.aidl` | Parcelable describing graphics frame metadata (frame ID, pixel width, pixel height, stride and offset).|
+| `CaptureCapabilities.aidl` | Parcelable describing capture capabilities for a video plane.|
+| `CaptureErrorCode.aidl` | Enum list of capture error codes.|
+| `CaptureProperty.aidl` | Enum list of capture session properties.|
+| `CapturePropertyKVPair.aidl` | Parcelable of a single capture property key and value pair.|
+| `VideoFrameView.aidl` | Parcelable describing the Dma-Buf addressing of a single captured frame.|
 | `PlaneType.aidl` | Enum list of plane types.|
 | `Property.aidl` | Enum list of plane properties.|
 | `PropertyKVPair.aidl` | Parcelable of a single property key and value pair.|
+| `State.aidl` | Enum list of capture resource lifecycle states.|
 | `SourcePlaneMapping.aidl` | Parcelable of a single source to plane mapping.|
 | `SourceType.aidl` | Enum list of source types used in source plane mapping.|
 
@@ -72,6 +86,8 @@ Typically, the plane index (resource ID) value starts at 0 for the first video p
 The `PlaneCapabilities` parcelable returned by the `IPlaneControl.getCapabilities()` function lists all capabilities supported by a plane resource.
 - Concurrent control of plane resources is allowed by multiple clients. The RDK middleware is responsible for ensuring only 1 controlling client is active at any given time.
 
+Capture destinations are declared per plane resource in the HAL Feature Profile, under `captureCapabilities`. A product declaring one must emit frames when the bound decoder is placed in `OperationalMode.GRAPHICS_TEXTURE`. `IPlaneControl.getCapture()` returns `null` for a plane resource with no capture declaration.
+
 ## System Context
 
 The Plane Control service provides functionality to multiple clients which exist inside the RDK middleware.
@@ -87,6 +103,8 @@ flowchart TD
     IPlaneControlListener["IPlaneControlListener"]
     IGraphicsFbProvider["IGraphicsFbProvider"]
     IGraphicsFbProviderListener["IGraphicsFbProviderListener"]
+    ICapture["ICapture"]
+    ICaptureController["ICaptureController"]
 
     subgraph Connections["Vendor Layer"]
         subgraph IPlaneControlHAL["Plane Control HAL"]
@@ -101,7 +119,7 @@ flowchart TD
     end
 
     %% --- Function Calls Over Single Line ---
-    RDKClientComponent -- getCapabilities() <br> getGraphicsFbProvider() <br> setVideoSourceDestinationPlaneMapping() <br> getVideoSourceDestinationPlaneMapping() <br> getProperty() <br> setProperty() <br> getPropertyMulti() <br> setPropertyMultiAtomic() <br> registerListener() <br> unregisterListener() --> IPlaneControl
+    RDKClientComponent -- getCapabilities() <br> getGraphicsFbProvider() <br> getCapture() <br> setVideoSourceDestinationPlaneMapping() <br> getVideoSourceDestinationPlaneMapping() <br> getProperty() <br> setProperty() <br> getPropertyMulti() <br> setPropertyMultiAtomic() <br> registerListener() <br> unregisterListener() --> IPlaneControl
     
     RDKClientComponent -- getCapabilities()
     createGraphicsFb()
@@ -116,6 +134,8 @@ flowchart TD
         IPlaneControl --> IPlaneControlListener
         IPlaneControl --> IGraphicsFbProvider
         IGraphicsFbProvider --> IGraphicsFbProviderListener
+        IPlaneControl --> ICapture
+        ICapture --> ICaptureController
         IPlaneControl -.-> VideoPlane0
         IPlaneControl -.-> VideoPlane1
         IPlaneControl -.-> VideoPlane2
@@ -133,6 +153,8 @@ flowchart TD
     IPlaneControlListener:::wheat
     IGraphicsFbProvider:::wheat
     IGraphicsFbProviderListener:::wheat
+    ICapture:::wheat
+    ICaptureController:::wheat
     VideoPlane0:::green
     VideoPlane1:::green
     VideoPlane2:::green
@@ -191,7 +213,7 @@ For the 2 types of planes (video and graphics) there are fixed configurations wh
 
 |Plane Type | Fixed Configuration|
 |-----------|--------------------|
-| **Video** |If there is no video to display on a visible plane, then it shall render transparent black. <br>The z-order is dynamic only for video planes.<br> Primary video plane shall always be listed at resource index 0.|
+| **Video** |If there is no video to display on a visible plane, then it shall render transparent black. <br>The z-order is dynamic only for video planes.<br> Primary video plane shall always be listed at resource index 0.<br>Where the product declares the plane as a capture destination, `getCapture()` provides decoded frame capture to a Dma-Buf ring.|
 | **Graphics** |When the plane type is GRAPHICS, `getGraphicsFbProvider()` provides graphics frame creation, commit, and destroy operations.|
 
 ## Graphics Frame Providers
@@ -342,6 +364,84 @@ SourcePlaneMapping[]=
     sourceIndex = 0, 
     destinationPlaneIndex = -1
 }
+```
+
+## Decoded Frame Capture
+
+Capture routes a video decoder's output into a ring of Dma-Buf slots that the client imports as GPU textures, instead of routing it to the display plane. It is the case where the destination of a decoder's output is the application's texture rather than a plane, so it is reached through `IPlaneControl.getCapture()` on the video plane the decoder would otherwise have been mapped to.
+
+The `IVideoDecoder` contract is unchanged - the decoder does not know where its output goes.
+
+Capture requires the decoder to be operating in `OperationalMode.GRAPHICS_TEXTURE`, which is advertised by `IVideoDecoderManager.getSupportedOperationalModes()` and selected through the decoder's `Property.OPERATIONAL_MODE`. A video decoder can be bound to at most one capture session at a time.
+
+### Capture Session Lifecycle
+
+1. Open the capture resource:
+Call `IPlaneControl.getCapture(planeResourceIndex, captureEventListener)`. A `null` return means the plane is not a capture destination on this product.
+2. Read the ring limits:
+Call `ICapture.getCapabilities()` for the maximum slot count and slot size, the supported DRM FOURCC formats and modifiers, whether the ring is a single shared Dma-Buf, and the behaviour when every slot is locked.
+3. Bind a decoder:
+Call `ICapture.open(videoDecoderId, captureControllerListener)`. The resource transitions `CLOSED` → `OPENING` → `READY`.
+4. Configure the ring:
+Call `ICaptureController.setPropertyMultiAtomic()` with `SLOT_COUNT`, `SLOT_SIZE_BYTES`, `DRM_FOURCC`, `DRM_MODIFIER`, `WIDTH` and `HEIGHT` while in `READY`.
+5. Start:
+Call `ICaptureController.start()`. The ring is reserved, the decoder is wired into it, the resource transitions `READY` → `STARTING` → `STARTED`, and `ICaptureControllerListener.onRingReady()` delivers the ring addressing.
+6. Pull frames:
+Call `ICaptureController.acquireLatestFrame()` to take the newest ready frame. It returns `null` rather than blocking when no new frame exists, and never returns the same frame twice. `ICaptureControllerListener.onFrameAvailable()` is an optional wake-up; a client pulling at a known cadence can ignore it.
+7. Release each acquired frame:
+Call `ICaptureController.releaseFrame(slot)` with the `VideoFrameView.slot` value. The call is idempotent and tolerates unknown slots.
+8. Stop and close:
+Call `ICaptureController.stop()` to unwire the decoder and release the ring, then `ICapture.close(controller)`. The bound decoder is left as it is.
+
+### Buffer Contract
+
+Frames are NV12 linear with truthful per-plane offsets addressing the actual buffer layout.
+
+`VideoFrameView.planeFds`, `planeOffsets` and `planeStrides` feed `EGL_DMA_BUF_PLANE<N>_FD_EXT`, `EGL_DMA_BUF_PLANE<N>_OFFSET_EXT` and `EGL_DMA_BUF_PLANE<N>_PITCH_EXT` directly, so a frame imports through `EGL_EXT_image_dma_buf_import` without translation.
+
+Each slot is Free, Ready or Locked. The decoder writes into Free slots and marks them Ready once the frame is atomically complete; `acquireLatestFrame()` moves a Ready slot to Locked, and the decoder never writes into a Locked slot. Decode proceeds at full rate however sparsely or slowly the client acquires. The behaviour when every slot is Locked is declared per product in `CaptureCapabilities.stallsWhenRingFull`.
+
+Where `CaptureCapabilities.sharedRingBuffer` is true, `onRingReady()` carries the single ring file descriptor and every `VideoFrameView.planeFds` entry refers to it. Where it is false, `onRingReady()` carries a null file descriptor and each frame carries its own slot file descriptors.
+
+All Dma-Bufs are released on `stop()` and on `close()`.
+
+Asked for a configuration the platform does not support, `start()` fails with a `CaptureErrorCode` and the decoder output is not redirected to a plane instead.
+
+```mermaid
+sequenceDiagram
+    participant Client as RDK Client
+    participant PC as IPlaneControl
+    participant Capture as ICapture
+    participant Controller as ICaptureController
+    participant Listener as ICaptureControllerListener
+    participant Decoder as IVideoDecoder
+
+    Client->>PC: getCapture(planeResourceIndex, eventListener)
+    PC-->>Client: ICapture
+
+    Client->>Capture: getCapabilities()
+    Capture-->>Client: CaptureCapabilities
+
+    Client->>Decoder: setProperty(OPERATIONAL_MODE, GRAPHICS_TEXTURE)
+
+    Client->>Capture: open(videoDecoderId, controllerListener)
+    Capture-->>Client: ICaptureController (READY)
+
+    Client->>Controller: setPropertyMultiAtomic(ring shape)
+    Client->>Controller: start()
+    Controller->>Decoder: Wire texture output into ring
+    Controller-->>Listener: onRingReady(ringFd, planeStrides, slotCount, slotSizeBytes)
+
+    loop Per displayed frame
+        Controller-->>Listener: onFrameAvailable()
+        Client->>Controller: acquireLatestFrame()
+        Controller-->>Client: VideoFrameView (slot Locked)
+        Client->>Client: EGL import and draw
+        Client->>Controller: releaseFrame(slot)
+    end
+
+    Client->>Controller: stop()
+    Client->>Capture: close(controller)
 ```
 
 ## Z-Order

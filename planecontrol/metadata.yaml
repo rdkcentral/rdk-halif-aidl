@@ -41,6 +41,8 @@ scope:
   - Video source-to-plane mapping for main and PIP scenarios
   - GBM Dma-Buf graphics frame buffer provider integration with EGL
   - Provider-extensible graphics frame model for future interface versions
+  - Decoded video frame capture to a Dma-Buf ring for decode-to-texture
+  - Capture session lifecycle, ring shape configuration and frame acquire/release
   - Atomic plane property control (position, size, Z-order)
   - Graphics frame commit workflow and plane-specific property access
 
@@ -52,16 +54,16 @@ scope:
 #   owners        - Responsible architecture teams
 notes:
   priority: 3
-  status_detail: "V1 stable at 0.2.0.0"
-  action: "#329 controller-upgrade audit open (#622 resolved: timestampNs contract documented)"
+  status_detail: "V1 stable at 0.2.0.0; ICapture added for review (#753)"
+  action: "#753 capture interface in 14+5 review; #329 controller-upgrade audit open (#622 resolved: timestampNs contract documented)"
   owners: "Architecture + Graphics_Architecture"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
-    Architecture: reviewed
-    Product_Architecture: reviewed
-    AV_Architecture: reviewed
-    Graphics_Architecture: reviewed
-    Vendor_Layer_Team: reviewed
+    Architecture: recheck
+    Product_Architecture: recheck
+    AV_Architecture: recheck
+    Graphics_Architecture: recheck
+    Vendor_Layer_Team: recheck
 

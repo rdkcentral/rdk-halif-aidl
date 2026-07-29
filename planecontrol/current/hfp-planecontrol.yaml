@@ -48,6 +48,19 @@ planecontrol:                   # Component object begins
         supportsAlpha: true  # Whether ALPHA property is supported (transparency blending)
         supportsZOrder: true  # Whether ZORDER property is supported (for plane stacking)
         vsyncDisplayLatency: 3  # Display latency in vsync periods
+        captureCapabilities:  # Decoded-frame capture destination for this plane (ICapture).
+                              # Omit the whole object on a plane that cannot capture -
+                              # IPlaneControl.getCapture() then returns null for it.
+          maxSlotCount: 8  # Maximum ring slots (CaptureProperty.SLOT_COUNT)
+          maxSlotSizeBytes: 12441600  # Maximum bytes per slot (3840x2160 NV12, aligned)
+          supportedFourCCs:  # DRM FOURCC formats; DRM_FORMAT_NV12 is required
+            - 0x3231564E  # DRM_FORMAT_NV12
+          supportedModifiers:  # DRM format modifiers; DRM_FORMAT_MOD_LINEAR is required
+            - 0x0000000000000000  # DRM_FORMAT_MOD_LINEAR
+          sharedRingBuffer: true  # true: one shared Dma-Buf with offset-addressed slots
+                                  # false: one Dma-Buf per slot
+          stallsWhenRingFull: false  # true: decoder stalls when all slots are locked
+                                     # false: oldest ready frame is dropped
     - 1:                    # Resource object begins
         type: VIDEO
         pixelFormats:
