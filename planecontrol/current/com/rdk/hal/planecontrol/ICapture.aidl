@@ -153,10 +153,10 @@ interface ICapture
      * The client configures the ring shape through `ICaptureController.setProperty()` in
      * the `READY` state, before calling `ICaptureController.start()`.
      *
-     * The bound decoder must have `OperationalMode.GRAPHICS_TEXTURE` selected in its
-     * `Property.OPERATIONAL_MODE` before `ICaptureController.start()` is called. Whether
+     * The bound decoder must have `videodecoder.OperationalMode.GRAPHICS_TEXTURE` selected in its
+     * `videodecoder.Property.OPERATIONAL_MODE` before `ICaptureController.start()` is called. Whether
      * that mode is available is advertised by
-     * `IVideoDecoderManager.getSupportedOperationalModes()`.
+     * `videodecoder.IVideoDecoderManager.getSupportedOperationalModes()`.
      *
      * A video decoder can be bound to at most one capture session at a time.
      *

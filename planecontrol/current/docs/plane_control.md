@@ -36,7 +36,7 @@ Each plane is configurable through a set of properties that clients can read or 
 | **HAL.PLANECONTROL.7** | Shall provide a graphics frame buffer provider API for graphics planes where plane type is GRAPHICS. |
 | **HAL.PLANECONTROL.8** | Shall provide APIs to create, commit and destroy graphics frame buffers via `IGraphicsFbProvider`.|
 | **HAL.PLANECONTROL.9** | Shall notify clients when committed graphics frame buffers are released and available for reuse via `IGraphicsFbProviderListener`.|
-| **HAL.PLANECONTROL.10** | Shall provide a decoded frame capture API via `ICapture` for video planes declared as capture destinations, binding a video decoder operating in `OperationalMode.GRAPHICS_TEXTURE` to a Dma-Buf ring.|
+| **HAL.PLANECONTROL.10** | Shall provide a decoded frame capture API via `ICapture` for video planes declared as capture destinations, binding a video decoder operating in `videodecoder.OperationalMode.GRAPHICS_TEXTURE` to a Dma-Buf ring.|
 | **HAL.PLANECONTROL.11** | Shall deliver captured frames as NV12 linear Dma-Bufs whose per-plane file descriptors, offsets and strides address the actual buffer layout and import directly through `EGL_EXT_image_dma_buf_import` without translation.|
 | **HAL.PLANECONTROL.12** | Shall allow decode to proceed at full rate independently of the rate at which the client acquires frames, and shall never re-deliver a frame already returned by `acquireLatestFrame()`.|
 | **HAL.PLANECONTROL.13** | Shall fail `ICaptureController.start()` with a `CaptureErrorCode` when the requested capture configuration is not supported, and shall not silently fall back to plane output.|
@@ -86,7 +86,7 @@ Typically, the plane index (resource ID) value starts at 0 for the first video p
 The `PlaneCapabilities` parcelable returned by the `IPlaneControl.getCapabilities()` function lists all capabilities supported by a plane resource.
 - Concurrent control of plane resources is allowed by multiple clients. The RDK middleware is responsible for ensuring only 1 controlling client is active at any given time.
 
-Capture destinations are declared per plane resource in the HAL Feature Profile, under `captureCapabilities`. A product declaring one must emit frames when the bound decoder is placed in `OperationalMode.GRAPHICS_TEXTURE`. `IPlaneControl.getCapture()` returns `null` for a plane resource with no capture declaration.
+Capture destinations are declared per plane resource in the HAL Feature Profile, under `captureCapabilities`. A product declaring one must emit frames when the bound decoder is placed in `videodecoder.OperationalMode.GRAPHICS_TEXTURE`. `IPlaneControl.getCapture()` returns `null` for a plane resource with no capture declaration.
 
 ## System Context
 
@@ -372,7 +372,7 @@ Capture routes a video decoder's output into a ring of Dma-Buf slots that the cl
 
 The `IVideoDecoder` contract is unchanged - the decoder does not know where its output goes.
 
-Capture requires the decoder to be operating in `OperationalMode.GRAPHICS_TEXTURE`, which is advertised by `IVideoDecoderManager.getSupportedOperationalModes()` and selected through the decoder's `Property.OPERATIONAL_MODE`. A video decoder can be bound to at most one capture session at a time.
+Capture requires the decoder to be operating in `videodecoder.OperationalMode.GRAPHICS_TEXTURE`, which is advertised by `videodecoder.IVideoDecoderManager.getSupportedOperationalModes()` and selected through the decoder's `videodecoder.Property.OPERATIONAL_MODE`. A video decoder can be bound to at most one capture session at a time.
 
 ### Capture Session Lifecycle
 

@@ -30,7 +30,7 @@ enum CaptureErrorCode {
     /** The platform refused the ring reservation from the video memory region. */
     OUT_OF_MEMORY = 1,
 
-    /** The bound video decoder is not in `OperationalMode.GRAPHICS_TEXTURE`. */
+    /** The bound video decoder is not in `videodecoder.OperationalMode.GRAPHICS_TEXTURE`. */
     DECODER_NOT_TEXTURE = 2,
 
     /** The configured ring format differs from the format the decoder emits. */

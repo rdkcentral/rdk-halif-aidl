@@ -56,13 +56,13 @@ interface ICaptureController
      *
      * Reserves a ring of `CaptureProperty.SLOT_COUNT` slots of
      * `CaptureProperty.SLOT_SIZE_BYTES` each from the platform's video memory region,
-     * and wires the bound video decoder's `OperationalMode.GRAPHICS_TEXTURE` output into
+     * and wires the bound video decoder's `videodecoder.OperationalMode.GRAPHICS_TEXTURE` output into
      * the ring.
      *
      * The capture resource transitions to a `STARTING` state and then a `STARTED` state,
      * and `ICaptureControllerListener.onRingReady()` is raised once the ring is addressable.
      *
-     * The bound video decoder must have `OperationalMode.GRAPHICS_TEXTURE` selected. A
+     * The bound video decoder must have `videodecoder.OperationalMode.GRAPHICS_TEXTURE` selected. A
      * decoder configured to emit a format other than the one the ring is configured for
      * fails here with `CaptureErrorCode.FORMAT_MISMATCH` rather than falling back to plane
      * output.
