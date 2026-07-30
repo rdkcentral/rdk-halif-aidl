@@ -80,34 +80,57 @@ interface IVideoSinkController
     boolean setProperty(in Property property, in PropertyValue propertyValue);
 
     /**
-     * Sets the Video Decoder ID linked to this Video Sink.
-     *
-     * When the Video Sink is opened, the default is set to `IVideoDecoder.Id.UNDEFINED`.
-     * When set to `IVideoDecoder.Id.UNDEFINED` then no Video Decoder source is set.
-     *
-     * @param[in] videoDecoderId		The ID of the Video Decoder source.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     *
-     * @returns boolean
-     * @retval true     The Video Decoder ID was set successfully.
-     * @retval false    Invalid Video Decoder ID.
-     *
-     *
-     * @pre The resource must be in State::READY.
-     *
-     * @see getVideoDecoder(), IVideoDecoderManager.getVideoDecoderIds()
-     */
+    * Sets the Video Decoder ID linked to this Video Sink.
+    *
+    * When the Video Sink is opened, the default is set to
+    * `IVideoDecoder.Id.UNDEFINED`.
+    *
+    * Tunnelled mode:
+    * A valid Video Decoder association is required before the pipeline is
+    * started.
+    *
+    * Non-tunnelled mode:
+    * This API is not supported and shall return
+    * `binder::Status::Exception::EX_UNSUPPORTED_OPERATION`.
+    *
+    * @param[in] videoDecoderId
+    *      The ID of the Video Decoder source.
+    *
+    * @exception binder::Status::Exception::EX_NONE
+    *      Operation completed successfully.
+    *
+    * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+    *      The resource is not in State::READY.
+    *
+    * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION
+    *      in a non-tunnelled pipeline.
+    *
+    * @returns boolean
+    * @retval true
+    *      The Video Decoder ID was set successfully.
+    *
+    * @retval false
+    *      Invalid Video Decoder ID.
+    *
+    * @pre The resource must be in State::READY.
+    *
+    * @see getVideoDecoder(), IVideoDecoderManager.getVideoDecoderIds()
+    */
     boolean setVideoDecoder(in IVideoDecoder.Id videoDecoderId);
 
     /**
      * Gets the Video Decoder ID linked to this Video Sink.
      *
+     * Tunnelled mode: returns the currently associated `IVideoDecoder.Id`.
+     *
+     * Non-tunnelled mode: Video Decoder association is not used by this sink,
+     * so the method returns `IVideoDecoder.Id.UNDEFINED`.
+     *
      * @returns IVideoDecoder.Id which can be IVideoDecoder.Id.UNDEFINED.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource
+     *            is not in State::READY or State::STARTED.
      *
      *
      * @pre The resource must be in State::READY or State::STARTED.
@@ -195,18 +218,37 @@ interface IVideoSinkController
     IAVClock.Id getClock();
 
     /**
-	 * Starts the Video Sink.
-     *
-     * The Video Sink must be in a READY state before it can be started.
-     * If successful the Video Sink transitions to a `STARTING` state and then a `STARTED` state.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     *
-     * @pre The resource must be in State::READY.
-     *
-     * @see stop(), IVideoSink.open()
-     */
+    * Starts the Video Sink.
+    *
+    * The Video Sink must be in a READY state before it can be started.
+    * If successful the Video Sink transitions to a `STARTING` state and then
+    * a `STARTED` state.
+    *
+    * Tunnelled Mode:
+    *
+    * When configured for tunnelled mode, a valid Video Decoder association must
+    * have been established using `setVideoDecoder()` before this method is
+    * called.
+    *
+    * Starting a tunnelled-mode Video Sink without a valid Video Decoder
+    * association shall fail.
+    *
+    * Non-tunnelled Mode:
+    *
+    * `setVideoDecoder()` is not required and shall not be used.
+    *
+    * @exception binder::Status::Exception::EX_NONE for success
+    *
+    * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+    *      The resource is not in State::READY, or
+    *      tunnelled mode and no valid Video Decoder has been associated.
+    *
+    * @pre The resource must be in State::READY.
+    * @pre In tunnelled mode, a valid Video Decoder must be associated via
+    *      setVideoDecoder().
+    *
+    * @see stop(), IVideoSink.open(), setVideoDecoder()
+    */
     void start();
 
     /**
@@ -258,10 +300,13 @@ interface IVideoSinkController
      * Throws `binder::Status::Exception::EX_ILLEGAL_STATE` if called after
      * `signalEndOfStream()` has been invoked on this session.
      *
+     * Tunnelled mode: `queueVideoFrame()` must not be used because frames are
+     * not queued through the middleware/client path; the decoder feeds the
+     * sink internally.
+     *
      * Throws `binder::Status::Exception::EX_UNSUPPORTED_OPERATION` when the
-     * controller is configured for tunnel mode - this API is not part of the
-     * data path in tunnel; the sink is fed by the decoder internally and the
-     * vendor is responsible for the internal EOS propagation. See
+     * video decoder is configured for tunnelled mode.
+     * The vendor is responsible for the internal EOS propagation. See
      * [Discussion #492](https://github.com/rdkcentral/rdk-halif-aidl/discussions/492).
      *
      *
@@ -279,7 +324,7 @@ interface IVideoSinkController
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in `STARTED`, or if a video frame is passed after `signalEndOfStream()`.
-     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if the controller is configured for tunnel mode.
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if the controller is configured for tunnelled mode.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      *
      * @pre The resource must be in State::STARTED.
@@ -302,8 +347,8 @@ interface IVideoSinkController
      * A second call is a no-op. After this call `queueVideoFrame()` throws
      * `EX_ILLEGAL_STATE` until the sink is flushed or stopped and restarted.
      *
-     * Behaviour is identical in tunnel and non-tunnel modes - the MW calls this
-     * method the same way. In tunnel mode the decoder->sink data flow is
+     * Behaviour is identical in tunnelled and non-tunnelled modes - the MW calls this
+     * method the same way. In tunnelled mode the decoder->sink data flow is
      * vendor-internal; the vendor must implement the EOS signal propagation
      * from decoder to sink so the sink can fire
      * `onEndOfStream(nsPresentationTime)` with the correct presentation

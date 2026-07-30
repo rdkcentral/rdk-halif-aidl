@@ -65,18 +65,36 @@ interface IAudioSinkController {
 	/**
 	 * Sets the audio decoder ID linked to this audio sink.
      *
-     * When the audio sink is opened, the default is set to `IAudioDecoder.Id.UNDEFINED`
-	 * which indicates no audio decoder source is set.
+     * When the audio sink is opened, the default is set to
+     * `IAudioDecoder.Id.UNDEFINED`.
 	 *
- 	 * @param[in] audioDecoderId		The ID of the audio decoder source.
+     * Tunnelled mode:
+     * A valid audio decoder association is required before the pipeline is
+     * started.
+     *
+     * Non-tunnelled mode:
+     * This API is not supported and shall return
+     * `binder::Status::Exception::EX_UNSUPPORTED_OPERATION`.
 	 *
-     * @exception binder::Status::Exception::EX_NONE for success
+	 * @param[in] audioDecoderId		The ID of the audio decoder source.
+	 *
+     * @exception binder::Status::Exception::EX_NONE
+     *      Operation completed successfully.
+     *
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *      The resource is not in State::READY.
      *
-     * @returns boolean - true on success or false if the ID is invalid or not IAudioDecoder.Id.UNDEFINED.
-     *
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION
+     *      in a non-tunnelled pipeline.
+	 *
+     * @returns boolean
+     * @retval true
+     *      The audio decoder ID was set successfully.
+     * @retval false
+     *      Invalid audio decoder ID.
+	 *
      * @pre The resource must be in State::READY.
-     *
+	 *
      * @see getAudioDecoder(), IAudioDecoderManager.getAudioDecoderIds()
 	 */
 	boolean setAudioDecoder(in IAudioDecoder.Id audioDecoderId);
@@ -84,10 +102,16 @@ interface IAudioSinkController {
 	/**
 	 * Gets the audio decoder ID linked to this audio sink.
 	 *
+	 * Tunnelled mode: returns the currently associated `IAudioDecoder.Id`.
+	 *
+	 * Non-tunnelled mode: audio decoder association is not used by this sink,
+	 * so the method returns `IAudioDecoder.Id.UNDEFINED`.
+	 *
      * @returns IAudioDecoder.Id which can be `IAudioDecoder.Id.UNDEFINED`.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource
+     *            is not in State::READY or State::STARTED.
      *
      * @pre The resource must be in State::READY or State::STARTED.
      *
@@ -176,14 +200,31 @@ interface IAudioSinkController {
 	 * Starts the audio sink.
      *
      * The audio sink must be in a `READY` state before it can be started.
-     * If successful the audio sink transitions to a `STARTING` state and then a `STARTED` state.
+     * If successful the audio sink transitions to a `STARTING` state and then
+     * a `STARTED` state.
+     *
+     * Tunnelled Mode:
+     *
+     * In tunnelled mode, a valid audio decoder association must have been
+     * established using `setAudioDecoder()` before this method is called.
+     *
+     * Starting a tunnelled-mode audio sink without a valid audio decoder
+     * association shall fail.
+     *
+     * Non-tunnelled Mode:
+     *
+     * `setAudioDecoder()` is not required and shall not be used.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *      The resource is not in State::READY, or the sink is in tunnelled
+     *      mode and no valid audio decoder has been associated.
      *
      * @pre The resource must be in State::READY.
+     * @pre In tunnelled mode, a valid audio decoder must be associated via
+     *      setAudioDecoder().
      *
-     * @see stop(), close()
+     * @see stop(), close(), setAudioDecoder()
      */
     void start();
 
@@ -232,10 +273,13 @@ interface IAudioSinkController {
      * Throws `binder::Status::Exception::EX_ILLEGAL_STATE` if called after
      * `signalEndOfStream()` has been invoked on this session.
      *
-     * Throws `binder::Status::Exception::EX_UNSUPPORTED_OPERATION` when the
-     * controller is configured for tunnel mode - this API is not part of the
-     * data path in tunnel; the sink is fed by the decoder internally and the
-     * vendor is responsible for the internal EOS propagation. See
+     * Tunnelled mode: `queueAudioFrame()` must not be used because frames are
+     * not queued through the middleware/client path; the decoder feeds the
+     * sink internally.
+     *
+     * Throws `binder::Status::Exception::EX_UNSUPPORTED_OPERATION` when in
+     * tunnelled mode. The vendor is responsible
+     * for the internal EOS propagation. See
      * [Discussion #492](https://github.com/rdkcentral/rdk-halif-aidl/discussions/492).
      *
      * @param[in] nsPresentationTime The presentation time of the audio frame in nanoseconds.
@@ -252,7 +296,7 @@ interface IAudioSinkController {
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the `STARTED` state, or if an audio frame is passed after `signalEndOfStream()`.
-     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if the controller is configured for tunnel mode.
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if in tunnelled mode.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT If an invalid argument is provided.
      *
      * @pre The resource must be in the `STARTED` state.
@@ -275,8 +319,8 @@ interface IAudioSinkController {
      * A second call is a no-op. After this call `queueAudioFrame()` throws
      * `EX_ILLEGAL_STATE` until the sink is flushed or stopped and restarted.
      *
-     * Behaviour is identical in tunnel and non-tunnel modes - the MW calls this
-     * method the same way. In tunnel mode the decoder->sink data flow is
+     * Behaviour is identical in tunnelled and non-tunnelled modes - the MW calls this
+     * method the same way. In tunnelled mode the decoder->sink data flow is
      * vendor-internal; the vendor must implement the EOS signal propagation
      * from decoder to sink so the sink can fire
      * `onEndOfStream(nsPresentationTime)` with the correct presentation
