@@ -27,14 +27,14 @@ package com.rdk.hal.planecontrol;
 @Backing(type="int")
 enum CaptureErrorCode {
 
-    /** The platform refused the ring reservation from the video memory region. */
+    /** The platform refused the buffer pool reservation from the video memory region. */
     OUT_OF_MEMORY = 1,
 
-    /** The bound video decoder is not in `videodecoder.OperationalMode.GRAPHICS_TEXTURE`. */
-    DECODER_NOT_TEXTURE = 2,
-
-    /** The configured ring format differs from the format the decoder emits. */
-    FORMAT_MISMATCH = 3,
+    /**
+     * The bound video decoder has no `videodecoder.CaptureConfig` applied, so its output
+     * is not routed to capture.
+     */
+    DECODER_NOT_CONFIGURED = 2,
 
     /** The bound video decoder is already bound to another capture session. */
     DECODER_BUSY = 4,

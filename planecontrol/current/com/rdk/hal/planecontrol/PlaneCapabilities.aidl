@@ -35,7 +35,7 @@ parcelable PlaneCapabilities
     /**
      * 0 based index of this plane resource.
      * Video planes shall be listed first, with the primary video plane at resource index 0.
-     * Graphics planes are listed next.
+     * Graphics planes are listed next, followed by capture planes.
      */
     int planeIndex;
 

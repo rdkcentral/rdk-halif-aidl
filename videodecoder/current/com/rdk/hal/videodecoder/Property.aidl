@@ -66,26 +66,6 @@ enum Property {
 	 */
     OUTPUT_FRAME_POOL_SIZE = 2,
 
-	/**
-	 * The current selected operational mode.
-	 *
-	 * Only modes returned by `IVideoDecoderManager.getSupportedOperationalModes()` can be set.
-	 * The default must be either `OperationalMode::TUNNELLED` or `OperationalMode::NON_TUNNELLED`
-	 * which is chosen by the OEM/vendor.
-	 * `OperationalMode::TUNNELLED` and `OperationalMode::NON_TUNNELLED` are mutually exclusive.
-	 * If `OperationalMode::GRAPHICS_TEXTURE` is supported, it can be set on its own or ORed with
-	 * `OperationalMode::TUNNELLED` or `OperationalMode::NON_TUNNELLED`
-	 *
-	 * Type: Integer
-	 * @see enum OperationalMode for possible values.
-	 * Access: Read-write.
-	 * Write in states: READY, STARTED
-	 *
-	 * @exception binder::Status::Exception::EX_NONE for success
-	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state or non STARTED state.
-	 *
-	 */
-    OPERATIONAL_MODE = 3,
 
 	/**
 	 * Low latency mode sets the expectation that no B-frames will be delivered in

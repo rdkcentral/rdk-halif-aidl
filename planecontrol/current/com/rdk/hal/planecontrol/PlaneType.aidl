@@ -37,5 +37,10 @@ enum PlaneType
     /** 
      *  Graphics plane.
      */
-    GRAPHICS = 1, 
+    GRAPHICS = 1,
+
+    /** 
+     *  Capture plane. Allows for capture of video frames.
+     */
+    CAPTURE = 2
 }

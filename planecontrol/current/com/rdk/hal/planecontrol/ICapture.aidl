@@ -30,23 +30,23 @@ import com.rdk.hal.PropertyValue;
 /**
  *  @brief     Decoded video frame capture interface.
  *
- *  A capture resource routes a video decoder's output into a ring of Dma-Buf slots
+ *  A capture resource routes a video decoder's output into a pool of Dma-Buf buffers
  *  which the client imports as GPU textures, instead of routing it to a display plane.
- *  It is obtained from `IPlaneControl.getCapture()` for the video plane resource the
- *  decoder would otherwise have been mapped to.
+ *  It is obtained from `IPlaneControl.getCapture()` for a plane resource of type
+ *  `PlaneType.CAPTURE`.
  *
  *  The `IVideoDecoder` contract is unchanged by capture - the decoder does not know
  *  where its output goes. `IPlaneControl.setVideoSourceDestinationPlaneMapping()` routes
- *  it to a display plane; `ICapture` routes it to a Dma-Buf ring.
+ *  it to a display plane; `ICapture` routes it to a Dma-Buf pool.
  *
  *  Session lifecycle:
  *  @code
  *    ICapture capture = planeControl.getCapture(planeResourceIndex, captureEventListener);
  *    ICaptureController controller = capture.open(videoDecoderId, captureControllerListener);
- *    controller.setPropertyMultiAtomic(ringShape);   // slot count, size, format, modifier
- *    controller.start();                             // onRingReady() follows
+ *    controller.setProperty(BUFFER_COUNT, n);        // pool depth
+ *    controller.start();                             // onPoolReady() follows
  *    VideoFrameView frame = controller.acquireLatestFrame();
- *    controller.releaseFrame(frame.slot);
+ *    controller.releaseFrame(frame.bufferIndex);
  *    controller.stop();
  *    capture.close(controller);
  *  @endcode
@@ -146,17 +146,20 @@ interface ICapture
      * If successful the capture resource transitions to an `OPENING` state and then a
      * `READY` state, which is notified to the registered `ICaptureEventListener`.
      *
-     * The returned `ICaptureController` is used by the client to configure the ring,
+     * The returned `ICaptureController` is used by the client to configure the pool,
      * start and stop the session, and acquire and release frames. Controller related
      * callbacks are made through the `ICaptureControllerListener` passed into the call.
      *
-     * The client configures the ring shape through `ICaptureController.setProperty()` in
-     * the `READY` state, before calling `ICaptureController.start()`.
+     * The client sets `CaptureProperty.BUFFER_COUNT` through
+     * `ICaptureController.setProperty()` in the `READY` state, before calling
+     * `ICaptureController.start()`. The captured frames' pixel format and size come from
+     * the decoder's `videodecoder.CaptureConfig`, not from here.
      *
-     * The bound decoder must have `videodecoder.OperationalMode.GRAPHICS_TEXTURE` selected in its
-     * `videodecoder.Property.OPERATIONAL_MODE` before `ICaptureController.start()` is called. Whether
-     * that mode is available is advertised by
-     * `videodecoder.IVideoDecoderManager.getSupportedOperationalModes()`.
+     * The bound decoder must have a `videodecoder.CaptureConfig` applied through
+     * `videodecoder.IVideoDecoderController.setCaptureConfig()` before
+     * `ICaptureController.start()` is called - that call is what routes the decoder's
+     * output to capture. Whether a decoder supports capture at all is
+     * `videodecoder.Capabilities.supportedCaptureFourCCs` being non-empty.
      *
      * A video decoder can be bound to at most one capture session at a time.
      *
@@ -188,8 +191,8 @@ interface ICapture
      * The capture resource must be in a `READY` state before it can be closed.
      * If successful the resource transitions to a `CLOSING` state and then a `CLOSED` state.
      *
-     * The ring and all its Dma-Bufs are released, and the vendor wiring between the decoder
-     * and the ring is undone. The bound video decoder is not stopped - only the capture
+     * The pool and all its Dma-Bufs are released, and the vendor wiring between the
+     * decoder and the pool is undone. The bound video decoder is not stopped - only the capture
      * binding is undone.
      *
      * @param[in] captureController     Instance of the ICaptureController.

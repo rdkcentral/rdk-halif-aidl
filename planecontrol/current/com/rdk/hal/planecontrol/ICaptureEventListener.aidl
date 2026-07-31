@@ -33,7 +33,7 @@ oneway interface ICaptureEventListener
      * @brief     Called when the capture resource has raised an error that is not tied to a
      *            single frame.
      *
-     * Examples are the bound video decoder leaving `videodecoder.OperationalMode.GRAPHICS_TEXTURE`
+     * Examples are the bound video decoder losing its capture configuration
      * unexpectedly, video memory exhaustion mid-session, and an IOMMU fault.
      *
      * @param[in] errorCode         A CaptureErrorCode enum value.

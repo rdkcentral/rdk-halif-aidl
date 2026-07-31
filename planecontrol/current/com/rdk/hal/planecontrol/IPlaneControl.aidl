@@ -258,22 +258,23 @@ interface IPlaneControl
     /**
      * Gets a Capture interface for a video plane resource.
      *
-     * Capture routes a video decoder's output into a ring of Dma-Buf slots which the
-     * client imports as GPU textures, instead of routing it to the display plane. It is
-     * a destination for a decoder's output, which is the routing this interface owns, so
-     * it is reached through the video plane resource the decoder would otherwise have
-     * been mapped to.
+     * A capture plane is a plane whose destination is the client's texture rather than
+     * the display. It routes a video decoder's output into a pool of Dma-Buf buffers
+     * which the client imports as GPU textures. That is a routing decision about where a
+     * decoder's output goes, which is what this interface owns, so a capture destination
+     * is discovered and addressed exactly as a display plane is.
      *
-     * A capture interface is only available for plane resources of type VIDEO on products
-     * that declare a capture resource for that plane in the HAL Feature Profile. The
-     * method returns `null` rather than throwing an exception.
+     * A capture interface is only available for plane resources of type
+     * `PlaneType.CAPTURE`. A product that supports decode-to-texture declares one capture
+     * plane resource per concurrent capture session it can serve. The method returns
+     * `null` rather than throwing an exception.
      *
      * @param[in] planeResourceIndex        The index of the plane resource.
      * @param[in] captureEventListener      Listener for capture resource event callbacks.
      *
-     * @returns A valid capture instance when the plane resource index refers to a video
-     *          plane that supports capture, or `null` if the plane resource index is
-     *          invalid or the indexed plane does not support capture.
+     * @returns A valid capture instance when the plane resource index refers to a plane
+     *          of type `PlaneType.CAPTURE`, or `null` if the plane resource index is
+     *          invalid or the indexed plane is not a capture plane.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.

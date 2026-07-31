@@ -36,10 +36,10 @@ Each plane is configurable through a set of properties that clients can read or 
 | **HAL.PLANECONTROL.7** | Shall provide a graphics frame buffer provider API for graphics planes where plane type is GRAPHICS. |
 | **HAL.PLANECONTROL.8** | Shall provide APIs to create, commit and destroy graphics frame buffers via `IGraphicsFbProvider`.|
 | **HAL.PLANECONTROL.9** | Shall notify clients when committed graphics frame buffers are released and available for reuse via `IGraphicsFbProviderListener`.|
-| **HAL.PLANECONTROL.10** | Shall provide a decoded frame capture API via `ICapture` for video planes declared as capture destinations, binding a video decoder operating in `videodecoder.OperationalMode.GRAPHICS_TEXTURE` to a Dma-Buf ring.|
-| **HAL.PLANECONTROL.11** | Shall deliver captured frames as NV12 linear Dma-Bufs whose per-plane file descriptors, offsets and strides address the actual buffer layout and import directly through `EGL_EXT_image_dma_buf_import` without translation.|
+| **HAL.PLANECONTROL.10** | Shall provide a decoded frame capture API via `ICapture` for plane resources of type `PlaneType.CAPTURE`, binding a video decoder configured for capture via `videodecoder.CaptureConfig` to a Dma-Buf buffer pool.|
+| **HAL.PLANECONTROL.11** | Shall deliver captured frames in the pixel format and size the bound decoder was configured with via `videodecoder.CaptureConfig`, as Dma-Bufs whose per-plane file descriptors, offsets and strides address the actual buffer layout and import directly through `EGL_EXT_image_dma_buf_import` without translation.|
 | **HAL.PLANECONTROL.12** | Shall allow decode to proceed at full rate independently of the rate at which the client acquires frames, and shall never re-deliver a frame already returned by `acquireLatestFrame()`.|
-| **HAL.PLANECONTROL.13** | Shall fail `ICaptureController.start()` with a `CaptureErrorCode` when the requested capture configuration is not supported, and shall not silently fall back to plane output.|
+| **HAL.PLANECONTROL.13** | Shall fail `ICaptureController.start()` with a `CaptureErrorCode` when the pool cannot be reserved or the bound decoder is not configured for capture, and shall not silently fall back to plane output.|
 
 ## Interface Definition
 
@@ -51,7 +51,7 @@ Each plane is configurable through a set of properties that clients can read or 
 | `IGraphicsFbProviderListener.aidl` | Listener interface for graphics frame release callbacks from the graphics frame buffer provider.|
 | `ICapture.aidl` | Decoded frame capture interface for a video plane used as a capture destination.|
 | `ICaptureController.aidl` | Capture session controller returned by `ICapture.open()`.|
-| `ICaptureControllerListener.aidl` | Listener interface for ring and frame callbacks from a capture session.|
+| `ICaptureControllerListener.aidl` | Listener interface for buffer pool and frame callbacks from a capture session.|
 | `ICaptureEventListener.aidl` | Listener interface for capture resource state and error callbacks.|
 | `AspectRatio.aidl` | Enum list of aspect ratios.|
 | `PlaneCapabilities.aidl` | Parcelable describing a single plane resource capabilities.|
@@ -86,7 +86,7 @@ Typically, the plane index (resource ID) value starts at 0 for the first video p
 The `PlaneCapabilities` parcelable returned by the `IPlaneControl.getCapabilities()` function lists all capabilities supported by a plane resource.
 - Concurrent control of plane resources is allowed by multiple clients. The RDK middleware is responsible for ensuring only 1 controlling client is active at any given time.
 
-Capture destinations are declared per plane resource in the HAL Feature Profile, under `captureCapabilities`. A product declaring one must emit frames when the bound decoder is placed in `videodecoder.OperationalMode.GRAPHICS_TEXTURE`. `IPlaneControl.getCapture()` returns `null` for a plane resource with no capture declaration.
+A product that supports decode-to-texture declares one plane resource of type `CAPTURE` per concurrent capture session it can serve, each carrying its buffer pool limits and formats under `captureCapabilities`. A product declaring one must emit frames when the bound decoder has a `videodecoder.CaptureConfig` applied. `IPlaneControl.getCapture()` returns `null` for any plane resource that is not of type `CAPTURE`.
 
 ## System Context
 
@@ -115,6 +115,7 @@ flowchart TD
             VideoPlane0["Video Plane 0"]
             VideoPlane1["Video Plane 1"]
             VideoPlane2["Graphics Plane 2"]
+            VideoPlane3["Capture Plane 3"]
         end
     end
 
@@ -139,6 +140,7 @@ flowchart TD
         IPlaneControl -.-> VideoPlane0
         IPlaneControl -.-> VideoPlane1
         IPlaneControl -.-> VideoPlane2
+        IPlaneControl -.-> VideoPlane3
 
     %% --- Apply Colors ---
     classDef background fill:#121212,stroke:none,color:#E0E0E0;
@@ -158,6 +160,7 @@ flowchart TD
     VideoPlane0:::green
     VideoPlane1:::green
     VideoPlane2:::green
+    VideoPlane3:::green
 
 ```
 
@@ -182,6 +185,7 @@ graph
         IPlaneControl --> ADI1("Video Plane <br> RESOURCE_ID = 0")
         IPlaneControl --> ADI2("Video Plane <br> RESOURCE_ID = 1")
         IPlaneControl --> ADI3("Graphics Plane <br> RESOURCE_ID = 2")
+        IPlaneControl --> ADI4("Capture Plane <br> RESOURCE_ID = 3")
     end
 
     %% --- High Contrast Styling (Rounded Box Simulation) ---
@@ -190,6 +194,7 @@ graph
     classDef instance1 fill:#FFC107,stroke:#FF8F00,stroke-width:2px,color:#000000;
     classDef instance2 fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#000000;
     classDef instance3 fill:#F44336,stroke:#B71C1C,stroke-width:2px,color:#FFFFFF;
+    classDef instance4 fill:#9C27B0,stroke:#4A148C,stroke-width:2px,color:#FFFFFF;
 
 
     %% --- Apply Colors ---
@@ -197,6 +202,7 @@ graph
     class ADI1 instance1;
     class ADI2 instance2;
     class ADI3 instance3;
+    class ADI4 instance4;
 
     %% --- Consistent Link Colors Per Instance ---
     %% Yellow for Instance 0
@@ -205,6 +211,8 @@ graph
     linkStyle 1 stroke:#CC5500,stroke-width:2px;
     %% Red for Instance 2
     linkStyle 2 stroke:#CC2200,stroke-width:2px;
+    %% Purple for Instance 3
+    linkStyle 3 stroke:#7B1FA2,stroke-width:2px;
 ```
 
 ## Plane Types and Fixed Configuration
@@ -213,8 +221,9 @@ For the 2 types of planes (video and graphics) there are fixed configurations wh
 
 |Plane Type | Fixed Configuration|
 |-----------|--------------------|
-| **Video** |If there is no video to display on a visible plane, then it shall render transparent black. <br>The z-order is dynamic only for video planes.<br> Primary video plane shall always be listed at resource index 0.<br>Where the product declares the plane as a capture destination, `getCapture()` provides decoded frame capture to a Dma-Buf ring.|
+| **Video** |If there is no video to display on a visible plane, then it shall render transparent black. <br>The z-order is dynamic only for video planes.<br> Primary video plane shall always be listed at resource index 0.|
 | **Graphics** |When the plane type is GRAPHICS, `getGraphicsFbProvider()` provides graphics frame creation, commit, and destroy operations.|
+| **Capture** |The destination is the client's texture rather than the display, so the plane is never composited: alpha, z-order and display latency do not apply.<br>When the plane type is CAPTURE, `getCapture()` provides decoded frame capture to a Dma-Buf buffer pool.<br>Capture planes are listed after graphics planes.|
 
 ## Graphics Frame Providers
 
@@ -368,44 +377,50 @@ SourcePlaneMapping[]=
 
 ## Decoded Frame Capture
 
-Capture routes a video decoder's output into a ring of Dma-Buf slots that the client imports as GPU textures, instead of routing it to the display plane. It is the case where the destination of a decoder's output is the application's texture rather than a plane, so it is reached through `IPlaneControl.getCapture()` on the video plane the decoder would otherwise have been mapped to.
+A capture plane is a plane whose destination is the client's texture rather than the display. It routes a video decoder's output into a pool of Dma-Buf buffers that the client imports as GPU textures. Because that is a routing decision about where a decoder's output goes, a capture destination is discovered and addressed exactly as a display plane is — `IPlaneControl.getCapabilities()` lists it with `type` of `CAPTURE`, and `IPlaneControl.getCapture()` returns its capture interface.
 
 The `IVideoDecoder` contract is unchanged - the decoder does not know where its output goes.
 
-Capture requires the decoder to be operating in `videodecoder.OperationalMode.GRAPHICS_TEXTURE`, which is advertised by `videodecoder.IVideoDecoderManager.getSupportedOperationalModes()` and selected through the decoder's `videodecoder.Property.OPERATIONAL_MODE`. A video decoder can be bound to at most one capture session at a time.
+Capture requires the decoder to have a `videodecoder.CaptureConfig` applied — that call is what routes its output to capture. Whether a decoder supports capture at all is `videodecoder.Capabilities.supportedCaptureFourCCs` being non-empty. A video decoder can be bound to at most one capture session at a time.
+
+**The captured frames' pixel format and size are the decoder's, not the plane's.** They are declared in `videodecoder.Capabilities.supportedCaptureFourCCs` / `supportedCaptureModifiers` and configured through `videodecoder.CaptureConfig`. A capture plane consumes what the decoder produces; it does not negotiate a second format, so the two cannot disagree. What the plane declares is how the buffer pool behaves — its depth, whether it is one shared allocation, and what happens when every buffer is locked.
 
 ### Capture Session Lifecycle
 
 1. Open the capture resource:
-Call `IPlaneControl.getCapture(planeResourceIndex, captureEventListener)`. A `null` return means the plane is not a capture destination on this product.
-2. Read the ring limits:
-Call `ICapture.getCapabilities()` for the maximum slot count and slot size, the supported DRM FOURCC formats and modifiers, whether the ring is a single shared Dma-Buf, and the behaviour when every slot is locked.
-3. Bind a decoder:
-Call `ICapture.open(videoDecoderId, captureControllerListener)`. The resource transitions `CLOSED` → `OPENING` → `READY`.
-4. Configure the ring:
-Call `ICaptureController.setPropertyMultiAtomic()` with `SLOT_COUNT`, `SLOT_SIZE_BYTES`, `DRM_FOURCC`, `DRM_MODIFIER`, `WIDTH` and `HEIGHT` while in `READY`.
+Call `IPlaneControl.getCapabilities()` and find a plane resource of type `CAPTURE`, then `IPlaneControl.getCapture(planeResourceIndex, captureEventListener)`. A product with no capture plane does not support decode-to-texture.
+2. Read the buffer pool limits:
+Call `ICapture.getCapabilities()` for the maximum buffer count and the behaviour when every buffer is locked.
+3. Configure and bind the decoder:
+Apply a `videodecoder.CaptureConfig` stating the pixel format and frame size, then call `ICapture.open(videoDecoderId, captureControllerListener)`. The resource transitions `CLOSED` → `OPENING` → `READY`.
+4. Configure the buffer pool:
+Call `ICaptureController.setProperty(BUFFER_COUNT, n)` while in `READY`. Buffer size is not set here — it follows from the format and frame size the decoder was configured with, plus the vendor's plane alignment, and is reported back at `onPoolReady()`.
 5. Start:
-Call `ICaptureController.start()`. The ring is reserved, the decoder is wired into it, the resource transitions `READY` → `STARTING` → `STARTED`, and `ICaptureControllerListener.onRingReady()` delivers the ring addressing.
+Call `ICaptureController.start()`. The pool is reserved, the decoder is wired into it, the resource transitions `READY` → `STARTING` → `STARTED`, and `ICaptureControllerListener.onPoolReady()` delivers the pool addressing.
 6. Pull frames:
 Call `ICaptureController.acquireLatestFrame()` to take the newest ready frame. It returns `null` rather than blocking when no new frame exists, and never returns the same frame twice. `ICaptureControllerListener.onFrameAvailable()` is an optional wake-up; a client pulling at a known cadence can ignore it.
 7. Release each acquired frame:
-Call `ICaptureController.releaseFrame(slot)` with the `VideoFrameView.slot` value. The call is idempotent and tolerates unknown slots.
+Call `ICaptureController.releaseFrame(bufferIndex)` with the `VideoFrameView.bufferIndex` value. The call is idempotent and tolerates unknown indices.
 8. Stop and close:
-Call `ICaptureController.stop()` to unwire the decoder and release the ring, then `ICapture.close(controller)`. The bound decoder is left as it is.
+Call `ICaptureController.stop()` to unwire the decoder and release the pool, then `ICapture.close(controller)`. The bound decoder is left as it is.
 
 ### Buffer Contract
 
 Frames are NV12 linear with truthful per-plane offsets addressing the actual buffer layout.
 
+The pixel format and modifier are the decoder's output configuration — see `videodecoder.CaptureConfig`. Both are defined by the Linux kernel in `include/uapi/drm/drm_fourcc.h` and carried as integers because the kernel owns that namespace; the HAL client passes them to its EGL implementation without interpreting them. `VideoFrameView` reports the format on every frame, so an importer needs no second lookup.
+
 `VideoFrameView.planeFds`, `planeOffsets` and `planeStrides` feed `EGL_DMA_BUF_PLANE<N>_FD_EXT`, `EGL_DMA_BUF_PLANE<N>_OFFSET_EXT` and `EGL_DMA_BUF_PLANE<N>_PITCH_EXT` directly, so a frame imports through `EGL_EXT_image_dma_buf_import` without translation.
 
-Each slot is Free, Ready or Locked. The decoder writes into Free slots and marks them Ready once the frame is atomically complete; `acquireLatestFrame()` moves a Ready slot to Locked, and the decoder never writes into a Locked slot. Decode proceeds at full rate however sparsely or slowly the client acquires. The behaviour when every slot is Locked is declared per product in `CaptureCapabilities.stallsWhenRingFull`.
+Each buffer is Free, Ready or Locked. The decoder writes into Free buffers and marks them Ready once the frame is atomically complete; `acquireLatestFrame()` moves the newest Ready buffer to Locked, and the decoder never writes into a Locked buffer. This is a pool rather than a queue — the client always takes the newest, and older Ready buffers it never took are recycled rather than delivered in turn. Decode proceeds at full rate however sparsely or slowly the client acquires. The behaviour when every buffer is Locked is declared per product in `CaptureCapabilities.stallsWhenPoolExhausted`.
 
-Where `CaptureCapabilities.sharedRingBuffer` is true, `onRingReady()` carries the single ring file descriptor and every `VideoFrameView.planeFds` entry refers to it. Where it is false, `onRingReady()` carries a null file descriptor and each frame carries its own slot file descriptors.
+Each frame carries the file descriptors and offsets that address it, so a client imports from `VideoFrameView.planeFds` and `planeOffsets` alone and needs to know nothing about how the vendor allocated the pool — one Dma-Buf carved into offset-addressed buffers and one Dma-Buf per buffer are both served by the same client code. A descriptor may repeat across frames, so a client caching EGLImages keys the cache on the descriptor and will see at most `BUFFER_COUNT` distinct ones.
 
 All Dma-Bufs are released on `stop()` and on `close()`.
 
-Asked for a configuration the platform does not support, `start()` fails with a `CaptureErrorCode` and the decoder output is not redirected to a plane instead.
+A pool the platform's video memory region cannot satisfy fails at `start()` with `CaptureErrorCode.OUT_OF_MEMORY`, rather than being silently trimmed.
+
+An unsupported capture format fails earlier, at `videodecoder.IVideoDecoderController.setCaptureConfig()`, while it is still a configuration error rather than a stream of wrong pixels. A pool the platform cannot reserve fails at `start()` with `CaptureErrorCode.OUT_OF_MEMORY`. Neither falls back to plane output.
 
 ```mermaid
 sequenceDiagram
@@ -422,22 +437,22 @@ sequenceDiagram
     Client->>Capture: getCapabilities()
     Capture-->>Client: CaptureCapabilities
 
-    Client->>Decoder: setProperty(OPERATIONAL_MODE, GRAPHICS_TEXTURE)
+    Client->>Decoder: setCaptureConfig(drmFourcc, drmModifier, width, height)
 
     Client->>Capture: open(videoDecoderId, controllerListener)
     Capture-->>Client: ICaptureController (READY)
 
-    Client->>Controller: setPropertyMultiAtomic(ring shape)
+    Client->>Controller: setProperty(BUFFER_COUNT, n)
     Client->>Controller: start()
-    Controller->>Decoder: Wire texture output into ring
-    Controller-->>Listener: onRingReady(ringFd, planeStrides, slotCount, slotSizeBytes)
+    Controller->>Decoder: Wire texture output into pool
+    Controller-->>Listener: onPoolReady(planeStrides, bufferCount, bufferSizeBytes)
 
     loop Per displayed frame
         Controller-->>Listener: onFrameAvailable()
         Client->>Controller: acquireLatestFrame()
-        Controller-->>Client: VideoFrameView (slot Locked)
+        Controller-->>Client: VideoFrameView (buffer Locked)
         Client->>Client: EGL import and draw
-        Client->>Controller: releaseFrame(slot)
+        Client->>Controller: releaseFrame(bufferIndex)
     end
 
     Client->>Controller: stop()

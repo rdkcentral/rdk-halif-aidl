@@ -23,6 +23,10 @@ package com.rdk.hal.planecontrol;
  *
  *  Named `CaptureProperty` because the module already defines a plane `Property` enum.
  *
+ *  Only the pool's shape is set here. The captured frames' pixel format and size belong
+ *  to the decoder's output configuration - see `videodecoder.CaptureConfig` - and the
+ *  size of a buffer follows from them, so neither is a capture property.
+ *
  *  @author    Gerald Weatherup
  */
 
@@ -31,24 +35,16 @@ package com.rdk.hal.planecontrol;
 enum CaptureProperty {
 
     /**
-     * The number of slots in the capture ring.
+     * The number of buffers in the capture pool.
      *
-     * Must not exceed `CaptureCapabilities.maxSlotCount`.
-     * The default is declared per product in the HAL Feature Profile.
+     * Must not exceed `CaptureCapabilities.maxBufferCount`. A pool the platform's video
+     * memory region cannot satisfy fails at `ICaptureController.start()` with
+     * `CaptureErrorCode.OUT_OF_MEMORY`.
      *
-     * Type: Integer
-     * Access: Read-write.
-     * Write in states: READY
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if written in a state other than READY.
-     */
-    SLOT_COUNT = 0,
-
-    /**
-     * The size in bytes of a single ring slot, including per-plane alignment padding.
-     *
-     * Must not exceed `CaptureCapabilities.maxSlotSizeBytes`.
+     * The size of each buffer is not set here: it follows from the pixel format and
+     * frame size the decoder was configured with in `videodecoder.CaptureConfig`,
+     * together with the vendor's own plane alignment. The resulting figure is reported
+     * back to the client in `ICaptureControllerListener.onPoolReady()`.
      *
      * Type: Integer
      * Access: Read-write.
@@ -57,61 +53,5 @@ enum CaptureProperty {
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE if written in a state other than READY.
      */
-    SLOT_SIZE_BYTES = 1,
-
-    /**
-     * The DRM FOURCC pixel format the ring is configured for.
-     *
-     * Must be one of `CaptureCapabilities.supportedFourCCs`.
-     * `DRM_FORMAT_NV12` is required to be supported by every product that declares a
-     * capture resource.
-     *
-     * Type: Integer
-     * Access: Read-write.
-     * Write in states: READY
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if written in a state other than READY.
-     */
-    DRM_FOURCC = 2,
-
-    /**
-     * The DRM format modifier the ring is configured for.
-     *
-     * Must be one of `CaptureCapabilities.supportedModifiers`.
-     * `DRM_FORMAT_MOD_LINEAR` is required to be supported by every product that declares
-     * a capture resource.
-     *
-     * Type: Long
-     * Access: Read-write.
-     * Write in states: READY
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if written in a state other than READY.
-     */
-    DRM_MODIFIER = 3,
-
-    /**
-     * The width in pixels of the captured frames.
-     *
-     * Type: Integer
-     * Access: Read-write.
-     * Write in states: READY
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if written in a state other than READY.
-     */
-    WIDTH = 4,
-
-    /**
-     * The height in pixels of the captured frames.
-     *
-     * Type: Integer
-     * Access: Read-write.
-     * Write in states: READY
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if written in a state other than READY.
-     */
-    HEIGHT = 5,
+    BUFFER_COUNT = 0,
 }

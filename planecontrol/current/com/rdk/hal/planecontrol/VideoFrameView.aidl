@@ -36,22 +36,25 @@ package com.rdk.hal.planecontrol;
 parcelable VideoFrameView
 {
     /**
-     * The ring slot this frame occupies, in the range [0, SLOT_COUNT).
+     * The pool buffer this frame occupies, in the range [0, BUFFER_COUNT).
      * This value is passed to `ICaptureController.releaseFrame()`.
      *
-     * The slot is carried explicitly because on per-surface platforms every slot
-     * has an offset of 0, so the offsets cannot identify the slot.
+     * The index is carried explicitly because where the pool is not a single shared
+     * allocation every buffer has an offset of 0, so the offsets cannot identify it.
      */
-    int slot;
+    int bufferIndex;
 
     /**
      * One Dma-Buf file descriptor per plane.
      *
-     * On a platform with `CaptureCapabilities.sharedRingBuffer` true, every entry
-     * refers to the single ring file descriptor delivered by
-     * `ICaptureControllerListener.onRingReady()` and is stable across frames.
-     * Otherwise each entry is this slot's own file descriptor, cycling through at
-     * most `CaptureProperty.SLOT_COUNT` distinct descriptors.
+     * Each frame carries the file descriptors and offsets that address it, so a client
+     * imports from `planeFds` and `planeOffsets` alone and needs to know nothing about
+     * how the vendor allocated the pool - one Dma-Buf carved into offset-addressed
+     * buffers and one Dma-Buf per buffer are both served by this.
+     *
+     * A file descriptor may repeat across frames. A client caching EGLImages keys the
+     * cache on the descriptor, and at most `CaptureProperty.BUFFER_COUNT` distinct
+     * descriptors are ever seen in a session.
      */
     ParcelFileDescriptor[] planeFds;
 

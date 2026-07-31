@@ -53,4 +53,36 @@ parcelable Capabilities
 	 * @see Property.SECURE_VIDEO
 	 */
     boolean supportsSecure;
+
+	/**
+	 * DRM FOURCC pixel formats this decoder can emit for capture (decode-to-texture).
+	 *
+	 * A non-empty list is what declares that this decoder supports capture at all;
+	 * there is no separate mode flag to advertise.
+	 *
+	 * FOURCC codes are defined by the Linux kernel in
+	 * `include/uapi/drm/drm_fourcc.h`, not by this interface, so they are carried as
+	 * integers rather than an enum: the kernel owns that namespace and new formats
+	 * arrive with new kernel versions.
+	 *
+	 * Empty where the decoder does not support capture. Where it is non-empty,
+	 * `DRM_FORMAT_NV12` (0x3231564E) is required to be present.
+	 *
+	 * @see CaptureConfig.drmFourcc, IVideoDecoderController.setCaptureConfig()
+	 */
+    int[] supportedCaptureFourCCs;
+
+	/**
+	 * DRM format modifiers this decoder can emit for capture (decode-to-texture).
+	 *
+	 * Also defined by the kernel in `include/uapi/drm/drm_fourcc.h`. A modifier is a
+	 * 64-bit namespaced value whose top 8 bits carry a vendor prefix, which is what
+	 * lets a vendor declare its own tiling or compression layouts.
+	 *
+	 * Empty where the decoder does not support capture. Where it is non-empty,
+	 * `DRM_FORMAT_MOD_LINEAR` (0) is required to be present.
+	 *
+	 * @see CaptureConfig.drmModifier
+	 */
+    long[] supportedCaptureModifiers;
 }

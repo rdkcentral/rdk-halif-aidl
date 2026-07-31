@@ -48,19 +48,6 @@ planecontrol:                   # Component object begins
         supportsAlpha: true  # Whether ALPHA property is supported (transparency blending)
         supportsZOrder: true  # Whether ZORDER property is supported (for plane stacking)
         vsyncDisplayLatency: 3  # Display latency in vsync periods
-        captureCapabilities:  # Decoded-frame capture destination for this plane (ICapture).
-                              # Omit the whole object on a plane that cannot capture -
-                              # IPlaneControl.getCapture() then returns null for it.
-          maxSlotCount: 8  # Maximum ring slots (CaptureProperty.SLOT_COUNT)
-          maxSlotSizeBytes: 12441600  # Maximum bytes per slot (3840x2160 NV12, aligned)
-          supportedFourCCs:  # DRM FOURCC formats; DRM_FORMAT_NV12 is required
-            - 0x3231564E  # DRM_FORMAT_NV12
-          supportedModifiers:  # DRM format modifiers; DRM_FORMAT_MOD_LINEAR is required
-            - 0x0000000000000000  # DRM_FORMAT_MOD_LINEAR
-          sharedRingBuffer: true  # true: one shared Dma-Buf with offset-addressed slots
-                                  # false: one Dma-Buf per slot
-          stallsWhenRingFull: false  # true: decoder stalls when all slots are locked
-                                     # false: oldest ready frame is dropped
     - 1:                    # Resource object begins
         type: VIDEO
         pixelFormats:
@@ -102,5 +89,30 @@ planecontrol:                   # Component object begins
           maxGraphicsFrameBufferHeight: 1080
           format: 0x34325258
           modifier: 0x0000000000000000
-
-
+    - 3:                    # Resource object begins
+        type: CAPTURE       # Destination is the client's texture, not the display.
+                            # Declare one capture plane per concurrent capture
+                            # session the product can serve; omit the type
+                            # entirely on a product that cannot decode to texture.
+        pixelFormats:
+          - NATIVE
+        sourceTypes:  # Supported source types for this plane (enum SourceType)
+          - VIDEO_SINK
+        maxWidth: 3840  # Maximum captured frame width this plane supports (in pixels)
+        maxHeight: 2160  # Maximum captured frame height this plane supports (in pixels)
+        frameWidth: 3840  # Width of the full frame reference coordinate system
+        frameHeight: 2160  # Height of the full frame reference coordinate system
+        supportedDynamicRanges:
+          - SDR
+        colorDepth: 8
+        maxFrameRate: 60  # Maximum capture rate in frames per second
+        supportsAlpha: false  # Not composited - alpha has no meaning on a capture plane
+        supportsZOrder: false  # Not composited - z-order has no meaning on a capture plane
+        vsyncDisplayLatency: 0  # Never reaches a display, so no display latency applies
+        captureCapabilities:  # Buffer pool behaviour for ICapture on this plane.
+                              # Required on a plane of type CAPTURE. The captured
+                              # pixel format and frame size are the decoder's - see
+                              # supportedCaptureFourCCs in hfp-videodecoder.yaml.
+          maxBufferCount: 8  # Maximum pool buffers (CaptureProperty.BUFFER_COUNT)
+          stallsWhenPoolExhausted: false  # true: decoder stalls when all buffers locked
+                                          # false: oldest ready frame is dropped

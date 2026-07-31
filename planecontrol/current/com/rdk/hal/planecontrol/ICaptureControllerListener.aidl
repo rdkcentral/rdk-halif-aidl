@@ -28,23 +28,22 @@ oneway interface ICaptureControllerListener
 {
     /**
      * @brief     Called once per session after `ICaptureController.start()` has wired the
-     *            video decoder into the ring, and before any `onFrameAvailable()`.
+     *            video decoder into the pool, and before any `onFrameAvailable()`.
      *
-     * @param[in] ringFd            The shared ring Dma-Buf on platforms where
-     *                              `CaptureCapabilities.sharedRingBuffer` is true.
-     *                              Null where it is false, in which case each slot's
-     *                              file descriptor arrives per frame in
-     *                              `VideoFrameView.planeFds`.
+     * Reports what the vendor actually allocated. The file descriptors that address each
+     * frame arrive per frame in `VideoFrameView`, so a client needs nothing from here to
+     * import a buffer - this is the pool's shape, not its addressing.
+     *
      * @param[in] planeStrides      The number of bytes from the start of one row of pixels
      *                              to the start of the next, per plane. For NV12 this is
      *                              [Y stride, UV stride].
-     * @param[in] slotCount         The number of slots reserved in the ring.
-     * @param[in] slotSizeBytes     The size in bytes of a single ring slot.
+     * @param[in] bufferCount       The number of buffers reserved in the pool.
+     * @param[in] bufferSizeBytes   The size in bytes of a single capture buffer.
      */
-    void onRingReady(in @nullable ParcelFileDescriptor ringFd, in int[] planeStrides, in int slotCount, in int slotSizeBytes);
+    void onPoolReady(in int[] planeStrides, in int bufferCount, in int bufferSizeBytes);
 
     /**
-     * @brief     Called when a slot has transitioned to Ready.
+     * @brief     Called when a buffer has transitioned to Ready.
      *
      * Implementations may coalesce these callbacks. A client that pulls at a known cadence
      * can ignore this callback; `ICaptureController.acquireLatestFrame()` is complete

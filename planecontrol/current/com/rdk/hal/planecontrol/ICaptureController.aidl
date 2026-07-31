@@ -29,14 +29,17 @@ import com.rdk.hal.PropertyValue;
  *  Returned by `ICapture.open()` and valid until `ICapture.close()`.
  *
  *  <h3>Frame flow</h3>
- *  Each ring slot is Free, Ready or Locked. The decoder writes into Free slots and marks
- *  them Ready when the frame is complete. `acquireLatestFrame()` moves the newest Ready
- *  slot to Locked and returns it; the decoder never writes into a Locked slot.
- *  `releaseFrame()` returns a Locked slot to Free.
+ *  Each pool buffer is Free, Ready or Locked. The decoder writes into Free buffers and
+ *  marks them Ready when the frame is complete. `acquireLatestFrame()` moves the newest
+ *  Ready buffer to Locked and returns it; the decoder never writes into a Locked buffer.
+ *  `releaseFrame()` returns a Locked buffer to Free.
+ *
+ *  This is a pool rather than a queue: the client always takes the newest Ready buffer,
+ *  and older Ready buffers it never took are recycled rather than delivered in turn.
  *
  *  Decode proceeds at full rate regardless of how sparsely or slowly the client acquires.
- *  The behaviour when every slot is Locked is declared per product in
- *  `CaptureCapabilities.stallsWhenRingFull`.
+ *  The behaviour when every buffer is Locked is declared per product in
+ *  `CaptureCapabilities.stallsWhenPoolExhausted`.
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
@@ -54,40 +57,37 @@ interface ICaptureController
     /**
      * Starts the capture session.
      *
-     * Reserves a ring of `CaptureProperty.SLOT_COUNT` slots of
-     * `CaptureProperty.SLOT_SIZE_BYTES` each from the platform's video memory region,
-     * and wires the bound video decoder's `videodecoder.OperationalMode.GRAPHICS_TEXTURE` output into
-     * the ring.
+     * Reserves a pool of `CaptureProperty.BUFFER_COUNT` buffers of
+     * `CaptureProperty.BUFFER_SIZE_BYTES` each from the platform's video memory region,
+     * and wires the bound video decoder's capture output into the pool.
      *
      * The capture resource transitions to a `STARTING` state and then a `STARTED` state,
-     * and `ICaptureControllerListener.onRingReady()` is raised once the ring is addressable.
+     * and `ICaptureControllerListener.onPoolReady()` is raised once the pool is addressable.
      *
-     * The bound video decoder must have `videodecoder.OperationalMode.GRAPHICS_TEXTURE` selected. A
-     * decoder configured to emit a format other than the one the ring is configured for
-     * fails here with `CaptureErrorCode.FORMAT_MISMATCH` rather than falling back to plane
-     * output.
+     * The bound video decoder must have a `videodecoder.CaptureConfig` applied. The pool
+     * is allocated for the pixel format and frame size that configuration states, so
+     * there is no second format here to disagree with it.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the READY state.
      * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC with a CaptureErrorCode value:
-     *            `OUT_OF_MEMORY` if the ring reservation was refused,
-     *            `DECODER_NOT_TEXTURE` if the bound decoder is not in GRAPHICS_TEXTURE mode,
-     *            `FORMAT_MISMATCH` if the ring format differs from the decoder output format.
+     *            `OUT_OF_MEMORY` if the pool reservation was refused,
+     *            `DECODER_NOT_CONFIGURED` if the bound decoder has no capture configuration applied.
      *
      * @pre The resource must be in State::READY.
      *
-     * @see stop(), ICaptureControllerListener.onRingReady()
+     * @see stop(), ICaptureControllerListener.onPoolReady()
      */
     void start();
 
     /**
      * Stops the capture session.
      *
-     * Unwires the video decoder from the ring and releases the ring and all its Dma-Bufs.
+     * Unwires the video decoder from the pool and releases the pool and all its Dma-Bufs.
      * The capture resource transitions to a `STOPPING` state and then a `READY` state.
      * The bound video decoder is left as it is.
      *
-     * Any slots still Locked by the client are released.
+     * Any buffers still Locked by the client are released.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the STARTED state.
@@ -99,12 +99,12 @@ interface ICaptureController
     void stop();
 
     /**
-     * Acquires the newest Ready slot and transitions it to Locked.
+     * Acquires the newest Ready buffer and transitions it to Locked.
      *
-     * This function never blocks. It returns null when no Ready slot exists, and never
+     * This function never blocks. It returns null when no Ready buffer exists, and never
      * returns a frame it has already returned.
      *
-     * Older Ready slots that the newest frame overtakes are returned to Free.
+     * Older Ready buffers that the newest frame overtakes are returned to Free.
      *
      * @returns VideoFrameView describing the acquired frame, or null if no new frame is
      *          available.
@@ -119,24 +119,24 @@ interface ICaptureController
     @nullable VideoFrameView acquireLatestFrame();
 
     /**
-     * Releases a previously acquired slot, transitioning it from Locked to Free.
+     * Releases a previously acquired buffer, transitioning it from Locked to Free.
      *
-     * `slot` must be a `VideoFrameView.slot` value previously returned by
-     * `acquireLatestFrame()`. This function is idempotent - a slot that is already Free,
-     * or a value outside the ring, returns without raising an exception.
+     * `bufferIndex` must be a `VideoFrameView.bufferIndex` value previously returned by
+     * `acquireLatestFrame()`. This function is idempotent - a buffer that is already
+     * Free, or an index outside the pool, returns without raising an exception.
      *
-     * @param[in] slot      The ring slot to release.
+     * @param[in] bufferIndex   The pool buffer to release.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @see acquireLatestFrame()
      */
-    void releaseFrame(in int slot);
+    void releaseFrame(in int bufferIndex);
 
     /**
      * Sets a capture property.
      *
-     * The ring shape properties are written in the `READY` state, before `start()`.
+     * `BUFFER_COUNT` is written in the `READY` state, before `start()`.
      *
      * @param[in] property              The key of a property from the CaptureProperty enum.
      * @param[in] propertyValue         Property value.
@@ -157,8 +157,7 @@ interface ICaptureController
     /**
      * Sets multiple capture properties atomically.
      *
-     * For example, the `SLOT_COUNT`, `SLOT_SIZE_BYTES`, `DRM_FOURCC` and `DRM_MODIFIER`
-     * properties can be set in a single call. Properties must only appear once in the list.
+     * Properties must only appear once in the list.
      *
      * @param[in] propertyKVList        Array of property key-value pairs.
      *

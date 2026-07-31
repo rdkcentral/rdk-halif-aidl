@@ -20,6 +20,12 @@ package com.rdk.hal.planecontrol;
 
 /**
  *  @brief     Capture capabilities definition for a plane resource.
+ *
+ *  Describes how the buffer pool behaves. The captured frames' pixel format and size
+ *  are the decoder's output configuration, declared in
+ *  `videodecoder.Capabilities.supportedCaptureFourCCs` and set through
+ *  `videodecoder.CaptureConfig` - a capture plane consumes what the decoder produces
+ *  rather than negotiating a second format.
  *  @author    Gerald Weatherup
  */
 
@@ -27,53 +33,22 @@ package com.rdk.hal.planecontrol;
 parcelable CaptureCapabilities
 {
     /**
-     * The maximum number of slots that can be reserved in the capture ring.
-     * @see CaptureProperty.SLOT_COUNT
-     */
-    int maxSlotCount;
-
-    /**
-     * The maximum size in bytes of a single ring slot.
-     * @see CaptureProperty.SLOT_SIZE_BYTES
-     */
-    int maxSlotSizeBytes;
-
-    /**
-     * The DRM FOURCC pixel formats the capture ring can be configured for.
-     * `DRM_FORMAT_NV12` is required to be present.
-     * These are opaque values passed through this interface to the client EGL
-     * implementation without interpretation by the HAL client.
-     * @see CaptureProperty.DRM_FOURCC
-     */
-    int[] supportedFourCCs;
-
-    /**
-     * The DRM format modifiers the capture ring can be configured for.
-     * `DRM_FORMAT_MOD_LINEAR` is required to be present.
-     * These are opaque values passed through this interface to the client EGL
-     * implementation without interpretation by the HAL client.
-     * @see CaptureProperty.DRM_MODIFIER
-     */
-    long[] supportedModifiers;
-
-    /**
-     * Indicates whether the vendor layer exposes the ring as a single shared Dma-Buf
-     * with offset-addressed slots, or as one Dma-Buf per slot.
+     * The maximum number of buffers that can be reserved in the capture pool.
      *
-     * When true, `ICaptureControllerListener.onRingReady()` delivers a non-null ring
-     * file descriptor and every `VideoFrameView.planeFds` entry refers to it.
-     * When false, `onRingReady()` delivers a null ring file descriptor and each
-     * frame carries its own slot file descriptor(s).
+     * A reservation that exceeds what the platform's video memory region can satisfy
+     * fails at `ICaptureController.start()` with `CaptureErrorCode.OUT_OF_MEMORY`.
+     *
+     * @see CaptureProperty.BUFFER_COUNT, CaptureErrorCode.OUT_OF_MEMORY
      */
-    boolean sharedRingBuffer;
+    int maxBufferCount;
 
     /**
-     * Indicates the behaviour when every ring slot is locked by the client and the
-     * decoder has a new frame to write.
+     * Indicates the behaviour when every buffer in the pool is locked by the client and
+     * the decoder has a new frame to write.
      *
-     * When true, the decoder stalls until a slot is released.
-     * When false, the oldest Ready slot is recycled and its frame is dropped.
-     * Decode proceeds at full rate in both cases for as long as slots are available.
+     * When true, the decoder stalls until a buffer is released.
+     * When false, the oldest Ready buffer is recycled and its frame is dropped.
+     * Decode proceeds at full rate in both cases for as long as buffers are available.
      */
-    boolean stallsWhenRingFull;
+    boolean stallsWhenPoolExhausted;
 }

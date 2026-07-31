@@ -49,6 +49,8 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 | **HAL.VIDEODECODER.11** | The video decoder shall be able to decode back to back I-frames.| Used in I-frame trick modes. |
 | **HAL.VIDEODECODER.12** | The video decoder shall discard any frames until the first reference frame has been received. |
 | **HAL.VIDEODECODER.13** | If a client process exits, the Video Decoder server shall automatically stop and close any Video Decoder instance controlled by that client. |
+| **HAL.VIDEODECODER.14** | A decoder supporting capture shall declare the DRM FOURCC formats and modifiers it can emit, and shall accept a `CaptureConfig` only for a declared combination.| Declaring the formats is necessary but not sufficient — a product declaring them must actually emit frames for capture. |
+| **HAL.VIDEODECODER.15** | A `CaptureConfig` the decoder cannot produce shall be rejected at `setCaptureConfig()`, never accepted and silently substituted.| The failure belongs where it is still a configuration error, not a stream of wrong pixels. |
 
 ## Interface Definition
 
@@ -58,6 +60,7 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 | `IVideoDecoder.aidl` | Video Decoder interface for a single video decoder resource instance. |
 | `IVideoDecoderController.aidl` | Controller interface for an IVideoDecoder resource instance. |
 | `IVideoDecoderControllerListener.aidl` | Listener callbacks interface to clients from an IVideoDecoderController. |
+| `CaptureConfig.aidl` | Output pixel format and frame size for a decoder producing frames for capture. |
 | `IVideoDecoderEventListener.aidl` | Listener callbacks interface to clients from an IVideoDecoder. |
 | `Capabilities.aidl` | Parcelable describing the capabilities of an IVideoDecoder resource instance. |
 | `Codec.aidl` | Enum list of video codecs. |
@@ -66,7 +69,6 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 | `DynamicRange.aidl` | Enum list of dynamic ranges. |
 | `ErrorCode.aidl` | Enum list of video decoder error codes. |
 | `FrameMetadata.aidl` | Parcelable of video frame metadata passed from the video decoder. |
-| `OperationalMode.aidl` | Enum list of video decoder operational modes. |
 | `PixelFormat.aidl` | Enum list of video pixel formats. |
 | `Property.aidl` | Enum list of video decoder properties. |
 | `PropertyKVPair.aidl` | Parcelable of a Property and PropertyValue pair. |
@@ -232,29 +234,63 @@ If any video decoder supports SVP in non-tunnelled mode then the Video Sink HAL 
 
 Markdown Output:
 
-## Operational Modes
+## Output Routing
 
-There are 3 modes that video decoders can operate in.  The `IVideoDecoderManager.getSupportedOperationalModes()` function must return all operational modes supported by the video decoders in the system.
+Where a decoder's frames go is determined by how the decoder is wired. The routing is the mode.
 
-This set of advertised operational modes must operate on all video decoder instances.
+| Where frames go | How it is selected | Frames returned over `onFrameOutput()`? |
+|---|---|---|
+| **Display plane** | The client maps this decoder's video sink to a video plane through `IPlaneControl.setVideoSourceDestinationPlaneMapping()`. | No. `frameBufferHandle` is -1 and only `FrameMetadata` comes back. |
+| **The client** | The client takes no plane mapping and consumes frame buffers directly. | Yes, in presentation order. |
+| **A capture interface** | The client calls `IVideoDecoderController.setCaptureConfig()`. | No. Frames are consumed through the capture plane. |
 
-Tunnelled and non-tunnelled modes cannot operate at the same time.  It is optional for video decoders to support both modes as options, but at least one of them must be supported.
+`setCaptureConfig()` is the whole of capture-mode selection: a decoder with a capture configuration applied emits frames for capture, one without does not, and the configuration is cleared on `close()`. Whether a decoder supports capture at all is `Capabilities.supportedCaptureFourCCs` being non-empty.
 
-If both are supported then there shall never be a dynamic switch between the 2 modes while STARTED.
+In every case, AV buffers containing compressed video are passed into the video decoder through calls to `decodeBufferWithMetadata()`.
 
-The `OPERATIONAL_MODE` property controls the operational mode the video decoder shall use.
+The vendor layer is responsible for AV sync where audio and video streams are linked in the same pipeline and frames go to a display plane.
 
-The enum `OperationalMode` provides the constants used to specify operational modes and allows for bitwise-or of multiple values.
+## Decode to Texture
 
-The video decoder may switch operational modes at any time while in a READY or STARTED state.
+In capture, the decoder's frames are consumed as GPU textures rather than emitted to a display plane. Their pixel format and size are properties of this decoder's output, so they are configured here and nowhere else — a capture destination consumes what the decoder produces rather than negotiating a second format, which is what keeps the two from disagreeing.
 
-In all modes, AV buffers containing compressed video are passed into the video decoder through calls to `decodeBufferWithMetadata()`.
+1. **Discover support.** `Capabilities.supportedCaptureFourCCs` and `supportedCaptureModifiers` list what this decoder can emit. Both are empty on a decoder that does not support capture — that is the whole of the declaration.
+2. **Open for a codec.** `open()` as normal. An unsupported codec fails here, which is the only gate on which decoders can capture; there is no separate enumeration of capture-capable decoders.
+3. **Configure the output.** `IVideoDecoderController.setCaptureConfig()` with the DRM FOURCC, modifier, width and height, while in `READY`. This call is what selects capture output, and a combination this decoder cannot produce is rejected here.
+4. **Bind a destination.** The client obtains a capture plane from the Plane Control HAL and binds this decoder to it. See [Plane Control — Decoded Frame Capture](../../../planecontrol/current/docs/plane_control.md#decoded-frame-capture).
 
-| Operational Mode | Description |
-|---|---|
-| `TUNNELLED` | Decoded video frames are passed directly to the linked video sink and video plane for rendering. <br>The vendor layer is responsible for AV sync where audio and video streams are linked in the same pipeline. <br>Decoded video frames are never received back in frame buffers over `IVideoDecoderControllerListener.onFrameOutput()`, but the `FrameMetadata` must still be returned in the usual way. <br>All calls to `onFrameOutput()` shall have the `frameBufferHandle` set to -1 to indicate no video frame buffer handle is being passed back. <br>It is optional for video decoders to support tunnelled operational mode. <br>If supported, tunnelled mode may be dynamically enabled or disabled while the video decoder is `READY` or `STARTED` and may run concurrently with graphics texture mode. Tunnelled mode cannot be used at the same time as non-tunnelled mode. |
-| `NON_TUNNELLED` | Decoded video frames are received back in video frame buffers over `IVideoDecoderListener.onFrameOutput()`. <br>Frames must be received in presentation order. <br>It is optional for video decoders to support non-tunnelled operational mode. <br>If supported, non-tunnelled mode may be dynamically enabled or disabled while the video decoder is `READY` or `STARTED` and may run concurrently with graphics texture mode. <br>Non-tunnelled mode cannot be used at the same time as tunnelled mode. |
-| `GRAPHICS_TEXTURE` | Video frames are converted to NV12 textures. <br>It is optional for video decoders to support graphics texture operational mode. <br>If supported, graphics texture mode may be dynamically enabled or disabled while the video decoder is `READY` or `STARTED` and may run concurrently with tunnelled or non-tunnelled mode. |
+### Pixel Format and Memory Layout
+
+A captured frame is described by two values, and they answer different questions.
+
+| Value | Question it answers | Example |
+|---|---|---|
+| **FOURCC** | What are the pixels? | `NV12` — 8-bit 4:2:0, luma plane followed by interleaved chroma |
+| **Modifier** | How are those bytes arranged in memory? | plain raster rows, or compressed blocks, or vendor tiles |
+
+The same FOURCC under two different modifiers is the same picture in two different byte layouts. A consumer that does not understand the layout cannot read the frame, however well it understands the format.
+
+Both are defined by the Linux kernel in `include/uapi/drm/drm_fourcc.h`. They are carried as plain integers rather than enums because the kernel owns those namespaces: new formats arrive with new kernel versions, and enumerating them in this interface would make every kernel addition an interface change to a value the HAL neither defines nor controls.
+
+#### Modifiers are vendor-namespaced
+
+A modifier is 64 bits, composed as `(vendor << 56) | value`. The top 8 bits are a registered vendor namespace and the remaining 56 bits mean whatever that vendor says they mean. The kernel registers a namespace per silicon vendor, so **most modifiers are specific to the hardware that defines them**.
+
+Exactly one modifier is universal: `DRM_FORMAT_MOD_LINEAR`, which sits in the vendor-neutral namespace at value `0x0000000000000000` and describes plain raster rows.
+
+A compressed or tiled layout is typically a *family* rather than a single value. Arm Frame Buffer Compression, for instance, is parameterised by superblock size (16×16, 32×8, 64×4) and by independent `YTR`, `SPLIT` and `SPARSE` flags, so two buffers can both be "AFBC" and carry different modifiers that a consumer must tell apart. That is why the declaration is a list of exact values rather than a list of layout names.
+
+#### Choosing one
+
+`Capabilities.supportedCaptureModifiers` is a menu of layouts this decoder can produce. The client picks the one its consumer can read, and the trade is bandwidth against portability.
+
+- **A GPU that understands the vendor's compressed layout** can take it directly. Compression can roughly halve the memory bandwidth of the capture path, which at 4K60 is often the difference between fitting in the platform's budget and not.
+- **Anything that must touch the pixels** — CPU readback, a screenshot, an encoder, or a GPU from a different vendor — needs `DRM_FORMAT_MOD_LINEAR`, because no other layout is portably decodable.
+
+The decoder writes the memory, so the choice has to reach the hardware: the client names the layout in `CaptureConfig.drmModifier` and the decoder is configured to produce it. This is also why `NV12` with `DRM_FORMAT_MOD_LINEAR` is required of every decoder that supports capture — it is the one combination any consumer can handle, so a client that can negotiate nothing else always has a working path.
+
+The per-product declaration is `supportedCaptureFourCCs` and `supportedCaptureModifiers` in `hfp-videodecoder.yaml`.
+
 
 ## Frame Metadata
 

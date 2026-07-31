@@ -42,6 +42,7 @@ scope:
   - Manager interface for decoder discovery and resource allocation
   - Secure and non-secure video playback paths
   - Buffer pool management and codec-specific capabilities per decoder
+  - Decode-to-texture output configuration (format and size) for GRAPHICS_TEXTURE mode
 
 # notes - Tracking metadata                                              [manual]
 #   priority      - Numeric priority (lower = higher)
@@ -55,8 +56,8 @@ notes:
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
-    Architecture: reviewed
-    Product_Architecture: reviewed
-    AV_Architecture: reviewed
-    Vendor_Layer_Team: reviewed
+    Architecture: recheck
+    Product_Architecture: recheck
+    AV_Architecture: recheck
+    Vendor_Layer_Team: recheck
 
