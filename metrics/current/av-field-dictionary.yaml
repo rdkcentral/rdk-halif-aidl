@@ -1,0 +1,368 @@
+hfd:
+  schemaVersion: '1.0'
+  domains:
+  - domain: av
+    dictionaryVersion: '1.1'
+    elements:
+    - element: video_decoder
+      fields:
+      - name: frames_decoded
+        unit: frames
+        kind: counter
+        provider: Driver
+        description: Compressed frames the decoder has decoded and emitted at its output (post-decode,
+          pre-sink). +1 per emitted frame. Counted from instance creation; never reset on flush/seek.
+      - name: frames_dropped
+        unit: frames
+        kind: counter
+        provider: Driver
+        description: Frames the decoder discarded **before output** — undecodable (corruption / unsupported)
+          or shed under decode overload. **Excludes** presentation-side drops, which are `av.video_sink`'s.
+          A frame here is not also in `frames_decoded`.
+      - name: decode_errors
+        unit: events
+        kind: counter
+        provider: Driver
+        description: 'Decode-error occurrences (bitstream/NAL parse failure, codec fault). Decoder-internal.
+          A **distinct axis** from `frames_dropped`: an error need not drop a frame, and a drop need not
+          be an error.'
+      - name: decode_latency_sum_us
+        unit: us
+        kind: counter
+        provider: Driver
+        description: Running sum of per-frame decode latency = *(decoder emits frame at output)* − *(compressed
+          access unit queued to decoder input)*. Needs the decoder's internal input/output timestamps.
+          Mean = `decode_latency_sum_us / frames_decoded`.
+      - name: last_decode_error_pts_ms
+        unit: ms
+        kind: current
+        provider: Driver
+        description: 'Stream PTS at detection of the **most recent** decode error, within ±1 frame interval.
+          Read with `decode_errors`: the counter says how many, this says where the newest one was. Left
+          undeclared where the SoC cannot derive a PTS — never served as `-1`.'
+      - name: last_decode_error_reason
+        unit: none
+        kind: current
+        provider: Driver
+        description: Closed-vocabulary classification of the most recent decode error. This is the value
+          a consumer branches on, and it is what makes the fault comparable across SoCs.
+      - name: last_decode_error_vendor_code
+        unit: none
+        kind: current
+        provider: Driver
+        description: The SoC's own error code for the same fault, carried through uninterpreted. For vendor
+          diagnosis; never branched on.
+    - element: video_sink
+      fields:
+      - name: frames_received
+        unit: frames
+        kind: counter
+        provider: Driver
+        description: Decoded frames received to be presented from the decoder.
+      - name: frames_presented
+        unit: frames
+        kind: counter
+        provider: Driver
+        description: Frames handed to display scanout for presentation — one per successful render.
+      - name: frames_dropped_late
+        unit: frames
+        kind: counter
+        provider: Driver
+        description: Frames dropped because their PTS deadline (vs the render clock) had passed by **>
+          one display frame-interval** at the sink render check — too late to show. Sink render-decision
+          internal.
+      - name: frames_dropped_frc
+        unit: frames
+        kind: counter
+        provider: Driver
+        description: Frames dropped by **frame-rate conversion** when source rate > display rate (cadence
+          decimation) — *not* because they were late. FRC-internal.
+      - name: frames_repeated_frc
+        unit: frames
+        kind: counter
+        provider: Driver
+        description: Frames repeated (held > 1 display interval) by **FRC** when source rate < display
+          rate (cadence up-conversion). Normal content cadence — **not** a freeze. FRC-internal.
+      - name: frames_repeated_missing_frame
+        unit: frames
+        kind: counter
+        provider: Driver
+        description: Frames repeated **to cover a missing next frame** — the sink had no new decoded frame
+          ready at render time (starvation cover). Feeds `freeze_duration_ms`. Sink-internal.
+      - name: underflowed
+        unit: episodes
+        kind: counter
+        provider: Driver
+        description: Count of video buffer-underflow **episodes**. +1 at each episode **start** (no frame
+          to present at render time); ends when a new frame is presented.
+      - name: underflow_duration_ms
+        unit: ms
+        kind: counter
+        provider: Driver
+        description: Cumulative wall-clock time across all video-underflow episodes (Σ of each episode's
+          start→clear). Paired with `underflowed`. An underflow episode manifests on screen as a freeze.
+      - name: freeze_duration_ms
+        unit: ms
+        kind: counter
+        provider: Driver
+        description: Cumulative on-screen time the same frame was held due to **repeated-to-cover-missing-frame**
+          (customer-visible freeze) — the time integral of `frames_repeated_missing_frame`. Excludes FRC
+          cadence repeats. Derived from a Driver figure.
+        derivedFrom: av.video_sink.frames_repeated_missing_frame
+      - name: freeze_event_count
+        unit: events
+        kind: counter
+        provider: Driver
+        description: 'Count of freeze episodes — +1 per episode start. Paired with `freeze_duration_ms`:
+          mean freeze length = `freeze_duration_ms` / `freeze_event_count`.'
+        derivedFrom: av.video_sink.frames_repeated_missing_frame
+      - name: max_freeze_duration_ms
+        unit: ms
+        kind: high_water
+        provider: Driver
+        description: Longest single freeze episode observed since instance creation. Monotone non-decreasing
+          high-water mark.
+        derivedFrom: av.video_sink.frames_repeated_missing_frame
+      - name: render_latency_sum_us
+        unit: us
+        kind: counter
+        provider: Driver
+        description: Running sum of per-frame render latency = *(frame presented to scanout)* − *(frame
+          received at sink input)*. Needs the sink's internal present timestamp. Paired with `frames_presented`.
+      - name: buffer_depth_ms
+        unit: ms
+        kind: current
+        provider: Driver
+        description: Buffered decoded media ahead of the present position **now** — Σ presentation-durations
+          of frames queued but not yet presented. Live sample re-read each poll; **not** cumulative. **Warning:**
+          SoC- and use-case-specific.
+      - name: last_underflow_trigger
+        unit: none
+        kind: current
+        provider: Driver
+        description: 'Closed-vocabulary cause of the most recent underflow episode: startup prefill, mid-stream,
+          seek recovery, trickplay recovery, content boundary. Distinguishes an expected starvation from
+          a defect.'
+      - name: last_underflow_duration_ms
+        unit: ms
+        kind: current
+        provider: Driver
+        description: Length of the most recent **completed** underflow episode. Read with `underflowed`
+          and `underflow_duration_ms`, which give the count and the total.
+      - name: last_dropped_frame_pts_ms
+        unit: ms
+        kind: current
+        provider: Driver
+        description: Stream PTS of the most recently dropped frame, within ±1 frame interval, whatever
+          the drop axis. Turns a drop count into a locatable defect. Left undeclared where no PTS is derivable.
+      - name: first_frame_presented_pts_ms
+        unit: ms
+        kind: current
+        provider: Driver
+        description: PTS of the first frame to reach presentation — set at session start and re-set after
+          each seek or flush. With `av.session.preroll_ms` this splits time-to-first-frame into the part
+          middleware owns and the part the hardware owns.
+    - element: audio_decoder
+      fields:
+      - name: frames_decoded
+        unit: frames
+        kind: counter
+        provider: Driver
+        description: Audio access units decoded and emitted at the decoder output. +1 per emitted access
+          unit. Counted from instance creation; never reset on flush/seek.
+      - name: frames_dropped
+        unit: frames
+        kind: counter
+        provider: Driver
+        description: Audio frames discarded before output (xruns / undecodable). Decoder-internal. Excludes
+          `frames_decoded`.
+      - name: decode_errors
+        unit: events
+        kind: counter
+        provider: Driver
+        description: 'Audio decode-error occurrences — a **distinct axis** from `frames_dropped`, exactly
+          as on `av.video_decoder`: an error need not drop a frame, and a drop need not be an error. Decoder-internal.'
+      - name: decode_latency_sum_us
+        unit: us
+        kind: counter
+        provider: Driver
+        description: Σ per-frame audio decode latency *(output-emitted − input-queued)*. Needs decoder-internal
+          timestamps. Paired with `frames_decoded`.
+      - name: last_decode_error_pts_ms
+        unit: ms
+        kind: current
+        provider: Driver
+        description: Stream PTS at detection of the most recent audio decode error, within ±1 frame interval.
+          Read with `decode_errors`. Left undeclared where no PTS is derivable — never served as `-1`.
+      - name: last_decode_error_reason
+        unit: none
+        kind: current
+        provider: Driver
+        description: Closed-vocabulary classification of the most recent audio decode error. The value
+          a consumer branches on.
+      - name: last_decode_error_vendor_code
+        unit: none
+        kind: current
+        provider: Driver
+        description: The SoC's own code for the same fault, carried through uninterpreted. For vendor
+          diagnosis; never branched on.
+    - element: audio_sink
+      fields:
+      - name: underflowed
+        unit: episodes
+        kind: counter
+        provider: Driver
+        description: Count of audio buffer-underflow **episodes**. +1 at each episode start (no decoded
+          audio to present); ends when output resumes. Counterpart of `av.video_sink.underflowed` — without
+          it an audio underflow rate cannot be computed at all.
+      - name: underflow_duration_ms
+        unit: ms
+        kind: counter
+        provider: Driver
+        description: 'Cumulative time the audio path was starved of decoded data (Σ of each episode start→clear).
+          Paired with `underflowed`: mean episode length = `underflow_duration_ms` / `underflowed`.'
+      - name: silence_duration_ms
+        unit: ms
+        kind: counter
+        provider: Driver
+        description: Cumulative emitted **digital silence** at or above the HFP-declared threshold (default
+          500 ms minimum episode). Digital-silence detection is in the audio path. Distinguishes unexpected
+          absence of audio output from starvation (`underflow_duration_ms`).
+      - name: silence_event_count
+        unit: events
+        kind: counter
+        provider: Driver
+        description: 'Count of completed digital-silence periods at or above the HFP-declared threshold.
+          Paired with `silence_duration_ms`: mean silence length = `silence_duration_ms` / `silence_event_count`.'
+      - name: buffer_depth_ms
+        unit: ms
+        kind: current
+        provider: Driver
+        description: Buffered decoded audio ahead of the play position **now**. Live sample re-read each
+          poll; **not** cumulative. **Warning:** SoC- and use-case-specific.
+      - name: last_underflow_trigger
+        unit: none
+        kind: current
+        provider: Driver
+        description: Closed-vocabulary cause of the most recent audio underflow episode, same vocabulary
+          as `av.video_sink.last_underflow_trigger`.
+      - name: last_underflow_duration_ms
+        unit: ms
+        kind: current
+        provider: Driver
+        description: Length of the most recent **completed** audio underflow episode. Read with `underflowed`
+          and `underflow_duration_ms`, which give the count and the total.
+      - name: last_silence_duration_ms
+        unit: ms
+        kind: current
+        provider: Driver
+        description: Length of the most recent completed digital-silence period. Read with `silence_event_count`
+          and `silence_duration_ms`.
+    - element: clock
+      fields:
+      - name: sync_offset_ms
+        unit: ms
+        kind: current
+        provider: Driver
+        description: The driver's predicted current audio-vs-video presentation offset. **Sign:** audio
+          leads → **positive**, video leads → **negative**. Live sample, not cumulative.
+      - name: sync_max_abs_offset_ms
+        unit: ms
+        kind: high_water
+        provider: Driver
+        description: Largest `abs(sync_offset_ms)` observed since instance creation. Monotone non-decreasing
+          high-water mark — derived from `sync_offset_ms`.
+        derivedFrom: av.clock.sync_offset_ms
+      - name: sync_time_over_threshold_ms
+        unit: ms
+        kind: counter
+        provider: Driver
+        description: Cumulative time `abs(sync_offset_ms)` exceeded `sync_threshold_ms` — the time integral
+          of out-of-sync operation. Derived from `sync_offset_ms` and `sync_threshold_ms`.
+        derivedFrom: av.clock.sync_threshold_ms
+      - name: sync_threshold_ms
+        unit: ms
+        kind: config
+        provider: Driver
+        description: The offset magnitude beyond which playback counts as out of sync. The threshold `sync_time_over_threshold_ms`
+          integrates against and `sync_max_abs_offset_ms` is judged by — declaring those two without this
+          leaves both uninterpretable. Writable so an integrator can tighten it per product.
+        writable: true
+      - name: resync_count
+        unit: events
+        kind: counter
+        provider: Driver
+        description: Count of A/V-sync **corrections** the clock applied — each discrete realignment to
+          re-align audio and video. +1 per applied correction.
+      - name: resync_magnitude_sum_ms
+        unit: ms
+        kind: counter
+        provider: Driver
+        description: 'Σ of the **absolute magnitude** (ms) of each resync correction. Clock-internal.
+          Paired with `resync_count`: mean correction size = `resync_magnitude_sum_ms / resync_count`.'
+    - element: session
+      fields:
+      - name: time_playing_ms
+        unit: ms
+        kind: counter
+        provider: Middleware
+        description: Cumulative wall-clock time the session spent in `PLAYING`. The denominator every
+          rate and ratio is computed against — without it a consumer cannot turn a drop count into a drop
+          rate. Accumulated by the session state machine.
+      - name: time_buffering_ms
+        unit: ms
+        kind: counter
+        provider: Middleware
+        description: Cumulative time the session was stalled awaiting data, as the state machine observed
+          it — distinct from `av.video_sink.underflow_duration_ms`, which is the sink's view of starvation.
+      - name: preroll_ms
+        unit: ms
+        kind: current
+        provider: Middleware
+        description: Time from `play()` to the pipeline reaching `PLAYING`, per playback start. With the
+          driver-sourced `av.video_sink.first_frame_presented_pts_ms` this splits time-to-first-frame
+          into the part middleware owns and the part the hardware owns.
+      - name: seek_count
+        unit: events
+        kind: counter
+        provider: Middleware
+        description: Completed seek/flush cycles. The denominator for post-seek recovery figures, and
+          the context that explains why first-frame timing was re-set.
+    - element: admission
+      fields:
+      - name: denied_count
+        unit: events
+        kind: counter
+        provider: Middleware
+        description: Session-creation requests refused as unsatisfiable. Lets a consumer distinguish **"playback
+          never started"** from **"playback started and then failed"** — two very different customer experiences,
+          indistinguishable from playback counters alone.
+      - name: reclaim_count
+        unit: events
+        kind: counter
+        provider: Middleware
+        description: Times a session's resources were reclaimed for another admitted consumer. Explains
+          an otherwise inexplicable teardown.
+  - domain: health
+    dictionaryVersion: '1.1'
+    elements:
+    - element: poll
+      fields:
+      - name: poll_period_ms
+        unit: ms
+        kind: current
+        provider: Declaring party
+        description: The poll loop's **actual** most-recent period, against the declared cadence floor.
+          A declared cadence is an intention; this is the measurement.
+      - name: poll_overrun_count
+        unit: events
+        kind: counter
+        provider: Declaring party
+        description: Poll cycles that exceeded the declared floor. Direct evidence for or against the
+          ≤50 ms freshness contract.
+      - name: state_age_ms
+        unit: ms
+        kind: current
+        provider: Declaring party
+        description: Age of the canonical state at the moment this read was served — how stale the numbers
+          in this snapshot are. Lets a consumer reason about freshness instead of assuming it.

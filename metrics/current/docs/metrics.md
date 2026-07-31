@@ -63,9 +63,48 @@ Three properties shape the interface:
 
 ---
 
-## Field dictionary
+## HAL Field Dictionary
 
-The normative `av` field set — what each name means, its unit, its kind, its provider and its population rule — is the [AV Domain Field Dictionary](av_field_dictionary.md). A declaration states *which* fields a product serves; the dictionary states *what each one is*, and a product may not declare a name the dictionary does not define.
+**HFD defines, HFP declares, the HAL carries.**
+
+| | Artefact | States |
+|---|---|---|
+| **HFD** | `av-field-dictionary.yaml` | What every field *means* — unit, kind, provider, population rule. Authored. |
+| **HFP** | `hfp-metrics.yaml` | Which of them *this product serves*, with what cadence and how many instances. |
+| **HAL** | `com.rdk.hal.metrics` | Carries the values. Never enumerates them. |
+
+A product may not declare a name the HFD does not define, and cannot redefine one it does — a declaration chooses whether to serve a field, not what it is.
+
+The HFD is a declarative file rather than prose, because everything below is generated from it and a generator must not parse meaning out of a document edited by hand:
+
+```text
+av-field-dictionary.yaml                      the HFD - authored
+    │
+    ├─→ docs/av_field_dictionary.md           human-readable reference
+    ├─→ com/rdk/hal/metrics/MetricNames.aidl  name + contract id constants
+    ├─→ hfp-metrics.yaml                      ids, descriptions
+    └─→ docs/metrics_requirements.md          one requirement per field
+```
+
+`scripts/dictionary-ids.py --generate` writes all four. It is a pre-commit step for the engineer changing a definition, so the generated diff is reviewed by the person who caused it.
+
+### Field contract id
+
+Every field carries an id derived from the contract that governs how it may be read:
+
+```text
+id = first 8 bytes of SHA-256("<domain>.<element>.<field>|<unit>|<kind>")
+```
+
+Nothing allocates it, so there is no registry to consult and nothing to resolve when two people add a field on separate branches.
+
+It buys a check no key can make alone. A key — a name or an ordinal — stays valid while the meaning underneath it changes: a product that declares `decode_latency_sum_us` but populates milliseconds still matches by name, and its consumer reports figures a thousand times wrong; a `current` sample reclassified as a `counter` gets differenced into nonsense. Because `unit` and `kind` are hashed, both change the id, so a consumer comparing against the id it was built with sees a hard mismatch rather than a wrong number.
+
+`MetricNames.aidl` carries a constant per name alongside its id, so a client neither mistypes a name nor accepts one whose meaning has moved.
+
+### No SoC-private namespace
+
+A figure only one SoC can produce still gets an HFD entry. A private range would let a vendor ship a name no dictionary defines, and every consumer of it would grow per-SoC code — which is the cost the dictionary exists to avoid.
 
 ---
 
@@ -127,6 +166,7 @@ Names are by **subject, not producer**. Which block sources a figure differs per
 | `Capabilities.aidl` | The catalog — every domain this product serves, with the schema identity. |
 | `MetricDomainInfo.aidl` | One domain and its elements, with the dictionary revision it was written against. |
 | `MetricElementInfo.aidl` | One element — its fields, instance count and cadence. |
+| `MetricNames.aidl` | Generated name and contract-id constants for every declared field. |
 | `MetricFieldInfo.aidl` | One declared field — name, unit, kind and writability. |
 | `MetricKVPair.aidl` | One metric value, keyed by its fully-qualified name. |
 
