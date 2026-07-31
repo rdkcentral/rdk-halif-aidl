@@ -20,8 +20,14 @@
 
 """Field identity and declaration checking for the metrics HAL.
 
-    scripts/dictionary-ids.py            check   (CI mode, exit non-zero on failure)
-    scripts/dictionary-ids.py --sync     rewrite hfp-metrics.yaml from the dictionary
+    scripts/dictionary-ids.py             check - exits non-zero on failure
+    scripts/dictionary-ids.py --sync      rewrite hfp-metrics.yaml from the dictionary
+    scripts/dictionary-ids.py --emit-aidl regenerate MetricGroup.aidl / MetricId.aidl
+
+RUN THIS BEFORE COMMITTING any change to the dictionary or the declaration. It
+is a pre-commit step for the engineer making the change, deliberately not a CI
+gate: the person editing the dictionary is the one who should see the generated
+diff and review it, rather than discovering it after the fact on a PR.
 
 IDENTITY IS DERIVED, NOT ALLOCATED
 ----------------------------------
@@ -229,6 +235,119 @@ def sync(dictionary: dict, hfp_text: str) -> str:
     return "\n".join(out) + "\n"
 
 
+AIDL_HEADER = """/*
+ * If not stated otherwise in this file or this component's LICENSE file the
+ * following copyright and licenses apply:
+ *
+ * Copyright 2026 RDK Management
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.rdk.hal.metrics;
+"""
+
+# Each group owns a 1000-block, so a metric's group is `value / 1000` and two
+# people adding to different groups can never collide on an ordinal.
+GROUP_STRIDE = 1000
+
+
+def enum_name(path: str) -> str:
+    """av.video_decoder.frames_decoded -> AV_VIDEO_DECODER_FRAMES_DECODED
+
+    A direct transliteration of the declared name, so the enum and the string
+    are visibly the same thing and neither has to be looked up to read the
+    other."""
+    return path.replace(".", "_").upper()
+
+
+def groups_of(dictionary: dict) -> dict:
+    """{ "<domain>.<element>": [(field, entry), ...] } in dictionary order."""
+    grouped: dict = {}
+    for path, entry in dictionary.items():
+        element, field = path.rsplit(".", 1)
+        grouped.setdefault(element, []).append((field, entry))
+    return grouped
+
+
+def emit_group_enum(dictionary: dict) -> str:
+    grouped = groups_of(dictionary)
+    lines = [AIDL_HEADER, """
+/**
+ *  @brief     The metric groups this interface can serve.
+ *
+ *  GENERATED from docs/av_field_dictionary.md by scripts/dictionary-ids.py.
+ *  Do not hand-edit - add the element to the dictionary and re-run --emit-aidl.
+ *
+ *  A group is one <domain>.<element>. Extending the interface with a new group
+ *  is an enum value appended here, which is a source-compatible change: a
+ *  consumer that does not know a value skips it.
+ *
+ *  Each group owns a 1000-block of MetricId values, so a metric's group is
+ *  `metricId / 1000` and two groups can never collide on an ordinal.
+ */
+@VintfStability
+@Backing(type="int")
+enum MetricGroup {
+"""]
+    for i, element in enumerate(grouped):
+        lines.append(f"    /** `{element}` - MetricId values {i * GROUP_STRIDE}"
+                     f"..{i * GROUP_STRIDE + GROUP_STRIDE - 1}. */")
+        lines.append(f"    {enum_name(element)} = {i},")
+        lines.append("")
+    lines.append("}")
+    return "\n".join(lines).replace("\n\n}", "\n}")
+
+
+def emit_metric_enum(dictionary: dict) -> str:
+    grouped = groups_of(dictionary)
+    lines = [AIDL_HEADER, """
+/**
+ *  @brief     Every metric this interface can serve, keyed by group block.
+ *
+ *  GENERATED from docs/av_field_dictionary.md by scripts/dictionary-ids.py.
+ *  Do not hand-edit - add the field to the dictionary and re-run --emit-aidl.
+ *
+ *  The name is a direct transliteration of the declared name, so
+ *  AV_VIDEO_DECODER_FRAMES_DECODED and `av.video_decoder.frames_decoded` are
+ *  visibly the same thing.
+ *
+ *  Values are banded by group: `metricId / 1000` is the MetricGroup ordinal.
+ *  Extending is appending inside a band; an existing value never moves,
+ *  because a consumer that cached the mapping would otherwise read a
+ *  different field under the value it already knows.
+ *
+ *  A value's presence here says the interface can carry it. Whether a given
+ *  product serves it is `getGroupMetrics()` at runtime - a product that cannot
+ *  measure a figure omits it rather than returning 0.
+ */
+@VintfStability
+@Backing(type="int")
+enum MetricId {
+"""]
+    for i, (element, fields) in enumerate(grouped.items()):
+        lines.append(f"    /* ---- {element} ---- */")
+        lines.append("")
+        for j, (field, entry) in enumerate(fields):
+            unit = entry["unit"]
+            kind = entry["kind"]
+            wr = ", writable" if entry["writable"] else ""
+            lines.append(f"    /** {unit} - {kind}{wr}. `{element}.{field}` */")
+            lines.append(f"    {enum_name(f'{element}.{field}')} = {i * GROUP_STRIDE + j},")
+            lines.append("")
+    lines.append("}")
+    return "\n".join(lines).replace("\n\n}", "\n}")
+
+
 def check(dictionary: dict, hfp_text: str) -> list[str]:
     problems, declared = [], set()
 
@@ -270,6 +389,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--sync", action="store_true",
                         help="rewrite hfp-metrics.yaml from the dictionary")
+    parser.add_argument("--emit-aidl", action="store_true",
+                        help="regenerate MetricGroup.aidl and MetricId.aidl")
     args = parser.parse_args()
 
     dictionary = parse_dictionary(DICT.read_text(encoding="utf-8"))
@@ -277,6 +398,13 @@ def main() -> int:
         print(f"error: no field definitions parsed from {DICT}", file=sys.stderr)
         return 2
     hfp_text = HFP.read_text(encoding="utf-8")
+
+    if args.emit_aidl:
+        aidl = ROOT / "com/rdk/hal/metrics"
+        (aidl / "MetricGroup.aidl").write_text(emit_group_enum(dictionary), encoding="utf-8")
+        (aidl / "MetricId.aidl").write_text(emit_metric_enum(dictionary), encoding="utf-8")
+        print(f"emitted MetricGroup.aidl ({len(groups_of(dictionary))} groups) "
+              f"and MetricId.aidl ({len(dictionary)} metrics)")
 
     if args.sync:
         HFP.write_text(sync(dictionary, hfp_text), encoding="utf-8")
