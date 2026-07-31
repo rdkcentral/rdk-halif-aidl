@@ -28,7 +28,7 @@ parcelable MetricFieldInfo
     /** Field name within its element, e.g. "frames_decoded". */
     String name;
 
-    /** "frames" | "ms" | "us" | "ns" | "bytes" | "events" | "percent" | "hz" | "none" */
+    /** "frames" | "episodes" | "ms" | "us" | "ns" | "bytes" | "events" | "percent" | "hz" | "none" */
     String unit;
 
     /**
@@ -44,4 +44,21 @@ parcelable MetricFieldInfo
 
     /** True when setField() is accepted on this field. */
     boolean writable;
+
+    /**
+     *  Content-derived identity of this field's contract: the first 8 bytes of
+     *  SHA-256 over "<domain>.<element>.<field>|<unit>|<kind>".
+     *
+     *  A consumer compares this against the id it was built with. Matching
+     *  names are not enough on their own - a product that serves
+     *  decode_latency_sum_us but populates milliseconds still matches by name,
+     *  and the consumer reports figures a thousand times wrong; a `current`
+     *  sample reclassified as a `counter` gets differenced and produces
+     *  nonsense. Both change the id, so both become a hard mismatch here
+     *  instead of a wrong number downstream.
+     *
+     *  Nothing allocates it, so it needs no registry: the same id means the
+     *  same name, unit and kind, which is the same field.
+     */
+    long id;
 }

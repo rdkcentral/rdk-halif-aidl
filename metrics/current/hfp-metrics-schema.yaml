@@ -22,7 +22,7 @@
 # Pykwalify schema for metrics declarations.
 #
 # ONE schema, validating EVERY metrics declaration on the device: the vendor's
-# hfp-metrics.yaml, Rialto's metrics-rialto.yaml, and any metrics-<component>.yaml
+# hfp-metrics.yaml, the middleware's own declaration, and any metrics-<component>.yaml
 # a future declaring party adds. getCapabilities() returns their union, which
 # only composes without translation if every declaration has the same shape.
 #
@@ -125,7 +125,7 @@ mapping:
                               unit:
                                 type: str
                                 required: true
-                                enum: [frames, ms, us, ns, bytes, events, percent, hz, none]
+                                enum: [frames, episodes, ms, us, ns, bytes, events, percent, hz, none]
 
                               # How the value behaves over time — governs what
                               # arithmetic a consumer may do:
@@ -142,6 +142,20 @@ mapping:
                               writable:
                                 type: bool
                                 required: false
+
+                              # Content-derived field identity, written by
+                              # scripts/dictionary-ids.py:
+                              #   first 8 bytes of SHA-256 over
+                              #   "<domain>.<element>.<field>|<unit>|<kind>"
+                              # A client compares it against the id it was built
+                              # with, so a field whose unit or kind changed is a
+                              # hard mismatch rather than a silently wrong number.
+                              # Nothing allocates it - delete it and --sync
+                              # regenerates it, so a rename flows through.
+                              id:
+                                type: str
+                                required: false
+                                pattern: '^0x[0-9a-f]{16}$'
 
                               # DERIVED domains only: the measured fields this is
                               # computed from, named the way every declaration
