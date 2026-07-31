@@ -18,7 +18,6 @@
  */
 package com.rdk.hal.metrics;
 import com.rdk.hal.metrics.MetricFieldInfo;
-import com.rdk.hal.metrics.MetricEventInfo;
 
 /**
  *  @brief     One element of a domain, and everything it serves.
@@ -37,24 +36,12 @@ parcelable MetricElementInfo
     MetricFieldInfo[] fields;
 
     /**
-     *  The event kinds this element raises, each with the values it carries.
-     *
-     *  EMPTY MEANS THIS ELEMENT NEVER RAISES EVENTS — an A/V clock reports
-     *  samples but has nothing episodic to report. A consumer reads this to
-     *  decide where registering a listener is worth anything.
-     */
-    MetricEventInfo[] events;
-
-    /**
      *  How many of this element the hardware SUPPORTS — the ceiling, not the
      *  live count. Declaring it lets capability be checked before the product
      *  boots, and lets a test assert that no source index >= instances ever
      *  appears. It must agree with the owning HAL's own feature profile.
      */
     int instances;
-
-    /** Events held between polls. Default 32. */
-    int eventBufferCapacity;
 
     /**
      *  The cadence this element is polled at. May be tighter than the 50 ms

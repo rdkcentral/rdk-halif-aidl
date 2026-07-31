@@ -19,8 +19,6 @@
 package com.rdk.hal.metrics;
 import com.rdk.hal.metrics.MetricFieldInfo;
 import com.rdk.hal.metrics.MetricKVPair;
-import com.rdk.hal.metrics.MetricsEvent;
-import com.rdk.hal.metrics.IMetricsSourceEventListener;
 
 /**
  *  @brief     One metric source — a single <domain>.<element>.<instance>.
@@ -78,10 +76,12 @@ interface IMetricsSource
      *         path.
      *
      *  @param[in]  name  : fully-qualified name.
-     *  @param[out] value : the value.
+     *  @param[out] value : single-element array receiving the value. AIDL
+     *                      primitives cannot be out parameters, so a length-1
+     *                      long array carries it back alongside the boolean.
      *  @returns boolean : false when the name is not served here.
      */
-    boolean getField(in String name, out long value);
+    boolean getField(in String name, out long[] value);
 
     /**
      *  @brief Write path — writable fields only: config, tunables, userspace
@@ -95,55 +95,4 @@ interface IMetricsSource
      *  @exception EX_ILLEGAL_ARGUMENT on an undeclared name.
      */
     boolean setField(in String name, in long value);
-
-    /**
-     *  @brief Events since the caller's last read.
-     *
-     *  Middleware is the only reader of this interface, so there is one cursor
-     *  and the caller holds it: pass the highest seq you have seen. The HAL
-     *  keeps no per-caller cursor state. Multi-consumer fan-out belongs one
-     *  layer up, where consumers genuinely read at different cadences.
-     *
-     *  The buffer exists only to bridge one poll interval. Oldest events drop
-     *  at the cap, and the overwrite is counted so a reader can tell it fell
-     *  behind rather than silently seeing a gap.
-     *
-     *  @param[in]  sinceSeq  : return events with seq greater than this.
-     *  @param[in]  maxEvents : cap on the number returned.
-     *  @param[out] events    : the events, in seq order.
-     *  @returns boolean : true on success.
-     */
-    boolean getRecentEvents(in long sinceSeq, in int maxEvents,
-                            out MetricsEvent[] events);
-
-    /**
-     *  @brief Registers for event callbacks from THIS source.
-     *
-     *  Registration is per source, so a consumer subscribes only to the
-     *  elements it cares about rather than filtering a device-wide stream.
-     *
-     *  NOT EVERY ELEMENT RAISES EVENTS. An element declares its event kinds in
-     *  MetricElementInfo.events; where that list is empty the element never
-     *  fires, and registering on it is accepted but silently idle. Check the
-     *  catalog before registering — it is the difference between "this element
-     *  has raised nothing yet" and "this element will never raise anything".
-     *
-     *  Push is optional and offered where the implementation can raise events
-     *  from a schedulable context. Where offered it removes poll latency on
-     *  events, but the buffer remains the delivery of record, because a oneway
-     *  binder call cannot be made from an atomic context — a listener that
-     *  misses a call loses nothing.
-     *
-     *  @param[in] listener : the listener.
-     *  @returns boolean : true on success.
-     */
-    boolean registerEventListener(in IMetricsSourceEventListener listener);
-
-    /**
-     *  @brief Unregisters a previously registered listener.
-     *
-     *  @param[in] listener : the listener.
-     *  @returns boolean : true on success.
-     */
-    boolean unregisterEventListener(in IMetricsSourceEventListener listener);
 }

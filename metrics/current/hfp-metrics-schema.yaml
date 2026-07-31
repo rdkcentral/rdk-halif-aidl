@@ -107,15 +107,6 @@ mapping:
                         required: false
                         range: { min: 1, max: 50 }
 
-                      # Events held between polls. Sized from the worst-case
-                      # burst within ONE poll interval, not from a rate: an
-                      # element that out-runs its buffer needs a tighter
-                      # cadence, not a bigger buffer. Default 32.
-                      eventBufferCapacity:
-                        type: int
-                        required: false
-                        range: { min: 8, max: 1024 }
-
                       fields:
                         type: seq
                         required: true
@@ -169,40 +160,3 @@ mapping:
                                 sequence:
                                   - type: str
                                     pattern: '^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$'
-
-                      events:
-                        type: seq
-                        required: false
-                        sequence:
-                          - type: map
-                            mapping:
-
-                              # Scoped by the element that raises it, so no
-                              # prefix: "underflow" on video_sink, not
-                              # "video_underflow".
-                              kind:
-                                type: str
-                                required: true
-                                pattern: '^[a-z][a-z0-9_]*$'
-
-                              fields:
-                                type: seq
-                                required: true
-                                sequence:
-                                  - type: map
-                                    mapping:
-
-                                      # Bare name — the kind already scopes it.
-                                      name:
-                                        type: str
-                                        required: true
-                                        pattern: '^[a-z][a-z0-9_]*$'
-
-                                      # The only descriptor an occurrence
-                                      # payload needs. counter/current/... 
-                                      # describes behaviour over time, which is
-                                      # meaningless for a single occurrence.
-                                      unit:
-                                        type: str
-                                        required: true
-                                        enum: [frames, ms, us, ns, bytes, events, percent, hz, none]

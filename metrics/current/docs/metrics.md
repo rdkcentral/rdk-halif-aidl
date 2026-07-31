@@ -52,7 +52,7 @@ The Metrics HAL is responsible for:
 - Publishing a **catalog** of every domain, element and field the product serves, with a schema identity a consumer can cache-key against.
 - Enumerating the **sources** that are live now, and reporting them appearing and disappearing.
 - Serving a **coherent snapshot** of every value a source holds, at a declared freshness.
-- Serving **events** — underflows, discontinuities, decode errors — from a per-source buffer that bridges one poll interval.
+- Serving the **most recent occurrence** of each episodic condition — underflow, decode error, first frame — as ordinary fields alongside the counter that totals them.
 - Accepting writes to the fields declared writable: configuration, tunables and test injection.
 
 Three properties shape the interface:
@@ -108,10 +108,10 @@ Names are by **subject, not producer**. Which block sources a figure differs per
 | **HAL.METRICS.5** | A read shall reflect events no older than the element's declared `pollCadenceMs`, which shall not exceed 50 ms. | An element may declare tighter; never looser. Freshness is a partner-facing promise. |
 | **HAL.METRICS.6** | A field the implementation cannot measure shall be left undeclared and omitted from reads. | It shall never be served as `0`. "Cannot measure it" and "measured zero" are different facts. |
 | **HAL.METRICS.7** | Every field returned shall be declared in `hfp-metrics.yaml` with `unit`, `kind` and `writable`, and every name used shall exist in that domain's dictionary at the declared `dictionaryVersion`. | There is no SoC-private namespace: a figure only one SoC can produce still gets a dictionary entry, so no consumer grows per-SoC code. |
-| **HAL.METRICS.8** | Event `seq` shall be monotonic per source from 1. Oldest events shall drop at the buffer cap and the overwrite shall be counted. | Loss is reported, not hidden — a reader can tell it fell behind rather than silently seeing a gap. |
-| **HAL.METRICS.9** | Where a consumer requires exact PTS, `pts_ms` shall be within ±1 frame interval of the event. Where genuinely underivable it shall be omitted. | Never a sentinel value. |
+| **HAL.METRICS.8** | Every episodic condition shall be reported as a `counter` totalling occurrences, and where a consumer needs per-occurrence detail, `current` fields describing the most recent one. | A poll cannot recover an occurrence it did not sample, so the count is what makes the occurrence visible and the `last_*` fields are what make it diagnosable. |
+| **HAL.METRICS.9** | Where a consumer requires exact PTS, a `*_pts_ms` field shall be within ±1 frame interval of the occurrence it describes. Where genuinely underivable it shall be left undeclared. | Never a sentinel value. |
 | **HAL.METRICS.10** | `MetricElementInfo.instances` shall state how many of the element the hardware supports, and shall agree with the owning HAL's own feature profile. | The ceiling, not the live count. No source index `>= instances` shall ever appear. |
-| **HAL.METRICS.11** | The implementation shall not require per-caller cursor state. | Middleware is the single reader and passes the highest `seq` it has seen. Multi-consumer fan-out is a middleware concern. |
+| **HAL.METRICS.11** | The implementation shall hold no per-caller state. | Every read is a snapshot of what the source holds now. Any consumer reads at any cadence without affecting another; fan-out is a middleware concern. |
 | **HAL.METRICS.12** | Values shall be presented in canonical units and semantics regardless of the SoC's raw representation. | The provider is an adapter, not a passthrough. A transform normalises representation; it cannot manufacture information, so where a SoC reports only a combined figure the finer-grained fields stay undeclared rather than derived by guesswork. |
 
 ---
@@ -122,16 +122,12 @@ Names are by **subject, not producer**. Which block sources a figure differs per
 |---|---|
 | `IMetricsManager.aidl` | Metrics Manager HAL interface — catalog and live source enumeration. |
 | `IMetricsSource.aidl` | Metrics HAL interface for a single source (`<domain>.<element>.<instance>`). |
-| `IMetricsSourceEventListener.aidl` | Listener callbacks to clients from an `IMetricsSource`. |
 | `IMetricsManagerEventListener.aidl` | Listener callbacks to clients from the `IMetricsManager` for sources appearing and disappearing. |
 | `Capabilities.aidl` | The catalog — every domain this product serves, with the schema identity. |
 | `MetricDomainInfo.aidl` | One domain and its elements, with the dictionary revision it was written against. |
-| `MetricElementInfo.aidl` | One element — its fields, event kinds, instance count, cadence and buffer depth. |
+| `MetricElementInfo.aidl` | One element — its fields, instance count and cadence. |
 | `MetricFieldInfo.aidl` | One declared field — name, unit, kind and writability. |
-| `MetricEventInfo.aidl` | One event kind and the values it carries. |
-| `MetricEventFieldInfo.aidl` | One value carried by an event kind. |
 | `MetricKVPair.aidl` | One metric value, keyed by its fully-qualified name. |
-| `MetricsEvent.aidl` | One event on a source's event buffer. |
 
 ---
 
@@ -151,7 +147,7 @@ Once registered, the service remains available for the lifetime of the system. S
 
 ## Product Customization
 
-The metric set a product serves is **declared data**, not code. `hfp-metrics.yaml`, validated by `hfp-metrics-schema.yaml`, declares per element: its fields, its event kinds and each kind's values, `instances`, `pollCadenceMs` and `eventBufferCapacity`. `getCapabilities()` returns the runtime truth built from that declaration.
+The metric set a product serves is **declared data**, not code. `hfp-metrics.yaml`, validated by `hfp-metrics-schema.yaml`, declares per element: its fields, `instances` and `pollCadenceMs`. `getCapabilities()` returns the runtime truth built from that declaration.
 
 Two conventions to follow when filling one in:
 
@@ -165,9 +161,8 @@ Two conventions to follow when filling one in:
 ```mermaid
 flowchart TD
     Client[Middleware] -->|getCapabilities / getSourcePaths / getSource| MGR[IMetricsManager]
-    Client -->|getAll / getRecentEvents / setField| SRC[IMetricsSource]
+    Client -->|getAll / getFieldsByName / setField| SRC[IMetricsSource]
     MGR -->|onSourceAdded / onSourceRemoved| Client
-    SRC -->|onEvent| Client
     MGR -->|builds catalog from| HFP[hfp-metrics.yaml]
     SRC -->|latches| HW[SoC Counters and Registers]
 
@@ -206,26 +201,28 @@ A client that exits leaves no state behind to clean up; listener registrations a
 1. **Resolve the catalog once.** `getCapabilities()` returns every domain, element and field the product serves. A consumer keeps the names it understands, ignores the rest, and cache-keys its resolved name map on `Capabilities.schemaId` — re-reading only when that value changes.
 2. **Attach to the live sources.** `getSourcePaths()` gives those live now, and `registerEventListener()` on the manager reports later arrivals and departures.
 3. **Poll each source.** `getAll()` returns every declared field of that source under one coherent snapshot; `getFieldsByName()` reads a subset under the same guarantee. Unknown names are omitted rather than raising an error, so a newer consumer degrades cleanly on an older product.
-4. **Drain the events.** `getRecentEvents(lastSeq, maxEvents)` returns events with `seq` greater than the cursor the caller passes.
-5. **Compute deltas.** Counters are cumulative since source creation, so rates and episode counts are the consumer's subtraction.
+4. **Compute deltas.** Counters are cumulative since source creation, so rates and episode counts are the consumer's subtraction. A counter that advanced between two polls says an episode occurred; the matching `last_*` fields describe the most recent one.
 
 `getField()` exists for diagnostics and one-off reads. It is not the poll path — a per-field loop gives up the single-snapshot guarantee that makes paired counters comparable.
 
 ---
 
-## Event Handling
+## Episodic Conditions
 
-An event is when it happened, what kind it was, and its declared values:
+Underflows, decode errors and first-frame timing are episodic — they happen at an instant rather than describing a level. They are reported as ordinary fields, in two parts:
 
-```text
-{ seq, tsUnixMs, kind, values[] }
-```
+| Part | Kind | Answers |
+|---|---|---|
+| `underflowed`, `decode_errors`, `freeze_event_count` | `counter` | How many have happened |
+| `last_underflow_duration_ms`, `last_decode_error_pts_ms`, `last_decode_error_reason` | `current` | What the most recent one was |
 
-`kind` is a declared string **scoped by its source**, so it carries no media prefix: `underflow` from `av.video_sink` is a video starvation, and the same kind from `av.audio_sink` is an audio one. Each kind declares the values it carries — `duration_ms`, `pts_ms`, `trigger`, `code` — so a new kind never widens a parcelable to hold a field only it uses.
+A counter that advanced between two polls is what makes the occurrence visible; the `last_*` fields are what make it diagnosable. Both arrive in the same `getAll()` snapshot as every other field, so an occurrence and the counters around it are always mutually consistent.
 
-The per-source buffer exists to bridge one poll interval. It is sized from the worst-case burst within an interval rather than from a rate: an element that out-runs its buffer needs a tighter cadence, and the buffer is not where that is fixed. Oldest events drop at the cap and the overwrite is counted, so a reader can tell it fell behind.
+**What this trades.** Several occurrences within one poll interval advance the counter by several and leave `last_*` describing only the newest. Rates and totals are exact; the intermediate occurrences of a burst are not individually described. This is deliberate — it removes per-source retention, sequence numbering, cursor state and overwrite accounting from every vendor implementation, and no consumer requirement asks for the middle of a burst.
 
-`IMetricsSourceEventListener` is an optional push path, offered where the implementation can raise events from a schedulable context. Where offered it removes poll latency; the buffer remains the delivery of record, because a `oneway` binder call cannot be made from an atomic context.
+`last_decode_error_reason` is the closed classification a consumer acts on; `last_decode_error_vendor_code` is the SoC's own value for the same fault, carried through uninterpreted. A vendor supplies both — the first makes the fault comparable across platforms, the second makes it debuggable on this one.
+
+A PTS the SoC cannot derive leaves the field **undeclared**, never served as `-1`. "No PTS available" and "the PTS is minus one" must not be the same value on the wire.
 
 ---
 
@@ -241,7 +238,7 @@ parcelable Capabilities {
 ```
 
 - `schemaId` is an opaque identity of this product's declared set — stable while the declaration is unchanged, different the moment anything in it changes. A bug report needs only this value to pin exactly what the device was serving.
-- `domains` carries, per domain, the dictionary revision it was written against and its elements. Each element carries its fields, its event kinds, `instances`, `pollCadenceMs` and `eventBufferCapacity`.
+- `domains` carries, per domain, the dictionary revision it was written against and its elements. Each element carries its fields, `instances` and `pollCadenceMs`.
 
 ### Example hfp-metrics.yaml
 
@@ -254,17 +251,13 @@ domains:
       video_decoder:
         instances: 2            # ceiling - must agree with the Video Decoder HFP
         pollCadenceMs: 20
-        eventBufferCapacity: 32
         fields:
-          frames_decoded:       { unit: frames, kind: counter, writable: false }
-          frames_dropped_early: { unit: frames, kind: counter, writable: false }
-          decode_errors:        { unit: errors, kind: counter, writable: false }
-        # frames_corrupted:     NOT SUPPORTED - no per-frame integrity signal on this SoC
-        events:
-          decode_error:
-            values:
-              code:   { unit: none, kind: gauge }
-              pts_ms: { unit: ms,   kind: gauge }
+          frames_decoded:            { unit: frames, kind: counter, writable: false }
+          frames_dropped_early:      { unit: frames, kind: counter, writable: false }
+          decode_errors:             { unit: errors, kind: counter, writable: false }
+          last_decode_error_pts_ms:  { unit: ms,     kind: current, writable: false }
+          last_decode_error_reason:  { unit: none,   kind: current, writable: false }
+        # frames_corrupted:          NOT SUPPORTED - no per-frame integrity signal on this SoC
 ```
 
 ---
@@ -279,7 +272,7 @@ domains:
 | `setField()` on a read-only field | `EX_UNSUPPORTED_OPERATION`. |
 | `setField()` on an undeclared name | `EX_ILLEGAL_ARGUMENT`. |
 | Field the product cannot measure | Undeclared, and omitted from every read. Never served as `0`. |
-| Event buffer overrun | Oldest events drop and the overwrite is counted, so the reader sees the loss. |
+| Consumer polls slower than episodes occur | Counters stay exact; `last_*` fields describe the newest occurrence only. Rates and totals are unaffected. |
 
 ---
 
@@ -302,8 +295,7 @@ sequenceDiagram
     loop Per poll tick, per source
         Client->>SRC: getAll()
         SRC-->>Client: fully-qualified name/value pairs, one coherent snapshot
-        Client->>SRC: getRecentEvents(lastSeq, maxEvents)
-        SRC-->>Client: events with seq > lastSeq
+        note over Client: Counters advanced -> an episode occurred.<br/>last_* fields in the same snapshot describe the newest one.
     end
 
     note over MGR,Client: A second session starts.

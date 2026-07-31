@@ -86,23 +86,20 @@ metrics:
                                   # hfp-videodecoder.yaml. Live sources are a
                                   # subset: av.video_decoder.0 .. .1
           pollCadenceMs: 20       # tighter than the 50 ms floor; never looser
-          eventBufferCapacity: 32 # events held between polls
           fields:
             - { name: frames_decoded,                unit: frames, kind: counter }
             - { name: frames_dropped,                unit: frames, kind: counter }
             - { name: decode_errors,                 unit: events, kind: counter }
             - { name: decode_latency_sum_us,         unit: us,     kind: counter }
-          events:
-            - kind: decode_error
-              fields:
-                - { name: pts_ms, unit: ms }
-                - { name: code,   unit: none }
+            - { name: last_decode_error_pts_ms,      unit: ms,     kind: current }
+            - { name: last_decode_error_reason,      unit: none,   kind: current }
+            - { name: last_decode_error_vendor_code, unit: none,   kind: current }
 
         # Sources    av.video_sink.0, av.video_sink.1
         # Read       getSource("av.video_sink.1")->getFields(["frames_presented",
         #                                                    "frames_dropped_late"])
-        # Events     getSource("av.video_sink.1")->getRecentEvents(lastSeq, 64)
-        #              -> kind "underflow_end", values { duration_ms }
+        # Episodes   underflowed counts them, underflow_duration_ms totals them,
+        #            last_underflow_duration_ms describes the most recent one
         - element: video_sink
           instances: 2            # one per decode path
           fields:
@@ -119,21 +116,10 @@ metrics:
             - { name: render_latency_sum_us,         unit: us,     kind: counter }
             - { name: max_freeze_duration_ms,        unit: ms,     kind: high_water }
             - { name: buffer_depth_ms,               unit: ms,     kind: current }
-          events:
-            - kind: underflow
-              fields:
-                - { name: trigger, unit: none }
-            - kind: underflow_end
-              fields:
-                - { name: duration_ms, unit: ms }
-            - kind: first_frame_presented
-              fields:
-                - { name: pts_ms, unit: ms }
-            - kind: quality_threshold_crossed
-              fields:
-                - { name: metric, unit: none }
-                - { name: count,  unit: frames }
-                - { name: pts_ms, unit: ms }
+            - { name: last_underflow_trigger,        unit: none,   kind: current }
+            - { name: last_underflow_duration_ms,    unit: ms,     kind: current }
+            - { name: first_frame_presented_pts_ms,  unit: ms,     kind: current }
+            - { name: last_dropped_frame_pts_ms,     unit: ms,     kind: current }
 
         # Sources    av.audio_decoder.0
         # Names      av.audio_decoder.frames_decoded  (same field name as the
@@ -145,11 +131,9 @@ metrics:
             - { name: frames_dropped,                unit: frames, kind: counter }
             - { name: decode_errors,                 unit: events, kind: counter }
             - { name: decode_latency_sum_us,         unit: us,     kind: counter }
-          events:
-            - kind: decode_error
-              fields:
-                - { name: pts_ms, unit: ms }
-                - { name: code,   unit: none }
+            - { name: last_decode_error_pts_ms,      unit: ms,     kind: current }
+            - { name: last_decode_error_reason,      unit: none,   kind: current }
+            - { name: last_decode_error_vendor_code, unit: none,   kind: current }
 
         # Sources    av.audio_sink.0
         # Read       getSource("av.audio_sink.0")->getField("buffer_depth_ms")
@@ -160,16 +144,9 @@ metrics:
             - { name: silence_duration_ms,           unit: ms,     kind: counter }
             - { name: silence_event_count,           unit: events, kind: counter }
             - { name: buffer_depth_ms,               unit: ms,     kind: current }
-          events:
-            - kind: underflow
-              fields:
-                - { name: trigger, unit: none }
-            - kind: underflow_end
-              fields:
-                - { name: duration_ms, unit: ms }
-            - kind: silence
-              fields:
-                - { name: duration_ms, unit: ms }
+            - { name: last_underflow_trigger,        unit: none,   kind: current }
+            - { name: last_underflow_duration_ms,    unit: ms,     kind: current }
+            - { name: last_silence_duration_ms,      unit: ms,     kind: current }
 
         # Sources    av.clock.0
         # Read       getSource("av.clock.0")->getAll()
