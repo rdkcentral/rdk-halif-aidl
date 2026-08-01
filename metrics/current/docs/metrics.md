@@ -78,15 +78,14 @@ A product may not declare a name the HFD does not define, and cannot redefine on
 The HFD is a declarative file rather than prose, because everything below is generated from it and a generator must not parse meaning out of a document edited by hand:
 
 ```text
-av-field-dictionary.yaml                      the HFD - authored
+av-field-dictionary.yaml             the HFD - authored
     │
-    ├─→ docs/av_field_dictionary.md           human-readable reference
-    ├─→ com/rdk/hal/metrics/MetricNames.aidl  name + contract id constants
-    ├─→ hfp-metrics.yaml                      ids, descriptions
-    └─→ docs/metrics_requirements.md          one requirement per field
+    ├─→ docs/av_field_dictionary.md   human-readable reference
+    ├─→ hfp-metrics.yaml              ids, descriptions
+    └─→ docs/metrics_requirements.md  one requirement per field
 ```
 
-`scripts/dictionary-ids.py --generate` writes all four. It is a pre-commit step for the engineer changing a definition, so the generated diff is reviewed by the person who caused it.
+`scripts/dictionary-ids.py --generate` writes all three. It is a pre-commit step for the engineer changing a definition, so the generated diff is reviewed by the person who caused it.
 
 ### Field contract id
 
@@ -100,7 +99,13 @@ Nothing allocates it, so there is no registry to consult and nothing to resolve 
 
 It buys a check no key can make alone. A key — a name or an ordinal — stays valid while the meaning underneath it changes: a product that declares `decode_latency_sum_us` but populates milliseconds still matches by name, and its consumer reports figures a thousand times wrong; a `current` sample reclassified as a `counter` gets differenced into nonsense. Because `unit` and `kind` are hashed, both change the id, so a consumer comparing against the id it was built with sees a hard mismatch rather than a wrong number.
 
-`MetricNames.aidl` carries a constant per name alongside its id, so a client neither mistypes a name nor accepts one whose meaning has moved.
+The id is not compiled into the interface. It reaches a client at runtime on `MetricFieldInfo`, which is where it is useful:
+
+1. **Resolve once.** `getFields()` on a source returns every field it serves — name, unit, kind and id. The client keeps the ones it understands and caches `name → id`.
+2. **Read many.** `getAll()` returns `MetricKVPair{name, value}` and nothing else. The id does not ride the poll path, because it cannot change between resolutions and the client already holds it.
+3. **Re-resolve on change.** `Capabilities.schemaId` changing is the signal that the declared set moved; the client resolves again and compares. An id that changed under a name it already knew means the meaning moved, and the client stops trusting that field rather than reporting it wrongly.
+
+A client that wants a build-time assertion generates its own constants from this same dictionary. Putting them in the interface would make every vendor implementation carry a table only a client reads.
 
 ### No SoC-private namespace
 
@@ -166,7 +171,6 @@ Names are by **subject, not producer**. Which block sources a figure differs per
 | `Capabilities.aidl` | The catalog — every domain this product serves, with the schema identity. |
 | `MetricDomainInfo.aidl` | One domain and its elements, with the dictionary revision it was written against. |
 | `MetricElementInfo.aidl` | One element — its fields, instance count and cadence. |
-| `MetricNames.aidl` | Generated name and contract-id constants for every declared field. |
 | `MetricFieldInfo.aidl` | One declared field — name, unit, kind and writability. |
 | `MetricKVPair.aidl` | One metric value, keyed by its fully-qualified name. |
 

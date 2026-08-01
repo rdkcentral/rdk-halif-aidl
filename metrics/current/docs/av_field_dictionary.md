@@ -69,6 +69,8 @@ The instance segment is not hashed (`.0` and `.1` are the same field on differen
 
 <!-- Field tables: GENERATED from av-field-dictionary.yaml by scripts/dictionary-ids.py. Do not hand-edit. -->
 
+<!-- Field tables: GENERATED from av-field-dictionary.yaml by scripts/dictionary-ids.py. Do not hand-edit. -->
+
 ## Fields
 
 ### `av.video_decoder`

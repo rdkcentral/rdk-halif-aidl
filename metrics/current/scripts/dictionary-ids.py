@@ -37,10 +37,16 @@ document that people edit by hand.
 
     av-field-dictionary.yaml                      the HFD - authored
         |
-        +-> docs/av_field_dictionary.md           human-readable reference
-        +-> com/rdk/hal/metrics/MetricNames.aidl  name + contract id constants
-        +-> hfp-metrics.yaml                      ids, descriptions
-        +-> docs/metrics_requirements.md          one requirement per field
+        +-> docs/av_field_dictionary.md      human-readable reference
+        +-> hfp-metrics.yaml                 ids, descriptions
+        +-> docs/metrics_requirements.md     one requirement per field
+
+The id is not generated into the interface. It reaches a client at runtime on
+MetricFieldInfo, which is where it is useful: a client resolves a source's
+fields once, caches name -> id, and re-resolves when Capabilities.schemaId
+changes. Constants in the interface would make every vendor implementation
+carry a table only a client reads, and a client that wants build-time constants
+generates them from this same dictionary.
 
 **HFD defines, HFP declares, the HAL carries.**
 
@@ -103,7 +109,6 @@ ROOT = HERE.parent
 HFD = ROOT / "av-field-dictionary.yaml"
 HFP = ROOT / "hfp-metrics.yaml"
 DICT_MD = ROOT / "docs/av_field_dictionary.md"
-NAMES = ROOT / "com/rdk/hal/metrics/MetricNames.aidl"
 REQS = ROOT / "docs/metrics_requirements.md"
 
 # The HFD renders units for humans; a declaration uses ASCII.
@@ -120,26 +125,6 @@ KIND_RULES = {
 
 GENERATED = ("GENERATED from av-field-dictionary.yaml by "
              "scripts/dictionary-ids.py. Do not hand-edit.")
-
-LICENCE = """/*
- * If not stated otherwise in this file or this component's LICENSE file the
- * following copyright and licenses apply:
- *
- * Copyright 2026 RDK Management
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */"""
-
 
 def field_id(path: str, unit: str, kind: str) -> int:
     """Content-derived identity. `path` is <domain>.<element>.<field>."""
@@ -210,40 +195,6 @@ def req_id(path: str) -> str:
 # --------------------------------------------------------------------------
 # Generators
 # --------------------------------------------------------------------------
-
-def emit_names(entries: dict) -> str:
-    out = [LICENCE, "package com.rdk.hal.metrics;", "", "/**",
-           " *  @brief     Declared metric names and their contract ids.",
-           " *",
-           f" *  {GENERATED}",
-           " *  Add the field to the HFD and re-run --generate.",
-           " *",
-           " *  A name constant spares a client a string literal it can mistype; the",
-           " *  matching `_ID` is what it compares against `MetricFieldInfo.id` to confirm",
-           " *  the product means the same thing by that name. A name that still matches",
-           " *  while the unit or kind changed underneath is the failure these ids exist",
-           " *  to catch.",
-           " *",
-           " *  These are the three-segment `<domain>.<element>.<field>` forms. A runtime",
-           " *  name carries the instance too - `av.video_decoder.0.frames_decoded` - so a",
-           " *  client composes the instance in, or matches on the trailing segments.",
-           " *",
-           " *  Constants only; this interface publishes no service and declares no methods.",
-           " */", "@VintfStability", "interface MetricNames", "{"]
-    last_element = None
-    for path, e in entries.items():
-        element = f"{e['domain']}.{e['element']}"
-        if element != last_element:
-            out.append(f"\n    /* ---- {element} ---- */\n")
-            last_element = element
-        writable = ", writable" if e["writable"] else ""
-        out.append(f"    /** {e['unit']} - {e['kind']}{writable} */")
-        out.append(f'    const @utf8InCpp String {const_name(path)} = "{path}";')
-        out.append(f"    const long {const_name(path)}_ID = "
-                   f"{field_id(path, e['unit'], e['kind'])};\n")
-    out.append("}")
-    return "\n".join(out) + "\n"
-
 
 def emit_requirements(entries: dict, derived: dict) -> str:
     out = ["# Metrics Field Requirements", "",
@@ -416,14 +367,13 @@ def main() -> int:
         return 2
 
     if args.generate:
-        NAMES.write_text(emit_names(entries), encoding="utf-8")
         REQS.write_text(emit_requirements(entries, derived), encoding="utf-8")
         DICT_MD.write_text(emit_dictionary_md(entries), encoding="utf-8")
         HFP.write_text(sync_hfp(entries, HFP.read_text(encoding="utf-8")),
                        encoding="utf-8")
         print(f"generated from {len(entries)} HFD entries:\n"
-              f"  {NAMES.relative_to(ROOT)}\n  {REQS.relative_to(ROOT)}\n"
-              f"  {DICT_MD.relative_to(ROOT)}\n  {HFP.relative_to(ROOT)}")
+              f"  {REQS.relative_to(ROOT)}\n  {DICT_MD.relative_to(ROOT)}\n"
+              f"  {HFP.relative_to(ROOT)}")
 
     problems = check(entries, derived, HFP.read_text(encoding="utf-8"))
     for problem in problems:

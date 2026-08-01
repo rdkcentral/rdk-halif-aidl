@@ -9,9 +9,9 @@
 # dictionary file alongside this one.
 #
 # GENERATE AFTER EDITING:  scripts/dictionary-ids.py --generate
-# Everything downstream - the reference doc, MetricNames.aidl, the ids and
-# descriptions in hfp-metrics.yaml, and the per-field requirements - is
-# generated from this file and must not be hand-edited.
+# Everything downstream - the reference doc, the ids and descriptions in
+# hfp-metrics.yaml, and the per-field requirements - is generated from this
+# file and must not be hand-edited.
 
 hfd:
   schemaVersion: '1.0'
