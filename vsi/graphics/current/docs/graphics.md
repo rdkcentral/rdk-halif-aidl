@@ -48,28 +48,41 @@ Graphics reaches the display through two surfaces, each with a different consume
 block-beta
     columns 1
     block:app
-        app_label["Application<br/>WPE, native apps, …"]
+        app_label["Application<br/>WPE, native apps"]
     end
     space
     block:compositor
-        comp_label["Compositor<br/>Platform-agnostic, renders offscreen to FBOs"]
+        comp_label["Compositor<br/>Renders offscreen to FBOs"]
     end
     space
     block:gpu
-        gpu_label["Vendor GPU Userspace<br/>EGL / OpenGL ES / Vulkan — /vendor layer"]
+        gpu_label["Vendor GPU Userspace<br/>EGL / OpenGL ES / Vulkan"]
     end
     space
     block:hal
-        hal_label["IGraphicsFbProvider<br/>Plane Control HAL — AIDL / Binder"]
+        hal_label["IGraphicsFbProvider<br/>Plane Control HAL (AIDL)"]
     end
     space
     block:vendor
-        vendor_label["Vendor HAL Implementation<br/>GBM, DMA-buf heaps or vendor allocator"]
+        vendor_label["Vendor HAL Implementation<br/>GBM or vendor allocator"]
     end
     space
     block:display
         display_label["Display Plane"]
     end
+
+    app --> compositor
+    compositor --> gpu
+    gpu --> hal
+    hal --> vendor
+    vendor --> display
+
+    style app fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    style compositor fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style gpu fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    style hal fill:#fff4e1,stroke:#e65100,stroke-width:2px
+    style vendor fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    style display fill:#e0e0e0,stroke:#424242,stroke-width:2px
 ```
 
 An application renders into its own DMA-buf and attaches it to a Wayland surface. The compositor imports that buffer as an `EGLImage`, composes into a frame buffer obtained from `IGraphicsFbProvider`, and presents it with `commitGraphicsFb()`.
