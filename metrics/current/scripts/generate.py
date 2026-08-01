@@ -102,6 +102,13 @@ HFP = ROOT / "hfp-metrics.yaml"
 DICT_MD = ROOT / "docs/field_dictionary.md"
 REQS = ROOT / "docs/metrics_requirements.md"
 
+# A layer above the HAL defines the figures only it produces. Untracked here -
+# it belongs to that layer's repository - but when a working copy is present the
+# combined view below is generated from it, which is what that layer publishes
+# to its own callers.
+UPPER_GLOB = "*-field-unique-dictionary.yaml"
+COMBINED = ROOT / "docs/combined_field_dictionary.md"
+
 # Units render for humans in one form and travel in another.
 UNIT_ALIASES = {"µs": "us"}
 
@@ -126,8 +133,27 @@ def field_id(path: str, unit: str, kind: str) -> int:
 def load_profile() -> tuple[dict, dict]:
     """Returns (entries, derived_from) from the HFP, in authored order."""
     entries, derived = {}, {}
-    doc = yaml.safe_load(HFP.read_text(encoding="utf-8"))
-    for domain in doc["metrics"]["domains"]:
+    _load(yaml.safe_load(HFP.read_text(encoding="utf-8")), entries, derived, "HAL")
+    return entries, derived
+
+
+def load_upper() -> dict:
+    """Fields defined by a layer above the HAL, keyed by layer name.
+
+    Empty when no working copy is present, which is the normal state of this
+    repository - those definitions live with the layer that owns them."""
+    layers = {}
+    for path in sorted(ROOT.glob(UPPER_GLOB)):
+        layer = path.name.split("-field-unique-dictionary")[0]
+        entries, derived = {}, {}
+        _load(yaml.safe_load(path.read_text(encoding="utf-8")), entries, derived, layer)
+        layers[layer] = entries
+    return layers
+
+
+def _load(doc: dict, entries: dict, derived: dict, layer: str) -> None:
+    root = doc.get("metrics") or doc.get("hfd")
+    for domain in root["domains"]:
         for element in domain["elements"]:
             for f in element["fields"]:
                 path = f"{domain['domain']}.{element['element']}.{f['name']}"
@@ -141,9 +167,9 @@ def load_profile() -> tuple[dict, dict]:
                     "provider": f.get("provider", "Driver"),
                     "description": f["description"].strip(),
                 }
+                entries[path]["layer"] = layer
                 if f.get("derivedFrom"):
                     derived[path] = f["derivedFrom"]
-    return entries, derived
 
 
 def strip_markdown(text: str) -> str:
@@ -200,6 +226,43 @@ def emit_requirements(entries: dict, derived: dict) -> str:
                     f"`0x{fid:016x}`")
         definition = f"Shall be reported as {rule}.{extra} {e['description']}"
         out.append(f"| **{req_id(path)}** | `{path}` | {contract} | {definition} |")
+    return "\n".join(out) + "\n"
+
+
+def emit_combined(hal: dict, layers: dict) -> str:
+    """Every field a caller of the top layer can see, and who produces it.
+
+    A consumer above the middleware reads the union - getCapabilities() returns
+    every profile live on the device - so it needs one document covering all of
+    them. This is that document, and it is the top layer's to publish."""
+    total = len(hal) + sum(len(v) for v in layers.values())
+    out = ["# Combined Field Dictionary", "",
+           f"<!-- {GENERATED} -->", "",
+           "Every field a caller can see, across every layer that declares one. "
+           "`getCapabilities()` returns the union of the profiles live on the "
+           "device, so this is the document a consumer of the top layer reads.",
+           "",
+           "The **Layer** column is who produces the figure. A consumer does not "
+           "need to know — the name means the same thing wherever it came from — "
+           "but it is what makes a missing field answerable: a field absent at "
+           "runtime is absent because the layer that owns it did not declare it.",
+           "",
+           "Contract ids are computed the same way at every layer, from "
+           "`path|unit|kind`, so an id means the same thing across the union "
+           "without anything having to co-ordinate.", "",
+           f"{total} fields: {len(hal)} from the HAL"
+           + "".join(f", {len(v)} from {k}" for k, v in layers.items()) + ".", "",
+           "| Field | Layer | Type · unit · kind | Provider | id | Definition |",
+           "|---|---|---|---|---|---|"]
+    merged = dict(hal)
+    for entries in layers.values():
+        merged.update(entries)
+    for path, e in merged.items():
+        fid = field_id(path, e["unit"], e["kind"])
+        w = " · **writable**" if e["writable"] else ""
+        out.append(f"| `{path}` | {e['layer']} | int64 · {e['unit']} · "
+                   f"`{e['kind']}`{w} | **{e['provider']}** | `0x{fid:016x}` "
+                   f"| {e['description']} |")
     return "\n".join(out) + "\n"
 
 
@@ -299,7 +362,16 @@ def generate(entries: dict, derived: dict) -> dict:
     HFP.write_text(write_ids(entries), encoding="utf-8")
     REQS.write_text(emit_requirements(entries, derived), encoding="utf-8")
     DICT_MD.write_text(emit_dictionary_md(entries), encoding="utf-8")
-    return {p: p.read_text(encoding="utf-8") for p in (REQS, DICT_MD, HFP)}
+    written = [REQS, DICT_MD, HFP]
+
+    layers = load_upper()
+    if layers:
+        COMBINED.write_text(emit_combined(entries, layers), encoding="utf-8")
+        written.append(COMBINED)
+    elif COMBINED.exists():
+        COMBINED.unlink()          # no upper layer here means no combined view
+
+    return {p: p.read_text(encoding="utf-8") for p in written}
 
 
 def main() -> int:
@@ -332,7 +404,11 @@ def main() -> int:
         print(f"\n{len(problems)} problem(s).", file=sys.stderr)
         return 1
 
+    layers = load_upper()
+    extra = sum(len(v) for v in layers.values())
     print(f"ok: {len(entries)} fields declared; ids written and generation is stable.")
+    if layers:
+        print(f"  plus {extra} from {', '.join(layers)} - combined view generated")
     for path in (DICT_MD, HFP, REQS):
         print(f"  wrote {path.relative_to(ROOT)}")
     return 0

@@ -51,5 +51,7 @@ Makefile
 
 
 # One feature profile per layer. The HAL's is committed; a layer above the HAL
-# keeps its own in its own repository, so a working copy of one here is local.
-metrics/current/middleware-*.yaml
+# keeps its own, and the combined view it publishes to its callers, in its own
+# repository. A working copy of either here is local.
+metrics/current/*-field-unique-dictionary.yaml
+metrics/current/docs/combined_field_dictionary.md

@@ -99,6 +99,10 @@ This profile is the **HAL layer's** — what a SoC vendor owes. A layer above th
 
 `getCapabilities()` returns the union of every profile live on the device, which composes without translation only because each follows the same shape. **A layer never declares another layer's fields** — that is what keeps "who owes this figure" answerable from the file it appears in.
 
+Because a consumer above reads the union, the top layer publishes a **combined field dictionary**: every field a caller can see, across every layer that declares one, with the layer that produces each. That document is the top layer's to publish, from its own repository — `scripts/generate.py` produces it here when a working copy of an upper layer's unique fields is present, and produces nothing extra when there is not.
+
+Contract ids are computed identically at every layer, from `path|unit|kind`, so an id means the same thing across the union without anything having to co-ordinate.
+
 ### Field contract id
 
 Every field carries an id derived from the contract that governs how it may be read:
