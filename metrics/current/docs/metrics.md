@@ -75,14 +75,18 @@ Three properties shape the interface:
 
 A product may not declare a name the HFD does not define, and cannot redefine one it does — a declaration chooses whether to serve a field, not what it is.
 
+**The HFP repeats the dictionary's `unit`, `kind` and `id` on purpose.** It has two readers who must not need a second file open: the vendor engineer reading what they are required to implement and return, and the test suite validating what the device actually returned. A bare list of names would serve neither. The usual cost of duplication is drift, and there is none here — the generator rewrites those columns from the HFD and the checker refuses to pass if they disagree, so the copy cannot rot.
+
+Whether the HFP ships to the device is the vendor's choice. Its purpose is to state the contract, not to be a runtime artefact.
+
 The HFD is a declarative file rather than prose, because everything below is generated from it and a generator must not parse meaning out of a document edited by hand:
 
 ```text
 av-field-dictionary.yaml             the HFD - authored
     │
     ├─→ docs/av_field_dictionary.md   human-readable reference
-    ├─→ hfp-metrics.yaml              ids, descriptions
-    └─→ docs/metrics_requirements.md  one requirement per field
+    ├─→ hfp-metrics.yaml              what this product declares, self-contained
+    └─→ docs/metrics_requirements.md  the assertions a test makes, one per field
 ```
 
 `scripts/dictionary-ids.py` writes all three. It takes no arguments — it regenerates, verifies the result is stable, checks the declaration against it, and exits non-zero if anything is wrong. It is a pre-commit step for the engineer changing a definition, so the generated diff is reviewed by the person who caused it.

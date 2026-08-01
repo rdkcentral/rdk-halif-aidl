@@ -61,9 +61,18 @@
 #     per-SoC code.
 #   * DESCRIPTIONS AND IDS ARE GENERATED, NEVER HAND-EDITED. Both are written by
 #         metrics/current/scripts/dictionary-ids.py
-#     from docs/av_field_dictionary.md at the pinned dictionaryVersion, which
+#     from av-field-dictionary.yaml at the pinned dictionaryVersion, which
 #     remains the source of truth. Edit the dictionary and re-run it.
-#     Deleting an id regenerates it, so a rename or a unit change flows through.
+#     Deleting an id restores it, so a rename or a unit change flows through.
+#   * THIS FILE REPEATS THE DICTIONARY ON PURPOSE. unit, kind and id are copies,
+#     because this file has two readers who must not need a second one open:
+#     the vendor engineer reading what they are required to implement and
+#     return, and the test suite validating what the device actually returned.
+#     A bare list of names would tell neither of them anything. The usual cost
+#     of duplication is drift, and there is none here - the generator rewrites
+#     these columns from the dictionary and refuses to pass if they disagree.
+#     The assertions a test makes against each field are generated alongside,
+#     in docs/metrics_requirements.md.
 #   * AN ID IS THE FIELD'S CONTRACT, NOT ITS INDEX. It is the first 8 bytes of
 #     SHA-256 over "<domain>.<element>.<field>|<unit>|<kind>", so nothing
 #     allocates it and there is no registry to consult. A consumer compares it
