@@ -150,8 +150,8 @@ mapping:
                               # A client compares it against the id it was built
                               # with, so a field whose unit or kind changed is a
                               # hard mismatch rather than a silently wrong number.
-                              # Nothing allocates it - delete it and --sync
-                              # regenerates it, so a rename flows through.
+                              # Nothing allocates it - delete it and the
+                              # generator restores it, so a rename flows through.
                               id:
                                 type: str
                                 required: false

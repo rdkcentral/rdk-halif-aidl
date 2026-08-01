@@ -60,9 +60,9 @@
 #     SoC can produce still gets a dictionary entry, so no consumer ever grows
 #     per-SoC code.
 #   * DESCRIPTIONS AND IDS ARE GENERATED, NEVER HAND-EDITED. Both are written by
-#         metrics/current/scripts/dictionary-ids.py --sync
+#         metrics/current/scripts/dictionary-ids.py
 #     from docs/av_field_dictionary.md at the pinned dictionaryVersion, which
-#     remains the source of truth. Edit the dictionary and re-run --sync.
+#     remains the source of truth. Edit the dictionary and re-run it.
 #     Deleting an id regenerates it, so a rename or a unit change flows through.
 #   * AN ID IS THE FIELD'S CONTRACT, NOT ITS INDEX. It is the first 8 bytes of
 #     SHA-256 over "<domain>.<element>.<field>|<unit>|<kind>", so nothing

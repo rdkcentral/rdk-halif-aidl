@@ -47,7 +47,7 @@ Two rules an allocated id would need policing to hold are properties of this enc
 
 The instance segment is not hashed (`.0` and `.1` are the same field on different sources), nor is `writable` (a per-product permission, not the field's meaning), nor this prose (a typo fix must not churn the id), nor the dictionary revision (every id would churn on every revision).
 
-`scripts/dictionary-ids.py` writes the id into each declaration entry and checks it in CI. Deleting an id regenerates it on the next `--sync`, so a rename or a unit change flows through.
+`scripts/dictionary-ids.py` writes the id into each declaration entry and checks it. Deleting an id restores it on the next run, so a rename or a unit change flows through.
 
 <!-- Field tables: GENERATED from av-field-dictionary.yaml by scripts/dictionary-ids.py. Do not hand-edit. -->
 

@@ -20,13 +20,16 @@
 
 """Generator and checker for the HAL Field Dictionary (HFD).
 
-    scripts/dictionary-ids.py             check - exits non-zero on failure
-    scripts/dictionary-ids.py --generate  regenerate everything from the HFD
+    scripts/dictionary-ids.py
 
-RUN --generate BEFORE COMMITTING any change to the dictionary. It is a
-pre-commit step for the engineer making the change, deliberately not a CI gate:
-the person editing a field definition is the one who should see the generated
-diff and review it, rather than discovering it later on a PR.
+No arguments. It regenerates everything the HFD drives, verifies the result is
+stable, checks the declaration against it, and exits non-zero if anything is
+wrong. There is nothing to remember and no mode to pick wrongly.
+
+RUN IT BEFORE COMMITTING any change to the dictionary. It is a pre-commit step
+for the engineer making the change, deliberately not a CI gate: the person
+editing a field definition is the one who should see the generated diff and
+review it, rather than discovering it later on a PR.
 
 THE HFD IS THE ONLY PLACE A FIELD IS AUTHORED
 ---------------------------------------------
@@ -350,7 +353,7 @@ def check(entries: dict, derived: dict, hfp_text: str) -> list[str]:
         if m and int(m.group(1), 16) != expected:
             problems.append(
                 f"{HFP.name}:{n + 1}: '{path}' carries id 0x{m.group(1)}, computed "
-                f"0x{expected:016x}. Re-run --generate.")
+                f"0x{expected:016x}. Re-run the generator.")
     for d, source in derived.items():
         if d in declared and source not in declared:
             problems.append(
@@ -359,25 +362,37 @@ def check(entries: dict, derived: dict, hfp_text: str) -> list[str]:
     return problems
 
 
+def generate(entries: dict, derived: dict) -> dict:
+    """Write every generated artefact. Returns {path: content} as written."""
+    REQS.write_text(emit_requirements(entries, derived), encoding="utf-8")
+    DICT_MD.write_text(emit_dictionary_md(entries), encoding="utf-8")
+    HFP.write_text(sync_hfp(entries, HFP.read_text(encoding="utf-8")),
+                   encoding="utf-8")
+    return {p: p.read_text(encoding="utf-8") for p in (REQS, DICT_MD, HFP)}
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--generate", action="store_true",
-                        help="regenerate every artefact from the HFD")
-    args = parser.parse_args()
+    argparse.ArgumentParser(
+        description="Regenerate and check everything the HAL Field Dictionary "
+                    "drives. Takes no arguments.").parse_args()
 
     entries, derived = load_hfd()
     if not entries:
         print(f"error: no fields found in {HFD}", file=sys.stderr)
         return 2
 
-    if args.generate:
-        REQS.write_text(emit_requirements(entries, derived), encoding="utf-8")
-        DICT_MD.write_text(emit_dictionary_md(entries), encoding="utf-8")
-        HFP.write_text(sync_hfp(entries, HFP.read_text(encoding="utf-8")),
-                       encoding="utf-8")
-        print(f"generated from {len(entries)} HFD entries:\n"
-              f"  {REQS.relative_to(ROOT)}\n  {DICT_MD.relative_to(ROOT)}\n"
-              f"  {HFP.relative_to(ROOT)}")
+    first = generate(entries, derived)
+    # Two emitters carry their own previous output forward - the HFP's
+    # description blocks and the dictionary's preamble. Both have stacked
+    # duplicates before, and neither failure is visible in a single run. So
+    # generate again and require the result to be identical.
+    second = generate(entries, derived)
+    unstable = sorted(p.name for p in first if first[p] != second[p])
+    if unstable:
+        print(f"error: generation is not idempotent - {', '.join(unstable)} "
+              f"changed on a second run. An emitter is failing to strip what it "
+              f"wrote last time.", file=sys.stderr)
+        return 1
 
     problems = check(entries, derived, HFP.read_text(encoding="utf-8"))
     for problem in problems:
@@ -386,8 +401,11 @@ def main() -> int:
         print(f"\n{len(problems)} problem(s).", file=sys.stderr)
         return 1
 
-    print(f"ok: {len(declared_fields(HFP.read_text(encoding='utf-8')))} declared "
-          f"fields resolve against {len(entries)} HFD entries; every id matches.")
+    declared = len(declared_fields(HFP.read_text(encoding="utf-8")))
+    print(f"ok: {len(entries)} dictionary entries, {declared} declared; "
+          f"every id matches and generation is stable.")
+    for path in (DICT_MD, HFP, REQS):
+        print(f"  wrote {path.relative_to(ROOT)}")
     return 0
 
 

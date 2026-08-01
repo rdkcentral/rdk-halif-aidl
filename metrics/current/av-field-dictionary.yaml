@@ -8,7 +8,7 @@
 # party above the HAL is that party's to define and declare, in its own
 # dictionary file alongside this one.
 #
-# GENERATE AFTER EDITING:  scripts/dictionary-ids.py --generate
+# AFTER EDITING, RUN:  scripts/dictionary-ids.py
 # Everything downstream - the reference doc, the ids and descriptions in
 # hfp-metrics.yaml, and the per-field requirements - is generated from this
 # file and must not be hand-edited.
