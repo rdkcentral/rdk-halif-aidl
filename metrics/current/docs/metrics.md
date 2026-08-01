@@ -63,33 +63,41 @@ Three properties shape the interface:
 
 ---
 
-## HAL Field Dictionary
+## The Feature Profile is the contract
 
-**HFD defines, HFP declares, the HAL carries.**
+`hfp-metrics.yaml` states the interface data a vendor must implement and return, and it is what the test suites validate a device against. **A field is defined there and nowhere else** — its meaning and this product's declaration of it are the same statement, so there is no separate dictionary to agree with.
 
-| | Artefact | States |
-|---|---|---|
-| **HFD** | `hal-field-dictionary.yaml` | What every field *means* — unit, kind, provider, population rule. Authored. |
-| **HFP** | `hfp-metrics.yaml` | Which of them *this product serves*, with what cadence and how many instances. |
-| **HAL** | `com.rdk.hal.metrics` | Carries the values. Never enumerates them. |
+Each field carries what a vendor needs to implement it and what a test needs to assert against it:
 
-A product may not declare a name the HFD does not define, and cannot redefine one it does — a declaration chooses whether to serve a field, not what it is.
+```yaml
+- name: frames_decoded
+  unit: frames
+  kind: counter
+  id: 0x63c81c7efbe7e743        # generated
+  provider: Driver
+  description: >
+    Compressed frames the decoder has decoded and emitted at its output
+    (post-decode, pre-sink). +1 per emitted frame. Counted from instance
+    creation; never reset on flush/seek.
+```
 
-**The HFP repeats the dictionary's `unit`, `kind` and `id` on purpose.** It has two readers who must not need a second file open: the vendor engineer reading what they are required to implement and return, and the test suite validating what the device actually returned. A bare list of names would serve neither. The usual cost of duplication is drift, and there is none here — the generator rewrites those columns from the HFD and the checker refuses to pass if they disagree, so the copy cannot rot.
-
-Whether the HFP ships to the device is the vendor's choice. Its purpose is to state the contract, not to be a runtime artefact.
-
-The HFD is a declarative file rather than prose, because everything below is generated from it and a generator must not parse meaning out of a document edited by hand:
+Everything else is generated from it by `scripts/generate.py`, which takes no arguments:
 
 ```text
-hal-field-dictionary.yaml             the HFD - authored
+hfp-metrics.yaml                     authored - the contract
     │
-    ├─→ docs/field_dictionary.md   human-readable reference
-    ├─→ hfp-metrics.yaml              what this product declares, self-contained
+    ├─→ id: on each field             computed and written back in
+    ├─→ docs/field_dictionary.md      human-readable reference
     └─→ docs/metrics_requirements.md  the assertions a test makes, one per field
 ```
 
-`scripts/dictionary-ids.py` writes all three. It takes no arguments — it regenerates, verifies the result is stable, checks the declaration against it, and exits non-zero if anything is wrong. It is a pre-commit step for the engineer changing a definition, so the generated diff is reviewed by the person who caused it.
+It regenerates, verifies the result is stable, checks the profile, and exits non-zero if anything is wrong.
+
+### One profile per layer
+
+This profile is the **HAL layer's** — what a SoC vendor owes. A layer above the HAL keeps its own profile in its own repository: the middleware that owns the session state machine declares its figures there, not here, and a vendor is never asked to serve them.
+
+`getCapabilities()` returns the union of every profile live on the device, which composes without translation only because each follows the same shape. **A layer never declares another layer's fields** — that is what keeps "who owes this figure" answerable from the file it appears in.
 
 ### Field contract id
 
@@ -103,19 +111,15 @@ Nothing allocates it, so there is no registry to consult and nothing to resolve 
 
 It buys a check no key can make alone. A key — a name or an ordinal — stays valid while the meaning underneath it changes: a product that declares `decode_latency_sum_us` but populates milliseconds still matches by name, and its consumer reports figures a thousand times wrong; a `current` sample reclassified as a `counter` gets differenced into nonsense. Because `unit` and `kind` are hashed, both change the id, so a consumer comparing against the id it was built with sees a hard mismatch rather than a wrong number.
 
-The id is not compiled into the interface. It reaches a client at runtime on `MetricFieldInfo`, which is where it is useful:
+The id is not compiled into the interface. It reaches a client at runtime on `MetricFieldInfo`:
 
-1. **Resolve once.** `getFields()` on a source returns every field it serves — name, unit, kind and id. The client keeps the ones it understands and caches `name → id`.
+1. **Resolve once.** `getFields()` returns every field a source serves — name, unit, kind and id. The client keeps the ones it understands and caches `name → id`.
 2. **Read many.** `getAll()` returns `MetricKVPair{name, value}` and nothing else. The id does not ride the poll path, because it cannot change between resolutions and the client already holds it.
-3. **Re-resolve on change.** `Capabilities.schemaId` changing is the signal that the declared set moved; the client resolves again and compares. An id that changed under a name it already knew means the meaning moved, and the client stops trusting that field rather than reporting it wrongly.
-
-A client that wants a build-time assertion generates its own constants from this same dictionary. Putting them in the interface would make every vendor implementation carry a table only a client reads.
+3. **Re-resolve on change.** `Capabilities.schemaId` changing is the signal that the declared set moved. An id that changed under a name the client already knew means the meaning moved, and the client stops trusting that field rather than reporting it wrongly.
 
 ### No SoC-private namespace
 
-A figure only one SoC can produce still gets an HFD entry. A private range would let a vendor ship a name no dictionary defines, and every consumer of it would grow per-SoC code — which is the cost the dictionary exists to avoid.
-
----
+A figure only one SoC can produce still gets a profile entry with a full description. A private range would let a vendor ship a name nothing defines, and every consumer of it would grow per-SoC code.
 
 ## Metric Naming
 
@@ -325,7 +329,7 @@ metrics:
           #                                                             # signal on this SoC
 ```
 
-Descriptions and ids are generated by `scripts/dictionary-ids.py` from the field dictionary at the pinned `dictionaryVersion`; neither is hand-edited. A product that cannot serve a field comments the entry out in place with a reason on the same line, so the file reads as a checklist against the dictionary rather than going silent.
+Descriptions and ids are generated by `scripts/generate.py` from the field dictionary at the pinned `dictionaryVersion`; neither is hand-edited. A product that cannot serve a field comments the entry out in place with a reason on the same line, so the file reads as a checklist against the dictionary rather than going silent.
 
 ---
 

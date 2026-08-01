@@ -50,6 +50,6 @@ Makefile
 .claude/
 
 
-# One field dictionary per layer. The HAL's is committed; a layer above the HAL
+# One feature profile per layer. The HAL's is committed; a layer above the HAL
 # keeps its own in its own repository, so a working copy of one here is local.
-metrics/current/middleware-field-dictionary.yaml
+metrics/current/middleware-*.yaml

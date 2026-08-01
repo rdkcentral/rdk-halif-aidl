@@ -21,10 +21,14 @@
 
 # Pykwalify schema for metrics declarations.
 #
-# ONE schema, validating EVERY metrics declaration on the device: the vendor's
-# hfp-metrics.yaml, the middleware's own declaration, and any metrics-<component>.yaml
-# a future declaring party adds. getCapabilities() returns their union, which
-# only composes without translation if every declaration has the same shape.
+# ONE schema, validating EVERY metrics profile: this one, which is the HAL
+# layer's, and the profile any layer above the HAL keeps in its own repository.
+# getCapabilities() returns their union, which composes without translation only
+# because every profile has the same shape.
+#
+# A profile is the contract - the interface data a vendor must implement and
+# return, and what the test suites validate a device against. A field is defined
+# in the profile that declares it and nowhere else.
 #
 # Schema Version: 0.1.0
 
@@ -143,8 +147,32 @@ mapping:
                                 type: bool
                                 required: false
 
+                              # Who is expected to source this figure. A
+                              # per-product outcome, not a fixed property of
+                              # the field: a consumer cannot tell which and
+                              # does not need to.
+                              provider:
+                                type: str
+                                required: true
+
+                              # What a vendor implements against and what a
+                              # test asserts. A field without one cannot be
+                              # implemented.
+                              description:
+                                type: str
+                                required: true
+
+                              # The measured field this one is computed from,
+                              # named <domain>.<element>.<field>. Declaring a
+                              # derived field without its input is an
+                              # undeliverable declaration, not a partial
+                              # capability.
+                              derivedFrom:
+                                type: str
+                                required: false
+
                               # Content-derived field identity, written by
-                              # scripts/dictionary-ids.py:
+                              # scripts/generate.py:
                               #   first 8 bytes of SHA-256 over
                               #   "<domain>.<element>.<field>|<unit>|<kind>"
                               # A client compares it against the id it was built

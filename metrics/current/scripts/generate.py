@@ -18,60 +18,50 @@
 # * SPDX-License-Identifier: Apache-2.0
 # */
 
-"""Generator and checker for the HAL Field Dictionary (HFD).
+"""Generator and checker for the metrics HAL Feature Profile.
 
-    scripts/dictionary-ids.py
+    scripts/generate.py
 
-No arguments. It regenerates everything the HFD drives, verifies the result is
-stable, checks the declaration against it, and exits non-zero if anything is
+No arguments. It computes each field's contract id and writes it back into the
+profile, regenerates the reference doc and the per-field requirements, verifies
+the result is stable, checks the profile, and exits non-zero if anything is
 wrong. There is nothing to remember and no mode to pick wrongly.
 
-RUN IT BEFORE COMMITTING any change to the dictionary. It is a pre-commit step
-for the engineer making the change, deliberately not a CI gate: the person
-editing a field definition is the one who should see the generated diff and
-review it, rather than discovering it later on a PR.
+RUN IT BEFORE COMMITTING any change to the profile. It is a pre-commit step for
+the engineer making the change, deliberately not a CI gate: the person editing a
+field is the one who should see the generated diff and review it, rather than
+discovering it later on a PR.
 
-ONE DICTIONARY PER LAYER
-------------------------
-Every layer defines the fields it produces, in its own dictionary, and declares
-which of them it serves, in its own profile. `hal-field-dictionary.yaml` is the
-HAL layer's: what a SoC vendor is asked to implement and return. A layer above
-the HAL - the middleware that owns the session state machine, for instance -
-keeps its own dictionary and its own declaration in its own repository, and
-this generator is the pattern it follows rather than a file it shares.
+THE PROFILE IS THE CONTRACT
+---------------------------
+`hfp-metrics.yaml` states the interface data a vendor must implement and return,
+and it is what the test suites validate a device against. A field is defined
+there and nowhere else - its meaning and this product's declaration of it are
+the same statement, so there is no separate dictionary to agree with.
 
-A layer never defines another layer's fields. That is what keeps "who owes this
-figure" answerable from the file it appears in.
-
-The dictionary is a declarative file, not prose, because everything below is
-generated from it and a generator must not have to parse meaning out of a
-document that people edit by hand.
-
-    hal-field-dictionary.yaml                      the HFD - authored
+    hfp-metrics.yaml                     authored - the contract
         |
-        +-> docs/field_dictionary.md      human-readable reference
-        +-> hfp-metrics.yaml                 ids, descriptions
-        +-> docs/metrics_requirements.md     one requirement per field
+        +-> id: on each field            computed and written back in
+        +-> docs/field_dictionary.md     human-readable reference
+        +-> docs/metrics_requirements.md the assertions a test makes
 
-The id is not generated into the interface. It reaches a client at runtime on
-MetricFieldInfo, which is where it is useful: a client resolves a source's
-fields once, caches name -> id, and re-resolves when Capabilities.schemaId
-changes. Constants in the interface would make every vendor implementation
-carry a table only a client reads, and a client that wants build-time constants
-generates them from this same dictionary.
+ONE PROFILE PER LAYER
+---------------------
+This profile is the HAL layer's: what a SoC vendor owes. A layer above the HAL
+keeps its own profile in its own repository - the middleware that owns the
+session state machine declares its figures there, not here, and a vendor is
+never asked to serve them. getCapabilities() returns the union of every profile
+live on the device, which composes only because each follows the same shape.
 
-**HFD defines, HFP declares, the HAL carries.**
+A layer never declares another layer's fields. That is what keeps "who owes this
+figure" answerable from the file it appears in.
 
 FIELD CONTRACT ID
 -----------------
-Every field carries an id derived from the contract that governs how a consumer
-may read it:
-
     id = first 8 bytes of SHA-256("<domain>.<element>.<field>|<unit>|<kind>")
 
 Nothing allocates it, so there is no registry to consult, no counter to advance
-and nothing to resolve when two people add a field on separate branches. Anyone
-computes it offline from the HFD alone.
+and nothing to resolve when two people add a field on separate branches.
 
 It buys a check no key can make on its own. A key - a name or an ordinal -
 stays valid while the meaning underneath it changes: a product that declares
@@ -81,28 +71,18 @@ reclassified as a `counter` gets differenced into nonsense. Because `unit` and
 `kind` are hashed, both change the id, so a consumer comparing against the id it
 was built with sees a hard mismatch instead of a wrong number.
 
-Two rules an allocated id would need policing to hold are properties of this
-encoding instead: an id is never reused, because the same id means the same
-name, unit and kind - the same field; and `unit` and `kind` cannot change under
-a stable id, because changing either produces a different id.
+An id is never reused, because the same id means the same name, unit and kind -
+the same field. And unit and kind cannot change under a stable id, because
+changing either produces a different id. Both are properties of the encoding
+rather than rules something has to police.
 
 Deliberately NOT hashed: the instance segment (`.0` and `.1` are the same field
 on different sources), `writable` (a per-product permission, not the field's
-meaning), the description (a typo fix must not churn the id), and
-`dictionaryVersion` (every id would churn on every revision).
+meaning), and the description (a typo fix must not churn the id).
 
-WHAT STILL NEEDS CHECKING
--------------------------
-The id removes the identity rules; it does not remove these:
-
-  * Every name a product declares must exist in the HFD. There is no
-    SoC-private namespace, so no consumer grows per-SoC code.
-  * A declared unit/kind must match the HFD's. A declaration chooses whether to
-    serve a field; it cannot redefine one.
-  * A derived field cannot be declared without the field it derives from.
-    Declaring `freeze_duration_ms` without `frames_repeated_missing_frame` is
-    not a partial capability, it is an undeliverable declaration - and it passes
-    every other check because both names are valid.
+The id is not generated into the interface. It reaches a client at runtime on
+MetricFieldInfo: a client resolves a source's fields once, caches name -> id,
+and re-resolves when Capabilities.schemaId changes.
 """
 
 from __future__ import annotations
@@ -118,12 +98,11 @@ import yaml
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-HFD = ROOT / "hal-field-dictionary.yaml"
 HFP = ROOT / "hfp-metrics.yaml"
 DICT_MD = ROOT / "docs/field_dictionary.md"
 REQS = ROOT / "docs/metrics_requirements.md"
 
-# The HFD renders units for humans; a declaration uses ASCII.
+# Units render for humans in one form and travel in another.
 UNIT_ALIASES = {"µs": "us"}
 
 # How each kind may be read. Stated once, emitted into every requirement.
@@ -135,8 +114,8 @@ KIND_RULES = {
     "config": "the present value of a tunable, absolute",
 }
 
-GENERATED = ("GENERATED from hal-field-dictionary.yaml by "
-             "scripts/dictionary-ids.py. Do not hand-edit.")
+GENERATED = ("GENERATED from hfp-metrics.yaml by scripts/generate.py. "
+             "Do not hand-edit.")
 
 def field_id(path: str, unit: str, kind: str) -> int:
     """Content-derived identity. `path` is <domain>.<element>.<field>."""
@@ -144,20 +123,11 @@ def field_id(path: str, unit: str, kind: str) -> int:
     return struct.unpack(">q", digest[:8])[0] & 0x7FFFFFFFFFFFFFFF
 
 
-def load_hfd() -> tuple[dict, dict]:
-    """Returns (entries, derived_from), preserving authored order.
-
-    Only the vendor contract is read. A figure observed by a party above the
-    HAL is that party's to define and declare in its own dictionary, and is not
-    something a SoC vendor is asked to serve - so it does not appear here, and
-    generation stays deterministic from what is committed."""
+def load_profile() -> tuple[dict, dict]:
+    """Returns (entries, derived_from) from the HFP, in authored order."""
     entries, derived = {}, {}
-    _load_one(yaml.safe_load(HFD.read_text(encoding="utf-8")), entries, derived)
-    return entries, derived
-
-
-def _load_one(doc: dict, entries: dict, derived: dict) -> None:
-    for domain in doc["hfd"]["domains"]:
+    doc = yaml.safe_load(HFP.read_text(encoding="utf-8"))
+    for domain in doc["metrics"]["domains"]:
         for element in domain["elements"]:
             for f in element["fields"]:
                 path = f"{domain['domain']}.{element['element']}.{f['name']}"
@@ -173,6 +143,7 @@ def _load_one(doc: dict, entries: dict, derived: dict) -> None:
                 }
                 if f.get("derivedFrom"):
                     derived[path] = f["derivedFrom"]
+    return entries, derived
 
 
 def strip_markdown(text: str) -> str:
@@ -233,7 +204,7 @@ def emit_requirements(entries: dict, derived: dict) -> str:
 
 
 def emit_dictionary_md(entries: dict) -> str:
-    """The human-readable reference, generated from the HFD."""
+    """The human-readable reference, generated from the profile."""
     head = DICT_MD.read_text(encoding="utf-8") if DICT_MD.exists() else ""
     preamble = (head.split("## Fields")[0] if "## Fields" in head
                 else "# AV Domain Field Dictionary\n\n")
@@ -270,113 +241,64 @@ def emit_dictionary_md(entries: dict) -> str:
 # HFP sync
 # --------------------------------------------------------------------------
 
-def declared_fields(hfp_text: str) -> list[tuple[int, str, str, dict]]:
-    found, domain, element = [], None, None
-    for n, line in enumerate(hfp_text.splitlines()):
+def write_ids(entries: dict) -> str:
+    """Write each field's computed id into the profile, in place.
+
+    Line-based so every comment and the authored layout survive. An `id:` line
+    is replaced where present and inserted after `kind:` where absent, so
+    deleting an id restores it on the next run."""
+    lines = HFP.read_text(encoding="utf-8").splitlines()
+    out: list[str] = []
+    domain = element = name = None
+
+    for line in lines:
         m = re.match(r"^\s*-\s+domain:\s*(\S+)", line)
         if m:
             domain = m.group(1)
-            continue
         m = re.match(r"^\s*-\s+element:\s*(\S+)", line)
         if m:
             element = m.group(1)
-            continue
-        m = re.match(
-            r"^(\s*)-\s*\{\s*name:\s*([a-z][a-z0-9_]*)\s*,\s*unit:\s*([a-z]+)\s*,"
-            r"\s*kind:\s*([a-z_]+)\s*(.*?)\}\s*$", line)
-        if m and domain and element:
-            indent, name, unit, kind, rest = m.groups()
-            found.append((n, domain, element,
-                          {"indent": indent, "name": name, "unit": unit,
-                           "kind": kind, "rest": rest, "line": line}))
-    return found
-
-
-def sync_hfp(entries: dict, hfp_text: str) -> str:
-    """Rewrite each declared field with its dictionary description and id.
-
-    Generated comment blocks are removed before being re-emitted, so running
-    this repeatedly is idempotent. A generated block is a run of comment lines
-    at the field's own indent immediately above it; the file's hand-written
-    element comments sit at a shallower indent and are left alone."""
-    decl = {d[0]: d for d in declared_fields(hfp_text)}
-    out: list[str] = []
-
-    for n, line in enumerate(hfp_text.splitlines()):
-        if n not in decl:
-            out.append(line)
-            continue
-
-        _, domain, element, f = decl[n]
-        path = f"{domain}.{element}.{f['name']}"
-        entry = entries.get(path)
-        if entry is None:
-            out.append(line)
-            continue
-
-        indent = f["indent"]
-        # Drop every previously generated block above this field, and the
-        # blank lines between them. Hand-written element comments sit at a
-        # shallower indent, so they do not match and are left alone.
-        while out and (out[-1].startswith(indent + "#") or not out[-1].strip()):
-            out.pop()
-
-        if out and out[-1].strip():
-            out.append("")
-        body = strip_markdown(entry["description"])
-        head = f"{indent}# {f['name']}: "
-        wrapped = wrap(body, 96 - len(head))
-        out.append(head + wrapped[0])
-        for extra in wrapped[1:]:
-            out.append(f"{indent}#{' ' * (len(f['name']) + 3)}{extra}")
-
-        writable = ", writable: true" if entry["writable"] else ""
-        fid = field_id(path, entry["unit"], entry["kind"])
-        out.append(f"{indent}- {{ name: {f['name']}, unit: {entry['unit']}, "
-                   f"kind: {entry['kind']}{writable}, id: 0x{fid:016x} }}")
-
+        m = re.match(r"^(\s*)-\s+name:\s*(\S+)\s*$", line)
+        if m:
+            name = m.group(2)
+        if re.match(r"^\s*id:\s*0x[0-9a-f]+\s*$", line):
+            continue                      # regenerated below
+        out.append(line)
+        m = re.match(r"^(\s*)kind:\s*(\S+)\s*$", line)
+        if m and domain and element and name:
+            path = f"{domain}.{element}.{name}"
+            entry = entries.get(path)
+            if entry:
+                out.append(f"{m.group(1)}id: "
+                           f"0x{field_id(path, entry['unit'], entry['kind']):016x}")
     return "\n".join(out) + "\n"
 
 
-# --------------------------------------------------------------------------
-
-def check(entries: dict, derived: dict, hfp_text: str) -> list[str]:
-    problems, declared = [], set()
-    for n, domain, element, f in declared_fields(hfp_text):
-        path = f"{domain}.{element}.{f['name']}"
-        declared.add(path)
-        entry = entries.get(path)
-        if entry is None:
+def check(entries: dict, derived: dict) -> list[str]:
+    """What the profile cannot be trusted to get right on its own."""
+    problems = []
+    for path, e in entries.items():
+        if e["kind"] not in KIND_RULES:
             problems.append(
-                f"{HFP.name}:{n + 1}: '{path}' is not defined in the HFD. There is "
-                f"no SoC-private namespace - add a dictionary entry first.")
-            continue
-        if f["unit"] != entry["unit"] or f["kind"] != entry["kind"]:
+                f"{HFP.name}: '{path}' declares kind '{e['kind']}', which is not one "
+                f"of {', '.join(sorted(KIND_RULES))}.")
+        if not e["description"]:
             problems.append(
-                f"{HFP.name}:{n + 1}: '{path}' declared as {f['unit']}/{f['kind']}, "
-                f"the HFD defines {entry['unit']}/{entry['kind']}. A declaration "
-                f"chooses whether to serve a field; it cannot redefine one.")
-            continue
-        expected = field_id(path, entry["unit"], entry["kind"])
-        m = re.search(r"id:\s*0x([0-9a-f]{16})", f["rest"])
-        if m and int(m.group(1), 16) != expected:
-            problems.append(
-                f"{HFP.name}:{n + 1}: '{path}' carries id 0x{m.group(1)}, computed "
-                f"0x{expected:016x}. Re-run the generator.")
+                f"{HFP.name}: '{path}' has no description. A vendor reads this file to "
+                f"know what to return, so a field without one cannot be implemented.")
     for d, source in derived.items():
-        if d in declared and source not in declared:
+        if source not in entries:
             problems.append(
-                f"{HFP.name}: '{d}' is declared but '{source}', which it is derived "
-                f"from, is not. That declaration cannot be satisfied.")
+                f"{HFP.name}: '{d}' is derived from '{source}', which is not declared. "
+                f"That declaration cannot be satisfied.")
     return problems
 
 
 def generate(entries: dict, derived: dict) -> dict:
     """Write every generated artefact. Returns {path: content} as written."""
+    HFP.write_text(write_ids(entries), encoding="utf-8")
     REQS.write_text(emit_requirements(entries, derived), encoding="utf-8")
     DICT_MD.write_text(emit_dictionary_md(entries), encoding="utf-8")
-    HFP.write_text(sync_hfp(entries, HFP.read_text(encoding="utf-8")),
-                   encoding="utf-8")
     return {p: p.read_text(encoding="utf-8") for p in (REQS, DICT_MD, HFP)}
 
 
@@ -385,9 +307,9 @@ def main() -> int:
         description="Regenerate and check everything the HAL Field Dictionary "
                     "drives. Takes no arguments.").parse_args()
 
-    entries, derived = load_hfd()
+    entries, derived = load_profile()
     if not entries:
-        print(f"error: no fields found in {HFD}", file=sys.stderr)
+        print(f"error: no fields found in {HFP}", file=sys.stderr)
         return 2
 
     first = generate(entries, derived)
@@ -403,16 +325,14 @@ def main() -> int:
               f"wrote last time.", file=sys.stderr)
         return 1
 
-    problems = check(entries, derived, HFP.read_text(encoding="utf-8"))
+    problems = check(entries, derived)
     for problem in problems:
         print(f"error: {problem}", file=sys.stderr)
     if problems:
         print(f"\n{len(problems)} problem(s).", file=sys.stderr)
         return 1
 
-    declared = len(declared_fields(HFP.read_text(encoding="utf-8")))
-    print(f"ok: {len(entries)} dictionary entries, {declared} declared; "
-          f"every id matches and generation is stable.")
+    print(f"ok: {len(entries)} fields declared; ids written and generation is stable.")
     for path in (DICT_MD, HFP, REQS):
         print(f"  wrote {path.relative_to(ROOT)}")
     return 0
