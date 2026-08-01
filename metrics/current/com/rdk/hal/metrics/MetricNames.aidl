@@ -234,49 +234,4 @@ interface MetricNames
     const @utf8InCpp String AV_CLOCK_RESYNC_MAGNITUDE_SUM_MS = "av.clock.resync_magnitude_sum_ms";
     const long AV_CLOCK_RESYNC_MAGNITUDE_SUM_MS_ID = 8927572216676754297;
 
-
-    /* ---- av.session ---- */
-
-    /** ms - counter */
-    const @utf8InCpp String AV_SESSION_TIME_PLAYING_MS = "av.session.time_playing_ms";
-    const long AV_SESSION_TIME_PLAYING_MS_ID = 508705495740045362;
-
-    /** ms - counter */
-    const @utf8InCpp String AV_SESSION_TIME_BUFFERING_MS = "av.session.time_buffering_ms";
-    const long AV_SESSION_TIME_BUFFERING_MS_ID = 2574682172750928069;
-
-    /** ms - current */
-    const @utf8InCpp String AV_SESSION_PREROLL_MS = "av.session.preroll_ms";
-    const long AV_SESSION_PREROLL_MS_ID = 4178272067711824615;
-
-    /** events - counter */
-    const @utf8InCpp String AV_SESSION_SEEK_COUNT = "av.session.seek_count";
-    const long AV_SESSION_SEEK_COUNT_ID = 2189258507205971246;
-
-
-    /* ---- av.admission ---- */
-
-    /** events - counter */
-    const @utf8InCpp String AV_ADMISSION_DENIED_COUNT = "av.admission.denied_count";
-    const long AV_ADMISSION_DENIED_COUNT_ID = 3403338645700450327;
-
-    /** events - counter */
-    const @utf8InCpp String AV_ADMISSION_RECLAIM_COUNT = "av.admission.reclaim_count";
-    const long AV_ADMISSION_RECLAIM_COUNT_ID = 2856521114737250736;
-
-
-    /* ---- health.poll ---- */
-
-    /** ms - current */
-    const @utf8InCpp String HEALTH_POLL_POLL_PERIOD_MS = "health.poll.poll_period_ms";
-    const long HEALTH_POLL_POLL_PERIOD_MS_ID = 7603142258846212183;
-
-    /** events - counter */
-    const @utf8InCpp String HEALTH_POLL_POLL_OVERRUN_COUNT = "health.poll.poll_overrun_count";
-    const long HEALTH_POLL_POLL_OVERRUN_COUNT_ID = 3489145051133043932;
-
-    /** ms - current */
-    const @utf8InCpp String HEALTH_POLL_STATE_AGE_MS = "health.poll.state_age_ms";
-    const long HEALTH_POLL_STATE_AGE_MS_ID = 8189371260856865213;
-
 }

@@ -148,9 +148,18 @@ def field_id(path: str, unit: str, kind: str) -> int:
 
 
 def load_hfd() -> tuple[dict, dict]:
-    """Returns (entries, derived_from), preserving authored order."""
-    doc = yaml.safe_load(HFD.read_text(encoding="utf-8"))
+    """Returns (entries, derived_from), preserving authored order.
+
+    Only the vendor contract is read. A figure observed by a party above the
+    HAL is that party's to define and declare in its own dictionary, and is not
+    something a SoC vendor is asked to serve - so it does not appear here, and
+    generation stays deterministic from what is committed."""
     entries, derived = {}, {}
+    _load_one(yaml.safe_load(HFD.read_text(encoding="utf-8")), entries, derived)
+    return entries, derived
+
+
+def _load_one(doc: dict, entries: dict, derived: dict) -> None:
     for domain in doc["hfd"]["domains"]:
         for element in domain["elements"]:
             for f in element["fields"]:
@@ -167,7 +176,6 @@ def load_hfd() -> tuple[dict, dict]:
                 }
                 if f.get("derivedFrom"):
                     derived[path] = f["derivedFrom"]
-    return entries, derived
 
 
 def strip_markdown(text: str) -> str:
@@ -318,22 +326,34 @@ def declared_fields(hfp_text: str) -> list[tuple[int, str, str, dict]]:
 
 
 def sync_hfp(entries: dict, hfp_text: str) -> str:
-    out, decl = [], {d[0]: d for d in declared_fields(hfp_text)}
-    lines, skip = hfp_text.splitlines(), False
-    for n, line in enumerate(lines):
-        if line.strip().startswith("#") and skip:
-            continue
-        skip = False
+    """Rewrite each declared field with its dictionary description and id.
+
+    Generated comment blocks are removed before being re-emitted, so running
+    this repeatedly is idempotent. A generated block is a run of comment lines
+    at the field's own indent immediately above it; the file's hand-written
+    element comments sit at a shallower indent and are left alone."""
+    decl = {d[0]: d for d in declared_fields(hfp_text)}
+    out: list[str] = []
+
+    for n, line in enumerate(hfp_text.splitlines()):
         if n not in decl:
             out.append(line)
             continue
+
         _, domain, element, f = decl[n]
         path = f"{domain}.{element}.{f['name']}"
         entry = entries.get(path)
         if entry is None:
             out.append(line)
             continue
+
         indent = f["indent"]
+        # Drop every previously generated block above this field, and the
+        # blank lines between them. Hand-written element comments sit at a
+        # shallower indent, so they do not match and are left alone.
+        while out and (out[-1].startswith(indent + "#") or not out[-1].strip()):
+            out.pop()
+
         if out and out[-1].strip():
             out.append("")
         body = strip_markdown(entry["description"])
@@ -342,10 +362,12 @@ def sync_hfp(entries: dict, hfp_text: str) -> str:
         out.append(head + wrapped[0])
         for extra in wrapped[1:]:
             out.append(f"{indent}#{' ' * (len(f['name']) + 3)}{extra}")
+
         writable = ", writable: true" if entry["writable"] else ""
         fid = field_id(path, entry["unit"], entry["kind"])
         out.append(f"{indent}- {{ name: {f['name']}, unit: {entry['unit']}, "
                    f"kind: {entry['kind']}{writable}, id: 0x{fid:016x} }}")
+
     return "\n".join(out) + "\n"
 
 

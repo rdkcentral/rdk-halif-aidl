@@ -49,3 +49,7 @@ Makefile
 # Claude Code
 .claude/
 
+
+# Field dictionaries for figures produced above the HAL. Not part of the
+# vendor contract - each party keeps its own alongside the component's.
+metrics/current/middleware-field-dictionary.yaml

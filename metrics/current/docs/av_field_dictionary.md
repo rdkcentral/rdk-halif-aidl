@@ -51,6 +51,24 @@ The instance segment is not hashed (`.0` and `.1` are the same field on differen
 
 <!-- Field tables: GENERATED from av-field-dictionary.yaml by scripts/dictionary-ids.py. Do not hand-edit. -->
 
+<!-- Field tables: GENERATED from av-field-dictionary.yaml by scripts/dictionary-ids.py. Do not hand-edit. -->
+
+<!-- Field tables: GENERATED from av-field-dictionary.yaml by scripts/dictionary-ids.py. Do not hand-edit. -->
+
+<!-- Field tables: GENERATED from av-field-dictionary.yaml by scripts/dictionary-ids.py. Do not hand-edit. -->
+
+<!-- Field tables: GENERATED from av-field-dictionary.yaml by scripts/dictionary-ids.py. Do not hand-edit. -->
+
+<!-- Field tables: GENERATED from av-field-dictionary.yaml by scripts/dictionary-ids.py. Do not hand-edit. -->
+
+<!-- Field tables: GENERATED from av-field-dictionary.yaml by scripts/dictionary-ids.py. Do not hand-edit. -->
+
+<!-- Field tables: GENERATED from av-field-dictionary.yaml by scripts/dictionary-ids.py. Do not hand-edit. -->
+
+<!-- Field tables: GENERATED from av-field-dictionary.yaml by scripts/dictionary-ids.py. Do not hand-edit. -->
+
+<!-- Field tables: GENERATED from av-field-dictionary.yaml by scripts/dictionary-ids.py. Do not hand-edit. -->
+
 ## Fields
 
 ### `av.video_decoder`
@@ -85,7 +103,7 @@ The instance segment is not hashed (`.0` and `.1` are the same field on differen
 | `last_underflow_trigger` | int64 · none · `current` | **Driver** | `0x03210d8159685756` | Closed-vocabulary cause of the most recent underflow episode: startup prefill, mid-stream, seek recovery, trickplay recovery, content boundary. Distinguishes an expected starvation from a defect. |
 | `last_underflow_duration_ms` | int64 · ms · `current` | **Driver** | `0x7b1ed4a908e8ef1b` | Length of the most recent **completed** underflow episode. Read with `underflowed` and `underflow_duration_ms`, which give the count and the total. |
 | `last_dropped_frame_pts_ms` | int64 · ms · `current` | **Driver** | `0x0e6d081eed2918dd` | Stream PTS of the most recently dropped frame, within ±1 frame interval, whatever the drop axis. Turns a drop count into a locatable defect. Left undeclared where no PTS is derivable. |
-| `first_frame_presented_pts_ms` | int64 · ms · `current` | **Driver** | `0x56eaeb10709bcdd8` | PTS of the first frame to reach presentation — set at session start and re-set after each seek or flush. With `av.session.preroll_ms` this splits time-to-first-frame into the part middleware owns and the part the hardware owns. |
+| `first_frame_presented_pts_ms` | int64 · ms · `current` | **Driver** | `0x56eaeb10709bcdd8` | PTS of the first frame to reach presentation — set at session start and re-set after each seek or flush. This is the hardware's contribution to time-to-first-frame; whatever elapsed above the HAL before decode began is observed by the party that started the session. |
 
 ### `av.audio_decoder`
 
@@ -122,30 +140,6 @@ The instance segment is not hashed (`.0` and `.1` are the same field on differen
 | `sync_threshold_ms` | int64 · ms · `config` · **writable** | **Driver** | `0x4c981a6fd5bbf977` | The offset magnitude beyond which playback counts as out of sync. The threshold `sync_time_over_threshold_ms` integrates against and `sync_max_abs_offset_ms` is judged by — declaring those two without this leaves both uninterpretable. Writable so an integrator can tighten it per product. |
 | `resync_count` | int64 · events · `counter` | **Driver** | `0x1e11b09c212e1a59` | Count of A/V-sync **corrections** the clock applied — each discrete realignment to re-align audio and video. +1 per applied correction. |
 | `resync_magnitude_sum_ms` | int64 · ms · `counter` | **Driver** | `0x7be51ba179aa2379` | Σ of the **absolute magnitude** (ms) of each resync correction. Clock-internal. Paired with `resync_count`: mean correction size = `resync_magnitude_sum_ms / resync_count`. |
-
-### `av.session`
-
-| Field | Type · unit · kind | Provider | id | Definition and population rule |
-|---|---|---|---|---|
-| `time_playing_ms` | int64 · ms · `counter` | **Middleware** | `0x070f48f400dfd832` | Cumulative wall-clock time the session spent in `PLAYING`. The denominator every rate and ratio is computed against — without it a consumer cannot turn a drop count into a drop rate. Accumulated by the session state machine. |
-| `time_buffering_ms` | int64 · ms · `counter` | **Middleware** | `0x23bb1bcb7c5998c5` | Cumulative time the session was stalled awaiting data, as the state machine observed it — distinct from `av.video_sink.underflow_duration_ms`, which is the sink's view of starvation. |
-| `preroll_ms` | int64 · ms · `current` | **Middleware** | `0x39fc344ee2e672e7` | Time from `play()` to the pipeline reaching `PLAYING`, per playback start. With the driver-sourced `av.video_sink.first_frame_presented_pts_ms` this splits time-to-first-frame into the part middleware owns and the part the hardware owns. |
-| `seek_count` | int64 · events · `counter` | **Middleware** | `0x1e61cf035b838d2e` | Completed seek/flush cycles. The denominator for post-seek recovery figures, and the context that explains why first-frame timing was re-set. |
-
-### `av.admission`
-
-| Field | Type · unit · kind | Provider | id | Definition and population rule |
-|---|---|---|---|---|
-| `denied_count` | int64 · events · `counter` | **Middleware** | `0x2f3b167773559817` | Session-creation requests refused as unsatisfiable. Lets a consumer distinguish **"playback never started"** from **"playback started and then failed"** — two very different customer experiences, indistinguishable from playback counters alone. |
-| `reclaim_count` | int64 · events · `counter` | **Middleware** | `0x27a466d1c15111b0` | Times a session's resources were reclaimed for another admitted consumer. Explains an otherwise inexplicable teardown. |
-
-### `health.poll`
-
-| Field | Type · unit · kind | Provider | id | Definition and population rule |
-|---|---|---|---|---|
-| `poll_period_ms` | int64 · ms · `current` | **Declaring party** | `0x6983c999eb4a2057` | The poll loop's **actual** most-recent period, against the declared cadence floor. A declared cadence is an intention; this is the measurement. |
-| `poll_overrun_count` | int64 · events · `counter` | **Declaring party** | `0x306beef00e98e4dc` | Poll cycles that exceeded the declared floor. Direct evidence for or against the ≤50 ms freshness contract. |
-| `state_age_ms` | int64 · ms · `current` | **Declaring party** | `0x71a67dc5c92a91bd` | Age of the canonical state at the moment this read was served — how stale the numbers in this snapshot are. Lets a consumer reason about freshness instead of assuming it. |
 
 ## Episodic Conditions
 

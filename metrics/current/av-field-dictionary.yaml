@@ -1,3 +1,18 @@
+# HAL Field Dictionary (HFD) - fields served by the vendor metrics HAL.
+#
+# What every field MEANS. hfp-metrics.yaml declares which of them a product
+# serves; this states what each one is. HFD defines, HFP declares, the HAL
+# carries.
+#
+# Only fields the SoC's driver produces belong here. A figure observed by a
+# party above the HAL is that party's to define and declare, in its own
+# dictionary file alongside this one.
+#
+# GENERATE AFTER EDITING:  scripts/dictionary-ids.py --generate
+# Everything downstream - the reference doc, MetricNames.aidl, the ids and
+# descriptions in hfp-metrics.yaml, and the per-field requirements - is
+# generated from this file and must not be hand-edited.
+
 hfd:
   schemaVersion: '1.0'
   domains:
@@ -160,8 +175,8 @@ hfd:
         kind: current
         provider: Driver
         description: PTS of the first frame to reach presentation — set at session start and re-set after
-          each seek or flush. With `av.session.preroll_ms` this splits time-to-first-frame into the part
-          middleware owns and the part the hardware owns.
+          each seek or flush. This is the hardware's contribution to time-to-first-frame; whatever
+          elapsed above the HAL before decode began is observed by the party that started the session.
     - element: audio_decoder
       fields:
       - name: frames_decoded
@@ -300,69 +315,3 @@ hfd:
         provider: Driver
         description: 'Σ of the **absolute magnitude** (ms) of each resync correction. Clock-internal.
           Paired with `resync_count`: mean correction size = `resync_magnitude_sum_ms / resync_count`.'
-    - element: session
-      fields:
-      - name: time_playing_ms
-        unit: ms
-        kind: counter
-        provider: Middleware
-        description: Cumulative wall-clock time the session spent in `PLAYING`. The denominator every
-          rate and ratio is computed against — without it a consumer cannot turn a drop count into a drop
-          rate. Accumulated by the session state machine.
-      - name: time_buffering_ms
-        unit: ms
-        kind: counter
-        provider: Middleware
-        description: Cumulative time the session was stalled awaiting data, as the state machine observed
-          it — distinct from `av.video_sink.underflow_duration_ms`, which is the sink's view of starvation.
-      - name: preroll_ms
-        unit: ms
-        kind: current
-        provider: Middleware
-        description: Time from `play()` to the pipeline reaching `PLAYING`, per playback start. With the
-          driver-sourced `av.video_sink.first_frame_presented_pts_ms` this splits time-to-first-frame
-          into the part middleware owns and the part the hardware owns.
-      - name: seek_count
-        unit: events
-        kind: counter
-        provider: Middleware
-        description: Completed seek/flush cycles. The denominator for post-seek recovery figures, and
-          the context that explains why first-frame timing was re-set.
-    - element: admission
-      fields:
-      - name: denied_count
-        unit: events
-        kind: counter
-        provider: Middleware
-        description: Session-creation requests refused as unsatisfiable. Lets a consumer distinguish **"playback
-          never started"** from **"playback started and then failed"** — two very different customer experiences,
-          indistinguishable from playback counters alone.
-      - name: reclaim_count
-        unit: events
-        kind: counter
-        provider: Middleware
-        description: Times a session's resources were reclaimed for another admitted consumer. Explains
-          an otherwise inexplicable teardown.
-  - domain: health
-    dictionaryVersion: '1.1'
-    elements:
-    - element: poll
-      fields:
-      - name: poll_period_ms
-        unit: ms
-        kind: current
-        provider: Declaring party
-        description: The poll loop's **actual** most-recent period, against the declared cadence floor.
-          A declared cadence is an intention; this is the measurement.
-      - name: poll_overrun_count
-        unit: events
-        kind: counter
-        provider: Declaring party
-        description: Poll cycles that exceeded the declared floor. Direct evidence for or against the
-          ≤50 ms freshness contract.
-      - name: state_age_ms
-        unit: ms
-        kind: current
-        provider: Declaring party
-        description: Age of the canonical state at the moment this read was served — how stale the numbers
-          in this snapshot are. Lets a consumer reason about freshness instead of assuming it.
