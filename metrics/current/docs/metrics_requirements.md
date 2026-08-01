@@ -1,6 +1,6 @@
 # Metrics Field Requirements
 
-<!-- GENERATED from av-field-dictionary.yaml by scripts/dictionary-ids.py. Do not hand-edit. -->
+<!-- GENERATED from hal-field-dictionary.yaml by scripts/dictionary-ids.py. Do not hand-edit. -->
 
 One requirement per declared field, generated from the HAL Field Dictionary. Each is independently testable, and its identifier is derived from the field path, so it is stable for as long as the field is.
 

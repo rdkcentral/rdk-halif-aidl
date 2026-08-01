@@ -69,7 +69,7 @@ Three properties shape the interface:
 
 | | Artefact | States |
 |---|---|---|
-| **HFD** | `av-field-dictionary.yaml` | What every field *means* — unit, kind, provider, population rule. Authored. |
+| **HFD** | `hal-field-dictionary.yaml` | What every field *means* — unit, kind, provider, population rule. Authored. |
 | **HFP** | `hfp-metrics.yaml` | Which of them *this product serves*, with what cadence and how many instances. |
 | **HAL** | `com.rdk.hal.metrics` | Carries the values. Never enumerates them. |
 
@@ -82,9 +82,9 @@ Whether the HFP ships to the device is the vendor's choice. Its purpose is to st
 The HFD is a declarative file rather than prose, because everything below is generated from it and a generator must not parse meaning out of a document edited by hand:
 
 ```text
-av-field-dictionary.yaml             the HFD - authored
+hal-field-dictionary.yaml             the HFD - authored
     │
-    ├─→ docs/av_field_dictionary.md   human-readable reference
+    ├─→ docs/field_dictionary.md   human-readable reference
     ├─→ hfp-metrics.yaml              what this product declares, self-contained
     └─→ docs/metrics_requirements.md  the assertions a test makes, one per field
 ```

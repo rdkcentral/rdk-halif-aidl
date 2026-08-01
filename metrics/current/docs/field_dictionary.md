@@ -49,7 +49,7 @@ The instance segment is not hashed (`.0` and `.1` are the same field on differen
 
 `scripts/dictionary-ids.py` writes the id into each declaration entry and checks it. Deleting an id restores it on the next run, so a rename or a unit change flows through.
 
-<!-- Field tables: GENERATED from av-field-dictionary.yaml by scripts/dictionary-ids.py. Do not hand-edit. -->
+<!-- Field tables: GENERATED from hal-field-dictionary.yaml by scripts/dictionary-ids.py. Do not hand-edit. -->
 
 ## Fields
 

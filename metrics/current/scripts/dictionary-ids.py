@@ -31,16 +31,25 @@ for the engineer making the change, deliberately not a CI gate: the person
 editing a field definition is the one who should see the generated diff and
 review it, rather than discovering it later on a PR.
 
-THE HFD IS THE ONLY PLACE A FIELD IS AUTHORED
----------------------------------------------
-`av-field-dictionary.yaml` is the HAL Field Dictionary - what every declared
-field means. It is a declarative file, not prose, because everything below is
+ONE DICTIONARY PER LAYER
+------------------------
+Every layer defines the fields it produces, in its own dictionary, and declares
+which of them it serves, in its own profile. `hal-field-dictionary.yaml` is the
+HAL layer's: what a SoC vendor is asked to implement and return. A layer above
+the HAL - the middleware that owns the session state machine, for instance -
+keeps its own dictionary and its own declaration in its own repository, and
+this generator is the pattern it follows rather than a file it shares.
+
+A layer never defines another layer's fields. That is what keeps "who owes this
+figure" answerable from the file it appears in.
+
+The dictionary is a declarative file, not prose, because everything below is
 generated from it and a generator must not have to parse meaning out of a
 document that people edit by hand.
 
-    av-field-dictionary.yaml                      the HFD - authored
+    hal-field-dictionary.yaml                      the HFD - authored
         |
-        +-> docs/av_field_dictionary.md      human-readable reference
+        +-> docs/field_dictionary.md      human-readable reference
         +-> hfp-metrics.yaml                 ids, descriptions
         +-> docs/metrics_requirements.md     one requirement per field
 
@@ -109,9 +118,9 @@ import yaml
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-HFD = ROOT / "av-field-dictionary.yaml"
+HFD = ROOT / "hal-field-dictionary.yaml"
 HFP = ROOT / "hfp-metrics.yaml"
-DICT_MD = ROOT / "docs/av_field_dictionary.md"
+DICT_MD = ROOT / "docs/field_dictionary.md"
 REQS = ROOT / "docs/metrics_requirements.md"
 
 # The HFD renders units for humans; a declaration uses ASCII.
@@ -126,7 +135,7 @@ KIND_RULES = {
     "config": "the present value of a tunable, absolute",
 }
 
-GENERATED = ("GENERATED from av-field-dictionary.yaml by "
+GENERATED = ("GENERATED from hal-field-dictionary.yaml by "
              "scripts/dictionary-ids.py. Do not hand-edit.")
 
 def field_id(path: str, unit: str, kind: str) -> int:

@@ -50,6 +50,6 @@ Makefile
 .claude/
 
 
-# Field dictionaries for figures produced above the HAL. Not part of the
-# vendor contract - each party keeps its own alongside the component's.
+# One field dictionary per layer. The HAL's is committed; a layer above the HAL
+# keeps its own in its own repository, so a working copy of one here is local.
 metrics/current/middleware-field-dictionary.yaml

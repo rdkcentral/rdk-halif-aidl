@@ -61,7 +61,7 @@
 #     per-SoC code.
 #   * DESCRIPTIONS AND IDS ARE GENERATED, NEVER HAND-EDITED. Both are written by
 #         metrics/current/scripts/dictionary-ids.py
-#     from av-field-dictionary.yaml at the pinned dictionaryVersion, which
+#     from hal-field-dictionary.yaml at the pinned dictionaryVersion, which
 #     remains the source of truth. Edit the dictionary and re-run it.
 #     Deleting an id restores it, so a rename or a unit change flows through.
 #   * THIS FILE REPEATS THE DICTIONARY ON PURPOSE. unit, kind and id are copies,
