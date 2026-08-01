@@ -225,6 +225,10 @@ def emit_dictionary_md(entries: dict) -> str:
     head = DICT_MD.read_text(encoding="utf-8") if DICT_MD.exists() else ""
     preamble = (head.split("## Fields")[0] if "## Fields" in head
                 else "# AV Domain Field Dictionary\n\n")
+    # The preamble is carried through, so drop any marker a previous run left
+    # in it before emitting a fresh one - otherwise they stack.
+    preamble = "\n".join(l for l in preamble.splitlines()
+                         if "Field tables: GENERATED" not in l)
     tail = ""
     for marker in ("## Episodic Conditions", "## Retired", "## Accuracy"):
         if marker in head:
