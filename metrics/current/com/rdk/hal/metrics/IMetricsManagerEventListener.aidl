@@ -23,6 +23,12 @@ package com.rdk.hal.metrics;
  *
  *  Per-session sources come and go with their sessions, so a consumer attaches
  *  at source start rather than polling getSourcePaths().
+ *
+ *  Only sources inside the scope this listener registered for are reported. A
+ *  consumer registered on "av" never hears about a "cpu" source, so it neither
+ *  filters what it receives nor wakes for a domain it does not read.
+ *
+ *  @see IMetricsManager.registerEventListener()
  */
 @VintfStability
 oneway interface IMetricsManagerEventListener

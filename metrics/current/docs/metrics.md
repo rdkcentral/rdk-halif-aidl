@@ -135,6 +135,8 @@ cpu.core.3.utilisation_pct
 
 The first three segments address a **source**; the fourth selects a field within it. `getSource("av.video_decoder.0")` returns one `IMetricsSource`, and one read of it is one coherent snapshot — the atomicity boundary is therefore visible in the name.
 
+**A name given to a source is bare; a name returned in a value is fully qualified.** The source already fixes the first three segments, so `getFieldsByName(["frames_decoded"])` feeds back exactly what `getFields()` returned, and asking one source for another's field cannot be expressed. A value, by contrast, outlives the call that produced it — in a log line, a merged set or a bug report, `frames_decoded` alone says nothing about which source produced it, so `MetricKVPair.name` carries the whole path.
+
 The path **is** the identity. There is no source-id parcelable, because modelling it a second time only creates a way for the two to disagree.
 
 Names are by **subject, not producer**. Which block sources a figure differs per SoC, and for some fields it is middleware rather than the SoC at all, so a producer-shaped name would move between products for the same metric.
@@ -206,7 +208,7 @@ Two conventions to follow when filling one in:
 ```mermaid
 flowchart TD
     Client[Middleware] -->|getCapabilities / getSourcePaths / getSource| MGR[IMetricsManager]
-    Client -->|getAll / getFieldsByName / setField| SRC[IMetricsSource]
+    Client -->|getFields / getAll / getFieldsByName| SRC[IMetricsSource]
     MGR -->|onSourceAdded / onSourceRemoved| Client
     MGR -->|builds catalog from| HFP[hfp-metrics.yaml]
     SRC -->|latches| HW[SoC Counters and Registers]
@@ -233,7 +235,7 @@ flowchart TD
 
 ## Resource Management
 
-Sources are discovered, not opened. `getSourcePaths()` returns those live now; `IMetricsManagerEventListener` reports them appearing and disappearing, so a client attaches at source start rather than polling.
+Sources are discovered, not opened. `getSourcePaths()` returns those live now; `IMetricsManagerEventListener` reports them appearing and disappearing within the scope the client registered for, so a client attaches at source start rather than polling, and hears nothing from a domain it does not read.
 
 Reading a source acquires nothing and blocks nothing — there is no open, no controller, and no single-writer ownership, because a metrics read is side-effect free. `setField()` is the exception and applies only to fields declared `writable` (configuration, tunables and test injection).
 
@@ -244,7 +246,16 @@ A client that exits leaves no state behind to clean up; listener registrations a
 ## Operation and Data Flow
 
 1. **Resolve the catalog once.** `getCapabilities()` returns every domain, element and field the product serves. A consumer keeps the names it understands, ignores the rest, and cache-keys its resolved name map on `Capabilities.schemaId` — re-reading only when that value changes.
-2. **Attach to the live sources.** `getSourcePaths()` gives those live now, and `registerEventListener()` on the manager reports later arrivals and departures.
+2. **Attach to the live sources.** `getSourcePaths()` gives those live now, and `registerEventListener(pathPrefix, listener)` reports later arrivals and departures **within a scope**:
+
+   | `pathPrefix` | Reports |
+   |---|---|
+   | `""` | every source on the device |
+   | `"av"` | one domain |
+   | `"av.video_decoder"` | one element, every instance of it |
+   | `"av.video_decoder.0"` | one source |
+
+   A consumer that only reads A/V registers on `"av"` and is never woken for a `cpu` or `memory` source. Matching is by whole segment, so `"av.video"` selects nothing — a string prefix would otherwise capture `av.video_decoder` and `av.video_sink` together and deliver sources the consumer never asked for.
 3. **Poll each source.** `getAll()` returns every declared field of that source under one coherent snapshot; `getFieldsByName()` reads a subset under the same guarantee. Unknown names are omitted rather than raising an error, so a newer consumer degrades cleanly on an older product.
 4. **Compute deltas.** Counters are cumulative since source creation, so rates and episode counts are the consumer's subtraction. A counter that advanced between two polls says an episode occurred; the matching `last_*` fields describe the most recent one.
 

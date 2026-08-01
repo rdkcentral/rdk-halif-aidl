@@ -26,7 +26,18 @@ import com.rdk.hal.metrics.MetricKVPair;
  *  The source is the read unit, so no path is passed on reads: one call is one
  *  coherent snapshot. The atomicity boundary is therefore visible in the name.
  *
- *  Every name returned is fully qualified. Every value is int64.
+ *  A name given to this interface is the BARE field name - `frames_decoded` -
+ *  because the source already fixes the domain, element and instance. It is the
+ *  same name `getFields()` returns, fed straight back without concatenation,
+ *  and a caller cannot ask one source for another's field because there is no
+ *  way to express it.
+ *
+ *  A name RETURNED in a value is fully qualified - `av.video_decoder.0.frames_decoded`
+ *  - because a value outlives the call that produced it. In a log line, a merged
+ *  set or a bug report, `frames_decoded` alone says nothing about which source
+ *  produced it.
+ *
+ *  Every value is int64.
  */
 @VintfStability
 interface IMetricsSource
@@ -61,11 +72,11 @@ interface IMetricsSource
      *  @brief Subset read — the named fields only, same single-snapshot
      *         guarantee.
      *
-     *  Names are fully qualified, as everywhere else. Unknown names are omitted
-     *  from the result rather than raising an error, so a newer consumer
+     *  Names are the bare field names from `getFields()`. Unknown names are
+     *  omitted from the result rather than raising an error, so a newer consumer
      *  degrades cleanly on an older product.
      *
-     *  @param[in]  names  : fully-qualified names to read.
+     *  @param[in]  names  : bare field names to read, e.g. "frames_decoded".
      *  @param[out] values : those that exist on this source.
      *  @returns boolean : true on success.
      */
@@ -75,7 +86,7 @@ interface IMetricsSource
      *  @brief Single-field read. Diagnostics and one-off reads, not the poll
      *         path.
      *
-     *  @param[in]  name  : fully-qualified name.
+     *  @param[in]  name  : bare field name, e.g. "frames_decoded".
      *  @param[out] value : single-element array receiving the value. AIDL
      *                      primitives cannot be out parameters, so a length-1
      *                      long array carries it back alongside the boolean.
@@ -87,7 +98,7 @@ interface IMetricsSource
      *  @brief Write path — writable fields only: config, tunables, userspace
      *         population, and test injection.
      *
-     *  @param[in] name  : fully-qualified name.
+     *  @param[in] name  : bare field name, e.g. "sync_threshold_ms".
      *  @param[in] value : the value to set.
      *  @returns boolean : true on success.
      *
