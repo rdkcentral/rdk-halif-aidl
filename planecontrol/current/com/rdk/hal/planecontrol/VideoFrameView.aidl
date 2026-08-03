@@ -39,8 +39,23 @@ parcelable VideoFrameView
      * The pool buffer this frame occupies, in the range [0, BUFFER_COUNT).
      * This value is passed to `ICaptureController.releaseFrame()`.
      *
-     * The index is carried explicitly because where the pool is not a single shared
-     * allocation every buffer has an offset of 0, so the offsets cannot identify it.
+     * An index rather than an address, because the two vendor allocation models
+     * put the buffer's identity in different places. Where the pool is one shared
+     * Dma-Buf, buffers differ by offset and share a file descriptor. Where it is
+     * one Dma-Buf per buffer, they differ by file descriptor and every offset is
+     * 0. An offset alone therefore identifies a buffer under the first model and
+     * nothing under the second.
+     *
+     * The pair (file descriptor, offset) would identify one under both, and is
+     * what the client used to import the frame. It is not what release is keyed
+     * on, because naming a file descriptor across a binder boundary means passing
+     * a ParcelFileDescriptor back - a dup and an SCM_RIGHTS pass on every
+     * released frame - to name memory the implementation already has open. An
+     * index carries the same information in an int.
+     *
+     * The index is also the safer key across teardown. A stale index after a
+     * stop/start names nothing and is ignored; a stale file descriptor names
+     * memory that may since have been freed.
      */
     int bufferIndex;
 

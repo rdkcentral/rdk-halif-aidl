@@ -404,6 +404,8 @@ Call `ICaptureController.start()`. The pool is reserved, the decoder is wired in
 Call `ICaptureController.acquireLatestFrame()` to take the newest ready frame. It returns `null` rather than blocking when no new frame exists, and never returns the same frame twice. `ICaptureControllerListener.onFrameAvailable()` is an optional wake-up; a client pulling at a known cadence can ignore it.
 7. Release each acquired frame:
 Call `ICaptureController.releaseFrame(bufferIndex)` with the `VideoFrameView.bufferIndex` value. The call is idempotent and tolerates unknown indices.
+
+Release is keyed by index rather than by address because the two vendor allocation models put a buffer's identity in different places — under a single shared Dma-Buf buffers differ by offset, and under one Dma-Buf per buffer they differ by file descriptor while every offset is 0. The pair `(file descriptor, offset)` would identify a buffer under both, but naming a file descriptor across a binder boundary means passing a `ParcelFileDescriptor` back on every released frame, to name memory the implementation already has open. An index carries the same information in an int, and is the safer key across teardown: a stale index names nothing, where a stale file descriptor names memory that may since have been freed.
 8. Stop and close:
 Call `ICaptureController.stop()` to unwire the decoder and release the pool, then `ICapture.close(controller)`. The bound decoder is left as it is.
 
