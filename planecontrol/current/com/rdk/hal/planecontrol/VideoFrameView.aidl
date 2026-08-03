@@ -67,9 +67,16 @@ parcelable VideoFrameView
      * how the vendor allocated the pool - one Dma-Buf carved into offset-addressed
      * buffers and one Dma-Buf per buffer are both served by this.
      *
-     * A file descriptor may repeat across frames. A client caching EGLImages keys the
-     * cache on the descriptor, and at most `CaptureProperty.BUFFER_COUNT` distinct
-     * descriptors are ever seen in a session.
+     * A CLIENT CACHING EGLImages MUST KEY THE CACHE ON `bufferIndex`, or equivalently
+     * on the pair (file descriptor, offset) - NEVER on the file descriptor alone.
+     * Where the pool is one shared Dma-Buf, every buffer carries the SAME descriptor
+     * and differs only by offset, so a cache keyed on the descriptor collapses the
+     * whole pool onto one entry and the client re-textures a single buffer for the
+     * rest of the session. The picture freezes while frames continue to arrive, which
+     * is not a failure the client can see in what it was handed.
+     *
+     * At most `CaptureProperty.BUFFER_COUNT` distinct buffers are ever seen in a
+     * session, so a cache of that size holds every one of them.
      */
     ParcelFileDescriptor[] planeFds;
 
