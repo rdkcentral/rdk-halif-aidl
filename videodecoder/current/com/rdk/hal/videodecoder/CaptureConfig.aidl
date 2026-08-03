@@ -36,6 +36,16 @@ package com.rdk.hal.videodecoder;
  *  A configuration the decoder cannot produce is rejected at
  *  `setCaptureConfig()` rather than accepted and silently substituted.
  *
+ *  <h3>The decoder does not transform the frame</h3>
+ *  Frames are emitted at the resolution the stream decodes to and in its source
+ *  colorimetry. The decoder MUST NOT scale, rotate, crop, colour-convert,
+ *  tone-map or gamma-adjust on this path. Shape and colour belong to the
+ *  consumer, which applies them per frame as it textures the frame onto its
+ *  scene, and they may change on any frame - so a transform applied here would
+ *  have to be undone, and a frame the consumer cannot untransform is a frame it
+ *  cannot use. `width` and `height` size the buffers; they do not request a
+ *  scale.
+ *
  *  `drmFourcc` says what the pixels are; `drmModifier` says how those bytes are
  *  arranged in memory. The same format under two modifiers is the same picture in two
  *  layouts, and a consumer that cannot read the layout cannot read the frame. Choosing
@@ -87,14 +97,23 @@ parcelable CaptureConfig {
     long drmModifier;
 
     /**
-     * The width in pixels of the captured frames.
+     * The maximum frame width in pixels the capture buffers must accommodate.
+     *
+     * THIS IS NOT A SCALING REQUEST. Frames are emitted at the resolution the
+     * stream decodes to, and this sizes the buffers that hold them. A stream
+     * that decodes smaller produces smaller frames, and
+     * `VideoFrameView.width` reports what each frame actually is.
+     *
      * Must not exceed the `CodecCapabilities.maxFrameWidth` of the codec the decoder
      * was opened for.
      */
     int width;
 
     /**
-     * The height in pixels of the captured frames.
+     * The maximum frame height in pixels the capture buffers must accommodate.
+     *
+     * As `width`, this sizes the buffers rather than requesting a scale.
+     *
      * Must not exceed the `CodecCapabilities.maxFrameHeight` of the codec the decoder
      * was opened for.
      */

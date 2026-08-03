@@ -51,6 +51,7 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 | **HAL.VIDEODECODER.13** | If a client process exits, the Video Decoder server shall automatically stop and close any Video Decoder instance controlled by that client. |
 | **HAL.VIDEODECODER.14** | A decoder supporting capture shall declare the DRM FOURCC formats and modifiers it can emit, and shall accept a `CaptureConfig` only for a declared combination.| Declaring the formats is necessary but not sufficient — a product declaring them must actually emit frames for capture. |
 | **HAL.VIDEODECODER.15** | A `CaptureConfig` the decoder cannot produce shall be rejected at `setCaptureConfig()`, never accepted and silently substituted.| The failure belongs where it is still a configuration error, not a stream of wrong pixels. |
+| **HAL.VIDEODECODER.16** | A decoder configured for capture shall emit frames at the resolution the stream decodes to and in its source colorimetry, applying no scaling, rotation, crop, colour conversion, tone-mapping or gamma adjustment.| `CaptureConfig.width` and `.height` size the buffers that hold the frames; they do not request a scale. Shape and colour belong to the consumer and may change on any frame. |
 
 ## Interface Definition
 

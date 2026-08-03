@@ -40,6 +40,9 @@ Each plane is configurable through a set of properties that clients can read or 
 | **HAL.PLANECONTROL.11** | Shall deliver captured frames in the pixel format and size the bound decoder was configured with via `videodecoder.CaptureConfig`, as Dma-Bufs whose per-plane file descriptors, offsets and strides address the actual buffer layout and import directly through `EGL_EXT_image_dma_buf_import` without translation.|
 | **HAL.PLANECONTROL.12** | Shall allow decode to proceed at full rate independently of the rate at which the client acquires frames, and shall never re-deliver a frame already returned by `acquireLatestFrame()`.|
 | **HAL.PLANECONTROL.13** | Shall fail `ICaptureController.start()` with a `CaptureErrorCode` when the pool cannot be reserved or the bound decoder is not configured for capture, and shall not silently fall back to plane output.|
+| **HAL.PLANECONTROL.14** | Shall deliver captured frames at the resolution the stream decodes to and in its source colorimetry, applying no scaling, rotation, crop, colour conversion, tone-mapping or gamma adjustment.| Shape and colour belong to the consumer, which applies them per frame and may change them on any frame. A transform applied here would have to be undone, and one the consumer cannot undo makes the frame unusable. `CaptureConfig.width` and `.height` size the buffers; `VideoFrameView.width` and `.height` report what each frame is. |
+| **HAL.PLANECONTROL.15** | Shall drop no more than one frame per 15 seconds of capture, at every resolution from 144p to 2160p, while the client acquires and releases at the presentation cadence.| The capture path is not permitted to lose frames a display plane would have shown. A client that stops releasing is not covered by this — that case is `CaptureCapabilities.stallsWhenPoolExhausted`. |
+| **HAL.PLANECONTROL.16** | Shall carry each frame's presentation time unaltered in `VideoFrameView.presentationTimeNs`.| It is the frame's only timing reference. A captured frame goes to the client's scene rather than to a display plane, so the client presents it against the clock its audio path already runs on. |
 
 ## Interface Definition
 
@@ -86,7 +89,7 @@ Typically, the plane index (resource ID) value starts at 0 for the first video p
 The `PlaneCapabilities` parcelable returned by the `IPlaneControl.getCapabilities()` function lists all capabilities supported by a plane resource.
 - Concurrent control of plane resources is allowed by multiple clients. The RDK middleware is responsible for ensuring only 1 controlling client is active at any given time.
 
-A product that supports decode-to-texture declares one plane resource of type `CAPTURE` per concurrent capture session it can serve, each carrying its buffer pool limits and formats under `captureCapabilities`. A product declaring one must emit frames when the bound decoder has a `videodecoder.CaptureConfig` applied. `IPlaneControl.getCapture()` returns `null` for any plane resource that is not of type `CAPTURE`.
+A product that supports decode-to-texture declares one plane resource of type `CAPTURE` per concurrent capture session it can serve, each carrying its buffer pool limits under `captureCapabilities`. Capture planes and video planes are independent resources, so a product declaring both can run a capture session alongside a playback session routed to a display plane, up to the decoder count its video decoder profile declares. A product declaring one must emit frames when the bound decoder has a `videodecoder.CaptureConfig` applied. `IPlaneControl.getCapture()` returns `null` for any plane resource that is not of type `CAPTURE`.
 
 ## System Context
 
@@ -406,7 +409,9 @@ Call `ICaptureController.stop()` to unwire the decoder and release the pool, the
 
 ### Buffer Contract
 
-Frames are NV12 linear with truthful per-plane offsets addressing the actual buffer layout.
+Frames are NV12 linear with truthful per-plane offsets addressing the actual buffer layout, at the resolution the stream decodes to and in its source colorimetry. The decoder applies no scaling, rotation, crop, colour conversion or tone-mapping on this path — shape and colour belong to the consumer, which applies them per frame as it textures the frame onto its scene, and may change them on any frame.
+
+`NV12` and `DRM_FORMAT_MOD_LINEAR` are the required baseline, not the limit. `videodecoder.Capabilities.supportedCaptureFourCCs` is an open list, so a product that can emit a format carrying alpha declares it and a client selects it through `CaptureConfig` — no interface change is needed to support one.
 
 The pixel format and modifier are the decoder's output configuration — see `videodecoder.CaptureConfig`. Both are defined by the Linux kernel in `include/uapi/drm/drm_fourcc.h` and carried as integers because the kernel owns that namespace; the HAL client passes them to its EGL implementation without interpreting them. `VideoFrameView` reports the format on every frame, so an importer needs no second lookup.
 

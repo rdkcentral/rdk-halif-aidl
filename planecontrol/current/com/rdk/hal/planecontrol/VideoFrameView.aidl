@@ -76,12 +76,16 @@ parcelable VideoFrameView
     int[] planeLengths;
 
     /**
-     * The width of the frame in pixels.
+     * The width of this frame in pixels, as the stream decoded it.
+     *
+     * Not necessarily the width configured on the decoder - that sizes the
+     * buffers, while this is what the frame actually is. A stream that decodes
+     * smaller produces smaller frames in the same pool.
      */
     int width;
 
     /**
-     * The height of the frame in pixels.
+     * The height of this frame in pixels, as the stream decoded it.
      */
     int height;
 
@@ -92,8 +96,14 @@ parcelable VideoFrameView
     int drmFourcc;
 
     /**
-     * The presentation time of the frame in nanoseconds, carried through from the
-     * decoded elementary stream.
+     * The presentation time of this frame in nanoseconds, carried through from the
+     * decoded elementary stream unaltered.
+     *
+     * This is the frame's only timing reference and the value a consumer
+     * synchronises against. Audio and video are not synchronised for the client
+     * on this path - a captured frame goes to the client's own scene rather than
+     * to a display plane, so the client decides when to present it, against the
+     * clock its audio path is already running on.
      */
     long presentationTimeNs;
 }
