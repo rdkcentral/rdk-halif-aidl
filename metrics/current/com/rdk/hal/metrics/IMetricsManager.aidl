@@ -24,10 +24,13 @@ import com.rdk.hal.metrics.IMetricsManagerEventListener;
 /**
  *  @brief     Service entry point for com.rdk.hal.metrics.
  *
- *  A general device metrics interface. It carries named numeric values from
- *  whoever measures them to whoever consumes them, organised into DOMAINS.
- *  A/V playback is the "av" domain; "cpu" and "memory" are domains a platform
- *  may add later without touching it or this interface.
+ *  Carries named numeric values from whoever measures them to whoever consumes
+ *  them, organised into DOMAINS. This interface serves the "av" domain: the
+ *  playback-quality figures a streaming partner certifies against.
+ *
+ *  A domain is the unit of extension - a later one is added without touching
+ *  "av" or this interface - which is why the naming is domain-qualified rather
+ *  than assuming its subject.
  *
  *  Naming — every metric name is four segments, fully qualified, no short form:
  *
@@ -36,7 +39,7 @@ import com.rdk.hal.metrics.IMetricsManagerEventListener;
  *      av.video_decoder.0.frames_decoded
  *      av.video_sink.1.frames_dropped_late
  *      av.clock.0.sync_offset_ms
- *      cpu.core.3.utilisation_pct
+ *      av.audio_sink.0.underflowed
  *
  *  The first three segments address a source; the fourth selects a field within
  *  it. The path IS the identity — there is no source-id parcelable, because
@@ -94,9 +97,9 @@ interface IMetricsManager
      *      "av.video_decoder"      one element, every instance of it
      *      "av.video_decoder.0"    one source
      *
-     *  A consumer that only reads A/V registers on "av" and is never woken for a
-     *  "cpu" or "memory" source. One that only drives the decode path registers
-     *  on "av.video_decoder" and is not woken for the clock either.
+     *  A consumer that reads everything registers on "av". One that only drives
+     *  the decode path registers on "av.video_decoder" and is not woken for the
+     *  sink or the clock.
      *
      *  MATCHING IS BY WHOLE SEGMENT, not by string prefix: "av.video" selects
      *  nothing, because no element is named "video". A string prefix would

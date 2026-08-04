@@ -44,11 +44,21 @@ parcelable MetricElementInfo
     int instances;
 
     /**
-     *  The cadence this element is polled at. May be tighter than the 50 ms
-     *  platform floor; never looser — freshness is a partner-facing promise.
+     *  The longest interval, in milliseconds, that this element's values may go
+     *  without being refreshed. A MAXIMUM, not a rate to poll at.
      *
-     *  Always populated. A declaration that omits it is declaring the 50 ms floor,
-     *  and the value carried here is 50 - a consumer reads the cadence in force
+     *  It is a freshness guarantee: a read returns values sampled no longer than this
+     *  ago. 20 means the values are refreshed at least every 20 ms. The platform
+     *  ceiling is 50 ms; an element may guarantee tighter, never looser.
+     *
+     *  It bounds what is worth reading, not what is allowed. Reads are never
+     *  rate-limited and never rejected for arriving too often - a consumer polling
+     *  faster than this simply reads the same values again, because nothing has
+     *  refreshed them in between. A consumer differencing counters at a shorter
+     *  interval than this is dividing by an interval no measurement covered.
+     *
+     *  Always populated. A declaration that omits it is declaring the 50 ms ceiling,
+     *  and the value carried here is 50 - a consumer reads the guarantee in force
      *  rather than inferring a default that is stated elsewhere.
      */
     int pollCadenceMs;

@@ -22,20 +22,20 @@ import com.rdk.hal.metrics.MetricElementInfo;
 /**
  *  @brief     One domain and its elements.
  *
- *  A domain is the subject area and the unit of extension: adding "cpu" or
- *  "memory" alongside "av" touches nothing that already exists, and requires no
- *  interface change.
+ *  A domain is the subject area and the unit of extension: a domain added
+ *  alongside "av" touches nothing that already exists, and requires no interface
+ *  change.
  */
 @VintfStability
 parcelable MetricDomainInfo
 {
-    /** e.g. "av", "cpu", "memory". */
+    /** The subject area, e.g. "av". */
     String domain;
 
     /**
      *  Which revision of THIS domain's field dictionary the declaration was
-     *  written against. Per domain, because an A/V dictionary cannot define
-     *  cpu.core.utilisation_pct.
+     *  written against. Per domain, because a dictionary defines the fields of
+     *  its own subject and cannot speak for another's.
      */
     String dictionaryVersion;
 

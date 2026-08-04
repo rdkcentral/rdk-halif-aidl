@@ -83,8 +83,9 @@ mapping:
                 required: true
                 pattern: '^[a-z][a-z0-9_]*$'
 
-              # Revision of THIS domain's dictionary. Per domain, because an
-              # A/V dictionary cannot define cpu.core.utilisation_pct.
+              # Revision of THIS domain's dictionary. Per domain, because a
+              # dictionary defines the fields of its own subject and cannot
+              # speak for another's.
               dictionaryVersion:
                 type: str
                 required: true

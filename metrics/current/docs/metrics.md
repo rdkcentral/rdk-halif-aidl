@@ -2,7 +2,9 @@
 
 ## Overview
 
-The **Metrics HAL** service carries named numeric values from whoever measures them to whoever consumes them. It is a **general device metrics interface, not an A/V one**: values are organised into **domains**, of which A/V playback is one. `cpu` and `memory` are domains a platform may add later without touching the `av` domain or this interface.
+The **Metrics HAL** service carries named numeric values from whoever measures them to whoever consumes them. It serves the **`av` domain**: the playback-quality figures a streaming partner certifies against.
+
+Values are organised into **domains**, and a domain is the unit of extension — one added later is added without touching `av` or this interface. That is why every name is domain-qualified rather than assuming its subject.
 
 Playback-quality metrics are a certification requirement across streaming partners — frames dropped and repeated, decode errors, underflow episodes with durations, A/V-sync excursions — with defined freshness and atomicity. Each SoC exposes these ad-hoc today (debug procfs, per-element properties, or not at all), so middleware cannot read them portably and cannot meet the accuracy contracts the certifications state. This HAL is the single vendor pull transport for them.
 
@@ -150,7 +152,7 @@ Every metric name is four segments, fully qualified. There is no short form.
 av.video_decoder.0.frames_decoded
 av.video_sink.1.frames_dropped_late
 av.clock.0.sync_offset_ms
-cpu.core.3.utilisation_pct
+av.audio_sink.0.underflowed
 ```
 
 | Segment | Meaning |
@@ -178,7 +180,8 @@ Names are by **subject, not producer**. Which block sources a figure differs per
 | **HAL.METRICS.2** | Every metric value shall be a signed 64-bit integer. | AIDL `long`. Counters use the positive range and never the sign; a signed field such as `sync_offset_ms` uses it; a boolean-shaped field is 0 or 1. |
 | **HAL.METRICS.3** | All values returned by one `getAll()` or `getFieldsByName()` call shall be sampled at a single instant. | An obligation on the implementation, not a property to be discovered — a source spanning two hardware blocks shall latch both. Paired counters must never yield an impossible ratio. |
 | **HAL.METRICS.4** | Counters shall be cumulative since source creation and shall not reset on flush or seek. High-water fields shall be monotone non-decreasing. | Consumers compute deltas. |
-| **HAL.METRICS.5** | A read shall reflect events no older than the element's declared `pollCadenceMs`, which shall not exceed 50 ms. | An element may declare tighter; never looser. Freshness is a partner-facing promise. |
+| **HAL.METRICS.5** | A read shall reflect events no older than the element's declared `pollCadenceMs`, which shall not exceed 50 ms. | A maximum staleness, not a rate to poll at. An element may guarantee tighter; never looser. Freshness is a partner-facing promise. |
+| **HAL.METRICS.5a** | A read shall never be rejected, rate-limited or throttled for arriving sooner than `pollCadenceMs`. | It bounds what is worth reading, not what is allowed. A consumer polling faster reads the same values again, because nothing refreshed them in between. |
 | **HAL.METRICS.6** | A field the implementation cannot measure shall be left undeclared and omitted from reads. | It shall never be served as `0`. "Cannot measure it" and "measured zero" are different facts. |
 | **HAL.METRICS.7** | Every field returned shall be declared in `hfp-metrics.yaml` with `unit`, `kind` and `writable`, and every name used shall exist in that domain's dictionary at the declared `dictionaryVersion`. | There is no SoC-private namespace: a figure only one SoC can produce still gets a dictionary entry, so no consumer grows per-SoC code. |
 | **HAL.METRICS.8** | Every episodic condition shall be reported as a `counter` totalling occurrences, and where a consumer needs per-occurrence detail, `current` fields describing the most recent one. | A poll cannot recover an occurrence it did not sample, so the count is what makes the occurrence visible and the `last_*` fields are what make it diagnosable. |
@@ -285,7 +288,7 @@ A client that exits leaves no state behind to clean up; listener registrations a
    | `"av.video_decoder"` | one element, every instance of it |
    | `"av.video_decoder.0"` | one source |
 
-   A consumer that only reads A/V registers on `"av"` and is never woken for a `cpu` or `memory` source. Matching is by whole segment, so `"av.video"` selects nothing — a string prefix would otherwise capture `av.video_decoder` and `av.video_sink` together and deliver sources the consumer never asked for.
+   A consumer that reads everything registers on `"av"`; one that only drives the decode path registers on `"av.video_decoder"` and is not woken for the sink or the clock. Matching is by whole segment, so `"av.video"` selects nothing — a string prefix would otherwise capture `av.video_decoder` and `av.video_sink` together and deliver sources the consumer never asked for.
 3. **Poll each source.** `getAll()` returns every declared field of that source under one coherent snapshot; `getFieldsByName()` reads a subset under the same guarantee. Unknown names are omitted rather than raising an error, so a newer consumer degrades cleanly on an older product.
 4. **Compute deltas.** Counters are cumulative since source creation, so rates and episode counts are the consumer's subtraction. A counter that advanced between two polls says an episode occurred; the matching `last_*` fields describe the most recent one.
 
