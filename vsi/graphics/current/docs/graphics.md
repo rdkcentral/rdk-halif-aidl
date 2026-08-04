@@ -216,9 +216,9 @@ The return is `@nullable`: a plane that is not of type `GRAPHICS` returns null, 
 @VintfStability
 interface IGraphicsFbProvider {
     GraphicsFbCapabilities getCapabilities();
+    boolean                commitGraphicsFb(in int graphicsFbId);
     ParcelFileDescriptor   createGraphicsFb(in int width, in int height, out GraphicsFbInfo outInfo);
     void                   destroyGraphicsFb(in int graphicsFbId);
-    boolean                commitGraphicsFb(in int graphicsFbId);
 }
 
 @VintfStability
