@@ -66,7 +66,6 @@ enum Property {
 	 */
     OUTPUT_FRAME_POOL_SIZE = 2,
 
-
 	/**
 	 * Low latency mode sets the expectation that no B-frames will be delivered in
 	 * the video stream or B-frames can be skipped over and the decoder should

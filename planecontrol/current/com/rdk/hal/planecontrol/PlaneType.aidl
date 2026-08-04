@@ -20,6 +20,16 @@ package com.rdk.hal.planecontrol;
   
 /**
  *  @brief     Plane type definition.
+ *
+ *  The type says where the plane's pixels come from and where they go, which is what
+ *  determines the interface used to drive it.
+ *
+ *  | Type | Pixels come from | Pixels go to | Interface |
+ *  |---|---|---|---|
+ *  | `VIDEO` | A mapped video source | The display | `IPlaneControl` |
+ *  | `GRAPHICS` | The client, frame by frame | The display | `IGraphicsFbProvider` |
+ *  | `CAPTURE` | A mapped video source | The client, frame by frame | `ICapture` |
+ *
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
@@ -29,18 +39,41 @@ package com.rdk.hal.planecontrol;
 @Backing(type="int")
 enum PlaneType
 {
-    /** 
+    /**
      *  Video plane.
+     *
+     *  Displays a mapped video source. The source is selected with
+     *  `IPlaneControl.setVideoSourceDestinationPlaneMapping()`, and position, size,
+     *  z-order and alpha are set through the plane's `Property` values.
      */
     VIDEO = 0,
- 
-    /** 
+
+    /**
      *  Graphics plane.
+     *
+     *  Displays frames the client draws. `IPlaneControl.getGraphicsFbProvider()`
+     *  provides the frame buffers, and the client creates, commits and destroys them
+     *  through `IGraphicsFbProvider`. Frames travel from the client to the display.
      */
     GRAPHICS = 1,
 
-    /** 
-     *  Capture plane. Allows for capture of video frames.
+    /**
+     *  Capture plane.
+     *
+     *  Delivers a mapped video source's decoded frames to the client as Dma-Bufs it
+     *  imports as GPU textures. `IPlaneControl.getCapture()` provides the capture
+     *  interface, and the source is selected with
+     *  `IPlaneControl.setVideoSourceDestinationPlaneMapping()` exactly as it is for a
+     *  video plane - the destination is the client's texture instead of the display.
+     *
+     *  A capture plane is never composited, so alpha, z-order, position, size and
+     *  display latency have no meaning on it. What it declares instead is what it can
+     *  deliver and how its buffer pool behaves, in `CaptureCapabilities`.
+     *
+     *  It runs in the opposite direction to a graphics plane. Both carry frames between
+     *  the client and the pipeline, but a graphics plane takes frames from the client to
+     *  the display, while a capture plane takes decoded frames from the pipeline to the
+     *  client.
      */
     CAPTURE = 2
 }

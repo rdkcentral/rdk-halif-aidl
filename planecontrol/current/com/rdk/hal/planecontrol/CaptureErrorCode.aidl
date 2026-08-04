@@ -31,14 +31,44 @@ enum CaptureErrorCode {
     OUT_OF_MEMORY = 1,
 
     /**
-     * The bound video decoder has no `videodecoder.CaptureConfig` applied, so its output
-     * is not routed to capture.
+     * No video source is mapped to this capture plane.
+     *
+     * @see IPlaneControl.setVideoSourceDestinationPlaneMapping()
      */
-    DECODER_NOT_CONFIGURED = 2,
+    SOURCE_NOT_MAPPED = 2,
 
-    /** The bound video decoder is already bound to another capture session. */
-    DECODER_BUSY = 4,
+    /**
+     * The mapped source is decoding a codec this plane cannot capture.
+     *
+     * @see CaptureCapabilities.supportedCodecs
+     */
+    CODEC_NOT_CAPTURABLE = 3,
 
     /** An unrecoverable hardware fault occurred, such as an IOMMU fault. */
-    HARDWARE_FAULT = 5,
+    HARDWARE_FAULT = 4,
+
+    /**
+     * The configured capture resolution does not match the resolution the mapped
+     * source is decoding, on a plane that cannot resize.
+     *
+     * @see CaptureCapabilities.resize, CaptureProperty.WIDTH, CaptureProperty.HEIGHT
+     */
+    RESOLUTION_MISMATCH = 5,
+
+    /**
+     * The colour conversion the configured format would require of the mapped source
+     * is not one this plane can perform.
+     */
+    COLOR_CONVERSION_UNSUPPORTED = 6,
+
+    /**
+     * The configured pixel format or memory layout cannot be delivered for the mapped
+     * source, even though the plane declares it.
+     *
+     * @see CaptureCapabilities.supportedFourCCs, CaptureCapabilities.supportedModifiers
+     */
+    FORMAT_UNSUPPORTED = 7,
+
+    /** The session's configuration is not a combination this plane can deliver. */
+    INVALID_CONFIGURATION = 8,
 }

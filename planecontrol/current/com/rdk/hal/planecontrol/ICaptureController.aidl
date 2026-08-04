@@ -29,17 +29,28 @@ import com.rdk.hal.PropertyValue;
  *  Returned by `ICapture.open()` and valid until `ICapture.close()`.
  *
  *  <h3>Frame flow</h3>
- *  Each pool buffer is Free, Ready or Locked. The decoder writes into Free buffers and
- *  marks them Ready when the frame is complete. `acquireLatestFrame()` moves the newest
- *  Ready buffer to Locked and returns it; the decoder never writes into a Locked buffer.
- *  `releaseFrame()` returns a Locked buffer to Free.
+ *  Each pool buffer is Free, Ready or Locked. The source's decoder writes into Free
+ *  buffers and marks them Ready when the frame is complete. `acquireLatestFrame()` moves
+ *  the buffer due for presentation to Locked and returns it; the decoder never writes
+ *  into a Locked buffer. `releaseFrame()`, or the next `acquireLatestFrame()`, returns a
+ *  Locked buffer to Free.
  *
- *  This is a pool rather than a queue: the client always takes the newest Ready buffer,
- *  and older Ready buffers it never took are recycled rather than delivered in turn.
+ *  The frame returned is the one due for presentation now - AV synchronised, with audio
+ *  latency and sync correction already applied by the vendor layer. Frames whose
+ *  presentation time has passed and which can therefore never be shown are dropped
+ *  rather than handed over; frames still in the future stay queued until their time
+ *  comes. A client that draws each frame on receipt is in sync without computing
+ *  anything.
  *
  *  Decode proceeds at full rate regardless of how sparsely or slowly the client acquires.
  *  The behaviour when every buffer is Locked is declared per product in
  *  `CaptureCapabilities.stallsWhenPoolExhausted`.
+ *
+ *  <h3>Buffer addressing</h3>
+ *  Every buffer's file descriptors, offsets, strides, size and format are delivered once
+ *  at `ICaptureControllerListener.onPoolReady()`, as one `VideoBufferView` per buffer.
+ *  A frame therefore carries only its buffer index and presentation time, and a client
+ *  resolves it against the pool it already holds.
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
@@ -57,22 +68,33 @@ interface ICaptureController
     /**
      * Starts the capture session.
      *
-     * Reserves a pool of `CaptureProperty.BUFFER_COUNT` buffers of
-     * `CaptureProperty.BUFFER_SIZE_BYTES` each from the platform's video memory region,
-     * and wires the bound video decoder's capture output into the pool.
+     * Reserves a pool of `CaptureProperty.BUFFER_COUNT` buffers from the platform's video
+     * memory region, sized for the format and frame size this session was configured
+     * with, and wires the mapped source's decoded output into the pool.
      *
      * The capture resource transitions to a `STARTING` state and then a `STARTED` state,
      * and `ICaptureControllerListener.onPoolReady()` is raised once the pool is addressable.
      *
-     * The bound video decoder must have a `videodecoder.CaptureConfig` applied. The pool
-     * is allocated for the pixel format and frame size that configuration states, so
-     * there is no second format here to disagree with it.
+     * Whatever configuration the mapped source's decoder needs in order to deliver those
+     * frames is applied by the vendor layer here, over its own internal path. A client
+     * arranges nothing on the decoder.
+     *
+     * The codec being decoded is checked here rather than at `open()`, because a source
+     * is opened for a codec independently of when it is mapped to this plane.
+     *
+     * A source may already be decoding when this is called. Frames it produced before
+     * the session started were discarded, and starting capture may require the vendor
+     * layer to reconfigure the decoder, which can interrupt decode visibly for the
+     * duration of the reconfiguration. Starting capture before the source starts
+     * decoding avoids both.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the READY state.
      * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC with a CaptureErrorCode value:
      *            `OUT_OF_MEMORY` if the pool reservation was refused,
-     *            `DECODER_NOT_CONFIGURED` if the bound decoder has no capture configuration applied.
+     *            `SOURCE_NOT_MAPPED` if the source was unmapped since `open()`,
+     *            `CODEC_NOT_CAPTURABLE` if the mapped source is decoding a codec outside
+     *            `CaptureCapabilities.supportedCodecs`.
      *
      * @pre The resource must be in State::READY.
      *
@@ -83,9 +105,9 @@ interface ICaptureController
     /**
      * Stops the capture session.
      *
-     * Unwires the video decoder from the pool and releases the pool and all its Dma-Bufs.
+     * Unwires the source from the pool and releases the pool and all its Dma-Bufs.
      * The capture resource transitions to a `STOPPING` state and then a `READY` state.
-     * The bound video decoder is left as it is.
+     * The source's decoder and its plane mapping are left as they are.
      *
      * Any buffers still Locked by the client are released.
      *
@@ -99,27 +121,46 @@ interface ICaptureController
     void stop();
 
     /**
-     * Acquires the newest Ready buffer and transitions it to Locked.
+     * Releases the previously acquired buffer and acquires the frame due for presentation.
      *
-     * This function never blocks. It returns null when no Ready buffer exists, and never
+     * Release and acquire are one call because a client redrawing at frame rate does
+     * both every frame, and two calls would put two binder round trips in a path that
+     * runs at 60 Hz.
+     *
+     * The frame returned is the one due for presentation now. Audio latency and AV-sync
+     * correction have already been applied by the vendor layer, so a client that draws
+     * it on receipt is in sync. Frames whose presentation time has passed are dropped;
+     * frames still in the future stay queued.
+     *
+     * This function never blocks. It returns null when no frame is due, and never
      * returns a frame it has already returned.
      *
-     * Older Ready buffers that the newest frame overtakes are returned to Free.
+     * @param[in] releaseBufferIndex    A `VideoFrameView.bufferIndex` previously returned
+     *                                  by this function, transitioned from Locked to
+     *                                  Free before the next frame is acquired. Pass
+     *                                  `VideoFrameView.NO_BUFFER` when there is nothing
+     *                                  to release, which is the case on the first call
+     *                                  of a session. An index that is already Free, or
+     *                                  outside the pool, is ignored.
      *
-     * @returns VideoFrameView describing the acquired frame, or null if no new frame is
-     *          available.
+     * @returns VideoFrameView carrying the buffer index and presentation time of the
+     *          acquired frame, or null if no frame is due.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the STARTED state.
      *
      * @pre The resource must be in State::STARTED.
      *
-     * @see releaseFrame()
+     * @see releaseFrame(), ICaptureControllerListener.onPoolReady()
      */
-    @nullable VideoFrameView acquireLatestFrame();
+    @nullable VideoFrameView acquireLatestFrame(in int releaseBufferIndex);
 
     /**
-     * Releases a previously acquired buffer, transitioning it from Locked to Free.
+     * Releases a previously acquired buffer without acquiring another.
+     *
+     * A client drawing continuously releases through `acquireLatestFrame()` instead, in
+     * the same call that takes the next frame. This is for the last frame of a session,
+     * and for a client that has stopped drawing but still holds a buffer.
      *
      * `bufferIndex` must be a `VideoFrameView.bufferIndex` value previously returned by
      * `acquireLatestFrame()`. This function is idempotent - a buffer that is already
@@ -136,7 +177,13 @@ interface ICaptureController
     /**
      * Sets a capture property.
      *
-     * `BUFFER_COUNT` is written in the `READY` state, before `start()`.
+     * `BUFFER_COUNT`, `WIDTH` and `HEIGHT` are written in the `READY` state, before
+     * `start()`. `DRM_FOURCC` and `DRM_MODIFIER` are read-only - the plane reports the
+     * format and layout it delivers rather than taking a request for one.
+     *
+     * A value this plane cannot deliver is rejected here rather than accepted and
+     * silently substituted, so an unsupported request fails while it is still a
+     * configuration error and not a stream of wrong pixels.
      *
      * @param[in] property              The key of a property from the CaptureProperty enum.
      * @param[in] propertyValue         Property value.
@@ -148,6 +195,7 @@ interface ICaptureController
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the property cannot be written in the current state.
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if the property is read-only.
      *
      *
      * @see ICapture.getProperty(), setPropertyMultiAtomic()

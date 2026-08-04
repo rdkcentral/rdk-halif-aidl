@@ -19,15 +19,16 @@
 package com.rdk.hal.planecontrol;
 
 /**
- *  @brief     Addressing information for a single captured decoded video frame.
+ *  @brief     A single captured decoded video frame.
  *
- *  The per-plane arrays are ordered by plane index and are the direct inputs to
- *  `EGL_EXT_image_dma_buf_import`: element N feeds `EGL_DMA_BUF_PLANE<N>_FD_EXT`,
- *  `EGL_DMA_BUF_PLANE<N>_OFFSET_EXT` and `EGL_DMA_BUF_PLANE<N>_PITCH_EXT`.
- *  For NV12 there are two planes, [Y, UV].
+ *  Returned by `ICaptureController.acquireLatestFrame()`, once per frame.
  *
- *  The offsets address the actual buffer layout and are not to be inferred from
- *  the pixel format.
+ *  This carries only what differs from one frame to the next. Where the frame lives and
+ *  how it is shaped were delivered once at `ICaptureControllerListener.onPoolReady()`,
+ *  as one `VideoBufferView` per pool buffer, so a client resolves a frame by looking up
+ *  `bufferIndex` in what it already holds.
+ *
+ *  @see VideoBufferView, ICaptureController.acquireLatestFrame()
  *
  *  @author    Gerald Weatherup
  */
@@ -36,96 +37,29 @@ package com.rdk.hal.planecontrol;
 parcelable VideoFrameView
 {
     /**
-     * The pool buffer this frame occupies, in the range [0, BUFFER_COUNT).
-     * This value is passed to `ICaptureController.releaseFrame()`.
+     * Passed as `ICaptureController.acquireLatestFrame()`'s `releaseBufferIndex` when
+     * the client holds no buffer to release.
+     */
+    const int NO_BUFFER = -1;
+
+    /**
+     * The pool buffer holding this frame.
      *
-     * An index rather than an address, because the two vendor allocation models
-     * put the buffer's identity in different places. Where the pool is one shared
-     * Dma-Buf, buffers differ by offset and share a file descriptor. Where it is
-     * one Dma-Buf per buffer, they differ by file descriptor and every offset is
-     * 0. An offset alone therefore identifies a buffer under the first model and
-     * nothing under the second.
-     *
-     * The pair (file descriptor, offset) would identify one under both, and is
-     * what the client used to import the frame. It is not what release is keyed
-     * on, because naming a file descriptor across a binder boundary means passing
-     * a ParcelFileDescriptor back - a dup and an SCM_RIGHTS pass on every
-     * released frame - to name memory the implementation already has open. An
-     * index carries the same information in an int.
-     *
-     * The index is also the safer key across teardown. A stale index after a
-     * stop/start names nothing and is ignored; a stale file descriptor names
-     * memory that may since have been freed.
+     * Indexes the `VideoBufferView` array delivered at `onPoolReady()`, which is where
+     * the frame's file descriptors, offsets, strides, size and format are. This is also
+     * the value passed to `ICaptureController.releaseFrame()`, or to the next
+     * `acquireLatestFrame()` to release and acquire in one call.
      */
     int bufferIndex;
-
-    /**
-     * One Dma-Buf file descriptor per plane.
-     *
-     * Each frame carries the file descriptors and offsets that address it, so a client
-     * imports from `planeFds` and `planeOffsets` alone and needs to know nothing about
-     * how the vendor allocated the pool - one Dma-Buf carved into offset-addressed
-     * buffers and one Dma-Buf per buffer are both served by this.
-     *
-     * A CLIENT CACHING EGLImages MUST KEY THE CACHE ON `bufferIndex`, or equivalently
-     * on the pair (file descriptor, offset) - NEVER on the file descriptor alone.
-     * Where the pool is one shared Dma-Buf, every buffer carries the SAME descriptor
-     * and differs only by offset, so a cache keyed on the descriptor collapses the
-     * whole pool onto one entry and the client re-textures a single buffer for the
-     * rest of the session. The picture freezes while frames continue to arrive, which
-     * is not a failure the client can see in what it was handed.
-     *
-     * At most `CaptureProperty.BUFFER_COUNT` distinct buffers are ever seen in a
-     * session, so a cache of that size holds every one of them.
-     */
-    ParcelFileDescriptor[] planeFds;
-
-    /**
-     * The byte offset of each plane from the start of its file descriptor.
-     * An offset of 0 is valid.
-     */
-    int[] planeOffsets;
-
-    /**
-     * The number of bytes from the start of one row of pixels to the start of the
-     * next row, for each plane.
-     */
-    int[] planeStrides;
-
-    /**
-     * The length in bytes of each plane.
-     */
-    int[] planeLengths;
-
-    /**
-     * The width of this frame in pixels, as the stream decoded it.
-     *
-     * Not necessarily the width configured on the decoder - that sizes the
-     * buffers, while this is what the frame actually is. A stream that decodes
-     * smaller produces smaller frames in the same pool.
-     */
-    int width;
-
-    /**
-     * The height of this frame in pixels, as the stream decoded it.
-     */
-    int height;
-
-    /**
-     * The DRM FOURCC pixel format of the frame.
-     * @see CaptureProperty.DRM_FOURCC
-     */
-    int drmFourcc;
 
     /**
      * The presentation time of this frame in nanoseconds, carried through from the
      * decoded elementary stream unaltered.
      *
-     * This is the frame's only timing reference and the value a consumer
-     * synchronises against. Audio and video are not synchronised for the client
-     * on this path - a captured frame goes to the client's own scene rather than
-     * to a display plane, so the client decides when to present it, against the
-     * clock its audio path is already running on.
+     * The frame returned is the one due for presentation now, with audio latency and
+     * AV-sync correction already applied, so a client that draws on receipt is in sync
+     * without computing anything from this value. It is carried because a client
+     * rendering to its own scene may need to place the frame on its own timeline.
      */
     long presentationTimeNs;
 }

@@ -18,6 +18,9 @@
  */
 package com.rdk.hal.planecontrol;
 
+import com.rdk.hal.planecontrol.CaptureErrorCode;
+import com.rdk.hal.planecontrol.VideoBufferView;
+
 /**
  *  @brief     Callbacks listener interface from a capture session controller.
  *  @author    Gerald Weatherup
@@ -28,19 +31,20 @@ oneway interface ICaptureControllerListener
 {
     /**
      * @brief     Called once per session after `ICaptureController.start()` has wired the
-     *            video decoder into the pool, and before any `onFrameAvailable()`.
+     *            source into the pool, and before any `onFrameAvailable()`.
      *
-     * Reports what the vendor actually allocated. The file descriptors that address each
-     * frame arrive per frame in `VideoFrameView`, so a client needs nothing from here to
-     * import a buffer - this is the pool's shape, not its addressing.
+     * Delivers the whole pool: one `VideoBufferView` per buffer, carrying the file
+     * descriptors, offsets, strides, size and format that address it. None of that
+     * changes while the session runs, so a client imports every buffer into an EGLImage
+     * here and afterwards needs only the buffer index each frame arrives in.
      *
-     * @param[in] planeStrides      The number of bytes from the start of one row of pixels
-     *                              to the start of the next, per plane. For NV12 this is
-     *                              [Y stride, UV stride].
-     * @param[in] bufferCount       The number of buffers reserved in the pool.
-     * @param[in] bufferSizeBytes   The size in bytes of a single capture buffer.
+     * The array length is the number of buffers the vendor reserved, which is what
+     * `CaptureProperty.BUFFER_COUNT` asked for, or the vendor's own choice where the
+     * session left it unset.
+     *
+     * @param[in] buffers   One entry per pool buffer, indexed by `VideoBufferView.bufferIndex`.
      */
-    void onPoolReady(in int[] planeStrides, in int bufferCount, in int bufferSizeBytes);
+    void onPoolReady(in VideoBufferView[] buffers);
 
     /**
      * @brief     Called when a buffer has transitioned to Ready.
@@ -50,4 +54,22 @@ oneway interface ICaptureControllerListener
      * without it.
      */
     void onFrameAvailable();
+
+    /**
+     * @brief     Called when the session cannot deliver frames as configured.
+     *
+     * Raised for failures the session runs into that are not tied to a single acquire
+     * call - a mapped source that changed to a resolution this plane cannot deliver, a
+     * colour conversion or format that turns out to be unavailable for the mapped
+     * source, or a configuration the vendor cannot honour.
+     *
+     * The session stops delivering frames. The client stops and closes it, or corrects
+     * the condition and starts again.
+     *
+     * @param[in] errorCode         A CaptureErrorCode enum value.
+     * @param[in] vendorErrorCode   A vendor specific error code.
+     *
+     * @see CaptureErrorCode
+     */
+    void onCaptureError(in CaptureErrorCode errorCode, in int vendorErrorCode);
 }

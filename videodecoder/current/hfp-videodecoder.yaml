@@ -116,16 +116,6 @@ videodecoder:                   # Component object begins
         - BT709
         - BT2020
       supportsSecure: true
-      # Formats this decoder emits for capture (decode-to-texture). A non-empty list
-      # is what declares that this decoder supports capture - there is no separate
-      # mode flag. Selected at runtime through CaptureConfig; a capture plane consumes
-      # what the decoder produces, so the format is declared here and not in
-      # hfp-planecontrol.yaml.
-      # FOURCC codes and modifiers are the kernel's, from include/uapi/drm/drm_fourcc.h.
-      supportedCaptureFourCCs:    # DRM_FORMAT_NV12 required wherever capture is supported
-        - 0x3231564E              # DRM_FORMAT_NV12
-      supportedCaptureModifiers:  # DRM_FORMAT_MOD_LINEAR required wherever capture is supported
-        - 0x0000000000000000      # DRM_FORMAT_MOD_LINEAR
     - 1:                          # Resource object begins (secondary HD decoder)
       supportedCodecs:
         - MPEG2_VIDEO:
@@ -194,7 +184,3 @@ videodecoder:                   # Component object begins
         - BT601_625
         - BT709
       supportsSecure: true
-      # This decoder does not support capture; both lists are empty, so CaptureConfig
-      # cannot be applied to it.
-      supportedCaptureFourCCs: []
-      supportedCaptureModifiers: []

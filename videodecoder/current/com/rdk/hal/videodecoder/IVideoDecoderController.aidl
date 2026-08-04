@@ -24,7 +24,6 @@ import com.rdk.hal.videodecoder.ContentLightLevel;
 import com.rdk.hal.videodecoder.Colorimetry;
 import com.rdk.hal.videodecoder.InputBufferMetadata;
 import com.rdk.hal.videodecoder.VideoDecoderStreamConfig;
-import com.rdk.hal.videodecoder.CaptureConfig;
 import com.rdk.hal.PropertyValue;
 
 /**
@@ -315,46 +314,4 @@ interface IVideoDecoderController
      * @see VideoDecoderStreamConfig, FrameMetadata
      */
     void setStreamConfig(in VideoDecoderStreamConfig config);
-
-    /**
-     * Sets up this decoder's output to be consumed by a capture interface.
-     *
-     * Calling this is what selects capture output. There is no separate mode to set
-     * first and none to unset afterwards: a decoder with a capture configuration
-     * applied emits frames for capture, and a decoder without one does not. The call
-     * is the mode.
-     *
-     * Capture is decode-to-texture - the frames are imported as GPU textures instead of
-     * being emitted to a display plane. Their format and size are properties of this
-     * decoder's output, so they are configured here and nowhere else: a capture
-     * destination consumes what the decoder produces rather than negotiating a second
-     * format, which is what keeps the two from disagreeing.
-     *
-     * `Capabilities.supportedCaptureFourCCs` is non-empty on a decoder that supports
-     * capture at all, and empty on one that does not.
-     *
-     * A configuration this decoder cannot produce is rejected here rather than
-     * accepted and silently substituted, so an unsupported request fails while it is
-     * still a configuration error and not a stream of wrong pixels.
-     *
-     * The configuration persists across `flush()` and is cleared on `close()`.
-     *
-     * @param[in] captureConfig     The capture output format and size.
-     *
-     * @returns boolean
-     * @retval true     The capture configuration was applied.
-     * @retval false    The configuration is not supported by this decoder.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the READY state.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if `drmFourcc` is not in
-     *            `Capabilities.supportedCaptureFourCCs`, `drmModifier` is not in
-     *            `Capabilities.supportedCaptureModifiers`, or `width`/`height` exceed the
-     *            `CodecCapabilities` of the codec this decoder was opened for.
-     *
-     * @pre The resource must be in State::READY.
-     *
-     * @see CaptureConfig, Capabilities.supportedCaptureFourCCs
-     */
-    boolean setCaptureConfig(in CaptureConfig captureConfig);
 }

@@ -24,29 +24,46 @@ import com.rdk.hal.planecontrol.CapturePropertyKVPair;
 import com.rdk.hal.planecontrol.ICaptureController;
 import com.rdk.hal.planecontrol.ICaptureControllerListener;
 import com.rdk.hal.planecontrol.State;
-import com.rdk.hal.videodecoder.IVideoDecoder;
 import com.rdk.hal.PropertyValue;
 
 /**
  *  @brief     Decoded video frame capture interface.
  *
- *  A capture resource routes a video decoder's output into a pool of Dma-Buf buffers
- *  which the client imports as GPU textures, instead of routing it to a display plane.
- *  It is obtained from `IPlaneControl.getCapture()` for a plane resource of type
- *  `PlaneType.CAPTURE`.
+ *  A capture resource routes a video source's decoded frames into a pool of Dma-Buf
+ *  buffers which the client imports as GPU textures, instead of routing them to a
+ *  display plane. It is obtained from `IPlaneControl.getCapture()` for a plane resource
+ *  of type `PlaneType.CAPTURE`.
+ *
+ *  The source is chosen the same way it is for a display plane, with
+ *  `IPlaneControl.setVideoSourceDestinationPlaneMapping()`. That mapping is the whole of
+ *  the binding: a source mapped to a capture plane is captured, and the source mapped
+ *  there is the source this session delivers. There is no second place a decoder is
+ *  named, so there is no second place for the two to disagree.
  *
  *  The `IVideoDecoder` contract is unchanged by capture - the decoder does not know
- *  where its output goes. `IPlaneControl.setVideoSourceDestinationPlaneMapping()` routes
- *  it to a display plane; `ICapture` routes it to a Dma-Buf pool.
+ *  where its output goes, and nothing is set on it to arrange capture.
+ *
+ *  A capture session is configured here in full - the frames the client wants and the
+ *  pool that holds them are both `CaptureProperty` values on the session controller.
+ *  The client asks this plane for what it needs and the vendor layer configures the
+ *  mapped source's decoder to deliver it, by whatever internal path that platform
+ *  requires.
  *
  *  Session lifecycle:
  *  @code
+ *    planeControl.setVideoSourceDestinationPlaneMapping(     // bind the source
+ *        {{ SourceType.VIDEO_SINK, sinkIndex, planeResourceIndex }});
  *    ICapture capture = planeControl.getCapture(planeResourceIndex, captureEventListener);
- *    ICaptureController controller = capture.open(videoDecoderId, captureControllerListener);
- *    controller.setProperty(BUFFER_COUNT, n);        // pool depth
- *    controller.start();                             // onPoolReady() follows
- *    VideoFrameView frame = controller.acquireLatestFrame();
- *    controller.releaseFrame(frame.bufferIndex);
+ *    ICaptureController controller = capture.open(captureControllerListener);
+ *    capture.getProperty(DRM_FOURCC);                 // format the plane delivers
+ *    capture.getProperty(DRM_MODIFIER);               // its memory layout
+ *    controller.setProperty(WIDTH, w);                // expected frame size
+ *    controller.setProperty(HEIGHT, h);
+ *    controller.setProperty(BUFFER_COUNT, n);         // pool depth, or leave to vendor
+ *    controller.start();                              // onPoolReady() delivers the pool
+ *    frame = controller.acquireLatestFrame(VideoFrameView.NO_BUFFER);
+ *    frame = controller.acquireLatestFrame(frame.bufferIndex);   // release + acquire
+ *    controller.releaseFrame(frame.bufferIndex);      // last frame of the session
  *    controller.stop();
  *    capture.close(controller);
  *  @endcode
@@ -141,7 +158,10 @@ interface ICapture
     boolean getPropertyMulti(in CaptureProperty[] properties, out CapturePropertyKVPair[] propertyKVList);
 
     /**
-     * Opens a capture session bound to a video decoder.
+     * Opens a capture session on this plane.
+     *
+     * The source captured is whatever `IPlaneControl` currently has mapped to this
+     * plane, so a source must be mapped to it before this is called.
      *
      * If successful the capture resource transitions to an `OPENING` state and then a
      * `READY` state, which is notified to the registered `ICaptureEventListener`.
@@ -150,40 +170,39 @@ interface ICapture
      * start and stop the session, and acquire and release frames. Controller related
      * callbacks are made through the `ICaptureControllerListener` passed into the call.
      *
-     * The client sets `CaptureProperty.BUFFER_COUNT` through
+     * The client sets the session's `CaptureProperty` values through
      * `ICaptureController.setProperty()` in the `READY` state, before calling
-     * `ICaptureController.start()`. The captured frames' pixel format and size come from
-     * the decoder's `videodecoder.CaptureConfig`, not from here.
+     * `ICaptureController.start()` - the frame format and size it wants, and the depth
+     * of the pool that holds them.
      *
-     * The bound decoder must have a `videodecoder.CaptureConfig` applied through
-     * `videodecoder.IVideoDecoderController.setCaptureConfig()` before
-     * `ICaptureController.start()` is called - that call is what routes the decoder's
-     * output to capture. Whether a decoder supports capture at all is
-     * `videodecoder.Capabilities.supportedCaptureFourCCs` being non-empty.
+     * Nothing is set on the mapped source's decoder. Making it deliver the frames this
+     * session was configured for is the vendor layer's own business, arranged over
+     * whatever internal path the platform provides.
      *
-     * A video decoder can be bound to at most one capture session at a time.
+     * A source is mapped to at most one plane at a time, which is what limits a decoder
+     * to a single capture session.
      *
      * If the client that opened the `ICaptureController` crashes, then the
      * `ICaptureController` has `stop()` and `close()` implicitly called to perform clean up.
      *
-     * @param[in] videoDecoderId                The ID of the video decoder to capture from.
      * @param[in] captureControllerListener     Listener object for controller callbacks.
      *
-     * @returns ICaptureController or null if the video decoder cannot be bound to this
-     *          capture resource.
+     * @returns ICaptureController or null if a capture session cannot be opened on this
+     *          plane.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT If `videoDecoderId` is not a valid video decoder ID.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
-     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC with `CaptureErrorCode.DECODER_BUSY`
-     *            if the video decoder is already bound to another capture session.
+     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC with `CaptureErrorCode.SOURCE_NOT_MAPPED`
+     *            if no video source is mapped to this plane.
      *
      * @pre The resource must be in State::CLOSED.
+     * @pre A video source must be mapped to this plane through
+     *      `IPlaneControl.setVideoSourceDestinationPlaneMapping()`.
      *
-     * @see close(), ICaptureController
+     * @see close(), ICaptureController, IPlaneControl.setVideoSourceDestinationPlaneMapping()
      */
-    @nullable ICaptureController open(in IVideoDecoder.Id videoDecoderId, in ICaptureControllerListener captureControllerListener);
+    @nullable ICaptureController open(in ICaptureControllerListener captureControllerListener);
 
     /**
      * Closes the capture session.
@@ -192,8 +211,8 @@ interface ICapture
      * If successful the resource transitions to a `CLOSING` state and then a `CLOSED` state.
      *
      * The pool and all its Dma-Bufs are released, and the vendor wiring between the
-     * decoder and the pool is undone. The bound video decoder is not stopped - only the capture
-     * binding is undone.
+     * source and the pool is undone. The source's decoder is not stopped, and its plane
+     * mapping is left as it is - only the capture session ends.
      *
      * @param[in] captureController     Instance of the ICaptureController.
      *

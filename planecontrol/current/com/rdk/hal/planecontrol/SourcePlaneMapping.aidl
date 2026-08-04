@@ -43,6 +43,9 @@ parcelable SourcePlaneMapping
     /**
      * The index of the plane to use as the destination for the video source.
      * A value of -1 indicates no plane.
+     *
+     * A plane of type `PlaneType.CAPTURE` routes the source to the client as Dma-Buf
+     * frames rather than to the display. See `IPlaneControl.getCapture()`.
      */
     int destinationPlaneIndex;
 }

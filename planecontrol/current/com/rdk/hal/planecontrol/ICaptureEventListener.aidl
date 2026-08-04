@@ -33,8 +33,7 @@ oneway interface ICaptureEventListener
      * @brief     Called when the capture resource has raised an error that is not tied to a
      *            single frame.
      *
-     * Examples are the bound video decoder losing its capture configuration
-     * unexpectedly, video memory exhaustion mid-session, and an IOMMU fault.
+     * Examples are video memory exhaustion mid-session and an IOMMU fault.
      *
      * @param[in] errorCode         A CaptureErrorCode enum value.
      * @param[in] vendorErrorCode   A vendor specific error code.
@@ -42,11 +41,14 @@ oneway interface ICaptureEventListener
     void onSystemError(in CaptureErrorCode errorCode, in int vendorErrorCode);
 
     /**
-     * @brief     Called when the bound video decoder was detached or closed.
+     * @brief     Called when the source feeding this plane went away - unmapped through
+     *            `IPlaneControl.setVideoSourceDestinationPlaneMapping()`, or its decoder
+     *            closed.
      *
      * The session is implicitly stopped and the capture resource transitions to `READY`.
+     * Mapping a source back to this plane makes the session startable again.
      */
-    void onDecoderDetached();
+    void onSourceUnmapped();
 
     /**
      * @brief     Called when the capture resource has transitioned to a new state.

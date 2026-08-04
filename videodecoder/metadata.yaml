@@ -38,11 +38,10 @@ lifecycle:
 # scope - High-level architectural responsibilities                       [manual]
 scope:
   - Video decoder resource management for multiple codec formats (H.264, HEVC, VP9, etc.)
-  - Tunnelled and non-tunnelled operational mode support
+  - Decoded frame delivery to a linked video sink or back to the client in frame buffers
   - Manager interface for decoder discovery and resource allocation
   - Secure and non-secure video playback paths
   - Buffer pool management and codec-specific capabilities per decoder
-  - Decode-to-texture output configuration (format and size) for GRAPHICS_TEXTURE mode
 
 # notes - Tracking metadata                                              [manual]
 #   priority      - Numeric priority (lower = higher)

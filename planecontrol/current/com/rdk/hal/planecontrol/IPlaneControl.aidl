@@ -70,6 +70,12 @@ interface IPlaneControl
      * Operations such as main and PIP video swaps can be performed using this call.
      * 
      * To unmap a source from its plane, map it to a `destinationPlaneIndex` of -1.
+     *
+     * A plane of type `PlaneType.CAPTURE` is a destination like any other, and mapping a
+     * source to one is what routes that source's decoded frames to capture. The frames
+     * are then delivered to the client through `getCapture()` rather than displayed.
+     * Unmapping a source from a capture plane while a session is running stops that
+     * session and raises `ICaptureEventListener.onSourceUnmapped()`.
      * 
      * If a source type and source index appear multiple times in the mapping list then the call fails.
      * If a plane index appears multiple times in the mapping list then the call fails.
@@ -85,7 +91,7 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      *
      *
-     * @see getVideoSourceDestinationPlaneMapping()
+     * @see getVideoSourceDestinationPlaneMapping(), getCapture()
      */
     boolean setVideoSourceDestinationPlaneMapping(in SourcePlaneMapping[] listSourcePlaneMapping);
   
@@ -268,6 +274,9 @@ interface IPlaneControl
      * `PlaneType.CAPTURE`. A product that supports decode-to-texture declares one capture
      * plane resource per concurrent capture session it can serve. The method returns
      * `null` rather than throwing an exception.
+     *
+     * The source captured is the one mapped to this plane through
+     * `setVideoSourceDestinationPlaneMapping()`.
      *
      * @param[in] planeResourceIndex        The index of the plane resource.
      * @param[in] captureEventListener      Listener for capture resource event callbacks.
