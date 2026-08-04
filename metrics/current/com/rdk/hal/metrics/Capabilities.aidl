@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.metrics;
-import com.rdk.hal.metrics.MetricDomainInfo;
+import com.rdk.hal.metrics.MetricProfileInfo;
 
 /**
  *  @brief     Everything this product serves — the runtime truth a consumer
@@ -45,5 +45,11 @@ parcelable Capabilities
      */
     String schemaId;
 
-    MetricDomainInfo[] domains;
+    /**
+     *  Every profile live on this device - the HAL layer's, and each layer above it
+     *  that declares metrics. Each carries its own versions and its own domains, so a
+     *  consumer can tell which layer owes a figure and which schema shape it is
+     *  reading.
+     */
+    MetricProfileInfo[] profiles;
 }

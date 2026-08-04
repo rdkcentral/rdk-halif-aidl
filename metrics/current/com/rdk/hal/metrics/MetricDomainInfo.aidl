@@ -25,11 +25,6 @@ import com.rdk.hal.metrics.MetricElementInfo;
  *  A domain is the subject area and the unit of extension: adding "cpu" or
  *  "memory" alongside "av" touches nothing that already exists, and requires no
  *  interface change.
- *
- *  This interface carries MEASURED domains only — values read from an
- *  instrument. Domains that are derived, computed as a stated function of
- *  measured fields, never cross it: a vendor cannot declare one and never sees
- *  one. They are computed by middleware from its own state.
  */
 @VintfStability
 parcelable MetricDomainInfo
@@ -43,6 +38,18 @@ parcelable MetricDomainInfo
      *  cpu.core.utilisation_pct.
      */
     String dictionaryVersion;
+
+    /**
+     *  True when this domain's fields are computed as a stated function of measured
+     *  fields, false when they are read from an instrument.
+     *
+     *  A vendor never declares a derived domain and a SoC never serves one, but
+     *  getCapabilities() returns the union of every profile live on the device, and the
+     *  layers above the HAL are exactly the ones that declare them. Without this flag a
+     *  computed figure arrives indistinguishable from a measured one, and a consumer
+     *  differencing it produces a number nothing ever measured.
+     */
+    boolean derived;
 
     MetricElementInfo[] elements;
 }

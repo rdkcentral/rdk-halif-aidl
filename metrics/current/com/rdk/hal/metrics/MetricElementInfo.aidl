@@ -46,6 +46,10 @@ parcelable MetricElementInfo
     /**
      *  The cadence this element is polled at. May be tighter than the 50 ms
      *  platform floor; never looser — freshness is a partner-facing promise.
+     *
+     *  Always populated. A declaration that omits it is declaring the 50 ms floor,
+     *  and the value carried here is 50 - a consumer reads the cadence in force
+     *  rather than inferring a default that is stated elsewhere.
      */
     int pollCadenceMs;
 }

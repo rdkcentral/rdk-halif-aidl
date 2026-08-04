@@ -111,15 +111,30 @@ Every field carries an id derived from the contract that governs how it may be r
 id = first 8 bytes of SHA-256("<domain>.<element>.<field>|<unit>|<kind>")
 ```
 
+Those 8 bytes are carried big-endian as the bit pattern of `MetricFieldInfo.id`. Roughly half of all ids have the top bit set and so arrive as a negative `long`; a consumer compares the 64 bits, never the signed magnitude. The declaration writes the same value as an unsigned `0x`-prefixed 16-digit literal.
+
 Nothing allocates it, so there is no registry to consult and nothing to resolve when two people add a field on separate branches.
 
 It buys a check no key can make alone. A key — a name or an ordinal — stays valid while the meaning underneath it changes: a product that declares `decode_latency_sum_us` but populates milliseconds still matches by name, and its consumer reports figures a thousand times wrong; a `current` sample reclassified as a `counter` gets differenced into nonsense. Because `unit` and `kind` are hashed, both change the id, so a consumer comparing against the id it was built with sees a hard mismatch rather than a wrong number.
 
 The id is not compiled into the interface. It reaches a client at runtime on `MetricFieldInfo`:
 
-1. **Resolve once.** `getFields()` returns every field a source serves — name, unit, kind and id. The client keeps the ones it understands and caches `name → id`.
+1. **Resolve once.** `getFields()` returns every field a source serves — every key its declaration carries, including the id. The client keeps the ones it understands and caches `name → id`.
 2. **Read many.** `getAll()` returns `MetricKVPair{name, value}` and nothing else. The id does not ride the poll path, because it cannot change between resolutions and the client already holds it.
 3. **Re-resolve on change.** `Capabilities.schemaId` changing is the signal that the declared set moved. An id that changed under a name the client already knew means the meaning moved, and the client stops trusting that field rather than reporting it wrongly.
+
+### Two contracts, one declaration
+
+A profile states a field once, and two audiences read that statement.
+
+| | Read by | Where it lives | Keys |
+|---|---|---|---|
+| **Declaration** | The vendor implementing the field, the test suite asserting it, a reviewer | The profile and the reference generated from it | `provider`, `description`, `derivedFrom`, `from` |
+| **Runtime** | A consumer reading a value | `MetricFieldInfo` and its parents | `name`, `unit`, `kind`, `writable`, `id`, and the domain's `derived` |
+
+The runtime set is the smaller one deliberately. Field data is returned per field, per source, so a device declaring 45 fields would carry roughly 8 KB of prose on every source to say something fixed that no consumer computes with. The test for a key is not whether it is true, but whether a consumer's arithmetic changes when it does not know it.
+
+Provenance splits on exactly that test. Whether a figure is measured or computed **does** change what a consumer may do — differencing a computed value as though it were an instrument reading yields a number nothing measured — so it is carried, as `MetricDomainInfo.derived`, once per domain. Which inputs produced it does not change how it is read, and stays in the profile.
 
 ### No SoC-private namespace
 
@@ -182,10 +197,13 @@ Names are by **subject, not producer**. Which block sources a figure differs per
 | `IMetricsManager.aidl` | Metrics Manager HAL interface — catalog and live source enumeration. |
 | `IMetricsSource.aidl` | Metrics HAL interface for a single source (`<domain>.<element>.<instance>`). |
 | `IMetricsManagerEventListener.aidl` | Listener callbacks to clients from the `IMetricsManager` for sources appearing and disappearing. |
-| `Capabilities.aidl` | The catalog — every domain this product serves, with the schema identity. |
-| `MetricDomainInfo.aidl` | One domain and its elements, with the dictionary revision it was written against. |
+| `Capabilities.aidl` | The catalog — every profile live on this product, with the schema identity. |
+| `MetricProfileInfo.aidl` | One layer's declaration — its interface and schema versions, and its domains. |
+| `MetricDomainInfo.aidl` | One domain and its elements, with the dictionary revision it was written against and whether it is derived. |
 | `MetricElementInfo.aidl` | One element — its fields, instance count and cadence. |
-| `MetricFieldInfo.aidl` | One declared field — name, unit, kind and writability. |
+| `MetricFieldInfo.aidl` | One declared field — its identity, unit, kind, writability and id. |
+| `MetricUnit.aidl` | Enum of the units a field's value may carry. |
+| `MetricKind.aidl` | Enum of how a field's value behaves over time. |
 | `MetricKVPair.aidl` | One metric value, keyed by its fully-qualified name. |
 
 ---

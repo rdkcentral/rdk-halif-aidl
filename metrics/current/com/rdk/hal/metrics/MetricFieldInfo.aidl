@@ -17,10 +17,35 @@
  * limitations under the License.
  */
 package com.rdk.hal.metrics;
+import com.rdk.hal.metrics.MetricKind;
+import com.rdk.hal.metrics.MetricUnit;
 
 /**
  *  @brief     What one declared field is — enough to interpret the number
  *             without consulting anything else at runtime.
+ *
+ *  <h3>Two contracts, one declaration</h3>
+ *  A profile states one field once, and that statement is read by two audiences.
+ *
+ *  The DECLARATION contract is what a vendor implements against and what a test
+ *  asserts: every key in the profile, prose included. It is consumed at build time, by
+ *  people and by test suites, and it lives in the profile and the reference documents
+ *  generated from it.
+ *
+ *  The RUNTIME contract is this parcelable: what a consumer needs in order to read a
+ *  number correctly. It carries the field's identity, what the number counts, what
+ *  arithmetic is valid on it, whether it can be written, and the id that detects any
+ *  of those changing underneath a name.
+ *
+ *  The runtime contract is the smaller one deliberately. It is returned per field, per
+ *  source, and a device declaring 45 fields carries roughly 8 KB of prose if the
+ *  declaration's descriptions ride along - repeated on every source, to say something
+ *  fixed that no consumer computes with. Prose belongs where it is read.
+ *
+ *  Provenance is the same case. Whether a figure is measured or computed changes what
+ *  a consumer may do with it, so it is carried - as MetricDomainInfo.derived, once per
+ *  domain, because derivation is a property of the domain. Which inputs a computed
+ *  figure was derived from does not change how it is read, and stays in the profile.
  */
 @VintfStability
 parcelable MetricFieldInfo
@@ -28,32 +53,28 @@ parcelable MetricFieldInfo
     /** Field name within its element, e.g. "frames_decoded". */
     String name;
 
-    /** "frames" | "episodes" | "ms" | "us" | "ns" | "bytes" | "events" | "percent" | "hz" | "none" */
-    String unit;
+    /** What the number counts. */
+    MetricUnit unit;
 
-    /**
-     *  How the value behaves over time — this governs the arithmetic a
-     *  consumer may do, and is what keeps deltas and samples from being mixed:
-     *
-     *    "counter"     cumulative since source creation; may be differenced
-     *    "current"     a live sample; absolute, NEVER sum it
-     *    "high_water"  monotone max since source creation; absolute
-     *    "config"      a tunable's present value; absolute
-     */
-    String kind;
+    /** How the value behaves over time, and so what arithmetic is valid on it. */
+    MetricKind kind;
 
     /** True when setField() is accepted on this field. */
     boolean writable;
 
     /**
      *  Content-derived identity of this field's contract: the first 8 bytes of
-     *  SHA-256 over "<domain>.<element>.<field>|<unit>|<kind>".
+     *  SHA-256 over "<domain>.<element>.<field>|<unit>|<kind>", carried as the
+     *  BIT PATTERN of those 8 bytes big-endian. Roughly half of all ids have the top
+     *  bit set and therefore arrive negative; a consumer compares the 64 bits, never
+     *  the signed magnitude. The declaration writes the same value as an unsigned
+     *  0x-prefixed 16-digit literal.
      *
      *  A consumer compares this against the id it was built with. Matching
      *  names are not enough on their own - a product that serves
      *  decode_latency_sum_us but populates milliseconds still matches by name,
-     *  and the consumer reports figures a thousand times wrong; a `current`
-     *  sample reclassified as a `counter` gets differenced and produces
+     *  and the consumer reports figures a thousand times wrong; a CURRENT
+     *  sample reclassified as a COUNTER gets differenced and produces
      *  nonsense. Both change the id, so both become a hard mismatch here
      *  instead of a wrong number downstream.
      *

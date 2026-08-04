@@ -30,6 +30,26 @@
 # return, and what the test suites validate a device against. A field is defined
 # in the profile that declares it and nowhere else.
 #
+# ---------------------------------------------------------------------------
+# TWO CONTRACTS, ONE DECLARATION
+#
+#   A key declared here is read by one of two audiences, and each key below says
+#   which.
+#
+#   DECLARATION  Consumed at build time - by the vendor implementing the field,
+#                by the test suite asserting it, and by the reference documents
+#                generated from this file. It never crosses the interface.
+#
+#   RUNTIME      Returned to a consumer on MetricFieldInfo, MetricElementInfo,
+#                MetricDomainInfo or MetricProfileInfo, because a consumer needs
+#                it to read a number correctly.
+#
+#   The runtime set is the smaller one deliberately. Field-level data is
+#   returned per field, per source: 45 fields of prose is roughly 8 KB repeated
+#   on every source, to carry something fixed that no consumer computes with.
+#   The test is not "is this true" but "does a consumer's arithmetic change if
+#   it does not know this".
+#
 # Schema Version: 0.1.0
 
 type: map
@@ -69,8 +89,12 @@ mapping:
                 type: str
                 required: true
 
-              # true  = computed from measured fields; platform-declared only.
-              # false = measured by an instrument. Default false.
+              # RUNTIME. true  = computed from measured fields;
+              #                   platform-declared only.
+              #          false = measured by an instrument. Default false.
+              # Carried to the consumer because differencing a computed value
+              # as though it were an instrument reading produces a number that
+              # was never measured.
               derived:
                 type: bool
                 required: false
@@ -147,31 +171,35 @@ mapping:
                                 type: bool
                                 required: false
 
-                              # Who is expected to source this figure. A
-                              # per-product outcome, not a fixed property of
-                              # the field: a consumer cannot tell which and
-                              # does not need to.
+                              # DECLARATION. Who is expected to source this
+                              # figure. A per-product outcome, not a fixed
+                              # property of the field: a consumer cannot tell
+                              # which and does not need to, so it is not
+                              # returned at runtime.
                               provider:
                                 type: str
                                 required: true
 
-                              # What a vendor implements against and what a
-                              # test asserts. A field without one cannot be
-                              # implemented.
+                              # DECLARATION. What a vendor implements against
+                              # and what a test asserts. A field without one
+                              # cannot be implemented. Read here and in the
+                              # generated reference, never over the interface.
                               description:
                                 type: str
                                 required: true
 
-                              # The measured field this one is computed from,
-                              # named <domain>.<element>.<field>. Declaring a
-                              # derived field without its input is an
-                              # undeliverable declaration, not a partial
-                              # capability.
+                              # DECLARATION. The measured field this one is
+                              # computed from, named <domain>.<element>.<field>.
+                              # Declaring a derived field without its input is
+                              # an undeliverable declaration, not a partial
+                              # capability. What a consumer needs at runtime is
+                              # whether a figure is computed at all, which is
+                              # the domain's `derived`.
                               derivedFrom:
                                 type: str
                                 required: false
 
-                              # Content-derived field identity, written by
+                              # RUNTIME. Content-derived field identity, written by
                               # scripts/generate.py:
                               #   first 8 bytes of SHA-256 over
                               #   "<domain>.<element>.<field>|<unit>|<kind>"
