@@ -89,8 +89,9 @@ Everything else is generated from it by `scripts/generate.py`, which takes no ar
 hfp-metrics.yaml                     authored - the contract
     │
     ├─→ id: on each field             computed and written back in
-    └─→ docs/field_dictionary.md      the reference, and the requirement each
-                                      declared field carries
+    └─→ docs/vendor_field_dictionary.md
+                                      the reference, and what each declared
+                                      field must do
 ```
 
 It regenerates, verifies the result is stable, checks the profile, and exits non-zero if anything is wrong.
@@ -181,7 +182,6 @@ Names are by **subject, not producer**. Which block sources a figure differs per
 | **HAL.METRICS.3** | All values returned by one `getAll()` or `getFieldsByName()` call shall be sampled at a single instant. | An obligation on the implementation, not a property to be discovered — a source spanning two hardware blocks shall latch both. Paired counters must never yield an impossible ratio. |
 | **HAL.METRICS.4** | Counters shall be cumulative since source creation and shall not reset on flush or seek. High-water fields shall be monotone non-decreasing. | Consumers compute deltas. |
 | **HAL.METRICS.5** | A read shall reflect events no older than the element's declared `pollCadenceMs`, which shall not exceed 50 ms. | A maximum staleness, not a rate to poll at. An element may guarantee tighter; never looser. Freshness is a partner-facing promise. |
-| **HAL.METRICS.5a** | A read shall never be rejected, rate-limited or throttled for arriving sooner than `pollCadenceMs`. | It bounds what is worth reading, not what is allowed. A consumer polling faster reads the same values again, because nothing refreshed them in between. |
 | **HAL.METRICS.6** | A field the implementation cannot measure shall be left undeclared and omitted from reads. | It shall never be served as `0`. "Cannot measure it" and "measured zero" are different facts. |
 | **HAL.METRICS.7** | Every field returned shall be declared in `hfp-metrics.yaml` with `unit`, `kind` and `writable`, and every name used shall exist in that domain's dictionary at the declared `dictionaryVersion`. | There is no SoC-private namespace: a figure only one SoC can produce still gets a dictionary entry, so no consumer grows per-SoC code. |
 | **HAL.METRICS.8** | Every episodic condition shall be reported as a `counter` totalling occurrences, and where a consumer needs per-occurrence detail, `current` fields describing the most recent one. | A poll cannot recover an occurrence it did not sample, so the count is what makes the occurrence visible and the `last_*` fields are what make it diagnosable. |
@@ -190,6 +190,8 @@ Names are by **subject, not producer**. Which block sources a figure differs per
 | **HAL.METRICS.11** | The implementation shall hold no per-caller state. | Every read is a snapshot of what the source holds now. Any consumer reads at any cadence without affecting another; fan-out is a middleware concern. |
 | **HAL.METRICS.12** | Values shall be presented in canonical units and semantics regardless of the SoC's raw representation. | The provider is an adapter, not a passthrough. A transform normalises representation; it cannot manufacture information, so where a SoC reports only a combined figure the finer-grained fields stay undeclared rather than derived by guesswork. |
 | **HAL.METRICS.13** | Every field returned shall carry the `id` its `<domain>.<element>.<field>`, `unit` and `kind` hash to. | Nothing allocates it, so it needs no registry. A product that serves a name in the wrong unit, or with the wrong kind, becomes a hard mismatch at the consumer rather than a silently wrong number. |
+| **HAL.METRICS.14** | A read shall never be rejected, rate-limited or throttled for arriving sooner than `pollCadenceMs`. | It bounds what is worth reading, not what is allowed. A consumer polling faster reads the same values again, because nothing refreshed them in between. |
+| **HAL.METRICS.15** | Every declared field's values shall behave as its `kind` states, and shall carry the meaning the [vendor field dictionary](vendor_field_dictionary.md) gives that name. | The dictionary is the definition a test asserts against. `counter` and `high_water` behaviour is HAL.METRICS.4; `current` is a live sample re-read each poll, absolute and never summed; `config` is the present value of a tunable. |
 
 ---
 

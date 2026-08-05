@@ -42,8 +42,8 @@ the same statement, so there is no separate dictionary to agree with.
     hfp-metrics.yaml                     authored - the contract
         |
         +-> id: on each field            computed and written back in
-        +-> docs/field_dictionary.md     the reference, and the assertions
-                                         a test makes
+        +-> docs/vendor_field_dictionary.md   the reference, and what each
+                                              declared field must do
 
 ONE PROFILE PER LAYER
 ---------------------
@@ -99,7 +99,7 @@ import yaml
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 HFP = ROOT / "hfp-metrics.yaml"
-DICT_MD = ROOT / "docs/field_dictionary.md"
+DICT_MD = ROOT / "docs/vendor_field_dictionary.md"
 
 # A layer above the HAL defines the figures only it produces. Untracked here -
 # it belongs to that layer's repository - but when a working copy is present the

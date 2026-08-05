@@ -4,13 +4,13 @@ The normative field set for the **`av` domain** of `com.rdk.hal.metrics`. A name
 
 A declaration (`hfp-metrics.yaml`) states *which* of these a product serves. This dictionary states *what each one is*. A product may not declare a name that is not defined here, and may not redefine one that is — that is what keeps the interface common across SoCs, and it is why there is no SoC-private namespace.
 
-## What a declared field requires
+## What a declared field must do
 
-Every field in this dictionary is a testable requirement for any product that declares it, identified `HAL.METRICS.FIELD.<PATH>` with the field path uppercased — `av.video_sink.frames_presented` is `HAL.METRICS.FIELD.AV.VIDEO_SINK.FRAMES_PRESENTED`. The identifier is derived from the path, so it is stable for as long as the field is.
+This dictionary is what `HAL.METRICS.15` asserts against: a declared field's values behave as its `kind` states and carry the meaning its definition below gives.
 
-A product must satisfy the requirement only for the fields it declares in `hfp-metrics.yaml`. A field it does not declare is absent at runtime rather than served as zero — "this SoC cannot measure it" and "it measured zero" stay distinct.
+A product is held to that only for the fields it declares in `hfp-metrics.yaml`. A field it does not declare is absent at runtime rather than served as zero — "this SoC cannot measure it" and "it measured zero" stay distinct.
 
-The requirement is that the field's values behave as its `kind` says, and carry the meaning its definition below gives:
+The four kinds:
 
 | `kind` | Values shall be |
 |---|---|
