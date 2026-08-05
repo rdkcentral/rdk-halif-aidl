@@ -64,11 +64,10 @@ parcelable MetricFieldInfo
 
     /**
      *  Content-derived identity of this field's contract: the first 8 bytes of
-     *  SHA-256 over "<domain>.<element>.<field>|<unit>|<kind>", carried as the
-     *  BIT PATTERN of those 8 bytes big-endian. Roughly half of all ids have the top
-     *  bit set and therefore arrive negative; a consumer compares the 64 bits, never
-     *  the signed magnitude. The declaration writes the same value as an unsigned
-     *  0x-prefixed 16-digit literal.
+     *  SHA-256 over "<domain>.<element>.<field>|<unit>|<kind>", read big-endian with
+     *  the sign bit cleared. 63 bits of hash, so the value is always non-negative and
+     *  compares identically however a consumer stores it. The declaration writes the
+     *  same value as a 0x-prefixed 16-digit literal.
      *
      *  A consumer compares this against the id it was built with. Matching
      *  names are not enough on their own - a product that serves

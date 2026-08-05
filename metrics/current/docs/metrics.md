@@ -89,8 +89,8 @@ Everything else is generated from it by `scripts/generate.py`, which takes no ar
 hfp-metrics.yaml                     authored - the contract
     │
     ├─→ id: on each field             computed and written back in
-    ├─→ docs/field_dictionary.md      human-readable reference
-    └─→ docs/metrics_requirements.md  the assertions a test makes, one per field
+    └─→ docs/field_dictionary.md      the reference, and the requirement each
+                                      declared field carries
 ```
 
 It regenerates, verifies the result is stable, checks the profile, and exits non-zero if anything is wrong.
@@ -113,7 +113,7 @@ Every field carries an id derived from the contract that governs how it may be r
 id = first 8 bytes of SHA-256("<domain>.<element>.<field>|<unit>|<kind>")
 ```
 
-Those 8 bytes are carried big-endian as the bit pattern of `MetricFieldInfo.id`. Roughly half of all ids have the top bit set and so arrive as a negative `long`; a consumer compares the 64 bits, never the signed magnitude. The declaration writes the same value as an unsigned `0x`-prefixed 16-digit literal.
+Those 8 bytes are read big-endian with the sign bit cleared, giving 63 bits of hash in `MetricFieldInfo.id`. The value is therefore always non-negative, and compares identically however a consumer stores it. The declaration writes the same value as a `0x`-prefixed 16-digit literal.
 
 Nothing allocates it, so there is no registry to consult and nothing to resolve when two people add a field on separate branches.
 

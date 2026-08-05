@@ -42,8 +42,8 @@ the same statement, so there is no separate dictionary to agree with.
     hfp-metrics.yaml                     authored - the contract
         |
         +-> id: on each field            computed and written back in
-        +-> docs/field_dictionary.md     human-readable reference
-        +-> docs/metrics_requirements.md the assertions a test makes
+        +-> docs/field_dictionary.md     the reference, and the assertions
+                                         a test makes
 
 ONE PROFILE PER LAYER
 ---------------------
@@ -100,7 +100,6 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 HFP = ROOT / "hfp-metrics.yaml"
 DICT_MD = ROOT / "docs/field_dictionary.md"
-REQS = ROOT / "docs/metrics_requirements.md"
 
 # A layer above the HAL defines the figures only it produces. Untracked here -
 # it belongs to that layer's repository - but when a working copy is present the
@@ -112,7 +111,8 @@ COMBINED = ROOT / "docs/combined_field_dictionary.md"
 # Units render for humans in one form and travel in another.
 UNIT_ALIASES = {"µs": "us"}
 
-# How each kind may be read. Stated once, emitted into every requirement.
+# How each kind may be read. Stated once in the dictionary, and the requirement
+# a field carries is that its values behave this way.
 KIND_RULES = {
     "counter": "cumulative since source creation, monotonically non-decreasing, "
                "and never reset on flush or seek",
@@ -197,37 +197,9 @@ def const_name(path: str) -> str:
     return path.replace(".", "_").upper()
 
 
-def req_id(path: str) -> str:
-    return "HAL.METRICS.FIELD." + path.upper()
-
-
 # --------------------------------------------------------------------------
 # Generators
 # --------------------------------------------------------------------------
-
-def emit_requirements(entries: dict, derived: dict) -> str:
-    out = ["# Metrics Field Requirements", "",
-           f"<!-- {GENERATED} -->", "",
-           "One requirement per declared field, generated from the HAL Field "
-           "Dictionary. Each is independently testable, and its identifier is "
-           "derived from the field path, so it is stable for as long as the "
-           "field is.", "",
-           "A product must satisfy a requirement only for the fields it declares "
-           "in `hfp-metrics.yaml`. A field it does not declare is absent at "
-           "runtime rather than served as zero.", "",
-           "| Requirement | Field | Contract | Definition |", "|---|---|---|---|"]
-    for path, e in entries.items():
-        rule = KIND_RULES.get(e["kind"], "")
-        fid = field_id(path, e["unit"], e["kind"])
-        access = "read-write" if e["writable"] else "read-only"
-        extra = (f" Derived from `{derived[path]}`, which the product must also "
-                 f"declare." if path in derived else "")
-        contract = (f"`{e['unit']}` · `{e['kind']}` · {access}<br>id "
-                    f"`0x{fid:016x}`")
-        definition = f"Shall be reported as {rule}.{extra} {e['description']}"
-        out.append(f"| **{req_id(path)}** | `{path}` | {contract} | {definition} |")
-    return "\n".join(out) + "\n"
-
 
 def emit_combined(hal: dict, layers: dict) -> str:
     """Every field a caller of the top layer can see, and who produces it.
@@ -360,9 +332,8 @@ def check(entries: dict, derived: dict) -> list[str]:
 def generate(entries: dict, derived: dict) -> dict:
     """Write every generated artefact. Returns {path: content} as written."""
     HFP.write_text(write_ids(entries), encoding="utf-8")
-    REQS.write_text(emit_requirements(entries, derived), encoding="utf-8")
     DICT_MD.write_text(emit_dictionary_md(entries), encoding="utf-8")
-    written = [REQS, DICT_MD, HFP]
+    written = [DICT_MD, HFP]
 
     layers = load_upper()
     if layers:
@@ -409,7 +380,7 @@ def main() -> int:
     print(f"ok: {len(entries)} fields declared; ids written and generation is stable.")
     if layers:
         print(f"  plus {extra} from {', '.join(layers)} - combined view generated")
-    for path in (DICT_MD, HFP, REQS):
+    for path in (DICT_MD, HFP):
         print(f"  wrote {path.relative_to(ROOT)}")
     return 0
 

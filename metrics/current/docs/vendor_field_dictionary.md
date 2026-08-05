@@ -4,6 +4,23 @@ The normative field set for the **`av` domain** of `com.rdk.hal.metrics`. A name
 
 A declaration (`hfp-metrics.yaml`) states *which* of these a product serves. This dictionary states *what each one is*. A product may not declare a name that is not defined here, and may not redefine one that is — that is what keeps the interface common across SoCs, and it is why there is no SoC-private namespace.
 
+## What a declared field requires
+
+Every field in this dictionary is a testable requirement for any product that declares it, identified `HAL.METRICS.FIELD.<PATH>` with the field path uppercased — `av.video_sink.frames_presented` is `HAL.METRICS.FIELD.AV.VIDEO_SINK.FRAMES_PRESENTED`. The identifier is derived from the path, so it is stable for as long as the field is.
+
+A product must satisfy the requirement only for the fields it declares in `hfp-metrics.yaml`. A field it does not declare is absent at runtime rather than served as zero — "this SoC cannot measure it" and "it measured zero" stay distinct.
+
+The requirement is that the field's values behave as its `kind` says, and carry the meaning its definition below gives:
+
+| `kind` | Values shall be |
+|---|---|
+| `counter` | cumulative since source creation, monotonically non-decreasing, and never reset on flush or seek |
+| `current` | a live sample re-read each poll, absolute, and never summed |
+| `high_water` | a monotone maximum since source creation, absolute |
+| `config` | the present value of a tunable, absolute |
+
+A field marked **writable** additionally accepts `setField()`; every other field rejects it.
+
 ## Relationship to concrete metric interfaces
 
 Other interfaces already describe some of these figures as **fixed members** — a struct or a method per metric. This one deliberately does not.
