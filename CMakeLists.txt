@@ -27,8 +27,21 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMakeMod
 include(HandleModules)
 
 find_package(Binder REQUIRED)
+find_package(BinderUtils REQUIRED)
 
 option(BUILD_CURRENT "Build current version of HAL modules" OFF)
+
+if(BUILD_CURRENT)
+    find_program(
+        AIDL_EXECUTABLE
+        NAMES aidl
+        HINTS ENV PATH "${PROJECT_SOURCE_DIR}/build-tools/linux_binder_idl/build-host"
+        DOC "aidl executable location"
+    )
+    if(NOT AIDL_EXECUTABLE)
+        message(FATAL_ERROR "Unable to find the aidl executable")
+    endif()
+endif()
 
 add_subdirectory("CMakeModules")
 
