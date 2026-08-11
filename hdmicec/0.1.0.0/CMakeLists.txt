@@ -13,7 +13,7 @@ project(hdmicec-v0.1.0.0-cpp LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(LIB_NAME "hdmicec-v0.1.0.0-cpp")
+set(LIB_NAME "hdmicecmw-v0.1.0.0-cpp")
 
 if (NOT DEFINED BINDER_SDK_DIR)
     message(FATAL_ERROR "BINDER_SDK_DIR must be set for snapshot build")
@@ -80,7 +80,7 @@ if (DEFINED HALIF_LIB_DIR)
     target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
 endif()
 
-target_link_libraries(${LIB_NAME} PRIVATE binder utils common-v0.2.0.0-cpp)
+target_link_libraries(${LIB_NAME} PRIVATE binder utils common-mw-v0.2.0.0-cpp)
 
 # The target_link_directories() above are BUILD-time search paths. By default
 # CMake bakes them into the library as RPATH/RUNPATH, which ships absolute build
