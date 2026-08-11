@@ -13,7 +13,7 @@ project(hdmicec-v0.1.0.0-cpp LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(LIB_NAME "hdmicecmw-v0.1.0.0-cpp")
+set(LIB_NAME "hdmicec-mw-v0.1.0.0-cpp")
 
 if (NOT DEFINED BINDER_SDK_DIR)
     message(FATAL_ERROR "BINDER_SDK_DIR must be set for snapshot build")
