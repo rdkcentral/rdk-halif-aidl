@@ -260,6 +260,13 @@ include("${HOST_AIDL_DIR}/CMakeLists.inc")
 #######################################################################
 
 target_build_interfaces_libraries()
+if (TARGET ${INTERFACE_TARGET}-v${AIDL_SRC_VERSION}-cpp)
+    set_target_properties(
+        ${INTERFACE_TARGET}-v${AIDL_SRC_VERSION}-cpp
+        PROPERTIES
+        OUTPUT_NAME "${INTERFACE_TARGET}-mw-v${AIDL_SRC_VERSION}-cpp"
+    )
+endif()
 
 #######################################################################
 # Stage headers BEFORE building so compilation uses staged headers
