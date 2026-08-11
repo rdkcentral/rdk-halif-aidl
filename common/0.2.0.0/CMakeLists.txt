@@ -54,7 +54,7 @@ project(common-v0.2.0.0-cpp LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(LIB_NAME "common-mw-v0.2.0.0-cpp")
+set(LIB_NAME "commonmw-v0.2.0.0-cpp")
 
 if (NOT DEFINED BINDER_SDK_DIR)
     message(FATAL_ERROR "BINDER_SDK_DIR must be set")
