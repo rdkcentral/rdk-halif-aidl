@@ -41,7 +41,7 @@ interface IFrontend {
         const int UNDEFINED = -1;
 
         /** The actual resource ID */
-        long value;
+        int value;
     }
 
     /** Get the ID of this frontend. */
