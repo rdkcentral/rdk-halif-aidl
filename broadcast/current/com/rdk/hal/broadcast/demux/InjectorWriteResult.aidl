@@ -2,7 +2,7 @@
  * If not stated otherwise in this file or this component's LICENSE file the
  * following copyright and licenses apply:
  *
- * Copyright 2024 RDK Management
+ * Copyright 2025 RDK Management
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -18,18 +18,21 @@
  */
 package com.rdk.hal.broadcast.demux;
 
+import com.rdk.hal.broadcast.demux.InjectorWriteStatus;
+
 /**
- * MPEG-2 TS-specific demux filter parameters.
+ * Result of a software injector write operation.
  *
- * @author Jan Pedersen
- * @author Christian George
- * @author Philipp Trommler
+ * @see IDataFromSoftwareInjector.write()
+ * @see InjectorWriteStatus
  */
 @VintfStability
-parcelable Mpeg2TsDemuxFilterParameters {
+parcelable InjectorWriteResult {
+    /** The outcome of the write call. */
+    InjectorWriteStatus status;
     /**
-     * The PIDs that should be captured by the filter. The value 8192 represents a
-     * wildcard filter to capture all PIDs.
+     * Number of bytes actually written. May be less than the input length on
+     * partial writes.
      */
-    int[] pids;
+    int bytesWritten;
 }
