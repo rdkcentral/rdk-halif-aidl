@@ -45,7 +45,7 @@ function(_generate_dependency_list CMAKE_STYLE_OUT PKG_CONFIG_STYLE_OUT LIB_NAME
 
         list(APPEND CMAKE_STYLE "${ARGV${dep}}-v${ARGV${dep_ver_index}}-cpp")
         list(APPEND PKG_CONFIG_STYLE "rdk-halif-${ARGV${dep}} = ${ARGV${dep_ver_index}}")
-        list(APPEND LIB_NAMES "lib${ARGV${dep}}-v${ARGV${dep_ver_index}}-cpp")
+        list(APPEND LIB_NAMES "${ARGV${dep}}-v${ARGV${dep_ver_index}}-cpp")
     endforeach()
 
     message(STATUS "CMake style dependencies: ${CMAKE_STYLE}")
@@ -59,13 +59,24 @@ endfunction()
 
 # Create MODULE_NAMEConfig.cmake and MODULE_NAMEConfigVersion.cmake files for the given module name and version. This is
 # necessary to allow other modules to find this module using find_package().
-function(_create_cmake_helpers MODULE_NAME MODULE_VERSION MODULE_DEPENDENCIES)
+function(_create_cmake_helpers MODULE_NAME MODULE_VERSION MODULE_DEPENDENCIES SOURCE_LIST HEADER_LIST)
     _capitalize_module_name("${MODULE_NAME}" MODULE_CAPITALIZED_NAME)
     string(TOUPPER "${MODULE_NAME}" MODULE_UPPER_NAME)
     string(PREPEND MODULE_UPPER_NAME "RDK_HALIF_")
 
-    configure_package_config_file(
-        "${CMAKE_SOURCE_DIR}/contrib/Config.cmake.in"
+    set(SRC_FILES)
+    foreach(SFILE IN LISTS "${SOURCE_LIST}")
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "\${PACKAGE_PREFIX_DIR}" SRC_FILE "${SFILE}")
+        list(APPEND SRC_FILES "${SRC_FILE}")
+    endforeach()
+    set(HDR_FILES)
+    foreach(HFILE IN LISTS "${HEADER_LIST}")
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "\${PACKAGE_PREFIX_DIR}" H_FILE "${HFILE}")
+        list(APPEND HEADER_FILES "${H_FILE}")
+   endforeach()
+
+   configure_package_config_file(
+    "${CMAKE_SOURCE_DIR}/contrib/Config.cmake.in"
         "${CMAKE_CURRENT_BINARY_DIR}/RdkHalif${MODULE_CAPITALIZED_NAME}Config.cmake"
         INSTALL_DESTINATION "${CMAKE_INSTALL_FULL_DATADIR}/cmake/Modules/"
         PATH_VARS CMAKE_INSTALL_INCLUDEDIR CMAKE_INSTALL_LIBDIR CMAKE_INSTALL_PREFIX
@@ -79,7 +90,7 @@ function(_create_cmake_helpers MODULE_NAME MODULE_VERSION MODULE_DEPENDENCIES)
     install(FILES
         "${CMAKE_CURRENT_BINARY_DIR}/RdkHalif${MODULE_CAPITALIZED_NAME}Config.cmake"
         "${CMAKE_CURRENT_BINARY_DIR}/RdkHalif${MODULE_CAPITALIZED_NAME}ConfigVersion.cmake"
-        DESTINATION "${CMAKE_INSTALL_FULL_DATADIR}/cmake/Modules/"
+        DESTINATION "${CMAKE_INSTALL_FULL_DATADIR}/cmake/RdkHalif${MODULE_CAPITALIZED_NAME}"
     )
 endfunction()
 
@@ -130,7 +141,7 @@ function(add_versioned)
     target_link_libraries("${TARGET_NAME}" PRIVATE ${CMAKE_DEPENDENCIES})
 
     # Create helpers for downstream consumers
-    _create_cmake_helpers("${MODULE_NAME}" "${MODULE_VERSION}" "${LIB_DEPENDENCIES}")
+    _create_cmake_helpers("${MODULE_NAME}" "${MODULE_VERSION}" "${LIB_DEPENDENCIES}" "${SRCS}" "${HDRS}")
     _create_pkgconfig_helpers(${MODULE_NAME} "${MODULE_VERSION}" "${PKG_CONFIG_DEPENDENCIES}")
 
     # Install the library, headers and source files
@@ -154,10 +165,31 @@ function(add_current)
 
     set(DEPS)
     foreach(dep IN LISTS MODULE_DEPENDENCIES)
+        string(APPEND AIDL_GEN_TARGET_DEPS "-I${PROJECT_SOURCE_DIR}/${dep}/current ")
         list(APPEND DEPS "${dep}" "current")
     endforeach()
+    string(REPLACE " " ";" AIDL_INTERFACE_INCLUDES ${AIDL_GEN_TARGET_DEPS})
 
-    message(DEBUG "Adding current module ${MODULE_NAME} with dependencies: ${DEPS}")
+    set(interface_dir "${CMAKE_CURRENT_SOURCE_DIR}")
+
+    file(GLOB_RECURSE SRCS CONFIGURE_DEPENDS "${interface_dir}/com/*.aidl")
+
+    message(STATUS "")
+    message(STATUS "Generate cpp and header files for: ${MODULE_NAME}")
+
+    execute_process(
+        COMMAND ${AIDL_EXECUTABLE} --version=1 --hash=notfrozen --min_sdk_version=33 --lang=cpp --structured --stability=vintf -o ${interface_dir}/src --header_out ${interface_dir}/include ${AIDL_INTERFACE_INCLUDES} -I${interface_dir} ${SRCS}
+            RESULT_VARIABLE gen_result
+    )
+
+    if(NOT gen_result EQUAL 0)
+        message(FATAL_ERROR "AIDL generation failed for ${MODULE_NAME}; check the aidl output above.")
+    endif()
+
+    file(GLOB_RECURSE source_files "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+    if(NOT source_files)
+         message(FATAL_ERROR "Source generation completed but no C++ files found in ${source_dir}")
+    endif()
 
     add_versioned(NAME "${MODULE_NAME}" VERSION "current" DEPENDENCIES ${DEPS})
 endfunction()

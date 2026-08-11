@@ -19,15 +19,5 @@
 # * limitations under the License.
 # *
 #** ******************************************************************************
-cmake_minimum_required(VERSION 3.8)
 
-# 1. Define the Interface Identity
-set(INTERFACE_TARGET broadcast)
-set(INTERFACE_VERSION current)
-
-# 2. Trigger the Build
-# This function (from CMakeLists.inc) will:
-#   a. Run 'aidl_ops -g' to generate the C++ code
-#   b. Find the generated files in 'stable/generated/broadcast/src/current'
-#   c. Create the library target 'broadcast-vcurrent-cpp'
-target_build_interfaces_libraries()
+add_versioned(NAME "broadcast" DEPENDENCIES "common")
