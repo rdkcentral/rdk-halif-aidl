@@ -80,7 +80,7 @@ if (DEFINED HALIF_LIB_DIR)
     target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
 endif()
 
-target_link_libraries(${LIB_NAME} PRIVATE binder utils common-mw-v0.2.0.0-cpp)
+target_link_libraries(${LIB_NAME} PRIVATE binder utils common-vendor-v0.2.0.0-cpp)
 
 # The target_link_directories() above are BUILD-time search paths. By default
 # CMake bakes them into the library as RPATH/RUNPATH, which ships absolute build
