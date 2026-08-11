@@ -32,10 +32,10 @@ interface ICaSlot {
     @VintfStability
     parcelable Id {
         /** The undefined ID value. */
-        const long UNDEFINED = -1;
+        const int UNDEFINED = -1;
 
         /** The actual resource ID */
-        long value;
+        int value;
     }
 
     /**

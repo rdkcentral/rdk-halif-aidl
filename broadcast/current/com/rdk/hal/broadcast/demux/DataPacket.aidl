@@ -30,8 +30,11 @@ parcelable DataPacket {
     /** Plain ID type */
     @VintfStability
     parcelable Id {
+        /** The undefined ID value. */
+        const int UNDEFINED = -1;
+
         /** The actual ID */
-        long value;
+        int value;
     }
 
     /**
