@@ -39,7 +39,7 @@ parcelable SoftwareSink {
     @VintfStability
     parcelable Id {
         /** The actual ID */
-        long value;
+        int value;
     }
 
     /**
