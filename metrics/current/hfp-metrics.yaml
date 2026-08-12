@@ -335,6 +335,28 @@ metrics:
                 whatever the drop axis. Turns a drop count into a locatable defect. Left
                 undeclared where no PTS is derivable.
 
+            - name: last_freeze_pts_ms
+              unit: ms
+              kind: current
+              id: '0x42cfffc003874fd4'
+              provider: Driver
+              description: >
+                Stream PTS at which the most recent freeze episode began, within ±1 frame
+                interval. Does the same for a freeze as `last_dropped_frame_pts_ms` does for
+                a drop — turns a count into a locatable defect. Left undeclared where no PTS
+                is derivable.
+
+            - name: last_freeze_duration_ms
+              unit: ms
+              kind: current
+              id: '0x3e53a4af6a16f1ce'
+              provider: Driver
+              derivedFrom: av.video_sink.frames_repeated_missing_frame
+              description: >
+                Length of the most recent **completed** freeze episode. Read with
+                `freeze_event_count` and `freeze_duration_ms`, which give the count and the
+                total, and with `max_freeze_duration_ms`, which gives the worst.
+
             - name: first_frame_presented_pts_ms
               unit: ms
               kind: current
