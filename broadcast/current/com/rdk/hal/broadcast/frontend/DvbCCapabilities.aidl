@@ -33,7 +33,7 @@ parcelable DvbCCapabilities {
     /** Supported bandwidths. */
     Bandwidth[] bandwidths;
     /** Supported annex standards. */
-    DvbCAnnex[] dvbCAnnex;
+    DvbCAnnex[] dvbCAnnexes;
     /** Supported modulations. */
     Modulation[] modulations;
 
