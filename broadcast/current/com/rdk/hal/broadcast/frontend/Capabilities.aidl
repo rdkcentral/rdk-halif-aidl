@@ -33,28 +33,26 @@ import com.rdk.hal.broadcast.frontend.SignalInfoProperty;
  */
 @VintfStability
 parcelable Capabilities {
-    /** Supported info types for carrier */
+    /** Supported info types for carrier. */
     SignalInfoProperty[] SignalInfoProperties;
 
-    /** Minimum frequency range of the tuner */
+    /** Minimum frequency range of the tuner. */
     long minFrequencyHz;
-    /** Maximum frequency range of the tuner */
+    /** Maximum frequency range of the tuner. */
     long maxFrequencyHz;
 
-    /**
-     * Range in Hertz that will result in the Tuner obtaining a lock
-     */
+    /** Range in Hertz that will result in the Tuner obtaining a lock. */
     long acquireFrequencyRangeHz;
 
-    /** Minimum symbol rate in Symbols per second */
+    /** Minimum symbol rate in Symbols per second. */
     int minSymbolRate;
-    /** Maximum symbol rate in Symbols per second */
+    /** Maximum symbol rate in Symbols per second. */
     int maxSymbolRate;
 
-    /** A value of true indicates that the tuner can autodetect the symbol rate */
+    /** A value of true indicates that the tuner can autodetect the symbol rate. */
     boolean hasAutoSymbolRate;
 
-    /** Capabilities specific to a given @FrontendType */
+    /** Possible specific capabilities for the frontend type. */
     union SpecificCapabilities {
         DvbTCapabilities dvbTCapabilities;
         DvbCCapabilities dvbCCapabilities;
@@ -62,6 +60,9 @@ parcelable Capabilities {
         AtscCapabilities atscCapabilities;
     }
 
-    /** Reserved for future use */
+    /** Capabilities specific to a given @FrontendType. */
+    SpecificCapabilities specificCapabilities;
+
+    /** Reserved for future use. */
     ParcelableHolder extension;
 }
