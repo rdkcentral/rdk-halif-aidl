@@ -28,4 +28,7 @@ parcelable Pid {
 
     /** The actual PID value. */
     int value;
+
+    /** Reserved for future use. */
+    ParcelableHolder extension;
 }

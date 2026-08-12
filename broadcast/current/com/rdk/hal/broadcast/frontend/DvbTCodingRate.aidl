@@ -31,4 +31,7 @@ parcelable DvbTCodingRate {
     CodingRate lp;
     /** High-priority stream coding rate. */
     CodingRate hp;
+
+    /** Reserved for future use. */
+    ParcelableHolder extension;
 }

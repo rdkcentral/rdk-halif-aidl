@@ -28,14 +28,17 @@ import com.rdk.hal.broadcast.ca.CaCapabilities;
  */
 @VintfStability
 interface ICaSlot {
-    /** CA slot resource ID type */
+    /** CA slot resource ID type. */
     @VintfStability
     parcelable Id {
         /** The undefined ID value. */
         const int UNDEFINED = -1;
 
-        /** The actual resource ID */
+        /** The actual resource ID. */
         int value;
+
+        /** Reserved for future use. */
+        ParcelableHolder extension;
     }
 
     /**
