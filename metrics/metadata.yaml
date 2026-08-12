@@ -23,7 +23,7 @@
 component: metrics
 version: 0.1.0.0
 status: AMBER
-description: "Device metrics — named int64 values and events, organised into domains"
+description: "Device metrics — named int64 values, organised into domains"
 type: SOC
 
 # lifecycle - 14+5 review cycle dates                                    [pr_cycle.sh]
@@ -41,7 +41,7 @@ scope:
   - Domain model, so cpu/memory and future subjects ride the same contract as av without interface change
   - Per-source atomic snapshot reads, so paired counters cannot be read torn
   - Declared metric set (hfp-metrics.yaml), keeping the metric dictionary out of the ABI
-  - Per-source event buffer bridging one poll interval, single reader, loss reported not hidden
+  - Episodic conditions carried as counters plus last-episode fields, so a poll between two episodes still sees both
 
 # notes - Tracking metadata                                              [manual]
 notes:

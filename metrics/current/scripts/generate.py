@@ -124,6 +124,11 @@ KIND_RULES = {
 GENERATED = ("GENERATED from hfp-metrics.yaml by scripts/generate.py. "
              "Do not hand-edit.")
 
+# The slowest cadence an element may declare - the 50 ms freshness floor of
+# HAL.METRICS.5. Stated in hfp-metrics-schema.yaml and the module docs too;
+# keep the three in step.
+SLOWEST_CADENCE_MS = 50
+
 def field_id(path: str, unit: str, kind: str) -> int:
     """Content-derived identity. `path` is <domain>.<element>.<field>."""
     digest = hashlib.sha256(f"{path}|{unit}|{kind}".encode("utf-8")).digest()
@@ -296,7 +301,7 @@ def write_ids(entries: dict) -> str:
         m = re.match(r"^(\s*)-\s+name:\s*(\S+)\s*$", line)
         if m:
             name = m.group(2)
-        if re.match(r"^\s*id:\s*0x[0-9a-f]+\s*$", line):
+        if re.match(r"^\s*id:\s*'?0x[0-9a-f]+'?\s*$", line):
             continue                      # regenerated below
         out.append(line)
         m = re.match(r"^(\s*)kind:\s*(\S+)\s*$", line)
@@ -304,8 +309,10 @@ def write_ids(entries: dict) -> str:
             path = f"{domain}.{element}.{name}"
             entry = entries.get(path)
             if entry:
+                # Quoted: YAML reads a bare 0x… as an integer, and the id is a
+                # 16-digit hex string whose leading zeros carry meaning.
                 out.append(f"{m.group(1)}id: "
-                           f"0x{field_id(path, entry['unit'], entry['kind']):016x}")
+                           f"'0x{field_id(path, entry['unit'], entry['kind']):016x}'")
     return "\n".join(out) + "\n"
 
 
@@ -326,6 +333,38 @@ def check(entries: dict, derived: dict) -> list[str]:
             problems.append(
                 f"{HFP.name}: '{d}' is derived from '{source}', which is not declared. "
                 f"That declaration cannot be satisfied.")
+    return problems
+
+
+def check_elements(doc: dict) -> list[str]:
+    """Element-level constraints, which no field-by-field pass can see.
+
+    The schema states these too, but the schema only runs where pykwalify is
+    installed. A profile that cannot validate is worth catching here, where
+    every author already runs."""
+    problems = []
+    root = doc.get("metrics") or doc.get("hfd")
+    for domain in root["domains"]:
+        for element in domain["elements"]:
+            where = f"{domain['domain']}.{element['element']}"
+            cadence = element.get("pollCadenceMs")
+            if cadence is not None and not 1 <= cadence <= SLOWEST_CADENCE_MS:
+                problems.append(
+                    f"{HFP.name}: '{where}' declares pollCadenceMs {cadence}, outside "
+                    f"1..{SLOWEST_CADENCE_MS}. The {SLOWEST_CADENCE_MS} ms freshness "
+                    f"floor is promised to partners; an element may declare tighter, "
+                    f"never looser.")
+            for f in element["fields"]:
+                fid = f.get("id")
+                if fid is None:
+                    continue
+                # A bare 0x… is an integer to YAML, so an unquoted id validates
+                # as neither the schema's string nor the 16 hex digits it needs.
+                if not isinstance(fid, str) or not re.fullmatch(r"0x[0-9a-f]{16}", fid):
+                    problems.append(
+                        f"{HFP.name}: '{where}.{f['name']}' carries id {fid!r}, which is "
+                        f"not a quoted 16-digit lowercase hex string. Delete the id and "
+                        f"re-run to regenerate it.")
     return problems
 
 
@@ -368,7 +407,9 @@ def main() -> int:
               f"wrote last time.", file=sys.stderr)
         return 1
 
-    problems = check(entries, derived)
+    # Re-read the written profile, so the ids checked are the ones that landed.
+    written = yaml.safe_load(HFP.read_text(encoding="utf-8"))
+    problems = check(entries, derived) + check_elements(written)
     for problem in problems:
         print(f"error: {problem}", file=sys.stderr)
     if problems:

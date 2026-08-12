@@ -107,7 +107,7 @@ metrics:
             - name: frames_decoded
               unit: frames
               kind: counter
-              id: 0x63c81c7efbe7e743
+              id: '0x63c81c7efbe7e743'
               provider: Driver
               description: >
                 Compressed frames the decoder has decoded and emitted at its output
@@ -117,7 +117,7 @@ metrics:
             - name: frames_dropped
               unit: frames
               kind: counter
-              id: 0x2c67d98cc76e6fb7
+              id: '0x2c67d98cc76e6fb7'
               provider: Driver
               description: >
                 Frames the decoder discarded **before output** — undecodable (corruption /
@@ -128,7 +128,7 @@ metrics:
             - name: decode_errors
               unit: events
               kind: counter
-              id: 0x070bb5fa11ef497b
+              id: '0x070bb5fa11ef497b'
               provider: Driver
               description: >
                 Decode-error occurrences (bitstream/NAL parse failure, codec fault).
@@ -138,7 +138,7 @@ metrics:
             - name: decode_latency_sum_us
               unit: us
               kind: counter
-              id: 0x4e69bac967d540b7
+              id: '0x4e69bac967d540b7'
               provider: Driver
               description: >
                 Running sum of per-frame decode latency = *(decoder emits frame at output)* −
@@ -148,7 +148,7 @@ metrics:
             - name: last_decode_error_pts_ms
               unit: ms
               kind: current
-              id: 0x14debdd0bbd63a14
+              id: '0x14debdd0bbd63a14'
               provider: Driver
               description: >
                 Stream PTS at detection of the **most recent** decode error, within ±1 frame
@@ -159,7 +159,7 @@ metrics:
             - name: last_decode_error_reason
               unit: none
               kind: current
-              id: 0x4fda2a3cf3d7dc09
+              id: '0x4fda2a3cf3d7dc09'
               provider: Driver
               description: >
                 Closed-vocabulary classification of the most recent decode error. This is the
@@ -169,7 +169,7 @@ metrics:
             - name: last_decode_error_vendor_code
               unit: none
               kind: current
-              id: 0x26d18e085c02dfd4
+              id: '0x26d18e085c02dfd4'
               provider: Driver
               description: >
                 The SoC's own error code for the same fault, carried through uninterpreted. For
@@ -182,7 +182,7 @@ metrics:
             - name: frames_received
               unit: frames
               kind: counter
-              id: 0x524c81ef37d81082
+              id: '0x524c81ef37d81082'
               provider: Driver
               description: >
                 Decoded frames received to be presented from the decoder.
@@ -190,7 +190,7 @@ metrics:
             - name: frames_presented
               unit: frames
               kind: counter
-              id: 0x7f36b75533d5db3a
+              id: '0x7f36b75533d5db3a'
               provider: Driver
               description: >
                 Frames handed to display scanout for presentation — one per successful render.
@@ -198,7 +198,7 @@ metrics:
             - name: frames_dropped_late
               unit: frames
               kind: counter
-              id: 0x7682bfb371ecc4d5
+              id: '0x7682bfb371ecc4d5'
               provider: Driver
               description: >
                 Frames dropped because their PTS deadline (vs the render clock) had passed by
@@ -208,7 +208,7 @@ metrics:
             - name: frames_dropped_frc
               unit: frames
               kind: counter
-              id: 0x6c43fb5584823d18
+              id: '0x6c43fb5584823d18'
               provider: Driver
               description: >
                 Frames dropped by **frame-rate conversion** when source rate > display rate
@@ -217,7 +217,7 @@ metrics:
             - name: frames_repeated_frc
               unit: frames
               kind: counter
-              id: 0x72b9db4bfce6f2ab
+              id: '0x72b9db4bfce6f2ab'
               provider: Driver
               description: >
                 Frames repeated (held > 1 display interval) by **FRC** when source rate <
@@ -227,7 +227,7 @@ metrics:
             - name: frames_repeated_missing_frame
               unit: frames
               kind: counter
-              id: 0x5a652c2dcf72deac
+              id: '0x5a652c2dcf72deac'
               provider: Driver
               description: >
                 Frames repeated **to cover a missing next frame** — the sink had no new decoded
@@ -237,7 +237,7 @@ metrics:
             - name: underflowed
               unit: episodes
               kind: counter
-              id: 0x6804c05ae6533181
+              id: '0x6804c05ae6533181'
               provider: Driver
               description: >
                 Count of video buffer-underflow **episodes**. +1 at each episode **start** (no
@@ -246,7 +246,7 @@ metrics:
             - name: underflow_duration_ms
               unit: ms
               kind: counter
-              id: 0x23e55a88f5bbbd94
+              id: '0x23e55a88f5bbbd94'
               provider: Driver
               description: >
                 Cumulative wall-clock time across all video-underflow episodes (Σ of each
@@ -256,7 +256,7 @@ metrics:
             - name: freeze_duration_ms
               unit: ms
               kind: counter
-              id: 0x1c86c5dfa4db5108
+              id: '0x1c86c5dfa4db5108'
               provider: Driver
               derivedFrom: av.video_sink.frames_repeated_missing_frame
               description: >
@@ -268,7 +268,7 @@ metrics:
             - name: freeze_event_count
               unit: events
               kind: counter
-              id: 0x5196f6826e91a801
+              id: '0x5196f6826e91a801'
               provider: Driver
               derivedFrom: av.video_sink.frames_repeated_missing_frame
               description: >
@@ -279,7 +279,7 @@ metrics:
             - name: max_freeze_duration_ms
               unit: ms
               kind: high_water
-              id: 0x088d619c00c1c539
+              id: '0x088d619c00c1c539'
               provider: Driver
               derivedFrom: av.video_sink.frames_repeated_missing_frame
               description: >
@@ -289,7 +289,7 @@ metrics:
             - name: render_latency_sum_us
               unit: us
               kind: counter
-              id: 0x75f862796424b00d
+              id: '0x75f862796424b00d'
               provider: Driver
               description: >
                 Running sum of per-frame render latency = *(frame presented to scanout)* −
@@ -299,7 +299,7 @@ metrics:
             - name: buffer_depth_ms
               unit: ms
               kind: current
-              id: 0x111d82c20cb9e693
+              id: '0x111d82c20cb9e693'
               provider: Driver
               description: >
                 Buffered decoded media ahead of the present position **now** — Σ
@@ -309,7 +309,7 @@ metrics:
             - name: last_underflow_trigger
               unit: none
               kind: current
-              id: 0x03210d8159685756
+              id: '0x03210d8159685756'
               provider: Driver
               description: >
                 Closed-vocabulary cause of the most recent underflow episode: startup prefill,
@@ -319,7 +319,7 @@ metrics:
             - name: last_underflow_duration_ms
               unit: ms
               kind: current
-              id: 0x7b1ed4a908e8ef1b
+              id: '0x7b1ed4a908e8ef1b'
               provider: Driver
               description: >
                 Length of the most recent **completed** underflow episode. Read with
@@ -328,7 +328,7 @@ metrics:
             - name: last_dropped_frame_pts_ms
               unit: ms
               kind: current
-              id: 0x0e6d081eed2918dd
+              id: '0x0e6d081eed2918dd'
               provider: Driver
               description: >
                 Stream PTS of the most recently dropped frame, within ±1 frame interval,
@@ -338,7 +338,7 @@ metrics:
             - name: first_frame_presented_pts_ms
               unit: ms
               kind: current
-              id: 0x56eaeb10709bcdd8
+              id: '0x56eaeb10709bcdd8'
               provider: Driver
               description: >
                 PTS of the first frame to reach presentation — set at session start and re-set
@@ -353,7 +353,7 @@ metrics:
             - name: frames_decoded
               unit: frames
               kind: counter
-              id: 0x23c94a86f7865005
+              id: '0x23c94a86f7865005'
               provider: Driver
               description: >
                 Audio access units decoded and emitted at the decoder output. +1 per emitted
@@ -362,7 +362,7 @@ metrics:
             - name: frames_dropped
               unit: frames
               kind: counter
-              id: 0x748c7fd20b15139d
+              id: '0x748c7fd20b15139d'
               provider: Driver
               description: >
                 Audio frames discarded before output (xruns / undecodable). Decoder-internal.
@@ -371,7 +371,7 @@ metrics:
             - name: decode_errors
               unit: events
               kind: counter
-              id: 0x577de621243f5a94
+              id: '0x577de621243f5a94'
               provider: Driver
               description: >
                 Audio decode-error occurrences — a **distinct axis** from `frames_dropped`,
@@ -381,7 +381,7 @@ metrics:
             - name: decode_latency_sum_us
               unit: us
               kind: counter
-              id: 0x1b3e9a9b42d47872
+              id: '0x1b3e9a9b42d47872'
               provider: Driver
               description: >
                 Σ per-frame audio decode latency *(output-emitted − input-queued)*. Needs
@@ -390,7 +390,7 @@ metrics:
             - name: last_decode_error_pts_ms
               unit: ms
               kind: current
-              id: 0x5d4a1b8bfa10cbbe
+              id: '0x5d4a1b8bfa10cbbe'
               provider: Driver
               description: >
                 Stream PTS at detection of the most recent audio decode error, within ±1 frame
@@ -400,7 +400,7 @@ metrics:
             - name: last_decode_error_reason
               unit: none
               kind: current
-              id: 0x10596fb80be50427
+              id: '0x10596fb80be50427'
               provider: Driver
               description: >
                 Closed-vocabulary classification of the most recent audio decode error. The
@@ -409,7 +409,7 @@ metrics:
             - name: last_decode_error_vendor_code
               unit: none
               kind: current
-              id: 0x7129e447242c26d5
+              id: '0x7129e447242c26d5'
               provider: Driver
               description: >
                 The SoC's own code for the same fault, carried through uninterpreted. For vendor
@@ -422,7 +422,7 @@ metrics:
             - name: underflowed
               unit: episodes
               kind: counter
-              id: 0x142f899619c8c4a9
+              id: '0x142f899619c8c4a9'
               provider: Driver
               description: >
                 Count of audio buffer-underflow **episodes**. +1 at each episode start (no
@@ -433,7 +433,7 @@ metrics:
             - name: underflow_duration_ms
               unit: ms
               kind: counter
-              id: 0x4ce68288bc2f93b2
+              id: '0x4ce68288bc2f93b2'
               provider: Driver
               description: >
                 Cumulative time the audio path was starved of decoded data (Σ of each episode
@@ -443,7 +443,7 @@ metrics:
             - name: silence_duration_ms
               unit: ms
               kind: counter
-              id: 0x09fdcdf6715ef048
+              id: '0x09fdcdf6715ef048'
               provider: Driver
               description: >
                 Cumulative emitted **digital silence** at or above the HFP-declared threshold
@@ -454,7 +454,7 @@ metrics:
             - name: silence_event_count
               unit: events
               kind: counter
-              id: 0x357a57be2601412e
+              id: '0x357a57be2601412e'
               provider: Driver
               description: >
                 Count of completed digital-silence periods at or above the HFP-declared
@@ -464,7 +464,7 @@ metrics:
             - name: buffer_depth_ms
               unit: ms
               kind: current
-              id: 0x1aea4fc8a27262b7
+              id: '0x1aea4fc8a27262b7'
               provider: Driver
               description: >
                 Buffered decoded audio ahead of the play position **now**. Live sample re-read
@@ -473,7 +473,7 @@ metrics:
             - name: last_underflow_trigger
               unit: none
               kind: current
-              id: 0x40771a4a2b2ee087
+              id: '0x40771a4a2b2ee087'
               provider: Driver
               description: >
                 Closed-vocabulary cause of the most recent audio underflow episode, same
@@ -482,7 +482,7 @@ metrics:
             - name: last_underflow_duration_ms
               unit: ms
               kind: current
-              id: 0x638f410fc657c525
+              id: '0x638f410fc657c525'
               provider: Driver
               description: >
                 Length of the most recent **completed** audio underflow episode. Read with
@@ -491,7 +491,7 @@ metrics:
             - name: last_silence_duration_ms
               unit: ms
               kind: current
-              id: 0x1cf88c9352312e83
+              id: '0x1cf88c9352312e83'
               provider: Driver
               description: >
                 Length of the most recent completed digital-silence period. Read with
@@ -499,13 +499,13 @@ metrics:
 
         - element: clock
           instances: 1
-          pollCadenceMs: 200
+          pollCadenceMs: 50
           fields:
 
             - name: sync_offset_ms
               unit: ms
               kind: current
-              id: 0x0853e5868c5f2bd8
+              id: '0x0853e5868c5f2bd8'
               provider: Driver
               description: >
                 The driver's predicted current audio-vs-video presentation offset. **Sign:**
@@ -515,7 +515,7 @@ metrics:
             - name: sync_max_abs_offset_ms
               unit: ms
               kind: high_water
-              id: 0x20d08f573aeb1229
+              id: '0x20d08f573aeb1229'
               provider: Driver
               derivedFrom: av.clock.sync_offset_ms
               description: >
@@ -525,7 +525,7 @@ metrics:
             - name: sync_time_over_threshold_ms
               unit: ms
               kind: counter
-              id: 0x323c3766c9e3638c
+              id: '0x323c3766c9e3638c'
               provider: Driver
               derivedFrom: av.clock.sync_threshold_ms
               description: >
@@ -536,7 +536,7 @@ metrics:
             - name: sync_threshold_ms
               unit: ms
               kind: config
-              id: 0x4c981a6fd5bbf977
+              id: '0x4c981a6fd5bbf977'
               writable: true
               provider: Driver
               description: >
@@ -548,7 +548,7 @@ metrics:
             - name: resync_count
               unit: events
               kind: counter
-              id: 0x1e11b09c212e1a59
+              id: '0x1e11b09c212e1a59'
               provider: Driver
               description: >
                 Count of A/V-sync **corrections** the clock applied — each discrete realignment
@@ -557,7 +557,7 @@ metrics:
             - name: resync_magnitude_sum_ms
               unit: ms
               kind: counter
-              id: 0x7be51ba179aa2379
+              id: '0x7be51ba179aa2379'
               provider: Driver
               description: >
                 Σ of the **absolute magnitude** (ms) of each resync correction. Clock-internal.
