@@ -22,6 +22,10 @@ import com.rdk.hal.broadcast.ca.PowerControl;
 
 /**
  * Capabilities of a Conditional Access (CA) slot.
+ *
+ * @author Jan Pedersen
+ * @author Christian George
+ * @author Philipp Trommler
  */
 @VintfStability
 parcelable CaCapabilities {

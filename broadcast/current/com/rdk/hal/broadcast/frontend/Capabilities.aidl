@@ -49,6 +49,7 @@ parcelable Capabilities {
     boolean hasAutoSymbolRate;
 
     /** Possible specific capabilities for the frontend type. */
+    @VintfStability
     union SpecificCapabilities {
         DvbTCapabilities dvbTCapabilities;
         DvbCCapabilities dvbCCapabilities;

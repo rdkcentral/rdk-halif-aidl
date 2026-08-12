@@ -44,7 +44,7 @@ union SignalInfoValue {
     boolean isRfLocked;
     /** RF signal level in dbm. */
     float rfLevel;
-    /** Carrier to noise ratio in dB (float). */
+    /** Carrier to noise ratio in dB. */
     float cnr;
     /** Bit error rate - The number of error bit per 1 billion bits. */
     int ber;
@@ -52,17 +52,17 @@ union SignalInfoValue {
     int preBer;
     /** Uncorrected Error count. */
     long uncorrectedErrors;
-    /** Signal Strength Indicator as defined in NorDig (int, range 0-100). */
+    /** Signal Strength Indicator as defined in NorDig (range 0-100). */
     int ssi;
-    /** Signal Quality Indicator as defined in NorDig (int, range 0-100). */
+    /** Signal Quality Indicator as defined in NorDig (range 0-100). */
     int sqi;
-    /** The actual frequency that the tuner is locked on (long, in Hertz). */
+    /** The actual frequency that the tuner is locked on (in Hertz). */
     long actualFrequencyHz;
-    /** Physical Layer Pipe ID (int, range 0-255). */
+    /** Physical Layer Pipe ID (range 0-255). */
     int plpId;
-    /** Physical Layer Pipe IDs (array of int, range 0-255). */
+    /** Physical Layer Pipe IDs (range 0-255). */
     int[] plpIds;
-    /** DVB-T2 System Id. */
+    /** DVB-T2 System ID. */
     int t2SystemId;
     /** The used modulation/sub-modulation. */
     Modulation modulation;
