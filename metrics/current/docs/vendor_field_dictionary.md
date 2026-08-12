@@ -147,9 +147,8 @@ The instance segment is not hashed (`.0` and `.1` are the same field on differen
 | Field | Type · unit · kind | Provider | id | Definition and population rule |
 |---|---|---|---|---|
 | `decrypt_count` | int64 · operations · `counter` | **Driver** | `0x01c6bee68b39b413` | Decrypt operations completed, summed across the key sessions this media session holds. The denominator for mean decrypt latency. |
-| `decrypt_errors` | int64 · events · `counter` | **Driver** | `0x5db0ea33fec21035` | Decrypt operations that failed on a key already held. Distinct from a licence that was never obtained, which is not a vendor-observable figure. |
+| `decrypt_errors` | int64 · events · `counter` | **Driver** | `0x5db0ea33fec21035` | Decrypt operations that failed on a key already held. Distinct from a licence that was never obtained, which is not vendor-observable. |
 | `decrypt_latency_sum_us` | int64 · us · `counter` | **Driver** | `0x6663f481e5048044` | Σ of decrypt operation latency. Paired with `decrypt_count`: mean decrypt latency = `decrypt_latency_sum_us` / `decrypt_count`. |
-| `output_restricted_time_ms` | int64 · ms · `counter` | **Driver** | `0x24270ea0977f032a` | Cumulative time the session played downscaled or blocked under an output restriction. The degraded-but-playing case, where every decode counter reads healthy while a lower resolution is presented. |
 
 ## Episodic Conditions
 

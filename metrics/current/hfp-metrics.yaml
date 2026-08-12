@@ -610,7 +610,7 @@ metrics:
               provider: Driver
               description: >
                 Decrypt operations that failed on a key already held. Distinct from a
-                licence that was never obtained, which is not a vendor-observable figure.
+                licence that was never obtained, which is not vendor-observable.
 
             - name: decrypt_latency_sum_us
               unit: us
@@ -621,13 +621,3 @@ metrics:
               description: >
                 Σ of decrypt operation latency. Paired with `decrypt_count`: mean decrypt
                 latency = `decrypt_latency_sum_us` / `decrypt_count`.
-
-            - name: output_restricted_time_ms
-              unit: ms
-              kind: counter
-              id: '0x24270ea0977f032a'
-              provider: Driver
-              description: >
-                Cumulative time the session played downscaled or blocked under an output
-                restriction. The degraded-but-playing case, where every decode counter
-                reads healthy while a lower resolution is presented.
