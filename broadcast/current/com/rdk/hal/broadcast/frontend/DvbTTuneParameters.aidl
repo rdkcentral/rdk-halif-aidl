@@ -62,6 +62,6 @@ parcelable DvbTTuneParameters {
      */
     int plpId;
 
-    /** Vendor-specific extensions. */
+    /** Reserved for future use. */
     ParcelableHolder extension;
 }

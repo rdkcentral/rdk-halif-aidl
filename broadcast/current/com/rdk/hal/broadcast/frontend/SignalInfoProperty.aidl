@@ -35,8 +35,8 @@ enum SignalInfoProperty {
     /** RF Lock status. */
     RF_LOCK,
     /** RF signal level in dbm. */
-    RFLEVEL,
-    /** Signal to noise ratio in dB (float). */
+    RF_LEVEL,
+    /** Carrier to noise ratio in dB. */
     CNR,
     /** Bit error rate - The number of error bit per 1 billion bits. */
     BER,
@@ -72,6 +72,6 @@ enum SignalInfoProperty {
     DVB_S_STANDARD,
     /** Coding rate. */
     CODING_RATE,
-    /** DVB-T LP and HP coding rate. */
+    /** DVB-T LP and HP coding rates. */
     DVB_T_CODING_RATE,
 }
