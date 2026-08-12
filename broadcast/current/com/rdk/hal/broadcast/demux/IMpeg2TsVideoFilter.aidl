@@ -26,11 +26,9 @@ import com.rdk.hal.broadcast.demux.Pid;
 @VintfStability
 interface IMpeg2TsVideoFilter {
     /**
-     * Set the PID containing the PCR values to be used for video data.
+     * Set the PID containing the video data.
      *
      * Setting a PID will activate the filter, i.e. it will potentially start outputting data instantly.
-     *
-     * @param pid The PID containing the PCR values.
      */
     void setPid(in Pid pid);
 

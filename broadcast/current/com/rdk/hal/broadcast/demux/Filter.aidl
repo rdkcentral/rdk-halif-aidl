@@ -25,6 +25,13 @@ import com.rdk.hal.broadcast.demux.IMpeg2TsVideoFilter;
  *
  * Exactly one member is active and represents the concrete filter instance that was opened.
  *
+ * This union is semantically coupled to FilterType: every concrete filter kind defined in FilterType must have a
+ * corresponding union member here.
+ *
+ * Note: FilterType values are not used as this union's discriminator tag. AIDL generates the union tag separately.
+ *
+ * @see FilterType
+ *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
