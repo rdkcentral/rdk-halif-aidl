@@ -86,7 +86,6 @@ function(_create_cmake_helpers MODULE_NAME MODULE_VERSION MODULE_DEPENDENCIES SO
         VERSION "${MODULE_VERSION}"
         COMPATIBILITY SameMajorVersion
     )
-
     install(FILES
         "${CMAKE_CURRENT_BINARY_DIR}/RdkHalif${MODULE_CAPITALIZED_NAME}Config.cmake"
         "${CMAKE_CURRENT_BINARY_DIR}/RdkHalif${MODULE_CAPITALIZED_NAME}ConfigVersion.cmake"
@@ -168,7 +167,9 @@ function(add_current)
         string(APPEND AIDL_GEN_TARGET_DEPS "-I${PROJECT_SOURCE_DIR}/${dep}/current ")
         list(APPEND DEPS "${dep}" "current")
     endforeach()
-    string(REPLACE " " ";" AIDL_INTERFACE_INCLUDES ${AIDL_GEN_TARGET_DEPS})
+    if(AIDL_GEN_TARGET_DEPS)
+        string(REPLACE " " ";" AIDL_INTERFACE_INCLUDES ${AIDL_GEN_TARGET_DEPS})
+    endif()
 
     set(interface_dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
