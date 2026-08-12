@@ -1,20 +1,16 @@
 /*
- * If not stated otherwise in this file or this component's LICENSE file the
- * following copyright and licenses apply:
+ * If not stated otherwise in this file or this component's LICENSE file the following copyright and licenses apply:
  *
  * Copyright 2026 RDK Management
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 package com.rdk.hal.broadcast.frontend;
 
@@ -23,7 +19,6 @@ import com.rdk.hal.broadcast.frontend.Capabilities;
 import com.rdk.hal.broadcast.frontend.FrontendType;
 import com.rdk.hal.broadcast.frontend.IFrontendController;
 import com.rdk.hal.broadcast.frontend.ILnbController;
-import com.rdk.hal.broadcast.frontend.State;
 
 /**
  * Front end HAL interface.
@@ -63,24 +58,11 @@ interface IFrontend {
     @nullable Capabilities getCapabilities(in FrontendType frontendType);
 
     /**
-     * Get the current frontend state.
-     *
-     * @returns State enum value.
-     *
-     * TODO Do we need this?
-     *
-     * @see IFrontendListener.onStateChanged().
-     */
-    State getState();
-
-    /**
      * Open the frontend in a mode where it is ready to tune.
      *
-     * The returned IFrontendController interface is used by the client facilitate
-     * all tune related operations. If the client that opened the
-     * IFrontEndController crashes, then the IFrontEndController has stop() and
-     * close() implicitly called to perform clean up. TODO can this be done in
-     * praxis?
+     * The returned IFrontendController interface is used by the client facilitate all tune related operations. If the
+     * client that opened the IFrontEndController crashes, then the IFrontEndController has stop() and close()
+     * implicitly called to perform clean up. TODO can this be done in praxis?
      *
      * @pre isOpen() == false
      *
@@ -93,52 +75,46 @@ interface IFrontend {
     /**
      * Close the frontend and invalidate the FrontendController.
      *
-     * Cleanup all attached (hardware) resources and brings the frontend back into
-     * a state where it can be opened again.
+     * Cleanup all attached (hardware) resources and brings the frontend back into a state where it can be opened again.
+     * Stops the current tuning and all output on TSOUT.
      *
      * @pre isOpen() == true
      *
-     * @param controller Non-null controller obtained from open() on the same
-     *     frontend.
+     * @param controller Non-null controller obtained from open() on the same frontend.
      */
     void close(in IFrontendController controller);
 
     /**
      * Acquire a DemuxDataProvider that must be passed to a DemuxController.
      *
-     * @returns IDemuxDataProvider or null on error (e.g. frontend not opened TODO
-     *     I don't think we have this limitation
-     * in the C++ HAL)
+     * @returns IDemuxDataProvider or null on error (e.g. frontend not opened TODO I don't think we have this limitation
+     *          in the C++ HAL)
      */
     @nullable IDemuxDataProvider acquireDataProvider();
 
     /**
      * Releases the DemuxDataProvider previously acquired.
      *
-     * @param provider A non-null provider obtained from acquireDataProvider() on
-     *     the same frontend.
+     * @param provider A non-null provider obtained from acquireDataProvider() on the same frontend.
      */
     void releaseDataProvider(in IDemuxDataProvider provider);
 
     /**
      * Opens the LNB controller. Non-blocking.
      *
-     * The returned ILnbController interface is used for controlling satellite
-     * equipment.
+     * The returned ILnbController interface is used for controlling satellite equipment.
      *
-     * @returns ILnbController or null on error (e.g. LNB controller already
-     *     opened)
+     * @returns ILnbController or null on error (e.g. LNB controller already opened)
      */
     @nullable ILnbController openLnb();
 
     /**
      * Closes the LNB controller and invalidates the LnbController.
      *
-     * Cleanup all attached (hardware) resources and brings the LNB controller
-     * back into a state where it can be opened again.
+     * Cleanup all attached (hardware) resources and brings the LNB controller back into a state where it can be opened
+     * again.
      *
-     * @param controller non-null controller obtained from openLnb() on the same
-     *     FrontEnd
+     * @param controller non-null controller obtained from openLnb() on the same FrontEnd
      */
     void closeLnb(in ILnbController controller);
 }
