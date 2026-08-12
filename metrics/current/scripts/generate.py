@@ -92,6 +92,7 @@ import hashlib
 import re
 import struct
 import sys
+import textwrap
 from pathlib import Path
 
 import yaml
@@ -185,16 +186,10 @@ def strip_markdown(text: str) -> str:
 
 
 def wrap(text: str, width: int) -> list[str]:
-    lines, current = [], ""
-    for word in text.split():
-        if current and len(current) + 1 + len(word) > width:
-            lines.append(current)
-            current = word
-        else:
-            current = f"{current} {word}".strip()
-    if current:
-        lines.append(current)
-    return lines
+    # A long word goes on its own line rather than being split: these are field
+    # names and identifiers, and a broken one is no longer the thing it names.
+    return textwrap.wrap(text, width, break_long_words=False,
+                         break_on_hyphens=False)
 
 
 def const_name(path: str) -> str:
