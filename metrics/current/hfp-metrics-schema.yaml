@@ -154,7 +154,7 @@ mapping:
                               unit:
                                 type: str
                                 required: true
-                                enum: [frames, episodes, ms, us, ns, bytes, events, percent, hz, none]
+                                enum: [frames, episodes, ms, us, ns, bytes, events, operations, percent, hz, none]
 
                               # How the value behaves over time — governs what
                               # arithmetic a consumer may do:

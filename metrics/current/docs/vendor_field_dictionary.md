@@ -140,6 +140,15 @@ The instance segment is not hashed (`.0` and `.1` are the same field on differen
 | `resync_count` | int64 · events · `counter` | **Driver** | `0x1e11b09c212e1a59` | Count of A/V-sync **corrections** the clock applied — each discrete realignment to re-align audio and video. +1 per applied correction. |
 | `resync_magnitude_sum_ms` | int64 · ms · `counter` | **Driver** | `0x7be51ba179aa2379` | Σ of the **absolute magnitude** (ms) of each resync correction. Clock-internal. Paired with `resync_count`: mean correction size = `resync_magnitude_sum_ms / resync_count`. |
 
+### `av.drm`
+
+| Field | Type · unit · kind | Provider | id | Definition and population rule |
+|---|---|---|---|---|
+| `decrypt_count` | int64 · operations · `counter` | **Driver** | `0x01c6bee68b39b413` | Decrypt operations completed, summed across the key sessions this media session holds. The denominator for mean decrypt latency. |
+| `decrypt_errors` | int64 · events · `counter` | **Driver** | `0x5db0ea33fec21035` | Decrypt operations that failed on a key already held. Distinct from a licence that was never obtained, which is not a vendor-observable figure. |
+| `decrypt_latency_sum_us` | int64 · us · `counter` | **Driver** | `0x6663f481e5048044` | Σ of decrypt operation latency. Paired with `decrypt_count`: mean decrypt latency = `decrypt_latency_sum_us` / `decrypt_count`. |
+| `output_restricted_time_ms` | int64 · ms · `counter` | **Driver** | `0x24270ea0977f032a` | Cumulative time the session played downscaled or blocked under an output restriction. The degraded-but-playing case, where every decode counter reads healthy while a lower resolution is presented. |
+
 ## Episodic Conditions
 
 Underflows, decode errors, silence periods and first-frame timing happen at an instant rather than describing a level. Each is reported in two parts, both ordinary fields arriving in the same snapshot as everything else:

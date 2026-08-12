@@ -59,4 +59,8 @@ enum MetricUnit {
 
     /** Hertz. */
     HZ = 9,
+
+    /** Completed operations, e.g. decrypt calls. Counts work done, where
+     *  EVENTS counts things that happened to it. */
+    OPERATIONS = 10,
 }
