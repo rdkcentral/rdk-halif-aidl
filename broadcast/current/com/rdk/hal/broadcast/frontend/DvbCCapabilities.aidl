@@ -32,10 +32,10 @@ import com.rdk.hal.broadcast.frontend.Modulation;
 parcelable DvbCCapabilities {
     /** Supported bandwidths. */
     Bandwidth[] bandwidths;
-    /** Supported annex standards. */
-    DvbCAnnex[] dvbCAnnexes;
     /** Supported modulations. */
     Modulation[] modulations;
+    /** Supported annex standards. */
+    DvbCAnnex[] dvbCAnnexes;
 
     /** Reserved for future use. */
     ParcelableHolder extension;

@@ -31,22 +31,29 @@ import com.rdk.hal.broadcast.frontend.SignalDetectMode;
 parcelable DvbSTuneParameters {
     /** The frequency to tune to in Hertz. */
     long frequencyHz;
+
     /**
      * The symbol rate in symbols per second.
      *
      * Use -1 for auto symbol rate detection (if supported, see DvbSCapabilities).
      */
     int symbolRate;
+
     /** Which DVB-S standard to use. */
     DvbSStandard dvbSStandard;
+
     /** The modulation to use. */
     Modulation modulation;
+
     /** Inner FEC coding rate. */
     CodingRate innerFec;
+
     /** Roll-off factor. */
     RollOff rollOff;
+
     /** Signal detect mode to use when tuning. */
     SignalDetectMode signalDetectMode;
+
     /** Reserved for future use. */
     ParcelableHolder extension;
 }

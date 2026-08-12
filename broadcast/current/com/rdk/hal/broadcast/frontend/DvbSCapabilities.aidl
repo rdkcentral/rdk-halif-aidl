@@ -32,14 +32,15 @@ import com.rdk.hal.broadcast.frontend.RollOff;
  */
 @VintfStability
 parcelable DvbSCapabilities {
-    /** Supported DVB-S standards. */
-    DvbSStandard[] dvbSStandards;
     /** Supported modulations. */
     Modulation[] modulations;
     /** Supported coding rates (inner FEC). */
     CodingRate[] codingRates;
+    /** Supported DVB-S standards. */
+    DvbSStandard[] dvbSStandards;
     /** Supported roll-off values. */
     RollOff[] rollOffs;
+
     /** Reserved for future use. */
     ParcelableHolder extension;
 }

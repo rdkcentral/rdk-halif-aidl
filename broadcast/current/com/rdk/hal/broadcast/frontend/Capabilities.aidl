@@ -34,6 +34,7 @@ parcelable Capabilities {
 
     /** Minimum frequency range of the tuner. */
     long minFrequencyHz;
+
     /** Maximum frequency range of the tuner. */
     long maxFrequencyHz;
 
@@ -42,6 +43,7 @@ parcelable Capabilities {
 
     /** Minimum symbol rate in Symbols per second. */
     int minSymbolRate;
+
     /** Maximum symbol rate in Symbols per second. */
     int maxSymbolRate;
 

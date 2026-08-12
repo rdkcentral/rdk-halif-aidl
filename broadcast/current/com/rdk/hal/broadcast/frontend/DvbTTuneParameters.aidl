@@ -31,6 +31,9 @@ import com.rdk.hal.broadcast.frontend.TransmissionMode;
  */
 @VintfStability
 parcelable DvbTTuneParameters {
+    /** The frequency to tune to in Hertz. */
+    long frequencyHz;
+
     /** The bandwidth to use. */
     Bandwidth bandwidth;
 
@@ -43,17 +46,11 @@ parcelable DvbTTuneParameters {
     /** LP and HP coding rates for DVB-T/T2. */
     DvbTCodingRate codingRate;
 
-    /** Signal detect mode to use when tuning. */
-    SignalDetectMode signalDetectMode;
-
     /** The guard interval to use. */
     GuardInterval guardInterval;
 
     /** The transmission mode to use. */
     TransmissionMode transmissionMode;
-
-    /** The frequency to tune to in Hertz. */
-    long frequencyHz;
 
     /**
      * The plp id for DVB-T2.
@@ -61,6 +58,9 @@ parcelable DvbTTuneParameters {
      * Use -1 for auto. Range 0-255.
      */
     int plpId;
+
+    /** Signal detect mode to use when tuning. */
+    SignalDetectMode signalDetectMode;
 
     /** Reserved for future use. */
     ParcelableHolder extension;
