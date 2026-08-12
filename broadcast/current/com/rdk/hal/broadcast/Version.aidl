@@ -27,4 +27,7 @@ parcelable Version {
     int major;
     /** Minor version number. */
     int minor;
+
+    /** Reserved for future use. */
+    ParcelableHolder extension;
 }

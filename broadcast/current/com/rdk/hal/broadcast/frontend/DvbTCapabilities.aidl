@@ -35,12 +35,12 @@ import com.rdk.hal.broadcast.frontend.TransmissionMode;
 parcelable DvbTCapabilities {
     /** Supported bandwidths. */
     Bandwidth[] bandwidths;
+    /** Supported modulations. */
+    Modulation[] subCarrierModulations;
     /** Supported code rates. */
     CodingRate[] codingRates;
     /** Supported standards. */
     DvbTStandard[] dvbTStandards;
-    /** Supported modulations. */
-    Modulation[] subCarrierModulations;
     /** Supported guard intervals. */
     GuardInterval[] guardIntervals;
     /** Supported transmission mode. */

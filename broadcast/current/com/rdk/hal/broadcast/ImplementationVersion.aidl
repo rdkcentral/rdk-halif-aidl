@@ -29,4 +29,7 @@ parcelable ImplementationVersion {
     @utf8InCpp String name;
     /** Implementation version. */
     Version version;
+
+    /** Reserved for future use. */
+    ParcelableHolder extension;
 }

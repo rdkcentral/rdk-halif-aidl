@@ -48,6 +48,9 @@ parcelable DemuxCapabilities {
          * Use 0 if not applicable (e.g. for tunnel filters that take a single PID).
          */
         int maxPids;
+
+        /** Reserved for future use. */
+        ParcelableHolder extension;
     }
 
     /**
@@ -56,4 +59,7 @@ parcelable DemuxCapabilities {
      * The service must only return one entry per filter type, with the maximum number of instances for that type.
      */
     FilterCapability[] supportedFilters;
+
+    /** Reserved for future use. */
+    ParcelableHolder extension;
 }

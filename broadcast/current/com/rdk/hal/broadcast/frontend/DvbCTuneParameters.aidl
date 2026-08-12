@@ -29,6 +29,16 @@ import com.rdk.hal.broadcast.frontend.SignalDetectMode;
  */
 @VintfStability
 parcelable DvbCTuneParameters {
+    /** The frequency in Hertz. */
+    long frequencyHz;
+
+    /**
+     * The symbol rate in symbols per second.
+     *
+     * Use -1 for auto symbol rate if it is supported.
+     */
+    int symbolRate;
+
     /** The bandwidth to use. */
     Bandwidth bandwidth;
 
@@ -40,16 +50,6 @@ parcelable DvbCTuneParameters {
 
     /** Coding rate - the inner FEC. */
     CodingRate codingRate;
-
-    /** The frequency in Hertz. */
-    long frequencyHz;
-
-    /**
-     * The symbol rate in symbols per second.
-     *
-     * Use -1 for auto symbolRate if it is supported.
-     */
-    int symbolRate;
 
     /** Signal detect mode to use when tuning. */
     SignalDetectMode signalDetectMode;

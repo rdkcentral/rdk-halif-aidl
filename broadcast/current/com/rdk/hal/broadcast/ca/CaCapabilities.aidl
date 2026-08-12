@@ -31,4 +31,7 @@ import com.rdk.hal.broadcast.ca.PowerControl;
 parcelable CaCapabilities {
     /** How the power line control is managed for this slot. */
     PowerControl powerControl;
+
+    /** Reserved for future use. */
+    ParcelableHolder extension;
 }

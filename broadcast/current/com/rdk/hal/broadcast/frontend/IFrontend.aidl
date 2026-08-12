@@ -35,8 +35,11 @@ interface IFrontend {
         /** The undefined ID value. */
         const int UNDEFINED = -1;
 
-        /** The actual resource ID */
+        /** The actual resource ID. */
         int value;
+
+        /** Reserved for future use. */
+        ParcelableHolder extension;
     }
 
     /** Get the ID of this frontend. */

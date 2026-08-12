@@ -35,6 +35,9 @@ interface IDemux {
 
         /** The actual resource ID. */
         int value;
+
+        /** Reserved for future use. */
+        ParcelableHolder extension;
     }
 
     /** Get the ID of this demux. */
