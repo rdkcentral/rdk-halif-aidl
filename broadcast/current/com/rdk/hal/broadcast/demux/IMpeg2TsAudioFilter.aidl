@@ -14,8 +14,6 @@
  */
 package com.rdk.hal.broadcast.demux;
 
-import com.rdk.hal.broadcast.demux.Pid;
-
 /**
  * MPEG-2 TS audio filter interface for tunneled pipelines.
  *
@@ -30,7 +28,7 @@ interface IMpeg2TsAudioFilter {
      *
      * Setting a PID will activate the filter, i.e. it will potentially start outputting data instantly.
      */
-    void setPid(in Pid pid);
+    void setPid(in int pid);
 
     /** Reset the PID containing the PCR values, effectively stopping the filter. */
     void clearPid();
