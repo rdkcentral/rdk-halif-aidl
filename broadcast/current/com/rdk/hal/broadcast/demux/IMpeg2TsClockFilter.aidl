@@ -14,8 +14,6 @@
  */
 package com.rdk.hal.broadcast.demux;
 
-import com.rdk.hal.broadcast.demux.Pid;
-
 /**
  * MPEG-2 TS clock filter interface for tunneled pipelines.
  *
@@ -29,10 +27,8 @@ interface IMpeg2TsClockFilter {
      * Set the PID containing the PCR values to be used for clock recovery.
      *
      * Setting a PID will activate the filter, i.e. it will potentially start outputting data instantly.
-     *
-     * @param pid The PID containing the PCR values.
      */
-    void setPid(in Pid pid);
+    void setPid(in int pid);
 
     /** Reset the PID containing the PCR values, effectively stopping the filter. */
     void clearPid();
