@@ -140,14 +140,18 @@ interface ICaptureController
      *                                  Free before the next frame is acquired. Pass
      *                                  `VideoFrameView.NO_BUFFER` when there is nothing
      *                                  to release, which is the case on the first call
-     *                                  of a session. An index that is already Free, or
-     *                                  outside the pool, is ignored.
+     *                                  of a session. An index that is already Free is
+     *                                  ignored, so a repeated release is harmless. An
+     *                                  index outside the pool is a client error and
+     *                                  raises `EX_ILLEGAL_ARGUMENT` rather than being
+     *                                  absorbed, because nothing else would show it.
      *
      * @returns VideoFrameView carrying the buffer index and presentation time of the
      *          acquired frame, or null if no frame is due.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the STARTED state.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT If `releaseBufferIndex` is neither `VideoFrameView.NO_BUFFER` nor a valid pool index.
      *
      * @pre The resource must be in State::STARTED.
      *
@@ -163,12 +167,17 @@ interface ICaptureController
      * and for a client that has stopped drawing but still holds a buffer.
      *
      * `bufferIndex` must be a `VideoFrameView.bufferIndex` value previously returned by
-     * `acquireLatestFrame()`. This function is idempotent - a buffer that is already
-     * Free, or an index outside the pool, returns without raising an exception.
+     * `acquireLatestFrame()`. Releasing a buffer that is already Free returns without
+     * raising an exception, so the call is idempotent. An index outside the pool is a
+     * client error rather than a repeat release, and raises `EX_ILLEGAL_ARGUMENT` - a
+     * client holding an index the pool cannot name has lost track of what it holds, and
+     * absorbing that silently is how a stale index survives to release another client's
+     * frame.
      *
      * @param[in] bufferIndex   The pool buffer to release.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT If `bufferIndex` is outside the pool.
      *
      * @see acquireLatestFrame()
      */

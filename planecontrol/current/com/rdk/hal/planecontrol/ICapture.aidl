@@ -61,8 +61,20 @@ import com.rdk.hal.PropertyValue;
  *    controller.setProperty(HEIGHT, h);
  *    controller.setProperty(BUFFER_COUNT, n);         // pool depth, or leave to vendor
  *    controller.start();                              // onPoolReady() delivers the pool
+ *
+ *    // In onPoolReady(buffers) - import every buffer once, keyed by its index.
+ *    // planeFds[0], planeOffsets[0] and planeStrides[0] feed EGL_DMA_BUF_PLANE0_FD_EXT,
+ *    // _OFFSET_EXT and _PITCH_EXT directly - PLANE1 for NV12 chroma - together with
+ *    // drmFourcc and drmModifier. No translation, no copy.
+ *    for (VideoBufferView b : buffers)
+ *        eglImage[b.bufferIndex] = eglCreateImageKHR(dpy, EGL_NO_CONTEXT,
+ *                                      EGL_LINUX_DMA_BUF_EXT, NULL, attributesOf(b));
+ *
+ *    // Per frame - the index selects an image already imported, nothing is re-imported.
  *    frame = controller.acquireLatestFrame(VideoFrameView.NO_BUFFER);
+ *    draw(eglImage[frame.bufferIndex]);
  *    frame = controller.acquireLatestFrame(frame.bufferIndex);   // release + acquire
+ *    draw(eglImage[frame.bufferIndex]);
  *    controller.releaseFrame(frame.bufferIndex);      // last frame of the session
  *    controller.stop();
  *    capture.close(controller);
