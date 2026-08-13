@@ -14,10 +14,11 @@
  */
 package com.rdk.hal.broadcast;
 
-import com.rdk.hal.broadcast.Version;
-
 /**
  * HAL Implementation Version structure.
+ *
+ * This version has to be filled by the service implementation and has to follow semantic versioning. It is not bound to
+ * the interface version.
  *
  * @author Jan Pedersen
  * @author Christian George
@@ -25,10 +26,27 @@ import com.rdk.hal.broadcast.Version;
  */
 @VintfStability
 parcelable ImplementationVersion {
-    /** Implementation name. */
-    @utf8InCpp String name;
+    @VintfStability
+    parcelable Version {
+        /** Major version number. */
+        int major;
+        /** Minor version number. */
+        int minor;
+        /** Patch version number. */
+        int patch;
+    }
+
     /** Implementation version. */
     Version version;
+
+    /**
+     * Implementation name.
+     *
+     * This is a implementation specific string, that has no semantics attached to it. The only requirements are that it
+     * is unique for each implementation, allows to identify the implementation and should not change between releases
+     * of the same implementation.
+     */
+    @utf8InCpp String name;
 
     /** Reserved for future use. */
     ParcelableHolder extension;
