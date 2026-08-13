@@ -28,10 +28,12 @@ import com.rdk.hal.broadcast.frontend.SignalDetectMode;
 parcelable AtscTuneParameters {
     /** The frequency to tune to in Hertz. */
     long frequencyHz;
-    /** The modulation to use. */
-    Modulation modulation;
+
     /** Signal detect mode to use when tuning. */
     SignalDetectMode signalDetectMode;
+
+    /** The modulation to use. */
+    Modulation modulation;
 
     /** Reserved for future use. */
     ParcelableHolder extension;
