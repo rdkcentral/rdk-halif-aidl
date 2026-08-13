@@ -39,17 +39,17 @@ import com.rdk.hal.broadcast.demux.IMpeg2TsVideoFilter;
 @VintfStability
 union Filter {
     /** A MPEG-2 TS data filter instance. */
-    IMpeg2TsDataFilter mpeg2TsDataFilter;
+    IMpeg2TsDataFilter mpeg2TsData;
 
     /** A MPEG-2 TS clock filter instance. */
-    IMpeg2TsClockFilter mpeg2TsClockFilter;
+    IMpeg2TsClockFilter mpeg2TsClock;
 
     /** A MPEG-2 TS video filter instance. */
-    IMpeg2TsVideoFilter mpeg2TsVideoFilter;
+    IMpeg2TsVideoFilter mpeg2TsVideo;
 
     /** A MPEG-2 TS audio filter instance. */
-    IMpeg2TsAudioFilter mpeg2TsAudioFilter;
+    IMpeg2TsAudioFilter mpeg2TsAudio;
 
     /** A MPEG-2 TS supplementary audio filter instance. */
-    IMpeg2TsSupplementaryAudioFilter mpeg2TsSupplementaryAudioFilter;
+    IMpeg2TsSupplementaryAudioFilter mpeg2TsSupplementaryAudio;
 }

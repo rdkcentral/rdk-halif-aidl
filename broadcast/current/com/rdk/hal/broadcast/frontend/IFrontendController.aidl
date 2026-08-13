@@ -61,9 +61,6 @@ interface IFrontendController {
 
         /** The quality of the reading. */
         Readiness readiness;
-
-        /** Reserved for future use. */
-        ParcelableHolder extension;
     }
 
     /**

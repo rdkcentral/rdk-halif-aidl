@@ -53,14 +53,13 @@ parcelable Capabilities {
     /** Possible specific capabilities for the frontend type. */
     @VintfStability
     union SpecificCapabilities {
-        DvbTCapabilities dvbTCapabilities;
-        DvbCCapabilities dvbCCapabilities;
-        DvbSCapabilities dvbSCapabilities;
-        AtscCapabilities atscCapabilities;
-    }
+        AtscCapabilities atsc;
+        DvbCCapabilities dvbC;
+        DvbSCapabilities dvbS;
+        DvbTCapabilities dvbT;}
 
     /** Capabilities specific to a given @FrontendType. */
-    SpecificCapabilities specificCapabilities;
+    SpecificCapabilities specifics;
 
     /** Reserved for future use. */
     ParcelableHolder extension;

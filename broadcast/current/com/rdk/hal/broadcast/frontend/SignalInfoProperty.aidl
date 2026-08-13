@@ -44,15 +44,15 @@ enum SignalInfoProperty {
     PRE_BER,
     /** Uncorrected error count. */
     UNCORRECTED_ERRORS,
-    /** Signal Strength Indicator as defined in NorDig (int, range 0-100). */
+    /** Signal Strength Indicator as defined in NorDig (range 0-100). */
     SSI,
-    /** Signal Quality Indicator as defined in NorDig (int, range 0-100). */
+    /** Signal Quality Indicator as defined in NorDig (range 0-100). */
     SQI,
-    /** The actual frequency that the tuner is locked on (long, in Hertz). */
+    /** The actual frequency that the tuner is locked on (in Hertz). */
     ACTUAL_FREQUENCY,
-    /** Physical Layer Pipe ID (int, range 0-255). */
+    /** Physical Layer Pipe ID (range 0-255). */
     PLP_ID,
-    /** Physical Layer Pipe IDs (array of int, range 0-255). */
+    /** Physical Layer Pipe IDs (range 0-255). */
     PLP_IDS,
     /** DVB-T2 System Id. */
     T2_SYSTEM_ID,

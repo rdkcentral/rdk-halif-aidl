@@ -32,6 +32,9 @@ parcelable DvbSTuneParameters {
     /** The frequency to tune to in Hertz. */
     long frequencyHz;
 
+    /** Signal detect mode to use when tuning. */
+    SignalDetectMode signalDetectMode;
+
     /**
      * The symbol rate in symbols per second.
      *
@@ -50,9 +53,6 @@ parcelable DvbSTuneParameters {
 
     /** Roll-off factor. */
     RollOff rollOff;
-
-    /** Signal detect mode to use when tuning. */
-    SignalDetectMode signalDetectMode;
 
     /** Reserved for future use. */
     ParcelableHolder extension;
