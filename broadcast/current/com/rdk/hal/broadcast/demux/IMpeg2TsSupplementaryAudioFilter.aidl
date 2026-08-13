@@ -14,8 +14,6 @@
  */
 package com.rdk.hal.broadcast.demux;
 
-import com.rdk.hal.broadcast.demux.Pid;
-
 /**
  * MPEG-2 TS supplementary audio filter interface for tunneled pipelines.
  *
@@ -32,7 +30,7 @@ interface IMpeg2TsSupplementaryAudioFilter {
      *
      * @param pid The PID containing the PCR values.
      */
-    void setPid(in Pid pid);
+    void setPid(in int pid);
 
     /** Reset the PID containing the PCR values, effectively stopping the filter. */
     void clearPid();
