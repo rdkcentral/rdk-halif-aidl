@@ -15,7 +15,6 @@
 package com.rdk.hal.broadcast;
 
 import com.rdk.hal.broadcast.ImplementationVersion;
-import com.rdk.hal.broadcast.Version;
 import com.rdk.hal.broadcast.ca.ICaSlot;
 import com.rdk.hal.broadcast.demux.IDemux;
 import com.rdk.hal.broadcast.frontend.IFrontend;
@@ -36,8 +35,14 @@ interface IBroadcastManager {
      */
     const @utf8InCpp String serviceName = "BroadcastManager";
 
-    /** Gets the HAL implementation version. */
-    ImplementationVersion getImplVersion();
+    /**
+     * Gets the service implementation version.
+     *
+     * This is not the same as the interface version, which is defined for the AIDL interface itself. The same
+     * implementation version may implement multiple versions of the interface, and multiple implementations versions
+     * may implement the same interface version (for example following internal bug fixes).
+     */
+    ImplementationVersion getImplementationVersion();
 
     /**
      * Gets the platform list of frontend IDs.
