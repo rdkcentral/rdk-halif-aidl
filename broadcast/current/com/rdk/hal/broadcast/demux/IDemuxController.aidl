@@ -33,10 +33,13 @@ interface IDemuxController {
      *
      * The returned union contains exactly one active member, representing the concrete type-specific filter interface.
      *
+     * @exception ::android::binder::Status::EX_UNSUPPORTED_OPERATION The demux does not support the given filter type.
+     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The demux can not provide any more filters of the given
+     *                                                        type.
+     *
      * @param[in] filterType The type of filter to create.
      *
-     * @returns DemuxFilter or null on error (e.g. no filter available for the given type, or the implementation cannot
-     *          create another instance).
+     * @returns DemuxFilter, or null on error.
      */
     @nullable Filter openFilter(in FilterType filterType);
 
@@ -46,8 +49,7 @@ interface IDemuxController {
      * The filter object will be invalidated. If the filter was not stopped before calling this method, the call to
      * closeFilter() will stop the filter first.
      *
-     * @note Trying to close a filter that was not opened on this demux will result in
-     * ::android::binder::Status::EX_ILLEGAL_ARGUMENT being thrown.
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The filter was not opened on this demux.
      *
      * @param[in] filter The filter to close.
      */
@@ -61,9 +63,13 @@ interface IDemuxController {
      * filters are active and also if they are not. The data written to the demux will be processed by the filters and
      * made available to the clients as if it was coming from the tuner.
      *
+     * @exception ::android::binder::Status::EX_UNSUPPORTED_OPERATION The demux does not support writing (see
+     *                                                                DemuxCapabilities.acceptsDataFromSoftware).
+     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The demux is already opened for writing.
+     *
      * @param listener The listener to receive notifications about the ring buffer sink.
      *
-     * @returns The IRingBufferSink related to the demux's internal IRingBuffer.
+     * @returns The IRingBufferSink related to the demux's internal IRingBuffer, or null on error.
      */
     @nullable IRingBufferSink openForWriting(in IRingBufferSinkListener listener);
 }
