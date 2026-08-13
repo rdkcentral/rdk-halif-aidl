@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 import com.rdk.hal.broadcast.demux.IDemuxDataProvider;
-import com.rdk.hal.broadcast.frontend.Capabilities;
+import com.rdk.hal.broadcast.frontend.FrontendCapabilities;
 import com.rdk.hal.broadcast.frontend.FrontendType;
 import com.rdk.hal.broadcast.frontend.IFrontendController;
 import com.rdk.hal.broadcast.frontend.ILnbController;
@@ -55,7 +55,7 @@ interface IFrontend {
      *
      * @returns Capabilities or null if the type is not supported.
      */
-    @nullable Capabilities getCapabilities(in FrontendType frontendType);
+    @nullable FrontendCapabilities getCapabilities(in FrontendType frontendType);
 
     /**
      * Open the frontend in a mode where it is ready to tune.
