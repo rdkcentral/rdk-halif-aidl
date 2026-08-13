@@ -397,6 +397,39 @@ A capture session is configured here in full: the frame format, memory layout an
 
 `Codec.H264` is required on every capture plane; decode-to-texture is certified against it. A decoder opened for a codec outside `supportedCodecs` decodes and displays normally — it just cannot feed a capture plane, and `start()` fails with `CaptureErrorCode.CODEC_NOT_CAPTURABLE` if one is mapped to it.
 
+#### Where this interface sits
+
+The consumer of a decoded frame is the code that textures it onto its own scene, and it typically runs in an application container with no binder to this HAL. The middleware holds the binder, configures the session and carries frames to the consumer over its own IPC.
+
+```mermaid
+flowchart TD
+    %% --- Consumer, outside the platform ---
+    subgraph AppContainer["Application container"]
+        App["Consumer<br/>textures the frame onto its scene"]
+    end
+
+    %% --- Platform ---
+    subgraph Platform["Platform"]
+        MW["Middleware<br/>admits the session, maps the source,<br/>holds the HAL binder"]
+
+        subgraph Vendor["Vendor Layer"]
+            Capture["ICapture / ICaptureController"]
+            Decoder["Mapped video source's decoder"]
+            Plane["Capture plane"]
+            Pool["Dma-Buf pool"]
+        end
+    end
+
+    App -->|IPC — frame descriptors, SCM_RIGHTS| MW
+    MW -->|binder| Capture
+    Capture --> Plane
+    Decoder --> Plane
+    Plane --> Pool
+    Pool -. imported as GPU textures .-> App
+```
+
+**This interface does not know which of them is its client.** The HAL contract is the same whether the middleware relays frames onward or a consumer binds `ICapture` itself; only the holder of the per-frame binding changes, and that decision sits above this repository. Binding directly halves the per-frame IPC hops, and each hop costs an `SCM_RIGHTS` pass of a Dma-Buf descriptor — but it requires a binder into the container the consumer runs in, which is a platform packaging decision rather than an interface one. It also has to answer which decoder instance a consumer may capture from, and how a binding the middleware does not hold is invalidated when the decoder is reclaimed under contention.
+
 ### Capture Session Lifecycle
 
 1. Open the capture resource:
@@ -475,6 +508,26 @@ Each buffer is Free, Ready or Locked. The decoder writes into Free buffers and m
 **Release and acquire are one call.** `acquireLatestFrame(releaseBufferIndex)` frees the buffer the client just finished with and takes the next in the same round trip, because a client redrawing at frame rate does both every frame and two calls would put two binder round trips in a 60 Hz path. `VideoFrameView.NO_BUFFER` is passed on the first call of a session. `releaseFrame()` remains for the last frame, and for a client that has stopped drawing while still holding a buffer.
 
 **Addressing is delivered once, not per frame.** `onPoolReady()` carries one `VideoBufferView` per pool buffer, with the file descriptors, offsets, strides, lengths, size and format that address it. None of that changes while the session runs, so a client imports every buffer into an EGLImage on receipt and thereafter resolves a frame by looking its `bufferIndex` up in what it already holds. A frame therefore costs one int and one long on the wire.
+
+```mermaid
+flowchart LR
+    %% --- Once, at onPoolReady() ---
+    subgraph Once["Once — onPoolReady(buffers)"]
+        BV["VideoBufferView[ i ]<br/>planeFds, planeOffsets,<br/>planeStrides, drmFourcc, drmModifier"]
+        IMG["EGLImage[ i ]<br/>imported via EGL_EXT_image_dma_buf_import"]
+        BV -->|one import per pool buffer| IMG
+    end
+
+    %% --- Per frame ---
+    subgraph PerFrame["Per frame — acquireLatestFrame()"]
+        FV["VideoFrameView<br/>bufferIndex, presentationTimeNs"]
+    end
+
+    FV -->|bufferIndex selects| IMG
+    IMG --> Draw["Texture onto the scene"]
+```
+
+Nothing is imported per frame, and no file descriptor crosses the binder after `onPoolReady()`. The index is what makes that possible: it names a buffer under both vendor allocation models, where a file descriptor alone does not.
 
 A client imports from `VideoBufferView.planeFds` and `planeOffsets` alone and needs to know nothing about how the vendor allocated the pool — one Dma-Buf carved into offset-addressed buffers and one Dma-Buf per buffer are both served by the same client code. A client caching EGLImages **must key the cache on `bufferIndex`**, or equivalently on the pair (file descriptor, offset) — never on the file descriptor alone. Where the pool is one shared Dma-Buf every buffer carries the same descriptor and differs only by offset, so an fd-keyed cache collapses the whole pool onto one entry and the client re-textures a single buffer for the rest of the session. The picture freezes while frames keep arriving, and nothing in what the client was handed shows it.
 
