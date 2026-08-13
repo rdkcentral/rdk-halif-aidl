@@ -28,7 +28,7 @@ import com.rdk.hal.broadcast.frontend.SignalInfoProperty;
  * @author Philipp Trommler
  */
 @VintfStability
-parcelable Capabilities {
+parcelable FrontendCapabilities {
     /** Supported info types for carrier. */
     SignalInfoProperty[] signalInfoProperties;
 
