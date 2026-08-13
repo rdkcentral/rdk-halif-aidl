@@ -34,6 +34,9 @@ parcelable DvbTTuneParameters {
     /** The frequency to tune to in Hertz. */
     long frequencyHz;
 
+    /** Signal detect mode to use when tuning. */
+    SignalDetectMode signalDetectMode;
+
     /** The bandwidth to use. */
     Bandwidth bandwidth;
 
@@ -58,9 +61,6 @@ parcelable DvbTTuneParameters {
      * Use -1 for auto. Range 0-255.
      */
     int plpId;
-
-    /** Signal detect mode to use when tuning. */
-    SignalDetectMode signalDetectMode;
 
     /** Reserved for future use. */
     ParcelableHolder extension;

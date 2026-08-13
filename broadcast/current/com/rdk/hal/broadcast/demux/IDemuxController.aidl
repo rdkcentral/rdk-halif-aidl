@@ -65,5 +65,5 @@ interface IDemuxController {
      *
      * @returns The IRingBufferSink related to the demux's internal IRingBuffer.
      */
-    IRingBufferSink openForWriting(in IRingBufferSinkListener listener);
+    @nullable IRingBufferSink openForWriting(in IRingBufferSinkListener listener);
 }

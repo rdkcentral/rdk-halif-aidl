@@ -41,16 +41,6 @@ parcelable DemuxCapabilities {
 
         /** Maximum number of instances of this filter type. */
         int maxInstances;
-
-        /**
-         * Maximum number of PIDs a single filter of this type can track simultaneously.
-         *
-         * Use 0 if not applicable (e.g. for tunnel filters that take a single PID).
-         */
-        int maxPids;
-
-        /** Reserved for future use. */
-        ParcelableHolder extension;
     }
 
     /**

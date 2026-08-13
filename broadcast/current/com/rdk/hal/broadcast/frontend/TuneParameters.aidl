@@ -29,11 +29,11 @@ import com.rdk.hal.broadcast.frontend.DvbTTuneParameters;
 @VintfStability
 union TuneParameters {
     /** Tune parameters for tuning ATSC tuners. */
-    AtscTuneParameters atscTuneParameters;
-    /** Tune parameters for tuning DVB-T tuners. */
-    DvbTTuneParameters dvbTTuneParameters;
+    AtscTuneParameters atsc;
     /** Tune parameters for tuning DVB-C tuners. */
-    DvbCTuneParameters dvbCTuneParameters;
+    DvbCTuneParameters dvbC;
     /** Tune parameters for tuning DVB-S/S2/S2X tuners. */
-    DvbSTuneParameters dvbSTuneParameters;
+    DvbSTuneParameters dvbS;
+    /** Tune parameters for tuning DVB-T tuners. */
+    DvbTTuneParameters dvbT;
 }

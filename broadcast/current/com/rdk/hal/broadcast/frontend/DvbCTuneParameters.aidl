@@ -32,6 +32,9 @@ parcelable DvbCTuneParameters {
     /** The frequency in Hertz. */
     long frequencyHz;
 
+    /** Signal detect mode to use when tuning. */
+    SignalDetectMode signalDetectMode;
+
     /**
      * The symbol rate in symbols per second.
      *
@@ -50,9 +53,6 @@ parcelable DvbCTuneParameters {
 
     /** Coding rate - the inner FEC. */
     CodingRate codingRate;
-
-    /** Signal detect mode to use when tuning. */
-    SignalDetectMode signalDetectMode;
 
     /** Reserved for future use. */
     ParcelableHolder extension;
