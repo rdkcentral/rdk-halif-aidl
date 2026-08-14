@@ -138,12 +138,13 @@ The dictionary revision pins the set of names; a field's `id` pins its unit and 
 |---|---|---|---|---|
 | `underflowed` | int64 · episodes · `counter` | **Driver** | `0x142f899619c8c4a9` | Count of audio buffer-underflow **episodes**. +1 at each episode start (no decoded audio to present); ends when output resumes. Counterpart of `av.video_sink.underflowed` — without it an audio underflow rate cannot be computed at all. |
 | `underflow_duration_ms` | int64 · ms · `counter` | **Driver** | `0x4ce68288bc2f93b2` | Cumulative time the audio path was starved of decoded data (Σ of each episode start→clear). Paired with `underflowed`: mean episode length = `underflow_duration_ms` / `underflowed`. |
-| `silence_duration_ms` | int64 · ms · `counter` | **Driver** | `0x09fdcdf6715ef048` | Cumulative emitted **digital silence** at or above the HFP-declared threshold (default 500 ms minimum episode). Digital-silence detection is in the audio path. Distinguishes unexpected absence of audio output from starvation (`underflow_duration_ms`). |
-| `silence_event_count` | int64 · events · `counter` | **Driver** | `0x357a57be2601412e` | Count of completed digital-silence periods at or above the HFP-declared threshold. Paired with `silence_duration_ms`: mean silence length = `silence_duration_ms` / `silence_event_count`. |
+| `silence_duration_ms` | int64 · ms · `counter` | **Driver** | `0x09fdcdf6715ef048` | Cumulative emitted **digital silence** in periods that reached `silence_threshold_ms`. Digital-silence detection is in the audio path. Distinguishes unexpected absence of audio output from starvation (`underflow_duration_ms`). |
+| `silence_event_count` | int64 · events · `counter` | **Driver** | `0x357a57be2601412e` | Count of completed digital-silence periods that reached `silence_threshold_ms`. Paired with `silence_duration_ms`: mean silence length = `silence_duration_ms` / `silence_event_count`. |
 | `buffer_depth_ms` | int64 · ms · `current` | **Driver** | `0x1aea4fc8a27262b7` | Buffered decoded audio ahead of the play position **now**. Live sample re-read each poll; **not** cumulative. **Warning:** SoC- and use-case-specific. |
 | `last_underflow_trigger` | int64 · none · `current` | **Driver** | `0x40771a4a2b2ee087` | Closed-vocabulary cause of the most recent audio underflow episode, same vocabulary as `av.video_sink.last_underflow_trigger`. |
 | `last_underflow_duration_ms` | int64 · ms · `current` | **Driver** | `0x638f410fc657c525` | Length of the most recent **completed** audio underflow episode. Read with `underflowed` and `underflow_duration_ms`, which give the count and the total. |
 | `last_silence_duration_ms` | int64 · ms · `current` | **Driver** | `0x1cf88c9352312e83` | Length of the most recent completed digital-silence period. Read with `silence_event_count` and `silence_duration_ms`. |
+| `silence_threshold_ms` | int64 · ms · `config` · **writable** | **Driver** | `0x02c4359649749c70` | Shortest digital-silence period that counts as one. Silence is normal output — a gap between programmes, a muted stream, a silent passage — so this is the line between that and a fault worth reporting. Default 500 ms. Writable so an integrator can tighten it per product. |
 
 ### `av.clock`
 
@@ -250,11 +251,19 @@ Raised when presentation resumes, closing the episode the preceding `underflow` 
 
 #### `silence`
 
-Raised when a digital-silence period ENDS having met the declared threshold. The threshold cannot be tested until the period completes, so silence has no start event.
+Raised when digital silence has continued for `silence_threshold_ms`, NOT when it began. Silence is ordinary output, so the threshold is what separates a gap between programmes from a fault; below it nothing is raised. Raising at the crossing rather than at the close is what makes a silence that is still going reportable while it is still going.
 
 | Payload | Unit | Meaning |
 |---|---|---|
-| `duration_ms` | ms | Length of the period this reports. Not cumulative — `silence_duration_ms` carries the running total. |
+| `elapsed_ms` | ms | Silence already elapsed at the crossing — `silence_threshold_ms`, within one detection interval. Present so a consumer need not assume the threshold it was configured with is the one in force. |
+
+#### `silence_end`
+
+Raised when audio resumes, closing the period the preceding `silence` opened. A period that never crossed the threshold raises neither.
+
+| Payload | Unit | Meaning |
+|---|---|---|
+| `duration_ms` | ms | Length of the whole period this closes, from the onset of silence rather than from the crossing. Not cumulative — `silence_duration_ms` carries the running total. |
 
 ## Episodic Conditions
 
@@ -328,15 +337,18 @@ An error is a point occurrence, so all four are written together and there is no
 
 ### Digital silence — `av.audio_sink`
 
-A period of emitted digital silence at or above the declared threshold. Counted only once complete, since the threshold cannot be tested until the period ends.
+Silence is ordinary output — a gap between programmes, a muted stream, a silent passage — so the occurrence being reported is not silence but *silence that went on too long*. `silence_threshold_ms` is that line, and it is writable, so an integrator sets it per product rather than inheriting one.
 
-**Event:** `silence`, raised at the end of the period, carrying `duration_ms`. There is no start event, for the same reason there is no start count.
+**Events:** `silence` when the silence has lasted `silence_threshold_ms`, carrying `elapsed_ms`; `silence_end` when audio resumes, carrying `duration_ms` for the whole period. A period that never reaches the threshold raises neither and moves no counter.
+
+The event fires at the **crossing**, not at the close, so a silence that is still going is reportable while it is still going — which is when it matters. The counters, by contrast, can only move once the period is complete.
 
 | Field | Kind | Written |
 |---|---|---|
-| `silence_event_count` | `counter` | **+1 at period end**, if it met the threshold |
-| `silence_duration_ms` | `counter` | **+= the period's length, at period end** |
-| `last_silence_duration_ms` | `current` | **= the period's length, at period end** |
+| `silence_threshold_ms` | `config` | the configured value; set by the integrator, not by an occurrence |
+| `silence_event_count` | `counter` | **+1 at period end**, if the period reached the threshold |
+| `silence_duration_ms` | `counter` | **+= the whole period's length, at period end** |
+| `last_silence_duration_ms` | `current` | **= the whole period's length, at period end** |
 
 ### First frame — `av.video_sink`
 

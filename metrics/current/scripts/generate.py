@@ -100,6 +100,7 @@ import yaml
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 HFP = ROOT / "hfp-metrics.yaml"
+SCHEMA = ROOT / "hfp-metrics-schema.yaml"
 DICT_MD = ROOT / "docs/vendor_field_dictionary.md"
 
 # A layer above the HAL defines the figures only it produces. Untracked here -
@@ -436,6 +437,35 @@ def check(entries: dict, derived: dict) -> list[str]:
     return problems
 
 
+def check_schema(paths: list[Path]) -> tuple[list[str], bool]:
+    """Validate profiles against hfp-metrics-schema.yaml.
+
+    Returns (problems, ran). The schema is the contract every layer's profile
+    is held to, and for six weeks this profile did not satisfy it while nothing
+    here noticed - the ids were unquoted, so YAML read them as integers where
+    the schema requires strings. Reading the schema is not checking against it.
+
+    pykwalify is not always installed, so `ran` is reported rather than assumed:
+    a validation that did not happen must never look like one that passed."""
+    try:
+        import logging
+        from pykwalify.core import Core
+        logging.disable(logging.CRITICAL)
+    except ImportError:
+        return [], False
+
+    problems = []
+    for path in paths:
+        try:
+            Core(source_file=str(path),
+                 schema_files=[str(SCHEMA)]).validate(raise_exception=True)
+        except Exception as exc:
+            first = str(exc).splitlines()
+            detail = " ".join(l.strip() for l in first[:4])
+            problems.append(f"{path.name}: fails {SCHEMA.name} - {detail}")
+    return problems, True
+
+
 def check_layers(hal: dict, layers: dict) -> list[str]:
     """The one rule that spans profiles: a layer never declares another's field.
 
@@ -597,8 +627,17 @@ def main() -> int:
         print(f"\n{len(problems)} problem(s).", file=sys.stderr)
         return 1
 
+    schema_problems, validated = check_schema([HFP])
+    for problem in schema_problems:
+        print(f"error: {problem}", file=sys.stderr)
+    if schema_problems:
+        return 1
+
     extra = sum(len(v) for v in layers.values())
     print(f"ok: {len(entries)} fields declared; ids written and generation is stable.")
+    print(f"  {SCHEMA.name}: "
+          + ("validated" if validated else
+             "NOT VALIDATED - pip install pykwalify (see scripts/requirements.txt)"))
     if layers:
         print(f"  plus {extra} from {', '.join(layers)} - combined view generated")
     for path in (DICT_MD, HFP):

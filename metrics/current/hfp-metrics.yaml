@@ -591,8 +591,8 @@ metrics:
               id: '0x09fdcdf6715ef048'
               provider: Driver
               description: >
-                Cumulative emitted **digital silence** at or above the HFP-declared threshold
-                (default 500 ms minimum episode). Digital-silence detection is in the audio
+                Cumulative emitted **digital silence** in periods that reached
+                `silence_threshold_ms`. Digital-silence detection is in the audio
                 path. Distinguishes unexpected absence of audio output from starvation
                 (`underflow_duration_ms`).
 
@@ -602,8 +602,8 @@ metrics:
               id: '0x357a57be2601412e'
               provider: Driver
               description: >
-                Count of completed digital-silence periods at or above the HFP-declared
-                threshold. Paired with `silence_duration_ms`: mean silence length =
+                Count of completed digital-silence periods that reached
+                `silence_threshold_ms`. Paired with `silence_duration_ms`: mean silence length =
                 `silence_duration_ms` / `silence_event_count`.
 
             - name: buffer_depth_ms
@@ -642,6 +642,18 @@ metrics:
                 Length of the most recent completed digital-silence period. Read with
                 `silence_event_count` and `silence_duration_ms`.
 
+            - name: silence_threshold_ms
+              unit: ms
+              kind: config
+              id: '0x02c4359649749c70'
+              writable: true
+              provider: Driver
+              description: >
+                Shortest digital-silence period that counts as one. Silence is normal
+                output — a gap between programmes, a muted stream, a silent passage —
+                so this is the line between that and a fault worth reporting. Default
+                500 ms. Writable so an integrator can tighten it per product.
+
 
           events:
 
@@ -673,15 +685,31 @@ metrics:
 
             - kind: silence
               description: >
-                Raised when a digital-silence period ENDS having met the declared
-                threshold. The threshold cannot be tested until the period completes,
-                so silence has no start event.
+                Raised when digital silence has continued for `silence_threshold_ms`,
+                NOT when it began. Silence is ordinary output, so the threshold is what
+                separates a gap between programmes from a fault; below it nothing is
+                raised. Raising at the crossing rather than at the close is what makes
+                a silence that is still going reportable while it is still going.
+              fields:
+
+                - name: elapsed_ms
+                  unit: ms
+                  description: >
+                    Silence already elapsed at the crossing — `silence_threshold_ms`,
+                    within one detection interval. Present so a consumer need not
+                    assume the threshold it was configured with is the one in force.
+
+            - kind: silence_end
+              description: >
+                Raised when audio resumes, closing the period the preceding `silence`
+                opened. A period that never crossed the threshold raises neither.
               fields:
 
                 - name: duration_ms
                   unit: ms
                   description: >
-                    Length of the period this reports. Not cumulative —
+                    Length of the whole period this closes, from the onset of silence
+                    rather than from the crossing. Not cumulative —
                     `silence_duration_ms` carries the running total.
 
         - element: clock

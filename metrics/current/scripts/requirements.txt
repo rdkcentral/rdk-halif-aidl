@@ -1,0 +1,5 @@
+# Optional: enables schema validation in generate.py.
+# Without it the profile is still generated and checked, but never validated
+# against hfp-metrics-schema.yaml, and generate.py says so rather than
+# reporting a pass it did not make.
+pykwalify>=1.8
