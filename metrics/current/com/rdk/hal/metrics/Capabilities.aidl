@@ -37,15 +37,6 @@ import com.rdk.hal.metrics.MetricProfileInfo;
 parcelable Capabilities
 {
     /**
-     *  Opaque identity of this product's declared set. Stable while the
-     *  declaration is unchanged, different the moment anything in it changes.
-     *  A consumer cache-keys its resolved name map on this rather than diffing
-     *  field lists, and a bug report needs only this value to pin exactly what
-     *  the device was serving.
-     */
-    String schemaId;
-
-    /**
      *  Every profile live on this device - the HAL layer's, and each layer above it
      *  that declares metrics. Each carries its own versions and its own domains, so a
      *  consumer can tell which layer owes a figure and which schema shape it is

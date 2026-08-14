@@ -59,10 +59,11 @@ interface IMetricsManager
 
     /**
      *  @brief The catalog — every domain, element and field this product
-     *         serves, with the schema identity.
+     *         serves.
      *
      *  Read once. A consumer matches the names it understands, keeps them, and
-     *  ignores the rest; it re-reads only when Capabilities.schemaId changes.
+     *  ignores the rest. The catalog is built from the declaration at startup
+     *  and stands for the life of the service, so one read is all it takes.
      *
      *  @returns Capabilities : the runtime truth, built from the declaration.
      */

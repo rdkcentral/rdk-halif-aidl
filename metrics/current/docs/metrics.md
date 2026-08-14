@@ -124,7 +124,7 @@ The id is not compiled into the interface. It reaches a client at runtime on `Me
 
 1. **Resolve once.** `getFields()` returns every field a source serves — every key its declaration carries, including the id. The client keeps the ones it understands and caches `name → id`.
 2. **Read many.** Two keys, same values and the same snapshot guarantee. `getAll()` and `getFieldsByName()` return `MetricKVPair{name, value}`, self-describing and worth it wherever a value outlives the call. `getFieldsById()` returns `MetricIdValue{id, value}` — two int64s, no string — for the capture loop, which reads the same set every cadence and would otherwise re-marshal a constant on every read.
-3. **Re-resolve on change.** `Capabilities.schemaId` changing is the signal that the declared set moved. An id that changed under a name the client already knew means the meaning moved, and the client stops trusting that field rather than reporting it wrongly.
+3. **Check what resolved against what was built.** An id arriving under a name the client already knew, but differing from the one it was built against, means the meaning moved — and the client stops trusting that field rather than reporting it wrongly.
 
 ### Two contracts, one declaration
 
@@ -222,7 +222,7 @@ At startup:
 
 1. The service process is launched by systemd.
 2. The `IMetricsManager` implementation registers itself with the AIDL Service Manager under the service name `MetricsManager` (matching `IMetricsManager.serviceName`).
-3. The implementation builds its catalog from `hfp-metrics.yaml` and derives `Capabilities.schemaId` from it.
+3. The implementation builds its catalog from `hfp-metrics.yaml`.
 
 Once registered, the service remains available for the lifetime of the system. Sources come and go beneath it as the elements they measure are created and destroyed.
 
@@ -281,7 +281,7 @@ A client that exits leaves no state behind to clean up; listener registrations a
 
 ## Operation and Data Flow
 
-1. **Resolve the catalog once.** `getCapabilities()` returns every domain, element and field the product serves. A consumer keeps the names it understands, ignores the rest, and cache-keys its resolved name map on `Capabilities.schemaId` — re-reading only when that value changes.
+1. **Resolve the catalog once.** `getCapabilities()` returns every domain, element and field the product serves. A consumer keeps the names it understands and ignores the rest. The catalog is built at startup and stands for the life of the service, so this is read once at attach.
 2. **Attach to the live sources.** `getSourcePaths()` gives those live now, and `registerEventListener(pathPrefix, listener)` reports later arrivals and departures **within a scope**:
 
    | `pathPrefix` | Reports |
@@ -326,12 +326,10 @@ A PTS the SoC cannot derive leaves the field **undeclared**, never served as `-1
 
 ```aidl
 parcelable Capabilities {
-    String schemaId;
     MetricProfileInfo[] profiles;
 }
 ```
 
-- `schemaId` is an opaque identity of this product's declared set — stable while the declaration is unchanged, different the moment anything in it changes. A bug report needs only this value to pin exactly what the device was serving.
 - `profiles` carries one entry per layer that declares metrics — the HAL's, and each layer above it. Each profile carries its own `interfaceVersion` and `schemaVersion`, so a consumer can tell which layer owes a figure and which schema shape it is reading.
 - `domains`, within a profile, carries per domain the dictionary revision it was written against and its elements. Each element carries its fields, `instances` and `captureCadenceMs`.
 
@@ -388,7 +386,7 @@ sequenceDiagram
     participant SRC as IMetricsSource
 
     Client->>MGR: getCapabilities()
-    note over Client: Resolve once. Cache-key the name map<br>on Capabilities.schemaId.
+    note over Client: Resolve once. The catalog stands<br>for the life of the service.
     Client->>MGR: registerEventListener("av", listener)
     Client->>MGR: getSourcePaths()
     MGR-->>Client: ["av.video_decoder.0", "av.video_sink.0", ...]

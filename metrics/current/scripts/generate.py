@@ -82,7 +82,7 @@ meaning), and the description (a typo fix must not churn the id).
 
 The id is not generated into the interface. It reaches a client at runtime on
 MetricFieldInfo: a client resolves a source's fields once, caches name -> id,
-and re-resolves when Capabilities.schemaId changes.
+and checks that id against the one it was built against.
 """
 
 from __future__ import annotations
