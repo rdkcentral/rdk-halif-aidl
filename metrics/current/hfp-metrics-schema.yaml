@@ -213,21 +213,3 @@ mapping:
                                 type: str
                                 required: false
                                 pattern: '^0x[0-9a-f]{16}$'
-
-                              # DERIVED domains only: the measured fields this is
-                              # computed from, named the way every declaration
-                              # names a field — <domain>.<element>.<field>, no
-                              # instance. The instance matches positionally at
-                              # runtime (cmcd_v2.video.N derives from
-                              # av.video_sink.N), and the runtime name is fully
-                              # qualified like every other.
-                              # Recorded so a derived value cannot silently
-                              # drift from its base, and so a device's coverage
-                              # of a standard is computable from its measured
-                              # declaration before it ships.
-                              from:
-                                type: seq
-                                required: false
-                                sequence:
-                                  - type: str
-                                    pattern: '^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$'
