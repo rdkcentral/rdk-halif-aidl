@@ -51,11 +51,11 @@ Middleware is the only client. It captures each source at the declared cadence, 
 
 The Metrics HAL is responsible for:
 
-- Publishing a **catalog** of every domain, element and field the product serves, with a schema identity a consumer can cache-key against.
-- Enumerating the **sources** that are live now, and reporting them appearing and disappearing.
+- Publishing a **catalog** of every domain, element and field the product serves.
+- Enumerating the **sources** this platform serves.
 - Serving a **coherent snapshot** of every value a source holds, at a declared freshness.
 - Serving the **most recent occurrence** of each episodic condition — underflow, decode error, first frame — as ordinary fields alongside the counter that totals them.
-- Accepting writes to the fields declared writable: configuration, tunables and test injection.
+- Accepting writes to the fields declared writable: configuration, tunables, test injection, and zeroing a high-water mark.
 
 Three properties shape the interface:
 
@@ -180,13 +180,13 @@ Names are by **subject, not producer**. Which block sources a figure differs per
 | **HAL.METRICS.1** | Every metric name shall be the fully-qualified four-segment path `<domain>.<element>.<instance>.<field>`. | A bare field name is ambiguous once merged: `frames_decoded` from `av.video_decoder.0` and `av.audio_decoder.0` are the same string. |
 | **HAL.METRICS.2** | Every metric value shall be a signed 64-bit integer. | AIDL `long`. Counters use the positive range and never the sign; a signed field such as `sync_offset_ms` uses it; a boolean-shaped field is 0 or 1. |
 | **HAL.METRICS.3** | All values returned by one `getAll()`, `getFieldsByName()` or `getFieldsById()` call shall be sampled at a single instant. | An obligation on the implementation, not a property to be discovered — a source spanning two hardware blocks shall latch both. Paired counters must never yield an impossible ratio. |
-| **HAL.METRICS.4** | Counters shall be cumulative since source creation and shall not reset on flush or seek. High-water fields shall be monotone non-decreasing. | Consumers compute deltas. |
+| **HAL.METRICS.4** | Counters shall be cumulative since service start and shall not reset on flush or seek. High-water fields shall be monotone non-decreasing between writes, and where declared `writable` shall accept a write of 0. | Consumers compute deltas from a baseline of their own; a maximum cannot be recovered by subtraction, so the reader zeros it instead. |
 | **HAL.METRICS.5** | A read shall reflect events no older than the element's declared `captureCadenceMs`, which shall not exceed 50 ms. | A maximum staleness, not a rate to capture at. An element may guarantee tighter; never looser. Freshness is a partner-facing promise. |
 | **HAL.METRICS.6** | A field the implementation cannot measure shall be left undeclared and omitted from reads. | It shall never be served as `0`. "Cannot measure it" and "measured zero" are different facts. |
 | **HAL.METRICS.7** | Every field returned shall be declared in `hfp-metrics.yaml` with `unit`, `kind` and `writable`, and every name used shall exist in that domain's dictionary at the declared `dictionaryVersion`. | There is no SoC-private namespace: a figure only one SoC can produce still gets a dictionary entry, so no consumer grows per-SoC code. |
 | **HAL.METRICS.8** | Every episodic condition shall be reported as a `counter` totalling occurrences, and where a consumer needs per-occurrence detail, `current` fields describing the most recent one. | A capture cannot recover an occurrence it did not sample, so the count is what makes the occurrence visible and the `last_*` fields are what make it diagnosable. |
 | **HAL.METRICS.9** | Where a consumer requires exact PTS, a `*_pts_ms` field shall be within ±1 frame interval of the occurrence it describes. Where genuinely underivable it shall be left undeclared. | Never a sentinel value. |
-| **HAL.METRICS.10** | `MetricElementInfo.instances` shall state how many of the element the hardware supports, and shall agree with the owning HAL's own feature profile. | The ceiling, not the live count. No source index `>= instances` shall ever appear. |
+| **HAL.METRICS.10** | `MetricElementInfo.instances` shall state how many of the element the hardware has, and shall agree with the owning HAL's own feature profile. `getSourcePaths()` shall return exactly that many, at indices `0` to `instances-1`, for the life of the service. | The count, not a ceiling — an idle resource is still served. No source index `>= instances` shall ever appear. |
 | **HAL.METRICS.11** | The implementation shall hold no per-caller state. | Every read is a snapshot of what the source holds now. Any consumer reads at any cadence without affecting another; fan-out is a middleware concern. |
 | **HAL.METRICS.12** | Values shall be presented in canonical units and semantics regardless of the SoC's raw representation. | The provider is an adapter, not a passthrough. A transform normalises representation; it cannot manufacture information, so where a SoC reports only a combined figure the finer-grained fields stay undeclared rather than derived by guesswork. |
 | **HAL.METRICS.13** | Every field returned shall carry the `id` its `<domain>.<element>.<field>`, `unit` and `kind` hash to. | Nothing allocates it, so it needs no registry. A product that serves a name in the wrong unit, or with the wrong kind, becomes a hard mismatch at the consumer rather than a silently wrong number. |
@@ -199,13 +199,12 @@ Names are by **subject, not producer**. Which block sources a figure differs per
 
 | Interface Definition File | Description |
 |---|---|
-| `IMetricsManager.aidl` | Metrics Manager HAL interface — catalog and live source enumeration. |
+| `IMetricsManager.aidl` | Metrics Manager HAL interface — catalog and source enumeration. |
 | `IMetricsSource.aidl` | Metrics HAL interface for a single source (`<domain>.<element>.<instance>`). |
-| `IMetricsManagerEventListener.aidl` | Listener callbacks to clients from the `IMetricsManager` for sources appearing and disappearing. |
-| `Capabilities.aidl` | The catalog — every profile live on this product, with the schema identity. |
+| `Capabilities.aidl` | The catalog — every profile live on this product. |
 | `MetricProfileInfo.aidl` | One layer's declaration — its interface and schema versions, and its domains. |
 | `MetricDomainInfo.aidl` | One domain and its elements, with the dictionary revision it was written against and whether it is derived. |
-| `MetricElementInfo.aidl` | One element — its fields, instance count and cadence. |
+| `MetricElementInfo.aidl` | One element — its fields, instance count and capture cadence. |
 | `MetricFieldInfo.aidl` | One declared field — its identity, unit, kind, writability and id. |
 | `MetricUnit.aidl` | Enum of the units a field's value may carry. |
 | `MetricKind.aidl` | Enum of how a field's value behaves over time. |
@@ -224,7 +223,7 @@ At startup:
 2. The `IMetricsManager` implementation registers itself with the AIDL Service Manager under the service name `MetricsManager` (matching `IMetricsManager.serviceName`).
 3. The implementation builds its catalog from `hfp-metrics.yaml`.
 
-Once registered, the service remains available for the lifetime of the system. Sources come and go beneath it as the elements they measure are created and destroyed.
+Once registered, the service remains available for the lifetime of the system, and so do its sources — every element the hardware has is served whether or not it is in use.
 
 ---
 
@@ -235,7 +234,7 @@ The metric set a product serves is **declared data**, not code. `hfp-metrics.yam
 Two conventions to follow when filling one in:
 
 - **Declare the whole dictionary and comment out what you cannot serve**, one line each, with `# NOT SUPPORTED — <reason>` on the same line. The file then reads as a checklist against the dictionary, so a reviewer sees what the SoC does not do rather than having to notice something missing.
-- **`instances` is the ceiling.** It makes capability checkable before the product boots, lets a test assert that no source index `>= instances` ever appears, and gives CI a cross-check against the owning HAL's own feature profile. The live set comes from `getSourcePaths()`, because it is dynamic — a picture-in-picture decoder exists only while the second session does.
+- **`instances` is the count.** Every instance the hardware has is served, in use or idle, so `getSourcePaths()` returns exactly this many at indices `0` to `instances-1`. It makes capability checkable before the product boots, lets a test assert that no source index `>= instances` ever appears, and gives CI a cross-check against the owning HAL's own feature profile.
 
 ---
 
@@ -271,31 +270,24 @@ flowchart TD
 
 ## Resource Management
 
-Sources are discovered, not opened. `getSourcePaths()` returns those live now; `IMetricsManagerEventListener` reports them appearing and disappearing within the scope the client registered for, so a client attaches at source start rather than re-reading it, and hears nothing from a domain it does not read.
+Sources are discovered, not opened, and the set is static per platform. A source is a hardware resource the vendor always has — a decoder that is idle is still present, and serves its fields with counters that simply do not advance. `getSourcePaths()` therefore returns the same set for the life of the service, matching the declared `instances` exactly, and a consumer enumerates once and holds the result.
 
-Reading a source acquires nothing and blocks nothing — there is no open, no controller, and no single-writer ownership, because a metrics read is side-effect free. `setField()` is the exception and applies only to fields declared `writable` (configuration, tunables and test injection).
+Reading a source acquires nothing and blocks nothing — there is no open, no controller, and no single-writer ownership, because a metrics read is side-effect free. `setField()` is the exception and applies only to fields declared `writable` (configuration, tunables, test injection, and zeroing a high-water mark).
 
-A client that exits leaves no state behind to clean up; listener registrations are dropped when the binder link dies.
+A client that exits leaves no state behind to clean up.
 
 ---
 
 ## Operation and Data Flow
 
 1. **Resolve the catalog once.** `getCapabilities()` returns every domain, element and field the product serves. A consumer keeps the names it understands and ignores the rest. The catalog is built at startup and stands for the life of the service, so this is read once at attach.
-2. **Attach to the live sources.** `getSourcePaths()` gives those live now, and `registerEventListener(pathPrefix, listener)` reports later arrivals and departures **within a scope**:
-
-   | `pathPrefix` | Reports |
-   |---|---|
-   | `""` | every source on the device |
-   | `"av"` | one domain |
-   | `"av.video_decoder"` | one element, every instance of it |
-   | `"av.video_decoder.0"` | one source |
-
-   A consumer that reads everything registers on `"av"`; one that only drives the decode path registers on `"av.video_decoder"` and is not woken for the sink or the clock. Matching is by whole segment, so `"av.video"` selects nothing — a string prefix would otherwise capture `av.video_decoder` and `av.video_sink` together and deliver sources the consumer never asked for.
+2. **Enumerate the sources once.** `getSourcePaths()` names every source this platform serves. The set is static, so a consumer resolves the ones it cares about at attach and holds them for the life of the service.
 3. **Capture each source.** `getAll()` returns every declared field of that source under one coherent snapshot; `getFieldsByName()` and `getFieldsById()` read a subset under the same guarantee. A key the source does not serve is omitted rather than raising an error, whichever form it was given in, so a newer consumer degrades cleanly on an older product.
 
    A steady capture loop should use `getFieldsById()` with the ids it cached at resolve time. It reads the same fields for the life of the source, and their names cannot change between resolutions, so the string form sends the same bytes on every capture — in the request, and again in every pair returned.
-4. **Compute deltas.** Counters are cumulative since source creation, so rates and episode counts are the consumer's subtraction. A counter that advanced between two captures says an episode occurred; the matching `last_*` fields describe the most recent one.
+4. **Compute deltas.** Counters are cumulative since service start, so rates and episode counts are the consumer's subtraction from a baseline it takes itself — at a session boundary, a channel change, or wherever its own reporting window begins. A counter that advanced between two captures says an episode occurred; the matching `last_*` fields describe the most recent one.
+
+   A `high_water` field cannot be made window-relative that way, because a maximum over a window is not the difference of two maxima. Those fields are declared `writable`, and the reader zeros them where its window begins.
 
 `getField()` exists for diagnostics and one-off reads. It is not the capture path — a per-field loop gives up the single-snapshot guarantee that makes paired counters comparable.
 
@@ -344,7 +336,7 @@ metrics:
       dictionaryVersion: "1.1"
       elements:
         - element: video_decoder
-          instances: 2            # ceiling - must agree with hfp-videodecoder.yaml
+          instances: 2            # the count - must agree with hfp-videodecoder.yaml
           captureCadenceMs: 20
           fields:
 
@@ -366,7 +358,8 @@ Descriptions and ids are generated by `scripts/generate.py` from the field dicti
 
 | Condition | Behaviour |
 |---|---|
-| Path not live | `getSource()` returns `null`. |
+| Well-formed path this platform does not serve | `getSource()` returns `null`. |
+| Malformed path (not three segments) | `getSource()` raises `EX_ILLEGAL_ARGUMENT` — a path that is not a path is an error in the caller. |
 | Unknown name in `getFieldsByName()` | Omitted from the result, so a newer consumer degrades cleanly on an older product. |
 | Unknown id in `getFieldsById()` | Omitted from the result, on the same grounds. |
 | Unknown name in `getField()` | Returns `false`. |
@@ -387,7 +380,6 @@ sequenceDiagram
 
     Client->>MGR: getCapabilities()
     note over Client: Resolve once. The catalog stands<br>for the life of the service.
-    Client->>MGR: registerEventListener("av", listener)
     Client->>MGR: getSourcePaths()
     MGR-->>Client: ["av.video_decoder.0", "av.video_sink.0", ...]
     Client->>MGR: getSource("av.video_decoder.0")

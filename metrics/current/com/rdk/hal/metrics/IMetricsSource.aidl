@@ -97,14 +97,22 @@ interface IMetricsSource
 
     /**
      *  @brief Write path — writable fields only: config, tunables, userspace
-     *         population, and test injection.
+     *         population, test injection, and zeroing a high-water mark.
+     *
+     *  A writable high_water field accepts 0 and nothing else. Counters are made
+     *  window-relative by differencing, but a maximum over a window is not the
+     *  difference of two maxima, so the reader zeros the mark where its own
+     *  reporting window begins. There is one reader, so the zero point is not
+     *  contended.
      *
      *  @param[in] name  : bare field name, e.g. "sync_threshold_ms".
      *  @param[in] value : the value to set.
      *  @returns boolean : true on success.
      *
-     *  @exception EX_UNSUPPORTED_OPERATION on a read-only field.
-     *  @exception EX_ILLEGAL_ARGUMENT on an undeclared name.
+     *  @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION on a
+     *             read-only field.
+     *  @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT on an
+     *             undeclared name, or a non-zero write to a high_water field.
      */
     boolean setField(in String name, in long value);
 
@@ -132,4 +140,32 @@ interface IMetricsSource
      *  @returns boolean : true on success.
      */
     boolean getFieldsById(in long[] ids, out MetricIdValue[] values);
+
+    /**
+     *  @brief Write by contract id. Same meaning as setField(); only the key
+     *         differs.
+     *
+     *  The id form matters more here than on the read path, and not for the same
+     *  reason. A read keyed by id saves marshalling a constant string; a WRITE
+     *  keyed by id is a correctness check. A name goes on matching while the
+     *  meaning under it moves - a product declaring `sync_threshold_ms` but
+     *  populating microseconds still matches by name - and a write that lands on
+     *  a field whose unit or kind is not what the caller believed sets the wrong
+     *  value rather than merely reporting one. Because the id hashes the path,
+     *  unit and kind, that mismatch fails the write instead.
+     *
+     *  It also lets a client that resolved ids once hold nothing else. Without
+     *  this, a caller keeps its name map alive purely to write.
+     *
+     *  @param[in] id    : contract id, from MetricFieldInfo.id.
+     *  @param[in] value : the value to set.
+     *  @returns boolean : true on success.
+     *
+     *  @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION on a
+     *             read-only field.
+     *  @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT on an id this
+     *             source does not serve, or a non-zero write to a high_water
+     *             field.
+     */
+    boolean setFieldById(in long id, in long value);
 }

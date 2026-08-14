@@ -108,21 +108,20 @@ mapping:
                     mapping:
 
                       # The thing within the domain that produces figures.
-                      # Declared ONCE per element type — instances are not
-                      # declared, they are discovered at runtime, because they
-                      # are dynamic (a PiP decoder exists only while the
-                      # second session does).
+                      # Declared ONCE per element type — the individual
+                      # instances are not listed, only counted, because they
+                      # are identical in everything but index.
                       element:
                         type: str
                         required: true
                         pattern: '^[a-z][a-z0-9_]*$'
 
-                      # How many of this element the hardware SUPPORTS — not
-                      # how many are live. The live set is discovered at
-                      # runtime; this is the ceiling, so dual-decode capability
-                      # is checkable before boot and a test can assert that no
-                      # source index >= instances ever appears. MUST agree with
-                      # the owning HAL's own HFP.
+                      # How many of this element the hardware HAS. Every one is
+                      # served whether or not it is in use, so this is the count
+                      # and getSourcePaths() returns exactly this many. Dual-decode
+                      # capability is checkable before boot and a test can assert
+                      # that no source index >= instances ever appears. MUST agree
+                      # with the owning HAL's own HFP.
                       instances:
                         type: int
                         required: true

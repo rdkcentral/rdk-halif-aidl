@@ -30,13 +30,14 @@ package com.rdk.hal.metrics;
 @Backing(type="int")
 enum MetricKind {
 
-    /** Cumulative since source creation. May be differenced. */
+    /** Cumulative since service start. May be differenced. */
     COUNTER = 0,
 
     /** A live sample. Absolute - never sum it. */
     CURRENT = 1,
 
-    /** Monotone maximum since source creation. Absolute. */
+    /** Monotone maximum since service start, or since the reader last zeroed
+     *  it where the field is writable. Absolute. */
     HIGH_WATER = 2,
 
     /** A tunable's present value. Absolute. */

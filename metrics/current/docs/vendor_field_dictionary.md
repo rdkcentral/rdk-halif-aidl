@@ -14,9 +14,9 @@ The four kinds:
 
 | `kind` | Values shall be |
 |---|---|
-| `counter` | cumulative since source creation, monotonically non-decreasing, and never reset on flush or seek |
+| `counter` | cumulative since service start, monotonically non-decreasing, and never reset on flush or seek |
 | `current` | a live sample re-read each capture, absolute, and never summed |
-| `high_water` | a monotone maximum since source creation, absolute |
+| `high_water` | a monotone maximum since service start, absolute |
 | `config` | the present value of a tunable, absolute |
 
 A field marked **writable** additionally accepts `setField()`; every other field rejects it.
@@ -37,9 +37,9 @@ Each field declares a **kind**, which governs the arithmetic a consumer may do:
 
 | Kind | Meaning | Consumer may |
 |---|---|---|
-| `counter` | Cumulative since source creation. Monotonically non-decreasing; never reset on flush or seek | difference it; sum deltas |
+| `counter` | Cumulative since service start. Monotonically non-decreasing; never reset on flush or seek | difference it; sum deltas |
 | `current` | A live sample, re-read each capture. Absolute | read it; **never sum it** |
-| `high_water` | Monotone max since source creation. Absolute | read it; compare it |
+| `high_water` | Monotone max since service start. Absolute | read it; compare it, and zero it where `writable` |
 | `config` | A tunable's present value. Absolute | read it; write it where `writable` |
 
 **A field a product cannot measure is undeclared**, and is therefore absent from a read — never returned as `0`. "This SoC cannot measure it" and "it measured zero" are different facts and the interface keeps them apart.
@@ -110,7 +110,7 @@ The dictionary revision pins the set of names; a field's `id` pins its unit and 
 | `underflow_duration_ms` | int64 · ms · `counter` | **Driver** | `0x23e55a88f5bbbd94` | Cumulative wall-clock time across all video-underflow episodes (Σ of each episode's start→clear). Paired with `underflowed`. An underflow episode manifests on screen as a freeze. |
 | `freeze_duration_ms` | int64 · ms · `counter` | **Driver** | `0x1c86c5dfa4db5108` | Cumulative on-screen time the same frame was held due to **repeated-to-cover-missing-frame** (customer-visible freeze) — the time integral of `frames_repeated_missing_frame`. Excludes FRC cadence repeats. Derived from a Driver figure. |
 | `freeze_event_count` | int64 · events · `counter` | **Driver** | `0x5196f6826e91a801` | Count of freeze episodes — +1 per episode start. Paired with `freeze_duration_ms`: mean freeze length = `freeze_duration_ms` / `freeze_event_count`. |
-| `max_freeze_duration_ms` | int64 · ms · `high_water` | **Driver** | `0x088d619c00c1c539` | Longest single freeze episode observed since instance creation. Monotone non-decreasing high-water mark. |
+| `max_freeze_duration_ms` | int64 · ms · `high_water` · **writable** | **Driver** | `0x088d619c00c1c539` | Longest single freeze episode observed. Monotone non-decreasing high-water mark since service start, or since the reader last zeroed it. Writable with 0 only, because a maximum over a window cannot be recovered by differencing two maxima - the reader zeros it where its reporting window begins. |
 | `render_latency_sum_us` | int64 · us · `counter` | **Driver** | `0x75f862796424b00d` | Running sum of per-frame render latency = *(frame presented to scanout)* − *(frame received at sink input)*. Needs the sink's internal present timestamp. Paired with `frames_presented`. |
 | `buffer_depth_ms` | int64 · ms · `current` | **Driver** | `0x111d82c20cb9e693` | Buffered decoded media ahead of the present position **now** — Σ presentation-durations of frames queued but not yet presented. Live sample re-read each capture; **not** cumulative. **Warning:** SoC- and use-case-specific. |
 | `last_underflow_trigger` | int64 · none · `current` | **Driver** | `0x03210d8159685756` | Closed-vocabulary cause of the most recent underflow episode: startup prefill, mid-stream, seek recovery, trickplay recovery, content boundary. Distinguishes an expected starvation from a defect. |
@@ -151,7 +151,7 @@ The dictionary revision pins the set of names; a field's `id` pins its unit and 
 | Field | Type · unit · kind | Provider | id | Definition and population rule |
 |---|---|---|---|---|
 | `sync_offset_ms` | int64 · ms · `current` | **Driver** | `0x0853e5868c5f2bd8` | The driver's predicted current audio-vs-video presentation offset. **Sign:** audio leads → **positive**, video leads → **negative**. Live sample, not cumulative. |
-| `sync_max_abs_offset_ms` | int64 · ms · `high_water` | **Driver** | `0x20d08f573aeb1229` | Largest `abs(sync_offset_ms)` observed since instance creation. Monotone non-decreasing high-water mark — derived from `sync_offset_ms`. |
+| `sync_max_abs_offset_ms` | int64 · ms · `high_water` · **writable** | **Driver** | `0x20d08f573aeb1229` | Largest `abs(sync_offset_ms)` observed. Monotone non-decreasing high-water mark since service start, or since the reader last zeroed it - derived from `sync_offset_ms`. Writable with 0 only, because a maximum over a window cannot be recovered by differencing two maxima. |
 | `sync_time_over_threshold_ms` | int64 · ms · `counter` | **Driver** | `0x323c3766c9e3638c` | Cumulative time `abs(sync_offset_ms)` exceeded `sync_threshold_ms` — the time integral of out-of-sync operation. Derived from `sync_offset_ms` and `sync_threshold_ms`. |
 | `sync_threshold_ms` | int64 · ms · `config` · **writable** | **Driver** | `0x4c981a6fd5bbf977` | The offset magnitude beyond which playback counts as out of sync. The threshold `sync_time_over_threshold_ms` integrates against and `sync_max_abs_offset_ms` is judged by — declaring those two without this leaves both uninterpretable. Writable so an integrator can tighten it per product. |
 | `resync_count` | int64 · events · `counter` | **Driver** | `0x1e11b09c212e1a59` | Count of A/V-sync **corrections** the clock applied — each discrete realignment to re-align audio and video. +1 per applied correction. |

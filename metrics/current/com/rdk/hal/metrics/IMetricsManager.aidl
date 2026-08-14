@@ -19,7 +19,6 @@
 package com.rdk.hal.metrics;
 import com.rdk.hal.metrics.Capabilities;
 import com.rdk.hal.metrics.IMetricsSource;
-import com.rdk.hal.metrics.IMetricsManagerEventListener;
 
 /**
  *  @brief     Service entry point for com.rdk.hal.metrics.
@@ -70,76 +69,34 @@ interface IMetricsManager
     Capabilities getCapabilities();
 
     /**
-     *  @brief The live source paths, e.g. "av.video_decoder.0".
+     *  @brief Every source path this platform serves, e.g. "av.video_decoder.0".
      *
-     *  The LIVE set, which is dynamic. How many of an element can exist is
-     *  declared as MetricElementInfo.instances; which exist right now is this.
+     *  STATIC PER PLATFORM. A source is a hardware resource the vendor always
+     *  has - idle is not absent - so the set is fixed for the life of the
+     *  service and matches MetricElementInfo.instances exactly. A consumer
+     *  enumerates once and holds the result.
      *
-     *  @returns String[] : live source paths.
+     *  A source that is idle serves its fields like any other; its counters
+     *  simply do not advance.
+     *
+     *  @returns String[] : every source path this platform serves.
      */
     String[] getSourcePaths();
 
     /**
      *  @brief Access to one source.
      *
+     *  A path this platform serves always resolves, whether or not the resource
+     *  is currently in use.
+     *
      *  @param[in] path : "<domain>.<element>.<instance>", from getSourcePaths().
-     *  @returns IMetricsSource : the source, or null if the path is not live.
+     *  @returns IMetricsSource : the source, or null if this platform declares
+     *                            no such source.
+     *
+     *  @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if `path` is
+     *             not three segments. A well-formed path that this platform does
+     *             not serve returns null; a path that is not a path at all is an
+     *             error in the caller.
      */
     @nullable IMetricsSource getSource(in String path);
-
-    /**
-     *  @brief Registers for source appear/disappear notification within a scope.
-     *
-     *  `pathPrefix` selects how much of the device a consumer hears about, named
-     *  the same way the sources themselves are:
-     *
-     *      ""                      every source on the device
-     *      "av"                    one domain
-     *      "av.video_decoder"      one element, every instance of it
-     *      "av.video_decoder.0"    one source
-     *
-     *  A consumer that reads everything registers on "av". One that only drives
-     *  the decode path registers on "av.video_decoder" and is not woken for the
-     *  sink or the clock.
-     *
-     *  MATCHING IS BY WHOLE SEGMENT, not by string prefix: "av.video" selects
-     *  nothing, because no element is named "video". A string prefix would
-     *  silently capture "av.video_decoder" and "av.video_sink" together, and a
-     *  consumer would receive sources it did not ask for.
-     *
-     *  A listener may register more than once with different prefixes. The
-     *  registrations are independent, and a source matching two of them is
-     *  reported once per matching registration.
-     *
-     *  The prefix must name a domain or element the product declares, so a typo
-     *  fails here rather than leaving a registration that is silently never
-     *  called. It need not have a live source yet - the live set is dynamic, and
-     *  registering before one exists is the point.
-     *
-     *  @param[in] pathPrefix : the scope to listen within; "" for the whole device.
-     *  @param[in] listener   : the listener.
-     *  @returns boolean : true on success, false if this listener is already
-     *                     registered for this prefix.
-     *
-     *  @exception EX_ILLEGAL_ARGUMENT if `pathPrefix` names no declared domain or
-     *             element.
-     *  @exception EX_NULL_POINTER if `listener` is null.
-     */
-    boolean registerEventListener(in String pathPrefix,
-                                  in IMetricsManagerEventListener listener);
-
-    /**
-     *  @brief Unregisters one previously registered scope.
-     *
-     *  Removes the registration made with this exact `pathPrefix`, leaving any
-     *  other registration the same listener holds in place.
-     *
-     *  @param[in] pathPrefix : the prefix the listener was registered with.
-     *  @param[in] listener   : the listener.
-     *  @returns boolean : true on success, false if no such registration exists.
-     *
-     *  @exception EX_NULL_POINTER if `listener` is null.
-     */
-    boolean unregisterEventListener(in String pathPrefix,
-                                    in IMetricsManagerEventListener listener);
 }

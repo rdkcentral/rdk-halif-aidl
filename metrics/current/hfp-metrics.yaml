@@ -42,9 +42,9 @@
 #   The first three address a source; the fourth selects a field within it.
 #   THIS FILE DECLARES THE ELEMENT, NOT THE INSTANCE. It states that a
 #   video_decoder reports frames_decoded, once, plus `instances: 2` - it never
-#   enumerates .0 and .1. The live set is discovered at runtime through
-#   getSourcePaths(), because it is dynamic: a picture-in-picture decoder
-#   exists only while the second session does.
+#   enumerates .0 and .1. getSourcePaths() names them at runtime, and returns
+#   exactly `instances` of them: every decoder the hardware has is served,
+#   whether or not a session is using it.
 #
 # ---------------------------------------------------------------------------
 # ONE PROFILE PER LAYER
@@ -82,10 +82,11 @@
 #     asserts. A field without one cannot be implemented, and the generator
 #     rejects it.
 #   * captureCadenceMs may be TIGHTER than the 50 ms floor, never looser.
-#   * `instances` is the count the hardware SUPPORTS, not the count that is
-#     live. It makes capability checkable before boot, lets a test assert that
-#     no source index >= instances ever appears, and MUST agree with the owning
-#     HAL's own feature profile - a CI-catchable cross-check.
+#   * `instances` is how many of the element the hardware HAS. Every one is
+#     served, in use or idle, so getSourcePaths() returns exactly this many. It
+#     makes capability checkable before boot, lets a test assert that no source
+#     index >= instances ever appears, and MUST agree with the owning HAL's own
+#     feature profile - a CI-catchable cross-check.
 #
 # Every value is int64 (AIDL long, signed 64-bit).
 
@@ -310,11 +311,15 @@ metrics:
               unit: ms
               kind: high_water
               id: '0x088d619c00c1c539'
+              writable: true
               provider: Driver
               derivedFrom: av.video_sink.frames_repeated_missing_frame
               description: >
-                Longest single freeze episode observed since instance creation. Monotone
-                non-decreasing high-water mark.
+                Longest single freeze episode observed. Monotone non-decreasing
+                high-water mark since service start, or since the reader last zeroed
+                it. Writable with 0 only, because a maximum over a window cannot be
+                recovered by differencing two maxima - the reader zeros it where its
+                reporting window begins.
 
             - name: render_latency_sum_us
               unit: us
@@ -731,11 +736,14 @@ metrics:
               unit: ms
               kind: high_water
               id: '0x20d08f573aeb1229'
+              writable: true
               provider: Driver
               derivedFrom: av.clock.sync_offset_ms
               description: >
-                Largest `abs(sync_offset_ms)` observed since instance creation. Monotone
-                non-decreasing high-water mark — derived from `sync_offset_ms`.
+                Largest `abs(sync_offset_ms)` observed. Monotone non-decreasing
+                high-water mark since service start, or since the reader last zeroed
+                it - derived from `sync_offset_ms`. Writable with 0 only, because a
+                maximum over a window cannot be recovered by differencing two maxima.
 
             - name: sync_time_over_threshold_ms
               unit: ms

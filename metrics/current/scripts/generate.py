@@ -116,10 +116,10 @@ UNIT_ALIASES = {"µs": "us"}
 # How each kind may be read. Stated once in the dictionary, and the requirement
 # a field carries is that its values behave this way.
 KIND_RULES = {
-    "counter": "cumulative since source creation, monotonically non-decreasing, "
+    "counter": "cumulative since service start, monotonically non-decreasing, "
                "and never reset on flush or seek",
     "current": "a live sample re-read each capture, absolute, and never summed",
-    "high_water": "a monotone maximum since source creation, absolute",
+    "high_water": "a monotone maximum since service start, absolute",
     "config": "the present value of a tunable, absolute",
 }
 

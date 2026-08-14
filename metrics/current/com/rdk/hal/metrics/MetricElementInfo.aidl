@@ -23,9 +23,8 @@ import com.rdk.hal.metrics.MetricFieldInfo;
  *  @brief     One element of a domain, and everything it serves.
  *
  *  An element is declared once, as a type — instances are not enumerated here.
- *  How many the hardware supports is 'instances'; which of them are live comes
- *  from IMetricsManager.getSourcePaths(), because the live set is dynamic (a
- *  picture-in-picture decoder exists only while the second session does).
+ *  How many the hardware has is 'instances', and
+ *  IMetricsManager.getSourcePaths() names them.
  */
 @VintfStability
 parcelable MetricElementInfo
@@ -36,10 +35,11 @@ parcelable MetricElementInfo
     MetricFieldInfo[] fields;
 
     /**
-     *  How many of this element the hardware SUPPORTS — the ceiling, not the
-     *  live count. Declaring it lets capability be checked before the product
-     *  boots, and lets a test assert that no source index >= instances ever
-     *  appears. It must agree with the owning HAL's own feature profile.
+     *  How many of this element the hardware has. Every one of them is served,
+     *  whether or not it is currently in use, so this is the count and not a
+     *  ceiling: getSourcePaths() returns exactly this many, at indices 0 to
+     *  instances-1. Declaring it lets capability be checked before the product
+     *  boots, and it must agree with the owning HAL's own feature profile.
      */
     int instances;
 
