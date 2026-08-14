@@ -1,3 +1,6 @@
+# Required: the profile, the schema and the upper-layer dictionaries are YAML.
+PyYAML>=6.0
+
 # Optional: enables schema validation in generate.py.
 # Without it the profile is still generated and checked, but never validated
 # against hfp-metrics-schema.yaml, and generate.py says so rather than

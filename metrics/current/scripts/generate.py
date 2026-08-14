@@ -113,6 +113,14 @@ COMBINED = ROOT / "docs/combined_field_dictionary.md"
 # Units render for humans in one form and travel in another.
 UNIT_ALIASES = {"µs": "us"}
 
+
+class DeclarationError(Exception):
+    """A declaration that cannot be loaded without losing part of itself.
+
+    Raised before anything is written. A repeated name does not conflict at
+    load time - the later one simply replaces the earlier - so nothing
+    downstream can tell a declaration was dropped."""
+
 # How each kind may be read. Stated once in the dictionary, and the requirement
 # a field carries is that its values behave this way.
 KIND_RULES = {
@@ -176,6 +184,12 @@ def load_events(doc: dict) -> dict:
         for element in domain["elements"]:
             for ev in element.get("events") or []:
                 key = f"{domain['domain']}.{element['element']}:{ev['kind']}"
+                if key in events:
+                    raise DeclarationError(
+                        f"'{domain['domain']}.{element['element']}' declares the "
+                        f"event '{ev['kind']}' twice. One payload specification "
+                        f"would be dropped, and the dictionary would show the "
+                        f"other as though it were the only one.")
                 events[key] = {
                     "element": f"{domain['domain']}.{element['element']}",
                     "kind": ev["kind"],
@@ -211,6 +225,12 @@ def _load(doc: dict, entries: dict, derived: dict, layer: str) -> None:
         for element in domain["elements"]:
             for f in element["fields"]:
                 path = f"{domain['domain']}.{element['element']}.{f['name']}"
+                if path in entries:
+                    raise DeclarationError(
+                        f"{layer}: '{path}' is declared twice. The second "
+                        f"declaration would replace the first with nothing to "
+                        f"show for it - ids, the dictionary and the checks would "
+                        f"all describe whichever came last.")
                 entries[path] = {
                     "domain": domain["domain"],
                     "element": element["element"],
@@ -588,14 +608,22 @@ def main() -> int:
         description="Regenerate and check everything the HAL Field Dictionary "
                     "drives. Takes no arguments.").parse_args()
 
-    entries, derived, versions, events = load_profile()
+    try:
+        entries, derived, versions, events = load_profile()
+    except DeclarationError as duplicate:
+        print(f"error: {duplicate}", file=sys.stderr)
+        return 1
     if not entries:
         print(f"error: no fields found in {HFP}", file=sys.stderr)
         return 2
 
     # Before writing anything: a path claimed by two layers cannot be rendered
     # in the combined view at all, so fail while the tree is still untouched.
-    layers, _ = load_upper()
+    try:
+        layers, _ = load_upper()
+    except DeclarationError as duplicate:
+        print(f"error: {duplicate}", file=sys.stderr)
+        return 1
     collisions = check_layers(entries, layers)
     if collisions:
         for collision in collisions:

@@ -105,30 +105,14 @@ target_include_directories(${LIB_NAME} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${_BINDER_INC}")
 
-# Dependency component headers (staged by the toolchain build into HALIF_INCLUDE_DIR).
-# Includes the transitive closure of imports so headers reachable via a direct
-# dependency (e.g. common via audiodecoder) are also on the search path.
-if (NOT DEFINED HALIF_INCLUDE_DIR)
-    message(FATAL_ERROR "HALIF_INCLUDE_DIR is required (this component has HAL dependencies). "
-        "Set it to the directory holding dependency headers (e.g. out/build/include).")
-endif()
-if (DEFINED HALIF_INCLUDE_DIR)
-    target_include_directories(${LIB_NAME} PRIVATE
-    "${HALIF_INCLUDE_DIR}/common/current/include")
-endif()
-
 target_link_directories(${LIB_NAME} PRIVATE
     "${BINDER_SDK_DIR}/lib/binder"
 )
-if (NOT DEFINED HALIF_LIB_DIR)
-    message(FATAL_ERROR "HALIF_LIB_DIR is required (this component has HAL dependencies). "
-        "Set it to the directory holding dependency lib*-cpp.so (e.g. out/target/lib/rdk-halif-aidl).")
-endif()
 if (DEFINED HALIF_LIB_DIR)
     target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
 endif()
 
-target_link_libraries(${LIB_NAME} PRIVATE binder utils common-vcurrent-cpp)
+target_link_libraries(${LIB_NAME} PRIVATE binder utils)
 
 # The target_link_directories() above are BUILD-time search paths. By default
 # CMake bakes them into the library as RPATH/RUNPATH, which ships absolute build
