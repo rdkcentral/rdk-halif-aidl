@@ -42,10 +42,10 @@ import com.rdk.hal.metrics.MetricUnit;
  *  declaration's descriptions ride along - repeated on every source, to say something
  *  fixed that no consumer computes with. Prose belongs where it is read.
  *
- *  Provenance is the same case. Whether a figure is measured or computed changes what
- *  a consumer may do with it, so it is carried - as MetricDomainInfo.derived, once per
- *  domain, because derivation is a property of the domain. Which inputs a computed
- *  figure was derived from does not change how it is read, and stays in the profile.
+ *  Provenance is the same case. `kind` already fixes what arithmetic is valid, and it
+ *  fixes it the same way whether the figure came from an instrument or from a stated
+ *  computation over other fields. Where a figure came from, and which inputs produced
+ *  it, are stated in the dictionary and stay in the profile.
  */
 @VintfStability
 parcelable MetricFieldInfo

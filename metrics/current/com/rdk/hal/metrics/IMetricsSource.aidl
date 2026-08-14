@@ -55,33 +55,33 @@ interface IMetricsSource
     MetricFieldInfo[] getFields();
 
     /**
-     *  @brief Whole-source read — every declared field under ONE coherent
-     *         snapshot, so paired fields (frames decoded vs presented) can
-     *         never produce an impossible ratio.
+     *  @brief Read by name — ONE coherent snapshot, so paired fields (frames
+     *         decoded vs presented) can never produce an impossible ratio.
      *
      *  Atomicity is an obligation on the implementation, not a property to be
-     *  discovered: a source spanning two hardware blocks latches both.
-     *
-     *  This is the normal read for a capture loop.
-     *
-     *  @param[out] values : fully-qualified name/value pairs.
-     *  @returns boolean : true on success.
-     */
-    boolean getAll(out MetricKVPair[] values);
-
-    /**
-     *  @brief Subset read — the named fields only, same single-snapshot
-     *         guarantee.
+     *  discovered: a source spanning two hardware blocks latches both. It holds
+     *  whatever was asked for, and it is the reason a read is per source rather
+     *  than per field.
      *
      *  Names are the bare field names from `getFields()`. Unknown names are
      *  omitted from the result rather than raising an error, so a newer consumer
-     *  degrades cleanly on an older product.
+     *  degrades cleanly on an older product. A null entry within the array is an
+     *  unknown name like any other, and is omitted on the same rule.
      *
-     *  @param[in]  names  : bare field names to read, e.g. "frames_decoded".
-     *  @param[out] values : those that exist on this source.
+     *  PASSING NULL READS EVERY FIELD. A caller that wants the whole source says
+     *  so by naming nothing, rather than by echoing back the list `getFields()`
+     *  just gave it. That keeps one read method where two would otherwise drift
+     *  apart, and it is the form to use for a diagnostic dump or a bug report -
+     *  MetricKVPair carries the fully-qualified name, so the result still means
+     *  something once it has outlived the call.
+     *
+     *  @param[in]  names  : bare field names to read, e.g. "frames_decoded";
+     *                       null for every field this source serves.
+     *  @param[out] values : fully-qualified name/value pairs, for those names
+     *                       this source serves.
      *  @returns boolean : true on success.
      */
-    boolean getFieldsByName(in String[] names, out MetricKVPair[] values);
+    boolean getFieldsByName(in @nullable String[] names, out MetricKVPair[] values);
 
     /**
      *  @brief Single-field read. Diagnostics and one-off reads, not the capture
@@ -117,8 +117,8 @@ interface IMetricsSource
     boolean setField(in String name, in long value);
 
     /**
-     *  @brief Subset read by contract id — the capture path, same single-snapshot
-     *         guarantee as getAll() and getFieldsByName().
+     *  @brief Read by contract id — the capture path, same single-snapshot
+     *         guarantee as getFieldsByName().
      *
      *  Identical in meaning to getFieldsByName(); only the key differs. A capture
      *  loop reads the same field set every cadence for the life of a source, and
@@ -131,15 +131,21 @@ interface IMetricsSource
      *  result rather than raising an error, exactly as an unknown name is
      *  omitted, so a newer consumer degrades cleanly on an older product.
      *
-     *  Prefer getAll() where the values outlive the call - a diagnostic dump, a
-     *  bug report, anything merged across sources - because MetricKVPair carries
-     *  the fully-qualified name and this does not.
+     *  PASSING NULL READS EVERY FIELD, as it does on getFieldsByName(). With that
+     *  and setFieldById(), a client that resolved its ids once holds ids and
+     *  nothing else - there is no call left that forces it to keep a name map
+     *  alive.
      *
-     *  @param[in]  ids    : contract ids to read, from MetricFieldInfo.id.
+     *  Prefer getFieldsByName() where the values outlive the call - a diagnostic
+     *  dump, a bug report, anything merged across sources - because MetricKVPair
+     *  carries the fully-qualified name and this does not.
+     *
+     *  @param[in]  ids    : contract ids to read, from MetricFieldInfo.id; null
+     *                       for every field this source serves.
      *  @param[out] values : those this source serves, id and value.
      *  @returns boolean : true on success.
      */
-    boolean getFieldsById(in long[] ids, out MetricIdValue[] values);
+    boolean getFieldsById(in @nullable long[] ids, out MetricIdValue[] values);
 
     /**
      *  @brief Write by contract id. Same meaning as setField(); only the key

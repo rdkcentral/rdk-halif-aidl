@@ -27,7 +27,7 @@ package com.rdk.hal.metrics;
  *
  *  MetricKVPair is self-describing: its fully-qualified name still means
  *  something in a log line, a merged set or a bug report, long after the call
- *  that produced it. That is worth paying for once, and it is what getAll()
+ *  that produced it. That is worth paying for once, and it is what getFieldsByName()
  *  returns.
  *
  *  This pair is not self-describing and does not try to be. It is two int64s,

@@ -73,8 +73,9 @@ interface IMetricsManager
      *
      *  STATIC PER PLATFORM. A source is a hardware resource the vendor always
      *  has - idle is not absent - so the set is fixed for the life of the
-     *  service and matches MetricElementInfo.instances exactly. A consumer
-     *  enumerates once and holds the result.
+     *  service, and a consumer enumerates once and holds the result. This is the
+     *  only statement of how many of an element exist; the catalog describes an
+     *  element once, as a type.
      *
      *  A source that is idle serves its fields like any other; its counters
      *  simply do not advance.

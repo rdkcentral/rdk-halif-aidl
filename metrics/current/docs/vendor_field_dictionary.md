@@ -167,9 +167,9 @@ The dictionary revision pins the set of names; a field's `id` pins its unit and 
 
 ## Events
 
-A counter says how many occurrences there have been and a `last_*` field describes the newest. An event carries each occurrence individually, so several inside one capture interval are not collapsed to their newest member. An element declares both, and a consumer picks by whether it needs totals or fidelity.
+A counter says how many occurrences there have been and a `last_*` field describes the newest. This section specifies the occurrence itself - what it is and what accompanies it - so a vendor knows exactly which moment moves those fields and a test can assert it did.
 
-The description of each event **is its trigger**: the instant a vendor raises it. Payload names are bare, because the event already fixes which source and which occurrence they belong to. A payload a product cannot derive is omitted from the event rather than sent as a placeholder.
+The description of each event **is its trigger**: the instant a vendor detects it. Payload names are bare, because the event already fixes which source and which occurrence they belong to. A payload a product cannot derive is omitted from the event rather than stated as a placeholder.
 
 ### `av.video_decoder`
 
@@ -269,14 +269,14 @@ Raised when audio resumes, closing the period the preceding `silence` opened. A 
 
 An underflow, a freeze, a decode error, a silence period and a first frame happen at an instant rather than describing a level. Each is reported as ordinary fields arriving in the same snapshot as everything else: **counters** say how many have occurred, **`last_*` fields** say what the most recent one was.
 
-A counter that advanced between two captures is what makes the occurrence visible; the `last_*` fields are what make it diagnosable. Because both arrive in one `getAll()` snapshot, an occurrence and the counters around it are always mutually consistent.
+A counter that advanced between two captures is what makes the occurrence visible; the `last_*` fields are what make it diagnosable. Because both arrive in one snapshot, an occurrence and the counters around it are always mutually consistent.
 
-Each occurrence has **two** reporting halves, and an implementation owes both:
+Each occurrence has **two** declared halves, and an implementation owes both:
 
 - the **fields** it moves, listed below with the instant each is written
-- the **event** it raises, named below and specified with its payload under [Events](#events)
+- the **occurrence** it raises, named below and specified with its payload under [Events](#events)
 
-They answer different questions. A consumer that missed the moment still sees the counters; a listener sees every occurrence in a burst, which the counters collapse. A field is written at the instant stated and not re-derived at capture time.
+A field is written at the instant stated and not re-derived at capture time. The occurrence specification is what a test drives the implementation against, so the moment a vendor detects is pinned to the field movements it must produce.
 
 ### Underflow — `av.video_sink`, `av.audio_sink`
 
@@ -362,7 +362,7 @@ Not an episode and has no counter: it is re-set each time playback restarts, so 
 
 ### What this trades
 
-Read by capture alone, several occurrences inside one capture interval advance the counter by several and leave the `last_*` fields describing the newest only. Rates and totals stay exact; the intermediate occurrences of a burst are not individually described. A consumer that needs each one listens for the element's events instead, which is the reason both halves are declared.
+Several occurrences inside one capture interval advance the counter by several and leave the `last_*` fields describing the newest only. Rates and totals stay exact; the intermediate occurrences of a burst are not individually described. That is the deliberate trade: it removes per-source retention, sequence numbering and cursor state from every vendor implementation, and no consumer requirement asks for the middle of a burst.
 
 **Not every element has episodic conditions.** An A/V clock reports samples and has nothing episodic to report, so it declares no `last_*` fields. Absence from the declaration is the answer.
 

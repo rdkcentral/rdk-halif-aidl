@@ -39,17 +39,5 @@ parcelable MetricDomainInfo
      */
     String dictionaryVersion;
 
-    /**
-     *  True when this domain's fields are computed as a stated function of measured
-     *  fields, false when they are read from an instrument.
-     *
-     *  A vendor never declares a derived domain and a SoC never serves one, but
-     *  getCapabilities() returns the union of every profile live on the device, and the
-     *  layers above the HAL are exactly the ones that declare them. Without this flag a
-     *  computed figure arrives indistinguishable from a measured one, and a consumer
-     *  differencing it produces a number nothing ever measured.
-     */
-    boolean derived;
-
     MetricElementInfo[] elements;
 }

@@ -304,14 +304,13 @@ def emit_events_md(events: dict) -> list[str]:
     """The events section: for each occurrence, its name, trigger and payload."""
     out = ["## Events", "",
            "A counter says how many occurrences there have been and a `last_*` field "
-           "describes the newest. An event carries each occurrence individually, so "
-           "several inside one capture interval are not collapsed to their newest "
-           "member. An element declares both, and a consumer picks by whether it "
-           "needs totals or fidelity.", "",
+           "describes the newest. This section specifies the occurrence itself - what "
+           "it is and what accompanies it - so a vendor knows exactly which moment "
+           "moves those fields and a test can assert it did.", "",
            "The description of each event **is its trigger**: the instant a vendor "
-           "raises it. Payload names are bare, because the event already fixes which "
+           "detects it. Payload names are bare, because the event already fixes which "
            "source and which occurrence they belong to. A payload a product cannot "
-           "derive is omitted from the event rather than sent as a placeholder."]
+           "derive is omitted from the event rather than stated as a placeholder."]
     last_element = None
     for ev in events.values():
         if ev["element"] != last_element:

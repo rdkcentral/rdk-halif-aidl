@@ -90,12 +90,12 @@ mapping:
                 type: str
                 required: true
 
-              # RUNTIME. true  = computed from measured fields;
-              #                   platform-declared only.
-              #          false = measured by an instrument. Default false.
-              # Carried to the consumer because differencing a computed value
-              # as though it were an instrument reading produces a number that
-              # was never measured.
+              # DECLARATION. true  = computed from measured fields;
+              #                       platform-declared only.
+              #              false = measured by an instrument. Default false.
+              # Read by the vendor, the test suite and the dictionary. `kind`
+              # is what tells a consumer which arithmetic is valid, and it says
+              # the same thing either way.
               derived:
                 type: bool
                 required: false
@@ -116,12 +116,13 @@ mapping:
                         required: true
                         pattern: '^[a-z][a-z0-9_]*$'
 
-                      # How many of this element the hardware HAS. Every one is
-                      # served whether or not it is in use, so this is the count
-                      # and getSourcePaths() returns exactly this many. Dual-decode
-                      # capability is checkable before boot and a test can assert
-                      # that no source index >= instances ever appears. MUST agree
-                      # with the owning HAL's own HFP.
+                      # DECLARATION. How many of this element the hardware HAS.
+                      # Every one is served whether or not it is in use, so
+                      # getSourcePaths() names exactly this many at runtime.
+                      # Declared so dual-decode capability is checkable before
+                      # boot and a test can assert that no source index >=
+                      # instances ever appears. MUST agree with the owning HAL's
+                      # own HFP.
                       instances:
                         type: int
                         required: true
@@ -192,9 +193,7 @@ mapping:
                               # computed from, named <domain>.<element>.<field>.
                               # Declaring a derived field without its input is
                               # an undeliverable declaration, not a partial
-                              # capability. What a consumer needs at runtime is
-                              # whether a figure is computed at all, which is
-                              # the domain's `derived`.
+                              # capability.
                               derivedFrom:
                                 type: str
                                 required: false
