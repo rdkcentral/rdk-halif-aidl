@@ -20,7 +20,7 @@
 # *
 #** ******************************************************************************
 
-# HAL Feature Profile for avbuffer
+# HAL Feature Profile for ringbuffer
 
 ringbuffer:
   interfaceVersion: current
