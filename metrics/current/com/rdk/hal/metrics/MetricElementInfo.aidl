@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.metrics;
+import com.rdk.hal.metrics.MetricEventInfo;
 import com.rdk.hal.metrics.MetricFieldInfo;
 
 /**
@@ -53,4 +54,14 @@ parcelable MetricElementInfo
      *  rather than inferring a default that is stated elsewhere.
      */
     int captureCadenceMs;
+
+    /**
+     *  The occurrences this element pushes, with the payload each carries.
+     *
+     *  Read before registering on IMetricsSource: an element declaring none
+     *  raises none. Empty is an answer, not an omission - it says this element
+     *  has nothing whose individual occurrences a consumer could need, which is
+     *  true of anything reporting only levels.
+     */
+    MetricEventInfo[] events;
 }

@@ -167,9 +167,11 @@ The dictionary revision pins the set of names; a field's `id` pins its unit and 
 
 ## Events
 
-A counter says how many occurrences there have been and a `last_*` field describes the newest. This section specifies the occurrence itself - what it is and what accompanies it - so a vendor knows exactly which moment moves those fields and a test can assert it did.
+A counter says how many occurrences there have been and a `last_*` field describes the newest. An event carries each occurrence individually, so several inside one capture interval are not collapsed to their newest member. An element declares both, and a consumer picks by whether it needs totals or fidelity.
 
-The description of each event **is its trigger**: the instant a vendor detects it. Payload names are bare, because the event already fixes which source and which occurrence they belong to. A payload a product cannot derive is omitted from the event rather than stated as a placeholder.
+Events are pushed to a listener registered on the source and arrive as MetricsEvent. The kinds an element raises are returned in the catalog as MetricElementInfo.events, so a consumer knows what to expect before it registers.
+
+The description of each event **is its trigger**: the instant a vendor raises it. Payload names are bare, because the event already fixes which source and which occurrence they belong to. A payload a product cannot derive is omitted from the event rather than sent as a placeholder.
 
 ### `av.video_decoder`
 
@@ -274,9 +276,9 @@ A counter that advanced between two captures is what makes the occurrence visibl
 Each occurrence has **two** declared halves, and an implementation owes both:
 
 - the **fields** it moves, listed below with the instant each is written
-- the **occurrence** it raises, named below and specified with its payload under [Events](#events)
+- the **event** it raises, named below and specified with its payload under [Events](#events), pushed to a listener registered on the source
 
-A field is written at the instant stated and not re-derived at capture time. The occurrence specification is what a test drives the implementation against, so the moment a vendor detects is pinned to the field movements it must produce.
+They answer different questions. A consumer that missed the moment still sees the counters; a listener sees every occurrence in a burst, which the counters collapse. A field is written at the instant stated and not re-derived at capture time.
 
 ### Underflow — `av.video_sink`, `av.audio_sink`
 
@@ -362,7 +364,9 @@ Not an episode and has no counter: it is re-set each time playback restarts, so 
 
 ### What this trades
 
-Several occurrences inside one capture interval advance the counter by several and leave the `last_*` fields describing the newest only. Rates and totals stay exact; the intermediate occurrences of a burst are not individually described. That is the deliberate trade: it removes per-source retention, sequence numbering and cursor state from every vendor implementation, and no consumer requirement asks for the middle of a burst.
+Read by capture alone, several occurrences inside one capture interval advance the counter by several and leave the `last_*` fields describing the newest only. Rates and totals stay exact; the intermediate occurrences of a burst are not individually described. A consumer that needs each one registers for the element's events instead, which is the reason both halves are declared.
+
+The push carries no buffer and no cursor — the callback is the delivery. A consumer that misses one has lost that occurrence's detail, never the count, because the counters are unaffected by whether anyone was listening.
 
 **Not every element has episodic conditions.** An A/V clock reports samples and has nothing episodic to report, so it declares no `last_*` fields. Absence from the declaration is the answer.
 

@@ -212,12 +212,14 @@ mapping:
                                 required: false
                                 pattern: '^0x[0-9a-f]{16}$'
 
-                      # Occurrences this element raises. A counter says an
-                      # occurrence happened and a `last_*` field describes the
-                      # newest; an event carries each one individually, so a
-                      # burst inside one capture interval is not collapsed to its
-                      # newest member. An element declares both, and a consumer
-                      # picks by whether it needs totals or fidelity.
+                      # RUNTIME. Occurrences this element raises, returned as
+                      # MetricElementInfo.events and pushed as MetricsEvent. A
+                      # counter says an occurrence happened and a `last_*` field
+                      # describes the newest; an event carries each one
+                      # individually, so a burst inside one capture interval is
+                      # not collapsed to its newest member. An element declares
+                      # both, and a consumer picks by whether it needs totals or
+                      # fidelity.
                       events:
                         type: seq
                         required: false

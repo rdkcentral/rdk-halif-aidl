@@ -53,6 +53,7 @@ The Metrics HAL is responsible for:
 
 - Publishing a **catalog** of every domain, element and field the product serves.
 - Enumerating the **sources** this platform serves.
+- Pushing each **occurrence** an element raises to a listener registered on that source, where a read could only carry the count and the newest.
 - Serving a **coherent snapshot** of every value a source holds, at a declared freshness.
 - Serving the **most recent occurrence** of each episodic condition — underflow, decode error, first frame — as ordinary fields alongside the counter that totals them.
 - Accepting writes to the fields declared writable: configuration, tunables, test injection, and zeroing a high-water mark.
@@ -187,6 +188,8 @@ Names are by **subject, not producer**. Which block sources a figure differs per
 | **HAL.METRICS.8** | Every episodic condition shall be reported as a `counter` totalling occurrences, and where a consumer needs per-occurrence detail, `current` fields describing the most recent one. | A capture cannot recover an occurrence it did not sample, so the count is what makes the occurrence visible and the `last_*` fields are what make it diagnosable. |
 | **HAL.METRICS.9** | Where a consumer requires exact PTS, a `*_pts_ms` field shall be within ±1 frame interval of the occurrence it describes. Where genuinely underivable it shall be left undeclared. | Never a sentinel value. |
 | **HAL.METRICS.10** | `getSourcePaths()` shall return one path per instance the hardware has, at indices `0` to `n-1`, for the life of the service, and shall agree with the `instances` declared in the profile. | An idle resource is still served, so the set is static. The path list is the only runtime statement of how many exist. |
+| **HAL.METRICS.16** | Every event kind an element declares shall be raised at the instant its trigger states, pushed to every listener registered on that source, and shall carry the payload values the declaration names that the product can derive. | A burst collapses in the counters; the push is what makes each occurrence individually visible. A value the product cannot derive is omitted, never defaulted. |
+| **HAL.METRICS.17** | Event delivery shall hold no buffer, sequence number or per-caller cursor, and the counters and `last_*` fields shall move whether or not a listener is registered. | The callback is the delivery. A consumer that registers late, or misses a call, still has the totals. |
 | **HAL.METRICS.11** | The implementation shall hold no per-caller state. | Every read is a snapshot of what the source holds now. Any consumer reads at any cadence without affecting another; fan-out is a middleware concern. |
 | **HAL.METRICS.12** | Values shall be presented in canonical units and semantics regardless of the SoC's raw representation. | The provider is an adapter, not a passthrough. A transform normalises representation; it cannot manufacture information, so where a SoC reports only a combined figure the finer-grained fields stay undeclared rather than derived by guesswork. |
 | **HAL.METRICS.13** | Every field returned shall carry the `id` its `<domain>.<element>.<field>`, `unit` and `kind` hash to. | Nothing allocates it, so it needs no registry. A product that serves a name in the wrong unit, or with the wrong kind, becomes a hard mismatch at the consumer rather than a silently wrong number. |
@@ -209,6 +212,11 @@ Names are by **subject, not producer**. Which block sources a figure differs per
 | `MetricUnit.aidl` | Enum of the units a field's value may carry. |
 | `MetricKind.aidl` | Enum of how a field's value behaves over time. |
 | `MetricKVPair.aidl` | One metric value, keyed by its fully-qualified name. |
+| `IMetricsSourceEventListener.aidl` | Push of occurrences from a source a consumer registered on. |
+| `MetricsEvent.aidl` | One occurrence — its source, kind, instant and payload. |
+| `MetricEventValue.aidl` | One payload value, keyed by its bare name. |
+| `MetricEventInfo.aidl` | An event kind an element raises, and the payload it carries. |
+| `MetricEventFieldInfo.aidl` | One value an event kind declares it may carry. |
 | `MetricIdValue.aidl` | One metric value, keyed by its contract id — the capture-path form, no string. |
 
 ---
@@ -244,7 +252,8 @@ Two conventions to follow when filling one in:
 flowchart TD
     Client[Middleware] -->|getCapabilities / getSourcePaths / getSource| MGR[IMetricsManager]
     Client -->|getFields / getFieldsByName / getFieldsById| SRC[IMetricsSource]
-    MGR -->|onSourceAdded / onSourceRemoved| Client
+    Client -->|registerEventListener| SRC
+    SRC -->|onMetricsEvent| Client
     MGR -->|builds catalog from| HFP[hfp-metrics.yaml]
     SRC -->|latches| HW[SoC Counters and Registers]
 
@@ -282,10 +291,11 @@ A client that exits leaves no state behind to clean up.
 
 1. **Resolve the catalog once.** `getCapabilities()` returns every domain, element and field the product serves. A consumer keeps the names it understands and ignores the rest. The catalog is built at startup and stands for the life of the service, so this is read once at attach.
 2. **Enumerate the sources once.** `getSourcePaths()` names every source this platform serves. The set is static, so a consumer resolves the ones it cares about at attach and holds them for the life of the service.
-3. **Capture each source.** `getFieldsByName()` and `getFieldsById()` return the keys asked for under one coherent snapshot, or every declared field when given null. A key the source does not serve is omitted rather than raising an error, whichever form it was given in, so a newer consumer degrades cleanly on an older product.
+3. **Register for what a read cannot carry.** `MetricElementInfo.events` declares the kinds an element raises; `IMetricsSource.registerEventListener()` subscribes to them. Each occurrence arrives as a `MetricsEvent` at the instant it happened, carrying its source path, kind and payload. There is no buffer and no cursor — the callback is the delivery, and the counters remain the record of how many occurred, so a missed call costs that occurrence's detail and never the count.
+4. **Capture each source.** `getFieldsByName()` and `getFieldsById()` return the keys asked for under one coherent snapshot, or every declared field when given null. A key the source does not serve is omitted rather than raising an error, whichever form it was given in, so a newer consumer degrades cleanly on an older product.
 
    A steady capture loop should use `getFieldsById()` with the ids it cached at resolve time. It reads the same fields for the life of the source, and their names cannot change between resolutions, so the string form sends the same bytes on every capture — in the request, and again in every pair returned.
-4. **Compute deltas.** Counters are cumulative since service start, so rates and episode counts are the consumer's subtraction from a baseline it takes itself — at a session boundary, a channel change, or wherever its own reporting window begins. A counter that advanced between two captures says an episode occurred; the matching `last_*` fields describe the most recent one.
+5. **Compute deltas.** Counters are cumulative since service start, so rates and episode counts are the consumer's subtraction from a baseline it takes itself — at a session boundary, a channel change, or wherever its own reporting window begins. A counter that advanced between two captures says an episode occurred; the matching `last_*` fields describe the most recent one.
 
    A `high_water` field cannot be made window-relative that way, because a maximum over a window is not the difference of two maxima. Those fields are declared `writable`, and the reader zeros them where its window begins.
 
@@ -385,14 +395,17 @@ sequenceDiagram
     Client->>MGR: getSource("av.video_decoder.0")
     MGR-->>Client: IMetricsSource
 
+    Client->>SRC: registerEventListener(listener)
+    note over Client: The kinds this element raises came<br/>from MetricElementInfo.events.
+
     loop Per capture tick, per source
         Client->>SRC: getFieldsById(null)
-        SRC-->>Client: fully-qualified name/value pairs, one coherent snapshot
+        SRC-->>Client: id/value pairs, one coherent snapshot
         note over Client: Counters advanced -> an episode occurred.<br/>last_* fields in the same snapshot describe the newest one.
     end
 
-    note over MGR,Client: A second session starts.
-    MGR-->>Client: onSourceAdded("av.video_decoder.1")
-    note over Client: Attach without re-reading getSourcePaths().
-    MGR-->>Client: onSourceRemoved("av.video_decoder.1")
+    note over SRC,Client: A burst the counters would collapse.
+    SRC-->>Client: onMetricsEvent(decode_error, ts, {reason, vendor_code})
+    SRC-->>Client: onMetricsEvent(decode_error, ts, {reason, vendor_code})
+    note over Client: Each occurrence individually. No buffer,<br/>no cursor - the callback is the delivery.
 ```

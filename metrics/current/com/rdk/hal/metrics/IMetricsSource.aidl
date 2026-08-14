@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.metrics;
+import com.rdk.hal.metrics.IMetricsSourceEventListener;
 import com.rdk.hal.metrics.MetricFieldInfo;
 import com.rdk.hal.metrics.MetricIdValue;
 import com.rdk.hal.metrics.MetricKVPair;
@@ -174,4 +175,41 @@ interface IMetricsSource
      *             field.
      */
     boolean setFieldById(in long id, in long value);
+
+    /**
+     *  @brief Registers for the occurrences this source raises.
+     *
+     *  A read cannot carry every occurrence. Counters and `last_*` fields are
+     *  exact for how many and what the newest was, but a burst inside one
+     *  capture interval collapses to its newest member, and reading faster does
+     *  not recover the rest. What a consumer needs per occurrence arrives here
+     *  instead, at the instant it happened.
+     *
+     *  Which kinds this source raises is declared in MetricElementInfo.events. A
+     *  consumer reads that first: an element declaring no kinds raises none, and
+     *  registering on it is accepted but never called. Registration is not a
+     *  capability query.
+     *
+     *  Registering changes nothing about the read path. The counters still count
+     *  and the `last_*` fields still move, so a consumer that registers late, or
+     *  not at all, still has the totals.
+     *
+     *  @param[in] listener : the listener.
+     *  @returns boolean : true on success, false if already registered here.
+     *
+     *  @exception binder::Status::Exception::EX_NULL_POINTER if `listener` is
+     *             null.
+     */
+    boolean registerEventListener(in IMetricsSourceEventListener listener);
+
+    /**
+     *  @brief Unregisters a listener from this source.
+     *
+     *  @param[in] listener : the listener.
+     *  @returns boolean : true on success, false if it was not registered.
+     *
+     *  @exception binder::Status::Exception::EX_NULL_POINTER if `listener` is
+     *             null.
+     */
+    boolean unregisterEventListener(in IMetricsSourceEventListener listener);
 }
