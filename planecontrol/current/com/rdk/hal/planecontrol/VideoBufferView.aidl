@@ -21,23 +21,20 @@ package com.rdk.hal.planecontrol;
 /**
  *  @brief     Addressing information for one buffer in the capture pool.
  *
- *  Delivered once per session, for every buffer in the pool, in
- *  `ICaptureControllerListener.onPoolReady()`. A buffer's address and shape do not
- *  change while the session runs, so the client imports each one into an EGLImage on
- *  receipt and thereafter needs only to be told which buffer holds the current frame.
+ *  One of these is delivered for every buffer in the pool, once per session, in
+ *  `ICaptureControllerListener.onPoolReady()`. A buffer's addressing and shape shall
+ *  not change for the life of the session, so a client imports each buffer once on
+ *  receipt and thereafter is told only which buffer holds the current frame.
  *
- *  What changes per frame is the buffer index and the presentation time, and those are
- *  what `VideoFrameView` carries. Sending the addressing with every frame would move
- *  file descriptors across the binder boundary at frame rate to say what was already
- *  said at `onPoolReady()`.
+ *  `planeFds` and `planeOffsets` shall together address every plane of the buffer,
+ *  and a client shall be able to import the buffer from this parcelable alone.
  *
  *  The per-plane arrays are ordered by plane index and are the direct inputs to
  *  `EGL_EXT_image_dma_buf_import`: element N feeds `EGL_DMA_BUF_PLANE<N>_FD_EXT`,
  *  `EGL_DMA_BUF_PLANE<N>_OFFSET_EXT` and `EGL_DMA_BUF_PLANE<N>_PITCH_EXT`.
- *  For NV12 there are two planes, [Y, UV].
  *
- *  The offsets address the actual buffer layout and are not to be inferred from
- *  the pixel format.
+ *  The offsets shall address the buffer's actual layout, and a client shall not
+ *  infer them from the pixel format.
  *
  *  @see VideoFrameView, ICaptureControllerListener.onPoolReady()
  *
@@ -48,46 +45,48 @@ package com.rdk.hal.planecontrol;
 parcelable VideoBufferView
 {
     /**
-     * The pool buffer this describes, in the range [0, pool buffer count).
+     * The identity of this pool buffer, in the range [0, pool buffer count).
      *
-     * This is the value `VideoFrameView.bufferIndex` carries and the value passed to
+     * The implementation shall assign each buffer an index that is unique within
+     * the pool and stable for the life of the session. It is the value
+     * `VideoFrameView.bufferIndex` carries on every frame, and the value passed to
      * `ICaptureController.releaseFrame()`.
      *
-     * An index rather than an address, because the two vendor allocation models
-     * put the buffer's identity in different places. Where the pool is one shared
-     * Dma-Buf, buffers differ by offset and share a file descriptor. Where it is
-     * one Dma-Buf per buffer, they differ by file descriptor and every offset is
-     * 0. An offset alone therefore identifies a buffer under the first model and
-     * nothing under the second.
+     * A BUFFER IS IDENTIFIED BY THIS INDEX AND BY NOTHING ELSE. The addressing in
+     * `planeFds` and `planeOffsets` is how a client reaches the memory; it is not
+     * an identity, and a client shall not treat either as one. Neither is
+     * constrained by this interface beyond having to address the buffer, so a
+     * client that keys on one of them keys on something the interface never
+     * promised would be distinct.
      *
-     * The pair (file descriptor, offset) would identify one under both, and is
-     * what the client used to import the buffer. It is not what release is keyed
-     * on, because naming a file descriptor across a binder boundary means passing
-     * a ParcelFileDescriptor back - a dup and an SCM_RIGHTS pass on every
-     * released frame - to name memory the implementation already has open. An
-     * index carries the same information in an int.
+     * A file descriptor could not carry identity across a frame in any case: a
+     * ParcelFileDescriptor is duplicated as it crosses the binder boundary, so
+     * the same memory arrives as a different integer on each delivery. Sending
+     * descriptors per frame would also cost a dup and an SCM_RIGHTS pass per
+     * plane per frame, to name memory the implementation already holds open.
      *
      * The index is also the safer key across teardown. A stale index after a
-     * stop/start names nothing and is ignored; a stale file descriptor names
-     * memory that may since have been freed.
+     * stop/start names nothing and shall be ignored; a stale file descriptor
+     * names memory that may since have been freed.
      */
     int bufferIndex;
 
     /**
-     * One Dma-Buf file descriptor per plane.
+     * One Dma-Buf file descriptor per plane of this buffer.
      *
-     * Each buffer carries the file descriptors and offsets that address it, so a client
-     * imports from `planeFds` and `planeOffsets` alone and needs to know nothing about
-     * how the vendor allocated the pool - one Dma-Buf carved into offset-addressed
-     * buffers and one Dma-Buf per buffer are both served by this.
+     * PER PLANE, NOT PER BUFFER. `onPoolReady()` delivers one VideoBufferView per
+     * buffer; these arrays index the planes within this one buffer. Every
+     * per-plane array shall have one element per plane of the declared
+     * `CaptureProperty.DRM_FOURCC`, in plane order. `DRM_FORMAT_NV12` is required
+     * of every capture plane and has two planes, [Y, UV].
      *
-     * A CLIENT CACHING EGLImages MUST KEY THE CACHE ON `bufferIndex`, or equivalently
-     * on the pair (file descriptor, offset) - NEVER on the file descriptor alone.
-     * Where the pool is one shared Dma-Buf, every buffer carries the SAME descriptor
-     * and differs only by offset, so a cache keyed on the descriptor collapses the
-     * whole pool onto one entry and the client re-textures a single buffer for the
-     * rest of the session. The picture freezes while frames continue to arrive, which
-     * is not a failure the client can see in what it was handed.
+     * A CLIENT CACHING IMPORTED IMAGES SHALL KEY THE CACHE ON `bufferIndex`, and
+     * shall not key it on a file descriptor. Two buffers in a pool may carry the
+     * same descriptor and differ only by offset, so a cache keyed on the
+     * descriptor collapses the pool onto one entry and the client re-textures a
+     * single buffer for the rest of the session. The picture freezes while frames
+     * continue to arrive, which is not a failure the client can detect in what it
+     * was handed.
      */
     ParcelFileDescriptor[] planeFds;
 
