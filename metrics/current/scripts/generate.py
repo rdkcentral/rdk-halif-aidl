@@ -130,6 +130,12 @@ GENERATED = ("GENERATED from hfp-metrics.yaml by scripts/generate.py. "
 # keep the three in step.
 SLOWEST_CADENCE_MS = 50
 
+def cell(text: str) -> str:
+    """Table-cell text. A pipe in a description would otherwise open a column,
+    and the closed vocabularies are written with pipes."""
+    return text.replace("|", "\\|")
+
+
 def field_id(path: str, unit: str, kind: str) -> int:
     """Content-derived identity. `path` is <domain>.<element>.<field>."""
     digest = hashlib.sha256(f"{path}|{unit}|{kind}".encode("utf-8")).digest()
@@ -150,12 +156,35 @@ def render_versions(v: dict) -> str:
     return ", ".join(f"`{d}` {rev or '—'}" for d, rev in v["domains"].items())
 
 
-def load_profile() -> tuple[dict, dict, dict]:
-    """Returns (entries, derived_from, versions) from the HFP, in authored order."""
+def load_profile() -> tuple[dict, dict, dict, dict]:
+    """Returns (entries, derived_from, versions, events) from the HFP."""
     entries, derived = {}, {}
     doc = yaml.safe_load(HFP.read_text(encoding="utf-8"))
     _load(doc, entries, derived, "HAL")
-    return entries, derived, profile_versions(doc)
+    return entries, derived, profile_versions(doc), load_events(doc)
+
+
+def load_events(doc: dict) -> dict:
+    """Occurrences each element raises, keyed '<domain>.<element>:<kind>'.
+
+    An event carries one occurrence with its own payload, where a counter can
+    only say how many happened and a `last_*` field only describes the newest."""
+    events = {}
+    root = doc.get("metrics") or doc.get("hfd")
+    for domain in root["domains"]:
+        for element in domain["elements"]:
+            for ev in element.get("events") or []:
+                key = f"{domain['domain']}.{element['element']}:{ev['kind']}"
+                events[key] = {
+                    "element": f"{domain['domain']}.{element['element']}",
+                    "kind": ev["kind"],
+                    "description": ev["description"].strip(),
+                    "fields": [{"name": f["name"],
+                                "unit": UNIT_ALIASES.get(f["unit"], f["unit"]),
+                                "description": f["description"].strip()}
+                               for f in ev["fields"]],
+                }
+    return events
 
 
 def load_upper() -> tuple[dict, dict]:
@@ -266,38 +295,70 @@ def emit_combined(hal: dict, layers: dict, hal_versions: dict,
         w = " · **writable**" if e["writable"] else ""
         out.append(f"| `{path}` | {e['layer']} | int64 · {e['unit']} · "
                    f"`{e['kind']}`{w} | **{e['provider']}** | `0x{fid:016x}` "
-                   f"| {e['description']} |")
+                   f"| {cell(e['description'])} |")
     return "\n".join(out) + "\n"
 
 
-def emit_dictionary_md(entries: dict, versions: dict) -> str:
+def emit_events_md(events: dict) -> list[str]:
+    """The events section: for each occurrence, its name, trigger and payload."""
+    out = ["## Events", "",
+           "A counter says how many occurrences there have been and a `last_*` field "
+           "describes the newest. An event carries each occurrence individually, so "
+           "several inside one poll interval are not collapsed to their newest "
+           "member. An element declares both, and a consumer picks by whether it "
+           "needs totals or fidelity.", "",
+           "The description of each event **is its trigger**: the instant a vendor "
+           "raises it. Payload names are bare, because the event already fixes which "
+           "source and which occurrence they belong to. A payload a product cannot "
+           "derive is omitted from the event rather than sent as a placeholder."]
+    last_element = None
+    for ev in events.values():
+        if ev["element"] != last_element:
+            out += ["", f"### `{ev['element']}`"]
+            last_element = ev["element"]
+        out += ["", f"#### `{ev['kind']}`", "", ev["description"], "",
+                "| Payload | Unit | Meaning |", "|---|---|---|"]
+        for f in ev["fields"]:
+            out.append(f"| `{f['name']}` | {f['unit']} | {cell(f['description'])} |")
+    return out + [""]
+
+
+def emit_dictionary_md(entries: dict, versions: dict, events: dict) -> str:
     """The human-readable reference, generated from the profile."""
     head = DICT_MD.read_text(encoding="utf-8") if DICT_MD.exists() else ""
     preamble = (head.split("## Fields")[0] if "## Fields" in head
                 else "# AV Domain Field Dictionary\n\n")
     # Versions are generated below, so drop the block a previous run left in
     # the carried-forward preamble rather than stacking another one on it.
-    preamble = preamble.split("## Versions")[0]
+    for heading in ("## Versions", "## How this document is produced"):
+        preamble = preamble.split(heading)[0]
     # The preamble is carried through, so drop any marker a previous run left
     # in it before emitting a fresh one - otherwise they stack.
     preamble = "\n".join(l for l in preamble.splitlines()
                          if "Field tables: GENERATED" not in l)
     tail = ""
-    for marker in ("## Episodic Conditions", "## Retired", "## Accuracy"):
+    for marker in ("## Episodic Conditions", "## Accuracy"):
         if marker in head:
             tail = head[head.index(marker):]
             break
 
+    dicts = ", ".join(f"`{d}` {rev or '—'}"
+                      for d, rev in versions["domains"].items())
     out = [preamble.rstrip("\n"), "", f"<!-- Field tables: {GENERATED} -->", "",
-           "## Versions", "",
-           "The dictionary revision pins the set of names; a field's `id` pins its "
-           "unit and kind. Cite both when stating what a device was asked to serve.",
-           "",
+           "## How this document is produced", "",
+           f"**Generated** from `{HFP.name}` by `scripts/generate.py`, from "
+           f"dictionary {dicts}.", "",
+           "The **Fields** and **Events** sections are written by that script and are "
+           "overwritten on every run, so a correction goes in the profile and reaches "
+           "this document from there. Everything else here is authored: the sections "
+           "above, and **Episodic Conditions** and **Accuracy** below.", "",
            "| | Version |", "|---|---|"]
     for domain, revision in versions["domains"].items():
         out.append(f"| `{domain}` dictionary | {revision or '—'} |")
     out += [f"| Interface | {versions['interface'] or '—'} |",
-            f"| Schema | {versions['schema'] or '—'} |",
+            f"| Schema | {versions['schema'] or '—'} |", "",
+            "The dictionary revision pins the set of names; a field's `id` pins its "
+            "unit and kind. Cite both when stating what a device was asked to serve.",
             "", "## Fields"]
     last_element = None
     for path, e in entries.items():
@@ -311,8 +372,8 @@ def emit_dictionary_md(entries: dict, versions: dict) -> str:
         fid = field_id(path, e["unit"], e["kind"])
         w = " · **writable**" if e["writable"] else ""
         out.append(f"| `{e['field']}` | int64 · {e['unit']} · `{e['kind']}`{w} "
-                   f"| **{e['provider']}** | `0x{fid:016x}` | {e['description']} |")
-    out += ["", tail.rstrip("\n"), ""]
+                   f"| **{e['provider']}** | `0x{fid:016x}` | {cell(e['description'])} |")
+    out += [""] + emit_events_md(events) + [tail.rstrip("\n"), ""]
     return "\n".join(out)
 
 
@@ -394,6 +455,31 @@ def check_layers(hal: dict, layers: dict) -> list[str]:
     return problems
 
 
+def check_events(events: dict) -> list[str]:
+    """What an event declaration cannot be trusted to get right on its own."""
+    problems = []
+    for key, ev in events.items():
+        if not ev["description"]:
+            problems.append(
+                f"{HFP.name}: event '{key}' has no description. The description is "
+                f"the trigger - without it a vendor cannot know when to raise it.")
+        if not ev["fields"]:
+            problems.append(
+                f"{HFP.name}: event '{key}' declares no payload. An occurrence with "
+                f"nothing to carry is a counter, not an event.")
+        seen = set()
+        for f in ev["fields"]:
+            if f["name"] in seen:
+                problems.append(
+                    f"{HFP.name}: event '{key}' declares '{f['name']}' twice.")
+            seen.add(f["name"])
+            if not f["description"]:
+                problems.append(
+                    f"{HFP.name}: event '{key}' payload '{f['name']}' has no "
+                    f"description, so a consumer cannot know what it carries.")
+    return problems
+
+
 def check_episodic(entries: dict, doc_text: str) -> list[str]:
     """Every episodic field must be named in the checklist an implementer reads.
 
@@ -450,10 +536,10 @@ def check_elements(doc: dict) -> list[str]:
     return problems
 
 
-def generate(entries: dict, derived: dict, versions: dict) -> dict:
+def generate(entries: dict, derived: dict, versions: dict, events: dict) -> dict:
     """Write every generated artefact. Returns {path: content} as written."""
     HFP.write_text(write_ids(entries), encoding="utf-8")
-    DICT_MD.write_text(emit_dictionary_md(entries, versions), encoding="utf-8")
+    DICT_MD.write_text(emit_dictionary_md(entries, versions, events), encoding="utf-8")
     written = [DICT_MD, HFP]
 
     layers, layer_versions = load_upper()
@@ -473,7 +559,7 @@ def main() -> int:
         description="Regenerate and check everything the HAL Field Dictionary "
                     "drives. Takes no arguments.").parse_args()
 
-    entries, derived, versions = load_profile()
+    entries, derived, versions, events = load_profile()
     if not entries:
         print(f"error: no fields found in {HFP}", file=sys.stderr)
         return 2
@@ -487,12 +573,12 @@ def main() -> int:
             print(f"error: {collision}", file=sys.stderr)
         return 1
 
-    first = generate(entries, derived, versions)
+    first = generate(entries, derived, versions, events)
     # Two emitters carry their own previous output forward - the HFP's
     # description blocks and the dictionary's preamble. Both have stacked
     # duplicates before, and neither failure is visible in a single run. So
     # generate again and require the result to be identical.
-    second = generate(entries, derived, versions)
+    second = generate(entries, derived, versions, events)
     unstable = sorted(p.name for p in first if first[p] != second[p])
     if unstable:
         print(f"error: generation is not idempotent - {', '.join(unstable)} "
@@ -503,7 +589,8 @@ def main() -> int:
     # Re-read the written profile, so the ids checked are the ones that landed.
     written = yaml.safe_load(HFP.read_text(encoding="utf-8"))
     problems = (check(entries, derived) + check_elements(written)
-                + check_episodic(entries, DICT_MD.read_text(encoding="utf-8")))
+                + check_episodic(entries, DICT_MD.read_text(encoding="utf-8"))
+                + check_events(events))
     for problem in problems:
         print(f"error: {problem}", file=sys.stderr)
     if problems:

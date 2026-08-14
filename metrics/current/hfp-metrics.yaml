@@ -175,6 +175,36 @@ metrics:
                 The SoC's own error code for the same fault, carried through uninterpreted. For
                 vendor diagnosis; never branched on.
 
+
+          events:
+
+            - kind: decode_error
+              description: >
+                Raised at detection of a decode fault, once per fault. A fault that
+                also discards a frame raises this and advances `frames_dropped`; a
+                fault that does not raises this alone. The two are separate axes.
+              fields:
+
+                - name: reason
+                  unit: none
+                  description: >
+                    Closed vocabulary: bitstream_error | unsupported_format |
+                    decoder_fault | resource_lost | hardware_fault. The value a
+                    consumer branches on, and what makes the fault comparable across
+                    SoCs.
+
+                - name: vendor_code
+                  unit: none
+                  description: >
+                    The SoC's own error code for the same fault, carried through
+                    uninterpreted. For vendor diagnosis; never branched on.
+
+                - name: pts_ms
+                  unit: ms
+                  description: >
+                    Stream PTS at detection, within ±1 frame interval. Omitted where
+                    the SoC cannot derive a PTS — never sent as `-1`.
+
         - element: video_sink
           instances: 2
           fields:
@@ -368,6 +398,69 @@ metrics:
                 time-to-first-frame; whatever elapsed above the HAL before decode began is
                 observed by the party that started the session.
 
+
+          events:
+
+            - kind: underflow
+              description: >
+                Raised at the START of a starvation episode — the instant there is
+                nothing to present at render time. Exactly one `underflow_end` closes
+                it.
+              fields:
+
+                - name: trigger
+                  unit: none
+                  description: >
+                    Closed vocabulary: startup_prefill | mid_stream | seek_recovery |
+                    trickplay_recovery | content_boundary. Distinguishes an expected
+                    starvation from a defect.
+
+            - kind: underflow_end
+              description: >
+                Raised when presentation resumes, closing the episode the preceding
+                `underflow` opened.
+              fields:
+
+                - name: duration_ms
+                  unit: ms
+                  description: >
+                    Length of the episode this closes, start to resume. Not
+                    cumulative — `underflow_duration_ms` carries the running total.
+
+            - kind: first_frame_presented
+              description: >
+                Raised when the first frame reaches presentation — once at session
+                start, and again after each seek or flush.
+              fields:
+
+                - name: pts_ms
+                  unit: ms
+                  description: >
+                    PTS of the frame that reached presentation. Omitted where the SoC
+                    cannot derive a PTS.
+
+            - kind: quality_threshold_crossed
+              description: >
+                Raised when a quality counter crosses its declared threshold. Only the
+                sink knows whether it shed a frame or repeated one, so which counter
+                moved is carried rather than inferred.
+              fields:
+
+                - name: metric
+                  unit: none
+                  description: >
+                    Which counter crossed: frames_dropped | frames_repeated.
+
+                - name: count
+                  unit: frames
+                  description: >
+                    How many frames the crossing covered.
+
+                - name: pts_ms
+                  unit: ms
+                  description: >
+                    Stream PTS at the crossing. Omitted where no PTS is derivable.
+
         - element: audio_decoder
           instances: 2
           fields:
@@ -436,6 +529,36 @@ metrics:
               description: >
                 The SoC's own code for the same fault, carried through uninterpreted. For vendor
                 diagnosis; never branched on.
+
+
+          events:
+
+            - kind: decode_error
+              description: >
+                Raised at detection of a decode fault, once per fault. A fault that
+                also discards a frame raises this and advances `frames_dropped`; a
+                fault that does not raises this alone. The two are separate axes.
+              fields:
+
+                - name: reason
+                  unit: none
+                  description: >
+                    Closed vocabulary: bitstream_error | unsupported_format |
+                    decoder_fault | resource_lost | hardware_fault. The value a
+                    consumer branches on, and what makes the fault comparable across
+                    SoCs.
+
+                - name: vendor_code
+                  unit: none
+                  description: >
+                    The SoC's own error code for the same fault, carried through
+                    uninterpreted. For vendor diagnosis; never branched on.
+
+                - name: pts_ms
+                  unit: ms
+                  description: >
+                    Stream PTS at detection, within ±1 frame interval. Omitted where
+                    the SoC cannot derive a PTS — never sent as `-1`.
 
         - element: audio_sink
           instances: 1
@@ -518,6 +641,48 @@ metrics:
               description: >
                 Length of the most recent completed digital-silence period. Read with
                 `silence_event_count` and `silence_duration_ms`.
+
+
+          events:
+
+            - kind: underflow
+              description: >
+                Raised at the START of a starvation episode — the instant there is
+                nothing to present at render time. Exactly one `underflow_end` closes
+                it.
+              fields:
+
+                - name: trigger
+                  unit: none
+                  description: >
+                    Closed vocabulary: startup_prefill | mid_stream | seek_recovery |
+                    trickplay_recovery | content_boundary. Distinguishes an expected
+                    starvation from a defect.
+
+            - kind: underflow_end
+              description: >
+                Raised when presentation resumes, closing the episode the preceding
+                `underflow` opened.
+              fields:
+
+                - name: duration_ms
+                  unit: ms
+                  description: >
+                    Length of the episode this closes, start to resume. Not
+                    cumulative — `underflow_duration_ms` carries the running total.
+
+            - kind: silence
+              description: >
+                Raised when a digital-silence period ENDS having met the declared
+                threshold. The threshold cannot be tested until the period completes,
+                so silence has no start event.
+              fields:
+
+                - name: duration_ms
+                  unit: ms
+                  description: >
+                    Length of the period this reports. Not cumulative —
+                    `silence_duration_ms` carries the running total.
 
         - element: clock
           instances: 1

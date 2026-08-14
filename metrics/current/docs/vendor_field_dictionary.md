@@ -68,15 +68,19 @@ The instance segment is not hashed (`.0` and `.1` are the same field on differen
 
 <!-- Field tables: GENERATED from hfp-metrics.yaml by scripts/generate.py. Do not hand-edit. -->
 
-## Versions
+## How this document is produced
 
-The dictionary revision pins the set of names; a field's `id` pins its unit and kind. Cite both when stating what a device was asked to serve.
+**Generated** from `hfp-metrics.yaml` by `scripts/generate.py`, from dictionary `av` 1.2.
+
+The **Fields** and **Events** sections are written by that script and are overwritten on every run, so a correction goes in the profile and reaches this document from there. Everything else here is authored: the sections above, and **Episodic Conditions** and **Accuracy** below.
 
 | | Version |
 |---|---|
 | `av` dictionary | 1.2 |
 | Interface | 0.1.0.0 |
 | Schema | 0.1.0 |
+
+The dictionary revision pins the set of names; a field's `id` pins its unit and kind. Cite both when stating what a device was asked to serve.
 
 ## Fields
 
@@ -160,17 +164,116 @@ The dictionary revision pins the set of names; a field's `id` pins its unit and 
 | `decrypt_errors` | int64 · events · `counter` | **Driver** | `0x5db0ea33fec21035` | Decrypt operations that failed on a key already held. Distinct from a licence that was never obtained, which is not vendor-observable. |
 | `decrypt_latency_sum_us` | int64 · us · `counter` | **Driver** | `0x6663f481e5048044` | Σ of decrypt operation latency. Paired with `decrypt_count`: mean decrypt latency = `decrypt_latency_sum_us` / `decrypt_count`. |
 
+## Events
+
+A counter says how many occurrences there have been and a `last_*` field describes the newest. An event carries each occurrence individually, so several inside one poll interval are not collapsed to their newest member. An element declares both, and a consumer picks by whether it needs totals or fidelity.
+
+The description of each event **is its trigger**: the instant a vendor raises it. Payload names are bare, because the event already fixes which source and which occurrence they belong to. A payload a product cannot derive is omitted from the event rather than sent as a placeholder.
+
+### `av.video_decoder`
+
+#### `decode_error`
+
+Raised at detection of a decode fault, once per fault. A fault that also discards a frame raises this and advances `frames_dropped`; a fault that does not raises this alone. The two are separate axes.
+
+| Payload | Unit | Meaning |
+|---|---|---|
+| `reason` | none | Closed vocabulary: bitstream_error \| unsupported_format \| decoder_fault \| resource_lost \| hardware_fault. The value a consumer branches on, and what makes the fault comparable across SoCs. |
+| `vendor_code` | none | The SoC's own error code for the same fault, carried through uninterpreted. For vendor diagnosis; never branched on. |
+| `pts_ms` | ms | Stream PTS at detection, within ±1 frame interval. Omitted where the SoC cannot derive a PTS — never sent as `-1`. |
+
+### `av.video_sink`
+
+#### `underflow`
+
+Raised at the START of a starvation episode — the instant there is nothing to present at render time. Exactly one `underflow_end` closes it.
+
+| Payload | Unit | Meaning |
+|---|---|---|
+| `trigger` | none | Closed vocabulary: startup_prefill \| mid_stream \| seek_recovery \| trickplay_recovery \| content_boundary. Distinguishes an expected starvation from a defect. |
+
+#### `underflow_end`
+
+Raised when presentation resumes, closing the episode the preceding `underflow` opened.
+
+| Payload | Unit | Meaning |
+|---|---|---|
+| `duration_ms` | ms | Length of the episode this closes, start to resume. Not cumulative — `underflow_duration_ms` carries the running total. |
+
+#### `first_frame_presented`
+
+Raised when the first frame reaches presentation — once at session start, and again after each seek or flush.
+
+| Payload | Unit | Meaning |
+|---|---|---|
+| `pts_ms` | ms | PTS of the frame that reached presentation. Omitted where the SoC cannot derive a PTS. |
+
+#### `quality_threshold_crossed`
+
+Raised when a quality counter crosses its declared threshold. Only the sink knows whether it shed a frame or repeated one, so which counter moved is carried rather than inferred.
+
+| Payload | Unit | Meaning |
+|---|---|---|
+| `metric` | none | Which counter crossed: frames_dropped \| frames_repeated. |
+| `count` | frames | How many frames the crossing covered. |
+| `pts_ms` | ms | Stream PTS at the crossing. Omitted where no PTS is derivable. |
+
+### `av.audio_decoder`
+
+#### `decode_error`
+
+Raised at detection of a decode fault, once per fault. A fault that also discards a frame raises this and advances `frames_dropped`; a fault that does not raises this alone. The two are separate axes.
+
+| Payload | Unit | Meaning |
+|---|---|---|
+| `reason` | none | Closed vocabulary: bitstream_error \| unsupported_format \| decoder_fault \| resource_lost \| hardware_fault. The value a consumer branches on, and what makes the fault comparable across SoCs. |
+| `vendor_code` | none | The SoC's own error code for the same fault, carried through uninterpreted. For vendor diagnosis; never branched on. |
+| `pts_ms` | ms | Stream PTS at detection, within ±1 frame interval. Omitted where the SoC cannot derive a PTS — never sent as `-1`. |
+
+### `av.audio_sink`
+
+#### `underflow`
+
+Raised at the START of a starvation episode — the instant there is nothing to present at render time. Exactly one `underflow_end` closes it.
+
+| Payload | Unit | Meaning |
+|---|---|---|
+| `trigger` | none | Closed vocabulary: startup_prefill \| mid_stream \| seek_recovery \| trickplay_recovery \| content_boundary. Distinguishes an expected starvation from a defect. |
+
+#### `underflow_end`
+
+Raised when presentation resumes, closing the episode the preceding `underflow` opened.
+
+| Payload | Unit | Meaning |
+|---|---|---|
+| `duration_ms` | ms | Length of the episode this closes, start to resume. Not cumulative — `underflow_duration_ms` carries the running total. |
+
+#### `silence`
+
+Raised when a digital-silence period ENDS having met the declared threshold. The threshold cannot be tested until the period completes, so silence has no start event.
+
+| Payload | Unit | Meaning |
+|---|---|---|
+| `duration_ms` | ms | Length of the period this reports. Not cumulative — `silence_duration_ms` carries the running total. |
+
 ## Episodic Conditions
 
 An underflow, a freeze, a decode error, a silence period and a first frame happen at an instant rather than describing a level. Each is reported as ordinary fields arriving in the same snapshot as everything else: **counters** say how many have occurred, **`last_*` fields** say what the most recent one was.
 
 A counter that advanced between two polls is what makes the occurrence visible; the `last_*` fields are what make it diagnosable. Because both arrive in one `getAll()` snapshot, an occurrence and the counters around it are always mutually consistent.
 
-The tables below are the implementation checklist. For each occurrence: every field it moves, and the instant it moves. A field is written at the instant stated and not re-derived at poll time.
+Each occurrence has **two** reporting halves, and an implementation owes both:
+
+- the **fields** it moves, listed below with the instant each is written
+- the **event** it raises, named below and specified with its payload under [Events](#events)
+
+They answer different questions. A poller that missed the moment still sees the counters; a listener sees every occurrence in a burst, which the counters collapse. A field is written at the instant stated and not re-derived at poll time.
 
 ### Underflow — `av.video_sink`, `av.audio_sink`
 
 Starts when there is nothing to present at render time. Ends when presentation resumes.
+
+**Events:** `underflow` at the start, carrying `trigger`; `underflow_end` at the close, carrying `duration_ms`. Exactly one `underflow_end` closes each `underflow`.
 
 | Field | Kind | Written |
 |---|---|---|
@@ -185,6 +288,8 @@ An episode in progress has already moved `underflowed` and `last_underflow_trigg
 
 The same frame held on screen because no new one was ready. Distinct from underflow: an underflow is the buffer state, a freeze is what the viewer sees.
 
+**Event:** `quality_threshold_crossed` with `metric` = `frames_repeated`, carrying `count` and `pts_ms`. The same event reports drops with `metric` = `frames_dropped`, because only the sink knows which of the two it did.
+
 | Field | Kind | Written |
 |---|---|---|
 | `frames_repeated_missing_frame` | `counter` | **+1 per repeated frame**, throughout the episode |
@@ -198,6 +303,8 @@ FRC cadence repeats are **not** a freeze. `frames_repeated_frc` counts those sep
 
 ### Decode error — `av.video_decoder`, `av.audio_decoder`
 
+**Event:** `decode_error`, carrying `reason`, `vendor_code` and `pts_ms` — the same three values the `last_decode_error_*` fields hold for the newest one.
+
 | Field | Kind | Written |
 |---|---|---|
 | `decode_errors` | `counter` | **+1 at detection** |
@@ -208,6 +315,8 @@ FRC cadence repeats are **not** a freeze. `frames_repeated_frc` counts those sep
 An error is a point occurrence, so all four are written together and there is no end instant. A decode error need not drop a frame and a dropped frame need not be an error: `decode_errors` and `frames_dropped` are separate axes and an implementation moves each on its own trigger.
 
 ### Dropped frame — `av.video_sink`
+
+**Event:** `quality_threshold_crossed` with `metric` = `frames_dropped`, carrying `count` and `pts_ms`.
 
 | Field | Kind | Written |
 |---|---|---|
@@ -221,6 +330,8 @@ An error is a point occurrence, so all four are written together and there is no
 
 A period of emitted digital silence at or above the declared threshold. Counted only once complete, since the threshold cannot be tested until the period ends.
 
+**Event:** `silence`, raised at the end of the period, carrying `duration_ms`. There is no start event, for the same reason there is no start count.
+
 | Field | Kind | Written |
 |---|---|---|
 | `silence_event_count` | `counter` | **+1 at period end**, if it met the threshold |
@@ -228,6 +339,8 @@ A period of emitted digital silence at or above the declared threshold. Counted 
 | `last_silence_duration_ms` | `current` | **= the period's length, at period end** |
 
 ### First frame — `av.video_sink`
+
+**Event:** `first_frame_presented`, carrying `pts_ms`.
 
 | Field | Kind | Written |
 |---|---|---|
@@ -237,7 +350,7 @@ Not an episode and has no counter: it is re-set each time playback restarts, so 
 
 ### What this trades
 
-Several occurrences inside one poll interval advance the counter by several and leave the `last_*` fields describing the newest only. Rates and totals stay exact; the intermediate occurrences of a burst are not individually described. That is the deliberate cost of holding no per-source retention, sequence numbering or cursor state in the vendor implementation.
+Read by polling alone, several occurrences inside one poll interval advance the counter by several and leave the `last_*` fields describing the newest only. Rates and totals stay exact; the intermediate occurrences of a burst are not individually described. A consumer that needs each one listens for the element's events instead, which is the reason both halves are declared.
 
 **Not every element has episodic conditions.** An A/V clock reports samples and has nothing episodic to report, so it declares no `last_*` fields. Absence from the declaration is the answer.
 
