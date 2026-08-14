@@ -18,6 +18,7 @@
  */
 package com.rdk.hal.metrics;
 import com.rdk.hal.metrics.MetricFieldInfo;
+import com.rdk.hal.metrics.MetricIdValue;
 import com.rdk.hal.metrics.MetricKVPair;
 
 /**
@@ -106,4 +107,29 @@ interface IMetricsSource
      *  @exception EX_ILLEGAL_ARGUMENT on an undeclared name.
      */
     boolean setField(in String name, in long value);
+
+    /**
+     *  @brief Subset read by contract id — the poll path, same single-snapshot
+     *         guarantee as getAll() and getFieldsByName().
+     *
+     *  Identical in meaning to getFieldsByName(); only the key differs. A poll
+     *  loop reads the same field set every cadence for the life of a source, and
+     *  the names of that set never change, so the string form re-marshals a
+     *  constant on every read - in the request, and again in every pair returned.
+     *  This form carries two int64s per value and no string at all.
+     *
+     *  Ids come from getFields(), which a client already calls once to resolve
+     *  the source. Passing an id this source does not serve omits it from the
+     *  result rather than raising an error, exactly as an unknown name is
+     *  omitted, so a newer consumer degrades cleanly on an older product.
+     *
+     *  Prefer getAll() where the values outlive the call - a diagnostic dump, a
+     *  bug report, anything merged across sources - because MetricKVPair carries
+     *  the fully-qualified name and this does not.
+     *
+     *  @param[in]  ids    : contract ids to read, from MetricFieldInfo.id.
+     *  @param[out] values : those this source serves, id and value.
+     *  @returns boolean : true on success.
+     */
+    boolean getFieldsById(in long[] ids, out MetricIdValue[] values);
 }

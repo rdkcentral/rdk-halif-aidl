@@ -123,7 +123,7 @@ It buys a check no key can make alone. A key — a name or an ordinal — stays 
 The id is not compiled into the interface. It reaches a client at runtime on `MetricFieldInfo`:
 
 1. **Resolve once.** `getFields()` returns every field a source serves — every key its declaration carries, including the id. The client keeps the ones it understands and caches `name → id`.
-2. **Read many.** `getAll()` returns `MetricKVPair{name, value}` and nothing else. The id does not ride the poll path, because it cannot change between resolutions and the client already holds it.
+2. **Read many.** Two keys, same values and the same snapshot guarantee. `getAll()` and `getFieldsByName()` return `MetricKVPair{name, value}`, self-describing and worth it wherever a value outlives the call. `getFieldsById()` returns `MetricIdValue{id, value}` — two int64s, no string — for the poll loop, which reads the same set every cadence and would otherwise re-marshal a constant on every read.
 3. **Re-resolve on change.** `Capabilities.schemaId` changing is the signal that the declared set moved. An id that changed under a name the client already knew means the meaning moved, and the client stops trusting that field rather than reporting it wrongly.
 
 ### Two contracts, one declaration
@@ -165,7 +165,7 @@ av.audio_sink.0.underflowed
 
 The first three segments address a **source**; the fourth selects a field within it. `getSource("av.video_decoder.0")` returns one `IMetricsSource`, and one read of it is one coherent snapshot — the atomicity boundary is therefore visible in the name.
 
-**A name given to a source is bare; a name returned in a value is fully qualified.** The source already fixes the first three segments, so `getFieldsByName(["frames_decoded"])` feeds back exactly what `getFields()` returned, and asking one source for another's field cannot be expressed. A value, by contrast, outlives the call that produced it — in a log line, a merged set or a bug report, `frames_decoded` alone says nothing about which source produced it, so `MetricKVPair.name` carries the whole path.
+**A name given to a source is bare; a name returned in a value is fully qualified.** The source already fixes the first three segments, so `getFieldsByName(["frames_decoded"])` feeds back exactly what `getFields()` returned, and asking one source for another's field cannot be expressed. A value, by contrast, outlives the call that produced it — in a log line, a merged set or a bug report, `frames_decoded` alone says nothing about which source produced it, so `MetricKVPair.name` carries the whole path. `MetricIdValue` deliberately carries no name: a poll loop resolves its ids once and holds the mapping, so it is the one caller for which the path is already known and re-sending it is pure cost.
 
 The path **is** the identity. There is no source-id parcelable, because modelling it a second time only creates a way for the two to disagree.
 
@@ -179,7 +179,7 @@ Names are by **subject, not producer**. Which block sources a figure differs per
 |--|---|---|
 | **HAL.METRICS.1** | Every metric name shall be the fully-qualified four-segment path `<domain>.<element>.<instance>.<field>`. | A bare field name is ambiguous once merged: `frames_decoded` from `av.video_decoder.0` and `av.audio_decoder.0` are the same string. |
 | **HAL.METRICS.2** | Every metric value shall be a signed 64-bit integer. | AIDL `long`. Counters use the positive range and never the sign; a signed field such as `sync_offset_ms` uses it; a boolean-shaped field is 0 or 1. |
-| **HAL.METRICS.3** | All values returned by one `getAll()` or `getFieldsByName()` call shall be sampled at a single instant. | An obligation on the implementation, not a property to be discovered — a source spanning two hardware blocks shall latch both. Paired counters must never yield an impossible ratio. |
+| **HAL.METRICS.3** | All values returned by one `getAll()`, `getFieldsByName()` or `getFieldsById()` call shall be sampled at a single instant. | An obligation on the implementation, not a property to be discovered — a source spanning two hardware blocks shall latch both. Paired counters must never yield an impossible ratio. |
 | **HAL.METRICS.4** | Counters shall be cumulative since source creation and shall not reset on flush or seek. High-water fields shall be monotone non-decreasing. | Consumers compute deltas. |
 | **HAL.METRICS.5** | A read shall reflect events no older than the element's declared `pollCadenceMs`, which shall not exceed 50 ms. | A maximum staleness, not a rate to poll at. An element may guarantee tighter; never looser. Freshness is a partner-facing promise. |
 | **HAL.METRICS.6** | A field the implementation cannot measure shall be left undeclared and omitted from reads. | It shall never be served as `0`. "Cannot measure it" and "measured zero" are different facts. |
@@ -210,6 +210,7 @@ Names are by **subject, not producer**. Which block sources a figure differs per
 | `MetricUnit.aidl` | Enum of the units a field's value may carry. |
 | `MetricKind.aidl` | Enum of how a field's value behaves over time. |
 | `MetricKVPair.aidl` | One metric value, keyed by its fully-qualified name. |
+| `MetricIdValue.aidl` | One metric value, keyed by its contract id — the poll-path form, no string. |
 
 ---
 
@@ -243,7 +244,7 @@ Two conventions to follow when filling one in:
 ```mermaid
 flowchart TD
     Client[Middleware] -->|getCapabilities / getSourcePaths / getSource| MGR[IMetricsManager]
-    Client -->|getFields / getAll / getFieldsByName| SRC[IMetricsSource]
+    Client -->|getFields / getAll / getFieldsByName / getFieldsById| SRC[IMetricsSource]
     MGR -->|onSourceAdded / onSourceRemoved| Client
     MGR -->|builds catalog from| HFP[hfp-metrics.yaml]
     SRC -->|latches| HW[SoC Counters and Registers]
@@ -291,7 +292,9 @@ A client that exits leaves no state behind to clean up; listener registrations a
    | `"av.video_decoder.0"` | one source |
 
    A consumer that reads everything registers on `"av"`; one that only drives the decode path registers on `"av.video_decoder"` and is not woken for the sink or the clock. Matching is by whole segment, so `"av.video"` selects nothing — a string prefix would otherwise capture `av.video_decoder` and `av.video_sink` together and deliver sources the consumer never asked for.
-3. **Poll each source.** `getAll()` returns every declared field of that source under one coherent snapshot; `getFieldsByName()` reads a subset under the same guarantee. Unknown names are omitted rather than raising an error, so a newer consumer degrades cleanly on an older product.
+3. **Poll each source.** `getAll()` returns every declared field of that source under one coherent snapshot; `getFieldsByName()` and `getFieldsById()` read a subset under the same guarantee. A key the source does not serve is omitted rather than raising an error, whichever form it was given in, so a newer consumer degrades cleanly on an older product.
+
+   A steady poll loop should use `getFieldsById()` with the ids it cached at resolve time. It reads the same fields for the life of the source, and their names cannot change between resolutions, so the string form sends the same bytes on every poll — in the request, and again in every pair returned.
 4. **Compute deltas.** Counters are cumulative since source creation, so rates and episode counts are the consumer's subtraction. A counter that advanced between two polls says an episode occurred; the matching `last_*` fields describe the most recent one.
 
 `getField()` exists for diagnostics and one-off reads. It is not the poll path — a per-field loop gives up the single-snapshot guarantee that makes paired counters comparable.
@@ -367,6 +370,7 @@ Descriptions and ids are generated by `scripts/generate.py` from the field dicti
 |---|---|
 | Path not live | `getSource()` returns `null`. |
 | Unknown name in `getFieldsByName()` | Omitted from the result, so a newer consumer degrades cleanly on an older product. |
+| Unknown id in `getFieldsById()` | Omitted from the result, on the same grounds. |
 | Unknown name in `getField()` | Returns `false`. |
 | `setField()` on a read-only field | `EX_UNSUPPORTED_OPERATION`. |
 | `setField()` on an undeclared name | `EX_ILLEGAL_ARGUMENT`. |
