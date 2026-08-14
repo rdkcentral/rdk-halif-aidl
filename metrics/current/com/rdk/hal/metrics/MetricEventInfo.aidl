@@ -29,6 +29,19 @@ import com.rdk.hal.metrics.MetricEventFieldInfo;
  *  A consumer reads this before it registers. An element that declares no kinds
  *  raises none, which is the difference between "this element has nothing to
  *  push" and "this product cannot push".
+ *
+ *  NOT EVERY FIGURE CAN BE AN EVENT. An event is a discrete occurrence with an
+ *  instant - something that starts. A `current` sample is a level that is always
+ *  true, a `config` is a setting and a `high_water` is a running maximum; none
+ *  of them happens at a moment, so none can be pushed. Nor does every counter
+ *  earn one: a counter of routine throughput would push a firehose carrying
+ *  nothing the counter does not already say. An event pairs with a counter that
+ *  totals EPISODES - the things that go wrong, and the transitions worth naming
+ *  individually - which is why an element declaring events always declares a
+ *  counter too.
+ *
+ *  Which kinds exist is settled in the field dictionary, not per product. A
+ *  product declares which of them it raises; it does not invent one.
  */
 @VintfStability
 parcelable MetricEventInfo

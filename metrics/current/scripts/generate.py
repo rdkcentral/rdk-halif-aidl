@@ -332,6 +332,18 @@ def emit_events_md(events: dict) -> list[str]:
            "MetricsEvent. The kinds an element raises are returned in the catalog as "
            "MetricElementInfo.events, so a consumer knows what to expect before it "
            "registers.", "",
+           "**Not every figure can be an event.** An event is a discrete occurrence "
+           "with an instant - something that starts. A `current` sample is a level "
+           "that is always true, a `config` is a setting and a `high_water` is a "
+           "running maximum; none of them happens at a moment, so none can be "
+           "pushed. Nor does every counter earn one - `av.drm` counts decrypt "
+           "operations, which are routine throughput rather than episodes, and "
+           "pushing each would carry nothing the counter does not already say. An "
+           "event pairs with a counter that totals episodes: the things that go "
+           "wrong, and the transitions worth naming individually.", "",
+           "**This section is the whole set.** An element listed here raises exactly these kinds and no others; an element absent from it raises none, and its "
+           "MetricElementInfo.events is empty. Empty is an answer - it says this "
+           "element has nothing whose individual occurrences a consumer could need.", "",
            "The description of each event **is its trigger**: the instant a vendor "
            "raises it. Payload names are bare, because the event already fixes which "
            "source and which occurrence they belong to. A payload a product cannot "
@@ -509,10 +521,18 @@ def check_layers(hal: dict, layers: dict) -> list[str]:
     return problems
 
 
-def check_events(events: dict) -> list[str]:
+def check_events(events: dict, entries: dict) -> list[str]:
     """What an event declaration cannot be trusted to get right on its own."""
     problems = []
+    counted = {f"{e['domain']}.{e['element']}"
+               for e in entries.values() if e["kind"] == "counter"}
     for key, ev in events.items():
+        if ev["element"] not in counted:
+            problems.append(
+                f"{HFP.name}: '{ev['element']}' declares the event "
+                f"'{ev['kind']}' but no counter. An event is an episode, and an "
+                f"episode is counted - without one a consumer that missed the "
+                f"push has no way to learn it happened at all.")
         if not ev["description"]:
             problems.append(
                 f"{HFP.name}: event '{key}' has no description. The description is "
@@ -652,7 +672,7 @@ def main() -> int:
     written = yaml.safe_load(HFP.read_text(encoding="utf-8"))
     problems = (check(entries, derived) + check_elements(written)
                 + check_episodic(entries, DICT_MD.read_text(encoding="utf-8"))
-                + check_events(events))
+                + check_events(events, entries))
     for problem in problems:
         print(f"error: {problem}", file=sys.stderr)
     if problems:

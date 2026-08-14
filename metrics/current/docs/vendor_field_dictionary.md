@@ -171,6 +171,10 @@ A counter says how many occurrences there have been and a `last_*` field describ
 
 Events are pushed to a listener registered on the source and arrive as MetricsEvent. The kinds an element raises are returned in the catalog as MetricElementInfo.events, so a consumer knows what to expect before it registers.
 
+**Not every figure can be an event.** An event is a discrete occurrence with an instant - something that starts. A `current` sample is a level that is always true, a `config` is a setting and a `high_water` is a running maximum; none of them happens at a moment, so none can be pushed. Nor does every counter earn one - `av.drm` counts decrypt operations, which are routine throughput rather than episodes, and pushing each would carry nothing the counter does not already say. An event pairs with a counter that totals episodes: the things that go wrong, and the transitions worth naming individually.
+
+**This section is the whole set.** An element listed here raises exactly these kinds and no others; an element absent from it raises none, and its MetricElementInfo.events is empty. Empty is an answer - it says this element has nothing whose individual occurrences a consumer could need.
+
 The description of each event **is its trigger**: the instant a vendor raises it. Payload names are bare, because the event already fixes which source and which occurrence they belong to. A payload a product cannot derive is omitted from the event rather than sent as a placeholder.
 
 ### `av.video_decoder`
