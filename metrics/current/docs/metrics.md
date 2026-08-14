@@ -292,7 +292,7 @@ A client that exits leaves no state behind to clean up.
 
 1. **Resolve the catalog once.** `getCapabilities()` returns every domain, element and field the product serves. A consumer keeps the names it understands and ignores the rest. The catalog is built at startup and stands for the life of the service, so this is read once at attach.
 2. **Enumerate the sources once.** `getSourcePaths()` names every source this platform serves. The set is static, so a consumer resolves the ones it cares about at attach and holds them for the life of the service.
-3. **Register for what a read cannot carry.** `MetricElementInfo.events` declares the kinds an element raises — and only some figures qualify, so this list is short and the [field dictionary](vendor_field_dictionary.md#events) is where it is settled. `IMetricsSource.registerEventListener()` subscribes to them. Each occurrence arrives as a `MetricsEvent` at the instant it happened, carrying its source path, kind and payload. There is no buffer and no cursor — the callback is the delivery, and the counters remain the record of how many occurred, so a missed call costs that occurrence's detail and never the count.
+3. **Register for what a read cannot carry.** `MetricElementInfo.events` declares the kinds an element raises — and only some figures qualify, so this list is short and the [field dictionary](vendor_field_dictionary.md#events) is where it is settled. `IMetricsSource.registerEventListener()` subscribes to them. Each occurrence arrives as a `MetricsEvent` carrying its source path, kind, payload and a **monotonic** timestamp taken when the vendor layer detected it — not when the callback arrived, since oneway delivery adds queueing and a burst can arrive coalesced. There is no buffer and no cursor — the callback is the delivery, and the counters remain the record of how many occurred, so a missed call costs that occurrence's detail and never the count.
 4. **Capture each source.** `getFieldsByName()` and `getFieldsById()` return the keys asked for under one coherent snapshot, or every declared field when given null. A key the source does not serve is omitted rather than raising an error, whichever form it was given in, so a newer consumer degrades cleanly on an older product.
 
    A steady capture loop should use `getFieldsById()` with the ids it cached at resolve time. It reads the same fields for the life of the source, and their names cannot change between resolutions, so the string form sends the same bytes on every capture — in the request, and again in every pair returned.
@@ -406,7 +406,7 @@ sequenceDiagram
     end
 
     note over SRC,Client: A burst the counters would collapse.
-    SRC-->>Client: onMetricsEvent(decode_error, ts, {reason, vendor_code})
-    SRC-->>Client: onMetricsEvent(decode_error, ts, {reason, vendor_code})
+    SRC-->>Client: onMetricsEvent(decode_error, monotonic ts, {reason, vendor_code})
+    SRC-->>Client: onMetricsEvent(decode_error, monotonic ts, {reason, vendor_code})
     note over Client: Each occurrence individually. No buffer,<br/>no cursor - the callback is the delivery.
 ```

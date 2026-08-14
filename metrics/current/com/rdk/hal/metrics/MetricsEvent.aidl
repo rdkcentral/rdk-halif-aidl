@@ -36,6 +36,8 @@ import com.rdk.hal.metrics.MetricEventValue;
  *  occurrence's detail, which is what the counters could never carry anyway.
  *
  *  A value the source cannot supply is OMITTED from values[], never defaulted.
+ *  The timestamp is not one of those - an occurrence a source cannot time is an
+ *  occurrence it cannot usefully push, and belongs in its counter alone.
  */
 @VintfStability
 parcelable MetricsEvent
@@ -46,8 +48,21 @@ parcelable MetricsEvent
     /** Declared event kind, from MetricEventInfo.kind. */
     String kind;
 
-    /** Host wall-clock at detection, in milliseconds. */
-    long tsUnixMs;
+    /**
+     *  Monotonic timestamp (ms) at the instant the occurrence was detected.
+     *
+     *  Monotonic, not wall-clock, because the arithmetic that matters here is
+     *  the interval BETWEEN occurrences and a wall clock can step under NTP -
+     *  which would space a burst wrongly, or negatively, in the one case the
+     *  push exists to describe.
+     *
+     *  It is also not the moment the callback arrives. Delivery is oneway, so
+     *  receipt carries queueing and listener scheduling on top of the event; a
+     *  burst can arrive coalesced and look simultaneous. This is the instant the
+     *  vendor layer detected the occurrence, sourced from CLOCK_MONOTONIC (or
+     *  equivalent) at that point.
+     */
+    long timestampMonotonicMs;
 
     /** The values this kind declares, by bare name. */
     MetricEventValue[] values;
