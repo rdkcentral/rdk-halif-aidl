@@ -68,6 +68,16 @@ The instance segment is not hashed (`.0` and `.1` are the same field on differen
 
 <!-- Field tables: GENERATED from hfp-metrics.yaml by scripts/generate.py. Do not hand-edit. -->
 
+## Versions
+
+The dictionary revision pins the set of names; a field's `id` pins its unit and kind. Cite both when stating what a device was asked to serve.
+
+| | Version |
+|---|---|
+| `av` dictionary | 1.2 |
+| Interface | 0.1.0.0 |
+| Schema | 0.1.0 |
+
 ## Fields
 
 ### `av.video_decoder`
@@ -152,30 +162,86 @@ The instance segment is not hashed (`.0` and `.1` are the same field on differen
 
 ## Episodic Conditions
 
-Underflows, decode errors, silence periods and first-frame timing happen at an instant rather than describing a level. Each is reported in two parts, both ordinary fields arriving in the same snapshot as everything else:
-
-| Part | Kind | Answers |
-|---|---|---|
-| `underflowed`, `decode_errors`, `freeze_event_count`, `silence_event_count` | `counter` | How many have occurred |
-| `last_underflow_duration_ms`, `last_decode_error_pts_ms`, `last_decode_error_reason`, … | `current` | What the most recent one was |
+An underflow, a freeze, a decode error, a silence period and a first frame happen at an instant rather than describing a level. Each is reported as ordinary fields arriving in the same snapshot as everything else: **counters** say how many have occurred, **`last_*` fields** say what the most recent one was.
 
 A counter that advanced between two polls is what makes the occurrence visible; the `last_*` fields are what make it diagnosable. Because both arrive in one `getAll()` snapshot, an occurrence and the counters around it are always mutually consistent.
 
-**What this trades.** Several occurrences inside one poll interval advance the counter by several and leave the `last_*` fields describing the newest only. Rates and totals stay exact; the intermediate occurrences of a burst are not individually described. That is the deliberate cost of holding no per-source retention, sequence numbering or cursor state in the vendor implementation.
+The tables below are the implementation checklist. For each occurrence: every field it moves, and the instant it moves. A field is written at the instant stated and not re-derived at poll time.
 
-**Not every element has episodic conditions.** An A/V clock reports samples and has nothing episodic to report, so it declares no `last_*` fields. Absence from the declaration is the answer — there is nothing to subscribe to and nothing to poll for.
+### Underflow — `av.video_sink`, `av.audio_sink`
+
+Starts when there is nothing to present at render time. Ends when presentation resumes.
+
+| Field | Kind | Written |
+|---|---|---|
+| `underflowed` | `counter` | **+1 at episode start** |
+| `last_underflow_trigger` | `current` | **at episode start** — why it began, from the closed vocabulary |
+| `underflow_duration_ms` | `counter` | **+= this episode's length, at episode end** |
+| `last_underflow_duration_ms` | `current` | **= this episode's length, at episode end** |
+
+An episode in progress has already moved `underflowed` and `last_underflow_trigger`; it has not yet moved either duration. A consumer seeing the count advance with the total unchanged is reading a live episode, which is the intended signal rather than a gap.
+
+### Freeze — `av.video_sink`
+
+The same frame held on screen because no new one was ready. Distinct from underflow: an underflow is the buffer state, a freeze is what the viewer sees.
+
+| Field | Kind | Written |
+|---|---|---|
+| `frames_repeated_missing_frame` | `counter` | **+1 per repeated frame**, throughout the episode |
+| `freeze_event_count` | `counter` | **+1 at episode start** |
+| `last_freeze_pts_ms` | `current` | **at episode start** — stream PTS where it began |
+| `freeze_duration_ms` | `counter` | **+= this episode's length, at episode end** |
+| `last_freeze_duration_ms` | `current` | **= this episode's length, at episode end** |
+| `max_freeze_duration_ms` | `high_water` | **at episode end**, if this episode was the longest so far |
+
+FRC cadence repeats are **not** a freeze. `frames_repeated_frc` counts those separately and moves none of the fields above — repeating a frame to convert 24 fps to a 60 Hz display is correct behaviour, not a defect.
+
+### Decode error — `av.video_decoder`, `av.audio_decoder`
+
+| Field | Kind | Written |
+|---|---|---|
+| `decode_errors` | `counter` | **+1 at detection** |
+| `last_decode_error_pts_ms` | `current` | **at detection** — stream PTS of the fault |
+| `last_decode_error_reason` | `current` | **at detection** — the closed-vocabulary class a consumer branches on |
+| `last_decode_error_vendor_code` | `current` | **at detection** — the SoC's own code, uninterpreted |
+
+An error is a point occurrence, so all four are written together and there is no end instant. A decode error need not drop a frame and a dropped frame need not be an error: `decode_errors` and `frames_dropped` are separate axes and an implementation moves each on its own trigger.
+
+### Dropped frame — `av.video_sink`
+
+| Field | Kind | Written |
+|---|---|---|
+| `frames_dropped_late` | `counter` | **+1** when a frame missed its deadline by more than one display interval |
+| `frames_dropped_frc` | `counter` | **+1** when frame-rate conversion decimated a frame |
+| `last_dropped_frame_pts_ms` | `current` | **at either drop above** — stream PTS of the frame dropped |
+
+`last_dropped_frame_pts_ms` covers both drop axes. Which axis dropped it is answered by whichever counter advanced.
+
+### Digital silence — `av.audio_sink`
+
+A period of emitted digital silence at or above the declared threshold. Counted only once complete, since the threshold cannot be tested until the period ends.
+
+| Field | Kind | Written |
+|---|---|---|
+| `silence_event_count` | `counter` | **+1 at period end**, if it met the threshold |
+| `silence_duration_ms` | `counter` | **+= the period's length, at period end** |
+| `last_silence_duration_ms` | `current` | **= the period's length, at period end** |
+
+### First frame — `av.video_sink`
+
+| Field | Kind | Written |
+|---|---|---|
+| `first_frame_presented_pts_ms` | `current` | **when the first frame reaches presentation** — at session start, and again after each seek or flush |
+
+Not an episode and has no counter: it is re-set each time playback restarts, so a consumer reads the current session's value rather than a history.
+
+### What this trades
+
+Several occurrences inside one poll interval advance the counter by several and leave the `last_*` fields describing the newest only. Rates and totals stay exact; the intermediate occurrences of a burst are not individually described. That is the deliberate cost of holding no per-source retention, sequence numbering or cursor state in the vendor implementation.
+
+**Not every element has episodic conditions.** An A/V clock reports samples and has nothing episodic to report, so it declares no `last_*` fields. Absence from the declaration is the answer.
 
 **A value the implementation cannot supply is left undeclared, not defaulted.** A PTS that cannot be derived is absent from the declaration, never served as `-1` — "no PTS available for this drop" and "the PTS is minus one" are different facts.
-
-## Retired
-
-A field is retired here rather than deleted, so a later author cannot resurrect the name with different semantics without seeing that it once meant something else. Retiring is a deliberate act with a diff.
-
-| Field | Retired | Reason |
-|---|---|---|
-| — | — | Nothing retired yet. |
-
-Because ids are content-derived, a retired name reused with the same unit and kind resolves to the same id and **is** the same field. Reused with a different unit or kind it resolves to a different id, so no consumer can mistake one for the other.
 
 ## Accuracy
 

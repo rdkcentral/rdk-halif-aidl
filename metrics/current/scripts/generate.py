@@ -136,25 +136,43 @@ def field_id(path: str, unit: str, kind: str) -> int:
     return struct.unpack(">q", digest[:8])[0] & 0x7FFFFFFFFFFFFFFF
 
 
-def load_profile() -> tuple[dict, dict]:
-    """Returns (entries, derived_from) from the HFP, in authored order."""
+def profile_versions(doc: dict) -> dict:
+    """What a profile states about itself, and each domain's dictionary."""
+    root = doc.get("metrics") or doc.get("hfd")
+    return {"interface": root.get("interfaceVersion"),
+            "schema": root.get("schemaVersion"),
+            "domains": {d["domain"]: d.get("dictionaryVersion")
+                        for d in root["domains"]}}
+
+
+def render_versions(v: dict) -> str:
+    """The domain dictionary revisions of one profile, as one cell."""
+    return ", ".join(f"`{d}` {rev or '—'}" for d, rev in v["domains"].items())
+
+
+def load_profile() -> tuple[dict, dict, dict]:
+    """Returns (entries, derived_from, versions) from the HFP, in authored order."""
     entries, derived = {}, {}
-    _load(yaml.safe_load(HFP.read_text(encoding="utf-8")), entries, derived, "HAL")
-    return entries, derived
+    doc = yaml.safe_load(HFP.read_text(encoding="utf-8"))
+    _load(doc, entries, derived, "HAL")
+    return entries, derived, profile_versions(doc)
 
 
-def load_upper() -> dict:
-    """Fields defined by a layer above the HAL, keyed by layer name.
+def load_upper() -> tuple[dict, dict]:
+    """Fields defined by a layer above the HAL, keyed by layer name, and the
+    versions each of those layers states.
 
     Empty when no working copy is present, which is the normal state of this
     repository - those definitions live with the layer that owns them."""
-    layers = {}
+    layers, versions = {}, {}
     for path in sorted(ROOT.glob(UPPER_GLOB)):
         layer = path.name.split("-field-unique-dictionary")[0]
         entries, derived = {}, {}
-        _load(yaml.safe_load(path.read_text(encoding="utf-8")), entries, derived, layer)
+        doc = yaml.safe_load(path.read_text(encoding="utf-8"))
+        _load(doc, entries, derived, layer)
         layers[layer] = entries
-    return layers
+        versions[layer] = profile_versions(doc)
+    return layers, versions
 
 
 def _load(doc: dict, entries: dict, derived: dict, layer: str) -> None:
@@ -201,7 +219,8 @@ def const_name(path: str) -> str:
 # Generators
 # --------------------------------------------------------------------------
 
-def emit_combined(hal: dict, layers: dict) -> str:
+def emit_combined(hal: dict, layers: dict, hal_versions: dict,
+                  layer_versions: dict) -> str:
     """Every field a caller of the top layer can see, and who produces it.
 
     A consumer above the middleware reads the union - getCapabilities() returns
@@ -224,8 +243,21 @@ def emit_combined(hal: dict, layers: dict) -> str:
            "without anything having to co-ordinate.", "",
            f"{total} fields: {len(hal)} from the HAL"
            + "".join(f", {len(v)} from {k}" for k, v in layers.items()) + ".", "",
-           "| Field | Layer | Type · unit · kind | Provider | id | Definition |",
-           "|---|---|---|---|---|---|"]
+           "## Versions", "",
+           "Each layer versions itself. A figure is cited against the dictionary "
+           "revision of the layer that owns it, not against a single number for "
+           "the union.", "",
+           "| Layer | Interface | Schema | Dictionary |",
+           "|---|---|---|---|",
+           f"| HAL | {hal_versions['interface'] or '—'} | "
+           f"{hal_versions['schema'] or '—'} | {render_versions(hal_versions)} |"]
+    for layer, v in layer_versions.items():
+        out.append(f"| {layer} | {v['interface'] or '—'} | {v['schema'] or '—'} "
+                   f"| {render_versions(v)} |")
+    out += ["",
+            "## Fields", "",
+            "| Field | Layer | Type · unit · kind | Provider | id | Definition |",
+            "|---|---|---|---|---|---|"]
     merged = dict(hal)
     for entries in layers.values():
         merged.update(entries)
@@ -238,11 +270,14 @@ def emit_combined(hal: dict, layers: dict) -> str:
     return "\n".join(out) + "\n"
 
 
-def emit_dictionary_md(entries: dict) -> str:
+def emit_dictionary_md(entries: dict, versions: dict) -> str:
     """The human-readable reference, generated from the profile."""
     head = DICT_MD.read_text(encoding="utf-8") if DICT_MD.exists() else ""
     preamble = (head.split("## Fields")[0] if "## Fields" in head
                 else "# AV Domain Field Dictionary\n\n")
+    # Versions are generated below, so drop the block a previous run left in
+    # the carried-forward preamble rather than stacking another one on it.
+    preamble = preamble.split("## Versions")[0]
     # The preamble is carried through, so drop any marker a previous run left
     # in it before emitting a fresh one - otherwise they stack.
     preamble = "\n".join(l for l in preamble.splitlines()
@@ -254,7 +289,16 @@ def emit_dictionary_md(entries: dict) -> str:
             break
 
     out = [preamble.rstrip("\n"), "", f"<!-- Field tables: {GENERATED} -->", "",
-           "## Fields"]
+           "## Versions", "",
+           "The dictionary revision pins the set of names; a field's `id` pins its "
+           "unit and kind. Cite both when stating what a device was asked to serve.",
+           "",
+           "| | Version |", "|---|---|"]
+    for domain, revision in versions["domains"].items():
+        out.append(f"| `{domain}` dictionary | {revision or '—'} |")
+    out += [f"| Interface | {versions['interface'] or '—'} |",
+            f"| Schema | {versions['schema'] or '—'} |",
+            "", "## Fields"]
     last_element = None
     for path, e in entries.items():
         element = f"{e['domain']}.{e['element']}"
@@ -350,6 +394,30 @@ def check_layers(hal: dict, layers: dict) -> list[str]:
     return problems
 
 
+def check_episodic(entries: dict, doc_text: str) -> list[str]:
+    """Every episodic field must be named in the checklist an implementer reads.
+
+    The Episodic Conditions section is authored, not generated: it states the
+    instant each field is written, which the profile does not say. Authored text
+    goes stale silently - a field added to the profile simply never appears -
+    so require the section to account for every episodic field."""
+    if "## Episodic Conditions" not in doc_text:
+        return []
+    section = doc_text[doc_text.index("## Episodic Conditions"):]
+    problems = []
+    for path, e in entries.items():
+        name = e["field"]
+        if not (name.startswith("last_") or name.endswith("_event_count")
+                or name == "underflowed"):
+            continue
+        if f"`{name}`" not in section:
+            problems.append(
+                f"{DICT_MD.name}: '{path}' reports an occurrence, but the Episodic "
+                f"Conditions section never names it - nothing tells an implementer "
+                f"at what instant to write it.")
+    return problems
+
+
 def check_elements(doc: dict) -> list[str]:
     """Element-level constraints, which no field-by-field pass can see.
 
@@ -382,15 +450,17 @@ def check_elements(doc: dict) -> list[str]:
     return problems
 
 
-def generate(entries: dict, derived: dict) -> dict:
+def generate(entries: dict, derived: dict, versions: dict) -> dict:
     """Write every generated artefact. Returns {path: content} as written."""
     HFP.write_text(write_ids(entries), encoding="utf-8")
-    DICT_MD.write_text(emit_dictionary_md(entries), encoding="utf-8")
+    DICT_MD.write_text(emit_dictionary_md(entries, versions), encoding="utf-8")
     written = [DICT_MD, HFP]
 
-    layers = load_upper()
+    layers, layer_versions = load_upper()
     if layers:
-        COMBINED.write_text(emit_combined(entries, layers), encoding="utf-8")
+        COMBINED.write_text(
+            emit_combined(entries, layers, versions, layer_versions),
+            encoding="utf-8")
         written.append(COMBINED)
     elif COMBINED.exists():
         COMBINED.unlink()          # no upper layer here means no combined view
@@ -403,26 +473,26 @@ def main() -> int:
         description="Regenerate and check everything the HAL Field Dictionary "
                     "drives. Takes no arguments.").parse_args()
 
-    entries, derived = load_profile()
+    entries, derived, versions = load_profile()
     if not entries:
         print(f"error: no fields found in {HFP}", file=sys.stderr)
         return 2
 
     # Before writing anything: a path claimed by two layers cannot be rendered
     # in the combined view at all, so fail while the tree is still untouched.
-    layers = load_upper()
+    layers, _ = load_upper()
     collisions = check_layers(entries, layers)
     if collisions:
         for collision in collisions:
             print(f"error: {collision}", file=sys.stderr)
         return 1
 
-    first = generate(entries, derived)
+    first = generate(entries, derived, versions)
     # Two emitters carry their own previous output forward - the HFP's
     # description blocks and the dictionary's preamble. Both have stacked
     # duplicates before, and neither failure is visible in a single run. So
     # generate again and require the result to be identical.
-    second = generate(entries, derived)
+    second = generate(entries, derived, versions)
     unstable = sorted(p.name for p in first if first[p] != second[p])
     if unstable:
         print(f"error: generation is not idempotent - {', '.join(unstable)} "
@@ -432,7 +502,8 @@ def main() -> int:
 
     # Re-read the written profile, so the ids checked are the ones that landed.
     written = yaml.safe_load(HFP.read_text(encoding="utf-8"))
-    problems = check(entries, derived) + check_elements(written)
+    problems = (check(entries, derived) + check_elements(written)
+                + check_episodic(entries, DICT_MD.read_text(encoding="utf-8")))
     for problem in problems:
         print(f"error: {problem}", file=sys.stderr)
     if problems:
