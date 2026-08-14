@@ -331,6 +331,25 @@ def check(entries: dict, derived: dict) -> list[str]:
     return problems
 
 
+def check_layers(hal: dict, layers: dict) -> list[str]:
+    """The one rule that spans profiles: a layer never declares another's field.
+
+    The combined view merges every layer into one table, so a repeated path
+    would silently keep one declaration and drop the other - and "who owes this
+    figure" stops being answerable from the file it appears in."""
+    problems, seen = [], {path: "the HAL" for path in hal}
+    for layer, entries in layers.items():
+        for path in entries:
+            if path in seen:
+                problems.append(
+                    f"'{path}' is declared by both {seen[path]} and {layer}. A layer "
+                    f"never declares another layer's fields, and the combined view "
+                    f"cannot show both.")
+            else:
+                seen[path] = layer
+    return problems
+
+
 def check_elements(doc: dict) -> list[str]:
     """Element-level constraints, which no field-by-field pass can see.
 
@@ -389,6 +408,15 @@ def main() -> int:
         print(f"error: no fields found in {HFP}", file=sys.stderr)
         return 2
 
+    # Before writing anything: a path claimed by two layers cannot be rendered
+    # in the combined view at all, so fail while the tree is still untouched.
+    layers = load_upper()
+    collisions = check_layers(entries, layers)
+    if collisions:
+        for collision in collisions:
+            print(f"error: {collision}", file=sys.stderr)
+        return 1
+
     first = generate(entries, derived)
     # Two emitters carry their own previous output forward - the HFP's
     # description blocks and the dictionary's preamble. Both have stacked
@@ -411,7 +439,6 @@ def main() -> int:
         print(f"\n{len(problems)} problem(s).", file=sys.stderr)
         return 1
 
-    layers = load_upper()
     extra = sum(len(v) for v in layers.values())
     print(f"ok: {len(entries)} fields declared; ids written and generation is stable.")
     if layers:

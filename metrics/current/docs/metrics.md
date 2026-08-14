@@ -75,7 +75,7 @@ Each field carries what a vendor needs to implement it and what a test needs to 
 - name: frames_decoded
   unit: frames
   kind: counter
-  id: 0x63c81c7efbe7e743        # generated
+  id: '0x63c81c7efbe7e743'      # generated
   provider: Driver
   description: >
     Compressed frames the decoder has decoded and emitted at its output
@@ -324,12 +324,13 @@ A PTS the SoC cannot derive leaves the field **undeclared**, never served as `-1
 ```aidl
 parcelable Capabilities {
     String schemaId;
-    MetricDomainInfo[] domains;
+    MetricProfileInfo[] profiles;
 }
 ```
 
 - `schemaId` is an opaque identity of this product's declared set — stable while the declaration is unchanged, different the moment anything in it changes. A bug report needs only this value to pin exactly what the device was serving.
-- `domains` carries, per domain, the dictionary revision it was written against and its elements. Each element carries its fields, `instances` and `pollCadenceMs`.
+- `profiles` carries one entry per layer that declares metrics — the HAL's, and each layer above it. Each profile carries its own `interfaceVersion` and `schemaVersion`, so a consumer can tell which layer owes a figure and which schema shape it is reading.
+- `domains`, within a profile, carries per domain the dictionary revision it was written against and its elements. Each element carries its fields, `instances` and `pollCadenceMs`.
 
 ### Example hfp-metrics.yaml
 
@@ -349,7 +350,7 @@ metrics:
             # frames_decoded: Compressed frames the decoder has decoded and emitted at its
             #                 output (post-decode, pre-sink). +1 per emitted frame. Counted
             #                 from instance creation; never reset on flush/seek.
-            - { name: frames_decoded, unit: frames, kind: counter, id: 0x63c81c7efbe7e743 }
+            - { name: frames_decoded, unit: frames, kind: counter, id: '0x63c81c7efbe7e743' }
 
           # - { name: frames_corrupted, unit: frames, kind: counter }   # NOT SUPPORTED - no
           #                                                             # per-frame integrity
@@ -384,7 +385,7 @@ sequenceDiagram
 
     Client->>MGR: getCapabilities()
     note over Client: Resolve once. Cache-key the name map<br>on Capabilities.schemaId.
-    Client->>MGR: registerEventListener(listener)
+    Client->>MGR: registerEventListener("av", listener)
     Client->>MGR: getSourcePaths()
     MGR-->>Client: ["av.video_decoder.0", "av.video_sink.0", ...]
     Client->>MGR: getSource("av.video_decoder.0")
