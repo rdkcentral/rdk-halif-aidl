@@ -128,10 +128,10 @@ mapping:
                         required: true
                         range: { min: 1 }
 
-                      # Cadence this element is polled at. May be TIGHTER than
+                      # Cadence this element is captured at. May be TIGHTER than
                       # the 50 ms platform floor; never looser — the freshness
                       # contract is a partner-facing promise. Default 50.
-                      pollCadenceMs:
+                      captureCadenceMs:
                         type: int
                         required: false
                         range: { min: 1, max: 50 }
@@ -217,7 +217,7 @@ mapping:
                       # Occurrences this element raises. A counter says an
                       # occurrence happened and a `last_*` field describes the
                       # newest; an event carries each one individually, so a
-                      # burst inside one poll interval is not collapsed to its
+                      # burst inside one capture interval is not collapsed to its
                       # newest member. An element declares both, and a consumer
                       # picks by whether it needs totals or fidelity.
                       events:

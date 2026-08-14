@@ -118,7 +118,7 @@ UNIT_ALIASES = {"µs": "us"}
 KIND_RULES = {
     "counter": "cumulative since source creation, monotonically non-decreasing, "
                "and never reset on flush or seek",
-    "current": "a live sample re-read each poll, absolute, and never summed",
+    "current": "a live sample re-read each capture, absolute, and never summed",
     "high_water": "a monotone maximum since source creation, absolute",
     "config": "the present value of a tunable, absolute",
 }
@@ -305,7 +305,7 @@ def emit_events_md(events: dict) -> list[str]:
     out = ["## Events", "",
            "A counter says how many occurrences there have been and a `last_*` field "
            "describes the newest. An event carries each occurrence individually, so "
-           "several inside one poll interval are not collapsed to their newest "
+           "several inside one capture interval are not collapsed to their newest "
            "member. An element declares both, and a consumer picks by whether it "
            "needs totals or fidelity.", "",
            "The description of each event **is its trigger**: the instant a vendor "
@@ -545,10 +545,10 @@ def check_elements(doc: dict) -> list[str]:
     for domain in root["domains"]:
         for element in domain["elements"]:
             where = f"{domain['domain']}.{element['element']}"
-            cadence = element.get("pollCadenceMs")
+            cadence = element.get("captureCadenceMs")
             if cadence is not None and not 1 <= cadence <= SLOWEST_CADENCE_MS:
                 problems.append(
-                    f"{HFP.name}: '{where}' declares pollCadenceMs {cadence}, outside "
+                    f"{HFP.name}: '{where}' declares captureCadenceMs {cadence}, outside "
                     f"1..{SLOWEST_CADENCE_MS}. The {SLOWEST_CADENCE_MS} ms freshness "
                     f"floor is promised to partners; an element may declare tighter, "
                     f"never looser.")

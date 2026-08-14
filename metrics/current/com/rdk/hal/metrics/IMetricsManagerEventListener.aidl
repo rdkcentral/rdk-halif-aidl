@@ -22,7 +22,7 @@ package com.rdk.hal.metrics;
  *  @brief     Notification that the set of live sources has changed.
  *
  *  Per-session sources come and go with their sessions, so a consumer attaches
- *  at source start rather than polling getSourcePaths().
+ *  at source start rather than re-reading getSourcePaths().
  *
  *  Only sources inside the scope this listener registered for are reported. A
  *  consumer registered on "av.video_decoder" never hears about a sink source, so it neither

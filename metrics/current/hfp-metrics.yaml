@@ -81,7 +81,7 @@
 #   * `description` is what a vendor implements against and what a test
 #     asserts. A field without one cannot be implemented, and the generator
 #     rejects it.
-#   * pollCadenceMs may be TIGHTER than the 50 ms floor, never looser.
+#   * captureCadenceMs may be TIGHTER than the 50 ms floor, never looser.
 #   * `instances` is the count the hardware SUPPORTS, not the count that is
 #     live. It makes capability checkable before boot, lets a test assert that
 #     no source index >= instances ever appears, and MUST agree with the owning
@@ -101,7 +101,7 @@ metrics:
 
         - element: video_decoder
           instances: 2
-          pollCadenceMs: 20
+          captureCadenceMs: 20
           fields:
 
             - name: frames_decoded
@@ -334,7 +334,7 @@ metrics:
               description: >
                 Buffered decoded media ahead of the present position **now** — Σ
                 presentation-durations of frames queued but not yet presented. Live sample
-                re-read each poll; **not** cumulative. **Warning:** SoC- and use-case-specific.
+                re-read each capture; **not** cumulative. **Warning:** SoC- and use-case-specific.
 
             - name: last_underflow_trigger
               unit: none
@@ -613,7 +613,7 @@ metrics:
               provider: Driver
               description: >
                 Buffered decoded audio ahead of the play position **now**. Live sample re-read
-                each poll; **not** cumulative. **Warning:** SoC- and use-case-specific.
+                each capture; **not** cumulative. **Warning:** SoC- and use-case-specific.
 
             - name: last_underflow_trigger
               unit: none
@@ -714,7 +714,7 @@ metrics:
 
         - element: clock
           instances: 1
-          pollCadenceMs: 50
+          captureCadenceMs: 50
           fields:
 
             - name: sync_offset_ms
@@ -784,7 +784,7 @@ metrics:
         # the driver can observe: work done on keys the session already holds.
         - element: drm
           instances: 2
-          pollCadenceMs: 50
+          captureCadenceMs: 50
           fields:
 
             - name: decrypt_count

@@ -45,14 +45,14 @@ parcelable MetricElementInfo
 
     /**
      *  The longest interval, in milliseconds, that this element's values may go
-     *  without being refreshed. A MAXIMUM, not a rate to poll at.
+     *  without being refreshed. A MAXIMUM, not a rate to capture at.
      *
      *  It is a freshness guarantee: a read returns values sampled no longer than this
      *  ago. 20 means the values are refreshed at least every 20 ms. The platform
      *  ceiling is 50 ms; an element may guarantee tighter, never looser.
      *
      *  It bounds what is worth reading, not what is allowed. Reads are never
-     *  rate-limited and never rejected for arriving too often - a consumer polling
+     *  rate-limited and never rejected for arriving too often - a consumer capturing
      *  faster than this simply reads the same values again, because nothing has
      *  refreshed them in between. A consumer differencing counters at a shorter
      *  interval than this is dividing by an interval no measurement covered.
@@ -61,5 +61,5 @@ parcelable MetricElementInfo
      *  and the value carried here is 50 - a consumer reads the guarantee in force
      *  rather than inferring a default that is stated elsewhere.
      */
-    int pollCadenceMs;
+    int captureCadenceMs;
 }

@@ -15,7 +15,7 @@ The four kinds:
 | `kind` | Values shall be |
 |---|---|
 | `counter` | cumulative since source creation, monotonically non-decreasing, and never reset on flush or seek |
-| `current` | a live sample re-read each poll, absolute, and never summed |
+| `current` | a live sample re-read each capture, absolute, and never summed |
 | `high_water` | a monotone maximum since source creation, absolute |
 | `config` | the present value of a tunable, absolute |
 
@@ -38,7 +38,7 @@ Each field declares a **kind**, which governs the arithmetic a consumer may do:
 | Kind | Meaning | Consumer may |
 |---|---|---|
 | `counter` | Cumulative since source creation. Monotonically non-decreasing; never reset on flush or seek | difference it; sum deltas |
-| `current` | A live sample, re-read each poll. Absolute | read it; **never sum it** |
+| `current` | A live sample, re-read each capture. Absolute | read it; **never sum it** |
 | `high_water` | Monotone max since source creation. Absolute | read it; compare it |
 | `config` | A tunable's present value. Absolute | read it; write it where `writable` |
 
@@ -112,7 +112,7 @@ The dictionary revision pins the set of names; a field's `id` pins its unit and 
 | `freeze_event_count` | int64 · events · `counter` | **Driver** | `0x5196f6826e91a801` | Count of freeze episodes — +1 per episode start. Paired with `freeze_duration_ms`: mean freeze length = `freeze_duration_ms` / `freeze_event_count`. |
 | `max_freeze_duration_ms` | int64 · ms · `high_water` | **Driver** | `0x088d619c00c1c539` | Longest single freeze episode observed since instance creation. Monotone non-decreasing high-water mark. |
 | `render_latency_sum_us` | int64 · us · `counter` | **Driver** | `0x75f862796424b00d` | Running sum of per-frame render latency = *(frame presented to scanout)* − *(frame received at sink input)*. Needs the sink's internal present timestamp. Paired with `frames_presented`. |
-| `buffer_depth_ms` | int64 · ms · `current` | **Driver** | `0x111d82c20cb9e693` | Buffered decoded media ahead of the present position **now** — Σ presentation-durations of frames queued but not yet presented. Live sample re-read each poll; **not** cumulative. **Warning:** SoC- and use-case-specific. |
+| `buffer_depth_ms` | int64 · ms · `current` | **Driver** | `0x111d82c20cb9e693` | Buffered decoded media ahead of the present position **now** — Σ presentation-durations of frames queued but not yet presented. Live sample re-read each capture; **not** cumulative. **Warning:** SoC- and use-case-specific. |
 | `last_underflow_trigger` | int64 · none · `current` | **Driver** | `0x03210d8159685756` | Closed-vocabulary cause of the most recent underflow episode: startup prefill, mid-stream, seek recovery, trickplay recovery, content boundary. Distinguishes an expected starvation from a defect. |
 | `last_underflow_duration_ms` | int64 · ms · `current` | **Driver** | `0x7b1ed4a908e8ef1b` | Length of the most recent **completed** underflow episode. Read with `underflowed` and `underflow_duration_ms`, which give the count and the total. |
 | `last_dropped_frame_pts_ms` | int64 · ms · `current` | **Driver** | `0x0e6d081eed2918dd` | Stream PTS of the most recently dropped frame, within ±1 frame interval, whatever the drop axis. Turns a drop count into a locatable defect. Left undeclared where no PTS is derivable. |
@@ -140,7 +140,7 @@ The dictionary revision pins the set of names; a field's `id` pins its unit and 
 | `underflow_duration_ms` | int64 · ms · `counter` | **Driver** | `0x4ce68288bc2f93b2` | Cumulative time the audio path was starved of decoded data (Σ of each episode start→clear). Paired with `underflowed`: mean episode length = `underflow_duration_ms` / `underflowed`. |
 | `silence_duration_ms` | int64 · ms · `counter` | **Driver** | `0x09fdcdf6715ef048` | Cumulative emitted **digital silence** in periods that reached `silence_threshold_ms`. Digital-silence detection is in the audio path. Distinguishes unexpected absence of audio output from starvation (`underflow_duration_ms`). |
 | `silence_event_count` | int64 · events · `counter` | **Driver** | `0x357a57be2601412e` | Count of completed digital-silence periods that reached `silence_threshold_ms`. Paired with `silence_duration_ms`: mean silence length = `silence_duration_ms` / `silence_event_count`. |
-| `buffer_depth_ms` | int64 · ms · `current` | **Driver** | `0x1aea4fc8a27262b7` | Buffered decoded audio ahead of the play position **now**. Live sample re-read each poll; **not** cumulative. **Warning:** SoC- and use-case-specific. |
+| `buffer_depth_ms` | int64 · ms · `current` | **Driver** | `0x1aea4fc8a27262b7` | Buffered decoded audio ahead of the play position **now**. Live sample re-read each capture; **not** cumulative. **Warning:** SoC- and use-case-specific. |
 | `last_underflow_trigger` | int64 · none · `current` | **Driver** | `0x40771a4a2b2ee087` | Closed-vocabulary cause of the most recent audio underflow episode, same vocabulary as `av.video_sink.last_underflow_trigger`. |
 | `last_underflow_duration_ms` | int64 · ms · `current` | **Driver** | `0x638f410fc657c525` | Length of the most recent **completed** audio underflow episode. Read with `underflowed` and `underflow_duration_ms`, which give the count and the total. |
 | `last_silence_duration_ms` | int64 · ms · `current` | **Driver** | `0x1cf88c9352312e83` | Length of the most recent completed digital-silence period. Read with `silence_event_count` and `silence_duration_ms`. |
@@ -167,7 +167,7 @@ The dictionary revision pins the set of names; a field's `id` pins its unit and 
 
 ## Events
 
-A counter says how many occurrences there have been and a `last_*` field describes the newest. An event carries each occurrence individually, so several inside one poll interval are not collapsed to their newest member. An element declares both, and a consumer picks by whether it needs totals or fidelity.
+A counter says how many occurrences there have been and a `last_*` field describes the newest. An event carries each occurrence individually, so several inside one capture interval are not collapsed to their newest member. An element declares both, and a consumer picks by whether it needs totals or fidelity.
 
 The description of each event **is its trigger**: the instant a vendor raises it. Payload names are bare, because the event already fixes which source and which occurrence they belong to. A payload a product cannot derive is omitted from the event rather than sent as a placeholder.
 
@@ -269,14 +269,14 @@ Raised when audio resumes, closing the period the preceding `silence` opened. A 
 
 An underflow, a freeze, a decode error, a silence period and a first frame happen at an instant rather than describing a level. Each is reported as ordinary fields arriving in the same snapshot as everything else: **counters** say how many have occurred, **`last_*` fields** say what the most recent one was.
 
-A counter that advanced between two polls is what makes the occurrence visible; the `last_*` fields are what make it diagnosable. Because both arrive in one `getAll()` snapshot, an occurrence and the counters around it are always mutually consistent.
+A counter that advanced between two captures is what makes the occurrence visible; the `last_*` fields are what make it diagnosable. Because both arrive in one `getAll()` snapshot, an occurrence and the counters around it are always mutually consistent.
 
 Each occurrence has **two** reporting halves, and an implementation owes both:
 
 - the **fields** it moves, listed below with the instant each is written
 - the **event** it raises, named below and specified with its payload under [Events](#events)
 
-They answer different questions. A poller that missed the moment still sees the counters; a listener sees every occurrence in a burst, which the counters collapse. A field is written at the instant stated and not re-derived at poll time.
+They answer different questions. A consumer that missed the moment still sees the counters; a listener sees every occurrence in a burst, which the counters collapse. A field is written at the instant stated and not re-derived at capture time.
 
 ### Underflow — `av.video_sink`, `av.audio_sink`
 
@@ -362,7 +362,7 @@ Not an episode and has no counter: it is re-set each time playback restarts, so 
 
 ### What this trades
 
-Read by polling alone, several occurrences inside one poll interval advance the counter by several and leave the `last_*` fields describing the newest only. Rates and totals stay exact; the intermediate occurrences of a burst are not individually described. A consumer that needs each one listens for the element's events instead, which is the reason both halves are declared.
+Read by capture alone, several occurrences inside one capture interval advance the counter by several and leave the `last_*` fields describing the newest only. Rates and totals stay exact; the intermediate occurrences of a burst are not individually described. A consumer that needs each one listens for the element's events instead, which is the reason both halves are declared.
 
 **Not every element has episodic conditions.** An A/V clock reports samples and has nothing episodic to report, so it declares no `last_*` fields. Absence from the declaration is the answer.
 
@@ -374,5 +374,5 @@ Read by polling alone, several occurrences inside one poll interval advance the 
 |---|---|
 | **Counter accuracy** | Within ±0.2 %. Every drop and every presentation counted — no quiet gaps between samples |
 | **Occurrence PTS** | A `*_pts_ms` field within ±1 frame interval of the occurrence it describes, where a consumer requires exact PTS |
-| **Snapshot freshness** | No older than the element's declared `pollCadenceMs`, floor 50 ms |
+| **Snapshot freshness** | No older than the element's declared `captureCadenceMs`, floor 50 ms |
 | **Atomicity** | Every value of one read sampled at a single instant, so paired counters never produce an impossible ratio |

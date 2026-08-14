@@ -41,7 +41,7 @@ scope:
   - Domain model, so cpu/memory and future subjects ride the same contract as av without interface change
   - Per-source atomic snapshot reads, so paired counters cannot be read torn
   - Declared metric set (hfp-metrics.yaml), keeping the metric dictionary out of the ABI
-  - Episodic conditions carried as counters plus last-episode fields, so a poll between two episodes still sees both
+  - Episodic conditions carried as counters plus last-episode fields, so a capture between two episodes still sees both
 
 # notes - Tracking metadata                                              [manual]
 notes:

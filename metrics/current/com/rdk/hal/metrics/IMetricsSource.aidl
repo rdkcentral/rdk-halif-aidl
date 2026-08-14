@@ -62,7 +62,7 @@ interface IMetricsSource
      *  Atomicity is an obligation on the implementation, not a property to be
      *  discovered: a source spanning two hardware blocks latches both.
      *
-     *  This is the normal read for a poll loop.
+     *  This is the normal read for a capture loop.
      *
      *  @param[out] values : fully-qualified name/value pairs.
      *  @returns boolean : true on success.
@@ -84,7 +84,7 @@ interface IMetricsSource
     boolean getFieldsByName(in String[] names, out MetricKVPair[] values);
 
     /**
-     *  @brief Single-field read. Diagnostics and one-off reads, not the poll
+     *  @brief Single-field read. Diagnostics and one-off reads, not the capture
      *         path.
      *
      *  @param[in]  name  : bare field name, e.g. "frames_decoded".
@@ -109,10 +109,10 @@ interface IMetricsSource
     boolean setField(in String name, in long value);
 
     /**
-     *  @brief Subset read by contract id — the poll path, same single-snapshot
+     *  @brief Subset read by contract id — the capture path, same single-snapshot
      *         guarantee as getAll() and getFieldsByName().
      *
-     *  Identical in meaning to getFieldsByName(); only the key differs. A poll
+     *  Identical in meaning to getFieldsByName(); only the key differs. A capture
      *  loop reads the same field set every cadence for the life of a source, and
      *  the names of that set never change, so the string form re-marshals a
      *  constant on every read - in the request, and again in every pair returned.

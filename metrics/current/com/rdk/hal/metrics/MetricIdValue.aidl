@@ -21,7 +21,7 @@ package com.rdk.hal.metrics;
 /**
  *  @brief     One metric value, keyed by its contract id.
  *
- *  The poll-path counterpart to MetricKVPair. Both carry the same value; they
+ *  The capture-path counterpart to MetricKVPair. Both carry the same value; they
  *  differ in what identifies it and therefore in what the pair costs and what
  *  it can be trusted to mean on its own.
  *
@@ -33,7 +33,7 @@ package com.rdk.hal.metrics;
  *  This pair is not self-describing and does not try to be. It is two int64s,
  *  fixed width, no string to marshal, for the case where the client already
  *  resolved the source's fields and is now reading the same set every 20 ms for
- *  the life of the session. Re-sending "frames_decoded" on each of those polls
+ *  the life of the session. Re-sending "frames_decoded" on each of those captures
  *  transmits a constant.
  *
  *  Nothing is lost by using it, because the id says more than the name does. A
