@@ -71,6 +71,61 @@ flowchart TD
 
 **This interface does not know which of them is its client.** The HAL contract is the same whether the middleware relays frames onward or a consumer binds `ICapture` itself; only the holder of the per-frame binding changes, and that decision sits above this repository. Binding directly halves the per-frame IPC hops, and each hop costs an `SCM_RIGHTS` pass of a Dma-Buf descriptor — but it requires a binder into the container the consumer runs in, which is a platform packaging decision rather than an interface one. It also has to answer which decoder instance a consumer may capture from, and how a binding the middleware does not hold is invalidated when the decoder is reclaimed under contention.
 
+## Planes, buffers and image planes
+
+The word **plane** means two unrelated things on this page, and both are load-bearing.
+
+**A plane is a hardware surface.** What `IPlaneControl` manages. A product has a handful — video planes, graphics planes, and a capture plane — identified by `planeIndex` and typed by `PlaneType`. This is the thing a source is mapped onto.
+
+**An image plane is a colour component of one frame.** `NV12` stores a frame as two separate blocks of bytes: luma (Y), and interleaved chroma (UV). DRM and EGL both call these planes, which is where `planeFds[]`, `planeOffsets[]` and `planeStrides[]` take their name — element N feeds `EGL_DMA_BUF_PLANE<N>_FD_EXT`. The name is inherited from the import API rather than chosen here.
+
+They have nothing to do with each other. A capture plane is one hardware surface; the frames it delivers each have one or more image planes inside them.
+
+### How it nests
+
+```text
+capture plane            planeIndex = 3       one hardware surface
+ └─ pool                 N buffers            allocated at start()
+     ├─ buffer           bufferIndex = 0      one frame lands in one buffer
+     │   ├─ image plane 0 (Y)    fd, offset, stride, length
+     │   └─ image plane 1 (UV)   fd, offset, stride, length
+     ├─ buffer           bufferIndex = 1
+     ├─ buffer           bufferIndex = 2
+     └─ buffer           bufferIndex = 3
+```
+
+| Identifier | Identifies | Where it appears |
+|---|---|---|
+| `planeIndex` | the hardware surface | `PlaneCapabilities`, `IPlaneControl.getCapture()` |
+| `bufferIndex` | which pool buffer holds this frame | `VideoFrameView`, `releaseFrame()` |
+| `(fd, offset)` | where one image plane's bytes live | `planeFds[N]`, `planeOffsets[N]` |
+
+### Concretely
+
+For 1920×1080 `NV12` with a pool of four, `onPoolReady()` delivers **four** `VideoBufferView`s. Buffer 0 might be:
+
+```text
+bufferIndex   = 0
+planeFds      = [ 7,       7       ]   Y and UV in the same Dma-Buf
+planeOffsets  = [ 0,       2088960 ]   UV starts after Y, plus alignment padding
+planeStrides  = [ 1920,    1920    ]
+planeLengths  = [ 2073600, 1036800 ]
+```
+
+or, where the implementation allocates each image plane separately:
+
+```text
+planeFds      = [ 7,       8       ]   different Dma-Bufs
+planeOffsets  = [ 0,       0       ]
+```
+
+Both are valid, and a client that imports from `planeFds` and `planeOffsets` serves either without knowing which it was handed.
+
+Note that `2088960` is **not** `1920 × 1080`. The implementation padded the chroma start for alignment, which is why the offset is stated rather than computed — deriving it from the frame size would land 15360 bytes short here.
+
+Per frame, `acquireLatestFrame()` returns only a `bufferIndex` and a timestamp. The client resolves the frame against what it imported at `onPoolReady()`; no descriptor crosses the binder after that.
+
+
 ## Implementation Requirements
 
 |#|Requirement | Comments|
@@ -482,7 +537,7 @@ The frame returned is the one due for presentation now, with AV-sync correction 
 
 ## Pixel Format and Memory Layout
 
-A captured frame is described by two values, and they answer different questions.
+A captured frame is described by two values, and they answer different questions. Where those values sit relative to buffers and image planes is [above](#planes-buffers-and-image-planes).
 
 | Value | Question it answers | Example |
 |---|---|---|

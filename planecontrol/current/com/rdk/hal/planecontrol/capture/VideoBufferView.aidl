@@ -29,6 +29,11 @@ package com.rdk.hal.planecontrol.capture;
  *  `planeFds` and `planeOffsets` shall together address every plane of the buffer,
  *  and a client shall be able to import the buffer from this parcelable alone.
  *
+ *  The `plane` in these field names is an IMAGE plane - a colour component of one
+ *  frame, such as the luma and interleaved chroma of `DRM_FORMAT_NV12` - and not the
+ *  hardware plane this capture session runs on. The name follows
+ *  `EGL_DMA_BUF_PLANE<N>_FD_EXT`, which these arrays feed directly.
+ *
  *  The per-plane arrays are ordered by plane index and are the direct inputs to
  *  `EGL_EXT_image_dma_buf_import`: element N feeds `EGL_DMA_BUF_PLANE<N>_FD_EXT`,
  *  `EGL_DMA_BUF_PLANE<N>_OFFSET_EXT` and `EGL_DMA_BUF_PLANE<N>_PITCH_EXT`.
