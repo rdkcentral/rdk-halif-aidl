@@ -16,13 +16,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.planecontrol;
+package com.rdk.hal.planecontrol.capture;
 
-import com.rdk.hal.planecontrol.CaptureErrorCode;
-import com.rdk.hal.planecontrol.State;
+import com.rdk.hal.planecontrol.capture.CaptureErrorCode;
+import com.rdk.hal.planecontrol.capture.State;
 
 /**
  *  @brief     Event callbacks listener interface from a capture resource.
+ *  @author    Peter Stieglitz
  *  @author    Gerald Weatherup
  */
 

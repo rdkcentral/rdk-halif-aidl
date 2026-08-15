@@ -16,8 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.planecontrol;
+package com.rdk.hal.planecontrol.capture;
 
+import com.rdk.hal.planecontrol.capture.FormatLayout;
 import com.rdk.hal.videodecoder.Codec;
 
 /**
@@ -25,25 +26,16 @@ import com.rdk.hal.videodecoder.Codec;
  *
  *  Describes what frames this capture plane can deliver and how its buffer pool
  *  behaves. This is the whole of the capture declaration: a client reads it, selects
- *  from it through `CaptureProperty`, and the vendor layer configures whatever it needs
+ *  from it through `ICaptureController.setFormat()`, and the vendor layer configures whatever it needs
  *  to on the decoder to satisfy the selection.
  *
+ *  @author    Peter Stieglitz
  *  @author    Gerald Weatherup
  */
 
 @VintfStability
 parcelable CaptureCapabilities
 {
-    /**
-     * The maximum number of buffers that can be reserved in the capture pool.
-     *
-     * A reservation that exceeds what the platform's video memory region can satisfy
-     * fails at `ICaptureController.start()` with `CaptureErrorCode.OUT_OF_MEMORY`.
-     *
-     * @see CaptureProperty.BUFFER_COUNT, CaptureErrorCode.OUT_OF_MEMORY
-     */
-    int maxBufferCount;
-
     /**
      * Indicates the behaviour when every buffer in the pool is locked by the client and
      * the decoder has a new frame to write.
@@ -55,48 +47,34 @@ parcelable CaptureCapabilities
     boolean stallsWhenPoolExhausted;
 
     /**
-     * The DRM FOURCC pixel formats this capture plane can deliver.
+     * The pixel format and memory layout pairs this capture plane can deliver.
      *
-     * FOURCC codes are defined by the Linux kernel in `include/uapi/drm/drm_fourcc.h`,
-     * not by this interface, so they are carried as integers rather than an enum: the
-     * kernel owns that namespace and new formats arrive with new kernel versions.
+     * Paired, because a modifier is not valid with every format: most modifiers are
+     * vendor-namespaced tiling or compression layouts that apply to particular
+     * formats and bit depths. Declaring two independent lists would offer a client
+     * the full cross-product, most of which a plane cannot deliver, and leave it to
+     * find out at `start()`.
      *
-     * These are opaque values passed through this interface to the client EGL
-     * implementation without interpretation by the HAL client.
+     * A client selects one entry and sets `Property.DRM_FOURCC` and
+     * `Property.DRM_MODIFIER` from it.
      *
-     * `DRM_FORMAT_NV12` (0x3231564E) is required to be present.
-     *
-     * @see CaptureProperty.DRM_FOURCC
+     * `DRM_FORMAT_NV12` (0x3231564E) with `DRM_FORMAT_MOD_LINEAR` (0) is required to
+     * be present. It is the combination any client can handle, and what makes an
+     * import path that always works.
      */
-    int[] supportedFourCCs;
-
-    /**
-     * The DRM format modifiers this capture plane can deliver.
-     *
-     * Also defined by the kernel in `include/uapi/drm/drm_fourcc.h`. A modifier is a
-     * 64-bit namespaced value whose top 8 bits carry a vendor prefix, which is what
-     * lets a vendor declare its own tiling or compression layouts.
-     *
-     * These are opaque values passed through this interface to the client EGL
-     * implementation without interpretation by the HAL client.
-     *
-     * `DRM_FORMAT_MOD_LINEAR` (0) is required to be present.
-     *
-     * @see CaptureProperty.DRM_MODIFIER
-     */
-    long[] supportedModifiers;
+    FormatLayout[] supportedFormats;
 
     /**
      * The maximum frame width in pixels this capture plane can deliver.
      *
-     * @see CaptureProperty.WIDTH
+     * @see Property.WIDTH
      */
     int maxFrameWidth;
 
     /**
      * The maximum frame height in pixels this capture plane can deliver.
      *
-     * @see CaptureProperty.HEIGHT
+     * @see Property.HEIGHT
      */
     int maxFrameHeight;
 
@@ -107,9 +85,10 @@ parcelable CaptureCapabilities
      * for a codec outside this list decodes and displays normally; what it cannot do is
      * feed a capture plane.
      *
-     * `Codec.H264` is required to be present on every capture plane. It is the codec
-     * decode-to-texture is certified against, and a client that can negotiate nothing
-     * else always has a working path.
+     * `Codec.H264_AVC` and `Codec.AV1` are both required to be present on every
+     * capture plane. Certification asks for H.264 in one cycle and AV1 in the next,
+     * and a product serves both, so a client that can negotiate either always has a
+     * working path.
      *
      * @see com.rdk.hal.videodecoder.Codec
      */
@@ -119,7 +98,7 @@ parcelable CaptureCapabilities
      * Whether this plane can deliver frames at a resolution other than the one the
      * mapped source is decoding.
      *
-     * When false, `CaptureProperty.WIDTH` and `HEIGHT` must equal the resolution the
+     * When false, the plane's `Property.WIDTH` and `HEIGHT` must equal the resolution the
      * mapped source decodes to, and `ICaptureController.start()` fails with
      * `CaptureErrorCode.RESOLUTION_MISMATCH` if they do not. Nothing is scaled: the
      * frames the client receives are the frames the decoder produced.
@@ -128,7 +107,7 @@ parcelable CaptureCapabilities
      * scales has no scaling quality to validate and no resolution permutations to
      * cover.
      *
-     * @see CaptureProperty.WIDTH, CaptureProperty.HEIGHT, CaptureErrorCode.RESOLUTION_MISMATCH
+     * @see Property.WIDTH, Property.HEIGHT, CaptureErrorCode.RESOLUTION_MISMATCH
      */
     boolean resize;
 }

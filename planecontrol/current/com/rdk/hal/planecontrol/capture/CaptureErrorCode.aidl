@@ -16,10 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.planecontrol;
+package com.rdk.hal.planecontrol.capture;
 
 /**
  *  @brief     Capture error code definitions.
+ *  @author    Peter Stieglitz
  *  @author    Gerald Weatherup
  */
 
@@ -51,7 +52,7 @@ enum CaptureErrorCode {
      * The configured capture resolution does not match the resolution the mapped
      * source is decoding, on a plane that cannot resize.
      *
-     * @see CaptureCapabilities.resize, CaptureProperty.WIDTH, CaptureProperty.HEIGHT
+     * @see CaptureCapabilities.resize, Property.WIDTH, Property.HEIGHT
      */
     RESOLUTION_MISMATCH = 5,
 

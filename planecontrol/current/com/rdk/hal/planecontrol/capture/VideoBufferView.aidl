@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.planecontrol;
+package com.rdk.hal.planecontrol.capture;
 
 /**
  *  @brief     Addressing information for one buffer in the capture pool.
@@ -38,6 +38,7 @@ package com.rdk.hal.planecontrol;
  *
  *  @see VideoFrameView, ICaptureControllerListener.onPoolReady()
  *
+ *  @author    Peter Stieglitz
  *  @author    Gerald Weatherup
  */
 
@@ -52,22 +53,11 @@ parcelable VideoBufferView
      * `VideoFrameView.bufferIndex` carries on every frame, and the value passed to
      * `ICaptureController.releaseFrame()`.
      *
-     * A BUFFER IS IDENTIFIED BY THIS INDEX AND BY NOTHING ELSE. The addressing in
-     * `planeFds` and `planeOffsets` is how a client reaches the memory; it is not
-     * an identity, and a client shall not treat either as one. Neither is
-     * constrained by this interface beyond having to address the buffer, so a
-     * client that keys on one of them keys on something the interface never
-     * promised would be distinct.
+     * This index is the buffer's identity. A client resolves a frame, keys any
+     * cache, and releases a buffer by it.
      *
-     * A file descriptor could not carry identity across a frame in any case: a
-     * ParcelFileDescriptor is duplicated as it crosses the binder boundary, so
-     * the same memory arrives as a different integer on each delivery. Sending
-     * descriptors per frame would also cost a dup and an SCM_RIGHTS pass per
-     * plane per frame, to name memory the implementation already holds open.
-     *
-     * The index is also the safer key across teardown. A stale index after a
-     * stop/start names nothing and shall be ignored; a stale file descriptor
-     * names memory that may since have been freed.
+     * An index that names no buffer in the current pool is ignored, which is what
+     * makes a release arriving after a stop safe.
      */
     int bufferIndex;
 
@@ -77,7 +67,7 @@ parcelable VideoBufferView
      * PER PLANE, NOT PER BUFFER. `onPoolReady()` delivers one VideoBufferView per
      * buffer; these arrays index the planes within this one buffer. Every
      * per-plane array shall have one element per plane of the declared
-     * `CaptureProperty.DRM_FOURCC`, in plane order. `DRM_FORMAT_NV12` is required
+     * selected format, in plane order. `DRM_FORMAT_NV12` is required
      * of every capture plane and has two planes, [Y, UV].
      *
      * A CLIENT CACHING IMPORTED IMAGES SHALL KEY THE CACHE ON `bufferIndex`, and
@@ -110,28 +100,28 @@ parcelable VideoBufferView
     /**
      * The width in pixels of the frames this buffer holds.
      *
-     * @see CaptureProperty.WIDTH
+     * @see Property.WIDTH
      */
     int width;
 
     /**
      * The height in pixels of the frames this buffer holds.
      *
-     * @see CaptureProperty.HEIGHT
+     * @see Property.HEIGHT
      */
     int height;
 
     /**
      * The DRM FOURCC pixel format of the frames this buffer holds.
      *
-     * @see CaptureProperty.DRM_FOURCC
+     * @see ICaptureController.setFormat(), FormatLayout.fourcc
      */
     int drmFourcc;
 
     /**
      * The DRM format modifier describing how this buffer's bytes are arranged in memory.
      *
-     * @see CaptureProperty.DRM_MODIFIER
+     * @see ICaptureController.setFormat(), FormatLayout.modifier
      */
     long drmModifier;
 }

@@ -16,13 +16,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.planecontrol;
+package com.rdk.hal.planecontrol.capture;
 
-import com.rdk.hal.planecontrol.CaptureErrorCode;
-import com.rdk.hal.planecontrol.VideoBufferView;
+import com.rdk.hal.planecontrol.capture.CaptureErrorCode;
+import com.rdk.hal.planecontrol.capture.VideoBufferView;
 
 /**
  *  @brief     Callbacks listener interface from a capture session controller.
+ *  @author    Peter Stieglitz
  *  @author    Gerald Weatherup
  */
 
@@ -39,10 +40,22 @@ oneway interface ICaptureControllerListener
      * here and afterwards needs only the buffer index each frame arrives in.
      *
      * The array length is the number of buffers the vendor reserved, which is what
-     * `CaptureProperty.BUFFER_COUNT` asked for, or the vendor's own choice where the
+     * as many buffers as the platform calibrated for the throughput it can sustain. The length of this array IS the pool depth - it is not declared anywhere else, because there is nothing for a client to decide before it and nothing to check it against. Where the
      * session left it unset.
      *
      * @param[in] buffers   One entry per pool buffer, indexed by `VideoBufferView.bufferIndex`.
+     *
+     *  DELIVERED ON A BINDER THREAD. This interface is `oneway`, so the callback
+     *  arrives on a thread of the client's binder pool - not the thread that owns
+     *  its GL context, and an import needs that context current. A client keeps
+     *  these descriptors and hands them to the thread that does own it.
+     *
+     *  THE DESCRIPTORS ARE THE CLIENT'S. They are duplicated as they cross the
+     *  binder boundary, so the client holds its own references to the same memory.
+     *  An import takes a further reference of its own, which is why a client may
+     *  close a descriptor once it has imported from it, and why the memory outlives
+     *  `stop()`. The client returns that memory by destroying its imported images
+     *  and closing any descriptor it still holds.
      */
     void onPoolReady(in VideoBufferView[] buffers);
 

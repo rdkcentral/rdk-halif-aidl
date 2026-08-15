@@ -24,6 +24,13 @@ import com.rdk.hal.videodecoder.DynamicRange;
  
 /**
  *  @brief     Plane resource capabilities definition.
+ *
+ *  On a plane of type `PlaneType.CAPTURE` this parcelable carries `planeIndex`,
+ *  `type` and `sourceTypes`. What such a plane delivers - its formats, frame sizes,
+ *  codecs and pool behaviour - is stated in `CaptureCapabilities`.
+ *
+ *  @see CaptureCapabilities, PlaneType.CAPTURE
+ *
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler

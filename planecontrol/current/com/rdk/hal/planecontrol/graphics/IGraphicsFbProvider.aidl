@@ -16,10 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.planecontrol;
+package com.rdk.hal.planecontrol.graphics;
 
-import com.rdk.hal.planecontrol.GraphicsFbInfo;
-import com.rdk.hal.planecontrol.GraphicsFbCapabilities;
+import com.rdk.hal.planecontrol.graphics.GraphicsFbInfo;
+import com.rdk.hal.planecontrol.graphics.GraphicsFbCapabilities;
 
 /** 
  *  @brief     Graphics Frame Buffer (Fb) interface.
@@ -33,6 +33,11 @@ import com.rdk.hal.planecontrol.GraphicsFbCapabilities;
  *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
  *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
  *    The caller must ignore any output variables.
+ *
+ *  COLOUR. A client renders sRGB into these buffers - BT.709 primaries with the sRGB
+ *  transfer function - and the compositor reads them as sRGB. Stating it once here is
+ *  what lets a compositor place graphics correctly against video of any dynamic range,
+ *  since it knows what the graphics pixels mean without being told per frame.
  */
  
 @VintfStability

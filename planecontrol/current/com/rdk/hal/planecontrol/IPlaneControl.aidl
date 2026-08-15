@@ -24,10 +24,10 @@ import com.rdk.hal.planecontrol.SourcePlaneMapping;
 import com.rdk.hal.planecontrol.Property;
 import com.rdk.hal.planecontrol.PropertyKVPair;
 import com.rdk.hal.PropertyValue;
-import com.rdk.hal.planecontrol.IGraphicsFbProvider;
-import com.rdk.hal.planecontrol.IGraphicsFbProviderListener;
-import com.rdk.hal.planecontrol.ICapture;
-import com.rdk.hal.planecontrol.ICaptureEventListener;
+import com.rdk.hal.planecontrol.graphics.IGraphicsFbProvider;
+import com.rdk.hal.planecontrol.graphics.IGraphicsFbProviderListener;
+import com.rdk.hal.planecontrol.capture.ICapture;
+import com.rdk.hal.planecontrol.capture.ICaptureEventListener;
 
  
 /** 

@@ -16,14 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.planecontrol;
+package com.rdk.hal.planecontrol.capture;
 
-import com.rdk.hal.planecontrol.CaptureCapabilities;
-import com.rdk.hal.planecontrol.CaptureProperty;
-import com.rdk.hal.planecontrol.CapturePropertyKVPair;
-import com.rdk.hal.planecontrol.ICaptureController;
-import com.rdk.hal.planecontrol.ICaptureControllerListener;
-import com.rdk.hal.planecontrol.State;
+import com.rdk.hal.planecontrol.capture.CaptureCapabilities;
+import com.rdk.hal.planecontrol.capture.ICaptureController;
+import com.rdk.hal.planecontrol.capture.ICaptureControllerListener;
+import com.rdk.hal.planecontrol.capture.State;
 import com.rdk.hal.PropertyValue;
 
 /**
@@ -44,7 +42,7 @@ import com.rdk.hal.PropertyValue;
  *  where its output goes, and nothing is set on it to arrange capture.
  *
  *  A capture session is configured here in full - the frames the client wants and the
- *  pool that holds them are both `CaptureProperty` values on the session controller.
+ *  pool that holds them are settled by `CaptureCapabilities` and one `setFormat()` call.
  *  The client asks this plane for what it needs and the vendor layer configures the
  *  mapped source's decoder to deliver it, by whatever internal path that platform
  *  requires.
@@ -55,17 +53,16 @@ import com.rdk.hal.PropertyValue;
  *        {{ SourceType.VIDEO_SINK, sinkIndex, planeResourceIndex }});
  *    ICapture capture = planeControl.getCapture(planeResourceIndex, captureEventListener);
  *    ICaptureController controller = capture.open(captureControllerListener);
- *    capture.getProperty(DRM_FOURCC);                 // format the plane delivers
- *    capture.getProperty(DRM_MODIFIER);               // its memory layout
- *    controller.setProperty(WIDTH, w);                // expected frame size
- *    controller.setProperty(HEIGHT, h);
- *    controller.setProperty(BUFFER_COUNT, n);         // pool depth, or leave to vendor
- *    controller.start();                              // onPoolReady() delivers the pool
+ *    planeControl.setProperty(capturePlane, WIDTH, w);   // frame size, as any plane's
+ *    planeControl.setProperty(capturePlane, HEIGHT, h);
+ *    controller.setFormat(caps.supportedFormats[i]);     // format and layout, paired
+ *    controller.start();                                 // onPoolReady() delivers the pool
  *
- *    // In onPoolReady(buffers) - import every buffer once, keyed by its index.
- *    // planeFds[0], planeOffsets[0] and planeStrides[0] feed EGL_DMA_BUF_PLANE0_FD_EXT,
- *    // _OFFSET_EXT and _PITCH_EXT directly - PLANE1 for NV12 chroma - together with
- *    // drmFourcc and drmModifier. No translation, no copy.
+ *    // onPoolReady() arrives on a BINDER THREAD. Keep the buffers and hand them to
+ *    // the thread that owns the GL context; that thread imports each one once,
+ *    // keyed by bufferIndex. planeFds[0], planeOffsets[0] and planeStrides[0] feed
+ *    // EGL_DMA_BUF_PLANE0_FD_EXT, _OFFSET_EXT and _PITCH_EXT - PLANE1 for NV12
+ *    // chroma - with drmFourcc and drmModifier. No translation, no copy.
  *    for (VideoBufferView b : buffers)
  *        eglImage[b.bufferIndex] = eglCreateImageKHR(dpy, EGL_NO_CONTEXT,
  *                                      EGL_LINUX_DMA_BUF_EXT, NULL, attributesOf(b));
@@ -87,6 +84,7 @@ import com.rdk.hal.PropertyValue;
  *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
  *    The caller must ignore any output variables.
  *
+ *  @author    Peter Stieglitz
  *  @author    Gerald Weatherup
  */
 
@@ -118,56 +116,6 @@ interface ICapture
      */
     State getState();
 
-    /**
-     * Gets a capture property.
-     *
-     * @param[in] property              The key of a property from the CaptureProperty enum.
-     *
-     * @returns PropertyValue or null if the property key is unknown.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value.
-     *
-     *
-     * @see ICaptureController.setProperty(), getPropertyMulti()
-     */
-    @nullable PropertyValue getProperty(in CaptureProperty property);
-
-    /**
-     * Gets multiple capture properties.
-     *
-     * Retrieves values for a list of property keys.
-     *
-     * Input `properties` is a non-null array of `CaptureProperty` keys. Each key must be a
-     * valid enum value; unknown or out-of-range values are treated as invalid.
-     *
-     * Output `propertyKVList` returns one `CapturePropertyKVPair` per requested key, with
-     * the same ordering as `properties`. For each pair, the `property` field echoes
-     * the requested key and `propertyValue` is populated on success.
-     *
-     * Error handling and return semantics:
-     * - Passing an empty `properties` array fails with `EX_ILLEGAL_ARGUMENT`.
-     * - If any key in `properties` is invalid, no values are populated and the
-     *   call fails with `EX_ILLEGAL_ARGUMENT`.
-     * - If a required out-parameter is null (e.g. `propertyKVList`), the call fails
-     *   with `EX_NULL_POINTER`.
-     * - When an exception is raised, no return value is transmitted.
-     *
-     * @param[in] properties      Non-empty list of property keys to query.
-     * @param[out] propertyKVList Returned key/value pairs corresponding to `properties`.
-     *
-     * @returns boolean
-     * @retval true               All property values were returned successfully.
-     * @retval false              The property values could not be retrieved.
-     *
-     * @exception binder::Status::Exception::EX_NONE             Success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid property key(s) or empty input list.
-     * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
-     *
-     *
-     * @see getProperty()
-     */
-    boolean getPropertyMulti(in CaptureProperty[] properties, out CapturePropertyKVPair[] propertyKVList);
 
     /**
      * Opens a capture session on this plane.
@@ -175,14 +123,14 @@ interface ICapture
      * The source captured is whatever `IPlaneControl` currently has mapped to this
      * plane, so a source must be mapped to it before this is called.
      *
-     * If successful the capture resource transitions to an `OPENING` state and then a
+     * If successful the capture resource transitions to a
      * `READY` state, which is notified to the registered `ICaptureEventListener`.
      *
      * The returned `ICaptureController` is used by the client to configure the pool,
      * start and stop the session, and acquire and release frames. Controller related
      * callbacks are made through the `ICaptureControllerListener` passed into the call.
      *
-     * The client sets the session's `CaptureProperty` values through
+     * The client selects the session's format through
      * `ICaptureController.setProperty()` in the `READY` state, before calling
      * `ICaptureController.start()` - the frame format and size it wants, and the depth
      * of the pool that holds them.
@@ -220,7 +168,7 @@ interface ICapture
      * Closes the capture session.
      *
      * The capture resource must be in a `READY` state before it can be closed.
-     * If successful the resource transitions to a `CLOSING` state and then a `CLOSED` state.
+     * If successful the resource transitions to a `CLOSED` state.
      *
      * The pool and all its Dma-Bufs are released, and the vendor wiring between the
      * source and the pool is undone. The source's decoder is not stopped, and its plane

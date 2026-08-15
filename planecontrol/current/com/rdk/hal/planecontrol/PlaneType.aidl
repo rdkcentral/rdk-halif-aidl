@@ -66,9 +66,8 @@ enum PlaneType
      *  `IPlaneControl.setVideoSourceDestinationPlaneMapping()` exactly as it is for a
      *  video plane - the destination is the client's texture instead of the display.
      *
-     *  A capture plane is never composited, so alpha, z-order, position, size and
-     *  display latency have no meaning on it. What it declares instead is what it can
-     *  deliver and how its buffer pool behaves, in `CaptureCapabilities`.
+     *  What such a plane can deliver, and how its buffer pool behaves, are stated in
+     *  `CaptureCapabilities`. `PlaneCapabilities` carries its routing.
      *
      *  It runs in the opposite direction to a graphics plane. Both carry frames between
      *  the client and the pipeline, but a graphics plane takes frames from the client to

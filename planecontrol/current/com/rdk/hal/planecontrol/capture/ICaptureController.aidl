@@ -16,11 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.planecontrol;
+package com.rdk.hal.planecontrol.capture;
 
-import com.rdk.hal.planecontrol.CaptureProperty;
-import com.rdk.hal.planecontrol.CapturePropertyKVPair;
-import com.rdk.hal.planecontrol.VideoFrameView;
+import com.rdk.hal.planecontrol.capture.FormatLayout;
+import com.rdk.hal.planecontrol.capture.VideoFrameView;
 import com.rdk.hal.PropertyValue;
 
 /**
@@ -59,6 +58,7 @@ import com.rdk.hal.PropertyValue;
  *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
  *    The caller must ignore any output variables.
  *
+ *  @author    Peter Stieglitz
  *  @author    Gerald Weatherup
  */
 
@@ -68,7 +68,7 @@ interface ICaptureController
     /**
      * Starts the capture session.
      *
-     * Reserves a pool of `CaptureProperty.BUFFER_COUNT` buffers from the platform's video
+     * Reserves the capture pool from the platform's video
      * memory region, sized for the format and frame size this session was configured
      * with, and wires the mapped source's decoded output into the pool.
      *
@@ -105,11 +105,25 @@ interface ICaptureController
     /**
      * Stops the capture session.
      *
-     * Unwires the source from the pool and releases the pool and all its Dma-Bufs.
-     * The capture resource transitions to a `STOPPING` state and then a `READY` state.
-     * The source's decoder and its plane mapping are left as they are.
+     * Unwires the source from the pool and drops the implementation's references to
+     * its Dma-Bufs. The capture resource transitions to a `STOPPING` state and then a
+     * `READY` state. The source's decoder and its plane mapping are left as they are.
      *
-     * Any buffers still Locked by the client are released.
+     * Buffers still Locked by the client are returned to the free state, so the
+     * implementation owes nothing further for them.
+     *
+     * THE CLIENT'S OWN REFERENCES OUTLIVE THIS CALL. A client received its own
+     * duplicated file descriptors at `onPoolReady()`, and an image imported from one
+     * holds a reference of its own; a Dma-Buf stays alive while any reference to it
+     * does. The memory therefore remains valid for as long as the client holds it,
+     * and the client releases it by destroying its imported images and closing those
+     * descriptors. Doing so is what returns the memory to the platform.
+     *
+     * A frame's CONTENT is fixed only while its buffer is Locked. Once a buffer is
+     * released - by `releaseFrame()`, by the next `acquireLatestFrame()`, or by this
+     * call - the implementation may write into it again, so a client sampling it
+     * beyond that point reads a frame being overwritten. A client that needs a frame
+     * to outlive the period it holds the buffer copies it while it still holds it.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the STARTED state.
@@ -184,51 +198,30 @@ interface ICaptureController
     void releaseFrame(in int bufferIndex);
 
     /**
-     * Sets a capture property.
+     * Selects the pixel format and memory layout the session delivers.
      *
-     * `BUFFER_COUNT`, `WIDTH` and `HEIGHT` are written in the `READY` state, before
-     * `start()`. `DRM_FOURCC` and `DRM_MODIFIER` are read-only - the plane reports the
-     * format and layout it delivers rather than taking a request for one.
+     * Takes one entry of `CaptureCapabilities.supportedFormats`, which pairs a
+     * format with a layout valid for it.
      *
-     * A value this plane cannot deliver is rejected here rather than accepted and
-     * silently substituted, so an unsupported request fails while it is still a
-     * configuration error and not a stream of wrong pixels.
+     * This is the client's decision. `DRM_FORMAT_MOD_LINEAR` serves a client that
+     * touches the pixels - CPU readback, an encoder, or a GPU from another vendor;
+     * a vendor-namespaced tiled or compressed layout serves one whose GPU is the
+     * same vendor's.
      *
-     * @param[in] property              The key of a property from the CaptureProperty enum.
-     * @param[in] propertyValue         Property value.
+     * A session that never calls this delivers `DRM_FORMAT_NV12` with
+     * `DRM_FORMAT_MOD_LINEAR`.
      *
-     * @returns boolean
-     * @retval true     Property was set successfully.
-     * @retval false    Invalid property or property value parameter.
+     * @param[in] format : one entry of `CaptureCapabilities.supportedFormats`.
+     * @returns boolean : true on success.
      *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the property cannot be written in the current state.
-     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if the property is read-only.
+     * @pre The resource must be in State::READY.
      *
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if `format` is not one
+     *            of the declared pairs.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if called in a state other
+     *            than READY.
      *
-     * @see ICapture.getProperty(), setPropertyMultiAtomic()
+     * @see CaptureCapabilities.supportedFormats, FormatLayout
      */
-    boolean setProperty(in CaptureProperty property, in PropertyValue propertyValue);
-
-    /**
-     * Sets multiple capture properties atomically.
-     *
-     * Properties must only appear once in the list.
-     *
-     * @param[in] propertyKVList        Array of property key-value pairs.
-     *
-     * @returns boolean
-     * @retval true     Properties were set successfully.
-     * @retval false    Invalid property or property value parameter.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the properties cannot be written in the current state.
-     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
-     *
-     *
-     * @see setProperty(), ICapture.getPropertyMulti()
-     */
-    boolean setPropertyMultiAtomic(in CapturePropertyKVPair[] propertyKVList);
+    boolean setFormat(in FormatLayout format);
 }

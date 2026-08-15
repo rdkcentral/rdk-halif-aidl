@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.planecontrol;
+package com.rdk.hal.planecontrol.graphics;
   
 /** 
  *  @brief     Callbacks listener interface from graphics frame buffer provider.

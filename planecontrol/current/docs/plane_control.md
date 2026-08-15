@@ -11,17 +11,18 @@ Each plane is configurable through a set of properties that clients can read or 
 !!! info References
     |||
     |-|-|
-    |**Interface Definition**|[planecontrol/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/planecontrol/current)|
+    |**Interface Definition**|[planecontrol/current/com/rdk/hal/planecontrol](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/planecontrol/current/com/rdk/hal/planecontrol)|
     |**Interface Version**|`current`|
+    |**Package**|`com.rdk.hal.planecontrol`|
     | **API Documentation** | *TBD - Doxygen* |
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
     |**VTS Tests**| [https://github.com/rdkcentral/rdk-halif-binder-test-planecontrol](https://github.com/rdkcentral/rdk-halif-binder-test-planecontrol) |
-    |**Reference Implementation - vComponent**|**TBC**|
 
 ## Related Pages
 
 !!! tip "Related Pages"
-    - [Decoded Frame Capture](capture_interface.md)
+    - [Decoded Frame Capture](capture/capture_interface.md)
+    - [Graphics Frame Providers](graphics/graphics_interface.md)
     - [Video Sink](../videosink/video_sink.md)
 
 ## Implementation Requirements
@@ -34,49 +35,25 @@ Each plane is configurable through a set of properties that clients can read or 
 | **HAL.PLANECONTROL.4** | Shall provide an API to atomically set multiple properties of a plane which take effect at the next available vsync.|
 | **HAL.PLANECONTROL.5** | Shall allow only 1 source to be mapped to any given video plane.|
 | **HAL.PLANECONTROL.6** | Shall provide an API to atomically update multiple video source to video plane mappings.|
-| **HAL.PLANECONTROL.7** | Shall provide a graphics frame buffer provider API for graphics planes where plane type is GRAPHICS. |
-| **HAL.PLANECONTROL.8** | Shall provide APIs to create, commit and destroy graphics frame buffers via `IGraphicsFbProvider`.|
-| **HAL.PLANECONTROL.9** | Shall notify clients when committed graphics frame buffers are released and available for reuse via `IGraphicsFbProviderListener`.|
-| **HAL.PLANECONTROL.10** | Shall provide a decoded frame capture API via `ICapture` for plane resources of type `PlaneType.CAPTURE`, delivering the frames of the video source mapped to that plane into a Dma-Buf buffer pool.| The source is selected with `setVideoSourceDestinationPlaneMapping()`, exactly as it is for a display plane. |
-| **HAL.PLANECONTROL.10a** | Shall declare in `CaptureCapabilities.supportedCodecs` the codecs whose decoded frames a capture plane can deliver, and shall include `Codec.H264`.| Capture is certified against H264. A decoder opened for any other codec still decodes and displays normally. |
-| **HAL.PLANECONTROL.11** | Shall deliver captured frames in the pixel format, memory layout and size the session was configured with through `CaptureProperty`, as Dma-Bufs whose per-plane file descriptors, offsets and strides address the actual buffer layout and import directly through `EGL_EXT_image_dma_buf_import` without translation.| The vendor layer configures whatever the bound decoder requires to deliver them, over its own internal path. |
-| **HAL.PLANECONTROL.11a** | Shall deliver the addressing of every pool buffer once at `ICaptureControllerListener.onPoolReady()`, and thereafter identify each frame by buffer index and presentation time alone.| A buffer's address and shape do not change during a session. Re-sending file descriptors at frame rate would move them across the binder boundary to repeat what was already said. |
-| **HAL.PLANECONTROL.12** | Shall allow decode to proceed at full rate independently of the rate at which the client acquires frames, and shall never re-deliver a frame already returned by `acquireLatestFrame()`.|
-| **HAL.PLANECONTROL.12a** | Shall return from `acquireLatestFrame()` the frame due for presentation with audio latency and AV-sync correction already applied, dropping frames whose presentation time has passed and holding frames whose time has not yet come.| A client that draws each frame on receipt is then in sync without computing anything. |
-| **HAL.PLANECONTROL.12b** | Shall release the buffer named in `acquireLatestFrame()`'s `releaseBufferIndex` before acquiring the next frame, so a client redrawing at frame rate makes one call per frame rather than two.| At 60 Hz the second round trip is pure overhead in the hot path. |
-| **HAL.PLANECONTROL.13** | Shall reject a writable `CaptureProperty` value outside `CaptureCapabilities` at `setProperty()`, and shall fail `ICaptureController.start()` with a `CaptureErrorCode` when the pool cannot be reserved or the mapped source is decoding a codec outside `CaptureCapabilities.supportedCodecs`, in no case falling back to plane output.| The failure belongs where it is still a configuration error, not a stream of wrong pixels. |
-| **HAL.PLANECONTROL.14** | Shall deliver captured frames at the resolution the stream decodes to and in its source colorimetry, applying no scaling, rotation, crop, colour conversion, tone-mapping or gamma adjustment.| Shape and colour belong to the consumer, which applies them per frame and may change them on any frame. A transform applied here would have to be undone, and one the consumer cannot undo makes the frame unusable. On a plane declaring `CaptureCapabilities.resize` false, `CaptureProperty.WIDTH` and `HEIGHT` must equal the decoded resolution. |
-| **HAL.PLANECONTROL.15** | Shall drop no more than one frame per 15 seconds of capture, at every resolution from 144p to 2160p, while the client acquires and releases at the presentation cadence.| The capture path is not permitted to lose frames a display plane would have shown. A client that stops releasing is not covered by this — that case is `CaptureCapabilities.stallsWhenPoolExhausted`. |
-| **HAL.PLANECONTROL.16** | Shall carry each frame's presentation time unaltered in `VideoFrameView.presentationTimeNs`.| It is the frame's only timing reference. A captured frame goes to the client's scene rather than to a display plane, so the client presents it against the clock its audio path already runs on. |
 
 ## Interface Definition
+
+The module is organised into three packages: `com.rdk.hal.planecontrol` for planes themselves, and one subpackage each for the two surfaces that carry frames between the client and the pipeline — [graphics](graphics/graphics_interface.md), which takes frames from the client to the display, and [capture](capture/capture_interface.md), which takes decoded frames from the pipeline to the client.
+
+**`com.rdk.hal.planecontrol`**
 
 |Interface Definition File | Description|
 |--------------------------|------------|
 |`IPlaneControl.aidl` | Plane Control HAL interface which provides the central API for video and graphics plane management.|
 | `IPlaneControlListener.aidl` | Plane Control listener for callbacks.|
-| `IGraphicsFbProvider.aidl` | Graphics frame buffer provider interface for a graphics plane.|
-| `IGraphicsFbProviderListener.aidl` | Listener interface for graphics frame release callbacks from the graphics frame buffer provider.|
-| `ICapture.aidl` | Decoded frame capture interface for a video plane used as a capture destination.|
-| `ICaptureController.aidl` | Capture session controller returned by `ICapture.open()`.|
-| `ICaptureControllerListener.aidl` | Listener interface for buffer pool and frame callbacks from a capture session.|
-| `ICaptureEventListener.aidl` | Listener interface for capture resource state and error callbacks.|
-| `AspectRatio.aidl` | Enum list of aspect ratios.|
 | `PlaneCapabilities.aidl` | Parcelable describing a single plane resource capabilities.|
-| `GraphicsFbCapabilities.aidl` | Parcelable describing graphics frame buffer provider capabilities for a graphics plane.|
-| `GraphicsFbInfo.aidl` | Parcelable describing graphics frame metadata (frame ID, pixel width, pixel height, stride and offset).|
-| `CaptureCapabilities.aidl` | Parcelable describing capture capabilities for a video plane.|
-| `CaptureErrorCode.aidl` | Enum list of capture error codes.|
-| `CaptureProperty.aidl` | Enum list of capture session properties.|
-| `CapturePropertyKVPair.aidl` | Parcelable of a single capture property key and value pair.|
-| `VideoBufferView.aidl` | Parcelable describing the Dma-Buf addressing of one capture pool buffer.|
-| `VideoFrameView.aidl` | Parcelable identifying a single captured frame by buffer index and presentation time.|
 | `PlaneType.aidl` | Enum list of plane types.|
 | `Property.aidl` | Enum list of plane properties.|
 | `PropertyKVPair.aidl` | Parcelable of a single property key and value pair.|
-| `State.aidl` | Enum list of capture resource lifecycle states.|
 | `SourcePlaneMapping.aidl` | Parcelable of a single source to plane mapping.|
 | `SourceType.aidl` | Enum list of source types used in source plane mapping.|
+| `AspectRatio.aidl` | Enum list of aspect ratios.|
+
 
 ## Initialization
 
@@ -101,11 +78,11 @@ A product that supports decode-to-texture declares one plane resource of type `C
 
 The Plane Control service provides functionality to multiple clients which exist inside the RDK middleware.
 
-Typically, video planes are linked to video sources when a GStreamer pipeline is created in the RDK middleware. The geometry of the video planes can be manipulated by the Window Manager through a separate client connection.
+Typically, video planes are linked to video sources when a media pipeline is created in the RDK middleware. The geometry of the video planes can be manipulated by the Window Manager through a separate client connection.
 
 Graphics planes may expose `IGraphicsFbProvider` for EGL-based graphics frame rendering and commit.
 
-A capture plane exposes `ICapture`, through which a client opens a session and pulls a mapped source's decoded frames as Dma-Buf buffers instead of sending them to the display. See [Decoded Frame Capture](capture_interface.md).
+A capture plane exposes `ICapture`, through which a client opens a session and pulls a mapped source's decoded frames as Dma-Buf buffers instead of sending them to the display. See [Decoded Frame Capture](capture/capture_interface.md).
 
 ```mermaid
 flowchart TD
@@ -257,60 +234,9 @@ For the 2 types of planes (video and graphics) there are fixed configurations wh
 
 ## Graphics Frame Providers
 
-- Plane Control supports graphics frame buffers via `IGraphicsFbProvider`.
-- Clients should first query `IPlaneControl.getCapabilities()` and confirm the target plane is of type GRAPHICS.
-- If supported, clients open the provider using `IPlaneControl.getGraphicsFbProvider()` and use provider APIs to create, render, commit, and destroy frames.
+A graphics plane exposes `IGraphicsFbProvider`, through which a client allocates graphics frame buffers and commits them for presentation. It runs in the opposite direction to a capture plane: frames go from the client to the display.
 
-### Graphics Frame Buffer Lifecycle
-
-Use the following sequence for each graphics plane:
-
-1. Discover provider support:
-Call `IPlaneControl.getCapabilities()` and confirm the target plane is of type GRAPHICS.
-2. Open provider:
-Call `IPlaneControl.getGraphicsFbProvider(planeResourceIndex, graphicsFbProviderListener)`.
-3. Create one or more frame buffers:
-Call `IGraphicsFbProvider.createGraphicsFb(width, height, outInfo)`.
-The returned file descriptor is the graphics buffer memory, and `outInfo` provides metadata such as `graphicsFbId`, stride, and offset. Supported format and modifier values are defined in `GraphicsFbCapabilities` and should be obtained via `IGraphicsFbProvider.getCapabilities()`.
-4. Render into the buffer:
-Use the returned graphics buffer and metadata with the client graphics stack (for example EGL/GL) to draw a frame.
-5. Commit for display:
-Call `IGraphicsFbProvider.commitGraphicsFb(graphicsFbId)` to queue the frame for presentation.
-This call is non-blocking.
-6. Reuse released buffers:
-Wait for `IGraphicsFbProviderListener.onGraphicsFbReleased(oldGraphicsFbId, timestampNs)` before reusing a previously displayed buffer.
-7. Destroy buffers when no longer needed:
-Call `IGraphicsFbProvider.destroyGraphicsFb(graphicsFbId)` for each created buffer during shutdown or reconfiguration.
-
-The number of simultaneously created buffers must not exceed `maxGraphicsFrameBuffers`, and created dimensions must not exceed `maxGraphicsFrameBufferWidth` and `maxGraphicsFrameBufferHeight`.
-
-```mermaid
-sequenceDiagram
-    participant Client as RDK Client
-    participant PC as IPlaneControl
-    participant Provider as IGraphicsFbProvider
-    participant Listener as IGraphicsFbProviderListener
-    participant Plane as Graphics Plane
-
-    Client->>PC: getCapabilities()
-    PC-->>Client: PlaneCapabilities[] (type == GRAPHICS)
-
-    Client->>PC: getGraphicsFbProvider(planeId, listener)
-    PC-->>Client: IGraphicsFbProvider
-
-    Client->>Provider: createGraphicsFb(width, height, outInfo)
-    Provider-->>Client: ParcelFileDescriptor + GraphicsFbInfo(graphicsFbId)
-
-    Client->>Client: Render into graphics buffer
-    Client->>Provider: commitGraphicsFb(graphicsFbId)
-    Provider->>Plane: Queue frame for display
-
-    Plane-->>Provider: Previous frame released
-    Provider-->>Listener: onGraphicsFbReleased(oldGraphicsFbId, timestampNs)
-    Listener-->>Client: Buffer available for reuse
-
-    Client->>Provider: destroyGraphicsFb(graphicsFbId)
-```
+See **[Graphics Frame Providers](graphics/graphics_interface.md)** for the buffer lifecycle and the provider contract.
 
 ## Video Planes
 
@@ -409,7 +335,7 @@ SourcePlaneMapping[]=
 
 A plane of type `CAPTURE` routes a mapped video source's decoded frames into Dma-Buf buffers the client imports as GPU textures, rather than to the display. It is discovered, mapped and addressed exactly as a display plane is, and `IPlaneControl.getCapture()` returns its capture interface.
 
-See **[Decoded Frame Capture](capture_interface.md)** for the session lifecycle, the pixel format and memory layout contract, the buffer contract and a worked example.
+See **[Decoded Frame Capture](capture/capture_interface.md)** for the session lifecycle, the pixel format and memory layout contract, the buffer contract and a worked example.
 
 ## Z-Order
 
