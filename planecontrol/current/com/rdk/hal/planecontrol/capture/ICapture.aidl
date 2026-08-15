@@ -58,7 +58,7 @@ import com.rdk.hal.PropertyValue;
  *    controller.setFormat(caps.supportedFormats[i]);     // format and layout, paired
  *    controller.start();                                 // onPoolReady() delivers the pool
  *
- *    // onPoolReady() arrives on a BINDER THREAD. Keep the buffers and hand them to
+ *    // onPoolReady() arrives on a binder thread. Keep the buffers and hand them to
  *    // the thread that owns the GL context; that thread imports each one once,
  *    // keyed by bufferIndex. planeFds[0], planeOffsets[0] and planeStrides[0] feed
  *    // EGL_DMA_BUF_PLANE0_FD_EXT, _OFFSET_EXT and _PITCH_EXT - PLANE1 for NV12

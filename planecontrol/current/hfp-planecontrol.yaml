@@ -85,8 +85,8 @@ planecontrol:                   # Component object begins
         vsyncDisplayLatency: 1
         graphicsFbCapabilities:
           maxGraphicsFrameBuffers: 3
-          maxGraphicsFrameBufferWidth: 1920
-          maxGraphicsFrameBufferHeight: 1080
+          maxGraphicsFbWidth: 1920
+          maxGraphicsFbHeight: 1080
           format: 0x34325258
           modifier: 0x0000000000000000
     - 3:                    # Resource object begins
@@ -94,41 +94,28 @@ planecontrol:                   # Component object begins
                             # Declare one capture plane per concurrent capture
                             # session the product can serve; omit the type
                             # entirely on a product that cannot decode to texture.
-        pixelFormats:
-          - NATIVE
-        sourceTypes:  # Supported source types for this plane (enum SourceType)
+        sourceTypes:  # Video source types that may be mapped to this plane
           - VIDEO_SINK
-        maxWidth: 1920  # Maximum captured frame width this plane supports (in pixels)
-        maxHeight: 1080  # Maximum captured frame height this plane supports (in pixels)
-        frameWidth: 1920  # Width of the full frame reference coordinate system
-        frameHeight: 1080  # Height of the full frame reference coordinate system
-        supportedDynamicRanges:
-          - SDR
-        colorDepth: 8
-        maxFrameRate: 60  # Maximum capture rate in frames per second
-        supportsAlpha: false  # Not composited - alpha has no meaning on a capture plane
-        supportsZOrder: false  # Not composited - z-order has no meaning on a capture plane
-        vsyncDisplayLatency: 0  # Never reaches a display, so no display latency applies
         captureCapabilities:  # Frames and buffer pool for ICapture on this plane.
                               # Required on a plane of type CAPTURE. This is the whole
                               # of the capture declaration - the vendor layer configures
                               # whatever the decoder needs to deliver what is declared
                               # here.
-          maxBufferCount: 8  # Maximum pool buffers (CaptureProperty.BUFFER_COUNT)
           stallsWhenPoolExhausted: false  # true: decoder stalls when all buffers locked
                                           # false: oldest ready frame is dropped
           # FOURCC codes and modifiers are the kernel's, from include/uapi/drm/drm_fourcc.h.
-          supportedFourCCs:     # DRM_FORMAT_NV12 required on every capture plane
-            - 0x3231564E        # DRM_FORMAT_NV12
-          supportedModifiers:   # DRM_FORMAT_MOD_LINEAR required on every capture plane
-            - 0x0000000000000000  # DRM_FORMAT_MOD_LINEAR
-          maxFrameWidth: 1920   # Maximum captured frame width (CaptureProperty.WIDTH)
-          maxFrameHeight: 1080  # Maximum captured frame height (CaptureProperty.HEIGHT)
+          # Declared in pairs: a modifier is valid with particular formats.
+          supportedFormats:     # The pairs this product can deliver, and the whole of them
+            - fourcc: 0x3231564E              # DRM_FORMAT_NV12
+              modifier: 0x0000000000000000    # DRM_FORMAT_MOD_LINEAR
+          maxFrameWidth: 1920   # Maximum captured frame width (Property.WIDTH)
+          maxFrameHeight: 1080  # Maximum captured frame height (Property.HEIGHT)
           supportedCodecs:      # Codecs whose decoded frames this plane can capture.
-                                # H264 is required on every capture plane. A decoder
-                                # opened for a codec not listed here decodes and
-                                # displays normally; it just cannot feed this plane.
-            - H264
+                                # Declare what this product can do. A decoder opened
+                                # for a codec not listed here decodes and displays
+                                # normally; it just cannot feed this plane.
+            - H264_AVC
+            - AV1
           resize: false         # false: captured resolution must equal the decoded
                                 # resolution; a mismatch fails start() with
                                 # RESOLUTION_MISMATCH and nothing is scaled.

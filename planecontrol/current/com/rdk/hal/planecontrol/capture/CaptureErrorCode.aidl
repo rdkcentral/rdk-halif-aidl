@@ -66,10 +66,14 @@ enum CaptureErrorCode {
      * The configured pixel format or memory layout cannot be delivered for the mapped
      * source, even though the plane declares it.
      *
-     * @see CaptureCapabilities.supportedFourCCs, CaptureCapabilities.supportedModifiers
+     * @see CaptureCapabilities.supportedFormats, ICaptureController.setFormat()
      */
     FORMAT_UNSUPPORTED = 7,
 
-    /** The session's configuration is not a combination this plane can deliver. */
+    /**
+     * The session's configuration is not a combination this plane can deliver, or is
+     * incomplete - `start()` raises this where no format was selected with
+     * `ICaptureController.setFormat()`.
+     */
     INVALID_CONFIGURATION = 8,
 }

@@ -45,12 +45,12 @@ oneway interface ICaptureControllerListener
      *
      * @param[in] buffers   One entry per pool buffer, indexed by `VideoBufferView.bufferIndex`.
      *
-     *  DELIVERED ON A BINDER THREAD. This interface is `oneway`, so the callback
+     *  Delivered on a binder thread. This interface is `oneway`, so the callback
      *  arrives on a thread of the client's binder pool - not the thread that owns
      *  its GL context, and an import needs that context current. A client keeps
      *  these descriptors and hands them to the thread that does own it.
      *
-     *  THE DESCRIPTORS ARE THE CLIENT'S. They are duplicated as they cross the
+     *  The descriptors are the client's. They are duplicated as they cross the
      *  binder boundary, so the client holds its own references to the same memory.
      *  An import takes a further reference of its own, which is why a client may
      *  close a descriptor once it has imported from it, and why the memory outlives

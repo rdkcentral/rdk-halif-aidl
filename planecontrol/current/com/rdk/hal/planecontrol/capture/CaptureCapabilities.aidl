@@ -55,12 +55,11 @@ parcelable CaptureCapabilities
      * the full cross-product, most of which a plane cannot deliver, and leave it to
      * find out at `start()`.
      *
-     * A client selects one entry and sets `Property.DRM_FOURCC` and
-     * `Property.DRM_MODIFIER` from it.
+     * A client selects one entry and passes it to
+     * `ICaptureController.setFormat()`.
      *
-     * `DRM_FORMAT_NV12` (0x3231564E) with `DRM_FORMAT_MOD_LINEAR` (0) is required to
-     * be present. It is the combination any client can handle, and what makes an
-     * import path that always works.
+     * These are the pairs this product can deliver, and the whole of them. A client
+     * that can handle none of them cannot capture from this plane.
      */
     FormatLayout[] supportedFormats;
 
@@ -84,11 +83,6 @@ parcelable CaptureCapabilities
      * Capture is not required of every codec a platform can decode. A decoder opened
      * for a codec outside this list decodes and displays normally; what it cannot do is
      * feed a capture plane.
-     *
-     * `Codec.H264_AVC` and `Codec.AV1` are both required to be present on every
-     * capture plane. Certification asks for H.264 in one cycle and AV1 in the next,
-     * and a product serves both, so a client that can negotiate either always has a
-     * working path.
      *
      * @see com.rdk.hal.videodecoder.Codec
      */

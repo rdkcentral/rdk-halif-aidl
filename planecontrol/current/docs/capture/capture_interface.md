@@ -36,7 +36,7 @@ A capture session is configured in two places and neither is new: the frame size
 
 **The client makes one decision.** It picks a row of `supportedFormats` and passes it to `ICaptureController.setFormat()`. Everything else is either calibrated by the platform and declared, or is a plane property set the way any plane's is.
 
-`Codec.H264_AVC` and `Codec.AV1` are both required on every capture plane; certification asks for H.264 in one cycle and AV1 in the next, and a product serves both. A decoder opened for a codec outside `supportedCodecs` decodes and displays normally — it just cannot feed a capture plane, and `start()` fails with `CaptureErrorCode.CODEC_NOT_CAPTURABLE` if one is mapped to it.
+A decoder opened for a codec outside `supportedCodecs` decodes and displays normally — it just cannot feed a capture plane, and `start()` fails with `CaptureErrorCode.CODEC_NOT_CAPTURABLE` if one is mapped to it.
 
 ### Where this interface sits
 
@@ -76,7 +76,7 @@ flowchart TD
 |#|Requirement | Comments|
 |-|------------|---------|
 | **HAL.PLANECONTROL.CAPTURE.1** | Shall provide a decoded frame capture API via `ICapture` for plane resources of type `PlaneType.CAPTURE`, delivering the frames of the video source mapped to that plane into a Dma-Buf buffer pool.| The source is selected with `setVideoSourceDestinationPlaneMapping()`, exactly as it is for a display plane. |
-| **HAL.PLANECONTROL.CAPTURE.2** | Shall declare in `CaptureCapabilities.supportedCodecs` the codecs whose decoded frames a capture plane can deliver, and shall include `Codec.H264_AVC` and `Codec.AV1`.| Certification asks for H.264 in one cycle and AV1 in the next; a product serves both. A decoder opened for any other codec still decodes and displays normally. |
+| **HAL.PLANECONTROL.CAPTURE.2** | Shall declare in `CaptureCapabilities.supportedCodecs` the codecs whose decoded frames a capture plane can deliver, .| The list is what the plane can capture, not what a product must offer. A decoder opened for a codec outside it decodes and displays normally; it just cannot feed this plane. A decoder opened for any other codec still decodes and displays normally. |
 | **HAL.PLANECONTROL.CAPTURE.3** | Shall deliver captured frames in the pixel format, memory layout and size the session was configured with, as Dma-Bufs whose per-plane file descriptors, offsets and strides address the actual buffer layout and import directly through `EGL_EXT_image_dma_buf_import` without translation.| The vendor layer configures whatever the bound decoder requires to deliver them, over its own internal path. |
 | **HAL.PLANECONTROL.CAPTURE.4** | Shall deliver the addressing of every pool buffer once at `ICaptureControllerListener.onPoolReady()`, and thereafter identify each frame by buffer index and presentation time alone.| A buffer's address and shape do not change during a session. Re-sending file descriptors at frame rate would move them across the binder boundary to repeat what was already said. |
 | **HAL.PLANECONTROL.CAPTURE.5** | Shall reject a `FormatLayout` outside `CaptureCapabilities.supportedFormats` at `setFormat()`, and shall fail `ICaptureController.start()` with a `CaptureErrorCode` when the pool cannot be reserved or the mapped source is decoding a codec outside `CaptureCapabilities.supportedCodecs`, in no case falling back to plane output.| The failure belongs where it is still a configuration error, not a stream of wrong pixels. |
@@ -159,9 +159,9 @@ Call `IPlaneControl.setVideoSourceDestinationPlaneMapping()` with the video sink
 4. Open the session:
 Call `ICapture.open(captureControllerListener)`. The resource transitions `CLOSED` → `READY`. It fails with `CaptureErrorCode.SOURCE_NOT_MAPPED` if no source is mapped to the plane.
 5. Configure the session:
-Call `ICaptureController.setFormat()` while in `READY` with one row of `CaptureCapabilities.supportedFormats`. A session that sets nothing gets the required baseline, `NV12` with `DRM_FORMAT_MOD_LINEAR`. Frame size is the plane's own `Property.WIDTH` and `HEIGHT`, set through `IPlaneControl` the way any plane's size is; where the plane declares `resize: false` they must equal what the mapped source decodes to. Pool depth is not a client choice and is not declared — the platform calibrates it from the throughput it can sustain, and the client sees how many buffers it got when `onPoolReady()` delivers them.
+Call `ICaptureController.setFormat()` while in `READY` with one row of `CaptureCapabilities.supportedFormats`. There is no default — what a plane delivers is whatever it declares, so a format is selected before `start()`. Frame size is the plane's own `Property.WIDTH` and `HEIGHT`, set through `IPlaneControl` the way any plane's size is; where the plane declares `resize: false` they must equal what the mapped source decodes to. Pool depth is not a client choice and is not declared — the platform calibrates it from the throughput it can sustain, and the client sees how many buffers it got when `onPoolReady()` delivers them.
 6. Start:
-Call `ICaptureController.start()`. The pool is reserved, the vendor layer configures the mapped source's decoder and wires it into the pool, the resource transitions `READY` → `STARTING` → `STARTED`, and `ICaptureControllerListener.onPoolReady()` delivers the pool addressing. The codec is checked here, because a decoder is opened for a codec independently of when it is mapped.
+Call `ICaptureController.start()`. A format must have been selected first — there is no default pair, so a session that selected none fails here with `CaptureErrorCode.INVALID_CONFIGURATION`. The pool is reserved, the vendor layer configures the mapped source's decoder and wires it into the pool, the resource transitions `READY` → `STARTING` → `STARTED`, and `ICaptureControllerListener.onPoolReady()` delivers the pool addressing. The codec is checked here, because a decoder is opened for a codec independently of when it is mapped.
 7. Pull frames:
 Call `ICaptureController.acquireLatestFrame(releaseBufferIndex)`, passing the buffer just finished with — or `VideoFrameView.NO_BUFFER` on the first call. It returns the frame due for presentation, `null` rather than blocking when none is due, and never the same frame twice. `ICaptureControllerListener.onFrameAvailable()` is an optional wake-up; a client pulling at a known cadence can ignore it.
 8. Release the last frame:
@@ -299,8 +299,8 @@ planeControl->getCapture(capturePlaneIndex, captureEventListener, &captureResour
 
 CaptureCapabilities captureCapabilities;
 captureResource->getCapabilities(&captureCapabilities);
-// captureCapabilities.supportedCodecs   - H264_AVC and AV1 both required
-// captureCapabilities.supportedFormats  - {fourcc, modifier} pairs; NV12 + LINEAR required
+// captureCapabilities.supportedCodecs   - what this plane can capture
+// captureCapabilities.supportedFormats  - the {fourcc, modifier} pairs it can deliver
 // captureCapabilities.maxFrameWidth     - the frame size ceiling
 // captureCapabilities.resize            - whether a size other than the decoded one is allowed
 
@@ -510,9 +510,21 @@ That trade — bandwidth against portability — is settled per product rather t
 - **A GPU that understands the vendor's compressed layout** can take it directly. Compression can roughly halve the memory bandwidth of the capture path, which at 4K60 is often the difference between fitting in the platform's budget and not.
 - **Anything that must touch the pixels** — CPU readback, a screenshot, an encoder, or a GPU from a different vendor — needs `DRM_FORMAT_MOD_LINEAR`, because no other layout is portably decodable.
 
-`NV12` with `DRM_FORMAT_MOD_LINEAR` is required of every capture plane, which is what makes a client's import path always work: it is the one combination any consumer can handle.
+A plane declares the pairs it can deliver and no more. A client that can handle none of them cannot capture from that plane, which is a fact about the product rather than a failure of the session.
 
 The per-product declaration is `supportedFormats` under `captureCapabilities` in `hfp-planecontrol.yaml`.
+
+## Error Handling
+
+| Condition | Behaviour |
+|---|---|
+| No format selected before `start()` | `start()` fails with `CaptureErrorCode.INVALID_CONFIGURATION`. There is no default pair to fall back on. |
+| A `FormatLayout` outside `supportedFormats` | `setFormat()` raises `EX_ILLEGAL_ARGUMENT`; the pair is rejected while it is still a configuration error. |
+| Mapped source decoding a codec outside `supportedCodecs` | `start()` fails with `CODEC_NOT_CAPTURABLE`. The decoder still decodes and displays normally. |
+| `resize` false and the size does not match the decoded resolution | `start()` fails with `RESOLUTION_MISMATCH`. Nothing is scaled. |
+| Pool reservation refused | `start()` fails with `OUT_OF_MEMORY`. |
+| Source unmapped while running | The session stops and `ICaptureEventListener.onSourceUnmapped()` is raised. Mapping a source back makes it startable again. |
+| `releaseFrame()` with an index the pool does not name | Raises `EX_ILLEGAL_ARGUMENT` — a client holding an unknown index has lost track of what it holds. |
 
 ## Buffer Contract
 
@@ -520,7 +532,7 @@ Frames are delivered in the pixel format and memory layout the session was confi
 
 `CaptureCapabilities.resize` states whether a plane can deliver a resolution other than the one being decoded. Where it is false, the plane's `Property.WIDTH` and `HEIGHT` must equal what the mapped source decodes to and `start()` fails with `CaptureErrorCode.RESOLUTION_MISMATCH` otherwise. A plane that never scales has no scaling quality to validate and no resolution permutations to cover, which is what keeps the tested surface small.
 
-`NV12` with `DRM_FORMAT_MOD_LINEAR` is the required baseline, not the limit. `supportedFormats` is an open list, so a product that can deliver a format carrying alpha declares that pair and a client selects it — no interface change is needed to support one.
+`supportedFormats` is an open list, so a product that can deliver a format carrying alpha declares that pair and a client selects it — no interface change is needed to support one.
 
 `VideoBufferView` reports the format and modifier of every buffer at `onPoolReady()`, so an importer needs no second lookup.
 
@@ -554,4 +566,4 @@ flowchart LR
 
 Nothing is imported per frame, and no file descriptor crosses the binder after `onPoolReady()`. The index is what makes that possible: it is the buffer's identity, where the addressing that reaches its memory is not.
 
-A client imports from `VideoBufferView.planeFds` and `planeOffsets` alone and needs to know nothing about how the vendor allocated the pool — one Dma-Buf carved into offset-addressed buffers and one Dma-Buf per buffer are both served by the same client code. A client caching EGLImages **must key the cache on `bufferIndex`**, or equivalently on the pair (file descriptor, offset) — never on the file descriptor alone. Where the pool is one shared Dma-Buf every buffer carries the same descriptor and differs only by offset, so an fd-keyed cache collapses the whole pool onto one entry and the client re-textures a single buffer for the rest of the session. The picture freezes while frames keep arriving, and nothing in what the client was handed shows it.
+A descriptor and its `planeOffsets` entry together address a plane, and that pair is the whole of what a client needs. How the memory behind it was allocated is the implementation's to choose — one descriptor shared across planes or buffers at differing offsets, or a descriptor per plane at offset zero, are equally valid. A client that imports from `VideoBufferView.planeFds` and `planeOffsets` serves both without knowing which it was handed. A client caching EGLImages **must key the cache on `bufferIndex`**, or equivalently on the pair (file descriptor, offset) — never on the file descriptor alone. Where the pool is one shared Dma-Buf every buffer carries the same descriptor and differs only by offset, so an fd-keyed cache collapses the whole pool onto one entry and the client re-textures a single buffer for the rest of the session. The picture freezes while frames keep arriving, and nothing in what the client was handed shows it.

@@ -72,6 +72,9 @@ interface ICaptureController
      * memory region, sized for the format and frame size this session was configured
      * with, and wires the mapped source's decoded output into the pool.
      *
+     * A format shall have been selected with `setFormat()` first. There is no default
+     * pair, so a session that has selected none has nothing to size a pool for.
+     *
      * The capture resource transitions to a `STARTING` state and then a `STARTED` state,
      * and `ICaptureControllerListener.onPoolReady()` is raised once the pool is addressable.
      *
@@ -94,11 +97,14 @@ interface ICaptureController
      *            `OUT_OF_MEMORY` if the pool reservation was refused,
      *            `SOURCE_NOT_MAPPED` if the source was unmapped since `open()`,
      *            `CODEC_NOT_CAPTURABLE` if the mapped source is decoding a codec outside
-     *            `CaptureCapabilities.supportedCodecs`.
+     *            `CaptureCapabilities.supportedCodecs`,
+     *            `INVALID_CONFIGURATION` if no format was selected with `setFormat()`,
+     *            `RESOLUTION_MISMATCH` if the plane declares `resize` false and the
+     *            frame size does not equal the decoded resolution.
      *
      * @pre The resource must be in State::READY.
      *
-     * @see stop(), ICaptureControllerListener.onPoolReady()
+     * @see setFormat(), stop(), ICaptureControllerListener.onPoolReady()
      */
     void start();
 
@@ -112,7 +118,7 @@ interface ICaptureController
      * Buffers still Locked by the client are returned to the free state, so the
      * implementation owes nothing further for them.
      *
-     * THE CLIENT'S OWN REFERENCES OUTLIVE THIS CALL. A client received its own
+     * The client's own references outlive this call. A client received its own
      * duplicated file descriptors at `onPoolReady()`, and an image imported from one
      * holds a reference of its own; a Dma-Buf stays alive while any reference to it
      * does. The memory therefore remains valid for as long as the client holds it,
@@ -208,8 +214,9 @@ interface ICaptureController
      * a vendor-namespaced tiled or compressed layout serves one whose GPU is the
      * same vendor's.
      *
-     * A session that never calls this delivers `DRM_FORMAT_NV12` with
-     * `DRM_FORMAT_MOD_LINEAR`.
+     * A format shall be selected before `start()`. There is no default: what a plane
+     * can deliver is whatever it declares, so there is no pair the interface could
+     * assume on the client's behalf.
      *
      * @param[in] format : one entry of `CaptureCapabilities.supportedFormats`.
      * @returns boolean : true on success.

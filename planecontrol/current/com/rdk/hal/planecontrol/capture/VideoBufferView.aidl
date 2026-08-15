@@ -64,17 +64,22 @@ parcelable VideoBufferView
     /**
      * One Dma-Buf file descriptor per plane of this buffer.
      *
-     * PER PLANE, NOT PER BUFFER. `onPoolReady()` delivers one VideoBufferView per
-     * buffer; these arrays index the planes within this one buffer. Every
-     * per-plane array shall have one element per plane of the declared
-     * selected format, in plane order. `DRM_FORMAT_NV12` is required
-     * of every capture plane and has two planes, [Y, UV].
+     * `onPoolReady()` delivers one VideoBufferView per pool buffer. Within it these
+     * arrays are indexed by plane: element N addresses plane N of the selected
+     * format, in plane order. `DRM_FORMAT_NV12`, for example, has two planes,
+     * [Y, UV], so each array has two elements.
      *
-     * A CLIENT CACHING IMPORTED IMAGES SHALL KEY THE CACHE ON `bufferIndex`, and
-     * shall not key it on a file descriptor. Two buffers in a pool may carry the
-     * same descriptor and differ only by offset, so a cache keyed on the
-     * descriptor collapses the pool onto one entry and the client re-textures a
-     * single buffer for the rest of the session. The picture freezes while frames
+     * A descriptor and its `planeOffsets` entry together address a plane. That pair
+     * is the whole of what a client needs, and how the memory behind it was
+     * allocated is the implementation's to choose - one descriptor shared across
+     * planes or buffers at differing offsets, or a descriptor per plane at offset
+     * zero, are equally valid and a client that imports from `planeFds` and
+     * `planeOffsets` serves both without knowing which it was handed.
+     *
+     * A client caching imported images shall key the cache on `bufferIndex`, and
+     * shall not key it on a file descriptor. Where buffers share a descriptor, a
+     * cache keyed on it collapses the pool onto one entry and the client re-textures
+     * a single buffer for the rest of the session. The picture freezes while frames
      * continue to arrive, which is not a failure the client can detect in what it
      * was handed.
      */
