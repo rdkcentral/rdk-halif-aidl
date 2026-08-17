@@ -56,8 +56,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(LIB_NAME "common-v0.2.0.0-cpp")
 
-if (NOT DEFINED BINDER_SDK_DIR)
-    message(FATAL_ERROR "BINDER_SDK_DIR must be set")
+if (NOT DEFINED BINDER_SDK_DIR_MW)
+    message(FATAL_ERROR "BINDER_SDK_DIR_MW must be set")
 endif()
 
 # Resolve the Binder header root across the local-dev layout
@@ -69,16 +69,16 @@ set(_BINDER_INC "")
 # unset BINDER_SDK_INCLUDE_DIR would expand to an absolute "/include/..." path
 # that could accidentally match a host directory.
 set(_binder_inc_cands "")
-if (BINDER_SDK_DIR)
-    list(APPEND _binder_inc_cands "${BINDER_SDK_DIR}/include/binder_sdk")
+if (BINDER_SDK_DIR_MW)
+    list(APPEND _binder_inc_cands "${BINDER_SDK_DIR_MW}/include/binder_sdk")
 endif()
-if (BINDER_SDK_INCLUDE_DIR)
+if (BINDER_SDK_INCLUDE_DIR_MW)
     list(APPEND _binder_inc_cands
         "${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk"
-        "${BINDER_SDK_INCLUDE_DIR}/include")
+        "${BINDER_SDK_INCLUDE_DIR}/include/mw")
 endif()
-if (BINDER_SDK_DIR)
-    list(APPEND _binder_inc_cands "${BINDER_SDK_DIR}/include")
+if (BINDER_SDK_DIR_MW)
+    list(APPEND _binder_inc_cands "${BINDER_SDK_DIR_MW}/include/mw")
 endif()
 foreach(_cand IN LISTS _binder_inc_cands)
     if (IS_DIRECTORY "${_cand}")
@@ -104,7 +104,7 @@ target_include_directories(${LIB_NAME} PRIVATE
     "${_BINDER_INC}")
 
 target_link_directories(${LIB_NAME} PRIVATE
-    "${BINDER_SDK_DIR}/lib/binder"
+    "${BINDER_SDK_DIR_MW}/lib/binder/mw"
 )
 if (DEFINED HALIF_LIB_DIR)
     target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
