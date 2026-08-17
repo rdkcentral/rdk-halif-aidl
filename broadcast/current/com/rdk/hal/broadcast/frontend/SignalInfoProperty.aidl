@@ -30,6 +30,8 @@ package com.rdk.hal.broadcast.frontend;
 enum SignalInfoProperty {
     /** Clean value when default initialized. */
     UNDEFINED = 0,
+    /** The actual frequency that the tuner is locked on (in Hertz). */
+    ACTUAL_FREQUENCY,
     /** Demod Lock status. */
     DEMOD_LOCK,
     /** RF Lock status. */
@@ -48,8 +50,6 @@ enum SignalInfoProperty {
     SSI,
     /** Signal Quality Indicator as defined in NorDig (range 0-100). */
     SQI,
-    /** The actual frequency that the tuner is locked on (in Hertz). */
-    ACTUAL_FREQUENCY,
     /** Physical Layer Pipe ID (range 0-255). */
     PLP_ID,
     /** Physical Layer Pipe IDs (range 0-255). */

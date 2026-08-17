@@ -36,6 +36,8 @@ import com.rdk.hal.broadcast.frontend.TransmissionMode;
  */
 @VintfStability
 union SignalInfoValue {
+    /** The actual frequency that the tuner is locked on (in Hertz). */
+    long actualFrequency;
     /** Demodulator lock state. */
     DemodLockState demodLockState;
     /** RF lock state. */
@@ -54,8 +56,6 @@ union SignalInfoValue {
     int ssi;
     /** Signal Quality Indicator as defined in NorDig (range 0-100). */
     int sqi;
-    /** The actual frequency that the tuner is locked on (in Hertz). */
-    long actualFrequency;
     /** Physical Layer Pipe ID (range 0-255). */
     int plpId;
     /** Physical Layer Pipe IDs (range 0-255). */
