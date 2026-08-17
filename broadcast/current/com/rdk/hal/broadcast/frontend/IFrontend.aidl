@@ -60,9 +60,7 @@ interface IFrontend {
     /**
      * Open the frontend in a mode where it is ready to tune.
      *
-     * The returned IFrontendController interface is used by the client facilitate all tune related operations. If the
-     * client that opened the IFrontEndController crashes, then the IFrontEndController has stop() and close()
-     * implicitly called to perform clean up. TODO can this be done in praxis?
+     * The returned IFrontendController interface is used by the client facilitate all tune related operations.
      *
      * @pre isOpen() == false
      *
