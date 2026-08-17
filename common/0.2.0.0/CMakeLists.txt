@@ -74,8 +74,8 @@ if (BINDER_SDK_DIR_MW)
 endif()
 if (BINDER_SDK_INCLUDE_DIR_MW)
     list(APPEND _binder_inc_cands
-        "${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk"
-        "${BINDER_SDK_INCLUDE_DIR}/include/mw")
+        "${BINDER_SDK_INCLUDE_DIR_MW}/include/binder_sdk"
+        "${BINDER_SDK_INCLUDE_DIR_MW}/include/mw")
 endif()
 if (BINDER_SDK_DIR_MW)
     list(APPEND _binder_inc_cands "${BINDER_SDK_DIR_MW}/include/mw")
