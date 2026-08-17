@@ -32,7 +32,7 @@ import com.rdk.hal.broadcast.frontend.TransmissionMode;
 @VintfStability
 parcelable DvbTTuneParameters {
     /** The frequency to tune to in Hertz. */
-    long frequencyHz;
+    long frequency;
 
     /** Signal detect mode to use when tuning. */
     SignalDetectMode signalDetectMode;

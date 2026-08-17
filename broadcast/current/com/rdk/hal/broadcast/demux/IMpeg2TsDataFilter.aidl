@@ -37,26 +37,25 @@ interface IMpeg2TsDataFilter {
      * non-empty will update the filter, but old data may still be read from the filter until the new data is available.
      * Going from an empty list to another empty list does nothing.
      *
-     * TODO is this in line with the C++ API?
-     * TODO PID type to define a wildcard PID?
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The list of PIDs exceeds the maximum number of PIDs that can be filtered for or contains invalid PIDs.
+     *
      */
     void setPids(in int[] pids);
 
     /**
-     * Get the maximum number of PIDs that can be filtered for.
+     * Use this to enable the collection of the full transport stream via wildcard filtering.
      *
-     * When setting more than this number of PIDs, the filter will go into wildcard mode.
-     *
-     * TODO is this in line with the C++ API?
+     * When calling this data from all PIDs will be returned. One practical usecase for this is if the list of PIDs
+     * becomes larger than maxPids()
      */
-    int getMaxPids();
+    void setAllPids();
 
     /**
-     * Enable wildcard mode, which will filter for all PIDs.
+     * Get the maximum number of PIDs that can be filtered for.
      *
      * TODO is this in line with the C++ API?
      */
-    void enableWildcard(in boolean enable);
+    int maxPids();
 
     /**
      * Register a consumer to read out data from the filter.
