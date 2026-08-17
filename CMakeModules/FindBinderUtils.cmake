@@ -25,16 +25,10 @@ include(FindPackageHandleStandardArgs)
 # First try pkg-config
 find_package(PkgConfig)
 if(PkgConfig_FOUND)
-    pkg_check_modules(PC_BinderUtils QUIET utils) # TODO: Name is too generic
+    pkg_check_modules(PC_BinderUtils QUIET utils)
 endif()
 
 # Utils
-find_path(
-    BinderUtils_INCLUDE_DIR
-    NAMES utils/misc.h
-    HINTS ${PC_BinderUtils_INCLUDE_DIRS} "${CMAKE_CURRENT_SOURCE_DIR}/out/build/include/binder_sdk"
-    PATH_SUFFIXES utils
-)
 find_library(
     BinderUtils_LIBRARY
     NAMES utils
@@ -42,22 +36,20 @@ find_library(
 )
 find_package_handle_standard_args(
     BinderUtils
-    REQUIRED_VARS BinderUtils_INCLUDE_DIR BinderUtils_LIBRARY
+    REQUIRED_VARS BinderUtils_LIBRARY
     VERSION_VAR BinderUtils_VERSION
 )
 
 if(BinderUtils_FOUND)
     set(BinderUtils_LIBRARIES ${BinderUtils_LIBRARY})
-    set(BinderUtils_INCLUDE_DIRS ${BinderUtils_INCLUDE_DIR})
     set(BinderUtils_DEFINITIONS ${PC_BinderUtils_CFLAGS_OTHER})
 endif()
 
 if(BinderUtils_FOUND AND NOT TARGET BinderUtils::BinderUtils)
-    add_library(Binder::Utils UNKNOWN IMPORTED)
+    add_library(BinderUtils::BinderUtils UNKNOWN IMPORTED)
     set_target_properties(
-        Binder::Utils PROPERTIES
+        BinderUtils::BinderUtils PROPERTIES
         IMPORTED_LOCATION "${BinderUtils_LIBRARY}"
-        INTERFACE_INCLUDE_DIRECTORIES "${BinderUtils_INCLUDE_DIR}"
         INTERFACE_COMPILE_DEFINITIONS "${PC_BinderUtils_CFLAGS_OTHER}"
     )
 endif()
