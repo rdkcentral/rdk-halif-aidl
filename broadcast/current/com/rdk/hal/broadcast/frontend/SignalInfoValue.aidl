@@ -16,11 +16,13 @@ package com.rdk.hal.broadcast.frontend;
 
 import com.rdk.hal.broadcast.frontend.Bandwidth;
 import com.rdk.hal.broadcast.frontend.CodingRate;
+import com.rdk.hal.broadcast.frontend.DemodLockState;
 import com.rdk.hal.broadcast.frontend.DvbSStandard;
 import com.rdk.hal.broadcast.frontend.DvbTCodingRate;
 import com.rdk.hal.broadcast.frontend.DvbTStandard;
 import com.rdk.hal.broadcast.frontend.GuardInterval;
 import com.rdk.hal.broadcast.frontend.Modulation;
+import com.rdk.hal.broadcast.frontend.RfLockState;
 import com.rdk.hal.broadcast.frontend.TransmissionMode;
 
 /**
@@ -28,27 +30,23 @@ import com.rdk.hal.broadcast.frontend.TransmissionMode;
  *
  * These are the values that can be returned on status requests. It will always be in sync with @ref SignalInfoProperty.
  *
- * TODO Many of these types are out of sync with the C++ HAL. We should also consider wrapping them in parcelables so
- * that they cannot be confused and units are documented. Further, the list itself is probably out of sync with the C++
- * HAL, as well.
- *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
 union SignalInfoValue {
-    /** Demod Lock status. */
-    boolean isDemodLocked;
-    /** RF Lock status. */
-    boolean isRfLocked;
+    /** Demodulator lock state. */
+    DemodLockState demodLockState;
+    /** RF lock state. */
+    RfLockState rfLockState;
     /** RF signal level in dbm. */
     float rfLevel;
     /** Carrier to noise ratio in dB. */
     float cnr;
-    /** Bit error rate - The number of error bit per 1 billion bits. */
+    /** Bit error rate - The number of error bits per 1 billion bits (range 0-1,000,000,000). */
     int ber;
-    /** Pre Viterbi BER - The number of error bit per 1 billion bits before correction. */
+    /** Pre Viterbi BER - The number of error bits per 1 billion bits before correction (range 0-1,000,000,000). */
     int preBer;
     /** Uncorrected Error count. */
     long uncorrectedErrors;
