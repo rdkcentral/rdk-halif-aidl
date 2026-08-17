@@ -104,7 +104,7 @@ target_include_directories(${LIB_NAME} PRIVATE
     "${_BINDER_INC}")
 
 target_link_directories(${LIB_NAME} PRIVATE
-    "${BINDER_SDK_DIR_MW}/lib/binder/mw"
+    "${BINDER_SDK_DIR_MW}/lib/mw"
 )
 if (DEFINED HALIF_LIB_DIR)
     target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
