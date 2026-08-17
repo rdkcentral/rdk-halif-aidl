@@ -112,8 +112,19 @@ target_include_directories(${LIB_NAME} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${_BINDER_INC}")
 
+if (DEFINED BINDER_SDK_DIR_MW AND
+    NOT "${BINDER_SDK_DIR_MW}" STREQUAL "")
+
+    set(_BINDER_LIB_DIR "${BINDER_SDK_DIR_MW}/lib/mw")
+
+else()
+
+    set(_BINDER_LIB_DIR "${BINDER_SDK_DIR}/lib/binder")
+
+endif()
+
 target_link_directories(${LIB_NAME} PRIVATE
-    "${BINDER_SDK_DIR_MW}/lib/mw"
+    "${_BINDER_LIB_DIR}"
 )
 if (DEFINED HALIF_LIB_DIR)
     target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
