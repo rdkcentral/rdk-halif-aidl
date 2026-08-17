@@ -77,9 +77,11 @@ interface IDemux {
      * DemuxSoftwareSource can be used to write data to the demux, depending on the Capabilities.
      * Only the software source can only provide data to this demux instance.
      *
-     * @returns IDemuxSoftwareSource or null on failure (e.g. the demux does not support software sources).
+     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The demux does not support software sources.
+     *
+     * @returns IDemuxSoftwareSource or null on failure (e.g. the demux does not support multiple software sources).
      */
-    IDemuxSoftwareSource.Id createSoftwareSource();
+    @nullable IDemuxSoftwareSource.Id createSoftwareSource();
 
     /**
      * Release the given software source.
@@ -100,9 +102,9 @@ interface IDemux {
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The software source ID is not valid for this demux.
      *
-     * @returns IDemuxSoftwareSource or null on failure (e.g. the software source does not exist).
+     * @returns IDemuxSoftwareSource
      */
-    @nullable IDemuxSoftwareSource acquireSoftwareSource(in IDemuxSoftwareSource.Id id);
+    IDemuxSoftwareSource acquireSoftwareSource(in IDemuxSoftwareSource.Id id);
 
     /**
      * Release the given software source. The internal reference count will be decremented.

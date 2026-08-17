@@ -87,8 +87,7 @@ interface IFrontend {
     /**
      * Acquire a DemuxDataProvider that must be passed to a DemuxController.
      *
-     * @returns IDemuxDataProvider or null on error (e.g. frontend not opened TODO I don't think we have this limitation
-     *          in the C++ HAL)
+     * @returns IDemuxDataProvider or null on error
      */
     @nullable IDemuxDataProvider acquireDataProvider();
 
