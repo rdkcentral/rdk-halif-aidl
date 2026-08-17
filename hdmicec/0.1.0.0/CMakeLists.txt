@@ -15,8 +15,9 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(LIB_NAME "hdmicec-v0.1.0.0-cpp")
 
-if (NOT DEFINED BINDER_SDK_DIR)
-    message(FATAL_ERROR "BINDER_SDK_DIR must be set for snapshot build")
+if (NOT DEFINED BINDER_SDK_DIR_MW AND NOT DEFINED BINDER_SDK_DIR)
+    message(FATAL_ERROR
+        "BINDER_SDK_DIR_MW or BINDER_SDK_DIR must be set")
 endif()
 
 # Resolve binder include path. Yocto stages a flat SDK so headers live under
@@ -32,15 +33,23 @@ set(_BINDER_INC "")
 # unset BINDER_SDK_INCLUDE_DIR would expand to an absolute "/include/..." path
 # that could accidentally match a host directory.
 set(_binder_inc_cands "")
-if (BINDER_SDK_DIR)
+if (BINDER_SDK_DIR_MW)
+    list(APPEND _binder_inc_cands "${BINDER_SDK_DIR_MW}/include/binder_sdk")
+else()
     list(APPEND _binder_inc_cands "${BINDER_SDK_DIR}/include/binder_sdk")
 endif()
-if (BINDER_SDK_INCLUDE_DIR)
+if (BINDER_SDK_INCLUDE_DIR_MW)
+    list(APPEND _binder_inc_cands
+        "${BINDER_SDK_INCLUDE_DIR_MW}/include/binder_sdk"
+        "${BINDER_SDK_INCLUDE_DIR_MW}/include/mw")
+else()
     list(APPEND _binder_inc_cands
         "${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk"
         "${BINDER_SDK_INCLUDE_DIR}/include")
 endif()
-if (BINDER_SDK_DIR)
+if (BINDER_SDK_DIR_MW)
+    list(APPEND _binder_inc_cands "${BINDER_SDK_DIR_MW}/include/mw")
+else()
     list(APPEND _binder_inc_cands "${BINDER_SDK_DIR}/include")
 endif()
 foreach(_cand IN LISTS _binder_inc_cands)
@@ -73,8 +82,19 @@ if (DEFINED HALIF_INCLUDE_DIR)
     "${HALIF_INCLUDE_DIR}/common/0.2.0.0/include")
 endif()
 
+if (DEFINED BINDER_SDK_DIR_MW AND
+    NOT "${BINDER_SDK_DIR_MW}" STREQUAL "")
+
+    set(_BINDER_LIB_DIR "${BINDER_SDK_DIR_MW}/lib/mw")
+
+else()
+
+    set(_BINDER_LIB_DIR "${BINDER_SDK_DIR}/lib/binder")
+
+endif()
+
 target_link_directories(${LIB_NAME} PRIVATE
-    "${BINDER_SDK_DIR}/lib/binder"
+    "${_BINDER_LIB_DIR}"
 )
 if (DEFINED HALIF_LIB_DIR)
     target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
