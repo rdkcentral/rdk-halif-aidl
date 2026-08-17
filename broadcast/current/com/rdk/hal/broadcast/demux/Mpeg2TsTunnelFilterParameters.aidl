@@ -15,21 +15,17 @@
 package com.rdk.hal.broadcast.demux;
 
 /**
- * MPEG-2 TS video filter interface for tunneled pipelines.
+ * MPEG-2 TS tunnel filter-specific parameters.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-interface IMpeg2TsVideoFilter {
-    /**
-     * Set the PID containing the video data.
-     *
-     * Setting a PID will activate the filter, i.e. it will potentially start outputting data instantly.
-     */
-    void setPid(in int pid);
+parcelable Mpeg2TsTunnelFilterParameters {
+    /** The PID to filter for. */
+    int pid;
 
-    /** Reset the PID containing the PCR values, effectively stopping the filter. */
-    void clearPid();
+    /** Reserved for future use. */
+    ParcelableHolder extension;
 }

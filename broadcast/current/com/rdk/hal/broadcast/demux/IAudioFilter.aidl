@@ -15,21 +15,11 @@
 package com.rdk.hal.broadcast.demux;
 
 /**
- * MPEG-2 TS clock filter interface for tunneled pipelines.
+ * MPEG-2 TS audio filter interface for tunneled pipelines.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-interface IMpeg2TsClockFilter {
-    /**
-     * Set the PID containing the PCR values to be used for clock recovery.
-     *
-     * Setting a PID will activate the filter, i.e. it will potentially start outputting data instantly.
-     */
-    void setPid(in int pid);
-
-    /** Reset the PID containing the PCR values, effectively stopping the filter. */
-    void clearPid();
-}
+interface IAudioFilter {}

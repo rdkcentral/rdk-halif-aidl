@@ -14,24 +14,30 @@
  */
 package com.rdk.hal.broadcast.demux;
 
+import com.rdk.hal.broadcast.demux.Mpeg2TsDataFilterParameters;
+import com.rdk.hal.broadcast.demux.Mpeg2TsTunnelFilterParameters;
+
 /**
- * MPEG-2 TS supplementary audio filter interface for tunneled pipelines.
+ * Tuner-specific tuning parameters.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-interface IMpeg2TsSupplementaryAudioFilter {
-    /**
-     * Set the PID containing the PCR values to be used for supplementary audio data.
-     *
-     * Setting a PID will activate the filter, i.e. it will potentially start outputting data instantly.
-     *
-     * @param pid The PID containing the PCR values.
-     */
-    void setPid(in int pid);
+union FilterParameters {
+    /** A MPEG-2 TS data filter instance. */
+    Mpeg2TsDataFilterParameters mpeg2TsData;
 
-    /** Reset the PID containing the PCR values, effectively stopping the filter. */
-    void clearPid();
+    /** A MPEG-2 TS clock filter instance. */
+    Mpeg2TsTunnelFilterParameters mpeg2TsClock;
+
+    /** A MPEG-2 TS video filter instance. */
+    Mpeg2TsTunnelFilterParameters mpeg2TsVideo;
+
+    /** A MPEG-2 TS audio filter instance. */
+    Mpeg2TsTunnelFilterParameters mpeg2TsAudio;
+
+    /** A MPEG-2 TS supplementary audio filter instance. */
+    Mpeg2TsTunnelFilterParameters mpeg2TsSupplementaryAudio;
 }

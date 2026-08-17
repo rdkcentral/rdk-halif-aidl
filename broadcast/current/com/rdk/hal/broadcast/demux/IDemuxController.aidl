@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.demux;
 
 import com.rdk.hal.broadcast.demux.Filter;
-import com.rdk.hal.broadcast.demux.FilterType;
+import com.rdk.hal.broadcast.demux.FilterParameters;
 
 /**
  * Interface for an opened demux.
@@ -31,15 +31,16 @@ interface IDemuxController {
      *
      * The returned union contains exactly one active member, representing the concrete type-specific filter interface.
      *
-     * @exception ::android::binder::Status::EX_UNSUPPORTED_OPERATION The demux does not support the given filter type.
-     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The demux can not provide any more filters of the given
-     *                                                        type.
+     * @exception ::android::binder::Status::EX_UNSUPPORTED_OPERATION The demux does not support the given filter
+     * parameters.
+     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The demux can not provide any more filters for the given
+     * filter parameters.
      *
-     * @param[in] filterType The type of filter to create.
+     * @param[in] parameters The parameters of the filter to create.
      *
-     * @returns DemuxFilter, or null on error.
+     * @returns Filter, or null on error.
      */
-    @nullable Filter openFilter(in FilterType filterType);
+    @nullable Filter openFilter(in FilterParameters parameters);
 
     /**
      * Closes the given filter.

@@ -14,35 +14,15 @@
  */
 package com.rdk.hal.broadcast.demux;
 
-import com.rdk.hal.broadcast.demux.IAudioFilter;
-import com.rdk.hal.broadcast.demux.IClockFilter;
-import com.rdk.hal.broadcast.demux.IMpeg2TsDataFilter;
-import com.rdk.hal.broadcast.demux.ISupplementaryAudioFilter;
-import com.rdk.hal.broadcast.demux.IVideoFilter;
-
 /**
- * A typed demux filter instance.
- *
- * Exactly one member is active and represents the concrete filter instance that was opened.
+ * MPEG-2 TS data filter-specific parameters.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-union Filter {
-    /** A MPEG-2 TS data filter instance. */
-    IMpeg2TsDataFilter mpeg2TsData;
-
-    /** A clock filter instance. */
-    IClockFilter clock;
-
-    /** A video filter instance. */
-    IVideoFilter video;
-
-    /** An audio filter instance. */
-    IAudioFilter audio;
-
-    /** A supplementary audio filter instance. */
-    ISupplementaryAudioFilter supplementaryAudio;
+parcelable Mpeg2TsDataFilterParameters {
+    /** Reserved for future use. */
+    ParcelableHolder extension;
 }
