@@ -16,8 +16,6 @@ package com.rdk.hal.broadcast.demux;
 
 import com.rdk.hal.broadcast.demux.Filter;
 import com.rdk.hal.broadcast.demux.FilterType;
-import com.rdk.hal.ringbuffer.IRingBufferSink;
-import com.rdk.hal.ringbuffer.IRingBufferSinkListener;
 
 /**
  * Interface for an opened demux.
@@ -54,22 +52,4 @@ interface IDemuxController {
      * @param[in] filter The filter to close.
      */
     void closeFilter(in Filter filter);
-
-    /**
-     * Open the demux for writing.
-     *
-     * This is used for writing data to the demux, e.g. for playing a recording or for feeding data from a network
-     * source. It should work independently of the filters, i.e. it should be possible to write data to the demux while
-     * filters are active and also if they are not. The data written to the demux will be processed by the filters and
-     * made available to the clients as if it was coming from the tuner.
-     *
-     * @exception ::android::binder::Status::EX_UNSUPPORTED_OPERATION The demux does not support writing (see
-     *                                                                DemuxCapabilities.acceptsDataFromSoftware).
-     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The demux is already opened for writing.
-     *
-     * @param listener The listener to receive notifications about the ring buffer sink.
-     *
-     * @returns The IRingBufferSink related to the demux's internal IRingBuffer, or null on error.
-     */
-    @nullable IRingBufferSink openForWriting(in IRingBufferSinkListener listener);
 }
