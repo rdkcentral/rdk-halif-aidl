@@ -37,7 +37,8 @@ interface IMpeg2TsDataFilter {
      * non-empty will update the filter, but old data may still be read from the filter until the new data is available.
      * Going from an empty list to another empty list does nothing.
      *
-     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The list of PIDs exceeds the maximum number of PIDs that can be filtered for or contains invalid PIDs.
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The list of PIDs exceeds the maximum number of PIDs
+     * that can be filtered for or contains invalid PIDs.
      *
      */
     void setPids(in int[] pids);
@@ -53,7 +54,7 @@ interface IMpeg2TsDataFilter {
     /**
      * Get the maximum number of PIDs that can be filtered for.
      *
-     * TODO is this in line with the C++ API?
+     * @returns The maximum number of PIDs that can be filtered for.
      */
     int maxPids();
 
