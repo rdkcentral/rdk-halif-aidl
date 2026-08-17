@@ -23,7 +23,7 @@
 component: broadcast
 version: 0.1.0.0
 status: AMBER
-description: "Broadcast tuner and RF frontend interface"
+description: "Broadcast frontend and demux interface"
 type: OEM
 
 # lifecycle - 14+5 review cycle dates                                    [pr_cycle.sh]
@@ -31,17 +31,19 @@ type: OEM
 #   review_deadline   - review_started + 14 calendar days
 #   target_green_date - review_deadline + 5 business days
 lifecycle:
-  review_started: ~
-  review_deadline: ~
-  target_green_date: ~
+    review_started: ~
+    review_deadline: ~
+    target_green_date: ~
 
 # scope - High-level architectural responsibilities                       [manual]
 scope:
-  - Frontend resource management for broadcast signal reception and tuning
-  - Multiple frontend type support with type-specific capabilities
-  - State management (CLOSED -> OPENING -> READY) for frontend operation
-  - Tuning operations through controller interface
-  - Tuning and state change event delivery to registered listeners
+    - Frontend resource management for broadcast signal reception and tuning
+    - Multiple frontend type support with type-specific capabilities
+    - LNB Control for DVB-S
+    - Tuning operations through controller interface
+    - Tuning and state change event delivery to registered listeners
+    - The Demux abstracts the acquission of data
+    - Support for Software writing to the demux to support the usage of network tuners and DVR
 
 # notes - Tracking metadata                                              [manual]
 #   priority      - Numeric priority (lower = higher)
@@ -50,11 +52,11 @@ scope:
 #   risk          - Risk notes (appears as watch item on dashboard)
 #   owners        - Responsible architecture teams
 notes:
-  priority: 5
-  status_detail: "Not integrated into the AIDL build - blocked on FMQ (#494)"
-  action: "Blocked: needs the android.hardware.common.fmq AIDL package in the binder SDK (linux_binder_idl#18); then add broadcast/current/interface.yaml - see #494."
-  risk: "broadcast has no interface.yaml and is excluded from the build; SoftwareSink/SoftwareSource use FMQ which the binder SDK does not yet ship."
-  owners: "Vendor_Layer_Team + Broadcast_Team"
+    priority: 5
+    status_detail: "Not integrated into the AIDL build - blocked on FMQ (#494)"
+    action: "Blocked: needs the android.hardware.common.fmq AIDL package in the binder SDK (linux_binder_idl#18); then add broadcast/current/interface.yaml - see #494."
+    risk: "broadcast has no interface.yaml and is excluded from the build; SoftwareSink/SoftwareInput use FMQ which the binder SDK does not yet ship."
+    owners: "Vendor_Layer_Team + Broadcast_Team"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
@@ -63,4 +65,3 @@ reviewers:
     Product_Architecture: pending
     Broadcast_Team: pending
     Vendor_Layer_Team: pending
-

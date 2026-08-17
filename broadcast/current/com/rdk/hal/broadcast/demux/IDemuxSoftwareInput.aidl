@@ -26,7 +26,7 @@ import com.rdk.hal.ringbuffer.IRingBufferSinkListener;
  * @author Philipp Trommler
  */
 @VintfStability
-interface IDemuxSoftwareSource {
+interface IDemuxSoftwareInput {
     /** Demux resource ID type. */
     @VintfStability
     parcelable Id {
