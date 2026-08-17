@@ -56,7 +56,8 @@ parcelable FrontendCapabilities {
         AtscCapabilities atsc;
         DvbCCapabilities dvbC;
         DvbSCapabilities dvbS;
-        DvbTCapabilities dvbT;}
+        DvbTCapabilities dvbT;
+    }
 
     /** Capabilities specific to a given @FrontendType. */
     SpecificCapabilities specifics;
