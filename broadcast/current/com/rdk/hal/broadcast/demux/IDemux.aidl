@@ -17,7 +17,7 @@ package com.rdk.hal.broadcast.demux;
 import com.rdk.hal.broadcast.demux.DemuxCapabilities;
 import com.rdk.hal.broadcast.demux.IDemuxController;
 import com.rdk.hal.broadcast.demux.IDemuxDataProvider;
-import com.rdk.hal.broadcast.demux.IDemuxSoftwareSource;
+import com.rdk.hal.broadcast.demux.IDemuxSoftwareInput;
 
 /**
  * Interface for a demux.
@@ -74,14 +74,14 @@ interface IDemux {
      * Create a software source for this demux.
      *
      * The created demux represented by the
-     * DemuxSoftwareSource can be used to write data to the demux, depending on the Capabilities.
+     * DemuxSoftwareInput can be used to write data to the demux, depending on the Capabilities.
      * Only the software source can only provide data to this demux instance.
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_STATE The demux does not support software sources.
      *
-     * @returns IDemuxSoftwareSource or null on failure (e.g. the demux does not support multiple software sources).
+     * @returns IDemuxSoftwareInput or null on failure (e.g. the demux does not support multiple software sources).
      */
-    @nullable IDemuxSoftwareSource.Id createSoftwareSource();
+    @nullable IDemuxSoftwareInput.Id createSoftwareInput();
 
     /**
      * Release the given software source.
@@ -91,26 +91,28 @@ interface IDemux {
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_STATE The reference count is not zero
      *
-     * @param[in] softwareSource Non-null software source obtained from createSoftwareSource() on the same Demux.
+     * @param[in] id the id for the software source obtained from createSoftwareInput() on the same Demux.
      */
-    void destroySoftwareSource(in IDemuxSoftwareSource.Id softwareSource);
+    void destroySoftwareInput(in IDemuxSoftwareInput.Id id);
 
     /**
      * Acquire the given software source. The internal reference count will be incremented.
      *
-     * @param[in] id Non-null software source ID obtained from createSoftwareSource() on the same Demux.
+     * @param[in] id Non-null software source ID obtained from createSoftwareInput() on the same Demux.
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The software source ID is not valid for this demux.
      *
-     * @returns IDemuxSoftwareSource
+     * @returns IDemuxSoftwareInput
      */
-    IDemuxSoftwareSource acquireSoftwareSource(in IDemuxSoftwareSource.Id id);
+    IDemuxSoftwareInput acquireSoftwareInput(in IDemuxSoftwareInput.Id id);
 
     /**
      * Release the given software source. The internal reference count will be decremented.
      *
+     * @param[in] input The instance of the software input obtained from acquireSoftwareInput() on the same Demux.
+     *
      * @exception ::android::binder::Status::EX_ILLEGAL_STATE The reference count is already zero.
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The software source is not valid for this demux.
      */
-    void releaseSoftwareSource(in IDemuxSoftwareSource softwareSource);
+    void releaseSoftwareInput(in IDemuxSoftwareInput input);
 }
