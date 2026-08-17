@@ -27,7 +27,7 @@ import com.rdk.hal.broadcast.frontend.SignalDetectMode;
 @VintfStability
 parcelable AtscTuneParameters {
     /** The frequency to tune to in Hertz. */
-    long frequencyHz;
+    long frequency;
 
     /** Signal detect mode to use when tuning. */
     SignalDetectMode signalDetectMode;

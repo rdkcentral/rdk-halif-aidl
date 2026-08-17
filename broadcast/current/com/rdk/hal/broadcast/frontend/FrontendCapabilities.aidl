@@ -33,13 +33,13 @@ parcelable FrontendCapabilities {
     SignalInfoProperty[] signalInfoProperties;
 
     /** Minimum frequency range of the tuner. */
-    long minFrequencyHz;
+    long minFrequency;
 
     /** Maximum frequency range of the tuner. */
-    long maxFrequencyHz;
+    long maxFrequency;
 
     /** Range in Hertz that will result in the Tuner obtaining a lock. */
-    long acquireFrequencyRangeHz;
+    long acquireFrequencyRange;
 
     /** Minimum symbol rate in Symbols per second. */
     int minSymbolRate;
