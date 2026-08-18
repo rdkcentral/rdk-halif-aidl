@@ -26,6 +26,6 @@ package com.rdk.hal.broadcast.frontend;
 enum RfLockState {
     /** Clean value when default initialised. */
     UNDEFINED = 0,
-    LOCKED,
     UNLOCKED,
+    LOCKED,
 }
