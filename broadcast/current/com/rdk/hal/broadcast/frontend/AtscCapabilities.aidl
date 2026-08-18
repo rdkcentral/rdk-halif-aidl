@@ -23,6 +23,9 @@ package com.rdk.hal.broadcast.frontend;
  */
 @VintfStability
 parcelable AtscCapabilities {
+    /** Supported modulations. */
+    Modulation[] modulations;
+
     /** Reserved for future use. */
     ParcelableHolder extension;
 }

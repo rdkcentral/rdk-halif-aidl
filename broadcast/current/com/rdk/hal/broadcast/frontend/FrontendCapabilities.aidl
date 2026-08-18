@@ -38,7 +38,7 @@ parcelable FrontendCapabilities {
     /** Maximum frequency range of the tuner. */
     long maxFrequency;
 
-    /** Range in Hertz that will result in the Tuner obtaining a lock. */
+    /** Range in Hertz from the center frequency that will result in the Tuner obtaining a lock. */
     long acquireFrequencyRange;
 
     /** Minimum symbol rate in Symbols per second. */

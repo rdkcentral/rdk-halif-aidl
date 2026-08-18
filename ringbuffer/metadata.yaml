@@ -59,5 +59,4 @@ notes:
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
     Architecture: pending
-    Vendor_Layer_Team: pending
     Broadcsast_Team: reviewed

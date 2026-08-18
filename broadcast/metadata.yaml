@@ -22,8 +22,8 @@
 # type        - Responsibility: SOC or OEM                                [manual]
 component: broadcast
 version: 0.1.0.0
-status: AMBER
-description: "Broadcast frontend and demux interface"
+status: GREEN
+description: "Broadcast Frontend, Lnb, Demux interfaces"
 type: OEM
 
 # lifecycle - 14+5 review cycle dates                                    [pr_cycle.sh]
@@ -43,7 +43,9 @@ scope:
     - Tuning operations through controller interface
     - Tuning and state change event delivery to registered listeners
     - The Demux abstracts the acquission of data
-    - Support for Software writing to the demux to support the usage of network tuners and DVR
+    - Support for software writing to the demux to support the usage of network tuners and DVR
+    - Support for tunnelled Audio/Video/Clock filters
+    - Support for power control of CaSlots (e.g. CiCams)
 
 # notes - Tracking metadata                                              [manual]
 #   priority      - Numeric priority (lower = higher)
@@ -52,16 +54,10 @@ scope:
 #   risk          - Risk notes (appears as watch item on dashboard)
 #   owners        - Responsible architecture teams
 notes:
-    priority: 5
-    status_detail: "Not integrated into the AIDL build - blocked on FMQ (#494)"
-    action: "Blocked: needs the android.hardware.common.fmq AIDL package in the binder SDK (linux_binder_idl#18); then add broadcast/current/interface.yaml - see #494."
-    risk: "broadcast has no interface.yaml and is excluded from the build; SoftwareSink/SoftwareInput use FMQ which the binder SDK does not yet ship."
-    owners: "Vendor_Layer_Team + Broadcast_Team"
+    owners: "Broadcast_Team"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
     Architecture: pending
-    Product_Architecture: pending
-    Broadcast_Team: pending
-    Vendor_Layer_Team: pending
+    Broadcast_Team: reviewed
