@@ -14,6 +14,8 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
+import com.rdk.hal.broadcast.frontend.Modulation;
+
 /**
  * ATSC capabilities.
  *
