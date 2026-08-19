@@ -21,7 +21,7 @@
 #** ******************************************************************************
 
 add_versioned(
-    NAME "audiobuffer"
+    NAME "avbuffer"
     VERSION "0.2.0.0"
     DEPENDENCIES
     "common" "0.2.0.0"

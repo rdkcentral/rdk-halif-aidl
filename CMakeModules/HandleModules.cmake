@@ -158,7 +158,7 @@ function(add_versioned)
 endfunction()
 
 # Add a "current" module, i.e. a module that is build from "current" sources and with "current" dependencies. Source and
-# headers will be searched for in the "src" and "include" directories of the current directory.
+# headers will be searched for in the "src" and "include" directories of the current directory after having been generated with the "aidl" transpiler
 function(add_current)
     cmake_parse_arguments(PARSE_ARGV 0 MODULE "" "NAME" "DEPENDENCIES")
 

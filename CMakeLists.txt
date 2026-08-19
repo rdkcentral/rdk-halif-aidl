@@ -27,7 +27,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMakeMod
 include(HandleModules)
 
 find_package(Binder REQUIRED)
-find_package(BinderUtils REQUIRED)
+find_package(AndroidUtils REQUIRED)
 
 option(BUILD_CURRENT "Build current version of HAL modules" OFF)
 
@@ -66,3 +66,4 @@ add_subdirectory("avbuffer")
 add_subdirectory("panel")
 add_subdirectory("planecontrol")
 add_subdirectory("videosink")
+

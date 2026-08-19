@@ -20,4 +20,4 @@
 # *
 #** ******************************************************************************
 
-add_current(NAME "bootreason" DEPENDENCIES "common")
+add_current(NAME "bootreason")
