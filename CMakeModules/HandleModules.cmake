@@ -48,9 +48,9 @@ function(_generate_dependency_list CMAKE_STYLE_OUT PKG_CONFIG_STYLE_OUT LIB_NAME
         list(APPEND LIB_NAMES "${ARGV${dep}}-v${ARGV${dep_ver_index}}-cpp")
     endforeach()
 
-    message(STATUS "CMake style dependencies: ${CMAKE_STYLE}")
-    message(STATUS "Pkg-config style dependencies: ${PKG_CONFIG_STYLE}")
-    message(STATUS "Library names: ${LIB_NAMES}")
+    message(DEBUG "CMake style dependencies: ${CMAKE_STYLE}")
+    message(DEBUG "Pkg-config style dependencies: ${PKG_CONFIG_STYLE}")
+    message(DEBUG "Library names: ${LIB_NAMES}")
 
     set(${CMAKE_STYLE_OUT} "${CMAKE_STYLE}" PARENT_SCOPE)
     set(${PKG_CONFIG_STYLE_OUT} "${PKG_CONFIG_STYLE}" PARENT_SCOPE)
@@ -76,9 +76,9 @@ function(_create_cmake_helpers MODULE_NAME MODULE_VERSION MODULE_DEPENDENCIES SO
    endforeach()
 
    configure_package_config_file(
-    "${CMAKE_SOURCE_DIR}/contrib/Config.cmake.in"
+        "${CMAKE_SOURCE_DIR}/contrib/Config.cmake.in"
         "${CMAKE_CURRENT_BINARY_DIR}/RdkHalif${MODULE_CAPITALIZED_NAME}Config.cmake"
-        INSTALL_DESTINATION "${CMAKE_INSTALL_FULL_DATADIR}/cmake/Modules/"
+        INSTALL_DESTINATION "${CMAKE_INSTALL_FULL_DATADIR}/cmake/RdkHalif${MODULE_CAPITALIZED_NAME}"
         PATH_VARS CMAKE_INSTALL_INCLUDEDIR CMAKE_INSTALL_LIBDIR CMAKE_INSTALL_PREFIX
     )
     write_basic_package_version_file(
@@ -171,25 +171,34 @@ function(add_current)
         string(REPLACE " " ";" AIDL_INTERFACE_INCLUDES ${AIDL_GEN_TARGET_DEPS})
     endif()
 
-    set(interface_dir "${CMAKE_CURRENT_SOURCE_DIR}")
+    set(INTERFACE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
-    file(GLOB_RECURSE SRCS CONFIGURE_DEPENDS "${interface_dir}/com/*.aidl")
+    file(GLOB_RECURSE SRCS CONFIGURE_DEPENDS "${INTERFACE_DIR}/com/*.aidl")
 
-    message(STATUS "")
-    message(STATUS "Generate cpp and header files for: ${MODULE_NAME}")
+    message(STATUS "Generate source and header files for: ${MODULE_NAME}")
 
     execute_process(
-        COMMAND ${AIDL_EXECUTABLE} --version=1 --hash=notfrozen --min_sdk_version=33 --lang=cpp --structured --stability=vintf -o ${interface_dir}/src --header_out ${interface_dir}/include ${AIDL_INTERFACE_INCLUDES} -I${interface_dir} ${SRCS}
-            RESULT_VARIABLE gen_result
+        COMMAND ${AIDL_EXECUTABLE} 
+        --version=1
+        --hash=notfrozen
+        --min_sdk_version=33
+        --lang=cpp
+        --structured
+        --stability=vintf
+        -o ${INTERFACE_DIR}/src
+        --header_out ${INTERFACE_DIR}/include
+        ${AIDL_INTERFACE_INCLUDES}
+        -I${INTERFACE_DIR} ${SRCS}
+        RESULT_VARIABLE gen_result
     )
 
     if(NOT gen_result EQUAL 0)
         message(FATAL_ERROR "AIDL generation failed for ${MODULE_NAME}; check the aidl output above.")
     endif()
 
-    file(GLOB_RECURSE source_files "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
-    if(NOT source_files)
-         message(FATAL_ERROR "Source generation completed but no C++ files found in ${source_dir}")
+    file(GLOB_RECURSE SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+    if(NOT SOURCE_FILES)
+         message(FATAL_ERROR "Source generation completed but no C++ files found in ${CMAKE_CURRENT_SOURCE_DIR}/src")
     endif()
 
     add_versioned(NAME "${MODULE_NAME}" VERSION "current" DEPENDENCIES ${DEPS})

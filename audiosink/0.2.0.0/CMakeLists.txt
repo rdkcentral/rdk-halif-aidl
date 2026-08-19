@@ -20,4 +20,11 @@
 # *
 #** ******************************************************************************
 
-add_versioned(NAME "audiosink" VERSION "0.2.0.0" DEPENDENCIES "common" "0.2.0.0" "audiodecoder" "0.2.0.0" "avclock" "0.2.0.0")
+add_versioned(
+    NAME "audiosink"
+    VERSION "0.2.0.0"
+    DEPENDENCIES
+    "common" "0.2.0.0"
+    "audiodecoder" "0.2.0.0"
+    "avclock" "0.2.0.0"
+)

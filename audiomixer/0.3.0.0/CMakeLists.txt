@@ -19,4 +19,11 @@
 # * limitations under the License.
 # *
 #** ******************************************************************************
-add_versioned(NAME "audiomixer" VERSION "0.3.0.0" DEPENDENCIES "common" "0.2.0.0" "audiodecoder" "0.2.0.0" "audiosink" "0.2.0.0")
+add_versioned(
+    NAME "audiomixer"
+    VERSION "0.3.0.0"
+    DEPENDENCIES
+    "common" "0.2.0.0"
+    "audiodecoder" "0.2.0.0"
+    "audiosink" "0.2.0.0"
+)

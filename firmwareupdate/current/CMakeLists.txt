@@ -20,4 +20,4 @@
 # *
 #** ******************************************************************************
 
-add_current(NAME "firmwareupdate" DEPENDENCIES "common")
+

@@ -20,4 +20,11 @@
 # *
 #** ******************************************************************************
 
-add_versioned(NAME "audiobuffer" VERSION "0.2.0.0" DEPENDENCIES "common" "0.2.0.0" "audiodecoder" "0.2.0.0" "videodecoder" "0.2.0.0")
+add_versioned(
+    NAME "audiobuffer"
+    VERSION "0.2.0.0"
+    DEPENDENCIES
+    "common" "0.2.0.0"
+    "audiodecoder" "0.2.0.0"
+    "videodecoder" "0.2.0.0"
+)
