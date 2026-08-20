@@ -20,4 +20,8 @@
 # *
 #** ******************************************************************************
 
-add_current(NAME "audiodecoder" DEPENDENCIES "common")
+add_current(
+    NAME "audiodecoder"
+    DEPENDENCIES
+    "common"
+)

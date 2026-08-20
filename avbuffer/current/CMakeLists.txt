@@ -20,4 +20,10 @@
 # *
 #** ******************************************************************************
 
-add_current(NAME "avbuffer" DEPENDENCIES "common" "audiodecoder" "videodecoder")
+add_current(
+    NAME "avbuffer"
+    DEPENDENCIES
+    "common"
+    "audiodecoder"
+    "videodecoder"
+)

@@ -20,4 +20,9 @@
 # *
 #** ******************************************************************************
 
-add_current(NAME "panel" DEPENDENCIES "common" "videodecoder")
+add_current(
+    NAME "panel"
+    DEPENDENCIES
+    "common"
+    "videodecoder"
+)

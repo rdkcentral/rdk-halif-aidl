@@ -20,4 +20,7 @@
 # *
 #** ******************************************************************************
 
-add_versioned(NAME "common" VERSION "0.2.0.0")
+add_versioned(
+    NAME "common"
+    VERSION "0.2.0.0"
+)

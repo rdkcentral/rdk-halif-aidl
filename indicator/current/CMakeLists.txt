@@ -20,4 +20,6 @@
 # *
 #** ******************************************************************************
 
-add_current(NAME "indicator" DEPENDENCIES "common")
+add_current(
+    NAME "indicator"
+)

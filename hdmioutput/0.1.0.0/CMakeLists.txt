@@ -20,4 +20,9 @@
 # *
 #** ******************************************************************************
 
-add_versioned(NAME "hdmioutput" VERSION "0.1.0.0" DEPENDENCIES "common" "0.2.0.0")
+add_versioned(
+    NAME "hdmioutput"
+    VERSION "0.1.0.0"
+    DEPENDENCIES
+    "common" "0.2.0.0"
+)

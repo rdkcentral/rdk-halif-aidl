@@ -20,4 +20,7 @@
 # *
 #** ******************************************************************************
 
-add_versioned(NAME "bootreason" VERSION "0.1.0.0")
+add_versioned(
+    NAME "bootreason"
+    VERSION "0.1.0.0"
+)

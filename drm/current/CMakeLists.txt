@@ -20,4 +20,6 @@
 # *
 #** ******************************************************************************
 
-add_current(NAME "drm" DEPENDENCIES "common")
+add_current(
+    NAME "drm"
+)

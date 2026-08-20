@@ -20,4 +20,8 @@
 # *
 #** ******************************************************************************
 
-add_current(NAME "hdmioutput" DEPENDENCIES "common")
+add_current(
+    NAME "hdmioutput"
+    DEPENDENCIES
+    "common"
+)

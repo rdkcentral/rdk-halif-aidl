@@ -26,5 +26,5 @@ add_versioned(
     DEPENDENCIES
     "common" "0.2.0.0"
     "audiodecoder" "0.2.0.0"
-    "avclock" "0.2.0.0"
+    "avclock" "0.2.0.1"
 )

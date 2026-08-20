@@ -20,4 +20,10 @@
 # *
 #** ******************************************************************************
 
-add_current(NAME "audiosink" DEPENDENCIES "common" "avclock" "audiodecoder")
+add_current(
+    NAME "audiosink"
+    DEPENDENCIES
+    "common"
+    "avclock"
+    "audiodecoder"
+)

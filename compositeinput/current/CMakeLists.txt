@@ -20,4 +20,8 @@
 # *
 #** ******************************************************************************
 
-add_current(NAME "compositeinput" DEPENDENCIES "common")
+add_current(
+    NAME "compositeinput"
+    DEPENDENCIES
+    "common"
+)

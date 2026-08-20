@@ -1,5 +1,5 @@
 if(BUILD_CURRENT)
     add_subdirectory(current)
 else()
-    add_subdirectory(0.2.0.0)
+    add_subdirectory(0.2.0.1)
 endif()

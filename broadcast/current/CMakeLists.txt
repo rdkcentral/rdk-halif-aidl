@@ -20,4 +20,8 @@
 # *
 #** ******************************************************************************
 
-add_versioned(NAME "broadcast" DEPENDENCIES "common")
+add_versioned(
+    NAME "broadcast"
+    DEPENDENCIES
+    "common"
+)

@@ -20,4 +20,6 @@
 # *
 #** ******************************************************************************
 
-add_current(NAME "deepsleep" DEPENDENCIES "common")
+add_current(
+    NAME "deepsleep"
+)

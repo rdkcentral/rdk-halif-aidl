@@ -20,4 +20,8 @@
 # *
 #** ******************************************************************************
 
-add_current(NAME "hdmiinput" DEPENDENCIES "common")
+add_current(
+    NAME "hdmiinput"
+    DEPENDENCIES
+    "common"
+)

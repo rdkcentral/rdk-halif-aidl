@@ -20,4 +20,6 @@
 # *
 #** ******************************************************************************
 
-add_current(NAME "sensor" DEPENDENCIES "common")
+add_current(
+    NAME "sensor"
+)

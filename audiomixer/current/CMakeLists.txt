@@ -20,4 +20,10 @@
 # *
 #** ******************************************************************************
 
-add_current(NAME "audiomixer" DEPENDENCIES "common" "audiodecoder" "audiosink" )
+add_current(
+    NAME "audiomixer"
+    DEPENDENCIES
+    "common"
+    "audiodecoder"
+    "audiosink"
+)

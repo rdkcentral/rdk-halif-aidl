@@ -20,4 +20,8 @@
 # *
 #** ******************************************************************************
 
-add_current(NAME "deviceinfo" DEPENDENCIES "common")
+add_current(
+    NAME "deviceinfo"
+    DEPENDENCIES
+    "common"
+)

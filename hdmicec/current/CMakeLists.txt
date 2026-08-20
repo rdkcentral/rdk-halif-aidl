@@ -20,4 +20,8 @@
 # *
 #** ******************************************************************************
 
-add_current(NAME "hdmicec" DEPENDENCIES "common")
+add_current(
+    NAME "hdmicec"
+    DEPENDENCIES
+    "common"
+)

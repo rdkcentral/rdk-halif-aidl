@@ -26,5 +26,5 @@ add_versioned(
     DEPENDENCIES
     "common" "0.2.0.0"
     "audiodecoder" "0.2.0.0"
-    "videodecoder" "0.2.0.0"
+    "videodecoder" "0.2.0.1"
 )

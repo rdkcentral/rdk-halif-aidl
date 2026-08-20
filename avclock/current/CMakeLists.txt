@@ -20,4 +20,8 @@
 # *
 #** ******************************************************************************
 
-add_current(NAME "avclock" DEPENDENCIES "common")
+add_current(
+    NAME "avclock"
+    DEPENDENCIES
+    "common"
+)
