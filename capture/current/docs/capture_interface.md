@@ -23,7 +23,7 @@ A capture is an output in its own right, bound to a stage of the pipeline. This 
 
 A capture takes frames from one stage of the pipeline and delivers them into a pool of Dma-Buf buffers the client imports as GPU textures. It is an output in its own right, not a destination inside another module's model: it is discovered through `ICaptureManager.getCaptureIds()`, addressed by its own `ICapture.Id`, and it carries its own frame size.
 
-**The binding is the session.** `ICapture.open()` names the `CaptureSource` to take frames from — `VIDEO_DECODER`, `VIDEO_SINK` or `AV_CLOCK` — and that stage is what the session delivers for its lifetime. A source may have a display path, a capture, both or neither; none of those is a special case, and a capture never needs a display destination in order to exist.
+**The binding is the session.** `ICapture.open()` names the `CaptureSource` to take frames from — `VIDEO_DECODER` or `VIDEO_SINK` — and that stage is what the session delivers for its lifetime. A source may have a display path, a capture, both or neither; none of those is a special case, and a capture never needs a display destination in order to exist.
 
 **What flows through the bound stage is decided by the input feed**, exactly as it always was. A capture neither selects nor changes it. Where a capture attaches and what content is playing are different axes, and a capture only chooses the first.
 

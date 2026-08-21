@@ -45,14 +45,10 @@ enum CaptureSource {
     VIDEO_DECODER = 1,
 
     /**
-     * Frames at the video sink, after presentation processing has been applied.
-     * What the sink is about to present.
+     * Frames at the video sink, after presentation processing has been applied
+     * and at the point the sink presents them. A capture bound here follows the
+     * same timing the presentation path does, because the sink is where the AV
+     * clock's synchronisation has already been applied.
      */
     VIDEO_SINK = 2,
-
-    /**
-     * Frames at the point the AV clock releases them for presentation, so the
-     * capture follows the same timing the presentation path does.
-     */
-    AV_CLOCK = 3,
 }
