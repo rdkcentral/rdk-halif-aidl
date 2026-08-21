@@ -32,11 +32,12 @@ enum CaptureErrorCode {
     OUT_OF_MEMORY = 1,
 
     /**
-     * No video source is mapped to this capture plane.
+     * The requested source is not one this resource supports, or cannot carry a
+     * further capture.
      *
-     * @see IPlaneControl.setVideoSourceDestinationPlaneMapping()
+     * @see ICapture.open(), CaptureCapabilities.supportedSources
      */
-    SOURCE_NOT_MAPPED = 2,
+    SOURCE_UNAVAILABLE = 2,
 
     /**
      * The mapped source is decoding a codec this plane cannot capture.

@@ -24,11 +24,13 @@ capture:                        # Component object begins
   interfaceVersion: current
   captures:                     # Resource list - one object per capture this product offers
     - 0:                        # Resource object begins
-        sources:                # Points in the pipeline this capture can bind to.
-                                # Declare what this product can do. A capture is bound
-                                # to exactly one source at a time; the list is what may
-                                # be selected, not what is selected.
+        supportedSources:       # Points in the pipeline this capture can bind to
+                                # (enum CaptureSource). Declare what this product can
+                                # do. A session binds to exactly one of them; the list
+                                # is what may be selected, not what is selected.
           - VIDEO_DECODER
+        maxCapturesPerSource: 1 # How many sessions one source can carry at once.
+                                # A further bind is refused with SOURCE_UNAVAILABLE.
         captureCapabilities:    # Frames and buffer pool for ICapture on this resource.
                                 # This is the whole of the capture declaration - the
                                 # vendor layer configures whatever the bound source

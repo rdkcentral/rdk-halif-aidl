@@ -18,13 +18,14 @@
  */
 package com.rdk.hal.capture;
 
+import com.rdk.hal.capture.CaptureSource;
 import com.rdk.hal.capture.FormatLayout;
 import com.rdk.hal.videodecoder.Codec;
 
 /**
  *  @brief     Capture capabilities definition for a plane resource.
  *
- *  Describes what frames this capture plane can deliver and how its buffer pool
+ *  Describes what frames this capture resource can deliver and how its buffer pool
  *  behaves. This is the whole of the capture declaration: a client reads it, selects
  *  from it through `ICaptureController.setFormat()`, and the vendor layer configures whatever it needs
  *  to on the decoder to satisfy the selection.
@@ -47,7 +48,7 @@ parcelable CaptureCapabilities
     boolean stallsWhenPoolExhausted;
 
     /**
-     * The pixel format and memory layout pairs this capture plane can deliver.
+     * The pixel format and memory layout pairs this capture resource can deliver.
      *
      * Paired, because a modifier is not valid with every format: most modifiers are
      * vendor-namespaced tiling or compression layouts that apply to particular
@@ -64,14 +65,14 @@ parcelable CaptureCapabilities
     FormatLayout[] supportedFormats;
 
     /**
-     * The maximum frame width in pixels this capture plane can deliver.
+     * The maximum frame width in pixels this capture resource can deliver.
      *
      * @see Property.WIDTH
      */
     int maxFrameWidth;
 
     /**
-     * The maximum frame height in pixels this capture plane can deliver.
+     * The maximum frame height in pixels this capture resource can deliver.
      *
      * @see Property.HEIGHT
      */
@@ -82,7 +83,7 @@ parcelable CaptureCapabilities
      *
      * Capture is not required of every codec a platform can decode. A decoder opened
      * for a codec outside this list decodes and displays normally; what it cannot do is
-     * feed a capture plane.
+     * feed a capture.
      *
      * @see com.rdk.hal.videodecoder.Codec
      */
@@ -104,4 +105,21 @@ parcelable CaptureCapabilities
      * @see Property.WIDTH, Property.HEIGHT, CaptureErrorCode.RESOLUTION_MISMATCH
      */
     boolean resize;
+
+    /**
+     * The pipeline stages this capture resource can bind to.
+     *
+     * `ICapture.open()` takes one of these. A stage absent from this list cannot be
+     * captured on this resource.
+     */
+    CaptureSource[] supportedSources;
+
+    /**
+     * How many capture sessions a single source can carry at once on this resource.
+     *
+     * A source already carrying this many captures refuses a further bind with
+     * `CaptureErrorCode.SOURCE_UNAVAILABLE`. One is the common case; a product that
+     * can fan a stage out to several captures declares more.
+     */
+    int maxCapturesPerSource;
 }

@@ -43,7 +43,7 @@ oneway interface ICaptureEventListener
 
     /**
      * @brief     Called when the source feeding this plane went away - unmapped through
-     *            `IPlaneControl.setVideoSourceDestinationPlaneMapping()`, or its decoder
+     *            the bound source becoming unavailable, or its decoder
      *            closed.
      *
      * The session is implicitly stopped and the capture resource transitions to `READY`.

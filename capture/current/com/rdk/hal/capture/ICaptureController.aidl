@@ -20,6 +20,7 @@ package com.rdk.hal.capture;
 
 import com.rdk.hal.capture.FormatLayout;
 import com.rdk.hal.capture.VideoFrameView;
+import com.rdk.hal.capture.Property;
 import com.rdk.hal.PropertyValue;
 
 /**
@@ -95,7 +96,7 @@ interface ICaptureController
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the READY state.
      * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC with a CaptureErrorCode value:
      *            `OUT_OF_MEMORY` if the pool reservation was refused,
-     *            `SOURCE_NOT_MAPPED` if the source was unmapped since `open()`,
+     *            `SOURCE_UNAVAILABLE` if the bound source became unavailable since `open()`,
      *            `CODEC_NOT_CAPTURABLE` if the mapped source is decoding a codec outside
      *            `CaptureCapabilities.supportedCodecs`,
      *            `INVALID_CONFIGURATION` if no format was selected with `setFormat()`,
@@ -231,4 +232,42 @@ interface ICaptureController
      * @see CaptureCapabilities.supportedFormats, FormatLayout
      */
     boolean setFormat(in FormatLayout format);
+
+    /**
+     * Sets a property of the capture session.
+     *
+     * The frame size is set here. A capture is an output in its own right, so it
+     * carries its own size rather than taking one from another module's resource.
+     *
+     * Properties are set in the `READY` state, before `start()`. The pool is built
+     * from them, so they are fixed for the life of a running session.
+     *
+     * @param[in] property      The property to set.
+     * @param[in] propertyValue The value to set it to.
+     *
+     * @returns boolean
+     * @retval true     Property was set.
+     * @retval false    Value out of range for the resource, or wrong type.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the session is not in the READY state.
+     *
+     * @pre The session must be in State::READY.
+     *
+     * @see getProperty(), Property, CaptureCapabilities
+     */
+    boolean setProperty(in Property property, in PropertyValue propertyValue);
+
+    /**
+     * Gets a property of the capture session.
+     *
+     * @param[in] property      The property to read.
+     *
+     * @returns PropertyValue
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
+     * @see setProperty(), Property
+     */
+    PropertyValue getProperty(in Property property);
 }

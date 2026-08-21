@@ -21,7 +21,7 @@ package com.rdk.hal.capture;
 /**
  *  @brief     Lifecycle state of a capture resource instance.
  *
- *  Applies to the capture resources reached through `IPlaneControl.getCapture()`.
+ *  Applies to the capture resources reached through `ICaptureManager.getCapture()`.
  *  Plane resources themselves are stateless and are not described by this enum.
  *
  *  @author    Peter Stieglitz

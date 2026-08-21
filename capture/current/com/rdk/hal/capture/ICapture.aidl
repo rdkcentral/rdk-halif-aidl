@@ -19,44 +19,53 @@
 package com.rdk.hal.capture;
 
 import com.rdk.hal.capture.CaptureCapabilities;
+import com.rdk.hal.capture.CaptureSource;
 import com.rdk.hal.capture.ICaptureController;
 import com.rdk.hal.capture.ICaptureControllerListener;
 import com.rdk.hal.capture.State;
 import com.rdk.hal.PropertyValue;
 
 /**
- *  @brief     Decoded video frame capture interface.
+ *  @brief     Frame capture bound to a pipeline source.
  *
- *  A capture resource routes a video source's decoded frames into a pool of Dma-Buf
- *  buffers which the client imports as GPU textures, instead of routing them to a
- *  display plane. It is obtained from `IPlaneControl.getCapture()` for a plane resource
- *  of type `PlaneType.CAPTURE`.
+ *  A capture resource takes frames from one stage of the pipeline and delivers them
+ *  into a pool of Dma-Buf buffers the client imports as GPU textures. It is an output
+ *  in its own right, not a destination within some other module's model: it is
+ *  addressed by its own `Id`, obtained from `ICaptureManager`, and it carries its own
+ *  frame size.
  *
- *  The source is chosen the same way it is for a display plane, with
- *  `IPlaneControl.setVideoSourceDestinationPlaneMapping()`. That mapping is the whole of
- *  the binding: a source mapped to a capture plane is captured, and the source mapped
- *  there is the source this session delivers. There is no second place a decoder is
- *  named, so there is no second place for the two to disagree.
+ *  **The binding is the session.** `open()` names the stage to take frames from, and
+ *  that stage is what the session delivers for its lifetime. A source may have a
+ *  display path, a capture, both or neither - none of those is a special case, and a
+ *  capture never needs a display destination to exist.
  *
- *  The `IVideoDecoder` contract is unchanged by capture - the decoder does not know
- *  where its output goes, and nothing is set on it to arrange capture.
+ *  What flows through the bound stage is decided by the input feed exactly as before.
+ *  A capture neither selects nor changes it, and the `IVideoDecoder` contract is
+ *  unchanged - the decoder does not know where its output goes, and nothing is set on
+ *  it to arrange capture.
  *
- *  A capture session is configured here in full - the frames the client wants and the
- *  pool that holds them are settled by `CaptureCapabilities` and one `setFormat()` call.
- *  The client asks this plane for what it needs and the vendor layer configures the
- *  mapped source's decoder to deliver it, by whatever internal path that platform
- *  requires.
+ *  Binding takes a view rather than diverting the frames. Anything already consuming
+ *  the stage carries on unaffected, which is what allows a capture to be attached to a
+ *  pipeline that is already running. `CaptureCapabilities.maxCapturesPerSource` says
+ *  how many captures one stage can carry.
+ *
+ *  A session is configured here in full - the frames the client wants and the pool that
+ *  holds them are settled by `CaptureCapabilities`, the size properties and one
+ *  `setFormat()` call. The client asks for what it needs and the vendor layer arranges
+ *  for the bound source to deliver it, by whatever internal path that platform requires.
  *
  *  Session lifecycle:
  *  @code
- *    planeControl.setVideoSourceDestinationPlaneMapping(     // bind the source
- *        {{ SourceType.VIDEO_SINK, sinkIndex, planeResourceIndex }});
- *    ICapture capture = planeControl.getCapture(planeResourceIndex, captureEventListener);
- *    ICaptureController controller = capture.open(captureControllerListener);
- *    planeControl.setProperty(capturePlane, WIDTH, w);   // frame size, as any plane's
- *    planeControl.setProperty(capturePlane, HEIGHT, h);
- *    controller.setFormat(caps.supportedFormats[i]);     // format and layout, paired
- *    controller.start();                                 // onPoolReady() delivers the pool
+ *    ICapture.Id[] ids = captureManager.getCaptureIds();
+ *    ICapture capture = captureManager.getCapture(ids[0], captureEventListener);
+ *    CaptureCapabilities caps = capture.getCapabilities();
+ *
+ *    ICaptureController controller =                       // bind: this is the session
+ *        capture.open(CaptureSource.VIDEO_DECODER, captureControllerListener);
+ *    controller.setProperty(Property.WIDTH, w);            // the capture's own size
+ *    controller.setProperty(Property.HEIGHT, h);
+ *    controller.setFormat(caps.supportedFormats[i]);       // format and layout, paired
+ *    controller.start();                                   // onPoolReady() delivers the pool
  *
  *    // onPoolReady() arrives on a binder thread. Keep the buffers and hand them to
  *    // the thread that owns the GL context; that thread imports each one once,
@@ -91,6 +100,16 @@ import com.rdk.hal.PropertyValue;
 @VintfStability
 interface ICapture
 {
+    /** Capture resource ID type */
+    @VintfStability
+    parcelable Id {
+        /** The undefined ID value. */
+        const int UNDEFINED = -1;
+
+        /** The actual resource ID */
+        int value;
+    }
+
     /**
      * Gets the capabilities of this capture resource.
      *
@@ -118,10 +137,17 @@ interface ICapture
 
 
     /**
-     * Opens a capture session on this plane.
+     * Opens a capture session bound to a pipeline source.
      *
-     * The source captured is whatever `IPlaneControl` currently has mapped to this
-     * plane, so a source must be mapped to it before this is called.
+     * The binding is the session. `captureSource` names the stage frames are taken
+     * from, and it must be one of `CaptureCapabilities.supportedSources`. What flows
+     * through that stage is decided by the input feed as it always was; a capture
+     * neither selects nor changes it.
+     *
+     * Binding does not divert the frames. A stage that is already delivering to a
+     * consumer continues to, and that consumer sees no change; the capture takes its
+     * own view of the same frames. Whether a stage can carry more than one capture at
+     * a time is declared by the platform, and a bind beyond that limit is refused.
      *
      * If successful the capture resource transitions to a
      * `READY` state, which is notified to the registered `ICaptureEventListener`.
@@ -135,34 +161,32 @@ interface ICapture
      * `ICaptureController.start()` - the frame format and size it wants, and the depth
      * of the pool that holds them.
      *
-     * Nothing is set on the mapped source's decoder. Making it deliver the frames this
-     * session was configured for is the vendor layer's own business, arranged over
-     * whatever internal path the platform provides.
-     *
-     * A source is mapped to at most one plane at a time, which is what limits a decoder
-     * to a single capture session.
+     * Nothing is set on the bound source. Making it deliver the frames this session was
+     * configured for is the vendor layer's own business, arranged over whatever
+     * internal path the platform provides.
      *
      * If the client that opened the `ICaptureController` crashes, then the
      * `ICaptureController` has `stop()` and `close()` implicitly called to perform clean up.
      *
+     * @param[in] captureSource                 The pipeline stage to bind this session to.
      * @param[in] captureControllerListener     Listener object for controller callbacks.
      *
-     * @returns ICaptureController or null if a capture session cannot be opened on this
-     *          plane.
+     * @returns ICaptureController or null if a capture session cannot be opened against
+     *          that source.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
-     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC with `CaptureErrorCode.SOURCE_NOT_MAPPED`
-     *            if no video source is mapped to this plane.
+     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC with `CaptureErrorCode.SOURCE_UNAVAILABLE`
+     *            if the source is not one this resource supports, or cannot carry a
+     *            further capture.
      *
      * @pre The resource must be in State::CLOSED.
-     * @pre A video source must be mapped to this plane through
-     *      `IPlaneControl.setVideoSourceDestinationPlaneMapping()`.
+     * @pre `captureSource` is one of `CaptureCapabilities.supportedSources`.
      *
-     * @see close(), ICaptureController, IPlaneControl.setVideoSourceDestinationPlaneMapping()
+     * @see close(), ICaptureController, CaptureSource, CaptureCapabilities.supportedSources
      */
-    @nullable ICaptureController open(in ICaptureControllerListener captureControllerListener);
+    @nullable ICaptureController open(in CaptureSource captureSource, in ICaptureControllerListener captureControllerListener);
 
     /**
      * Closes the capture session.
@@ -171,8 +195,8 @@ interface ICapture
      * If successful the resource transitions to a `CLOSED` state.
      *
      * The pool and all its Dma-Bufs are released, and the vendor wiring between the
-     * source and the pool is undone. The source's decoder is not stopped, and its plane
-     * mapping is left as it is - only the capture session ends.
+     * source and the pool is undone. The bound source is not stopped and nothing else
+     * consuming it is affected - only the capture session ends.
      *
      * @param[in] captureController     Instance of the ICaptureController.
      *
