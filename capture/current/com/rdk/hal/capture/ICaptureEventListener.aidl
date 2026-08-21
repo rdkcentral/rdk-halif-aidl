@@ -49,7 +49,7 @@ oneway interface ICaptureEventListener
      * The session is implicitly stopped and the capture resource transitions to `READY`.
      * Mapping a source back to this plane makes the session startable again.
      */
-    void onSourceUnmapped();
+    void onSourceLost();
 
     /**
      * @brief     Called when the capture resource has transitioned to a new state.

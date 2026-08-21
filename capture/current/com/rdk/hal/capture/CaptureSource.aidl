@@ -40,7 +40,7 @@ enum CaptureSource {
 
     /**
      * Frames as the video decoder produces them, before any presentation
-     * processing. What decode-to-texture wants: the decoded frame itself.
+     * processing.
      */
     VIDEO_DECODER = 1,
 

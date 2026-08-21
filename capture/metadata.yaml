@@ -37,7 +37,7 @@ lifecycle:
 
 # scope - High-level architectural responsibilities                       [manual]
 scope:
-  - Frame capture as an output in its own right, bound to a source rather than to a display plane
+  - Frame capture as an output in its own right, bound to a selectable pipeline source
   - Source selection across the pipeline, so a product controls where capture attaches
   - Capture session lifecycle, ring shape configuration and frame acquire/release
   - Decoded video frame capture to a Dma-Buf ring for decode-to-texture
@@ -51,7 +51,7 @@ scope:
 #   owners        - Responsible architecture teams
 notes:
   priority: 3
-  status_detail: "Standalone module proposed for #753; interface carried over from the planecontrol-nested proposal"
+  status_detail: "Standalone capture module for #753; entry point, source binding and frame properties defined"
   action: "Settle source binding, capture multiplicity per source, and whether attaching perturbs an existing consumer"
   owners: "Architecture + Graphics_Architecture"
 
