@@ -196,7 +196,7 @@ function(add_current)
     message(STATUS "Generate source and header files for: ${MODULE_NAME}")
 
     execute_process(
-        COMMAND ${AIDL_EXECUTABLE} 
+        COMMAND ${AIDL_EXECUTABLE}
         --version=1
         --hash=notfrozen
         --min_sdk_version=33

@@ -20,6 +20,9 @@
 # *
 #** ******************************************************************************
 
-add_versioned(
+add_current(
     NAME "broadcast"
+    DEPENDENCIES
+    "ringbuffer"
 )
+

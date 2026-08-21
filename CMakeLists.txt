@@ -66,4 +66,5 @@ add_subdirectory("avbuffer")
 add_subdirectory("panel")
 add_subdirectory("planecontrol")
 add_subdirectory("videosink")
-
+add_subdirectory("ringbuffer")
+add_subdirectory("broadcast")
