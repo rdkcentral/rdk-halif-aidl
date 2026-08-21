@@ -22,4 +22,7 @@
 
 add_current(
     NAME "broadcast"
+    DEPENDENCIES
+    "ringbuffer"
 )
+
