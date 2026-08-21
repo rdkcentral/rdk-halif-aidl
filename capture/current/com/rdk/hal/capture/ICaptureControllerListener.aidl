@@ -72,8 +72,8 @@ oneway interface ICaptureControllerListener
      * @brief     Called when the session cannot deliver frames as configured.
      *
      * Raised for failures the session runs into that are not tied to a single acquire
-     * call - a mapped source that changed to a resolution this plane cannot deliver, a
-     * colour conversion or format that turns out to be unavailable for the mapped
+     * call - a bound source that changed to a resolution this capture cannot deliver, a
+     * colour conversion or format that turns out to be unavailable for the bound
      * source, or a configuration the vendor cannot honour.
      *
      * The session stops delivering frames. The client stops and closes it, or corrects

@@ -42,12 +42,12 @@ oneway interface ICaptureEventListener
     void onSystemError(in CaptureErrorCode errorCode, in int vendorErrorCode);
 
     /**
-     * @brief     Called when the source feeding this plane went away - unmapped through
+     * @brief     Called when the bound source went away - lost through
      *            the bound source becoming unavailable, or its decoder
      *            closed.
      *
      * The session is implicitly stopped and the capture resource transitions to `READY`.
-     * Mapping a source back to this plane makes the session startable again.
+     * Binding a source again with `open()` makes the session startable.
      */
     void onSourceLost();
 

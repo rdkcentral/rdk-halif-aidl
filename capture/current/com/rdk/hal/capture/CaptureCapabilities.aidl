@@ -23,7 +23,7 @@ import com.rdk.hal.capture.FormatLayout;
 import com.rdk.hal.videodecoder.Codec;
 
 /**
- *  @brief     Capture capabilities definition for a plane resource.
+ *  @brief     Capture capabilities definition for a capture resource.
  *
  *  Describes what frames this capture resource can deliver and how its buffer pool
  *  behaves. This is the whole of the capture declaration: a client reads it, selects
@@ -53,14 +53,14 @@ parcelable CaptureCapabilities
      * Paired, because a modifier is not valid with every format: most modifiers are
      * vendor-namespaced tiling or compression layouts that apply to particular
      * formats and bit depths. Declaring two independent lists would offer a client
-     * the full cross-product, most of which a plane cannot deliver, and leave it to
+     * the full cross-product, most of which a capture cannot deliver, and leave it to
      * find out at `start()`.
      *
      * A client selects one entry and passes it to
      * `ICaptureController.setFormat()`.
      *
      * These are the pairs this product can deliver, and the whole of them. A client
-     * that can handle none of them cannot capture from this plane.
+     * that can handle none of them cannot capture from this resource.
      */
     FormatLayout[] supportedFormats;
 
@@ -79,7 +79,7 @@ parcelable CaptureCapabilities
     int maxFrameHeight;
 
     /**
-     * The video codecs whose decoded frames this plane can capture.
+     * The video codecs whose decoded frames this capture can take.
      *
      * Capture is not required of every codec a platform can decode. A decoder opened
      * for a codec outside this list decodes and displays normally; what it cannot do is
@@ -90,15 +90,15 @@ parcelable CaptureCapabilities
     Codec[] supportedCodecs;
 
     /**
-     * Whether this plane can deliver frames at a resolution other than the one the
-     * mapped source is decoding.
+     * Whether this capture can deliver frames at a resolution other than the one the
+     * bound source is decoding.
      *
-     * When false, the plane's `Property.WIDTH` and `HEIGHT` must equal the resolution the
-     * mapped source decodes to, and `ICaptureController.start()` fails with
+     * When false, the capture's `Property.WIDTH` and `HEIGHT` must equal the resolution the
+     * bound source decodes to, and `ICaptureController.start()` fails with
      * `CaptureErrorCode.RESOLUTION_MISMATCH` if they do not. Nothing is scaled: the
      * frames the client receives are the frames the decoder produced.
      *
-     * Declaring false is what keeps the tested surface small - a plane that never
+     * Declaring false is what keeps the tested surface small - a capture that never
      * scales has no scaling quality to validate and no resolution permutations to
      * cover.
      *

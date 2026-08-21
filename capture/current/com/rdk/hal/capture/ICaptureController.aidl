@@ -71,7 +71,7 @@ interface ICaptureController
      *
      * Reserves the capture pool from the platform's video
      * memory region, sized for the format and frame size this session was configured
-     * with, and wires the mapped source's decoded output into the pool.
+     * with, and wires the bound source's decoded output into the pool.
      *
      * A format shall have been selected with `setFormat()` first. There is no default
      * pair, so a session that has selected none has nothing to size a pool for.
@@ -79,12 +79,12 @@ interface ICaptureController
      * The capture resource transitions to a `STARTING` state and then a `STARTED` state,
      * and `ICaptureControllerListener.onPoolReady()` is raised once the pool is addressable.
      *
-     * Whatever configuration the mapped source's decoder needs in order to deliver those
+     * Whatever configuration the bound source needs in order to deliver those
      * frames is applied by the vendor layer here, over its own internal path. A client
      * arranges nothing on the decoder.
      *
      * The codec being decoded is checked here rather than at `open()`, because a source
-     * is opened for a codec independently of when it is mapped to this plane.
+     * is opened for a codec independently of when a capture binds to it.
      *
      * A source may already be decoding when this is called. Frames it produced before
      * the session started were discarded, and starting capture may require the vendor
@@ -97,10 +97,10 @@ interface ICaptureController
      * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC with a CaptureErrorCode value:
      *            `OUT_OF_MEMORY` if the pool reservation was refused,
      *            `SOURCE_UNAVAILABLE` if the bound source became unavailable since `open()`,
-     *            `CODEC_NOT_CAPTURABLE` if the mapped source is decoding a codec outside
+     *            `CODEC_NOT_CAPTURABLE` if the bound source is decoding a codec outside
      *            `CaptureCapabilities.supportedCodecs`,
      *            `INVALID_CONFIGURATION` if no format was selected with `setFormat()`,
-     *            `RESOLUTION_MISMATCH` if the plane declares `resize` false and the
+     *            `RESOLUTION_MISMATCH` if the capture declares `resize` false and the
      *            frame size does not equal the decoded resolution.
      *
      * @pre The resource must be in State::READY.

@@ -10,7 +10,6 @@ A capture is an output in its own right, bound to a stage of the pipeline. This 
     |**Interface Definition**|[capture/current/com/rdk/hal/capture](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/capture/current/com/rdk/hal/capture)|
     |**Interface Version**|`current`|
     |**Package**|`com.rdk.hal.capture`|
-    | **API Documentation** | *TBD - Doxygen* |
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
     |**VTS Tests**| [https://github.com/rdkcentral/rdk-halif-binder-test-capture](https://github.com/rdkcentral/rdk-halif-binder-test-capture) |
 
@@ -57,7 +56,7 @@ flowchart TD
 
         subgraph Vendor["Vendor Layer"]
             Capture["ICapture / ICaptureController"]
-            Decoder["Mapped video source's decoder"]
+            Decoder["Bound source"]
             Cap["Capture"]
             Pool["Dma-Buf pool"]
         end
@@ -134,7 +133,7 @@ Per frame, `acquireLatestFrame()` returns only a `bufferIndex` and a timestamp. 
 | **HAL.CAPTURE.2** | Shall declare in `CaptureCapabilities.supportedCodecs` the codecs whose decoded frames a capture can deliver.| The list is what the capture can take, not what a product must offer. A decoder opened for a codec outside it decodes and displays normally; it just cannot feed this capture. |
 | **HAL.CAPTURE.3** | Shall deliver captured frames in the pixel format, memory layout and size the session was configured with, as Dma-Bufs whose per-plane file descriptors, offsets and strides address the actual buffer layout and import directly through `EGL_EXT_image_dma_buf_import` without translation.| The vendor layer configures whatever the bound decoder requires to deliver them, over its own internal path. |
 | **HAL.CAPTURE.4** | Shall deliver the addressing of every pool buffer once at `ICaptureControllerListener.onPoolReady()`, and thereafter identify each frame by buffer index and presentation time alone.| A buffer's address and shape do not change during a session. Re-sending file descriptors at frame rate would move them across the binder boundary to repeat what was already said. |
-| **HAL.CAPTURE.5** | Shall reject a `FormatLayout` outside `CaptureCapabilities.supportedFormats` at `setFormat()`, and shall fail `ICaptureController.start()` with a `CaptureErrorCode` when the pool cannot be reserved or the mapped source is decoding a codec outside `CaptureCapabilities.supportedCodecs`, in no case falling back to plane output.| The failure belongs where it is still a configuration error, not a stream of wrong pixels. |
+| **HAL.CAPTURE.5** | Shall reject a `FormatLayout` outside `CaptureCapabilities.supportedFormats` at `setFormat()`, and shall fail `ICaptureController.start()` with a `CaptureErrorCode` when the pool cannot be reserved or the bound source is decoding a codec outside `CaptureCapabilities.supportedCodecs`, in no case falling back to display output.| The failure belongs where it is still a configuration error, not a stream of wrong pixels. |
 | **HAL.CAPTURE.6** | Shall deliver captured frames at the resolution the stream decodes to and in its source colorimetry, applying no scaling, rotation, crop, colour conversion, tone-mapping or gamma adjustment.| Shape and colour belong to the consumer, which applies them per frame and may change them on any frame. A transform applied here would have to be undone, and one the consumer cannot undo makes the frame unusable. On a capture declaring `CaptureCapabilities.resize` false, its `Property.WIDTH` and `HEIGHT` must equal the decoded resolution. |
 | **HAL.CAPTURE.7** | Shall drop no more than one frame per 15 seconds of capture, at every resolution from 144p to 2160p, while the client acquires and releases at the presentation cadence.| The capture path is not permitted to lose frames the display path would have shown. A client that stops releasing is not covered by this — that case is `CaptureCapabilities.stallsWhenPoolExhausted`. |
 | **HAL.CAPTURE.8** | Shall carry each frame's presentation time unaltered in `VideoFrameView.presentationTimeNs`.| It is the frame's only timing reference. A captured frame goes to the client's scene rather than to the display, so the client presents it against the clock its audio path already runs on. |
@@ -284,7 +283,7 @@ Buffers the client holds Locked at the moment of any of these are released with 
 
 All Dma-Bufs are released on `stop()` and on `close()`.
 
-A format, modifier or frame size outside `CaptureCapabilities` fails at `ICaptureController.setProperty()`, while it is still a configuration error rather than a stream of wrong pixels. A pool the platform's video memory region cannot satisfy fails at `ICaptureController.start()` with `CaptureErrorCode.OUT_OF_MEMORY`, rather than being silently trimmed, and a mapped source decoding a codec outside `supportedCodecs` fails there with `CaptureErrorCode.CODEC_NOT_CAPTURABLE`. None of them falls back to plane output.
+A format, modifier or frame size outside `CaptureCapabilities` fails at `ICaptureController.setProperty()`, while it is still a configuration error rather than a stream of wrong pixels. A pool the platform's video memory region cannot satisfy fails at `ICaptureController.start()` with `CaptureErrorCode.OUT_OF_MEMORY`, rather than being silently trimmed, and a bound source decoding a codec outside `supportedCodecs` fails there with `CaptureErrorCode.CODEC_NOT_CAPTURABLE`. None of them falls back to display output.
 
 ```mermaid
 sequenceDiagram
@@ -311,7 +310,7 @@ sequenceDiagram
     Client->>PC: setProperty(capturePlane, HEIGHT, h)
     Client->>Controller: setFormat(supportedFormats[i])
     Client->>Controller: start()
-    Controller->>Decoder: Configure and wire mapped source into pool
+    Controller->>Decoder: Configure and wire bound source into pool
 
     Controller-->>Listener: onPoolReady(VideoBufferView[])
     Client->>Client: EGL import every buffer once
@@ -543,14 +542,14 @@ A compressed or tiled layout is typically a *family* rather than a single value.
 
 ### Which one a capture delivers
 
-`CaptureCapabilities.supportedFormats` declares the pairs a plane can deliver, and the client selects one with `setFormat()`. Paired, because a modifier is not valid with every format: most are vendor-namespaced tiling or compression layouts that apply to particular formats and bit depths, so two independent lists would offer combinations the plane cannot deliver.
+`CaptureCapabilities.supportedFormats` declares the pairs a capture can deliver, and the client selects one with `setFormat()`. Paired, because a modifier is not valid with every format: most are vendor-namespaced tiling or compression layouts that apply to particular formats and bit depths, so two independent lists would offer combinations the capture cannot deliver.
 
 That trade — bandwidth against portability — is settled per product rather than per session:
 
 - **A GPU that understands the vendor's compressed layout** can take it directly. Compression can roughly halve the memory bandwidth of the capture path, which at 4K60 is often the difference between fitting in the platform's budget and not.
 - **Anything that must touch the pixels** — CPU readback, a screenshot, an encoder, or a GPU from a different vendor — needs `DRM_FORMAT_MOD_LINEAR`, because no other layout is portably decodable.
 
-A plane declares the pairs it can deliver and no more. A client that can handle none of them cannot capture from that plane, which is a fact about the product rather than a failure of the session.
+A capture declares the pairs it can deliver and no more. A client that can handle none of them cannot capture from it, which is a fact about the product rather than a failure of the session.
 
 The per-product declaration is `supportedFormats` under `captureCapabilities` in `hfp-capture.yaml`.
 
@@ -560,7 +559,7 @@ The per-product declaration is `supportedFormats` under `captureCapabilities` in
 |---|---|
 | No format selected before `start()` | `start()` fails with `CaptureErrorCode.INVALID_CONFIGURATION`. There is no default pair to fall back on. |
 | A `FormatLayout` outside `supportedFormats` | `setFormat()` raises `EX_ILLEGAL_ARGUMENT`; the pair is rejected while it is still a configuration error. |
-| Mapped source decoding a codec outside `supportedCodecs` | `start()` fails with `CODEC_NOT_CAPTURABLE`. The decoder still decodes and displays normally. |
+| Bound source decoding a codec outside `supportedCodecs` | `start()` fails with `CODEC_NOT_CAPTURABLE`. The decoder still decodes and displays normally. |
 | `resize` false and the size does not match the decoded resolution | `start()` fails with `RESOLUTION_MISMATCH`. Nothing is scaled. |
 | Pool reservation refused | `start()` fails with `OUT_OF_MEMORY`. |
 | Bound source lost while running | The session stops and `ICaptureEventListener.onSourceLost()` is raised. Binding again with `open()` makes it startable. |
@@ -570,7 +569,7 @@ The per-product declaration is `supportedFormats` under `captureCapabilities` in
 
 Frames are delivered in the pixel format and memory layout the session was configured for, with truthful per-plane offsets addressing the actual buffer layout, at the resolution the stream decodes to and in its source colorimetry. No scaling, rotation, crop, colour conversion or tone-mapping is applied on this path — shape and colour belong to the consumer, which applies them per frame as it textures the frame onto its scene, and may change them on any frame.
 
-`CaptureCapabilities.resize` states whether a plane can deliver a resolution other than the one being decoded. Where it is false, the plane's `Property.WIDTH` and `HEIGHT` must equal what the mapped source decodes to and `start()` fails with `CaptureErrorCode.RESOLUTION_MISMATCH` otherwise. A plane that never scales has no scaling quality to validate and no resolution permutations to cover, which is what keeps the tested surface small.
+`CaptureCapabilities.resize` states whether a capture can deliver a resolution other than the one being produced. Where it is false, the capture's `Property.WIDTH` and `HEIGHT` must equal what the bound source is producing and `start()` fails with `CaptureErrorCode.RESOLUTION_MISMATCH` otherwise. A capture that never scales has no scaling quality to validate and no resolution permutations to cover, which is what keeps the tested surface small.
 
 `supportedFormats` is an open list, so a product that can deliver a format carrying alpha declares that pair and a client selects it — no interface change is needed to support one.
 

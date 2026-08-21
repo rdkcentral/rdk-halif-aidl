@@ -40,7 +40,7 @@ enum CaptureErrorCode {
     SOURCE_UNAVAILABLE = 2,
 
     /**
-     * The mapped source is decoding a codec this plane cannot capture.
+     * The bound source is decoding a codec this capture cannot take.
      *
      * @see CaptureCapabilities.supportedCodecs
      */
@@ -50,29 +50,29 @@ enum CaptureErrorCode {
     HARDWARE_FAULT = 4,
 
     /**
-     * The configured capture resolution does not match the resolution the mapped
-     * source is decoding, on a plane that cannot resize.
+     * The configured capture resolution does not match the resolution the bound
+     * source is decoding, on a capture that cannot resize.
      *
      * @see CaptureCapabilities.resize, Property.WIDTH, Property.HEIGHT
      */
     RESOLUTION_MISMATCH = 5,
 
     /**
-     * The colour conversion the configured format would require of the mapped source
-     * is not one this plane can perform.
+     * The colour conversion the configured format would require of the bound source
+     * is not one this capture can perform.
      */
     COLOR_CONVERSION_UNSUPPORTED = 6,
 
     /**
-     * The configured pixel format or memory layout cannot be delivered for the mapped
-     * source, even though the plane declares it.
+     * The configured pixel format or memory layout cannot be delivered for the bound
+     * source, even though the capture declares it.
      *
      * @see CaptureCapabilities.supportedFormats, ICaptureController.setFormat()
      */
     FORMAT_UNSUPPORTED = 7,
 
     /**
-     * The session's configuration is not a combination this plane can deliver, or is
+     * The session's configuration is not a combination this capture can deliver, or is
      * incomplete - `start()` raises this where no format was selected with
      * `ICaptureController.setFormat()`.
      */
