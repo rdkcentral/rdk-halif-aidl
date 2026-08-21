@@ -22,7 +22,7 @@
 # type        - Responsibility: SOC or OEM                                [manual]
 component: capture
 version: 0.1.0.0
-status: RED
+status: AMBER
 description: "Frame capture bound to a selectable pipeline source"
 type: SOC
 

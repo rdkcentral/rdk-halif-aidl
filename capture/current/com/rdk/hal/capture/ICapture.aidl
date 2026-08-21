@@ -22,6 +22,7 @@ import com.rdk.hal.capture.CaptureCapabilities;
 import com.rdk.hal.capture.CaptureSource;
 import com.rdk.hal.capture.ICaptureController;
 import com.rdk.hal.capture.ICaptureControllerListener;
+import com.rdk.hal.capture.Property;
 import com.rdk.hal.capture.State;
 import com.rdk.hal.PropertyValue;
 
@@ -187,6 +188,25 @@ interface ICapture
      * @see close(), ICaptureController, CaptureSource, CaptureCapabilities.supportedSources
      */
     @nullable ICaptureController open(in CaptureSource captureSource, in ICaptureControllerListener captureControllerListener);
+
+    /**
+     * Gets a property of this capture resource.
+     *
+     * Readable by any holder of this interface and at any time; reading a property
+     * does not require the session, and does not depend on capture state. Properties
+     * are set through `ICaptureController.setProperty()` by the client that opened
+     * the session.
+     *
+     * @param[in] property      The key of a property from the Property enum.
+     *
+     * @returns PropertyValue or null if the property key is unknown.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value.
+     *
+     * @see ICaptureController.setProperty(), Property
+     */
+    PropertyValue getProperty(in Property property);
 
     /**
      * Closes the capture session.

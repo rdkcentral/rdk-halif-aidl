@@ -254,20 +254,8 @@ interface ICaptureController
      *
      * @pre The session must be in State::READY.
      *
-     * @see getProperty(), Property, CaptureCapabilities
+     * @see ICapture.getProperty(), Property, CaptureCapabilities
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);
 
-    /**
-     * Gets a property of the capture session.
-     *
-     * @param[in] property      The property to read.
-     *
-     * @returns PropertyValue
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     *
-     * @see setProperty(), Property
-     */
-    PropertyValue getProperty(in Property property);
 }

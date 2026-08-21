@@ -193,7 +193,7 @@ flowchart TD
     classDef default fill:#1E1E1E,stroke:#E0E0E0,stroke-width:1px,color:#E0E0E0;
 
     Client:::blue
-    PC:::wheat
+    MGR:::wheat
     CAP:::wheat
     CTRL:::wheat
     L:::wheat
@@ -209,21 +209,19 @@ flowchart TD
 Call `ICaptureManager.getCaptureIds()` and take an `ICapture` with `getCapture(captureId, captureEventListener)`. An empty array means the product does not support decode-to-texture.
 2. Read what the capture can deliver:
 Call `ICapture.getCapabilities()` for the capturable codecs, the supported pixel formats and modifiers, the maximum frame size and buffer count, and the behaviour when every buffer is locked.
-3. Bind the source:
-Call `ICapture.open()` with one of `CaptureCapabilities.supportedSources`. This is the binding, and it is the session — it lasts until `close()`. A stage already carrying `maxCapturesPerSource` sessions refuses with `CaptureErrorCode.SOURCE_UNAVAILABLE`.
-4. Open the session:
-Call `ICapture.open(captureSource, captureControllerListener)`. The resource transitions `CLOSED` → `READY`. It fails with `CaptureErrorCode.SOURCE_UNAVAILABLE` if the stage is not one this resource supports, or already carries `maxCapturesPerSource` sessions.
-5. Configure the session:
+3. Bind a source, which opens the session:
+Call `ICapture.open(captureSource, captureControllerListener)` with one of `CaptureCapabilities.supportedSources`. The binding and the session are the same thing — the stage named here is what this session delivers until `close()`. The resource transitions `CLOSED` → `READY`. It fails with `CaptureErrorCode.SOURCE_UNAVAILABLE` if the stage is not one this resource supports, or already carries `maxCapturesPerSource` sessions.
+4. Configure the session:
 Call `ICaptureController.setFormat()` while in `READY` with one row of `CaptureCapabilities.supportedFormats`. There is no default — what a capture delivers is whatever it declares, so a format is selected before `start()`. Frame size is the capture's own `Property.WIDTH` and `HEIGHT`, set with `ICaptureController.setProperty()`; where the capture declares `resize: false` they must equal what the bound source is producing. Pool depth is not a client choice and is not declared — the platform calibrates it from the throughput it can sustain, and the client sees how many buffers it got when `onPoolReady()` delivers them.
-6. Start:
-Call `ICaptureController.start()`. A format must have been selected first — there is no default pair, so a session that selected none fails here with `CaptureErrorCode.INVALID_CONFIGURATION`. The pool is reserved, the vendor layer configures the mapped source's decoder and wires it into the pool, the resource transitions `READY` → `STARTING` → `STARTED`, and `ICaptureControllerListener.onPoolReady()` delivers the pool addressing. The codec is checked here, because a decoder is opened for a codec independently of when it is mapped.
-7. Pull frames:
+5. Start:
+Call `ICaptureController.start()`. A format must have been selected first — there is no default pair, so a session that selected none fails here with `CaptureErrorCode.INVALID_CONFIGURATION`. The pool is reserved, the vendor layer configures the bound source and wires it into the pool, the resource transitions `READY` → `STARTING` → `STARTED`, and `ICaptureControllerListener.onPoolReady()` delivers the pool addressing. The codec is checked here, because a decoder is opened for a codec independently of when a capture binds to it.
+6. Pull frames:
 Call `ICaptureController.acquireLatestFrame(releaseBufferIndex)`, passing the buffer just finished with — or `VideoFrameView.NO_BUFFER` on the first call. It returns the frame due for presentation, `null` rather than blocking when none is due, and never the same frame twice. `ICaptureControllerListener.onFrameAvailable()` is an optional wake-up; a client pulling at a known cadence can ignore it.
-8. Release the last frame:
+7. Release the last frame:
 Call `ICaptureController.releaseFrame(bufferIndex)` when the client stops drawing while still holding a buffer. A client drawing continuously has already released through the previous step. The call is idempotent and tolerates unknown indices.
 
 Release is keyed by index because the index is the buffer's identity. An index that names no buffer in the current pool is ignored, which is what makes a release arriving after a stop safe.
-9. Stop and close:
+8. Stop and close:
 Call `ICaptureController.stop()` to unwire the source and release the pool; the resource transitions `STARTED` → `STOPPING` → `READY`, reclaiming any buffer the client still holds, and can be started again. Then `ICapture.close(controller)` returns it to `CLOSED`. The bound source keeps running and anything else consuming it is untouched.
 
 The bound source becoming unavailable while a session is running stops it and raises `ICaptureEventListener.onSourceLost()`; binding again with `open()` makes the session startable.
@@ -255,7 +253,7 @@ stateDiagram-v2
 
 Blue states rest until the client acts on them, amber ones are passing through on their own, and green is the only state in which frames can be acquired.
 
-`ICapture.getState()` reads the state at any time, and `ICaptureEventListener.onStateChanged()` reports every transition — which is how a client learns about the ones it did not ask for. Unmapping the source under a running session stops it; `ICaptureEventListener.onSystemError()` and `ICaptureControllerListener.onCaptureError()` report faults against the resource and the session respectively, each with a `CaptureErrorCode` and the vendor's own code.
+`ICapture.getState()` reads the state at any time, and `ICaptureEventListener.onStateChanged()` reports every transition — which is how a client learns about the ones it did not ask for. The bound source becoming unavailable under a running session stops it; `ICaptureEventListener.onSystemError()` and `ICaptureControllerListener.onCaptureError()` report faults against the resource and the session respectively, each with a `CaptureErrorCode` and the vendor's own code.
 
 `STARTING` is the gap between `start()` returning and the pool arriving: the session is not usable until `onPoolReady()` delivers the addressing, which is what moves it to `STARTED`.
 
