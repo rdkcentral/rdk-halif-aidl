@@ -1,0 +1,235 @@
+# If not stated otherwise in this file or this component's LICENSE file the
+# following copyright and licenses apply:
+#
+# Copyright 2026 RDK Management
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Key Value Contract for the video decoder.
+#
+# THIS FILE IS THE CONTRACT for what this component measures. A vendor
+# implements against the description on each key, and a test suite asserts
+# against it. A key defined here is defined nowhere else.
+#
+# AFTER EDITING, RUN:  scripts/kvcc.py
+# It derives every identifier, writes the AIDL enums and the C key header, and
+# fails if two keys collide or a key has no description.
+#
+# THIS VOCABULARY SITS BESIDE THE INTERFACE VERSIONS, NEVER INSIDE ONE.
+# Publishing a revision creates kvc/<revision>/ and touches no interface
+# directory, so no .aidl changes and no frozen interface hash moves. The
+# interface names a floor it requires, not a pin, because adding a key is
+# compatible by construction.
+#
+# WHAT BELONGS HERE
+#   Only what this component produces. A figure the video sink measures is
+#   declared by videosink, whatever consumes it, so "who owes this figure" is
+#   answerable from the file it appears in.
+#
+# RULES THAT BITE
+#   * A key absent here is ABSENT at runtime — never served as 0, never as -1.
+#     "This SoC cannot measure it" and "it measured zero" must stay distinct.
+#   * unit and kind are part of a key's IDENTITY, not documentation. Declaring
+#     a field in us and populating ms yields a different identifier, so the
+#     consumer sees a mismatch rather than a figure a thousand times wrong.
+#   * A counter is monotonic from resource creation and is NEVER reset on
+#     open(), flush(), stop() or seek. Consumers difference it.
+#   * The instance is runtime, not contract. This file declares the element
+#     once; it never enumerates .0 and .1.
+#   * Every value is int64 (AIDL long, signed 64-bit).
+
+format: kvc
+schema: 1
+
+domain: av
+component: video_decoder
+package: videodecoder
+version: 1.0
+
+# How many of the element the hardware HAS. Every one is served, in use or
+# idle. Must agree with hfp-videodecoder.yaml — a CI-catchable cross-check.
+instances: 2
+
+# May be TIGHTER than the 50 ms platform floor, never looser.
+captureCadenceMs: 20
+
+keys:
+
+  # av.video_decoder.frames_decoded
+  - name: frames_decoded
+    type: int64
+    unit: frames
+    kind: counter
+    access: read
+    provider: driver
+    description: >
+      Compressed frames the decoder has decoded and emitted at its output,
+      post-decode and pre-sink. One per emitted frame, counted from instance
+      creation and never reset on flush or seek.
+
+  # av.video_decoder.frames_dropped
+  - name: frames_dropped
+    type: int64
+    unit: frames
+    kind: counter
+    access: read
+    provider: driver
+    description: >
+      Frames the decoder discarded before output — undecodable through
+      corruption or unsupported format, or shed under decode overload.
+      Excludes presentation-side drops, which belong to the video sink. A
+      frame counted here is not also in frames_decoded.
+
+  # av.video_decoder.decode_errors
+  - name: decode_errors
+    type: int64
+    unit: events
+    kind: counter
+    access: read
+    provider: driver
+    description: >
+      Decode-error occurrences such as a bitstream or NAL parse failure or a
+      codec fault. Decoder-internal, and a distinct axis from frames_dropped:
+      an error need not drop a frame, and a drop need not be an error.
+
+  # av.video_decoder.decode_latency_sum_us
+  - name: decode_latency_sum_us
+    type: int64
+    unit: us
+    kind: counter
+    access: read
+    provider: driver
+    description: >
+      Running sum of per-frame decode latency, measured from the compressed
+      access unit being queued to the decoder input until the frame is emitted
+      at its output. Mean latency is this divided by frames_decoded.
+
+  # av.video_decoder.last_decode_error_pts_ms
+  - name: last_decode_error_pts_ms
+    type: int64
+    unit: ms
+    kind: current
+    access: read
+    provider: driver
+    description: >
+      Stream PTS at detection of the most recent decode error, within one
+      frame interval. Read with decode_errors, which says how many there were
+      while this says where the newest one was. Left undeclared where the SoC
+      cannot derive a PTS, and never served as -1.
+
+  # av.video_decoder.last_decode_error_reason
+  - name: last_decode_error_reason
+    type: int64
+    unit: none
+    kind: current
+    access: read
+    provider: driver
+    description: >
+      Classification of the most recent decode error. This is the value a
+      consumer branches on, and what makes the fault comparable across SoCs.
+    values:
+      - name: none
+        value: 0
+        description: No decode error has been recorded.
+      - name: bitstream_error
+        value: 1
+        description: The coded bitstream was malformed or failed to parse.
+      - name: unsupported_format
+        value: 2
+        description: >
+          The stream is well formed but uses a tool, profile or level this
+          decoder does not implement.
+      - name: decoder_fault
+        value: 3
+        description: >
+          The decoder failed internally on a stream it should have been able
+          to decode.
+      - name: resource_lost
+        value: 4
+        description: >
+          A resource the decode depended on was withdrawn, such as a secure
+          buffer or a hardware context reclaimed under pressure.
+      - name: hardware_fault
+        value: 5
+        description: The decode hardware reported a fault.
+
+  # av.video_decoder.last_decode_error_vendor_code
+  - name: last_decode_error_vendor_code
+    type: int64
+    unit: none
+    kind: current
+    access: read
+    provider: driver
+    description: >
+      The SoC's own error code for the same fault, carried through
+      uninterpreted. For vendor diagnosis, and never branched on.
+
+events:
+
+  # av.video_decoder.decode_error
+  - name: decode_error
+    description: >
+      Raised at detection of a decode fault, once per fault. A fault that also
+      discards a frame raises this and advances frames_dropped; a fault that
+      does not raises this alone. The two are separate axes.
+    attributes:
+
+      # av.video_decoder.decode_error.reason
+      - name: reason
+        type: int64
+        unit: none
+        description: >
+          Classification of this fault, from the same closed vocabulary as
+          last_decode_error_reason. The value a consumer branches on.
+        values:
+          - name: none
+            value: 0
+            description: No decode error has been recorded.
+          - name: bitstream_error
+            value: 1
+            description: The coded bitstream was malformed or failed to parse.
+          - name: unsupported_format
+            value: 2
+            description: >
+              The stream is well formed but uses a tool, profile or level this
+              decoder does not implement.
+          - name: decoder_fault
+            value: 3
+            description: >
+              The decoder failed internally on a stream it should have been
+              able to decode.
+          - name: resource_lost
+            value: 4
+            description: >
+              A resource the decode depended on was withdrawn, such as a
+              secure buffer or a hardware context reclaimed under pressure.
+          - name: hardware_fault
+            value: 5
+            description: The decode hardware reported a fault.
+
+      # av.video_decoder.decode_error.vendor_code
+      - name: vendor_code
+        type: int64
+        unit: none
+        description: >
+          The SoC's own error code for this fault, carried through
+          uninterpreted. For vendor diagnosis, and never branched on.
+
+      # av.video_decoder.decode_error.pts_ms
+      - name: pts_ms
+        type: int64
+        unit: ms
+        description: >
+          Stream PTS at detection, within one frame interval. Absent where the
+          SoC cannot derive a PTS at all, and NOT_AVAILABLE where it can but
+          could not at this instant. Never sent as -1.

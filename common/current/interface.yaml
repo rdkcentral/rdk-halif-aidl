@@ -1,7 +1,10 @@
 aidl_interface:
   name: common
   srcs:
+    # A leading-* glob matches one path segment, so the metric envelope in the
+    # com.rdk.hal.metrics subpackage needs naming in its own right.
     - com/rdk/hal/*.aidl
+    - com/rdk/hal/metrics/*.aidl
   imports: []
   stability: vintf
   layout: module-local

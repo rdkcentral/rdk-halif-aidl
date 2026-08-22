@@ -102,6 +102,12 @@ enum Property
      * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
+	 *
+	 * @deprecated Superseded by Metric::FRAMES_RECEIVED, read through
+	 * IVideoSink.getMetrics(). That call latches every requested figure at
+	 * one instant, so paired counters cannot be read torn, and reports
+	 * NOT_SUPPORTED rather than -1 where the product cannot measure it.
+	 * This property resets on open()/flush()/stop(); the metric does not.
      */
     METRIC_FRAMES_RECEIVED = 1000,
 
@@ -115,6 +121,12 @@ enum Property
      * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
+	 *
+	 * @deprecated Superseded by Metric::FRAMES_PRESENTED, read through
+	 * IVideoSink.getMetrics(). That call latches every requested figure at
+	 * one instant, so paired counters cannot be read torn, and reports
+	 * NOT_SUPPORTED rather than -1 where the product cannot measure it.
+	 * This property resets on open()/flush()/stop(); the metric does not.
      */
     METRIC_FRAMES_PRESENTED = 1001,
 
@@ -129,6 +141,12 @@ enum Property
      * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
+	 *
+	 * @deprecated Superseded by Metric::FRAMES_DROPPED_LATE, read through
+	 * IVideoSink.getMetrics(). That call latches every requested figure at
+	 * one instant, so paired counters cannot be read torn, and reports
+	 * NOT_SUPPORTED rather than -1 where the product cannot measure it.
+	 * This property resets on open()/flush()/stop(); the metric does not.
      */
     METRIC_FRAMES_DROPPED_LATE = 1002,
 
@@ -143,6 +161,12 @@ enum Property
      * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
+	 *
+	 * @deprecated Superseded by Metric::FRAMES_DROPPED_FRC, read through
+	 * IVideoSink.getMetrics(). That call latches every requested figure at
+	 * one instant, so paired counters cannot be read torn, and reports
+	 * NOT_SUPPORTED rather than -1 where the product cannot measure it.
+	 * This property resets on open()/flush()/stop(); the metric does not.
      */
     METRIC_FRAMES_DROPPED_FRC = 1003,
 
@@ -157,6 +181,12 @@ enum Property
      * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
+	 *
+	 * @deprecated Superseded by Metric::FRAMES_REPEATED_FRC, read through
+	 * IVideoSink.getMetrics(). That call latches every requested figure at
+	 * one instant, so paired counters cannot be read torn, and reports
+	 * NOT_SUPPORTED rather than -1 where the product cannot measure it.
+	 * This property resets on open()/flush()/stop(); the metric does not.
      */
     METRIC_FRAMES_REPEATED_FRC = 1004,
 
@@ -171,6 +201,13 @@ enum Property
      * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
+	 *
+	 * @deprecated Superseded by Metric::FRAMES_REPEATED_MISSING_FRAME,
+	 * read through IVideoSink.getMetrics(). That call latches every
+	 * requested figure at one instant, so paired counters cannot be read
+	 * torn, and reports NOT_SUPPORTED rather than -1 where the product
+	 * cannot measure it. This property resets on open()/flush()/stop();
+	 * the metric does not.
      */
     METRIC_FRAMES_REPEATED_MISSING_FRAME = 1005,
 
@@ -185,6 +222,12 @@ enum Property
      * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
+	 *
+	 * @deprecated Superseded by Metric::UNDERFLOWED, read through
+	 * IVideoSink.getMetrics(). That call latches every requested figure at
+	 * one instant, so paired counters cannot be read torn, and reports
+	 * NOT_SUPPORTED rather than -1 where the product cannot measure it.
+	 * This property resets on open()/flush()/stop(); the metric does not.
      */
     METRIC_UNDERFLOWED = 1006,
 }

@@ -42,6 +42,8 @@ import com.rdk.hal.drm.NumberOfSessions;
 import com.rdk.hal.drm.ProvideProvisionResponseResult;
 import com.rdk.hal.drm.ProvisionRequest;
 import com.rdk.hal.drm.SecurityLevel;
+import com.rdk.hal.metrics.MetricSnapshot;
+import com.rdk.hal.drm.Metric;
 
 
 /**
@@ -186,12 +188,18 @@ interface IDrmPlugin {
      * returned in one call to getMetrics(). The scope and definition of the
      * metrics is defined by the plugin.
      *
+     * These are vendor-defined and explicitly opaque: nothing constrains the
+     * names or the units, so a figure here is useful for vendor diagnosis and
+     * cannot be compared across SoCs. For the contracted decrypt figures, which
+     * are identified and comparable, see getDeclaredMetrics().
+     *
      * @return collection of metric groups provided by the plugin
      *     Implicit error codes:
      *       + ERROR_DRM_INVALID_STATE if the metrics are not available to be
      *             returned.
      */
     List<DrmMetricGroup> getMetrics();
+
 
     /**
      * Return the current number of open sessions and the maximum number of
@@ -553,4 +561,37 @@ interface IDrmPlugin {
             in byte[] sessionId, in byte[] keyId, in byte[] message,
             in byte[] signature);
 
+    /* ---------------------------------------------------------------------
+     * Metrics. Appended last, and any future addition is appended after
+     * these: a method's transaction ID is its declaration order, so
+     * inserting one above shifts every ID below it and breaks the ABI.
+     * ------------------------------------------------------------------ */
+
+    /**
+     * Gets the contracted decrypt metrics as one coherent snapshot.
+     *
+     * Every value is latched at the one instant the snapshot records, so
+     * `decrypt_count` and `decrypt_latency_sum_us` read together always describe
+     * the same moment and their quotient is a mean that existed.
+     *
+     * Unlike getMetrics(), what these keys mean is fixed: each is declared in
+     * drm/kvc/current/drm.kvc with a unit and a kind that form part of its
+     * identifier, so a consumer comparing two products is comparing the same
+     * figure. A key this product cannot measure reports
+     * `MetricStatus::NOT_SUPPORTED` rather than 0 or -1.
+     *
+     * Scope is what the driver can observe: work done on keys the session
+     * already holds. A licence that was never obtained is a fact about the
+     * licence exchange rather than about the decrypt path, and is not here.
+     *
+     * @param[in] metrics             Metric keys to query, or null for every served metric.
+     *
+     * @return MetricSnapshot containing one value per requested key.
+     *     Implicit error codes:
+     *       + ERROR_DRM_INVALID_STATE if the metrics are not available to be
+     *             returned.
+     *
+     * @see getMetrics()
+     */
+    MetricSnapshot getDeclaredMetrics(in @nullable Metric[] metrics);
 }
