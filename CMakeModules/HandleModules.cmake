@@ -27,16 +27,17 @@ function(_capitalize_module_name MODULE_NAME OUT_VAR)
 endfunction()
 
 # Transforms the dependencies into different formats. Takes a list of dependency-version pairs as arguments.
-function(_generate_dependency_list CMAKE_STYLE_OUT PKG_CONFIG_STYLE_OUT LIB_NAMES_OUT)
+function(_generate_dependency_list CMAKE_STYLE_OUT PKG_CONFIG_STYLE_OUT LIB_NAMES_OUT FIND_DEPS_OUT)
     set(CMAKE_STYLE "Binder::Binder")
     set(PKG_CONFIG_STYLE "binder")
     set(LIB_NAMES "libbinder")
+    set(FIND_DEPS "find_dependency(Binder)")
 
-    math(EXPR remainder "(${ARGC} - 3) % 2")
+    math(EXPR remainder "(${ARGC} - 4) % 2")
     if(NOT remainder EQUAL 0)
         message(FATAL_ERROR "_generate_dependency_list expects dependency-version pairs, but got an odd number of args")
     endif()
-    foreach(dep RANGE 3 "${ARGC}" 2)
+    foreach(dep RANGE 4 "${ARGC}" 2)
         if(${dep} EQUAL ${ARGC})
             break()
         endif()
@@ -46,6 +47,8 @@ function(_generate_dependency_list CMAKE_STYLE_OUT PKG_CONFIG_STYLE_OUT LIB_NAME
         list(APPEND CMAKE_STYLE "${ARGV${dep}}-v${ARGV${dep_ver_index}}-cpp")
         list(APPEND PKG_CONFIG_STYLE "rdk-halif-${ARGV${dep}} = ${ARGV${dep_ver_index}}")
         list(APPEND LIB_NAMES "${ARGV${dep}}-v${ARGV${dep_ver_index}}-cpp")
+        _capitalize_module_name("${ARGV${dep}}" _DEP_CAP)
+        list(APPEND FIND_DEPS "find_dependency(RdkHalif${_DEP_CAP})")
     endforeach()
 
     message(DEBUG "CMake style dependencies: ${CMAKE_STYLE}")
@@ -55,11 +58,12 @@ function(_generate_dependency_list CMAKE_STYLE_OUT PKG_CONFIG_STYLE_OUT LIB_NAME
     set(${CMAKE_STYLE_OUT} "${CMAKE_STYLE}" PARENT_SCOPE)
     set(${PKG_CONFIG_STYLE_OUT} "${PKG_CONFIG_STYLE}" PARENT_SCOPE)
     set(${LIB_NAMES_OUT} "${LIB_NAMES}" PARENT_SCOPE)
+    set(${FIND_DEPS_OUT} "${FIND_DEPS}" PARENT_SCOPE)
 endfunction()
 
 # Create MODULE_NAMEConfig.cmake and MODULE_NAMEConfigVersion.cmake files for the given module name and version. This is
 # necessary to allow other modules to find this module using find_package().
-function(_create_cmake_helpers MODULE_NAME MODULE_VERSION MODULE_DEPENDENCIES SOURCE_LIST HEADER_LIST)
+function(_create_cmake_helpers MODULE_NAME MODULE_VERSION MODULE_DEPENDENCIES FIND_DEPENDENCIES SOURCE_LIST HEADER_LIST)
     _capitalize_module_name("${MODULE_NAME}" MODULE_CAPITALIZED_NAME)
     string(TOUPPER "${MODULE_NAME}" MODULE_UPPER_NAME)
     string(PREPEND MODULE_UPPER_NAME "RDK_HALIF_")
@@ -75,6 +79,7 @@ function(_create_cmake_helpers MODULE_NAME MODULE_VERSION MODULE_DEPENDENCIES SO
         list(APPEND HEADER_FILES "${H_FILE}")
    endforeach()
 
+   list(JOIN FIND_DEPENDENCIES "\n" FIND_DEPENDENCIES)
    configure_package_config_file(
         "${CMAKE_SOURCE_DIR}/contrib/Config.cmake.in"
         "${CMAKE_CURRENT_BINARY_DIR}/RdkHalif${MODULE_CAPITALIZED_NAME}Config.cmake"
@@ -89,6 +94,10 @@ function(_create_cmake_helpers MODULE_NAME MODULE_VERSION MODULE_DEPENDENCIES SO
     install(FILES
         "${CMAKE_CURRENT_BINARY_DIR}/RdkHalif${MODULE_CAPITALIZED_NAME}Config.cmake"
         "${CMAKE_CURRENT_BINARY_DIR}/RdkHalif${MODULE_CAPITALIZED_NAME}ConfigVersion.cmake"
+        DESTINATION "${CMAKE_INSTALL_FULL_DATADIR}/cmake/RdkHalif${MODULE_CAPITALIZED_NAME}"
+    )
+    install(EXPORT "RdkHalif${MODULE_CAPITALIZED_NAME}Targets"
+        NAMESPACE "RdkHalif::"
         DESTINATION "${CMAKE_INSTALL_FULL_DATADIR}/cmake/RdkHalif${MODULE_CAPITALIZED_NAME}"
     )
 endfunction()
@@ -121,30 +130,39 @@ function(add_versioned)
     file(GLOB_RECURSE HDRS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
 
     # Set sources
-    target_sources("${TARGET_NAME}" PRIVATE ${SRCS} PUBLIC ${HDRS})
-    target_include_directories("${TARGET_NAME}" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+    target_sources("${TARGET_NAME}" PRIVATE ${SRCS} PUBLIC "$<BUILD_INTERFACE:${HDRS}>")
+    target_include_directories("${TARGET_NAME}"
+        PUBLIC
+            "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+    )
 
     # Set relevant compile options
+    _capitalize_module_name("${MODULE_NAME}" _MODULE_CAPITALIZED_NAME)
     set_target_properties(
         "${TARGET_NAME}" PROPERTIES
         CXX_STANDARD 17
         CXX_STANDARD_REQUIRED ON
         POSITION_INDEPENDENT_CODE ON
+        EXPORT_NAME "${_MODULE_CAPITALIZED_NAME}"
     )
 
     message(DEBUG "Adding module ${MODULE_NAME} version ${MODULE_VERSION} with dependencies: ${MODULE_DEPENDENCIES}")
 
-    _generate_dependency_list(CMAKE_DEPENDENCIES PKG_CONFIG_DEPENDENCIES LIB_DEPENDENCIES ${MODULE_DEPENDENCIES})
+    _generate_dependency_list(CMAKE_DEPENDENCIES PKG_CONFIG_DEPENDENCIES LIB_DEPENDENCIES FIND_DEPS ${MODULE_DEPENDENCIES})
 
     # Link to binder and the given dependencies
-    target_link_libraries("${TARGET_NAME}" PRIVATE ${CMAKE_DEPENDENCIES})
+    target_link_libraries("${TARGET_NAME}" PUBLIC ${CMAKE_DEPENDENCIES})
 
     # Create helpers for downstream consumers
-    _create_cmake_helpers("${MODULE_NAME}" "${MODULE_VERSION}" "${LIB_DEPENDENCIES}" "${SRCS}" "${HDRS}")
+    _create_cmake_helpers("${MODULE_NAME}" "${MODULE_VERSION}" "${CMAKE_DEPENDENCIES}" "${FIND_DEPS}" "${SRCS}" "${HDRS}")
     _create_pkgconfig_helpers(${MODULE_NAME} "${MODULE_VERSION}" "${PKG_CONFIG_DEPENDENCIES}")
 
     # Install the library, headers and source files
-    install(TARGETS "${TARGET_NAME}" ARCHIVE DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}")
+    install(TARGETS "${TARGET_NAME}"
+        EXPORT "RdkHalif${_MODULE_CAPITALIZED_NAME}Targets"
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}"
+    )
     install(
         DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/"
         DESTINATION "${CMAKE_INSTALL_FULL_INCLUDEDIR}"
