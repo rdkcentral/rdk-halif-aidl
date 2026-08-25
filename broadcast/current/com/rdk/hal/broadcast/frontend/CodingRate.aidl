@@ -17,10 +17,6 @@ package com.rdk.hal.broadcast.frontend;
 /**
  * Code rate enum.
  *
- * Note that this enum is shared across all frontend types and thus includes values that are only usable on some of
- * them. You should always request and consult the list of supported coding rates from the frontend before using any of
- * them.
- *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler

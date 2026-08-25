@@ -14,30 +14,17 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
+import com.rdk.hal.broadcast.frontend.DvbSRollOff;
+
 /**
- * Roll-off enumeration.
+ * Roll-off factor for DVB-S/S2/S2X and ISDB-S.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-@Backing(type = "int")
-enum RollOff {
-    /** Clean value when default initialized. */
-    UNDEFINED = 0,
-    /** Auto-selected. */
-    AUTO,
-    /** Roll off value 0.35 used by DVB-S2 and DVB-S2X. */
-    ROLL_OFF_0_35,
-    /** Roll off value 0.25 used by DVB-S2 and DVB-S2X. */
-    ROLL_OFF_0_25,
-    /** Roll off value 0.20 used by DVB-S2 and DVB-S2X. */
-    ROLL_OFF_0_20,
-    /** Roll off value 0.15 used by DVB-S2X. */
-    ROLL_OFF_0_15,
-    /** Roll off value 0.10 used by DVB-S2X. */
-    ROLL_OFF_0_10,
-    /** Roll off value 0.05 used by DVB-S2X. */
-    ROLL_OFF_0_05,
+union RollOff {
+    DvbSRollOff dvbS = DvbSRollOff.UNDEFINED;
+    // Reserved for future use.
 }

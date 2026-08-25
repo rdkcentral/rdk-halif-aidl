@@ -14,17 +14,16 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.DvbTTransmissionMode;
-
 /**
- * Transmission mode union.
+ * Constant long values used across the frontend.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
+
+@Backing(type = "long")
 @VintfStability
-union TransmissionMode {
-    DvbTTransmissionMode dvbT = DvbTTransmissionMode.UNDEFINED;
-    // Reserved for future use.
+enum ConstantLong {
+    INVALID_B = -1,
 }

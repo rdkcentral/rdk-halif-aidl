@@ -14,17 +14,28 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.DvbTTransmissionMode;
-
 /**
- * Transmission mode union.
+ * Available modulations.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-union TransmissionMode {
-    DvbTTransmissionMode dvbT = DvbTTransmissionMode.UNDEFINED;
-    // Reserved for future use.
+@Backing(type = "int")
+enum DvbCModulation {
+    /** Clean value when default initialized. */
+    UNDEFINED = 0,
+    /** Auto-selected modulation. */
+    AUTO,
+    /** QAM_16. */
+    QAM_16,
+    /** QAM_32. */
+    QAM_32,
+    /** QAM_64. */
+    QAM_64,
+    /** QAM_128. */
+    QAM_128,
+    /** QAM_256. */
+    QAM_256,
 }

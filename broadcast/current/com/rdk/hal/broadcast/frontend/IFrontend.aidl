@@ -99,19 +99,22 @@ interface IFrontend {
     /**
      * Opens the LNB controller. Non-blocking.
      *
-     * The returned ILnbController interface is used for controlling satellite equipment.
+     * The returned ILnbController interface is used for controlling satellite
+     * equipment.
      *
-     * @returns ILnbController or null on error (e.g. LNB controller already opened)
+     * @returns ILnbController or null on error (e.g. LNB controller already
+     *     opened)
      */
     @nullable ILnbController openLnb();
 
     /**
      * Closes the LNB controller and invalidates the LnbController.
      *
-     * Cleanup all attached (hardware) resources and brings the LNB controller back into a state where it can be opened
-     * again.
+     * Cleanup all attached (hardware) resources and brings the LNB controller
+     * back into a state where it can be opened again.
      *
-     * @param controller non-null controller obtained from openLnb() on the same FrontEnd
+     * @param controller non-null controller obtained from openLnb() on the same
+     *     FrontEnd
      */
     void closeLnb(in ILnbController controller);
 }

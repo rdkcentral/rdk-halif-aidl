@@ -14,9 +14,9 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.Bandwidth;
 import com.rdk.hal.broadcast.frontend.DvbCAnnex;
-import com.rdk.hal.broadcast.frontend.Modulation;
+import com.rdk.hal.broadcast.frontend.DvbCBandwidth;
+import com.rdk.hal.broadcast.frontend.DvbCModulation;
 
 /**
  * DVB-C capability struct.
@@ -31,9 +31,9 @@ import com.rdk.hal.broadcast.frontend.Modulation;
 @VintfStability
 parcelable DvbCCapabilities {
     /** Supported bandwidths. */
-    Bandwidth[] bandwidths;
+    DvbCBandwidth[] bandwidths;
     /** Supported modulations. */
-    Modulation[] modulations;
+    DvbCModulation[] modulations;
     /** Supported annex standards. */
     DvbCAnnex[] dvbCAnnexes;
 

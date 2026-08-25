@@ -14,34 +14,19 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
+import com.rdk.hal.broadcast.frontend.DvbCBandwidth;
+import com.rdk.hal.broadcast.frontend.DvbTBandwidth;
+
 /**
- * Available bandwidths.
- *
- * Note that this enum is shared across all frontend types and thus includes values that are only usable on some of
- * them. You should always request and consult the list of supported bandwidths from the frontend before using any of
- * them.
+ * Union of available frontend bandwidths.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-@Backing(type = "int")
-enum Bandwidth {
-    /** Clean value when default initialized. */
-    UNDEFINED = 0,
-    /** The Tuner will automatically detect the bandwidth. */
-    AUTO,
-    /** 1.712 MHz. */
-    MHZ_1_712,
-    /** 5 MHz. */
-    MHZ_5,
-    /** 6 MHz. */
-    MHZ_6,
-    /** 7 MHz. */
-    MHZ_7,
-    /** 8 MHz. */
-    MHZ_8,
-    /** 10 MHz. */
-    MHZ_10,
+union Bandwidth {
+    DvbCBandwidth dvbC = DvbCBandwidth.UNDEFINED;
+    DvbTBandwidth dvbT;
+    // Reserved for future use.
 }

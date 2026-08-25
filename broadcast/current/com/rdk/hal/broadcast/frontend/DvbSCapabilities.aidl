@@ -15,9 +15,9 @@
 package com.rdk.hal.broadcast.frontend;
 
 import com.rdk.hal.broadcast.frontend.CodingRate;
+import com.rdk.hal.broadcast.frontend.DvbSModulation;
+import com.rdk.hal.broadcast.frontend.DvbSRollOff;
 import com.rdk.hal.broadcast.frontend.DvbSStandard;
-import com.rdk.hal.broadcast.frontend.Modulation;
-import com.rdk.hal.broadcast.frontend.RollOff;
 
 /**
  * DVB-S/S2/S2X satellite broadcast standard capabilities.
@@ -33,13 +33,13 @@ import com.rdk.hal.broadcast.frontend.RollOff;
 @VintfStability
 parcelable DvbSCapabilities {
     /** Supported modulations. */
-    Modulation[] modulations;
+    DvbSModulation[] modulations;
     /** Supported coding rates (inner FEC). */
     CodingRate[] codingRates;
     /** Supported DVB-S standards. */
     DvbSStandard[] dvbSStandards;
     /** Supported roll-off values. */
-    RollOff[] rollOffs;
+    DvbSRollOff[] rollOffs;
 
     /** Reserved for future use. */
     ParcelableHolder extension;

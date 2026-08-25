@@ -14,17 +14,16 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.DvbTTransmissionMode;
-
 /**
- * Transmission mode union.
+ * Constant integer values used across the frontend.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
+
+@Backing(type = "int")
 @VintfStability
-union TransmissionMode {
-    DvbTTransmissionMode dvbT = DvbTTransmissionMode.UNDEFINED;
-    // Reserved for future use.
+enum ConstantInt {
+    INVALID_PLP_ID = -2,
 }

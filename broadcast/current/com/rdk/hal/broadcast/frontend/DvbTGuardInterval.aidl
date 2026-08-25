@@ -14,17 +14,32 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.DvbTTransmissionMode;
-
 /**
- * Transmission mode union.
+ * Available guard intervals.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-union TransmissionMode {
-    DvbTTransmissionMode dvbT = DvbTTransmissionMode.UNDEFINED;
-    // Reserved for future use.
+@Backing(type = "int")
+enum DvbTGuardInterval {
+    /** Clean value when default initialized. */
+    UNDEFINED = 0,
+    /** Auto-selected guard interval. */
+    AUTO,
+    /** 1/4. */
+    GI_1_4,
+    /** 1/8. */
+    GI_1_8,
+    /** 1/16. */
+    GI_1_16,
+    /** 1/32. */
+    GI_1_32,
+    /** 1/128. */
+    GI_1_128,
+    /** 19/128. */
+    GI_19_128,
+    /** 19/256. */
+    GI_19_256,
 }

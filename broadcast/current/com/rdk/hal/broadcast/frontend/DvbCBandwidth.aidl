@@ -18,22 +18,26 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.AtscModulation;
-import com.rdk.hal.broadcast.frontend.DvbCModulation;
-import com.rdk.hal.broadcast.frontend.DvbSModulation;
-import com.rdk.hal.broadcast.frontend.DvbTConstellation;
-
 /**
- * Available modulations.
+ * Available DvbC bandwidths.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-union Modulation {
-    AtscModulation atsc = AtscModulation.UNDEFINED;
-    DvbCModulation dvbC;
-    DvbSModulation dvbS;
-    DvbTConstellation dvbT;
+@Backing(type = "int")
+enum DvbCBandwidth {
+    /** Clean value when default initialized. */
+    UNDEFINED = 0,
+    /** The Tuner will automatically detect the bandwidth. */
+    AUTO,
+    /** 5 MHz. */
+    MHZ_5,
+    /** 6 MHz. */
+    MHZ_6,
+    /** 7 MHz. */
+    MHZ_7,
+    /** 8 MHz. */
+    MHZ_8,
 }

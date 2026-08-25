@@ -14,17 +14,30 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.DvbTTransmissionMode;
-
 /**
- * Transmission mode union.
+ * Available DvbT bandwidths.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-union TransmissionMode {
-    DvbTTransmissionMode dvbT = DvbTTransmissionMode.UNDEFINED;
-    // Reserved for future use.
+@Backing(type = "int")
+enum DvbTBandwidth {
+    /** Clean value when default initialized. */
+    UNDEFINED = 0,
+    /** The Tuner will automatically detect the bandwidth. */
+    AUTO,
+    /** 1.712 MHz. */
+    MHZ_1_712,
+    /** 5 MHz. */
+    MHZ_5,
+    /** 6 MHz. */
+    MHZ_6,
+    /** 7 MHz. */
+    MHZ_7,
+    /** 8 MHz. */
+    MHZ_8,
+    /** 10 MHz. */
+    MHZ_10,
 }

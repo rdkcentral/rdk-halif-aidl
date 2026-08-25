@@ -14,10 +14,10 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.Bandwidth;
 import com.rdk.hal.broadcast.frontend.CodingRate;
 import com.rdk.hal.broadcast.frontend.DvbCAnnex;
-import com.rdk.hal.broadcast.frontend.Modulation;
+import com.rdk.hal.broadcast.frontend.DvbCBandwidth;
+import com.rdk.hal.broadcast.frontend.DvbCModulation;
 import com.rdk.hal.broadcast.frontend.SignalDetectMode;
 
 /**
@@ -43,13 +43,13 @@ parcelable DvbCTuneParameters {
     int symbolRate;
 
     /** The bandwidth to use. */
-    Bandwidth bandwidth;
+    DvbCBandwidth bandwidth;
 
     /** Which DVB-C Annex to use. */
     DvbCAnnex dvbCAnnex;
 
     /** The modulation to use. */
-    Modulation modulation;
+    DvbCModulation modulation;
 
     /** Coding rate - the inner FEC. */
     CodingRate codingRate;

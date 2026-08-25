@@ -14,17 +14,36 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.DvbTTransmissionMode;
-
 /**
- * Transmission mode union.
+ * DVB-T Transmission modes.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-union TransmissionMode {
-    DvbTTransmissionMode dvbT = DvbTTransmissionMode.UNDEFINED;
-    // Reserved for future use.
+@Backing(type = "int")
+enum DvbTTransmissionMode {
+    /** Clean value when default initialized. */
+    UNDEFINED = 0,
+    /** Auto-selected transmission mode. */
+    AUTO,
+    /** Transmission mode of 2k used in DVB-T. */
+    MODE_2K,
+    /** Transmission mode of 4k used in DVB-T. */
+    MODE_4K,
+    /** Transmission mode of 8k used in DVB-T. */
+    MODE_8K,
+    /** Transmission mode of 1k used in DVB-T2. */
+    MODE_1K,
+    /** Transmission mode of 16k used in DVB-T2. */
+    MODE_16K,
+    /** Transmission mode of 32k used in DVB-T2. */
+    MODE_32K,
+    /** Transmission mode of 8k extended used in DVB-T2. */
+    MODE_8K_E,
+    /** Transmission mode of 16k extended used in DVB-T2. */
+    MODE_16K_E,
+    /** Transmission mode of 32k extended used in DVB-T2. */
+    MODE_32K_E,
 }

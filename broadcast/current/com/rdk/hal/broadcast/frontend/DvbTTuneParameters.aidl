@@ -14,13 +14,14 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.Bandwidth;
+import com.rdk.hal.broadcast.frontend.ConstantInt;
+import com.rdk.hal.broadcast.frontend.DvbTBandwidth;
 import com.rdk.hal.broadcast.frontend.DvbTCodingRate;
+import com.rdk.hal.broadcast.frontend.DvbTConstellation;
+import com.rdk.hal.broadcast.frontend.DvbTGuardInterval;
 import com.rdk.hal.broadcast.frontend.DvbTStandard;
-import com.rdk.hal.broadcast.frontend.GuardInterval;
-import com.rdk.hal.broadcast.frontend.Modulation;
+import com.rdk.hal.broadcast.frontend.DvbTTransmissionMode;
 import com.rdk.hal.broadcast.frontend.SignalDetectMode;
-import com.rdk.hal.broadcast.frontend.TransmissionMode;
 
 /**
  * DVB-T-specific tuning parameters.
@@ -38,29 +39,29 @@ parcelable DvbTTuneParameters {
     SignalDetectMode signalDetectMode;
 
     /** The bandwidth to use. */
-    Bandwidth bandwidth;
+    DvbTBandwidth bandwidth;
 
     /** Which DVB-T Standard to use. */
     DvbTStandard dvbTStandard;
 
-    /** The modulation to use. */
-    Modulation subCarrierModulation;
+    /** The constellation to use. */
+    DvbTConstellation constellation;
 
     /** LP and HP coding rates for DVB-T/T2. */
     DvbTCodingRate codingRate;
 
     /** The guard interval to use. */
-    GuardInterval guardInterval;
+    DvbTGuardInterval guardInterval;
 
     /** The transmission mode to use. */
-    TransmissionMode transmissionMode;
+    DvbTTransmissionMode transmissionMode;
 
     /**
      * The plp id for DVB-T2.
      *
      * Use -1 for auto. Range 0-255.
      */
-    int plpId;
+    int plpId = ConstantInt.INVALID_PLP_ID;
 
     /** Reserved for future use. */
     ParcelableHolder extension;

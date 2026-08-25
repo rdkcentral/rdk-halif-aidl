@@ -14,12 +14,12 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.Bandwidth;
 import com.rdk.hal.broadcast.frontend.CodingRate;
+import com.rdk.hal.broadcast.frontend.DvbTBandwidth;
+import com.rdk.hal.broadcast.frontend.DvbTConstellation;
+import com.rdk.hal.broadcast.frontend.DvbTGuardInterval;
 import com.rdk.hal.broadcast.frontend.DvbTStandard;
-import com.rdk.hal.broadcast.frontend.GuardInterval;
-import com.rdk.hal.broadcast.frontend.Modulation;
-import com.rdk.hal.broadcast.frontend.TransmissionMode;
+import com.rdk.hal.broadcast.frontend.DvbTTransmissionMode;
 
 /**
  * DVB-T specific capabilities.
@@ -34,17 +34,17 @@ import com.rdk.hal.broadcast.frontend.TransmissionMode;
 @VintfStability
 parcelable DvbTCapabilities {
     /** Supported bandwidths. */
-    Bandwidth[] bandwidths;
-    /** Supported modulations. */
-    Modulation[] subCarrierModulations;
+    DvbTBandwidth[] bandwidths;
+    /** Supported constellations. */
+    DvbTConstellation[] constellations;
     /** Supported code rates. */
     CodingRate[] codingRates;
     /** Supported standards. */
     DvbTStandard[] dvbTStandards;
     /** Supported guard intervals. */
-    GuardInterval[] guardIntervals;
+    DvbTGuardInterval[] guardIntervals;
     /** Supported transmission mode. */
-    TransmissionMode[] transmissionModes;
+    DvbTTransmissionMode[] transmissionModes;
 
     /** Reserved for future use. */
     ParcelableHolder extension;

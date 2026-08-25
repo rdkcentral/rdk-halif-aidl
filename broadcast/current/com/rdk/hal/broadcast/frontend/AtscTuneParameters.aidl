@@ -14,7 +14,7 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.Modulation;
+import com.rdk.hal.broadcast.frontend.AtscModulation;
 import com.rdk.hal.broadcast.frontend.SignalDetectMode;
 
 /**
@@ -33,7 +33,7 @@ parcelable AtscTuneParameters {
     SignalDetectMode signalDetectMode;
 
     /** The modulation to use. */
-    Modulation modulation;
+    AtscModulation modulation;
 
     /** Reserved for future use. */
     ParcelableHolder extension;
