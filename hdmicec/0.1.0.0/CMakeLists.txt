@@ -74,7 +74,7 @@ if (DEFINED HALIF_INCLUDE_DIR)
 endif()
 
 target_link_directories(${LIB_NAME} PRIVATE
-    "${BINDER_SDK_DIR}/lib/mw"
+    "${BINDER_SDK_DIR}"
 )
 if (DEFINED HALIF_LIB_DIR)
     target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
