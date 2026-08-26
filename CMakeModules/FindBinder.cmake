@@ -21,6 +21,9 @@
 #** ******************************************************************************
 
 include(FindPackageHandleStandardArgs)
+include(CMakeFindDependencyMacro)
+
+find_dependency(AndroidUtils REQUIRED)
 
 # First try pkg-config
 find_package(PkgConfig)
@@ -48,7 +51,8 @@ find_package_handle_standard_args(
 if(Binder_FOUND)
     set(Binder_LIBRARIES ${Binder_LIBRARY})
     set(Binder_INCLUDE_DIRS ${Binder_INCLUDE_DIR})
-    set(Binder_DEFINITIONS ${PC_Binder_CFLAGS_OTHER})
+    set(Binder_COMPILE_OPTIONS ${PC_Binder_CFLAGS_OTHER})
+    set(Binder_LINK_OPTIONS ${PC_Binder_LDFLAGS_OTHER})
 endif()
 
 # Lastly, modern target-style
@@ -58,6 +62,8 @@ if(Binder_FOUND AND NOT TARGET Binder::Binder)
         Binder::Binder PROPERTIES
         IMPORTED_LOCATION "${Binder_LIBRARY}"
         INTERFACE_INCLUDE_DIRECTORIES "${Binder_INCLUDE_DIR}"
-        INTERFACE_COMPILE_DEFINITIONS "${PC_Binder_CFLAGS_OTHER}"
+        INTERFACE_COMPILE_OPTIONS "${Binder_COMPILE_OPTIONS}"
+        INTERFACE_LINK_LIBRARIES "AndroidUtils::AndroidUtils"
+        INTERFACE_LINK_OPTIONS "${Binder_LINK_OPTIONS}"
     )
 endif()

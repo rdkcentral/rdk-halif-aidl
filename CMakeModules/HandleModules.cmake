@@ -83,7 +83,7 @@ function(_create_cmake_helpers MODULE_NAME MODULE_VERSION MODULE_DEPENDENCIES FI
    configure_package_config_file(
         "${CMAKE_SOURCE_DIR}/contrib/Config.cmake.in"
         "${CMAKE_CURRENT_BINARY_DIR}/RdkHalif${MODULE_CAPITALIZED_NAME}Config.cmake"
-        INSTALL_DESTINATION "${CMAKE_INSTALL_FULL_DATADIR}/cmake/RdkHalif${MODULE_CAPITALIZED_NAME}"
+       INSTALL_DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/RdkHalif${MODULE_CAPITALIZED_NAME}"
         PATH_VARS CMAKE_INSTALL_INCLUDEDIR CMAKE_INSTALL_LIBDIR CMAKE_INSTALL_PREFIX
     )
     write_basic_package_version_file(
@@ -94,11 +94,11 @@ function(_create_cmake_helpers MODULE_NAME MODULE_VERSION MODULE_DEPENDENCIES FI
     install(FILES
         "${CMAKE_CURRENT_BINARY_DIR}/RdkHalif${MODULE_CAPITALIZED_NAME}Config.cmake"
         "${CMAKE_CURRENT_BINARY_DIR}/RdkHalif${MODULE_CAPITALIZED_NAME}ConfigVersion.cmake"
-        DESTINATION "${CMAKE_INSTALL_FULL_DATADIR}/cmake/RdkHalif${MODULE_CAPITALIZED_NAME}"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/RdkHalif${MODULE_CAPITALIZED_NAME}"
     )
     install(EXPORT "RdkHalif${MODULE_CAPITALIZED_NAME}Targets"
         NAMESPACE "RdkHalif::"
-        DESTINATION "${CMAKE_INSTALL_FULL_DATADIR}/cmake/RdkHalif${MODULE_CAPITALIZED_NAME}"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/RdkHalif${MODULE_CAPITALIZED_NAME}"
     )
 endfunction()
 
@@ -113,7 +113,7 @@ function(_create_pkgconfig_helpers MODULE_NAME MODULE_VERSION DEPENDENCIES)
         @ONLY
     )
     install(FILES "${CMAKE_CURRENT_BINARY_DIR}/rdk-halif-${MODULE_NAME}.pc"
-        DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}/pkgconfig/"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig/"
     )
 endfunction()
 
@@ -161,11 +161,11 @@ function(add_versioned)
     # Install the library, headers and source files
     install(TARGETS "${TARGET_NAME}"
         EXPORT "RdkHalif${_MODULE_CAPITALIZED_NAME}Targets"
-        ARCHIVE DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}"
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
     )
     install(
         DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/"
-        DESTINATION "${CMAKE_INSTALL_FULL_INCLUDEDIR}"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
         FILES_MATCHING PATTERN "*.h"
     )
     install(

@@ -42,7 +42,8 @@ find_package_handle_standard_args(
 
 if(AndroidUtils_FOUND)
     set(AndroidUtils_LIBRARIES ${AndroidUtils_LIBRARY})
-    set(AndroidUtils_DEFINITIONS ${PC_AndroidUtils_CFLAGS_OTHER})
+    set(AndroidUtils_COMPILE_OPTIONS ${PC_AndroidUtils_CFLAGS_OTHER})
+    set(AndroidUtils_LINK_OPTIONS ${PC_AndroidUtils_LDFLAGS_OTHER})
 endif()
 
 if(AndroidUtils_FOUND AND NOT TARGET AndroidUtils::AndroidUtils)
@@ -50,6 +51,7 @@ if(AndroidUtils_FOUND AND NOT TARGET AndroidUtils::AndroidUtils)
     set_target_properties(
         AndroidUtils::AndroidUtils PROPERTIES
         IMPORTED_LOCATION "${AndroidUtils_LIBRARY}"
-        INTERFACE_COMPILE_DEFINITIONS "${PC_AndroidUtils_CFLAGS_OTHER}"
+        INTERFACE_COMPILE_OPTIONS "${AndroidUtils_COMPILE_OPTIONS}"
+        INTERFACE_LINK_OPTIONS "${AndroidUtils_LINK_OPTIONS}"
     )
 endif()
