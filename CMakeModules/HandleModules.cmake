@@ -102,7 +102,7 @@ function(_create_cmake_helpers MODULE_NAME MODULE_VERSION MODULE_DEPENDENCIES FI
     )
     install(EXPORT "RdkHalif${MODULE_CAPITALIZED_NAME}Targets"
         NAMESPACE "RdkHalif::"
-        DESTINATION "${CMAKE_INSTALL_FULL_DATADIR}/cmake/RdkHalif${MODULE_CAPITALIZED_NAME}"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/RdkHalif${MODULE_CAPITALIZED_NAME}"
     )
 endfunction()
 
