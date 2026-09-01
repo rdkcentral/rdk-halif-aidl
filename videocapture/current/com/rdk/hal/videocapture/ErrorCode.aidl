@@ -16,17 +16,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.capture;
+package com.rdk.hal.videocapture;
 
 /**
- *  @brief     Capture error code definitions.
+ *  @brief     Video capture error code definitions.
  *  @author    Peter Stieglitz
  *  @author    Gerald Weatherup
  */
 
 @VintfStability
 @Backing(type="int")
-enum CaptureErrorCode {
+enum ErrorCode {
 
     /** The platform refused the buffer pool reservation from the video memory region. */
     OUT_OF_MEMORY = 1,
@@ -35,14 +35,14 @@ enum CaptureErrorCode {
      * The requested source is not one this resource supports, or cannot carry a
      * further capture.
      *
-     * @see ICapture.open(), CaptureCapabilities.supportedSources
+     * @see IVideoCapture.openWithDecoder(), IVideoCapture.openWithSink(), Capabilities.supportedSources
      */
     SOURCE_UNAVAILABLE = 2,
 
     /**
      * The bound source is decoding a codec this capture cannot take.
      *
-     * @see CaptureCapabilities.supportedCodecs
+     * @see Capabilities.supportedCodecs
      */
     CODEC_NOT_CAPTURABLE = 3,
 
@@ -53,7 +53,7 @@ enum CaptureErrorCode {
      * The configured capture resolution does not match the resolution the bound
      * source is decoding, on a capture that cannot resize.
      *
-     * @see CaptureCapabilities.resize, Property.WIDTH, Property.HEIGHT
+     * @see Capabilities.resize, Property.WIDTH, Property.HEIGHT
      */
     RESOLUTION_MISMATCH = 5,
 
@@ -67,14 +67,14 @@ enum CaptureErrorCode {
      * The configured pixel format or memory layout cannot be delivered for the bound
      * source, even though the capture declares it.
      *
-     * @see CaptureCapabilities.supportedFormats, ICaptureController.setFormat()
+     * @see Capabilities.supportedFormats, IVideoCaptureController.setFormat()
      */
     FORMAT_UNSUPPORTED = 7,
 
     /**
      * The session's configuration is not a combination this capture can deliver, or is
      * incomplete - `start()` raises this where no format was selected with
-     * `ICaptureController.setFormat()`.
+     * `IVideoCaptureController.setFormat()`.
      */
     INVALID_CONFIGURATION = 8,
 }

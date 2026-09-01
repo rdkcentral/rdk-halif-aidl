@@ -16,10 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.capture;
+package com.rdk.hal.videocapture;
 
-import com.rdk.hal.capture.CaptureErrorCode;
-import com.rdk.hal.capture.State;
+import com.rdk.hal.videocapture.ErrorCode;
+import com.rdk.hal.videocapture.State;
 
 /**
  *  @brief     Event callbacks listener interface from a capture resource.
@@ -28,7 +28,7 @@ import com.rdk.hal.capture.State;
  */
 
 @VintfStability
-oneway interface ICaptureEventListener
+oneway interface IVideoCaptureEventListener
 {
     /**
      * @brief     Called when the capture resource has raised an error that is not tied to a
@@ -36,10 +36,10 @@ oneway interface ICaptureEventListener
      *
      * Examples are video memory exhaustion mid-session and an IOMMU fault.
      *
-     * @param[in] errorCode         A CaptureErrorCode enum value.
+     * @param[in] errorCode         A ErrorCode enum value.
      * @param[in] vendorErrorCode   A vendor specific error code.
      */
-    void onSystemError(in CaptureErrorCode errorCode, in int vendorErrorCode);
+    void onSystemError(in ErrorCode errorCode, in int vendorErrorCode);
 
     /**
      * @brief     Called when the bound source went away - lost through
@@ -47,7 +47,8 @@ oneway interface ICaptureEventListener
      *            closed.
      *
      * The session is implicitly stopped and the capture resource transitions to `READY`.
-     * Binding a source again with `open()` makes the session startable.
+     * Binding a source again with `openWithDecoder()` or `openWithSink()` makes the
+     * session startable.
      */
     void onSourceLost();
 

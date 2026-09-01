@@ -1,9 +1,10 @@
 aidl_interface:
-  name: capture
+  name: videocapture
   srcs:
-    - com/rdk/hal/capture/*.aidl
+    - com/rdk/hal/videocapture/*.aidl
   imports:
     - common@current
     - videodecoder@current
+    - videosink@current
   stability: vintf
   layout: module-local

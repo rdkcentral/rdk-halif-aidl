@@ -16,18 +16,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.capture;
+package com.rdk.hal.videocapture;
 
-import com.rdk.hal.capture.CaptureSource;
-import com.rdk.hal.capture.FormatLayout;
+import com.rdk.hal.videocapture.Source;
+import com.rdk.hal.videocapture.FormatLayout;
 import com.rdk.hal.videodecoder.Codec;
 
 /**
- *  @brief     Capture capabilities definition for a capture resource.
+ *  @brief     Video capture capabilities definition for a capture resource.
  *
  *  Describes what frames this capture resource can deliver and how its buffer pool
  *  behaves. This is the whole of the capture declaration: a client reads it, selects
- *  from it through `ICaptureController.setFormat()`, and the vendor layer configures whatever it needs
+ *  from it through `IVideoCaptureController.setFormat()`, and the vendor layer configures whatever it needs
  *  to on the decoder to satisfy the selection.
  *
  *  @author    Peter Stieglitz
@@ -35,7 +35,7 @@ import com.rdk.hal.videodecoder.Codec;
  */
 
 @VintfStability
-parcelable CaptureCapabilities
+parcelable Capabilities
 {
     /**
      * Indicates the behaviour when every buffer in the pool is locked by the client and
@@ -57,7 +57,7 @@ parcelable CaptureCapabilities
      * find out at `start()`.
      *
      * A client selects one entry and passes it to
-     * `ICaptureController.setFormat()`.
+     * `IVideoCaptureController.setFormat()`.
      *
      * These are the pairs this product can deliver, and the whole of them. A client
      * that can handle none of them cannot capture from this resource.
@@ -94,31 +94,32 @@ parcelable CaptureCapabilities
      * bound source is decoding.
      *
      * When false, the capture's `Property.WIDTH` and `HEIGHT` must equal the resolution the
-     * bound source decodes to, and `ICaptureController.start()` fails with
-     * `CaptureErrorCode.RESOLUTION_MISMATCH` if they do not. Nothing is scaled: the
+     * bound source decodes to, and `IVideoCaptureController.start()` fails with
+     * `ErrorCode.RESOLUTION_MISMATCH` if they do not. Nothing is scaled: the
      * frames the client receives are the frames the decoder produced.
      *
      * Declaring false is what keeps the tested surface small - a capture that never
      * scales has no scaling quality to validate and no resolution permutations to
      * cover.
      *
-     * @see Property.WIDTH, Property.HEIGHT, CaptureErrorCode.RESOLUTION_MISMATCH
+     * @see Property.WIDTH, Property.HEIGHT, ErrorCode.RESOLUTION_MISMATCH
      */
     boolean resize;
 
     /**
      * The pipeline stages this capture resource can bind to.
      *
-     * `ICapture.open()` takes one of these. A stage absent from this list cannot be
+     * `IVideoCapture.openWithDecoder()` and `openWithSink()` bind the matching kinds.
+     * A stage absent from this list cannot be
      * captured on this resource.
      */
-    CaptureSource[] supportedSources;
+    Source[] supportedSources;
 
     /**
      * How many capture sessions a single source can carry at once on this resource.
      *
      * A source already carrying this many captures refuses a further bind with
-     * `CaptureErrorCode.SOURCE_UNAVAILABLE`. One is the common case; a product that
+     * `ErrorCode.SOURCE_UNAVAILABLE`. One is the common case; a product that
      * can fan a stage out to several captures declares more.
      */
     int maxCapturesPerSource;

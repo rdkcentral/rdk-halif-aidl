@@ -39,6 +39,7 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
 | **HAL.VIDEOSINK.7** |  ||
 | **HAL.VIDEOSINK.8** | Video frames decoupled from video planes (destination plane -1) shall continue to be delivered and remain in sync with audio.  When coupled to a video plane they shall immediately become visible and be in lip sync. |To ensure if/when a video sink source is assigned to a video plane it appears in sync with audio. |
 | **HAL.VIDEOSINK.9** | If a client process exits, the Video Sink server shall automatically stop and close any `IVideoSink` instance controlled by that client. ||
+| **HAL.VIDEOSINK.10** | Shall declare in `Capabilities.supportsCapture` whether a capture session may bind to this sink, and where it declares `true` shall serve `com.rdk.hal.videocapture` the frame due for presentation against the attached AV Clock without altering its own display path. | The capture takes a view of the frames this sink has already scheduled; the scheduler stays here. A sink declaring `false` refuses `IVideoCapture.openWithSink()`. |
 
 ## Interface Definition
 

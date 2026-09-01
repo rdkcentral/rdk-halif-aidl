@@ -52,11 +52,11 @@
 #   HALIF_INSTALL_RPATH     - RPATH to embed in the library (default: none, so
 #                             no build paths leak into the shipped .so)
 cmake_minimum_required(VERSION 3.16)
-project(capture-vcurrent-cpp LANGUAGES CXX)
+project(videocapture-vcurrent-cpp LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(LIB_NAME "capture-vcurrent-cpp")
+set(LIB_NAME "videocapture-vcurrent-cpp")
 
 if (NOT DEFINED BINDER_SDK_DIR)
     message(FATAL_ERROR "BINDER_SDK_DIR must be set")
@@ -96,7 +96,7 @@ endif()
 
 file(GLOB_RECURSE SRCS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 if (NOT SRCS)
-    message(FATAL_ERROR "No sources under src/. Run ./build_interfaces.sh capture first to regenerate.")
+    message(FATAL_ERROR "No sources under src/. Run ./build_interfaces.sh videocapture first to regenerate.")
 endif()
 
 add_library(${LIB_NAME} SHARED ${SRCS})

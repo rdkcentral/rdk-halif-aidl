@@ -31,4 +31,9 @@ videosink:
       vsyncDisplayLatencyNs: 2000000
       supportsHoldLastFrame: true
       supportsSecure: true
+      supportsCapture: true   # true: com.rdk.hal.videocapture may bind a capture
+                              # session to this sink via openWithSink(). The sink
+                              # keeps its scheduler and its display path is
+                              # unaffected. false: openWithSink() against this
+                              # sink fails.
 

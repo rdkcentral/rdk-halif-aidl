@@ -16,12 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.capture;
+package com.rdk.hal.videocapture;
 
 /**
  *  @brief     Lifecycle state of a capture resource instance.
  *
- *  Applies to the capture resources reached through `ICaptureManager.getCapture()`.
+ *  Applies to the capture resources reached through `IVideoCaptureManager.getVideoCapture()`.
  *  Plane resources themselves are stateless and are not described by this enum.
  *
  *  @author    Peter Stieglitz
@@ -46,7 +46,7 @@ enum State {
      * `start()` has returned and the pool is not yet delivered.
      *
      * The session is not usable in this state: the addressing arrives at
-     * `ICaptureControllerListener.onPoolReady()`, and reaching STARTED is what says
+     * `IVideoCaptureControllerListener.onPoolReady()`, and reaching STARTED is what says
      * it has. This is the one transition with an end a client can observe, which is
      * what makes it a state rather than an interval nobody sees.
      */

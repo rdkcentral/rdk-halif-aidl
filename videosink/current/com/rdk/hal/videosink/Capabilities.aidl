@@ -65,4 +65,16 @@ parcelable Capabilities
      * content. Mirrors `IVideoSink[i].supportsSecure` in the HFP.
      */
     boolean supportsSecure;
+
+    /**
+     * Indicates whether this Video Sink instance can be the frame source for
+     * a capture session, through
+     * `com.rdk.hal.videocapture.IVideoCapture.openWithSink()`. When `true`, a
+     * capture bound here is served the frame this sink would be presenting
+     * against its attached AV Clock, with the sink's own latency compensation
+     * already applied; the sink keeps the scheduler and continues to render to
+     * its mapped video plane unaffected. When `false`, `openWithSink()` against
+     * this sink fails. Mirrors `IVideoSink[i].supportsCapture` in the HFP.
+     */
+    boolean supportsCapture;
 }

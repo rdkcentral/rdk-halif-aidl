@@ -20,18 +20,23 @@
 # * SPDX-License-Identifier: Apache-2.0
 # */
 
-capture:                        # Component object begins
+videocapture:                        # Component object begins
   interfaceVersion: current
   captures:                     # Resource list - one object per capture this product offers
     - 0:                        # Resource object begins
-        supportedSources:       # Points in the pipeline this capture can bind to
-                                # (enum CaptureSource). Declare what this product can
-                                # do. A session binds to exactly one of them; the list
-                                # is what may be selected, not what is selected.
+        supportedSources:       # Kinds of pipeline stage this capture can bind to
+                                # (enum Source). Declare what this product can do.
+                                # A session binds to one named resource of one of
+                                # these kinds - VIDEO_SINK through openWithSink(),
+                                # VIDEO_DECODER through openWithDecoder(). The
+                                # source resource declares its own side too:
+                                # videosink Capabilities.supportsCapture, and
+                                # videodecoder OperationalMode.GRAPHICS_TEXTURE.
+          - VIDEO_SINK
           - VIDEO_DECODER
-        maxCapturesPerSource: 1 # How many sessions one source can carry at once.
+        maxCapturesPerSource: 1 # How many sessions one source resource can carry at once.
                                 # A further bind is refused with SOURCE_UNAVAILABLE.
-        captureCapabilities:    # Frames and buffer pool for ICapture on this resource.
+        captureCapabilities:    # Frames and buffer pool for IVideoCapture on this resource.
                                 # This is the whole of the capture declaration - the
                                 # vendor layer configures whatever the bound source
                                 # needs to deliver what is declared here.

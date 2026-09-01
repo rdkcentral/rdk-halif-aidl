@@ -16,17 +16,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.capture;
+package com.rdk.hal.videocapture;
 
 /**
  *  @brief     Properties of a capture session.
  *
  *  The shape of the frames a session delivers. Set in the `READY` state before
- *  `ICaptureController.start()`; the pool is built from them.
+ *  `IVideoCaptureController.start()`; the pool is built from them.
  *
  *  A capture owns its own frame size because it is an output in its own right.
- *  The size is bounded by `CaptureCapabilities.maxFrameWidth` and `maxFrameHeight`,
- *  and unless `CaptureCapabilities.resize` is true it must equal the resolution the
+ *  The size is bounded by `Capabilities.maxFrameWidth` and `maxFrameHeight`,
+ *  and unless `Capabilities.resize` is true it must equal the resolution the
  *  bound source is producing.
  *
  *  @author    Gerald Weatherup

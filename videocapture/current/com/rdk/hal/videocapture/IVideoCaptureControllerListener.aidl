@@ -16,10 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.capture;
+package com.rdk.hal.videocapture;
 
-import com.rdk.hal.capture.CaptureErrorCode;
-import com.rdk.hal.capture.VideoBufferView;
+import com.rdk.hal.videocapture.ErrorCode;
+import com.rdk.hal.videocapture.VideoBufferView;
 
 /**
  *  @brief     Callbacks listener interface from a capture session controller.
@@ -28,10 +28,10 @@ import com.rdk.hal.capture.VideoBufferView;
  */
 
 @VintfStability
-oneway interface ICaptureControllerListener
+oneway interface IVideoCaptureControllerListener
 {
     /**
-     * @brief     Called once per session after `ICaptureController.start()` has wired the
+     * @brief     Called once per session after `IVideoCaptureController.start()` has wired the
      *            source into the pool, and before any `onFrameAvailable()`.
      *
      * Delivers the whole pool: one `VideoBufferView` per buffer, carrying the file
@@ -63,7 +63,7 @@ oneway interface ICaptureControllerListener
      * @brief     Called when a buffer has transitioned to Ready.
      *
      * Implementations may coalesce these callbacks. A client that pulls at a known cadence
-     * can ignore this callback; `ICaptureController.acquireLatestFrame()` is complete
+     * can ignore this callback; `IVideoCaptureController.acquireLatestFrame()` is complete
      * without it.
      */
     void onFrameAvailable();
@@ -79,10 +79,10 @@ oneway interface ICaptureControllerListener
      * The session stops delivering frames. The client stops and closes it, or corrects
      * the condition and starts again.
      *
-     * @param[in] errorCode         A CaptureErrorCode enum value.
+     * @param[in] errorCode         A ErrorCode enum value.
      * @param[in] vendorErrorCode   A vendor specific error code.
      *
-     * @see CaptureErrorCode
+     * @see ErrorCode
      */
-    void onCaptureError(in CaptureErrorCode errorCode, in int vendorErrorCode);
+    void onCaptureError(in ErrorCode errorCode, in int vendorErrorCode);
 }

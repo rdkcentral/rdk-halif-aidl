@@ -16,17 +16,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.capture;
+package com.rdk.hal.videocapture;
 
-import com.rdk.hal.capture.FormatLayout;
-import com.rdk.hal.capture.VideoFrameView;
-import com.rdk.hal.capture.Property;
+import com.rdk.hal.videocapture.FormatLayout;
+import com.rdk.hal.videocapture.VideoFrameView;
+import com.rdk.hal.videocapture.Property;
 import com.rdk.hal.PropertyValue;
 
 /**
- *  @brief     Capture session controller interface.
+ *  @brief     Video capture session controller interface.
  *
- *  Returned by `ICapture.open()` and valid until `ICapture.close()`.
+ *  Returned by `IVideoCapture.openWithDecoder()` or `IVideoCapture.openWithSink()`, and
+ *  valid until `IVideoCapture.close()`.
  *
  *  <h3>Frame flow</h3>
  *  Each pool buffer is Free, Ready or Locked. The source's decoder writes into Free
@@ -44,11 +45,11 @@ import com.rdk.hal.PropertyValue;
  *
  *  Decode proceeds at full rate regardless of how sparsely or slowly the client acquires.
  *  The behaviour when every buffer is Locked is declared per product in
- *  `CaptureCapabilities.stallsWhenPoolExhausted`.
+ *  `Capabilities.stallsWhenPoolExhausted`.
  *
  *  <h3>Buffer addressing</h3>
  *  Every buffer's file descriptors, offsets, strides, size and format are delivered once
- *  at `ICaptureControllerListener.onPoolReady()`, as one `VideoBufferView` per buffer.
+ *  at `IVideoCaptureControllerListener.onPoolReady()`, as one `VideoBufferView` per buffer.
  *  A frame therefore carries only its buffer index and presentation time, and a client
  *  resolves it against the pool it already holds.
  *
@@ -64,7 +65,7 @@ import com.rdk.hal.PropertyValue;
  */
 
 @VintfStability
-interface ICaptureController
+interface IVideoCaptureController
 {
     /**
      * Starts the capture session.
@@ -77,13 +78,13 @@ interface ICaptureController
      * pair, so a session that has selected none has nothing to size a pool for.
      *
      * The capture resource transitions to a `STARTING` state and then a `STARTED` state,
-     * and `ICaptureControllerListener.onPoolReady()` is raised once the pool is addressable.
+     * and `IVideoCaptureControllerListener.onPoolReady()` is raised once the pool is addressable.
      *
      * Whatever configuration the bound source needs in order to deliver those
      * frames is applied by the vendor layer here, over its own internal path. A client
      * arranges nothing on the decoder.
      *
-     * The codec being decoded is checked here rather than at `open()`, because a source
+     * The codec being decoded is checked here rather than at bind time, because a source
      * is opened for a codec independently of when a capture binds to it.
      *
      * A source may already be decoding when this is called. Frames it produced before
@@ -94,18 +95,18 @@ interface ICaptureController
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the READY state.
-     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC with a CaptureErrorCode value:
+     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC with a ErrorCode value:
      *            `OUT_OF_MEMORY` if the pool reservation was refused,
-     *            `SOURCE_UNAVAILABLE` if the bound source became unavailable since `open()`,
+     *            `SOURCE_UNAVAILABLE` if the bound source became unavailable since the bind,
      *            `CODEC_NOT_CAPTURABLE` if the bound source is decoding a codec outside
-     *            `CaptureCapabilities.supportedCodecs`,
+     *            `Capabilities.supportedCodecs`,
      *            `INVALID_CONFIGURATION` if no format was selected with `setFormat()`,
      *            `RESOLUTION_MISMATCH` if the capture declares `resize` false and the
      *            frame size does not equal the decoded resolution.
      *
      * @pre The resource must be in State::READY.
      *
-     * @see setFormat(), stop(), ICaptureControllerListener.onPoolReady()
+     * @see setFormat(), stop(), IVideoCaptureControllerListener.onPoolReady()
      */
     void start();
 
@@ -176,7 +177,7 @@ interface ICaptureController
      *
      * @pre The resource must be in State::STARTED.
      *
-     * @see releaseFrame(), ICaptureControllerListener.onPoolReady()
+     * @see releaseFrame(), IVideoCaptureControllerListener.onPoolReady()
      */
     @nullable VideoFrameView acquireLatestFrame(in int releaseBufferIndex);
 
@@ -207,7 +208,7 @@ interface ICaptureController
     /**
      * Selects the pixel format and memory layout the session delivers.
      *
-     * Takes one entry of `CaptureCapabilities.supportedFormats`, which pairs a
+     * Takes one entry of `Capabilities.supportedFormats`, which pairs a
      * format with a layout valid for it.
      *
      * This is the client's decision. `DRM_FORMAT_MOD_LINEAR` serves a client that
@@ -219,7 +220,7 @@ interface ICaptureController
      * can deliver is whatever it declares, so there is no pair the interface could
      * assume on the client's behalf.
      *
-     * @param[in] format : one entry of `CaptureCapabilities.supportedFormats`.
+     * @param[in] format : one entry of `Capabilities.supportedFormats`.
      * @returns boolean : true on success.
      *
      * @pre The resource must be in State::READY.
@@ -229,7 +230,7 @@ interface ICaptureController
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE if called in a state other
      *            than READY.
      *
-     * @see CaptureCapabilities.supportedFormats, FormatLayout
+     * @see Capabilities.supportedFormats, FormatLayout
      */
     boolean setFormat(in FormatLayout format);
 
@@ -254,7 +255,7 @@ interface ICaptureController
      *
      * @pre The session must be in State::READY.
      *
-     * @see ICapture.getProperty(), Property, CaptureCapabilities
+     * @see IVideoCapture.getProperty(), Property, Capabilities
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);
 

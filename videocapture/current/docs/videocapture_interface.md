@@ -7,11 +7,11 @@ A capture is an output in its own right, bound to a stage of the pipeline. This 
 !!! info References
     |||
     |-|-|
-    |**Interface Definition**|[capture/current/com/rdk/hal/capture](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/capture/current/com/rdk/hal/capture)|
+    |**Interface Definition**|[videocapture/current/com/rdk/hal/videocapture](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videocapture/current/com/rdk/hal/videocapture)|
     |**Interface Version**|`current`|
-    |**Package**|`com.rdk.hal.capture`|
+    |**Package**|`com.rdk.hal.videocapture`|
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
-    |**VTS Tests**| [https://github.com/rdkcentral/rdk-halif-binder-test-capture](https://github.com/rdkcentral/rdk-halif-binder-test-capture) |
+    |**VTS Tests**| [https://github.com/rdkcentral/rdk-halif-binder-test-videocapture](https://github.com/rdkcentral/rdk-halif-binder-test-videocapture) |
 
 ## Related Pages
 
@@ -21,23 +21,25 @@ A capture is an output in its own right, bound to a stage of the pipeline. This 
 
 ## Functionality
 
-A capture takes frames from one stage of the pipeline and delivers them into a pool of Dma-Buf buffers the client imports as GPU textures. It is an output in its own right, not a destination inside another module's model: it is discovered through `ICaptureManager.getCaptureIds()`, addressed by its own `ICapture.Id`, and it carries its own frame size.
+A capture takes frames from one stage of the pipeline and delivers them into a pool of Dma-Buf buffers the client imports as GPU textures. It is an output in its own right, not a destination inside another module's model: it is discovered through `IVideoCaptureManager.getVideoCaptureIds()`, addressed by its own `IVideoCapture.Id`, and it carries its own frame size.
 
-**The binding is the session.** `ICapture.open()` names the `CaptureSource` to take frames from — `VIDEO_DECODER` or `VIDEO_SINK` — and that stage is what the session delivers for its lifetime. A source may have a display path, a capture, both or neither; none of those is a special case, and a capture never needs a display destination in order to exist.
+**The binding is the session.** `IVideoCapture.openWithDecoder()` and `IVideoCapture.openWithSink()` each name the resource to take frames from — a particular `IVideoDecoder` or a particular `IVideoSink`, by its own ID — and that resource is what the session delivers for its lifetime. A source may have a display path, a capture, both or neither; none of those is a special case, and a capture never needs a display destination in order to exist.
+
+**The two attach modes differ in what a frame means, which is why they are two calls.** A decoder-attached session delivers the most recently decoded frame with no clock applied — nothing dropped for being late, nothing held for being early — and the client schedules on `presentationTimeNs` itself. A sink-attached session delivers the frame the sink would be presenting against its attached AV Clock, with audio and graphics latency compensation already applied. A client that needs AV-synced frames binds to a sink.
 
 **What flows through the bound stage is decided by the input feed**, exactly as it always was. A capture neither selects nor changes it. Where a capture attaches and what content is playing are different axes, and a capture only chooses the first.
 
-**Binding takes a view, it does not divert.** Anything already consuming the stage carries on unaffected, which is what lets a capture attach to a pipeline that is already running. `CaptureCapabilities.maxCapturesPerSource` declares how many captures one stage can carry; a bind past that limit is refused with `CaptureErrorCode.SOURCE_UNAVAILABLE`.
+**Binding takes a view, it does not divert.** Anything already consuming the stage carries on unaffected, which is what lets a capture attach to a pipeline that is already running. `Capabilities.maxCapturesPerSource` declares how many captures one stage can carry; a bind past that limit is refused with `ErrorCode.SOURCE_UNAVAILABLE`.
 
 The `IVideoDecoder` contract is unchanged — the decoder does not know where its output goes, and nothing is set on it to arrange capture.
 
-A capture session is configured in two places, both on the capture itself: the frame size through `ICaptureController.setProperty()` with `Property.WIDTH` and `Property.HEIGHT`, and the pixel format and memory layout with one `ICaptureController.setFormat()` call. Pool depth is not configured at all — the platform calibrates it. The vendor layer arranges whatever the bound source requires to deliver the result, over whatever internal path it has.
+A capture session is configured in two places, both on the capture itself: the frame size through `IVideoCaptureController.setProperty()` with `Property.WIDTH` and `Property.HEIGHT`, and the pixel format and memory layout with one `IVideoCaptureController.setFormat()` call. Pool depth is not configured at all — the platform calibrates it. The vendor layer arranges whatever the bound source requires to deliver the result, over whatever internal path it has.
 
-**What a capture can deliver is declared in `CaptureCapabilities`.** `supportedSources` lists the stages it can bind to, `supportedCodecs` the codecs it can capture, `supportedFormats` the pixel-format and memory-layout pairs, `maxFrameWidth` and `maxFrameHeight` the frame sizes, `maxCapturesPerSource` the fan-out, and `stallsWhenPoolExhausted` what happens when every buffer is held. A product that can decode to texture declares a capture, and that declaration is the whole of what is on offer.
+**What a capture can deliver is declared in `Capabilities`.** `supportedSources` lists the stages it can bind to, `supportedCodecs` the codecs it can capture, `supportedFormats` the pixel-format and memory-layout pairs, `maxFrameWidth` and `maxFrameHeight` the frame sizes, `maxCapturesPerSource` the fan-out, and `stallsWhenPoolExhausted` what happens when every buffer is held. A product that can decode to texture declares a capture, and that declaration is the whole of what is on offer.
 
-**The client makes one decision.** It picks a row of `supportedFormats` and passes it to `ICaptureController.setFormat()`. Everything else is either calibrated by the platform and declared, or is a property of the capture set directly on it.
+**The client makes one decision.** It picks a row of `supportedFormats` and passes it to `IVideoCaptureController.setFormat()`. Everything else is either calibrated by the platform and declared, or is a property of the capture set directly on it.
 
-A decoder opened for a codec outside `supportedCodecs` decodes and displays normally — it just cannot feed a capture, and `start()` fails with `CaptureErrorCode.CODEC_NOT_CAPTURABLE` if a session is bound to it.
+A decoder opened for a codec outside `supportedCodecs` decodes and displays normally — it just cannot feed a capture, and `start()` fails with `ErrorCode.CODEC_NOT_CAPTURABLE` if a session is bound to it.
 
 ### Where this interface sits
 
@@ -55,7 +57,7 @@ flowchart TD
         MW["Middleware<br/>admits the session, maps the source,<br/>holds the HAL binder"]
 
         subgraph Vendor["Vendor Layer"]
-            Capture["ICapture / ICaptureController"]
+            Capture["IVideoCapture / IVideoCaptureController"]
             Decoder["Bound source"]
             Cap["Capture"]
             Pool["Dma-Buf pool"]
@@ -70,19 +72,20 @@ flowchart TD
     Pool -. imported as GPU textures .-> App
 ```
 
-**This interface does not know which of them is its client.** The HAL contract is the same whether the middleware relays frames onward or a consumer binds `ICapture` itself; only the holder of the per-frame binding changes, and that decision sits above this repository. Binding directly halves the per-frame IPC hops, and each hop costs an `SCM_RIGHTS` pass of a Dma-Buf descriptor — but it requires a binder into the container the consumer runs in, which is a platform packaging decision rather than an interface one. It also has to answer which decoder instance a consumer may capture from, and how a binding the middleware does not hold is invalidated when the decoder is reclaimed under contention.
+**This interface does not know which of them is its client.** The HAL contract is the same whether the middleware relays frames onward or a consumer binds `IVideoCapture` itself; only the holder of the per-frame binding changes, and that decision sits above this repository. Binding directly halves the per-frame IPC hops, and each hop costs an `SCM_RIGHTS` pass of a Dma-Buf descriptor — but it requires a binder into the container the consumer runs in, which is a platform packaging decision rather than an interface one. It also has to answer which decoder instance a consumer may capture from, and how a binding the middleware does not hold is invalidated when the decoder is reclaimed under contention.
 
 ## Buffers and image planes
 
 **An image plane is a colour component of one frame**, and it is the only sense of "plane" this page uses. `NV12` stores a frame as two separate blocks of bytes: luma (Y), and interleaved chroma (UV). DRM and EGL both call these planes, which is where `planeFds[]`, `planeOffsets[]` and `planeStrides[]` take their name — element N feeds `EGL_DMA_BUF_PLANE<N>_FD_EXT`. The name is inherited from the import API rather than chosen here.
 
-A capture is addressed by its own `ICapture.Id`, and the frames it delivers each have one or more image planes inside them.
+A capture is addressed by its own `IVideoCapture.Id`, and the frames it delivers each have one or more image planes inside them.
 
 ### How it nests
 
 ```text
-capture                  ICapture.Id          one capture resource
- └─ session              open(source)         bound to one CaptureSource
+capture                  IVideoCapture.Id          one capture resource
+ └─ session              openWithDecoder()    bound to one IVideoDecoder
+                         openWithSink()       or to one IVideoSink
      └─ pool             N buffers            allocated at start()
          ├─ buffer       bufferIndex = 0      one frame lands in one buffer
          │   ├─ image plane 0 (Y)    fd, offset, stride, length
@@ -94,8 +97,9 @@ capture                  ICapture.Id          one capture resource
 
 | Identifier | Identifies | Where it appears |
 |---|---|---|
-| `ICapture.Id` | the capture resource | `ICaptureManager.getCaptureIds()`, `getCapture()` |
-| `CaptureSource` | the stage the session takes frames from | `ICapture.open()`, `CaptureCapabilities.supportedSources` |
+| `IVideoCapture.Id` | the capture resource | `IVideoCaptureManager.getVideoCaptureIds()`, `getVideoCapture()` |
+| `Source` | the kind of stage a capture can take frames from | `Capabilities.supportedSources`, `IVideoCaptureManager.getSupportedSources()` |
+| `IVideoDecoder.Id` / `IVideoSink.Id` | which decoder or sink this session is bound to | `IVideoCapture.openWithDecoder()`, `IVideoCapture.openWithSink()` |
 | `bufferIndex` | which pool buffer holds this frame | `VideoFrameView`, `releaseFrame()` |
 | `(fd, offset)` | where one image plane's bytes live | `planeFds[N]`, `planeOffsets[N]` |
 
@@ -129,56 +133,61 @@ Per frame, `acquireLatestFrame()` returns only a `bufferIndex` and a timestamp. 
 
 |#|Requirement | Comments|
 |-|------------|---------|
-| **HAL.CAPTURE.1** | Shall provide a decoded frame capture API via `ICapture`, delivering the frames of the bound `CaptureSource` into a Dma-Buf buffer pool.| The capture is found through `ICaptureManager` and the source is chosen at `ICapture.open()`. The binding is the session. |
-| **HAL.CAPTURE.2** | Shall declare in `CaptureCapabilities.supportedCodecs` the codecs whose decoded frames a capture can deliver.| The list is what the capture can take, not what a product must offer. A decoder opened for a codec outside it decodes and displays normally; it just cannot feed this capture. |
-| **HAL.CAPTURE.3** | Shall deliver captured frames in the pixel format, memory layout and size the session was configured with, as Dma-Bufs whose per-plane file descriptors, offsets and strides address the actual buffer layout and import directly through `EGL_EXT_image_dma_buf_import` without translation.| The vendor layer configures whatever the bound decoder requires to deliver them, over its own internal path. |
-| **HAL.CAPTURE.4** | Shall deliver the addressing of every pool buffer once at `ICaptureControllerListener.onPoolReady()`, and thereafter identify each frame by buffer index and presentation time alone.| A buffer's address and shape do not change during a session. Re-sending file descriptors at frame rate would move them across the binder boundary to repeat what was already said. |
-| **HAL.CAPTURE.5** | Shall reject a `FormatLayout` outside `CaptureCapabilities.supportedFormats` at `setFormat()`, and shall fail `ICaptureController.start()` with a `CaptureErrorCode` when the pool cannot be reserved or the bound source is decoding a codec outside `CaptureCapabilities.supportedCodecs`, in no case falling back to display output.| The failure belongs where it is still a configuration error, not a stream of wrong pixels. |
-| **HAL.CAPTURE.6** | Shall deliver captured frames at the resolution the stream decodes to and in its source colorimetry, applying no scaling, rotation, crop, colour conversion, tone-mapping or gamma adjustment.| Shape and colour belong to the consumer, which applies them per frame and may change them on any frame. A transform applied here would have to be undone, and one the consumer cannot undo makes the frame unusable. On a capture declaring `CaptureCapabilities.resize` false, its `Property.WIDTH` and `HEIGHT` must equal the decoded resolution. |
-| **HAL.CAPTURE.7** | Shall drop no more than one frame per 15 seconds of capture, at every resolution from 144p to 2160p, while the client acquires and releases at the presentation cadence.| The capture path is not permitted to lose frames the display path would have shown. A client that stops releasing is not covered by this — that case is `CaptureCapabilities.stallsWhenPoolExhausted`. |
-| **HAL.CAPTURE.8** | Shall carry each frame's presentation time unaltered in `VideoFrameView.presentationTimeNs`.| It is the frame's only timing reference. A captured frame goes to the client's scene rather than to the display, so the client presents it against the clock its audio path already runs on. |
-| **HAL.CAPTURE.9** | Shall allow decode to proceed at full rate independently of the rate at which the client acquires frames, and shall never re-deliver a frame already returned by `acquireLatestFrame()`.|
-| **HAL.CAPTURE.10** | Shall return from `acquireLatestFrame()` the frame due for presentation with audio latency and AV-sync correction already applied, dropping frames whose presentation time has passed and holding frames whose time has not yet come.| A client that draws each frame on receipt is then in sync without computing anything. |
-| **HAL.CAPTURE.11** | Shall release the buffer named in `acquireLatestFrame()`'s `releaseBufferIndex` before acquiring the next frame, so a client redrawing at frame rate makes one call per frame rather than two.| At 60 Hz the second round trip is pure overhead in the hot path. |
+| **HAL.VIDEOCAPTURE.1** | Shall provide a decoded frame capture API via `IVideoCapture`, delivering the frames of the bound source into a Dma-Buf buffer pool.| The capture is found through `IVideoCaptureManager`, and the source resource is named by its own ID at `IVideoCapture.openWithDecoder()` or `IVideoCapture.openWithSink()`. The binding is the session. |
+| **HAL.VIDEOCAPTURE.2** | Shall declare in `Capabilities.supportedCodecs` the codecs whose decoded frames a capture can deliver.| The list is what the capture can take, not what a product must offer. A decoder opened for a codec outside it decodes and displays normally; it just cannot feed this capture. |
+| **HAL.VIDEOCAPTURE.3** | Shall deliver captured frames in the pixel format, memory layout and size the session was configured with, as Dma-Bufs whose per-plane file descriptors, offsets and strides address the actual buffer layout and import directly through `EGL_EXT_image_dma_buf_import` without translation.| The vendor layer configures whatever the bound decoder requires to deliver them, over its own internal path. |
+| **HAL.VIDEOCAPTURE.4** | Shall deliver the addressing of every pool buffer once at `IVideoCaptureControllerListener.onPoolReady()`, and thereafter identify each frame by buffer index and presentation time alone.| A buffer's address and shape do not change during a session. Re-sending file descriptors at frame rate would move them across the binder boundary to repeat what was already said. |
+| **HAL.VIDEOCAPTURE.5** | Shall reject a `FormatLayout` outside `Capabilities.supportedFormats` at `setFormat()`, and shall fail `IVideoCaptureController.start()` with a `ErrorCode` when the pool cannot be reserved or the bound source is decoding a codec outside `Capabilities.supportedCodecs`, in no case falling back to display output.| The failure belongs where it is still a configuration error, not a stream of wrong pixels. |
+| **HAL.VIDEOCAPTURE.6** | Shall deliver captured frames at the resolution the stream decodes to and in its source colorimetry, applying no scaling, rotation, crop, colour conversion, tone-mapping or gamma adjustment.| Shape and colour belong to the consumer, which applies them per frame and may change them on any frame. A transform applied here would have to be undone, and one the consumer cannot undo makes the frame unusable. On a capture declaring `Capabilities.resize` false, its `Property.WIDTH` and `HEIGHT` must equal the decoded resolution. |
+| **HAL.VIDEOCAPTURE.7** | Shall drop no more than one frame per 15 seconds of capture, at every resolution from 144p to 2160p, while the client acquires and releases at the presentation cadence.| The capture path is not permitted to lose frames the display path would have shown. A client that stops releasing is not covered by this — that case is `Capabilities.stallsWhenPoolExhausted`. |
+| **HAL.VIDEOCAPTURE.8** | Shall carry each frame's presentation time unaltered in `VideoFrameView.presentationTimeNs`, under both attach modes.| The time the source attached to the frame, neither recomputed nor compensated. Under decoder-attach it is the client's only timing reference and the client schedules against it. Under sink-attach the scheduling has already been done (**HAL.VIDEOCAPTURE.10**) and it is carried for a client placing the frame on a timeline of its own. |
+| **HAL.VIDEOCAPTURE.9** | Shall allow decode to proceed at full rate independently of the rate at which the client acquires frames, and shall never re-deliver a frame already returned by `acquireLatestFrame()`.|
+| **HAL.VIDEOCAPTURE.10** | On a session opened with `openWithSink()`, shall return from `acquireLatestFrame()` the frame due for presentation against the AV Clock attached to that sink, with audio latency and AV-sync correction already applied, dropping frames whose presentation time has passed and holding frames whose time has not yet come.| A client that draws each frame on receipt is then in sync without computing anything. The sink is where the estate's AV-sync scheduling already lives; capture is a second consumer of the frames it has scheduled, and adds no scheduler of its own. Applies to sink-attach only — the decoder-attach contract is **HAL.VIDEOCAPTURE.12**. |
+| **HAL.VIDEOCAPTURE.11** | Shall release the buffer named in `acquireLatestFrame()`'s `releaseBufferIndex` before acquiring the next frame, so a client redrawing at frame rate makes one call per frame rather than two.| At 60 Hz the second round trip is pure overhead in the hot path. |
+| **HAL.VIDEOCAPTURE.12** | On a session opened with `openWithDecoder()`, shall return from `acquireLatestFrame()` the most recently decoded frame the decoder has emitted since the last acquire, applying no AV-sync, audio-latency or graphics-latency correction, dropping no frame for being late and holding none for being early.| There is no presentation reference at the decoder to be late or early against, and none is added: the decoder gains no clock, no scheduler and no coordination with the audio path. The client schedules from `presentationTimeNs` on whatever timeline it is drawing to. Applies to decoder-attach only — the sink-attach contract is **HAL.VIDEOCAPTURE.10**. |
+| **HAL.VIDEOCAPTURE.13** | Shall accept `openWithSink()` only against a video sink declaring `com.rdk.hal.videosink.Capabilities.supportsCapture` true, and `openWithDecoder()` only where `IVideoDecoderManager.getSupportedOperationalModes()` contains `OperationalMode.GRAPHICS_TEXTURE`; and shall declare in `Capabilities.supportedSources` which of the two attach modes this capture offers.| The declaration is symmetric: each source-host HAL says whether it can be captured from, and the capture says which kinds of source it can bind to. A client discovers a valid pairing without trying it. |
 
 ## Interface Definition
 
-All of these are in `com.rdk.hal.capture`.
+All of these are in `com.rdk.hal.videocapture`.
 
 |Interface Definition File | Description|
 |--------------------------|------------|
-| `ICapture.aidl` | Frame capture interface for one capture resource.|
-| `ICaptureController.aidl` | Capture session controller returned by `ICapture.open()`.|
-| `ICaptureControllerListener.aidl` | Listener interface for buffer pool and frame callbacks from a capture session.|
-| `ICaptureEventListener.aidl` | Listener interface for capture resource state and error callbacks.|
-| `CaptureCapabilities.aidl` | Parcelable describing what a capture resource can deliver.|
-| `CaptureErrorCode.aidl` | Enum list of capture error codes.|
+| `IVideoCapture.aidl` | Frame capture interface for one capture resource.|
+| `IVideoCaptureManager.aidl` | Manager interface listing the capture resources a product offers and the sources they can bind to.|
+| `IVideoCaptureController.aidl` | Capture session controller returned by `IVideoCapture.openWithDecoder()` or `IVideoCapture.openWithSink()`.|
+| `IVideoCaptureControllerListener.aidl` | Listener interface for buffer pool and frame callbacks from a capture session.|
+| `IVideoCaptureEventListener.aidl` | Listener interface for capture resource state and error callbacks.|
+| `Capabilities.aidl` | Parcelable describing what a capture resource can deliver.|
+| `ErrorCode.aidl` | Enum list of capture error codes.|
 | `FormatLayout.aidl` | Parcelable pairing a DRM FOURCC with a memory layout valid for it.|
 | `VideoBufferView.aidl` | Parcelable describing the Dma-Buf addressing of one capture pool buffer.|
 | `VideoFrameView.aidl` | Parcelable identifying a single captured frame by buffer index and presentation time.|
+| `Source.aidl` | Enum naming the kinds of pipeline stage a capture can bind to.|
+| `Property.aidl` | Enum list of capture frame properties.|
 | `State.aidl` | Enum list of capture resource lifecycle states.|
 
 ## Product Customization
 
-A product declares each capture in `hfp-capture.yaml`: `supportedSources` and `maxCapturesPerSource`, and under `captureCapabilities` the `supportedFormats` pairs, `supportedCodecs`, `maxFrameWidth` and `maxFrameHeight`, `stallsWhenPoolExhausted` and `resize`. Pool depth is not declared — the platform calibrates it and the client counts what `onPoolReady()` delivers. A product with no capture declares none, and `ICaptureManager.getCaptureIds()` returns an empty array.
+A product declares each capture in `hfp-videocapture.yaml`: `supportedSources` and `maxCapturesPerSource`, and under `captureCapabilities` the `supportedFormats` pairs, `supportedCodecs`, `maxFrameWidth` and `maxFrameHeight`, `stallsWhenPoolExhausted` and `resize`. Pool depth is not declared — the platform calibrates it and the client counts what `onPoolReady()` delivers. A product with no capture declares none, and `IVideoCaptureManager.getVideoCaptureIds()` returns an empty array.
 
 ## System Context
 
-A capture is reached through its own manager. `ICaptureManager` lists the capture resources and hands out an `ICapture`; `open()` binds a source and returns the controller; everything after that is the session.
+A capture is reached through its own manager. `IVideoCaptureManager` lists the capture resources and hands out an `IVideoCapture`; `openWithDecoder()` or `openWithSink()` binds one named source resource and returns the controller; everything after that is the session.
 
 ```mermaid
 flowchart TD
     Client[Middleware / Application]
-    MGR[ICaptureManager]
-    CAP[ICapture]
-    CTRL[ICaptureController]
-    L[ICaptureControllerListener]
+    MGR[IVideoCaptureManager]
+    CAP[IVideoCapture]
+    CTRL[IVideoCaptureController]
+    L[IVideoCaptureControllerListener]
     POOL[Dma-Buf pool]
-    DEC[Bound CaptureSource]
+    DEC[Bound Source]
 
-    Client -->|getCaptureIds / getCapture| MGR
+    Client -->|getVideoCaptureIds / getVideoCapture| MGR
     MGR --> CAP
-    CAP -->|open with a CaptureSource| CTRL
+    CAP -->|open with a Source| CTRL
     Client -->|setFormat / start / stop| CTRL
     Client -->|acquireLatestFrame / releaseFrame| CTRL
     CTRL --> L
@@ -205,25 +214,27 @@ flowchart TD
 
 
 1. Open the capture resource:
-Call `ICaptureManager.getCaptureIds()` and take an `ICapture` with `getCapture(captureId, captureEventListener)`. An empty array means the product does not support decode-to-texture.
+Call `IVideoCaptureManager.getVideoCaptureIds()` and take an `IVideoCapture` with `getVideoCapture(captureId, captureEventListener)`. An empty array means the product does not support decode-to-texture.
 2. Read what the capture can deliver:
-Call `ICapture.getCapabilities()` for the capturable codecs, the supported pixel formats and modifiers, the maximum frame size and buffer count, and the behaviour when every buffer is locked.
+Call `IVideoCapture.getCapabilities()` for the capturable codecs, the supported pixel formats and modifiers, the maximum frame size and buffer count, and the behaviour when every buffer is locked.
 3. Bind a source, which opens the session:
-Call `ICapture.open(captureSource, captureControllerListener)` with one of `CaptureCapabilities.supportedSources`. The binding and the session are the same thing — the stage named here is what this session delivers until `close()`. The resource transitions `CLOSED` → `READY`. It fails with `CaptureErrorCode.SOURCE_UNAVAILABLE` if the stage is not one this resource supports, or already carries `maxCapturesPerSource` sessions.
+Call `IVideoCapture.openWithSink(videoSinkId, captureControllerListener)` or `IVideoCapture.openWithDecoder(videoDecoderId, captureControllerListener)`, naming the sink or decoder by its own ID. The binding and the session are the same thing — the resource named here is what this session delivers until `close()`, and which call was used is what decides whether frames arrive AV-synced (**HAL.VIDEOCAPTURE.10**) or as decoded (**HAL.VIDEOCAPTURE.12**). The resource transitions `CLOSED` → `READY`. It fails with `EX_ILLEGAL_ARGUMENT` if the ID names nothing, or the sink declares `supportsCapture` false, or the platform does not offer `OperationalMode.GRAPHICS_TEXTURE`; and with `ErrorCode.SOURCE_UNAVAILABLE` if that kind of source is not in `Capabilities.supportedSources`, or that resource already carries `maxCapturesPerSource` sessions.
+
+A client finds a valid pairing before opening: enumerate `IVideoSinkManager.getVideoSinkIds()` for sinks whose `Capabilities.supportsCapture` is true, or check `IVideoDecoderManager.getSupportedOperationalModes()` for `GRAPHICS_TEXTURE`, against the kinds this capture lists in `Capabilities.supportedSources`.
 4. Configure the session:
-Call `ICaptureController.setFormat()` while in `READY` with one row of `CaptureCapabilities.supportedFormats`. There is no default — what a capture delivers is whatever it declares, so a format is selected before `start()`. Frame size is the capture's own `Property.WIDTH` and `HEIGHT`, set with `ICaptureController.setProperty()`; where the capture declares `resize: false` they must equal what the bound source is producing. Pool depth is not a client choice and is not declared — the platform calibrates it from the throughput it can sustain, and the client sees how many buffers it got when `onPoolReady()` delivers them.
+Call `IVideoCaptureController.setFormat()` while in `READY` with one row of `Capabilities.supportedFormats`. There is no default — what a capture delivers is whatever it declares, so a format is selected before `start()`. Frame size is the capture's own `Property.WIDTH` and `HEIGHT`, set with `IVideoCaptureController.setProperty()`; where the capture declares `resize: false` they must equal what the bound source is producing. Pool depth is not a client choice and is not declared — the platform calibrates it from the throughput it can sustain, and the client sees how many buffers it got when `onPoolReady()` delivers them.
 5. Start:
-Call `ICaptureController.start()`. A format must have been selected first — there is no default pair, so a session that selected none fails here with `CaptureErrorCode.INVALID_CONFIGURATION`. The pool is reserved, the vendor layer configures the bound source and wires it into the pool, the resource transitions `READY` → `STARTING` → `STARTED`, and `ICaptureControllerListener.onPoolReady()` delivers the pool addressing. The codec is checked here, because a decoder is opened for a codec independently of when a capture binds to it.
+Call `IVideoCaptureController.start()`. A format must have been selected first — there is no default pair, so a session that selected none fails here with `ErrorCode.INVALID_CONFIGURATION`. The pool is reserved, the vendor layer configures the bound source and wires it into the pool, the resource transitions `READY` → `STARTING` → `STARTED`, and `IVideoCaptureControllerListener.onPoolReady()` delivers the pool addressing. The codec is checked here, because a decoder is opened for a codec independently of when a capture binds to it.
 6. Pull frames:
-Call `ICaptureController.acquireLatestFrame(releaseBufferIndex)`, passing the buffer just finished with — or `VideoFrameView.NO_BUFFER` on the first call. It returns the frame due for presentation, `null` rather than blocking when none is due, and never the same frame twice. `ICaptureControllerListener.onFrameAvailable()` is an optional wake-up; a client pulling at a known cadence can ignore it.
+Call `IVideoCaptureController.acquireLatestFrame(releaseBufferIndex)`, passing the buffer just finished with — or `VideoFrameView.NO_BUFFER` on the first call. On a sink-attached session it returns the frame due for presentation, AV-synced; on a decoder-attached one, the most recent frame the decoder has emitted since the last acquire, with no clock applied. Either way it returns `null` rather than blocking when none is due, and never the same frame twice. `IVideoCaptureControllerListener.onFrameAvailable()` is an optional wake-up; a client pulling at a known cadence can ignore it.
 7. Release the last frame:
-Call `ICaptureController.releaseFrame(bufferIndex)` when the client stops drawing while still holding a buffer. A client drawing continuously has already released through the previous step. The call is idempotent and tolerates unknown indices.
+Call `IVideoCaptureController.releaseFrame(bufferIndex)` when the client stops drawing while still holding a buffer. A client drawing continuously has already released through the previous step. The call is idempotent and tolerates unknown indices.
 
 Release is keyed by index because the index is the buffer's identity. An index that names no buffer in the current pool is ignored, which is what makes a release arriving after a stop safe.
 8. Stop and close:
-Call `ICaptureController.stop()` to unwire the source and release the pool; the resource transitions `STARTED` → `STOPPING` → `READY`, reclaiming any buffer the client still holds, and can be started again. Then `ICapture.close(controller)` returns it to `CLOSED`. The bound source keeps running and anything else consuming it is untouched.
+Call `IVideoCaptureController.stop()` to unwire the source and release the pool; the resource transitions `STARTED` → `STOPPING` → `READY`, reclaiming any buffer the client still holds, and can be started again. Then `IVideoCapture.close(controller)` returns it to `CLOSED`. The bound source keeps running and anything else consuming it is untouched.
 
-The bound source becoming unavailable while a session is running stops it and raises `ICaptureEventListener.onSourceLost()`; binding again with `open()` makes the session startable.
+The bound source becoming unavailable while a session is running stops it and raises `IVideoCaptureEventListener.onSourceLost()`; binding again with `openWithDecoder()` or `openWithSink()` makes the session startable.
 
 ## Startup Order and Buffer Lifetime
 
@@ -232,13 +243,13 @@ The bound source becoming unavailable while a session is running stops it and ra
 ```mermaid
 stateDiagram-v2
     [*] --> CLOSED
-    CLOSED --> READY: ICapture.open()
+    CLOSED --> READY: openWithDecoder() / openWithSink()
     READY --> STARTING: start()
     STARTING --> STARTED: onPoolReady()
     STARTED --> STOPPING: stop()
     STARTED --> STOPPING: onSourceLost()
     STOPPING --> READY
-    READY --> CLOSED: ICapture.close()
+    READY --> CLOSED: IVideoCapture.close()
     CLOSED --> [*]
 
     classDef settled  fill:#1565C0,stroke:#E0E0E0,stroke-width:2px,color:#E0E0E0;
@@ -252,7 +263,7 @@ stateDiagram-v2
 
 Blue states rest until the client acts on them, amber ones are passing through on their own, and green is the only state in which frames can be acquired.
 
-`ICapture.getState()` reads the state at any time, and `ICaptureEventListener.onStateChanged()` reports every transition — which is how a client learns about the ones it did not ask for. The bound source becoming unavailable under a running session stops it; `ICaptureEventListener.onSystemError()` and `ICaptureControllerListener.onCaptureError()` report faults against the resource and the session respectively, each with a `CaptureErrorCode` and the vendor's own code.
+`IVideoCapture.getState()` reads the state at any time, and `IVideoCaptureEventListener.onStateChanged()` reports every transition — which is how a client learns about the ones it did not ask for. The bound source becoming unavailable under a running session stops it; `IVideoCaptureEventListener.onSystemError()` and `IVideoCaptureControllerListener.onCaptureError()` report faults against the resource and the session respectively, each with a `ErrorCode` and the vendor's own code.
 
 `STARTING` is the gap between `start()` returning and the pool arriving: the session is not usable until `onPoolReady()` delivers the addressing, which is what moves it to `STARTED`.
 
@@ -276,41 +287,43 @@ Shutdown is likewise legal in either order, and the pool outlives neither.
 | What ends first | What happens |
 |---|---|
 | **The session** | `stop()` unwires the capture and releases the pool and every Dma-Buf in it. The bound source keeps running and anything else consuming it is untouched; frames are simply no longer copied here. |
-| **The source** | The session is implicitly stopped, the pool and its Dma-Bufs are released, and `ICaptureEventListener.onSourceLost()` is raised. The resource returns to `READY` and binding again with `open()` makes it startable. |
+| **The source** | The session is implicitly stopped, the pool and its Dma-Bufs are released, and `IVideoCaptureEventListener.onSourceLost()` is raised. The resource returns to `READY` and binding again with `openWithDecoder()` or `openWithSink()` makes it startable. |
 | **The client process** | `stop()` and `close()` are called implicitly on its behalf, releasing the pool whether or not the client still held buffers. |
 
 Buffers the client holds Locked at the moment of any of these are released with the rest of the pool. A client's imported EGLImages do not survive `stop()`: the buffer indices of a new session name new memory, and images cached against the old pool must be discarded when `onPoolReady()` delivers the new one.
 
 All Dma-Bufs are released on `stop()` and on `close()`.
 
-A format, modifier or frame size outside `CaptureCapabilities` fails at `ICaptureController.setProperty()`, while it is still a configuration error rather than a stream of wrong pixels. A pool the platform's video memory region cannot satisfy fails at `ICaptureController.start()` with `CaptureErrorCode.OUT_OF_MEMORY`, rather than being silently trimmed, and a bound source decoding a codec outside `supportedCodecs` fails there with `CaptureErrorCode.CODEC_NOT_CAPTURABLE`. None of them falls back to display output.
+A format, modifier or frame size outside `Capabilities` fails at `IVideoCaptureController.setProperty()`, while it is still a configuration error rather than a stream of wrong pixels. A pool the platform's video memory region cannot satisfy fails at `IVideoCaptureController.start()` with `ErrorCode.OUT_OF_MEMORY`, rather than being silently trimmed, and a bound source decoding a codec outside `supportedCodecs` fails there with `ErrorCode.CODEC_NOT_CAPTURABLE`. None of them falls back to display output.
 
 ```mermaid
 sequenceDiagram
     participant Client as RDK Client
-    participant Manager as ICaptureManager
-    participant Capture as ICapture
-    participant Controller as ICaptureController
-    participant Listener as ICaptureControllerListener
-    participant Decoder as IVideoDecoder
+    participant Manager as IVideoCaptureManager
+    participant Capture as IVideoCapture
+    participant Controller as IVideoCaptureController
+    participant Listener as IVideoCaptureControllerListener
+    participant Sink as IVideoSink
 
-    Client->>Manager: getCapture(captureId, eventListener)
-    PC-->>Client: ICapture
+    Client->>Manager: getVideoCaptureIds()
+    Manager-->>Client: IVideoCapture.Id[]
+
+    Client->>Manager: getVideoCapture(captureId, eventListener)
+    Manager-->>Client: IVideoCapture
 
     Client->>Capture: getCapabilities()
-    Capture-->>Client: CaptureCapabilities
+    Capture-->>Client: Capabilities
 
-    Client->>PC: setVideoSourceDestinationPlaneMapping(VIDEO_SINK, sinkIndex, capturePlane)
-    PC-->>Client: true
+    Note over Client,Sink: Pick a sink declaring supportsCapture true
 
-    Client->>Capture: open(controllerListener)
-    Capture-->>Client: ICaptureController (READY)
+    Client->>Capture: openWithSink(videoSinkId, controllerListener)
+    Capture-->>Client: IVideoCaptureController (READY)
 
-    Client->>PC: setProperty(capturePlane, WIDTH, w)
-    Client->>PC: setProperty(capturePlane, HEIGHT, h)
+    Client->>Controller: setProperty(WIDTH, w)
+    Client->>Controller: setProperty(HEIGHT, h)
     Client->>Controller: setFormat(supportedFormats[i])
     Client->>Controller: start()
-    Controller->>Decoder: Configure and wire bound source into pool
+    Controller->>Sink: Wire the sink's scheduled frames into the pool
 
     Controller-->>Listener: onPoolReady(VideoBufferView[])
     Client->>Client: EGL import every buffer once
@@ -334,30 +347,48 @@ The whole interface in one pass: find the capture, bind it to a source, agree th
 
 ```c++
 // Find a capture. A product without one does not support decode-to-texture.
-std::vector<ICapture::Id> captureIds;
-captureManager->getCaptureIds(&captureIds);
+std::vector<IVideoCapture::Id> captureIds;
+captureManager->getVideoCaptureIds(&captureIds);
 if (captureIds.empty()) {
     return;   // no capture on this product
 }
 
 // Open the capture resource and read what it can deliver.
-sp<ICapture> captureResource;
-captureManager->getCapture(captureIds[0], captureEventListener, &captureResource);
+sp<IVideoCapture> captureResource;
+captureManager->getVideoCapture(captureIds[0], captureEventListener, &captureResource);
 
-CaptureCapabilities captureCapabilities;
+Capabilities captureCapabilities;
 captureResource->getCapabilities(&captureCapabilities);
-// captureCapabilities.supportedSources      - the stages it can bind to
-// captureCapabilities.maxCapturesPerSource  - how far one stage fans out
+// captureCapabilities.supportedSources      - the kinds of stage it can bind to
+// captureCapabilities.maxCapturesPerSource  - how far one source resource fans out
 // captureCapabilities.supportedCodecs       - what this capture can take
 // captureCapabilities.supportedFormats      - the {fourcc, modifier} pairs it can deliver
 // captureCapabilities.maxFrameWidth         - the frame size ceiling
 // captureCapabilities.resize                - whether a size other than the source's is allowed
 
-// Bind the source. THIS is the session - it names the stage frames are taken from,
-// and it lasts until close(). Anything already consuming that stage is unaffected.
-sp<ICaptureController> captureController;
-captureResource->open(CaptureSource::VIDEO_DECODER, captureControllerListener,
-                      &captureController);   // CLOSED -> READY
+// Find a sink that declares it can be captured from. The decoder-attach form is the
+// same shape against IVideoDecoderManager, gated on OperationalMode::GRAPHICS_TEXTURE.
+std::vector<IVideoSink::Id> sinkIds;
+videoSinkManager->getVideoSinkIds(&sinkIds);
+IVideoSink::Id captureSinkId{IVideoSink::Id::UNDEFINED};
+for (const auto& id : sinkIds) {
+    sp<IVideoSink> sink;
+    videoSinkManager->getVideoSink(id, &sink);
+    videosink::Capabilities sinkCapabilities;
+    sink->getCapabilities(&sinkCapabilities);
+    if (sinkCapabilities.supportsCapture) {
+        captureSinkId = id;
+        break;
+    }
+}
+
+// Bind the source. THIS is the session - it names the sink frames are taken from,
+// and it lasts until close(). The sink's own display path is unaffected. Frames
+// arrive AV-synced because this is the sink-attach form; openWithDecoder() would
+// deliver them as decoded, with no clock applied.
+sp<IVideoCaptureController> captureController;
+captureResource->openWithSink(captureSinkId, captureControllerListener,
+                              &captureController);   // CLOSED -> READY
 
 // Configure while READY. The capture carries its own frame size.
 bool propertySucceeded = false;
@@ -390,10 +421,10 @@ struct CapturedPoolBuffer {
 };
 ```
 
-The pool is delivered once, on a **binder thread** — `ICaptureControllerListener` is `oneway`, so the callback arrives on the client's binder pool, not on the thread that owns its GL context. An EGL import needs that context current, so the callback duplicates the descriptors and hands them over; the render thread imports each buffer once, and never again.
+The pool is delivered once, on a **binder thread** — `IVideoCaptureControllerListener` is `oneway`, so the callback arrives on the client's binder pool, not on the thread that owns its GL context. An EGL import needs that context current, so the callback duplicates the descriptors and hands them over; the render thread imports each buffer once, and never again.
 
 ```c++
-// ICaptureControllerListener - runs on a binder thread. No GL calls here.
+// IVideoCaptureControllerListener - runs on a binder thread. No GL calls here.
 ::android::binder::Status onPoolReady(
         const std::vector<VideoBufferView>& poolBuffers) override {
 
@@ -516,7 +547,7 @@ for (const auto& [bufferIndex, eglImage] : eglImagesByBufferIndex) {
 eglImagesByBufferIndex.clear();
 ```
 
-The frame returned is the one due for presentation now, with AV-sync correction already applied, so a client that draws on receipt is in sync without computing anything from `presentationTimeNs`. It is carried for a client placing the frame on its own timeline.
+On a sink-attached session the frame returned is the one due for presentation now, with AV-sync correction already applied, so a client that draws on receipt is in sync without computing anything from `presentationTimeNs`; the time is carried for a client placing the frame on a timeline of its own. On a decoder-attached session it is the most recently decoded frame with no correction applied, and `presentationTimeNs` is what the client schedules from.
 
 
 ## Pixel Format and Memory Layout
@@ -542,7 +573,7 @@ A compressed or tiled layout is typically a *family* rather than a single value.
 
 ### Which one a capture delivers
 
-`CaptureCapabilities.supportedFormats` declares the pairs a capture can deliver, and the client selects one with `setFormat()`. Paired, because a modifier is not valid with every format: most are vendor-namespaced tiling or compression layouts that apply to particular formats and bit depths, so two independent lists would offer combinations the capture cannot deliver.
+`Capabilities.supportedFormats` declares the pairs a capture can deliver, and the client selects one with `setFormat()`. Paired, because a modifier is not valid with every format: most are vendor-namespaced tiling or compression layouts that apply to particular formats and bit depths, so two independent lists would offer combinations the capture cannot deliver.
 
 That trade — bandwidth against portability — is settled per product rather than per session:
 
@@ -551,25 +582,25 @@ That trade — bandwidth against portability — is settled per product rather t
 
 A capture declares the pairs it can deliver and no more. A client that can handle none of them cannot capture from it, which is a fact about the product rather than a failure of the session.
 
-The per-product declaration is `supportedFormats` under `captureCapabilities` in `hfp-capture.yaml`.
+The per-product declaration is `supportedFormats` under `captureCapabilities` in `hfp-videocapture.yaml`.
 
 ## Error Handling
 
 | Condition | Behaviour |
 |---|---|
-| No format selected before `start()` | `start()` fails with `CaptureErrorCode.INVALID_CONFIGURATION`. There is no default pair to fall back on. |
+| No format selected before `start()` | `start()` fails with `ErrorCode.INVALID_CONFIGURATION`. There is no default pair to fall back on. |
 | A `FormatLayout` outside `supportedFormats` | `setFormat()` raises `EX_ILLEGAL_ARGUMENT`; the pair is rejected while it is still a configuration error. |
 | Bound source decoding a codec outside `supportedCodecs` | `start()` fails with `CODEC_NOT_CAPTURABLE`. The decoder still decodes and displays normally. |
 | `resize` false and the size does not match the decoded resolution | `start()` fails with `RESOLUTION_MISMATCH`. Nothing is scaled. |
 | Pool reservation refused | `start()` fails with `OUT_OF_MEMORY`. |
-| Bound source lost while running | The session stops and `ICaptureEventListener.onSourceLost()` is raised. Binding again with `open()` makes it startable. |
+| Bound source lost while running | The session stops and `IVideoCaptureEventListener.onSourceLost()` is raised. Binding again with `openWithDecoder()` or `openWithSink()` makes it startable. |
 | `releaseFrame()` with an index the pool does not name | Raises `EX_ILLEGAL_ARGUMENT` — a client holding an unknown index has lost track of what it holds. |
 
 ## Buffer Contract
 
 Frames are delivered in the pixel format and memory layout the session was configured for, with truthful per-plane offsets addressing the actual buffer layout, at the resolution the stream decodes to and in its source colorimetry. No scaling, rotation, crop, colour conversion or tone-mapping is applied on this path — shape and colour belong to the consumer, which applies them per frame as it textures the frame onto its scene, and may change them on any frame.
 
-`CaptureCapabilities.resize` states whether a capture can deliver a resolution other than the one being produced. Where it is false, the capture's `Property.WIDTH` and `HEIGHT` must equal what the bound source is producing and `start()` fails with `CaptureErrorCode.RESOLUTION_MISMATCH` otherwise. A capture that never scales has no scaling quality to validate and no resolution permutations to cover, which is what keeps the tested surface small.
+`Capabilities.resize` states whether a capture can deliver a resolution other than the one being produced. Where it is false, the capture's `Property.WIDTH` and `HEIGHT` must equal what the bound source is producing and `start()` fails with `ErrorCode.RESOLUTION_MISMATCH` otherwise. A capture that never scales has no scaling quality to validate and no resolution permutations to cover, which is what keeps the tested surface small.
 
 `supportedFormats` is an open list, so a product that can deliver a format carrying alpha declares that pair and a client selects it — no interface change is needed to support one.
 
@@ -577,9 +608,9 @@ Frames are delivered in the pixel format and memory layout the session was confi
 
 `VideoBufferView.planeFds`, `planeOffsets` and `planeStrides` feed `EGL_DMA_BUF_PLANE<N>_FD_EXT`, `EGL_DMA_BUF_PLANE<N>_OFFSET_EXT` and `EGL_DMA_BUF_PLANE<N>_PITCH_EXT` directly, so a buffer imports through `EGL_EXT_image_dma_buf_import` without translation.
 
-Each buffer is Free, Ready or Locked. The decoder writes into Free buffers and marks them Ready once the frame is atomically complete; `acquireLatestFrame()` moves the buffer due for presentation to Locked, and the decoder never writes into a Locked buffer. Decode proceeds at full rate however sparsely or slowly the client acquires. The behaviour when every buffer is Locked is declared per product in `CaptureCapabilities.stallsWhenPoolExhausted`.
+Each buffer is Free, Ready or Locked. The source writes into Free buffers and marks them Ready once the frame is atomically complete; `acquireLatestFrame()` moves the buffer it returns to Locked, and the decoder never writes into a Locked buffer. Decode proceeds at full rate however sparsely or slowly the client acquires. The behaviour when every buffer is Locked is declared per product in `Capabilities.stallsWhenPoolExhausted`.
 
-**The frame returned is the one due for presentation now.** Audio latency and AV-sync correction are applied by the vendor layer before the frame is handed over, so a client that draws each frame on receipt is in sync without computing anything from the presentation time. Frames whose presentation time has passed can never be shown and are dropped rather than delivered; frames whose time has not yet come stay queued until it does.
+**What "the frame returned" means depends on which attach mode opened the session.** Sink-attached (`openWithSink()`): the frame due for presentation now — audio latency and AV-sync correction applied by the vendor layer before the frame is handed over, so a client that draws each frame on receipt is in sync without computing anything from the presentation time; frames whose presentation time has passed can never be shown and are dropped rather than delivered, and frames whose time has not yet come stay queued until it does. Decoder-attached (`openWithDecoder()`): the most recently decoded frame the decoder has emitted since the last acquire — no clock, no correction, nothing dropped for lateness and nothing held for earliness, because at the decoder there is no presentation reference to be late or early against. See **HAL.VIDEOCAPTURE.10** and **HAL.VIDEOCAPTURE.12**.
 
 **Release and acquire are one call.** `acquireLatestFrame(releaseBufferIndex)` frees the buffer the client just finished with and takes the next in the same round trip, because a client redrawing at frame rate does both every frame and two calls would put two binder round trips in a 60 Hz path. `VideoFrameView.NO_BUFFER` is passed on the first call of a session. `releaseFrame()` remains for the last frame, and for a client that has stopped drawing while still holding a buffer.
 

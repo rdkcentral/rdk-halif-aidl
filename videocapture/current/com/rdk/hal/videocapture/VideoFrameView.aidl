@@ -16,19 +16,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.capture;
+package com.rdk.hal.videocapture;
 
 /**
  *  @brief     A single captured decoded video frame.
  *
- *  Returned by `ICaptureController.acquireLatestFrame()`, once per frame.
+ *  Returned by `IVideoCaptureController.acquireLatestFrame()`, once per frame.
  *
  *  This carries only what differs from one frame to the next. Where the frame lives and
- *  how it is shaped were delivered once at `ICaptureControllerListener.onPoolReady()`,
+ *  how it is shaped were delivered once at `IVideoCaptureControllerListener.onPoolReady()`,
  *  as one `VideoBufferView` per pool buffer, so a client resolves a frame by looking up
  *  `bufferIndex` in what it already holds.
  *
- *  @see VideoBufferView, ICaptureController.acquireLatestFrame()
+ *  @see VideoBufferView, IVideoCaptureController.acquireLatestFrame()
  *
  *  @author    Peter Stieglitz
  *  @author    Gerald Weatherup
@@ -38,7 +38,7 @@ package com.rdk.hal.capture;
 parcelable VideoFrameView
 {
     /**
-     * Passed as `ICaptureController.acquireLatestFrame()`'s `releaseBufferIndex` when
+     * Passed as `IVideoCaptureController.acquireLatestFrame()`'s `releaseBufferIndex` when
      * the client holds no buffer to release.
      */
     const int NO_BUFFER = -1;
@@ -48,7 +48,7 @@ parcelable VideoFrameView
      *
      * Indexes the `VideoBufferView` array delivered at `onPoolReady()`, which is where
      * the frame's file descriptors, offsets, strides, size and format are. This is also
-     * the value passed to `ICaptureController.releaseFrame()`, or to the next
+     * the value passed to `IVideoCaptureController.releaseFrame()`, or to the next
      * `acquireLatestFrame()` to release and acquire in one call.
      */
     int bufferIndex;

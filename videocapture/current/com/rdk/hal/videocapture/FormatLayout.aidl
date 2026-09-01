@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.capture;
+package com.rdk.hal.videocapture;
 
 /**
  *  @brief     A pixel format and a memory layout that are valid together.
@@ -24,8 +24,8 @@ package com.rdk.hal.capture;
  *  A pair, because a modifier is valid with particular formats: most are
  *  vendor-namespaced tiling or compression layouts that apply to specific formats
  *  and bit depths. A client selects one entry of
- *  `CaptureCapabilities.supportedFormats` and passes it to
- *  `ICaptureController.setFormat()`.
+ *  `Capabilities.supportedFormats` and passes it to
+ *  `IVideoCaptureController.setFormat()`.
  *
  *  Both values are defined by the Linux kernel in `include/uapi/drm/drm_fourcc.h`
  *  and are carried as integers rather than enums: the kernel owns those
@@ -33,7 +33,7 @@ package com.rdk.hal.capture;
  *  pass through this interface to the client's EGL implementation without
  *  interpretation.
  *
- *  @see CaptureCapabilities.supportedFormats
+ *  @see Capabilities.supportedFormats
  *
  *  @author    Peter Stieglitz
  *  @author    Gerald Weatherup

@@ -16,17 +16,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.capture;
-import com.rdk.hal.capture.ICapture;
-import com.rdk.hal.capture.ICaptureEventListener;
-import com.rdk.hal.capture.CaptureSource;
+package com.rdk.hal.videocapture;
+import com.rdk.hal.videocapture.IVideoCapture;
+import com.rdk.hal.videocapture.IVideoCaptureEventListener;
+import com.rdk.hal.videocapture.Source;
 
 /**
- *  @brief     Capture Manager HAL interface.
+ *  @brief     Video Capture Manager HAL interface.
  *  @author    Gerald Weatherup
  *
  *  The entry point to the capture module. A client asks the manager which
- *  capture resources the platform has, and takes an `ICapture` for the one it
+ *  capture resources the platform has, and takes an `IVideoCapture` for the one it
  *  wants. A capture resource is addressed by its own ID; it is not reached
  *  through, or identified by, any other module's resource.
  *
@@ -39,10 +39,10 @@ import com.rdk.hal.capture.CaptureSource;
  */
 
 @VintfStability
-interface ICaptureManager
+interface IVideoCaptureManager
 {
     /** The service name to publish. To be returned by getServiceName() in the derived class. */
-    const @utf8InCpp String serviceName = "CaptureManager";
+    const @utf8InCpp String serviceName = "VideoCaptureManager";
 
     /**
      * Gets the platform list of capture resource IDs.
@@ -51,26 +51,26 @@ interface ICaptureManager
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
-     * @returns ICapture.Id[]
+     * @returns IVideoCapture.Id[]
      */
-    ICapture.Id[] getCaptureIds();
+    IVideoCapture.Id[] getVideoCaptureIds();
 
     /**
      * Gets the pipeline sources the platform's capture resources can bind to.
      *
      * This is the union across all capture resources. Which sources a given
-     * resource offers is in its `CaptureCapabilities.supportedSources`.
+     * resource offers is in its `Capabilities.supportedSources`.
      *
      * This function can be called at any time and is not dependent on any
      * capture state. The returned value is not allowed to change between calls.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
-     * @returns CaptureSource[] one or more CaptureSource enum values.
+     * @returns Source[] one or more Source enum values.
      *
-     * @see CaptureSource, CaptureCapabilities.supportedSources
+     * @see Source, Capabilities.supportedSources
      */
-    CaptureSource[] getSupportedSources();
+    Source[] getSupportedSources();
 
     /**
      * Gets a capture interface.
@@ -78,12 +78,12 @@ interface ICaptureManager
      * @param[in] captureId              The ID of the capture resource.
      * @param[in] captureEventListener   Listener object for capture resource events.
      *
-     * @returns ICapture or null if the ID is not a capture resource on this platform.
+     * @returns IVideoCapture or null if the ID is not a capture resource on this platform.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
-     * @see getCaptureIds()
+     * @see getVideoCaptureIds()
      */
-    @nullable ICapture getCapture(in ICapture.Id captureId, in ICaptureEventListener captureEventListener);
+    @nullable IVideoCapture getVideoCapture(in IVideoCapture.Id captureId, in IVideoCaptureEventListener captureEventListener);
 }

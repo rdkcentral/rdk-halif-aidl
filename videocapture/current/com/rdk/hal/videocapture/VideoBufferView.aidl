@@ -16,13 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.capture;
+package com.rdk.hal.videocapture;
 
 /**
  *  @brief     Addressing information for one buffer in the capture pool.
  *
  *  One of these is delivered for every buffer in the pool, once per session, in
- *  `ICaptureControllerListener.onPoolReady()`. A buffer's addressing and shape shall
+ *  `IVideoCaptureControllerListener.onPoolReady()`. A buffer's addressing and shape shall
  *  not change for the life of the session, so a client imports each buffer once on
  *  receipt and thereafter is told only which buffer holds the current frame.
  *
@@ -41,7 +41,7 @@ package com.rdk.hal.capture;
  *  The offsets shall address the buffer's actual layout, and a client shall not
  *  infer them from the pixel format.
  *
- *  @see VideoFrameView, ICaptureControllerListener.onPoolReady()
+ *  @see VideoFrameView, IVideoCaptureControllerListener.onPoolReady()
  *
  *  @author    Peter Stieglitz
  *  @author    Gerald Weatherup
@@ -56,7 +56,7 @@ parcelable VideoBufferView
      * The implementation shall assign each buffer an index that is unique within
      * the pool and stable for the life of the session. It is the value
      * `VideoFrameView.bufferIndex` carries on every frame, and the value passed to
-     * `ICaptureController.releaseFrame()`.
+     * `IVideoCaptureController.releaseFrame()`.
      *
      * This index is the buffer's identity. A client resolves a frame, keys any
      * cache, and releases a buffer by it.
@@ -124,14 +124,14 @@ parcelable VideoBufferView
     /**
      * The DRM FOURCC pixel format of the frames this buffer holds.
      *
-     * @see ICaptureController.setFormat(), FormatLayout.fourcc
+     * @see IVideoCaptureController.setFormat(), FormatLayout.fourcc
      */
     int drmFourcc;
 
     /**
      * The DRM format modifier describing how this buffer's bytes are arranged in memory.
      *
-     * @see ICaptureController.setFormat(), FormatLayout.modifier
+     * @see IVideoCaptureController.setFormat(), FormatLayout.modifier
      */
     long drmModifier;
 }
