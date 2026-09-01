@@ -85,13 +85,8 @@ interface IVideoSinkController
     * When the Video Sink is opened, the default is set to
     * `IVideoDecoder.Id.UNDEFINED`.
     *
-    * Tunnelled mode:
     * A valid Video Decoder association is required before the pipeline is
-    * started.
-    *
-    * Non-tunnelled mode:
-    * This API is not supported and shall return
-    * `binder::Status::Exception::EX_UNSUPPORTED_OPERATION`.
+    * started in both tunnelled and non-tunnelled modes.
     *
     * @param[in] videoDecoderId
     *      The ID of the Video Decoder source.
@@ -101,9 +96,6 @@ interface IVideoSinkController
     *
     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
     *      The resource is not in State::READY.
-    *
-    * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION
-    *      in a non-tunnelled pipeline.
     *
     * @returns boolean
     * @retval true
@@ -121,10 +113,8 @@ interface IVideoSinkController
     /**
      * Gets the Video Decoder ID linked to this Video Sink.
      *
-     * Tunnelled mode: returns the currently associated `IVideoDecoder.Id`.
-     *
-     * Non-tunnelled mode: Video Decoder association is not used by this sink,
-     * so the method returns `IVideoDecoder.Id.UNDEFINED`.
+    * Returns the currently associated `IVideoDecoder.Id` in both tunnelled
+    * and non-tunnelled modes.
      *
      * @returns IVideoDecoder.Id which can be IVideoDecoder.Id.UNDEFINED.
      *
@@ -224,28 +214,20 @@ interface IVideoSinkController
     * If successful the Video Sink transitions to a `STARTING` state and then
     * a `STARTED` state.
     *
-    * Tunnelled Mode:
-    *
-    * When configured for tunnelled mode, a valid Video Decoder association must
-    * have been established using `setVideoDecoder()` before this method is
-    * called.
-    *
-    * Starting a tunnelled-mode Video Sink without a valid Video Decoder
-    * association shall fail.
-    *
-    * Non-tunnelled Mode:
-    *
-    * `setVideoDecoder()` is not required and shall not be used.
+    * The client must call `setVideoDecoder()` with a valid decoder ID before
+    * calling this method in both tunnelled and non-tunnelled modes. Starting
+    * a Video Sink while the associated decoder ID is
+    * `IVideoDecoder.Id.UNDEFINED` shall fail.
     *
     * @exception binder::Status::Exception::EX_NONE for success
     *
     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-    *      The resource is not in State::READY, or
-    *      tunnelled mode and no valid Video Decoder has been associated.
+    *      The resource is not in State::READY, or the associated Video
+    *      Decoder ID is `IVideoDecoder.Id.UNDEFINED`.
     *
     * @pre The resource must be in State::READY.
-    * @pre In tunnelled mode, a valid Video Decoder must be associated via
-    *      setVideoDecoder().
+    * @pre The associated Video Decoder ID must not be
+    *      `IVideoDecoder.Id.UNDEFINED`; set it using `setVideoDecoder()`.
     *
     * @see stop(), IVideoSink.open(), setVideoDecoder()
     */

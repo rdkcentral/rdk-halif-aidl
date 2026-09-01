@@ -68,13 +68,8 @@ interface IAudioSinkController {
      * When the audio sink is opened, the default is set to
      * `IAudioDecoder.Id.UNDEFINED`.
 	 *
-     * Tunnelled mode:
-     * A valid audio decoder association is required before the pipeline is
-     * started.
-     *
-     * Non-tunnelled mode:
-     * This API is not supported and shall return
-     * `binder::Status::Exception::EX_UNSUPPORTED_OPERATION`.
+	 * A valid audio decoder association is required before the pipeline is
+	 * started in both tunnelled and non-tunnelled modes.
 	 *
 	 * @param[in] audioDecoderId		The ID of the audio decoder source.
 	 *
@@ -84,9 +79,6 @@ interface IAudioSinkController {
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *      The resource is not in State::READY.
      *
-     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION
-     *      in a non-tunnelled pipeline.
-	 *
      * @returns boolean
      * @retval true
      *      The audio decoder ID was set successfully.
@@ -102,10 +94,8 @@ interface IAudioSinkController {
 	/**
 	 * Gets the audio decoder ID linked to this audio sink.
 	 *
-	 * Tunnelled mode: returns the currently associated `IAudioDecoder.Id`.
-	 *
-	 * Non-tunnelled mode: audio decoder association is not used by this sink,
-	 * so the method returns `IAudioDecoder.Id.UNDEFINED`.
+     * Returns the currently associated `IAudioDecoder.Id` in both tunnelled
+     * and non-tunnelled modes.
 	 *
      * @returns IAudioDecoder.Id which can be `IAudioDecoder.Id.UNDEFINED`.
      *
@@ -203,26 +193,19 @@ interface IAudioSinkController {
      * If successful the audio sink transitions to a `STARTING` state and then
      * a `STARTED` state.
      *
-     * Tunnelled Mode:
-     *
-     * In tunnelled mode, a valid audio decoder association must have been
-     * established using `setAudioDecoder()` before this method is called.
-     *
-     * Starting a tunnelled-mode audio sink without a valid audio decoder
-     * association shall fail.
-     *
-     * Non-tunnelled Mode:
-     *
-     * `setAudioDecoder()` is not required and shall not be used.
+     * The client must call `setAudioDecoder()` with a valid decoder ID before
+     * calling this method in both tunnelled and non-tunnelled modes. Starting
+     * an audio sink while the associated decoder ID is
+     * `IAudioDecoder.Id.UNDEFINED` shall fail.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     *      The resource is not in State::READY, or the sink is in tunnelled
-     *      mode and no valid audio decoder has been associated.
+     *      The resource is not in State::READY, or the associated audio
+     *      decoder ID is `IAudioDecoder.Id.UNDEFINED`.
      *
      * @pre The resource must be in State::READY.
-     * @pre In tunnelled mode, a valid audio decoder must be associated via
-     *      setAudioDecoder().
+     * @pre The associated audio decoder ID must not be
+     *      `IAudioDecoder.Id.UNDEFINED`; set it using `setAudioDecoder()`.
      *
      * @see stop(), close(), setAudioDecoder()
      */
