@@ -42,13 +42,11 @@ oneway interface IVideoCaptureEventListener
     void onSystemError(in ErrorCode errorCode, in int vendorErrorCode);
 
     /**
-     * @brief     Called when the bound source went away - lost through
-     *            the bound source becoming unavailable, or its decoder
-     *            closed.
+     * @brief     Called when the bound video sink went away - closed, or
+     *            otherwise no longer able to deliver frames.
      *
      * The session is implicitly stopped and the capture resource transitions to `READY`.
-     * Binding a source again with `openWithDecoder()` or `openWithSink()` makes the
-     * session startable.
+     * Binding a sink again with `IVideoCapture.open()` makes the session startable.
      */
     void onSourceLost();
 

@@ -24,7 +24,6 @@ import com.rdk.hal.videocapture.IVideoCaptureControllerListener;
 import com.rdk.hal.videocapture.Property;
 import com.rdk.hal.videocapture.State;
 import com.rdk.hal.PropertyValue;
-import com.rdk.hal.videodecoder.IVideoDecoder;
 import com.rdk.hal.videosink.IVideoSink;
 
 /**
@@ -36,30 +35,26 @@ import com.rdk.hal.videosink.IVideoSink;
  *  addressed by its own `Id`, obtained from `IVideoCaptureManager`, and it carries its own
  *  frame size.
  *
- *  **The binding is the session.** `openWithDecoder()` and `openWithSink()` each name
- *  the resource frames are taken from - a particular `IVideoDecoder` or a particular
- *  `IVideoSink`, by its own ID - and that resource is what the session delivers for
- *  its lifetime. A source may have a display path, a capture, both or neither - none
- *  of those is a special case, and a capture never needs a display destination to
- *  exist.
+ *  **The binding is the session.** `open()` names the video sink frames are taken
+ *  from - a particular `IVideoSink`, by its own ID - and that sink is what the session
+ *  delivers for its lifetime. A sink may have a display path, a capture, both or
+ *  neither - none of those is a special case, and a capture never needs a display
+ *  destination to exist.
  *
- *  **The two attach modes differ in what a frame means, which is why they are two
- *  calls.** A decoder-attached session delivers the most recently decoded frame, with
- *  no clock applied and nothing dropped or held for timing; the frame's presentation
- *  time is carried for a client scheduling on its own timeline. A sink-attached
- *  session delivers the frame the sink would be presenting against its attached
- *  `IAVClock` now, with audio and graphics latency compensation already applied, late
- *  frames dropped and early frames held. A client needing AV-synced frames must use
- *  `openWithSink()`.
+ *  **A capture is served the frame its sink would be presenting.** The sink is where
+ *  the estate's presentation scheduling lives, and a capture is a second consumer of
+ *  the frames it has already scheduled - so what a frame means here is whatever it
+ *  means at that sink, and the capture adds no scheduler, no clock and no timing
+ *  policy of its own.
  *
- *  What flows through the bound stage is decided by the input feed exactly as before.
- *  A capture neither selects nor changes it, and the `IVideoDecoder` contract is
- *  unchanged - the decoder does not know where its output goes, and nothing is set on
- *  it to arrange capture.
+ *  What flows through the bound sink is decided by the input feed exactly as before.
+ *  A capture neither selects nor changes it, and the `IVideoSink` contract is
+ *  unchanged - nothing is set on the sink to arrange capture, and its display path is
+ *  untouched.
  *
  *  Binding takes a view rather than diverting the frames. Anything already consuming
  *  the stage carries on unaffected, which is what allows a capture to be attached to a
- *  pipeline that is already running. `Capabilities.maxCapturesPerSource` says
+ *  pipeline that is already running. `Capabilities.maxCapturesPerSink` says
  *  how many captures one stage can carry.
  *
  *  A session is configured here in full - the frames the client wants and the pool that
@@ -73,13 +68,10 @@ import com.rdk.hal.videosink.IVideoSink;
  *    IVideoCapture capture = captureManager.getVideoCapture(ids[0], captureEventListener);
  *    Capabilities caps = capture.getCapabilities();
  *
- *    // Pick a sink that declares it can be captured from. The decoder-attach form is
- *    // openWithDecoder(decoderId, ...) against a decoder on a platform declaring
- *    // OperationalMode.GRAPHICS_TEXTURE.
  *    IVideoSink.Id sinkId = ...;                           // supportsCapture == true
  *
  *    IVideoCaptureController controller =                  // bind: this is the session
- *        capture.openWithSink(sinkId, captureControllerListener);
+ *        capture.open(sinkId, captureControllerListener);
  *    controller.setProperty(Property.WIDTH, w);            // the capture's own size
  *    controller.setProperty(Property.HEIGHT, h);
  *    controller.setFormat(caps.supportedFormats[i]);       // format and layout, paired
@@ -155,74 +147,6 @@ interface IVideoCapture
 
 
     /**
-     * Opens a capture session bound to a video decoder.
-     *
-     * The binding is the session. `videoDecoderId` names the decoder frames are taken
-     * from, and it is that decoder - not merely a decoder - for the session's
-     * lifetime. What flows through it is decided by the input feed as it always was; a
-     * capture neither selects nor changes it.
-     *
-     * Frames are delivered as the decoder emits them. No clock is attached and no
-     * AV-sync, audio-latency or graphics-latency compensation is applied: nothing is
-     * dropped for being late and nothing is held for being early, because there is no
-     * presentation reference to be late or early against. Each frame carries its
-     * presentation time in `VideoFrameView.presentationTimeNs`, which is what a client
-     * scheduling on its own timeline uses. A client that needs AV-synced frames must
-     * use `openWithSink()` instead - see `HAL.VIDEOCAPTURE.12`.
-     *
-     * The decoder declares its side of this: the call is accepted only against a
-     * platform whose `IVideoDecoderManager.getSupportedOperationalModes()` contains
-     * `OperationalMode.GRAPHICS_TEXTURE`, and only if `Source.VIDEO_DECODER` is in
-     * `Capabilities.supportedSources`.
-     *
-     * Binding does not divert the frames. A decoder that is already delivering to a
-     * display path continues to, and that path sees no change; the capture takes its
-     * own view of the same frames. How many captures one decoder can carry at a time
-     * is declared in `Capabilities.maxCapturesPerSource`, and a bind beyond that limit
-     * is refused.
-     *
-     * If successful the capture resource transitions to a `READY` state, which is
-     * notified to the registered `IVideoCaptureEventListener`.
-     *
-     * The returned `IVideoCaptureController` is used by the client to configure the pool,
-     * start and stop the session, and acquire and release frames. Controller related
-     * callbacks are made through the `IVideoCaptureControllerListener` passed into the call.
-     *
-     * The client selects the session's format through
-     * `IVideoCaptureController.setProperty()` in the `READY` state, before calling
-     * `IVideoCaptureController.start()` - the frame format and size it wants, and the depth
-     * of the pool that holds them.
-     *
-     * Nothing is set on the bound decoder. Making it deliver the frames this session was
-     * configured for is the vendor layer's own business, arranged over whatever
-     * internal path the platform provides.
-     *
-     * If the client that opened the `IVideoCaptureController` crashes, then the
-     * `IVideoCaptureController` has `stop()` and `close()` implicitly called to perform clean up.
-     *
-     * @param[in] videoDecoderId                The decoder to take frames from.
-     * @param[in] captureControllerListener     Listener object for controller callbacks.
-     *
-     * @returns IVideoCaptureController or null if a capture session cannot be opened against
-     *          that decoder.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT If `videoDecoderId` names no
-     *            decoder, or the platform does not support `OperationalMode.GRAPHICS_TEXTURE`.
-     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
-     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC with `ErrorCode.SOURCE_UNAVAILABLE`
-     *            if `Source.VIDEO_DECODER` is not one this resource supports, or that
-     *            decoder cannot carry a further capture.
-     *
-     * @pre The resource must be in State::CLOSED.
-     * @pre `Source.VIDEO_DECODER` is one of `Capabilities.supportedSources`.
-     *
-     * @see openWithSink(), close(), IVideoCaptureController, Capabilities.supportedSources
-     */
-    @nullable IVideoCaptureController openWithDecoder(in IVideoDecoder.Id videoDecoderId, in IVideoCaptureControllerListener captureControllerListener);
-
-    /**
      * Opens a capture session bound to a video sink.
      *
      * The binding is the session. `videoSinkId` names the sink frames are taken from,
@@ -230,22 +154,22 @@ interface IVideoCapture
      * through it is decided by the input feed as it always was; a capture neither
      * selects nor changes it.
      *
-     * Frames are delivered as the sink would present them: the frame due against the
-     * `IAVClock` attached to that sink, with audio latency and AV-sync correction
-     * already applied, frames whose presentation time has passed dropped and frames
-     * whose time has not yet come held. A client that draws each frame on receipt is
-     * then in sync without computing anything - see `HAL.VIDEOCAPTURE.10`. The sink
-     * keeps the scheduler; the capture is a second consumer of the frames it has
-     * already scheduled.
+     * Frames are delivered as the sink would present them - see `HAL.VIDEOCAPTURE.10`.
+     * Where the sink is presenting against an attached `IAVClock`, that means the frame
+     * due now with audio latency and AV-sync correction already applied, frames whose
+     * presentation time has passed dropped and frames whose time has not yet come held,
+     * so a client that draws each frame on receipt is in sync without computing
+     * anything. The sink keeps the scheduler and the timing policy; the capture is a
+     * second consumer of the frames it has already scheduled, and adds no clock, no
+     * scheduler and no timing policy of its own.
      *
      * The sink declares its side of this: the call is accepted only against a sink
-     * whose `com.rdk.hal.videosink.Capabilities.supportsCapture` is true, and only if
-     * `Source.VIDEO_SINK` is in `Capabilities.supportedSources`.
+     * whose `com.rdk.hal.videosink.Capabilities.supportsCapture` is true.
      *
      * Binding does not divert the frames. A sink that is already rendering to a mapped
      * video plane continues to, and the display sees no change; the capture takes its
      * own view of the same scheduled frames. How many captures one sink can carry at a
-     * time is declared in `Capabilities.maxCapturesPerSource`, and a bind beyond that
+     * time is declared in `Capabilities.maxCapturesPerSink`, and a bind beyond that
      * limit is refused.
      *
      * If successful the capture resource transitions to a `READY` state, which is
@@ -279,15 +203,14 @@ interface IVideoCapture
      *            or that sink declares `supportsCapture` false.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC with `ErrorCode.SOURCE_UNAVAILABLE`
-     *            if `Source.VIDEO_SINK` is not one this resource supports, or that sink
-     *            cannot carry a further capture.
+     *            if that sink cannot carry a further capture.
      *
      * @pre The resource must be in State::CLOSED.
-     * @pre `Source.VIDEO_SINK` is one of `Capabilities.supportedSources`.
+     * @pre The sink declares `com.rdk.hal.videosink.Capabilities.supportsCapture` true.
      *
-     * @see openWithDecoder(), close(), IVideoCaptureController, Capabilities.supportedSources
+     * @see close(), IVideoCaptureController, Capabilities.maxCapturesPerSink
      */
-    @nullable IVideoCaptureController openWithSink(in IVideoSink.Id videoSinkId, in IVideoCaptureControllerListener captureControllerListener);
+    @nullable IVideoCaptureController open(in IVideoSink.Id videoSinkId, in IVideoCaptureControllerListener captureControllerListener);
 
     /**
      * Gets a property of this capture resource.
@@ -330,7 +253,7 @@ interface IVideoCapture
      *
      * @pre The resource must be in State::READY.
      *
-     * @see openWithDecoder(), openWithSink()
+     * @see open()
      */
     boolean close(in IVideoCaptureController captureController);
 }

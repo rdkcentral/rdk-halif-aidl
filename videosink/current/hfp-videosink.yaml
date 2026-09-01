@@ -32,8 +32,7 @@ videosink:
       supportsHoldLastFrame: true
       supportsSecure: true
       supportsCapture: true   # true: com.rdk.hal.videocapture may bind a capture
-                              # session to this sink via openWithSink(). The sink
-                              # keeps its scheduler and its display path is
-                              # unaffected. false: openWithSink() against this
-                              # sink fails.
+                              # session to this sink via IVideoCapture.open(). The
+                              # sink keeps its scheduler and its display path is
+                              # unaffected. false: open() against this sink fails.
 

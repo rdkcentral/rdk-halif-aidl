@@ -26,8 +26,7 @@ import com.rdk.hal.PropertyValue;
 /**
  *  @brief     Video capture session controller interface.
  *
- *  Returned by `IVideoCapture.openWithDecoder()` or `IVideoCapture.openWithSink()`, and
- *  valid until `IVideoCapture.close()`.
+ *  Returned by `IVideoCapture.open()` and valid until `IVideoCapture.close()`.
  *
  *  <h3>Frame flow</h3>
  *  Each pool buffer is Free, Ready or Locked. The source's decoder writes into Free
@@ -97,7 +96,7 @@ interface IVideoCaptureController
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the READY state.
      * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC with a ErrorCode value:
      *            `OUT_OF_MEMORY` if the pool reservation was refused,
-     *            `SOURCE_UNAVAILABLE` if the bound source became unavailable since the bind,
+     *            `SOURCE_UNAVAILABLE` if the bound sink became unavailable since the bind,
      *            `CODEC_NOT_CAPTURABLE` if the bound source is decoding a codec outside
      *            `Capabilities.supportedCodecs`,
      *            `INVALID_CONFIGURATION` if no format was selected with `setFormat()`,

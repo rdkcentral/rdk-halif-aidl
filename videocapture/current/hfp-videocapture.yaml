@@ -24,23 +24,16 @@ videocapture:                        # Component object begins
   interfaceVersion: current
   captures:                     # Resource list - one object per capture this product offers
     - 0:                        # Resource object begins
-        supportedSources:       # Kinds of pipeline stage this capture can bind to
-                                # (enum Source). Declare what this product can do.
-                                # A session binds to one named resource of one of
-                                # these kinds - VIDEO_SINK through openWithSink(),
-                                # VIDEO_DECODER through openWithDecoder(). The
-                                # source resource declares its own side too:
-                                # videosink Capabilities.supportsCapture, and
-                                # videodecoder OperationalMode.GRAPHICS_TEXTURE.
-          - VIDEO_SINK
-          - VIDEO_DECODER
-        maxCapturesPerSource: 1 # How many sessions one source resource can carry at once.
+        maxCapturesPerSink: 1   # How many sessions one video sink can carry at once.
                                 # A further bind is refused with SOURCE_UNAVAILABLE.
+                                # Which sinks can be captured from at all is declared
+                                # on the sink itself, in videosink
+                                # Capabilities.supportsCapture.
         captureCapabilities:    # Frames and buffer pool for IVideoCapture on this resource.
                                 # This is the whole of the capture declaration - the
-                                # vendor layer configures whatever the bound source
+                                # vendor layer configures whatever the bound sink
                                 # needs to deliver what is declared here.
-          stallsWhenPoolExhausted: false  # true: source stalls when all buffers locked
+          stallsWhenPoolExhausted: false  # true: the sink stalls when all buffers locked
                                           # false: oldest ready frame is dropped
           # FOURCC codes and modifiers are the kernel's, from include/uapi/drm/drm_fourcc.h.
           # Declared in pairs: a modifier is valid with particular formats.

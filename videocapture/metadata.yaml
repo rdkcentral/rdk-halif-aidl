@@ -37,8 +37,8 @@ lifecycle:
 
 # scope - High-level architectural responsibilities                       [manual]
 scope:
-  - Video frame capture as an output in its own right, bound to a named source resource
-  - Two attach modes - a video sink for AV-synced frames, a video decoder for frames as decoded
+  - Video frame capture as an output in its own right, bound to a named video sink
+  - Frames delivered as the bound sink would present them, the sink keeping the timing policy
   - Capture session lifecycle, ring shape configuration and frame acquire/release
   - Decoded video frame capture to a Dma-Buf ring for decode-to-texture
   - Symmetric per-product declaration of which sources a platform can capture from
@@ -51,8 +51,8 @@ scope:
 #   owners        - Responsible architecture teams
 notes:
   priority: 3
-  status_detail: "Standalone videocapture module for #753; instance-level source binding, symmetric vendor declaration and source-conditional delivery contracts defined"
-  action: "Settle whether decoder-attach stays as a second mode or capture binds only to a video sink with an explicit free-run mode; add that mode to videosink if so"
+  status_detail: "Standalone videocapture module for #753; binds one named video sink, with the sink declaring supportsCapture and owning the timing policy"
+  action: "Add an explicit free-run (immediate) presentation mode to videosink, which capture then inherits through HAL.VIDEOCAPTURE.10"
   owners: "Architecture + Graphics_Architecture"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]

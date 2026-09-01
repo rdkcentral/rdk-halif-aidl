@@ -32,10 +32,9 @@ enum ErrorCode {
     OUT_OF_MEMORY = 1,
 
     /**
-     * The requested source is not one this resource supports, or cannot carry a
-     * further capture.
+     * The bound video sink cannot carry a further capture.
      *
-     * @see IVideoCapture.openWithDecoder(), IVideoCapture.openWithSink(), Capabilities.supportedSources
+     * @see IVideoCapture.open(), Capabilities.maxCapturesPerSink
      */
     SOURCE_UNAVAILABLE = 2,
 

@@ -18,7 +18,6 @@
  */
 package com.rdk.hal.videocapture;
 
-import com.rdk.hal.videocapture.Source;
 import com.rdk.hal.videocapture.FormatLayout;
 import com.rdk.hal.videodecoder.Codec;
 
@@ -107,20 +106,14 @@ parcelable Capabilities
     boolean resize;
 
     /**
-     * The pipeline stages this capture resource can bind to.
+     * How many capture sessions a single video sink can carry at once on this resource.
      *
-     * `IVideoCapture.openWithDecoder()` and `openWithSink()` bind the matching kinds.
-     * A stage absent from this list cannot be
-     * captured on this resource.
-     */
-    Source[] supportedSources;
-
-    /**
-     * How many capture sessions a single source can carry at once on this resource.
-     *
-     * A source already carrying this many captures refuses a further bind with
+     * A sink already carrying this many captures refuses a further bind with
      * `ErrorCode.SOURCE_UNAVAILABLE`. One is the common case; a product that
-     * can fan a stage out to several captures declares more.
+     * can fan one sink out to several captures declares more.
+     *
+     * Which sinks can be captured from at all is declared on the sink, in
+     * `com.rdk.hal.videosink.Capabilities.supportsCapture`.
      */
-    int maxCapturesPerSource;
+    int maxCapturesPerSink;
 }

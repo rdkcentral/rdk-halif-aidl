@@ -19,7 +19,6 @@
 package com.rdk.hal.videocapture;
 import com.rdk.hal.videocapture.IVideoCapture;
 import com.rdk.hal.videocapture.IVideoCaptureEventListener;
-import com.rdk.hal.videocapture.Source;
 
 /**
  *  @brief     Video Capture Manager HAL interface.
@@ -54,23 +53,6 @@ interface IVideoCaptureManager
      * @returns IVideoCapture.Id[]
      */
     IVideoCapture.Id[] getVideoCaptureIds();
-
-    /**
-     * Gets the pipeline sources the platform's capture resources can bind to.
-     *
-     * This is the union across all capture resources. Which sources a given
-     * resource offers is in its `Capabilities.supportedSources`.
-     *
-     * This function can be called at any time and is not dependent on any
-     * capture state. The returned value is not allowed to change between calls.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     *
-     * @returns Source[] one or more Source enum values.
-     *
-     * @see Source, Capabilities.supportedSources
-     */
-    Source[] getSupportedSources();
 
     /**
      * Gets a capture interface.
