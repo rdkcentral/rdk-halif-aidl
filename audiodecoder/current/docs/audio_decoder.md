@@ -382,21 +382,23 @@ sequenceDiagram
     participant Listener as IAudioDecoderControllerListener
     participant Sink as IAudioSinkController
     Note over MW,Demux: Container parsed — priming and padding values extracted
-    MW->>Dec: decodeBufferWithMetadata(handle1, {pts, trimStartNs=42_666_667, trimEndNs=0, ...})
+    MW->>Dec: decodeBufferWithMetadata(handle1, {nsPresentationTime, trimStartNs=42_666_667, trimEndNs=0, ...})
     Note right of Dec: First frame — trim leading priming
     Dec-->>Listener: onFrameOutput(pts, handle1_pcm, {trimStartNs=42_666_667, trimEndNs=0, ...})
     Listener->>Sink: queueAudioFrame(pts, handle1_pcm, {trimStartNs=42_666_667, ...})
     Note over Sink: Sink discards first 42.67 ms of PCM before mixing
-    MW->>Dec: decodeBufferWithMetadata(handle2, {pts, trimStartNs=0, trimEndNs=0, ...})
+    MW->>Dec: decodeBufferWithMetadata(handle2, {nsPresentationTime, trimStartNs=0, trimEndNs=0, ...})
     Dec-->>Listener: onFrameOutput(pts, handle2_pcm, {trimStartNs=0, trimEndNs=0, ...})
     Note over MW,Dec: ... middle of stream, no trim ...
-    MW->>Dec: decodeBufferWithMetadata(handleN, {pts, trimStartNs=0, trimEndNs=2_666_667, ...})
+    MW->>Dec: decodeBufferWithMetadata(handleN, {nsPresentationTime, trimStartNs=0, trimEndNs=2_666_667, ...})
     Note right of Dec: Final frame — trim trailing padding
     MW->>Dec: signalEndOfStream()
     Dec-->>Listener: onFrameOutput(pts, handleN_pcm, {trimStartNs=0, trimEndNs=2_666_667, ...})
     Listener->>Sink: queueAudioFrame(pts, handleN_pcm, {trimEndNs=2_666_667, ...})
     Dec-->>Listener: onEndOfStream()
-    Note over Sink: Sink discards last 2.67 ms; emits onEndOfStream once the final frame has passed to the mixer
+    Note over Sink: Sink discards last 2.67 ms of PCM
+    MW->>Sink: signalEndOfStream()
+    Sink-->>MW: onEndOfStream(nsPresentationTime)
 ```
 
 End-of-stream is a discrete signal — see [End of Stream Signalling](#end-of-stream-signalling). Neither `InputBufferMetadata` nor `FrameMetadata` carries an application EOS flag, so the trim on the final frame and the EOS signal are independent of one another.
