@@ -57,20 +57,9 @@ parcelable FrameMetadata {
 	 * Per-frame — applies only to this decoded frame, not to the stream as a
 	 * whole. Set to 0 (the common case) for no trim.
 	 *
-	 * These report the trim still OUTSTANDING on this frame.
-	 *
-	 * Applying the trim is mandatory and the amount is fixed by
-	 * `InputBufferMetadata`; only the point at which an implementation applies
-	 * it is free. A decoder that has not applied the trim carries the values
-	 * through unchanged from `InputBufferMetadata.trimStartNs` / `trimEndNs`,
-	 * and the AudioSink applies them before presenting PCM to the mixer. A
-	 * decoder that has already applied the trim itself MUST report 0 here, so
-	 * that the sink does not discard the same samples twice.
-	 *
-	 * A non-zero value therefore means "not yet applied"; 0 means "nothing left
-	 * to trim", whether because none was requested or because it is already
-	 * done. Either way the PCM leaving the sink has been trimmed exactly as
-	 * `InputBufferMetadata` specified.
+	 * The AudioSink applies these durations before presenting the PCM to the
+	 * mixer. Where the decoder has already trimmed the frame itself, it sets
+	 * both to 0, so the samples are discarded exactly once.
 	 *
 	 * Used for codec priming / encoder delay (AAC LC/HE, Opus pre-skip), AAC
 	 * SBR padding, and gapless playback across track boundaries.
