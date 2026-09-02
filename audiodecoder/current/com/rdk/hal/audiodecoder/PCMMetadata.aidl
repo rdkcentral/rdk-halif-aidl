@@ -22,6 +22,15 @@ import com.rdk.hal.audiodecoder.PCMFormat;
 
 /** 
  *  @brief     PCM Audio frame metadata.
+ *
+ *  Every field on this parcelable describes the format of the frame it
+ *  accompanies. Where the decoder absorbs an in-codec format change
+ *  mid-stream, the first frame produced under the new format carries the
+ *  updated numChannels / channelTypes / sampleRate, and subsequent frames
+ *  carry the new values until the next change. This is the only
+ *  format-change notification: there is no out-of-band signal and the
+ *  client is not required to act before it arrives.
+ *
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
@@ -31,18 +40,27 @@ import com.rdk.hal.audiodecoder.PCMFormat;
 parcelable PCMMetadata {
 
     /**
-     * Number of audio channels.
+     * Number of audio channels in this frame.
+     *
+     * Reflects the format of THIS frame. On an in-codec format change the
+     * value updates on the first frame produced under the new format.
      */
     int numChannels;
 
     /**
-     * Array of ChannelType enum values.
+     * Array of ChannelType enum values for this frame.
      * The array size should match the number of channels.
+     *
+     * Reflects the format of THIS frame. Updates on the first frame
+     * produced after an in-codec channel-layout change.
      */
     ChannelType[] channelTypes;
 
     /**
-     * Sample rate in samples/second.
+     * Sample rate in samples/second for this frame.
+     *
+     * Reflects the format of THIS frame. On an in-codec format change the
+     * value updates on the first frame produced under the new format.
      */
     int sampleRate;
 
