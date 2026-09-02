@@ -82,18 +82,34 @@ interface IVideoSinkController
     /**
      * Sets the Video Decoder ID linked to this Video Sink.
      *
-     * When the Video Sink is opened, the default is set to `IVideoDecoder.Id.UNDEFINED`.
-     * When set to `IVideoDecoder.Id.UNDEFINED` then no Video Decoder source is set.
+     * `IVideoDecoder.Id.UNDEFINED` means that no Video Decoder source is
+     * associated. It is the default when the Video Sink is opened and may be
+     * passed here to clear an existing association, equivalent in effect to
+     * the state at `open()`.
      *
-     * @param[in] videoDecoderId		The ID of the Video Decoder source.
+     * A valid Video Decoder ID is one returned by
+     * `IVideoDecoderManager.getVideoDecoderIds()`. A valid association is
+     * required before the pipeline is started in both tunnelled and
+     * non-tunnelled modes.
      *
-     * @exception binder::Status::Exception::EX_NONE for success
+     * @param[in] videoDecoderId
+     *      The ID of the Video Decoder source, or `IVideoDecoder.Id.UNDEFINED`
+     *      to clear the association.
+     *
+     * @exception binder::Status::Exception::EX_NONE
+     *      Operation completed successfully.
+     *
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *      The resource is not in State::READY.
      *
      * @returns boolean
-     * @retval true     The Video Decoder ID was set successfully.
-     * @retval false    Invalid Video Decoder ID.
+     * @retval true
+     *      The Video Decoder ID was set, or the association was cleared with
+     *      `IVideoDecoder.Id.UNDEFINED`.
      *
+     * @retval false
+     *      The ID is not one returned by
+     *      `IVideoDecoderManager.getVideoDecoderIds()`.
      *
      * @pre The resource must be in State::READY.
      *
@@ -104,10 +120,14 @@ interface IVideoSinkController
     /**
      * Gets the Video Decoder ID linked to this Video Sink.
      *
+     * Returns the currently associated `IVideoDecoder.Id` in both tunnelled
+     * and non-tunnelled modes.
+     *
      * @returns IVideoDecoder.Id which can be IVideoDecoder.Id.UNDEFINED.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource
+     *            is not in State::READY or State::STARTED.
      *
      *
      * @pre The resource must be in State::READY or State::STARTED.
@@ -195,17 +215,28 @@ interface IVideoSinkController
     IAVClock.Id getClock();
 
     /**
-	 * Starts the Video Sink.
+     * Starts the Video Sink.
      *
      * The Video Sink must be in a READY state before it can be started.
-     * If successful the Video Sink transitions to a `STARTING` state and then a `STARTED` state.
+     * If successful the Video Sink transitions to a `STARTING` state and then
+     * a `STARTED` state.
+     *
+     * The client must call `setVideoDecoder()` with a valid decoder ID before
+     * calling this method in both tunnelled and non-tunnelled modes. Starting
+     * a Video Sink while the associated decoder ID is
+     * `IVideoDecoder.Id.UNDEFINED` shall fail.
      *
      * @exception binder::Status::Exception::EX_NONE for success
+     *
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *      The resource is not in State::READY, or the associated Video
+     *      Decoder ID is `IVideoDecoder.Id.UNDEFINED`.
      *
      * @pre The resource must be in State::READY.
+     * @pre The associated Video Decoder ID must not be
+     *      `IVideoDecoder.Id.UNDEFINED`; set it using `setVideoDecoder()`.
      *
-     * @see stop(), IVideoSink.open()
+     * @see stop(), IVideoSink.open(), setVideoDecoder()
      */
     void start();
 
@@ -302,8 +333,8 @@ interface IVideoSinkController
      * A second call is a no-op. After this call `queueVideoFrame()` throws
      * `EX_ILLEGAL_STATE` until the sink is flushed or stopped and restarted.
      *
-     * Behaviour is identical in tunnel and non-tunnel modes - the MW calls this
-     * method the same way. In tunnel mode the decoder->sink data flow is
+     * Behaviour is identical in tunnelled and non-tunnelled modes - the MW calls this
+     * method the same way. In tunnelled mode the decoder->sink data flow is
      * vendor-internal; the vendor must implement the EOS signal propagation
      * from decoder to sink so the sink can fire
      * `onEndOfStream(nsPresentationTime)` with the correct presentation
