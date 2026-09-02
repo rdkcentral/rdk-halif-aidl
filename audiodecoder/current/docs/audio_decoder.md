@@ -333,7 +333,7 @@ sequenceDiagram
     Dec-->>Listener: onFrameOutput(pts, pcmHandle, metadata=null)
     MW->>Dec: decodeBufferWithMetadata(handleN+1, {pts, ...})
     Note right of Dec: 48 kHz 5.1 detected in the bitstream
-    Dec-->>Listener: onFrameOutput(pts, pcmHandle, FrameMetadata{pcm: PCMMetadata{sampleRate=48000, numChannels=6, ...}})
+    Dec-->>Listener: onFrameOutput(pts, pcmHandle, FrameMetadata{metadata=PCMMetadata{sampleRate=48000, numChannels=6, ...}})
     Note over MW: Non-null metadata is the notification — client retains the new format
     MW->>Dec: decodeBufferWithMetadata(handleN+2, {pts, ...})
     Dec-->>Listener: onFrameOutput(pts, pcmHandle, metadata=null)
