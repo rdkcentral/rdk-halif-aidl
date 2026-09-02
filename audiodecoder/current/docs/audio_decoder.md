@@ -361,7 +361,7 @@ Presented to mixer        |            source audio               |
                           |<-- matches the original duration ---->|
 ```
 
-The decoder emits the whole encoded run. The sink discards `trimStartNs` from the front and `trimEndNs` from the back, leaving audio whose duration matches the source sample-accurately.
+The decoder emits the whole encoded run. Applying the trim discards `trimStartNs` from the front and `trimEndNs` from the back, leaving audio whose duration matches the source sample-accurately. Which stage applies it is covered under [The trim contract](#the-trim-contract) below.
 
 ### The trim contract
 
