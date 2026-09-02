@@ -80,41 +80,41 @@ interface IVideoSinkController
     boolean setProperty(in Property property, in PropertyValue propertyValue);
 
     /**
-    * Sets the Video Decoder ID linked to this Video Sink.
-    *
-    * When the Video Sink is opened, the default is set to
-    * `IVideoDecoder.Id.UNDEFINED`.
-    *
-    * A valid Video Decoder association is required before the pipeline is
-    * started in both tunnelled and non-tunnelled modes.
-    *
-    * @param[in] videoDecoderId
-    *      The ID of the Video Decoder source.
-    *
-    * @exception binder::Status::Exception::EX_NONE
-    *      Operation completed successfully.
-    *
-    * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-    *      The resource is not in State::READY.
-    *
-    * @returns boolean
-    * @retval true
-    *      The Video Decoder ID was set successfully.
-    *
-    * @retval false
-    *      Invalid Video Decoder ID.
-    *
-    * @pre The resource must be in State::READY.
-    *
-    * @see getVideoDecoder(), IVideoDecoderManager.getVideoDecoderIds()
-    */
+     * Sets the Video Decoder ID linked to this Video Sink.
+     *
+     * When the Video Sink is opened, the default is set to
+     * `IVideoDecoder.Id.UNDEFINED`.
+     *
+     * A valid Video Decoder association is required before the pipeline is
+     * started in both tunnelled and non-tunnelled modes.
+     *
+     * @param[in] videoDecoderId
+     *      The ID of the Video Decoder source.
+     *
+     * @exception binder::Status::Exception::EX_NONE
+     *      Operation completed successfully.
+     *
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *      The resource is not in State::READY.
+     *
+     * @returns boolean
+     * @retval true
+     *      The Video Decoder ID was set successfully.
+     *
+     * @retval false
+     *      Invalid Video Decoder ID.
+     *
+     * @pre The resource must be in State::READY.
+     *
+     * @see getVideoDecoder(), IVideoDecoderManager.getVideoDecoderIds()
+     */
     boolean setVideoDecoder(in IVideoDecoder.Id videoDecoderId);
 
     /**
      * Gets the Video Decoder ID linked to this Video Sink.
      *
-    * Returns the currently associated `IVideoDecoder.Id` in both tunnelled
-    * and non-tunnelled modes.
+     * Returns the currently associated `IVideoDecoder.Id` in both tunnelled
+     * and non-tunnelled modes.
      *
      * @returns IVideoDecoder.Id which can be IVideoDecoder.Id.UNDEFINED.
      *
@@ -208,29 +208,29 @@ interface IVideoSinkController
     IAVClock.Id getClock();
 
     /**
-    * Starts the Video Sink.
-    *
-    * The Video Sink must be in a READY state before it can be started.
-    * If successful the Video Sink transitions to a `STARTING` state and then
-    * a `STARTED` state.
-    *
-    * The client must call `setVideoDecoder()` with a valid decoder ID before
-    * calling this method in both tunnelled and non-tunnelled modes. Starting
-    * a Video Sink while the associated decoder ID is
-    * `IVideoDecoder.Id.UNDEFINED` shall fail.
-    *
-    * @exception binder::Status::Exception::EX_NONE for success
-    *
-    * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-    *      The resource is not in State::READY, or the associated Video
-    *      Decoder ID is `IVideoDecoder.Id.UNDEFINED`.
-    *
-    * @pre The resource must be in State::READY.
-    * @pre The associated Video Decoder ID must not be
-    *      `IVideoDecoder.Id.UNDEFINED`; set it using `setVideoDecoder()`.
-    *
-    * @see stop(), IVideoSink.open(), setVideoDecoder()
-    */
+     * Starts the Video Sink.
+     *
+     * The Video Sink must be in a READY state before it can be started.
+     * If successful the Video Sink transitions to a `STARTING` state and then
+     * a `STARTED` state.
+     *
+     * The client must call `setVideoDecoder()` with a valid decoder ID before
+     * calling this method in both tunnelled and non-tunnelled modes. Starting
+     * a Video Sink while the associated decoder ID is
+     * `IVideoDecoder.Id.UNDEFINED` shall fail.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     *
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *      The resource is not in State::READY, or the associated Video
+     *      Decoder ID is `IVideoDecoder.Id.UNDEFINED`.
+     *
+     * @pre The resource must be in State::READY.
+     * @pre The associated Video Decoder ID must not be
+     *      `IVideoDecoder.Id.UNDEFINED`; set it using `setVideoDecoder()`.
+     *
+     * @see stop(), IVideoSink.open(), setVideoDecoder()
+     */
     void start();
 
     /**

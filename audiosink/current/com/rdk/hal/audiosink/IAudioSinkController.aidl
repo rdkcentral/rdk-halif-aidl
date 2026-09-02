@@ -62,17 +62,17 @@ import com.rdk.hal.avclock.IAVClock;
 @VintfStability
 interface IAudioSinkController {
 
-	/**
-	 * Sets the audio decoder ID linked to this audio sink.
+    /**
+     * Sets the audio decoder ID linked to this audio sink.
      *
      * When the audio sink is opened, the default is set to
      * `IAudioDecoder.Id.UNDEFINED`.
-	 *
-	 * A valid audio decoder association is required before the pipeline is
-	 * started in both tunnelled and non-tunnelled modes.
-	 *
-	 * @param[in] audioDecoderId		The ID of the audio decoder source.
-	 *
+     *
+     * A valid audio decoder association is required before the pipeline is
+     * started in both tunnelled and non-tunnelled modes.
+     *
+     * @param[in] audioDecoderId        The ID of the audio decoder source.
+     *
      * @exception binder::Status::Exception::EX_NONE
      *      Operation completed successfully.
      *
@@ -84,19 +84,19 @@ interface IAudioSinkController {
      *      The audio decoder ID was set successfully.
      * @retval false
      *      Invalid audio decoder ID.
-	 *
+     *
      * @pre The resource must be in State::READY.
-	 *
+     *
      * @see getAudioDecoder(), IAudioDecoderManager.getAudioDecoderIds()
-	 */
-	boolean setAudioDecoder(in IAudioDecoder.Id audioDecoderId);
+     */
+    boolean setAudioDecoder(in IAudioDecoder.Id audioDecoderId);
 
-	/**
-	 * Gets the audio decoder ID linked to this audio sink.
-	 *
+    /**
+     * Gets the audio decoder ID linked to this audio sink.
+     *
      * Returns the currently associated `IAudioDecoder.Id` in both tunnelled
      * and non-tunnelled modes.
-	 *
+     *
      * @returns IAudioDecoder.Id which can be `IAudioDecoder.Id.UNDEFINED`.
      *
      * @exception binder::Status::Exception::EX_NONE for success
@@ -106,7 +106,7 @@ interface IAudioSinkController {
      * @pre The resource must be in State::READY or State::STARTED.
      *
      * @see setAudioDecoder()
-	 */
+     */
     IAudioDecoder.Id getAudioDecoder();
 
     /**
@@ -187,7 +187,7 @@ interface IAudioSinkController {
     IAVClock.Id getClock();
 
     /**
-	 * Starts the audio sink.
+     * Starts the audio sink.
      *
      * The audio sink must be in a `READY` state before it can be started.
      * If successful the audio sink transitions to a `STARTING` state and then
