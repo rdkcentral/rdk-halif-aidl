@@ -328,6 +328,7 @@ sequenceDiagram
     participant MW as Middleware
     participant Dec as IAudioDecoderController
     participant Listener as IAudioDecoderControllerListener
+    Note over MW,Listener: Mid-session. The 44.1 kHz stereo format was<br/>delivered on the first frame after start().
     MW->>Dec: decodeBufferWithMetadata(handleN, {pts, ...})
     Note right of Dec: still 44.1 kHz stereo — format unchanged
     Dec-->>Listener: onFrameOutput(nsPresentationTime, frameAVBufferHandle, metadata=null)
