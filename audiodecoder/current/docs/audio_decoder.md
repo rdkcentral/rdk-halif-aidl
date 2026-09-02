@@ -346,18 +346,16 @@ This is correct behaviour — **the decoder is expected to emit the full encoded
 
 ### The trim contract
 
-`InputBufferMetadata.trimStartNs` and `trimEndNs` carry per-frame trim durations on each `decodeBufferWithMetadata()` call. The corresponding `FrameMetadata.trimStartNs` / `trimEndNs` on `onFrameOutput()` report what remains outstanding, as set out below.
+`InputBufferMetadata.trimStartNs` and `trimEndNs` carry per-frame trim durations on each `decodeBufferWithMetadata()` call. The corresponding `FrameMetadata.trimStartNs` / `trimEndNs` on `onFrameOutput()` carry the trim to the sink, which applies it before presenting the PCM to the mixer.
 
 **The trim behaviour is defined by this interface and is not negotiable.** The samples must be trimmed as specified. What *is* an implementation choice is **where** the trim is applied — a vendor may apply it inside the decoder (for example via FFmpeg's `AV_PKT_DATA_SKIP_SAMPLES` during decode) or in the sink.
 
-Whichever site applies it, `FrameMetadata.trimStartNs` / `trimEndNs` report the trim **still outstanding** on the frame:
+A decoder that trims the frame itself sets `FrameMetadata.trimStartNs` / `trimEndNs` to 0, so the sink does not discard the same samples again:
 
-| Decoder applies the trim? | `FrameMetadata.trim*` | Sink |
+| Where the trim is applied | `FrameMetadata.trim*` | Sink |
 |---|---|---|
-| No | carried through unchanged from `InputBufferMetadata` | applies the trim |
-| Yes | **reported as 0** | nothing left to do |
-
-Reporting 0 once the trim is applied is what prevents the same samples being discarded twice. The observable result is identical either way: the PCM leaving the Audio Sink into the Audio Mixer has been trimmed exactly as `InputBufferMetadata` specified.
+| Sink | carried through from `InputBufferMetadata` | applies the trim |
+| Decoder | 0 | nothing to do | The observable result is identical either way: the PCM leaving the Audio Sink into the Audio Mixer has been trimmed exactly as `InputBufferMetadata` specified.
 
 The trim is strictly **per-buffer**. Each `decodeBufferWithMetadata()` call's values apply only to the single decoded frame produced from that buffer and are not carried forward. The HAL holds no trim state across buffers. Where a trim region spans multiple input buffers, the middleware translates it into per-buffer trim metadata before calling the decoder.
 
