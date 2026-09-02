@@ -238,9 +238,11 @@ print("yes" if fs and all(is_doc(p) for p in fs) else "no")
     else
         echo "  reviewers: request teams → ${!want_teams[*]}"
         if ! $DRY_RUN; then
+            local -A request_failed=()
             for slug in "${!want_teams[@]}"; do
                 if ! gh pr edit "$pr" --repo "$REPO" --add-reviewer "rdkcentral/${slug}" >/dev/null 2>&1; then
                     echo "    WARN: could not request ${slug} — is the team a collaborator on ${REPO}?" >&2
+                    request_failed["$slug"]=1
                     WARN_COUNT=$((WARN_COUNT + 1))
                 fi
             done
@@ -253,7 +255,10 @@ print("yes" if fs and all(is_doc(p) for p in fs) else "no")
             for slug in "${!want_teams[@]}"; do
                 if [[ " ${requested} " == *" ${slug} "* ]]; then
                     echo "    requested ${slug}"
-                else
+                elif [ -z "${request_failed[$slug]:-}" ]; then
+                    # A team whose request already failed above is reported and
+                    # counted there; counting it again here would inflate the
+                    # summary for a single failure.
                     echo "    WARN: ${slug} is not a pending reviewer after the request" >&2
                     WARN_COUNT=$((WARN_COUNT + 1))
                 fi
