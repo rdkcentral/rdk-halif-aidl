@@ -23,7 +23,8 @@ import com.rdk.hal.audiodecoder.PCMFormat;
 /** 
  *  @brief     PCM Audio frame metadata.
  *
- *  Every field on this parcelable describes the format of the frame whose
+ *  The format fields on this parcelable - numChannels, channelTypes,
+ *  sampleRate, format and planarFormat - describe the frame whose
  *  FrameMetadata carried it, and that format remains in effect for later
  *  frames until new metadata is delivered.
  *
