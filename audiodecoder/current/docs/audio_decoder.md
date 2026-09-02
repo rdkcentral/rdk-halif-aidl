@@ -317,7 +317,7 @@ An **in-codec** format change — the sample rate or channel count changing with
 
 **The decoder detects the change from the bitstream.** Every codec in scope carries the format in-band: AAC in the ADTS header or AudioSpecificConfig, AC-3 and E-AC-3 in the syncframe (`fscod`, `acmod`), MP3 in the frame header, Opus in its identification header. The decoder therefore holds the authoritative values before the client could supply them.
 
-**The change surfaces on the output side.** `PCMMetadata` describes the frame it accompanies, so the first frame produced under the new format carries the new `sampleRate`, `numChannels` and `channelTypes`, and every frame after it carries them until the next change. Consumers read the format from the frame in front of them; there is no separate notification to subscribe to.
+**The change surfaces on the output side.** Frame metadata is only emitted when it changes, so a format change is precisely when `FrameMetadata` is delivered. The first frame produced under the new format carries a non-null `FrameMetadata` whose `PCMMetadata` holds the new `sampleRate`, `numChannels` and `channelTypes`. Frames after it carry null again until the format changes once more, so the client retains the last values it was given. That delivery is the notification; there is no separate signal to subscribe to.
 
 `setAudioFormat()` is a **setup-time hint**, valid in `State::READY`. It supplies container-derived values for codecs whose codec-specific data does not carry them, so the decoder can size its output before the first frame arrives. It is not a runtime reconfiguration call.
 
@@ -328,12 +328,15 @@ sequenceDiagram
     participant MW as Middleware
     participant Dec as IAudioDecoderController
     participant Listener as IAudioDecoderControllerListener
-    MW->>Dec: decodeBufferWithMetadata(handle, {pts, ...})
+    MW->>Dec: decodeBufferWithMetadata(handleN, {pts, ...})
+    Note right of Dec: still 44.1 kHz stereo — format unchanged
+    Dec-->>Listener: onFrameOutput(pts, pcmHandle, metadata=null)
+    MW->>Dec: decodeBufferWithMetadata(handleN+1, {pts, ...})
     Note right of Dec: 48 kHz 5.1 detected in the bitstream
-    Dec-->>Listener: onFrameOutput(pts, pcmHandle, {pcm: PCMMetadata{sampleRate=48000, numChannels=6, ...}})
-    Note over MW: New format read from the frame — no client action taken
-    MW->>Dec: decodeBufferWithMetadata(handle, {pts, ...})
-    Dec-->>Listener: onFrameOutput(pts, pcmHandle, {pcm: PCMMetadata{sampleRate=48000, numChannels=6, ...}})
+    Dec-->>Listener: onFrameOutput(pts, pcmHandle, FrameMetadata{pcm: PCMMetadata{sampleRate=48000, numChannels=6, ...}})
+    Note over MW: Non-null metadata is the notification — client retains the new format
+    MW->>Dec: decodeBufferWithMetadata(handleN+2, {pts, ...})
+    Dec-->>Listener: onFrameOutput(pts, pcmHandle, metadata=null)
 ```
 
 A **codec** change — AAC to AC-3, say — is out of scope. The decoder backend itself must be reconfigured, so those require `stop()` → `setAudioFormat()` → `start()`.
