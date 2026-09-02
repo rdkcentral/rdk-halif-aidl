@@ -355,7 +355,9 @@ A decoder that trims the frame itself sets `FrameMetadata.trimStartNs` / `trimEn
 | Where the trim is applied | `FrameMetadata.trim*` | Sink |
 |---|---|---|
 | Sink | carried through from `InputBufferMetadata` | applies the trim |
-| Decoder | 0 | nothing to do | The observable result is identical either way: the PCM leaving the Audio Sink into the Audio Mixer has been trimmed exactly as `InputBufferMetadata` specified.
+| Decoder | 0 | nothing to do |
+
+The observable result is identical either way: the PCM leaving the Audio Sink into the Audio Mixer has been trimmed exactly as `InputBufferMetadata` specified.
 
 The trim is strictly **per-buffer**. Each `decodeBufferWithMetadata()` call's values apply only to the single decoded frame produced from that buffer and are not carried forward. The HAL holds no trim state across buffers. Where a trim region spans multiple input buffers, the middleware translates it into per-buffer trim metadata before calling the decoder.
 
