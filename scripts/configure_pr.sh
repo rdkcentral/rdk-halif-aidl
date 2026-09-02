@@ -62,9 +62,17 @@ fi
 
 $DRY_RUN && echo "=== DRY RUN — no changes will be made ===" && echo
 
-# Counter for non-fatal issues — surfaced at end of run and used to set a
-# non-zero exit code so CI can detect partial failures (failed gh pr edit
-# calls, unmapped reviewer teams, etc.).
+# EVERY STEP IS ATTEMPTED, THEN THE RUN FAILS IF ANY OF THEM DID.
+#
+# A step that cannot be applied must not stop the ones after it — a PR missing
+# a label is still worth assigning and adding reviewers to — so every mutating
+# call is guarded and records a warning instead of aborting. The count is
+# reported at the end and sets a non-zero exit, so a partial run is never
+# mistaken for a clean one.
+#
+# This matters most where the failure is invisible: a reviewer team that is not
+# a collaborator is rejected by the API, and without the count the run would
+# report success having added no reviewer at all.
 WARN_COUNT=0
 
 # --- Team mapping -----------------------------------------------------------
@@ -230,9 +238,30 @@ print("yes" if fs and all(is_doc(p) for p in fs) else "no")
     else
         echo "  reviewers: request teams → ${!want_teams[*]}"
         if ! $DRY_RUN; then
+            local -A request_failed=()
             for slug in "${!want_teams[@]}"; do
-                gh pr edit "$pr" --repo "$REPO" --add-reviewer "rdkcentral/${slug}" 2>/dev/null \
-                    && echo "    requested ${slug}" || echo "    WARN: could not request ${slug}"
+                if ! gh pr edit "$pr" --repo "$REPO" --add-reviewer "rdkcentral/${slug}" >/dev/null 2>&1; then
+                    echo "    WARN: could not request ${slug} — is the team a collaborator on ${REPO}?" >&2
+                    request_failed["$slug"]=1
+                    WARN_COUNT=$((WARN_COUNT + 1))
+                fi
+            done
+            # Read back rather than trust the call. A request the API accepts but
+            # does not act on would otherwise be reported as applied, which is how
+            # a mandatory reviewer goes missing without anyone seeing it.
+            local requested
+            requested=$(gh pr view "$pr" --repo "$REPO" --json reviewRequests \
+                --jq '[.reviewRequests[].name // empty] | join(" ")' 2>/dev/null || echo "")
+            for slug in "${!want_teams[@]}"; do
+                if [[ " ${requested} " == *" ${slug} "* ]]; then
+                    echo "    requested ${slug}"
+                elif [ -z "${request_failed[$slug]:-}" ]; then
+                    # A team whose request already failed above is reported and
+                    # counted there; counting it again here would inflate the
+                    # summary for a single failure.
+                    echo "    WARN: ${slug} is not a pending reviewer after the request" >&2
+                    WARN_COUNT=$((WARN_COUNT + 1))
+                fi
             done
         fi
     fi
@@ -275,8 +304,12 @@ else: print("    ")
     else
         echo "  project: status '${cs}' → '${TARGET_STATUS}'"
         if ! $DRY_RUN; then
-            gh api graphql -f query='mutation{updateProjectV2ItemFieldValue(input:{projectId:"'"$proj_id"'",itemId:"'"$item_id"'",fieldId:"'"$field_id"'",value:{singleSelectOptionId:"'"$option_id"'"}}){projectV2Item{id}}}' >/dev/null \
-                && echo "    applied"
+            if gh api graphql -f query='mutation{updateProjectV2ItemFieldValue(input:{projectId:"'"$proj_id"'",itemId:"'"$item_id"'",fieldId:"'"$field_id"'",value:{singleSelectOptionId:"'"$option_id"'"}}){projectV2Item{id}}}' >/dev/null 2>&1; then
+                echo "    applied"
+            else
+                echo "    WARN: could not set project status to '${TARGET_STATUS}'" >&2
+                WARN_COUNT=$((WARN_COUNT + 1))
+            fi
         fi
     fi
 }
