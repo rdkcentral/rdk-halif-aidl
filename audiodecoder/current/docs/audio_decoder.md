@@ -334,7 +334,7 @@ Typical priming amounts:
 
 | Codec | Encoder priming (typical) |
 |---|---|
-| AAC-LC | 2048 samples (one full frame) |
+| AAC-LC | 2048 samples (two 1024-sample frames) |
 | HE-AAC v1/v2 | 2048 + extra SBR latency |
 | MP3 | 529–1105 samples (LAME default 576) |
 | Vorbis | Variable per stream, signalled in headers |
@@ -373,21 +373,21 @@ sequenceDiagram
     participant Listener as IAudioDecoderControllerListener
     participant Sink as IAudioSinkController
     Note over MW,Demux: Container parsed — priming and padding values extracted
-    MW->>Dec: decodeBufferWithMetadata(handle₁, {pts, trimStartNs=42_666_667, trimEndNs=0, ...})
+    MW->>Dec: decodeBufferWithMetadata(handle1, {pts, trimStartNs=42_666_667, trimEndNs=0, ...})
     Note right of Dec: First frame — trim leading priming
-    Dec-->>Listener: onFrameOutput(pts, handle₁_pcm, {trimStartNs=42_666_667, trimEndNs=0, ...})
-    Listener->>Sink: queueAudioFrame(handle₁_pcm, {trimStartNs=42_666_667, ...})
+    Dec-->>Listener: onFrameOutput(pts, handle1_pcm, {trimStartNs=42_666_667, trimEndNs=0, ...})
+    Listener->>Sink: queueAudioFrame(handle1_pcm, {trimStartNs=42_666_667, ...})
     Note over Sink: Sink discards first 42.67 ms of PCM before mixing
-    MW->>Dec: decodeBufferWithMetadata(handle₂, {pts, trimStartNs=0, trimEndNs=0, ...})
-    Dec-->>Listener: onFrameOutput(pts, handle₂_pcm, {trimStartNs=0, trimEndNs=0, ...})
+    MW->>Dec: decodeBufferWithMetadata(handle2, {pts, trimStartNs=0, trimEndNs=0, ...})
+    Dec-->>Listener: onFrameOutput(pts, handle2_pcm, {trimStartNs=0, trimEndNs=0, ...})
     Note over MW,Dec: ... middle of stream, no trim ...
-    MW->>Dec: decodeBufferWithMetadata(handleN, {pts, trimStartNs=0, trimEndNs=18_666_667, ...})
+    MW->>Dec: decodeBufferWithMetadata(handleN, {pts, trimStartNs=0, trimEndNs=2_666_667, ...})
     Note right of Dec: Final frame — trim trailing padding
     MW->>Dec: signalEndOfStream()
-    Dec-->>Listener: onFrameOutput(pts, handleN_pcm, {trimStartNs=0, trimEndNs=18_666_667, ...})
-    Listener->>Sink: queueAudioFrame(handleN_pcm, {trimEndNs=18_666_667, ...})
+    Dec-->>Listener: onFrameOutput(pts, handleN_pcm, {trimStartNs=0, trimEndNs=2_666_667, ...})
+    Listener->>Sink: queueAudioFrame(handleN_pcm, {trimEndNs=2_666_667, ...})
     Dec-->>Listener: onEndOfStream()
-    Note over Sink: Sink discards last 18.67 ms; emits onEndOfStream once played
+    Note over Sink: Sink discards last 2.67 ms; emits onEndOfStream once the final frame has passed to the mixer
 ```
 
 End-of-stream is a discrete signal — see [End of Stream Signalling](#end-of-stream-signalling). Neither `InputBufferMetadata` nor `FrameMetadata` carries an application EOS flag, so the trim on the final frame and the EOS signal are independent of one another.
@@ -411,7 +411,7 @@ Middleware extracts priming/padding from the container and translates to nanosec
 ```text
 priming = 2048 samples
 trimStartNs (first frame) = 2048 / 48000 × 1_000_000_000
-                          = 42_666_666 ns
+                          = 42_666_667 ns   (rounded to nearest ns)
                           ≈ 42.67 ms
 ```
 
@@ -419,7 +419,7 @@ If the same stream was originally 44.1 kHz with a 1-second source duration and w
 
 ```text
 trimEndNs (final frame) = 128 / 48000 × 1_000_000_000
-                        = 2_666_666 ns
+                        = 2_666_667 ns   (rounded to nearest ns)
                         ≈ 2.67 ms
 ```
 
