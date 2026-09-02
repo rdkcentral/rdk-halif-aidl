@@ -344,6 +344,25 @@ Typical priming amounts:
 
 This is correct behaviour — **the decoder is expected to emit the full encoded sample count, padding included.** What removes the padding is the trim metadata described below.
 
+What the decoder emits, and what the trim removes:
+
+```text
+                 trimStartNs                                    trimEndNs
+              (encoder priming)                              (final padding)
+                 |<------>|                                       |<->|
+                 +--------+---------------------------------------+---+
+Decoded PCM      | primed |            source audio               |pad|
+                 +--------+---------------------------------------+---+
+                 |<--------------- what the decoder emits ----------->|
+
+                          +---------------------------------------+
+Presented to mixer        |            source audio               |
+                          +---------------------------------------+
+                          |<-- matches the original duration ---->|
+```
+
+The decoder emits the whole encoded run. The sink discards `trimStartNs` from the front and `trimEndNs` from the back, leaving audio whose duration matches the source sample-accurately.
+
 ### The trim contract
 
 `InputBufferMetadata.trimStartNs` and `trimEndNs` carry per-frame trim durations on each `decodeBufferWithMetadata()` call. The corresponding `FrameMetadata.trimStartNs` / `trimEndNs` on `onFrameOutput()` carry the trim to the sink, which applies it before presenting the PCM to the mixer.
