@@ -82,14 +82,19 @@ interface IVideoSinkController
     /**
      * Sets the Video Decoder ID linked to this Video Sink.
      *
-     * When the Video Sink is opened, the default is set to
-     * `IVideoDecoder.Id.UNDEFINED`.
+     * `IVideoDecoder.Id.UNDEFINED` means that no Video Decoder source is
+     * associated. It is the default when the Video Sink is opened and may be
+     * passed here to clear an existing association, equivalent in effect to
+     * the state at `open()`.
      *
-     * A valid Video Decoder association is required before the pipeline is
-     * started in both tunnelled and non-tunnelled modes.
+     * A valid Video Decoder ID is one returned by
+     * `IVideoDecoderManager.getVideoDecoderIds()`. A valid association is
+     * required before the pipeline is started in both tunnelled and
+     * non-tunnelled modes.
      *
      * @param[in] videoDecoderId
-     *      The ID of the Video Decoder source.
+     *      The ID of the Video Decoder source, or `IVideoDecoder.Id.UNDEFINED`
+     *      to clear the association.
      *
      * @exception binder::Status::Exception::EX_NONE
      *      Operation completed successfully.
@@ -99,10 +104,12 @@ interface IVideoSinkController
      *
      * @returns boolean
      * @retval true
-     *      The Video Decoder ID was set successfully.
+     *      The Video Decoder ID was set, or the association was cleared with
+     *      `IVideoDecoder.Id.UNDEFINED`.
      *
      * @retval false
-     *      Invalid Video Decoder ID.
+     *      The ID is not one returned by
+     *      `IVideoDecoderManager.getVideoDecoderIds()`.
      *
      * @pre The resource must be in State::READY.
      *

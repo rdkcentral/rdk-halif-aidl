@@ -65,13 +65,19 @@ interface IAudioSinkController {
     /**
      * Sets the audio decoder ID linked to this audio sink.
      *
-     * When the audio sink is opened, the default is set to
-     * `IAudioDecoder.Id.UNDEFINED`.
+     * `IAudioDecoder.Id.UNDEFINED` means that no audio decoder source is
+     * associated. It is the default when the audio sink is opened and may be
+     * passed here to clear an existing association, equivalent in effect to
+     * the state at `open()`.
      *
-     * A valid audio decoder association is required before the pipeline is
-     * started in both tunnelled and non-tunnelled modes.
+     * A valid audio decoder ID is one returned by
+     * `IAudioDecoderManager.getAudioDecoderIds()`. A valid association is
+     * required before the pipeline is started in both tunnelled and
+     * non-tunnelled modes.
      *
-     * @param[in] audioDecoderId        The ID of the audio decoder source.
+     * @param[in] audioDecoderId        The ID of the audio decoder source, or
+     *                                  `IAudioDecoder.Id.UNDEFINED` to clear
+     *                                  the association.
      *
      * @exception binder::Status::Exception::EX_NONE
      *      Operation completed successfully.
@@ -81,9 +87,11 @@ interface IAudioSinkController {
      *
      * @returns boolean
      * @retval true
-     *      The audio decoder ID was set successfully.
+     *      The audio decoder ID was set, or the association was cleared with
+     *      `IAudioDecoder.Id.UNDEFINED`.
      * @retval false
-     *      Invalid audio decoder ID.
+     *      The ID is not one returned by
+     *      `IAudioDecoderManager.getAudioDecoderIds()`.
      *
      * @pre The resource must be in State::READY.
      *
