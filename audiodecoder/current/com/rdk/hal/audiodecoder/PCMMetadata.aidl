@@ -22,6 +22,21 @@ import com.rdk.hal.audiodecoder.PCMFormat;
 
 /** 
  *  @brief     PCM Audio frame metadata.
+ *
+ *  The format fields on this parcelable - numChannels, channelTypes,
+ *  sampleRate, format and planarFormat - describe the frame whose
+ *  FrameMetadata carried it, and that format remains in effect for later
+ *  frames until new metadata is delivered.
+ *
+ *  Frame metadata is delivered with the first decoded frame after start(),
+ *  the first after flush(), and whenever it changes. Where the decoder
+ *  absorbs an in-codec format change mid-stream, the first frame produced
+ *  under the new format therefore carries a non-null FrameMetadata whose
+ *  `metadata` field holds a PCMMetadata with the updated numChannels /
+ *  channelTypes / sampleRate. That delivery is the
+ *  only format-change notification: there is no out-of-band signal, and
+ *  the client is not required to act before it arrives.
+ *
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
@@ -31,18 +46,29 @@ import com.rdk.hal.audiodecoder.PCMFormat;
 parcelable PCMMetadata {
 
     /**
-     * Number of audio channels.
+     * Number of audio channels in this frame.
+     *
+     * Reflects the format of THIS frame. On an in-codec format change the
+     * value updates on the first frame produced under the new format,
+     * and stays in effect until new metadata is delivered.
      */
     int numChannels;
 
     /**
-     * Array of ChannelType enum values.
+     * Array of ChannelType enum values for this frame.
      * The array size should match the number of channels.
+     *
+     * Reflects the format of THIS frame. Updates on the first frame
+     * produced after an in-codec channel-layout change.
      */
     ChannelType[] channelTypes;
 
     /**
-     * Sample rate in samples/second.
+     * Sample rate in samples/second for this frame.
+     *
+     * Reflects the format of THIS frame. On an in-codec format change the
+     * value updates on the first frame produced under the new format,
+     * and stays in effect until new metadata is delivered.
      */
     int sampleRate;
 
