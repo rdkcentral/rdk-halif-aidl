@@ -27,10 +27,11 @@ import com.rdk.hal.audiodecoder.PCMFormat;
  *  FrameMetadata carried it, and that format remains in effect for later
  *  frames until new metadata is delivered.
  *
- *  Frame metadata is only emitted when it changes, so where the decoder
- *  absorbs an in-codec format change mid-stream the first frame produced
- *  under the new format carries a non-null FrameMetadata holding the
- *  updated numChannels / channelTypes / sampleRate. That delivery is the
+ *  Frame metadata is delivered with the first decoded frame after start(),
+ *  the first after flush(), and whenever it changes. Where the decoder
+ *  absorbs an in-codec format change mid-stream, the first frame produced
+ *  under the new format therefore carries a non-null FrameMetadata holding
+ *  the updated numChannels / channelTypes / sampleRate. That delivery is the
  *  only format-change notification: there is no out-of-band signal, and
  *  the client is not required to act before it arrives.
  *
