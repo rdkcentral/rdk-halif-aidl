@@ -346,7 +346,7 @@ This is correct behaviour — **the decoder is expected to emit the full encoded
 
 ### The trim contract
 
-`InputBufferMetadata.trimStartNs` and `trimEndNs` carry per-frame trim durations on each `decodeBufferWithMetadata()` call. The HAL carries these unchanged through to the corresponding `FrameMetadata.trimStartNs` / `trimEndNs` on `onFrameOutput()`.
+`InputBufferMetadata.trimStartNs` and `trimEndNs` carry per-frame trim durations on each `decodeBufferWithMetadata()` call. The corresponding `FrameMetadata.trimStartNs` / `trimEndNs` on `onFrameOutput()` report what remains outstanding, as set out below.
 
 **The trim behaviour is defined by this interface and is not negotiable.** The samples must be trimmed as specified. What *is* an implementation choice is **where** the trim is applied — a vendor may apply it inside the decoder (for example via FFmpeg's `AV_PKT_DATA_SKIP_SAMPLES` during decode) or in the sink.
 
