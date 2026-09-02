@@ -315,7 +315,9 @@ For the first input [AV Buffer](../avbuffer/av_buffer.md) audio frame passed in 
 
 An **in-codec** format change — the sample rate or channel count changing without a change of codec, for example AAC 44.1 kHz stereo becoming 48 kHz 5.1 — is absorbed by the decoder while it remains in `State::STARTED`. No `stop()` / `start()` cycle is required, no `flush()`, and no call from the client.
 
-**The decoder detects the change from the bitstream.** Every codec in scope carries the format in-band: AAC in the ADTS header or AudioSpecificConfig, AC-3 and E-AC-3 in the syncframe (`fscod`, `acmod`), MP3 in the frame header, Opus in its identification header. The decoder therefore holds the authoritative values before the client could supply them.
+**The decoder detects the change from the bitstream.** The codecs that can present an in-codec format change carry it in-band: AAC in the ADTS header or AudioSpecificConfig, AC-3 and E-AC-3 in the syncframe (`fscod`, `acmod`), MP3 in the frame header. The decoder therefore holds the authoritative values before the client could supply them.
+
+Opus is the exception, and needs no detection: its decoded output is always 48 kHz regardless of the source, so an Opus stream cannot present a mid-stream sample-rate change. The `input sample rate` field in the identification header records the original source rate for information only and is not the output rate. Channel count is fixed for the stream by the same header.
 
 **The change surfaces on the output side.** Frame metadata is delivered with the first decoded frame after `start()`, the first after `flush()`, and whenever it changes — so a format change is one of the occasions on which `FrameMetadata` is delivered. The first frame produced under the new format carries a non-null `FrameMetadata` whose `metadata` field holds the new `sampleRate`, `numChannels` and `channelTypes`. Frames after it carry null until some part of the frame metadata changes again, so the client retains the last values it was given. That delivery is the notification; there is no separate signal to subscribe to.
 
