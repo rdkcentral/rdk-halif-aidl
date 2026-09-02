@@ -346,19 +346,21 @@ This is correct behaviour — **the decoder is expected to emit the full encoded
 
 What the decoder emits, and what the trim removes:
 
-```text
-                 trimStartNs                                    trimEndNs
-              (encoder priming)                              (final padding)
-                 |<------>|                                       |<->|
-                 +--------+---------------------------------------+---+
-Decoded PCM      | primed |            source audio               |pad|
-                 +--------+---------------------------------------+---+
-                 |<--------------- what the decoder emits ----------->|
+```mermaid
+block-beta
+    columns 20
+    primed["priming<br/>trimStartNs"]:3
+    src1["source audio"]:14
+    pad["padding<br/>trimEndNs"]:3
+    space:20
+    space:3
+    src2["source audio — presented to the mixer"]:14
+    space:3
 
-                          +---------------------------------------+
-Presented to mixer        |            source audio               |
-                          +---------------------------------------+
-                          |<-- matches the original duration ---->|
+    style primed fill:#FFE0B2,stroke:#E65100,color:#BF360C,font-weight:bold;
+    style pad    fill:#FFE0B2,stroke:#E65100,color:#BF360C,font-weight:bold;
+    style src1   fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20,font-weight:bold;
+    style src2   fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20,font-weight:bold;
 ```
 
 The decoder emits the whole encoded run. Applying the trim discards `trimStartNs` from the front and `trimEndNs` from the back, leaving audio whose duration matches the source sample-accurately. Which stage applies it is covered under [The trim contract](#the-trim-contract) below.
