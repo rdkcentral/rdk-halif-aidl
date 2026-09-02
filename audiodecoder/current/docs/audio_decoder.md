@@ -311,6 +311,33 @@ Where the client has knowledge of PTS discontinuities in the audio stream, it sh
 
 For the first input [AV Buffer](../avbuffer/av_buffer.md) audio frame passed in for decode after the discontinuity, it shall indicate the discontinuity in its next output `FrameMetadata`.
 
+## Mid-Stream Format Changes
+
+An **in-codec** format change — the sample rate or channel count changing without a change of codec, for example AAC 44.1 kHz stereo becoming 48 kHz 5.1 — is absorbed by the decoder while it remains in `State::STARTED`. No `stop()` / `start()` cycle is required, no `flush()`, and no call from the client.
+
+**The decoder detects the change from the bitstream.** Every codec in scope carries the format in-band: AAC in the ADTS header or AudioSpecificConfig, AC-3 and E-AC-3 in the syncframe (`fscod`, `acmod`), MP3 in the frame header, Opus in its identification header. The decoder therefore holds the authoritative values before the client could supply them.
+
+**The change surfaces on the output side.** `PCMMetadata` describes the frame it accompanies, so the first frame produced under the new format carries the new `sampleRate`, `numChannels` and `channelTypes`, and every frame after it carries them until the next change. Consumers read the format from the frame in front of them; there is no separate notification to subscribe to.
+
+`setAudioFormat()` is a **setup-time hint**, valid in `State::READY`. It supplies container-derived values for codecs whose codec-specific data does not carry them, so the decoder can size its output before the first frame arrives. It is not a runtime reconfiguration call.
+
+`signalDiscontinuity()` covers PTS discontinuities and carries no format information.
+
+```mermaid
+sequenceDiagram
+    participant MW as Middleware
+    participant Dec as IAudioDecoderController
+    participant Listener as IAudioDecoderControllerListener
+    MW->>Dec: decodeBufferWithMetadata(handle, {pts, ...})
+    Note right of Dec: 48 kHz 5.1 detected in the bitstream
+    Dec-->>Listener: onFrameOutput(pts, pcmHandle, {pcm: PCMMetadata{sampleRate=48000, numChannels=6, ...}})
+    Note over MW: New format read from the frame — no client action taken
+    MW->>Dec: decodeBufferWithMetadata(handle, {pts, ...})
+    Dec-->>Listener: onFrameOutput(pts, pcmHandle, {pcm: PCMMetadata{sampleRate=48000, numChannels=6, ...}})
+```
+
+A **codec** change — AAC to AC-3, say — is out of scope. The decoder backend itself must be reconfigured, so those require `stop()` → `setAudioFormat()` → `start()`.
+
 ## End of Stream Signalling
 
 End-of-stream is a discrete signal, not a per-buffer flag. The client drives it with `IAudioDecoderController.signalEndOfStream()` and observes completion through `IAudioDecoderControllerListener.onEndOfStream()`. Audio EOS is always client-signalled - no supported audio elementary stream (MP3, AAC, AC-3/E-AC-3, Opus, Vorbis) carries an in-bitstream EOS marker, so `FrameMetadata.bitstreamEOS` is always false for audio.
