@@ -77,8 +77,8 @@ parcelable InputBufferMetadata {
      * matching `FrameMetadata.trimStartNs` on
      * `IAudioDecoderControllerListener.onFrameOutput()`, and the AudioSink
      * applies it before presenting PCM to the mixer. A decoder that trims the
-     * frame itself instead sets `FrameMetadata.trimStartNs` to 0, so the
-     * samples are discarded exactly once.
+     * frame itself instead sets both `FrameMetadata.trimStartNs` and
+     * `trimEndNs` to 0, so the samples are discarded exactly once.
      *
      * Type rationale: `int` (not `long`) — at nanosecond precision, max value is
      * ~2.1 seconds, sufficient for any per-frame priming/padding trim.
