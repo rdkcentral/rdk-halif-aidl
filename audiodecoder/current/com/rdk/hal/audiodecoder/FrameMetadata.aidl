@@ -57,9 +57,9 @@ parcelable FrameMetadata {
 	 * Per-frame — applies only to this decoded frame, not to the stream as a
 	 * whole. Set to 0 (the common case) for no trim.
 	 *
-	 * Carried through unchanged from `InputBufferMetadata.trimStartNs` and
-	 * `trimEndNs` on the corresponding `decodeBufferWithMetadata()` call. The
-	 * AudioSink uses these to trim the PCM before presenting to the mixer.
+	 * The AudioSink applies these durations before presenting the PCM to the
+	 * mixer. Where the decoder has already trimmed the frame itself, it sets
+	 * both to 0, so the samples are discarded exactly once.
 	 *
 	 * Used for codec priming / encoder delay (AAC LC/HE, Opus pre-skip), AAC
 	 * SBR padding, and gapless playback across track boundaries.

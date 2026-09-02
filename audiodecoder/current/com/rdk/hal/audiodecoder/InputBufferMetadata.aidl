@@ -73,10 +73,12 @@ parcelable InputBufferMetadata {
      * - Gapless playback across track boundaries
      *
      * Data flow: the middleware sets this here on each
-     * `decodeBufferWithMetadata()` call; the HAL carries it through unchanged to
-     * the matching `FrameMetadata.trimStartNs` on the corresponding
-     * `IAudioDecoderControllerListener.onFrameOutput()` callback; the AudioSink
-     * applies the trim when presenting PCM to the mixer.
+     * `decodeBufferWithMetadata()` call; the trim reaches the sink through the
+     * matching `FrameMetadata.trimStartNs` on
+     * `IAudioDecoderControllerListener.onFrameOutput()`, and the AudioSink
+     * applies it before presenting PCM to the mixer. A decoder that trims the
+     * frame itself instead sets both `FrameMetadata.trimStartNs` and
+     * `FrameMetadata.trimEndNs` to 0, so the samples are discarded exactly once.
      *
      * Type rationale: `int` (not `long`) — at nanosecond precision, max value is
      * ~2.1 seconds, sufficient for any per-frame priming/padding trim.
