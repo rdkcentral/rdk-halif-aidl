@@ -402,6 +402,7 @@ sequenceDiagram
     participant Dec as IAudioDecoderController
     participant Listener as IAudioDecoderControllerListener
     participant Sink as IAudioSinkController
+    Note over MW,Sink: Sink-applies case. A decoder that trims the frame itself<br/>reports 0 in FrameMetadata.trim* and the sink does nothing.
     Note over MW,Demux: Container parsed — priming and padding values extracted
     MW->>Dec: decodeBufferWithMetadata(handle1, {nsPresentationTime, trimStartNs=42_666_667, trimEndNs=0, ...})
     Note right of Dec: First frame — trim leading priming
