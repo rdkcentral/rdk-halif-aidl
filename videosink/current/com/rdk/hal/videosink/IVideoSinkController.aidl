@@ -289,13 +289,10 @@ interface IVideoSinkController
      * Throws `binder::Status::Exception::EX_ILLEGAL_STATE` if called after
      * `signalEndOfStream()` has been invoked on this session.
      *
-     * Tunnelled mode: `queueVideoFrame()` must not be used because frames are
-     * not queued through the middleware/client path; the decoder feeds the
-     * sink internally.
-     *
      * Throws `binder::Status::Exception::EX_UNSUPPORTED_OPERATION` when the
-     * video decoder is configured for tunnelled mode.
-     * The vendor is responsible for the internal EOS propagation. See
+     * controller is configured for tunnel mode - this API is not part of the
+     * data path in tunnel; the sink is fed by the decoder internally and the
+     * vendor is responsible for the internal EOS propagation. See
      * [Discussion #492](https://github.com/rdkcentral/rdk-halif-aidl/discussions/492).
      *
      *
@@ -313,7 +310,7 @@ interface IVideoSinkController
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in `STARTED`, or if a video frame is passed after `signalEndOfStream()`.
-     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if the controller is configured for tunnelled mode.
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if the controller is configured for tunnel mode.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      *
      * @pre The resource must be in State::STARTED.
