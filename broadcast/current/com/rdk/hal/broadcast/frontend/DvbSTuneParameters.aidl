@@ -14,7 +14,7 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.CodingRate;
+import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
 import com.rdk.hal.broadcast.frontend.DvbSModulation;
 import com.rdk.hal.broadcast.frontend.DvbSRollOff;
 import com.rdk.hal.broadcast.frontend.DvbSStandard;
@@ -48,8 +48,8 @@ parcelable DvbSTuneParameters {
     /** The modulation to use. */
     DvbSModulation modulation;
 
-    /** Inner FEC coding rate. */
-    CodingRate innerFec;
+    /** Inner FEC code rate. */
+    DvbSInnerFec innerFec;
 
     /** Roll-off factor. */
     DvbSRollOff rollOff;

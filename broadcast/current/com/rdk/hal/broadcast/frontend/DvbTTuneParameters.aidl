@@ -16,7 +16,7 @@ package com.rdk.hal.broadcast.frontend;
 
 import com.rdk.hal.broadcast.frontend.ConstantInt;
 import com.rdk.hal.broadcast.frontend.DvbTBandwidth;
-import com.rdk.hal.broadcast.frontend.DvbTCodingRate;
+import com.rdk.hal.broadcast.frontend.DvbTCodeRate;
 import com.rdk.hal.broadcast.frontend.DvbTConstellation;
 import com.rdk.hal.broadcast.frontend.DvbTGuardInterval;
 import com.rdk.hal.broadcast.frontend.DvbTStandard;
@@ -47,8 +47,11 @@ parcelable DvbTTuneParameters {
     /** The constellation to use. */
     DvbTConstellation constellation;
 
-    /** LP and HP coding rates for DVB-T/T2. */
-    DvbTCodingRate codingRate;
+    /** LP code rate for DVB-T/T2. */
+    DvbTCodeRate lpCodeRate;
+
+    /** HP code rate for DVB-T/T2. */
+    DvbTCodeRate hpCodeRate;
 
     /** The guard interval to use. */
     DvbTGuardInterval guardInterval;

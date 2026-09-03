@@ -14,8 +14,8 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.CodingRate;
 import com.rdk.hal.broadcast.frontend.DvbTBandwidth;
+import com.rdk.hal.broadcast.frontend.DvbTCodeRate;
 import com.rdk.hal.broadcast.frontend.DvbTConstellation;
 import com.rdk.hal.broadcast.frontend.DvbTGuardInterval;
 import com.rdk.hal.broadcast.frontend.DvbTStandard;
@@ -38,7 +38,7 @@ parcelable DvbTCapabilities {
     /** Supported constellations. */
     DvbTConstellation[] constellations;
     /** Supported code rates. */
-    CodingRate[] codingRates;
+    DvbTCodeRate[] codeRates;
     /** Supported standards. */
     DvbTStandard[] dvbTStandards;
     /** Supported guard intervals. */

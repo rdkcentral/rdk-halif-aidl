@@ -70,8 +70,6 @@ enum SignalInfoProperty {
     DVB_T_STANDARD,
     /** DVB-S Standard. */
     DVB_S_STANDARD,
-    /** Coding rate. */
-    CODING_RATE,
-    /** DVB-T LP and HP coding rates. */
-    DVB_T_CODING_RATE,
+    /** Coderate. */
+    CODE_RATE,
 }

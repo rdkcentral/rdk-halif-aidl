@@ -14,24 +14,35 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.CodingRate;
-
 /**
- * DVB-T LP and HP coding rates, used as a signal info value.
- *
- * Returned for @ref SignalInfoProperty::DVB_T_CODING_RATE.
+ * DVB-C code rate enum.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-parcelable DvbTCodingRate {
-    /** Low-priority stream coding rate. */
-    CodingRate lp;
-    /** High-priority stream coding rate. */
-    CodingRate hp;
+@Backing(type = "int")
+enum DvbCCodeRate {
+    UNDEFINED = 0,
+    AUTO,
 
-    /** Reserved for future use. */
-    ParcelableHolder extension;
+    /** CR_1_2 */
+    CR_1_2,
+    /** CR_2_3 */
+    CR_2_3,
+    /** CR_3_4 */
+    CR_3_4,
+    /** CR_3_5 */
+    CR_3_5,
+    /** CR_4_5 */
+    CR_4_5,
+    /** CR_5_6 */
+    CR_5_6,
+    /** CR_6_7 */
+    CR_6_7,
+    /** CR_8_9 */
+    CR_8_9,
+    /** CR_9_10 */
+    CR_9_10,
 }

@@ -14,46 +14,20 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.DvbCAnnex;
-import com.rdk.hal.broadcast.frontend.DvbCBandwidth;
 import com.rdk.hal.broadcast.frontend.DvbCCodeRate;
-import com.rdk.hal.broadcast.frontend.DvbCModulation;
-import com.rdk.hal.broadcast.frontend.SignalDetectMode;
+import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
+import com.rdk.hal.broadcast.frontend.DvbTCodeRate;
 
 /**
- * DVB-C-specific tuning parameters.
+ * Available Coderates.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-parcelable DvbCTuneParameters {
-    /** The frequency in Hertz. */
-    long frequency;
-
-    /** Signal detect mode to use when tuning. */
-    SignalDetectMode signalDetectMode;
-
-    /**
-     * The symbol rate in symbols per second.
-     *
-     * Use -1 for auto symbol rate if it is supported.
-     */
-    int symbolRate;
-
-    /** The bandwidth to use. */
-    DvbCBandwidth bandwidth;
-
-    /** Which DVB-C Annex to use. */
-    DvbCAnnex dvbCAnnex;
-
-    /** The modulation to use. */
-    DvbCModulation modulation;
-
-    /** Code rate - the inner FEC. */
-    DvbCCodeRate codeRate;
-
-    /** Reserved for future use. */
-    ParcelableHolder extension;
+union CodeRate {
+    DvbCCodeRate dvbC = DvbCCodeRate.UNDEFINED;
+    DvbTCodeRate dvbT;
+    DvbSInnerFec dvbS;
 }

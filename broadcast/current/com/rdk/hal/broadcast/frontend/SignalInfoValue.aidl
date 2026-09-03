@@ -15,10 +15,9 @@
 package com.rdk.hal.broadcast.frontend;
 
 import com.rdk.hal.broadcast.frontend.Bandwidth;
-import com.rdk.hal.broadcast.frontend.CodingRate;
+import com.rdk.hal.broadcast.frontend.CodeRate;
 import com.rdk.hal.broadcast.frontend.DemodLockState;
 import com.rdk.hal.broadcast.frontend.DvbSStandard;
-import com.rdk.hal.broadcast.frontend.DvbTCodingRate;
 import com.rdk.hal.broadcast.frontend.DvbTStandard;
 import com.rdk.hal.broadcast.frontend.GuardInterval;
 import com.rdk.hal.broadcast.frontend.Modulation;
@@ -76,8 +75,6 @@ union SignalInfoValue {
     DvbTStandard dvbTStandard;
     /** DVB-S Standard. */
     DvbSStandard dvbSStandard;
-    /** Coding rate. */
-    CodingRate codingRate;
-    /** DVB-T LP and HP coding rates. */
-    DvbTCodingRate dvbTCodingRate;
+    /** Coderates e.g (LP and HP) for DVB-T/T2. */
+    CodeRate[] codeRates;
 }

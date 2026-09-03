@@ -14,7 +14,7 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.CodingRate;
+import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
 import com.rdk.hal.broadcast.frontend.DvbSModulation;
 import com.rdk.hal.broadcast.frontend.DvbSRollOff;
 import com.rdk.hal.broadcast.frontend.DvbSStandard;
@@ -34,8 +34,8 @@ import com.rdk.hal.broadcast.frontend.DvbSStandard;
 parcelable DvbSCapabilities {
     /** Supported modulations. */
     DvbSModulation[] modulations;
-    /** Supported coding rates (inner FEC). */
-    CodingRate[] codingRates;
+    /** Supported code rates (inner FEC). */
+    DvbSInnerFec[] innerFecs;
     /** Supported DVB-S standards. */
     DvbSStandard[] dvbSStandards;
     /** Supported roll-off values. */

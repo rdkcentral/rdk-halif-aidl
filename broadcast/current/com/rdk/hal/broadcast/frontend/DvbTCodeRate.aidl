@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * Code rate enum.
+ * DVB-T and DVB-T2 code rate enum.
  *
  * @author Jan Pedersen
  * @author Christian George
@@ -23,27 +23,22 @@ package com.rdk.hal.broadcast.frontend;
  */
 @VintfStability
 @Backing(type = "int")
-enum CodingRate {
-    /** Clean value when default initialized. */
+enum DvbTCodeRate {
     UNDEFINED = 0,
-    /** Auto-selected coding rate. */
     AUTO,
-    /** 1/2. */
+
+    /** CR_1_2 applies to DVB-T and DVB-T2. */
     CR_1_2,
-    /** 2/3. */
+    /** CR_2_3 applies to DVB-T and DVB-T2. */
     CR_2_3,
-    /** 3/4. */
+    /** CR_3_4 applies to DVB-T and DVB-T2. */
     CR_3_4,
-    /** 5/6. */
-    CR_5_6,
-    /** 7/8. */
-    CR_7_8,
-    /** 8/9 Used by DVB-C. */
-    CR_8_9,
-    /** 3/5 Used by DVB-C. */
+    /** CR_3_5 applies to DVB-T2. */
     CR_3_5,
-    /** 4/5 Used by DVB-C. */
+    /** CR_4_5 applies to DVB-T2. */
     CR_4_5,
-    /** 9/10 Used by DVB-C. */
-    CR_9_10,
+    /** CR_5_6 applies to DVB-T and DVB-T2. */
+    CR_5_6,
+    /** CR_7_8 applies to DVB-T. */
+    CR_7_8,
 }
