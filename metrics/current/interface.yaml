@@ -1,7 +1,7 @@
 aidl_interface:
-  name: common
+  name: metrics
   srcs:
-    - com/rdk/hal/*.aidl
+    - com/rdk/hal/metrics/*.aidl
   imports: []
   stability: vintf
   layout: module-local

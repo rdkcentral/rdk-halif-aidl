@@ -4,6 +4,7 @@ aidl_interface:
     - com/rdk/hal/avclock/*.aidl
   imports:
     - common@current
+    - metrics@current
   stability: vintf
   layout: module-local
 

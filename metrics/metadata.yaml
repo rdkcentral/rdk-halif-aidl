@@ -1,0 +1,60 @@
+# If not stated otherwise in this file or this component's LICENSE file the
+# following copyright and licenses apply:
+#
+# Copyright 2026 RDK Management
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# component   - Machine-readable component identifier                    [manual]
+# version     - Pre-baseline: 0.<generation>.<minor>.<patch>              [release.sh]
+# status      - RAG status: GREEN / AMBER / RED                          [manual]
+# description - One-line human-readable summary                          [manual]
+# type        - Responsibility: SOC or OEM                                [manual]
+component: metrics
+version: 0.1.0.0
+status: AMBER
+description: "The metric envelope every measuring HAL serves its figures through"
+type: OEM
+
+# lifecycle - 14+5 review cycle dates                                    [pr_cycle.sh]
+#   review_started    - Date the review window opened
+#   review_deadline   - review_started + 14 calendar days
+#   target_green_date - review_deadline + 5 business days
+lifecycle:
+  review_started: ~
+  review_deadline: ~
+  target_green_date: ~
+
+# scope - High-level architectural responsibilities                       [manual]
+scope:
+  - The fixed envelope a metric is carried in - value, group, snapshot, event
+  - The status a figure carries when a product cannot serve it
+  - The requirements every measuring component serves its figures under
+  - The rule by which a key's identifier is derived from its composed terms
+
+# notes - Tracking metadata                                              [manual]
+#   priority      - Numeric priority (lower = higher)
+#   status_detail - Short current state description
+#   action        - Required action to progress
+#   risk          - Risk notes (appears as watch item on dashboard)
+#   owners        - Responsible architecture teams
+notes:
+  status_detail: "Types only. Imported by every measuring component; imports nothing."
+  owners: "AV_Architecture"
+
+# reviewers - Sign-off status per stakeholder team                       [manual]
+#   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
+reviewers:
+    Architecture: pending
+    AV_Architecture: pending
+    Product_Architecture: pending
