@@ -22,28 +22,402 @@
 
 # HAL Feature Profile for audiodecoder
 
-audiodecoder:                   # Component object begins
-    interfaceVersion: current
-    IAudioDecoder:              # Resource list
-      - 0:                      # Resource object begins
-         supportedCodecs:       # Array of codec capabilities
-           - AAC_LC
-           - HE_AAC
-           - HE_AAC2
-           - DOLBY_AC3
-           - DOLBY_AC3_PLUS
-           - DOLBY_AC3_PLUS_JOC
-           - DOLBY_AC4
-           - X_HE_AAC
-         supportsSecure: true
-      - 1:                      # Resource object begins
-         supportedCodecs:       # Array of codec capabilities
-           - AAC_LC
-           - HE_AAC
-           - HE_AAC2
-           - DOLBY_AC3
-           - DOLBY_AC3_PLUS
-           - DOLBY_AC3_PLUS_JOC
-           - DOLBY_AC4
-           - X_HE_AAC
-         supportsSecure: true
+audiodecoder: # Component object begins
+  interfaceVersion: current
+  Capabilities:
+    - 0:
+      codecCapabilities:
+        - PCM:
+          profiles:
+            - BASE:
+              maxBitrateInBps: 1536000
+              maxChannels: 8
+              maxSampleRateInHz: 192000
+              maxBitDepth: 32
+
+        - AAC:
+          profiles:
+            - LC:
+              maxBitrateInBps: 576000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+            - HE_V1:
+              maxBitrateInBps: 576000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+            - HE_V2:
+              maxBitrateInBps: 576000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+            - ELD:
+              maxBitrateInBps: 576000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+            - X_HE:
+              maxBitrateInBps: 576000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+
+        - MPEG_AUDIO:
+          profiles:
+            - LAYER_1:
+              maxBitrateInBps: 448000
+              maxChannels: 2
+              maxSampleRateInHz: 48000
+              maxBitDepth: 16
+            - LAYER_2:
+              maxBitrateInBps: 384000
+              maxChannels: 2
+              maxSampleRateInHz: 48000
+              maxBitDepth: 16
+
+        - MP3:
+          profiles:
+            - BASE:
+              maxBitrateInBps: 320000
+              maxChannels: 2
+              maxSampleRateInHz: 48000
+              maxBitDepth: 16
+
+        - ALAC:
+          profiles:
+            - BASE:
+              maxBitrateInBps: 4608000
+              maxChannels: 8
+              maxSampleRateInHz: 192000
+              maxBitDepth: 32
+
+        - SBC:
+          profiles:
+            - BASE:
+              maxBitrateInBps: 345000
+              maxChannels: 2
+              maxSampleRateInHz: 48000
+              maxBitDepth: 16
+
+        - DOLBY_AC3:
+          profiles:
+            - STANDARD:
+              maxBitrateInBps: 6144000
+              maxChannels: 16
+              maxSampleRateInHz: 48000
+              maxBitDepth: 24
+
+        - DOLBY_EAC3:
+          profiles:
+            - PLUS:
+              maxBitrateInBps: 6144000
+              maxChannels: 16
+              maxSampleRateInHz: 48000
+              maxBitDepth: 24
+            - PLUS_JOC:
+              maxBitrateInBps: 6144000
+              maxChannels: 16
+              maxSampleRateInHz: 48000
+              maxBitDepth: 24
+
+        - DOLBY_AC4:
+          profiles:
+            - BASE:
+              maxBitrateInBps: 6000000
+              maxChannels: 8
+              maxSampleRateInHz: 48000
+              maxBitDepth: 24
+
+        - DOLBY_TRUEHD:
+          profiles:
+            - BASE:
+              maxBitrateInBps: 18432000
+              maxChannels: 16
+              maxSampleRateInHz: 192000
+              maxBitDepth: 24
+
+        - FLAC:
+          profiles:
+            - BASE:
+              maxBitrateInBps: 4608000
+              maxChannels: 8
+              maxSampleRateInHz: 192000
+              maxBitDepth: 32
+
+        - VORBIS:
+          profiles:
+            - BASE:
+              maxBitrateInBps: 500000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+
+        - OPUS:
+          profiles:
+            - BASE:
+              maxBitrateInBps: 510000
+              maxChannels: 8
+              maxSampleRateInHz: 48000
+              maxBitDepth: 24
+
+        - REALAUDIO:
+          profiles:
+            - RA8:
+              maxBitrateInBps: 352000
+              maxChannels: 2
+              maxSampleRateInHz: 48000
+              maxBitDepth: 16
+            - RA10:
+              maxBitrateInBps: 352000
+              maxChannels: 2
+              maxSampleRateInHz: 48000
+              maxBitDepth: 16
+
+        - USAC:
+          profiles:
+            - BASELINE:
+              maxBitrateInBps: 512000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+            - EXTENDED_HE_AAC:
+              maxBitrateInBps: 512000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+
+        - DTS:
+          profiles:
+            - CORE:
+              maxBitrateInBps: 6144000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+            - HD_HRA:
+              maxBitrateInBps: 6144000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+            - HD_MA:
+              maxBitrateInBps: 6144000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+
+        - AVS:
+          profiles:
+            - AVS1_PART2:
+              maxBitrateInBps: 320000
+              maxChannels: 2
+              maxSampleRateInHz: 48000
+              maxBitDepth: 16
+            - AVS2:
+              maxBitrateInBps: 320000
+              maxChannels: 2
+              maxSampleRateInHz: 48000
+              maxBitDepth: 16
+            - AVS3:
+              maxBitrateInBps: 320000
+              maxChannels: 2
+              maxSampleRateInHz: 48000
+              maxBitDepth: 16
+      supportsSecure: true
+    - 1:
+      codecCapabilities:
+        - PCM:
+          profiles:
+            - BASE:
+              maxBitrateInBps: 1536000
+              maxChannels: 8
+              maxSampleRateInHz: 192000
+              maxBitDepth: 32
+
+        - AAC:
+          profiles:
+            - LC:
+              maxBitrateInBps: 576000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+            - HE_V1:
+              maxBitrateInBps: 576000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+            - HE_V2:
+              maxBitrateInBps: 576000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+            - ELD:
+              maxBitrateInBps: 576000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+            - X_HE:
+              maxBitrateInBps: 576000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+
+        - MPEG_AUDIO:
+          profiles:
+            - LAYER_1:
+              maxBitrateInBps: 448000
+              maxChannels: 2
+              maxSampleRateInHz: 48000
+              maxBitDepth: 16
+            - LAYER_2:
+              maxBitrateInBps: 384000
+              maxChannels: 2
+              maxSampleRateInHz: 48000
+              maxBitDepth: 16
+
+        - MP3:
+          profiles:
+            - BASE:
+              maxBitrateInBps: 320000
+              maxChannels: 2
+              maxSampleRateInHz: 48000
+              maxBitDepth: 16
+
+        - ALAC:
+          profiles:
+            - BASE:
+              maxBitrateInBps: 4608000
+              maxChannels: 8
+              maxSampleRateInHz: 192000
+              maxBitDepth: 32
+
+        - SBC:
+          profiles:
+            - BASE:
+              maxBitrateInBps: 345000
+              maxChannels: 2
+              maxSampleRateInHz: 48000
+              maxBitDepth: 16
+
+        - DOLBY_AC3:
+          profiles:
+            - STANDARD:
+              maxBitrateInBps: 6144000
+              maxChannels: 16
+              maxSampleRateInHz: 48000
+              maxBitDepth: 24
+
+        - DOLBY_EAC3:
+          profiles:
+            - PLUS:
+              maxBitrateInBps: 6144000
+              maxChannels: 16
+              maxSampleRateInHz: 48000
+              maxBitDepth: 24
+            - PLUS_JOC:
+              maxBitrateInBps: 6144000
+              maxChannels: 16
+              maxSampleRateInHz: 48000
+              maxBitDepth: 24
+
+        - DOLBY_AC4:
+          profiles:
+            - BASE:
+              maxBitrateInBps: 6000000
+              maxChannels: 8
+              maxSampleRateInHz: 48000
+              maxBitDepth: 24
+
+        - DOLBY_TRUEHD:
+          profiles:
+            - BASE:
+              maxBitrateInBps: 18432000
+              maxChannels: 16
+              maxSampleRateInHz: 192000
+              maxBitDepth: 24
+
+        - FLAC:
+          profiles:
+            - BASE:
+              maxBitrateInBps: 4608000
+              maxChannels: 8
+              maxSampleRateInHz: 192000
+              maxBitDepth: 32
+
+        - VORBIS:
+          profiles:
+            - BASE:
+              maxBitrateInBps: 500000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+
+        - OPUS:
+          profiles:
+            - BASE:
+              maxBitrateInBps: 510000
+              maxChannels: 8
+              maxSampleRateInHz: 48000
+              maxBitDepth: 24
+
+        - REALAUDIO:
+          profiles:
+            - RA8:
+              maxBitrateInBps: 352000
+              maxChannels: 2
+              maxSampleRateInHz: 48000
+              maxBitDepth: 16
+            - RA10:
+              maxBitrateInBps: 352000
+              maxChannels: 2
+              maxSampleRateInHz: 48000
+              maxBitDepth: 16
+
+        - USAC:
+          profiles:
+            - BASELINE:
+              maxBitrateInBps: 512000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+            - EXTENDED_HE_AAC:
+              maxBitrateInBps: 512000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+
+        - DTS:
+          profiles:
+            - CORE:
+              maxBitrateInBps: 6144000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+            - HD_HRA:
+              maxBitrateInBps: 6144000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+            - HD_MA:
+              maxBitrateInBps: 6144000
+              maxChannels: 8
+              maxSampleRateInHz: 96000
+              maxBitDepth: 24
+
+        - AVS:
+          profiles:
+            - AVS1_PART2:
+              maxBitrateInBps: 320000
+              maxChannels: 2
+              maxSampleRateInHz: 48000
+              maxBitDepth: 16
+            - AVS2:
+              maxBitrateInBps: 320000
+              maxChannels: 2
+              maxSampleRateInHz: 48000
+              maxBitDepth: 16
+            - AVS3:
+              maxBitrateInBps: 320000
+              maxChannels: 2
+              maxSampleRateInHz: 48000
+              maxBitDepth: 16
+      supportsSecure: true

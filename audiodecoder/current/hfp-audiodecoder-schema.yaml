@@ -1,0 +1,452 @@
+#** *****************************************************************************
+# *
+# * If not stated otherwise in this file or this component's LICENSE file the
+# * following copyright and licenses apply:
+# *
+# * Copyright 2026 RDK Management
+# *
+# * Licensed under the Apache License, Version 2.0 (the "License");
+# * you may not use this file except in compliance with the License.
+# * You may obtain a copy of the License at
+# *
+# *
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing, software
+# * distributed under the License is distributed on an "AS IS" BASIS,
+# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# * See the License for the specific language governing permissions and
+# * limitations under the License.
+# *
+#** ******************************************************************************
+
+# Pykwalify schema for audio decoder capabilities
+# Enforces codec-specific profile validation
+# Schema Version: 0.1.0
+
+type: map
+mapping:
+  audiodecoder:
+    type: map
+    required: true
+    mapping:
+      interfaceVersion:
+        type: str
+        required: true
+
+      schemaVersion:
+        type: str
+        required: true
+        pattern: '^\d+\.\d+\.\d+$'
+
+      Capabilities:
+        type: seq
+        required: true
+        sequence:
+          - type: map
+            matching: "any"
+            mapping:
+              regex;(^\d+$):
+                type: map
+                mapping:
+                  codecCapabilities:
+                    type: seq
+                    required: true
+                    sequence:
+                      - type: map
+                        mapping:
+                          PCM:
+                            type: map
+                            mapping:
+                              profiles:
+                                type: seq
+                                required: false
+                                sequence:
+                                  - type: str
+                                    enum: []
+                              maxBitrateInBps:
+                                type: number
+                                required: true
+                              maxChannels:
+                                type: int
+                                required: true
+                              maxSampleRateInHz:
+                                type: int
+                                required: true
+                              maxBitDepth:
+                                type: int
+                                required: false
+
+                          AAC:
+                            type: map
+                            mapping:
+                              profiles:
+                                type: seq
+                                required: false
+                                sequence:
+                                  - type: str
+                                    enum: [LC, HE_V1, HE_V2, ELD, X_HE]
+                              maxBitrateInBps:
+                                type: number
+                                required: false
+                              maxChannels:
+                                type: int
+                                required: false
+                              maxSampleRateInHz:
+                                type: int
+                                required: false
+                              maxBitDepth:
+                                type: int
+                                required: false
+
+                          MPEG_AUDIO:
+                            type: map
+                            mapping:
+                              profiles:
+                                type: seq
+                                required: false
+                                sequence:
+                                  - type: str
+                                    enum: []
+                              maxBitrateInBps:
+                                type: number
+                                required: true
+                              maxChannels:
+                                type: int
+                                required: true
+                              maxSampleRateInHz:
+                                type: int
+                                required: true
+                              maxBitDepth:
+                                type: int
+                                required: false
+
+                          MP3:
+                            type: map
+                            mapping:
+                              profiles:
+                                type: seq
+                                required: false
+                                sequence:
+                                  - type: str
+                                    enum: []
+                              maxBitrateInBps:
+                                type: number
+                                required: true
+                              maxChannels:
+                                type: int
+                                required: true
+                              maxSampleRateInHz:
+                                type: int
+                                required: true
+                              maxBitDepth:
+                                type: int
+                                required: false
+
+                          ALAC:
+                            type: map
+                            mapping:
+                              profiles:
+                                type: seq
+                                required: false
+                                sequence:
+                                  - type: str
+                                    enum: []
+                              maxBitrateInBps:
+                                type: number
+                                required: true
+                              maxChannels:
+                                type: int
+                                required: true
+                              maxSampleRateInHz:
+                                type: int
+                                required: true
+                              maxBitDepth:
+                                type: int
+                                required: false
+
+                          SBC:
+                            type: map
+                            mapping:
+                              profiles:
+                                type: seq
+                                required: false
+                                sequence:
+                                  - type: str
+                                    enum: []
+                              maxBitrateInBps:
+                                type: number
+                                required: true
+                              maxChannels:
+                                type: int
+                                required: true
+                              maxSampleRateInHz:
+                                type: int
+                                required: true
+                              maxBitDepth:
+                                type: int
+                                required: false
+
+                          DOLBY_AC3:
+                            type: map
+                            mapping:
+                              profiles:
+                                type: seq
+                                required: false
+                                sequence:
+                                  - type: str
+                                    enum: [STANDARD, PLUS, PLUS_JOC]
+                              maxBitrateInBps:
+                                type: number
+                                required: false
+                              maxChannels:
+                                type: int
+                                required: false
+                              maxSampleRateInHz:
+                                type: int
+                                required: false
+                              maxBitDepth:
+                                type: int
+                                required: false
+
+                          DOLBY_AC4:
+                            type: map
+                            mapping:
+                              profiles:
+                                type: seq
+                                required: false
+                                sequence:
+                                  - type: str
+                                    enum: []
+                              maxBitrateInBps:
+                                type: number
+                                required: true
+                              maxChannels:
+                                type: int
+                                required: true
+                              maxSampleRateInHz:
+                                type: int
+                                required: true
+                              maxBitDepth:
+                                type: int
+                                required: false
+
+                          DOLBY_MAT:
+                            type: map
+                            mapping:
+                              profiles:
+                                type: seq
+                                required: false
+                                sequence:
+                                  - type: str
+                                    enum: [V1, V2]
+                              maxBitrateInBps:
+                                type: number
+                                required: false
+                              maxChannels:
+                                type: int
+                                required: false
+                              maxSampleRateInHz:
+                                type: int
+                                required: false
+                              maxBitDepth:
+                                type: int
+                                required: false
+
+                          DOLBY_TRUEHD:
+                            type: map
+                            mapping:
+                              profiles:
+                                type: seq
+                                required: false
+                                sequence:
+                                  - type: str
+                                    enum: []
+                              maxBitrateInBps:
+                                type: number
+                                required: true
+                              maxChannels:
+                                type: int
+                                required: true
+                              maxSampleRateInHz:
+                                type: int
+                                required: true
+                              maxBitDepth:
+                                type: int
+                                required: false
+
+                          FLAC:
+                            type: map
+                            mapping:
+                              profiles:
+                                type: seq
+                                required: false
+                                sequence:
+                                  - type: str
+                                    enum: []
+                              maxBitrateInBps:
+                                type: number
+                                required: true
+                              maxChannels:
+                                type: int
+                                required: true
+                              maxSampleRateInHz:
+                                type: int
+                                required: true
+                              maxBitDepth:
+                                type: int
+                                required: false
+
+                          VORBIS:
+                            type: map
+                            mapping:
+                              profiles:
+                                type: seq
+                                required: false
+                                sequence:
+                                  - type: str
+                                    enum: []
+                              maxBitrateInBps:
+                                type: number
+                                required: true
+                              maxChannels:
+                                type: int
+                                required: true
+                              maxSampleRateInHz:
+                                type: int
+                                required: true
+                              maxBitDepth:
+                                type: int
+                                required: false
+
+                          OPUS:
+                            type: map
+                            mapping:
+                              profiles:
+                                type: seq
+                                required: false
+                                sequence:
+                                  - type: str
+                                    enum: []
+                              maxBitrateInBps:
+                                type: number
+                                required: true
+                              maxChannels:
+                                type: int
+                                required: true
+                              maxSampleRateInHz:
+                                type: int
+                                required: true
+                              maxBitDepth:
+                                type: int
+                                required: false
+
+                          WMA:
+                            type: map
+                            mapping:
+                              profiles:
+                                type: seq
+                                required: false
+                                sequence:
+                                  - type: str
+                                    enum: [STANDARD, PRO, LOSSLESS]
+                              maxBitrateInBps:
+                                type: number
+                                required: false
+                              maxChannels:
+                                type: int
+                                required: false
+                              maxSampleRateInHz:
+                                type: int
+                                required: false
+                              maxBitDepth:
+                                type: int
+                                required: false
+
+                          REALAUDIO:
+                            type: map
+                            mapping:
+                              profiles:
+                                type: seq
+                                required: false
+                                sequence:
+                                  - type: str
+                                    enum: [RA8, RA10]
+                              maxBitrateInBps:
+                                type: number
+                                required: false
+                              maxChannels:
+                                type: int
+                                required: false
+                              maxSampleRateInHz:
+                                type: int
+                                required: false
+                              maxBitDepth:
+                                type: int
+                                required: false
+
+                          USAC:
+                            type: map
+                            mapping:
+                              profiles:
+                                type: seq
+                                required: false
+                                sequence:
+                                  - type: str
+                                    enum: [BASELINE, EXTENDED_HE_AAC]
+                              maxBitrateInBps:
+                                type: number
+                                required: false
+                              maxChannels:
+                                type: int
+                                required: false
+                              maxSampleRateInHz:
+                                type: int
+                                required: false
+                              maxBitDepth:
+                                type: int
+                                required: false
+
+                          DTS:
+                            type: map
+                            mapping:
+                              profiles:
+                                type: seq
+                                required: false
+                                sequence:
+                                  - type: str
+                                    enum: [CORE, HD_HRA, HD_MA]
+                              maxBitrateInBps:
+                                type: number
+                                required: false
+                              maxChannels:
+                                type: int
+                                required: false
+                              maxSampleRateInHz:
+                                type: int
+                                required: false
+                              maxBitDepth:
+                                type: int
+                                required: false
+
+                          AVS:
+                            type: map
+                            mapping:
+                              profiles:
+                                type: seq
+                                required: false
+                                sequence:
+                                  - type: str
+                                    enum: [AVS1_PART2, AVS2, AVS3]
+                              maxBitrateInBps:
+                                type: number
+                                required: false
+                              maxChannels:
+                                type: int
+                                required: false
+                              maxSampleRateInHz:
+                                type: int
+                                required: false
+                              maxBitDepth:
+                                type: int
+                                required: false
