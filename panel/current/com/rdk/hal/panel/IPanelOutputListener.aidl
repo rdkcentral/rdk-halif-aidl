@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.panel;
+import com.rdk.hal.panel.PQParameter;
+import com.rdk.hal.panel.PQParameterConfiguration;
 import com.rdk.hal.videodecoder.DynamicRange;
 import com.rdk.hal.AVSource;
 
@@ -37,6 +39,17 @@ oneway interface IPanelOutputListener
      * @param[in] pictureMode   The new picture mode.
      */
     void onPictureModeChanged(in String pictureMode);
+
+    /**
+     * Callback when a PQ picture property value changes.
+     *
+     * @param[in] pictureMode             The picture mode for which the change applies.
+     * @param[in] avSource                The AV source for which the change applies.
+     * @param[in] dynamicRange            The video format dynamic range for which the change applies.
+     * @param[in] pictureProperty         The PQ picture property that changed.
+    * @param[in] picturePropertyValue    The changed value variant.
+     */
+    void onPQParameterChanged(in String pictureMode, in AVSource avSource, in DynamicRange dynamicRange, in PQParameter pictureProperty, in PQParameterConfiguration.Value picturePropertyValue);
  
     /**
      * Callback when the video source being tracked for PQ settings changes.
@@ -45,7 +58,7 @@ oneway interface IPanelOutputListener
      * When video stops then `AVSource.UNKNOWN` is passed in the call.
      * 
      * @param[in] avSource      The new AV source.
-     */
+    */
     void onVideoSourceChanged(in AVSource avSource);
 
     /**
@@ -55,7 +68,7 @@ oneway interface IPanelOutputListener
      * When video stops then `DynamicRange.UNKNOWN` is passed in the call.
      *
      * @param[in] dynamicRange      The new dynamic range video format.
-     */
+    */
     void onVideoFormatChanged(in DynamicRange dynamicRange);
 
     /**
@@ -66,7 +79,7 @@ oneway interface IPanelOutputListener
      *
      * @param[in] frameRateNumerator        The numerator of the frame rate.
      * @param[in] frameRateDenominator      The denominator of the frame rate.
-     */
+    */
     void onVideoFrameRateChanged(in int frameRateNumerator, in int frameRateDenominator);
  
     /**
@@ -77,7 +90,7 @@ oneway interface IPanelOutputListener
      *
      * @param[in] width     The video frame width.
      * @param[in] height    The video frame height.
-     */
+    */
     void onVideoResolutionChanged(in int width, in int height);
 
     /**
@@ -87,7 +100,7 @@ oneway interface IPanelOutputListener
      * matching is enabled and it adjusts the refresh rate to best match the video frame rate.
      * 
      * @param[in] refreshRateHz     The new panel refresh rate.
-     */
+    */
     void onRefreshRateChanged(in double refreshRateHz);
 
 }

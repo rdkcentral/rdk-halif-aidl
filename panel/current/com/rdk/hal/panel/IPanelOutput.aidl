@@ -18,7 +18,8 @@
  */
 package com.rdk.hal.panel;
 import com.rdk.hal.panel.Capabilities;
-import com.rdk.hal.panel.IFactoryPanel;
+import com.rdk.hal.panel.IPanelOutputController;
+import com.rdk.hal.panel.IPanelOutputControllerListener;
 import com.rdk.hal.panel.PictureModeConfiguration;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.PQParameterConfiguration;
@@ -31,8 +32,6 @@ import com.rdk.hal.AVSource;
 /** 
  *  @brief     Display Panel Output Control HAL interface.
  *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
- *
- *
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
@@ -48,6 +47,21 @@ interface IPanelOutput
     const @utf8InCpp String serviceName = "PanelOutput";
 
     /**
+     * @brief Panel output resource identifier type.
+     */
+    @VintfStability parcelable Id {
+        /**
+         * @brief Undefined/invalid ID value.
+         */
+        const int UNDEFINED = -1;
+
+        /**
+         * @brief The concrete resource identifier value.
+         */
+        int value;
+    }
+
+    /**
      * Gets the capabilities of the panel service.
      * 
      * This function can be called at any time and the returned value is not allowed to change between calls.
@@ -57,11 +71,53 @@ interface IPanelOutput
     Capabilities getCapabilities();
 
     /**
-     * Gets the factory interface for the panel.
+     * @brief Open this panel output for exclusive control.
      *
-     * @return IFactoryPanel or null on error.
+     * On success the panel output is ready for lifecycle control.
+     * The returned IPanelOutputController provides start()/stop() control.
+     *
+     * Only one controller may exist at a time. If the owning client
+     * crashes, the HAL implicitly calls stop() and close() to release
+     * the panel output.
+     *
+     * @param listener Listener for controller callbacks (state changes).
+     *
+     * @returns IPanelOutputController, or null if the panel output cannot be opened.
+     *
+     * @exception binder::Status EX_ILLEGAL_STATE if panel output is already open.
+     * @exception binder::Status EX_NULL_POINTER if listener is null.
+     *
+     * @see close(), IPanelOutputController
      */
-    @nullable IFactoryPanel getFactoryInterface();
+    @nullable IPanelOutputController open(in IPanelOutputControllerListener listener);
+
+    /**
+     * @brief Close this panel output and release the controller.
+     *
+     * Accepted from STOPPED or ERROR. From STOPPED this is the normal close
+     * path. From ERROR this is the recovery path: after a start() failure
+     * (which transitions the panel output to ERROR), the client calls close()
+     * to release the controller and the panel output returns to a state where
+     * it can be opened again. On success the controller is invalidated and
+     * another client may `open()` the panel output.
+     *
+     * If the panel output is in STARTED, STARTING, or STOPPING the call fails
+     * with EX_ILLEGAL_STATE - the client must call stop() first (or, from
+     * ERROR, close() directly).
+     *
+     * @param controller The IPanelOutputController instance returned by open().
+     *
+     * @returns Success flag.
+     * @retval true  Successfully closed.
+     * @retval false The supplied controller is not the instance returned by open().
+     *
+     * @exception binder::Status EX_ILLEGAL_STATE if panel output is not in STOPPED or ERROR state.
+     * @exception binder::Status EX_NULL_POINTER if controller is null.
+     *
+     * @see open(), IPanelOutputController.start()
+     */
+    boolean close(in IPanelOutputController controller);
+
 
   	/**
 	 * Sets the panel enabled state.
@@ -409,6 +465,43 @@ interface IPanelOutput
      * @return WhiteBalanceMultiPointSettings
      */
     WhiteBalanceMultiPointSettings getMultiPointWhiteBalance(in int colorTemperature);
+
+	/**
+	 * Enables or disables calibration mode for the PQ pipeline.
+     * 
+     * When enabled, all PQ processing blocks (e.g. brightness, contrast, sharpness, saturation, hue,
+     * dimming, noise reduction, CMS, etc.) are set to a neutral or disabled state to allow accurate
+     * measurement of the panel output without interference from PQ processing.
+     * The white balance (WB) and gamma blocks are also set to a neutral or disabled state.
+     * 
+     * When disabled, all PQ blocks, the WB block and the gamma block are restored to the last known
+     * state that was in effect before calibration mode was enabled.
+     * 
+     * Calibration mode is disabled by default.
+	 *
+	 * @param[in] enabled   The new calibration mode state.
+     *                      true to enable calibration mode, false to restore the previous state.
+     * 
+	 * @return boolean
+     * @retval true     The calibration mode state was successfully set.
+     * @retval false    The calibration mode state could not be set.
+     *
+     * 
+     * @see getCalibrationMode()
+	 */
+    boolean enableCalibrationMode(in boolean enabled);
+
+    /**
+     * Gets the current calibration mode state.
+     *
+     * @return boolean
+     * @retval true     Calibration mode is enabled.
+     * @retval false    Calibration mode is disabled.
+     *
+     * 
+     * @see enableCalibrationMode()
+     */
+    boolean getCalibrationMode();
 
 	/**
 	 * Starts a display fade up or down operation.
