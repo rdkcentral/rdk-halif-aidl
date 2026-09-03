@@ -24,16 +24,21 @@ videocapture:                        # Component object begins
   interfaceVersion: current
   captures:                     # Resource list - one object per capture this product offers
     - 0:                        # Resource object begins
-        maxCapturesPerSink: 1   # How many sessions one video sink can carry at once.
+        maxCapturesPerSource: 1 # How many sessions one source can carry at once.
                                 # A further bind is refused with SOURCE_UNAVAILABLE.
-                                # Which sinks can be captured from at all is declared
-                                # on the sink itself, in videosink
-                                # Capabilities.supportsCapture.
+                                # Per source, not per capture: two sessions on
+                                # different sources do not count against each other.
+        supportedSources:       # The sources open() accepts, and the whole of them.
+                                # One arm per entry, matching the Source union. A
+                                # source absent from this list is refused with
+                                # SOURCE_NOT_CAPTURABLE.
+          - videoSinkId: 0      # Frames this sink would be presenting
+          - videoDecoderId: 0   # Frames this decoder produced, in produced order
         captureCapabilities:    # Frames and buffer pool for IVideoCapture on this resource.
                                 # This is the whole of the capture declaration - the
-                                # vendor layer configures whatever the bound sink
+                                # vendor layer configures whatever the bound source
                                 # needs to deliver what is declared here.
-          stallsWhenPoolExhausted: false  # true: the sink stalls when all buffers locked
+          stallsWhenPoolExhausted: false  # true: the source stalls when all buffers locked
                                           # false: oldest ready frame is dropped
           # FOURCC codes and modifiers are the kernel's, from include/uapi/drm/drm_fourcc.h.
           # Declared in pairs: a modifier is valid with particular formats.

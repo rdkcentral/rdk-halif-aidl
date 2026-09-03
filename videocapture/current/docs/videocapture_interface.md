@@ -23,19 +23,19 @@ A capture is an output in its own right, bound to a stage of the pipeline. This 
 
 A capture takes frames from one stage of the pipeline and delivers them into a pool of Dma-Buf buffers the client imports as GPU textures. It is an output in its own right, not a destination inside another module's model: it is discovered through `IVideoCaptureManager.getVideoCaptureIds()`, addressed by its own `IVideoCapture.Id`, and it carries its own frame size.
 
-**The binding is the session.** `IVideoCapture.open()` names the video sink to take frames from — a particular `IVideoSink`, by its own ID — and that sink is what the session delivers for its lifetime. A sink may have a display path, a capture, both or neither; none of those is a special case, and a capture never needs a display destination in order to exist.
+**The binding is the session.** `IVideoCapture.open()` names the source to take frames from — one arm of `Source`, naming a particular sink or decoder by its own ID — and that source is what the session delivers for its lifetime. A source may have a display path, a capture, both or neither; none of those is a special case, and a capture never needs a display destination in order to exist.
 
 **A capture is served the frame its sink would be presenting.** The sink is where the estate's presentation scheduling lives — the AV Clock attaches there, and the frame due now is the frame it has already worked out. A capture is a second consumer of that same scheduled stream, so what a frame means is whatever it means at that sink, and the capture adds no clock, no scheduler and no timing policy of its own.
 
 **What flows through the bound stage is decided by the input feed**, exactly as it always was. A capture neither selects nor changes it. Where a capture attaches and what content is playing are different axes, and a capture only chooses the first.
 
-**Binding takes a view, it does not divert.** A sink already rendering to a mapped video plane carries on unaffected, which is what lets a capture attach to a pipeline that is already running. `Capabilities.maxCapturesPerSink` declares how many captures one sink can carry; a bind past that limit is refused with `ErrorCode.SOURCE_UNAVAILABLE`.
+**Binding takes a view, it does not divert.** A source already feeding a display path carries on unaffected, which is what lets a capture attach to a pipeline that is already running. `Capabilities.maxCapturesPerSource` declares how many captures one source can carry; a bind past that limit is refused with `ErrorCode.SOURCE_UNAVAILABLE`.
 
 The `IVideoDecoder` contract is unchanged — the decoder does not know where its output goes, and nothing is set on it to arrange capture.
 
 A capture session is configured in two places, both on the capture itself: the frame size through `IVideoCaptureController.setProperty()` with `Property.WIDTH` and `Property.HEIGHT`, and the pixel format and memory layout with one `IVideoCaptureController.setFormat()` call. Pool depth is not configured at all — the platform calibrates it. The vendor layer arranges whatever the bound source requires to deliver the result, over whatever internal path it has.
 
-**What a capture can deliver is declared in `Capabilities`.** `supportedCodecs` lists the codecs it can capture, `supportedFormats` the pixel-format and memory-layout pairs, `maxFrameWidth` and `maxFrameHeight` the frame sizes, `maxCapturesPerSink` the fan-out, and `stallsWhenPoolExhausted` what happens when every buffer is held. A product that can decode to texture declares a capture, and that declaration is the whole of what is on offer.
+**What a capture can deliver is declared in `Capabilities`.** `supportedCodecs` lists the codecs it can capture, `supportedFormats` the pixel-format and memory-layout pairs, `maxFrameWidth` and `maxFrameHeight` the frame sizes, `maxCapturesPerSource` the fan-out, `supportedSources` the stages it can bind to, and `stallsWhenPoolExhausted` what happens when every buffer is held. A product that can decode to texture declares a capture, and that declaration is the whole of what is on offer.
 
 **The client makes one decision.** It picks a row of `supportedFormats` and passes it to `IVideoCaptureController.setFormat()`. Everything else is either calibrated by the platform and declared, or is a property of the capture set directly on it.
 
@@ -82,7 +82,7 @@ A capture is addressed by its own `IVideoCapture.Id`, and the frames it delivers
 
 ```text
 capture                  IVideoCapture.Id          one capture resource
- └─ session              open(sinkId)         bound to one IVideoSink
+ └─ session              open(source)         bound to one Source arm
      └─ pool             N buffers            allocated at start()
          ├─ buffer       bufferIndex = 0      one frame lands in one buffer
          │   ├─ image plane 0 (Y)    fd, offset, stride, length
@@ -95,7 +95,7 @@ capture                  IVideoCapture.Id          one capture resource
 | Identifier | Identifies | Where it appears |
 |---|---|---|
 | `IVideoCapture.Id` | the capture resource | `IVideoCaptureManager.getVideoCaptureIds()`, `getVideoCapture()` |
-| `IVideoSink.Id` | which video sink this session takes frames from | `IVideoCapture.open()` |
+| `Source` | which stage this session takes frames from — a sink or a decoder | `IVideoCapture.open()`, `Capabilities.supportedSources` |
 | `bufferIndex` | which pool buffer holds this frame | `VideoFrameView`, `releaseFrame()` |
 | `(fd, offset)` | where one image plane's bytes live | `planeFds[N]`, `planeOffsets[N]` |
 
@@ -151,7 +151,7 @@ Per frame, `acquireLatestFrame()` returns only a `bufferIndex` and a timestamp. 
 | **HAL.VIDEOCAPTURE.9** | Shall allow decode to proceed at full rate independently of the rate at which the client acquires frames, and shall never re-deliver a frame already returned by `acquireLatestFrame()`.|
 | **HAL.VIDEOCAPTURE.10** | Shall return from `acquireLatestFrame()` the frame the bound sink would be presenting at that moment, under whatever presentation mode that sink is running. Where the sink is presenting against an attached AV Clock, that is the frame due now with audio latency and AV-sync correction already applied, frames whose presentation time has passed dropped and frames whose time has not yet come held.| A client that draws each frame on receipt is then in sync without computing anything. The sink owns the timing policy and capture inherits it, so a change of presentation mode at the sink needs no change here. |
 | **HAL.VIDEOCAPTURE.11** | Shall release the buffer named in `acquireLatestFrame()`'s `releaseBufferIndex` before acquiring the next frame, so a client redrawing at frame rate makes one call per frame rather than two.| At 60 Hz the second round trip is pure overhead in the hot path. |
-| **HAL.VIDEOCAPTURE.12** | Shall accept `open()` only against a video sink declaring `com.rdk.hal.videosink.Capabilities.supportsCapture` true.| The sink declares whether it can be captured from, so a client finds a valid target by enumeration rather than by attempting a bind. |
+| **HAL.VIDEOCAPTURE.12** | Shall declare every source it can bind to in `Capabilities.supportedSources`, and shall accept `open()` only against a source listed there, failing others with `ErrorCode.SOURCE_NOT_CAPTURABLE`.| What can be captured from is a property of the capture, so it is declared in one place and a client finds a valid target by enumeration rather than by attempting a bind. A sink and a decoder carry no capture vocabulary. |
 
 ## Interface Definition
 
@@ -174,7 +174,7 @@ All of these are in `com.rdk.hal.videocapture`.
 
 ## Product Customization
 
-A product declares each capture in `hfp-videocapture.yaml`: `maxCapturesPerSink`, and under `captureCapabilities` the `supportedFormats` pairs, `supportedCodecs`, `maxFrameWidth` and `maxFrameHeight`, `stallsWhenPoolExhausted` and `resize`. Pool depth is not declared — the platform calibrates it and the client counts what `onPoolReady()` delivers. A product with no capture declares none, and `IVideoCaptureManager.getVideoCaptureIds()` returns an empty array.
+A product declares each capture in `hfp-videocapture.yaml`: `maxCapturesPerSource` and `supportedSources`, and under `captureCapabilities` the `supportedFormats` pairs, `supportedCodecs`, `maxFrameWidth` and `maxFrameHeight`, `stallsWhenPoolExhausted` and `resize`. Pool depth is not declared — the platform calibrates it and the client counts what `onPoolReady()` delivers. A product with no capture declares none, and `IVideoCaptureManager.getVideoCaptureIds()` returns an empty array.
 
 ## System Context
 
@@ -188,11 +188,11 @@ flowchart TD
     CTRL[IVideoCaptureController]
     L[IVideoCaptureControllerListener]
     POOL[Dma-Buf pool]
-    SINK[Bound IVideoSink]
+    SINK[Bound Source]
 
     Client -->|getVideoCaptureIds / getVideoCapture| MGR
     MGR --> CAP
-    CAP -->|"open(sinkId)"| CTRL
+    CAP -->|"open(source)"| CTRL
     Client -->|setFormat / start / stop| CTRL
     Client -->|acquireLatestFrame / releaseFrame| CTRL
     CTRL --> L
@@ -223,9 +223,9 @@ Call `IVideoCaptureManager.getVideoCaptureIds()` and take an `IVideoCapture` wit
 2. Read what the capture can deliver:
 Call `IVideoCapture.getCapabilities()` for the capturable codecs, the supported pixel formats and modifiers, the maximum frame size, how many captures one sink can carry, and the behaviour when every buffer is locked. The buffer count is not among them — it is learnt from `onPoolReady()`.
 3. Bind a source, which opens the session:
-Call `IVideoCapture.open(videoSinkId, captureControllerListener)`, naming the sink by its own ID. The binding and the session are the same thing — the sink named here is what this session delivers until `close()`. The resource transitions `CLOSED` → `READY`. It fails with `EX_ILLEGAL_ARGUMENT` if the ID names no sink or that sink declares `supportsCapture` false, and with `ErrorCode.SOURCE_UNAVAILABLE` if the sink already carries `maxCapturesPerSink` sessions.
+Call `IVideoCapture.open(source, captureControllerListener)`, naming the stage by one arm of `Source`. The binding and the session are the same thing — the source named here is what this session delivers until `close()`. The resource transitions `CLOSED` → `READY`. It fails with `EX_ILLEGAL_ARGUMENT` if the arm names no resource of its kind, with `ErrorCode.SOURCE_NOT_CAPTURABLE` if the source is absent from `Capabilities.supportedSources`, and with `ErrorCode.SOURCE_UNAVAILABLE` if it already carries `maxCapturesPerSource` sessions.
 
-A client finds a valid target before opening: enumerate `IVideoSinkManager.getVideoSinkIds()` and take the sinks whose `Capabilities.supportsCapture` is true.
+A client finds a valid target before opening: read `IVideoCapture.getCapabilities()` and take an entry from `supportedSources`. What the capability lists is exactly what `open()` accepts.
 4. Configure the session:
 Call `IVideoCaptureController.setFormat()` while in `READY` with one row of `Capabilities.supportedFormats`. There is no default — what a capture delivers is whatever it declares, so a format is selected before `start()`. Frame size is the capture's own `Property.WIDTH` and `HEIGHT`, set with `IVideoCaptureController.setProperty()`; where the capture declares `resize: false` they must equal what the bound source is producing. Pool depth is not a client choice and is not declared — the platform calibrates it from the throughput it can sustain, and the client sees how many buffers it got when `onPoolReady()` delivers them.
 5. Start:
@@ -250,7 +250,7 @@ The bound sink becoming unavailable while a session is running stops it and rais
 ```mermaid
 stateDiagram-v2
     [*] --> CLOSED
-    CLOSED --> READY: open()
+    CLOSED --> READY: open(source)
     READY --> STARTING: start()
     STARTING --> STARTED: onPoolReady()
     STARTED --> STOPPING: stop() or onSourceLost()
@@ -312,7 +312,7 @@ sequenceDiagram
     participant Capture as IVideoCapture
     participant Controller as IVideoCaptureController
     participant Listener as IVideoCaptureControllerListener
-    participant Sink as IVideoSink
+    participant Sink as Bound Source
 
     Client->>Manager: getVideoCaptureIds()
     Manager-->>Client: IVideoCapture.Id[]
@@ -323,9 +323,9 @@ sequenceDiagram
     Client->>Capture: getCapabilities()
     Capture-->>Client: Capabilities
 
-    Note over Client,Sink: Pick a sink declaring supportsCapture true
+    Note over Client,Sink: Pick an entry from Capabilities.supportedSources
 
-    Client->>Capture: open(videoSinkId, controllerListener)
+    Client->>Capture: open(source, controllerListener)
     Capture-->>Client: IVideoCaptureController (READY)
 
     Client->>Controller: setProperty(WIDTH, w)
@@ -631,32 +631,23 @@ captureManager->getVideoCapture(captureIds[0], captureEventListener, &captureRes
 
 Capabilities captureCapabilities;
 captureResource->getCapabilities(&captureCapabilities);
-// captureCapabilities.maxCapturesPerSink   - how far one sink fans out
+// maxCapturesPerSource                     - how far one source fans out
 // captureCapabilities.supportedCodecs       - what this capture can take
 // captureCapabilities.supportedFormats      - the {fourcc, modifier} pairs it can deliver
 // captureCapabilities.maxFrameWidth         - the frame size ceiling
 // captureCapabilities.resize                - whether a size other than the source's is allowed
 
 // Find a sink that declares it can be captured from.
-std::vector<IVideoSink::Id> sinkIds;
-videoSinkManager->getVideoSinkIds(&sinkIds);
-IVideoSink::Id captureSinkId{IVideoSink::Id::UNDEFINED};
-for (const auto& id : sinkIds) {
-    sp<IVideoSink> sink;
-    videoSinkManager->getVideoSink(id, &sink);
-    videosink::Capabilities sinkCapabilities;
-    sink->getCapabilities(&sinkCapabilities);
-    if (sinkCapabilities.supportsCapture) {
-        captureSinkId = id;
-        break;
-    }
-}
+// What open() accepts is what the capability lists - no probing, and no capture
+// vocabulary on the sink or the decoder.
+Source captureSource = capabilities.supportedSources[0];
 
-// Bind the sink. THIS is the session - it names the sink frames are taken from, and
-// it lasts until close(). The sink's own display path is unaffected, and the frames
-// arrive as that sink would present them.
+// Bind the source. THIS is the session - it names the stage frames are taken from,
+// and it lasts until close(). That stage's own display path is unaffected, and the
+// frames arrive as that stage produces them: a sink arm delivers what the sink would
+// present, a decoder arm what the decoder produced.
 sp<IVideoCaptureController> captureController;
-captureResource->open(captureSinkId, captureControllerListener,
+captureResource->open(captureSource, captureControllerListener,
                       &captureController);   // CLOSED -> READY
 
 // Configure while READY. The capture carries its own frame size.

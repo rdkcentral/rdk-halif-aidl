@@ -19,6 +19,7 @@
 package com.rdk.hal.videocapture;
 
 import com.rdk.hal.videocapture.FormatLayout;
+import com.rdk.hal.videocapture.Source;
 import com.rdk.hal.videodecoder.Codec;
 
 /**
@@ -106,14 +107,34 @@ parcelable Capabilities
     boolean resize;
 
     /**
-     * How many capture sessions a single video sink can carry at once on this resource.
+     * How many capture sessions one source can carry at once on this resource.
      *
-     * A sink already carrying this many captures refuses a further bind with
-     * `ErrorCode.SOURCE_UNAVAILABLE`. One is the common case; a product that
-     * can fan one sink out to several captures declares more.
+     * A source already carrying this many captures refuses a further bind with
+     * `ErrorCode.SOURCE_UNAVAILABLE`. One is the common case; a product that can fan
+     * one source out to several captures declares more.
      *
-     * Which sinks can be captured from at all is declared on the sink, in
-     * `com.rdk.hal.videosink.Capabilities.supportsCapture`.
+     * The limit is per source, not per capture resource: two sessions on different
+     * sources do not count against each other.
      */
-    int maxCapturesPerSink;
+    int maxCapturesPerSource;
+
+    /**
+     * The pipeline sources this capture resource can take frames from, and the whole
+     * of them.
+     *
+     * Every source a session may be opened against is listed here, by the same `Source`
+     * union a client passes to `IVideoCapture.open()` - so what the capability lists is
+     * exactly what `open()` accepts, and a client enumerates rather than discovering a
+     * pairing by a failed bind.
+     *
+     * The declaration is centralised here rather than on each source's own
+     * capabilities, because capture is a module in its own right: what can be captured
+     * from is a property of the capture, and a source carries no capture vocabulary.
+     *
+     * A source absent from this list fails `open()` with
+     * `ErrorCode.SOURCE_NOT_CAPTURABLE`.
+     *
+     * @see IVideoCapture.open(), Source, ErrorCode.SOURCE_NOT_CAPTURABLE
+     */
+    Source[] supportedSources;
 }

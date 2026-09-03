@@ -32,9 +32,12 @@ enum ErrorCode {
     OUT_OF_MEMORY = 1,
 
     /**
-     * The bound video sink cannot carry a further capture.
+     * The named source cannot carry a further capture.
      *
-     * @see IVideoCapture.open(), Capabilities.maxCapturesPerSink
+     * The source is one this capture serves, and it is already carrying
+     * `Capabilities.maxCapturesPerSource` sessions.
+     *
+     * @see IVideoCapture.open(), Capabilities.maxCapturesPerSource
      */
     SOURCE_UNAVAILABLE = 2,
 
@@ -76,4 +79,15 @@ enum ErrorCode {
      * `IVideoCaptureController.setFormat()`.
      */
     INVALID_CONFIGURATION = 8,
+
+    /**
+     * The named source is not one this capture can take frames from.
+     *
+     * Distinct from `SOURCE_UNAVAILABLE`: the source is not in
+     * `Capabilities.supportedSources` at all, so no capacity would make the bind
+     * succeed. A client that enumerated `supportedSources` does not see this.
+     *
+     * @see IVideoCapture.open(), Capabilities.supportedSources, Source
+     */
+    SOURCE_NOT_CAPTURABLE = 9,
 }
