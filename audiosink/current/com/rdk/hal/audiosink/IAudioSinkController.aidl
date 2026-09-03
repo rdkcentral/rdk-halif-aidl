@@ -51,6 +51,21 @@ import com.rdk.hal.avclock.IAVClock;
  *  suspends consumption but does not flush the queue or stop the sink; the
  *  same is true of attaching to a clock that is paused.
  *
+ *  <h3>Mixer input routing and audibility</h3>
+ *  The attached clock gates frame consumption; the routed mixer input gates
+ *  audibility. The routing is owned by the Audio Mixer rather than by this
+ *  controller — `IAudioMixerController` routes `AudioSourceType.AUDIO_SINK` at
+ *  this sink's resource index to a mixer input, and `AudioSourceType.NONE`
+ *  clears that routing. With no mixer input routed, queued frames are consumed
+ *  at their presentation times and their buffers freed via `IAVBuffer.free()`
+ *  at exactly the same points as when a mixer input is routed, and nothing is
+ *  audible. The queue drains at clock rate, so the sink stays in sync with any
+ *  video sink presenting against the same clock.
+ *
+ *  The routing may be set or cleared at any point in the session, including
+ *  while `STARTED`. A routing change leaves the sink's state-machine state
+ *  unchanged, does not flush the queue and raises no exception.
+ *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
  *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
@@ -205,6 +220,12 @@ interface IAudioSinkController {
      * calling this method in both tunnelled and non-tunnelled modes. Starting
      * an audio sink while the associated decoder ID is
      * `IAudioDecoder.Id.UNDEFINED` shall fail.
+     *
+     * The audio decoder association is the only association this call
+     * requires. The AVClock attachment and the mixer input routing are
+     * independent of it: a sink started with no mixer input routed runs
+     * normally and is inaudible until a mixer input is routed — see the
+     * interface @brief.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE

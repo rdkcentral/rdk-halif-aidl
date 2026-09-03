@@ -45,6 +45,7 @@ The interaction between the RDK GStreamer Audio Sink element and the Audio Sink 
 | **HAL.AUDIOSINK.3** | The default volume level for an audio sink session shall be 1.0 (full volume) and unmuted. ||
 | **HAL.AUDIOSINK.4** | The default reference level for an audio sink session shall be -31dB. ||
 | **HAL.AUDIOSINK.5** | If a client process exits, the Audio Sink server shall automatically stop and close any Audio Sink instance controlled by that client. ||
+| **HAL.AUDIOSINK.6** | Shall run a session with no mixer input routed, consuming queued frames and freeing their buffers against the attached AV Clock while producing no audio. | The routing is owned by the Audio Mixer and may be set or cleared at any point in the session, including while the sink is `STARTED`. |
 
 ## Interface Definition
 
@@ -223,6 +224,14 @@ The Audio Sink HAL cannot handle audio frame buffers when tunnelled audio is exc
 In these cases an Audio Decoder does not return audio frame buffer handles that can be passed to the Audio Sink.
 
 The Audio Sink HAL is still used to control the audio stream volume, mute and volume ramping.
+
+## Audio Mixer Input Routing
+
+An Audio Sink is routed to a mixer input by the [Audio Mixer](../audiomixer/audio_mixer.md) rather than by the sink itself: `IAudioMixerController` routes `AudioSourceType.AUDIO_SINK` at this sink's resource index to a mixer input, and `AudioSourceType.NONE` clears that routing.
+
+The attached AV Clock gates frame consumption and the mixer routing gates audibility, mirroring the way a [Video Sink](../videosink/video_sink.md) relates to its video plane. `start()` requires a valid Audio Decoder association and nothing else. The routing may be set or cleared at any point in the session, including while the sink is `STARTED`: a routing change leaves the sink's state unchanged, does not flush the queue and raises no exception.
+
+With no mixer input routed, queued frames are consumed at their presentation times on the attached clock and their buffers freed with `IAVBuffer.free()` at the same points as when a mixer input is routed, and nothing is audible. The queue drains at clock rate, so the sink stays in sync with any Video Sink presenting against the same clock.
 
 ## End of Stream Signalling
 

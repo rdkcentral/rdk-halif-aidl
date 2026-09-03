@@ -22,6 +22,7 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
 
 !!! tip "Related Pages"
     - [Video Decoder](../videodecoder/video_decoder.md)
+    - [Plane Control](../planecontrol/plane_control.md)
     - [AV Buffer](../avbuffer/av_buffer.md)
     - [AV Clock](../avclock/av_clock.md)
     - [Session State Management](../key_concepts/hal/hal_session_state_management.md)
@@ -36,7 +37,7 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
 | **HAL.VIDEOSINK.4** | Shall notify the client when the first frame is presented in the session once opened or after a flush operation. ||
 | **HAL.VIDEOSINK.5** | Shall notify the client when a video underflow occurs.| A video underflow condition is met if an expected frame is not queued in time for display. |
 | **HAL.VIDEOSINK.6** | Shall provide an API to expose the video sink resources for the client to discover. ||
-| **HAL.VIDEOSINK.7** |  ||
+| **HAL.VIDEOSINK.7** | Shall run a session with no video plane mapped, consuming queued frames and freeing their buffers against the attached AV Clock while displaying nothing. | The plane mapping is owned by Plane Control and may be set or cleared at any point in the session, including while the sink is `STARTED`. |
 | **HAL.VIDEOSINK.8** | Video frames decoupled from video planes (destination plane -1) shall continue to be delivered and remain in sync with audio.  When coupled to a video plane they shall immediately become visible and be in lip sync. |To ensure if/when a video sink source is assigned to a video plane it appears in sync with audio. |
 | **HAL.VIDEOSINK.9** | If a client process exits, the Video Sink server shall automatically stop and close any `IVideoSink` instance controlled by that client. ||
 
@@ -222,6 +223,25 @@ The display of decoded video frames are made on the video plane that has been ma
 Setting and changing the mapping requires a call to `IPlaneControl.setVideoSourceDestinationPlaneMapping()`.
 
 Full details are covered in the [Plane Control HAL](../planecontrol/plane_control.md).
+
+`start()` requires a valid Video Decoder association and nothing else. The mapping may be set or cleared at any point in the session, including while the sink is `STARTED`: a mapping change leaves the sink's state unchanged, does not flush the queue and raises no exception. This is what allows main and PIP sources to be swapped between planes, or unmapped, while playing.
+
+### No Plane Mapped
+
+A `destinationPlaneIndex` of `-1` means the Video Sink has no plane. The attached AV Clock gates frame consumption and the plane gates visibility, so the two are independent:
+
+| | Plane mapped | No plane mapped |
+| --- | --- | --- |
+| Queued frames | Consumed at their presentation time on the attached clock | Consumed at their presentation time on the attached clock |
+| Frame buffers | Freed with `IAVBuffer.free()` once presented | Freed with `IAVBuffer.free()` at the same point |
+| Display | Rendered on the mapped plane | Nothing displayed |
+| `onFirstFrameRendered()` | Fires on the first frame rendered | Fires on the first frame rendered once a plane becomes mapped |
+| `onVideoUnderflow()` / `onVideoResumed()` | Armed | Armed |
+| `onEndOfStream()` | Fires once the final queued frame's presentation time passes | Fires once the final queued frame's presentation time passes |
+
+Because the queue drains at clock rate in both cases, `queueVideoFrame()` applies back-pressure only for the reason described in [Input Buffer Back-Pressure](#input-buffer-back-pressure), and an unmapped sink stays in sync with any Audio Sink presenting against the same clock.
+
+On becoming mapped, the sink renders from the first queued frame whose presentation time is at or after the current clock time, which satisfies **HAL.VIDEOSINK.8**. Queued frames whose presentation time has already passed are discarded rather than displayed late.
 
 ## Video Sink States
 
