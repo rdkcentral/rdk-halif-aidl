@@ -45,9 +45,14 @@ The Panel HAL manages both static capabilities and dynamic runtime control of th
 The corresponding [`hfp-panel.yaml`](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/panel/current/hfp-panel.yaml) file includes structured declarations for:
 
 * `panelType`, `pixelWidth`, `heightCm`, etc. (from `Capabilities.aidl`, returned via `IPanelOutput.getCapabilities()`)
-* `supportedPQParameters` (from `PQParameter.aidl`)
-* `pqParameterCapabilities` (from `PQParameterCapabilities.aidl`)
-* `pictureModeCapabilities` (from `Capabilities.aidl`)
+* `pqContexts` — the distinct (picture modes × video formats × AV sources) support sets, each declared once (from `Capabilities.aidl`)
+* `pqParameters` — one entry per supported PQ parameter with its scope, value range and applicable context(s) (from `PQParameterCapability.aidl`)
+
+### PQ Capability Model
+
+PQ capability is a normalized relation. `Capabilities.pqContexts` declares each distinct support set of picture modes, video formats and per-format AV sources once; `Capabilities.pqParameters` lists every supported parameter with its range and the contexts it applies in. Parameter names are string keys: the canonical vocabulary is defined as constants in `PQParameter.aidl`, and vendor-specific parameters use the `vendor.<vendorname>.` namespace — clients render them generically from their declared range and contexts.
+
+Clients rendering a settings UI call `getSupportedPQParameters(pictureMode, source, format)` to obtain the parameters available in the active context in a single call, using the same addressing tuple (and wildcard semantics) as `setPQParameters()` / `getPQParameters()`.
 
 ---
 
@@ -73,8 +78,8 @@ The corresponding [`hfp-panel.yaml`](https://github.com/rdkcentral/rdk-halif-aid
 | `IFactoryPanel.aidl`                  | Factory interface for persistent configuration and tests     |
 | `IPanelOutput.aidl`                   | Runtime panel output control interface                       |
 | `IPanelOutputListener.aidl`           | Event listener callbacks for panel state changes             |
-| `PQParameter.aidl`                    | Enumeration of supported picture quality parameters          |
-| `PQParameterCapabilities.aidl`        | Capabilities per PQ parameter by picture mode and format     |
+| `PQParameter.aidl`                    | Canonical string vocabulary for picture quality parameters   |
+| `PQParameterCapability.aidl`          | Identity, scope and value range of one PQ parameter          |
 | `PQParameterConfiguration.aidl`       | Configuration value of PQ parameter for a mode/source/format |
 | `PanelType.aidl`                      | Enumeration of panel types (LCD, OLED, etc.)                 |
 | `PictureModeConfiguration.aidl`       | Picture mode, video format, and AV source config             |
@@ -141,7 +146,7 @@ flowchart TD
 
 ## Operation and Data Flow
 
-* Client query `Capabilities` for supported picture modes and PQ parameters.
+* Clients query `Capabilities` for supported picture modes and PQ parameters, or call `getSupportedPQParameters()` for the parameters available in a specific picture mode / AV source / video format context.
 * Picture mode configurations and PQ parameters are set via `setPictureModes()` and `setPQParameters()`.
 * The panel output enable state controls display and backlight.
 * Frame rate matching adjusts panel refresh rate dynamically to match video content.
@@ -205,9 +210,9 @@ flowchart TD
 Each platform must include a [hfp-panel.yaml](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/panel/current/hfp-panel.yaml) to define the platform-specific implementation of this HAL. It includes:
 
 * Static capabilities such as panel dimensions, panel type, and refresh rates.
-* Lists of supported PQ parameters and picture modes.
-* Capabilities of each PQ parameter per picture mode, AV source, and dynamic range.
-* Declared as includes or structured sections aligned with the AIDL interfaces.
+* The distinct PQ support contexts (picture modes × video formats × AV sources), each declared once.
+* One entry per supported PQ parameter with its scope, value range and applicable contexts.
+* Declared as structured sections mirroring the `Capabilities` parcelable.
 
 These files are machine-readable and used for:
 
