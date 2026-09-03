@@ -6,8 +6,8 @@
 |---|---|
 | Status | 🔴 DRAFT |
 | Version | Issue #1 |
-| Author | Gerald Weatherup |
-| Reviewers | Lucien Kennedy-Lamb, Jan Pedersen, Peter Stieglitz, Philipp Trommler, Thomas Manstrup |
+| Author | RDK-E Architecture |
+| Reviewers | Assigned on the pull request |
 | Parent | [HAL Delivery & Versioning SOP](../governance/versioning-sop.md) |
 
 ---
