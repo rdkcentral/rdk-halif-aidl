@@ -21,7 +21,7 @@
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: audiomixer
-version: 0.3.0.0
+version: 0.4.0.0
 status: AMBER
 description: "Audio mixing and routing for multi-stream output"
 type: SOC

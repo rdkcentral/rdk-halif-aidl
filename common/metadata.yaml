@@ -21,7 +21,7 @@
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: common
-version: 0.2.0.0
+version: 0.2.1.0
 status: GREEN
 description: "Shared base AIDL types and definitions used across all HAL interfaces"
 type: OEM
