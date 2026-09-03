@@ -133,6 +133,10 @@ enum Property {
 
     /**
      *
+	 *
+	 * @deprecated A placeholder that never named a metric. This module's
+	 * figures are Metric enum members read through
+	 * IAudioSink.getMetrics().
      */
     METRIC_xxxx = 1000,
 }

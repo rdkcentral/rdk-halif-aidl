@@ -194,6 +194,12 @@ enum Property {
 	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
+	 *
+	 * @deprecated Superseded by Metric::FRAMES_DECODED, read through
+	 * IAudioDecoder.getMetrics(). That call latches every requested figure
+	 * at one instant, so paired counters cannot be read torn, and reports
+	 * NOT_SUPPORTED rather than -1 where the product cannot measure it.
+	 * This property resets on open()/flush()/stop(); the metric does not.
 	 */
 	METRIC_FRAMES_DECODED = 1000,
 
@@ -208,6 +214,12 @@ enum Property {
 	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
+	 *
+	 * @deprecated Superseded by Metric::DECODE_ERRORS, read through
+	 * IAudioDecoder.getMetrics(). That call latches every requested figure
+	 * at one instant, so paired counters cannot be read torn, and reports
+	 * NOT_SUPPORTED rather than -1 where the product cannot measure it.
+	 * This property resets on open()/flush()/stop(); the metric does not.
 	 */
 	METRIC_DECODE_ERRORS = 1001,
 
@@ -224,6 +236,12 @@ enum Property {
 	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
+	 *
+	 * @deprecated Superseded by Metric::FRAMES_DROPPED, read through
+	 * IAudioDecoder.getMetrics(). That call latches every requested figure
+	 * at one instant, so paired counters cannot be read torn, and reports
+	 * NOT_SUPPORTED rather than -1 where the product cannot measure it.
+	 * This property resets on open()/flush()/stop(); the metric does not.
 	 */
 	METRIC_FRAMES_DROPPED = 1002,
 }

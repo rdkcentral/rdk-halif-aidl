@@ -4,5 +4,16 @@ aidl_interface:
     - com/rdk/hal/videodecoder/*.aidl
   imports:
     - common@current
+    - metrics@current
   stability: vintf
   layout: module-local
+
+# The vocabulary this interface carries, named as a FLOOR rather than a pin.
+# Imports pin exactly because ABI compatibility is exact; a vocabulary is not,
+# because adding a key is compatible by construction. An interface frozen
+# against 1.0 keeps serving when the vocabulary reaches 1.2, and a caller built
+# from the later revision is answered NOT_SUPPORTED for keys this one does not
+# have.
+kvc:
+  vocabulary: videodecoder
+  minimum: "1.0"

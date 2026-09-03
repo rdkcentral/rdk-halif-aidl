@@ -1,0 +1,408 @@
+# If not stated otherwise in this file or this component's LICENSE file the
+# following copyright and licenses apply:
+#
+# Copyright 2026 RDK Management
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Key Value Contract for the video sink.
+#
+# THIS FILE IS THE CONTRACT for what this component measures. A vendor
+# implements against the description on each key; a test suite asserts against
+# it. AFTER EDITING, RUN: scripts/kvcc.py
+#
+# This vocabulary sits BESIDE the interface versions, never inside one, so a
+# revision here moves no frozen interface hash.
+#
+# A key absent here is ABSENT at runtime — never 0, never -1. unit and kind are
+# part of a key's identity. A counter is monotonic from resource creation and is
+# never reset on open(), flush(), stop() or seek. Every value is int64.
+#
+# THE THREE DROP AXES ARE SEPARATE and a frame belongs to exactly one:
+# frames_dropped_late missed its deadline, frames_dropped_frc was decimated by
+# rate conversion, and a frame the decoder discarded before output is
+# av.video_decoder.frames_dropped rather than anything here.
+
+format: kvc
+schema: 1
+
+domain: av
+component: video_sink
+package: videosink
+version: 1.0
+
+instances: 2
+
+keys:
+
+  # av.video_sink.frames_received
+  - name: frames_received
+    type: int64
+    unit: frames
+    kind: counter
+    access: read
+    provider: driver
+    description: >
+      Decoded frames received from the decoder to be presented.
+
+  # av.video_sink.frames_presented
+  - name: frames_presented
+    type: int64
+    unit: frames
+    kind: counter
+    access: read
+    provider: driver
+    description: >
+      Frames handed to display scanout for presentation, one per successful
+      render.
+
+  # av.video_sink.frames_dropped_late
+  - name: frames_dropped_late
+    type: int64
+    unit: frames
+    kind: counter
+    access: read
+    provider: driver
+    description: >
+      Frames dropped because their PTS deadline against the render clock had
+      passed by more than one display frame interval at the sink render check —
+      too late to show. Sink render-decision internal.
+
+  # av.video_sink.frames_dropped_frc
+  - name: frames_dropped_frc
+    type: int64
+    unit: frames
+    kind: counter
+    access: read
+    provider: driver
+    description: >
+      Frames dropped by frame-rate conversion when the source rate exceeds the
+      display rate, which is cadence decimation rather than lateness.
+
+  # av.video_sink.frames_repeated_frc
+  - name: frames_repeated_frc
+    type: int64
+    unit: frames
+    kind: counter
+    access: read
+    provider: driver
+    description: >
+      Frames held for more than one display interval by frame-rate conversion
+      when the source rate is below the display rate. Normal content cadence,
+      and not a freeze.
+
+  # av.video_sink.frames_repeated_missing_frame
+  - name: frames_repeated_missing_frame
+    type: int64
+    unit: frames
+    kind: counter
+    access: read
+    provider: driver
+    description: >
+      Frames repeated to cover a missing next frame — the sink had no new
+      decoded frame ready at render time. This is starvation cover, and it is
+      what freeze_duration_ms integrates.
+
+  # av.video_sink.underflowed
+  - name: underflowed
+    type: int64
+    unit: episodes
+    kind: counter
+    access: read
+    provider: driver
+    description: >
+      Count of video buffer-underflow episodes. One per episode start, where an
+      episode starts when there is no frame to present at render time and ends
+      when a new frame is presented.
+
+  # av.video_sink.underflow_duration_ms
+  - name: underflow_duration_ms
+    type: int64
+    unit: ms
+    kind: counter
+    access: read
+    provider: driver
+    description: >
+      Cumulative wall-clock time across all video underflow episodes. Paired
+      with underflowed, so the mean episode length is this divided by that. An
+      underflow episode manifests on screen as a freeze.
+
+  # av.video_sink.freeze_duration_ms
+  - name: freeze_duration_ms
+    type: int64
+    unit: ms
+    kind: counter
+    access: read
+    provider: driver
+    description: >
+      Cumulative on-screen time the same frame was held to cover a missing
+      frame, which is the customer-visible freeze — the time integral of
+      frames_repeated_missing_frame. Excludes frame-rate-conversion cadence
+      repeats, which are not freezes.
+
+  # av.video_sink.freeze_event_count
+  - name: freeze_event_count
+    type: int64
+    unit: events
+    kind: counter
+    access: read
+    provider: driver
+    description: >
+      Count of freeze episodes, one per episode start. Paired with
+      freeze_duration_ms, so the mean freeze length is that divided by this.
+
+  # av.video_sink.max_freeze_duration_ms
+  - name: max_freeze_duration_ms
+    type: int64
+    unit: ms
+    kind: high_water
+    access: read
+    provider: driver
+    description: >
+      Longest single freeze episode observed. A monotone non-decreasing
+      high-water mark over the life of the resource, and read-only: a maximum
+      cannot be recovered by differencing two maxima, so a consumer wanting the
+      worst freeze within its own reporting window tracks that itself from
+      last_freeze_duration_ms rather than resetting a figure other readers
+      share.
+
+  # av.video_sink.render_latency_sum_us
+  - name: render_latency_sum_us
+    type: int64
+    unit: us
+    kind: counter
+    access: read
+    provider: driver
+    description: >
+      Running sum of per-frame render latency, from a frame arriving at the sink
+      input to being presented to scanout. Paired with frames_presented.
+
+  # av.video_sink.buffer_depth_ms
+  - name: buffer_depth_ms
+    type: int64
+    unit: ms
+    kind: current
+    access: read
+    provider: driver
+    description: >
+      Buffered decoded media ahead of the present position now — the sum of
+      presentation durations of frames queued but not yet presented. A live
+      sample re-read each capture rather than a cumulative figure. This is
+      SoC- and use-case-specific, so compare it against itself over time rather
+      than across products.
+
+  # av.video_sink.last_underflow_trigger
+  - name: last_underflow_trigger
+    type: int64
+    unit: none
+    kind: current
+    access: read
+    provider: driver
+    description: >
+      Cause of the most recent underflow episode, which is what distinguishes an
+      expected starvation from a defect.
+    values:
+      - name: none
+        value: 0
+        description: No underflow episode has been recorded.
+      - name: startup_prefill
+        value: 1
+        description: >
+          The pipeline had not yet filled at the start of presentation. Expected.
+      - name: mid_stream
+        value: 2
+        description: >
+          Starvation during steady-state playback, with no seek, trickplay or
+          content boundary to explain it. This is the one that indicates a
+          defect.
+      - name: seek_recovery
+        value: 3
+        description: The pipeline was refilling after a seek. Expected.
+      - name: trickplay_recovery
+        value: 4
+        description: >
+          The pipeline was refilling after a trickplay rate change. Expected.
+      - name: content_boundary
+        value: 5
+        description: >
+          The stream crossed a discontinuity such as a period or advert
+          boundary. Expected.
+
+  # av.video_sink.last_underflow_duration_ms
+  - name: last_underflow_duration_ms
+    type: int64
+    unit: ms
+    kind: current
+    access: read
+    provider: driver
+    description: >
+      Length of the most recent completed underflow episode. Read with
+      underflowed and underflow_duration_ms, which give the count and the total.
+
+  # av.video_sink.last_dropped_frame_pts_ms
+  - name: last_dropped_frame_pts_ms
+    type: int64
+    unit: ms
+    kind: current
+    access: read
+    provider: driver
+    description: >
+      Stream PTS of the most recently dropped frame, within one frame interval,
+      whichever drop axis it fell on. This is what turns a drop count into a
+      locatable defect. Left undeclared where no PTS is derivable.
+
+  # av.video_sink.last_freeze_pts_ms
+  - name: last_freeze_pts_ms
+    type: int64
+    unit: ms
+    kind: current
+    access: read
+    provider: driver
+    description: >
+      Stream PTS at which the most recent freeze episode began, within one frame
+      interval. Does for a freeze what last_dropped_frame_pts_ms does for a
+      drop. Left undeclared where no PTS is derivable.
+
+  # av.video_sink.last_freeze_duration_ms
+  - name: last_freeze_duration_ms
+    type: int64
+    unit: ms
+    kind: current
+    access: read
+    provider: driver
+    description: >
+      Length of the most recent completed freeze episode. Read with
+      freeze_event_count and freeze_duration_ms for the count and the total, and
+      with max_freeze_duration_ms for the worst.
+
+  # av.video_sink.first_frame_presented_pts_ms
+  - name: first_frame_presented_pts_ms
+    type: int64
+    unit: ms
+    kind: current
+    access: read
+    provider: driver
+    description: >
+      PTS of the first frame to reach presentation, set at session start and
+      re-set after each seek or flush. This is the hardware's contribution to
+      time-to-first-frame; whatever elapsed above the HAL before decode began is
+      observed by the party that started the session.
+
+events:
+
+  # av.video_sink.underflow
+  - name: underflow
+    description: >
+      Raised at the START of a starvation episode, the instant there is nothing
+      to present at render time. Exactly one underflow_end closes it.
+    attributes:
+
+      # av.video_sink.underflow.trigger
+      - name: trigger
+        type: int64
+        unit: none
+        description: >
+          What caused this episode, which is what distinguishes an expected
+          starvation from a defect.
+        values:
+          - name: none
+            value: 0
+            description: No cause was determined.
+          - name: startup_prefill
+            value: 1
+            description: The pipeline had not yet filled. Expected.
+          - name: mid_stream
+            value: 2
+            description: >
+              Starvation during steady-state playback with nothing to explain
+              it. Indicates a defect.
+          - name: seek_recovery
+            value: 3
+            description: The pipeline was refilling after a seek. Expected.
+          - name: trickplay_recovery
+            value: 4
+            description: >
+              The pipeline was refilling after a trickplay rate change.
+              Expected.
+          - name: content_boundary
+            value: 5
+            description: >
+              The stream crossed a discontinuity such as a period or advert
+              boundary. Expected.
+
+  # av.video_sink.underflow_end
+  - name: underflow_end
+    description: >
+      Raised when presentation resumes, closing the episode the preceding
+      underflow opened.
+    values:
+
+      # av.video_sink.underflow_end.duration_ms
+      - name: duration_ms
+        type: int64
+        unit: ms
+        kind: current
+        description: >
+          Length of the episode this closes, from start to resume. Not
+          cumulative — underflow_duration_ms carries the running total.
+
+  # av.video_sink.first_frame_presented
+  - name: first_frame_presented
+    description: >
+      Raised when the first frame reaches presentation, once at session start
+      and again after each seek or flush.
+    attributes:
+
+      # av.video_sink.first_frame_presented.pts_ms
+      - name: pts_ms
+        type: int64
+        unit: ms
+        description: >
+          PTS of the frame that reached presentation. Absent where the SoC
+          cannot derive a PTS.
+
+  # av.video_sink.quality_threshold_crossed
+  - name: quality_threshold_crossed
+    description: >
+      Raised when a quality counter crosses its declared threshold. Only the
+      sink knows whether it shed a frame or repeated one, so which counter moved
+      is carried rather than inferred.
+    attributes:
+
+      # av.video_sink.quality_threshold_crossed.metric
+      - name: metric
+        type: int64
+        unit: none
+        description: Which counter crossed its threshold.
+        values:
+          - name: frames_dropped
+            value: 1
+            description: A drop counter crossed.
+          - name: frames_repeated
+            value: 2
+            description: A repeat counter crossed.
+
+      # av.video_sink.quality_threshold_crossed.pts_ms
+      - name: pts_ms
+        type: int64
+        unit: ms
+        description: >
+          Stream PTS at the crossing. Absent where no PTS is derivable.
+    values:
+
+      # av.video_sink.quality_threshold_crossed.count
+      - name: count
+        type: int64
+        unit: frames
+        kind: current
+        description: How many frames the crossing covered.
