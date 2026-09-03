@@ -16,7 +16,8 @@
 #
 # Jira statuses last refreshed: 2026-07-03 (live corp-sync pull; must be re-pulled
 # before this file is relied on for current status).
-# Last edited: 2026-07-03 — live status refresh, boot -> bootreason (see #684).
+# Last edited: 2026-07-03 — live status refresh, boot -> bootreason (see #684);
+# cryptoengine and keyvault added top-level (ENT-8666 / ENT-8665, #387).
 
 # SOC Components
 videodecoder:
@@ -143,6 +144,26 @@ drm:
   mw_teams: [AV_Architecture]
   vts_team: ~  # TODO: link DRM HAL VTS CPESP ticket once raised
   vdevice: ~   # TODO: link DRM HAL vDevice CPESP ticket once raised
+
+cryptoengine:
+  metadata: cryptoengine/metadata.yaml
+  # Reuses the ENT-8666 initiative previously attached to vsi/crypto.
+  feature: { id: ENT-8666, url: "https://ccp.sys.comcast.net/browse/ENT-8666", title: "RDK-E Crypto Engine HAL", status: Ideation }
+  hal_spec: ~  # TODO: link CryptoEngine HAL Interface Specification CPESP ticket once raised
+  mw_review: ~
+  mw_teams: ~
+  vts_team: ~  # TODO: link CryptoEngine HAL VTS CPESP ticket once raised
+  vdevice: ~   # TODO: link CryptoEngine HAL vDevice CPESP ticket once raised
+
+keyvault:
+  metadata: keyvault/metadata.yaml
+  # Reuses the ENT-8665 initiative previously attached to vsi/keyvault.
+  feature: { id: ENT-8665, url: "https://ccp.sys.comcast.net/browse/ENT-8665", title: "RDK-E KeyVault HAL", status: Ideation }
+  hal_spec: ~  # TODO: link KeyVault HAL Interface Specification CPESP ticket once raised
+  mw_review: ~
+  mw_teams: ~
+  vts_team: ~  # TODO: link KeyVault HAL VTS CPESP ticket once raised
+  vdevice: ~   # TODO: link KeyVault HAL vDevice CPESP ticket once raised
 
 # OEM Components
 compositeinput:
@@ -322,6 +343,5 @@ vsi/filesystem:
   vdevice: ~
 
 # vsi/crypto and vsi/keyvault entries removed — these were placeholder
-# vsi-namespaced metadata; the real HALs are added as top-level
-# cryptoengine/ and keyvault/ components by #387 and will be indexed
-# here once that PR lands.
+# vsi-namespaced metadata; the real HALs are indexed above as top-level
+# cryptoengine/ and keyvault/ components (added by #387).
