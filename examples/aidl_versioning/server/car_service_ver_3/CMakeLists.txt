@@ -32,11 +32,6 @@ target_link_interfaces_libraries(CarServiceVer3
     car-v3-cpp
     )
 
-target_include_directories(CarServiceVer3
-    PRIVATE
-    ${INTERFACES_ROOT_DIRS}/stable/generated/car/include/
-    )
-
 target_link_libraries(CarServiceVer3 PRIVATE
     log
     )
