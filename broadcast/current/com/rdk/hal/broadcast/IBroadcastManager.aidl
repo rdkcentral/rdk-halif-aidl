@@ -1,69 +1,80 @@
 /*
- * If not stated otherwise in this file or this component's LICENSE file the
- * following copyright and licenses apply:
+ * If not stated otherwise in this file or this component's LICENSE file the following copyright and licenses apply:
  *
- * Copyright 2024 RDK Management
+ * Copyright 2026 RDK Management
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 package com.rdk.hal.broadcast;
 
+import com.rdk.hal.broadcast.ImplementationVersion;
+import com.rdk.hal.broadcast.ca.ICaSlot;
 import com.rdk.hal.broadcast.demux.IDemux;
 import com.rdk.hal.broadcast.frontend.IFrontend;
 
 /**
- *  @brief     BroadcastManager HAL interface.
- *  @author    Jan Pedersen
- *  @author    Christian George
- *  @author    Philipp Trommler
+ * BroadcastManager HAL interface.
  *
- *  <h3>Exception Handling</h3>
- *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ * @author Jan Pedersen
+ * @author Christian George
+ * @author Philipp Trommler
  */
-
 @VintfStability
 interface IBroadcastManager {
-    /** The service name to publish. To be returned by getServiceName() in the derived class. */
+    /**
+     * The service name to publish.
+     *
+     * To be returned by getServiceName() in the derived class.
+     */
     const @utf8InCpp String serviceName = "BroadcastManager";
 
     /**
-	 * Gets the platform list of frontend IDs.
-     * 
-     * @returns IFrontEnd.Id[]
+     * Gets the service implementation version.
      *
+     * This is not the same as the interface version, which is defined for the AIDL interface itself. The same
+     * implementation version may implement multiple versions of the interface, and multiple implementations versions
+     * may implement the same interface version (for example following internal bug fixes).
+     */
+    ImplementationVersion getImplementationVersion();
+
+    /**
+     * Gets the platform list of frontend IDs.
+     *
+     * @returns Array of IFrontend.Id values for all frontends on this platform.
      */
     IFrontend.Id[] getFrontendIds();
 
     /**
-     * Get the frontend interface for the given ID
+     * Get the frontend interface for the given ID.
      *
-     * @param[in] frontendId    The ID of the frontend.
-     *
-     * @returns IFrontend ID or null if the ID is invalid.
-     *
+     * @returns IFrontend or null if the ID is invalid.
      */
     @nullable IFrontend getFrontend(in IFrontend.Id frontendId);
 
-    /*
-     * Open a instance of Demux.
+    /** Gets the list of demux IDs available on this platform. */
+    IDemux.Id[] getDemuxIds();
+
+    /**
+     * Get the demux interface for the given ID.
      *
-     * The opened demux can afterwards be used on a tuner or a software input
-     *
-     * @returns IDemux or null if we are out of demux resources.
+     * @returns IDemux or null if the ID is invalid.
      */
-    @nullable IDemux openDemux();
+    @nullable IDemux getDemux(in IDemux.Id demuxId);
+
+    /** Gets the list of CA slot IDs available on this platform. */
+    ICaSlot.Id[] getCaSlotIds();
+
+    /**
+     * Get the CA slot interface for the given ID.
+     *
+     * @returns ICaSlot or null if the ID is invalid.
+     */
+    @nullable ICaSlot getCaSlot(in ICaSlot.Id slotId);
 }

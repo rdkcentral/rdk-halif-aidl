@@ -1,0 +1,46 @@
+/*
+ * If not stated otherwise in this file or this component's LICENSE file the following copyright and licenses apply:
+ *
+ * Copyright 2026 RDK Management
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+package com.rdk.hal.broadcast.frontend;
+
+import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
+import com.rdk.hal.broadcast.frontend.DvbSModulation;
+import com.rdk.hal.broadcast.frontend.DvbSRollOff;
+import com.rdk.hal.broadcast.frontend.DvbSStandard;
+
+/**
+ * DVB-S/S2/S2X satellite broadcast standard capabilities.
+ *
+ * The AUTO member of all the enums will only be returned if the frontend
+ * supports a real auto selection of the respective parameter. Just choosing the
+ * first applicable value and bailing out on error doesn't count as AUTO mode.
+ *
+ * @author Jan Pedersen
+ * @author Christian George
+ * @author Philipp Trommler
+ */
+@VintfStability
+parcelable DvbSCapabilities {
+    /** Supported modulations. */
+    DvbSModulation[] modulations;
+    /** Supported code rates (inner FEC). */
+    DvbSInnerFec[] innerFecs;
+    /** Supported DVB-S standards. */
+    DvbSStandard[] dvbSStandards;
+    /** Supported roll-off values. */
+    DvbSRollOff[] rollOffs;
+
+    /** Reserved for future use. */
+    ParcelableHolder extension;
+}
