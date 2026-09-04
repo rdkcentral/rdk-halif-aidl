@@ -83,6 +83,7 @@ These bound everything below. If one is wrong, the architecture changes rather t
 | 5 | Packaging gap: consumers hardcoding paths | <https://github.com/rdkcentral/rdk-halif-aidl/issues/666> |
 | 6 | Generator strips Doxygen comments from generated headers | <https://github.com/rdkcentral/linux_binder_idl/issues/28> |
 | 7 | AOSP stable AIDL: freeze mechanics and `versions_with_info` | <https://source.android.com/docs/core/architecture/aidl/stable-aidl> |
+| 8 | What the AIDL generator guarantees to its consumers | <https://github.com/rdkcentral/linux_binder_idl/blob/develop/CODEGEN.md> |
 
 ---
 
@@ -284,9 +285,32 @@ decisions.
 
 | Dependency | On whom | Needed for |
 |---|---|---|
-| Doxygen comment preservation in generated headers ([Ref 6](#5-references)) | `linux_binder_idl` | HALIF-F-006 |
-| A generator version recorded per snapshot | `linux_binder_idl` + release tooling | HALIF-N-002, and the refreeze policy decision |
+| BINDER-F-001 — comment preservation ([Ref 6](#5-references)) | `linux_binder_idl` | HALIF-F-006 |
+| BINDER-F-002, BINDER-F-003 — determinism and generator identity | `linux_binder_idl` | HALIF-N-002, and the refreeze policy decision |
+| BINDER-F-005 — clean compile under `-Werror` | `linux_binder_idl` | HALIF-N-003 |
 | Consumer smoke test through `find_package` and `pkg-config` | This repository's CI | HALIF-N-003 |
+
+---
+
+## 15. Component Requirements
+
+### `linux_binder_idl` — the AIDL generator
+
+`HALIF-F-006` and `HALIF-N-002` cannot be met by this repository. They are
+requirements on the generator, which is separately owned and versioned. Stated
+here so the boundary is explicit; the generator's own contract is [Ref 8](#5-references).
+
+| # | Requirement | Satisfies |
+|---|---|---|
+| BINDER-F-001 | The generator **shall** carry documentation comments from the AIDL into the generated C++ headers. | HALIF-F-006 |
+| BINDER-F-002 | The generator **shall** produce byte-identical output for identical AIDL input at a given generator version. | HALIF-N-002 |
+| BINDER-F-003 | Generated output **shall** identify the generator version that produced it. | HALIF-N-002, and the refreeze policy decision |
+| BINDER-F-004 | The generator **shall** emit binder helper headers only for interfaces, not for parcelables or enums. | Snapshot size and clarity |
+| BINDER-F-005 | Generated code **shall** compile without diagnostics under `-Werror` at C++17. | HALIF-N-003 |
+
+The decision candidate on client/server separation in §11 also depends on the
+generator: `Bp` and `Bn` implementations are emitted into a single translation
+unit, so no packaging arrangement in this repository can separate them.
 
 ---
 
