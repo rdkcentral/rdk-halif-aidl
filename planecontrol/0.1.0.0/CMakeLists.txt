@@ -21,7 +21,7 @@
 #** ******************************************************************************
 
 add_versioned(
-    NAME "panelcontrol"
+    NAME "planecontrol"
     VERSION "0.1.0.0"
     DEPENDENCIES
     "common" "0.2.0.0"

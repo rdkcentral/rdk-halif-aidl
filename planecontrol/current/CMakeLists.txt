@@ -21,7 +21,7 @@
 #** ******************************************************************************
 
 add_current(
-    NAME "panelcontrol"
+    NAME "planecontrol"
     DEPENDENCIES
     "common"
     "videodecoder"

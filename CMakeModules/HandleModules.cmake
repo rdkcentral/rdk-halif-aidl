@@ -44,10 +44,10 @@ function(_generate_dependency_list CMAKE_STYLE_OUT PKG_CONFIG_STYLE_OUT LIB_NAME
 
         math(EXPR dep_ver_index "${dep} + 1")
 
-        list(APPEND CMAKE_STYLE "${ARGV${dep}}-v${ARGV${dep_ver_index}}-cpp")
         list(APPEND PKG_CONFIG_STYLE "rdk-halif-aidl-${ARGV${dep}} = ${ARGV${dep_ver_index}}")
         list(APPEND LIB_NAMES "${ARGV${dep}}-v${ARGV${dep_ver_index}}-cpp")
         _capitalize_module_name("${ARGV${dep}}" _DEP_CAP)
+        list(APPEND CMAKE_STYLE "RdkHalifAidl::${_DEP_CAP}")
         list(APPEND FIND_DEPS "find_dependency(RdkHalifAidl${_DEP_CAP})")
     endforeach()
 
@@ -74,7 +74,7 @@ function(_create_cmake_helpers MODULE_NAME MODULE_VERSION MODULE_DEPENDENCIES FI
         list(APPEND SRC_FILES "${SRC_FILE}")
     endforeach()
     set(HDR_FILES)
-    foreach(HFILE IN ITEMS "${HEADER_LIST}")
+    foreach(HFILE IN ITEMS ${HEADER_LIST})
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "\${PACKAGE_PREFIX_DIR}" H_FILE "${HFILE}")
         list(APPEND HEADER_FILES "${H_FILE}")
    endforeach()
@@ -139,6 +139,12 @@ function(add_versioned)
 
     # Set relevant compile options
     _capitalize_module_name("${MODULE_NAME}" _MODULE_CAPITALIZED_NAME)
+
+    add_library(
+        "RdkHalifAidl::${_MODULE_CAPITALIZED_NAME}"
+        ALIAS "${TARGET_NAME}"
+    )
+
     set_target_properties(
         "${TARGET_NAME}" PROPERTIES
         CXX_STANDARD 17

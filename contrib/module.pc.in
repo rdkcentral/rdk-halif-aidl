@@ -3,9 +3,10 @@ includedir = ${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
 libdir = ${prefix}/@CMAKE_INSTALL_LIBDIR@
 
 Name: rdk-halif-aidl-@MODULE_NAME@
+Description: RDK HALIF AIDL @MODULE_NAME@ interface library
 Version: @MODULE_VERSION@
 URL: https://rdkcentral.github.io/rdk-halif-aidl
 Requires: @MODULE_DEPENDENCIES@
 
-Libs: -L${libdir}
+Libs: -L${libdir} -l@MODULE_NAME@-v@MODULE_VERSION@-cpp
 Cflags: -I${includedir}
