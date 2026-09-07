@@ -47,7 +47,8 @@ oneway interface IVideoSinkControllerListener
     void onFirstFrameRendered(in long nsPresentationTime);
 
     /**
-     * Callback when the last video frame has been rendered.
+     * Callback when the presentation time of the session's final queued frame
+     * has passed on the attached clock.
      *
      * Triggered after the client called `IVideoSinkController.signalEndOfStream()`
      * to assert that no further frames will be queued. Fires exactly once per

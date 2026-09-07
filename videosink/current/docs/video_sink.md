@@ -210,7 +210,7 @@ If any video decoder supports SVP in non-tunnelled mode then the Video Sink HAL 
 
 EOS is a discrete signal. After queuing its final frame, the RDK middleware client calls `IVideoSinkController.signalEndOfStream()` to assert that no further frames will be queued. `queueVideoFrame()` only submits a frame and carries no EOS information. The sink must be in `State::STARTED`, otherwise the call throws `EX_ILLEGAL_STATE`. A second call is a no-op, and any subsequent `queueVideoFrame()` throws `EX_ILLEGAL_STATE` until the sink is flushed or stopped and restarted.
 
-All video frame buffers already queued continue to be displayed in the usual way. After the final queued frame has been rendered, the sink fires `IVideoSinkControllerListener.onEndOfStream(nsPresentationTime)` exactly once, carrying the presentation time of that final frame. If no frames were queued when `signalEndOfStream()` was called, `nsPresentationTime` is the undefined-time sentinel (`IAVClock.UNDEFINED_TIME`) so the client sees the same callback in all cases.
+All video frame buffers already queued continue to be consumed — and, with a plane mapped, displayed — in the usual way. Once the presentation time of the final queued frame has passed on the attached clock, the sink fires `IVideoSinkControllerListener.onEndOfStream(nsPresentationTime)` exactly once, carrying the presentation time of that final frame. If no frames were queued when `signalEndOfStream()` was called, `nsPresentationTime` is the undefined-time sentinel (`IAVClock.UNDEFINED_TIME`) so the client sees the same callback in all cases.
 
 For non-tunnelled video, the middleware forwards each decoded frame to the Video Sink via `queueVideoFrame()`; once the Video Decoder has fired its own `onEndOfStream()` and the final frame has been queued, the middleware calls `signalEndOfStream()` on the sink.
 
@@ -242,6 +242,40 @@ A `destinationPlaneIndex` of `-1` means the Video Sink has no plane. The attache
 Because the queue drains at clock rate in both cases, `queueVideoFrame()` applies back-pressure only for the reason described in [Input Buffer Back-Pressure](#input-buffer-back-pressure), and an unmapped sink stays in sync with any Audio Sink presenting against the same clock.
 
 On becoming mapped, the sink renders from the first queued frame whose presentation time is at or after the current clock time, which satisfies **HAL.VIDEOSINK.8**. Queued frames whose presentation time has already passed are discarded rather than displayed late.
+
+**Starting with no plane mapped** — the sink runs normally from `start()`; the plane only adds visibility when it arrives:
+
+```mermaid
+sequenceDiagram
+    participant MW as RDK Middleware
+    participant VS as Video Sink
+    participant PC as Plane Control
+    Note over VS: No plane mapped (destinationPlaneIndex -1)
+    MW->>VS: start()
+    Note over VS: STARTED
+    MW->>VS: queueVideoFrame(...)
+    loop Each presentation time on the attached AV Clock
+        VS->>VS: consume frame, IAVBuffer.free()
+        Note right of VS: nothing displayed, queue drains at clock rate
+    end
+    MW->>PC: setVideoSourceDestinationPlaneMapping(sink, plane)
+    Note over VS: renders from the first queued frame whose<br/>presentation time is at or after the clock time
+    VS-->>MW: onFirstFrameRendered(nsPresentationTime)
+```
+
+**Unmapping while running** — the mapping change is invisible to the sink's state machine; consumption never stops, so re-mapping needs no resync:
+
+```mermaid
+sequenceDiagram
+    participant MW as RDK Middleware
+    participant VS as Video Sink
+    participant PC as Plane Control
+    Note over VS: STARTED, plane mapped, rendering at presentation times
+    MW->>PC: setVideoSourceDestinationPlaneMapping(sink, -1)
+    Note over VS: state unchanged, no flush, no exception<br/>consumption continues on the clock, nothing displayed
+    MW->>PC: setVideoSourceDestinationPlaneMapping(sink, plane)
+    Note over VS: rendering resumes at the current clock position<br/>frames whose presentation time has passed are discarded
+```
 
 This is what makes dual-decode session switching seamless. Two decoder → sink chains run concurrently, each consuming against its own attached clock, with exactly one mapped to the plane at a time. Switching between them is a mapping swap with no stop, flush or resync on either chain: the newly mapped sink was already consuming at its correct presentation times, so video is rendered from the switch point onwards. Paired with the equivalent mixer-input routing swap on the [Audio Sink](../audiosink/audio_sink.md), a full A/V session switch is one mapping change plus one routing change while both sessions keep running.
 

@@ -42,10 +42,11 @@ import com.rdk.hal.avclock.IAVClock;
  *      returns `false` until queue space becomes available again. Frames
  *      remain in the queue across the no-clock period.</li>
  *  <li><b>AVClock attached and started</b>: the sink consumes queued frames
- *      at the rate dictated by the clock and renders them on the mapped video
- *      plane — AV synchronisation is in effect (lip-synced with any audio
- *      sink presenting against the same clock). If the clock is paused,
- *      consumption pauses with it and the queue will eventually fill.</li>
+ *      at the rate dictated by the clock, rendering them when a video plane
+ *      is mapped — AV synchronisation is in effect (lip-synced with any audio
+ *      sink presenting against the same clock) whether or not a plane is
+ *      mapped. If the clock is paused, consumption pauses with it and the
+ *      queue will eventually fill.</li>
  *  </ul>
  *  `attachClock()` / `detachClock()` are callable in `READY` or `STARTED` and
  *  do not change the sink's state-machine state. Detaching during `STARTED`

@@ -47,7 +47,8 @@ oneway interface IVideoSinkEventListener
     void onFirstFrameRendered(in long nsPresentationTime);
 
     /**
-     * Callback when the last video frame has been rendered.
+     * Callback when the presentation time of the session's final queued frame
+     * has passed on the attached clock.
      *
      * The behaviour is the same for tunnelled and non-tunnelled video operating modes.
      * This occurs once the presentation time of the last queued frame in the
@@ -58,7 +59,8 @@ oneway interface IVideoSinkEventListener
      * With a plane mapped, the associated plane `Capabilities.vsyncDisplayLatency`
      * indicates the expected time between this callback and actual display.
      *
-     * @param[in] nsPresentationTime    The presentation time of the frame.
+     * @param[in] nsPresentationTime    The presentation time of the final video frame,
+     *                                  or `IAVClock.UNDEFINED_TIME` if no frames were queued.
      */
     void onEndOfStream(in long nsPresentationTime);
 
