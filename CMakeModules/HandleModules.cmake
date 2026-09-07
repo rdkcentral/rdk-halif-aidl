@@ -100,10 +100,6 @@ function(_create_cmake_helpers MODULE_NAME MODULE_VERSION MODULE_DEPENDENCIES FI
         NAMESPACE "RdkHalifAidl::"
         DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/RdkHalifAidl${MODULE_CAPITALIZED_NAME}"
     )
-    install(EXPORT "RdkHalif${MODULE_CAPITALIZED_NAME}Targets"
-        NAMESPACE "RdkHalif::"
-        DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/RdkHalif${MODULE_CAPITALIZED_NAME}"
-    )
 endfunction()
 
 # Create MODULE_NAME.pc file for the given module name and version. This is necessary to allow other modules to find
