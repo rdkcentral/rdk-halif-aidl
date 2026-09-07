@@ -233,6 +233,8 @@ The attached AV Clock gates frame consumption and the mixer routing gates audibi
 
 With no mixer input routed, queued frames are consumed at their presentation times on the attached clock and their buffers freed with `IAVBuffer.free()` at the same points as when a mixer input is routed, and nothing is audible. The queue drains at clock rate, so the sink stays in sync with any Video Sink presenting against the same clock.
 
+This is what makes dual-decode session switching seamless. Two decoder → sink chains run concurrently, each consuming against its own attached clock, with exactly one routed to a mixer input at a time. Switching between them is a routing swap — clear one sink's routing and route the other — with no stop, flush or resync on either chain: the newly routed sink was already consuming at its correct presentation times, so audio is heard from the switch point onwards. The same swap on the video side is a plane-mapping change, so a full A/V session switch is one routing change plus one mapping change while both sessions keep running.
+
 ## End of Stream Signalling
 
 EOS is a discrete signal. After queuing its final frame, the RDK middleware client calls `IAudioSinkController.signalEndOfStream()` to assert that no further frames will be queued. `queueAudioFrame()` only submits a frame and carries no EOS information. The sink must be in the `STARTED` state, otherwise the call throws `EX_ILLEGAL_STATE`. A second call is a no-op, and any subsequent `queueAudioFrame()` throws `EX_ILLEGAL_STATE` until the sink is flushed or stopped and restarted.

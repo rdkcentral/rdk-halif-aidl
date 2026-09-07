@@ -243,6 +243,8 @@ Because the queue drains at clock rate in both cases, `queueVideoFrame()` applie
 
 On becoming mapped, the sink renders from the first queued frame whose presentation time is at or after the current clock time, which satisfies **HAL.VIDEOSINK.8**. Queued frames whose presentation time has already passed are discarded rather than displayed late.
 
+This is what makes dual-decode session switching seamless. Two decoder → sink chains run concurrently, each consuming against its own attached clock, with exactly one mapped to the plane at a time. Switching between them is a mapping swap with no stop, flush or resync on either chain: the newly mapped sink was already consuming at its correct presentation times, so video is rendered from the switch point onwards. Paired with the equivalent mixer-input routing swap on the [Audio Sink](../audiosink/audio_sink.md), a full A/V session switch is one mapping change plus one routing change while both sessions keep running.
+
 ## Video Sink States
 
 The Video Sink HAL follows the standard Session State Management paradigm.
