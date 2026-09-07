@@ -52,8 +52,11 @@ oneway interface IHDMIInputControllerListener
 
     /**
      * Video ID code change notification.
-     * 
+     *
      * Fires to reflect a change in the video ID code from the HDMI source device.
+     * The event always fires to reflect the current VIC when the signal reaches
+     * `SignalState.LOCKED` after `start()`, so clients have an initial value
+     * without a separate query.
      *
      * @param[in] vic       The VIC code.
      */
@@ -64,7 +67,10 @@ oneway interface IHDMIInputControllerListener
      *
      * Fires to reflect a change in the VRR/FVA signalling from the source device
      * decoded from the received Video Timing Extended Metadata (VTEM).
-     * 
+     * The event always fires to reflect the current VRR signalling state when the
+     * signal reaches `SignalState.LOCKED` after `start()`, so clients have an
+     * initial value without a separate query.
+     *
      * When the VTEM is no longer received (EM timeout condition) then this
      * callback fires with vrrActive=false, M_CONST=false, fastVActive=false, frameRate=0.0.
      * 
