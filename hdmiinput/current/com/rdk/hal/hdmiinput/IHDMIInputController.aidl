@@ -106,12 +106,6 @@ interface IHDMIInputController
      * The RDK middleware is responsible for providing an EDID that only reflects the
      * known capabilities of this HDMI input port.
      *
-     * The active EDID is the sole control for capability advertisement towards the
-     * HDMI source device. To enable or disable an optional feature at runtime
-     * (e.g. VRR, ALLM, QMS), the middleware sets an EDID that includes or omits
-     * that feature's advertisement. The HAL shall not advertise, nor process
-     * signalling for, a feature that the active EDID does not advertise.
-     *
      * @exception binder::Status EX_ILLEGAL_STATE
      *     Thrown if the resource is not in State::READY
      * 
