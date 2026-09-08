@@ -90,8 +90,9 @@ EXTRA_OECMAKE = " \
 "
 ```
 
-A recipe can derive both switches instead of declaring them — the protocol from
-the kernel's resolved `.config`, the ELF class from `SITEINFO_BITS`, so nothing
+`BUILD_HOST_AIDL` is fixed at `OFF`. The other two are the platform-dependent
+ones, and a recipe can derive them instead of declaring them — the protocol from
+the kernel's resolved `.config`, the ELF class from `SITEINFO_BITS` — so nothing
 is hand-maintained per platform. See
 [`PROTOCOL.md`](https://github.com/rdkcentral/linux_binder_idl/blob/develop/PROTOCOL.md)
 for that derivation, the full switch matrix and the verification steps, and the

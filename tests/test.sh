@@ -46,6 +46,18 @@ CMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX:-$(pwd)/out/target}"
 # 64-bit kernel. Set ON to build the legacy row A instead.
 HALIF_BINDER_IPC_32BIT="${HALIF_BINDER_IPC_32BIT:-OFF}"
 
+# Normalise to exactly ON or OFF. CMake accepts several spellings of true, but
+# the protocol assertion below compares against "ON" — so an unnormalised "1"
+# would build protocol 7 while the test expected 8, and report a mismatch that
+# is not one. Anything unrecognised is a typo worth failing on rather than
+# silently treating as OFF.
+case "${HALIF_BINDER_IPC_32BIT^^}" in
+    ON|TRUE|YES|Y|1)  HALIF_BINDER_IPC_32BIT=ON ;;
+    OFF|FALSE|NO|N|0) HALIF_BINDER_IPC_32BIT=OFF ;;
+    *) echo "HALIF_BINDER_IPC_32BIT must be ON or OFF (got '${HALIF_BINDER_IPC_32BIT}')" >&2
+       exit 1 ;;
+esac
+
 usage() {
     echo "Usage: $0 [--from ID] [--to ID] [--only ID[,ID...]] [--list] [--help]"
     echo "  --from ID    Start running at test ID (e.g., 3 or 6)"
@@ -771,7 +783,7 @@ test_11() {
         local want_proto=8
         [ "${HALIF_BINDER_IPC_32BIT}" = "ON" ] && want_proto=7
         local sym=""
-        [ -f "${sdk_lib}" ] && sym=$(grep -ao 'ipcSetDataReferenceEPKh[jm]PK[yj]' "${sdk_lib}" | head -1 || true)
+        [ -f "${sdk_lib}" ] && sym=$(grep -ao 'ipcSetDataReferenceEPKh[jm]PK[yj]' "${sdk_lib}" | head -n 1 || true)
         local got_proto
         case "${sym}" in
             *PKy) got_proto=8 ;;

@@ -102,9 +102,10 @@ The Binder SDK comes from the `linux-binder` recipe (`linux_binder_idl`). Pin
 `SRCREV` in `meta-rdk-halif-aidl/recipes-halif/rdk-halif-aidl/rdk-halif-aidl.bb`
 to a released tag for reproducible builds.
 
-That recipe takes three switches — the ELF class from the toolchain, the binder
-wire protocol from the kernel — and a protocol mismatch terminates every binder
-process at startup on the device. The three platform configurations are in
+That recipe takes three switches — `BUILD_HOST_AIDL`, always `OFF`; the ELF
+class, from the toolchain; and the binder wire protocol, from the kernel — and a
+protocol mismatch terminates every binder process at startup on the device. The
+three platform configurations are in
 [`docs/standards/build_integration.md`](../../docs/standards/build_integration.md), Stage 1.
 
 ## What you get
