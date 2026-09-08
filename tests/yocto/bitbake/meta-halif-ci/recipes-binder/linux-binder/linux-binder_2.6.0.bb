@@ -11,6 +11,14 @@
 #
 # The tarball is produced by tests/yocto/bitbake/run.sh from the SDK already built
 # in out/ (via build_binder.sh), so this recipe never compiles anything.
+#
+# Because it compiles nothing, it inherits whatever wire protocol and bitness the
+# staged SDK was built with and asserts nothing about either. Those live where
+# they can actually be exercised: test 11 in tests/test.sh cross-compiles a real
+# ARM SDK and verifies the protocol of the artifact it produced, and
+# linux_binder_idl's QEMU kernel matrix runs each protocol against a kernel that
+# serves it. The switch contract an integrator writes a recipe against is in
+# docs/standards/build_integration.md, Stage 1.
 
 SUMMARY = "CI stub providing a prebuilt Binder SDK for rdk-halif-aidl"
 LICENSE = "Apache-2.0"
