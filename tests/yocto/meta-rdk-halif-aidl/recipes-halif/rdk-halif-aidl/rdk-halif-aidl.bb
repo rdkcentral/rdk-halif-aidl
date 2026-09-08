@@ -145,7 +145,8 @@
 #       The version scheme, the era rules, and the isCompatible() predicate
 #       that decides whether a client may talk to a given server.
 #
-#   linux_binder_idl CODEGEN.md
+#   CODEGEN.md - in linux_binder_idl, the repo that ships the generator:
+#   https://github.com/rdkcentral/linux_binder_idl/blob/develop/CODEGEN.md
 #       What the generator guarantees about the C++ this recipe compiles -
 #       determinism, interface identity, and the known deviations.
 

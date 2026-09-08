@@ -154,8 +154,8 @@ the versions manifest as an argument, defaulting to the repo's
 
 ## See also
 
-| | |
-| --- | --- |
+| Document | What it covers |
+| -------- | -------------- |
 | [`rdk-halif-aidl.bb`](../../tests/yocto/meta-rdk-halif-aidl/recipes-halif/rdk-halif-aidl/rdk-halif-aidl.bb) | The same contract as a working recipe, with the reasoning for where a version sits — in the library name, and in the header path |
 | [Yocto integration](../../tests/yocto/README.md) | The consumable layer, the role examples, and the tests that prove the staging contract |
 | [HLA: What a Released HAL Snapshot Contains](../architecture/hla-released-snapshot-contents.md) | Why a snapshot holds what it holds, and the requirements this contract is built to |
