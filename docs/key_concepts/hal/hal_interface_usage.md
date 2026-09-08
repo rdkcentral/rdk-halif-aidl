@@ -103,12 +103,24 @@ is (component, version), never (component, role).**
 ## Version selection
 
 Each layer pins its own set of versions and builds against it. Middleware and
-vendor are built and delivered separately, and need not agree.
+vendor are built and delivered separately, and each pin is a deliberate choice:
+moving up to a later revision means deciding what to implement against it and
+when to move.
 
-Compatibility is checked at runtime rather than assumed, so a client and a
-server built from different versions can meet, and the client adapts or
-declines. The client-side helpers and the era rules they apply are documented in
-[Client Usage of Stable AIDL](../../whitepapers/client_usage_of_stable_aidl.md).
+**How far the two pins may differ depends on the era.** While a component is
+`0.x`, a major bump is a breaking change, so middleware and vendor must be
+**aligned on the major** — which couples their release cadences to each other.
+Below the major each side chooses freely: within one major the protocol is
+backwards-compatible, so a `0.2.3` server serves any `0.2.y` client. After a
+component adopts frozen-AIDL discipline the interface is additive-only, and the
+vendor can hold a major while the middleware versions independently.
+
+Compatibility is checked at runtime rather than assumed. `halcompat::isCompatible()`
+applies the era rule for you — major equality while in era `0`, plain ordering
+once frozen — so a client never handles the encoding itself. The helper and the
+rules it applies are documented in
+[Client Usage of Stable AIDL](../../whitepapers/client_usage_of_stable_aidl.md)
+and the [Versioning Guide](../../standards/versioning-guide.md).
 
 ```mermaid
 flowchart LR
@@ -126,11 +138,20 @@ flowchart LR
     S1 --> VB["vendor build<br/>Bn for IAudioDecoder<br/>Bp for its listeners"]
 ```
 
-The two layers select independently. Nothing requires them to choose the same
-row — which is what makes the snapshot tree the shared artefact and the version
-choice a per-consumer one.
+The two layers select their own rows, subject to the era rule above: while a
+component is `0.x` they must land on the same major, and each may sit at a
+different minor or patch within it. That is what makes the snapshot tree the
+shared artefact and the version choice a per-consumer one.
 
-Pinning per *layer* assumes one client per HAL. Where two consumers need
-different versions of the same component, a per-layer choice cannot express it;
-what a release must provide to support that is the subject of
+**A layer's pin is not the whole story.** A manifest pins the components a layer
+names; every dependency is then built at the exact version its dependent links,
+because the build closure is keyed by `(component, version)`. So where two
+consumers need different versions of the same component, both are planned and
+built side by side — `common@0.1.0.0` and `common@0.2.0.0` coexist in one build,
+each serving the dependent that asked for it. The layout that keeps them apart
+once installed — the version in the library name, and in the staged header path
+— is described in
+[Third-Party Build Integration](../../standards/build_integration.md) and the
+[`rdk-halif-aidl` recipe](../../../tests/yocto/meta-rdk-halif-aidl/recipes-halif/rdk-halif-aidl/rdk-halif-aidl.bb);
+what a release must provide to support it is the subject of
 [HLA: What a Released HAL Snapshot Contains](../../architecture/hla-released-snapshot-contents.md).
