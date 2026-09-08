@@ -42,7 +42,7 @@ build contract to [Ref 2](#5-references).
 These bound everything below. If one is wrong, the architecture changes rather than the detail.
 
 1. **The interface is used symmetrically.** Each side is a client of some interfaces in a component and a server of others, so neither can be shipped half a binding set. See [Ref 1](#5-references).
-2. **C++ is the only backend, and a cohort ships one released version per component.** This is what makes committing generated bindings tractable at all; a second backend, or many frozen versions built simultaneously, changes the answer.
+2. **C++ is the only backend.** This is what makes committing generated bindings tractable at all; a second backend changes the answer. A released cohort pins one version per component by *default* — that is what `versions_released.yaml` expresses — but the default is not a limit: the build closure is keyed by `(component, version)`, so several versions of one component are built side by side whenever their dependents link different ones. See [Ref 2](#5-references) and [Ref 9](#5-references).
 3. **Consumers cross-compile in environments we do not fully control.** Weakening: we set the distro and recipes for most consumers today, so this is closer to a decision not to impose a toolchain than a hard constraint.
 4. **The generator is versioned independently of the interfaces.** `linux_binder_idl` releases on its own cadence, so which generator produced a binding is a variable rather than a constant. This is reversible by decision — see [Open Issues](#3-open-issues).
 5. **Released snapshots are contract-immutable and the release tooling is the sole writer of committed bindings.**
@@ -57,7 +57,7 @@ These bound everything below. If one is wrong, the architecture changes rather t
 | Do we pin the generator version across platforms? | **Open.** Pinning makes assumption 4 false and retires the determinism argument. It costs a flag-day whenever the generator moves, instead of absorbing the change per component at freeze time. |
 | On a generator defect, do we refreeze deliberately or absorb silently? | **Open.** Refreezing touches released artefacts across a release cycle; regenerate-at-build fixes every consumer on the next build but changes a certified ABI without anyone deciding to. A risk preference, not a technical question. |
 | Should the build recipe move out of the version directories? | **Open.** Required to satisfy HALIF-F-004 enforceably; see the decision candidate in §11. |
-| Should every artefact path carry the version? | **Open.** Required to satisfy HALIF-F-001 and HALIF-F-003; today only the library filename does. |
+| Should every *installed* artefact path carry the version? | **Open.** The staged tree already does: the library name carries it (`lib<component>-v<version>-cpp.so`) and headers stage under `<mount>/rdk-halif-aidl/include/<component>/<version>/include`, which is what lets vendor and middleware hold different versions without colliding ([Ref 9](#5-references)). What is unsettled is the *installed discovery* surface — a CMake package config or `.pc` file published to a shared prefix. An unversioned one cannot express a version request, and a consumer's version pin is a deliberate choice it should not lose. |
 | No check proves a frozen snapshot's bindings match its AIDL. | **Open.** The `current/` invariant is enforced by the smoke test; the frozen equivalent — regenerate from `<ver>/com/` and diff against `<ver>/{include,src}` — runs nowhere. Cheap to close, and would settle the drift objection with evidence. |
 | The implementation surface ships undocumented. | **Open.** Tracked as [Ref 6](#5-references). Until it lands, HALIF-F-006 is unmet and every IDE tooltip in a HAL implementation is blank. |
 
@@ -83,13 +83,18 @@ These bound everything below. If one is wrong, the architecture changes rather t
 | 5 | Packaging gap: consumers hardcoding paths | <https://github.com/rdkcentral/rdk-halif-aidl/issues/666> |
 | 6 | Generator strips Doxygen comments from generated headers | <https://github.com/rdkcentral/linux_binder_idl/issues/28> |
 | 7 | AOSP stable AIDL: freeze mechanics and `versions_with_info` | <https://source.android.com/docs/core/architecture/aidl/stable-aidl> |
-| 8 | What the AIDL generator guarantees to its consumers | <https://github.com/rdkcentral/linux_binder_idl/blob/develop/CODEGEN.md> |
+| 8 | What the AIDL generator guarantees to its consumers — determinism, interface identity, known deviations. Published by [linux_binder_idl#65](https://github.com/rdkcentral/linux_binder_idl/pull/65) | <https://github.com/rdkcentral/linux_binder_idl/blob/develop/CODEGEN.md> |
+| 9 | The layout contract in force: version selection, role mount points, and why a version sits in the library name but the header *path* | [`rdk-halif-aidl.bb`](../../tests/yocto/meta-rdk-halif-aidl/recipes-halif/rdk-halif-aidl/rdk-halif-aidl.bb) |
+| 10 | The consumable layer and the tests that prove the staging contract | [Yocto integration](../../tests/yocto/README.md) |
+| 11 | The version scheme, the era rules, and the `isCompatible()` predicate | [Versioning Guide](../standards/versioning-guide.md) |
+| 12 | The client-side helper implementing those era rules | [`halcompat.h`](../../common/current/halcompat.h) |
 
 ---
 
 ## 6. Context and Drivers
 
 - **Drivers:** integrating teams were writing bespoke recipes to unpick a release, because the published artefact carried no standard way to resolve a component's headers, libraries and dependencies ([Ref 5](#5-references)). Separately, proposals to change the build have repeatedly required editing released snapshots, with no stated rule to assess them against.
+- **What a version pin is for.** Each side builds against a fixed major of the contract — the vendor for its implementation, the middleware for its clients — and moving up is a deliberate decision about what to implement and when. In era `0` a major bump breaks the wire, so those two pins **must be aligned**, which couples vendor and middleware release cadences to one another. After the AIDL freeze the vendor can hold a major while the middleware versions independently and keeps evolving. **Decoupling those cadences is what the freeze buys**, and it is why a release must let a consumer state the version it wants rather than inherit whichever one is installed ([Ref 11](#5-references)).
 - **Strategic alignment:** moves the repository toward standard Linux packaging conventions for consumption, and toward AOSP's separation of contract from build recipe ([Ref 7](#5-references)) for release integrity — without adopting AOSP's regenerate-at-build model, which their build shape permits and ours does not require.
 
 ---
