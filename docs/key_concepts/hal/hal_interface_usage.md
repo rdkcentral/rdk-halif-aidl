@@ -107,6 +107,17 @@ vendor are built and delivered separately, and each pin is a deliberate choice:
 moving up to a later revision means deciding what to implement against it and
 when to move.
 
+**What a side builds against and what it runs against are not the same thing.**
+Both matter, and they have different rules:
+
+| | What it means |
+| --- | ------------- |
+| **Builds against** | One chosen version, per component. The code is written to that interface, so the choice is fixed at build time and changing it is a decision someone makes. |
+| **Runs against** | That version, or a later minor or patch of it. Within one major the protocol is backwards-compatible, so a `0.2.3` server serves a client built against `0.2.0`. |
+
+Conflating the two is the usual source of confusion: a build pinned to
+`0.2.0` does not mean the server it meets must also be `0.2.0`.
+
 **How far the two pins may differ depends on the era.** While a component is
 `0.x`, a major bump is a breaking change, so middleware and vendor must be
 **aligned on the major** — which couples their release cadences to each other.
