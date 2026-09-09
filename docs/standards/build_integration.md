@@ -32,11 +32,15 @@ The Binder SDK (libbinder/libutils + headers) is delivered by the `linux-binder`
 recipe and staged into the recipe sysroot. Three switches configure it, and a
 recipe states all three explicitly rather than inheriting a default:
 
-| Switch | Follows | Why |
-| ------ | ------- | --- |
-| `BUILD_HOST_AIDL` | always `OFF` | the host AIDL tool runs on the build host and is not part of a target image |
-| `TARGET_LIB32_VERSION` / `TARGET_LIB64_VERSION` | the **toolchain** — the ELF class of the userspace linking it | a 32-bit process cannot load a 64-bit `libbinder.so` |
-| `BINDER_IPC_32BIT` | the **kernel** — its resolved `.config` | libbinder compares protocol versions for exact equality when it opens the driver |
+| Switch | Value to pass | Why |
+| ------ | ------------- | --- |
+| `BUILD_HOST_AIDL` | `OFF`, on every platform | the host AIDL tool runs on the build host and is not part of a target image |
+| `TARGET_LIB32_VERSION` / `TARGET_LIB64_VERSION` | follows the **toolchain** — the ELF class of the userspace linking it | a 32-bit process cannot load a 64-bit `libbinder.so` |
+| `BINDER_IPC_32BIT` | follows the **kernel** — its resolved `.config` | libbinder compares protocol versions for exact equality when it opens the driver |
+
+These are the values to pass, not the defaults. `BUILD_HOST_AIDL` in particular
+defaults to `ON` in the Binder SDK, so a recipe that omits it builds a host AIDL
+compiler the target image never carries — and pulls in flex and bison to do it.
 
 ### The three platform configurations
 
