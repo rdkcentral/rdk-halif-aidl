@@ -19,6 +19,20 @@
 # linux_binder_idl's QEMU kernel matrix runs each protocol against a kernel that
 # serves it. The switch contract an integrator writes a recipe against is in
 # docs/standards/build_integration.md, Stage 1.
+#
+# Deliberately unversioned, for the same reason. Which Binder SDK gets staged is
+# decided by binder_sdk.version at the repo root and nothing else, so a version
+# in this filename - which is where BitBake takes PV from - would describe
+# nothing this recipe does, and would go stale silently the first time that pin
+# moved. Taking up a new SDK release is a one-line change to binder_sdk.version.
+# PV therefore falls back to BitBake's 1.0, which nothing constrains - this
+# recipe only has to PROVIDE linux-binder, and no consumer names a version.
+#
+#   Last verified against: linux_binder_idl 2.6.0
+#
+# That line is a record of what the harness has been run with, not a pin. If it
+# disagrees with binder_sdk.version, binder_sdk.version is right and this needs
+# a fresh run.
 
 SUMMARY = "CI stub providing a prebuilt Binder SDK for rdk-halif-aidl"
 LICENSE = "Apache-2.0"
