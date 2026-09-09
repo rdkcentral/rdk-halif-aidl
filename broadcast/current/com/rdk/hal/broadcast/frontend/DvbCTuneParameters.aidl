@@ -38,7 +38,7 @@ parcelable DvbCTuneParameters {
     /**
      * The symbol rate in symbols per second.
      *
-     * Use -1 for auto symbol rate if it is supported.
+     * Use ConstantsInt.AUTO_SYMBOL_RATE for auto symbol rate if it is supported.
      */
     int symbolRate;
 

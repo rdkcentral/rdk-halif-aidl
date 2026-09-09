@@ -19,7 +19,7 @@ import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
 import com.rdk.hal.broadcast.frontend.DvbTCodeRate;
 
 /**
- * Available Coderates.
+ * Available code rates.
  *
  * @author Jan Pedersen
  * @author Christian George
@@ -28,6 +28,6 @@ import com.rdk.hal.broadcast.frontend.DvbTCodeRate;
 @VintfStability
 union CodeRate {
     DvbCCodeRate dvbC = DvbCCodeRate.UNDEFINED;
-    DvbTCodeRate dvbT;
     DvbSInnerFec dvbS;
+    DvbTCodeRate dvbT;
 }

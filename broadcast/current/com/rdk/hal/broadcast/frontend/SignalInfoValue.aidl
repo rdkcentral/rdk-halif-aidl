@@ -75,6 +75,6 @@ union SignalInfoValue {
     DvbTStandard dvbTStandard;
     /** DVB-S Standard. */
     DvbSStandard dvbSStandard;
-    /** Coderates e.g (LP and HP) for DVB-T/T2. */
+    /** Code rates e.g (LP and HP) for DVB-T/T2. TODO this isn't for DVB-T only anymore, is it? */
     CodeRate[] codeRates;
 }

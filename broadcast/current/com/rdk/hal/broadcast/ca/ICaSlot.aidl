@@ -1,20 +1,16 @@
 /*
- * If not stated otherwise in this file or this component's LICENSE file the
- * following copyright and licenses apply:
+ * If not stated otherwise in this file or this component's LICENSE file the following copyright and licenses apply:
  *
- * Copyright 2025 RDK Management
+ * Copyright 2026 RDK Management
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 package com.rdk.hal.broadcast.ca;
 
@@ -23,8 +19,7 @@ import com.rdk.hal.broadcast.ca.CaCapabilities;
 /**
  * CA slot HAL interface.
  *
- * Represents a single Conditional Access (CA) slot on the platform. Obtain
- * instances via IBroadcastManager.getCaSlot().
+ * Represents a single Conditional Access (CA) slot on the platform. Obtain instances via IBroadcastManager.getCaSlot().
  */
 @VintfStability
 interface ICaSlot {
@@ -38,26 +33,18 @@ interface ICaSlot {
         int value;
     }
 
-    /**
-     * Get the ID of this CA slot.
-     *
-     * @returns Id the unique identifier for this CA slot.
-     */
+    /** Get the ID of this CA slot. */
     Id getId();
 
-    /**
-     * Get the supported capabilities of this CA slot.
-     *
-     * @returns CaCapabilities the capabilities of this CA slot.
-     */
+    /** * Get the supported capabilities of this CA slot. */
     CaCapabilities getCapabilities();
 
     /**
      * Enable or disable power to the CA slot.
      *
-     * @param[in] enabled true to enable power, false to disable.
+     * @exception ::android::binder::Status::EX_UNSUPPORTED_OPERATION The CA slot does not support power control.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE
+     * @param[in] enabled true to enable power, false to disable.
      */
     void setPower(in boolean enabled);
 }

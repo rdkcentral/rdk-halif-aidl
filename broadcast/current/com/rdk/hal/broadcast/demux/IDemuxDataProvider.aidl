@@ -17,9 +17,9 @@ package com.rdk.hal.broadcast.demux;
 /**
  * Polymorphic base interface for components that can feed data to a demux.
  *
- * This can be used to connect a frontend to a demux, in a platform-specific way. There is no need for it in the API
- * itself, but it can be used to implement additional functionality needed to facilitate the connection between frontend
- * and demux.
+ * This can be used to connect a frontend or a software input to a demux, in a platform-specific way. There is no need
+ * for it in the API itself, but it can be used to implement additional functionality needed to facilitate the
+ * connection between frontend and demux.
  *
  * @author Jan Pedersen
  * @author Christian George
@@ -27,6 +27,7 @@ package com.rdk.hal.broadcast.demux;
  *
  * @see IDemux.connect()
  * @see IFrontend.acquireDataProvider()
+ * @see IDemuxSoftwareInput.acquireDataProvider()
  */
 @VintfStability
 interface IDemuxDataProvider {}

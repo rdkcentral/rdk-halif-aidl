@@ -17,7 +17,7 @@ package com.rdk.hal.broadcast.frontend;
 import com.rdk.hal.broadcast.frontend.DvbSRollOff;
 
 /**
- * Roll-off factor for DVB-S/S2/S2X and ISDB-S.
+ * Roll-off factor for DVB-S/S2/S2X and ISDB-S. TODO ISDB-S?
  *
  * @author Jan Pedersen
  * @author Christian George

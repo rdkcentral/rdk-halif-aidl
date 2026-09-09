@@ -22,6 +22,10 @@ import com.rdk.hal.broadcast.demux.IDemuxSoftwareInput;
 /**
  * Interface for a demux.
  *
+ * Provides non-exclusive access to the demux instance, allowing multiple clients to connect to the same demux and
+ * gather information about its capabilities. By connecting a data provider to the demux, clients can acquire exclusive
+ * access to the demux through the controller interface, enabling them to set up filters and manage data flow.
+ *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
@@ -41,7 +45,11 @@ interface IDemux {
     /** Get the ID of this demux. */
     Id getId();
 
-    /** Check whether this demux is already connected. */
+    /**
+     * Check whether this demux is already connected.
+     *
+     * Be aware of possible TOCTOU issues when using this method, especially in connection with connect().
+     */
     boolean isConnected();
 
     /** Get the supported capabilities. */
@@ -52,6 +60,10 @@ interface IDemux {
      *
      * Each demux might only be connected to one DemuxDataProvider. The connected demux represented by the
      * DemuxController can be used to set up multiple filters, depending on the Capabilities.
+     *
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The DemuxDataProvider is already connected to another
+     *                                                           Demux.
+     * @exception ::android::binder::Status::EX_ILLEGAL_STATE isConnected() is true.
      *
      * @param[in] provider The DemuxDataProvider to connect the Demux to.
      *
@@ -64,55 +76,53 @@ interface IDemux {
      *
      * The DemuxController object will be invalidated.
      *
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The DemuxController is not originating from this Demux.
+     * @exception ::android::binder::Status::EX_ILLEGAL_STATE isConnected() is false.
+     *
      * @param[in] controller Non-null DemuxController obtained from connect() on the same Demux.
      *
      * @returns IDemuxDataProvider the provider instance passed to connect().
      */
-    @nullable IDemuxDataProvider disconnect(in IDemuxController controller);
+    IDemuxDataProvider disconnect(in IDemuxController controller);
 
     /**
      * Create a software source for this demux.
      *
-     * The created demux represented by the
-     * DemuxSoftwareInput can be used to write data to the demux, depending on the Capabilities.
-     * Only the software source can only provide data to this demux instance.
+     * The created DemuxSoftwareInput can be used to write data to the demux, and only to *this* demux instance.
      *
-     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The demux does not support software sources.
+     * @exception ::android::binder::Status::EX_UNSUPPORTED_OPERATION The demux does not support software sources.
      *
-     * @returns IDemuxSoftwareInput or null on failure (e.g. the demux does not support multiple software sources).
+     * @returns IDemuxSoftwareInput or null on failure (e.g. maximum number of DemuxSoftwareInput instances has been
+     *          reached).
      */
     @nullable IDemuxSoftwareInput.Id createSoftwareInput();
 
     /**
      * Release the given software source.
      *
-     * The software source object will be invalidated. If the reference count is 0 the software source will be
-     * destroyed.
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The software source ID is not valid for this demux.
+     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The DemuxSoftwareInput is still acquired by a client.
      *
-     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The reference count is not zero
-     *
-     * @param[in] id the id for the software source obtained from createSoftwareInput() on the same Demux.
+     * @param[in] id Non-null ID for the software source obtained from createSoftwareInput() on the same Demux.
      */
     void destroySoftwareInput(in IDemuxSoftwareInput.Id id);
 
     /**
-     * Acquire the given software source. The internal reference count will be incremented.
-     *
-     * @param[in] id Non-null software source ID obtained from createSoftwareInput() on the same Demux.
+     * Acquire the given software source.
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The software source ID is not valid for this demux.
      *
-     * @returns IDemuxSoftwareInput
+     * @param[in] id Non-null software source ID obtained from createSoftwareInput() on the same Demux.
      */
     IDemuxSoftwareInput acquireSoftwareInput(in IDemuxSoftwareInput.Id id);
 
     /**
-     * Release the given software source. The internal reference count will be decremented.
+     * Release the given software source.
+     *
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The software source is not valid for this demux.
+     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The DemuxSoftwareInput is not acquired by any client.
      *
      * @param[in] input The instance of the software input obtained from acquireSoftwareInput() on the same Demux.
-     *
-     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The reference count is already zero.
-     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The software source is not valid for this demux.
      */
     void releaseSoftwareInput(in IDemuxSoftwareInput input);
 }

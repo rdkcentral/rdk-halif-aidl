@@ -30,6 +30,9 @@ package com.rdk.hal.broadcast.frontend;
 enum SignalInfoProperty {
     /** Clean value when default initialized. */
     UNDEFINED = 0,
+    /** TODO Since we have unions now which have a type based on the carrier type, it might be good to include that here
+     * as well. */
+    // CARRIER_TYPE,
     /** The actual frequency that the tuner is locked on (in Hertz). */
     ACTUAL_FREQUENCY,
     /** Demod Lock status. */
@@ -70,6 +73,6 @@ enum SignalInfoProperty {
     DVB_T_STANDARD,
     /** DVB-S Standard. */
     DVB_S_STANDARD,
-    /** Coderate. */
+    /** Code rate. */
     CODE_RATE,
 }

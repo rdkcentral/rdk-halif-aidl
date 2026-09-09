@@ -22,9 +22,8 @@ import com.rdk.hal.broadcast.frontend.DvbSStandard;
 /**
  * DVB-S/S2/S2X satellite broadcast standard capabilities.
  *
- * The AUTO member of all the enums will only be returned if the frontend
- * supports a real auto selection of the respective parameter. Just choosing the
- * first applicable value and bailing out on error doesn't count as AUTO mode.
+ * The AUTO member of all the enums will only be returned if the frontend supports a real auto selection of the
+ * respective parameter. Just choosing the first applicable value and bailing out on error doesn't count as AUTO mode.
  *
  * @author Jan Pedersen
  * @author Christian George

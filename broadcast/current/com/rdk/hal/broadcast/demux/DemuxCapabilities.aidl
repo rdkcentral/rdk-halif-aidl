@@ -47,7 +47,7 @@ parcelable DemuxCapabilities {
      * Supported filter types and their maximum number of instances.
      *
      * Each filter type must appear at most once. The order of entries is not significant. The service must not return
-     * UNDEFINED.
+     * FilterType::UNDEFINED.
      */
     FilterCapability[] supportedFilters;
 

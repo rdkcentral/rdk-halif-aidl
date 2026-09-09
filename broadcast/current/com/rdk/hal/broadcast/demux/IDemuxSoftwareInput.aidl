@@ -19,7 +19,9 @@ import com.rdk.hal.ringbuffer.IRingBufferSink;
 import com.rdk.hal.ringbuffer.IRingBufferSinkListener;
 
 /**
- * Interface for a demux.
+ * Interface for a demux software input that can be used to feed data into a demux.
+ *
+ * Possible use-cases are  playing a recording from a file or for feeding data from a network source.
  *
  * @author Jan Pedersen
  * @author Christian George
@@ -37,7 +39,7 @@ interface IDemuxSoftwareInput {
         int value;
     }
 
-    /** Get the ID of this demux. */
+    /** Get the ID of this software input. */
     Id getId();
 
     /**
@@ -48,35 +50,36 @@ interface IDemuxSoftwareInput {
      * while filters are active and also if they are not. The data written to the demux will be processed by the filters
      * and made available to the clients as if it was coming from the tuner.
      *
-     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The source is already opened for writing or is connected
-     * with a DemuxDataProvider.
-     *
-     * @param listener The listener to receive notifications about the ring buffer sink.
-     *
-     * @returns The IRingBufferSink related to the demux's internal IRingBuffer, or null on error.
+     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The software input is already opened for writing or is
+     *                                                        connected through a DemuxDataProvider.
      */
-    @nullable IRingBufferSink openForWriting(in IRingBufferSinkListener listener);
+    IRingBufferSink openForWriting(in IRingBufferSinkListener listener);
 
     /**
      * Close the demux for writing.
      *
      * The IRingBufferSink obtained from openForWriting() will be invalidated.
      *
-     * @param[in] bufferSink Non-null IRingBufferSink obtained from openForWriting() on the same Demux.
+     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The software input is not opened for writing.
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The bufferSink was not obtained from openForWriting()
+     *                                                           on the same software input.
      */
     void closeForWriting(in IRingBufferSink bufferSink);
 
     /**
-     * Acquire a DemuxDataProvider that must be passed to a DemuxController.
+     * Acquire a DemuxDataProvider that must be passed to a Demux.
      *
-     * @returns IDemuxDataProvider or null on error
+     * @returns A DemuxDataProvider that can be used to connect to a Demux or null on failure (e.g. there is already a
+     *          DemuxDataProvider acquired).
      */
     @nullable IDemuxDataProvider acquireDataProvider();
 
     /**
      * Releases the DemuxDataProvider previously acquired.
      *
-     * @param provider A non-null provider obtained from acquireDataProvider() on the same frontend.
+     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The software input is not connected to a Demux.
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The provider was not obtained from
+     *                                                           acquireDataProvider() on the same software input.
      */
     void releaseDataProvider(in IDemuxDataProvider provider);
 }

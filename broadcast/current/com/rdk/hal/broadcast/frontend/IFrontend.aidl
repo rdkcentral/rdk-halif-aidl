@@ -23,6 +23,10 @@ import com.rdk.hal.broadcast.frontend.ILnbController;
 /**
  * Front end HAL interface.
  *
+ * Non-exclusive access to the front end. Multiple clients can work on the same frontend at the same time and access
+ * information about it through this interface. When a client wants to tune the frontend, it has to acquire exclusive
+ * access through the IFrontendController interface obtained from open().
+ *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
@@ -42,7 +46,11 @@ interface IFrontend {
     /** Get the ID of this frontend. */
     Id getId();
 
-    /** Check whether the frontend is already opened. */
+    /**
+     * Check whether the frontend is already opened.
+     *
+     * Be aware of possible TOCTOU issues when using this method, especially in connection with open().
+     */
     boolean isOpen();
 
     /** Gets the supported frontend types. */
@@ -51,22 +59,16 @@ interface IFrontend {
     /**
      * Get the supported capabilities for the given frontend type.
      *
-     * @param frontendType The type of capabilites to request.
-     *
-     * @returns Capabilities or null if the type is not supported.
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The frontendType is not supported by this frontend.
      */
-    @nullable FrontendCapabilities getCapabilities(in FrontendType frontendType);
+    FrontendCapabilities getCapabilities(in FrontendType frontendType);
 
     /**
-     * Open the frontend in a mode where it is ready to tune.
+     * Exclusively open the frontend for tuning.
      *
-     * The returned IFrontendController interface is used by the client facilitate all tune related operations.
+     * The returned IFrontendController interface is used by the client to facilitate all tune related operations.
      *
-     * @pre isOpen() == false
-     *
-     * @see IFrontendController
-     *
-     * @returns IFrontendController or null on error.
+     * @returns IFrontendController or null on error (e.g. frontend already opened by another client).
      */
     @nullable IFrontendController open();
 
@@ -76,45 +78,53 @@ interface IFrontend {
      * Cleanup all attached (hardware) resources and brings the frontend back into a state where it can be opened again.
      * Stops the current tuning and all output on TSOUT.
      *
-     * @pre isOpen() == true
+     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The frontend is not opened.
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The controller was not obtained from open() on this
+     *                                                           frontend.
      *
      * @param controller Non-null controller obtained from open() on the same frontend.
      */
     void close(in IFrontendController controller);
 
     /**
-     * Acquire a DemuxDataProvider that must be passed to a DemuxController.
+     * Acquire a DemuxDataProvider that must be passed to a Demux.
      *
-     * @returns IDemuxDataProvider or null on error
+     * @returns A DemuxDataProvider that can be used to connect a Demux to this frontend or null on error (e.g. there is
+     *          already a DemuxDataProvider acquired).
      */
     @nullable IDemuxDataProvider acquireDataProvider();
 
     /**
      * Releases the DemuxDataProvider previously acquired.
      *
-     * @param provider A non-null provider obtained from acquireDataProvider() on the same frontend.
+     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The frontend is not connected to a Demux.
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The provider was not obtained from
+     *                                                           acquireDataProvider() on the same frontend.
      */
     void releaseDataProvider(in IDemuxDataProvider provider);
 
     /**
-     * Opens the LNB controller. Non-blocking.
+     * Opens the LNB controller for exclusive access.
      *
-     * The returned ILnbController interface is used for controlling satellite
-     * equipment.
+     * The returned ILnbController interface is used for controlling satellite equipment.
      *
-     * @returns ILnbController or null on error (e.g. LNB controller already
-     *     opened)
+     * @exception ::android::binder::Status::EX_UNSUPPORTED_OPERATION The frontend does not support LNB control.
+     *
+     * @returns A LnbController or null on error (e.g. LNB controller already opened)
      */
     @nullable ILnbController openLnb();
 
     /**
      * Closes the LNB controller and invalidates the LnbController.
      *
-     * Cleanup all attached (hardware) resources and brings the LNB controller
-     * back into a state where it can be opened again.
+     * Cleanup all attached (hardware) resources and brings the LNB controller back into a state where it can be opened
+     * again.
      *
-     * @param controller non-null controller obtained from openLnb() on the same
-     *     FrontEnd
+     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The LNB controller is not opened.
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The controller was not obtained from openLnb() on this
+     *                                                           frontend.
+     *
+     * @param[in] controller Non-null controller obtained from openLnb() on the same FrontEnd
      */
     void closeLnb(in ILnbController controller);
 }

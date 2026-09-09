@@ -54,9 +54,9 @@ interface IBroadcastManager {
     /**
      * Get the frontend interface for the given ID.
      *
-     * @returns IFrontend or null if the ID is invalid.
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT if the ID is invalid.
      */
-    @nullable IFrontend getFrontend(in IFrontend.Id frontendId);
+    IFrontend getFrontend(in IFrontend.Id frontendId);
 
     /** Gets the list of demux IDs available on this platform. */
     IDemux.Id[] getDemuxIds();
@@ -64,9 +64,9 @@ interface IBroadcastManager {
     /**
      * Get the demux interface for the given ID.
      *
-     * @returns IDemux or null if the ID is invalid.
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT if the ID is invalid.
      */
-    @nullable IDemux getDemux(in IDemux.Id demuxId);
+    IDemux getDemux(in IDemux.Id demuxId);
 
     /** Gets the list of CA slot IDs available on this platform. */
     ICaSlot.Id[] getCaSlotIds();
@@ -74,7 +74,7 @@ interface IBroadcastManager {
     /**
      * Get the CA slot interface for the given ID.
      *
-     * @returns ICaSlot or null if the ID is invalid.
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT if the ID is invalid.
      */
-    @nullable ICaSlot getCaSlot(in ICaSlot.Id slotId);
+    ICaSlot getCaSlot(in ICaSlot.Id slotId);
 }

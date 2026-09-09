@@ -21,9 +21,10 @@ package com.rdk.hal.broadcast.frontend;
  * @author Christian George
  * @author Philipp Trommler
  */
-
 @Backing(type = "int")
 @VintfStability
 enum ConstantInt {
+    AUTO_PLP_ID = -1,
     INVALID_PLP_ID = -2,
+    AUTO_SYMBOL_RATE = -1,
 }

@@ -21,9 +21,8 @@ package com.rdk.hal.broadcast.frontend;
  * @author Christian George
  * @author Philipp Trommler
  */
-
 @Backing(type = "long")
 @VintfStability
 enum ConstantLong {
-    INVALID_B = -1,
+    INVALID_B = -1, // TODO what is this?
 }

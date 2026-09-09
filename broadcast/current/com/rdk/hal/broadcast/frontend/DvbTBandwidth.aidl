@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * Available DvbT bandwidths.
+ * Available DVB-T bandwidths.
  *
  * @author Jan Pedersen
  * @author Christian George

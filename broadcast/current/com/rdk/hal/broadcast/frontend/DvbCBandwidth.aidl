@@ -19,7 +19,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * Available DvbC bandwidths.
+ * Available DVB-C bandwidths.
  *
  * @author Jan Pedersen
  * @author Christian George

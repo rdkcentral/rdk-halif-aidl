@@ -21,7 +21,14 @@ import com.rdk.hal.broadcast.frontend.TuneParameters;
 import com.rdk.hal.broadcast.frontend.TuneStatus;
 
 /**
- * FrontendController HAL interface.
+ * Frontend controller interface.
+ *
+ * This interface gives exclusive access to a frontend's resources, allowing *one* client to tune the frontend and query
+ * its status. Only one controller will be given out per frontend at a time, guaranteeing the client uninterferred
+ * access to the frontend.
+ *
+ * The client might choose to internally share the frontend controller with other components, in which case it's the
+ * client's responsibility to ensure that the internal usage is synchronized.
  *
  * @author Jan Pedersen
  * @author Christian George
@@ -29,7 +36,12 @@ import com.rdk.hal.broadcast.frontend.TuneStatus;
  */
 @VintfStability
 interface IFrontendController {
-    /** Tune with the given parameters. */
+    /**
+     * Tune with the given parameters.
+     *
+     * @exception ::android::binder::Status::EX_UNSUPPORTED_OPERATION The given parameters are for a carrier type that
+     *                                                                is not supported by this frontend.
+     */
     void tune(in TuneParameters tuneParams);
 
     /** Cancels any ongoing tune and sets the tuner into unlocked state. */

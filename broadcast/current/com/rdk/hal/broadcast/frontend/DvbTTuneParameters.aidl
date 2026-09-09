@@ -62,7 +62,7 @@ parcelable DvbTTuneParameters {
     /**
      * The plp id for DVB-T2.
      *
-     * Use -1 for auto. Range 0-255.
+     * Use ConstantInt.AUTO_PLP_ID for auto. Range 0-255.
      */
     int plpId = ConstantInt.INVALID_PLP_ID;
 

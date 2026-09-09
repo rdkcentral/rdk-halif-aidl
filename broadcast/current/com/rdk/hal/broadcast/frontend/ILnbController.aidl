@@ -21,7 +21,7 @@ import com.rdk.hal.broadcast.frontend.LnbVoltage;
  * LNB controller interface.
  *
  * Handles control operations for a Low-Noise Block downconverter (LNB), including voltage control, tone control, and
- * DiSEqC signalling. Obtained via IFrontend.openLnb().
+ * DiSEqC signalling. Exclusively obtained through IFrontend.openLnb(), see IFrontendController for details.
  *
  * @author Jan Pedersen
  * @author Christian George
@@ -36,9 +36,8 @@ interface ILnbController {
      *
      * Use LnbVoltage.NONE to turn off the LNB power.
      *
-     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT if the voltage value is not supported.
-     *
-     * @param[in] voltage The voltage to set.
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT if the voltage value is not supported. TODO should we
+     * document this generally that out of range enum values are illegal arguments?
      */
     void setVoltage(in LnbVoltage voltage);
 
@@ -46,8 +45,6 @@ interface ILnbController {
      * Set the LNB tone.
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT if the tone value is not supported.
-     *
-     * @param[in] tone The tone mode to set.
      */
     void setTone(in LnbTone tone);
 
