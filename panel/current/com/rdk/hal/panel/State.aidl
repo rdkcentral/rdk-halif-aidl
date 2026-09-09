@@ -24,6 +24,7 @@
 package com.rdk.hal.panel;
 
 @VintfStability
+@Backing(type="int")
 enum State {
     STOPPED = 0,
     STARTING = 1,
