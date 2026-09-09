@@ -136,7 +136,7 @@ enum PQParameter
 
     /**
      * 2-point white balance calibration settings.
-     * Value is represented as a TwoPointWBSettings.TwoPointWB parcelable.
+     * Value is represented as a TwoPointWB parcelable.
      * Use getPQParameters() / setPQParameters() with the twoPointWBSettings
      * field of PQParameterConfiguration for this parameter.
      */

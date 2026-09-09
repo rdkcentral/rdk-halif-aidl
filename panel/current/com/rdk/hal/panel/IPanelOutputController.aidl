@@ -36,7 +36,7 @@ interface IPanelOutputController {
      * @brief Start the panel output controller.
      *
      * On success, the state transitions STOPPED -> STARTING -> STARTED.
-    * IPanelOutputControllerListener.onStateChanged() fires for each
+     * IPanelOutputControllerListener.onStateChanged() fires for each
      * transition. If hardware initialization fails, the state transitions
      * to ERROR (observable via onStateChanged()) and this call fails with
      * EX_SERVICE_SPECIFIC. Use IPanelOutput.close() to release the panel
@@ -54,7 +54,7 @@ interface IPanelOutputController {
      * @brief Stop the panel output controller.
      *
      * On success, the state transitions STARTED -> STOPPING -> STOPPED.
-    * IPanelOutputControllerListener.onStateChanged() fires for each
+     * IPanelOutputControllerListener.onStateChanged() fires for each
      * transition.
      *
      * @exception binder::Status EX_ILLEGAL_STATE if panel output is not
