@@ -61,8 +61,8 @@ parcelable Capabilities
      */
     double[] supportedRefreshRatesHz;
 
-    /*
-     * Defines the video format and AV source capabilities for a picture mode.
+    /**
+     * Defines the dynamic range and AV source capabilities for a picture mode.
      */
     parcelable PictureModeCapabilities
     {
@@ -72,39 +72,32 @@ parcelable Capabilities
         String pictureMode;
 
         /**
-         * Defines a video format capability for a picture mode.
+         * Defines list of dynamic ranges and list of AV sources of each 
+         * of thise dynamic range that can be associated for a given 
+         * picture mode.
          */
-        parcelable VideoFormatCapabilities
+        parcelable DynamicRangeCapabilities
         {
             /**
-             * The dynamic range video format.
+             * The dynamic range that can be associated for the picture mode.
              */
-            DynamicRange videoFormat;
+            DynamicRange dynamicRange;
 
             /**
-             * Lists the AV sources supported by this picture mode and video format.
+             * Defines list of AV sources that can be associated for a given 
+             * picture mode and a given dynamic range.
              */
             AVSource[] supportedAVSources;
         }
 
         /**
-         * Lists the video format capabilities for a picture mode.
+         * Lists the dynamic range capabilities for a picture mode.
          */
-        VideoFormatCapabilities[] videoFormatCapabilities;
+        DynamicRangeCapabilities[] dynamicRangeCapabilities;
     }
 
     /**
-     * All AV sources supported by the panel, independent of picture mode.
-     */
-    AVSource[] supportedAVSources;
-
-    /**
-     * All video formats (dynamic ranges) supported by the panel, independent of picture mode.
-     */
-    DynamicRange[] supportedVideoFormats;
-
-    /**
-     * Array of picture modes and their capabilities, listing the video formats and AV sources supported.
+     * Array of picture modes and their capabilities, listing the dynamic ranges and AV sources supported.
      */
     PictureModeCapabilities[] pictureModeCapabilities;
 
@@ -115,4 +108,14 @@ parcelable Capabilities
      * used in `PQParameter.COLOR_TEMPERATURE` and functions such as `set2PointWhiteBalance()`.
      */
     String[] colorTemperatureNames;
+
+    /**
+     * All AV sources supported by the panel.
+     */
+    AVSource[] supportedAVSources;
+
+    /**
+     * All dynamic ranges supported by the panel.
+     */
+    DynamicRange[] supportedDynamicRanges;
 }

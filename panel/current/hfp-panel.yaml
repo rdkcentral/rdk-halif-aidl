@@ -39,7 +39,7 @@ panel:                  # Component object begins
     - SATURATION
     - HUE
     - MANUAL_BACKLIGHT
-    - GAMMA
+    - SDR_GAMMA
     - COLOR_TEMPERATURE
     - DIMMING_MODE
     - DIMMING_LEVEL
@@ -63,12 +63,14 @@ panel:                  # Component object begins
     - LUMA_CYAN
     - LUMA_MAGENTA
     - MEMC
-    - DYNAMIC_CONTRAST_LEVEL
     - LOCAL_CONTRAST_LEVEL
-    - LOCAL_DIMMING_ZONES_X
-    - LOCAL_DIMMING_ZONES_Y
+    - MPEG_NOISE_REDUCTION
+    - NOISE_REDUCTION
     - AI_PQ_ENGINE
     - AMBIENT_LIGHT_SENSOR_CONTROL
+    - PRECISION_DETAIL
+    - DV_CALIBRATION
+    - TWO_POINT_WB
   supportedRefreshRatesHz:
     - 48
     - 49
@@ -90,9 +92,23 @@ panel:                  # Component object begins
     - 144
     - 165
     - 240
+  # All AV sources supported by the panel, independent of picture mode.
+  supportedAVSources:
+    - IP
+    - TUNER
+    - HDMI_1
+    - HDMI_2
+    - HDMI_3
+    - COMPOSITE_1
+  # All dynamic ranges supported by the panel, independent of picture mode.
+  supportedDynamicRanges:
+    - SDR
+    - HLG
+    - HDR10
+    - DOLBY_VISION
   pictureModeCapabilities: # PictureModeCapabilities
     - Entertainment: # pictureMode
-        - SDR: # videoFormat
+        - SDR: # dynamicRange
             supportedAVSources: # AVSource
               - IP
               - TUNER
@@ -277,9 +293,12 @@ panel:                  # Component object begins
     - Warm
   PQParameterCapabilities:
     - BRIGHTNESS:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -462,9 +481,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - CONTRAST:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -647,9 +669,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - SHARPNESS:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -832,9 +857,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - SATURATION:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -1017,9 +1045,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - HUE:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -1202,9 +1233,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - MANUAL_BACKLIGHT:
+        isSupported: true
         isGlobal: true
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -1386,10 +1420,13 @@ panel:                  # Component object begins
                       - HDMI_1
                       - HDMI_2
                       - HDMI_3
-    - GAMMA:
+    - SDR_GAMMA:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -1572,9 +1609,13 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - COLOR_TEMPERATURE:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            # Index into colorTemperatureNames[].
+            minValue: 0
+            maxValue: 2
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -1757,9 +1798,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - DIMMING_MODE:
+        isSupported: true
         isGlobal: true
-        minValue: 0
-        maxValue: 2
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 2
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -1942,9 +1986,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - DIMMING_LEVEL:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 3
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 3
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -2127,9 +2174,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - LOW_LATENCY_STATE:
+        isSupported: true
         isGlobal: true
-        minValue: 0
-        maxValue: 1
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 1
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -2312,9 +2362,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - SATURATION_RED:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -2497,9 +2550,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - SATURATION_BLUE:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -2682,9 +2738,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - SATURATION_GREEN:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -2867,9 +2926,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - SATURATION_YELLOW:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -3052,9 +3114,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - SATURATION_CYAN:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -3237,9 +3302,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - SATURATION_MAGENTA:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -3422,9 +3490,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - HUE_RED:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -3607,9 +3678,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - HUE_BLUE:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -3792,9 +3866,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - HUE_GREEN:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -3977,9 +4054,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - HUE_YELLOW:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -4162,9 +4242,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - HUE_CYAN:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -4347,9 +4430,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - HUE_MAGENTA:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -4532,9 +4618,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - LUMA_RED:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -4717,9 +4806,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - LUMA_BLUE:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -4902,9 +4994,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - LUMA_GREEN:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -5087,9 +5182,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - LUMA_YELLOW:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -5272,9 +5370,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - LUMA_CYAN:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -5457,9 +5558,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - LUMA_MAGENTA:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -5642,9 +5746,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - MEMC:
+        isSupported: true
         isGlobal: true
-        minValue: 0
-        maxValue: 4
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 4
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -5826,10 +5933,13 @@ panel:                  # Component object begins
                       - HDMI_1
                       - HDMI_2
                       - HDMI_3
-    - DYNAMIC_CONTRAST_LEVEL:
-        isGlobal: true
-        minValue: 0
-        maxValue: 100
+    - MPEG_NOISE_REDUCTION:
+        isSupported: true
+        isGlobal: false
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -6012,9 +6122,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - LOCAL_CONTRAST_LEVEL:
+        isSupported: true
         isGlobal: true
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -6196,10 +6309,13 @@ panel:                  # Component object begins
                       - HDMI_1
                       - HDMI_2
                       - HDMI_3
-    - LOCAL_DIMMING_ZONES_X:
-        isGlobal: true
-        minValue: 1
-        maxValue: 10000
+    - NOISE_REDUCTION:
+        isSupported: true
+        isGlobal: false
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -6381,10 +6497,285 @@ panel:                  # Component object begins
                       - HDMI_1
                       - HDMI_2
                       - HDMI_3
-    - LOCAL_DIMMING_ZONES_Y:
-        isGlobal: true
-        minValue: 1
-        maxValue: 10000
+    - PRECISION_DETAIL:
+        isSupported: true
+        isGlobal: false
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 100
+        pictureModeCapabilities:
+            - Entertainment:
+                - SDR:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                      - COMPOSITE_1
+                - HLG:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                - HDR10:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                - DOLBY_VISION:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+            - Dynamic:
+                - SDR:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                      - COMPOSITE_1
+                - HLG:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                - HDR10:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                - DOLBY_VISION:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+            - Dynamic2:
+                - SDR:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                      - COMPOSITE_1
+                - HLG:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                - HDR10:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                - DOLBY_VISION:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+            - Sports:
+                - SDR:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                      - COMPOSITE_1
+                - HLG:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                - HDR10:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                - DOLBY_VISION:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+            - Movie:
+                - SDR:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                      - COMPOSITE_1
+                - HLG:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                - HDR10:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                - DOLBY_VISION:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+            - Expert:
+                - SDR:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                      - COMPOSITE_1
+                - HLG:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                - HDR10:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                - DOLBY_VISION:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+    - DV_CALIBRATION:
+        isSupported: true
+        isGlobal: false
+        rangeBound:
+          # Uses the dvCalibrationBounds variant of PQParameterCapabilities.RangeBound.
+          dvCalibrationBounds:
+            minBound:
+              Tmax: 0.0
+              Tmin: 0.0
+              Tgamma: 1.80
+              Rx: 0.0
+              Ry: 0.0
+              Gx: 0.0
+              Gy: 0.0
+              Bx: 0.0
+              By: 0.0
+              Wx: 0.0
+              Wy: 0.0
+            maxBound:
+              Tmax: 10000.0
+              Tmin: 10000.0
+              Tgamma: 2.60
+              Rx: 1.0
+              Ry: 1.0
+              Gx: 1.0
+              Gy: 1.0
+              Bx: 1.0
+              By: 1.0
+              Wx: 1.0
+              Wy: 1.0
+        pictureModeCapabilities:
+            - Entertainment:
+                - DOLBY_VISION:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+            - Dynamic:
+                - DOLBY_VISION:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+            - Dynamic2:
+                - DOLBY_VISION:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+            - Sports:
+                - DOLBY_VISION:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+            - Movie:
+                - DOLBY_VISION:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+            - Expert:
+                - DOLBY_VISION:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+    - TWO_POINT_WB:
+        isSupported: true
+        isGlobal: false
+        rangeBound:
+          # Uses the twoPointWBBounds variant of PQParameterCapabilities.RangeBound.
+          twoPointWBBounds:
+            minBound:
+              gain: 0
+              offset: -1024
+            maxBound:
+              gain: 2047
+              offset: 1023
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -6567,9 +6958,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - AI_PQ_ENGINE:
+        isSupported: true
         isGlobal: true
-        minValue: 0
-        maxValue: 1
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 1
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:
@@ -6752,9 +7146,12 @@ panel:                  # Component object begins
                       - HDMI_2
                       - HDMI_3
     - AMBIENT_LIGHT_SENSOR_CONTROL:
+        isSupported: true
         isGlobal: true
-        minValue: 0
-        maxValue: 1
+        rangeBound:
+          intBounds:
+            minValue: 0
+            maxValue: 1
         pictureModeCapabilities:
             - Entertainment:
                 - SDR:

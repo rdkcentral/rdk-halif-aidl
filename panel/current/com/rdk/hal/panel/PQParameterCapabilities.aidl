@@ -19,7 +19,7 @@
 package com.rdk.hal.panel;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.DolbyVisionCalibrationSettings;
-import com.rdk.hal.panel.TwoPointWBSettings;
+import com.rdk.hal.panel.TwoPointWB;
 import com.rdk.hal.videodecoder.DynamicRange;
 import com.rdk.hal.AVSource;
 
@@ -32,7 +32,7 @@ import com.rdk.hal.AVSource;
 parcelable PQParameterCapabilities
 {
     /**
-     * The PQ parameter being referenced in the PQCapabilities.
+     * The PQ parameter being referenced in these capabilities.
      */
     PQParameter pqParameter;
 
@@ -51,7 +51,8 @@ parcelable PQParameterCapabilities
     boolean isGlobal;
 
     /**
-     * Scalar integer minimum/maximum bounds used by all PQ parameters except DV_CALIBRATION.
+     * Scalar integer minimum/maximum bounds used by all PQ parameters except
+     * DV_CALIBRATION and TWO_POINT_WB.
      */
     parcelable IntBounds {
         /** The minimum value for this PQ parameter. */
@@ -77,9 +78,9 @@ parcelable PQParameterCapabilities
      */
     parcelable TwoPointWBBounds {
         /** Per-field minimum 2-point WB values. */
-        TwoPointWBSettings.TwoPointWB minBound;
+        TwoPointWB minBound;
         /** Per-field maximum 2-point WB values. */
-        TwoPointWBSettings.TwoPointWB maxBound;
+        TwoPointWB maxBound;
     }
 
     /**
@@ -97,12 +98,12 @@ parcelable PQParameterCapabilities
     RangeBound rangeBound;
 
     /**
-     * Union of a list of supported integer values or a list of supported Dolby Vision
-        * calibration settings values.
-        * For all PQ parameters except DV_CALIBRATION and TWO_POINT_WB,
-        * use the `intValues` variant.
+     * Union of a list of supported integer values, a list of supported Dolby Vision
+     * calibration settings values, or a list of supported 2-point white balance values.
+     * For all PQ parameters except DV_CALIBRATION and TWO_POINT_WB,
+     * use the `intValues` variant.
      * For PQParameter.DV_CALIBRATION, use the `dvCalibrationValues` variant.
-        * For PQParameter.TWO_POINT_WB, use the `twoPointWBValues` variant.
+     * For PQParameter.TWO_POINT_WB, use the `twoPointWBValues` variant.
      * This only needs to be populated if not all values between min and max are supported.
      */
     union SupportedValues {
@@ -122,7 +123,7 @@ parcelable PQParameterCapabilities
          * Specific TwoPointWB presets that are supported.
          * Empty array means any value within the TwoPointWBBounds range is valid.
          */
-        TwoPointWBSettings.TwoPointWB[] twoPointWBValues;
+        TwoPointWB[] twoPointWBValues;
     }
     SupportedValues supportedValues;
 
@@ -137,29 +138,29 @@ parcelable PQParameterCapabilities
         String pictureMode;
 
         /**
-         * Nested PQ parameter video format capabilities definition.
+         * Nested PQ parameter dynamic range capabilities definition.
          */
-        parcelable PQParamVideoFormatCapabilities
+        parcelable PQParamDynamicRangeCapabilities
         {
             /**
-             * The video format dynamic range.
+             * The dynamic range.
              */
-            DynamicRange drFormat;
+            DynamicRange dynamicRange;
 
             /**
-             * The array of AV sources supported by this PQ parameter for the video format and picture mode.
+             * The array of AV sources supported by this PQ parameter for the dynamic range and picture mode.
              */
             AVSource[] supportedAVSources;
         }
 
         /**
-         * Array of PQ parameter video format capabilities, for this picture mode.
+         * Array of PQ parameter dynamic range capabilities, for this picture mode.
          */
-        PQParamVideoFormatCapabilities[] pqParamVideoFormatCapabilities;
+        PQParamDynamicRangeCapabilities[] pqParamDynamicRangeCapabilities;
     }
 
     /**
-     * Array of PQ parameter capabilties for picture modes.
+     * Array of PQ parameter capabilities for picture modes.
      */
     PQParamPictureModeCapabilities[] pqParamPictureModeCapabilities;
 }
