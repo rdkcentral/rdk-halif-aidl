@@ -18,8 +18,8 @@
  */
 package com.rdk.hal.audiomixer;
 
-import com.rdk.hal.PropertyType;
 import com.rdk.hal.PropertyValue;
+import com.rdk.hal.audiomixer.PropertyType;
 
 /**
  * @file      AQParameterMetadata.aidl

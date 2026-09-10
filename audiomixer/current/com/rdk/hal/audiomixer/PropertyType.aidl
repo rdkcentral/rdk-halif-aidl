@@ -16,17 +16,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal;
+package com.rdk.hal.audiomixer;
 
 /**
  * @file      PropertyType.aidl
- * @brief     Common property value type enumeration shared across HAL interfaces.
+ * @brief     Value type of an audiomixer AQ parameter.
  *
- *            Indicates which field of the common PropertyValue union should be
- *            read or written for a given property. Used by any component that
- *            ships metadata describing a runtime-discovered property set —
- *            e.g. compositeinput's PropertyMetadata, audiomixer's
- *            AQParameterMetadata.
+ *            Indicates which field of the common PropertyValue union carries
+ *            the value of an AQ parameter, as declared by
+ *            AQParameterMetadata.type.
  *
  *            Each enumerator maps 1:1 to a field of com.rdk.hal.PropertyValue.Value:
  *
@@ -39,15 +37,9 @@ package com.rdk.hal;
  *              <li>STRING  -> PropertyValue.value.stringValue</li>
  *            </ul>
  *
- *            This enum intentionally covers only the scalar/string subset of
- *            PropertyValue.Value used by property-metadata declarations —
- *            the union's remaining fields (byteValue, charValue,
- *            intArrayValue) have no enumerator until a consumer needs one
- *            (added values are backwards-compatible).
- *
- *            Promoted from compositeinput.PropertyMetadata.PropertyType so
- *            consumers share one common type instead of importing a
- *            component-scoped type from another component's package.
+ *            The enum covers the scalar and string fields of
+ *            PropertyValue.Value used by AQ parameters; byteValue, charValue
+ *            and intArrayValue have no enumerator.
  *
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
