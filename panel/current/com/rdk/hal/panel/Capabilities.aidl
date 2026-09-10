@@ -72,9 +72,8 @@ parcelable Capabilities
         String pictureMode;
 
         /**
-         * Defines list of dynamic ranges and list of AV sources of each 
-         * of thise dynamic range that can be associated for a given 
-         * picture mode.
+         * Defines the list of dynamic ranges, and the list of AV sources for each
+         * dynamic range, that can be associated with a given picture mode.
          */
         parcelable DynamicRangeCapabilities
         {

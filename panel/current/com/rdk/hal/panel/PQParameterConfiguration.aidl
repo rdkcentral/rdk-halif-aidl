@@ -49,10 +49,10 @@ parcelable PQParameterConfiguration
 	AVSource source;
 
 	/**
-	 * The video format dynamic range.
-	 * DynamicRange.UNKNOWN means wildcard which applies to all supported dynamic range formats.
+	 * The dynamic range.
+	 * DynamicRange.UNKNOWN means wildcard which applies to all supported dynamic ranges.
 	 */
-	DynamicRange format;
+	DynamicRange dynamicRange;
 	
 	/**
 	 * The value for the PQ parameter.
