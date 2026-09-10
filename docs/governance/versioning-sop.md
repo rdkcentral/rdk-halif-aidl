@@ -85,6 +85,244 @@ interface is right.
   patch to `0`
 - A documentation-only change bumps patch
 
+### How PRs Drive the Version Bump
+
+Pre-baseline component versions advance one PR at a time. The bump that each
+PR implies is signalled by **labels on the PR**. `scripts/configure_pr.sh`
+applies them automatically from the PR title and changed files; reviewers may
+add or correct them as needed.
+
+Every PR carries **exactly one change-class label**. The label is the
+single signal of intent — there is no implicit-default class. An
+unlabelled PR is an unfinished PR.
+
+The label names mean what the version fields mean — the label tier IS the
+field it bumps:
+
+| PR label | Implied bump | Applied when |
+| --- | --- | --- |
+| `Major Change` | **Major** (`0.g.m.p` → `0.(g+1).0.0`) | Breaking interface change — conventional-commit `!:` marker in the PR title (e.g. `feat(avclock)!: ...`): renames, removals, signature changes, design re-direction. Auto-applied by `configure_pr.sh` on the `!:` marker. |
+| `Minor Change` | **Minor** (`0.g.m.p` → `0.g.(m+1).0`) | Backwards-compatible addition — the default for real interface work: new methods, new fields appended to parcelables, new enum values added with fallback handling, new sub-interfaces. |
+| `documentation` | **Bugfix** (`0.g.m.p` → `0.g.m.(p+1)`) | The interface surface is untouched — doc tweaks, metadata corrections, HFP YAML changes, comment-only refactors, trivial non-interface fixes. Auto-applied by `configure_pr.sh` when every changed file is doc-like (see `is_doc()`). |
+
+A PR that carries **no** change-class label but whose linked (closing)
+issue is GitHub type **`Bug`** implies the bugfix bump — the native issue
+type carries the signal, no label needed. An explicit change-class label
+always wins over the issue type (a bug whose fix changes the interface
+surface carries `Minor Change` or `Major Change` accordingly, and the
+structural audit checks the declared class either way).
+
+The `Breaking Change` label is retired — breaking IS the major bump, so a
+separate label was redundant. `scripts/release.sh` still accepts it as a
+deprecated alias of `Major Change` while historical and in-flight PRs
+migrate; do not apply it to new PRs.
+
+If multiple change-class labels are accidentally applied to a single
+PR, `scripts/release.sh` resolves by severity: `Major Change` >
+`Minor Change` > `documentation`. Reviewers should still clean the
+labelling so each PR carries exactly one.
+
+The PR author edits the component's `metadata.yaml` `version:` to the new
+value as part of the PR's diff. Reviewers check that the version bump matches
+the label and the actual change.
+
+#### The `CR` Label (independent — not a change-class)
+
+`CR` (Change Request) marks an **ABI change** that must go through wider review
+and deliberate scheduling. It is a **process/governance** label, **independent**
+of the change-class above. The change-class answers *"how does the version
+number move?"*; `CR` answers a **different** question — *"is this an ABI change
+that needs wider review and separate scheduling?"* The two axes are orthogonal,
+so a `CR` carries a change-class label alongside it (an ABI change carries
+`Major Change`).
+
+A PR/issue tagged `CR` requires:
+
+1. **Wider review sign-off on approval** — beyond the default CODEOWNERS review
+   team, the relevant `team:*` architecture reviewers must sign off.
+2. **Separate release scheduling** — it is not folded into the normal cohort
+   release sweep; it is scheduled into a release deliberately.
+
+`CR` does **not** affect the version bump — `scripts/release.sh` never reads it.
+It is therefore *not* a change-class: `Major Change` remains the class that
+drives the major bump, and conflating the two would break the label-driven
+bump logic.
+
+#### The Subsume Rule
+
+Between releases, `metadata.yaml` `version:` represents the **intent for the
+next release** — the highest bump that has been declared since the last
+release tag. A PR bumps `version:` *only if its change is more significant
+than what is already pending.*
+
+| Last released | Already pending on `develop` | This PR is… | Action |
+|---|---|---|---|
+| `0.1.0.0` | `0.1.0.0` (unchanged since release) | patch | bump → `0.1.0.1` |
+| `0.1.0.0` | `0.1.0.0` | minor | bump → `0.1.1.0` |
+| `0.1.0.0` | `0.1.0.0` | breaking | bump → `0.2.0.0` |
+| `0.1.0.0` | `0.1.1.0` (a prior PR already bumped minor) | another minor | **no bump — already covered** |
+| `0.1.0.0` | `0.1.1.0` | patch (smaller than pending) | **no bump — subsumed by minor** |
+| `0.1.0.0` | `0.1.1.0` | breaking | bump → `0.2.0.0` (subsumes the minor) |
+| `0.1.0.0` | `0.2.0.0` (a prior PR already bumped breaking) | minor or patch | **no bump — already covered** |
+| `0.1.0.0` | `0.2.0.0` | another breaking | **no bump** (one generation tick per release window) |
+| new component (no prior release) | `0.1.0.0` | anything | no bump — first release is `0.1.0.0` regardless of how many PRs accumulate |
+
+**Net rule:** `next_version = max(current_pending, this_PR_would_imply)`. The
+release version is the aggregate delta since the last tag, not a per-PR
+count. Multiple breaking changes in a single release window batch into one
+generation; multiple feature additions batch into one minor; multiple
+docs-only changes batch into one patch.
+
+This is **human-side discipline**, not script-enforced. Reviewers verify
+that the bump (or non-bump) is appropriate for the PR's change.
+
+#### When the Snapshot is Created
+
+`metadata.yaml` `version:` is a **forward-looking declaration** of what the
+next release will tag the component as. The `<component>/<version>/`
+snapshot directory is **not** created in feature PRs. It is materialised at
+release time by the top-level `./release.sh`, which reads `metadata.yaml`
+and copies `current/` to `<version>/`.
+
+Feature PRs touch `current/` only:
+
+- `current/com/.../*.aidl` — authored AIDL source
+- `current/docs/<component>.md` — documentation
+- `current/CMakeLists.txt`, `current/interface.yaml`, `current/hfp-*.yaml` —
+  build wiring + manifest + hardware feature profile
+
+The toolchain-generated C++ bindings (`current/include/*.h` and
+`current/src/*.cpp`) are not in this list — see
+[Generated Code is Not Committed in `current/`](#generated-code-is-not-committed-in-current) below.
+
+Multiple PRs can accumulate bumps on `develop` without any of them creating
+snapshot directories. The next release event (`release.sh` run during
+release prep) materialises all of the snapshots together and the repo is
+tagged.
+
+#### Pre-Tag Structural Audit
+
+The release flow enforces the structural audit itself: every stage and
+`--apply` invocation first audits the components being written and refuses
+to proceed while their structural class, PR labels and `metadata.yaml`
+disagree. The full-repo sweep is available at any time:
+
+```bash
+./scripts/release.sh --audit   # every component; non-zero exit on any flag
+```
+
+For **every** component — including ones untouched since the last release —
+the audit dumps the canonical AIDL surface of the last frozen snapshot and
+of `current/` (binder toolchain `aidl_ops dump-surface`), classifies the
+structural difference (`diff-surface` emits `breaking` / `major` / `none`,
+where `major` means additive and the audit displays it as such;
+surface-identical trees whose sources still differ count as doc-only), and
+cross-checks three signals per component:
+
+| Signal     | Source                                         |
+|------------|------------------------------------------------|
+| Structural | what the AIDL actually changed (code truth)    |
+| Label      | the change class PR labels imply               |
+| Declared   | `metadata.yaml` `version:` (pre-bumped by PRs) |
+
+A row is flagged when the label class contradicts the structural class,
+when `metadata.yaml` declares a version the structural class doesn't
+support, or when an era ≥ 1 component classifies breaking (forbidden — a
+breaking change there requires a new component). Flagged rows print the
+exact structural diff (method/field level) so the fix — relabel the PR,
+correct `metadata.yaml`, or revert the AIDL — is evident from the output.
+Release tagging proceeds only on a clean `--audit --strict` pass.
+
+#### Generated Code is Not Committed in `current/`
+
+`current/include/*.h` and `current/src/*.cpp` are toolchain output —
+regenerated from the module's AIDL by `./build_modules.sh` (or the
+underlying linux_binder_idl) on every build. They are **`.gitignore`d
+under `current/`** and never tracked in git on develop.
+
+Generated bindings only enter the repo when `./release.sh` freezes a
+cohort — at release time, the script regenerates each module's bindings
+and commits them into the new immutable `<module>/<version>/include/`
+and `<module>/<version>/src/` directories alongside the snapshot's
+AIDL. Frozen `<version>/` snapshots are the consumption artifact;
+consumers pin to them (`common@0.1.0.0`), not to `current/`.
+
+##### The rule
+
+> Feature PRs touch only AIDL, docs, and manifest/HFP under `current/`.
+> They never `git add` files in `current/include/` or `current/src/`.
+> The build regenerates those locally; the `.gitignore` keeps them out
+> of commits.
+
+##### Why this model
+
+Treating generated output as a versioned artifact in `current/`
+conflated two distinct concerns and caused a class of recurring
+problems:
+
+1. **Drift between committed bindings and the AIDL** that produced
+   them (#564) — a stale committed `.h` paired with a freshly-
+   regenerated `.cpp` mid-rebuild produced cryptic "no declaration
+   matches" errors. The toolchain silently rewrote headers at build
+   time, so a successful build was not proof that the committed
+   snapshot was consistent.
+2. **Cascade-commit discipline per PR** — every AIDL change had to
+   regenerate every downstream module's bindings and commit them.
+   Fragile, easily forgotten.
+3. **Noisy PR diffs** — 10 lines of authored AIDL produced ~200 lines
+   of regenerated bindings. Reviewers lost focus on the actual
+   surface change.
+
+The new model eliminates all three: there is no committed `current/`
+binding to drift from, no per-PR cascade because the regen happens at
+build time locally, and PR diffs show only authored content.
+
+##### What's still committed where
+
+- `current/com/.../*.aidl` — authored AIDL ✅ committed
+- `current/docs/`, `current/CMakeLists.txt`, `current/interface.yaml`,
+  `current/hfp-*.yaml` — authored config ✅ committed
+- `current/include/`, `current/src/` — toolchain output ❌
+  `.gitignore`d, regenerated locally on every build
+- `<module>/<version>/com/`, `<module>/<version>/include/`,
+  `<module>/<version>/src/`, etc. — frozen snapshot ✅ committed
+  (write-once at release time by `./release.sh`)
+
+##### Enforcement
+
+- **Local:** `./tests/smoke/smoke_test.sh` asserts no files are tracked
+  under `*/current/include/` or `*/current/src/` after
+  `[1/4] ./build_modules.sh all --clean`. Any regression (someone
+  bypassing `.gitignore` with `git add -f`, or a new generator
+  output not covered by the rule) trips the check.
+- **Release:** `./release.sh` is the only entry point that may
+  commit generated bindings, and only into frozen `<version>/`
+  directories. Invocation: `./scripts/release.sh --apply --release-version X.Y.Z` runs the full pipeline — per-component `metadata.yaml`
+  bumps, per-bumped-component snapshot creation (regen-during-freeze,
+  then `cp -r current/` to `<version>/`), `mkdocs.yml` nav update,
+  and `release/X.Y.Z` branch with matching `X.Y.Z` tag. No-op when
+  no component is bumped (no branch, no tag, no doc edits). Suppress
+  individual steps for testing with `--no-snapshot`, `--no-mkdocs`,
+  or `--no-git`. Implemented in #513.
+
+This separation means a single coherent release contains all of the
+component changes from the release window batched into one set of new
+snapshots — see [Release Cadence](#release-cadence) below.
+
+#### Release Cadence
+
+Releases are **milestone-driven** with **patch releases on demand**:
+
+- A new milestone (e.g. `0.20.0 - Convergance`) closes when its content is
+  complete. A release is then cut from `develop` to `main`, `release.sh`
+  materialises all the pending component snapshots, and the repo is tagged.
+- An urgent fix that cannot wait for the next milestone is shipped as a
+  patch release (e.g. `0.15.1`) using the same release ceremony.
+
+Releases are **not** cut on every PR merge. Multiple changes batch into one
+coherent release narrative. See the [0.20.0](../releases/0.20.0.md) and
+[0.15.0](../releases/0.15.0.md) release notes for the pattern.
+
 ### Post-Baseline: AIDL Stable Versioning
 
 Once a component reaches AIDL Baseline and is frozen, it follows **AIDL
@@ -225,7 +463,7 @@ The repository contains **33 components** across two responsibility types:
 | `deepsleep` | Deep sleep and low-power state management |
 | `deviceinfo` | Device information and platform capability reporting |
 | `ffv` | Far-field voice capture and mic array processing |
-| `flash` | Firmware image storage and update management |
+| `firmwareupdate` | Update lifecycle for multiple firmware types at multiple locations across the system |
 | `indicator` | LED and visual indicator state management |
 | `panel` | Front panel display and button control |
 | `r4ce` | RF4CE remote control protocol and pairing |
@@ -325,10 +563,10 @@ that deployed implementations are never broken by upstream changes.
 
 ### Breaking Changes
 
-Breaking changes are signalled via the `breaking-change` label on the PR or
+Breaking changes are signalled via the `Major Change` label on the PR or
 issue at creation time. This is visible to reviewers immediately and drives
 review prioritisation. When the change is merged and the component is released,
-the version is bumped accordingly (generation bump for pre-baseline, new module
+the version is bumped accordingly (major bump for pre-baseline, new module
 for post-baseline).
 
 ---
@@ -427,29 +665,38 @@ Idempotent — safe to re-run.
 | Label | Purpose |
 |-------|---------|
 | `component:<name>` | Maps PRs to a specific HAL/VSI component (auto-detected from metadata.yaml) |
-| `breaking-change` | Breaking interface change — bumps generation |
-| `documentation-change` | Documentation-only change — no interface change, bumps patch |
+| `Major Change` | Breaking interface change — bumps major |
+| `Minor Change` | Additive, backwards-compatible interface change — bumps minor (the default for real work) |
+| `documentation` | Doc-only / metadata-only / comment-only change — bumps bugfix |
+| `CR` | Change Request — ABI change needing wider review sign-off + separate release scheduling (independent of change-class; no bump effect) |
 | `scope:infrastructure` | Repo tooling, CI/CD, governance |
 | `scope:overview` | Tracking ticket spanning multiple components |
 
-The label determines the version bump category at release time:
+Every PR carries **exactly one** of `Major Change` / `Minor Change` /
+`documentation`. The label signals the bump intent; the PR author bumps
+`metadata.yaml` `version:` accordingly as part of the PR diff (see
+[How PRs Drive the Version Bump](#how-prs-drive-the-version-bump) above
+for the full subsume rule and snapshot-timing model):
 
 | Label | Version bump | Example |
 |-------|-------------|---------|
-| `breaking-change` | Bump generation, reset minor + patch | `0.1.2.1` → `0.2.0.0` |
-| *(no label)* | Bump minor, reset patch | `0.1.0.0` → `0.1.1.0` |
-| `documentation-change` | Bump patch | `0.1.1.0` → `0.1.1.1` |
+| `Major Change` | Bump major, reset minor + bugfix | `0.1.2.1` → `0.2.0.0` |
+| `Minor Change` | Bump minor, reset bugfix | `0.1.0.0` → `0.1.1.0` |
+| `documentation` | Bump bugfix | `0.1.1.0` → `0.1.1.1` |
 
 Release-time execution (manual):
 
 ```bash
-# Preview component version bumps since the previous release tag
-./scripts/release.sh
-
-# Apply updates to component metadata.yaml files
-./scripts/release.sh --apply
+# Snapshot every component whose metadata.yaml version: differs from
+# its currently-released <module>/<version>/ directory. Idempotent.
+./release.sh
 ```
 
-All other state (RAG status, reviewer sign-off, lifecycle dates) is tracked in
-`metadata.yaml` — the Single Source of Truth. PRs are assigned directly to
-GitHub teams for review.
+`./release.sh` reads `metadata.yaml` `version:` verbatim — it does not
+compute bumps; that's the PR author's job, signalled by the label and
+validated by reviewers. Snapshots materialise only at release time, never
+in feature PRs.
+
+All other state (RAG status, reviewer sign-off, lifecycle dates) is tracked
+in `metadata.yaml` — the Single Source of Truth. PRs are assigned directly
+to GitHub teams for review.

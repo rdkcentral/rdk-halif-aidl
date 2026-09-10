@@ -3,7 +3,7 @@ aidl_interface:
   srcs:
     - com/rdk/hal/avbuffer/*.aidl
   imports:
-    - audiodecoder
-    - videodecoder
+    - audiodecoder@current
+    - videodecoder@current
   stability: vintf
   layout: module-local

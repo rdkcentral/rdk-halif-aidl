@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.broadcast.frontend;
-import com.rdk.hal.State;
+import com.rdk.hal.broadcast.frontend.State;
 
 /**
  *  @brief     Listener for important changes on a frontend

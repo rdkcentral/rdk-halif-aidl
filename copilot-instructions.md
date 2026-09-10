@@ -41,9 +41,9 @@ Every HAL module follows this exact structure:
 
 ```aidl
 // Standard pattern in main interfaces
-package com.rdk.hal.boot;
-interface IBoot {
-    const @utf8InCpp String serviceName = "boot";
+package com.rdk.hal.bootreason;
+interface IBootReason {
+    const @utf8InCpp String serviceName = "BootReason";
     // ...
 }
 

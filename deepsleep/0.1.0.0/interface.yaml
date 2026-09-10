@@ -1,5 +1,6 @@
 aidl_interface:
   name: deepsleep
+  version: 1000
   srcs:
     - com/rdk/hal/deepsleep/*.aidl
   imports: []

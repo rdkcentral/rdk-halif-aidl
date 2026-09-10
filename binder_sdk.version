@@ -5,9 +5,17 @@
 # clones the toolchain. Keep it pinned so the committed module-local
 # generated C++ always matches the generator that produced it.
 #
-# Pinned to the module-local generator commit on
-# feature/19-module-local-generated-output (linux_binder_idl#20). Bump to a
-# release tag once that PR merges.
+# Pinned to release tag 2.6.0 (linux_binder_idl) which ships:
+#  - AIDL surface dump & structural diff toolchain (linux_binder_idl#27/#48):
+#    aidl_ops dump-surface emits the declared surface as canonical
+#    deterministic text; diff-surface classifies the structural difference
+#    (breaking / major / none) — the engine consumed by the release audit
+#    gate (#633/#568) to validate declared bump classes.
+# The AIDL generator is byte-identical to 2.5.0, so committed module-local C++
+# is unchanged by this bump — it is a toolchain-currency bump, not a regen.
+# Previously 2.5.0, which decoupled the binder wire protocol from compile
+# bitness (linux_binder_idl#42/#45/#46/#47) and added the QEMU kernel-matrix
+# round-trip harness (linux_binder_idl#40/#41).
 #
 # Override for a one-off build with:  BINDER_VERSION=<ref> ./build_binder.sh
-b3b6d69
+2.6.0

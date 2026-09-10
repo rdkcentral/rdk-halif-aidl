@@ -8,6 +8,12 @@ Where resource instances managed by a HAL service, often a sub-interface is offe
 
 Not all states may be applicable to all HAL services, so check the relevant HAL service documentation.
 
+!!! tip "Companion page"
+    This page describes the session state machine once a client holds a session.
+    For how a resource comes into existence, is initialised, releases power, and
+    behaves across service teardown, suspend/resume and bootloader handover, see
+    [HAL Resource Lifecycle](hal_resource_lifecycle.md).
+
 ## HAL AIDL Definitions
 
 See `State.aidl` in [Common](https://github.com/rdkcentral/rdk-halif-aidl/common/current/com/rdk/hal/State.aidl).

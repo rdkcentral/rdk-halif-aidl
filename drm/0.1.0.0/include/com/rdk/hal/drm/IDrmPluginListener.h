@@ -17,9 +17,9 @@ namespace drm {
 class IDrmPluginListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(DrmPluginListener)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 1000;
+  const std::string HASH = "77c954ed1bda58039abf0dd6e283f0d896a0cf5d";
+  static constexpr char* HASHVALUE = "77c954ed1bda58039abf0dd6e283f0d896a0cf5d";
   virtual ::android::binder::Status onEvent(::com::rdk::hal::drm::EventType eventType, const ::std::vector<uint8_t>& sessionId, const ::std::vector<uint8_t>& data) = 0;
   virtual ::android::binder::Status onExpirationUpdate(const ::std::vector<uint8_t>& sessionId, int64_t expiryTimeInMS) = 0;
   virtual ::android::binder::Status onKeysChange(const ::std::vector<uint8_t>& sessionId, const ::std::vector<::com::rdk::hal::drm::KeyStatus>& keyStatusList, bool hasNewUsableKey) = 0;

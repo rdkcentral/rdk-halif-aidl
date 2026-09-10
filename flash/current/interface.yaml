@@ -1,7 +1,0 @@
-aidl_interface:
-  name: flash
-  srcs:
-    - com/rdk/hal/flash/*.aidl
-  imports: []
-  stability: vintf
-  layout: module-local

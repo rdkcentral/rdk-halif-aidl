@@ -1,0 +1,8 @@
+aidl_interface:
+  name: common
+  version: 2000
+  srcs:
+    - com/rdk/hal/*.aidl
+  imports: []
+  stability: vintf
+  layout: module-local

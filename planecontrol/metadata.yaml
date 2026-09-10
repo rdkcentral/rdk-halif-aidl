@@ -21,8 +21,8 @@
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: planecontrol
-version: 0.1.0.0
-status: AMBER
+version: 0.2.0.0
+status: GREEN
 description: "Graphics and video plane composition control"
 type: SOC
 
@@ -52,16 +52,16 @@ scope:
 #   owners        - Responsible architecture teams
 notes:
   priority: 3
-  status_detail: "Re-review required"
-  action: "Discussions with MW team - Simplify design. Architecture requires simplified design and restructured review."
+  status_detail: "V1 stable at 0.2.0.0"
+  action: "#329 controller-upgrade audit open (#622 resolved: timestampNs contract documented)"
   owners: "Architecture + Graphics_Architecture"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
-    Architecture: pending
-    Product_Architecture: pending
-    AV_Architecture: pending
-    Graphics_Architecture: pending
-    Vendor_Layer_Team: pending
+    Architecture: reviewed
+    Product_Architecture: reviewed
+    AV_Architecture: reviewed
+    Graphics_Architecture: reviewed
+    Vendor_Layer_Team: reviewed
 

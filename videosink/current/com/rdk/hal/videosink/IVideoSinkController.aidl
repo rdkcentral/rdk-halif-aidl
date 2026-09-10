@@ -82,18 +82,34 @@ interface IVideoSinkController
     /**
      * Sets the Video Decoder ID linked to this Video Sink.
      *
-     * When the Video Sink is opened, the default is set to `IVideoDecoder.Id.UNDEFINED`.
-     * When set to `IVideoDecoder.Id.UNDEFINED` then no Video Decoder source is set.
+     * `IVideoDecoder.Id.UNDEFINED` means that no Video Decoder source is
+     * associated. It is the default when the Video Sink is opened and may be
+     * passed here to clear an existing association, equivalent in effect to
+     * the state at `open()`.
      *
-     * @param[in] videoDecoderId		The ID of the Video Decoder source.
+     * A valid Video Decoder ID is one returned by
+     * `IVideoDecoderManager.getVideoDecoderIds()`. A valid association is
+     * required before the pipeline is started in both tunnelled and
+     * non-tunnelled modes.
      *
-     * @exception binder::Status::Exception::EX_NONE for success
+     * @param[in] videoDecoderId
+     *      The ID of the Video Decoder source, or `IVideoDecoder.Id.UNDEFINED`
+     *      to clear the association.
+     *
+     * @exception binder::Status::Exception::EX_NONE
+     *      Operation completed successfully.
+     *
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *      The resource is not in State::READY.
      *
      * @returns boolean
-     * @retval true     The Video Decoder ID was set successfully.
-     * @retval false    Invalid Video Decoder ID.
+     * @retval true
+     *      The Video Decoder ID was set, or the association was cleared with
+     *      `IVideoDecoder.Id.UNDEFINED`.
      *
+     * @retval false
+     *      The ID is not one returned by
+     *      `IVideoDecoderManager.getVideoDecoderIds()`.
      *
      * @pre The resource must be in State::READY.
      *
@@ -104,10 +120,14 @@ interface IVideoSinkController
     /**
      * Gets the Video Decoder ID linked to this Video Sink.
      *
+     * Returns the currently associated `IVideoDecoder.Id` in both tunnelled
+     * and non-tunnelled modes.
+     *
      * @returns IVideoDecoder.Id which can be IVideoDecoder.Id.UNDEFINED.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource
+     *            is not in State::READY or State::STARTED.
      *
      *
      * @pre The resource must be in State::READY or State::STARTED.
@@ -195,17 +215,28 @@ interface IVideoSinkController
     IAVClock.Id getClock();
 
     /**
-	 * Starts the Video Sink.
+     * Starts the Video Sink.
      *
      * The Video Sink must be in a READY state before it can be started.
-     * If successful the Video Sink transitions to a `STARTING` state and then a `STARTED` state.
+     * If successful the Video Sink transitions to a `STARTING` state and then
+     * a `STARTED` state.
+     *
+     * The client must call `setVideoDecoder()` with a valid decoder ID before
+     * calling this method in both tunnelled and non-tunnelled modes. Starting
+     * a Video Sink while the associated decoder ID is
+     * `IVideoDecoder.Id.UNDEFINED` shall fail.
      *
      * @exception binder::Status::Exception::EX_NONE for success
+     *
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *      The resource is not in State::READY, or the associated Video
+     *      Decoder ID is `IVideoDecoder.Id.UNDEFINED`.
      *
      * @pre The resource must be in State::READY.
+     * @pre The associated Video Decoder ID must not be
+     *      `IVideoDecoder.Id.UNDEFINED`; set it using `setVideoDecoder()`.
      *
-     * @see stop(), IVideoSink.open()
+     * @see stop(), IVideoSink.open(), setVideoDecoder()
      */
     void start();
 
@@ -250,24 +281,24 @@ interface IVideoSinkController
      * exception, ownership remains with the caller.
      *
      *
-     * End-of-stream signalling: the client signals EOS by setting
-     * `metadata.endOfStream = true` on the final queued frame. Both
-     * `frameBufferHandle` and `nsPresentationTime` MUST be valid for the final
-     * real frame - the same as for any other frame submitted to this method.
-     * The other fields of `FrameMetadata` describe the final frame as normal.
-     * The sink shall continue to render all previously queued frames in the
-     * usual way and deliver `IVideoSinkControllerListener.onEndOfStream()` once
-     * the final frame has been rendered. If a video frame is passed to
-     * `queueVideoFrame()` after EOS, then the `binder::Status EX_ILLEGAL_STATE`
-     * exception is raised. The video sink must be stopped and restarted or
-     * flushed to accept new buffers.
+     * End-of-stream signalling: this method only queues frames - it carries
+     * no end-of-stream flag. After queuing its final frame the client calls
+     * `signalEndOfStream()`, which tells the sink no more frames will be
+     * queued.
+     *
+     * Throws `binder::Status::Exception::EX_ILLEGAL_STATE` if called after
+     * `signalEndOfStream()` has been invoked on this session.
+     *
+     * Throws `binder::Status::Exception::EX_UNSUPPORTED_OPERATION` when the
+     * controller is configured for tunnel mode - this API is not part of the
+     * data path in tunnel; the sink is fed by the decoder internally and the
+     * vendor is responsible for the internal EOS propagation. See
+     * [Discussion #492](https://github.com/rdkcentral/rdk-halif-aidl/discussions/492).
      *
      *
      * @param[in] nsPresentationTime    The presentation time of the video frame in nanoseconds.
      * @param[in] frameBufferHandle     A handle to the video frame buffer.
      * @param[in] metadata              A FrameMetadata object with metadata relating to the video frame.
-     *                                  Set `endOfStream = true` on the final queued frame to
-     *                                  signal EOS.
      *
      * @returns boolean
      * @retval true  Frame successfully queued for display. Buffer ownership transfers to HAL.
@@ -278,12 +309,48 @@ interface IVideoSinkController
      *               until space is available.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in `STARTED`, or if a video frame is passed after `signalEndOfStream()`.
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if the controller is configured for tunnel mode.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      *
      * @pre The resource must be in State::STARTED.
      */
     boolean queueVideoFrame(in long nsPresentationTime, in long frameBufferHandle, in FrameMetadata metadata);
+
+    /**
+     * Signals end-of-stream to the video sink.
+     *
+     * Asserts that no further frames will be queued via `queueVideoFrame()`.
+     * The sink renders every already-queued frame in the usual way and then
+     * fires `IVideoSinkControllerListener.onEndOfStream(nsPresentationTime)`
+     * with the presentation time of the final rendered frame.
+     *
+     * If no frames are queued when this is called, the sink fires
+     * `onEndOfStream()` with an undefined-time sentinel
+     * (`IAVClock.UNDEFINED_TIME`) so the client sees the same callback in all
+     * cases.
+     *
+     * A second call is a no-op. After this call `queueVideoFrame()` throws
+     * `EX_ILLEGAL_STATE` until the sink is flushed or stopped and restarted.
+     *
+     * Behaviour is identical in tunnelled and non-tunnelled modes - the MW calls this
+     * method the same way. In tunnelled mode the decoder->sink data flow is
+     * vendor-internal; the vendor must implement the EOS signal propagation
+     * from decoder to sink so the sink can fire
+     * `onEndOfStream(nsPresentationTime)` with the correct presentation
+     * timing. The MW observes the same sequencing in both modes:
+     * `decoder.onEndOfStream()` (decode complete) followed by
+     * `sink.onEndOfStream(nsPresentationTime)` (presentation complete).
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource
+     *            is not in State::STARTED.
+     *
+     * @pre The resource must be in State::STARTED.
+     *
+     * @see IVideoSinkControllerListener.onEndOfStream()
+     */
+    void signalEndOfStream();
 
     /**
      * Flushes the internal queue of video frames.

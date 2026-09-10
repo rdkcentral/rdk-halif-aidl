@@ -21,8 +21,8 @@
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: audiomixer
-version: 0.1.0.1
-status: GREEN
+version: 0.3.0.0
+status: AMBER
 description: "Audio mixing and routing for multi-stream output"
 type: SOC
 
@@ -50,13 +50,15 @@ scope:
 #   risk          - Risk notes (appears as watch item on dashboard)
 #   owners        - Responsible architecture teams
 notes:
+  status_detail: "AQ parameter API in review"
+  action: "Land AQ processor API (PR #573) + OutputPortType BLUETOOTH→CAPTURE rename (#708) — both batch into one 0.4.0.0 major bump (0.23.0). Flip to GREEN when shipped."
   owners: "Architecture + Vendor_Layer_Team + AV_Architecture"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
-    Architecture: reviewed
-    Product_Architecture: reviewed
-    AV_Architecture: reviewed
-    Vendor_Layer_Team: reviewed
+    Architecture: pending
+    Product_Architecture: pending
+    AV_Architecture: pending
+    Vendor_Layer_Team: pending
 

@@ -1,5 +1,6 @@
 aidl_interface:
   name: deviceinfo
+  version: 1000
   srcs:
     - com/rdk/hal/deviceinfo/*.aidl
   imports: []

@@ -93,6 +93,18 @@ MY_PATH="$(realpath "${BASH_SOURCE[0]}")"
 MY_DIR="$(dirname "${MY_PATH}")"
 REPO_URL="https://github.com/rdkcentral/linux_binder_idl"
 
+# This is a developer/architecture wrapper — it needs a native host toolchain.
+# Yocto/cross builds must call CMake directly (see docs/standards/build_integration.md).
+# Abort early in a cross/OE environment rather than silently producing
+# broken/empty output (#624). Use 'return' when sourced so an interactive shell
+# isn't killed.
+#
+# Note: unlike build_modules.sh / build_interfaces.sh, the `clean` argument here
+# means "force rebuild" (it removes the SDK and rebuilds), so it is a build
+# operation and is intentionally NOT exempt from the guard.
+source "${MY_DIR}/dev_env_guard.sh"
+halif_guard_dev_host_env || return 1 2>/dev/null || exit 1
+
 # Pinned toolchain revision. The default is the first non-comment line of
 # binder_sdk.version (committed to the repo so the module-local generated C++
 # stays matched to the generator that produced it); override with the
@@ -264,7 +276,23 @@ build_sdk() {
 
     echo ""
     echo "Building binder SDK..."
-    cmake --build "$BINDER_BUILD_DIR" -j$(nproc)
+    # The [AIDL] codegen custom commands exec ./aidl but carry no build-graph
+    # dependency on the aidl target (linux_binder_idl#53), so under -j a
+    # generation step can exec ./aidl while its link is still writing the
+    # file -> ETXTBSY ("Text file busy") -> Error 127. Fast path: build
+    # parallel; it compiles every object regardless of whether the race
+    # trips. Fallback: on failure, re-run serially -- -j1 reuses all the
+    # objects the parallel pass already compiled and only serializes the
+    # cheap tail (aidl link -> codegen -> final link), so the codegen never
+    # races the link. Fast when the race does not trip, always correct when
+    # it does. The proper fix is the missing DEPENDS upstream (#53).
+    if ! cmake --build "$BINDER_BUILD_DIR" -j$(nproc); then
+        echo ""
+        echo "⚠️  Parallel build hit the codegen/aidl ETXTBSY race" \
+             "(linux_binder_idl#53); retrying serially to order the codegen" \
+             "after the aidl link..."
+        cmake --build "$BINDER_BUILD_DIR" -j1
+    fi
 
     if [ $? -ne 0 ]; then
         echo ""
@@ -305,7 +333,7 @@ build_sdk() {
     fi
 
     # Create halif placeholder directories
-    mkdir -p "$SDK_INSTALL_DIR/lib/halif"
+    mkdir -p "$SDK_INSTALL_DIR/lib/rdk-halif-aidl"
 
     # Create marker files
     touch "$SDK_INSTALL_DIR/.sdk_ready"

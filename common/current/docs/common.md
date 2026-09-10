@@ -15,7 +15,7 @@
 ## Related Pages
 
 !!! tip "Related Pages"
-    - TBC
+    - [Client Usage of Stable AIDL](../../../docs/whitepapers/client_usage_of_stable_aidl.md) — the client adapter pattern; shipped here as `halcompat.h`
 
 ## 🚧 Document Under Construction
 

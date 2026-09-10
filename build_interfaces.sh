@@ -42,6 +42,15 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT_PATH="$SCRIPT_DIR/$(basename "${BASH_SOURCE[0]}")"
 
+# Host-toolchain guard (#624): build / sdk operations need a native toolchain,
+# and Yocto/cross builds must call CMake directly (see
+# docs/standards/build_integration.md). clean/help do no toolchain work, so
+# they stay usable in any environment.
+case "${1:-}" in
+    clean|cleanstable|cleanall|--help|-h|"") ;;
+    *) source "$SCRIPT_DIR/dev_env_guard.sh"; halif_guard_dev_host_env || exit 1 ;;
+esac
+
 # Show help if no arguments or help requested
 if [[ $# -eq 0 ]] || [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
     cat << EOF
@@ -84,7 +93,10 @@ Build Configuration:
   Use CC/CXX environment variables to control compiler and flags:
     CC=gcc CXX=g++ ./build_interfaces.sh <module>              # Release (default)
     CC="gcc -g" CXX="g++ -g" ./build_interfaces.sh <module>   # Debug build
-    CC=arm-linux-gnueabihf-gcc ./build_interfaces.sh <module>  # Cross-compile
+
+  Cross-compilation / Yocto: this wrapper is host-only and refuses to run in a
+  cross/OpenEmbedded environment. Production/cross builds invoke CMake directly
+  — see docs/standards/build_integration.md.
 
 Examples:
   # Building
@@ -114,11 +126,43 @@ Workflow:
   2. Build:   ./build_interfaces.sh all
   3. Verify:  ./build_modules.sh all
   4. Deploy:  scp -r out/target/* device:/usr/
-  5. Release: ./release.sh <module>   # snapshot current/ -> <version>/
+  5. Release: ./release.sh             # cohort-wide release sweep (dry-run first)
 
 EOF
     exit 0
 fi
+
+#######################################################################
+# Pre-flight checks (#571)
+#######################################################################
+#
+# Same purpose as in build_modules.sh: surface broken-env failures as
+# a single actionable line rather than cryptic CMake / Python output
+# deep in the run. Skipped for clean / sdk-only commands which must
+# work in any state.
+
+preflight_check_interfaces() {
+    # Toolchain artefacts present. Honour BINDER_TOOLCHAIN_ROOT /
+    # BINDER_SOURCE_DIR overrides used by Yocto and cross-compile
+    # flows. The 'sdk' / 'sdk-only' commands stage the toolchain
+    # itself and bypass this check via the case statement below.
+    local toolchain_root="${BINDER_TOOLCHAIN_ROOT:-${BINDER_SOURCE_DIR:-$SCRIPT_DIR/build-tools/linux_binder_idl}}"
+    if [[ ! -f "$toolchain_root/host/aidl_ops.py" ]]; then
+        echo "❌ AIDL toolchain not found at $toolchain_root/host/aidl_ops.py." >&2
+        echo "   Fix: run ./build_interfaces.sh sdk to stage the toolchain," >&2
+        echo "        ./build_binder.sh to bootstrap, symlink build-tools/" >&2
+        echo "        from a known-good worktree, or set BINDER_TOOLCHAIN_ROOT" >&2
+        echo "        (or BINDER_SOURCE_DIR) to the toolchain location." >&2
+        exit 1
+    fi
+}
+
+# Run pre-flight unless the user asked for a clean/sdk command — those
+# must work in any environment state.
+case "${1:-}" in
+    clean|cleanstable|cleanall|sdk|sdk-only|--help|-h|"") : ;;  # skip preflight
+    *) preflight_check_interfaces ;;
+esac
 
 # Handle commands
 case "${1:-}" in
@@ -264,14 +308,14 @@ if ! "$BUILD_MODULES_SCRIPT" "$MODULE" --version "$VERSION"; then
 fi
 
 BINDER_LIBS=$(ls out/target/lib/binder/*.so 2>/dev/null | wc -l || echo 0)
-MODULE_LIBS=$(ls out/target/lib/halif/*.so 2>/dev/null | wc -l || echo 0)
+MODULE_LIBS=$(ls out/target/lib/rdk-halif-aidl/*.so 2>/dev/null | wc -l || echo 0)
 
 echo ""
 echo "✅ Build Complete - SDK Ready for Deployment"
 echo ""
 echo "   📦 Runtime libraries:"
 echo "      • Binder libraries: ${BINDER_LIBS} files (out/target/lib/binder/)"
-echo "      • HAL libraries:    ${MODULE_LIBS} files (out/target/lib/halif/)"
+echo "      • HAL libraries:    ${MODULE_LIBS} files (out/target/lib/rdk-halif-aidl/)"
 echo ""
 echo "   📂 Generated C++ is module-local: <module>/current/{include,src}/"
 echo ""

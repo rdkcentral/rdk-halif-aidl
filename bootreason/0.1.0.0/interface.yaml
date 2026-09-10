@@ -1,0 +1,8 @@
+aidl_interface:
+  name: bootreason
+  version: 1000
+  srcs:
+    - com/rdk/hal/bootreason/*.aidl
+  imports: []
+  stability: vintf
+  layout: module-local

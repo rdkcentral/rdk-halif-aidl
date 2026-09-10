@@ -18,9 +18,9 @@ namespace deviceinfo {
 class IDeviceInfo : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(DeviceInfo)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 1000;
+  const std::string HASH = "30c2e75c3fff12dcd04ec7b15653567501edd1eb";
+  static constexpr char* HASHVALUE = "30c2e75c3fff12dcd04ec7b15653567501edd1eb";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getCapabilities(::com::rdk::hal::deviceinfo::Capabilities* _aidl_return) = 0;
   virtual ::android::binder::Status getProperty(const ::android::String16& propertyKey, ::std::optional<::com::rdk::hal::deviceinfo::Property>* _aidl_return) = 0;

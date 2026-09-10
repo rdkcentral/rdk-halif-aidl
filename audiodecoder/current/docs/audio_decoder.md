@@ -313,13 +313,15 @@ For the first input [AV Buffer](../avbuffer/av_buffer.md) audio frame passed in 
 
 ## End of Stream Signalling
 
-EOS rides entirely on the framework metadata parcelables on both sides of the interface. There is no separate signal method. Audio EOS is always application-driven - no supported audio elementary stream (MP3, AAC, AC-3/E-AC-3, Opus, Vorbis) carries an in-bitstream EOS marker.
+End-of-stream is a discrete signal, not a per-buffer flag. The client drives it with `IAudioDecoderController.signalEndOfStream()` and observes completion through `IAudioDecoderControllerListener.onEndOfStream()`. Audio EOS is always client-signalled - no supported audio elementary stream (MP3, AAC, AC-3/E-AC-3, Opus, Vorbis) carries an in-bitstream EOS marker, so `FrameMetadata.bitstreamEOS` is always false for audio.
 
-**Input side:** the client sets `InputBufferMetadata.endOfStream = true` on the final call to `IAudioDecoderController.decodeBufferWithMetadata()`. `bufferHandle` MUST reference a valid encoded frame - there is no EOS-only marker form and no path to signal EOS without data. If the client has no more data to send, it ends the session via `stop()` (or `flush(reset=true)` if the decoder is to be reused).
+**Input side:** when the client has submitted its final buffer, it calls `IAudioDecoderController.signalEndOfStream()`. This is the authoritative "I will submit no further buffers" signal and the only input-side EOS path. `decodeBufferWithMetadata()` only submits data and carries no EOS information; `InputBufferMetadata` has no EOS field. The decoder must be in `State::STARTED` and at least one buffer must have been submitted on the session, otherwise the call throws `EX_ILLEGAL_STATE`. A second call is a no-op, and any subsequent `decodeBufferWithMetadata()` throws `EX_ILLEGAL_STATE`.
 
-**Output side:** EOS rides on the FINAL `IAudioDecoderControllerListener.onFrameOutput()` callback of the decode session by `FrameMetadata.endOfStream = true`. There is no separate EOS-only marker callback after the last frame. Fires exactly once per session. In non-tunnelled mode the callback delivers the last decoded audio frame with valid `frameAVBufferHandle` and `FrameMetadata`; in tunnelled mode `frameAVBufferHandle = -1` is normal but the callback is still unambiguously identifiable by `endOfStream = true`. `metadata` is guaranteed non-null on the EOS callback (because `endOfStream` transitioning from false to true is a metadata change). The other fields of `FrameMetadata` describe the final frame as normal.
+This is distinct from `stop()` and `flush()`, which abruptly discard any held frames. `signalEndOfStream()` drains them: the HAL decodes and emits every held frame in presentation order via `onFrameOutput()` (each with its `FrameMetadata`), dropping none.
 
-After the EOS callback the decoder remains in `State::STARTED` but is drained. No further `onFrameOutput()` is delivered until `flush()` or `stop()` + `start()`.
+**Output side:** after the final `onFrameOutput()` of the drained session, the HAL fires `IAudioDecoderControllerListener.onEndOfStream()` exactly once. It is delivered on the same listener and ordered in-band - it follows the last frame on the same ordered callback channel. After this callback the decoder remains in `State::STARTED` but is drained; no further `onFrameOutput()` is delivered until `flush()` or `stop()` + `start()`.
+
+Behaviour is identical in tunnelled and non-tunnelled modes. In tunnelled mode the decoder→sink data flow is vendor-internal, so the vendor propagates the EOS signal from decoder to sink. The middleware observes the same sequencing in both modes: `decoder.onEndOfStream()` (decode complete) followed by `sink.onEndOfStream(nsPresentationTime)` (presentation complete) with the correct presentation timing.
 
 ## Decoded Audio Frame Buffers
 
@@ -410,8 +412,8 @@ sequenceDiagram
     ADC-->>IAudioDecoderEventListener: onStateChanged(STARTING → STARTED)
 
     Note over Client: Client can now send AV buffers
-    Client->>Controller: decodeBufferWithMetadata(bufferHandle=1, {pts, endOfStream=false, trimStartNs=0, trimEndNs=0, ...})
-    Client->>Controller: decodeBufferWithMetadata(bufferHandle=2, {pts, endOfStream=false, trimStartNs=0, trimEndNs=0, ...})
+    Client->>Controller: decodeBufferWithMetadata(bufferHandle=1, {pts, trimStartNs=0, trimEndNs=0, ...})
+    Client->>Controller: decodeBufferWithMetadata(bufferHandle=2, {pts, trimStartNs=0, trimEndNs=0, ...})
     Controller-->>IAudioDecoderControllerListener: onFrameOutput(pts, frameBufferHandle=1000, metadata)
     Controller->>IAVBuffer: free(bufferHandle=1)
 
@@ -420,12 +422,17 @@ sequenceDiagram
     ADC-->>IAudioDecoderEventListener: onStateChanged(STARTED → FLUSHING)
     Controller->>IAVBuffer: free(bufferHandle=2)
     ADC-->>IAudioDecoderEventListener: onStateChanged(FLUSHING → STARTED)
-    Client->>Controller: decodeBufferWithMetadata(bufferHandle=3, {pts, endOfStream=false, trimStartNs=0, trimEndNs=0, ...})
+    Client->>Controller: decodeBufferWithMetadata(bufferHandle=3, {pts, trimStartNs=0, trimEndNs=0, ...})
+
+    Note over Controller: signalEndOfStream() drains the decoder,<br>emits held frames, then fires onEndOfStream() once
+    Client->>Controller: signalEndOfStream()
+    Controller-->>IAudioDecoderControllerListener: onFrameOutput(pts, frameBufferHandle=1002, metadata)
+    Controller->>IAVBuffer: free(bufferHandle=3)
+    Controller-->>IAudioDecoderControllerListener: onEndOfStream()
 
     Note over ADC: stop() transitions from STARTED → STOPPING → READY
     Client->>Controller: stop()
     ADC-->>IAudioDecoderEventListener: onStateChanged(STARTED → STOPPING)
-    Controller->>IAVBuffer: free(bufferHandle=3)
     ADC-->>IAudioDecoderEventListener: onStateChanged(STOPPING → READY)
 
     Note over ADC: close() transitions from READY → CLOSING → CLOSED

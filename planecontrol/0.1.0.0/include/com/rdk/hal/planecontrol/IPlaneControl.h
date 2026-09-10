@@ -25,9 +25,9 @@ namespace planecontrol {
 class IPlaneControl : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(PlaneControl)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 1000;
+  const std::string HASH = "11e8e5b5f7dc1340849d654caa7a1444056272b6";
+  static constexpr char* HASHVALUE = "11e8e5b5f7dc1340849d654caa7a1444056272b6";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getCapabilities(::std::vector<::com::rdk::hal::planecontrol::PlaneCapabilities>* _aidl_return) = 0;
   virtual ::android::binder::Status setVideoSourceDestinationPlaneMapping(const ::std::vector<::com::rdk::hal::planecontrol::SourcePlaneMapping>& listSourcePlaneMapping, bool* _aidl_return) = 0;

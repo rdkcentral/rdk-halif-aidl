@@ -7,7 +7,7 @@
 #
 # Inputs (set by the caller, typically build_modules.sh --version 0.2.0.0):
 #   BINDER_SDK_DIR  - linux_binder SDK root (lib/binder + include/binder_sdk)
-#   HALIF_LIB_DIR   - directory holding dependency lib<dep>-vcurrent-cpp.so
+#   HALIF_LIB_DIR   - directory holding dependency lib<dep>-v<X.Y.Z.W>-cpp.so
 cmake_minimum_required(VERSION 3.8)
 project(compositeinput-v0.2.0.0-cpp LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
@@ -23,19 +23,39 @@ endif()
 # ${BINDER_SDK_DIR}/include/binder_sdk. The local dev layout splits headers
 # (out/build/include/binder_sdk) from runtime libs (out/target/lib/binder),
 # so allow BINDER_SDK_INCLUDE_DIR to point at the headers root.
-set(_BINDER_INC "${BINDER_SDK_DIR}/include/binder_sdk")
-if (NOT IS_DIRECTORY "${_BINDER_INC}")
-    if (DEFINED BINDER_SDK_INCLUDE_DIR AND
-        IS_DIRECTORY "${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk")
-        set(_BINDER_INC "${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk")
-    else()
-        message(FATAL_ERROR
-            "Binder SDK headers not found at ${_BINDER_INC}. "
-            "Set BINDER_SDK_INCLUDE_DIR to the headers root.")
+# Resolve the Binder header root across the local-dev layout
+# (<prefix>/include/binder_sdk) and Yocto/sysroot layouts (a direct include
+# dir). First existing candidate wins; the dev layout is tried first so local
+# builds are unaffected (#644).
+set(_BINDER_INC "")
+# Only consider a candidate whose base variable is actually set — otherwise an
+# unset BINDER_SDK_INCLUDE_DIR would expand to an absolute "/include/..." path
+# that could accidentally match a host directory.
+set(_binder_inc_cands "")
+if (BINDER_SDK_DIR)
+    list(APPEND _binder_inc_cands "${BINDER_SDK_DIR}/include/binder_sdk")
+endif()
+if (BINDER_SDK_INCLUDE_DIR)
+    list(APPEND _binder_inc_cands
+        "${BINDER_SDK_INCLUDE_DIR}/include/binder_sdk"
+        "${BINDER_SDK_INCLUDE_DIR}/include")
+endif()
+if (BINDER_SDK_DIR)
+    list(APPEND _binder_inc_cands "${BINDER_SDK_DIR}/include")
+endif()
+foreach(_cand IN LISTS _binder_inc_cands)
+    if (IS_DIRECTORY "${_cand}")
+        set(_BINDER_INC "${_cand}")
+        break()
     endif()
+endforeach()
+if (_BINDER_INC STREQUAL "")
+    message(FATAL_ERROR
+        "Binder SDK headers not found. Set BINDER_SDK_INCLUDE_DIR to the headers "
+        "root (local dev: <prefix>/include/binder_sdk; Yocto: the staged include dir).")
 endif()
 
-file(GLOB_RECURSE SRCS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+file(GLOB_RECURSE SRCS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 if (NOT SRCS)
     message(FATAL_ERROR "No sources under src/. The snapshot must carry committed generated C++.")
 endif()
@@ -44,13 +64,13 @@ add_library(${LIB_NAME} SHARED ${SRCS})
 
 target_include_directories(${LIB_NAME} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    "${_BINDER_INC}"
-)
+    "${_BINDER_INC}")
 
-# Dependency component headers (staged by the current/ build into HALIF_INCLUDE_DIR).
+# Dependency component headers (transitive closure — covers headers reachable
+# via direct deps, e.g. common via audiodecoder/videodecoder for avbuffer).
 if (DEFINED HALIF_INCLUDE_DIR)
     target_include_directories(${LIB_NAME} PRIVATE
-    "${HALIF_INCLUDE_DIR}/common/current/include")
+    "${HALIF_INCLUDE_DIR}/common/0.2.0.0/include")
 endif()
 
 target_link_directories(${LIB_NAME} PRIVATE
@@ -60,13 +80,36 @@ if (DEFINED HALIF_LIB_DIR)
     target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
 endif()
 
-target_link_libraries(${LIB_NAME} PRIVATE binder utils common-vcurrent-cpp)
+target_link_libraries(${LIB_NAME} PRIVATE binder utils common-v0.2.0.0-cpp)
 
-set_target_properties(${LIB_NAME} PROPERTIES OUTPUT_NAME "${LIB_NAME}")
+# The target_link_directories() above are BUILD-time search paths. By default
+# CMake bakes them into the library as RPATH/RUNPATH, which ships absolute build
+# paths inside the .so - Yocto's do_package_qa rejects that, and the runtime
+# search path belongs to the integrator's image, not to this library.
+#
+# Default to emitting no RPATH. Overridable for builds that genuinely need one:
+# pass -DHALIF_INSTALL_RPATH=<path>.
+if (NOT DEFINED HALIF_INSTALL_RPATH)
+    set(HALIF_INSTALL_RPATH "")
+endif()
+
+set_target_properties(${LIB_NAME} PROPERTIES
+    OUTPUT_NAME "${LIB_NAME}"
+    SKIP_BUILD_RPATH TRUE
+    BUILD_WITH_INSTALL_RPATH TRUE
+    INSTALL_RPATH "${HALIF_INSTALL_RPATH}")
 
 include(GNUInstallDirs)
+
+# Install destination for the built interface library. Overridable so the
+# location can be changed by the build (or in future) without editing this
+# snapshot: pass -DHALIF_INSTALL_LIBDIR=<dir>.
+if (NOT DEFINED HALIF_INSTALL_LIBDIR)
+    set(HALIF_INSTALL_LIBDIR "lib/rdk-halif-aidl")
+endif()
+
 install(TARGETS ${LIB_NAME}
-    LIBRARY DESTINATION lib/halif
+    LIBRARY DESTINATION ${HALIF_INSTALL_LIBDIR}
             PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
                         GROUP_READ GROUP_EXECUTE
                         WORLD_READ WORLD_EXECUTE)

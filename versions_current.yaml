@@ -1,0 +1,43 @@
+# versions.yaml - HAL interface version manifest
+#
+# Selects which version of each HAL component is built into the SDK.
+#
+#   current                      in-development interface  (<component>/current/)
+#   <major>.<minor>.<patch>.<build>   a released snapshot  (<component>/<version>/)
+#
+# build_modules.sh reads this file in `manifest` mode to determine the set of
+# components to build and the version of each. A component absent from the
+# `components:` map falls back to `default:`.
+#
+# A released snapshot is produced by ./release.sh, which copies
+# <component>/current/ to <component>/<version>/, taking <version> verbatim
+# from the component's metadata.yaml `version:` field.
+#
+# NOTE: building a component from a released <version>/ snapshot (rather than
+# current/) depends on per-version selection support in the linux_binder_idl
+# toolchain. Until that lands, every component is expected to be `current`.
+
+default: current
+
+components:
+  audiodecoder:   current
+  audiomixer:     current
+  audiosink:      current
+  avbuffer:       current
+  avclock:        current
+  bootreason:  current
+  common:         current
+  compositeinput: current
+  deepsleep:      current
+  deviceinfo:     current
+  drm:            current
+  firmwareupdate: current
+  hdmicec:        current
+  hdmiinput:      current
+  hdmioutput:     current
+  indicator:      current
+  panel:          current
+  planecontrol:   current
+  sensor:         current
+  videodecoder:   current
+  videosink:      current

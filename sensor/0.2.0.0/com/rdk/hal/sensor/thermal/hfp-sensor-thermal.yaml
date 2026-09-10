@@ -1,0 +1,113 @@
+# If not stated otherwise in this file or this component's LICENSE file the
+# following copyright and licenses apply:
+#
+# Copyright 2025 RDK Management
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+sensor:
+  thermal:
+    - id: "soc_die"
+      sensorName: "SoC Die" # Used in com.rdk.hal.sensor.thermal/TemperatureReading.aidl
+      location: "CPU"       # Used in com.rdk.hal.sensor.thermal/TemperatureReading.aidl
+
+      # -------------------------------------------------------------------------
+      # SENSOR CHARACTERISTICS
+      # -------------------------------------------------------------------------
+      # sensor_reading_range_celsius:
+      #   Absolute measurable range of the physical sensor. These limits are
+      #   hardware-defined and represent what the ADC/IC can report, not what is
+      #   considered safe for operation.
+      sensor_reading_range_celsius:
+        min: -40
+        max: 125
+
+      # operational_temperature_celsius:
+      #   Normal safe operating envelope for the platform under steady-state load.
+      #   Middleware should regard this as the “normal zone”.
+      #   Anything above the max here enters mitigation or alarm territory.
+      operational_temperature_celsius:
+        min: -20
+        max: 95
+
+      # -------------------------------------------------------------------------
+      # POLICY TRIGGER POINTS
+      # -------------------------------------------------------------------------
+      # The trigger values define how the vendor policy transitions between
+      # State values. They MUST satisfy:
+      #   recovered  <  exceeded  <  shutdown
+      #
+      # • critical_temperature_recovered_celsius :
+      #       Threshold below which the system is considered recovered and
+      #       returns to NORMAL state.
+      # • critical_temperature_exceeded_celsius :
+      #       Point at which CRITICAL_TEMPERATURE_EXCEEDED is emitted and
+      #       mitigation (if supported) becomes active.  This is usually a few
+      #       degrees ABOVE operational max to allow early warning.
+      # • entering_critical_shutdown_celsius :
+      #       Hard limit at which ENTERING_CRITICAL_SHUTDOWN is emitted and
+      #       hardware shutdown is initiated.
+      triggers:
+        critical_temperature_recovered_celsius: 90
+        critical_temperature_exceeded_celsius: 98
+        entering_critical_shutdown_celsius: 115
+
+      # -------------------------------------------------------------------------
+      # THERMAL POLICY
+      # -------------------------------------------------------------------------
+      # The policy section reflects internal vendor thermal management strategy
+      # defined by expert engineering teams during hardware validation.
+      # These values are NOT user-configurable and MUST NOT be modified by
+      # parties outside of the critical hardware design and validation teams.
+      policy:
+        shutdown_min_downtime_s: 900
+        recovery:
+          strategy: TIME_BASED
+          min_cooldown_seconds: 240
+
+      vendor:
+        vendorCode: 1001  # Used in com.rdk.hal.sensor.thermal/TemperatureReading.aidl
+        vendorInfo: "Primary die sensor used for critical trip points." # Used in com.rdk.hal.sensor.thermal/TemperatureReading.aidl
+
+    - id: "board"
+      sensorName: "Mainboard Ambient" # Used in com.rdk.hal.sensor.thermal/TemperatureReading.aidl
+      location: "Board"           # Used in com.rdk.hal.sensor.thermal/TemperatureReading.aidl
+
+      # Absolute measurable range of this sensor device.
+      sensor_reading_range_celsius:
+        min: -20
+        max: 80
+
+      # Expected steady-state board temperature range under normal conditions.
+      operational_temperature_celsius:
+        min: 0
+        max: 65
+
+      # Trigger thresholds for this domain.
+      #   Recovered < Exceeded < Shutdown  (must hold true)
+      triggers:
+        critical_temperature_recovered_celsius: 60
+        critical_temperature_exceeded_celsius: 70
+        entering_critical_shutdown_celsius: 72   # ~10% below sensor max
+
+      # Thermal policy defined by expert engineering teams (not user-configurable).
+      policy:
+        shutdown_min_downtime_s: 600
+        recovery:
+          strategy: TIME_BASED
+          min_cooldown_seconds: 180
+
+      vendor:
+        vendorCode: 1002  # Used in com.rdk.hal.sensor.thermal/TemperatureReading.aidl
+        vendorInfo: "Used for general system thermal monitoring." # Used in com.rdk.hal.sensor.thermal/TemperatureReading.aidl
+

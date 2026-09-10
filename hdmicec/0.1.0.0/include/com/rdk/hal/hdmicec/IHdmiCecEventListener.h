@@ -17,9 +17,9 @@ namespace hdmicec {
 class IHdmiCecEventListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(HdmiCecEventListener)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 1000;
+  const std::string HASH = "70a901cf2b5493b59578cf5ad220fcf10f96b3b1";
+  static constexpr char* HASHVALUE = "70a901cf2b5493b59578cf5ad220fcf10f96b3b1";
   virtual ::android::binder::Status onMessageReceived(const ::std::vector<uint8_t>& message) = 0;
   virtual ::android::binder::Status onStateChanged(::com::rdk::hal::hdmicec::State oldState, ::com::rdk::hal::hdmicec::State newState) = 0;
   virtual ::android::binder::Status onMessageSent(const ::std::vector<uint8_t>& message, ::com::rdk::hal::hdmicec::SendMessageStatus status) = 0;
