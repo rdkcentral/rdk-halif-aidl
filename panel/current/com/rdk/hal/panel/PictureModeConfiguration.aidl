@@ -34,9 +34,9 @@ parcelable PictureModeConfiguration
 	String pictureMode;
 
 	/**
-	 * The video format dynamic range.
+	 * The dynamic range.
 	 */
-	DynamicRange format;
+	DynamicRange dynamicRange;
 
 	/**
 	 * The AV source.
