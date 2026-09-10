@@ -26,7 +26,6 @@ package com.rdk.hal.panel;
 @VintfStability
 parcelable WhiteBalance2PointSettings
 {
-	/* TODO: define what the valid range is - or provide an API for it. */
 
 	parcelable Point {
         /**

@@ -45,7 +45,7 @@ oneway interface IPanelOutputListener
      *
      * @param[in] pictureMode             The picture mode for which the change applies.
      * @param[in] avSource                The AV source for which the change applies.
-     * @param[in] dynamicRange            The video format dynamic range for which the change applies.
+     * @param[in] dynamicRange            The dynamic range for which the change applies.
      * @param[in] pictureProperty         The PQ picture property that changed.
      * @param[in] picturePropertyValue    The changed value variant.
      */
@@ -62,12 +62,12 @@ oneway interface IPanelOutputListener
     void onVideoSourceChanged(in AVSource avSource);
 
     /**
-     * Callback when the dynamic range video format being tracked for PQ settings changes.
+     * Callback when the dynamic range being tracked for PQ settings changes.
      * 
      * This occurs when video starts, stops or on a DynamicRange change in the video.
      * When video stops then `DynamicRange.UNKNOWN` is passed in the call.
      *
-     * @param[in] dynamicRange      The new dynamic range video format.
+     * @param[in] dynamicRange      The new dynamic range.
      */
     void onDynamicRangeChanged(in DynamicRange dynamicRange);
 

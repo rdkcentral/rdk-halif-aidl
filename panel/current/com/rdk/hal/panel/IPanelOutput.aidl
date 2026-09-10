@@ -191,7 +191,7 @@ interface IPanelOutput
      * Sets one or more picture modes for the panel.
      * 
      * Each `PictureModeConfiguration` element in the `configurations` array links together
-     * a picture mode, dynamic range video format and AV source.
+     * a picture mode, dynamic range and AV source.
      *
      * @param[in] configurations    Array of PictureModeConfiguration values.
      * 
@@ -205,20 +205,20 @@ interface IPanelOutput
 	boolean setPictureModes(in PictureModeConfiguration[] configurations);
 
     /**
-     * Gets one or more picture modes of the panel for a given AV source and dynamic range video format.
+     * Gets one or more picture modes of the panel for a given AV source and dynamic range.
      *
-     * Input `requestedConfigurations` contains one or more entries where the `format` and `source` fields
-     * specify the query criteria. The `pictureMode` field may be ignored on input.
+     * Input `requestedConfigurations` contains one or more entries where the `dynamicRange` and `source`
+     * fields specify the query criteria. The `pictureMode` field may be ignored on input.
      *
      * Output `returnedConfigurations` contains one element per input element (same ordering). For each element:
-     * - The `format` and `source` fields echo the requested values.
+     * - The `dynamicRange` and `source` fields echo the requested values.
      * - The `pictureMode` field is populated on success.
      *
      * Error handling:
      * - Passing an empty `requestedConfigurations` array returns false.
      * - If any entry contains invalid criteria, the call returns false and no output values are populated.
      *
-     * @param[in] requestedConfigurations   Non-empty list of query criteria (format/source/pictureMode optional).
+     * @param[in] requestedConfigurations   Non-empty list of query criteria (dynamicRange/source/pictureMode optional).
      * @param[out] returnedConfigurations   Populated picture mode results matching input ordering.
      *
      * @returns boolean
@@ -235,9 +235,9 @@ interface IPanelOutput
     boolean getPictureModes(in PictureModeConfiguration[] requestedConfigurations, out PictureModeConfiguration[] returnedConfigurations);
 
     /**
-     * Gets one or more default picture modes for a given AV source and dynamic range video format.
+     * Gets one or more default picture modes for a given AV source and dynamic range.
      *
-     * Input `requestedConfigurations` defines the query criteria (format/source). `pictureMode` is ignored.
+     * Input `requestedConfigurations` defines the query criteria (dynamicRange/source). `pictureMode` is ignored.
      * Output `defaultConfigurations` echoes criteria and populates the default `pictureMode` value.
      * Failure semantics mirror `getPictureModes()`.
      *
@@ -280,7 +280,7 @@ interface IPanelOutput
      *
      * Input `requestedConfigurations` specifies one or more PQ parameters to query. Each element's:
      * - `pqParameter` must be valid.
-     * - `pictureMode`, `source`, and `format` may be concrete values or wildcards per their definitions.
+     * - `pictureMode`, `source`, and `dynamicRange` may be concrete values or wildcards per their definitions.
      * - `value` field is ignored on input.
      *
      * Output `returnedConfigurations` mirrors ordering and criteria and populates the `value` field.
@@ -437,11 +437,11 @@ interface IPanelOutput
     AVSource getVideoSource();
 
     /**
-     * Gets the current dynamic range video format used to apply PQ settings.
+     * Gets the current dynamic range used to apply PQ settings.
      * 
      * The returned value is DynamicRange.UNKNOWN if no video is playing.
      *
-     * @returns DynamicRange     The current dynamic range video format.
+     * @returns The current dynamic range.
      */
     DynamicRange getDynamicRange();
 
