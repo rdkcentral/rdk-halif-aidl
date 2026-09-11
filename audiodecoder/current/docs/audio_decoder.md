@@ -52,7 +52,7 @@ Uncompressed PCM audio streams do not require decoding. Therefore, they bypass t
 | **HAL.AUDIODECODER.7** | Each audio decoder resource shall provide an API to expose its capabilities for secure audio processing and supported codecs. |
 | **HAL.AUDIODECODER.8** | Only 1 client connection shall be allowed to open and control an audio decoder resource. |
 | **HAL.AUDIODECODER.9**| Multiple client connections shall be allowed to register for events from an audio decoder resource.|
-| **HAL.AUDIODECODER.10** | Audio frame metadata shall be returned to a controlling client on the first audio frame decoded after an open or flush and then against not until the frame metadata changes. | Not sent on every decoded audio frame buffer unless changed since previous. A frame with a non-zero trim always carries metadata — see [The trim contract](#the-trim-contract). |
+| **HAL.AUDIODECODER.10** | Audio frame metadata shall be returned to a controlling client on the first audio frame decoded after an open or flush, and thereafter only when the frame metadata changes. | Not sent on every decoded audio frame buffer unless changed since previous. A frame with a non-zero trim always carries metadata — see [The trim contract](#the-trim-contract). |
 | **HAL.AUDIODECODER.11** | The audio frame output buffer from an audio decoder shall match the platform PCM audio format required for mixing. | See com.rdk.hal.audiosink.PlatformCapabilities |
 | **HAL.AUDIODECODER.12** | If a client process exits, the Audio Decoder server shall automatically stop and close any Audio Decoder instance controlled by that client. |
 
@@ -344,7 +344,7 @@ Typical priming amounts:
 
 This is correct behaviour — **the encoded stream carries the full sample count, priming and padding included.** What removes them is the trim metadata described below, and the contract is that they are discarded **exactly once** before the PCM reaches the mixer.
 
-What the decoder emits, and what the trim removes:
+What the encoded stream holds, and what the trim removes:
 
 ```mermaid
 block-beta
@@ -363,7 +363,7 @@ block-beta
     style src2   fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20,font-weight:bold;
 ```
 
-Decoding yields the whole encoded run. Applying the trim discards `trimStartNs` from the front and `trimEndNs` from the back, leaving audio whose duration matches the source sample-accurately. Which stage applies it is covered under [The trim contract](#the-trim-contract) below.
+The encoded run holds the priming, the source audio and the padding. Applying the trim discards `trimStartNs` from the front and `trimEndNs` from the back, leaving audio whose duration matches the source sample-accurately. The trim is applied by the decoder or by the sink, as covered under [The trim contract](#the-trim-contract) below.
 
 ### The trim contract
 
@@ -476,9 +476,9 @@ The right metric for "did the decoder behave correctly" is **total post-trim aud
 |---|---|---|
 | Input AAC frame count == output PCM frame count | ❌ | Resampling and encoder framing change the count; not a HAL conformance signal |
 | Sink-applies case: (last output PTS − first output PTS + final frame duration) − leading trim − trailing trim == source duration | ✅ | PTS-based; counts the final frame's own duration and subtracts the trim the sink applies inside the leading and trailing frames. Where the decoder applies the trim, its output frames are already shortened; use the sample count below. |
-| Total post-trim PCM sample count == `(source_duration × output_sample_rate)` | ✅ | Sample-accurate and independent of which stage applies the trim; the conformance check for whether priming/padding was handled correctly |
+| Total post-trim PCM sample count == the source's expected sample count at the output rate (`source_duration × output_sample_rate`, rounded by the pipeline's resampling convention) | ✅ | Sample-accurate and independent of which stage applies the trim; the conformance check for whether priming/padding was handled correctly |
 
-If a test reports "extra output frames after resampling" or similar frame-count mismatches, the decoder is almost certainly behaving correctly and the test logic needs to switch to one of the post-trim validations above. Before the trim, the full encoded sample count — priming and padding included — is correct output. The trim metadata is the mechanism that makes the audible output sample-accurate to the source, and the HAL contract is that it is applied exactly once before the mixer.
+If a test reports "extra output frames after resampling" or similar frame-count mismatches, the decoder is almost certainly behaving correctly and the test logic needs to switch to one of the post-trim validations above. Where the sink applies the trim, the decoder's output correctly carries the full encoded sample count, priming and padding included; where the decoder applies it, that output is already shortened. Either way the HAL contract is that the trim is applied exactly once before the mixer, which is what makes the audible output sample-accurate to the source.
 
 If a test pipeline produces resampled audio without the container priming/padding metadata (some FFmpeg paths do not emit `edts/elst` or `iTunSMPB` on resampled output), middleware has no source for `trimStartNs` / `trimEndNs` and the padding leaks through. The fix is in the test pipeline (preserve or compute the priming/padding values), not the HAL.
 

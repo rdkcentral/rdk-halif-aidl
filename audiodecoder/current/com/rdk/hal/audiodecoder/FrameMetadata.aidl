@@ -57,9 +57,10 @@ parcelable FrameMetadata {
 	 * Per-frame — applies only to this decoded frame, not to the stream as a
 	 * whole. Set to 0 (the common case) for no trim.
 	 *
-	 * The AudioSink applies these durations before presenting the PCM to the
-	 * mixer. Where the decoder has already trimmed the frame itself, it sets
-	 * both to 0, so the samples are discarded exactly once.
+	 * These fields carry the trim still outstanding for this frame, and the
+	 * AudioSink applies it before presenting the PCM to the mixer. A decoder
+	 * that has already trimmed the frame itself sets both to 0, so the samples
+	 * are discarded exactly once.
 	 *
 	 * A frame with a non-zero trim always carries non-null metadata on
 	 * `IAudioDecoderControllerListener.onFrameOutput()`, even when the trim
