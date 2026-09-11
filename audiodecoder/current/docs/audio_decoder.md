@@ -337,12 +337,12 @@ Typical priming amounts:
 | AAC-LC | 2048 samples (two 1024-sample frames) |
 | HE-AAC v1/v2 | 2048 + extra SBR latency |
 | MP3 | 529–1105 samples (LAME default 576) |
-| Vorbis | Variable per stream, signalled in headers |
+| Vorbis | Variable per stream, signalled by Ogg granule positions |
 | Opus | Variable, signalled in `OpusHead.pre_skip` |
 
 **Resampling adds another layer.** When the source media is resampled before encoding (or re-encoded at a different rate from the original), the resampled sample count rarely divides evenly into the codec's frame size. The leftover samples land in a final frame padded out to the full frame size with encoder-generated silence. For example, 1 s at 44.1 kHz resampled to 48 kHz produces 48,000 samples, which does not divide evenly into AAC's 1024-samples/frame, so the last AAC frame contains real PCM plus padding to fill the frame.
 
-This is correct behaviour — **the decoder is expected to emit the full encoded sample count, padding included.** What removes the padding is the trim metadata described below.
+This is correct behaviour — **the encoded stream carries the full sample count, priming and padding included.** What removes them is the trim metadata described below, and the contract is that they are discarded **exactly once** before the PCM reaches the mixer.
 
 What the decoder emits, and what the trim removes:
 
@@ -363,11 +363,11 @@ block-beta
     style src2   fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20,font-weight:bold;
 ```
 
-The decoder emits the whole encoded run. Applying the trim discards `trimStartNs` from the front and `trimEndNs` from the back, leaving audio whose duration matches the source sample-accurately. Which stage applies it is covered under [The trim contract](#the-trim-contract) below.
+Decoding yields the whole encoded run. Applying the trim discards `trimStartNs` from the front and `trimEndNs` from the back, leaving audio whose duration matches the source sample-accurately. Which stage applies it is covered under [The trim contract](#the-trim-contract) below.
 
 ### The trim contract
 
-`InputBufferMetadata.trimStartNs` and `trimEndNs` carry per-frame trim durations on each `decodeBufferWithMetadata()` call. The corresponding `FrameMetadata.trimStartNs` / `trimEndNs` on `onFrameOutput()` carry the trim to the sink, which applies it before presenting the PCM to the mixer.
+`InputBufferMetadata.trimStartNs` and `trimEndNs` carry per-frame trim durations on each `decodeBufferWithMetadata()` call. The corresponding `FrameMetadata.trimStartNs` / `trimEndNs` on `onFrameOutput()` carry whatever trim is still outstanding to the sink, which applies it before presenting the PCM to the mixer.
 
 **The trim behaviour is defined by this interface and is not negotiable.** The samples must be trimmed as specified. What *is* an implementation choice is **where** the trim is applied — a vendor may apply it inside the decoder (for example via FFmpeg's `AV_PKT_DATA_SKIP_SAMPLES` during decode) or in the sink.
 
@@ -386,9 +386,10 @@ The trim is strictly **per-buffer**. Each `decodeBufferWithMetadata()` call's va
 
 | Codec | Trim required | Source of the values |
 |---|---|---|
-| **Opus** | Always | `OpusHead.pre_skip` (RFC 7845 §5.1) is present in every Opus stream. WebM carriage adds `CodecDelay` / `SeekPreRoll`. |
-| **AAC** | When the container signals it | MP4 `edts/elst`, the `iTunSMPB` atom, or WebM `CodecDelay` / `SeekPreRoll`. ADTS-AAC signals nothing, so nothing is trimmed. |
+| **Opus** | Always | `OpusHead.pre_skip` (RFC 7845 §5.1) is present in every Opus stream; WebM carries the same value as `CodecDelay`. Trailing trim comes from the final Ogg page's granule position (RFC 7845, End Trimming) or WebM `DiscardPadding`. |
+| **AAC** | When the container signals it | MP4 `edts/elst`, the `iTunSMPB` atom, or WebM `CodecDelay` and `DiscardPadding`. ADTS-AAC signals nothing, so nothing is trimmed. |
 | **MP3** | When the container signals it | `iTunSMPB`, or the Xing/LAME `INFO` tag. |
+| **Vorbis** | When the container signals it | Ogg granule positions — the first audio page's for the leading trim, the final page's for the trailing trim (Vorbis I specification, Appendix A) — or WebM `CodecDelay` and `DiscardPadding`. |
 | **Dolby (DD+ / AC-4 / Atmos)** | Not applicable | No encoder pre-skip in the decode contract and no `CodecDelay` equivalent in the carriage spec. In passthrough no PCM is produced at all. |
 
 Trim is a no-op when the values are zero, which is always the case for Dolby decoded paths.
@@ -404,19 +405,20 @@ sequenceDiagram
     participant Sink as IAudioSinkController
     Note over MW,Sink: Sink-applies case. A decoder that trims the frame itself<br/>reports 0 in FrameMetadata.trim* and the sink does nothing.
     Note over MW,Demux: Container parsed — priming and padding values extracted
-    MW->>Dec: decodeBufferWithMetadata(handle1, {nsPresentationTime, trimStartNs=42_666_667, trimEndNs=0, ...})
-    Note right of Dec: First frame — trim leading priming
-    Dec-->>Listener: onFrameOutput(pts, handle1_pcm, {trimStartNs=42_666_667, trimEndNs=0, ...})
-    Listener->>Sink: queueAudioFrame(pts, handle1_pcm, {trimStartNs=42_666_667, ...})
-    Note over Sink: Sink discards first 42.67 ms of PCM before mixing
-    MW->>Dec: decodeBufferWithMetadata(handle2, {nsPresentationTime, trimStartNs=0, trimEndNs=0, ...})
-    Dec-->>Listener: onFrameOutput(pts, handle2_pcm, {trimStartNs=0, trimEndNs=0, ...})
+    Note over MW,Dec: 2048 priming samples span two 1024-sample frames,<br/>so the leading trim is split across the first two buffers
+    MW->>Dec: decodeBufferWithMetadata(handle1, {nsPresentationTime, trimStartNs=21_333_333, trimEndNs=0, ...})
+    Dec-->>Listener: onFrameOutput(pts, handle1_pcm, {trimStartNs=21_333_333, trimEndNs=0, ...})
+    MW->>Sink: queueAudioFrame(pts, handle1_pcm, {trimStartNs=21_333_333, ...})
+    MW->>Dec: decodeBufferWithMetadata(handle2, {nsPresentationTime, trimStartNs=21_333_333, trimEndNs=0, ...})
+    Dec-->>Listener: onFrameOutput(pts, handle2_pcm, {trimStartNs=21_333_333, trimEndNs=0, ...})
+    MW->>Sink: queueAudioFrame(pts, handle2_pcm, {trimStartNs=21_333_333, ...})
+    Note over Sink: Sink discards frames 1 and 2 in full — 42.67 ms of priming
     Note over MW,Dec: ... middle of stream, no trim ...
     MW->>Dec: decodeBufferWithMetadata(handleN, {nsPresentationTime, trimStartNs=0, trimEndNs=2_666_667, ...})
     Note right of Dec: Final frame — trim trailing padding
     MW->>Dec: signalEndOfStream()
     Dec-->>Listener: onFrameOutput(pts, handleN_pcm, {trimStartNs=0, trimEndNs=2_666_667, ...})
-    Listener->>Sink: queueAudioFrame(pts, handleN_pcm, {trimEndNs=2_666_667, ...})
+    MW->>Sink: queueAudioFrame(pts, handleN_pcm, {trimEndNs=2_666_667, ...})
     Dec-->>Listener: onEndOfStream()
     Note over Sink: Sink discards last 2.67 ms of PCM
     MW->>Sink: signalEndOfStream()
@@ -429,24 +431,31 @@ After the trim is applied, the audible output matches the original source durati
 
 ### Where the values come from — container metadata sources
 
-Middleware extracts priming/padding from the container and translates to nanosecond durations:
+Middleware extracts priming/padding from the container and translates them to nanosecond durations. The table gives the total **leading trim** (priming) and **trailing trim** (padding); where either is longer than one frame, the middleware splits it across consecutive buffers, as [The trim contract](#the-trim-contract) requires.
 
 | Container | Source | Translation to trim |
 |---|---|---|
-| **MP4 / ISOBMFF** | `edts/elst` edit list | `media_time` (samples) → first frame `trimStartNs` ; `(segment_duration × media_rate) - track_duration` shortfall → last frame `trimEndNs` |
-| **MP4 (iTunes-style)** | `iTunSMPB` text in `udta` | First whitespace-separated value = priming samples; second = padding samples |
-| **WebM / Matroska** | `CodecDelay` element on the audio track | Decoder delay in nanoseconds → first frame `trimStartNs` directly |
-| **Ogg Opus / Opus-in-MP4** | `OpusHead.pre_skip` | `pre_skip / 48000 × 1_000_000_000` → first frame `trimStartNs` (Opus pre-skip is always in 48 kHz units regardless of stream rate) |
-| **ADTS AAC** (no container) | None | No priming/padding metadata available; first/last frame trims unknown; output will contain priming/padding |
+| **MP4 / ISOBMFF** | `edts/elst` edit list | `media_time` is in the media timescale (`mdhd.timescale`); `segment_duration` is in the movie timescale (`mvhd.timescale`).<br/>Leading trim = `media_time ÷ mdhd.timescale`.<br/>Trailing trim = (encoded media duration − `media_time` − `segment_duration × mdhd.timescale ÷ mvhd.timescale`) ÷ `mdhd.timescale`, where the encoded media duration is the sum of the track's sample durations in `mdhd` units.<br/>A `segment_duration` of 0, common in fragmented MP4, runs the edit to the end of the media, so there is no trailing trim. |
+| **MP4 (iTunes-style)** | `iTunSMPB` text in `udta` | Space-separated hexadecimal words: the first is reserved, the second is the priming (leading trim) in samples, the third is the padding (trailing trim) in samples, and the fourth is the original sample count. |
+| **WebM / Matroska** | `CodecDelay` on the audio track; `DiscardPadding` on the final block | Both are in nanoseconds: `CodecDelay` → leading trim, `DiscardPadding` → trailing trim, directly. |
+| **Ogg Opus / Opus-in-MP4** | `OpusHead.pre_skip`; final Ogg page granule position, or the MP4 edit list | Leading trim = `pre_skip ÷ 48000` (Opus pre-skip is always in 48 kHz units regardless of stream rate). Trailing trim = the samples the final page's granule position cuts from its last packet (RFC 7845, End Trimming), or the edit-list rule above for MP4. |
+| **Ogg Vorbis** | First audio page and final page granule positions | Leading trim = the samples the first audio page's granule position falls short of what the page decodes; trailing trim = the samples the final page's granule position cuts from its last packet (Vorbis I specification, Appendix A). |
+| **ADTS AAC** (no container) | None | No priming/padding metadata available; leading and trailing trims are unknown, and the output contains the priming and padding |
+
+Each duration converts to nanoseconds as `seconds × 1_000_000_000`, rounded to the nearest nanosecond.
 
 **Worked example** — AAC-LC at 48 kHz with 2048-sample priming:
 
 ```text
-priming = 2048 samples
-trimStartNs (first frame) = 2048 / 48000 × 1_000_000_000
-                          = 42_666_667 ns   (rounded to nearest ns)
-                          ≈ 42.67 ms
+priming             = 2048 samples = two 1024-sample frames
+leading trim        = 2048 / 48000 × 1_000_000_000
+                    ≈ 42.67 ms
+trimStartNs (frame 1) = 1024 / 48000 × 1_000_000_000
+                      = 21_333_333 ns   (rounded to nearest ns)
+trimStartNs (frame 2) = 21_333_333 ns
 ```
+
+Both leading frames are discarded in full; the source audio starts at the first sample of frame 3.
 
 If the same stream was originally 44.1 kHz with a 1-second source duration and was resampled to 48 kHz before encoding, the encoder produces 48,000 + 2048 = 50,048 samples → 49 AAC frames (50,176 samples) with `50,176 − 50,048 = 128 samples` of padding in the final frame:
 
@@ -463,10 +472,10 @@ The right metric for "did the decoder behave correctly" is **total post-trim aud
 | Validation | Valid? | Why |
 |---|---|---|
 | Input AAC frame count == output PCM frame count | ❌ | Resampling and encoder framing change the count; not a HAL conformance signal |
-| `Σ(output_frame_pts_deltas)` matches input media duration | ✅ | PTS-based; immune to frame repacking |
+| (last output PTS − first output PTS + final frame duration) − leading trim − trailing trim == source duration | ✅ | PTS-based; counts the final frame's own duration and subtracts the trim applied inside the leading and trailing frames |
 | Total post-trim PCM sample count == `(source_duration × output_sample_rate)` | ✅ | Sample-accurate; the right check for whether priming/padding was handled correctly |
 
-If a test reports "extra output frames after resampling" or similar frame-count mismatches, the decoder is almost certainly behaving correctly and the test logic needs to switch to one of the post-trim validations above. The HAL contract guarantees the decoder emits the full encoded sample count; the trim metadata is the mechanism that makes the audible output sample-accurate to the source.
+If a test reports "extra output frames after resampling" or similar frame-count mismatches, the decoder is almost certainly behaving correctly and the test logic needs to switch to one of the post-trim validations above. Before the trim, the full encoded sample count — priming and padding included — is correct output. The trim metadata is the mechanism that makes the audible output sample-accurate to the source, and the HAL contract is that it is applied exactly once before the mixer.
 
 If a test pipeline produces resampled audio without the container priming/padding metadata (some FFmpeg paths do not emit `edts/elst` or `iTunSMPB` on resampled output), middleware has no source for `trimStartNs` / `trimEndNs` and the padding leaks through. The fix is in the test pipeline (preserve or compute the priming/padding values), not the HAL.
 
