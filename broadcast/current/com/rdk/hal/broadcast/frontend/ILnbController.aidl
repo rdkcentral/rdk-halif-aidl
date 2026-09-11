@@ -36,8 +36,7 @@ interface ILnbController {
      *
      * Use LnbVoltage.NONE to turn off the LNB power.
      *
-     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT if the voltage value is not supported. TODO should we
-     * document this generally that out of range enum values are illegal arguments?
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT if the voltage value is not supported.
      */
     void setVoltage(in LnbVoltage voltage);
 

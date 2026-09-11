@@ -27,4 +27,6 @@ enum ConstantInt {
     AUTO_PLP_ID = -1,
     INVALID_PLP_ID = -2,
     AUTO_SYMBOL_RATE = -1,
+    INVALID_INPUT_STREAM_ID = -1,
+    INVALID_PLS_CODE = -1,
 }

@@ -14,9 +14,12 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
+import com.rdk.hal.broadcast.frontend.ConstantInt;
 import com.rdk.hal.broadcast.frontend.DvbCAnnex;
 import com.rdk.hal.broadcast.frontend.DvbCBandwidth;
+import com.rdk.hal.broadcast.frontend.DvbCCodeRate;
 import com.rdk.hal.broadcast.frontend.DvbCModulation;
+import com.rdk.hal.broadcast.frontend.SpectralInversion;
 
 /**
  * DVB-C capability struct.
@@ -32,10 +35,14 @@ import com.rdk.hal.broadcast.frontend.DvbCModulation;
 parcelable DvbCCapabilities {
     /** Supported bandwidths. */
     DvbCBandwidth[] bandwidths;
-    /** Supported modulations. */
-    DvbCModulation[] modulations;
     /** Supported annex standards. */
     DvbCAnnex[] dvbCAnnexes;
+    /** Supported modulations. */
+    DvbCModulation[] modulations;
+    /** Supported code rates. */
+    DvbCCodeRate[] codeRates;
+    /** Supported spectral inversion modes. */
+    SpectralInversion[] inversions;
 
     /** Reserved for future use. */
     ParcelableHolder extension;

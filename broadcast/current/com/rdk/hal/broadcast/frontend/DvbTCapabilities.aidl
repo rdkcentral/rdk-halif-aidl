@@ -18,8 +18,11 @@ import com.rdk.hal.broadcast.frontend.DvbTBandwidth;
 import com.rdk.hal.broadcast.frontend.DvbTCodeRate;
 import com.rdk.hal.broadcast.frontend.DvbTConstellation;
 import com.rdk.hal.broadcast.frontend.DvbTGuardInterval;
+import com.rdk.hal.broadcast.frontend.DvbTHierarchy;
+import com.rdk.hal.broadcast.frontend.DvbTMiso;
 import com.rdk.hal.broadcast.frontend.DvbTStandard;
 import com.rdk.hal.broadcast.frontend.DvbTTransmissionMode;
+import com.rdk.hal.broadcast.frontend.SpectralInversion;
 
 /**
  * DVB-T specific capabilities.
@@ -35,16 +38,30 @@ import com.rdk.hal.broadcast.frontend.DvbTTransmissionMode;
 parcelable DvbTCapabilities {
     /** Supported bandwidths. */
     DvbTBandwidth[] bandwidths;
-    /** Supported constellations. */
-    DvbTConstellation[] constellations;
-    /** Supported code rates. */
-    DvbTCodeRate[] codeRates;
+
     /** Supported standards. */
     DvbTStandard[] dvbTStandards;
+
+    /** Supported constellations. */
+    DvbTConstellation[] constellations;
+
+    /** Supported code rates. */
+    DvbTCodeRate[] codeRates;
+
     /** Supported guard intervals. */
     DvbTGuardInterval[] guardIntervals;
+
     /** Supported transmission mode. */
     DvbTTransmissionMode[] transmissionModes;
+
+    /** Supported spectral inversion modes. */
+    SpectralInversion[] inversions;
+
+    /** Supported hierarchical transmission modes. */
+    DvbTHierarchy[] hierarchies;
+
+    /** Supported MISO modes. */
+    DvbTMiso[] misoModes;
 
     /** Reserved for future use. */
     ParcelableHolder extension;

@@ -30,9 +30,11 @@ package com.rdk.hal.broadcast.frontend;
 enum SignalInfoProperty {
     /** Clean value when default initialized. */
     UNDEFINED = 0,
-    /** TODO Since we have unions now which have a type based on the carrier type, it might be good to include that here
-     * as well. */
-    // CARRIER_TYPE,
+    /**
+     * The type of the frontend associated with this signal info (e.g., DVB-T, DVB-S, DVB-C).
+     * If no tune has been performed, this value is UNDEFINED.
+     */
+    FRONTEND_TYPE,
     /** The actual frequency that the tuner is locked on (in Hertz). */
     ACTUAL_FREQUENCY,
     /** Demod Lock status. */
@@ -75,4 +77,24 @@ enum SignalInfoProperty {
     DVB_S_STANDARD,
     /** Code rate. */
     CODE_RATE,
+    /** DVB-C Annex. */
+    DVB_C_ANNEX,
+    /** Spectral inversion mode. */
+    SPECTRAL_INVERSION,
+    /** roll-off factor. */
+    ROLL_OFF,
+    /** DVB-T hierarchical transmission mode. */
+    DVB_T_HIERARCHY,
+    /** DVB-T MISO mode. */
+    DVB_T_MISO,
+    /** DVB-S/S2/S2X inner FEC. */
+    DVB_S_INNER_FEC,
+    /** DVB-S2/S2X pilot mode. */
+    DVB_S_PILOT,
+    /** DVB-S2/S2X physical-layer scrambling mode. */
+    DVB_S_PLS_MODE,
+    /** DVB-S2/S2X physical-layer scrambling code. */
+    DVB_S_PLS_CODE,
+    /** DVB-S2/S2X input stream identifier. */
+    DVB_S_INPUT_STREAM_ID,
 }

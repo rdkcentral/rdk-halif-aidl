@@ -16,8 +16,11 @@ package com.rdk.hal.broadcast.frontend;
 
 import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
 import com.rdk.hal.broadcast.frontend.DvbSModulation;
+import com.rdk.hal.broadcast.frontend.DvbSPilot;
+import com.rdk.hal.broadcast.frontend.DvbSPlsMode;
 import com.rdk.hal.broadcast.frontend.DvbSRollOff;
 import com.rdk.hal.broadcast.frontend.DvbSStandard;
+import com.rdk.hal.broadcast.frontend.SpectralInversion;
 
 /**
  * DVB-S/S2/S2X satellite broadcast standard capabilities.
@@ -31,14 +34,22 @@ import com.rdk.hal.broadcast.frontend.DvbSStandard;
  */
 @VintfStability
 parcelable DvbSCapabilities {
+    /** Supported DVB-S standards. */
+    DvbSStandard[] dvbSStandards;
     /** Supported modulations. */
     DvbSModulation[] modulations;
     /** Supported code rates (inner FEC). */
     DvbSInnerFec[] innerFecs;
-    /** Supported DVB-S standards. */
-    DvbSStandard[] dvbSStandards;
     /** Supported roll-off values. */
     DvbSRollOff[] rollOffs;
+    /** Supported DVB-S2/S2X pilot modes. */
+    DvbSPilot[] pilots;
+    /** Supported DVB-S/S2/S2X spectral inversion modes. */
+    SpectralInversion[] inversions;
+    /** Supported DVB-S2/S2X physical-layer scrambling modes. */
+    DvbSPlsMode[] plsModes;
+    /** Whether DVB-S2/S2X input stream selection is supported. */
+    boolean isInputStreamIdSupported;
 
     /** Reserved for future use. */
     ParcelableHolder extension;

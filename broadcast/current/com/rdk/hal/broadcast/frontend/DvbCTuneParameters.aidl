@@ -19,6 +19,7 @@ import com.rdk.hal.broadcast.frontend.DvbCBandwidth;
 import com.rdk.hal.broadcast.frontend.DvbCCodeRate;
 import com.rdk.hal.broadcast.frontend.DvbCModulation;
 import com.rdk.hal.broadcast.frontend.SignalDetectMode;
+import com.rdk.hal.broadcast.frontend.SpectralInversion;
 
 /**
  * DVB-C-specific tuning parameters.
@@ -38,7 +39,7 @@ parcelable DvbCTuneParameters {
     /**
      * The symbol rate in symbols per second.
      *
-     * Use ConstantsInt.AUTO_SYMBOL_RATE for auto symbol rate if it is supported.
+     * Use ConstantInt.AUTO_SYMBOL_RATE for auto symbol rate if it is supported.
      */
     int symbolRate;
 
@@ -53,6 +54,9 @@ parcelable DvbCTuneParameters {
 
     /** Code rate - the inner FEC. */
     DvbCCodeRate codeRate;
+
+    /** Spectral inversion mode to use when tuning. */
+    SpectralInversion inversion;
 
     /** Reserved for future use. */
     ParcelableHolder extension;

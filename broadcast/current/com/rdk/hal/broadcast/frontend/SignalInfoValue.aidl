@@ -17,11 +17,20 @@ package com.rdk.hal.broadcast.frontend;
 import com.rdk.hal.broadcast.frontend.Bandwidth;
 import com.rdk.hal.broadcast.frontend.CodeRate;
 import com.rdk.hal.broadcast.frontend.DemodLockState;
+import com.rdk.hal.broadcast.frontend.DvbCAnnex;
+import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
+import com.rdk.hal.broadcast.frontend.DvbSPilot;
+import com.rdk.hal.broadcast.frontend.DvbSPlsMode;
 import com.rdk.hal.broadcast.frontend.DvbSStandard;
+import com.rdk.hal.broadcast.frontend.DvbTHierarchy;
+import com.rdk.hal.broadcast.frontend.DvbTMiso;
 import com.rdk.hal.broadcast.frontend.DvbTStandard;
+import com.rdk.hal.broadcast.frontend.FrontendType;
 import com.rdk.hal.broadcast.frontend.GuardInterval;
 import com.rdk.hal.broadcast.frontend.Modulation;
 import com.rdk.hal.broadcast.frontend.RfLockState;
+import com.rdk.hal.broadcast.frontend.RollOff;
+import com.rdk.hal.broadcast.frontend.SpectralInversion;
 import com.rdk.hal.broadcast.frontend.TransmissionMode;
 
 /**
@@ -35,6 +44,7 @@ import com.rdk.hal.broadcast.frontend.TransmissionMode;
  */
 @VintfStability
 union SignalInfoValue {
+    FrontendType frontendType = FrontendType.UNDEFINED;
     /** The actual frequency that the tuner is locked on (in Hertz). */
     long actualFrequency;
     /** Demodulator lock state. */
@@ -77,4 +87,24 @@ union SignalInfoValue {
     DvbSStandard dvbSStandard;
     /** Code rates e.g (LP and HP) for DVB-T/T2. TODO this isn't for DVB-T only anymore, is it? */
     CodeRate[] codeRates;
+    /** DVB-C Annex. */
+    DvbCAnnex dvbCAnnex;
+    /** Spectral inversion mode. */
+    SpectralInversion inversion;
+    /** DVB-T hierarchical transmission mode. */
+    DvbTHierarchy dvbTHierarchy;
+    /** DVB-T MISO mode. */
+    DvbTMiso dvbTMiso;
+    /** DVB-S/S2/S2X inner FEC. */
+    DvbSInnerFec dvbSInnerFec;
+    /** roll-off factor. */
+    RollOff rollOff;
+    /** DVB-S2/S2X pilot mode. */
+    DvbSPilot dvbSPilot;
+    /** DVB-S2/S2X input stream identifier. */
+    int dvbSInputStreamId;
+    /** DVB-S2/S2X physical-layer scrambling mode. */
+    DvbSPlsMode dvbSPlsMode;
+    /** DVB-S2/S2X physical-layer scrambling code. */
+    int dvbSPlsCode;
 }

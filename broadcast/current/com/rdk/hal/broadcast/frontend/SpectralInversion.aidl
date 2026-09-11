@@ -15,14 +15,21 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * Constant long values used across the frontend.
+ * Spectral inversion modes for broadcast frontend tuning.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
-@Backing(type = "long")
 @VintfStability
-enum ConstantLong {
-    INVALID_B = -1, // TODO what is this?
+@Backing(type = "int")
+enum SpectralInversion {
+    /** Clean value when default initialized. */
+    UNDEFINED = 0,
+    /** Automatically detect spectral inversion. */
+    AUTO,
+    /** Use normal spectral orientation. */
+    NORMAL,
+    /** Use inverted spectral orientation. */
+    INVERTED,
 }

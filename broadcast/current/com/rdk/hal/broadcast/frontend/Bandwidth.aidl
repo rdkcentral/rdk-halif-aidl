@@ -28,5 +28,4 @@ import com.rdk.hal.broadcast.frontend.DvbTBandwidth;
 union Bandwidth {
     DvbCBandwidth dvbC = DvbCBandwidth.UNDEFINED;
     DvbTBandwidth dvbT;
-    // Reserved for future use.
 }

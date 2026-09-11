@@ -14,12 +14,15 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
+import com.rdk.hal.broadcast.frontend.ConstantInt;
 import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
 import com.rdk.hal.broadcast.frontend.DvbSModulation;
+import com.rdk.hal.broadcast.frontend.DvbSPilot;
+import com.rdk.hal.broadcast.frontend.DvbSPlsMode;
 import com.rdk.hal.broadcast.frontend.DvbSRollOff;
 import com.rdk.hal.broadcast.frontend.DvbSStandard;
 import com.rdk.hal.broadcast.frontend.SignalDetectMode;
-
+import com.rdk.hal.broadcast.frontend.SpectralInversion;
 /**
  * DVB-S/S2/S2X-specific tuning parameters.
  *
@@ -53,6 +56,21 @@ parcelable DvbSTuneParameters {
 
     /** Roll-off factor. */
     DvbSRollOff rollOff;
+
+    /** DVB-S2/S2X pilot symbol mode. */
+    DvbSPilot pilot;
+
+    /** DVB-S/S2/S2X spectral inversion mode to use when tuning. */
+    SpectralInversion inversion;
+
+    /** DVB-S2/S2X input stream identifier; use -1 when not selecting a specific stream. */
+    int inputStreamId = ConstantInt.INVALID_INPUT_STREAM_ID;
+
+    /** DVB-S2/S2X physical-layer scrambling mode. */
+    DvbSPlsMode plsMode;
+
+    /** DVB-S2/S2X physical-layer scrambling code (scrambling-sequence index). */
+    int plsCode = ConstantInt.INVALID_PLS_CODE;
 
     /** Reserved for future use. */
     ParcelableHolder extension;
