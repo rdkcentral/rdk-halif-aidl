@@ -360,11 +360,19 @@ setup_path() {
     fi
 }
 
+build_aidl() {
+    echo "Building aidl tool"
+    cd "$BINDER_REPO_DIR"
+    bash build-linux-binder-aidl.sh
+    echo "✓ aidl tool build complete"
+}
+
 # ------------------------------------------------------------------------------
 # MAIN EXECUTION
 # ------------------------------------------------------------------------------
 clone_repo || exit 1
 clean_build
+build_aidl
 build_sdk || exit 1
 setup_path
 
