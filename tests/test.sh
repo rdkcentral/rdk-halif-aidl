@@ -38,6 +38,26 @@ TESTS_FAILED=0
 
 CMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX:-$(pwd)/out/target}"
 
+# The binder wire protocol the cross-compiled SDK is built for. Bitness follows
+# the toolchain; the protocol follows the kernel the image runs, so it is stated
+# rather than inherited - a 32-bit toolchain resolves to protocol 7 on its own.
+# The ARM target here is row B of docs/standards/build_integration.md: 32-bit
+# userspace on a protocol-8 kernel, which is every kernel from 4.18 and every
+# 64-bit kernel. Set ON to build the legacy row A instead.
+HALIF_BINDER_IPC_32BIT="${HALIF_BINDER_IPC_32BIT:-OFF}"
+
+# Normalise to exactly ON or OFF. CMake accepts several spellings of true, but
+# the protocol assertion below compares against "ON" — so an unnormalised "1"
+# would build protocol 7 while the test expected 8, and report a mismatch that
+# is not one. Anything unrecognised is a typo worth failing on rather than
+# silently treating as OFF.
+case "${HALIF_BINDER_IPC_32BIT^^}" in
+    ON|TRUE|YES|Y|1)  HALIF_BINDER_IPC_32BIT=ON ;;
+    OFF|FALSE|NO|N|0) HALIF_BINDER_IPC_32BIT=OFF ;;
+    *) echo "HALIF_BINDER_IPC_32BIT must be ON or OFF (got '${HALIF_BINDER_IPC_32BIT}')" >&2
+       exit 1 ;;
+esac
+
 usage() {
     echo "Usage: $0 [--from ID] [--to ID] [--only ID[,ID...]] [--list] [--help]"
     echo "  --from ID    Start running at test ID (e.g., 3 or 6)"
@@ -746,12 +766,41 @@ test_11() {
           -DCMAKE_INSTALL_LIBDIR=lib/binder \
           -DBUILD_HOST_AIDL=OFF \
           -DTARGET_LIB32_VERSION=ON \
+          -DBINDER_IPC_32BIT=${HALIF_BINDER_IPC_32BIT} \
           -DCMAKE_BUILD_TYPE=Release && \
         cmake --build build/binder -- -j\$(nproc) && \
         cmake --install build/binder" \
         >/tmp/arm_sdk_build.log 2>&1; then
         echo "✅ ARM Binder SDK built successfully"
         echo ""
+
+        # The wire protocol is compiled into libbinder, so verify the artifact
+        # rather than trusting the switch. Parcel::ipcSetDataReference takes a
+        # const binder_size_t*, and the protocol selects that type's width, so
+        # the mangled third parameter names the protocol the library speaks:
+        # PKy (const unsigned long long*) is 8, PKj (const unsigned int*) is 7.
+        local sdk_lib="${current_dir}/out/target/lib/binder/libbinder.so"
+        local want_proto=8
+        [ "${HALIF_BINDER_IPC_32BIT}" = "ON" ] && want_proto=7
+        local sym=""
+        [ -f "${sdk_lib}" ] && sym=$(grep -ao 'ipcSetDataReferenceEPKh[jm]PK[yj]' "${sdk_lib}" | head -n 1 || true)
+        local got_proto
+        case "${sym}" in
+            *PKy) got_proto=8 ;;
+            *PKj) got_proto=7 ;;
+            *)    got_proto="undetermined" ;;
+        esac
+        if [ "${got_proto}" = "${want_proto}" ]; then
+            echo "✅ ARM Binder SDK speaks protocol ${got_proto}, as requested"
+            echo ""
+        else
+            echo "❌ ARM Binder SDK speaks protocol ${got_proto}, expected ${want_proto}"
+            echo "   libbinder compares protocol versions for exact equality when it"
+            echo "   opens the driver. A mismatch is not caught at build time - every"
+            echo "   binder process terminates at startup on the device."
+            echo "   Library: ${sdk_lib}"
+            return 1
+        fi
     else
         echo "❌ ARM SDK build FAILED!"
         echo ""
