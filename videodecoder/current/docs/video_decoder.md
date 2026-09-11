@@ -7,9 +7,7 @@ The output of the video decoder can follow two paths:
 - **Non-tunnelled mode** – The decoded video is returned to the RDK media pipeline as a video frame buffer along with metadata.
 - **Tunnelled mode** – The decoded video is passed directly through the vendor layer.
 
-The choice between tunnelled and non-tunnelled video does not affect the operational mode of the audio decoder. It is possible to have tunnelled video while using non-tunnelled audio.
-
-The video decoder's operational mode can be selected by the client upon initialization.
+Video and audio are independent. A pipeline may pass video from decoder to sink within the vendor layer while returning decoded audio to the client.
 
 The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decoder** element, specifically designed to integrate with the **Video Decoder HAL** interface.
 
@@ -42,8 +40,7 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 | **HAL.VIDEODECODER.4** | Only one video frame shall be output per output frame callback from the video decoder. |
 | **HAL.VIDEODECODER.5** | Encoded video data shall be passed in shared memory buffers by handle and shall be in either secure or non-secure buffer types. |The pool implementation of memory buffers for secure and non-secure memory is implemented by the vendor. See [AV Buffer](../avbuffer/av_buffer.md) for details. |
 | **HAL.VIDEODECODER.6** | The video decoder shall support a secure video pipeline where encoded and decoded data in secure buffers shall not be exposed to any process outside of the secure video pipeline. Secure coded video input buffers to the video decoder shall always be output in secure decoded frame buffers. |
-| **HAL.VIDEODECODER.7** | The video decoder shall operate in either a tunnelled or non-tunnelled operational mode. |Only one of these operational modes needs be supported by the video decoder. |
-| **HAL.VIDEODECODER.8** | The video decoder may optionally operate in a textured video operational mode. |
+| **HAL.VIDEODECODER.7** | Decoded video frames shall reach the linked video sink, either passed back to the client in frame buffers and queued to the sink by the client, or passed from decoder to sink within the vendor layer. |
 | **HAL.VIDEODECODER.9** | The video decoder HAL shall report on the number of video decoder instances supported and their capabilities. |
 | **HAL.VIDEODECODER.10** | An opened video decoder instance shall be configured to decode only a single codec type.| No dynamic video codec switching is supported while open.  A video decoder instance must be closed and reopened to change the codec type.|
 | **HAL.VIDEODECODER.11** | The video decoder shall be able to decode back to back I-frames.| Used in I-frame trick modes. |
@@ -66,7 +63,6 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 | `DynamicRange.aidl` | Enum list of dynamic ranges. |
 | `ErrorCode.aidl` | Enum list of video decoder error codes. |
 | `FrameMetadata.aidl` | Parcelable of video frame metadata passed from the video decoder. |
-| `OperationalMode.aidl` | Enum list of video decoder operational modes. |
 | `PixelFormat.aidl` | Enum list of video pixel formats. |
 | `Property.aidl` | Enum list of video decoder properties. |
 | `PropertyKVPair.aidl` | Parcelable of a Property and PropertyValue pair. |
@@ -232,29 +228,15 @@ If any video decoder supports SVP in non-tunnelled mode then the Video Sink HAL 
 
 Markdown Output:
 
-## Operational Modes
+## Output Routing
 
-There are 3 modes that video decoders can operate in.  The `IVideoDecoderManager.getSupportedOperationalModes()` function must return all operational modes supported by the video decoders in the system.
+Decoded video frames are presented by the linked video sink. The sink must have this decoder associated through `IVideoSinkController.setVideoDecoder()` before it is started.
 
-This set of advertised operational modes must operate on all video decoder instances.
+AV buffers containing compressed video are passed into the video decoder through `decodeBufferWithMetadata()`. Decoded frames are reported over `IVideoDecoderControllerListener.onFrameOutput()`.
 
-Tunnelled and non-tunnelled modes cannot operate at the same time.  It is optional for video decoders to support both modes as options, but at least one of them must be supported.
+When `onFrameOutput()` carries a valid `frameAVBufferHandle`, frames are returned in presentation order and the client passes each one to `IVideoSinkController.queueVideoFrame()`.
 
-If both are supported then there shall never be a dynamic switch between the 2 modes while STARTED.
-
-The `OPERATIONAL_MODE` property controls the operational mode the video decoder shall use.
-
-The enum `OperationalMode` provides the constants used to specify operational modes and allows for bitwise-or of multiple values.
-
-The video decoder may switch operational modes at any time while in a READY or STARTED state.
-
-In all modes, AV buffers containing compressed video are passed into the video decoder through calls to `decodeBufferWithMetadata()`.
-
-| Operational Mode | Description |
-|---|---|
-| `TUNNELLED` | Decoded video frames are passed directly to the linked video sink and video plane for rendering. <br>The vendor layer is responsible for AV sync where audio and video streams are linked in the same pipeline. <br>Decoded video frames are never received back in frame buffers over `IVideoDecoderControllerListener.onFrameOutput()`, but the `FrameMetadata` must still be returned in the usual way. <br>All calls to `onFrameOutput()` shall have the `frameBufferHandle` set to -1 to indicate no video frame buffer handle is being passed back. <br>It is optional for video decoders to support tunnelled operational mode. <br>If supported, tunnelled mode may be dynamically enabled or disabled while the video decoder is `READY` or `STARTED` and may run concurrently with graphics texture mode. Tunnelled mode cannot be used at the same time as non-tunnelled mode. |
-| `NON_TUNNELLED` | Decoded video frames are received back in video frame buffers over `IVideoDecoderListener.onFrameOutput()`. <br>Frames must be received in presentation order. <br>It is optional for video decoders to support non-tunnelled operational mode. <br>If supported, non-tunnelled mode may be dynamically enabled or disabled while the video decoder is `READY` or `STARTED` and may run concurrently with graphics texture mode. <br>Non-tunnelled mode cannot be used at the same time as tunnelled mode. |
-| `GRAPHICS_TEXTURE` | Video frames are converted to NV12 textures. <br>It is optional for video decoders to support graphics texture operational mode. <br>If supported, graphics texture mode may be dynamically enabled or disabled while the video decoder is `READY` or `STARTED` and may run concurrently with tunnelled or non-tunnelled mode. |
+When `onFrameOutput()` carries a `frameAVBufferHandle` of `-1`, the vendor layer passes frames from the decoder to the sink and is responsible for AV sync where audio and video streams are linked in the same pipeline.
 
 ## Frame Metadata
 
@@ -266,7 +248,7 @@ To conserve CPU load, the frame metadata is only passed with the first decoded f
 
 If the frame metadata does not need to be passed, then the `@nullable FrameMetadata metadata` parameter should be passed as null in `onFrameOutput()`.
 
-The same rules for frame metadata apply to all operational modes.
+The same rules for frame metadata apply on both paths.
 
 When operating exclusively in tunnelled mode, if there is no frame metadata to be passed, then no call to `onFrameOutput()` should be made because there is no frame buffer handle or frame metadata to return to the client.
 
@@ -362,11 +344,11 @@ Behaviour is identical in tunnelled and non-tunnelled modes. In tunnelled mode t
 
 ## Decoded Video Frame Buffers
 
-Decoded video frame buffers are only passed from the video decoder to the client when operating in the non-tunnelled operational mode.
+Decoded video frame buffers are passed to the client only when `onFrameOutput()` carries a valid `frameAVBufferHandle`.
 
 If the input [AV Buffer](../avbuffer/av_buffer.md) that contained the coded video frame was passed in a secure buffer, then the corresponding decoded video frame must be output in a secure video frame buffer.
 
-Video frame buffers are passed back as handles in the `IVideoDecoderControllerListener.onFrameOutput()` function `frameBufferHandle` parameter.  In tunnelled mode, `-1` is passed as the handle value to indicate that no frame buffer handle is being provided since the video is consumed internally by the vendor layer.
+Video frame buffers are passed back as handles in the `IVideoDecoderControllerListener.onFrameOutput()` function `frameAVBufferHandle` parameter.  In tunnelled mode, `-1` is passed as the handle value to indicate that no frame buffer handle is being provided since the video is consumed internally by the vendor layer.
 
 The format of the data in the decoded video frame buffer is determined by the vendor driver implementation and does not need to be understood by the RDK middleware.
 
@@ -463,7 +445,7 @@ sequenceDiagram
 
     Client->>Controller: decodeBufferWithMetadata(bufferHandle=1, {pts, ...})
     Client->>Controller: decodeBufferWithMetadata(bufferHandle=2, {pts, ...})
-    Controller-->>IVideoDecoderControllerListener: onFrameOutput(pts, frameBufferHandle=1000, metadata)
+    Controller-->>IVideoDecoderControllerListener: onFrameOutput(pts, frameAVBufferHandle=1000, metadata)
     Controller->>IAVBuffer: free(bufferHandle=1)
 
     Note over ADC: flush() transitions from STARTED -> FLUSHING -> STARTED
@@ -478,7 +460,7 @@ sequenceDiagram
     Note over Controller: signalEndOfStream() drains the decoder,<br>emits held frames, then fires onEndOfStream() once
 
     Client->>Controller: signalEndOfStream()
-    Controller-->>IVideoDecoderControllerListener: onFrameOutput(pts, frameBufferHandle=1002, metadata)
+    Controller-->>IVideoDecoderControllerListener: onFrameOutput(pts, frameAVBufferHandle=1002, metadata)
     Controller->>IAVBuffer: free(bufferHandle=3)
     Controller-->>IVideoDecoderControllerListener: onEndOfStream()
 
