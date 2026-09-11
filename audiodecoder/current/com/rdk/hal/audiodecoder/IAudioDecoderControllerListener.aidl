@@ -37,7 +37,7 @@ oneway interface IAudioDecoderControllerListener {
     * and `metadata` is non-null for the first frame after `State::START` or `State::FLUSHING`,
     * or whenever stream metadata changes. Metadata may be null if unchanged since the last callback,
     * except that a frame with a non-zero trim always carries non-null metadata, even when the trim
-    * repeats the previous frame's; a null metadata means zero trim for that frame.
+    * repeats the previous frame's trim; a null metadata means zero trim for that frame.
     * See `FrameMetadata.trimStartNs`.
     *
     * Ownership semantics for `frameAVBufferHandle`:

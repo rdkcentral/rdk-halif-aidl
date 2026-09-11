@@ -285,7 +285,7 @@ As audio frames are decoded, the metadata which related to the frames must be pa
 
 In non-tunnelled operating mode, the frame buffer handle and metadata related to the frame must be passed in the same `onFrameOutput()` call.
 
-To conserve CPU load, the frame metadata is only passed with the first decoded frame after a `start()`, the first decoded frame after a `flush()`, if the frame metadata changes, or — in non-tunnelled mode — with any frame that carries a non-zero trim, even one repeating the previous frame's (see [The trim contract](#the-trim-contract)).
+To conserve CPU load, the frame metadata is only passed with the first decoded frame after a `start()`, the first decoded frame after a `flush()`, if the frame metadata changes, or — in non-tunnelled mode — with any frame that carries a non-zero trim, even when that trim repeats the previous frame's trim (see [The trim contract](#the-trim-contract)).
 
 If the frame metadata does not need to be passed, then the `@nullable FrameMetadata metadata` parameter should be passed as null in `onFrameOutput()`.
 
@@ -382,7 +382,7 @@ The observable result is identical either way: the PCM leaving the Audio Sink in
 
 The trim is strictly **per-buffer**. Each `decodeBufferWithMetadata()` call's values apply only to the single decoded frame produced from that buffer and are not carried forward. The HAL holds no trim state across buffers. Where a trim region spans multiple input buffers, the middleware translates it into per-buffer trim metadata before calling the decoder.
 
-Because the trim is per-frame, in non-tunnelled mode a frame with a non-zero trim always carries non-null `FrameMetadata` on `onFrameOutput()`, even when its trim repeats the previous frame's. A null `metadata` means zero trim for that frame: when the middleware forwards such a frame to `queueAudioFrame()`, it passes the last metadata with both trim fields set to 0.
+Because the trim is per-frame, in non-tunnelled mode a frame with a non-zero trim always carries non-null `FrameMetadata` on `onFrameOutput()`, even when its trim repeats the previous frame's trim. A null `metadata` means zero trim for that frame: when the middleware forwards such a frame to `queueAudioFrame()`, it passes the last metadata with both trim fields set to 0.
 
 ### Codec scope
 
@@ -392,7 +392,7 @@ Because the trim is per-frame, in non-tunnelled mode a frame with a non-zero tri
 | **AAC** | When the container signals it | MP4 `edts/elst`, the `iTunSMPB` atom, or Matroska `CodecDelay` and `DiscardPadding`. ADTS-AAC signals nothing, so nothing is trimmed. |
 | **MP3** | When the container signals it | `iTunSMPB`, or the LAME tag that follows the Xing / `Info` header in the first frame and stores the encoder delay and padding. |
 | **Vorbis** | When the container signals it | In Ogg, granule positions (Vorbis I specification, Appendix A): the first audio page's granule position gives the leading trim and the final page's granule position gives the trailing trim. In WebM, `CodecDelay` and `DiscardPadding`. |
-| **Dolby (DD+ / AC-4 / Atmos)** | Not applicable | No encoder pre-skip in the decode contract and no `CodecDelay` equivalent in the carriage spec. In passthrough no PCM is produced at all. |
+| **Dolby (DD+ / AC-4 / Atmos)** | Not applicable | No encoder pre-skip in the decode contract and no `CodecDelay` equivalent in the carriage spec. In passthrough-only operation no PCM is produced. |
 
 Trim is a no-op when the values are zero, which is always the case for Dolby decoded paths.
 
@@ -445,7 +445,7 @@ Middleware extracts priming/padding from the container and translates them to na
 | **Ogg Vorbis** | First audio page and final page granule positions | Leading trim = the samples the first audio page's granule position falls short of what the page decodes; trailing trim = the samples the final page's granule position cuts from its last packet (Vorbis I specification, Appendix A). |
 | **ADTS AAC** (no container) | None | No priming/padding metadata available; leading and trailing trims are unknown, and the output contains the priming and padding |
 
-Each duration converts to nanoseconds as `seconds × 1_000_000_000`, rounded to the nearest nanosecond.
+Sample counts convert to seconds by dividing by the rate they are counted at: 48 kHz for Opus (`pre_skip`, `PreSkip` and Ogg Opus granule positions), and the stream's decoded sample rate for `iTunSMPB`, the LAME tag and Ogg Vorbis granule positions. Each duration then converts to nanoseconds as `seconds × 1_000_000_000`, rounded to the nearest nanosecond.
 
 **Worked example** — AAC-LC at 48 kHz with 2048-sample priming:
 
