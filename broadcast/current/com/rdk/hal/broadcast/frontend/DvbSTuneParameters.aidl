@@ -1,0 +1,77 @@
+/*
+ * If not stated otherwise in this file or this component's LICENSE file the following copyright and licenses apply:
+ *
+ * Copyright 2026 RDK Management
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+package com.rdk.hal.broadcast.frontend;
+
+import com.rdk.hal.broadcast.frontend.ConstantInt;
+import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
+import com.rdk.hal.broadcast.frontend.DvbSModulation;
+import com.rdk.hal.broadcast.frontend.DvbSPilot;
+import com.rdk.hal.broadcast.frontend.DvbSPlsMode;
+import com.rdk.hal.broadcast.frontend.DvbSRollOff;
+import com.rdk.hal.broadcast.frontend.DvbSStandard;
+import com.rdk.hal.broadcast.frontend.SignalDetectMode;
+import com.rdk.hal.broadcast.frontend.SpectralInversion;
+/**
+ * DVB-S/S2/S2X-specific tuning parameters.
+ *
+ * @author Jan Pedersen
+ * @author Christian George
+ * @author Philipp Trommler
+ */
+@VintfStability
+parcelable DvbSTuneParameters {
+    /** The frequency to tune to in Hertz. */
+    long frequency;
+
+    /** Signal detect mode to use when tuning. */
+    SignalDetectMode signalDetectMode;
+
+    /**
+     * The symbol rate in symbols per second.
+     *
+     * Use ConstantInt.AUTO_SYMBOL_RATE for auto symbol rate detection (if supported, see DvbSCapabilities).
+     */
+    int symbolRate;
+
+    /** Which DVB-S standard to use. */
+    DvbSStandard dvbSStandard;
+
+    /** The modulation to use. */
+    DvbSModulation modulation;
+
+    /** Inner FEC code rate. */
+    DvbSInnerFec innerFec;
+
+    /** Roll-off factor. */
+    DvbSRollOff rollOff;
+
+    /** DVB-S2/S2X pilot symbol mode. */
+    DvbSPilot pilot;
+
+    /** DVB-S/S2/S2X spectral inversion mode to use when tuning. */
+    SpectralInversion inversion;
+
+    /** DVB-S2/S2X input stream identifier; use -1 when not selecting a specific stream. */
+    int inputStreamId = ConstantInt.INVALID_INPUT_STREAM_ID;
+
+    /** DVB-S2/S2X physical-layer scrambling mode. */
+    DvbSPlsMode plsMode;
+
+    /** DVB-S2/S2X physical-layer scrambling code (scrambling-sequence index). */
+    int plsCode = ConstantInt.INVALID_PLS_CODE;
+
+    /** Reserved for future use. */
+    ParcelableHolder extension;
+}

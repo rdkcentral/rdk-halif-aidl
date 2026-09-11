@@ -1,142 +1,130 @@
 /*
- * If not stated otherwise in this file or this component's LICENSE file the
- * following copyright and licenses apply:
+ * If not stated otherwise in this file or this component's LICENSE file the following copyright and licenses apply:
  *
- * Copyright 2024 RDK Management
+ * Copyright 2026 RDK Management
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 package com.rdk.hal.broadcast.frontend;
-import com.rdk.hal.broadcast.frontend.Capabilities;
+
+import com.rdk.hal.broadcast.demux.IDemuxDataProvider;
+import com.rdk.hal.broadcast.frontend.FrontendCapabilities;
 import com.rdk.hal.broadcast.frontend.FrontendType;
-import com.rdk.hal.broadcast.frontend.IFrontendListener;
 import com.rdk.hal.broadcast.frontend.IFrontendController;
-import com.rdk.hal.broadcast.frontend.IFrontendControllerListener;
-import com.rdk.hal.broadcast.frontend.State;
+import com.rdk.hal.broadcast.frontend.ILnbController;
 
 /**
- *  @brief     FrontEnd HAL interface.
- *  @author    Jan Pedersen
- *  @author    Christian George
- *  @author    Philipp Trommler
+ * Front end HAL interface.
  *
- *  <h3>Exception Handling</h3>
- *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ * Non-exclusive access to the front end. Multiple clients can work on the same frontend at the same time and access
+ * information about it through this interface. When a client wants to tune the frontend, it has to acquire exclusive
+ * access through the IFrontendController interface obtained from open().
+ *
+ * @author Jan Pedersen
+ * @author Christian George
+ * @author Philipp Trommler
  */
-
 @VintfStability
 interface IFrontend {
-
-    /** Frontend resource ID type */
+    /** Frontend resource ID type. */
     @VintfStability
     parcelable Id {
         /** The undefined ID value. */
         const int UNDEFINED = -1;
 
-        /** The actual resource ID */
+        /** The actual resource ID. */
         int value;
     }
 
-    /** 
-     * Gets the supported frontend types
+    /** Get the ID of this frontend. */
+    Id getId();
+
+    /**
+     * Check whether the frontend is already opened.
      *
-     * Can be called any time and is not depended o
-     *
-     * @returns FrontendType array
-     *
+     * Be aware of possible TOCTOU issues when using this method, especially in connection with open().
      */
+    boolean isOpen();
+
+    /** Gets the supported frontend types. */
     FrontendType[] getFrontendTypes();
 
     /**
-     * Get the supported capabilities for the given frontend type
+     * Get the supported capabilities for the given frontend type.
      *
-     * @param[in] frontendType The type of capabilites to request
-     *
-     * @returns Capabilities or null if the type is not supported
-     *
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The frontendType is not supported by this frontend.
      */
-    @nullable Capabilities getCapabilities(in FrontendType frontendType);
+    FrontendCapabilities getCapabilities(in FrontendType frontendType);
 
     /**
-	 * Gets the current frontend state.
+     * Exclusively open the frontend for tuning.
      *
-     * @returns State enum value.
+     * The returned IFrontendController interface is used by the client to facilitate all tune related operations.
      *
-	 *
-     * @see IFrontendListener.onStateChanged().
-     */  
-    State getState();
+     * @returns IFrontendController or null on error (e.g. frontend already opened by another client).
+     */
+    @nullable IFrontendController open();
 
     /**
-	 * Opens the frontend in a mode where it is ready to tune
-     * 
-     * If successful the frontend transitions to an OPENING state and then a READY state
-     * which is notified to any registered `IFrontendListener` interfaces.
-     * 
-     * Controller related callbacks are made through the `IFrontendControllerListener`
-     * passed into the call.
-     * 
-     * The returned `IFrontendController` interface is used by the client facilitate all tune
-     * related operations.
+     * Close the frontend and invalidate the FrontendController.
      *
-     * If the client that opened the `IFrontEndController` crashes,
-     * then the `IFrontEndController` has stop() and close() implicitly called to perform clean up.
+     * Cleanup all attached (hardware) resources and brings the frontend back into a state where it can be opened again.
+     * Stops the current tuning and all output on TSOUT.
      *
-     * @param[in] frontendControllerListener    Listener object for controller callbacks.
+     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The frontend is not opened.
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The controller was not obtained from open() on this
+     *                                                           frontend.
      *
-     * @returns IFrontendController or null on error.
-     * 
-     * @exception binder::Status EX_ILLEGAL_STATE 
-     *
-     * 
-     * @pre The resource must be in State::CLOSED.
-     * 
-     * @see IFrontendController, IFrontendController.close(), registerListener()
+     * @param controller Non-null controller obtained from open() on the same frontend.
      */
-    @nullable IFrontendController open(in IFrontendControllerListener frontendControllerListener);
+    void close(in IFrontendController controller);
 
     /**
-	 * Registers a frontend listener.
-     * 
-     * A `IFrontendListener` can only be registered once and will fail on subsequent
-     * registration attempts.
+     * Acquire a DemuxDataProvider that must be passed to a Demux.
      *
-     * @param[in] frontendListener	    Listener object for event callbacks.
-     *
-     * @return boolean
-     * @retval true     The listener was registered.
-     * @retval false    The listener is already registered.
-     *
-     *
-     * @see unregisterListener()
+     * @returns A DemuxDataProvider that can be used to connect a Demux to this frontend or null on error (e.g. there is
+     *          already a DemuxDataProvider acquired).
      */
-    boolean registerListener(in IFrontendListener frontendListener);
+    @nullable IDemuxDataProvider acquireDataProvider();
 
     /**
-	 * Unregisters a frontend listener.
-     * 
-     * @param[in] frontendListener	    Listener object for event callbacks.
+     * Releases the DemuxDataProvider previously acquired.
      *
-     * @return boolean
-     * @retval true     The listener was unregistered.
-     * @retval false    The listener was not found registered.
-     *
-     *
-     * @see registerListener()
+     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The frontend is not connected to a Demux.
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The provider was not obtained from
+     *                                                           acquireDataProvider() on the same frontend.
      */
-    boolean unregisterListener(in IFrontendListener frontendListener);
+    void releaseDataProvider(in IDemuxDataProvider provider);
+
+    /**
+     * Opens the LNB controller for exclusive access.
+     *
+     * The returned ILnbController interface is used for controlling satellite equipment.
+     *
+     * @exception ::android::binder::Status::EX_UNSUPPORTED_OPERATION The frontend does not support LNB control.
+     *
+     * @returns A LnbController or null on error (e.g. LNB controller already opened)
+     */
+    @nullable ILnbController openLnb();
+
+    /**
+     * Closes the LNB controller and invalidates the LnbController.
+     *
+     * Cleanup all attached (hardware) resources and brings the LNB controller back into a state where it can be opened
+     * again.
+     *
+     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The LNB controller is not opened.
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The controller was not obtained from openLnb() on this
+     *                                                           frontend.
+     *
+     * @param[in] controller Non-null controller obtained from openLnb() on the same FrontEnd
+     */
+    void closeLnb(in ILnbController controller);
 }
