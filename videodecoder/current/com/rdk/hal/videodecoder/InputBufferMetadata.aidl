@@ -35,11 +35,11 @@ import com.rdk.hal.videodecoder.DolbyVisionLayerFlags;
  *  <h3>Field semantics</h3>
  *  The fields fall into two categories with distinct semantics:
  *
- *  <h4>Non-nullable per-buffer fields (`nsPresentationTime`, `discontinuity`)</h4>
- *  These describe the encoded frame itself. Each `decodeBufferWithMetadata()`
- *  call is self-describing for these fields: the HAL MUST NOT carry state
- *  from this parcelable across calls. A subsequent call with default-valued
- *  fields replaces, it does not preserve, the previous call's values.
+ *  <h4>Non-nullable per-buffer field (`nsPresentationTime`)</h4>
+ *  Describes the encoded frame itself. Each `decodeBufferWithMetadata()`
+ *  call is self-describing for this field: the HAL MUST NOT carry state
+ *  from this parcelable across calls. A subsequent call's value replaces,
+ *  it does not preserve, the previous call's value.
  *
  *  <h4>Override fields (`colorimetry`, `masteringDisplayInfo`,
  *  `contentLightLevel`, `dolbyVisionLayerFlags`, `pixelAspectRatio`)</h4>
@@ -89,24 +89,6 @@ parcelable InputBufferMetadata {
      * Presentation time of the encoded frame in nanoseconds.
      */
     long nsPresentationTime;
-
-    /**
-     * Marks this buffer as the first following a PTS discontinuity.
-     *
-     * When true, the PTS of this buffer is discontinuous with previously
-     * submitted buffers: the decoder MUST reset its PTS tracking and
-     * interpolation state before decoding this buffer, and MUST NOT
-     * interpolate timestamps across the discontinuity. Decoded output from
-     * this buffer onward reports the new timeline; the first output frame
-     * decoded from this buffer carries `FrameMetadata.discontinuity = true`.
-     *
-     * This is the sole discontinuity signal and is per-buffer in-band.
-     * `flush()` also resets PTS state; this flag covers in-band
-     * discontinuities without flushing queued data.
-     *
-     * @see FrameMetadata.discontinuity
-     */
-    boolean discontinuity;
 
     /**
      * Optional colorimetry override applied from this buffer onward.

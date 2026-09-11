@@ -119,9 +119,8 @@ interface IVideoDecoderController
      * Each call is self-describing; the HAL MUST NOT carry any field of
      * `InputBufferMetadata` across calls.
      *
-     * Setting `metadata.discontinuity = true` marks this buffer as the first
-     * following a PTS discontinuity: the decoder MUST reset its PTS tracking
-     * and interpolation state before decoding it. See `InputBufferMetadata`.
+     * A PTS discontinuity is signalled by calling `signalDiscontinuity()`
+     * before the first buffer that follows the discontinuity.
      *
      * @param[in] bufferHandle  A handle to the AV buffer containing the encoded
      *                          video frame. MUST be a valid handle.
@@ -143,6 +142,7 @@ interface IVideoDecoderController
      * @pre The resource must be in State::STARTED.
      *
      * @see InputBufferMetadata
+     * @see signalDiscontinuity()
      * @see IVideoDecoderControllerListener.onFrameOutput()
      */
     boolean decodeBufferWithMetadata(in long bufferHandle, in InputBufferMetadata metadata);
@@ -165,6 +165,33 @@ interface IVideoDecoderController
      * @pre The resource must be in State::STARTED.
      */
     void flush(in boolean reset);
+
+    /**
+     * Signals a discontinuity in the video stream.
+     *
+     * This is the sole PTS discontinuity signal on the input side. The client
+     * calls it between the last buffer before the discontinuity and the first
+     * buffer after it: buffers passed to `decodeBufferWithMetadata()` after
+     * this call returns are PTS discontinuous with every buffer passed before
+     * it and with every frame already held in the Video Decoder.
+     *
+     * The decoder MUST reset its PTS tracking and interpolation state before
+     * decoding the first buffer passed after this call, and MUST NOT
+     * interpolate timestamps across the discontinuity. Buffers passed before
+     * this call, and frames already held in the Video Decoder, are decoded
+     * and output as normal.
+     *
+     * The first frame output from buffers passed after this call carries
+     * `FrameMetadata.discontinuity = true`.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE
+     *
+     * @pre The resource must be in State::STARTED.
+     *
+     * @see FrameMetadata.discontinuity
+     */
+    void signalDiscontinuity();
 
     /**
      * Signals client-driven end-of-stream and drains the decoder.
