@@ -309,7 +309,7 @@ Any metadata associated with the supplementary/primary audio mix levels is left 
 
 Where the client has knowledge of PTS discontinuities in the audio stream, it shall call `IAudioDecoderController.signalDiscontinuity()` between the AV buffers passed to `decodeBufferWithMetadata()`.
 
-For the first input [AV Buffer](../avbuffer/av_buffer.md) audio frame passed in for decode after the discontinuity, it shall indicate the discontinuity in its next output `FrameMetadata`.
+The decoder resets its PTS tracking and interpolation state before decoding the first [AV Buffer](../avbuffer/av_buffer.md) passed after the call. The first frame output from those buffers carries `FrameMetadata.discontinuity = true`.
 
 ## End of Stream Signalling
 

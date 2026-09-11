@@ -118,8 +118,8 @@ interface IAudioDecoderController {
      * Each call is self-describing; the HAL MUST NOT carry any field of
      * `InputBufferMetadata` (including `trimStartNs`/`trimEndNs`) across calls.
      *
-     * The `metadata.discontinuity` field is reserved in v1 and MUST be false.
-     * Use `signalDiscontinuity()` to signal a PTS discontinuity.
+     * A PTS discontinuity is signalled by calling `signalDiscontinuity()`
+     * before the first buffer that follows the discontinuity.
      *
      * @param[in] bufferHandle  A handle to the AV buffer containing the encoded
      *                          audio frame. MUST be a valid handle.
@@ -136,11 +136,12 @@ interface IAudioDecoderController {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if `bufferHandle` is
-     *            invalid or if `metadata.discontinuity` is true.
+     *            invalid.
      *
      * @pre The resource must be in State::STARTED.
      *
      * @see InputBufferMetadata
+     * @see signalDiscontinuity()
      * @see IAudioDecoderControllerListener.onFrameOutput()
      */
     boolean decodeBufferWithMetadata(in long bufferHandle, in InputBufferMetadata metadata);
@@ -165,18 +166,25 @@ interface IAudioDecoderController {
     /**
 	 * Signals a discontinuity in the audio stream.
      *
-     * The audio decoder must be in a state of `STARTED`.
-     * Buffers that follow this call passed in `decodeBufferWithMetadata()` shall be
-     * regarded as PTS discontinuous to any audio frames previously passed.
+     * This is the sole PTS discontinuity signal on the input side. The client
+     * calls it between the last buffer before the discontinuity and the first
+     * buffer after it: buffers passed to `decodeBufferWithMetadata()` after
+     * this call returns are PTS discontinuous with every buffer passed before it.
      *
-     * This method remains the authoritative path for signalling discontinuity in
-     * v1. The `InputBufferMetadata.discontinuity` field is reserved and MUST be
-     * false until a later release migrates the signalling path.
+     * The decoder MUST reset its PTS tracking and interpolation state before
+     * decoding the first buffer passed after this call, and MUST NOT
+     * interpolate timestamps across the discontinuity. Buffers passed before
+     * this call are decoded and output as normal.
+     *
+     * The first frame output from buffers passed after this call carries
+     * `FrameMetadata.discontinuity = true`.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
      * @pre The resource must be in State::STARTED.
+     *
+     * @see FrameMetadata.discontinuity
      */
     void signalDiscontinuity();
 

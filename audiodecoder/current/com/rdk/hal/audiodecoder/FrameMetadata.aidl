@@ -110,7 +110,14 @@ parcelable FrameMetadata {
 	boolean bitstreamEOS;
 
 	/**
-	 * Discontinuity indicator where the PTS for this frame is likely to be discontinuous to the previous.
+	 * Discontinuity indicator where the PTS for this frame is discontinuous
+	 * to the previous frame.
+	 *
+	 * Set true on the first frame output from buffers passed to
+	 * `decodeBufferWithMetadata()` after
+	 * `IAudioDecoderController.signalDiscontinuity()`.
+	 *
+	 * @see IAudioDecoderController.signalDiscontinuity()
 	 */
 	boolean discontinuity;
 
