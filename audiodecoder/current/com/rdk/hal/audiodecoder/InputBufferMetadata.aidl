@@ -45,24 +45,6 @@ parcelable InputBufferMetadata {
     long nsPresentationTime;
 
     /**
-     * Marks this buffer as the first following a PTS discontinuity.
-     *
-     * When true, the PTS of this buffer is discontinuous with previously
-     * submitted buffers: the decoder MUST reset its PTS tracking and
-     * interpolation state before decoding this buffer, and MUST NOT
-     * interpolate timestamps across the discontinuity. Decoded output from
-     * this buffer onward reports the new timeline; the first output frame
-     * decoded from this buffer carries `FrameMetadata.discontinuity = true`.
-     *
-     * This is the sole discontinuity signal and is per-buffer in-band.
-     * `flush()` also resets PTS state; this flag covers in-band
-     * discontinuities without flushing queued data.
-     *
-     * @see FrameMetadata.discontinuity
-     */
-    boolean discontinuity;
-
-    /**
      * Duration to trim from the start of the decoded audio frame, in nanoseconds.
      *
      * Per-frame trim — applied to the single decoded frame produced from this
