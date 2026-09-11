@@ -35,7 +35,10 @@ oneway interface IAudioDecoderControllerListener {
     *
     * Otherwise, `frameAVBufferHandle` is a valid AVBuffer handle to a decoded PCM buffer,
     * and `metadata` is non-null for the first frame after `State::START` or `State::FLUSHING`,
-    * or whenever stream metadata changes. Metadata may be null if unchanged since the last callback.
+    * or whenever stream metadata changes. Metadata may be null if unchanged since the last callback,
+    * except that a frame with a non-zero trim always carries non-null metadata, even when the trim
+    * repeats the previous frame's; a null metadata means zero trim for that frame.
+    * See `FrameMetadata.trimStartNs`.
     *
     * Ownership semantics for `frameAVBufferHandle`:
     * - The client receives ownership of the AVBuffer handle when this callback is invoked.
@@ -51,7 +54,8 @@ oneway interface IAudioDecoderControllerListener {
     * @param[in] frameAVBufferHandle   AVBuffer handle to the decoded audio frame buffer. Valid handle in
     *                                   non-tunnelled mode; -1 in tunnelled mode.
     * @param[in] metadata              FrameMetadata for the audio frame. Nullable on routine
-    *                                  callbacks (in tunnelled mode or when unchanged).
+    *                                  callbacks (in tunnelled mode or when unchanged); always
+    *                                  non-null in non-tunnelled mode for a frame with a non-zero trim.
     *
     * @see IAudioDecoderController.decodeBufferWithMetadata(), IAVBuffer.free(),
     *      onEndOfStream()

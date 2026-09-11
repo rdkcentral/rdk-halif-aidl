@@ -62,10 +62,10 @@ parcelable FrameMetadata {
 	 * that has already trimmed the frame itself sets both to 0, so the samples
 	 * are discarded exactly once.
 	 *
-	 * A frame with a non-zero trim always carries non-null metadata on
-	 * `IAudioDecoderControllerListener.onFrameOutput()`, even when the trim
-	 * repeats the previous frame's. A null metadata means zero trim for that
-	 * frame.
+	 * In non-tunnelled mode, a frame with a non-zero trim always carries
+	 * non-null metadata on `IAudioDecoderControllerListener.onFrameOutput()`,
+	 * even when the trim repeats the previous frame's. A null metadata means
+	 * zero trim for that frame.
 	 *
 	 * Used for codec priming / encoder delay (AAC LC/HE, Opus pre-skip), AAC
 	 * SBR padding, and gapless playback across track boundaries.

@@ -52,7 +52,7 @@ Uncompressed PCM audio streams do not require decoding. Therefore, they bypass t
 | **HAL.AUDIODECODER.7** | Each audio decoder resource shall provide an API to expose its capabilities for secure audio processing and supported codecs. |
 | **HAL.AUDIODECODER.8** | Only 1 client connection shall be allowed to open and control an audio decoder resource. |
 | **HAL.AUDIODECODER.9**| Multiple client connections shall be allowed to register for events from an audio decoder resource.|
-| **HAL.AUDIODECODER.10** | Audio frame metadata shall be returned to a controlling client on the first audio frame decoded after an open or flush, and thereafter only when the frame metadata changes. | Not sent on every decoded audio frame buffer unless changed since previous. A frame with a non-zero trim always carries metadata — see [The trim contract](#the-trim-contract). |
+| **HAL.AUDIODECODER.10** | Audio frame metadata shall be returned to a controlling client on the first audio frame decoded after an open or flush, and thereafter only when the frame metadata changes. | Not sent on every decoded audio frame buffer unless changed since previous. In non-tunnelled mode, a frame with a non-zero trim always carries metadata — see [The trim contract](#the-trim-contract). |
 | **HAL.AUDIODECODER.11** | The audio frame output buffer from an audio decoder shall match the platform PCM audio format required for mixing. | See com.rdk.hal.audiosink.PlatformCapabilities |
 | **HAL.AUDIODECODER.12** | If a client process exits, the Audio Decoder server shall automatically stop and close any Audio Decoder instance controlled by that client. |
 
@@ -285,7 +285,7 @@ As audio frames are decoded, the metadata which related to the frames must be pa
 
 In non-tunnelled operating mode, the frame buffer handle and metadata related to the frame must be passed in the same `onFrameOutput()` call.
 
-To conserve CPU load, the frame metadata is only passed with the first decoded frame after a `start()`, the first decoded frame after a `flush()` or if the frame metadata changes.
+To conserve CPU load, the frame metadata is only passed with the first decoded frame after a `start()`, the first decoded frame after a `flush()`, if the frame metadata changes, or — in non-tunnelled mode — with any frame that carries a non-zero trim, even one repeating the previous frame's (see [The trim contract](#the-trim-contract)).
 
 If the frame metadata does not need to be passed, then the `@nullable FrameMetadata metadata` parameter should be passed as null in `onFrameOutput()`.
 
@@ -382,15 +382,15 @@ The observable result is identical either way: the PCM leaving the Audio Sink in
 
 The trim is strictly **per-buffer**. Each `decodeBufferWithMetadata()` call's values apply only to the single decoded frame produced from that buffer and are not carried forward. The HAL holds no trim state across buffers. Where a trim region spans multiple input buffers, the middleware translates it into per-buffer trim metadata before calling the decoder.
 
-Because the trim is per-frame, a frame with a non-zero trim always carries non-null `FrameMetadata` on `onFrameOutput()`, even when its trim repeats the previous frame's. A null `metadata` means zero trim for that frame: when the middleware forwards such a frame to `queueAudioFrame()`, it passes the last metadata with both trim fields set to 0.
+Because the trim is per-frame, in non-tunnelled mode a frame with a non-zero trim always carries non-null `FrameMetadata` on `onFrameOutput()`, even when its trim repeats the previous frame's. A null `metadata` means zero trim for that frame: when the middleware forwards such a frame to `queueAudioFrame()`, it passes the last metadata with both trim fields set to 0.
 
 ### Codec scope
 
 | Codec | Trim required | Source of the values |
 |---|---|---|
 | **Opus** | Always | Every Opus stream carries a pre-skip: `OpusHead.pre_skip` in Ogg (RFC 7845 §5.1), `CodecDelay` in WebM, and `PreSkip` in the `dOps` box in MP4. Trailing trim comes from the final Ogg page's granule position (RFC 7845, End Trimming), WebM `DiscardPadding`, or the MP4 edit list. |
-| **AAC** | When the container signals it | MP4 `edts/elst`, the `iTunSMPB` atom, or WebM `CodecDelay` and `DiscardPadding`. ADTS-AAC signals nothing, so nothing is trimmed. |
-| **MP3** | When the container signals it | `iTunSMPB`, or the Xing/LAME `INFO` tag. |
+| **AAC** | When the container signals it | MP4 `edts/elst`, the `iTunSMPB` atom, or Matroska `CodecDelay` and `DiscardPadding`. ADTS-AAC signals nothing, so nothing is trimmed. |
+| **MP3** | When the container signals it | `iTunSMPB`, or the LAME tag that follows the Xing / `Info` header in the first frame and stores the encoder delay and padding. |
 | **Vorbis** | When the container signals it | In Ogg, granule positions (Vorbis I specification, Appendix A): the first audio page's granule position gives the leading trim and the final page's granule position gives the trailing trim. In WebM, `CodecDelay` and `DiscardPadding`. |
 | **Dolby (DD+ / AC-4 / Atmos)** | Not applicable | No encoder pre-skip in the decode contract and no `CodecDelay` equivalent in the carriage spec. In passthrough no PCM is produced at all. |
 
