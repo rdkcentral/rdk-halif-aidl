@@ -2180,16 +2180,19 @@ create_snapshot() {
     # snapshot's include/ tree (#623). These are public, versioned contract
     # headers that live at the module root in current/ — current/include/ is
     # gitignored generator output, so they cannot live there in the dev tree.
-    # Copying them into the snapshot's include/ makes them ship and version with
-    # the generated headers and be picked up by the include/-tree staging copy
-    # that downstream snapshot builds rely on.
+    # MOVE (not copy) them into the snapshot's include/: downstream snapshot
+    # builds consume headers from include/ only, so a root copy left behind is a
+    # duplicate authoritative source (#745). The hand-authored originals stay at
+    # the module root in current/ — this moves within the snapshot copy only, so
+    # the dev tree is untouched. Snapshots already released keep whatever they
+    # shipped; this applies to every snapshot cut from here on.
     local _nullglob_was=0; shopt -q nullglob && _nullglob_was=1
     shopt -s nullglob
     local _root_hdrs=("${snapshot_dir}"/*.h)
     [[ "${_nullglob_was}" -eq 0 ]] && shopt -u nullglob
     if [[ "${#_root_hdrs[@]}" -gt 0 ]]; then
         mkdir -p "${snapshot_dir}/include"
-        if ! cp "${_root_hdrs[@]}" "${snapshot_dir}/include/"; then
+        if ! mv "${_root_hdrs[@]}" "${snapshot_dir}/include/"; then
             warn "Failed to stage module-root header(s) into ${comp}/${version}/include/."
             return 1
         fi
