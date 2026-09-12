@@ -18,6 +18,7 @@
  */
 package com.rdk.hal.videosink;
 import com.rdk.hal.videosink.State;
+import com.rdk.hal.metrics.MetricEvent;
 
 /**
  *  @brief     Callbacks event listener interface for Video Sink.
@@ -91,4 +92,24 @@ oneway interface IVideoSinkEventListener
      * @param[in] newState  The new state that the sink has transitioned to.
      */
     void onStateChanged(in State oldState, in State newState);
+
+    /**
+     * Callback when a metric occurrence has been reported.
+     *
+     * One occurrence per call, stamped at detection rather than at delivery, so a
+     * consumer can tell how long an event waited and two events keep their true
+     * spacing however they were dispatched.
+     *
+     * An occurrence is pushed because a read cannot carry it: a condition that
+     * began and ended between two reads is invisible to a reader however fast it
+     * polls. The existing callbacks on this interface remain the control signals
+     * that something happened; this carries the measurable detail of it.
+     *
+     * The event kind is a `MetricEventKind` value and its payload fields are
+     * `MetricEventAttribute` values, so a listener can walk an occurrence whose
+     * kind it does not specifically know.
+     *
+     * @param[in] event                 The occurrence, its identifier and its payload.
+     */
+    void onMetricEvent(in MetricEvent event);
 }

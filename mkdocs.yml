@@ -111,6 +111,7 @@ nav:
       - Current: '!include firmwareupdate/current/mkdocs.yml'
       - 0.2.0.0: '!include firmwareupdate/0.2.0.0/mkdocs.yml'
     - Indicator: '!include indicator/current/mkdocs.yml'
+    - Metrics: '!include metrics/current/mkdocs.yml'
     - Panel: '!include panel/current/mkdocs.yml'
     - Plane Control:
       - Current: '!include planecontrol/current/mkdocs.yml'

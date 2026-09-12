@@ -1,0 +1,279 @@
+# If not stated otherwise in this file or this component's LICENSE file the
+# following copyright and licenses apply:
+#
+# Copyright 2026 RDK Management
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Key Value Contract for the audio sink.
+#
+# THIS FILE IS THE CONTRACT for what this component measures. A vendor
+# implements against the description on each key; a test suite asserts against
+# it. AFTER EDITING, RUN: scripts/kvcc.py
+#
+# This vocabulary sits BESIDE the interface versions, never inside one, so a
+# revision here moves no frozen interface hash.
+#
+# A key absent here is ABSENT at runtime — never 0, never -1. unit and kind are
+# part of a key's identity. A counter is monotonic from resource creation and is
+# never reset on open(), flush(), stop() or seek. Every value is int64.
+#
+# SILENCE AND STARVATION ARE DIFFERENT FAULTS. Starvation is the sink having
+# nothing to play; silence is it playing something that happens to be silent.
+# A consumer diagnosing "no audio" needs to know which, so they are separate
+# axes and never merged.
+
+format: kvc
+schema: 1
+
+domain: av
+component: audio_sink
+package: audiosink
+version: 1.0
+
+instances: 1
+
+keys:
+
+  # av.audio_sink.underflowed
+  - name: underflowed
+    type: int64
+    unit: episodes
+    kind: counter
+    access: read
+    provider: driver
+    description: >
+      Count of audio buffer-underflow episodes, one per episode start, where an
+      episode starts when there is no decoded audio to present and ends when
+      output resumes. The counterpart of av.video_sink.underflowed — without it
+      an audio underflow rate cannot be computed at all.
+
+  # av.audio_sink.underflow_duration_ms
+  - name: underflow_duration_ms
+    type: int64
+    unit: ms
+    kind: counter
+    access: read
+    provider: driver
+    description: >
+      Cumulative time the audio path was starved of decoded data. Paired with
+      underflowed, so the mean episode length is this divided by that.
+
+  # av.audio_sink.silence_duration_ms
+  - name: silence_duration_ms
+    type: int64
+    unit: ms
+    kind: counter
+    access: read
+    provider: driver
+    description: >
+      Cumulative emitted digital silence, counting only periods that reached
+      silence_threshold_ms. Distinguishes an unexpected absence of audio output
+      from starvation, which is underflow_duration_ms.
+
+  # av.audio_sink.silence_event_count
+  - name: silence_event_count
+    type: int64
+    unit: events
+    kind: counter
+    access: read
+    provider: driver
+    description: >
+      Count of completed digital-silence periods that reached
+      silence_threshold_ms. Paired with silence_duration_ms, so the mean
+      silence length is that divided by this.
+
+  # av.audio_sink.buffer_depth_ms
+  - name: buffer_depth_ms
+    type: int64
+    unit: ms
+    kind: current
+    access: read
+    provider: driver
+    description: >
+      Buffered decoded audio ahead of the play position now. A live sample
+      re-read each capture rather than a cumulative figure. This is SoC- and
+      use-case-specific, so compare it against itself over time rather than
+      across products.
+
+  # av.audio_sink.last_underflow_trigger
+  - name: last_underflow_trigger
+    type: int64
+    unit: none
+    kind: current
+    access: read
+    provider: driver
+    description: >
+      Cause of the most recent audio underflow episode, from the same
+      vocabulary as av.video_sink.last_underflow_trigger.
+    values:
+      - name: none
+        value: 0
+        description: No underflow episode has been recorded.
+      - name: startup_prefill
+        value: 1
+        description: >
+          The pipeline had not yet filled at the start of presentation.
+          Expected.
+      - name: mid_stream
+        value: 2
+        description: >
+          Starvation during steady-state playback, with no seek, trickplay or
+          content boundary to explain it. This is the one that indicates a
+          defect.
+      - name: seek_recovery
+        value: 3
+        description: The pipeline was refilling after a seek. Expected.
+      - name: trickplay_recovery
+        value: 4
+        description: >
+          The pipeline was refilling after a trickplay rate change. Expected.
+      - name: content_boundary
+        value: 5
+        description: >
+          The stream crossed a discontinuity such as a period or advert
+          boundary. Expected.
+
+  # av.audio_sink.last_underflow_duration_ms
+  - name: last_underflow_duration_ms
+    type: int64
+    unit: ms
+    kind: current
+    access: read
+    provider: driver
+    description: >
+      Length of the most recent completed audio underflow episode. Read with
+      underflowed and underflow_duration_ms, which give the count and the total.
+
+  # av.audio_sink.last_silence_duration_ms
+  - name: last_silence_duration_ms
+    type: int64
+    unit: ms
+    kind: current
+    access: read
+    provider: driver
+    description: >
+      Length of the most recent completed digital-silence period. Read with
+      silence_event_count and silence_duration_ms.
+
+  # av.audio_sink.silence_threshold_ms
+  - name: silence_threshold_ms
+    type: int64
+    unit: ms
+    kind: config
+    access: read
+    provider: driver
+    description: >
+      Shortest digital-silence period that counts as one. Silence is normal
+      output — a gap between programmes, a muted stream, a silent passage — so
+      this is the line between that and a fault worth reporting. Default 500 ms,
+      and set by product configuration rather than over this interface. Reading
+      it is what the key is for: silence_duration_ms and silence_event_count
+      count only periods that reached it, so neither is interpretable without
+      it.
+
+events:
+
+  # av.audio_sink.underflow
+  - name: underflow
+    description: >
+      Raised at the START of a starvation episode, the instant there is nothing
+      to present at render time. Exactly one underflow_end closes it.
+    attributes:
+
+      # av.audio_sink.underflow.trigger
+      - name: trigger
+        type: int64
+        unit: none
+        description: >
+          What caused this episode, which is what distinguishes an expected
+          starvation from a defect.
+        values:
+          - name: none
+            value: 0
+            description: No cause was determined.
+          - name: startup_prefill
+            value: 1
+            description: The pipeline had not yet filled. Expected.
+          - name: mid_stream
+            value: 2
+            description: >
+              Starvation during steady-state playback with nothing to explain
+              it. Indicates a defect.
+          - name: seek_recovery
+            value: 3
+            description: The pipeline was refilling after a seek. Expected.
+          - name: trickplay_recovery
+            value: 4
+            description: >
+              The pipeline was refilling after a trickplay rate change.
+              Expected.
+          - name: content_boundary
+            value: 5
+            description: >
+              The stream crossed a discontinuity such as a period or advert
+              boundary. Expected.
+
+  # av.audio_sink.underflow_end
+  - name: underflow_end
+    description: >
+      Raised when presentation resumes, closing the episode the preceding
+      underflow opened.
+    values:
+
+      # av.audio_sink.underflow_end.duration_ms
+      - name: duration_ms
+        type: int64
+        unit: ms
+        kind: current
+        description: >
+          Length of the episode this closes, from start to resume. Not
+          cumulative — underflow_duration_ms carries the running total.
+
+  # av.audio_sink.silence
+  - name: silence
+    description: >
+      Raised when digital silence has continued for silence_threshold_ms, NOT
+      when it began. Silence is ordinary output, so the threshold is what
+      separates a gap between programmes from a fault, and below it nothing is
+      raised. Raising at the crossing rather than at the close is what makes a
+      silence that is still going reportable while it is still going.
+    values:
+
+      # av.audio_sink.silence.elapsed_ms
+      - name: elapsed_ms
+        type: int64
+        unit: ms
+        kind: current
+        description: >
+          Silence already elapsed at the crossing, which is
+          silence_threshold_ms within one detection interval. Present so a
+          consumer need not assume the threshold it was configured with is the
+          one in force.
+
+  # av.audio_sink.silence_end
+  - name: silence_end
+    description: >
+      Raised when audio resumes, closing the period the preceding silence
+      opened. A period that never crossed the threshold raises neither.
+    values:
+
+      # av.audio_sink.silence_end.duration_ms
+      - name: duration_ms
+        type: int64
+        unit: ms
+        kind: current
+        description: >
+          Length of the whole period this closes, from the onset of silence
+          rather than from the crossing. Not cumulative — silence_duration_ms
+          carries the running total.

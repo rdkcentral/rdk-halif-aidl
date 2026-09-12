@@ -36,6 +36,7 @@ components:
   hdmiinput:      current
   hdmioutput:     current
   indicator:      current
+  metrics:        current
   panel:          current
   planecontrol:   current
   sensor:         current

@@ -26,6 +26,8 @@ import com.rdk.hal.audiodecoder.Codec;
 import com.rdk.hal.audiodecoder.CSDAudioFormat;
 import com.rdk.hal.audiodecoder.State;
 import com.rdk.hal.PropertyValue;
+import com.rdk.hal.metrics.MetricSnapshot;
+import com.rdk.hal.audiodecoder.Metric;
 
 /**
  *  @brief     Audio Decoder HAL interface.
@@ -79,6 +81,9 @@ interface IAudioDecoder
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value.
      */
     @nullable PropertyValue getProperty(in Property property);
+
+
+
 
 	/**
 	 * Gets the current state of the audio decoder resource.
@@ -183,4 +188,42 @@ interface IAudioDecoder
      * @see registerEventListener()
      */
     boolean unregisterEventListener(in IAudioDecoderEventListener audioDecoderEventListener);
+
+    /* ---------------------------------------------------------------------
+     * Metrics. Appended last, and any future addition is appended after
+     * these: a method's transaction ID is its declaration order, so
+     * inserting one above shifts every ID below it and breaks the ABI.
+     * ------------------------------------------------------------------ */
+
+    /**
+     * Gets metrics as one coherent snapshot.
+     *
+     * Every value in the returned snapshot is latched at the one instant the
+     * snapshot records, so paired figures can never be read torn. This is an
+     * obligation on the implementation, not a property to be discovered — an
+     * implementation whose figures span two hardware blocks latches both.
+     *
+     * Passing null asks for everything this resource serves, which is the call a
+     * consumer polling at a cadence should use: one round trip, one sampling
+     * instant. Figures the product cannot measure are then simply absent, because
+     * nothing named them.
+     *
+     * Passing a list asks for those keys by name, and the snapshot carries one
+     * value per requested key — including a key this product cannot measure,
+     * which comes back as `MetricStatus::NOT_SUPPORTED` so a caller that named a
+     * figure always learns its fate. That difference is the reason to name keys
+     * rather than filter the full set client-side.
+     *
+     * Ordering of values within a group is not significant; a caller matches on
+     * `MetricValue.id` rather than on position. A value is never a sentinel: `0`
+     * means it measured zero.
+     *
+     * @param[in] metrics             Metric keys to query, or null for every served metric.
+     *
+     * @returns MetricSnapshot latched at a single monotonic instant.
+     *
+     * @exception binder::Status::Exception::EX_NONE             Success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT An empty (but non-null) list, or an invalid metric key.
+     */
+    MetricSnapshot getMetrics(in @nullable Metric[] metrics);
 }
