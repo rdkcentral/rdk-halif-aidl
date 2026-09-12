@@ -1,0 +1,85 @@
+#** *****************************************************************************
+# *
+# * If not stated otherwise in this file or this component's LICENSE file the
+# * following copyright and licenses apply:
+# *
+# * Copyright 2026 RDK Management
+# *
+# * Licensed under the Apache License, Version 2.0 (the "License");
+# * you may not use this file except in compliance with the License.
+# * You may obtain a copy of the License at
+# *
+# *
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing, software
+# * distributed under the License is distributed on an "AS IS" BASIS,
+# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# * See the License for the specific language governing permissions and
+# * limitations under the License.
+# *
+#** ******************************************************************************
+
+# HAL Feature Profile for key vault
+#
+# Defines the platform-provisioned vault instances and their constraints.
+# Applications may also create additional vaults at runtime via the HAL API.
+
+keyvault:
+  interfaceVersion: current
+
+  # Whether applications can create new vaults at runtime
+  # (in addition to the platform-provisioned vaults below)
+  allowApplicationVaults: true
+
+  # Maximum number of application-created vaults (0 = unlimited)
+  maxApplicationVaults: 16
+
+  # Platform-provisioned vault instances
+  # These are created at boot and available immediately.
+  vaults:
+
+    - name: "platform-identity"
+      description: "Device identity certificates and signing keys"
+      securityLevel: TEE
+      maxKeys: 16
+      supportedKeySizes: [256, 384, 521, 2048, 4096]
+      persistsAcrossSleep: true
+      storageCapacityBytes: 65536
+      extractable: false         # Keys in this vault are never extractable
+
+    - name: "app-secure-storage"
+      description: "Per-application encrypted key-value storage"
+      securityLevel: TEE
+      maxKeys: 256
+      supportedKeySizes: [128, 256]
+      persistsAcrossSleep: true
+      storageCapacityBytes: 1048576   # 1 MB
+      extractable: false
+
+    - name: "drm-provisioning"
+      description: "DRM key provisioning and device credentials"
+      securityLevel: TEE
+      maxKeys: 32
+      supportedKeySizes: [128, 256]
+      persistsAcrossSleep: true
+      storageCapacityBytes: 131072    # 128 KB
+      extractable: false
+
+    - name: "msl"
+      description: "Message Security Layer session keys"
+      securityLevel: TEE
+      maxKeys: 64
+      supportedKeySizes: [128, 256]
+      persistsAcrossSleep: false      # Session keys are re-derived after sleep
+      storageCapacityBytes: 65536
+      extractable: false
+
+    - name: "general-purpose"
+      description: "Shared general-purpose vault for platform services"
+      securityLevel: SOFTWARE
+      maxKeys: 128
+      supportedKeySizes: [128, 192, 256]
+      persistsAcrossSleep: true
+      storageCapacityBytes: 524288    # 512 KB
+      extractable: true              # Keys can be exported from this vault

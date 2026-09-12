@@ -95,6 +95,7 @@ nav:
       - Current: '!include bootreason/current/mkdocs.yml'
       - 0.1.0.0: '!include bootreason/0.1.0.0/mkdocs.yml'
     - Broadcast: '!include broadcast/current/mkdocs.yml'
+    - Crypto Engine: '!include cryptoengine/current/mkdocs.yml'
     - DRM: '!include drm/current/mkdocs.yml'
     - HDMI:
       - HDMI CEC: '!include hdmicec/current/mkdocs.yml'
@@ -111,6 +112,7 @@ nav:
       - Current: '!include firmwareupdate/current/mkdocs.yml'
       - 0.2.0.0: '!include firmwareupdate/0.2.0.0/mkdocs.yml'
     - Indicator: '!include indicator/current/mkdocs.yml'
+    - Key Vault: '!include keyvault/current/mkdocs.yml'
     - Panel: '!include panel/current/mkdocs.yml'
     - Plane Control:
       - Current: '!include planecontrol/current/mkdocs.yml'
