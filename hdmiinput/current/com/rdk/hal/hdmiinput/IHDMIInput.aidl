@@ -78,8 +78,8 @@ interface IHDMIInput
      *
      * @returns PropertyValue or null if the property key is unknown or unavailable for this port.
      *
-     * 
-     * @see IHDMIInputController.setProperty()
+     *
+     * @see Property
      */
     @nullable PropertyValue getProperty(in Property property);
 
@@ -191,9 +191,11 @@ interface IHDMIInput
      * The returned `IHDMIInputController` interface is used to control the HDMI input port interface
      * including starting and stopping the port for display.
      *
-     * If the client that opened the `IHDMIInputController` crashes,
-     * then the `IHDMIInputController.stop()` and `close()` functions are implicitly called to perform
-     * clean up.
+     * If the client that opened the `IHDMIInputController` crashes or its binder
+     * connection to the service is dropped, then the `IHDMIInputController.stop()` and
+     * `close()` functions are implicitly called to perform clean up, returning the
+     * resource to `State::CLOSED`. A restarted client can then call `open()` again
+     * without any explicit recovery or force-close step.
      *
      * Once opened to a `READY` state the HDMI input port HPD line is unasserted and CEC remains inactive.
      *
@@ -237,6 +239,11 @@ interface IHDMIInput
      * Registers a HDMI input event listener.
      * 
      * Only one event listener may be registered per port at a time. Attempting to register a second listener will return false.
+     *
+     * On successful registration, the listener always receives an initial
+     * `onStateChanged()` callback reflecting the current state, so a client
+     * registering after state transitions have already occurred (e.g. after a
+     * client restart) is synchronized without a separate query.
      *
      * @param[in] hdmiInputEventListener    Listener object for event callbacks.
      *
