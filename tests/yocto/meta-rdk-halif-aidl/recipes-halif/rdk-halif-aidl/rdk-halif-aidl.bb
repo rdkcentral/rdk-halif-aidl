@@ -123,6 +123,32 @@
 # The offline contract tests tests/yocto/ci/*.sh exercise the same build loop
 # without BitBake. This is reference material - adapt SRCREV and the toolchain to
 # your project.
+#
+#
+# SEE ALSO - where the rest of the contract is written down
+# -----------------------------------------------------------------------------
+#   docs/standards/build_integration.md
+#       The per-component build and staging contract, in prose: the CMake
+#       variables, the lib + header staging, and how a build configuration
+#       selects components and versions.
+#
+#   docs/architecture/hla-released-snapshot-contents.md
+#       Why a released snapshot holds what it holds, the requirements this
+#       recipe is built to (HALIF-F-001..006, HALIF-N-001..003), and the
+#       decisions still open.
+#
+#   docs/key_concepts/hal/hal_interface_usage.md
+#       What a consumer actually compiles, why each side is both client and
+#       server, and how far a middleware and a vendor pin may differ.
+#
+#   docs/standards/versioning-guide.md
+#       The version scheme, the era rules, and the isCompatible() predicate
+#       that decides whether a client may talk to a given server.
+#
+#   CODEGEN.md - in linux_binder_idl, the repo that ships the generator:
+#   https://github.com/rdkcentral/linux_binder_idl/blob/develop/CODEGEN.md
+#       What the generator guarantees about the C++ this recipe compiles -
+#       determinism, interface identity, and the known deviations.
 
 SUMMARY = "RDK HAL AIDL interface libraries"
 HOMEPAGE = "https://github.com/rdkcentral/rdk-halif-aidl"

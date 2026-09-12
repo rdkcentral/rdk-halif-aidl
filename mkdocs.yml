@@ -43,6 +43,7 @@ nav:
   - Hardware Abstraction Layer:
     - Introduction: introduction/aidl_and_binder.md
     - Key Concepts:
+      - HAL Interface Usage: key_concepts/hal/hal_interface_usage.md
       - HAL Properties: key_concepts/hal/hal_properties.md
       - HAL Feature Profiles: key_concepts/hal/hal_feature_profiles.md
       - HAL Naming Conventions: key_concepts/hal/hal_naming_conventions.md
@@ -160,6 +161,8 @@ nav:
       - RDK Documentation Structure: governance/rdk-release-documentation-structure.md
       - RDK Engineering Validation Framework: governance/rdk-engineering-validation-framework.md
       - HAL Delivery & Versioning SOP: governance/versioning-sop.md
+    - Architecture:
+      - 'HLA: Released HAL Snapshot Contents': architecture/hla-released-snapshot-contents.md
     - White Papers:
       - Documentation in Git: whitepapers/documentation_in_git.md
       - Branching Strategies : whitepapers/branching_strategies.md

@@ -242,3 +242,12 @@ cmake -S <comp>/<ver> -B <build> -DHALIF_INSTALL_LIBDIR=lib64/rdk-halif-aidl
 
 See [`docs/standards/build_integration.md`](../../docs/standards/build_integration.md)
 for the full integration contract.
+
+## See also
+
+| Document | What it covers |
+| -------- | -------------- |
+| [Third-Party Build Integration](../../docs/standards/build_integration.md) | The per-component build and staging contract in prose — CMake variables, staging, component and version selection |
+| [HLA: What a Released HAL Snapshot Contains](../../docs/architecture/hla-released-snapshot-contents.md) | Why a snapshot holds what it holds, and the requirements this layer is built to |
+| [HAL Interface Usage](../../docs/key_concepts/hal/hal_interface_usage.md) | What a consumer compiles, and how far a middleware and a vendor pin may differ |
+| [Versioning Guide](../../docs/standards/versioning-guide.md) | The version scheme, the era rules, and the `isCompatible()` predicate |

@@ -309,6 +309,73 @@ This separation means a single coherent release contains all of the
 component changes from the release window batched into one set of new
 snapshots — see [Release Cadence](#release-cadence) below.
 
+#### A Frozen Snapshot Is Contract, Not Build Infrastructure
+
+A released `<module>/<version>/` directory holds the interface contract
+and what derives from it. It does not hold the recipe for building that
+contract.
+
+##### The separation
+
+> Build infrastructure lives outside the version directories, in one
+> place that enumerates the released versions and their pinned imports.
+> A frozen `<module>/<version>/` is never edited to accommodate a
+> build-system change.
+
+A build-system rework therefore touches a single file and modifies no
+released snapshot. No re-release is required, because nothing in a
+released snapshot changed.
+
+##### Why the recipe lives outside the snapshot
+
+Putting a per-snapshot `CMakeLists.txt` inside each version directory
+makes the build recipe part of the frozen artefact, and every
+consequence follows from that one decision:
+
+1. **Immutability becomes unenforceable.** Any build-system change has
+   to edit released directories, so the write-once rule is broken
+   routinely rather than exceptionally.
+2. **Dialects diverge.** A change that converts the snapshots the build
+   currently references leaves the rest on the previous shape, and the
+   tree carries two incompatible build styles with nothing to say which
+   is live.
+3. **The freeze step has to rewrite code.** `release.sh` copies
+   `current/CMakeLists.txt` into the new snapshot and patches the
+   library name, dependency link names and include paths into it — a
+   regex over generated build logic, run at the moment correctness
+   matters most.
+4. **The dependency graph acquires copies.** The pinned imports are
+   stated in `interface.yaml`, again in the snapshot's build file, and
+   again in whatever selects which version to build. They drift.
+
+AOSP resolves this structurally rather than by discipline: freezing
+writes only the `.aidl` files and a `.hash` into
+`aidl_api/<name>/<version>/`, and the `aidl_interface` module lives in
+one `Android.bp` at the project root, where freezing appends a
+`{version, imports}` tuple to `versions_with_info`. Their frozen
+directories contain no build files, so "how do we change the build
+system without touching released interfaces" cannot arise. See the
+[HLA: What a Released HAL Snapshot Contains](../architecture/hla-released-snapshot-contents.md)
+whitepaper for the fuller comparison.
+
+##### What this means for a frozen directory
+
+- `<version>/com/**/*.aidl`, `<version>/.hash` — the contract ✅
+- `<version>/include/`, `<version>/src/` — bindings derived from it ✅
+  (write-once at release time; regenerable in place by
+  `refreeze_snapshots.sh` for identity constants only)
+- `<version>/docs/`, `<version>/interface.yaml`, `<version>/hfp-*.yaml`
+  — the contract's description and metadata ✅
+- build recipes ❌ — these belong outside the version directory,
+  generated from `versions_released.yaml` and each component's
+  `interface.yaml`
+
+##### Enforcing the boundary
+
+A change that modifies any `<module>/<version>/` file outside a release
+must be raised as a defect. Where the frozen build files still exist,
+treat their removal as the fix rather than editing them in place.
+
 #### Release Cadence
 
 Releases are **milestone-driven** with **patch releases on demand**:
