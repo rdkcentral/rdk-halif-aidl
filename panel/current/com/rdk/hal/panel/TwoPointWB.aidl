@@ -18,29 +18,25 @@
  */
 package com.rdk.hal.panel;
 
-/** 
- *  @brief     Display panel 2 point white balance settings.
+/**
+ *  @brief     2-point white balance entry.
+ *             Holds the gain and offset for a 2-point white balance calibration entry.
+ *             Used as the value type for PQParameter.TWO_POINT_WB in set/get/getDefault/getCapabilities operations.
  *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
  */
- 
+
 @VintfStability
-parcelable WhiteBalance2PointSettings
+parcelable TwoPointWB
 {
+    /**
+     * White balance gain value.
+     * Valid range is 0 to 2047.
+     */
+    int gain;
 
-	parcelable Point {
-        /**
-         * White balance gain value.
-         * Valid range is 0 to 2047.
-         */
-		int gain;
-        /**
-         * White balance offset value.
-         * Valid range is -1024 to 1023.
-         */
-		int offset;
-	}
-
-	Point r;
-	Point g;
-	Point b;
+    /**
+     * White balance offset value.
+     * Valid range is -1024 to 1023.
+     */
+    int offset;
 }
