@@ -130,7 +130,7 @@ Backwards-compatible (bump **minor**):
 - ADD new methods at the END of an interface
 - ADD new fields at the END of a parcelable
 - ADD new enum values (clients handle unknown values)
-- ADD a new parcelable, enum or interface type
+- ADD a new parcelable, union, enum or interface type
 
 Breaking (bump **major**; era `0` only — forbidden once era `1` is declared):
 
@@ -139,11 +139,36 @@ Breaking (bump **major**; era `0` only — forbidden once era `1` is declared):
 - Reorder methods or fields (declaration order is ABI: it defines binder
   transaction ids and parcel layout)
 - Change an enum value's backing integer
+- **ADD a new arm to an existing union** — see below
 - Remove `@VintfStability` or change wire-affecting annotations
 
 Surface-untouched (bump **bugfix**): documentation and comment changes plus
 trivial non-interface fixes — anything that leaves the declared interface
 surface identical.
+
+### Why an added union arm is breaking
+
+A parcelable and a union are appended to differently, and the difference is in
+the wire format rather than the language.
+
+A **parcelable** carries a 4-byte size header. A reader that knows fewer fields
+than the writer sent seeks to `start + size` and keeps its declared defaults for
+the rest, so a field appended at the end is genuinely compatible.
+
+A **union** carries no size header. It is written as an `int32` tag followed by
+exactly one value, and the generated reader is a `switch` on that tag whose
+fallthrough is `BAD_VALUE`. A receiver handed a tag it does not know cannot skip
+the value, because nothing on the wire tells it how long that value is — the
+transaction fails.
+
+The failure surfaces at runtime, on the receiving side, as a failed transaction.
+It does not appear at compile time on either side.
+
+**An added arm is safe only behind capability negotiation** — where the sender
+establishes that the receiver understands the new arm before ever transmitting
+it. Where a component does that, record the negotiated capability in the change
+request; the structural audit cannot observe it and will classify the change as
+breaking.
 
 ### Mechanical Classification
 
@@ -168,6 +193,10 @@ procedure):
 | `major` (additive) | **minor** bump | **minor** bump |
 | `none`, sources differ | **bugfix** bump | **bugfix** bump |
 | `none`, sources identical | no snapshot | no snapshot |
+
+An arm appended to an existing union is reported as `breaking`, under the change
+kind `union_arm_added`, so it is distinguishable in audit output from a removal
+or a reorder.
 
 ## Development and Release Workflow
 
