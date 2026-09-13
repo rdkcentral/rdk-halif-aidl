@@ -344,7 +344,7 @@ A media pipeline is operating in low latency mode when the video decoder and aud
 
 Where the client has knowledge of PTS discontinuities in the video stream, it shall call `IVideoDecoderController.signalDiscontinuity()` between the AV buffers passed to `decodeBufferWithMetadata()`.
 
-The decoder resets its PTS tracking and interpolation state before decoding the first [AV Buffer](../avbuffer/av_buffer.md) passed after the call. The first frame output from those buffers carries `FrameMetadata.discontinuity = true`.
+The decoder resets its PTS tracking and interpolation state before decoding the first [AV Buffer](../avbuffer/av_buffer.md) passed after the call, and does not interpolate timestamps across the discontinuity. Buffers passed before the call, and frames already held in the decoder, are decoded and output as normal. The first frame output from buffers passed after the call carries `FrameMetadata.discontinuity = true`.
 
 ## End of Stream Signalling
 
