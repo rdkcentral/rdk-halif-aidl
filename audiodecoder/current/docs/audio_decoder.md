@@ -447,6 +447,8 @@ Middleware extracts priming/padding from the container and translates them to na
 
 Sample counts convert to seconds by dividing by the rate they are counted at: 48 kHz for Opus (`pre_skip`, `PreSkip` and Ogg Opus granule positions), and the stream's decoded sample rate for `iTunSMPB`, the LAME tag and Ogg Vorbis granule positions. Each duration then converts to nanoseconds as `seconds × 1_000_000_000`, rounded to the nearest nanosecond.
 
+The stage that applies the trim converts each duration back to whole samples at the **decoded PCM output rate**, as `round(ns × output_sample_rate ÷ 1_000_000_000)`. With a 48 kHz output rate, `21_333_333` ns is 1024 samples; truncating instead would leave one priming sample in the frame. Where a leading or trailing trim is split across frames, each frame's value is rounded independently, and the split is chosen so the per-frame sample counts sum to that whole trim at the output rate. Opus counts are signalled in 48 kHz units whatever the output rate, so that total is the duration they represent expressed at the output rate: a 312-sample pre-skip is 6.5 ms, which is 156 samples of 24 kHz PCM.
+
 **Worked example** — AAC-LC at 48 kHz with 2048-sample priming:
 
 ```text
@@ -456,6 +458,10 @@ leading trim        = 2048 / 48000 × 1_000_000_000
 trimStartNs (frame 1) = 1024 / 48000 × 1_000_000_000
                       = 21_333_333 ns   (rounded to nearest ns)
 trimStartNs (frame 2) = 21_333_333 ns
+
+samples discarded     = round(21_333_333 × 48000 / 1_000_000_000) per frame
+                      = 1024 + 1024 = 2048   (the full priming, at the
+                                              48 kHz output rate)
 ```
 
 Both leading frames are discarded in full; the source audio starts at the first sample of frame 3.
