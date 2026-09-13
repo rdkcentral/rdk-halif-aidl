@@ -45,17 +45,6 @@ parcelable InputBufferMetadata {
     long nsPresentationTime;
 
     /**
-     * Reserved for a future release. Clients MUST set this to false in v1.
-     *
-     * Use `IAudioDecoderController.signalDiscontinuity()` to signal a PTS
-     * discontinuity in v1. This field will become authoritative in a later
-     * release once migration is complete.
-     *
-     * @see IAudioDecoderController.signalDiscontinuity()
-     */
-    boolean discontinuity;
-
-    /**
      * Duration to trim from the start of the decoded audio frame, in nanoseconds.
      *
      * Per-frame trim — applied to the single decoded frame produced from this
