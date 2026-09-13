@@ -45,7 +45,7 @@ oneway interface IHDMIOutputControllerListener
      *
      * - **ALWAYS** fired during the `OPENING` transition (CLOSED → READY), even if the
      *   HPD state has not changed, to communicate the initial sink connection state.
-     * - **Only on actual HPD changes** during `STARTING`, `STARTED`, and `STOPPING` states
+     * - **Only on actual HPD changes** during `READY`, `STARTING`, `STARTED`, and `STOPPING` states
      *   (i.e., when cable is physically connected/disconnected or sink is powered on/off).
      * - Debouncing is handled internally by the HAL; the state reported here is stable.
      *
