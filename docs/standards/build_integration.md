@@ -43,15 +43,8 @@ Binder SDK can change it — point the build at the right cross-compiler and a
 only as an optional assertion, for a build that should *stop* if the toolchain
 is not what was expected.
 
-These are values to pass, not defaults to rely on. State them: a recipe that
-says what it wants does not change meaning when a default does.
-
-The older spellings `BINDER_IPC_32BIT=ON|OFF` and
-`TARGET_LIB32_VERSION`/`TARGET_LIB64_VERSION` are still honoured.
-`BINDER_IPC_32BIT` reads backwards — `OFF` is protocol 8 — because it names the
-legacy *mode* rather than the protocol; it is kept because it is the kernel's own
-symbol name, so the same string greps across `/proc/config.gz`, a defconfig, the
-build and the compile line.
+State both rather than relying on a default: a recipe that says what it wants
+does not change meaning when a default does.
 
 ### The three platform configurations
 
