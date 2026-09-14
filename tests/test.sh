@@ -38,23 +38,16 @@ TESTS_FAILED=0
 
 CMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX:-$(pwd)/out/target}"
 
-# The binder wire protocol the cross-compiled SDK is built for. Bitness follows
-# the toolchain; the protocol follows the kernel the image runs, so it is stated
-# rather than inherited - a 32-bit toolchain resolves to protocol 7 on its own.
-# The ARM target here is row B of docs/standards/build_integration.md: 32-bit
-# userspace on a protocol-8 kernel, which is every kernel from 4.18 and every
-# 64-bit kernel. Set ON to build the legacy row A instead.
-HALIF_BINDER_IPC_32BIT="${HALIF_BINDER_IPC_32BIT:-OFF}"
-
-# Normalise to exactly ON or OFF. CMake accepts several spellings of true, but
-# the protocol assertion below compares against "ON" — so an unnormalised "1"
-# would build protocol 7 while the test expected 8, and report a mismatch that
-# is not one. Anything unrecognised is a typo worth failing on rather than
-# silently treating as OFF.
-case "${HALIF_BINDER_IPC_32BIT^^}" in
-    ON|TRUE|YES|Y|1)  HALIF_BINDER_IPC_32BIT=ON ;;
-    OFF|FALSE|NO|N|0) HALIF_BINDER_IPC_32BIT=OFF ;;
-    *) echo "HALIF_BINDER_IPC_32BIT must be ON or OFF (got '${HALIF_BINDER_IPC_32BIT}')" >&2
+# The binder wire protocol the cross-compiled SDK is built for. It follows the
+# KERNEL the image runs, not the toolchain, so it is stated rather than
+# inherited. The ARM target here is row B of
+# docs/standards/build_integration.md: 32-bit userspace on a protocol-8 kernel,
+# which is every kernel from 4.18 and every 64-bit kernel. Set 7 for the legacy
+# row A.
+HALIF_BINDER_PROTOCOL="${HALIF_BINDER_PROTOCOL:-8}"
+case "${HALIF_BINDER_PROTOCOL}" in
+    7|8) ;;
+    *) echo "HALIF_BINDER_PROTOCOL must be 7 or 8 (got '${HALIF_BINDER_PROTOCOL}')" >&2
        exit 1 ;;
 esac
 
@@ -765,8 +758,7 @@ test_11() {
           -DCMAKE_INSTALL_PREFIX=${current_dir}/out/target \
           -DCMAKE_INSTALL_LIBDIR=lib/binder \
           -DBUILD_HOST_AIDL=OFF \
-          -DTARGET_LIB32_VERSION=ON \
-          -DBINDER_IPC_32BIT=${HALIF_BINDER_IPC_32BIT} \
+          -DBINDER_PROTOCOL=${HALIF_BINDER_PROTOCOL} \
           -DCMAKE_BUILD_TYPE=Release && \
         cmake --build build/binder -- -j\$(nproc) && \
         cmake --install build/binder" \
@@ -780,8 +772,7 @@ test_11() {
         # the mangled third parameter names the protocol the library speaks:
         # PKy (const unsigned long long*) is 8, PKj (const unsigned int*) is 7.
         local sdk_lib="${current_dir}/out/target/lib/binder/libbinder.so"
-        local want_proto=8
-        [ "${HALIF_BINDER_IPC_32BIT}" = "ON" ] && want_proto=7
+        local want_proto="${HALIF_BINDER_PROTOCOL}"
         local sym=""
         [ -f "${sdk_lib}" ] && sym=$(grep -ao 'ipcSetDataReferenceEPKh[jm]PK[yj]' "${sdk_lib}" | head -n 1 || true)
         local got_proto

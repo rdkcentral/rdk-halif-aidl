@@ -35,12 +35,23 @@ recipe states all three explicitly rather than inheriting a default:
 | Switch | Value to pass | Why |
 | ------ | ------------- | --- |
 | `BUILD_HOST_AIDL` | `OFF`, on every platform | the host AIDL tool runs on the build host and is not part of a target image |
-| `TARGET_LIB32_VERSION` / `TARGET_LIB64_VERSION` | follows the **toolchain** — the ELF class of the userspace linking it | a 32-bit process cannot load a 64-bit `libbinder.so` |
-| `BINDER_IPC_32BIT` | follows the **kernel** — its resolved `.config` | libbinder compares protocol versions for exact equality when it opens the driver |
+| `BINDER_PROTOCOL` | `8` — or the kernel's protocol, if a legacy platform is still in the fleet | libbinder compares protocol versions for exact equality when it opens the driver |
 
-These are the values to pass, not the defaults. `BUILD_HOST_AIDL` in particular
-defaults to `ON` in the Binder SDK, so a recipe that omits it builds a host AIDL
-compiler the target image never carries — and pulls in flex and bison to do it.
+**The ELF class is not a switch.** It follows `CC`/`CXX`, and nothing in the
+Binder SDK can change it — point the build at the right cross-compiler and a
+32-bit toolchain produces a 32-bit `libbinder.so`. `TARGET_BITNESS=32|64` exists
+only as an optional assertion, for a build that should *stop* if the toolchain
+is not what was expected.
+
+These are values to pass, not defaults to rely on. State them: a recipe that
+says what it wants does not change meaning when a default does.
+
+The older spellings `BINDER_IPC_32BIT=ON|OFF` and
+`TARGET_LIB32_VERSION`/`TARGET_LIB64_VERSION` are still honoured.
+`BINDER_IPC_32BIT` reads backwards — `OFF` is protocol 8 — because it names the
+legacy *mode* rather than the protocol; it is kept because it is the kernel's own
+symbol name, so the same string greps across `/proc/config.gz`, a defconfig, the
+build and the compile line.
 
 ### The three platform configurations
 
@@ -86,11 +97,11 @@ A protocol mismatch is not caught at build time. It surfaces on the device,
 where every binder process terminates at startup.
 
 ```bitbake
-# Row B — 32-bit userspace on a protocol-8 kernel.
+# Row B — 32-bit userspace on a protocol-8 kernel. The 32-bit ELF class comes
+# from the cross-toolchain, so it is not stated here.
 EXTRA_OECMAKE = " \
     -DBUILD_HOST_AIDL=OFF \
-    -DTARGET_LIB32_VERSION=ON \
-    -DBINDER_IPC_32BIT=OFF \
+    -DBINDER_PROTOCOL=8 \
 "
 ```
 
