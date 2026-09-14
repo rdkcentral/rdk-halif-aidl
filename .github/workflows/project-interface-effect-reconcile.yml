@@ -1,0 +1,41 @@
+name: "Interface Effect — reconcile"
+
+# Sweeps every ticket in both directions. This is the only path that catches a
+# value edited on the board: `projects_v2_item` is an organisation webhook event
+# and a repository workflow cannot subscribe to it.
+
+permissions:
+  contents: read
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "Report what would change without writing"
+        type: boolean
+        default: false
+
+concurrency:
+  group: interface-effect-reconcile
+  cancel-in-progress: true
+
+jobs:
+  reconcile:
+    name: "Reconcile labels and project field"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Reconcile"
+        env:
+          GH_TOKEN: ${{ secrets.PROJECTS_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "::warning::PROJECTS_TOKEN is not set — reconcile skipped"
+            exit 0
+          fi
+          python3 scripts/project_interface_effect.py reconcile \
+            ${{ inputs.dry-run && '--dry-run' || '' }}
