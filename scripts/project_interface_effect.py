@@ -37,6 +37,11 @@ can be edited, so the sync has to work out which one moved rather than assuming.
     - PR vs its linked issue     -> the PR wins, because the PR is the change.
                                     A PR with no class inherits the issue's.
 
+  Milestones
+    Mirrored between a PR and its linked issues on the same rule, so a release
+    view slicing on the milestone shows the whole of a release - the merged
+    work included - rather than whichever side happened to be stamped.
+
 Subcommands:
   sync-item  --number N   one ticket, for a labeled/unlabeled event
   reconcile               every ticket, both directions (the scheduled sweep)
@@ -372,6 +377,44 @@ def sync_ticket(project, ticket, dry_run, report):
     return None
 
 
+def set_milestone(node_id, milestone_id, is_pr):
+    mutation = (
+        "mutation($id:ID!,$m:ID){updatePullRequest(input:{pullRequestId:$id,"
+        "milestoneId:$m}){clientMutationId}}"
+        if is_pr
+        else "mutation($id:ID!,$m:ID){updateIssue(input:{id:$id,milestoneId:$m})"
+        "{clientMutationId}}"
+    )
+    gql(mutation, {"id": node_id, "m": milestone_id})
+
+
+def mirror_milestone(pr, linked, dry_run, report):
+    """Keep a PR and its linked issues on the same milestone, PR first.
+
+    A release view slices on the milestone, so a PR stamped for the release
+    whose issue is not (or the reverse) leaves half the release invisible.
+    """
+    pr_milestone = pr.get("milestone")
+    for issue in linked:
+        issue_milestone = issue.get("milestone")
+        if pr_milestone:
+            if not issue_milestone or issue_milestone["title"] != pr_milestone["title"]:
+                if not dry_run:
+                    set_milestone(issue["id"], pr_milestone["id"], is_pr=False)
+                report.append(
+                    f"#{issue['number']}: milestone -> {pr_milestone['title']} "
+                    f"(from PR #{pr['number']})"
+                )
+        elif issue_milestone:
+            if not dry_run:
+                set_milestone(pr["id"], issue_milestone["id"], is_pr=True)
+            report.append(
+                f"PR #{pr['number']}: milestone -> {issue_milestone['title']} "
+                f"(from #{issue['number']})"
+            )
+            pr_milestone = issue_milestone
+
+
 def propagate_pr_to_issues(pr, dry_run, report):
     """The PR is the change: its class overwrites a linked issue that differs.
 
@@ -381,6 +424,7 @@ def propagate_pr_to_issues(pr, dry_run, report):
     linked = pr.get("closingIssuesReferences", {}).get("nodes", [])
     if not linked:
         return []
+    mirror_milestone(pr, linked, dry_run, report)
     pr_labels = [n["name"] for n in pr["labels"]["nodes"]]
     pr_class = class_of(pr_labels)
     touched = []
@@ -416,6 +460,7 @@ query($owner:String!,$name:String!,$cursor:String){
       pageInfo{ hasNextPage endCursor }
       nodes{
         id number
+        milestone{ id title }
         labels(first:50){ nodes{ name } }
         %(links)s
         projectItems(first:20,includeArchived:false){ nodes{ %(item)s } }
@@ -427,7 +472,7 @@ query($owner:String!,$name:String!,$cursor:String){
 
 LINKS = """
         closingIssuesReferences(first:10){
-          nodes{ id number labels(first:50){ nodes{ name } } }
+          nodes{ id number milestone{ id title } labels(first:50){ nodes{ name } } }
         }
 """
 
@@ -489,9 +534,9 @@ def cmd_sync_item(args):
         query($owner:String!,$name:String!,$number:Int!){
           repository(owner:$owner,name:$name){
             issueOrPullRequest(number:$number){
-              ... on Issue{ id number labels(first:50){nodes{name}}
+              ... on Issue{ id number milestone{ id title } labels(first:50){nodes{name}}
                 projectItems(first:20,includeArchived:false){nodes{ %(item)s }} }
-              ... on PullRequest{ id number labels(first:50){nodes{name}}
+              ... on PullRequest{ id number milestone{ id title } labels(first:50){nodes{name}}
                 %(links)s
                 projectItems(first:20,includeArchived:false){nodes{ %(item)s }} }
             }
