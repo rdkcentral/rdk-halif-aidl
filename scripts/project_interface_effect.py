@@ -36,6 +36,12 @@ can be edited, so the sync has to work out which one moved rather than assuming.
     - Both moved                 -> the labels win; the divergence is reported.
     - PR vs its linked issue     -> the PR wins, because the PR is the change.
                                     A PR with no class inherits the issue's.
+    - CR and New Interface       -> governance markers, not change classes. They
+                                    are written *with* `Major Change`, never
+                                    instead of it: docs/governance/versioning-sop.md
+                                    is explicit that `release.sh` reads
+                                    `Major Change` for the bump and never reads
+                                    `CR`, so replacing it would lose the bump.
 
   Milestones
     Mirrored between a PR and its linked issues on the same rule, so a release
@@ -90,8 +96,18 @@ MAPPING = [
 # Display order of the options on the board.
 OPTION_ORDER = ["Major", "CR-Major", "New Interface", "Minor", "BugFix", "Documentation"]
 
-# The label written when the board is the only surface that classified a ticket.
-WRITEBACK_LABEL = {option: labels[0] for option, _colour, labels in MAPPING}
+# What a board selection writes back. CR-Major and New Interface carry
+# `Major Change` with them: the version bump is label-driven and `release.sh`
+# only ever reads the change class, so a marker that replaced it would quietly
+# turn a major release into a minor one.
+WRITEBACK_LABELS = {
+    "CR-Major": ["CR", "Major Change"],
+    "New Interface": ["New Interface", "Major Change"],
+    "Major": ["Major Change"],
+    "Minor": ["Minor Change"],
+    "BugFix": ["bug"],
+    "Documentation": ["documentation"],
+}
 
 # Every label the mapping owns: applying one means removing the others.
 OWNED_LABELS = {label for _o, _c, labels in MAPPING for label in labels}
@@ -247,6 +263,19 @@ def set_effect(project, item_id, option):
     )
 
 
+def clear_effect(project, item_id):
+    gql(
+        """
+        mutation($p:ID!,$i:ID!,$f:ID!){
+          clearProjectV2ItemFieldValue(input:{projectId:$p,itemId:$i,fieldId:$f}){
+            projectV2Item{ id }
+          }
+        }
+        """,
+        {"p": project.id, "i": item_id, "f": project.field_id},
+    )
+
+
 def set_state(project, item_id, value):
     gql(
         """
@@ -278,27 +307,33 @@ def label_id(name):
     return _label_ids[name]
 
 
-def apply_label(content_id, option, current_labels):
-    """Put the option's label on a ticket and strip the other mapped ones."""
-    wanted = WRITEBACK_LABEL[option]
-    target = label_id(wanted)
-    if not target:
-        print(f"    ! label {wanted!r} missing from the repo — skipped")
+def apply_labels(content_id, option, current_labels):
+    """Apply every label an option implies, and strip only what it displaces.
+
+    Returns False when a label the option needs does not exist in the repo, so
+    the caller can leave the sync state alone and let the next sweep retry.
+    """
+    wanted = WRITEBACK_LABELS[option]
+    missing = [name for name in wanted if not label_id(name)]
+    if missing:
+        print(f"    ! label(s) {missing} missing from the repo — skipped")
         return False
-    if wanted not in current_labels:
+
+    additions = [label_id(name) for name in wanted if name not in current_labels]
+    if additions:
         gql(
             """
             mutation($l:ID!,$ids:[ID!]!){
               addLabelsToLabelable(input:{labelableId:$l,labelIds:$ids}){ clientMutationId }
             }
             """,
-            {"l": content_id, "ids": [target]},
+            {"l": content_id, "ids": additions},
         )
-    stale = [
-        label_id(name)
-        for name in current_labels
-        if name in OWNED_LABELS and name not in LABELS_OF[option]
-    ]
+
+    # A retired alias of the same class (Breaking Change for Major) is left
+    # alone; only a label belonging to a class this option replaces is removed.
+    keep = set(wanted) | set(LABELS_OF[option])
+    stale = [label_id(name) for name in current_labels if name in OWNED_LABELS and name not in keep]
     stale = [i for i in stale if i]
     if stale:
         gql(
@@ -360,21 +395,40 @@ def sync_ticket(project, ticket, dry_run, report):
 
     field_class = (item.get("effect") or {}).get("name")
     synced = (item.get("synced") or {}).get("text") or None
+
+    # An option nobody mapped (a stale rename, or one added by hand on the
+    # board) must not be resolved into a label lookup that raises.
+    if field_class and field_class not in WRITEBACK_LABELS:
+        report.append(f"#{number}: board value {field_class!r} is not in the mapping")
+        return None
+
     winner, reason = resolve(labels_class, field_class, synced)
 
     if winner is None:
+        # The classification was removed from the ticket. Clear the board too,
+        # otherwise the last value stays selected for ever and the stored state
+        # goes on misreporting which surface moved.
+        if field_class or synced:
+            if not dry_run:
+                clear_effect(project, item["id"])
+                set_state(project, item["id"], "")
+            report.append(f"#{number}: cleared, classification removed")
+            return "changed"
         return None
 
     actions = []
+    labels_written = True
     if winner != field_class:
         if not dry_run:
             set_effect(project, item["id"], winner)
         actions.append(f"field->{winner}")
     if winner != labels_class:
         if not dry_run:
-            apply_label(ticket["id"], winner, labels)
-        actions.append(f"label->{WRITEBACK_LABEL[winner]}")
-    if winner != synced and not dry_run:
+            labels_written = apply_labels(ticket["id"], winner, labels)
+        actions.append(f"label->{'+'.join(WRITEBACK_LABELS[winner])}")
+    # Record the sync only once the writes landed: a label that could not be
+    # written must be retried by the next sweep, not marked as done.
+    if winner != synced and labels_written and not dry_run:
         set_state(project, item["id"], winner)
 
     if actions:
@@ -400,25 +454,31 @@ def mirror_milestone(pr, linked, dry_run, report):
     A release view slices on the milestone, so a PR stamped for the release
     whose issue is not (or the reverse) leaves half the release invisible.
     """
+    # Settle on the source before touching anything, so a PR with no milestone
+    # and several linked issues does not adopt one and leave the earlier issues
+    # outside the release view.
     pr_milestone = pr.get("milestone")
+    source = pr_milestone or next(
+        (issue["milestone"] for issue in linked if issue.get("milestone")), None
+    )
+    if not source:
+        return
+
+    if not pr_milestone:
+        if not dry_run:
+            set_milestone(pr["id"], source["id"], is_pr=True)
+        pr["milestone"] = source
+        report.append(f"PR #{pr['number']}: milestone -> {source['title']} (inherited)")
+
     for issue in linked:
         issue_milestone = issue.get("milestone")
-        if pr_milestone:
-            if not issue_milestone or issue_milestone["title"] != pr_milestone["title"]:
-                if not dry_run:
-                    set_milestone(issue["id"], pr_milestone["id"], is_pr=False)
-                report.append(
-                    f"#{issue['number']}: milestone -> {pr_milestone['title']} "
-                    f"(from PR #{pr['number']})"
-                )
-        elif issue_milestone:
+        if not issue_milestone or issue_milestone["title"] != source["title"]:
             if not dry_run:
-                set_milestone(pr["id"], issue_milestone["id"], is_pr=True)
+                set_milestone(issue["id"], source["id"], is_pr=False)
             report.append(
-                f"PR #{pr['number']}: milestone -> {issue_milestone['title']} "
-                f"(from #{issue['number']})"
+                f"#{issue['number']}: milestone -> {source['title']} "
+                f"(from PR #{pr['number']})"
             )
-            pr_milestone = issue_milestone
 
 
 def propagate_pr_to_issues(pr, dry_run, report):
@@ -440,18 +500,28 @@ def propagate_pr_to_issues(pr, dry_run, report):
             issue_class = class_of([n["name"] for n in issue["labels"]["nodes"]])
             if issue_class:
                 if not dry_run:
-                    apply_label(pr["id"], issue_class, pr_labels)
+                    apply_labels(pr["id"], issue_class, pr_labels)
+                    # Reflect the write locally so the caller syncs this PR's
+                    # item with the class it now has, not the one it had.
+                    pr["labels"]["nodes"] = [
+                        {"name": name}
+                        for name in sorted(
+                            set(pr_labels) | set(WRITEBACK_LABELS[issue_class])
+                        )
+                    ]
                 report.append(
                     f"PR #{pr['number']}: inherited {issue_class} from #{issue['number']}"
                 )
-                return [pr["number"]]
+                # Not a linked issue: returning its number would send the caller
+                # looking for a pull request through `repository.issue(...)`.
+                return []
         return []
 
     for issue in linked:
         issue_labels = [n["name"] for n in issue["labels"]["nodes"]]
         if class_of(issue_labels) != pr_class:
             if not dry_run:
-                apply_label(issue["id"], pr_class, issue_labels)
+                apply_labels(issue["id"], pr_class, issue_labels)
             report.append(
                 f"#{issue['number']}: {pr_class} from PR #{pr['number']} (PR wins)"
             )

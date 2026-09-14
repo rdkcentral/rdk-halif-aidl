@@ -38,4 +38,4 @@ jobs:
             exit 0
           fi
           python3 scripts/project_interface_effect.py reconcile \
-            ${{ inputs.dry-run && '--dry-run' || '' }}
+            ${{ inputs['dry-run'] && '--dry-run' || '' }}
