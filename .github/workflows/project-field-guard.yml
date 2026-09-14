@@ -1,0 +1,36 @@
+name: "Interface Effect — field guard"
+
+# Fails when the project field's options stop matching the mapping, or a mapped
+# label is deleted from the repo. Either one silently breaks the sync, so it is
+# worth a red tick rather than a quiet no-op.
+
+permissions:
+  contents: read
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "scripts/project_interface_effect.py"
+      - ".github/workflows/project-interface-effect*.yml"
+      - ".github/workflows/project-field-guard.yml"
+
+jobs:
+  guard:
+    name: "Check labels against field options"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Check for drift"
+        env:
+          GH_TOKEN: ${{ secrets.PROJECTS_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "::warning::PROJECTS_TOKEN is not set — drift check skipped"
+            exit 0
+          fi
+          python3 scripts/project_interface_effect.py check
