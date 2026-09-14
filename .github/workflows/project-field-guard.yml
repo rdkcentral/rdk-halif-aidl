@@ -22,6 +22,10 @@ jobs:
   guard:
     name: "Check labels against field options"
     runs-on: ubuntu-latest
+    # A dispatch can name any branch and `actions/checkout` follows it, which
+    # would hand PROJECTS_TOKEN to whatever that branch says the script is.
+    # Only the default branch gets the secret.
+    if: github.ref_name == github.event.repository.default_branch
     steps:
       - uses: actions/checkout@v4
 

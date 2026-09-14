@@ -96,10 +96,19 @@ MAPPING = [
 # Display order of the options on the board.
 OPTION_ORDER = ["Major", "CR-Major", "New Interface", "Minor", "BugFix", "Documentation"]
 
+# Precedence, strongest first - MAPPING order is the precedence order.
+PRECEDENCE = [option for option, _colour, _labels in MAPPING]
+
 # What a board selection writes back. CR-Major and New Interface carry
 # `Major Change` with them: the version bump is label-driven and `release.sh`
 # only ever reads the change class, so a marker that replaced it would quietly
 # turn a major release into a minor one.
+#
+# BugFix is the exception with no release meaning: it writes `bug`, which the
+# bump logic does not read - a bugfix bump comes from `documentation` or from a
+# linked issue of type Bug. Selecting BugFix on the board therefore classifies
+# the ticket for people, not for the release. #827 decides whether the field or
+# the labels drive the bump.
 WRITEBACK_LABELS = {
     "CR-Major": ["CR", "Major Change"],
     "New Interface": ["New Interface", "Major Change"],
@@ -263,6 +272,18 @@ def set_effect(project, item_id, option):
     )
 
 
+def read_item(project, item_id):
+    """Re-read one item's two fields, to check nothing moved under a sweep."""
+    data = gql(
+        """
+        query($id:ID!){ node(id:$id){ ... on ProjectV2Item{ %s } } }
+        """
+        % _item_fields(),
+        {"id": item_id},
+    )
+    return data.get("node")
+
+
 def clear_effect(project, item_id):
     gql(
         """
@@ -305,6 +326,22 @@ def label_id(name):
         node = data["repository"]["label"]
         _label_ids[name] = node["id"] if node else None
     return _label_ids[name]
+
+
+def remove_owned_labels(content_id, current_labels):
+    """Strip every classification label, for a ticket cleared on the board."""
+    ids = [label_id(name) for name in current_labels if name in OWNED_LABELS]
+    ids = [i for i in ids if i]
+    if not ids:
+        return
+    gql(
+        """
+        mutation($l:ID!,$ids:[ID!]!){
+          removeLabelsFromLabelable(input:{labelableId:$l,labelIds:$ids}){ clientMutationId }
+        }
+        """,
+        {"l": content_id, "ids": ids},
+    )
 
 
 def apply_labels(content_id, option, current_labels):
@@ -405,16 +442,40 @@ def sync_ticket(project, ticket, dry_run, report):
     winner, reason = resolve(labels_class, field_class, synced)
 
     if winner is None:
-        # The classification was removed from the ticket. Clear the board too,
-        # otherwise the last value stays selected for ever and the stored state
-        # goes on misreporting which surface moved.
-        if field_class or synced:
+        # The classification is gone from whichever surface still held it.
+        # Clearing only the field would leave the labels to restore it on the
+        # next sweep, so clearing on the board has to take the labels with it.
+        if field_class or synced or labels_class:
             if not dry_run:
-                clear_effect(project, item["id"])
+                if field_class:
+                    clear_effect(project, item["id"])
+                if labels_class:
+                    remove_owned_labels(ticket["id"], labels)
                 set_state(project, item["id"], "")
             report.append(f"#{number}: cleared, classification removed")
             return "changed"
         return None
+
+    # A ticket carrying only `CR` already resolves to CR-Major, so comparing
+    # classes alone would never add the `Major Change` that carries the bump.
+    # Normalise whenever any label the option implies is absent.
+    absent = [name for name in WRITEBACK_LABELS[winner] if name not in labels]
+    needs_write = (
+        winner != field_class or winner != labels_class or absent or winner != synced
+    )
+
+    # A sweep reads every ticket and then writes, so an event-driven run can
+    # land in between and this snapshot goes stale. Re-read the item before the
+    # first write and step aside if it moved - the next sweep sees the new value
+    # rather than this one overwriting it.
+    if needs_write and not dry_run:
+        fresh = read_item(project, item["id"])
+        if fresh is not None:
+            fresh_class = (fresh.get("effect") or {}).get("name")
+            fresh_state = (fresh.get("synced") or {}).get("text") or None
+            if fresh_class != field_class or fresh_state != synced:
+                report.append(f"#{number}: skipped, the item moved while the sweep ran")
+                return None
 
     actions = []
     labels_written = True
@@ -422,7 +483,7 @@ def sync_ticket(project, ticket, dry_run, report):
         if not dry_run:
             set_effect(project, item["id"], winner)
         actions.append(f"field->{winner}")
-    if winner != labels_class:
+    if winner != labels_class or absent:
         if not dry_run:
             labels_written = apply_labels(ticket["id"], winner, labels)
         actions.append(f"label->{'+'.join(WRITEBACK_LABELS[winner])}")
@@ -496,26 +557,30 @@ def propagate_pr_to_issues(pr, dry_run, report):
     touched = []
 
     if pr_class is None:
-        for issue in linked:
-            issue_class = class_of([n["name"] for n in issue["labels"]["nodes"]])
-            if issue_class:
-                if not dry_run:
-                    apply_labels(pr["id"], issue_class, pr_labels)
-                    # Reflect the write locally so the caller syncs this PR's
-                    # item with the class it now has, not the one it had.
-                    pr["labels"]["nodes"] = [
-                        {"name": name}
-                        for name in sorted(
-                            set(pr_labels) | set(WRITEBACK_LABELS[issue_class])
-                        )
-                    ]
-                report.append(
-                    f"PR #{pr['number']}: inherited {issue_class} from #{issue['number']}"
-                )
-                # Not a linked issue: returning its number would send the caller
-                # looking for a pull request through `repository.issue(...)`.
+        # Take the strongest class across every linked issue rather than
+        # whichever the API returned first, then fall through so the remaining
+        # linked issues are brought up to it as well.
+        candidates = [
+            class_of([n["name"] for n in issue["labels"]["nodes"]]) for issue in linked
+        ]
+        candidates = [c for c in candidates if c]
+        if not candidates:
+            return []
+        inherited = min(candidates, key=PRECEDENCE.index)
+        if not dry_run:
+            if not apply_labels(pr["id"], inherited, pr_labels):
+                # The write failed, so the PR still has no class. Leave the
+                # local object alone and let the next sweep retry.
                 return []
-        return []
+            # Reflect the write locally so the caller syncs this PR's item with
+            # the class it now has, not the one it had.
+            pr["labels"]["nodes"] = [
+                {"name": name}
+                for name in sorted(set(pr_labels) | set(WRITEBACK_LABELS[inherited]))
+            ]
+        report.append(f"PR #{pr['number']}: inherited {inherited} from its linked issues")
+        pr_class = inherited
+        pr_labels = [n["name"] for n in pr["labels"]["nodes"]]
 
     for issue in linked:
         issue_labels = [n["name"] for n in issue["labels"]["nodes"]]
