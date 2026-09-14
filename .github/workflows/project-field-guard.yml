@@ -7,15 +7,16 @@ name: "Interface Effect — field guard"
 permissions:
   contents: read
 
+# Deliberately not triggered on `pull_request`: the job hands PROJECTS_TOKEN to
+# the checked-out copy of the script, and on a same-repository pull request that
+# copy is whatever the branch says it is. A drift check is not worth handing an
+# organisation-project token to unreviewed code - the daily run catches the same
+# drift a few hours later.
+
 on:
   schedule:
     - cron: "17 6 * * *"
   workflow_dispatch:
-  pull_request:
-    paths:
-      - "scripts/project_interface_effect.py"
-      - ".github/workflows/project-interface-effect*.yml"
-      - ".github/workflows/project-field-guard.yml"
 
 jobs:
   guard:
