@@ -42,6 +42,12 @@ can be edited, so the sync has to work out which one moved rather than assuming.
     view slicing on the milestone shows the whole of a release - the merged
     work included - rather than whichever side happened to be stamped.
 
+  Scope
+    Open tickets, plus closed ones still inside an open milestone. A closed
+    ticket in a finished release is the record of what happened, and rewriting
+    its labels a year later only generates notifications. `--all` includes it
+    when that is genuinely wanted.
+
 Subcommands:
   sync-item  --number N   one ticket, for a labeled/unlabeled event
   reconcile               every ticket, both directions (the scheduled sweep)
@@ -459,8 +465,8 @@ query($owner:String!,$name:String!,$cursor:String){
     %(kind)s(first:50,after:$cursor,states:[%(states)s]){
       pageInfo{ hasNextPage endCursor }
       nodes{
-        id number
-        milestone{ id title }
+        id number state
+        milestone{ id title state }
         labels(first:50){ nodes{ name } }
         %(links)s
         projectItems(first:20,includeArchived:false){ nodes{ %(item)s } }
@@ -472,7 +478,7 @@ query($owner:String!,$name:String!,$cursor:String){
 
 LINKS = """
         closingIssuesReferences(first:10){
-          nodes{ id number milestone{ id title } labels(first:50){ nodes{ name } } }
+          nodes{ id number milestone{ id title state } labels(first:50){ nodes{ name } } }
         }
 """
 
@@ -498,6 +504,21 @@ def fetch(kind, states, links):
         cursor = block["pageInfo"]["endCursor"]
 
 
+def in_scope(ticket, everything):
+    """Open work, plus closed work still inside an open milestone.
+
+    A closed ticket in a finished release is the record of what happened;
+    rewriting its labels once the release has shipped only sends notifications
+    to everyone who touched it.
+    """
+    if everything:
+        return True
+    if ticket.get("state") == "OPEN":
+        return True
+    milestone = ticket.get("milestone")
+    return bool(milestone and milestone.get("state") == "OPEN")
+
+
 def cmd_reconcile(args):
     project = Project()
     missing = [o for o in OPTION_ORDER if o not in project.options]
@@ -505,24 +526,36 @@ def cmd_reconcile(args):
         sys.exit(f"field is missing options {missing} — run `check` first")
 
     report = []
-    prs = list(fetch("pullRequests", "OPEN,CLOSED,MERGED", links=True))
+    prs = [
+        pr
+        for pr in fetch("pullRequests", "OPEN,CLOSED,MERGED", links=True)
+        if in_scope(pr, args.all)
+    ]
     for pr in prs:
         propagate_pr_to_issues(pr, args.dry_run, report)
+    propagated = len(report)
 
-    changed = 0
-    seen = 0
-    for ticket in prs + list(fetch("issues", "OPEN,CLOSED", links=False)):
-        seen += 1
-        if sync_ticket(project, ticket, args.dry_run, report):
-            changed += 1
+    issues = [
+        issue
+        for issue in fetch("issues", "OPEN,CLOSED", links=False)
+        if in_scope(issue, args.all)
+    ]
+    for ticket in prs + issues:
+        sync_ticket(project, ticket, args.dry_run, report)
 
     for line in report:
         print(f"  {line}")
-    print(f"\n{seen} tickets examined, {changed} changed")
+    seen = len(prs) + len(issues)
+    headline = (
+        f"{seen} tickets in scope, {len(report)} change(s): "
+        f"{propagated} between PRs and their issues, "
+        f"{len(report) - propagated} on project items"
+    )
+    print(f"\n{headline}")
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:
         with open(summary, "a", encoding="utf-8") as handle:
-            handle.write(f"### Interface Effect sync\n\n{seen} examined, {changed} changed\n\n")
+            handle.write(f"### Interface Effect sync\n\n{headline}\n\n")
             for line in report[:100]:
                 handle.write(f"- {line}\n")
 
@@ -633,8 +666,13 @@ def main():
     one.add_argument("--dry-run", action="store_true")
     one.set_defaults(func=cmd_sync_item)
 
-    every = sub.add_parser("reconcile", help="sweep every ticket, both directions")
+    every = sub.add_parser("reconcile", help="sweep tickets in scope, both directions")
     every.add_argument("--dry-run", action="store_true")
+    every.add_argument(
+        "--all",
+        action="store_true",
+        help="include closed tickets whose milestone has shipped",
+    )
     every.set_defaults(func=cmd_reconcile)
 
     guard = sub.add_parser("check", help="fail on drift between labels and options")
