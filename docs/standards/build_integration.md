@@ -60,19 +60,14 @@ device speaks that one.
 
 **The kernel version does not decide the row — its config does.** Being 32-bit
 at 4.17 or older is what makes protocol 7 *possible*; it is not what makes it
-apply. Read the resolved `.config`, and read it as three states:
+apply. Two devices on the same silicon and the same kernel version can sit in
+different rows.
 
-| In the kernel config | Protocol | Row |
-| -------------------- | -------- | --- |
-| `CONFIG_ANDROID_BINDER_IPC_32BIT=y` | 7 | A |
-| `# CONFIG_ANDROID_BINDER_IPC_32BIT is not set` | 8 | B |
-| the symbol absent entirely | 8 | B |
-
-The third state is common: a vendor BSP that backports a newer binder driver
-onto an older base drops the option altogether, so the symbol does not exist
-even on a 4.9 kernel. A 32-bit 4.9 platform is therefore as likely to be row B
-as row A, and only its config says which. Two devices on the same silicon and
-the same 4.9 kernel version can sit in different rows.
+Determining which protocol a kernel serves, and reading its resolved `.config`
+to find out, is covered in
+[`PROTOCOL.md`](https://github.com/rdkcentral/linux_binder_idl/blob/develop/PROTOCOL.md).
+A build that needs it derived rather than stated can use
+`example/yocto/binder-protocol-from-kernel.inc` from the same repository.
 
 **Row B is the one to get right.** A 32-bit toolchain resolves to protocol 7 on
 its own, so `-DBINDER_IPC_32BIT=OFF` is mandatory there and is never a default.
