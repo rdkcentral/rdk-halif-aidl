@@ -1,0 +1,62 @@
+/*
+ * If not stated otherwise in this file or this component's LICENSE file the following copyright and licenses apply:
+ *
+ * Copyright 2026 RDK Management
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+package com.rdk.hal.broadcast.ca;
+
+import com.rdk.hal.broadcast.ca.CaCapabilities;
+
+/**
+ * @brief CA slot HAL interface.
+ *
+ * Represents a single Conditional Access (CA) slot on the platform. Obtain instances via IBroadcastManager.getCaSlot().
+ *
+ * @author Jan Pedersen
+ * @author Christian George
+ * @author Philipp Trommler
+ */
+@VintfStability
+interface ICaSlot {
+    /** CA slot resource ID type. */
+    @VintfStability
+    parcelable Id {
+        /** The undefined ID value. */
+        const int UNDEFINED = -1;
+
+        /** The actual resource ID. */
+        int value;
+    }
+
+    /**
+     * @brief Get the ID of this CA slot.
+     *
+     * @returns The resource ID of this CA slot.
+     */
+    Id getId();
+
+    /**
+     * @brief Get the supported capabilities of this CA slot.
+     *
+     * @returns The capabilities of this CA slot.
+     */
+    CaCapabilities getCapabilities();
+
+    /**
+     * @brief Enable or disable power to the CA slot.
+     *
+     * @exception ::android::binder::Status::EX_UNSUPPORTED_OPERATION The CA slot does not support power control.
+     *
+     * @param[in] enabled true to enable power, false to disable.
+     */
+    void setPower(in boolean enabled);
+}
