@@ -1,0 +1,41 @@
+name: "Interface Effect — field guard"
+
+# Fails when the project field's options stop matching the mapping, or a mapped
+# label is deleted from the repo. Either one silently breaks the sync, so it is
+# worth a red tick rather than a quiet no-op.
+
+permissions:
+  contents: read
+
+# Deliberately not triggered on `pull_request`: the job hands PROJECTS_TOKEN to
+# the checked-out copy of the script, and on a same-repository pull request that
+# copy is whatever the branch says it is. A drift check is not worth handing an
+# organisation-project token to unreviewed code - the daily run catches the same
+# drift a few hours later.
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  guard:
+    name: "Check labels against field options"
+    runs-on: ubuntu-latest
+    # A dispatch can name any branch and `actions/checkout` follows it, which
+    # would hand PROJECTS_TOKEN to whatever that branch says the script is.
+    # Only the default branch gets the secret.
+    if: github.ref_name == github.event.repository.default_branch
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Check for drift"
+        env:
+          GH_TOKEN: ${{ secrets.PROJECTS_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "::warning::PROJECTS_TOKEN is not set — drift check skipped"
+            exit 0
+          fi
+          python3 scripts/project_interface_effect.py check
