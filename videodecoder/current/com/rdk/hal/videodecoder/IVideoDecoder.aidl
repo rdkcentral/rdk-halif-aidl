@@ -24,6 +24,7 @@ import com.rdk.hal.videodecoder.PropertyKVPair;
 import com.rdk.hal.videodecoder.Codec;
 import com.rdk.hal.videodecoder.IVideoDecoderControllerListener;
 import com.rdk.hal.videodecoder.IVideoDecoderEventListener;
+import com.rdk.hal.videodecoder.OperationalMode;
 import com.rdk.hal.PropertyValue;
 import com.rdk.hal.videodecoder.State;
 
@@ -263,4 +264,20 @@ interface IVideoDecoder
      * @see registerEventListener()
      */
     boolean unregisterEventListener(in IVideoDecoderEventListener videoDecoderEventListener);
+
+    /**
+     * Gets the output mode currently selected by the vendor for this decoder.
+     *
+     * The mode is implementation-selected and is not configurable through
+     * the Video Decoder HAL. TUNNELLED output is consumed within the vendor
+     * layer; NON_TUNNELLED output is returned through onFrameOutput().
+     *
+     * @returns Current operational output mode.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the READY or STARTED state.
+     *
+     * @pre The resource must be in State::READY or State::STARTED.
+     */
+    OperationalMode getCurrentOperationalMode();
 }
