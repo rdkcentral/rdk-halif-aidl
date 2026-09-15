@@ -625,9 +625,17 @@ def propagate_pr_to_issues(pr, dry_run, report):
 
     for issue in linked:
         issue_labels = [n["name"] for n in issue["labels"]["nodes"]]
-        if class_of(issue_labels) != pr_class:
-            if not dry_run:
-                apply_labels(issue["id"], pr_class, issue_labels)
+        # Not only a differing class: an issue carrying just `CR` already reads
+        # as CR-Major, so comparing classes alone would leave it without the
+        # `Major Change` that actually carries the bump.
+        absent = [
+            name for name in WRITEBACK_LABELS[pr_class] if name not in issue_labels
+        ]
+        if class_of(issue_labels) != pr_class or absent:
+            if not dry_run and not apply_labels(issue["id"], pr_class, issue_labels):
+                # The write failed. Leave it for the next sweep rather than
+                # reporting a change that did not happen.
+                continue
             report.append(
                 f"#{issue['number']}: {pr_class} from PR #{pr['number']} (PR wins)"
             )

@@ -6,16 +6,22 @@ name: "Interface Effect — sync one ticket"
 permissions:
   contents: read
 
+# Issue events only, and deliberately so. Syncing a pull request in real time
+# needs `pull_request_target`, which runs both the workflow and the checkout
+# from the pull request's *base* branch - and anyone with push access can open a
+# pull request whose base is a branch they control, which would put
+# PROJECTS_TOKEN in front of code nobody reviewed. Gating on the base ref does
+# not help: the base branch's own copy of this file is what runs, `if:` and all.
+# A label change on a pull request is picked up by the reconcile sweep instead,
+# within fifteen minutes.
 on:
   issues:
-    types: [opened, reopened, labeled, unlabeled]
-  pull_request_target:
     types: [opened, reopened, labeled, unlabeled]
 
 concurrency:
   # One run at a time per ticket: two label edits in quick succession must not
   # race each other into the project field.
-  group: interface-effect-${{ github.event.issue.number || github.event.pull_request.number }}
+  group: interface-effect-${{ github.event.issue.number }}
   cancel-in-progress: false
 
 jobs:
@@ -38,4 +44,4 @@ jobs:
             exit 0
           fi
           python3 scripts/project_interface_effect.py sync-item \
-            --number "${{ github.event.issue.number || github.event.pull_request.number }}"
+            --number "${{ github.event.issue.number }}"
