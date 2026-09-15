@@ -91,13 +91,33 @@ MAPPING = [
     ("Minor", "BLUE", ["Minor Change"]),
     ("BugFix", "YELLOW", ["bug"]),
     ("Documentation", "GRAY", ["documentation"]),
+    # Last, so it only classifies a ticket nothing else does: repo tooling that
+    # is also a Minor Change still has a minor effect on the interface, and a
+    # major change must never hide behind an infrastructure tag.
+    ("Infrastructure", "GREEN", ["scope:infrastructure"]),
 ]
 
 # Display order of the options on the board.
-OPTION_ORDER = ["Major", "CR-Major", "New Interface", "Minor", "BugFix", "Documentation"]
+OPTION_ORDER = [
+    "Major",
+    "CR-Major",
+    "New Interface",
+    "Minor",
+    "BugFix",
+    "Documentation",
+    "Infrastructure",
+]
 
 # Precedence, strongest first - MAPPING order is the precedence order.
 PRECEDENCE = [option for option, _colour, _labels in MAPPING]
+
+# Mapped labels that are never removed. `scope:infrastructure` says which part
+# of the repo a ticket touches, not what it does to the interface: it is read to
+# derive the Infrastructure option, but deleting it because somebody picked a
+# class on the board would throw away triage information this sync does not own.
+# The cost is that an infrastructure-only ticket cannot be cleared from the
+# board - the label is still there, so the next sweep derives the value again.
+KEEP_ALWAYS = {"scope:infrastructure"}
 
 # What a board selection writes back. CR-Major and New Interface carry
 # `Major Change` with them: the version bump is label-driven and `release.sh`
@@ -116,6 +136,7 @@ WRITEBACK_LABELS = {
     "Minor": ["Minor Change"],
     "BugFix": ["bug"],
     "Documentation": ["documentation"],
+    "Infrastructure": ["scope:infrastructure"],
 }
 
 # Every label the mapping owns: applying one means removing the others.
@@ -330,7 +351,11 @@ def label_id(name):
 
 def remove_owned_labels(content_id, current_labels):
     """Strip every classification label, for a ticket cleared on the board."""
-    ids = [label_id(name) for name in current_labels if name in OWNED_LABELS]
+    ids = [
+        label_id(name)
+        for name in current_labels
+        if name in OWNED_LABELS and name not in KEEP_ALWAYS
+    ]
     ids = [i for i in ids if i]
     if not ids:
         return
@@ -369,7 +394,7 @@ def apply_labels(content_id, option, current_labels):
 
     # A retired alias of the same class (Breaking Change for Major) is left
     # alone; only a label belonging to a class this option replaces is removed.
-    keep = set(wanted) | set(LABELS_OF[option])
+    keep = set(wanted) | set(LABELS_OF[option]) | KEEP_ALWAYS
     stale = [label_id(name) for name in current_labels if name in OWNED_LABELS and name not in keep]
     stale = [i for i in stale if i]
     if stale:
@@ -491,6 +516,22 @@ def sync_ticket(project, ticket, dry_run, report):
     # written must be retried by the next sweep, not marked as done.
     if winner != synced and labels_written and not dry_run:
         set_state(project, item["id"], winner)
+
+    # Keep the in-memory ticket in step with what was just written, so a second
+    # pass over the same ticket in one run sees the new state rather than
+    # re-deriving from stale values (or tripping the moved-under-us check).
+    if actions and not dry_run:
+        item["effect"] = {"name": winner}
+        if labels_written:
+            item["synced"] = {"text": winner}
+            kept = {
+                name
+                for name in labels
+                if name not in OWNED_LABELS or name in KEEP_ALWAYS
+            }
+            ticket["labels"]["nodes"] = [
+                {"name": name} for name in sorted(kept | set(WRITEBACK_LABELS[winner]))
+            ]
 
     if actions:
         report.append(f"#{number}: {', '.join(actions)} ({reason})")
@@ -667,25 +708,27 @@ def cmd_reconcile(args):
         if in_scope(pr, args.all)
     ]
     for pr in prs:
+        # The PR's own surfaces settle first. Propagating an inherited label
+        # before that would make a board edit on the PR look like a label edit,
+        # and the linked issue's class would quietly win.
+        sync_ticket(project, pr, args.dry_run, report)
+        before = class_of([n["name"] for n in pr["labels"]["nodes"]])
         propagate_pr_to_issues(pr, args.dry_run, report)
-    propagated = len(report)
+        if class_of([n["name"] for n in pr["labels"]["nodes"]]) != before:
+            sync_ticket(project, pr, args.dry_run, report)
 
     issues = [
         issue
         for issue in fetch("issues", "OPEN,CLOSED", links=False)
         if in_scope(issue, args.all)
     ]
-    for ticket in prs + issues:
+    for ticket in issues:
         sync_ticket(project, ticket, args.dry_run, report)
 
     for line in report:
         print(f"  {line}")
     seen = len(prs) + len(issues)
-    headline = (
-        f"{seen} tickets in scope, {len(report)} change(s): "
-        f"{propagated} between PRs and their issues, "
-        f"{len(report) - propagated} on project items"
-    )
+    headline = f"{seen} tickets in scope, {len(report)} change(s)"
     print(f"\n{headline}")
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:
@@ -719,8 +762,13 @@ def cmd_sync_item(args):
         sys.exit(f"#{args.number} not found")
 
     report = []
-    touched = propagate_pr_to_issues(ticket, args.dry_run, report)
+    # Same ordering as the sweep: this ticket's own surfaces first, so an edit
+    # made on the board is not mistaken for a label edit once propagation runs.
     sync_ticket(project, ticket, args.dry_run, report)
+    before = class_of([n["name"] for n in ticket["labels"]["nodes"]])
+    touched = propagate_pr_to_issues(ticket, args.dry_run, report)
+    if class_of([n["name"] for n in ticket["labels"]["nodes"]]) != before:
+        sync_ticket(project, ticket, args.dry_run, report)
 
     # A linked issue that just changed needs its own item updating too.
     for number in touched:
