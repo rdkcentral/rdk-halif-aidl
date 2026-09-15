@@ -7,6 +7,10 @@ The output of the video decoder can follow two paths:
 - **Non-tunnelled mode** – The decoded video is returned to the RDK media pipeline as a video frame buffer along with metadata.
 - **Tunnelled mode** – The decoded video is passed directly through the vendor layer.
 
+The selected output mode is implementation-defined for each decoder instance. Clients can
+query it with `IVideoDecoder.getCurrentOperationalMode()` after `open()`. It is read-only;
+clients must not assume that tunnelled output can be enabled or disabled through a property.
+
 Video and audio are independent. A pipeline may pass video from decoder to sink within the vendor layer while returning decoded audio to the client.
 
 The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decoder** element, specifically designed to integrate with the **Video Decoder HAL** interface.
@@ -65,6 +69,7 @@ The **RDK middleware GStreamer pipeline** includes a dedicated **RDK Video Decod
 | `FrameMetadata.aidl` | Parcelable of video frame metadata passed from the video decoder. |
 | `PixelFormat.aidl` | Enum list of video pixel formats. |
 | `Property.aidl` | Enum list of video decoder properties. |
+| `OperationalMode.aidl` | Enum value describing the current output routing mode. |
 | `PropertyKVPair.aidl` | Parcelable of a Property and PropertyValue pair. |
 | `ScanType.aidl` | Enum list of video frame scan types. |
 
@@ -111,8 +116,8 @@ flowchart TD
         VideoFrameQueue["Video Frame Queue"]
     end
     RDKClientComponent -- createVideoPool() <br> alloc() <br> free() <br> destroyPool() --> IAVBuffer
-    RDKClientComponent -- getVideoDecoderIds() <br> getVideoDecoder() getSupportedOperationModes()--> IVideoDecoderManager
-    RDKClientComponent -- getCapabilities() <br> getProperty() <br> getPropertyMulti() <br> getState() <br> open() <br> close() <br> registerEventListener() <br> unregisterEventListener()--> IVideoDecoder
+    RDKClientComponent -- getVideoDecoderIds() <br> getVideoDecoder() --> IVideoDecoderManager
+    RDKClientComponent -- getCapabilities() <br> getProperty() <br> getPropertyMulti() <br> getState() <br> getCurrentOperationalMode() <br> open() <br> close() <br> registerEventListener() <br> unregisterEventListener()--> IVideoDecoder
     RDKClientComponent -- registerEventListener() <br> unregisterEventListener() --> IVideoDecoder
     RDKClientComponent -- start() <br> stop() <br> setProperty() <br> decodeBufferWithMetadata() <br> flush() <br> signalDiscontinuity() <br> parseCodecSpecificData() --> IVideoDecoderController
     IVideoDecoderManager --> IVideoDecoder --> IVideoDecoderController
