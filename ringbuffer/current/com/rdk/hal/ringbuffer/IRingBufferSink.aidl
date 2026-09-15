@@ -1,0 +1,120 @@
+/*
+ * If not stated otherwise in this file or this component's LICENSE file the following copyright and licenses apply:
+ *
+ * Copyright 2026 RDK Management
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+package com.rdk.hal.ringbuffer;
+
+import com.rdk.hal.ringbuffer.RingBufferAcquireResult;
+import com.rdk.hal.ringbuffer.RingBufferInfo;
+
+/**
+ * @brief Producer side of IRingBuffer.
+ *
+ * @author Jan Pedersen
+ * @author Christian George
+ * @author Philipp Trommler
+ */
+@VintfStability
+interface IRingBufferSink {
+    /**
+     * @brief Get the underlying file descriptor for the ring buffer.
+     *
+     * The returned descriptor is a duplicate owned by the caller, which is responsible for closing it. Calling this
+     * method more than once yields independent descriptors, each of which must be closed.
+     *
+     * The descriptor remains valid until the caller closes it, but the memory it refers to is only meaningful while
+     * this producer is registered. After unregisterProducer(), or after the implementation has released the
+     * registration because the producer died, the descriptor must no longer be used to read or write buffer contents:
+     * the region may have been reused by a new producer. Unmap and close it as part of unregistering.
+     *
+     * @returns The file descriptor backing the ring buffer, to be mapped or read by the producer.
+     */
+    ParcelFileDescriptor getFileDescriptor();
+
+    /**
+     * @brief Get information about the ring buffer.
+     *
+     * The result is a snapshot taken while the call was serviced, not a live view. The consumer runs concurrently, so
+     * availableForReading may already be out of date by the time the caller inspects it and is advisory only — useful
+     * for metrics or coarse decisions, but never as the basis for a write. acquire() is the authoritative operation,
+     * and the bytes field of its result is the only trustworthy statement of what the caller may access. The size and
+     * overflow setting are stable while a client is registered.
+     *
+     * @returns A snapshot of the ring buffer size, readable byte count and overflow setting.
+     */
+    RingBufferInfo getInfo();
+
+    /**
+     * @brief Set the minimum number of bytes that will cause a notification.
+     *
+     * The producer will be notified through the IRingBufferSinkListener::onSpaceAvailable callback when the number of
+     * bytes available for writing in the ring buffer is greater than or equal to the specified threshold. Once that
+     * callback has returned, the producer can call acquire() to acquire the available bytes for writing. If the number
+     * of bytes available for writing is already greater than or equal to the specified threshold when this method is
+     * called, the producer will be notified immediately through the onSpaceAvailable callback.
+     *
+     * The notification threshold can be set to 0 to disable notifications.
+     *
+     * The default value is one, i.e. the producer will be notified as soon as there is at least one byte available for
+     * writing in the ring buffer.
+     *
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT If the provided threshold is less than 0 or greater
+     *                                                           than the size of the ring buffer.
+     *
+     * @param bytes The minimum number of bytes that will cause a notification.
+     */
+    void setNotificationThreshold(in int bytes);
+
+    /**
+     * @brief Acquire bytes for writing.
+     *
+     * @note If the underlying IRingBuffer is set up to use overflowing behavior, this method will return immediately
+     * with the number of bytes requested, limited by the number of continuous bytes available. It will thus override
+     * data which has not yet been read by the consumer if the producer writes data faster than the consumer reading it.
+     *
+     * @note The producer is not allowed to call this method again before releasing the bytes acquired in the previous
+     * call to acquire. This is to prevent fragmentation of the ring buffer and to ensure that the producer can always
+     * write to a contiguous block of memory.
+     *
+     * @exception ::android::binder::Status::EX_ILLEGAL_STATE If the producer has already acquired bytes and has not
+     *                                                        yet released them.
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT If the provided number of bytes is less than or equal
+     *                                                           to 0 or greater than the size of the ring buffer.
+     *
+     * @param bytes The number of bytes to acquire for writing.
+     * @returns A RingBufferAcquireResult containing the offset in the ring buffer where the producer can start writing
+     *         data and the number of bytes that were actually acquired for writing. Null, if the ring buffer is set up
+     *         not to overflow and the ring buffer is full.
+     */
+    @nullable RingBufferAcquireResult acquire(in int bytes);
+
+    /**
+     * @brief Release bytes in the ring buffer after writing.
+     *
+     * If bytes is less than the number of bytes acquired in the corresponding acquire call, the remaining bytes will be
+     * dropped and not marked readable for the consumer. They can be acquired again in a subsequent call to acquire.
+     *
+     * @note Once this call has returned, the producer is not allowed to write to the ring buffer at the offset and size
+     * returned by the corresponding acquire call anymore. The consumer is now allowed to read from the ring buffer at
+     * that offset.
+     *
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT If the provided ID does not match the ID returned by
+     *                                                           the last acquire call or if the provided number of
+     *                                                           bytes is less than 0 or greater than the number of
+     *                                                           bytes acquired in the corresponding acquire call.
+     *
+     * @param id The ID from the corresponding acquire call to correlate the release with the acquire.
+     * @param bytes The number of bytes to release after writing.
+     */
+    void release(in RingBufferAcquireResult.Id id, in int bytes);
+}
