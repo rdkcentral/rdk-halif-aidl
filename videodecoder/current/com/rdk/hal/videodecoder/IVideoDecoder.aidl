@@ -24,6 +24,7 @@ import com.rdk.hal.videodecoder.PropertyKVPair;
 import com.rdk.hal.videodecoder.Codec;
 import com.rdk.hal.videodecoder.IVideoDecoderControllerListener;
 import com.rdk.hal.videodecoder.IVideoDecoderEventListener;
+import com.rdk.hal.OperationalMode;
 import com.rdk.hal.PropertyValue;
 import com.rdk.hal.videodecoder.State;
 
@@ -166,13 +167,13 @@ interface IVideoDecoder
 
     /**
 	 * Opens the Video Decoder to decode the specified codec with a specified maximum resolution.
-     * 
+     *
      * If successful the Video Decoder transitions to an `OPENING` state and then a `READY` state
      * which is notified to any registered `IVideoDecoderEventListener` interfaces.
-     * 
+     *
      * Controller related callbacks are made through the `IVideoDecoderControllerListener`
      * passed into the call.
-     * 
+     *
      * The returned `IVideoDecoderController` interface is used by the client to feed data buffers
      * for decode and manage the decoding flow.
      *
@@ -190,14 +191,14 @@ interface IVideoDecoder
      * @param[in] maxHeight                         maximum height of the decoded frame.
      *
      * @returns IVideoDecoderController or null if the codec or the requested secure mode is not supported.
-     * 
+     *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
-     * 
+     *
      * @pre The resource must be in State::CLOSED.
-     * 
+     *
      * @see IVideoDecoderController, IVideoDecoderController.close(), registerEventListener()
      */
     @nullable IVideoDecoderController openWithResolution(in Codec codec, in boolean secure, in IVideoDecoderControllerListener videoDecoderControllerListener, in int maxWidth, in int maxHeight);
@@ -263,4 +264,20 @@ interface IVideoDecoder
      * @see registerEventListener()
      */
     boolean unregisterEventListener(in IVideoDecoderEventListener videoDecoderEventListener);
+
+    /**
+     * Gets the output mode currently selected by the vendor for this decoder.
+     *
+     * The mode is implementation-selected and is not configurable through
+     * the Video Decoder HAL. TUNNELLED output is consumed within the vendor
+     * layer; NON_TUNNELLED output is returned through onFrameOutput().
+     *
+     * @returns Current operational output mode.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the STARTED state.
+     *
+     * @pre The resource must be in State::STARTED.
+     */
+    OperationalMode getCurrentOperationalMode();
 }
