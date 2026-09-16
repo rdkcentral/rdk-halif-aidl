@@ -136,10 +136,17 @@ echo ""
 # orthogonal and co-exists with a change-class label (an ABI change is a
 # `Breaking Change`). It does NOT affect the version bump; `release.sh` never
 # reads it.
+#
+# `New Interface` marks a brand-new interface surface and is orthogonal in the
+# same way: it says *what kind* of change this is, while `Major Change` still
+# carries the bump. Both are mirrored to the project's `Interface Effect`
+# field by scripts/project_interface_effect.py, which writes them alongside
+# the change class rather than in place of it.
 # ---------------------------------------------------------------------------
 
 echo "Process / governance labels:"
 create_label "CR"                    "5319e7" "Change Request — ABI change needing wider review sign-off + separate release scheduling"
+create_label "New Interface"         "d93f0b" "Brand-new interface surface (new component / new AIDL) — major effect; carries Major Change for the bump"
 
 echo ""
 
