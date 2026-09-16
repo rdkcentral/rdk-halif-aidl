@@ -36,7 +36,7 @@ oneway interface IVideoCaptureEventListener
      *
      * Examples are video memory exhaustion mid-session and an IOMMU fault.
      *
-     * @param[in] errorCode         A ErrorCode enum value.
+     * @param[in] errorCode         An ErrorCode enum value.
      * @param[in] vendorErrorCode   A vendor specific error code.
      */
     void onSystemError(in ErrorCode errorCode, in int vendorErrorCode);

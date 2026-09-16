@@ -242,7 +242,7 @@ interface IVideoCapture
      *
      * @see IVideoCaptureController.setProperty(), Property
      */
-    PropertyValue getProperty(in Property property);
+    @nullable PropertyValue getProperty(in Property property);
 
     /**
      * Closes the capture session.

@@ -93,7 +93,7 @@ oneway interface IVideoCaptureControllerListener
      * The session stops delivering frames. The client stops and closes it, or corrects
      * the condition and starts again.
      *
-     * @param[in] errorCode         A ErrorCode enum value.
+     * @param[in] errorCode         An ErrorCode enum value.
      * @param[in] vendorErrorCode   A vendor specific error code.
      *
      * @see ErrorCode
