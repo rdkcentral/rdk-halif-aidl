@@ -61,6 +61,12 @@ enum Property {
 	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
+	 *
+	 * @deprecated Superseded by Metric::SYNC_OFFSET_MS, read through
+	 * IAVClock.getMetrics(). That call latches every requested figure at
+	 * one instant, so paired counters cannot be read torn, and reports
+	 * NOT_SUPPORTED rather than -1 where the product cannot measure it.
+	 * This property resets on open()/flush()/stop(); the metric does not.
 	 */
 	METRIC_AV_SYNC_ACCURACY_MS = 1000,
 
@@ -76,6 +82,12 @@ enum Property {
 	 * @exception binder::Status::Exception::EX_NONE for success
 	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
 	 *
+	 *
+	 * @deprecated Superseded by Metric::RESYNC_COUNT, read through
+	 * IAVClock.getMetrics(). That call latches every requested figure at
+	 * one instant, so paired counters cannot be read torn, and reports
+	 * NOT_SUPPORTED rather than -1 where the product cannot measure it.
+	 * This property resets on open()/flush()/stop(); the metric does not.
 	 */
 	METRIC_AV_RESYNC_COUNT = 1001,
 }

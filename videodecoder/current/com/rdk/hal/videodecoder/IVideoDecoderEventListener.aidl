@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.videodecoder;
+import com.rdk.hal.metrics.MetricEvent;
 import com.rdk.hal.videodecoder.ErrorCode;
 import com.rdk.hal.videodecoder.State;
 
@@ -45,4 +46,24 @@ oneway interface IVideoDecoderEventListener {
      * @param[in] newState              The new state that the decoder has transitioned to.
      */
     void onStateChanged(in State oldState, in State newState);
+
+    /**
+     * Callback when the decoder has reported a metric occurrence.
+     *
+     * One occurrence per call, stamped at detection rather than at delivery, so a
+     * consumer can tell how long an event waited and two events keep their true
+     * spacing however they were dispatched.
+     *
+     * This carries the measurable detail of an occurrence — which fault, where in
+     * the stream, the vendor's own code for it. `onDecodeError()` remains the
+     * control signal that a fault happened; the two describe the same fault from
+     * different sides, and a decoder raising one raises the other.
+     *
+     * The event kind is a `MetricEventKind` value and its payload fields are
+     * `MetricEventAttribute` values, so a listener can walk an occurrence whose
+     * kind it does not specifically know.
+     *
+     * @param[in] event                 The occurrence, its identifier and its payload.
+     */
+    void onMetricEvent(in MetricEvent event);
 }
