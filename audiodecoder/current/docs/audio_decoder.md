@@ -35,6 +35,8 @@ The decoded audio output can be delivered via two distinct paths:
 
 The choice between tunnelled and non-tunnelled mode is made on a per-codec basis during the initialization of the audio decoder. This flexibility allows the system to optimize performance for different audio formats. It's important to note that the audio decoder can switch between these modes for different codec instances, but a single codec instance must operate in one mode or the other for the duration of its use. The operational mode of the audio decoder is independent of the video decoder's mode. This means that it is perfectly valid to have tunnelled video and non-tunnelled audio, or vice-versa.
 
+Clients can query the current output mode with `IAudioDecoder.getCurrentOperationalMode()` while the resource is in the `STARTED` state. The mode is selected by the vendor and is read-only.
+
 ## PCM Handling
 
 Uncompressed PCM audio streams do not require decoding. Therefore, they bypass the Audio Decoder HAL entirely. Instead, they are routed directly to the [Audio Sink](../audiosink/audio_sink.md) service for mixing and playback. This is an important distinction to make for clarity.
@@ -75,6 +77,7 @@ The interface can be found by following this link [audiodecoder](https://github.
 | `FrameMetadata.aidl` | Parcelable of audio frame metadata passed from the audio decoder. |
 | `PCMFormat.aidl` | Enum list of PCM coding formats. |
 | `Property.aidl` | Enum list of audio decoder properties. |
+| `OperationalMode.aidl` | Common enum value describing the current output routing mode. |
 
 ## Initialization
 
