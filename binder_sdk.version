@@ -5,17 +5,33 @@
 # clones the toolchain. Keep it pinned so the committed module-local
 # generated C++ always matches the generator that produced it.
 #
-# Pinned to release tag 2.6.0 (linux_binder_idl) which ships:
-#  - AIDL surface dump & structural diff toolchain (linux_binder_idl#27/#48):
-#    aidl_ops dump-surface emits the declared surface as canonical
-#    deterministic text; diff-surface classifies the structural difference
-#    (breaking / major / none) — the engine consumed by the release audit
-#    gate (#633/#568) to validate declared bump classes.
-# The AIDL generator is byte-identical to 2.5.0, so committed module-local C++
-# is unchanged by this bump — it is a toolchain-currency bump, not a regen.
-# Previously 2.5.0, which decoupled the binder wire protocol from compile
-# bitness (linux_binder_idl#42/#45/#46/#47) and added the QEMU kernel-matrix
-# round-trip harness (linux_binder_idl#40/#41).
+# ---------------------------------------------------------------------------
+# TESTING PIN - NOT A RELEASE.
+#
+# Pointed at the linux_binder_idl branch carrying the current build system
+# (rdkcentral/linux_binder_idl PR #69): protocol 8 by default, BINDER_PROTOCOL
+# and TARGET_BITNESS in place of switches that read backwards, and the QEMU
+# kernel matrix that proves them.
+#
+# It is a branch on purpose: the switch names this repository now passes do not
+# exist in 2.6.0, and CMake IGNORES an unknown -D and succeeds - so building
+# against the old tag would silently produce a protocol-7 SDK with a green
+# result. Testing against the branch is what makes the new switches real rather
+# than ignored.
+#
+# This MUST return to a released tag before merge. A branch moves underneath
+# you, so the committed module-local C++ stops being reproducible from the pin,
+# which is the whole reason this file exists.
+#
+#   revert to:  2.7.0        once it is cut and carries PR #69
+# ---------------------------------------------------------------------------
+#
+# 2.6.0 (the previous pin) shipped the AIDL surface dump & structural diff
+# toolchain (linux_binder_idl#27/#48): aidl_ops dump-surface emits the declared
+# surface as canonical deterministic text; diff-surface classifies the
+# structural difference (breaking / major / none) - the engine consumed by the
+# release audit gate (#633/#568). Its AIDL generator is byte-identical to
+# 2.5.0, so committed module-local C++ is unchanged across these bumps.
 #
 # Override for a one-off build with:  BINDER_VERSION=<ref> ./build_binder.sh
-2.6.0
+feature/68-build-host-aidl-default-off
