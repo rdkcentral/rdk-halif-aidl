@@ -56,5 +56,6 @@ notes:
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
     Architecture: pending
-    AV_Architecture: pending
     Product_Architecture: pending
+    AV_Architecture: pending
+    Vendor_Layer_Team: pending
