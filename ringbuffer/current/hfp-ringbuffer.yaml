@@ -24,3 +24,11 @@
 
 ringbuffer:
   interfaceVersion: current
+
+  # Overflow behaviour is a capability of the implementation, not an interface-wide
+  # default - see IRingBuffer.setOverflowing() and HAL.RINGBUF.4. List every
+  # behaviour the platform can provide; setOverflowing() throws
+  # EX_UNSUPPORTED_OPERATION for any behaviour not listed here.
+  supportedOverflowBehaviours:
+    - OVERFLOWING # setOverflowing(true)  - producer never blocks, oldest data is overwritten
+    - NON_OVERFLOWING # setOverflowing(false) - producer's acquire() returns null when full, no data loss

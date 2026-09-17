@@ -17,9 +17,11 @@ package com.rdk.hal.ringbuffer;
 import com.rdk.hal.ringbuffer.RingBufferErrorCode;
 
 /**
- * Callback interface for the consumer side of IRingBuffer.
+ * @brief Callback interface for the consumer side of IRingBuffer.
  *
- * It's not allowed to call any methods on IRingBufferSource or IRingBuffer from within the callbacks of this interface.
+ * This interface is oneway, so callbacks are dispatched asynchronously and the implementation does not wait for them
+ * to return. Methods on IRingBufferSource or IRingBuffer must not be called from within a callback body; the consumer
+ * may call them once the callback has returned.
  *
  * @author Jan Pedersen
  * @author Christian George
@@ -28,7 +30,7 @@ import com.rdk.hal.ringbuffer.RingBufferErrorCode;
 @VintfStability
 oneway interface IRingBufferSourceListener {
     /**
-     * Called when there's data available in the ring buffer for the consumer to read.
+     * @brief Called when there's data available in the ring buffer for the consumer to read.
      *
      * This callback is triggered when the number of bytes available for reading in the ring buffer is greater than or
      * equal to the notification threshold set by the consumer using the IRingBufferSource::setNotificationThreshold
@@ -43,7 +45,7 @@ oneway interface IRingBufferSourceListener {
     void onDataAvailable(in int bytes);
 
     /**
-     * Called on error.
+     * @brief Called on error.
      *
      * @param code The error code indicating the type of error that occurred.
      * @param message A human-readable message providing more details about the error.

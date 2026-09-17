@@ -15,7 +15,7 @@
 package com.rdk.hal.ringbuffer;
 
 /**
- * Information about an IRingBuffer.
+ * @brief Information about an IRingBuffer.
  *
  * The parcelable is kept as small as possible to avoid unnecessary overhead when sending it over Binder. For example,
  * the number of bytes available for writing is not included, as it can be calculated from the size and the number of
@@ -35,4 +35,7 @@ parcelable RingBufferInfo {
 
     /** The overflow setting of the ring buffer. */
     boolean isOverflowing;
+
+    /** Reserved for future use. */
+    ParcelableHolder extension;
 }

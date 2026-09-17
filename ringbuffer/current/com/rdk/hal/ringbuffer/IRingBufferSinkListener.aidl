@@ -17,9 +17,11 @@ package com.rdk.hal.ringbuffer;
 import com.rdk.hal.ringbuffer.RingBufferErrorCode;
 
 /**
- * Callback interface for the producer side of IRingBuffer.
+ * @brief Callback interface for the producer side of IRingBuffer.
  *
- * It's not allowed to call any methods on IRingBufferSink or IRingBuffer from within the callbacks of this interface.
+ * This interface is oneway, so callbacks are dispatched asynchronously and the implementation does not wait for them
+ * to return. Methods on IRingBufferSink or IRingBuffer must not be called from within a callback body; the producer
+ * may call them once the callback has returned.
  *
  * @author Jan Pedersen
  * @author Christian George
@@ -28,7 +30,7 @@ import com.rdk.hal.ringbuffer.RingBufferErrorCode;
 @VintfStability
 oneway interface IRingBufferSinkListener {
     /**
-     * Called when there's space available in the ring buffer for the producer to write data.
+     * @brief Called when there's space available in the ring buffer for the producer to write data.
      *
      * This callback is triggered when the number of bytes available for writing in the ring buffer is greater than or
      * equal to the notification threshold set by the producer using the IRingBufferSink::setNotificationThreshold
@@ -43,7 +45,7 @@ oneway interface IRingBufferSinkListener {
     void onSpaceAvailable(in int bytes);
 
     /**
-     * Called when the consumer side has requested a flush of the ring buffer.
+     * @brief Called when the consumer side has requested a flush of the ring buffer.
      *
      * This can be used by the producer to flush any internal buffers or data sources to ensure no stale data will be
      * written to the ring buffer going forward.
@@ -51,7 +53,7 @@ oneway interface IRingBufferSinkListener {
     void onFlushRequested();
 
     /**
-     * Called on error.
+     * @brief Called on error.
      *
      * @param code The error code indicating the type of error that occurred.
      * @param message A human-readable message providing more details about the error.

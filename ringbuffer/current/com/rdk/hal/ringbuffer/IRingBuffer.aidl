@@ -18,9 +18,17 @@ import com.rdk.hal.ringbuffer.IRingBufferSink;
 import com.rdk.hal.ringbuffer.IRingBufferSinkListener;
 import com.rdk.hal.ringbuffer.IRingBufferSource;
 import com.rdk.hal.ringbuffer.IRingBufferSourceListener;
+import com.rdk.hal.ringbuffer.RingBufferInfo;
 
 /**
- * Generic ring buffer interface for HAL components.
+ * @brief Generic ring buffer interface for HAL components.
+ *
+ * This interface is implementation-internal. It is owned by the HAL component that creates the ring buffer and is
+ * deliberately never exposed over the producer or consumer interfaces: it is not registered with the service manager,
+ * has no serviceName constant, and is not returned by any method a producer or consumer client can call. Clients only
+ * ever hold an IRingBufferSink or an IRingBufferSource, obtained from the owning HAL component.
+ *
+ * Buffer size and overflow behaviour are therefore set by the owning component, not negotiated by its clients.
  *
  * The ring buffer has to exhibit the typical Linux-like shared memory semantics, i.e. both producer and consumer have
  * to be able to mmap(2) the same shared memory using the file descriptor accessible through the IRingBufferSink and
@@ -43,7 +51,19 @@ import com.rdk.hal.ringbuffer.IRingBufferSourceListener;
 @VintfStability
 interface IRingBuffer {
     /**
-     * Set the size in bytes of the ring buffer.
+     * @brief Get information about the ring buffer.
+     *
+     * Available to the owning component at any time, including before a producer or consumer has been registered.
+     *
+     * @returns A snapshot of the ring buffer size, readable byte count and overflow setting.
+     */
+    RingBufferInfo getInfo();
+
+    /**
+     * @brief Set the size in bytes of the ring buffer.
+     *
+     * Sizes and offsets are 32-bit throughout this interface, which bounds a ring buffer at 2 GiB. That limit is
+     * deliberate and is not expected to constrain the intended use cases.
      *
      * @note If there is currently a producer or a consumer registered, ::android::binder::Status::EX_ILLEGAL_STATE will
      * be thrown.
@@ -58,7 +78,12 @@ interface IRingBuffer {
     void setSize(in int bytes);
 
     /**
-     * Set the overflowing behavior of the ring buffer.
+     * @brief Set the overflowing behavior of the ring buffer.
+     *
+     * The interface defines no default. Whether a ring buffer overflows, and whether that behaviour can be changed at
+     * all, is a capability of the particular implementation, so the owning component shall set the behaviour it
+     * requires rather than relying on an initial value, and shall be prepared for EX_UNSUPPORTED_OPERATION where the
+     * implementation does not offer it. The value in effect can be read back through getInfo().
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_STATE If there is currently a producer or a consumer registered.
      * @exception ::android::binder::Status::EX_UNSUPPORTED_OPERATION If the provided overflowing behavior is not
@@ -67,15 +92,21 @@ interface IRingBuffer {
      * @param enabled If false, producers will be unable to write when the ring buffer is full. This avoids data loss on
      * the client side, but will block the producer until the consumer has read enough data to free up space in the ring
      * buffer. If true, producers will be able to write even when the ring buffer is full, which will result in data
-     * loss on the client side, but will not block the producer. The default value is true.
+     * loss on the client side, but will not block the producer.
      */
     void setOverflowing(in boolean enabled);
 
     /**
-     * Registers a producer to the ring buffer.
+     * @brief Registers a producer to the ring buffer.
      *
      * @note The producer shall expect to receive a callback to IRingBufferSinkListener::onSpaceAvailable immediately
      * after registration. This is to allow the producer to learn about the ring buffer's size.
+     *
+     * @note The listener is hosted by the client, so the implementation shall register a death recipient on it
+     * (linkToDeath) to learn if the producer terminates unexpectedly. On death the implementation shall discard any
+     * acquire result the producer still held and release the registration, returning the producer slot to its
+     * unregistered state as if unregisterProducer() had been called. A crashed producer must not leave the slot
+     * permanently occupied.
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_STATE If there is currently a producer registered.
      *
@@ -85,7 +116,7 @@ interface IRingBuffer {
     IRingBufferSink registerProducer(in IRingBufferSinkListener listener);
 
     /**
-     * Unregisters the current producer from the ring buffer.
+     * @brief Unregisters the current producer from the ring buffer.
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_STATE If there is currently no producer registered.
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT If the provided sink does not match the currently
@@ -94,7 +125,13 @@ interface IRingBuffer {
     void unregisterProducer(in IRingBufferSink sink);
 
     /**
-     * Registers a consumer to the ring buffer.
+     * @brief Registers a consumer to the ring buffer.
+     *
+     * @note The listener is hosted by the client, so the implementation shall register a death recipient on it
+     * (linkToDeath) to learn if the consumer terminates unexpectedly. On death the implementation shall release any
+     * acquire results the consumer still held, returning that space to the producer, and release the registration,
+     * returning the consumer slot to its unregistered state as if unregisterConsumer() had been called. A crashed
+     * consumer must not leave the slot permanently occupied.
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_STATE If there is currently a consumer registered.
      *
@@ -104,7 +141,7 @@ interface IRingBuffer {
     IRingBufferSource registerConsumer(in IRingBufferSourceListener listener);
 
     /**
-     * Unregisters the current consumer from the ring buffer.
+     * @brief Unregisters the current consumer from the ring buffer.
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_STATE If there is currently no consumer registered.
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT If the provided source does not match the currently

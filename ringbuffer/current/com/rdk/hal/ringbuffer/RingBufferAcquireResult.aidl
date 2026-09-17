@@ -15,7 +15,7 @@
 package com.rdk.hal.ringbuffer;
 
 /**
- * Results of a call to acquire() for either reading or writing data in the ring buffer.
+ * @brief Results of a call to acquire() for either reading or writing data in the ring buffer.
  *
  * @author Jan Pedersen
  * @author Christian George
@@ -26,7 +26,11 @@ parcelable RingBufferAcquireResult {
     /** A type-safe ID. */
     @VintfStability
     parcelable Id {
-        int id;
+        /** The undefined ID value. */
+        const int UNDEFINED = -1;
+
+        /** The actual ID. */
+        int value;
     }
 
     /** The ID to correlate acquire and release calls. */
@@ -55,4 +59,7 @@ parcelable RingBufferAcquireResult {
      * the beginning of the ring buffer.
      */
     int remaining;
+
+    /** Reserved for future use. */
+    ParcelableHolder extension;
 }

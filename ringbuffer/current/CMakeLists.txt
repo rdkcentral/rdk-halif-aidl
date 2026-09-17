@@ -108,15 +108,8 @@ target_include_directories(${LIB_NAME} PRIVATE
 target_link_directories(${LIB_NAME} PRIVATE
     "${BINDER_SDK_DIR}/lib/binder"
 )
-if (NOT DEFINED HALIF_LIB_DIR)
-    message(FATAL_ERROR "HALIF_LIB_DIR is required (this component has HAL dependencies). "
-        "Set it to the directory holding dependency lib*-cpp.so (e.g. out/target/lib/rdk-halif-aidl).")
-endif()
-if (DEFINED HALIF_LIB_DIR)
-    target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
-endif()
 
-target_link_libraries(${LIB_NAME} PRIVATE binder utils common-vcurrent-cpp)
+target_link_libraries(${LIB_NAME} PRIVATE binder utils)
 
 # The target_link_directories() above are BUILD-time search paths. By default
 # CMake bakes them into the library as RPATH/RUNPATH, which ships absolute build

@@ -22,7 +22,7 @@
 # type        - Responsibility: SOC or OEM                                [manual]
 component: ringbuffer
 version: 0.1.0.0
-status: GREEN
+status: AMBER
 description: "Generic ring buffer interface for opaque data"
 type: OEM
 
@@ -51,12 +51,13 @@ scope:
 #   owners        - Responsible architecture teams
 notes:
   priority: 21
-  status_detail: "In review"
+  status_detail: "In review; review feedback applied (PR #258)"
+  action: "Complete remaining review items and obtain Architecture sign-off, then flip to GREEN."
   risk: "Currently only tested with broadcast use-cases"
   owners: "Broadcast_Team"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
-    Architecture: pending
-    Broadcast_Team: reviewed
+  Architecture: pending
+  Broadcast_Team: reviewed

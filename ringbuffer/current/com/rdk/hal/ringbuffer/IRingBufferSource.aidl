@@ -18,7 +18,7 @@ import com.rdk.hal.ringbuffer.RingBufferAcquireResult;
 import com.rdk.hal.ringbuffer.RingBufferInfo;
 
 /**
- * Consumer side of IRingBuffer.
+ * @brief Consumer side of IRingBuffer.
  *
  * @author Jan Pedersen
  * @author Christian George
@@ -27,21 +27,41 @@ import com.rdk.hal.ringbuffer.RingBufferInfo;
 @VintfStability
 interface IRingBufferSource {
     /**
-     * Get the underlying file descriptor for the ring buffer.
+     * @brief Get the underlying file descriptor for the ring buffer.
+     *
+     * The returned descriptor is a duplicate owned by the caller, which is responsible for closing it. Calling this
+     * method more than once yields independent descriptors, each of which must be closed.
+     *
+     * The descriptor remains valid until the caller closes it, but the memory it refers to is only meaningful while
+     * this consumer is registered. After unregisterConsumer(), or after the implementation has released the
+     * registration because the consumer died, the descriptor must no longer be used to read buffer contents: the
+     * region may have been reused by a new consumer. Unmap and close it as part of unregistering.
+     *
+     * @returns The file descriptor backing the ring buffer, to be mapped or read by the consumer.
      */
     ParcelFileDescriptor getFileDescriptor();
 
-    /** Get information about the ring buffer. */
+    /**
+     * @brief Get information about the ring buffer.
+     *
+     * The result is a snapshot taken while the call was serviced, not a live view. The producer runs concurrently, so
+     * availableForReading may already be out of date by the time the caller inspects it and is advisory only — useful
+     * for metrics or coarse decisions, but never as the basis for a read. acquire() is the authoritative operation,
+     * and the bytes field of its result is the only trustworthy statement of what the caller may access. The size and
+     * overflow setting are stable while a client is registered.
+     *
+     * @returns A snapshot of the ring buffer size, readable byte count and overflow setting.
+     */
     RingBufferInfo getInfo();
 
     /**
-     * Set the minimum number of bytes that will cause a notification.
+     * @brief Set the minimum number of bytes that will cause a notification.
      *
      * The consumer will be notified through the IRingBufferSourceListener::onDataAvailable callback when the number of
-     * bytes available for reading in the ring buffer is greater than or equal to the specified threshold. The consumer
-     * can then call acquire() to acquire the available bytes for reading. If the number of bytes available for reading
-     * is already greater than or equal to the specified threshold when this method is called, the consumer will be
-     * notified immediately through the onDataAvailable callback.
+     * bytes available for reading in the ring buffer is greater than or equal to the specified threshold. Once that
+     * callback has returned, the consumer can call acquire() to acquire the available bytes for reading. If the number
+     * of bytes available for reading is already greater than or equal to the specified threshold when this method is
+     * called, the consumer will be notified immediately through the onDataAvailable callback.
      *
      * The notification threshold can be set to 0 to disable notifications.
      *
@@ -56,7 +76,11 @@ interface IRingBufferSource {
     void setNotificationThreshold(in int bytes);
 
     /**
-     * Acquire data for reading.
+     * @brief Acquire data for reading.
+     *
+     * Unlike the producer, the consumer may hold several outstanding acquire results at once: calling this method
+     * again before releasing a previous result is allowed and does not throw. Each result is identified by its own
+     * RingBufferAcquireResult.Id.
      *
      * @note If the ring buffer has been set up to be overflowing, the data acquired by this call may be significantly
      * newer than the data acquired through the last call to acquire() when an overflow has occurred. Likewise, the
@@ -81,21 +105,24 @@ interface IRingBufferSource {
     @nullable RingBufferAcquireResult acquire(in int bytes);
 
     /**
-     * Release bytes in the ring buffer after reading.
+     * @brief Release bytes in the ring buffer after reading.
+     *
+     * Outstanding acquire results may be released in any order; the consumer is not required to release them in the
+     * order they were acquired. Space is returned to the producer as each result is released.
      *
      * @note Once this call has returned, the consumer is not allowed to read from the ring buffer at the offset and
      * size returned by the corresponding acquire call anymore. The producer is now allowed to write to the ring buffer
      * at that offset.
      *
-     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT If the provided ID does not match the ID returned by
-     *                                                           a call to acquire().
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT If the provided ID does not correspond to an
+     *                                                           outstanding acquire on this source.
      *
      * @param id The ID from the corresponding acquire call to correlate the release with the acquire.
      */
     void release(in RingBufferAcquireResult.Id id);
 
     /**
-     * Request a flush of the ring buffer.
+     * @brief Request a flush of the ring buffer.
      *
      * This will both reset read and write positions and forward the request to the producer in order to give it a
      * chance to reset its internal buffers as well. The producer will be notified through the

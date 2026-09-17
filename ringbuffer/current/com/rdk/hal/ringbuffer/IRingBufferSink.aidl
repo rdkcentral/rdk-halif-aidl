@@ -18,7 +18,7 @@ import com.rdk.hal.ringbuffer.RingBufferAcquireResult;
 import com.rdk.hal.ringbuffer.RingBufferInfo;
 
 /**
- * Producer side of IRingBuffer.
+ * @brief Producer side of IRingBuffer.
  *
  * @author Jan Pedersen
  * @author Christian George
@@ -27,21 +27,41 @@ import com.rdk.hal.ringbuffer.RingBufferInfo;
 @VintfStability
 interface IRingBufferSink {
     /**
-     * Get the underlying file descriptor for the ring buffer.
+     * @brief Get the underlying file descriptor for the ring buffer.
+     *
+     * The returned descriptor is a duplicate owned by the caller, which is responsible for closing it. Calling this
+     * method more than once yields independent descriptors, each of which must be closed.
+     *
+     * The descriptor remains valid until the caller closes it, but the memory it refers to is only meaningful while
+     * this producer is registered. After unregisterProducer(), or after the implementation has released the
+     * registration because the producer died, the descriptor must no longer be used to read or write buffer contents:
+     * the region may have been reused by a new producer. Unmap and close it as part of unregistering.
+     *
+     * @returns The file descriptor backing the ring buffer, to be mapped or read by the producer.
      */
     ParcelFileDescriptor getFileDescriptor();
 
-    /** Get information about the ring buffer. */
+    /**
+     * @brief Get information about the ring buffer.
+     *
+     * The result is a snapshot taken while the call was serviced, not a live view. The consumer runs concurrently, so
+     * availableForReading may already be out of date by the time the caller inspects it and is advisory only — useful
+     * for metrics or coarse decisions, but never as the basis for a write. acquire() is the authoritative operation,
+     * and the bytes field of its result is the only trustworthy statement of what the caller may access. The size and
+     * overflow setting are stable while a client is registered.
+     *
+     * @returns A snapshot of the ring buffer size, readable byte count and overflow setting.
+     */
     RingBufferInfo getInfo();
 
     /**
-     * Set the minimum number of bytes that will cause a notification.
+     * @brief Set the minimum number of bytes that will cause a notification.
      *
      * The producer will be notified through the IRingBufferSinkListener::onSpaceAvailable callback when the number of
-     * bytes available for writing in the ring buffer is greater than or equal to the specified threshold. The producer
-     * can then call acquire() to acquire the available bytes for writing. If the number of bytes available for writing
-     * is already greater than or equal to the specified threshold when this method is called, the producer will be
-     * notified immediately through the onSpaceAvailable callback.
+     * bytes available for writing in the ring buffer is greater than or equal to the specified threshold. Once that
+     * callback has returned, the producer can call acquire() to acquire the available bytes for writing. If the number
+     * of bytes available for writing is already greater than or equal to the specified threshold when this method is
+     * called, the producer will be notified immediately through the onSpaceAvailable callback.
      *
      * The notification threshold can be set to 0 to disable notifications.
      *
@@ -56,7 +76,7 @@ interface IRingBufferSink {
     void setNotificationThreshold(in int bytes);
 
     /**
-     * Acquire bytes for writing.
+     * @brief Acquire bytes for writing.
      *
      * @note If the underlying IRingBuffer is set up to use overflowing behavior, this method will return immediately
      * with the number of bytes requested, limited by the number of continuous bytes available. It will thus override
@@ -79,7 +99,7 @@ interface IRingBufferSink {
     @nullable RingBufferAcquireResult acquire(in int bytes);
 
     /**
-     * Release bytes in the ring buffer after writing.
+     * @brief Release bytes in the ring buffer after writing.
      *
      * If bytes is less than the number of bytes acquired in the corresponding acquire call, the remaining bytes will be
      * dropped and not marked readable for the consumer. They can be acquired again in a subsequent call to acquire.
