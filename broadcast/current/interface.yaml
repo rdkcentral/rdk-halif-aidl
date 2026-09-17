@@ -1,8 +1,7 @@
 aidl_interface:
   name: broadcast
   srcs:
-    - com/rdk/hal/broadcast/*.aidl
-    - com/rdk/hal/broadcast/*/*.aidl
+    - com/rdk/hal/broadcast/**/*.aidl
   imports:
     - ringbuffer@current
   stability: vintf

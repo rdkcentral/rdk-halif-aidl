@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * Roll-off enumeration.
+ * @brief Roll-off enumeration.
  *
  * @author Jan Pedersen
  * @author Christian George

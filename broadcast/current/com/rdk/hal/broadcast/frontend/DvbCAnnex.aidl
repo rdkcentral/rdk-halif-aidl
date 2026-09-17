@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * Available DVB-C standards.
+ * @brief Available DVB-C standards.
  *
  * @author Jan Pedersen
  * @author Christian George

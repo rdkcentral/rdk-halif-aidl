@@ -17,7 +17,7 @@ package com.rdk.hal.broadcast.demux;
 import com.rdk.hal.broadcast.demux.FilterType;
 
 /**
- * Demux capabilities.
+ * @brief Demux capabilities.
  *
  * @author Jan Pedersen
  * @author Christian George

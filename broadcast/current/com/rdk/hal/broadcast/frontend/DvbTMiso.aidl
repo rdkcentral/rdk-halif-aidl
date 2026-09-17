@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * Multiple Input Single Output (MISO) modes defined for DVB-T frontend tuning.
+ * @brief Multiple Input Single Output (MISO) modes defined for DVB-T frontend tuning.
  *
  * @author Jan Pedersen
  * @author Christian George

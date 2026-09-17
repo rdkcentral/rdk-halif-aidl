@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * Available guard intervals.
+ * @brief Available guard intervals.
  *
  * @author Jan Pedersen
  * @author Christian George

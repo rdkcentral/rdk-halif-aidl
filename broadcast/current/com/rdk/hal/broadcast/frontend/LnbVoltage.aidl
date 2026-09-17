@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * LNB voltage enumeration.
+ * @brief LNB voltage enumeration.
  *
  * @author Jan Pedersen
  * @author Christian George

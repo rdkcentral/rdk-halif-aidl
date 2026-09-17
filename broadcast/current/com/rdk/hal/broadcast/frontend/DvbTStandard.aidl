@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * Available DVB-T standards.
+ * @brief Available DVB-T standards.
  *
  * @author Jan Pedersen
  * @author Christian George

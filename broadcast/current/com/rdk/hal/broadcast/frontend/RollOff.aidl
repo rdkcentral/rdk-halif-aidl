@@ -17,7 +17,7 @@ package com.rdk.hal.broadcast.frontend;
 import com.rdk.hal.broadcast.frontend.DvbSRollOff;
 
 /**
- * Roll-off factor.
+ * @brief Roll-off factor.
  *
  * @author Jan Pedersen
  * @author Christian George

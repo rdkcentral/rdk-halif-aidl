@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * LNB tone enumeration.
+ * @brief LNB tone enumeration.
  *
  * @author Jan Pedersen
  * @author Christian George

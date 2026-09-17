@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast;
 
 /**
- * HAL Implementation Version structure.
+ * @brief HAL Implementation Version structure.
  *
  * This version has to be filled by the service implementation and has to follow semantic versioning. It is not bound to
  * the interface version.

@@ -17,7 +17,7 @@ package com.rdk.hal.broadcast.frontend;
 import com.rdk.hal.broadcast.frontend.DvbTGuardInterval;
 
 /**
- * Available guard intervals.
+ * @brief Available guard intervals.
  *
  * @author Jan Pedersen
  * @author Christian George

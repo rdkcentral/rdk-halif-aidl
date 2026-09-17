@@ -21,7 +21,7 @@ import com.rdk.hal.broadcast.demux.ISupplementaryAudioFilter;
 import com.rdk.hal.broadcast.demux.IVideoFilter;
 
 /**
- * A typed demux filter instance.
+ * @brief A typed demux filter instance.
  *
  * Exactly one member is active and represents the concrete filter instance that was opened.
  *

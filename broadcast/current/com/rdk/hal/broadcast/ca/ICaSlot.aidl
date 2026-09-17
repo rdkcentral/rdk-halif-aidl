@@ -17,9 +17,13 @@ package com.rdk.hal.broadcast.ca;
 import com.rdk.hal.broadcast.ca.CaCapabilities;
 
 /**
- * CA slot HAL interface.
+ * @brief CA slot HAL interface.
  *
  * Represents a single Conditional Access (CA) slot on the platform. Obtain instances via IBroadcastManager.getCaSlot().
+ *
+ * @author Jan Pedersen
+ * @author Christian George
+ * @author Philipp Trommler
  */
 @VintfStability
 interface ICaSlot {
@@ -33,14 +37,22 @@ interface ICaSlot {
         int value;
     }
 
-    /** Get the ID of this CA slot. */
+    /**
+     * @brief Get the ID of this CA slot.
+     *
+     * @returns The resource ID of this CA slot.
+     */
     Id getId();
 
-    /** Get the supported capabilities of this CA slot. */
+    /**
+     * @brief Get the supported capabilities of this CA slot.
+     *
+     * @returns The capabilities of this CA slot.
+     */
     CaCapabilities getCapabilities();
 
     /**
-     * Enable or disable power to the CA slot.
+     * @brief Enable or disable power to the CA slot.
      *
      * @exception ::android::binder::Status::EX_UNSUPPORTED_OPERATION The CA slot does not support power control.
      *

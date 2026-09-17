@@ -18,7 +18,7 @@ import com.rdk.hal.broadcast.frontend.DvbCBandwidth;
 import com.rdk.hal.broadcast.frontend.DvbTBandwidth;
 
 /**
- * Union of available frontend bandwidths.
+ * @brief Union of available frontend bandwidths.
  *
  * @author Jan Pedersen
  * @author Christian George

@@ -18,7 +18,7 @@ import com.rdk.hal.broadcast.frontend.AtscModulation;
 import com.rdk.hal.broadcast.frontend.SignalDetectMode;
 
 /**
- * ATSC-specific tuning parameters.
+ * @brief ATSC-specific tuning parameters.
  *
  * @author Jan Pedersen
  * @author Christian George

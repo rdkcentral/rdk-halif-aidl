@@ -20,7 +20,7 @@ import com.rdk.hal.broadcast.demux.IDemux;
 import com.rdk.hal.broadcast.frontend.IFrontend;
 
 /**
- * BroadcastManager HAL interface.
+ * @brief BroadcastManager HAL interface.
  *
  * @author Jan Pedersen
  * @author Christian George
@@ -36,43 +36,65 @@ interface IBroadcastManager {
     const @utf8InCpp String serviceName = "BroadcastManager";
 
     /**
-     * Gets the service implementation version.
+     * @brief Gets the service implementation version.
      *
      * This is not the same as the interface version, which is defined for the AIDL interface itself. The same
      * implementation version may implement multiple versions of the interface, and multiple implementations versions
      * may implement the same interface version (for example following internal bug fixes).
+     *
+     * @returns The implementation name and semantic version of the service.
      */
     ImplementationVersion getImplementationVersion();
 
     /**
-     * Gets the platform list of frontend IDs.
+     * @brief Gets the platform list of frontend IDs.
      *
      * @returns Array of IFrontend.Id values for all frontends on this platform.
      */
     IFrontend.Id[] getFrontendIds();
 
     /**
-     * Get the frontend interface for the given ID.
+     * @brief Get the frontend interface for the given ID.
+     *
+     * @param[in] frontendId An ID obtained from getFrontendIds().
+     *
+     * @returns The frontend interface for the given ID.
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT if the ID is invalid.
      */
     IFrontend getFrontend(in IFrontend.Id frontendId);
 
-    /** Gets the list of demux IDs available on this platform. */
+    /**
+     * @brief Gets the list of demux IDs available on this platform.
+     *
+     * @returns Array of IDemux.Id values for all demuxes on this platform.
+     */
     IDemux.Id[] getDemuxIds();
 
     /**
-     * Get the demux interface for the given ID.
+     * @brief Get the demux interface for the given ID.
+     *
+     * @param[in] demuxId An ID obtained from getDemuxIds().
+     *
+     * @returns The demux interface for the given ID.
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT if the ID is invalid.
      */
     IDemux getDemux(in IDemux.Id demuxId);
 
-    /** Gets the list of CA slot IDs available on this platform. */
+    /**
+     * @brief Gets the list of CA slot IDs available on this platform.
+     *
+     * @returns Array of ICaSlot.Id values for all CA slots on this platform.
+     */
     ICaSlot.Id[] getCaSlotIds();
 
     /**
-     * Get the CA slot interface for the given ID.
+     * @brief Get the CA slot interface for the given ID.
+     *
+     * @param[in] slotId An ID obtained from getCaSlotIds().
+     *
+     * @returns The CA slot interface for the given ID.
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT if the ID is invalid.
      */

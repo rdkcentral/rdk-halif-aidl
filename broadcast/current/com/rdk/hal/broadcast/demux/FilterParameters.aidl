@@ -18,26 +18,31 @@ import com.rdk.hal.broadcast.demux.Mpeg2TsDataFilterParameters;
 import com.rdk.hal.broadcast.demux.Mpeg2TsTunnelFilterParameters;
 
 /**
- * Tuner-specific tuning parameters.
+ * @brief Type-specific parameters for opening a demux filter.
+ *
+ * Exactly one member is set. The active member selects which type of filter openFilter() creates, and carries the
+ * parameters for that filter type.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
+ *
+ * @see IDemuxController.openFilter()
  */
 @VintfStability
 union FilterParameters {
-    /** A MPEG-2 TS data filter instance. */
+    /** Parameters for a MPEG-2 TS data filter. */
     Mpeg2TsDataFilterParameters mpeg2TsData;
 
-    /** A MPEG-2 TS clock filter instance. */
+    /** Parameters for a MPEG-2 TS clock filter. */
     Mpeg2TsTunnelFilterParameters mpeg2TsClock;
 
-    /** A MPEG-2 TS video filter instance. */
+    /** Parameters for a MPEG-2 TS video filter. */
     Mpeg2TsTunnelFilterParameters mpeg2TsVideo;
 
-    /** A MPEG-2 TS audio filter instance. */
+    /** Parameters for a MPEG-2 TS audio filter. */
     Mpeg2TsTunnelFilterParameters mpeg2TsAudio;
 
-    /** A MPEG-2 TS supplementary audio filter instance. */
+    /** Parameters for a MPEG-2 TS supplementary audio filter. */
     Mpeg2TsTunnelFilterParameters mpeg2TsSupplementaryAudio;
 }

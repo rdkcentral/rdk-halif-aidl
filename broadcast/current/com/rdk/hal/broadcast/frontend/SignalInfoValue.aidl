@@ -34,9 +34,11 @@ import com.rdk.hal.broadcast.frontend.SpectralInversion;
 import com.rdk.hal.broadcast.frontend.TransmissionMode;
 
 /**
- * SignalInfo values.
+ * @brief SignalInfo values.
  *
- * These are the values that can be returned on status requests. It will always be in sync with @ref SignalInfoProperty.
+ * These are the values that can be returned on status requests. The members correspond one-to-one, and in the same
+ * order, with the entries of @ref SignalInfoProperty following its UNDEFINED entry. When adding a value here, add the
+ * matching property there in the same position.
  *
  * @author Jan Pedersen
  * @author Christian George
@@ -52,7 +54,7 @@ union SignalInfoValue {
     DemodLockState demodLockState;
     /** RF lock state. */
     RfLockState rfLockState;
-    /** RF signal level in dbm. */
+    /** RF signal level in dBm. */
     float rfLevel;
     /** Carrier to noise ratio in dB. */
     float cnr;
@@ -92,20 +94,20 @@ union SignalInfoValue {
     DvbCAnnex dvbCAnnex;
     /** Spectral inversion mode. */
     SpectralInversion inversion;
+    /** Roll-off factor. */
+    RollOff rollOff;
     /** DVB-T hierarchical transmission mode. */
     DvbTHierarchy dvbTHierarchy;
     /** DVB-T MISO mode. */
     DvbTMiso dvbTMiso;
     /** DVB-S/S2/S2X inner FEC. */
     DvbSInnerFec dvbSInnerFec;
-    /** roll-off factor. */
-    RollOff rollOff;
     /** DVB-S2/S2X pilot mode. */
     DvbSPilot dvbSPilot;
-    /** DVB-S2/S2X input stream identifier. */
-    int dvbSInputStreamId;
     /** DVB-S2/S2X physical-layer scrambling mode. */
     DvbSPlsMode dvbSPlsMode;
     /** DVB-S2/S2X physical-layer scrambling code. */
     int dvbSPlsCode;
+    /** DVB-S2/S2X input stream identifier. */
+    int dvbSInputStreamId;
 }

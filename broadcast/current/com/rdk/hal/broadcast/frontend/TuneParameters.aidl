@@ -20,7 +20,7 @@ import com.rdk.hal.broadcast.frontend.DvbSTuneParameters;
 import com.rdk.hal.broadcast.frontend.DvbTTuneParameters;
 
 /**
- * Tuner-specific tuning parameters.
+ * @brief Tuner-specific tuning parameters.
  *
  * @author Jan Pedersen
  * @author Christian George

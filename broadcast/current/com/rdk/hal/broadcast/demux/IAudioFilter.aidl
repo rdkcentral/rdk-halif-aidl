@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.demux;
 
 /**
- * MPEG-2 TS audio filter interface for tunneled pipelines.
+ * @brief MPEG-2 TS audio filter interface for tunneled pipelines.
  *
  * @author Jan Pedersen
  * @author Christian George

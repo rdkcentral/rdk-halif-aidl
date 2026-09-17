@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * DVB-S2/S2X physical-layer scrambling sequence (PLS) modes defined for DVB-S frontend tuning.
+ * @brief DVB-S2/S2X physical-layer scrambling sequence (PLS) modes defined for DVB-S frontend tuning.
  *
  * @author Jan Pedersen
  * @author Christian George

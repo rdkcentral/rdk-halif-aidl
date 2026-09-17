@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * Available frontend signal info property types.
+ * @brief Available frontend signal info property types.
  *
  * Note that this enum is shared across all frontend types and thus includes values that are only usable on some of
  * them. You should always request and consult the list of supported status properties from the frontend before using
@@ -42,13 +42,15 @@ enum SignalInfoProperty {
     DEMOD_LOCK,
     /** RF Lock status. */
     RF_LOCK,
-    /** RF signal level in dbm. */
+    /** RF signal level in dBm. */
     RF_LEVEL,
     /** Carrier to noise ratio in dB. */
     CNR,
-    /** Bit error rate - The number of error bit per 1 billion bits. */
+    /** Bit error rate - The number of error bits per 1 billion bits (range 0-1,000,000,000). */
     BER,
-    /** Pre Viterbi BER - The number of error bit per 1 billion bits before correction. */
+    /**
+     * Pre Viterbi BER - The number of error bits per 1 billion bits before correction (range 0-1,000,000,000).
+     */
     PRE_BER,
     /** Uncorrected error count. */
     UNCORRECTED_ERRORS,

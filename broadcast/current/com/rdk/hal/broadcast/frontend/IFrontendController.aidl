@@ -21,7 +21,7 @@ import com.rdk.hal.broadcast.frontend.TuneParameters;
 import com.rdk.hal.broadcast.frontend.TuneStatus;
 
 /**
- * Frontend controller interface.
+ * @brief Frontend controller interface.
  *
  * This interface gives exclusive access to a frontend's resources, allowing *one* client to tune the frontend and query
  * its status. Only one controller will be given out per frontend at a time, guaranteeing the client uninterrupted
@@ -30,6 +30,14 @@ import com.rdk.hal.broadcast.frontend.TuneStatus;
  * The client might choose to internally share the frontend controller with other components, in which case it's the
  * client's responsibility to ensure that the internal usage is synchronized.
  *
+ * The service side is thread-safe: concurrent calls on this interface are permitted and are serialised internally, so a
+ * client sharing the controller across threads risks interleaved ordering but never a corrupted service state. Calls
+ * may block for the duration of the underlying hardware operation.
+ *
+ * This interface deliberately provides no listener or callback interface. Tune status and signal information are
+ * observed by polling getTuneStatus() and getSignalInfo(); the client chooses its own polling interval. Nothing is
+ * pushed from the service, so a client that stops polling simply stops observing.
+ *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
@@ -37,17 +45,34 @@ import com.rdk.hal.broadcast.frontend.TuneStatus;
 @VintfStability
 interface IFrontendController {
     /**
-     * Tune with the given parameters.
+     * @brief Tune with the given parameters.
+     *
+     * Asynchronous: returns as soon as the request has been accepted, not when lock is achieved. The frontend enters
+     * TUNING and the client polls getTuneStatus() until it reports LOCKED or NO_SIGNAL.
+     *
+     * Retuning is allowed. Calling tune() while a tune is already in progress, or while locked, is legal and
+     * supersedes the previous request: the frontend abandons it and begins tuning to the new parameters. The client
+     * does not need to call stopTune() first.
+     *
+     * @param[in] tuneParams The carrier-specific parameters to tune with.
      *
      * @exception ::android::binder::Status::EX_UNSUPPORTED_OPERATION The given parameters are for a carrier type that
      *                                                                is not supported by this frontend.
      */
     void tune(in TuneParameters tuneParams);
 
-    /** Cancels any ongoing tune and sets the tuner into unlocked state. */
+    /** @brief Cancels any ongoing tune and sets the tuner into unlocked state. */
     void stopTune();
 
-    /** Gets the current frontend tune status. */
+    /**
+     * @brief Gets the current frontend tune status.
+     *
+     * This is the only means of observing tune progress: there is no completion callback, so a client waiting for a
+     * tune to finish polls this method until it reports LOCKED or NO_SIGNAL. Loss of lock after a successful tune is
+     * likewise only visible by continued polling.
+     *
+     * @returns Current tune status (e.g. IDLE, TUNING, NO_SIGNAL, LOCKED).
+     */
     TuneStatus getTuneStatus();
 
     /** Return type for @ref IFrontendController::getSignalInfo. */
@@ -77,7 +102,7 @@ interface IFrontendController {
     }
 
     /**
-     * Get frontend signal information.
+     * @brief Get frontend signal information.
      *
      * @param[in] properties A list of information types that shall be returned. Note that this has to be a subset of
      *                       the information types returned in the Capabilities set for this frontend.

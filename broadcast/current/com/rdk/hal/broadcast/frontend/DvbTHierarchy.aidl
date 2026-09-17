@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * Hierarchical transmission modes defined for DVB-T tuning.
+ * @brief Hierarchical transmission modes defined for DVB-T tuning.
  *
  * @author Jan Pedersen
  * @author Christian George

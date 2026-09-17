@@ -25,10 +25,14 @@ import com.rdk.hal.broadcast.frontend.DvbTTransmissionMode;
 import com.rdk.hal.broadcast.frontend.SpectralInversion;
 
 /**
- * DVB-T specific capabilities.
+ * @brief DVB-T specific capabilities.
  *
  * The AUTO member of all the enums will only be returned if the frontend supports a real auto selection of the
  * respective parameter. Just choosing the first applicable value and bailing out on error doesn't count as AUTO mode.
+ *
+ * There is deliberately no capability flag for PLP selection. PLP selection is a mandatory requirement for a DVB-T2
+ * frontend, so a frontend that reports DvbTStandard.T2 in dvbTStandards shall support DvbTTuneParameters.plpId,
+ * including FrontendConstants.AUTO_PLP_ID.
  *
  * @author Jan Pedersen
  * @author Christian George

@@ -23,7 +23,7 @@ import com.rdk.hal.broadcast.frontend.DvbSStandard;
 import com.rdk.hal.broadcast.frontend.SpectralInversion;
 
 /**
- * DVB-S/S2/S2X satellite broadcast standard capabilities.
+ * @brief DVB-S/S2/S2X satellite broadcast standard capabilities.
  *
  * The AUTO member of all the enums will only be returned if the frontend supports a real auto selection of the
  * respective parameter. Just choosing the first applicable value and bailing out on error doesn't count as AUTO mode.
@@ -34,6 +34,12 @@ import com.rdk.hal.broadcast.frontend.SpectralInversion;
  */
 @VintfStability
 parcelable DvbSCapabilities {
+    /** Minimum symbol rate in Symbols per second. */
+    int minSymbolRate;
+    /** Maximum symbol rate in Symbols per second. */
+    int maxSymbolRate;
+    /** Whether the tuner can autodetect the symbol rate. */
+    boolean isAutoSymbolRateSupported;
     /** Supported DVB-S standards. */
     DvbSStandard[] dvbSStandards;
     /** Supported modulations. */

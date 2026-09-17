@@ -22,7 +22,7 @@
 # type        - Responsibility: SOC or OEM                                [manual]
 component: broadcast
 version: 0.1.0.0
-status: GREEN
+status: AMBER
 description: "Broadcast Frontend, Lnb, Demux interfaces"
 type: OEM
 
@@ -31,21 +31,21 @@ type: OEM
 #   review_deadline   - review_started + 14 calendar days
 #   target_green_date - review_deadline + 5 business days
 lifecycle:
-    review_started: ~
-    review_deadline: ~
-    target_green_date: ~
+  review_started: ~
+  review_deadline: ~
+  target_green_date: ~
 
 # scope - High-level architectural responsibilities                       [manual]
 scope:
-    - Frontend resource management for broadcast signal reception and tuning
-    - Multiple frontend type support with type-specific capabilities
-    - LNB Control for DVB-S
-    - Tuning operations through controller interface
-    - Tuning and state change event delivery to registered listeners
-    - The Demux abstracts the acquisition of data
-    - Support for software writing to the demux to support the usage of network tuners and DVR
-    - Support for tunnelled Audio/Video/Clock filters
-    - Support for power control of CaSlots (e.g. CiCams)
+  - Frontend resource management for broadcast signal reception and tuning
+  - Multiple frontend type support with type-specific capabilities
+  - LNB Control for DVB-S
+  - Tuning operations through controller interface
+  - Tune status and signal information observed by client polling; no listener or callback interface is provided
+  - The Demux abstracts the acquisition of data
+  - Support for software writing to the demux to support the usage of network tuners and DVR
+  - Support for tunnelled Audio/Video/Clock filters
+  - Support for power control of CaSlots (e.g. CiCams)
 
 # notes - Tracking metadata                                              [manual]
 #   priority      - Numeric priority (lower = higher)
@@ -54,10 +54,13 @@ scope:
 #   risk          - Risk notes (appears as watch item on dashboard)
 #   owners        - Responsible architecture teams
 notes:
-    owners: "Broadcast_Team"
+  status_detail: "Extended for DVB-T/C/S and ATSC 1.0 (PR #258); review feedback being applied"
+  action: "Populate hfp-broadcast.yaml and complete the design doc (HAL.BROADCAST.n requirements). Flip to GREEN after Architecture sign-off."
+  risk: "Breaking changes in flight - client token added to five acquiring calls, SignalInfoValue union reordered, symbol-rate capabilities moved to DvbC/DvbSCapabilities. Not safe to implement against until merged."
+  owners: "Broadcast_Team"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
-    Architecture: pending
-    Broadcast_Team: reviewed
+  Architecture: pending
+  Broadcast_Team: reviewed

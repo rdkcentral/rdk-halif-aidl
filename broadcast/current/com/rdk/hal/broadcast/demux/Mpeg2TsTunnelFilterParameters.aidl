@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.demux;
 
 /**
- * MPEG-2 TS tunnel filter-specific parameters.
+ * @brief MPEG-2 TS tunnel filter-specific parameters.
  *
  * @author Jan Pedersen
  * @author Christian George

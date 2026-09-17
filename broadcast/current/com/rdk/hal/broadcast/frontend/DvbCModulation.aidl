@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * Available modulations.
+ * @brief Available modulations.
  *
  * @author Jan Pedersen
  * @author Christian George

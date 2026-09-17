@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.demux;
 
 /**
- * Demux filter types.
+ * @brief Demux filter types.
  *
  * This enum is semantically coupled to Filter: every concrete filter type listed here must have a corresponding member
  * in Filter.

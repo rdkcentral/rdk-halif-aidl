@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * DVB-S, DVB-S2, and DVB-S2X inner FEC enum.
+ * @brief DVB-S, DVB-S2, and DVB-S2X inner FEC enum.
  *
  * @author Jan Pedersen
  * @author Christian George

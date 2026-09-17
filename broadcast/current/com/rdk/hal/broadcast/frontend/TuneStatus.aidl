@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * TuneStatus enum.
+ * @brief TuneStatus enum.
  *
  * @author Jan Pedersen
  * @author Christian George

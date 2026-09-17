@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * Signal detect mode enumeration.
+ * @brief Signal detect mode enumeration.
  *
  * @author Jan Pedersen
  * @author Christian George

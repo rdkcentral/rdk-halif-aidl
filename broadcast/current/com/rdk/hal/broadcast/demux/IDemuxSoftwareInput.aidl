@@ -19,9 +19,12 @@ import com.rdk.hal.ringbuffer.IRingBufferSink;
 import com.rdk.hal.ringbuffer.IRingBufferSinkListener;
 
 /**
- * Interface for a demux software input that can be used to feed data into a demux.
+ * @brief Interface for a demux software input that can be used to feed data into a demux.
  *
  * Possible use-cases are  playing a recording from a file or for feeding data from a network source.
+ *
+ * The write claim and any acquired data provider are released when the owning client drops its Binder reference,
+ * including on abnormal termination. See the design document for the mechanism.
  *
  * @author Jan Pedersen
  * @author Christian George
@@ -29,7 +32,7 @@ import com.rdk.hal.ringbuffer.IRingBufferSinkListener;
  */
 @VintfStability
 interface IDemuxSoftwareInput {
-    /** Demux resource ID type. */
+    /** Demux software input resource ID type. */
     @VintfStability
     parcelable Id {
         /** The undefined ID value. */
@@ -39,16 +42,31 @@ interface IDemuxSoftwareInput {
         int value;
     }
 
-    /** Get the ID of this software input. */
+    /**
+     * @brief Get the ID of this software input.
+     *
+     * @returns The resource ID of this software input.
+     */
     Id getId();
 
     /**
-     * Open the demux for writing.
+     * @brief Open the demux for writing.
      *
      * This is used for writing data to the demux, e.g. for playing a recording from a file or for feeding data from a
      * network source. It will work independently of the filters, i.e. it should be possible to write data to the demux
      * while filters are active and also if they are not. The data written to the demux will be processed by the filters
      * and made available to the clients as if it was coming from the tuner.
+     *
+     * The returned ring buffer is non-overflowing. When it is full, acquire() returns null rather than overwriting
+     * data the demux has not yet consumed, and the client resumes writing once
+     * IRingBufferSinkListener::onSpaceAvailable reports space. A software input carries a stream the client already
+     * holds in full, such as a recording or a network feed, so the correct response to a slow demux is to make the
+     * client wait rather than to discard transport packets: a dropped packet would corrupt the stream the client is
+     * replaying, and the client cannot detect or repair that from this interface.
+     *
+     * @param[in] listener Listener notified when the ring buffer is ready to accept more data.
+     *
+     * @returns An IRingBufferSink interface used to write data into the demux.
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_STATE The software input is already opened for writing or is
      *                                                        connected through a DemuxDataProvider.
@@ -56,7 +74,7 @@ interface IDemuxSoftwareInput {
     IRingBufferSink openForWriting(in IRingBufferSinkListener listener);
 
     /**
-     * Close the demux for writing.
+     * @brief Close the demux for writing.
      *
      * The IRingBufferSink obtained from openForWriting() will be invalidated.
      *
@@ -67,15 +85,14 @@ interface IDemuxSoftwareInput {
     void closeForWriting(in IRingBufferSink bufferSink);
 
     /**
-     * Acquire a DemuxDataProvider that must be passed to a Demux.
+     * @brief Acquire a DemuxDataProvider that must be passed to a Demux.
      *
-     * @returns A DemuxDataProvider that can be used to connect to a Demux or null on failure (e.g. there is already a
-     *          DemuxDataProvider acquired).
+     * @returns A DemuxDataProvider that can be used to connect to a Demux, or null if one has already been acquired.
      */
     @nullable IDemuxDataProvider acquireDataProvider();
 
     /**
-     * Releases the DemuxDataProvider previously acquired.
+     * @brief Releases the DemuxDataProvider previously acquired.
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_STATE The software input is not connected to a Demux.
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The provider was not obtained from

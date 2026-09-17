@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * DVB-T and DVB-T2 code rate.
+ * @brief DVB-T and DVB-T2 code rate.
  *
  * @author Jan Pedersen
  * @author Christian George

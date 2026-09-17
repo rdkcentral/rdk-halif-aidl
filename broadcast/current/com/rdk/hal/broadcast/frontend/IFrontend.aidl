@@ -14,6 +14,7 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
+import com.rdk.hal.broadcast.IBroadcastClientToken;
 import com.rdk.hal.broadcast.demux.IDemuxDataProvider;
 import com.rdk.hal.broadcast.frontend.FrontendCapabilities;
 import com.rdk.hal.broadcast.frontend.FrontendType;
@@ -21,11 +22,14 @@ import com.rdk.hal.broadcast.frontend.IFrontendController;
 import com.rdk.hal.broadcast.frontend.ILnbController;
 
 /**
- * Front end HAL interface.
+ * @brief Front end HAL interface.
  *
  * Non-exclusive access to the front end. Multiple clients can work on the same frontend at the same time and access
  * information about it through this interface. When a client wants to tune the frontend, it has to acquire exclusive
  * access through the IFrontendController interface obtained from open().
+ *
+ * Exclusive claims are released when the owning client drops its Binder reference, including on abnormal termination,
+ * so a crashed client cannot hold the frontend indefinitely. See the design document for the mechanism.
  *
  * @author Jan Pedersen
  * @author Christian George
@@ -43,37 +47,61 @@ interface IFrontend {
         int value;
     }
 
-    /** Get the ID of this frontend. */
+    /**
+     * @brief Get the ID of this frontend.
+     *
+     * @returns The resource ID of this frontend.
+     */
     Id getId();
 
     /**
-     * Check whether the frontend is already opened.
+     * @brief Check whether the frontend is already opened.
      *
      * Be aware of possible TOCTOU issues when using this method, especially in connection with open().
+     *
+     * @returns Open state of the frontend.
+     * @retval true The frontend is opened by a client.
+     * @retval false The frontend is not opened.
      */
     boolean isOpen();
 
-    /** Gets the supported frontend types. */
+    /**
+     * @brief Gets the supported frontend types.
+     *
+     * @returns Array of frontend types supported by this frontend.
+     */
     FrontendType[] getFrontendTypes();
 
     /**
-     * Get the supported capabilities for the given frontend type.
+     * @brief Get the supported capabilities for the given frontend type.
+     *
+     * The active member of FrontendCapabilities.specifics always matches the requested frontendType: ATSC selects
+     * atsc, DVB_C selects dvbC, DVB_S selects dvbS and DVB_T selects dvbT. The client does not need to inspect the
+     * union tag to know which member to read.
+     *
+     * @param[in] frontendType A type obtained from getFrontendTypes().
+     *
+     * @returns The capabilities of this frontend for the given frontend type.
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The frontendType is not supported by this frontend.
      */
     FrontendCapabilities getCapabilities(in FrontendType frontendType);
 
     /**
-     * Exclusively open the frontend for tuning.
+     * @brief Exclusively open the frontend for tuning.
      *
      * The returned IFrontendController interface is used by the client to facilitate all tune related operations.
      *
-     * @returns IFrontendController or null on error (e.g. frontend already opened by another client).
+     * @param[in] token The caller's client token. The claim is released if the owning client terminates.
+     *
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The token is null or is not hosted by the caller.
+     *
+     * @returns An IFrontendController, or null if the frontend is already opened by another client.
      */
-    @nullable IFrontendController open();
+    @nullable IFrontendController open(in IBroadcastClientToken token);
 
     /**
-     * Close the frontend and invalidate the FrontendController.
+     * @brief Close the frontend and invalidate the FrontendController.
      *
      * Cleanup all attached (hardware) resources and brings the frontend back into a state where it can be opened again.
      * Stops the current tuning and all output on TSOUT.
@@ -87,15 +115,19 @@ interface IFrontend {
     void close(in IFrontendController controller);
 
     /**
-     * Acquire a DemuxDataProvider that must be passed to a Demux.
+     * @brief Acquire a DemuxDataProvider that must be passed to a Demux.
      *
-     * @returns A DemuxDataProvider that can be used to connect a Demux to this frontend or null on error (e.g. there is
-     *          already a DemuxDataProvider acquired).
+     * @param[in] token The caller's client token. The claim is released if the owning client terminates.
+     *
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The token is null or is not hosted by the caller.
+     *
+     * @returns A DemuxDataProvider that can be used to connect a Demux to this frontend, or null if one has already
+     *          been acquired.
      */
-    @nullable IDemuxDataProvider acquireDataProvider();
+    @nullable IDemuxDataProvider acquireDataProvider(in IBroadcastClientToken token);
 
     /**
-     * Releases the DemuxDataProvider previously acquired.
+     * @brief Releases the DemuxDataProvider previously acquired.
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_STATE The frontend has no DemuxDataProvider acquired.
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The provider was not obtained from
@@ -104,18 +136,21 @@ interface IFrontend {
     void releaseDataProvider(in IDemuxDataProvider provider);
 
     /**
-     * Opens the LNB controller for exclusive access.
+     * @brief Opens the LNB controller for exclusive access.
      *
      * The returned ILnbController interface is used for controlling satellite equipment.
      *
-     * @exception ::android::binder::Status::EX_UNSUPPORTED_OPERATION The frontend does not support LNB control.
+     * @param[in] token The caller's client token. The claim is released if the owning client terminates.
      *
-     * @returns A LnbController or null on error (e.g. LNB controller already opened)
+     * @exception ::android::binder::Status::EX_UNSUPPORTED_OPERATION The frontend does not support LNB control.
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The token is null or is not hosted by the caller.
+     *
+     * @returns An ILnbController, or null if the LNB controller is already opened by another client.
      */
-    @nullable ILnbController openLnb();
+    @nullable ILnbController openLnb(in IBroadcastClientToken token);
 
     /**
-     * Closes the LNB controller and invalidates the LnbController.
+     * @brief Closes the LNB controller and invalidates the LnbController.
      *
      * Cleanup all attached (hardware) resources and brings the LNB controller back into a state where it can be opened
      * again.

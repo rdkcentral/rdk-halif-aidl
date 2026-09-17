@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.ca;
 
 /**
- * Describes how power line control is managed for a CA slot.
+ * @brief Describes how power line control is managed for a CA slot.
  *
  * @author Jan Pedersen
  * @author Christian George

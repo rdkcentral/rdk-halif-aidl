@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * DVB-S standard enumeration.
+ * @brief DVB-S standard enumeration.
  *
  * @author Jan Pedersen
  * @author Christian George

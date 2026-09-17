@@ -17,7 +17,7 @@ package com.rdk.hal.broadcast.frontend;
 import com.rdk.hal.broadcast.frontend.DvbTTransmissionMode;
 
 /**
- * Transmission mode union.
+ * @brief Transmission mode union.
  *
  * @author Jan Pedersen
  * @author Christian George

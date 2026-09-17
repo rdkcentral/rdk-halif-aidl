@@ -17,7 +17,7 @@ package com.rdk.hal.broadcast.frontend;
 import com.rdk.hal.broadcast.frontend.AtscModulation;
 
 /**
- * ATSC capabilities.
+ * @brief ATSC capabilities.
  *
  * @author Jan Pedersen
  * @author Christian George

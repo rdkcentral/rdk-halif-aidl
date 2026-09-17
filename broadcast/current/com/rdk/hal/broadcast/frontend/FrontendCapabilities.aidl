@@ -21,7 +21,7 @@ import com.rdk.hal.broadcast.frontend.DvbTCapabilities;
 import com.rdk.hal.broadcast.frontend.SignalInfoProperty;
 
 /**
- * Capabilities for a frontend.
+ * @brief Capabilities for a frontend.
  *
  * @author Jan Pedersen
  * @author Christian George
@@ -41,15 +41,6 @@ parcelable FrontendCapabilities {
     /** Range in Hertz from the center frequency that will result in the Tuner obtaining a lock. */
     long acquireFrequencyRange;
 
-    /** Minimum symbol rate in Symbols per second. */
-    int minSymbolRate;
-
-    /** Maximum symbol rate in Symbols per second. */
-    int maxSymbolRate;
-
-    /** A value of true indicates that the tuner can autodetect the symbol rate. */
-    boolean hasAutoSymbolRate;
-
     /** Possible specific capabilities for the frontend type. */
     @VintfStability
     union SpecificCapabilities {
@@ -59,7 +50,11 @@ parcelable FrontendCapabilities {
         DvbTCapabilities dvbT;
     }
 
-    /** Capabilities specific to a given @FrontendType. */
+    /**
+     * Capabilities specific to a given @FrontendType.
+     *
+     * The active member always matches the frontendType passed to IFrontend.getCapabilities().
+     */
     SpecificCapabilities specifics;
 
     /** Reserved for future use. */

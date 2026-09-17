@@ -17,7 +17,7 @@ package com.rdk.hal.broadcast.ca;
 import com.rdk.hal.broadcast.ca.PowerControl;
 
 /**
- * Capabilities of a Conditional Access (CA) slot.
+ * @brief Capabilities of a Conditional Access (CA) slot.
  *
  * @author Jan Pedersen
  * @author Christian George

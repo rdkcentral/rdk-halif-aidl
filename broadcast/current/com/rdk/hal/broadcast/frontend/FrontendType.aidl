@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * Frontend types.
+ * @brief Frontend types.
  *
  * @author Jan Pedersen
  * @author Christian George

@@ -21,6 +21,164 @@
 #** ******************************************************************************
 
 # HAL Feature Profile for broadcast
+#
+# Declares the maximal capability sets expressible through the broadcast AIDL.
+# Platform tailoring narrows these lists; nothing here may be widened beyond the
+# corresponding enum in the interface.
+#
+# Sections mirror the runtime capability parcelables so the two can be compared:
+#   frontend -> FrontendCapabilities (+ the per-standard SpecificCapabilities union)
+#   demux    -> DemuxCapabilities
+#   ca       -> CaCapabilities
+#
+# UNDEFINED is omitted throughout: it is the default-initialised value, not a
+# capability. AUTO is retained, since supporting automatic detection of a
+# parameter is a real platform capability.
 
-broadcast:             # Component object begins
-    interfaceVersion: current
+broadcast: # Component object begins
+  interfaceVersion: current
+
+  # IFrontend.getCapabilities(FrontendType) -> FrontendCapabilities
+  frontend:
+    supportedFrontendTypes:
+      - ATSC
+      - DVB_C
+      - DVB_S
+      - DVB_T
+
+    # Frequency limits are per-platform (tuner dependent) and are filled in
+    # during platform tailoring: minFrequency, maxFrequency, acquireFrequencyRange.
+
+    # SignalInfoProperty values readable through IFrontendController.getSignalInfo().
+    signalInfoProperties:
+      - FRONTEND_TYPE
+      - ACTUAL_FREQUENCY
+      - DEMOD_LOCK
+      - RF_LOCK
+      - RF_LEVEL
+      - CNR
+      - BER
+      - PRE_BER
+      - UNCORRECTED_ERRORS
+      - SSI
+      - SQI
+      - PLP_ID
+      - PLP_IDS
+      - T2_SYSTEM_ID
+      - MODULATION
+      - GUARD_INTERVAL
+      - TRANSMISSION_MODE
+      - BANDWIDTH
+      - SYMBOL_RATE
+      - DVB_T_STANDARD
+      - DVB_S_STANDARD
+      - CODE_RATE
+      - DVB_C_ANNEX
+      - SPECTRAL_INVERSION
+      - ROLL_OFF
+      - DVB_T_HIERARCHY
+      - DVB_T_MISO
+      - DVB_S_INNER_FEC
+      - DVB_S_PILOT
+      - DVB_S_PLS_MODE
+      - DVB_S_PLS_CODE
+      - DVB_S_INPUT_STREAM_ID
+
+    # FrontendCapabilities.specifics - DvbTCapabilities
+    dvbT:
+      bandwidths: [AUTO, MHZ_1_712, MHZ_5, MHZ_6, MHZ_7, MHZ_8, MHZ_10]
+      dvbTStandards: [AUTO, T, T2]
+      constellations: [AUTO, QPSK, QAM_16, QAM_64, QAM_128, QAM_256]
+      codeRates: [AUTO, CR_1_2, CR_2_3, CR_3_4, CR_3_5, CR_4_5, CR_5_6, CR_7_8]
+      guardIntervals: [AUTO, GI_1_4, GI_1_8, GI_1_16, GI_1_32, GI_1_128, GI_19_128, GI_19_256]
+      transmissionModes:
+        [AUTO, MODE_1K, MODE_2K, MODE_4K, MODE_8K, MODE_16K, MODE_32K, MODE_8K_E, MODE_16K_E, MODE_32K_E]
+      inversions: [AUTO, NORMAL, INVERTED]
+      hierarchies: [AUTO, NONE, ALPHA_1, ALPHA_2, ALPHA_4]
+      misoModes: [AUTO, SISO, MISO]
+
+    # FrontendCapabilities.specifics - DvbCCapabilities
+    dvbC:
+      # minSymbolRate / maxSymbolRate are per-platform; isAutoSymbolRateSupported
+      # reports whether AUTO_SYMBOL_RATE may be requested.
+      isAutoSymbolRateSupported: true
+      bandwidths: [AUTO, MHZ_5, MHZ_6, MHZ_7, MHZ_8]
+      dvbCAnnexes: [AUTO, A, B, C]
+      modulations: [AUTO, QAM_16, QAM_32, QAM_64, QAM_128, QAM_256]
+      codeRates: [AUTO, CR_1_2, CR_2_3, CR_3_4, CR_3_5, CR_4_5, CR_5_6, CR_6_7, CR_8_9, CR_9_10]
+      inversions: [AUTO, NORMAL, INVERTED]
+
+    # FrontendCapabilities.specifics - DvbSCapabilities
+    dvbS:
+      isAutoSymbolRateSupported: true
+      isInputStreamIdSupported: true
+      dvbSStandards: [AUTO, S, S2, S2X]
+      modulations: [AUTO, QPSK, PSK_8, PSK_16, PSK_32, APSK_8, APSK_16, APSK_32, APSK_64, APSK_128, APSK_256]
+      innerFecs:
+        [
+          AUTO,
+          FEC_1_2,
+          FEC_1_3,
+          FEC_1_4,
+          FEC_1_5,
+          FEC_2_3,
+          FEC_2_5,
+          FEC_2_9,
+          FEC_3_4,
+          FEC_3_5,
+          FEC_4_5,
+          FEC_4_15,
+          FEC_5_6,
+          FEC_7_8,
+          FEC_7_9,
+          FEC_7_10,
+          FEC_7_15,
+          FEC_8_9,
+          FEC_8_15,
+          FEC_9_10,
+          FEC_11_15,
+          FEC_11_20,
+          FEC_11_45,
+          FEC_13_18,
+          FEC_14_45,
+          FEC_23_36,
+          FEC_25_36,
+          FEC_26_45,
+          FEC_28_45,
+          FEC_32_45,
+          FEC_77_90,
+        ]
+      rollOffs: [AUTO, ROLL_OFF_0_35, ROLL_OFF_0_25, ROLL_OFF_0_20, ROLL_OFF_0_15, ROLL_OFF_0_10, ROLL_OFF_0_05]
+      # Quoted: bare ON/OFF are booleans in YAML 1.1, not the DvbSPilot enumerators.
+      pilots: [AUTO, "ON", "OFF"]
+      plsModes: [AUTO, ROOT, GOLD, COMBO]
+      inversions: [AUTO, NORMAL, INVERTED]
+
+    # FrontendCapabilities.specifics - AtscCapabilities
+    atsc:
+      modulations: [AUTO, VSB_8, VSB_16]
+
+  # IDemux.getCapabilities() -> DemuxCapabilities
+  demux:
+    acceptsDataFromSoftware: true
+    acceptsDataFromHardware: true
+    canHoldBackData: true
+
+    # DemuxCapabilities.supportedFilters carries a maxInstances count per filter
+    # type. The counts are per-platform and are filled in during tailoring; only
+    # the set of expressible filter types is fixed by the interface.
+    supportedFilterTypes:
+      - MPEG2TS_DATA
+      - MPEG2TS_CLOCK
+      - MPEG2TS_VIDEO
+      - MPEG2TS_AUDIO
+      - MPEG2TS_SUPPLEMENTARY_AUDIO
+
+  # ICaSlot.getCapabilities() -> CaCapabilities
+  ca:
+    # CaCapabilities.powerControl is a single value per slot; a platform declares
+    # the one its slot reports.
+    supportedPowerControl:
+      - NONE
+      - SHARED
+      - DEDICATED

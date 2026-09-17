@@ -18,7 +18,7 @@ import com.rdk.hal.broadcast.frontend.LnbTone;
 import com.rdk.hal.broadcast.frontend.LnbVoltage;
 
 /**
- * LNB controller interface.
+ * @brief LNB controller interface.
  *
  * Handles control operations for a Low-Noise Block downconverter (LNB), including voltage control, tone control, and
  * DiSEqC signalling. Exclusively obtained through IFrontend.openLnb(), see IFrontendController for details.
@@ -32,30 +32,35 @@ import com.rdk.hal.broadcast.frontend.LnbVoltage;
 @VintfStability
 interface ILnbController {
     /**
-     * Set the LNB voltage.
+     * @brief Set the LNB voltage.
      *
      * Use LnbVoltage.NONE to turn off the LNB power.
      */
     void setVoltage(in LnbVoltage voltage);
 
-    /** Set the LNB tone. */
+    /** @brief Set the LNB tone. */
     void setTone(in LnbTone tone);
 
     /**
-     * Get the overload state of the LNB controller.
+     * @brief Get the overload state of the LNB controller.
      *
-     * @returns True if the LNB power line is overloaded (e.g. possible short circuit on the LNB voltage line), false
-     *          otherwise.
+     * @returns Overload state of the LNB power line.
+     * @retval true The LNB power line is overloaded (e.g. possible short circuit on the LNB voltage line).
+     * @retval false The LNB power line is not overloaded.
      */
     boolean isOverloaded();
 
     /**
-     * Send a DiSEqC (Digital Satellite Equipment Control) command.
+     * @brief Send a DiSEqC (Digital Satellite Equipment Control) command.
      *
      * Sends a DiSEqC command to the connected LNB equipment as specified by the EUTELSAT Bus Functional Specification
      * Version 4.2. Blocks until the entire command has been transmitted.
      *
-     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT if the command is empty or malformed.
+     * A DiSEqC message is at most 6 bytes (framing, address, command and up to three data bytes). An implementation
+     * may reject anything longer with EX_ILLEGAL_ARGUMENT rather than forwarding it to the hardware.
+     *
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT if the command is empty, malformed, or longer than
+     *                                                           6 bytes.
      *
      * @param[in] command The DiSEqC command bytes to transmit.
      */

@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * Spectral inversion modes for broadcast frontend tuning.
+ * @brief Spectral inversion modes for broadcast frontend tuning.
  *
  * @author Jan Pedersen
  * @author Christian George

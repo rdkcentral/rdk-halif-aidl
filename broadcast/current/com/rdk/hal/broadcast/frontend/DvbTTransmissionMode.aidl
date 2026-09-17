@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * DVB-T Transmission modes.
+ * @brief DVB-T Transmission modes.
  *
  * @author Jan Pedersen
  * @author Christian George

@@ -19,7 +19,7 @@ import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
 import com.rdk.hal.broadcast.frontend.DvbTCodeRates;
 
 /**
- * Available code rates.
+ * @brief Available code rates.
  *
  * @author Jan Pedersen
  * @author Christian George

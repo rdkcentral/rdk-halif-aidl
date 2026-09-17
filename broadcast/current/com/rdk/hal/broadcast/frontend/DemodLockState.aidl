@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * Demodulator lock state.
+ * @brief Demodulator lock state.
  *
  * @author Jan Pedersen
  * @author Christian George
@@ -24,7 +24,7 @@ package com.rdk.hal.broadcast.frontend;
 @VintfStability
 @Backing(type = "int")
 enum DemodLockState {
-    /** Clean value when default initialised. */
+    /** Clean value when default initialized. */
     UNDEFINED = 0,
     UNLOCKED,
     LOCKED,

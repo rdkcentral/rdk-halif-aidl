@@ -15,7 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 /**
- * DVB-C code rate enum.
+ * @brief DVB-C code rate enum.
  *
  * @author Jan Pedersen
  * @author Christian George

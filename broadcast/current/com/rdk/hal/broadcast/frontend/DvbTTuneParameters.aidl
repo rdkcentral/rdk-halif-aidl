@@ -13,7 +13,7 @@
  * specific language governing permissions and limitations under the License.
  */
 package com.rdk.hal.broadcast.frontend;
-import com.rdk.hal.broadcast.frontend.ConstantInt;
+
 import com.rdk.hal.broadcast.frontend.DvbTBandwidth;
 import com.rdk.hal.broadcast.frontend.DvbTCodeRates;
 import com.rdk.hal.broadcast.frontend.DvbTConstellation;
@@ -22,11 +22,12 @@ import com.rdk.hal.broadcast.frontend.DvbTHierarchy;
 import com.rdk.hal.broadcast.frontend.DvbTMiso;
 import com.rdk.hal.broadcast.frontend.DvbTStandard;
 import com.rdk.hal.broadcast.frontend.DvbTTransmissionMode;
+import com.rdk.hal.broadcast.frontend.FrontendConstants;
 import com.rdk.hal.broadcast.frontend.SignalDetectMode;
 import com.rdk.hal.broadcast.frontend.SpectralInversion;
 
 /**
- * DVB-T-specific tuning parameters.
+ * @brief DVB-T-specific tuning parameters.
  *
  * @author Jan Pedersen
  * @author Christian George
@@ -70,9 +71,12 @@ parcelable DvbTTuneParameters {
     /**
      * The plp id for DVB-T2.
      *
-     * Use ConstantInt.AUTO_PLP_ID for auto. Otherwise specify a value in the range 0-255.
+     * Use FrontendConstants.AUTO_PLP_ID for auto. Otherwise specify a value in the range 0-255.
+     *
+     * PLP selection is mandatory for a DVB-T2 frontend, so no capability query is needed: any frontend that reports
+     * DvbTStandard.T2 in DvbTCapabilities.dvbTStandards shall honour this field. It is ignored when tuning DVB-T.
      */
-    int plpId = ConstantInt.INVALID_PLP_ID;
+    int plpId = FrontendConstants.INVALID_PLP_ID;
 
     /** Reserved for future use. */
     ParcelableHolder extension;

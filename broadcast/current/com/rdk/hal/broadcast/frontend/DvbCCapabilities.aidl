@@ -14,7 +14,6 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.ConstantInt;
 import com.rdk.hal.broadcast.frontend.DvbCAnnex;
 import com.rdk.hal.broadcast.frontend.DvbCBandwidth;
 import com.rdk.hal.broadcast.frontend.DvbCCodeRate;
@@ -22,7 +21,7 @@ import com.rdk.hal.broadcast.frontend.DvbCModulation;
 import com.rdk.hal.broadcast.frontend.SpectralInversion;
 
 /**
- * DVB-C capability struct.
+ * @brief DVB-C capability struct.
  *
  * The AUTO member of all the enums will only be returned if the frontend supports a real auto selection of the
  * respective parameter. Just choosing the first applicable value and bailing out on error doesn't count as AUTO mode.
@@ -33,6 +32,12 @@ import com.rdk.hal.broadcast.frontend.SpectralInversion;
  */
 @VintfStability
 parcelable DvbCCapabilities {
+    /** Minimum symbol rate in Symbols per second. */
+    int minSymbolRate;
+    /** Maximum symbol rate in Symbols per second. */
+    int maxSymbolRate;
+    /** Whether the tuner can autodetect the symbol rate. */
+    boolean isAutoSymbolRateSupported;
     /** Supported bandwidths. */
     DvbCBandwidth[] bandwidths;
     /** Supported annex standards. */

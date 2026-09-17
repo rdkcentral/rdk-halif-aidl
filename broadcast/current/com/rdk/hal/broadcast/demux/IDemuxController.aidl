@@ -18,7 +18,7 @@ import com.rdk.hal.broadcast.demux.Filter;
 import com.rdk.hal.broadcast.demux.FilterParameters;
 
 /**
- * Interface for an opened demux.
+ * @brief Interface for an opened demux.
  *
  * Grants exclusive access to the demux and allows opening and closing of filters. See IFrontendController for the
  * details on what this means in terms of synchronization requirements.
@@ -30,21 +30,22 @@ import com.rdk.hal.broadcast.demux.FilterParameters;
 @VintfStability
 interface IDemuxController {
     /**
-     * Open a filter for the given filter type.
+     * @brief Open a filter for the given filter type.
      *
      * The returned union contains exactly one active member, representing the concrete type-specific filter interface.
      *
      * @exception ::android::binder::Status::EX_UNSUPPORTED_OPERATION The demux does not support the given filter type.
-     * @exception ::android::binder::Status::EX_ILLEGAL_STATE The demux can not provide any more filters of the given
-     *                                                        filter type.
      *
      * @param[in] parameters The parameters of the filter to create. The actual filter type to be returned is determined
      *                       by the type of the filter parameters.
+     *
+     * @returns A Filter holding the concrete filter interface, or null if the demux cannot provide any more filters of
+     *          the given filter type.
      */
     @nullable Filter openFilter(in FilterParameters parameters);
 
     /**
-     * Closes the given filter.
+     * @brief Closes the given filter.
      *
      * The filter object will be invalidated. The call to closeFilter() will stop the filter.
      *
