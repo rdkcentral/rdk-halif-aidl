@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 package com.rdk.hal.panel;
-import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.videodecoder.DynamicRange;
 import com.rdk.hal.AVSource;
 
@@ -30,9 +29,12 @@ import com.rdk.hal.AVSource;
 parcelable PQParameterConfiguration
 {
 	/**
-	 * The PQ parameter.
+	 * The PQ parameter name.
+	 * Canonical names are defined in `PQParameter`; vendor-specific parameters
+	 * use the `vendor.<vendorname>.` namespace.
+	 * Must name a parameter listed in `Capabilities.pqParameters`.
 	 */
-	PQParameter pqParameter;
+	@utf8InCpp String pqParameter;
 
 	/**
 	 * The picture mode.
