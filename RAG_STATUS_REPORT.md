@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| **Generated** | 2026-07-15 |
-| **Components** | 31 |
+| **Generated** | 2026-07-22 |
+| **Components** | 33 |
 | 🟢 **GREEN** | 19 |
 | 🟡 **AMBER** | 12 |
-| 🔴 **RED** | 0 |
+| 🔴 **RED** | 2 |
 
 ---
 
@@ -16,7 +16,7 @@
 |--------|-------|---------|
 | 🟢 GREEN | **19** | Reviewed & Approved — Interface stable on develop |
 | 🟡 AMBER | **12** | Under Active Ingestion — Will enter sprint review when ready |
-| 🔴 RED | **0** | Not Started / Blocked — Strategy or definition required |
+| 🔴 RED | **2** | Not Started / Blocked — Strategy or definition required |
 
 ---
 
@@ -89,6 +89,8 @@
 
 | | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
 |---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
+| 🔴 | cryptoengine | 0.1.0.0 | 2 | Initial interface definition — under review | Architecture review and vendor alignment | — | — | Architecture + Security |
+| 🔴 | keyvault | 0.1.0.0 | 2 | Initial interface definition — under review | Architecture review and vendor alignment | — | — | Architecture + Security |
 
 
 ### OEM Components
@@ -133,6 +135,8 @@
 
 | | Component | Progress | Arch | Prod | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel | Vendor |
 |---|-----------|----------|------|------|-----|-----------|----------|----------|--------------|--------|--------|
+| 🔴 | cryptoengine | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | N/A | ☐ |
+| 🔴 | keyvault | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | N/A | ☐ |
 
 ### OEM — 🟢 GREEN
 
