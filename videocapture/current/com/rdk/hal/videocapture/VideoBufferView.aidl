@@ -61,8 +61,9 @@ parcelable VideoBufferView
      * This index is the buffer's identity. A client resolves a frame, keys any
      * cache, and releases a buffer by it.
      *
-     * An index that names no buffer in the current pool is ignored, which is what
-     * makes a release arriving after a stop safe.
+     * Releasing a buffer that is already Free is harmless, which is what makes a
+     * release arriving after a stop safe. An index outside the pool is a client
+     * error and raises `EX_ILLEGAL_ARGUMENT` - see `IVideoCaptureController.releaseFrame()`.
      */
     int bufferIndex;
 
@@ -81,12 +82,17 @@ parcelable VideoBufferView
      * zero, are equally valid and a client that imports from `planeFds` and
      * `planeOffsets` serves both without knowing which it was handed.
      *
+     * Each entry arrives in the client as its own descriptor, valid in the client's
+     * process, even where several entries share one Dma-Buf on the implementation
+     * side. The descriptors belong to the parcel and are closed when
+     * `onPoolReady()` returns; a client duplicates any it will use afterwards.
+     *
      * A client caching imported images shall key the cache on `bufferIndex`, and
-     * shall not key it on a file descriptor. Where buffers share a descriptor, a
-     * cache keyed on it collapses the pool onto one entry and the client re-textures
-     * a single buffer for the rest of the session. The picture freezes while frames
-     * continue to arrive, which is not a failure the client can detect in what it
-     * was handed.
+     * shall not key it on a file descriptor number. Numbers are process-local, say
+     * nothing about which entries share memory, and are reused as soon as they are
+     * closed, so a cache keyed on them resolves frames against the wrong buffer. The
+     * picture is wrong while frames continue to arrive, which is not a failure the
+     * client can detect in what it was handed.
      */
     ParcelFileDescriptor[] planeFds;
 

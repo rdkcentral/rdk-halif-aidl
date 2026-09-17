@@ -22,7 +22,6 @@ package com.rdk.hal.videocapture;
  *  @brief     Lifecycle state of a capture resource instance.
  *
  *  Applies to the capture resources reached through `IVideoCaptureManager.getVideoCapture()`.
- *  Plane resources themselves are stateless and are not described by this enum.
  *
  *  @author    Peter Stieglitz
  *  @author    Gerald Weatherup

@@ -39,23 +39,37 @@ oneway interface IVideoCaptureControllerListener
      * changes while the session runs, so a client imports every buffer into an EGLImage
      * here and afterwards needs only the buffer index each frame arrives in.
      *
-     * The array length is the number of buffers the vendor reserved, which is what
-     * as many buffers as the platform calibrated for the throughput it can sustain. The length of this array IS the pool depth - it is not declared anywhere else, because there is nothing for a client to decide before it and nothing to check it against. Where the
-     * session left it unset.
+     * The array length is the number of buffers the platform reserved, calibrated for
+     * the throughput it can sustain. The length of this array IS the pool depth - it
+     * is not declared anywhere else, because there is nothing for a client to decide
+     * before it and nothing to check it against.
+     *
+     * Raised once per `start()`. A later `start()` delivers a new pool whose buffer
+     * indices name new memory, and a client discards whatever it imported from the
+     * previous one before resolving any index against it.
      *
      * @param[in] buffers   One entry per pool buffer, indexed by `VideoBufferView.bufferIndex`.
      *
      *  Delivered on a binder thread. This interface is `oneway`, so the callback
      *  arrives on a thread of the client's binder pool - not the thread that owns
-     *  its GL context, and an import needs that context current. A client keeps
-     *  these descriptors and hands them to the thread that does own it.
+     *  its GL context, and an import needs that context current.
      *
-     *  The descriptors are the client's. They are duplicated as they cross the
-     *  binder boundary, so the client holds its own references to the same memory.
-     *  An import takes a further reference of its own, which is why a client may
-     *  close a descriptor once it has imported from it, and why the memory outlives
-     *  `stop()`. The client returns that memory by destroying its imported images
-     *  and closing any descriptor it still holds.
+     *  Every `planeFds` entry arrives as a descriptor already valid in the client's
+     *  process: binder installs a new descriptor for each entry, referring to the
+     *  same Dma-Buf. Entries that share a Dma-Buf on the implementation side
+     *  therefore arrive with distinct numbers, and a descriptor number is not an
+     *  identity - `bufferIndex` is.
+     *
+     *  Those descriptors belong to the parcel and are closed when this callback
+     *  returns. A client that will use them afterwards duplicates each one before
+     *  returning, preferably with `F_DUPFD_CLOEXEC`, and hands the duplicates to the
+     *  thread that owns its GL context.
+     *
+     *  Each duplicate is a reference to the memory, and an image imported from it
+     *  takes a further reference of its own. That is why a client may close a
+     *  duplicate once it has imported from it, and why the memory outlives `stop()`.
+     *  The client returns the memory by destroying its imported images, unmapping
+     *  any CPU mappings and closing any descriptor it still holds.
      */
     void onPoolReady(in VideoBufferView[] buffers);
 

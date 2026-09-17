@@ -58,17 +58,15 @@ flowchart TD
 
         subgraph Vendor["Vendor Layer"]
             Capture["IVideoCapture / IVideoCaptureController"]
-            Decoder["Bound source"]
-            Cap["Capture"]
+            Sink["Bound IVideoSink"]
             Pool["Dma-Buf pool"]
         end
     end
 
-    App -->|IPC — frame descriptors, SCM_RIGHTS| MW
+    MW -->|IPC — pool descriptors once via SCM_RIGHTS,<br/>then bufferIndex per frame| App
     MW -->|binder| Capture
-    Capture --> Plane
-    Decoder --> Plane
-    Plane --> Pool
+    Capture -->|wires| Pool
+    Sink -->|scheduled frames| Pool
     Pool -. imported as GPU textures .-> App
 ```
 
@@ -103,24 +101,35 @@ capture                  IVideoCapture.Id          one capture resource
 
 ### Concretely
 
-For 1920×1080 `NV12` with a pool of four, `onPoolReady()` delivers **four** `VideoBufferView`s. Buffer 0 might be:
+For 1920×1080 `NV12` with a pool of four, `onPoolReady()` delivers **four** `VideoBufferView`s. The implementation is free to lay the memory out in any of these ways, and all of them are valid:
+
+| Layout | Buffer 0 | Buffer 1 |
+|---|---|---|
+| **One Dma-Buf per plane** | `(bufA, 0)`, `(bufB, 0)` | `(bufC, 0)`, `(bufD, 0)` |
+| **One Dma-Buf per buffer**, planes at differing offsets | `(bufA, 0)`, `(bufA, 2088960)` | `(bufB, 0)`, `(bufB, 2088960)` |
+| **One Dma-Buf for the whole pool**, buffers and planes at differing offsets | `(bufA, 0)`, `(bufA, 2088960)` | `(bufA, 3133440)`, `(bufA, 5222400)` |
+
+Each pair is (Dma-Buf, offset) as the implementation sees it. Buffer 0 in the second layout, as it is written on the vendor side:
 
 ```text
 bufferIndex   = 0
-planeFds      = [ 7,       7       ]   Y and UV in the same Dma-Buf
+planeFds      = [ bufA,    bufA    ]   Y and UV in the same Dma-Buf
 planeOffsets  = [ 0,       2088960 ]   UV starts after Y, plus alignment padding
 planeStrides  = [ 1920,    1920    ]
 planeLengths  = [ 2073600, 1036800 ]
 ```
 
-or, where the implementation allocates each image plane separately:
+and as it arrives in the client:
 
 ```text
-planeFds      = [ 7,       8       ]   different Dma-Bufs
-planeOffsets  = [ 0,       0       ]
+bufferIndex   = 0
+planeFds      = [ 12,      13      ]   two descriptor numbers - the SAME Dma-Buf
+planeOffsets  = [ 0,       2088960 ]
+planeStrides  = [ 1920,    1920    ]
+planeLengths  = [ 2073600, 1036800 ]
 ```
 
-Both are valid, and a client that imports from `planeFds` and `planeOffsets` serves either without knowing which it was handed.
+**Binder installs a new descriptor in the client for every array entry**, even where several entries name the same Dma-Buf. The client cannot tell the three layouts apart from the numbers it receives, and does not need to: a client that imports every plane from its own `planeFds[N]` and `planeOffsets[N]` serves all of them. See [Getting the Buffers into Your Process](#getting-the-buffers-into-your-process).
 
 Note that `2088960` is **not** `1920 × 1080`. The implementation padded the chroma start for alignment, which is why the offset is stated rather than computed — deriving it from the frame size would land 15360 bytes short here.
 
@@ -183,7 +192,7 @@ flowchart TD
 
     Client -->|getVideoCaptureIds / getVideoCapture| MGR
     MGR --> CAP
-    CAP -->|open(sinkId)| CTRL
+    CAP -->|"open(sinkId)"| CTRL
     Client -->|setFormat / start / stop| CTRL
     Client -->|acquireLatestFrame / releaseFrame| CTRL
     CTRL --> L
@@ -202,7 +211,7 @@ flowchart TD
     CTRL:::wheat
     L:::wheat
     POOL:::green
-    DEC:::green
+    SINK:::green
 ```
 
 
@@ -212,7 +221,7 @@ flowchart TD
 1. Open the capture resource:
 Call `IVideoCaptureManager.getVideoCaptureIds()` and take an `IVideoCapture` with `getVideoCapture(captureId, captureEventListener)`. An empty array means the product does not support decode-to-texture.
 2. Read what the capture can deliver:
-Call `IVideoCapture.getCapabilities()` for the capturable codecs, the supported pixel formats and modifiers, the maximum frame size and buffer count, and the behaviour when every buffer is locked.
+Call `IVideoCapture.getCapabilities()` for the capturable codecs, the supported pixel formats and modifiers, the maximum frame size, how many captures one sink can carry, and the behaviour when every buffer is locked. The buffer count is not among them — it is learnt from `onPoolReady()`.
 3. Bind a source, which opens the session:
 Call `IVideoCapture.open(videoSinkId, captureControllerListener)`, naming the sink by its own ID. The binding and the session are the same thing — the sink named here is what this session delivers until `close()`. The resource transitions `CLOSED` → `READY`. It fails with `EX_ILLEGAL_ARGUMENT` if the ID names no sink or that sink declares `supportsCapture` false, and with `ErrorCode.SOURCE_UNAVAILABLE` if the sink already carries `maxCapturesPerSink` sessions.
 
@@ -221,14 +230,16 @@ A client finds a valid target before opening: enumerate `IVideoSinkManager.getVi
 Call `IVideoCaptureController.setFormat()` while in `READY` with one row of `Capabilities.supportedFormats`. There is no default — what a capture delivers is whatever it declares, so a format is selected before `start()`. Frame size is the capture's own `Property.WIDTH` and `HEIGHT`, set with `IVideoCaptureController.setProperty()`; where the capture declares `resize: false` they must equal what the bound source is producing. Pool depth is not a client choice and is not declared — the platform calibrates it from the throughput it can sustain, and the client sees how many buffers it got when `onPoolReady()` delivers them.
 5. Start:
 Call `IVideoCaptureController.start()`. A format must have been selected first — there is no default pair, so a session that selected none fails here with `ErrorCode.INVALID_CONFIGURATION`. The pool is reserved, the vendor layer configures the bound source and wires it into the pool, the resource transitions `READY` → `STARTING` → `STARTED`, and `IVideoCaptureControllerListener.onPoolReady()` delivers the pool addressing. The codec is checked here, because a decoder is opened for a codec independently of when a capture binds to it.
-6. Pull frames:
+6. Take the pool into the client process:
+In `onPoolReady()`, duplicate every descriptor before the callback returns and hand the copies to the thread that owns the GL context, which imports each buffer once. The descriptors in the callback's arguments are closed when it returns. [Getting the Buffers into Your Process](#getting-the-buffers-into-your-process) is the whole procedure.
+7. Pull frames:
 Call `IVideoCaptureController.acquireLatestFrame(releaseBufferIndex)`, passing the buffer just finished with — or `VideoFrameView.NO_BUFFER` on the first call. It returns the frame the bound sink would be presenting at that moment, `null` rather than blocking when none is due, and never the same frame twice. `IVideoCaptureControllerListener.onFrameAvailable()` is an optional wake-up; a client pulling at a known cadence can ignore it.
-7. Release the last frame:
-Call `IVideoCaptureController.releaseFrame(bufferIndex)` when the client stops drawing while still holding a buffer. A client drawing continuously has already released through the previous step. The call is idempotent and tolerates unknown indices.
+8. Release the last frame:
+Call `IVideoCaptureController.releaseFrame(bufferIndex)` when the client stops drawing while still holding a buffer. A client drawing continuously has already released through the previous step.
 
-Release is keyed by index because the index is the buffer's identity. An index that names no buffer in the current pool is ignored, which is what makes a release arriving after a stop safe.
-8. Stop and close:
-Call `IVideoCaptureController.stop()` to unwire the source and release the pool; the resource transitions `STARTED` → `STOPPING` → `READY`, reclaiming any buffer the client still holds, and can be started again. Then `IVideoCapture.close(controller)` returns it to `CLOSED`. The bound source keeps running and anything else consuming it is untouched.
+Release is keyed by index because the index is the buffer's identity. Releasing a buffer that is already Free is harmless, so a repeated release — including one that arrives after `stop()` has already freed every buffer — returns without error. An index outside `[0, pool size)` is never a repeat release: it raises `EX_ILLEGAL_ARGUMENT`, because a client holding an index the pool cannot name has lost track of what it holds.
+9. Stop and close:
+Call `IVideoCaptureController.stop()` to unwire the source; the resource transitions `STARTED` → `STOPPING` → `READY`, returning any buffer the client still holds to Free, and can be started again. Then `IVideoCapture.close(controller)` returns it to `CLOSED`. The bound source keeps running and anything else consuming it is untouched. The implementation drops its own references to the pool here; the client's references are its own to drop — see [Buffer lifetime across teardown](#buffer-lifetime-across-teardown).
 
 The bound sink becoming unavailable while a session is running stops it and raises `IVideoCaptureEventListener.onSourceLost()`; binding again with `open()` makes the session startable.
 
@@ -239,13 +250,12 @@ The bound sink becoming unavailable while a session is running stops it and rais
 ```mermaid
 stateDiagram-v2
     [*] --> CLOSED
-    CLOSED --> READY: open(sinkId)
+    CLOSED --> READY: open()
     READY --> STARTING: start()
     STARTING --> STARTED: onPoolReady()
-    STARTED --> STOPPING: stop()
-    STARTED --> STOPPING: onSourceLost()
+    STARTED --> STOPPING: stop() or onSourceLost()
     STOPPING --> READY
-    READY --> CLOSED: IVideoCapture.close()
+    READY --> CLOSED: close()
     CLOSED --> [*]
 
     classDef settled  fill:#1565C0,stroke:#E0E0E0,stroke-width:2px,color:#E0E0E0;
@@ -282,19 +292,22 @@ Shutdown is likewise legal in either order, and the pool outlives neither.
 
 | What ends first | What happens |
 |---|---|
-| **The session** | `stop()` unwires the capture and releases the pool and every Dma-Buf in it. The bound source keeps running and anything else consuming it is untouched; frames are simply no longer copied here. |
-| **The sink** | The session is implicitly stopped, the pool and its Dma-Bufs are released, and `IVideoCaptureEventListener.onSourceLost()` is raised. The resource returns to `READY` and binding again with `open()` makes it startable. |
-| **The client process** | `stop()` and `close()` are called implicitly on its behalf, releasing the pool whether or not the client still held buffers. |
+| **The session** | `stop()` unwires the capture and the implementation drops its references to the pool. The bound source keeps running and anything else consuming it is untouched; frames are simply no longer delivered here. |
+| **The sink** | The session is implicitly stopped as above, and `IVideoCaptureEventListener.onSourceLost()` is raised. The resource returns to `READY` and binding again with `open()` makes it startable. |
+| **The client process** | `stop()` and `close()` are called implicitly on its behalf. The process's descriptors and imported images went with it, so nothing holds the pool and its memory returns to the platform. |
 
-Buffers the client holds Locked at the moment of any of these are released with the rest of the pool. A client's imported EGLImages do not survive `stop()`: the buffer indices of a new session name new memory, and images cached against the old pool must be discarded when `onPoolReady()` delivers the new one.
+Buffers the client holds Locked at the moment of any of these are returned to Free with the rest of the pool.
 
-All Dma-Bufs are released on `stop()` and on `close()`.
+In every case the implementation drops only **its own** references. Memory the client still references — through a descriptor it duplicated, an image it imported or a mapping it made — stays valid until the client drops those, and is returned to the platform when the last one goes. What ends at `stop()` is the content guarantee, not the memory.
 
-A format, modifier or frame size outside `Capabilities` fails at `IVideoCaptureController.setProperty()`, while it is still a configuration error rather than a stream of wrong pixels. A pool the platform's video memory region cannot satisfy fails at `IVideoCaptureController.start()` with `ErrorCode.OUT_OF_MEMORY`, rather than being silently trimmed, and a bound source decoding a codec outside `supportedCodecs` fails there with `ErrorCode.CODEC_NOT_CAPTURABLE`. None of them falls back to display output.
+A pool belongs to one session. Every `start()` delivers a fresh `onPoolReady()`, and its buffer indices name new memory even where the numbers repeat. A client destroys the images it imported from the previous pool — at `stop()`, or at the latest when the new `onPoolReady()` arrives — and never resolves a new session's `bufferIndex` against an old session's images.
+
+A `FormatLayout` outside `Capabilities.supportedFormats` fails at `IVideoCaptureController.setFormat()`, and a frame size outside `Capabilities` fails at `IVideoCaptureController.setProperty()`, while each is still a configuration error rather than a stream of wrong pixels. A pool the platform's video memory region cannot satisfy fails at `IVideoCaptureController.start()` with `ErrorCode.OUT_OF_MEMORY`, rather than being silently trimmed, and a bound source decoding a codec outside `supportedCodecs` fails there with `ErrorCode.CODEC_NOT_CAPTURABLE`. None of them falls back to display output.
 
 ```mermaid
 sequenceDiagram
     participant Client as RDK Client
+    participant Render as Client render thread
     participant Manager as IVideoCaptureManager
     participant Capture as IVideoCapture
     participant Controller as IVideoCaptureController
@@ -321,21 +334,284 @@ sequenceDiagram
     Client->>Controller: start()
     Controller->>Sink: Wire the sink's scheduled frames into the pool
 
-    Controller-->>Listener: onPoolReady(VideoBufferView[])
-    Client->>Client: EGL import every buffer once
+    Controller-->>Listener: onPoolReady(VideoBufferView[]) on a binder thread
+    Note over Listener: dup every planeFds entry<br/>before returning - the originals<br/>close when the callback returns
+    Listener->>Render: duplicated descriptors and plane metadata
+    Render->>Render: eglCreateImageKHR per buffer, keyed by bufferIndex
+    Render->>Render: close the duplicates
 
     loop Per displayed frame
         Controller-->>Listener: onFrameAvailable()
-        Client->>Controller: acquireLatestFrame(previousBufferIndex)
-        Controller-->>Client: VideoFrameView (bufferIndex, PTS)
-        Client->>Client: Draw the cached EGLImage for that index
+        Render->>Controller: acquireLatestFrame(previousBufferIndex)
+        Controller-->>Render: VideoFrameView (bufferIndex, PTS)
+        Render->>Render: Draw the EGLImage for that bufferIndex
     end
 
-    Client->>Controller: releaseFrame(lastBufferIndex)
+    Render->>Controller: releaseFrame(lastBufferIndex)
 
     Client->>Controller: stop()
     Client->>Capture: close(controller)
+    Render->>Render: eglDestroyImageKHR - last reference, memory returns to the platform
 ```
+
+## Getting the Buffers into Your Process
+
+Everything a client needs to reach the pool's memory arrives once, in `IVideoCaptureControllerListener.onPoolReady()`. This section is the procedure for turning that callback into memory the client's process can use — as GPU textures, as a CPU mapping, or relayed onward to another process — and the rules that keep that memory valid.
+
+### What arrives
+
+`onPoolReady(VideoBufferView[] buffers)` carries one `VideoBufferView` per pool buffer:
+
+| Field | Meaning to the caller |
+|---|---|
+| `bufferIndex` | The buffer's identity, in `[0, buffers.size())`. Every frame names its buffer by this. |
+| `planeFds[N]` | A Dma-Buf descriptor, **already valid in the receiving process**, for image plane N. |
+| `planeOffsets[N]` | Where plane N starts within that Dma-Buf. Use it as given; never derive it. |
+| `planeStrides[N]` | Bytes from one row of plane N to the next. |
+| `planeLengths[N]` | Bytes in plane N. |
+| `width`, `height`, `drmFourcc`, `drmModifier` | The shape of the frames this buffer holds. The same for every buffer in the pool. |
+
+The number of image planes is `planeFds.size()` — one for a packed format, two for `NV12`, three for `YUV420`, never more than four — and the four per-plane arrays always have that same length. The number of buffers is `buffers.size()`; it is declared nowhere else.
+
+### How a descriptor reaches the client
+
+A `ParcelFileDescriptor` is not a number carried in the parcel. Binder translates each one as the transaction crosses: the kernel installs a new descriptor in the receiving process referring to the same open Dma-Buf, and the client's copy carries that new number. Three consequences follow for a caller:
+
+1. **The client needs nothing else to reach the memory.** No shared allocator, no handle lookup, no second call — the descriptors in `onPoolReady()` are usable as delivered.
+2. **Every array entry arrives as its own descriptor.** Where the implementation lays several planes or buffers into one Dma-Buf, the client still receives a distinct number per entry. `(bufA, 0)`, `(bufA, 2088960)` on the vendor side is `(12, 0)`, `(13, 2088960)` in the client — see [Concretely](#concretely).
+3. **Descriptor numbers are not identity.** They say nothing about which entries share memory, they change again at every further process hop, and a number is reused as soon as it is closed. Identity is `bufferIndex`.
+
+A client never needs to know whether entries share a Dma-Buf. Importing plane N from `planeFds[N]` at `planeOffsets[N]` is correct for every layout.
+
+One plane's descriptor, from the implementation to the GPU:
+
+```mermaid
+sequenceDiagram
+    participant Vendor as Vendor implementation
+    participant Kernel as Binder driver
+    participant Callback as Client binder thread
+    participant Render as Render thread
+
+    Vendor->>Kernel: planeFds[N] = bufA
+    Kernel->>Callback: onPoolReady() - new descriptor 12, same Dma-Buf
+    Note over Callback: 12 is owned by the parcel<br/>and closes on return
+    Callback->>Callback: fcntl(12, F_DUPFD_CLOEXEC) = 17
+    Callback->>Render: 17, offset, stride, bufferIndex
+    Callback-->>Kernel: return - 12 is closed
+    Render->>Render: eglCreateImageKHR(... PLANE_N_FD = 17 ...)
+    Note over Render: the EGLImage now holds<br/>its own reference to bufA
+    Render->>Render: close(17)
+```
+
+### Ownership inside the callback
+
+The descriptors in the callback's arguments belong to the parcel, not to the client. In the C++ backend each `ParcelFileDescriptor` owns its descriptor as a `unique_fd`, the array is passed by const reference, and all of them are **closed when `onPoolReady()` returns**. A client that stores the numbers and uses them later is using descriptors that have been closed — and, because numbers are reused, may be using a different file entirely.
+
+So, before returning, the callback:
+
+1. **Duplicates every descriptor it will use** — `fcntl(fd, F_DUPFD_CLOEXEC, 0)`, so the copy is not leaked into a child process across `exec()`.
+2. **Copies the per-plane metadata** alongside, since the `VideoBufferView`s go too.
+3. **Hands the copies to the thread that will use them**, and returns.
+
+It does no GL work. `IVideoCaptureControllerListener` is `oneway`, so the callback runs on a thread of the client's binder pool, and an EGL import needs the client's context current on the thread that makes it.
+
+`oneway` calls on one binder object are delivered in order, so `onPoolReady()` always arrives before the first `onFrameAvailable()` of the same session. The session is `STARTING` until the pool is delivered and `acquireLatestFrame()` is not valid before it.
+
+```c++
+// One pool buffer, in a form another thread can own.
+struct CapturedPlane {
+    android::base::unique_fd fd;        // this process's own duplicate
+    int32_t                  offset;
+    int32_t                  stride;
+    int32_t                  length;
+};
+
+struct CapturedPoolBuffer {
+    int32_t                    bufferIndex;
+    int32_t                    width;
+    int32_t                    height;
+    int32_t                    drmFourcc;
+    int64_t                    drmModifier;
+    std::vector<CapturedPlane> planes;  // planes.size() == VideoBufferView.planeFds.size()
+};
+
+// IVideoCaptureControllerListener - runs on a binder thread. No GL calls here.
+::android::binder::Status onPoolReady(
+        const std::vector<VideoBufferView>& poolBuffers) override {
+
+    std::vector<CapturedPoolBuffer> capturedPool;
+    capturedPool.reserve(poolBuffers.size());
+
+    for (const VideoBufferView& poolBuffer : poolBuffers) {
+        CapturedPoolBuffer captured{poolBuffer.bufferIndex, poolBuffer.width,
+                                    poolBuffer.height,      poolBuffer.drmFourcc,
+                                    poolBuffer.drmModifier, {}};
+
+        for (size_t plane = 0; plane < poolBuffer.planeFds.size(); ++plane) {
+            // The descriptor in the argument is closed when this callback returns.
+            // Take this process's own reference to the Dma-Buf now.
+            android::base::unique_fd duplicate(
+                    ::fcntl(poolBuffer.planeFds[plane].get(), F_DUPFD_CLOEXEC, 0));
+            if (!duplicate.ok()) {
+                // Usually EMFILE. A pool with a buffer missing cannot be drawn from.
+                reportCaptureFailure(errno);
+                return ::android::binder::Status::ok();
+            }
+            captured.planes.push_back({std::move(duplicate),
+                                       poolBuffer.planeOffsets[plane],
+                                       poolBuffer.planeStrides[plane],
+                                       poolBuffer.planeLengths[plane]});
+        }
+        capturedPool.push_back(std::move(captured));
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(pendingPoolMutex);
+        pendingPool = std::move(capturedPool);   // replaces any earlier pool not yet taken
+        pendingPoolArrived = true;
+    }
+    renderThread.wake();
+    return ::android::binder::Status::ok();
+}
+```
+
+### Importing as GPU textures
+
+On the render thread, with the context current, once per pool. The attribute list is built per plane from the arrays, so the same code imports a one-, two- or three-plane format and every memory layout.
+
+```c++
+// EGL_DMA_BUF_PLANE<N>_* attribute names, by plane index.
+static const EGLint kPlaneFd[]       = { EGL_DMA_BUF_PLANE0_FD_EXT,          EGL_DMA_BUF_PLANE1_FD_EXT,
+                                         EGL_DMA_BUF_PLANE2_FD_EXT,          EGL_DMA_BUF_PLANE3_FD_EXT };
+static const EGLint kPlaneOffset[]   = { EGL_DMA_BUF_PLANE0_OFFSET_EXT,      EGL_DMA_BUF_PLANE1_OFFSET_EXT,
+                                         EGL_DMA_BUF_PLANE2_OFFSET_EXT,      EGL_DMA_BUF_PLANE3_OFFSET_EXT };
+static const EGLint kPlanePitch[]    = { EGL_DMA_BUF_PLANE0_PITCH_EXT,       EGL_DMA_BUF_PLANE1_PITCH_EXT,
+                                         EGL_DMA_BUF_PLANE2_PITCH_EXT,       EGL_DMA_BUF_PLANE3_PITCH_EXT };
+static const EGLint kPlaneModLow[]   = { EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT, EGL_DMA_BUF_PLANE1_MODIFIER_LO_EXT,
+                                         EGL_DMA_BUF_PLANE2_MODIFIER_LO_EXT, EGL_DMA_BUF_PLANE3_MODIFIER_LO_EXT };
+static const EGLint kPlaneModHigh[]  = { EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT, EGL_DMA_BUF_PLANE1_MODIFIER_HI_EXT,
+                                         EGL_DMA_BUF_PLANE2_MODIFIER_HI_EXT, EGL_DMA_BUF_PLANE3_MODIFIER_HI_EXT };
+
+void importCapturePoolAsTextures() {
+    std::vector<CapturedPoolBuffer> capturedPool;
+    {
+        std::lock_guard<std::mutex> lock(pendingPoolMutex);
+        if (!pendingPoolArrived) {
+            return;
+        }
+        capturedPool = std::move(pendingPool);
+        pendingPoolArrived = false;
+    }
+
+    // A new pool is a new session's memory. Nothing imported from the old one
+    // may be resolved against this session's buffer indices.
+    destroyImportedImages();
+
+    for (CapturedPoolBuffer& captured : capturedPool) {
+        std::vector<EGLint> attributes = {
+            EGL_WIDTH,                captured.width,
+            EGL_HEIGHT,               captured.height,
+            EGL_LINUX_DRM_FOURCC_EXT, captured.drmFourcc,
+        };
+
+        for (size_t plane = 0; plane < captured.planes.size(); ++plane) {
+            attributes.insert(attributes.end(), {
+                kPlaneFd[plane],     captured.planes[plane].fd.get(),
+                kPlaneOffset[plane], captured.planes[plane].offset,
+                kPlanePitch[plane],  captured.planes[plane].stride,
+            });
+            // The modifier is repeated on every plane, split LO/HI. It needs
+            // EGL_EXT_image_dma_buf_import_modifiers; without that extension only
+            // DRM_FORMAT_MOD_LINEAR can be imported, and it is then omitted.
+            if (haveModifierImport) {
+                attributes.insert(attributes.end(), {
+                    kPlaneModLow[plane],  (EGLint)(captured.drmModifier & 0xFFFFFFFF),
+                    kPlaneModHigh[plane], (EGLint)(captured.drmModifier >> 32),
+                });
+            }
+        }
+        attributes.push_back(EGL_NONE);
+
+        EGLImageKHR image = eglCreateImageKHR(eglDisplay, EGL_NO_CONTEXT,
+                                              EGL_LINUX_DMA_BUF_EXT, nullptr,
+                                              attributes.data());
+        if (image == EGL_NO_IMAGE_KHR) {
+            // This EGL cannot import the pair the session selected.
+            reportCaptureFailure(eglGetError());
+            return;
+        }
+
+        // KEY THE CACHE ON bufferIndex - never on a descriptor number.
+        eglImagesByBufferIndex[captured.bufferIndex] = image;
+    }
+
+    // capturedPool goes out of scope here and its unique_fds close. That is
+    // correct: each EGLImage holds its own reference to the Dma-Buf, so the
+    // memory stays alive, and the process is not left holding descriptors
+    // it has no further use for.
+}
+```
+
+Closing the duplicates once the images exist keeps the process's descriptor count at zero per buffer in steady state. A client that holds them open instead costs one descriptor per image plane per pool buffer — sixteen for eight `NV12` buffers — for the life of the session, which counts against `RLIMIT_NOFILE`.
+
+### Reading the pixels on the CPU
+
+A client that touches the pixels — readback, a screenshot, a software encoder — selects a `DRM_FORMAT_MOD_LINEAR` row of `supportedFormats`; no other layout is portably readable. It maps each plane from its duplicated descriptor instead of, or as well as, importing it:
+
+```c++
+// Map from the start of the Dma-Buf up to the end of the plane; the offset
+// need not be page-aligned, so it is applied after mapping.
+size_t mappingLength = plane.offset + plane.length;
+void*  mapping = ::mmap(nullptr, mappingLength, PROT_READ, MAP_SHARED, plane.fd.get(), 0);
+
+// Per frame, while the buffer is Locked - between acquireLatestFrame() and its release:
+struct dma_buf_sync sync{DMA_BUF_SYNC_START | DMA_BUF_SYNC_READ};
+::ioctl(plane.fd.get(), DMA_BUF_IOCTL_SYNC, &sync);
+const uint8_t* rows = static_cast<const uint8_t*>(mapping) + plane.offset;
+// ... read `rows`, stepping planeStrides[N] per row ...
+sync.flags = DMA_BUF_SYNC_END | DMA_BUF_SYNC_READ;
+::ioctl(plane.fd.get(), DMA_BUF_IOCTL_SYNC, &sync);
+```
+
+The mapping holds its own reference to the Dma-Buf, as an image does, but `DMA_BUF_IOCTL_SYNC` needs a descriptor, so a client reading on the CPU keeps the duplicate open for as long as it reads. The sync bracket is what lets the implementation flush caches and account for the access; reading without it can see stale bytes on platforms with non-coherent memory. Reads are valid only while the buffer is Locked — a released buffer may already be taking the next frame.
+
+### Relaying the pool to another process
+
+Where the middleware holds the binder and the consumer runs in another container ([Where this interface sits](#where-this-interface-sits)), the middleware is the process that receives `onPoolReady()` and it forwards the pool:
+
+1. **Once per pool**, it sends each buffer's `bufferIndex`, shape and per-plane offsets, strides and lengths, with the plane descriptors attached as `SCM_RIGHTS` ancillary data on a Unix domain socket. It sends from its own duplicates — the callback's descriptors are gone once it returns — and may close them after the send, because the kernel has taken the receiver's references.
+2. **Per frame**, it forwards only `bufferIndex` and `presentationTimeNs`, exactly as `acquireLatestFrame()` returned them. No descriptor crosses again.
+3. **On a new pool**, it tells the consumer the old one is finished before sending the new, so the consumer destroys its old images before it resolves any new index.
+
+`SCM_RIGHTS` translates descriptors just as binder does, so every rule above holds in the consumer: each descriptor arrives with a new number, sharing is invisible, and identity is `bufferIndex`. The consumer imports once and keys on the index. `SCM_RIGHTS` carries at most 253 descriptors per message, far above any pool, but a relay splitting the pool across messages keeps each buffer's planes in one message.
+
+The consumer's release travels back the same way: it tells the middleware which `bufferIndex` it has finished with, and the middleware passes that to its next `acquireLatestFrame()`. The HAL sees one client — the middleware — and Locked state is tracked against it.
+
+### Reference lifetime
+
+A Dma-Buf is returned to the platform only when the last reference to it goes, wherever it is held:
+
+| Reference | Taken | Dropped |
+|---|---|---|
+| Implementation's pool | `start()` | `stop()`, `close()`, loss of the sink, or client death |
+| Descriptor in the `onPoolReady()` argument | Binder, on delivery | Automatically, when the callback returns |
+| Client's duplicate | `F_DUPFD_CLOEXEC` in the callback | `close()` — once imported or mapped, unless still needed for `DMA_BUF_IOCTL_SYNC` or a relay |
+| `EGLImage` | `eglCreateImageKHR()` | `eglDestroyImageKHR()` |
+| CPU mapping | `mmap()` | `munmap()` |
+| Relayed descriptor in another process | `SCM_RIGHTS` receipt | That process's `close()`, or its exit |
+
+`stop()` removes only the first row. That is why an image drawn after `stop()` still addresses valid memory, and why its contents are no longer guaranteed: the implementation no longer holds the buffer Locked for anyone.
+
+### Checklist
+
+- Duplicate every plane descriptor **inside** `onPoolReady()`; the argument's descriptors close on return.
+- Do no GL work on the binder thread; import on the thread that owns the context.
+- Take the plane count from `planeFds.size()`; never assume two.
+- Use `planeOffsets` and `planeStrides` as delivered; never compute them from the frame size.
+- Key everything on `bufferIndex`; never on a descriptor number.
+- Close duplicates once imported, unless a CPU mapping or a relay still needs them.
+- Read pixels only while the buffer is Locked, bracketed by `DMA_BUF_IOCTL_SYNC`.
+- On every new `onPoolReady()`, destroy what was imported from the previous pool first.
 
 ## A Capture Session End to End
 
@@ -398,110 +674,7 @@ captureController->setFormat(selectPreferredFormat(captureCapabilities.supported
 captureController->start();
 ```
 
-`VideoBufferView` carries `ParcelFileDescriptor`, which is move-only, and the callback receives them by const reference — so the array cannot simply be stored. A client duplicates the descriptors it intends to import from, which is also what keeps that memory alive independently of the session:
-
-```c++
-// One pool buffer, in a form the render thread can own.
-struct CapturedPoolBuffer {
-    int32_t          bufferIndex;
-    int32_t          frameWidth;
-    int32_t          frameHeight;
-    int32_t          drmFourcc;
-    int64_t          drmModifier;
-    std::vector<int32_t> planeOffsets;
-    std::vector<int32_t> planeStrides;
-    std::vector<int>     planeFileDescriptors;   // duplicated; this thread owns them
-};
-```
-
-The pool is delivered once, on a **binder thread** — `IVideoCaptureControllerListener` is `oneway`, so the callback arrives on the client's binder pool, not on the thread that owns its GL context. An EGL import needs that context current, so the callback duplicates the descriptors and hands them over; the render thread imports each buffer once, and never again.
-
-```c++
-// IVideoCaptureControllerListener - runs on a binder thread. No GL calls here.
-::android::binder::Status onPoolReady(
-        const std::vector<VideoBufferView>& poolBuffers) override {
-
-    std::vector<CapturedPoolBuffer> capturedBuffers;
-    for (const VideoBufferView& poolBuffer : poolBuffers) {
-        CapturedPoolBuffer capturedBuffer{poolBuffer.bufferIndex,
-                                          poolBuffer.width,
-                                          poolBuffer.height,
-                                          poolBuffer.drmFourcc,
-                                          poolBuffer.drmModifier,
-                                          poolBuffer.planeOffsets,
-                                          poolBuffer.planeStrides,
-                                          {}};
-        for (const ::android::os::ParcelFileDescriptor& planeDescriptor : poolBuffer.planeFds) {
-            capturedBuffer.planeFileDescriptors.push_back(::dup(planeDescriptor.get()));
-        }
-        capturedBuffers.push_back(std::move(capturedBuffer));
-    }
-
-    {
-        std::lock_guard<std::mutex> lock(pendingPoolMutex);
-        pendingPoolBuffers = std::move(capturedBuffers);
-    }
-    renderThread.wake();
-    return ::android::binder::Status::ok();
-}
-```
-
-On the render thread, with the context current — once, when the pool arrives:
-
-```c++
-void importCapturePoolAsTextures() {
-    std::vector<CapturedPoolBuffer> capturedBuffers;
-    {
-        std::lock_guard<std::mutex> lock(pendingPoolMutex);
-        capturedBuffers = std::move(pendingPoolBuffers);
-    }
-
-    for (const CapturedPoolBuffer& capturedBuffer : capturedBuffers) {
-        // The per-plane arrays are the attribute list. Element N feeds
-        // EGL_DMA_BUF_PLANE<N>_FD_EXT / _OFFSET_EXT / _PITCH_EXT; NV12 has two
-        // planes, [Y, UV]. The modifier is split across a LO/HI pair per plane and
-        // needs EGL_EXT_image_dma_buf_import_modifiers.
-        const EGLint modifierLow  = (EGLint)(capturedBuffer.drmModifier & 0xFFFFFFFF);
-        const EGLint modifierHigh = (EGLint)(capturedBuffer.drmModifier >> 32);
-
-        EGLint imageAttributes[] = {
-            EGL_WIDTH,                          capturedBuffer.frameWidth,
-            EGL_HEIGHT,                         capturedBuffer.frameHeight,
-            EGL_LINUX_DRM_FOURCC_EXT,           capturedBuffer.drmFourcc,
-
-            EGL_DMA_BUF_PLANE0_FD_EXT,          capturedBuffer.planeFileDescriptors[0],
-            EGL_DMA_BUF_PLANE0_OFFSET_EXT,      capturedBuffer.planeOffsets[0],
-            EGL_DMA_BUF_PLANE0_PITCH_EXT,       capturedBuffer.planeStrides[0],
-            EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT, modifierLow,
-            EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT, modifierHigh,
-
-            EGL_DMA_BUF_PLANE1_FD_EXT,          capturedBuffer.planeFileDescriptors[1],
-            EGL_DMA_BUF_PLANE1_OFFSET_EXT,      capturedBuffer.planeOffsets[1],
-            EGL_DMA_BUF_PLANE1_PITCH_EXT,       capturedBuffer.planeStrides[1],
-            EGL_DMA_BUF_PLANE1_MODIFIER_LO_EXT, modifierLow,
-            EGL_DMA_BUF_PLANE1_MODIFIER_HI_EXT, modifierHigh,
-
-            EGL_NONE
-        };
-
-        EGLImageKHR eglImage = eglCreateImageKHR(eglDisplay, EGL_NO_CONTEXT,
-                                                 EGL_LINUX_DMA_BUF_EXT, NULL,
-                                                 imageAttributes);
-
-        // KEY THE CACHE ON bufferIndex. Two buffers may share a descriptor and differ
-        // only by offset, so a cache keyed on the descriptor collapses the pool onto
-        // one entry and the picture silently freezes.
-        eglImagesByBufferIndex[capturedBuffer.bufferIndex] = eglImage;
-    }
-
-    // Close the duplicates now the images hold their own references to the memory.
-    for (const CapturedPoolBuffer& capturedBuffer : capturedBuffers) {
-        for (int planeDescriptor : capturedBuffer.planeFileDescriptors) {
-            ::close(planeDescriptor);
-        }
-    }
-}
-```
+Then, on `onPoolReady()`, the pool is duplicated on the binder thread and imported on the render thread exactly as [Getting the Buffers into Your Process](#getting-the-buffers-into-your-process) shows. That section is the part of the contract a caller most often gets wrong; the rest of this walk-through assumes `eglImagesByBufferIndex` has been filled from it.
 
 Then the draw loop. One call both releases the buffer just drawn and acquires the next, so a client drawing continuously never calls `releaseFrame()` at all:
 
@@ -545,7 +718,7 @@ The frame returned is the one the bound sink would be presenting now, with the s
 
 ## Pixel Format and Memory Layout
 
-A captured frame is described by two values, and they answer different questions. Where those values sit relative to buffers and image planes is [above](#planes-buffers-and-image-planes).
+A captured frame is described by two values, and they answer different questions. Where those values sit relative to buffers and image planes is [above](#buffers-and-image-planes).
 
 | Value | Question it answers | Example |
 |---|---|---|
@@ -587,7 +760,10 @@ The per-product declaration is `supportedFormats` under `captureCapabilities` in
 | `resize` false and the size does not match the decoded resolution | `start()` fails with `RESOLUTION_MISMATCH`. Nothing is scaled. |
 | Pool reservation refused | `start()` fails with `OUT_OF_MEMORY`. |
 | Bound sink lost while running | The session stops and `IVideoCaptureEventListener.onSourceLost()` is raised. Binding again with `open()` makes it startable. |
-| `releaseFrame()` with an index the pool does not name | Raises `EX_ILLEGAL_ARGUMENT` — a client holding an unknown index has lost track of what it holds. |
+| `releaseFrame()` or `acquireLatestFrame()` with a buffer already Free | Returns without error. A repeated release, including one arriving after `stop()`, is harmless. |
+| `releaseFrame()` or `acquireLatestFrame()` with an index outside `[0, pool size)` | Raises `EX_ILLEGAL_ARGUMENT` — a client holding an unknown index has lost track of what it holds. |
+| `dup()` of a pool descriptor fails in `onPoolReady()` | The client's own resource failure, usually `EMFILE`. The client cannot import that buffer; it stops the session rather than drawing from a partial pool. |
+| `eglCreateImageKHR()` fails for a pool buffer | The client's EGL rejected the pair it selected. A declared pair the client cannot import is a client capability gap; it stops the session and selects a different row of `supportedFormats`. |
 
 ## Buffer Contract
 
@@ -629,4 +805,4 @@ flowchart LR
 
 Nothing is imported per frame, and no file descriptor crosses the binder after `onPoolReady()`. The index is what makes that possible: it is the buffer's identity, where the addressing that reaches its memory is not.
 
-A descriptor and its `planeOffsets` entry together address a plane, and that pair is the whole of what a client needs. How the memory behind it was allocated is the implementation's to choose — one descriptor shared across planes or buffers at differing offsets, or a descriptor per plane at offset zero, are equally valid. A client that imports from `VideoBufferView.planeFds` and `planeOffsets` serves both without knowing which it was handed. A client caching EGLImages **must key the cache on `bufferIndex`**, or equivalently on the pair (file descriptor, offset) — never on the file descriptor alone. Where the pool is one shared Dma-Buf every buffer carries the same descriptor and differs only by offset, so an fd-keyed cache collapses the whole pool onto one entry and the client re-textures a single buffer for the rest of the session. The picture freezes while frames keep arriving, and nothing in what the client was handed shows it.
+A descriptor and its `planeOffsets` entry together address a plane, and that pair is the whole of what a client needs. How the memory behind it was allocated is the implementation's to choose — one descriptor shared across planes or buffers at differing offsets, or a descriptor per plane at offset zero, are equally valid. A client that imports from `VideoBufferView.planeFds` and `planeOffsets` serves both without knowing which it was handed. A client caching EGLImages **must key the cache on `bufferIndex`**, and never on a descriptor number. A descriptor number is a process-local handle, not an identity: binder gives each array entry its own number even where entries share a Dma-Buf, the numbers change again at every further hop, and a number closed after import is handed straight back out by the next `open()` or `dup()` in the process. A cache keyed on descriptor numbers therefore either misses buffers that share memory or aliases a new buffer onto a stale entry, and in both cases the picture is wrong while frames keep arriving, with nothing in what the client was handed to show it.

@@ -179,10 +179,11 @@ interface IVideoCapture
      * start and stop the session, and acquire and release frames. Controller related
      * callbacks are made through the `IVideoCaptureControllerListener` passed into the call.
      *
-     * The client selects the session's format through
-     * `IVideoCaptureController.setProperty()` in the `READY` state, before calling
-     * `IVideoCaptureController.start()` - the frame format and size it wants, and the depth
-     * of the pool that holds them.
+     * The client configures the session in the `READY` state, before calling
+     * `IVideoCaptureController.start()`: the pixel format and memory layout with
+     * `IVideoCaptureController.setFormat()`, and the frame size with
+     * `IVideoCaptureController.setProperty()`. Pool depth is not configured; the
+     * platform calibrates it and `onPoolReady()` delivers however many buffers it is.
      *
      * Nothing is set on the bound sink. Making it deliver the frames this session was
      * configured for is the vendor layer's own business, arranged over whatever

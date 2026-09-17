@@ -189,7 +189,8 @@ interface IVideoCaptureController
      *
      * `bufferIndex` must be a `VideoFrameView.bufferIndex` value previously returned by
      * `acquireLatestFrame()`. Releasing a buffer that is already Free returns without
-     * raising an exception, so the call is idempotent. An index outside the pool is a
+     * raising an exception, so the call is idempotent - including after `stop()`,
+     * which has already returned every buffer to Free. An index outside the pool is a
      * client error rather than a repeat release, and raises `EX_ILLEGAL_ARGUMENT` - a
      * client holding an index the pool cannot name has lost track of what it holds, and
      * absorbing that silently is how a stale index survives to release another client's
@@ -215,7 +216,7 @@ interface IVideoCaptureController
      * a vendor-namespaced tiled or compressed layout serves one whose GPU is the
      * same vendor's.
      *
-     * A format shall be selected before `start()`. There is no default: what a plane
+     * A format shall be selected before `start()`. There is no default: what a capture
      * can deliver is whatever it declares, so there is no pair the interface could
      * assume on the client's behalf.
      *
