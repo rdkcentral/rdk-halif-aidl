@@ -221,9 +221,11 @@ interface IAudioSinkController {
      * a `STARTED` state.
      *
      * The client must call `setAudioDecoder()` with a valid decoder ID before
-     * calling this method in both tunnelled and non-tunnelled modes. Starting
-     * an audio sink while the associated decoder ID is
-     * `IAudioDecoder.Id.UNDEFINED` shall fail.
+     * calling this method when audio is sourced from an Audio Decoder, in
+     * both tunnelled and non-tunnelled modes; starting such a session while
+     * the associated decoder ID is `IAudioDecoder.Id.UNDEFINED` shall fail.
+     * This precondition does not apply to the decoder-less Clear PCM Audio
+     * Playback path, which starts with no decoder association.
      *
      * The AVClock attachment and the mixer input routing are independent of
      * the decoder association above: a sink started with no mixer input
@@ -232,12 +234,14 @@ interface IAudioSinkController {
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     *      The resource is not in State::READY, or the associated audio
-     *      decoder ID is `IAudioDecoder.Id.UNDEFINED`.
+     *      The resource is not in State::READY, or the sink is being fed by
+     *      an Audio Decoder while the associated decoder ID is
+     *      `IAudioDecoder.Id.UNDEFINED`.
      *
      * @pre The resource must be in State::READY.
-     * @pre The associated audio decoder ID must not be
-     *      `IAudioDecoder.Id.UNDEFINED`; set it using `setAudioDecoder()`.
+     * @pre For a session fed by an Audio Decoder, the associated audio
+     *      decoder ID must not be `IAudioDecoder.Id.UNDEFINED`; set it
+     *      using `setAudioDecoder()`.
      *
      * @see stop(), IAudioSink.close(), setAudioDecoder()
      */
