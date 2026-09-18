@@ -141,7 +141,7 @@ parcelable PQParameterCapabilities
          * Specific integer values between minValue and maxValue that are supported.
          * Empty array means all integer values in [minValue, maxValue] are valid.
          */
-        int[] intValues = {};
+        int[] intValues;
 
         /**
          * Specific colour temperature presets that are supported.
