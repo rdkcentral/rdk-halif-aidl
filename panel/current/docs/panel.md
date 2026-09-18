@@ -216,7 +216,7 @@ Each platform must include a [hfp-panel.yaml](https://github.com/rdkcentral/rdk-
 * Supported colour temperature enum values aligned with `ColourTemperature.aidl`.
 * Lists of supported PQ parameters and picture modes.
 * Capabilities of each PQ parameter per picture mode, AV source, and dynamic range, including `TWO_POINT_WB` and `MULTI_POINT_WB` structured bounds.
-* Declared as structured sections aligned with the AIDL interfaces and consumed by `IPanelOutput.getCapabilities()`.
+* Declared as structured sections aligned with the AIDL interfaces; panel capabilities are returned by `IPanelOutput.getCapabilities()`, while per-parameter capabilities are returned by `IPanelOutputController.getPQParameterCapabilities()`.
 
 These files are machine-readable and used for:
 

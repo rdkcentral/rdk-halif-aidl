@@ -31,7 +31,6 @@
 package com.rdk.hal.panel;
 
 import com.rdk.hal.AVSource;
-import com.rdk.hal.panel.Capabilities;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.PQParameterCapabilities;
 import com.rdk.hal.panel.PQParameterConfiguration;

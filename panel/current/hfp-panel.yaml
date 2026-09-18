@@ -400,6 +400,8 @@ panel:                  # Component object begins
               By: 1.0
               Wx: 1.0
               Wy: 1.0
+        supportedValues:
+          dvCalibrationValues: []
         # Dolby Vision calibration only applies to the DOLBY_VISION dynamic range.
         pictureModeCapabilities:
           - Entertainment: &dolbyVisionOnly
@@ -425,6 +427,8 @@ panel:                  # Component object begins
               twoPointWBColour: WB_COLOR_BLUE
               gain: 2047
               offset: 1023
+            supportedValues:
+              twoPointWBValues: []
         pictureModeCapabilities: *pictureModesAll
     - MULTI_POINT_WB:
         isSupported: true
@@ -444,6 +448,8 @@ panel:                  # Component object begins
               r: []
               g: []
               b: []
+        supportedValues:
+          multiPointWBValues: []
         pictureModeCapabilities: *pictureModesAll
     - AI_PQ_ENGINE:
         isSupported: true
