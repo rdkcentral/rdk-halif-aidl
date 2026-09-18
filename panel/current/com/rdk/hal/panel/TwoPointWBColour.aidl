@@ -2,7 +2,7 @@
  * If not stated otherwise in this file or this component's LICENSE file the
  * following copyright and licenses apply:
  *
- * Copyright 2024 RDK Management
+ * Copyright 2026 RDK Management
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/**
+ * @file TwoPointWBColour.aidl
+ * @brief Supported colour channels for 2-point white balance calibration entries.
+ */
 package com.rdk.hal.panel;
 
-/** 
- *  @brief     Display panel 2 point white balance settings.
- *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
- */
- 
 @VintfStability
-parcelable WhiteBalance2PointSettings
-{
-	/* TODO: define what the valid range is - or provide an API for it. */
-
-	parcelable Point {
-		int gain;
-		int offset;
-	}
-
-	Point r;
-	Point g;
-	Point b;
+@Backing(type="int")
+enum TwoPointWBColour {
+    WB_COLOR_RED = 0,
+    WB_COLOR_GREEN = 1,
+    WB_COLOR_BLUE = 2,
+    WB_COLOR_MAX = 3,
 }
