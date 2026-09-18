@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.panel;
+import com.rdk.hal.panel.Capabilities;
 import com.rdk.hal.panel.IPanelOutputController;
 import com.rdk.hal.panel.IPanelOutputControllerListener;
 import com.rdk.hal.panel.IPanelOutputEventListener;
