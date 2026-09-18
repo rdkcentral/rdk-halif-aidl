@@ -41,8 +41,13 @@ enum PQParameter
     MANUAL_BACKLIGHT = 5,               //!< Picture parameter  is Backlight (fixed/global) (not the ALS value)  Setting will fail if ALS enabled.
     // Valid gamma values are defined in enum SDRGamma.
     SDR_GAMMA = 6,                      //!< Picture parameter  is SDR Gamma
-    // 0..n depending on preconfigured number of presets.
-    COLOR_TEMPERATURE = 7,              //!< Picture parameter  is Colour temperature (?)
+    /**
+     * Colour temperature preset.
+     * Value is represented as a ColourTemperature enum value.
+     * Use getPQParameters() / setPQParameters() with the colourTemperatureValue
+     * field of PQParameterConfiguration for this parameter.
+     */
+    COLOR_TEMPERATURE = 7,
     // 0=Fixed 1=Global 2=Local
     DIMMING_MODE = 8,                   //!< Picture parameter  is Dimming mode
     // 0..n presets defined by vendor (for global or local dimming)
@@ -141,5 +146,13 @@ enum PQParameter
      * field of PQParameterConfiguration for this parameter.
      */
     TWO_POINT_WB = 37,
+
+    /**
+     * Multi-point white balance calibration settings.
+     * Value is represented as a WhiteBalanceMultiPointSettings parcelable.
+     * Use getPQParameters() / setPQParameters() with the multiPointWBSettings
+     * field of PQParameterConfiguration for this parameter.
+     */
+    MULTI_POINT_WB = 38,
 
 }

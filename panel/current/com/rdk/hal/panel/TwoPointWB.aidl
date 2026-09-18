@@ -18,6 +18,8 @@
  */
 package com.rdk.hal.panel;
 
+import com.rdk.hal.panel.ColourTemperature;
+
 /**
  *  @brief     2-point white balance entry.
  *             Holds the gain and offset for a 2-point white balance calibration entry.
@@ -28,6 +30,11 @@ package com.rdk.hal.panel;
 @VintfStability
 parcelable TwoPointWB
 {
+    /**
+     * Colour temperature profile this white balance entry applies to.
+     */
+    ColourTemperature colourTemperature;
+
     /**
      * White balance gain value.
      * Valid range is 0 to 2047.

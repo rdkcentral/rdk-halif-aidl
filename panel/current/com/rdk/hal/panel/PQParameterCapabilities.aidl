@@ -17,9 +17,11 @@
  * limitations under the License.
  */
 package com.rdk.hal.panel;
+import com.rdk.hal.panel.ColourTemperature;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.DolbyVisionCalibrationSettings;
 import com.rdk.hal.panel.TwoPointWB;
+import com.rdk.hal.panel.WhiteBalanceMultiPointSettings;
 import com.rdk.hal.videodecoder.DynamicRange;
 import com.rdk.hal.AVSource;
 
@@ -52,13 +54,23 @@ parcelable PQParameterCapabilities
 
     /**
      * Scalar integer minimum/maximum bounds used by all PQ parameters except
-     * DV_CALIBRATION and TWO_POINT_WB.
+     * COLOR_TEMPERATURE, DV_CALIBRATION, TWO_POINT_WB, and MULTI_POINT_WB.
      */
     parcelable IntBounds {
         /** The minimum value for this PQ parameter. */
         int minValue;
         /** The maximum value for this PQ parameter. */
         int maxValue;
+    }
+
+    /**
+     * Colour temperature bounds used when pqParameter == PQParameter.COLOR_TEMPERATURE.
+     */
+    parcelable ColourTemperatureBounds {
+        /** The minimum supported colour temperature preset. */
+        ColourTemperature minValue;
+        /** The maximum supported colour temperature preset. */
+        ColourTemperature maxValue;
     }
 
     /**
@@ -84,26 +96,44 @@ parcelable PQParameterCapabilities
     }
 
     /**
+     * Multi-point white balance bounds used when pqParameter == PQParameter.MULTI_POINT_WB.
+     * minBound and maxBound contain the per-field minimum and maximum WB values.
+     */
+    parcelable MultiPointWBBounds {
+        /** Per-field minimum multi-point WB values. */
+        WhiteBalanceMultiPointSettings minBound;
+        /** Per-field maximum multi-point WB values. */
+        WhiteBalanceMultiPointSettings maxBound;
+    }
+
+    /**
      * Union of scalar integer range bounds, Dolby Vision calibration bounds, or
      * 2-point white balance bounds.
-     * For all PQ parameters except DV_CALIBRATION and TWO_POINT_WB, use `intBounds`.
+     * For all PQ parameters except COLOR_TEMPERATURE, DV_CALIBRATION, TWO_POINT_WB, and MULTI_POINT_WB, use `intBounds`.
+     * For PQParameter.COLOR_TEMPERATURE, use `colourTemperatureBounds`.
      * For PQParameter.DV_CALIBRATION, use `dvCalibrationBounds`.
      * For PQParameter.TWO_POINT_WB, use `twoPointWBBounds`.
+     * For PQParameter.MULTI_POINT_WB, use `multiPointWBBounds`.
      */
     union RangeBound {
         IntBounds intBounds;
+        ColourTemperatureBounds colourTemperatureBounds;
         DvCalibrationBounds dvCalibrationBounds;
         TwoPointWBBounds twoPointWBBounds;
+        MultiPointWBBounds multiPointWBBounds;
     }
     RangeBound rangeBound;
 
     /**
      * Union of a list of supported integer values, a list of supported Dolby Vision
      * calibration settings values, or a list of supported 2-point white balance values.
-     * For all PQ parameters except DV_CALIBRATION and TWO_POINT_WB,
+    * For all PQ parameters except COLOR_TEMPERATURE, DV_CALIBRATION,
+    * TWO_POINT_WB, and MULTI_POINT_WB,
      * use the `intValues` variant.
+    * For PQParameter.COLOR_TEMPERATURE, use the `colourTemperatureValues` variant.
      * For PQParameter.DV_CALIBRATION, use the `dvCalibrationValues` variant.
      * For PQParameter.TWO_POINT_WB, use the `twoPointWBValues` variant.
+    * For PQParameter.MULTI_POINT_WB, use the `multiPointWBValues` variant.
      * This only needs to be populated if not all values between min and max are supported.
      */
     union SupportedValues {
@@ -112,6 +142,12 @@ parcelable PQParameterCapabilities
          * Empty array means all integer values in [minValue, maxValue] are valid.
          */
         int[] intValues = {};
+
+        /**
+         * Specific colour temperature presets that are supported.
+         * Empty array means any value within the ColourTemperatureBounds range is valid.
+         */
+        ColourTemperature[] colourTemperatureValues;
 
         /**
          * Specific DolbyVisionCalibrationSettings presets that are supported.
@@ -124,6 +160,12 @@ parcelable PQParameterCapabilities
          * Empty array means any value within the TwoPointWBBounds range is valid.
          */
         TwoPointWB[] twoPointWBValues;
+
+        /**
+         * Specific WhiteBalanceMultiPointSettings presets that are supported.
+         * Empty array means any value within the MultiPointWBBounds range is valid.
+         */
+        WhiteBalanceMultiPointSettings[] multiPointWBValues;
     }
     SupportedValues supportedValues;
 

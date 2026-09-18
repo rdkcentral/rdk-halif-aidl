@@ -31,7 +31,7 @@
 #   dynamicRangesAll         - the four dynamic ranges and their AV sources.
 #   dolbyVisionEntry         - the DOLBY_VISION dynamic range entry.
 #   pictureModesAll          - all picture modes, each supporting dynamicRangesAll.
-#   intBounds0to1/2/100      - the common integer bounds for PQ parameters.
+#   intBounds0to1/2/4/100    - the common integer bounds for PQ parameters.
 
 panel:                  # Component object begins
   interfaceVersion: current
@@ -82,6 +82,7 @@ panel:                  # Component object begins
     - PRECISION_DETAIL
     - DV_CALIBRATION
     - TWO_POINT_WB
+    - MULTI_POINT_WB
   supportedRefreshRatesHz:
     - 48
     - 49
@@ -138,10 +139,12 @@ panel:                  # Component object begins
     - Sports: *dynamicRangesAll
     - Movie: *dynamicRangesAll
     - Expert: *dynamicRangesAll
-  colorTemperatureNames: #colorTemperatureNames
-    - Cool
-    - Normal
-    - Warm
+  supportedColourTemperatures:
+    - WARM
+    - NORMAL
+    - COLD
+    - SUPER_COLD
+    - CUSTOM
   PQParameterCapabilities:
     - BRIGHTNESS:
         isSupported: true
@@ -191,16 +194,25 @@ panel:                  # Component object begins
         isSupported: true
         isGlobal: false
         rangeBound:
-          # Index into colorTemperatureNames[].
-          intBounds: &intBounds0to2
-            minValue: 0
-            maxValue: 2
+          # Uses the colourTemperatureBounds variant of PQParameterCapabilities.RangeBound.
+          colourTemperatureBounds:
+            minValue: WARM
+            maxValue: CUSTOM
+        supportedValues:
+          colourTemperatureValues:
+            - WARM
+            - NORMAL
+            - COLD
+            - SUPER_COLD
+            - CUSTOM
         pictureModeCapabilities: *pictureModesAll
     - DIMMING_MODE:
         isSupported: true
         isGlobal: true
         rangeBound:
-          intBounds: *intBounds0to2
+          intBounds: &intBounds0to2
+            minValue: 0
+            maxValue: 2
         pictureModeCapabilities: *pictureModesAll
     - DIMMING_LEVEL:
         isSupported: true
@@ -404,11 +416,32 @@ panel:                  # Component object begins
           # Uses the twoPointWBBounds variant of PQParameterCapabilities.RangeBound.
           twoPointWBBounds:
             minBound:
+              colourTemperature: WARM
               gain: 0
               offset: -1024
             maxBound:
+              colourTemperature: CUSTOM
               gain: 2047
               offset: 1023
+        pictureModeCapabilities: *pictureModesAll
+    - MULTI_POINT_WB:
+        isSupported: true
+        isGlobal: false
+        rangeBound:
+          # Uses the multiPointWBBounds variant of PQParameterCapabilities.RangeBound.
+          # The number of calibration points is vendor-defined, so platform profiles
+          # should replace these example arrays with concrete min/max vectors.
+          multiPointWBBounds:
+            minBound:
+              colourTemperature: WARM
+              r: []
+              g: []
+              b: []
+            maxBound:
+              colourTemperature: CUSTOM
+              r: []
+              g: []
+              b: []
         pictureModeCapabilities: *pictureModesAll
     - AI_PQ_ENGINE:
         isSupported: true

@@ -36,8 +36,6 @@ import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.PQParameterCapabilities;
 import com.rdk.hal.panel.PQParameterConfiguration;
 import com.rdk.hal.panel.PictureModeConfiguration;
-import com.rdk.hal.panel.WhiteBalance2PointSettings;
-import com.rdk.hal.panel.WhiteBalanceMultiPointSettings;
 import com.rdk.hal.videodecoder.DynamicRange;
 
 @VintfStability
@@ -424,58 +422,6 @@ interface IPanelOutputController {
      *                  and [1] is the video height.
      */
 	int[2] getVideoResolution();
-
-    /**
-     * Sets the 2-point white balance settings for a given color temperature.
-     *
-     * This method can only be called after start() has completed successfully.
-     *
-     * @param[in] colorTemperature  The color temperature to set.
-     * @param[in] whiteBalance      The white balance settings.
-     * 
-     * @returns boolean
-     * @retval true     The 2-point white balance was set for the color temperature.
-     * @retval false    One or more parameters are invalid.
-     *
-     */
-    boolean set2PointWhiteBalance(in int colorTemperature, in WhiteBalance2PointSettings whiteBalance);
-
-    /**
-     * Gets the 2-point white balance settings for a given color temperature.
-     *
-     * This method can only be called after start() has completed successfully.
-     *
-     * @param[in] colorTemperature  The color temperature to set.
-     * 
-     * @returns WhiteBalance2PointSettings
-     */
-    WhiteBalance2PointSettings get2PointWhiteBalance(in int colorTemperature);
-
-    /**
-     * Sets the multi-point white balance settings for a given color temperature.
-     *
-     * This method can only be called after start() has completed successfully.
-     *
-     * @param[in] colorTemperature  The color temperature to set.
-     * @param[in] whiteBalance      The white balance settings.
-     *
-     * @returns boolean
-     * @retval true     The multi-point white balance was set for the color temperature.
-     * @retval false    One or more parameters are invalid.
-     *
-     */
-    boolean setMultiPointWhiteBalance(in int colorTemperature, in WhiteBalanceMultiPointSettings whiteBalance);
-
-    /**
-     * Gets the multi-point white balance settings for a given color temperature.
-     *
-     * This method can only be called after start() has completed successfully.
-     *
-     * @param[in] colorTemperature  The color temperature to set.
-     *
-     * @returns WhiteBalanceMultiPointSettings
-     */
-    WhiteBalanceMultiPointSettings getMultiPointWhiteBalance(in int colorTemperature);
 
 	/**
 	 * Enables or disables calibration mode for the PQ pipeline.
