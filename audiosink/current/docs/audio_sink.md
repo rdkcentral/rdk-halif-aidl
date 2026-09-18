@@ -197,7 +197,7 @@ An [AV Buffer](../avbuffer/av_buffer.md) audio pool would be used for PCM data w
 
 The audio data must be in the PCM audio format and sample rate, as reported in `PlatformCapabilities` returned from the `IAudioSinkManager.getPlatformCapabilities()` function.
 
-Once the data in an audio frame buffer has been fully passed to or processed by the mixer, the Audio Sink shall free the handle by calling `IAVBuffer.free()`.
+Once the data in an audio frame buffer has been fully consumed — passed to or processed by the mixer when a mixer input is routed, or consumed at its presentation time on the attached clock when no mixer input is routed — the Audio Sink shall free the handle by calling `IAVBuffer.free()`.
 
 ## Input Buffer Back-Pressure
 
