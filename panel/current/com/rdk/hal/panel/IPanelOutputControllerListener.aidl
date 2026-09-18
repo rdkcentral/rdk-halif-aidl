@@ -18,10 +18,35 @@
  */
 package com.rdk.hal.panel;
 
+import com.rdk.hal.AVSource;
+import com.rdk.hal.panel.PQParameter;
+import com.rdk.hal.panel.PQParameterConfiguration;
 import com.rdk.hal.panel.State;
+import com.rdk.hal.videodecoder.DynamicRange;
 
 @VintfStability
 oneway interface IPanelOutputControllerListener {
+    /**
+     * Callback when the picture mode changes.
+     * 
+     * This can occur on an AVSource or DynamicRange change in the video
+     * or occurs after a call to setPictureMode().
+     * 
+     * @param[in] pictureMode   The new picture mode.
+     */
+    void onPictureModeChanged(in String pictureMode);
+
+    /**
+     * Callback when a PQ picture property value changes.
+     *
+     * @param[in] pictureMode             The picture mode for which the change applies.
+     * @param[in] avSource                The AV source for which the change applies.
+     * @param[in] dynamicRange            The dynamic range for which the change applies.
+     * @param[in] pictureProperty         The PQ picture property that changed.
+     * @param[in] picturePropertyValue    The changed value variant.
+     */
+    void onPQParameterChanged(in String pictureMode, in AVSource avSource, in DynamicRange dynamicRange, in PQParameter pictureProperty, in PQParameterConfiguration.Value picturePropertyValue);
+
     /**
      * @brief Called when the panel output transitions to a new lifecycle state.
      *
