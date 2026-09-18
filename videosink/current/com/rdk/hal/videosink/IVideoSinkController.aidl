@@ -69,9 +69,9 @@ import com.rdk.hal.avclock.IAVClock;
  *      with any audio sink presenting against the same clock and video is
  *      lip-synced from the moment a plane is mapped.</li>
  *  </ul>
- *  The mapping may be set or cleared at any point in the session, including
- *  while `STARTED`. A mapping change leaves the sink's state-machine state
- *  unchanged, does not flush the queue and raises no exception. On becoming
+ * The mapping may be set or cleared at any point in the session, including
+ * while `STARTED`. A successful mapping change leaves the sink's state-machine
+ * state unchanged and does not flush the queue. On becoming
  *  mapped, the sink renders from the first queued frame whose presentation
  *  time is at or after the current clock time; queued frames whose
  *  presentation time has already passed are discarded rather than displayed
