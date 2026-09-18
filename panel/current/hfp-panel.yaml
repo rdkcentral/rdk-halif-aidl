@@ -417,10 +417,12 @@ panel:                  # Component object begins
           twoPointWBBounds:
             minBound:
               colourTemperature: WARM
+              twoPointWBColour: WB_COLOR_RED
               gain: 0
               offset: -1024
             maxBound:
               colourTemperature: CUSTOM
+              twoPointWBColour: WB_COLOR_BLUE
               gain: 2047
               offset: 1023
         pictureModeCapabilities: *pictureModesAll
