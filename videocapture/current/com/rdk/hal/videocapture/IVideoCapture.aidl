@@ -21,31 +21,26 @@ package com.rdk.hal.videocapture;
 import com.rdk.hal.videocapture.Capabilities;
 import com.rdk.hal.videocapture.IVideoCaptureController;
 import com.rdk.hal.videocapture.IVideoCaptureControllerListener;
-import com.rdk.hal.videocapture.Property;
 import com.rdk.hal.videocapture.Source;
 import com.rdk.hal.videocapture.State;
-import com.rdk.hal.PropertyValue;
 
 /**
  *  @brief     Video frame capture bound to a named pipeline source.
  *
- *  A capture resource takes frames from one stage of the pipeline and delivers them
- *  into a pool of Dma-Buf buffers the client imports as GPU textures. It is an output
- *  in its own right, not a destination within some other module's model: it is
- *  addressed by its own `Id`, obtained from `IVideoCaptureManager`, and it carries its own
- *  frame size.
+ *  A capture resource takes frames from a video sink and delivers them into a pool of
+ *  Dma-Buf buffers the client imports as GPU textures. It is an output in its own right,
+ *  not a destination within some other module's model: it is addressed by its own `Id`
+ *  and obtained from `IVideoCaptureManager`.
  *
  *  **The binding is the session.** `open()` names the source frames are taken from -
- *  one arm of `Source`, naming a particular sink or decoder by its own ID - and that
- *  source is what the session delivers for its lifetime. A source may have a display
+ *  one arm of `Source`, naming a particular sink by its own ID - and that source is what
+ *  the session delivers for its lifetime. A source may have a display
  *  path, a capture, both or neither - none of those is a special case, and a capture
  *  never needs a display destination to exist.
  *
- *  **A capture is served the frames of the stage it names,** and the stage decides what
- *  a frame means. A capture adds no scheduler, no clock and no timing policy of its own:
- *  bound to a sink it takes what that sink would present, under whatever presentation
- *  mode the sink is running; bound to a decoder it takes what the decoder produced, in
- *  the order it produced it. `Source` states the two.
+ *  **A capture is served the frame its sink would be presenting,** under whatever
+ *  presentation mode the sink is running. A capture adds no scheduler, no clock and no
+ *  timing policy of its own.
  *
  *  **Which sources can be captured from is declared here,** in
  *  `Capabilities.supportedSources`, not on the sources themselves. Capture is a module
@@ -57,13 +52,15 @@ import com.rdk.hal.PropertyValue;
  *  capture, and its display path is untouched.
  *
  *  Binding takes a view rather than diverting the frames. Anything already consuming
- *  the stage carries on unaffected, which is what allows a capture to be attached to a
- *  pipeline that is already running. `Capabilities.maxCapturesPerSource` says how many
- *  captures one source can carry.
+ *  the source carries on unaffected, which is what allows a capture to be attached to a
+ *  pipeline that is already running. A source carries at most one capture.
  *
- *  A session is configured here in full - the frames the client wants and the pool that
- *  holds them are settled by `Capabilities`, the size properties and one
- *  `setFormat()` call. The client asks for what it needs and the vendor layer arranges
+ *  Capture is of clear content only. No secure pool and no protected import path is
+ *  expected of an implementation; a source carrying protected content is refused with
+ *  `ErrorCode.PROTECTED_CONTENT`.
+ *
+ *  The frames are settled by `Capabilities`; the client states only how many it will
+ *  hold at once, and the platform sizes the pool from that. The client asks for what it needs and the vendor layer arranges
  *  for the bound source to deliver it, by whatever internal path that platform requires.
  *
  *  Session lifecycle:
@@ -76,9 +73,7 @@ import com.rdk.hal.PropertyValue;
  *
  *    IVideoCaptureController controller =                  // bind: this is the session
  *        capture.open(source, captureControllerListener);
- *    controller.setProperty(Property.WIDTH, w);            // the capture's own size
- *    controller.setProperty(Property.HEIGHT, h);
- *    controller.setFormat(caps.supportedFormats[i]);       // format and layout, paired
+ *    controller.setHeldFrames(3);                          // frames held at once
  *    controller.start();                                   // onPoolReady() delivers the pool
  *
  *    // onPoolReady() arrives on a binder thread. Keep the buffers and hand them to
@@ -92,7 +87,7 @@ import com.rdk.hal.PropertyValue;
  *
  *    // Per frame - the index selects an image already imported, nothing is re-imported.
  *    frame = controller.acquireLatestFrame(VideoFrameView.NO_BUFFER);
- *    draw(eglImage[frame.bufferIndex]);
+ *    draw(eglImage[frame.bufferIndex], frame.visibleWidth, frame.visibleHeight);
  *    frame = controller.acquireLatestFrame(frame.bufferIndex);   // release + acquire
  *    draw(eglImage[frame.bufferIndex]);
  *    controller.releaseFrame(frame.bufferIndex);      // last frame of the session
@@ -154,20 +149,18 @@ interface IVideoCapture
      * Opens a capture session bound to one pipeline source.
      *
      * The binding is the session. `source` names the stage frames are taken from - one
-     * arm of `Source`, naming a particular sink or decoder - and it is that source, not
+     * arm of `Source`, naming a particular sink - and it is that source, not
      * merely a source of its kind, for the session's lifetime. What flows through it is
      * decided by the input feed as it always was; a capture neither selects nor changes
      * it.
      *
-     * Frames are delivered as the named stage produces them - see `HAL.VIDEOCAPTURE.10`.
-     * Bound to a sink, that is what the sink would be presenting, under whatever
-     * presentation mode it is running: where the sink presents against an attached
-     * `IAVClock` it is the frame due now with audio latency and AV-sync correction
-     * already applied, frames whose presentation time has passed dropped and frames
-     * whose time has not yet come held. Bound to a decoder, it is what the decoder
-     * produced, in the order it produced it, with no presentation scheduling applied.
-     * Either way the stage keeps the timing policy and the capture adds no clock, no
-     * scheduler and no policy of its own.
+     * Frames are delivered as the sink would be presenting them, under whatever
+     * presentation mode it is running - see `HAL.VIDEOCAPTURE.10`. Where the sink
+     * presents against an attached `IAVClock` that is the frame due now with audio
+     * latency and AV-sync correction already applied, frames whose presentation time
+     * has passed dropped and frames whose time has not yet come held. The sink keeps the
+     * timing policy and the capture adds no clock, no scheduler and no policy of its
+     * own.
      *
      * The capture declares which sources it serves in `Capabilities.supportedSources`,
      * and the call is accepted only against a source listed there. A source outside the
@@ -176,9 +169,11 @@ interface IVideoCapture
      *
      * Binding does not divert the frames. A source already feeding a display path
      * continues to, and the display sees no change; the capture takes its own view of
-     * the same frames. How many captures one source can carry at a time is declared in
-     * `Capabilities.maxCapturesPerSource`, and a bind beyond that limit is refused with
-     * `ErrorCode.SOURCE_UNAVAILABLE`.
+     * the same frames. A source carries at most one capture, so a bind against a source
+     * already carrying one is refused with `ErrorCode.SOURCE_UNAVAILABLE`.
+     *
+     * Capture is of clear content only. A bind against a source operating in its secure
+     * video path is refused with `ErrorCode.PROTECTED_CONTENT`.
      *
      * If successful the capture resource transitions to a `READY` state, which is
      * notified to the registered `IVideoCaptureEventListener`.
@@ -187,11 +182,12 @@ interface IVideoCapture
      * start and stop the session, and acquire and release frames. Controller related
      * callbacks are made through the `IVideoCaptureControllerListener` passed into the call.
      *
-     * The client configures the session in the `READY` state, before calling
-     * `IVideoCaptureController.start()`: the pixel format and memory layout with
-     * `IVideoCaptureController.setFormat()`, and the frame size with
-     * `IVideoCaptureController.setProperty()`. Pool depth is not configured; the
-     * platform calibrates it and `onPoolReady()` delivers however many buffers it is.
+     * One thing is configured on the session, in the `READY` state: how many frames the
+     * client will hold at once, with `IVideoCaptureController.setHeldFrames()`. The pixel
+     * format and memory layout are `Capabilities.format`, and the pool is sized for
+     * `Capabilities.maxFrameWidth` and `maxFrameHeight`, each frame reporting its
+     * visible size. The platform adds the buffers it needs in flight and delivers the
+     * pool at `onPoolReady()`.
      *
      * Nothing is set on the bound source. Making it deliver the frames this session was
      * configured for is the vendor layer's own business, arranged over whatever
@@ -214,35 +210,16 @@ interface IVideoCapture
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC with
      *            `ErrorCode.SOURCE_NOT_CAPTURABLE` if `source` is absent from
-     *            `Capabilities.supportedSources`, or `ErrorCode.SOURCE_UNAVAILABLE` if that
-     *            source cannot carry a further capture.
+     *            `Capabilities.supportedSources`, `ErrorCode.SOURCE_UNAVAILABLE` if that
+     *            source already carries a capture, or `ErrorCode.PROTECTED_CONTENT` if it
+     *            is carrying protected content.
      *
      * @pre The resource must be in State::CLOSED.
      * @pre `source` appears in `Capabilities.supportedSources`.
      *
-     * @see close(), IVideoCaptureController, Source, Capabilities.supportedSources,
-     *      Capabilities.maxCapturesPerSource
+     * @see close(), IVideoCaptureController, Source, Capabilities.supportedSources
      */
     @nullable IVideoCaptureController open(in Source source, in IVideoCaptureControllerListener captureControllerListener);
-
-    /**
-     * Gets a property of this capture resource.
-     *
-     * Readable by any holder of this interface and at any time; reading a property
-     * does not require the session, and does not depend on capture state. Properties
-     * are set through `IVideoCaptureController.setProperty()` by the client that opened
-     * the session.
-     *
-     * @param[in] property      The key of a property from the Property enum.
-     *
-     * @returns PropertyValue or null if the property key is unknown.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value.
-     *
-     * @see IVideoCaptureController.setProperty(), Property
-     */
-    @nullable PropertyValue getProperty(in Property property);
 
     /**
      * Closes the capture session.

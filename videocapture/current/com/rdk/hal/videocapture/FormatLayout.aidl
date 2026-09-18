@@ -23,9 +23,8 @@ package com.rdk.hal.videocapture;
  *
  *  A pair, because a modifier is valid with particular formats: most are
  *  vendor-namespaced tiling or compression layouts that apply to specific formats
- *  and bit depths. A client selects one entry of
- *  `Capabilities.supportedFormats` and passes it to
- *  `IVideoCaptureController.setFormat()`.
+ *  and bit depths. A capture declares the one pair it delivers in
+ *  `Capabilities.format`.
  *
  *  Both values are defined by the Linux kernel in `include/uapi/drm/drm_fourcc.h`
  *  and are carried as integers rather than enums: the kernel owns those
@@ -33,7 +32,7 @@ package com.rdk.hal.videocapture;
  *  pass through this interface to the client's EGL implementation without
  *  interpretation.
  *
- *  @see Capabilities.supportedFormats
+ *  @see Capabilities.format
  *
  *  @author    Peter Stieglitz
  *  @author    Gerald Weatherup

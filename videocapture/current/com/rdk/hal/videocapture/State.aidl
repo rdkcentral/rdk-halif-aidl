@@ -38,7 +38,12 @@ enum State {
      */
     CLOSED = 0,
 
-    /** Open and configurable. `setFormat()` is written here, before `start()`. */
+    /**
+     * Open and bound to a source, and startable.
+     *
+     * The state a session returns to when it ends without being closed: `stop()`
+     * returns here, as does a failed start and a lost source.
+     */
     READY = 1,
 
     /**
@@ -48,17 +53,12 @@ enum State {
      * `IVideoCaptureControllerListener.onPoolReady()`, and reaching STARTED is what says
      * it has. This is the one transition with an end a client can observe, which is
      * what makes it a state rather than an interval nobody sees.
+     *
+     * A failure after `start()` has returned, or the loss of the source before the pool
+     * is delivered, moves the resource back to `READY`; no `onPoolReady()` follows.
      */
     STARTING = 2,
 
     /** Running. The pool is delivered and frames can be acquired. */
     STARTED = 3,
-
-    /**
-     * `stop()` has returned and teardown is in progress.
-     *
-     * Buffers the client still holds Locked are reclaimed here. The resource reaches
-     * READY when it is done, and can be started again.
-     */
-    STOPPING = 4,
 }

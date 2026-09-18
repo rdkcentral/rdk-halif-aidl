@@ -114,30 +114,30 @@ parcelable VideoBufferView
     int[] planeLengths;
 
     /**
-     * The width in pixels of the frames this buffer holds.
-     *
-     * @see Property.WIDTH
+     * The width in pixels of this buffer - `Capabilities.maxFrameWidth`, the same for
+     * every buffer in the pool. The picture a frame holds occupies the top-left
+     * `VideoFrameView.visibleWidth` x `visibleHeight` of it.
      */
     int width;
 
     /**
-     * The height in pixels of the frames this buffer holds.
+     * The height in pixels of this buffer - `Capabilities.maxFrameHeight`.
      *
-     * @see Property.HEIGHT
+     * @see width
      */
     int height;
 
     /**
      * The DRM FOURCC pixel format of the frames this buffer holds.
      *
-     * @see IVideoCaptureController.setFormat(), FormatLayout.fourcc
+     * @see Capabilities.format, FormatLayout.fourcc
      */
     int drmFourcc;
 
     /**
      * The DRM format modifier describing how this buffer's bytes are arranged in memory.
      *
-     * @see IVideoCaptureController.setFormat(), FormatLayout.modifier
+     * @see Capabilities.format, FormatLayout.modifier
      */
     long drmModifier;
 }

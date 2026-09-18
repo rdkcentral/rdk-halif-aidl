@@ -51,7 +51,7 @@ scope:
 #   owners        - Responsible architecture teams
 notes:
   priority: 3
-  status_detail: "Standalone videocapture module for #781; binds one named source through a Source union - a video sink or a video decoder - with the capture declaring supportedSources and the bound stage owning the timing policy"
+  status_detail: "Standalone videocapture module for #781; binds one named video sink through a Source union, with the capture declaring supportedSources, the sink owning the timing policy, clear content only, and a pool sized for the declared maximum frame"
   action: "Add an explicit free-run (immediate) presentation mode to videosink, which capture then inherits through HAL.VIDEOCAPTURE.10"
   owners: "Architecture + Graphics_Architecture"
 

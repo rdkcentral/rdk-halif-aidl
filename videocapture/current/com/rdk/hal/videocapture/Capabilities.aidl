@@ -25,10 +25,9 @@ import com.rdk.hal.videodecoder.Codec;
 /**
  *  @brief     Video capture capabilities definition for a capture resource.
  *
- *  Describes what frames this capture resource can deliver and how its buffer pool
- *  behaves. This is the whole of the capture declaration: a client reads it, selects
- *  from it through `IVideoCaptureController.setFormat()`, and the vendor layer configures whatever it needs
- *  to on the decoder to satisfy the selection.
+ *  Describes what frames this capture resource delivers. This is the whole of the
+ *  capture declaration: a client reads it and configures nothing, and the vendor layer
+ *  arranges whatever the bound source needs in order to deliver what is declared.
  *
  *  @author    Peter Stieglitz
  *  @author    Gerald Weatherup
@@ -38,43 +37,32 @@ import com.rdk.hal.videodecoder.Codec;
 parcelable Capabilities
 {
     /**
-     * Indicates the behaviour when every buffer in the pool is locked by the client and
-     * the decoder has a new frame to write.
+     * The pixel format and memory layout every frame of this capture is delivered in.
      *
-     * When true, the decoder stalls until a buffer is released.
-     * When false, the oldest Ready buffer is recycled and its frame is dropped.
-     * Decode proceeds at full rate in both cases for as long as buffers are available.
+     * One pair per capture, chosen by the product: the vendor's most efficient layout
+     * that the product's GPU imports through `EGL_EXT_image_dma_buf_import` - with
+     * `EGL_EXT_image_dma_buf_import_modifiers` for a layout other than
+     * `DRM_FORMAT_MOD_LINEAR` - as an external texture, which the GPU samples as
+     * RGB(A). The frame stays in its decoded colour encoding; conversion to RGB happens
+     * in that sampling, not in the capture.
      */
-    boolean stallsWhenPoolExhausted;
-
-    /**
-     * The pixel format and memory layout pairs this capture resource can deliver.
-     *
-     * Paired, because a modifier is not valid with every format: most modifiers are
-     * vendor-namespaced tiling or compression layouts that apply to particular
-     * formats and bit depths. Declaring two independent lists would offer a client
-     * the full cross-product, most of which a capture cannot deliver, and leave it to
-     * find out at `start()`.
-     *
-     * A client selects one entry and passes it to
-     * `IVideoCaptureController.setFormat()`.
-     *
-     * These are the pairs this product can deliver, and the whole of them. A client
-     * that can handle none of them cannot capture from this resource.
-     */
-    FormatLayout[] supportedFormats;
+    FormatLayout format;
 
     /**
      * The maximum frame width in pixels this capture resource can deliver.
      *
-     * @see Property.WIDTH
+     * The pool is sized for `maxFrameWidth` x `maxFrameHeight`, and every buffer is that
+     * size. A frame occupies the top-left `VideoFrameView.visibleWidth` x
+     * `visibleHeight` of its buffer, so a stream changing resolution within the maximum
+     * needs no new pool. A source decoding beyond it fails with
+     * `ErrorCode.RESOLUTION_MISMATCH`.
      */
     int maxFrameWidth;
 
     /**
      * The maximum frame height in pixels this capture resource can deliver.
      *
-     * @see Property.HEIGHT
+     * @see maxFrameWidth
      */
     int maxFrameHeight;
 
@@ -88,35 +76,6 @@ parcelable Capabilities
      * @see com.rdk.hal.videodecoder.Codec
      */
     Codec[] supportedCodecs;
-
-    /**
-     * Whether this capture can deliver frames at a resolution other than the one the
-     * bound source is decoding.
-     *
-     * When false, the capture's `Property.WIDTH` and `HEIGHT` must equal the resolution the
-     * bound source decodes to, and `IVideoCaptureController.start()` fails with
-     * `ErrorCode.RESOLUTION_MISMATCH` if they do not. Nothing is scaled: the
-     * frames the client receives are the frames the decoder produced.
-     *
-     * Declaring false is what keeps the tested surface small - a capture that never
-     * scales has no scaling quality to validate and no resolution permutations to
-     * cover.
-     *
-     * @see Property.WIDTH, Property.HEIGHT, ErrorCode.RESOLUTION_MISMATCH
-     */
-    boolean resize;
-
-    /**
-     * How many capture sessions one source can carry at once on this resource.
-     *
-     * A source already carrying this many captures refuses a further bind with
-     * `ErrorCode.SOURCE_UNAVAILABLE`. One is the common case; a product that can fan
-     * one source out to several captures declares more.
-     *
-     * The limit is per source, not per capture resource: two sessions on different
-     * sources do not count against each other.
-     */
-    int maxCapturesPerSource;
 
     /**
      * The pipeline sources this capture resource can take frames from, and the whole

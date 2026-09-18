@@ -23,36 +23,32 @@
 videocapture:                        # Component object begins
   interfaceVersion: current
   captures:                     # Resource list - one object per capture this product offers
-    - 0:                        # Resource object begins
-        maxCapturesPerSource: 1 # How many sessions one source can carry at once.
-                                # A further bind is refused with SOURCE_UNAVAILABLE.
-                                # Per source, not per capture: two sessions on
-                                # different sources do not count against each other.
+    - 0:                        # Resource object begins. A source carries at most one
+                                # capture; a second bind is refused with SOURCE_UNAVAILABLE.
         supportedSources:       # The sources open() accepts, and the whole of them.
                                 # One arm per entry, matching the Source union. A
                                 # source absent from this list is refused with
                                 # SOURCE_NOT_CAPTURABLE.
           - videoSinkId: 0      # Frames this sink would be presenting
-          - videoDecoderId: 0   # Frames this decoder produced, in produced order
         captureCapabilities:    # Frames and buffer pool for IVideoCapture on this resource.
                                 # This is the whole of the capture declaration - the
                                 # vendor layer configures whatever the bound source
                                 # needs to deliver what is declared here.
-          stallsWhenPoolExhausted: false  # true: the source stalls when all buffers locked
-                                          # false: oldest ready frame is dropped
-          # FOURCC codes and modifiers are the kernel's, from include/uapi/drm/drm_fourcc.h.
-          # Declared in pairs: a modifier is valid with particular formats.
-          supportedFormats:     # The pairs this product can deliver, and the whole of them
-            - fourcc: 0x3231564E              # DRM_FORMAT_NV12
-              modifier: 0x0000000000000000    # DRM_FORMAT_MOD_LINEAR
-          maxFrameWidth: 1920   # Maximum captured frame width (Property.WIDTH)
-          maxFrameHeight: 1080  # Maximum captured frame height (Property.HEIGHT)
+          # FOURCC and modifier are the kernel's, from include/uapi/drm/drm_fourcc.h.
+          format:               # The one pair every frame is delivered in: the vendor's
+                                # most efficient layout that this product's GPU imports
+                                # as an external texture.
+            fourcc: 0x3231564E              # DRM_FORMAT_NV12
+            modifier: 0x0000000000000000    # DRM_FORMAT_MOD_LINEAR
+          maxHeldFrames: 6      # The largest setHeldFrames() count this product backs,
+                                # on top of its own buffers in flight. A larger count
+                                # fails start() with OUT_OF_MEMORY. Product declaration
+                                # for conformance, not a Capabilities field.
+          maxFrameWidth: 1920   # Pool buffers are this size; a frame reports its
+          maxFrameHeight: 1080  # visible size. Beyond it fails with RESOLUTION_MISMATCH.
           supportedCodecs:      # Codecs whose decoded frames this capture can take.
                                 # Declare what this product can do. A decoder opened
                                 # for a codec not listed here decodes and displays
                                 # normally; it just cannot feed this capture.
             - H264_AVC
             - AV1
-          resize: false         # false: captured resolution must equal the source
-                                # resolution; a mismatch fails start() with
-                                # RESOLUTION_MISMATCH and nothing is scaled.

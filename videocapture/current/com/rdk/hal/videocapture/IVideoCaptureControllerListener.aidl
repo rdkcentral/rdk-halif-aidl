@@ -39,10 +39,11 @@ oneway interface IVideoCaptureControllerListener
      * changes while the session runs, so a client imports every buffer into an EGLImage
      * here and afterwards needs only the buffer index each frame arrives in.
      *
-     * The array length is the number of buffers the platform reserved, calibrated for
-     * the throughput it can sustain. The length of this array IS the pool depth - it
-     * is not declared anywhere else, because there is nothing for a client to decide
-     * before it and nothing to check it against.
+     * The array length is the pool depth: the client's
+     * `IVideoCaptureController.setHeldFrames()` count plus the buffers the platform
+     * needs in flight to keep writing at rate, which it calibrates from its own memory
+     * bandwidth and decode throughput. The client learns the total here and needs it
+     * only to size its own import cache.
      *
      * Raised once per `start()`. A later `start()` delivers a new pool whose buffer
      * indices name new memory, and a client discards whatever it imported from the
@@ -86,12 +87,14 @@ oneway interface IVideoCaptureControllerListener
      * @brief     Called when the session cannot deliver frames as configured.
      *
      * Raised for failures the session runs into that are not tied to a single acquire
-     * call - a bound source that changed to a resolution this capture cannot deliver, a
-     * colour conversion or format that turns out to be unavailable for the bound
-     * source, or a configuration the vendor cannot honour.
+     * call: the bound source changing to a resolution beyond the declared maximum
+     * (`RESOLUTION_MISMATCH`), to a codec this capture cannot take (`CODEC_NOT_CAPTURABLE`)
+     * or to protected content (`PROTECTED_CONTENT`); a colour conversion or format that
+     * turns out to be unavailable for the bound source; or a vendor reconfiguration that
+     * cannot keep the pool.
      *
-     * The session stops delivering frames. The client stops and closes it, or corrects
-     * the condition and starts again.
+     * The session is stopped and the resource moves to `READY`. The client starts it
+     * again, which delivers a new pool, or closes it.
      *
      * @param[in] errorCode         An ErrorCode enum value.
      * @param[in] vendorErrorCode   A vendor specific error code.

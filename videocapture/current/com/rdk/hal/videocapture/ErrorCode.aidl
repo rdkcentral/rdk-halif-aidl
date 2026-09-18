@@ -32,12 +32,13 @@ enum ErrorCode {
     OUT_OF_MEMORY = 1,
 
     /**
-     * The named source cannot carry a further capture.
+     * The named source cannot take this capture.
      *
-     * The source is one this capture serves, and it is already carrying
-     * `Capabilities.maxCapturesPerSource` sessions.
+     * The source is one this capture serves, and it is already carrying a capture
+     * session - a source carries at most one - or it became unavailable between the
+     * bind and `IVideoCaptureController.start()`.
      *
-     * @see IVideoCapture.open(), Capabilities.maxCapturesPerSource
+     * @see IVideoCapture.open(), IVideoCaptureController.start()
      */
     SOURCE_UNAVAILABLE = 2,
 
@@ -52,33 +53,31 @@ enum ErrorCode {
     HARDWARE_FAULT = 4,
 
     /**
-     * The configured capture resolution does not match the resolution the bound
-     * source is decoding, on a capture that cannot resize.
+     * The bound source is decoding, or has changed to, a resolution beyond
+     * `Capabilities.maxFrameWidth` or `maxFrameHeight`.
      *
-     * @see Capabilities.resize, Property.WIDTH, Property.HEIGHT
+     * The pool is sized for that maximum, so a larger frame cannot be captured. Raised
+     * by `IVideoCaptureController.start()`, or mid-session through
+     * `IVideoCaptureControllerListener.onCaptureError()`, after which the session is
+     * stopped. Playback of the source continues.
+     *
+     * @see Capabilities.maxFrameWidth, Capabilities.maxFrameHeight
      */
     RESOLUTION_MISMATCH = 5,
 
     /**
-     * The colour conversion the configured format would require of the bound source
+     * The colour conversion the declared format would require of the bound source
      * is not one this capture can perform.
      */
     COLOR_CONVERSION_UNSUPPORTED = 6,
 
     /**
-     * The configured pixel format or memory layout cannot be delivered for the bound
-     * source, even though the capture declares it.
+     * The declared pixel format or memory layout cannot be delivered for the bound
+     * source.
      *
-     * @see Capabilities.supportedFormats, IVideoCaptureController.setFormat()
+     * @see Capabilities.format
      */
     FORMAT_UNSUPPORTED = 7,
-
-    /**
-     * The session's configuration is not a combination this capture can deliver, or is
-     * incomplete - `start()` raises this where no format was selected with
-     * `IVideoCaptureController.setFormat()`.
-     */
-    INVALID_CONFIGURATION = 8,
 
     /**
      * The named source is not one this capture can take frames from.
@@ -90,4 +89,17 @@ enum ErrorCode {
      * @see IVideoCapture.open(), Capabilities.supportedSources, Source
      */
     SOURCE_NOT_CAPTURABLE = 9,
+
+    /**
+     * The bound source is carrying protected content.
+     *
+     * Capture is of clear content only. Raised by `IVideoCapture.open()` or
+     * `IVideoCaptureController.start()` when the source is operating in its secure
+     * video path, or mid-session through `IVideoCaptureControllerListener.onCaptureError()`
+     * when it enters it, after which the session is stopped. Playback of the source
+     * continues.
+     *
+     * @see IVideoCapture.open()
+     */
+    PROTECTED_CONTENT = 10,
 }

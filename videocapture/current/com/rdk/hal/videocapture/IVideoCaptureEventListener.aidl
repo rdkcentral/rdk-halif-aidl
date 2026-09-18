@@ -45,8 +45,10 @@ oneway interface IVideoCaptureEventListener
      * @brief     Called when the bound video sink went away - closed, or
      *            otherwise no longer able to deliver frames.
      *
-     * The session is implicitly stopped and the capture resource transitions to `READY`.
-     * Binding a sink again with `IVideoCapture.open()` makes the session startable.
+     * The session is implicitly stopped and the capture resource transitions to `READY`,
+     * from `STARTING` or `STARTED`. The controller stays valid until
+     * `IVideoCapture.close()`, which the client calls before binding a source again with
+     * `IVideoCapture.open()`.
      */
     void onSourceLost();
 

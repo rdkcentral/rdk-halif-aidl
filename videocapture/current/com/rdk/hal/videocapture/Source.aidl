@@ -18,20 +18,15 @@
  */
 package com.rdk.hal.videocapture;
 
-import com.rdk.hal.videodecoder.IVideoDecoder;
 import com.rdk.hal.videosink.IVideoSink;
 
 /**
  *  @brief     The pipeline stage a capture session takes its frames from.
  *
  *  A capture is an output in its own right, and what it names is a source rather than
- *  a resource it belongs to. The two arms are the two stages that hold decoded frames,
- *  and which one a session names decides what the frames mean:
- *
- *  - `videoSinkId` - the frames the sink would be presenting, under whatever
- *    presentation mode that sink is running.
- *  - `videoDecoderId` - the frames the decoder has produced, in the order it produced
- *    them.
+ *  a resource it belongs to. The one arm is a video sink: the session takes the frames
+ *  that sink would be presenting, under whatever presentation mode it is running, so
+ *  the sink keeps the timing policy and the capture adds none.
  *
  *  A capture declares which sources it serves in `Capabilities.supportedSources`, and
  *  the union is the same type in both places: what a client may pass to
@@ -49,7 +44,4 @@ union Source
 {
     /** A video sink, by its own ID, as the frame source. */
     IVideoSink.Id videoSinkId;
-
-    /** A video decoder, by its own ID, as the frame source. */
-    IVideoDecoder.Id videoDecoderId;
 }

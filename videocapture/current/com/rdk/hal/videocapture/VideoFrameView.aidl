@@ -63,4 +63,21 @@ parcelable VideoFrameView
      * rendering to its own scene may need to place the frame on its own timeline.
      */
     long presentationTimeNs;
+
+    /**
+     * The width in pixels of the picture this frame holds.
+     *
+     * The pool is sized for `Capabilities.maxFrameWidth` and `maxFrameHeight`, so a
+     * frame occupies the top-left `visibleWidth` x `visibleHeight` of its buffer, and a
+     * change of stream resolution within that maximum changes only these values. The
+     * buffer's own size is `VideoBufferView.width` and `height`.
+     */
+    int visibleWidth;
+
+    /**
+     * The height in pixels of the picture this frame holds.
+     *
+     * @see visibleWidth
+     */
+    int visibleHeight;
 }
