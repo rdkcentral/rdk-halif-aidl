@@ -224,7 +224,7 @@ Setting and changing the mapping requires a call to `IPlaneControl.setVideoSourc
 
 Full details are covered in the [Plane Control HAL](../planecontrol/plane_control.md).
 
-`start()` requires a valid Video Decoder association and nothing else. The mapping may be set or cleared at any point in the session, including while the sink is `STARTED`: a mapping change leaves the sink's state unchanged, does not flush the queue and raises no exception. This is what allows main and PIP sources to be swapped between planes, or unmapped, while playing.
+`start()` requires a valid Video Decoder association and nothing else. The mapping may be set or cleared at any point in the session, including while the sink is `STARTED`: a successful mapping change leaves the sink's state unchanged and does not flush the queue; mapping validation or state errors are reported by Plane Control. This is what allows main and PIP sources to be swapped between planes, or unmapped, while playing.
 
 ### No Plane Mapped
 
