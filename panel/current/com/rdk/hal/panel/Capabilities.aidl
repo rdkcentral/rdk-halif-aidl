@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.panel;
+import com.rdk.hal.panel.ColourTemperature;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.PanelType;
 import com.rdk.hal.videodecoder.DynamicRange;
@@ -101,12 +102,12 @@ parcelable Capabilities
     PictureModeCapabilities[] pictureModeCapabilities;
 
     /**
-     * Array of color temperature names.
-     * e.g. { "Cool", "Normal", "Warm" }.
-     * Each index of the String[] corresponds to the index of a color temperature preset
-     * used in `PQParameter.COLOR_TEMPERATURE` and functions such as `set2PointWhiteBalance()`.
+     * Array of supported colour temperature presets.
+     *
+     * These enum values are used directly by `PQParameter.COLOR_TEMPERATURE`
+     * and by colour-temperature-scoped white balance operations.
      */
-    String[] colorTemperatureNames;
+    ColourTemperature[] supportedColourTemperatures;
 
     /**
      * All AV sources supported by the panel.

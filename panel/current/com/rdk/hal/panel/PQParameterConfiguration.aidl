@@ -17,9 +17,11 @@
  * limitations under the License.
  */
 package com.rdk.hal.panel;
+import com.rdk.hal.panel.ColourTemperature;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.DolbyVisionCalibrationSettings;
 import com.rdk.hal.panel.TwoPointWB;
+import com.rdk.hal.panel.WhiteBalanceMultiPointSettings;
 import com.rdk.hal.videodecoder.DynamicRange;
 import com.rdk.hal.AVSource;
 
@@ -56,18 +58,27 @@ parcelable PQParameterConfiguration
 	
 	/**
 	 * The value for the PQ parameter.
-	 * For all PQ parameters except PQParameter.DV_CALIBRATION and PQParameter.TWO_POINT_WB,
+	 * For all PQ parameters except PQParameter.COLOR_TEMPERATURE,
+	 * PQParameter.DV_CALIBRATION, PQParameter.TWO_POINT_WB, and
+	 * PQParameter.MULTI_POINT_WB,
 	 * use the `intValue` variant.
+	 * For PQParameter.COLOR_TEMPERATURE, use the `colourTemperatureValue` variant.
 	 * For PQParameter.DV_CALIBRATION, use the `dvCalibrationSettings` variant.
 	 * For PQParameter.TWO_POINT_WB, use the `twoPointWBSettings` variant.
+	 * For PQParameter.MULTI_POINT_WB, use the `multiPointWBSettings` variant.
 	 */
+	@VintfStability
 	union Value {
-		/** Integer value used by all PQ parameters except DV_CALIBRATION and TWO_POINT_WB. */
+		/** Integer value used by all PQ parameters except COLOR_TEMPERATURE, DV_CALIBRATION, TWO_POINT_WB, and MULTI_POINT_WB. */
 		int intValue;
+		/** Colour temperature enum used when pqParameter == PQParameter.COLOR_TEMPERATURE. */
+		ColourTemperature colourTemperatureValue;
 		/** Dolby Vision calibration settings used when pqParameter == PQParameter.DV_CALIBRATION. */
 		DolbyVisionCalibrationSettings dvCalibrationSettings;
 		/** 2-point white balance settings used when pqParameter == PQParameter.TWO_POINT_WB. */
 		TwoPointWB twoPointWBSettings;
+		/** Multi-point white balance settings used when pqParameter == PQParameter.MULTI_POINT_WB. */
+		WhiteBalanceMultiPointSettings multiPointWBSettings;
 	}
 	Value value;
 }
