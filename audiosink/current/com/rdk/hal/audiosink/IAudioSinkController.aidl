@@ -60,7 +60,9 @@ import com.rdk.hal.avclock.IAVClock;
  *  at their presentation times and their buffers freed via `IAVBuffer.free()`
  *  at exactly the same points as when a mixer input is routed, and nothing is
  *  audible. The queue drains at clock rate, so the sink stays in sync with any
- *  video sink presenting against the same clock.
+ *  video sink presenting against the same clock. `onFirstFrameRendered()`
+ *  reports the first frame mixed, so with no mixer input routed it fires
+ *  once a mixer input becomes routed and the first queued frame is mixed.
  *
  *  The routing may be set or cleared at any point in the session, including
  *  while `STARTED`. A successful routing change leaves the sink's
@@ -223,11 +225,10 @@ interface IAudioSinkController {
      * an audio sink while the associated decoder ID is
      * `IAudioDecoder.Id.UNDEFINED` shall fail.
      *
-     * The audio decoder association is the only association this call
-     * requires. The AVClock attachment and the mixer input routing are
-     * independent of it: a sink started with no mixer input routed runs
-     * normally and is inaudible until a mixer input is routed — see the
-     * interface @brief.
+     * The AVClock attachment and the mixer input routing are independent of
+     * the decoder association above: a sink started with no mixer input
+     * routed runs normally and is inaudible until a mixer input is routed —
+     * see the interface @brief.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
@@ -321,9 +322,11 @@ interface IAudioSinkController {
      * The sink consumes every already-queued frame at its presentation time
      * — and, where a mixer input is routed, makes it audible — in the usual
      * way, then fires `IAudioSinkControllerListener.onEndOfStream(nsPresentationTime)`
-     * with the presentation time of the final queued frame. The callback is
-     * keyed on that presentation time passing on the attached clock, so it
-     * fires whether or not a mixer input is routed.
+     * with the presentation time of the final queued frame. The callback
+     * fires once consumption of that final frame completes on the attached
+     * clock (its buffer is freed via `IAVBuffer.free()`), not merely once
+     * its presentation time is reached, so it fires whether or not a mixer
+     * input is routed.
      *
      * If no frames are queued when this is called, the sink fires
      * `onEndOfStream()` with an undefined-time sentinel

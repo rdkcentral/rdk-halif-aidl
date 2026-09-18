@@ -43,6 +43,9 @@ oneway interface IAudioSinkControllerListener {
      *
      * The behaviour is the same for tunnelled and non-tunnelled audio.
      * This occurs on the first audio frame in the session or after a flush() call.
+     * Mixing requires a routed mixer input, so for a sink running with no
+     * mixer input routed this reports the first frame mixed once a mixer
+     * input becomes routed.
      * The frame may not immediately be heard due to the audio pipeline output latency.
      *
      * @param[in] nsPresentationTime	The presentation time of the audio frame in nanoseconds.
@@ -50,16 +53,16 @@ oneway interface IAudioSinkControllerListener {
     void onFirstFrameRendered(in long nsPresentationTime);
 
     /**
-     * Callback when the presentation time of the session's final queued
-     * audio frame has passed on the attached clock.
+     * Callback when consumption of the session's final queued audio frame
+     * has completed on the attached clock.
      *
      * Triggered after the client called `IAudioSinkController.signalEndOfStream()`
      * to assert that no further frames will be queued. Fires exactly once per
-     * session, ordered strictly after the presentation time of the final
-     * queued frame has passed on the attached clock. It is keyed on that
-     * presentation time rather than on mixing, so it fires whether or not a
-     * mixer input is routed. If no frames were queued, `nsPresentationTime`
-     * is the undefined-time sentinel (`IAVClock.UNDEFINED_TIME`).
+     * session, ordered strictly after consumption of the final queued frame
+     * completes on the attached clock. It is keyed on that completion
+     * rather than on mixing, so it fires whether or not a mixer input is
+     * routed. If no frames were queued, `nsPresentationTime` is the
+     * undefined-time sentinel (`IAVClock.UNDEFINED_TIME`).
      *
      * The behaviour is the same for tunnelled and non-tunnelled audio.
      * With a mixer input routed, the audio may not immediately be heard due
