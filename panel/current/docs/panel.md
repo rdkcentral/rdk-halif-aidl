@@ -81,7 +81,8 @@ The corresponding [`hfp-panel.yaml`](https://github.com/rdkcentral/rdk-halif-aid
 | `PanelType.aidl`                      | Enumeration of panel types (LCD, OLED, etc.)                 |
 | `PictureModeConfiguration.aidl`       | Picture mode, dynamic range, and AV source config             |
 | `State.aidl`                          | Panel controller lifecycle state enumeration                 |
-| `TwoPointWB.aidl`                     | Two-point white balance calibration entry keyed by colour temperature |
+| `TwoPointWB.aidl`                     | Two-point white balance calibration entry keyed by colour temperature and WB colour channel |
+| `TwoPointWBColour.aidl`               | Enumeration of supported 2-point white balance colour channels |
 | `WhiteBalanceMultiPointSettings.aidl` | Multi-point white balance calibration entry keyed by colour temperature |
 
 ---
@@ -147,6 +148,7 @@ flowchart TD
 * Frame rate matching adjusts panel refresh rate dynamically to match video content.
 * Colour temperature values are exchanged through `PQParameterConfiguration` using the `ColourTemperature` enum for `PQParameter.COLOR_TEMPERATURE`.
 * White balance values are exchanged through `PQParameterConfiguration`, using `TwoPointWB` for `PQParameter.TWO_POINT_WB` and `WhiteBalanceMultiPointSettings` for `PQParameter.MULTI_POINT_WB`.
+* `TwoPointWB` entries carry both `ColourTemperature` and `TwoPointWBColour` so each gain and offset pair targets a specific colour-temperature preset and RGB channel.
 * Calibration mode and display fading remain dedicated controller operations.
 
 ---
@@ -154,7 +156,7 @@ flowchart TD
 ## Modes of Operation
 
 * Runtime picture modes configurable by client with dynamic range and AV source scoping.
-* 2-point and multi-point white balance entries configurable per picture mode, dynamic range, AV source, and colour temperature.
+* 2-point and multi-point white balance entries configurable per picture mode, dynamic range, and AV source, with 2-point white balance also scoped by colour temperature and WB colour channel.
 * Frame rate matching mode enabled/disabled by client.
 * Calibration mode is available on the controller for PQ pipeline validation workflows.
 

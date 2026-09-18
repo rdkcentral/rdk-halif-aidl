@@ -19,6 +19,7 @@
 package com.rdk.hal.panel;
 
 import com.rdk.hal.panel.ColourTemperature;
+import com.rdk.hal.panel.TwoPointWBColour;
 
 /**
  *  @brief     2-point white balance entry.
@@ -34,6 +35,11 @@ parcelable TwoPointWB
      * Colour temperature profile this white balance entry applies to.
      */
     ColourTemperature colourTemperature;
+
+    /**
+     * White balance colour channel this entry applies to.
+     */
+    TwoPointWBColour twoPointWBColour;
 
     /**
      * White balance gain value.
