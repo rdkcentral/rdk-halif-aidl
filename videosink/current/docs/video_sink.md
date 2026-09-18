@@ -35,7 +35,7 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
 | **HAL.VIDEOSINK.2** | Shall support flushing of the internal queue of video frames and notify the client when a flush operation has completed. ||
 | **HAL.VIDEOSINK.3** | Shall internally manage the release of video frame handles back to the internal pool after they have finished being presented or during a flush. ||
 | **HAL.VIDEOSINK.4** | Shall notify the client when the first frame is presented in the session once opened or after a flush operation. ||
-| **HAL.VIDEOSINK.5** | Shall notify the client when a video underflow occurs.| A video underflow condition is met if an expected frame is not queued in time for display. |
+| **HAL.VIDEOSINK.5** | Shall notify the client when a video underflow occurs.| A video underflow condition is met if an expected frame is not queued in time for its presentation time on the attached clock. |
 | **HAL.VIDEOSINK.6** | Shall provide an API to expose the video sink resources for the client to discover. ||
 | **HAL.VIDEOSINK.7** | Shall run a session with no video plane mapped, consuming queued frames and freeing their buffers against the attached AV Clock while displaying nothing. | The plane mapping is owned by Plane Control and may be set or cleared at any point in the session, including while the sink is `STARTED`. |
 | **HAL.VIDEOSINK.8** | Video frames decoupled from video planes (destination plane -1) shall continue to be delivered and remain in sync with audio.  When coupled to a video plane they shall immediately become visible and be in lip sync. |To ensure if/when a video sink source is assigned to a video plane it appears in sync with audio. |
@@ -239,7 +239,7 @@ A `destinationPlaneIndex` of `-1` means the Video Sink has no plane. The attache
 | `onVideoUnderflow()` / `onVideoResumed()` | Armed | Armed |
 | `onEndOfStream()` | Fires once the final queued frame's presentation time passes | Fires once the final queued frame's presentation time passes |
 
-Because the queue drains at clock rate in both cases, `queueVideoFrame()` applies back-pressure only for the reason described in [Input Buffer Back-Pressure](#input-buffer-back-pressure), and an unmapped sink stays in sync with any Audio Sink presenting against the same clock.
+Because the queue drains at clock rate in both cases, `queueVideoFrame()` applies back-pressure only for the reason described in [Input Buffer Back-Pressure](#input-buffer-back-pressure), and an unmapped sink stays in sync with any Audio Sink presenting against the same clock. Underflow and resume detection follow frame consumption on the attached clock, not display, so `onVideoUnderflow()` / `onVideoResumed()` apply identically whether or not a plane is mapped.
 
 On becoming mapped, the sink renders from the first queued frame whose presentation time is at or after the current clock time, which satisfies **HAL.VIDEOSINK.8**. Queued frames whose presentation time has already passed are discarded rather than displayed late.
 
@@ -277,7 +277,7 @@ sequenceDiagram
     Note over VS: rendering resumes at the current clock position<br/>frames whose presentation time has passed are discarded
 ```
 
-This is what makes dual-decode session switching seamless. Two decoder → sink chains run concurrently, each consuming against its own attached clock, with exactly one mapped to the plane at a time. Switching between them is a mapping swap with no stop, flush or resync on either chain: the newly mapped sink was already consuming at its correct presentation times, so video is rendered from the switch point onwards. Paired with the equivalent mixer-input routing swap on the [Audio Sink](../audiosink/audio_sink.md), a full A/V session switch is one mapping change plus one routing change while both sessions keep running.
+This is what makes dual-decode session switching seamless. Two decoder → sink chains run concurrently against the same AV Clock (or an explicitly synchronised pair of clocks), with exactly one mapped to the plane at a time. Switching between them is a mapping swap with no stop, flush or resync on either chain: the newly mapped sink was already consuming at the shared clock's correct presentation times, so video is rendered from the switch point onwards. Paired with the equivalent mixer-input routing swap on the [Audio Sink](../audiosink/audio_sink.md), a full A/V session switch is one mapping change plus one routing change while both sessions keep running.
 
 ## Video Sink States
 

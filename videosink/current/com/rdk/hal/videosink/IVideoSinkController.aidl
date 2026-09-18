@@ -69,6 +69,10 @@ import com.rdk.hal.avclock.IAVClock;
  *      with any audio sink presenting against the same clock and video is
  *      lip-synced from the moment a plane is mapped.</li>
  *  </ul>
+ *  `Property.RENDER_FIRST_FRAME` is independent of this contract: it only
+ *  governs whether a single first frame may be displayed ahead of the
+ *  attached clock, and does not change when frames are consumed, freed, or
+ *  when `onEndOfStream()` fires.
  * The mapping may be set or cleared at any point in the session, including
  * while `STARTED`. A successful mapping change leaves the sink's state-machine
  * state unchanged and does not flush the queue. On becoming

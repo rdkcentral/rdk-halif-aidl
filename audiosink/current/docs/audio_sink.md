@@ -233,7 +233,7 @@ The attached AV Clock gates frame consumption and the mixer routing gates audibi
 
 With no mixer input routed, queued frames are consumed at their presentation times on the attached clock and their buffers freed with `IAVBuffer.free()` at the same points as when a mixer input is routed, and nothing is audible. The queue drains at clock rate, so the sink stays in sync with any Video Sink presenting against the same clock.
 
-This is what makes dual-decode session switching seamless. Two decoder → sink chains run concurrently, each consuming against its own attached clock, with exactly one routed to a mixer input at a time. Switching between them is a routing swap — clear one sink's routing and route the other — with no stop, flush or resync on either chain: the newly routed sink was already consuming at its correct presentation times, so audio is heard from the switch point onwards. The same swap on the video side is a plane-mapping change, so a full A/V session switch is one routing change plus one mapping change while both sessions keep running.
+This is what makes dual-decode session switching seamless. Two decoder → sink chains run concurrently against the same AV Clock (or an explicitly synchronised pair of clocks), with exactly one routed to a mixer input at a time. Switching between them is a routing swap — clear one sink's routing and route the other — with no stop, flush or resync on either chain: the newly routed sink was already consuming at the shared clock's correct presentation times, so audio is heard from the switch point onwards. The same swap on the video side is a plane-mapping change, so a full A/V session switch is one routing change plus one mapping change while both sessions keep running.
 
 ## End of Stream Signalling
 
