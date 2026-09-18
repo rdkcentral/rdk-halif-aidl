@@ -17,40 +17,17 @@
  * limitations under the License.
  */
 package com.rdk.hal.panel;
-import com.rdk.hal.panel.PQParameter;
-import com.rdk.hal.panel.PQParameterConfiguration;
 import com.rdk.hal.videodecoder.DynamicRange;
 import com.rdk.hal.AVSource;
 
 /** 
- *  @brief     Display Panel Output Listener interface.
+ *  @brief     Display Panel Output Event Listener interface.
  *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
  */
 
 @VintfStability
-oneway interface IPanelOutputListener
+oneway interface IPanelOutputEventListener
 {
-    /**
-     * Callback when the picture mode changes.
-     * 
-     * This can occur on an AVSource or DynamicRange change in the video
-     * or occurs after a call to setPictureMode().
-     * 
-     * @param[in] pictureMode   The new picture mode.
-     */
-    void onPictureModeChanged(in String pictureMode);
-
-    /**
-     * Callback when a PQ picture property value changes.
-     *
-     * @param[in] pictureMode             The picture mode for which the change applies.
-     * @param[in] avSource                The AV source for which the change applies.
-     * @param[in] dynamicRange            The dynamic range for which the change applies.
-     * @param[in] pictureProperty         The PQ picture property that changed.
-     * @param[in] picturePropertyValue    The changed value variant.
-     */
-    void onPQParameterChanged(in String pictureMode, in AVSource avSource, in DynamicRange dynamicRange, in PQParameter pictureProperty, in PQParameterConfiguration.Value picturePropertyValue);
- 
     /**
      * Callback when the video source being tracked for PQ settings changes.
      * 
