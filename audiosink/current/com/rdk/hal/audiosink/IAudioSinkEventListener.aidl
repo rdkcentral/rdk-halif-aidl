@@ -50,11 +50,14 @@ oneway interface IAudioSinkEventListener {
     void onFirstFrameRendered(in long nsPresentationTime);
 
     /**
-     * Callback when the last audio frame has been completely passed to the mixer.
+     * Callback when the presentation time of the session's final queued
+     * audio frame has passed on the attached clock.
      *
      * The behaviour is the same for tunnelled and non-tunnelled audio.
-     * This occurs on the last frame mixed in the session.
-     * The audio may not immediately be heard due to audio mixer and output latencies.
+     * This occurs once the presentation time of the last queued frame in
+     * the session has passed on the attached clock, whether or not a mixer
+     * input is routed. With a mixer input routed, the audio may not
+     * immediately be heard due to audio mixer and output latencies.
      *
      * @param[in] nsPresentationTime	The presentation time of the audio frame in nanoseconds.
      */

@@ -50,16 +50,20 @@ oneway interface IAudioSinkControllerListener {
     void onFirstFrameRendered(in long nsPresentationTime);
 
     /**
-     * Callback when the last audio frame has been completely passed to the mixer.
+     * Callback when the presentation time of the session's final queued
+     * audio frame has passed on the attached clock.
      *
      * Triggered after the client called `IAudioSinkController.signalEndOfStream()`
      * to assert that no further frames will be queued. Fires exactly once per
-     * session, ordered strictly after the final queued frame has been completely
-     * passed to the mixer. If no frames were queued, `nsPresentationTime` is the
-     * undefined-time sentinel (`IAVClock.UNDEFINED_TIME`).
+     * session, ordered strictly after the presentation time of the final
+     * queued frame has passed on the attached clock. It is keyed on that
+     * presentation time rather than on mixing, so it fires whether or not a
+     * mixer input is routed. If no frames were queued, `nsPresentationTime`
+     * is the undefined-time sentinel (`IAVClock.UNDEFINED_TIME`).
      *
      * The behaviour is the same for tunnelled and non-tunnelled audio.
-     * The audio may not immediately be heard due to audio mixer and output latencies.
+     * With a mixer input routed, the audio may not immediately be heard due
+     * to audio mixer and output latencies.
      *
      * @param[in] nsPresentationTime	The presentation time of the final audio frame in nanoseconds,
      *                                  or `IAVClock.UNDEFINED_TIME` if no frames were queued.

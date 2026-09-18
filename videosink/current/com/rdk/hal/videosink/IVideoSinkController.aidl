@@ -355,7 +355,8 @@ interface IVideoSinkController
      * Signals end-of-stream to the video sink.
      *
      * Asserts that no further frames will be queued via `queueVideoFrame()`.
-     * The sink presents every already-queued frame in the usual way and then
+     * The sink consumes every already-queued frame at its presentation time
+     * — and, where a plane is mapped, renders it — in the usual way, then
      * fires `IVideoSinkControllerListener.onEndOfStream(nsPresentationTime)`
      * with the presentation time of the final queued frame.
      *

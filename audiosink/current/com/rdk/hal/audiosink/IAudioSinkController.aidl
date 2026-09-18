@@ -63,8 +63,10 @@ import com.rdk.hal.avclock.IAVClock;
  *  video sink presenting against the same clock.
  *
  *  The routing may be set or cleared at any point in the session, including
- *  while `STARTED`. A routing change leaves the sink's state-machine state
- *  unchanged, does not flush the queue and raises no exception.
+ *  while `STARTED`. A successful routing change leaves the sink's
+ *  state-machine state unchanged and does not flush the queue; validation
+ *  and state errors from `IAudioMixerController.setInputRouting()` are
+ *  reported by the Audio Mixer.
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
@@ -316,9 +318,12 @@ interface IAudioSinkController {
      * Signals end-of-stream to the audio sink.
      *
      * Asserts that no further frames will be queued via `queueAudioFrame()`.
-     * The sink mixes every already-queued frame in the usual way and then
-     * fires `IAudioSinkControllerListener.onEndOfStream(nsPresentationTime)`
-     * with the presentation time of the final frame passed to the mixer.
+     * The sink consumes every already-queued frame at its presentation time
+     * — and, where a mixer input is routed, makes it audible — in the usual
+     * way, then fires `IAudioSinkControllerListener.onEndOfStream(nsPresentationTime)`
+     * with the presentation time of the final queued frame. The callback is
+     * keyed on that presentation time passing on the attached clock, so it
+     * fires whether or not a mixer input is routed.
      *
      * If no frames are queued when this is called, the sink fires
      * `onEndOfStream()` with an undefined-time sentinel
