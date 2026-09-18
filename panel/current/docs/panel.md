@@ -37,15 +37,16 @@ The Panel HAL manages both static capabilities and dynamic runtime control of th
 
 * Panel hardware capabilities including resolution, physical size, panel type (LCD, OLED, QLED, Mini-LED), supported picture quality (PQ) parameters, refresh rates, picture modes, dynamic ranges, and AV sources.
 * Picture quality configuration, including brightness, contrast, saturation, hue, gamma, local dimming, and noise reduction.
-* White balance calibration interfaces for 2-point and multi-point adjustments.
+* White balance calibration through PQ parameters, with 2-point and multi-point entries scoped by picture mode, dynamic range, AV source, and colour temperature.
 * Dynamic control over panel enable/disable, picture modes, frame rate matching, calibration mode, and display fading.
 * Event callbacks for real-time updates on picture mode, PQ parameter, video source, dynamic range, resolution, frame rate, and refresh rate changes.
 
 The corresponding [`hfp-panel.yaml`](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/panel/current/hfp-panel.yaml) file includes structured declarations for:
 
-* `panelType`, `pixelWidth`, `heightCm`, etc. (from `Capabilities.aidl`, returned via `IPanelOutputController.getCapabilities()`)
+* `panelType`, `pixelWidth`, `heightCm`, etc. (from `Capabilities.aidl`, returned via `IPanelOutput.getCapabilities()`)
+* `supportedColourTemperatures` (from `Capabilities.aidl`, using `ColourTemperature.aidl` enum values directly)
 * `supportedPQParameters` (from `PQParameter.aidl`)
-* `pqParameterCapabilities` (from `PQParameterCapabilities.aidl`)
+* `pqParameterCapabilities`, including integer, Dolby Vision, 2-point WB, and multi-point WB value shapes (from `PQParameterCapabilities.aidl`)
 * `pictureModeCapabilities`, `supportedDynamicRanges`, and `supportedAVSources` (from `Capabilities.aidl` and `hfp-panel.yaml`)
 
 ---
@@ -55,12 +56,12 @@ The corresponding [`hfp-panel.yaml`](https://github.com/rdkcentral/rdk-halif-aid
 | #               | Requirement                                                                                                                                    | Comments                                      |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | **HAL.PANEL.1** | The service shall expose accurate static capabilities including panel resolution, physical dimensions, and supported PQ parameters.            | Enables adaptive client configurations        |
-| **HAL.PANEL.2** | The service shall support setting and querying of picture quality parameters per picture mode, AV source, and dynamic range format.            | Supports granular PQ control                  |
+| **HAL.PANEL.2** | The service shall support setting and querying of picture quality parameters per picture mode, AV source, and dynamic range format, including colour-temperature-scoped white balance entries. | Supports granular PQ control                  |
 | **HAL.PANEL.3** | The service shall allow enabling/disabling panel output and backlight with no side effects.                                                    |                                               |
 | **HAL.PANEL.4** | The service shall provide asynchronous event callbacks for picture mode, PQ parameter, video source, dynamic range, frame rate, resolution, and refresh rate changes. | Ensures responsive UI/middleware updates      |
 | **HAL.PANEL.5** | The service shall support frame rate matching with panel refresh rate adjustments.                                                             | Enables smooth video playback synchronisation |
-| **HAL.PANEL.6** | The service shall support calibration mode, white balance, and display fading through the runtime controller.                                  | Supports panel tuning and diagnostics         |
-| **HAL.PANEL.7** | The service shall expose current capabilities through the controller interface and align runtime queries with HFP declarations.                 | Keeps implementation and HFP in sync          |
+| **HAL.PANEL.6** | The service shall support calibration mode, display fading, and both 2-point and multi-point white balance through the runtime interfaces.      | Supports panel tuning and diagnostics         |
+| **HAL.PANEL.7** | The service shall expose current capabilities through the service interface and align runtime queries with HFP declarations.                    | Keeps implementation and HFP in sync          |
 
 ---
 
@@ -68,32 +69,32 @@ The corresponding [`hfp-panel.yaml`](https://github.com/rdkcentral/rdk-halif-aid
 
 | AIDL File                           | Description                                                  |
 | ----------------------------------- | ------------------------------------------------------------ |
-| `Capabilities.aidl`                   | Defines panel capabilities and supported picture modes       |
+| `Capabilities.aidl`                   | Defines panel capabilities, supported picture modes, and supported colour temperature presets |
+| `ColourTemperature.aidl`              | Enumeration of supported colour temperature presets used by colour temperature and white balance controls |
 | `IPanelOutput.aidl`                   | Singleton entry point for opening and closing the panel      |
 | `IPanelOutputController.aidl`         | Exclusive control interface for runtime panel operations     |
 | `IPanelOutputControllerListener.aidl` | Controller lifecycle and primary control callbacks           |
 | `IPanelOutputEventListener.aidl`      | Passive event listener callbacks for runtime panel changes   |
-| `PQParameter.aidl`                    | Enumeration of supported picture quality parameters          |
-| `PQParameterCapabilities.aidl`        | Capabilities per PQ parameter by picture mode and dynamic range     |
-| `PQParameterConfiguration.aidl`       | Configuration value of PQ parameter for a mode/source/dynamic range |
+| `PQParameter.aidl`                    | Enumeration of supported picture quality parameters, including 2-point and multi-point white balance |
+| `PQParameterCapabilities.aidl`        | Capabilities per PQ parameter by picture mode and dynamic range, including structured WB bounds and values |
+| `PQParameterConfiguration.aidl`       | Configuration value of PQ parameter for a mode/source/dynamic range, including structured WB values |
 | `PanelType.aidl`                      | Enumeration of panel types (LCD, OLED, etc.)                 |
 | `PictureModeConfiguration.aidl`       | Picture mode, dynamic range, and AV source config             |
 | `State.aidl`                          | Panel controller lifecycle state enumeration                 |
-| `TwoPointWB.aidl`                     | Two-point white balance calibration settings                 |
-| `WhiteBalance2PointSettings.aidl`     | 2-point white balance calibration settings                   |
-| `WhiteBalanceMultiPointSettings.aidl` | Multi-point white balance calibration arrays                 |
+| `TwoPointWB.aidl`                     | Two-point white balance calibration entry keyed by colour temperature |
+| `WhiteBalanceMultiPointSettings.aidl` | Multi-point white balance calibration entry keyed by colour temperature |
 
 ---
 
 ## Initialization
 
-The Panel HAL service is initialised early in the device boot process, registering itself with the system service manager under the name `"PanelOutput"`. The singleton `IPanelOutput` interface is used to open and close the exclusive controller, while `IPanelOutputController` exposes the runtime control operations and `getCapabilities()`. The event listener interfaces allow clients to subscribe for asynchronous updates, with `IPanelOutputControllerListener` used by the primary controller client and `IPanelOutputEventListener` used by passive observers.
+The Panel HAL service is initialised early in the device boot process, registering itself with the system service manager under the name `"PanelOutput"`. The singleton `IPanelOutput` interface is used to query static capabilities and to open and close the exclusive controller, while `IPanelOutputController` exposes the runtime control operations. The event listener interfaces allow clients to subscribe for asynchronous updates, with `IPanelOutputControllerListener` used by the primary controller client and `IPanelOutputEventListener` used by passive observers.
 
 ---
 
 ## Product Customization
 
-* `Capabilities` parcelable exposes physical dimensions, panel type, supported PQ parameters, refresh rates, supported picture modes, supported dynamic ranges, and supported AV sources.
+* `Capabilities` parcelable exposes physical dimensions, panel type, supported PQ parameters, refresh rates, supported picture modes, supported dynamic ranges, supported AV sources, and the supported colour temperature enum values.
 * Supports multiple picture modes, dynamic ranges, and AV sources, allowing flexible client-specific configurations.
 * Platforms may expose multiple simultaneous picture modes or limit to a single active mode depending on hardware capability.
 
@@ -131,7 +132,8 @@ flowchart TD
 ## Resource Management
 
 * Clients acquire the singleton service handle via binder connection to `PanelOutput`, then call `open()` to obtain the exclusive controller.
-* Runtime control methods such as `start()`, `stop()`, `setEnabled()`, `setPictureModes()`, `setPQParameters()`, and white-balance methods are issued through `IPanelOutputController`.
+* Runtime control methods such as `start()`, `stop()`, `setEnabled()`, `setPictureModes()`, and `setPQParameters()` are issued through `IPanelOutputController`.
+* 2-point and multi-point white balance are configured through `setPQParameters()` and queried through `getPQParameters()` using `PQParameter.TWO_POINT_WB` and `PQParameter.MULTI_POINT_WB`.
 * Passive observers register `IPanelOutputEventListener` to receive video source, dynamic range, frame rate, resolution, and refresh-rate notifications.
 * Cleanup occurs on client disconnect, with the controller implicitly released by the HAL.
 
@@ -139,17 +141,20 @@ flowchart TD
 
 ## Operation and Data Flow
 
-* Client queries `IPanelOutputController.getCapabilities()` for supported picture modes, PQ parameters, refresh rates, and runtime limits.
+* Client queries `IPanelOutput.getCapabilities()` for supported picture modes, PQ parameters, refresh rates, runtime limits, and supported colour temperature presets.
 * Picture mode configurations and PQ parameters are set via `setPictureModes()` and `setPQParameters()` after `start()` succeeds.
 * The panel output enable state controls display and backlight through the controller.
 * Frame rate matching adjusts panel refresh rate dynamically to match video content.
-* White balance, calibration mode, and display fading are adjusted through the controller.
+* Colour temperature values are exchanged through `PQParameterConfiguration` using the `ColourTemperature` enum for `PQParameter.COLOR_TEMPERATURE`.
+* White balance values are exchanged through `PQParameterConfiguration`, using `TwoPointWB` for `PQParameter.TWO_POINT_WB` and `WhiteBalanceMultiPointSettings` for `PQParameter.MULTI_POINT_WB`.
+* Calibration mode and display fading remain dedicated controller operations.
 
 ---
 
 ## Modes of Operation
 
 * Runtime picture modes configurable by client with dynamic range and AV source scoping.
+* 2-point and multi-point white balance entries configurable per picture mode, dynamic range, AV source, and colour temperature.
 * Frame rate matching mode enabled/disabled by client.
 * Calibration mode is available on the controller for PQ pipeline validation workflows.
 
@@ -187,7 +192,7 @@ flowchart TD
 | ------------- | ----------------------- | ------------- |
 | Picture Modes | Video display presets   | Mandatory     |
 | PQ Parameters | Picture quality control | Mandatory     |
-| White Balance | Color calibration       | Mandatory     |
+| White Balance | Colour-temperature-scoped 2-point and multi-point calibration values | Mandatory     |
 
 ---
 
@@ -195,6 +200,7 @@ flowchart TD
 
 * Supports a range of panel types: LCD, OLED, QLED, Mini LED.
 * Supports multiple refresh rates and frame rate matching.
+* Supports typed colour temperature presets that can be applied to both 2-point and multi-point white balance entries.
 * Supports advanced PQ parameters including AI PQ engine and noise reduction.
 * Supports display fading and calibration mode on the runtime controller.
 
@@ -205,9 +211,10 @@ flowchart TD
 Each platform must include a [hfp-panel.yaml](https://github.com/rdkcentral/rdk-halif-aidl/tree/develop/panel/current/hfp-panel.yaml) to define the platform-specific implementation of this HAL. It includes:
 
 * Static capabilities such as panel dimensions, panel type, refresh rates, supported AV sources, dynamic ranges, PQ parameters, and picture modes.
+* Supported colour temperature enum values aligned with `ColourTemperature.aidl`.
 * Lists of supported PQ parameters and picture modes.
-* Capabilities of each PQ parameter per picture mode, AV source, and dynamic range.
-* Declared as structured sections aligned with the AIDL interfaces and consumed by the controller's `getCapabilities()`.
+* Capabilities of each PQ parameter per picture mode, AV source, and dynamic range, including `TWO_POINT_WB` and `MULTI_POINT_WB` structured bounds.
+* Declared as structured sections aligned with the AIDL interfaces and consumed by `IPanelOutput.getCapabilities()`.
 
 These files are machine-readable and used for:
 
