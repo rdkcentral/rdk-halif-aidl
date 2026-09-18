@@ -51,6 +51,25 @@ import com.rdk.hal.avclock.IAVClock;
  *  suspends consumption but does not flush the queue or stop the sink; the
  *  same is true of attaching to a clock that is paused.
  *
+ *  <h3>Mixer input routing and audibility</h3>
+ *  The attached clock gates frame consumption; the routed mixer input gates
+ *  audibility. The routing is owned by the Audio Mixer rather than by this
+ *  controller — `IAudioMixerController` routes `AudioSourceType.AUDIO_SINK` at
+ *  this sink's resource index to a mixer input, and `AudioSourceType.NONE`
+ *  clears that routing. With no mixer input routed, queued frames are consumed
+ *  at their presentation times and their buffers freed via `IAVBuffer.free()`
+ *  at exactly the same points as when a mixer input is routed, and nothing is
+ *  audible. The queue drains at clock rate, so the sink stays in sync with any
+ *  video sink presenting against the same clock. `onFirstFrameRendered()`
+ *  reports the first frame mixed, so with no mixer input routed it fires
+ *  once a mixer input becomes routed and the first queued frame is mixed.
+ *
+ *  The routing may be set or cleared at any point in the session, including
+ *  while `STARTED`. A successful routing change leaves the sink's
+ *  state-machine state unchanged and does not flush the queue; validation
+ *  and state errors from `IAudioMixerController.setInputRouting()` are
+ *  reported by the Audio Mixer.
+ *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
  *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
@@ -202,18 +221,27 @@ interface IAudioSinkController {
      * a `STARTED` state.
      *
      * The client must call `setAudioDecoder()` with a valid decoder ID before
-     * calling this method in both tunnelled and non-tunnelled modes. Starting
-     * an audio sink while the associated decoder ID is
-     * `IAudioDecoder.Id.UNDEFINED` shall fail.
+     * calling this method when audio is sourced from an Audio Decoder, in
+     * both tunnelled and non-tunnelled modes; starting such a session while
+     * the associated decoder ID is `IAudioDecoder.Id.UNDEFINED` shall fail.
+     * This precondition does not apply to the decoder-less Clear PCM Audio
+     * Playback path, which starts with no decoder association.
+     *
+     * The AVClock attachment and the mixer input routing are independent of
+     * the decoder association above: a sink started with no mixer input
+     * routed runs normally and is inaudible until a mixer input is routed —
+     * see the interface @brief.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     *      The resource is not in State::READY, or the associated audio
-     *      decoder ID is `IAudioDecoder.Id.UNDEFINED`.
+     *      The resource is not in State::READY, or the sink is being fed by
+     *      an Audio Decoder while the associated decoder ID is
+     *      `IAudioDecoder.Id.UNDEFINED`.
      *
      * @pre The resource must be in State::READY.
-     * @pre The associated audio decoder ID must not be
-     *      `IAudioDecoder.Id.UNDEFINED`; set it using `setAudioDecoder()`.
+     * @pre For a session fed by an Audio Decoder, the associated audio
+     *      decoder ID must not be `IAudioDecoder.Id.UNDEFINED`; set it
+     *      using `setAudioDecoder()`.
      *
      * @see stop(), IAudioSink.close(), setAudioDecoder()
      */
@@ -234,9 +262,10 @@ interface IAudioSinkController {
     void stop();
 
     /**
-     * Queues an audio frame for mixing.
+     * Queues an audio frame for clock-paced consumption.
      *
-     * The audio sink must be in the `STARTED` state.
+     * The audio sink must be in the `STARTED` state. The frame is mixed only
+     * while a mixer input is routed — see the interface @brief.
      * Buffers can be either non-secure or secure to support SAP (Secure Audio Path).
      * Each call shall reference a single audio frame with a presentation timestamp.
      *
@@ -275,7 +304,7 @@ interface IAudioSinkController {
      * @param[in] metadata           A FrameMetadata parcelable describing the audio frame.
      *
      * @returns boolean
-     * @retval true  Buffer successfully queued for mixing. Buffer ownership transfers to HAL.
+     * @retval true  Buffer successfully queued for consumption. Buffer ownership transfers to HAL.
      * @retval false Buffer queue is full. Buffer ownership remains with caller.
      *               The client SHOULD wait for `IAudioSinkControllerListener.onFrameBufferAvailable()`
      *               before retrying, to avoid wasted binder transactions. Continuing to call this
@@ -295,9 +324,14 @@ interface IAudioSinkController {
      * Signals end-of-stream to the audio sink.
      *
      * Asserts that no further frames will be queued via `queueAudioFrame()`.
-     * The sink mixes every already-queued frame in the usual way and then
-     * fires `IAudioSinkControllerListener.onEndOfStream(nsPresentationTime)`
-     * with the presentation time of the final frame passed to the mixer.
+     * The sink consumes every already-queued frame at its presentation time
+     * — and, where a mixer input is routed, makes it audible — in the usual
+     * way, then fires `IAudioSinkControllerListener.onEndOfStream(nsPresentationTime)`
+     * with the presentation time of the final queued frame. The callback
+     * fires once consumption of that final frame completes on the attached
+     * clock (its buffer is freed via `IAVBuffer.free()`), not merely once
+     * its presentation time is reached, so it fires whether or not a mixer
+     * input is routed.
      *
      * If no frames are queued when this is called, the sink fires
      * `onEndOfStream()` with an undefined-time sentinel

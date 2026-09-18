@@ -257,6 +257,8 @@ Video sources (video sinks, HDMI inputs, and composite inputs) can be mapped to 
 
 A video plane can only be mapped to one video source at a time, and any attempt to set additional video sources shall fail.
 
+Mapping is a display-side operation and a video source keeps running across a mapping change. Unmapping a Video Sink leaves its session state, frame queue and AV Clock synchronisation untouched, which is what allows a source to be unmapped, swapped between planes and remapped while playing. Video Sink behaviour with no plane mapped is covered in [Video Sink](../videosink/video_sink.md).
+
 A call to the `setVideoSourceDestinationPlaneMapping()` allows for multiple sources and planes to be mapped and can perform complex operations such as plane swapping between main and PIP video.
 
 The sequence of calls below shows how main video and PIP video can be mapped separately and then swapped.
