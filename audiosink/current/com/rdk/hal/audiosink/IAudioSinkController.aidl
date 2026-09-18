@@ -258,9 +258,10 @@ interface IAudioSinkController {
     void stop();
 
     /**
-     * Queues an audio frame for mixing.
+     * Queues an audio frame for clock-paced consumption.
      *
-     * The audio sink must be in the `STARTED` state.
+     * The audio sink must be in the `STARTED` state. The frame is mixed only
+     * while a mixer input is routed — see the interface @brief.
      * Buffers can be either non-secure or secure to support SAP (Secure Audio Path).
      * Each call shall reference a single audio frame with a presentation timestamp.
      *
@@ -299,7 +300,7 @@ interface IAudioSinkController {
      * @param[in] metadata           A FrameMetadata parcelable describing the audio frame.
      *
      * @returns boolean
-     * @retval true  Buffer successfully queued for mixing. Buffer ownership transfers to HAL.
+     * @retval true  Buffer successfully queued for consumption. Buffer ownership transfers to HAL.
      * @retval false Buffer queue is full. Buffer ownership remains with caller.
      *               The client SHOULD wait for `IAudioSinkControllerListener.onFrameBufferAvailable()`
      *               before retrying, to avoid wasted binder transactions. Continuing to call this
