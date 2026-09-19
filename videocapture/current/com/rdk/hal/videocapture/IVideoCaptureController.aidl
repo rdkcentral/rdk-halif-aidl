@@ -141,7 +141,11 @@ interface IVideoCaptureController
      *            `Capabilities.supportedCodecs`,
      *            `RESOLUTION_MISMATCH` if the bound source is decoding beyond
      *            `Capabilities.maxFrameWidth` or `maxFrameHeight`,
-     *            `PROTECTED_CONTENT` if the bound source is carrying protected content.
+     *            `PROTECTED_CONTENT` if the bound source is carrying protected content,
+     *            `COLOR_CONVERSION_UNSUPPORTED` if `Capabilities.format` requires a colour
+     *            conversion of the bound source this capture cannot perform,
+     *            `FORMAT_UNSUPPORTED` if `Capabilities.format` cannot be delivered for the
+     *            bound source.
      *
      * @pre The resource must be in State::READY.
      *
