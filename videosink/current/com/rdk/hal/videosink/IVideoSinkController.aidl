@@ -117,13 +117,18 @@ interface IVideoSinkController
      * passed here to clear an existing association, equivalent in effect to
      * the state at `open()`.
      *
+     * `IVideoDecoder.Id.EXTERNAL` indicates that the Video Sink is fed by an
+     * external non-HAL component rather than a HAL Video Decoder. A session
+     * associated with `EXTERNAL` may be started.
+     *
      * A valid Video Decoder ID is one returned by
-     * `IVideoDecoderManager.getVideoDecoderIds()`. A valid association is
-     * required before the pipeline is started in both tunnelled and
-     * non-tunnelled modes.
+     * `IVideoDecoderManager.getVideoDecoderIds()`. A valid association, or
+     * `IVideoDecoder.Id.EXTERNAL`, is required before the pipeline is started
+     * in both tunnelled and non-tunnelled modes.
      *
      * @param[in] videoDecoderId
-     *      The ID of the Video Decoder source, or `IVideoDecoder.Id.UNDEFINED`
+     *      The ID of the Video Decoder source, `IVideoDecoder.Id.EXTERNAL`
+     *      for an external non-HAL source, or `IVideoDecoder.Id.UNDEFINED`
      *      to clear the association.
      *
      * @exception binder::Status::Exception::EX_NONE
@@ -134,11 +139,12 @@ interface IVideoSinkController
      *
      * @returns boolean
      * @retval true
-     *      The Video Decoder ID was set, or the association was cleared with
+     *      The Video Decoder ID was set, the source was set to
+     *      `IVideoDecoder.Id.EXTERNAL`, or the association was cleared with
      *      `IVideoDecoder.Id.UNDEFINED`.
      *
      * @retval false
-     *      The ID is not one returned by
+     *      The ID is not `IVideoDecoder.Id.EXTERNAL` and not one returned by
      *      `IVideoDecoderManager.getVideoDecoderIds()`.
      *
      * @pre The resource must be in State::READY.
@@ -153,7 +159,8 @@ interface IVideoSinkController
      * Returns the currently associated `IVideoDecoder.Id` in both tunnelled
      * and non-tunnelled modes.
      *
-     * @returns IVideoDecoder.Id which can be IVideoDecoder.Id.UNDEFINED.
+     * @returns IVideoDecoder.Id which can be `IVideoDecoder.Id.UNDEFINED` or
+     *          `IVideoDecoder.Id.EXTERNAL`.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource
@@ -251,7 +258,8 @@ interface IVideoSinkController
      * If successful the Video Sink transitions to a `STARTING` state and then
      * a `STARTED` state.
      *
-     * The client must call `setVideoDecoder()` with a valid decoder ID before
+     * The client must call `setVideoDecoder()` with a valid decoder ID, or
+     * `IVideoDecoder.Id.EXTERNAL` for an external non-HAL source, before
      * calling this method in both tunnelled and non-tunnelled modes. Starting
      * a Video Sink while the associated decoder ID is
      * `IVideoDecoder.Id.UNDEFINED` shall fail.
@@ -270,7 +278,8 @@ interface IVideoSinkController
      *
      * @pre The resource must be in State::READY.
      * @pre The associated Video Decoder ID must not be
-     *      `IVideoDecoder.Id.UNDEFINED`; set it using `setVideoDecoder()`.
+     *      `IVideoDecoder.Id.UNDEFINED`; set a valid decoder ID or
+     *      `IVideoDecoder.Id.EXTERNAL` using `setVideoDecoder()`.
      *
      * @see stop(), IVideoSink.open(), setVideoDecoder()
      */

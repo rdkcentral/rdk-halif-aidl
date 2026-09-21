@@ -50,6 +50,9 @@ interface IAudioDecoder
         /** The undefined ID value. */
         const int UNDEFINED = -1;
 
+        /** Sentinel indicating the sink source is an external non-HAL component rather than a HAL Audio Decoder. */
+        const int EXTERNAL = -2;
+
         /** The actual resource ID */
         int value;
     }

@@ -215,7 +215,7 @@ If any audio decoder supports SAP in non-tunnelled mode then the Audio Sink HAL 
 
 PCM stream data can originate in the RDK media pipeline from multiple sources; from an application, from the RDK middleware or from a software audio decoder. In these cases the PCM data is passed directly to the Audio Sink HAL.
 
-Clear PCM audio is copied into a non-secure [AV Buffer](../avbuffer/av_buffer.md) and is routed to the `IAudioSinkController` where it is queued for mixing.
+Clear PCM audio is copied into a non-secure [AV Buffer](../avbuffer/av_buffer.md) and is routed to the `IAudioSinkController` where it is queued for mixing. As this data does not originate from a HAL Audio Decoder, the client calls `setAudioDecoder(IAudioDecoder.Id.EXTERNAL)` before `start()`.
 
 ## Tunnelled Audio & Passthrough Mode
 
@@ -229,7 +229,7 @@ The Audio Sink HAL is still used to control the audio stream volume, mute and vo
 
 An Audio Sink is routed to a mixer input by the [Audio Mixer](../audiomixer/audio_mixer.md) rather than by the sink itself: `IAudioMixerController` routes `AudioSourceType.AUDIO_SINK` at this sink's resource index to a mixer input, and `AudioSourceType.NONE` clears that routing.
 
-The attached AV Clock gates frame consumption and the mixer routing gates audibility, mirroring the way a [Video Sink](../videosink/video_sink.md) relates to its video plane. `start()` requires a valid Audio Decoder association and nothing else when the sink is fed by an Audio Decoder; the decoder-less [Clear PCM Audio Playback](#clear-pcm-audio-playback) path starts with no such association. Routing may be changed while the sink is `STARTED` without changing the sink's state or flushing its queue; validation and state errors from `IAudioMixerController.setInputRouting()` are reported by the Audio Mixer.
+The attached AV Clock gates frame consumption and the mixer routing gates audibility, mirroring the way a [Video Sink](../videosink/video_sink.md) relates to its video plane. `start()` requires either a valid Audio Decoder association or `IAudioDecoder.Id.EXTERNAL` — the latter indicating the sink data source is not a HAL decoder, as used by the [Clear PCM Audio Playback](#clear-pcm-audio-playback) path. Starting while the decoder ID is `IAudioDecoder.Id.UNDEFINED` is an error. Routing may be changed while the sink is `STARTED` without changing the sink's state or flushing its queue; validation and state errors from `IAudioMixerController.setInputRouting()` are reported by the Audio Mixer.
 
 With no mixer input routed, queued frames are consumed at their presentation times on the attached clock and their buffers freed with `IAVBuffer.free()` at the same points as when a mixer input is routed, and nothing is audible. The queue drains at clock rate, so the sink stays in sync with any Video Sink presenting against the same clock.
 

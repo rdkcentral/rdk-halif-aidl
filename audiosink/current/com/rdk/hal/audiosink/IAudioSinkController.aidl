@@ -89,12 +89,19 @@ interface IAudioSinkController {
      * passed here to clear an existing association, equivalent in effect to
      * the state at `open()`.
      *
-     * A valid audio decoder ID is one returned by
-     * `IAudioDecoderManager.getAudioDecoderIds()`. A valid association is
-     * required before the pipeline is started in both tunnelled and
-     * non-tunnelled modes.
+     * `IAudioDecoder.Id.EXTERNAL` indicates that the audio sink is fed by an
+     * external non-HAL component rather than a HAL Audio Decoder, for example
+     * the Clear PCM Audio Playback path. A session associated with `EXTERNAL`
+     * may be started.
      *
-     * @param[in] audioDecoderId        The ID of the audio decoder source, or
+     * A valid audio decoder ID is one returned by
+     * `IAudioDecoderManager.getAudioDecoderIds()`. A valid association, or
+     * `IAudioDecoder.Id.EXTERNAL`, is required before the pipeline is started
+     * in both tunnelled and non-tunnelled modes.
+     *
+     * @param[in] audioDecoderId        The ID of the audio decoder source,
+     *                                  `IAudioDecoder.Id.EXTERNAL` for an
+     *                                  external non-HAL source, or
      *                                  `IAudioDecoder.Id.UNDEFINED` to clear
      *                                  the association.
      *
@@ -106,10 +113,11 @@ interface IAudioSinkController {
      *
      * @returns boolean
      * @retval true
-     *      The audio decoder ID was set, or the association was cleared with
+     *      The audio decoder ID was set, the source was set to
+     *      `IAudioDecoder.Id.EXTERNAL`, or the association was cleared with
      *      `IAudioDecoder.Id.UNDEFINED`.
      * @retval false
-     *      The ID is not one returned by
+     *      The ID is not `IAudioDecoder.Id.EXTERNAL` and not one returned by
      *      `IAudioDecoderManager.getAudioDecoderIds()`.
      *
      * @pre The resource must be in State::READY.
@@ -124,7 +132,8 @@ interface IAudioSinkController {
      * Returns the currently associated `IAudioDecoder.Id` in both tunnelled
      * and non-tunnelled modes.
      *
-     * @returns IAudioDecoder.Id which can be `IAudioDecoder.Id.UNDEFINED`.
+     * @returns IAudioDecoder.Id which can be `IAudioDecoder.Id.UNDEFINED` or
+     *          `IAudioDecoder.Id.EXTERNAL`.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource
@@ -220,12 +229,11 @@ interface IAudioSinkController {
      * If successful the audio sink transitions to a `STARTING` state and then
      * a `STARTED` state.
      *
-     * The client must call `setAudioDecoder()` with a valid decoder ID before
-     * calling this method when audio is sourced from an Audio Decoder, in
-     * both tunnelled and non-tunnelled modes; starting such a session while
-     * the associated decoder ID is `IAudioDecoder.Id.UNDEFINED` shall fail.
-     * This precondition does not apply to the decoder-less Clear PCM Audio
-     * Playback path, which starts with no decoder association.
+     * The client must call `setAudioDecoder()` with a valid decoder ID, or
+     * `IAudioDecoder.Id.EXTERNAL` for an external non-HAL source such as the
+     * Clear PCM Audio Playback path, before calling this method in both
+     * tunnelled and non-tunnelled modes. Starting an audio sink while the
+     * associated decoder ID is `IAudioDecoder.Id.UNDEFINED` shall fail.
      *
      * The AVClock attachment and the mixer input routing are independent of
      * the decoder association above: a sink started with no mixer input
@@ -234,14 +242,13 @@ interface IAudioSinkController {
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
-     *      The resource is not in State::READY, or the sink is being fed by
-     *      an Audio Decoder while the associated decoder ID is
-     *      `IAudioDecoder.Id.UNDEFINED`.
+     *      The resource is not in State::READY, or the associated decoder ID
+     *      is `IAudioDecoder.Id.UNDEFINED`.
      *
      * @pre The resource must be in State::READY.
-     * @pre For a session fed by an Audio Decoder, the associated audio
-     *      decoder ID must not be `IAudioDecoder.Id.UNDEFINED`; set it
-     *      using `setAudioDecoder()`.
+     * @pre The associated audio decoder ID must not be
+     *      `IAudioDecoder.Id.UNDEFINED`; set a valid decoder ID or
+     *      `IAudioDecoder.Id.EXTERNAL` using `setAudioDecoder()`.
      *
      * @see stop(), IAudioSink.close(), setAudioDecoder()
      */
