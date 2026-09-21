@@ -215,7 +215,7 @@ If any audio decoder supports SAP in non-tunnelled mode then the Audio Sink HAL 
 
 PCM stream data can originate in the RDK media pipeline from multiple sources; from an application, from the RDK middleware or from a software audio decoder. In these cases the PCM data is passed directly to the Audio Sink HAL.
 
-Clear PCM audio is copied into a non-secure [AV Buffer](../avbuffer/av_buffer.md) and is routed to the `IAudioSinkController` where it is queued for mixing. As this data does not originate from a HAL Audio Decoder, the client calls `setAudioDecoder(IAudioDecoder.Id.EXTERNAL)` before `start()`.
+Clear PCM audio is copied into a non-secure [AV Buffer](../avbuffer/av_buffer.md) and is routed to the `IAudioSinkController` where it is queued for mixing. As this data does not originate from a HAL Audio Decoder, the client constructs an `IAudioDecoder.Id` with its `value` field set to `IAudioDecoder.Id.EXTERNAL` and passes it to `setAudioDecoder()` before `start()`.
 
 ## Tunnelled Audio & Passthrough Mode
 
