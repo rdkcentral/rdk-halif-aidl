@@ -250,6 +250,13 @@ interface IVideoCaptureController
      * absorbing that silently is how a stale index survives to release another client's
      * frame.
      *
+     * This call returns a buffer to the pool. It is not how a client frees memory, which
+     * it does by destroying its imported images and closing its descriptors. `stop()` has
+     * already returned every buffer to Free, so a call made in `READY` does nothing and
+     * raises no exception - a client tidying up after a stop need not know in which order
+     * it stopped and released. After `close()` there is no controller left to call, and
+     * none is needed.
+     *
      * @param[in] bufferIndex   The pool buffer to release.
      *
      * @exception binder::Status::Exception::EX_NONE for success.

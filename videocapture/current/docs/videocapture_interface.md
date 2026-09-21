@@ -295,7 +295,7 @@ A source and a capture session start independently, and either order is legal.
 
 **Session started before the source decodes.** The pool is reserved and idle, and `acquireLatestFrame()` returns `null` until frames arrive. Nothing is lost.
 
-Shutdown is likewise legal in either order, and the pool outlives neither.
+Shutdown is likewise legal in either order, and the implementation's pool outlives neither.
 
 | What ends first | What happens |
 |---|---|
@@ -605,12 +605,12 @@ A Dma-Buf is returned to the platform only when the last reference to it goes, w
 |---|---|---|
 | Implementation's pool | `start()` | `stop()`, `close()`, loss of the sink, or client death |
 | Descriptor in the `onPoolReady()` argument | Binder, on delivery | Automatically, when the callback returns |
-| Client's duplicate | `F_DUPFD_CLOEXEC` in the callback | `close()` — once imported or mapped, unless still needed for `DMA_BUF_IOCTL_SYNC` or a relay |
+| Client's duplicate | `F_DUPFD_CLOEXEC` in the callback | `close(2)` — once imported or mapped, unless still needed for `DMA_BUF_IOCTL_SYNC` or a relay |
 | `EGLImage` | `eglCreateImageKHR()` | `eglDestroyImageKHR()` |
 | CPU mapping | `mmap()` | `munmap()` |
-| Relayed descriptor in another process | `SCM_RIGHTS` receipt | That process's `close()`, or its exit |
+| Relayed descriptor in another process | `SCM_RIGHTS` receipt | That process's `close(2)`, or its exit |
 
-`stop()` removes only the first row. That is why an image drawn after `stop()` still addresses valid memory, and because nothing writes to the pool after the session ends, it still holds the frame it held.
+`stop()` and `close()` remove only the first row. That is why an image drawn after either still addresses valid memory, and because nothing writes to the pool after the session ends, it still holds the frame it held. Every other row is dropped by whoever holds it, whenever they choose: no call on this interface frees a buffer, and none is required before or after the session ends.
 
 ### Checklist
 

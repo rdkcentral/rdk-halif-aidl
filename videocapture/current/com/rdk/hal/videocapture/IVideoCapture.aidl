@@ -227,9 +227,15 @@ interface IVideoCapture
      * The capture resource must be in a `READY` state before it can be closed.
      * If successful the resource transitions to a `CLOSED` state.
      *
-     * The pool and all its Dma-Bufs are released, and the vendor wiring between the
-     * source and the pool is undone. The bound source is not stopped and nothing else
-     * consuming it is affected - only the capture session ends.
+     * The implementation drops its own references to the pool's Dma-Bufs and undoes the
+     * vendor wiring between the source and the pool. The bound source is not stopped and
+     * nothing else consuming it is affected - only the capture session ends.
+     *
+     * The client's references are untouched. A Dma-Buf stays alive while any reference to
+     * it does, so the descriptors the client duplicated at `onPoolReady()` and the images
+     * it imported from them remain valid after this call. The memory returns to the
+     * platform when the client destroys those images and closes those descriptors, which
+     * it does at whatever point suits it and without a further call on this interface.
      *
      * @param[in] captureController     Instance of the IVideoCaptureController.
      *
