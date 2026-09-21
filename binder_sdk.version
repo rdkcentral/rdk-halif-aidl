@@ -5,16 +5,17 @@
 # clones the toolchain. Keep it pinned so the committed module-local
 # generated C++ always matches the generator that produced it.
 #
-# Pinned to release tag 2.4.0 (linux_binder_idl) which ships:
-#  - aidl-gen emits an explicit interface version ordinal for module-local
-#    snapshots (linux_binder_idl#33)
-#  - 4.9 kernel support: restored pre-5.16 binder freeze fallbacks
-#    (linux_binder_idl#36, closes linux_binder_idl#35)
-#  - CMake 3.8 compatibility: get_filename_component instead of
-#    file(REAL_PATH) (linux_binder_idl#34)
-#  - Aggregate test-suite runner at tests/run-tests.sh (linux_binder_idl#38)
-# Previously 2.3.0 (Yocto SDK M4 mismatch fix + regression test,
-# linux_binder_idl#30/#31).
+# Pinned to release tag 2.6.0 (linux_binder_idl) which ships:
+#  - AIDL surface dump & structural diff toolchain (linux_binder_idl#27/#48):
+#    aidl_ops dump-surface emits the declared surface as canonical
+#    deterministic text; diff-surface classifies the structural difference
+#    (breaking / major / none) — the engine consumed by the release audit
+#    gate (#633/#568) to validate declared bump classes.
+# The AIDL generator is byte-identical to 2.5.0, so committed module-local C++
+# is unchanged by this bump — it is a toolchain-currency bump, not a regen.
+# Previously 2.5.0, which decoupled the binder wire protocol from compile
+# bitness (linux_binder_idl#42/#45/#46/#47) and added the QEMU kernel-matrix
+# round-trip harness (linux_binder_idl#40/#41).
 #
 # Override for a one-off build with:  BINDER_VERSION=<ref> ./build_binder.sh
-2.4.0
+2.6.0

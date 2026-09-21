@@ -3,110 +3,151 @@
 This guide defines how a production or third-party build system (Yocto/BitBake,
 buildroot, or a bespoke CMake superbuild) consumes **rdk-halif-aidl**.
 
-!!! warning "Build the artifacts with CMake directly"
-    The repository's wrapper scripts — `build_binder.sh`, `build_modules.sh`,
-    `build_interfaces.sh` — are developer and architecture-team convenience tools
-    that **require a native host toolchain**. Production and cross builds **must
-    invoke CMake directly** with the variables below. The scripts detect a
-    cross/OpenEmbedded environment and abort, because running them there silently
-    produces broken or empty output.
-
-## What an integrator builds
-
-The deliverable is two CMake builds, run in order:
+The deliverable is two build stages, run in order:
 
 | Stage | Source | Produces | Toolchain |
 | ----- | ------ | -------- | --------- |
 | 1 — Binder SDK | `linux_binder_idl` (the `linux-binder` recipe) | `libbinder.so`, `libutils.so`, `servicemanager`, headers | Target cross-toolchain |
-| 2 — HAL interface libraries | each `<module>/<version>/` | `lib<module>-v<version>-cpp.so` | Target cross-toolchain |
+| 2 — HAL interface libraries | each `<module>/<version>/` snapshot | `lib<module>-v<version>-cpp.so` | Target cross-toolchain |
 
-The HAL libraries are compiled from **committed, pre-generated C++**. The AIDL
-compiler and Python are used offline by the architecture team to regenerate that
-C++; they are **never required on a build host or target**.
+A production build compiles the **committed, pre-generated C++** in each released
+`<module>/<version>/` snapshot. The AIDL compiler regenerates that C++ offline
+for the architecture team; the **AIDL / codegen toolchain is never required on a
+build host or target** for a released snapshot. (BitBake and the layer's helper
+scripts are Python, so the build host has Python — it just never runs codegen.)
 
-## Requirements
+!!! warning "Build per component; the top-level CMake is a developer path"
+    The top-level `CMakeLists.txt` runs the AIDL codegen toolchain
+    (`aidl_ops.py`) at configure time and therefore requires the
+    `linux_binder_idl` source and Python — it is the developer / integrated
+    build, **not** the production path. Likewise the wrapper scripts
+    (`build_binder.sh`, `build_modules.sh`, `build_interfaces.sh`) require a
+    native host toolchain and abort in a cross/OpenEmbedded environment. A
+    production build consumes each released snapshot **per component** from its
+    self-contained `<module>/<version>/CMakeLists.txt`.
 
-1. **Toolchain via the environment.** Provide `CC`, `CXX`, `CFLAGS`, `CXXFLAGS`,
-   and `LDFLAGS` through the cross environment. BitBake sets these automatically;
-   CMake consumes them.
-2. **Binder SDK: runtime only.** Configure the `linux_binder_idl` build with
-   `-DBUILD_HOST_AIDL=OFF`. The host AIDL tool runs on the build host and is not
-   part of a target image. The binder CMake also auto-enables its Yocto profile
-   (disabling host-only install rules) when `OECORE_*_SYSROOT` is present — this
-   is correct and requires no action.
-3. **HAL modules: point at the staged SDK.** Configure the top-level CMake with
-   the staged Binder SDK location. A staged SDK is flat, so headers and libraries
-   share one prefix — set both `BINDER_SDK_DIR` and `BINDER_SDK_INCLUDE_DIR` to it.
-4. **Select the version on the CMake command line.** `INTERFACE_TARGET` picks
-   the module(s) and `AIDL_SRC_VERSION` picks the version (`current` or a
-   released `X.Y.Z.W`). The top-level CMake builds one target/version per
-   invocation. `versions_released.yaml` is a convenience manifest consumed by
-   `build_modules.sh` — **not** by CMake — so a build system that wants a whole
-   released cohort iterates the versions itself (one CMake invocation each).
+## Stage 1 — Binder SDK
 
-### CMake variables (Stage 2 — HAL modules)
-
-| Variable                 | Purpose                                                      | Required |
-| ------------------------ | ------------------------------------------------------------ | -------- |
-| `INTERFACE_TARGET`       | Module(s) to build; `all` or a name (default `all`)          | No       |
-| `AIDL_SRC_VERSION`       | Version to build; `current` or `X.Y.Z.W` (default `current`) | No       |
-| `BINDER_SDK_DIR`         | Staged Binder SDK libraries prefix                           | Yes      |
-| `BINDER_SDK_INCLUDE_DIR` | Staged Binder SDK headers prefix                             | Yes      |
-| `OUT_DIR`                | Output directory (default `out`)                             | No       |
-
-## Reference recipes
-
-Copy-me starting templates (not consumed by this repo) live under `examples/`:
-
-- [`rdk-halif-aidl.bb`](examples/rdk-halif-aidl.bb) — BitBake recipe.
-- [`rdk-halif-aidl.yaml`](examples/rdk-halif-aidl.yaml) — [Bob Build Tool](https://bobbuildtool.dev/) recipe.
-
-Both are thin wrappers over the same direct-CMake invocation, so the build is
-build-system-agnostic — porting to another build system means calling the same
-CMake with the same variables. The recipes are reference material and are not
-CI-verified here; pin them to a released tag and adapt the toolchain/sysroot to
-your project.
-
-## Recipe pattern (BitBake)
-
-**Stage 1 — Binder SDK** is delivered by the `linux-binder` recipe. See the
+The Binder SDK (libbinder/libutils + headers) is delivered by the `linux-binder`
+recipe and staged into the recipe sysroot. Configure it with
+`-DBUILD_HOST_AIDL=OFF` — the host AIDL tool runs on the build host and is not
+part of a target image. See the
 [linux_binder_idl BUILD guide](https://github.com/rdkcentral/linux_binder_idl/blob/develop/BUILD.md)
-for the full recipe, cross-compilation flags, and runtime/systemd setup. The
-essential line:
+for cross-compilation flags and runtime/systemd setup. The essential line:
 
 ```bitbake
 EXTRA_OECMAKE = "-DBUILD_HOST_AIDL=OFF"
 ```
 
-**Stage 2 — HAL interface libraries** depend on the staged SDK:
+## Stage 2 — HAL interface libraries (per component)
 
-```bitbake
-DEPENDS = "linux-binder"
-inherit cmake
+Each released snapshot builds from its own `<module>/<version>/CMakeLists.txt`,
+which compiles the committed C++ into `lib<module>-v<version>-cpp.so`. A snapshot
+that references sibling interfaces (e.g. `hdmicec` uses `common`) links their
+libraries and includes their headers; those dependencies are declared in the
+snapshot's `interface.yaml` `imports:` and must be built and staged first.
 
-# Let the cmake class run configure / compile / install — don't override the
-# tasks. Pass build options via EXTRA_OECMAKE. The CMake install() rules place
-# the libraries under <prefix>/lib/halif, so the class' install step
-# (cmake --install ${B} --prefix ${D}${prefix}) puts them in the right place.
-EXTRA_OECMAKE = " \
-    -DINTERFACE_TARGET=all \
-    -DBINDER_SDK_DIR=${STAGING_DIR}${prefix} \
-    -DBINDER_SDK_INCLUDE_DIR=${STAGING_DIR}${prefix} \
-"
+### CMake variables (per-component build)
 
-FILES:${PN} += "${libdir}/halif/*.so"
+| Variable                 | Purpose                                                     | Required |
+| ------------------------ | ----------------------------------------------------------- | -------- |
+| `BINDER_SDK_DIR`         | Staged Binder SDK prefix (`lib/binder` + headers)           | Yes      |
+| `BINDER_SDK_INCLUDE_DIR` | Staged Binder SDK headers prefix (flat sysroot: same value) | Yes      |
+| `HALIF_LIB_DIR`          | Directory holding dependency `lib<dep>-v<ver>-cpp.so`       | If deps  |
+| `HALIF_INCLUDE_DIR`      | Root under which `<dep>/<ver>/include` resolves             | If deps  |
+
+The direct invocation for one snapshot:
+
+```bash
+cmake -S <module>/<version> -B build/<module> \
+    -DBINDER_SDK_DIR=<sysroot> -DBINDER_SDK_INCLUDE_DIR=<sysroot> \
+    -DHALIF_LIB_DIR=<sysroot>/lib/rdk-halif-aidl \
+    -DHALIF_INCLUDE_DIR=<sysroot>/include/rdk-halif-aidl
+cmake --build build/<module>
+cmake --install build/<module> --prefix <sysroot>   # stages lib<module>-v<ver>-cpp.so to lib/rdk-halif-aidl
 ```
 
-## Why not the wrapper scripts
+The module `install()` rule stages the `.so` under `lib/rdk-halif-aidl`. A dependent also
+needs the dependency's **headers**, so a complete stage additionally copies the
+snapshot's `include/` tree to `<sysroot>/include/rdk-halif-aidl/<module>/<version>/
+include`. `tests/yocto/ci/yocto_staging_check.sh` exercises this exact
+contract offline (build `common` → stage → build `hdmicec` against it) and is the
+executable reference for a recipe.
 
-The scripts assume a developer's native host:
+## Yocto integration — you own your recipes
 
-- They build the host AIDL compiler. Under a cross `CC` that tool is compiled for
-  the target and cannot execute on the build host, failing configuration.
-- The binder CMake auto-enables its Yocto profile from `OECORE_*_SYSROOT`, which
-  disables the host-only install rules the scripts rely on — so a script run
-  inside an OpenEmbedded shell appears to succeed but stages nothing.
+The integration team controls its own recipes. What rdk-halif-aidl guarantees is
+the per-component build **contract** above: the CMake variables, the lib +
+header staging, and the inter-component dependency graph declared in each
+snapshot's `interface.yaml` `imports:`. Any `.bb` that honours that contract
+works; the shape of your recipes is yours to decide.
 
-Both are correct behaviours for a production build invoked **directly through
-CMake**, and both are wrong for the developer scripts — which is why the scripts
-refuse to run in a cross/OE environment. An integrator never needs them.
+As a starting point and a CI-tested reference, the repo ships a layer at
+`tests/yocto/meta-rdk-halif-aidl/` with a single `rdk-halif-aidl` recipe. Use it
+directly:
+
+```bitbake
+BBLAYERS += "${TOPDIR}/../rdk-halif-aidl/tests/yocto/meta-rdk-halif-aidl"
+IMAGE_INSTALL:append = " rdk-halif-aidl-common rdk-halif-aidl-avclock"   # the components you need
+```
+
+…or copy the recipe into your own layer and adapt it. The recipe builds the
+selected components in dependency order and stages each one's lib + headers
+before building its dependents, so the failure a hand-rolled single recipe hits —
+a dependency not yet staged when a dependent links — does not arise.
+
+The recipe is reference material and is validated in CI (`test.sh` Test 12) — if
+you adopt it, pin `SRCREV` to the released tag's commit for reproducible builds.
+Its install destination is overridable: `HALIF_MOUNT_POINT` (the partition mount,
+`/vendor` | `/mw`), from which `HALIF_LIBDIR` (where the `.so` installs *and*
+stages) and `HALIF_INCDIR` (headers, under the mount) derive. A build
+configuration sets these to its partition layout.
+
+## Non-Yocto build systems
+
+Drive the same per-component CMake invocation shown above, in dependency order
+(`scripts/halif_plan.py` prints the topological order for a set of components),
+staging each component's lib + headers into a shared prefix before building its
+dependents. `build_modules.sh` implements the same ordering for the developer
+tree, and the `rdk-halif-aidl` recipe's `do_compile` does it for BitBake.
+
+## Component selection, versions, and the vendor / middleware split
+
+The interface libraries are consumed by two build configurations — the **vendor**
+layer that implements the HAL, and the **middleware (MW)** that calls it. Both
+build from the *same* `rdk-halif-aidl` recipe, to their own mounts, via two
+knobs:
+
+- **Which components** — `HALIF_COMPONENTS`, defaulting to the full list from the
+  generated `halif-components.inc` (every buildable released component;
+  `broadcast` is absent because it has no released snapshot). Leave it at the
+  default to build **every HAL**, or set a subset — you name only what you want,
+  and `halif_plan.py` adds each component's dependency closure automatically, so
+  `common` need never be listed. The recipe splits the output into one package
+  per component (`rdk-halif-aidl-<comp>`).
+- **Which version** — every component builds its **latest** released snapshot by
+  default; point `HALIF_VERSIONS_FILE` at a manifest (`components: {comp: ver}`,
+  same schema as `versions_released.yaml`) to pin the top-level components. Each
+  dependency follows the exact version its dependent links, and because the
+  closure is keyed by (component, version), **different versions of one dependency
+  coexist** in a single build — one consumer's `common@0.1.0.0` and another's
+  `common@0.2.0.0` are both built and shipped, side by side in the
+  `rdk-halif-aidl-common` package.
+
+There is no generated per-config include — a build configuration just sets the
+mount point and (optionally) a versions manifest:
+
+```bitbake
+# meta-vendor/conf/halif-vendor.inc, required from local.conf / distro
+HALIF_MOUNT_POINT = "/vendor"
+# HALIF_LIBDIR derives as ${HALIF_MOUNT_POINT}/rdk-halif-aidl
+# HALIF_COMPONENTS + HALIF_VERSIONS_FILE left at default →
+# builds every HAL from the source's versions_released.yaml (the released cohort).
+```
+
+The `tests/yocto/meta-vendor` and `meta-mw` examples both build the full HAL from
+`versions_released.yaml`, differing only by mount point. The offline example
+builds `tests/yocto/ci/yocto_build_vendor.sh` and `yocto_build_mw.sh` (wrappers
+over `yocto_build.sh <role> [manifest]`) do the same without BitBake — each takes
+the versions manifest as an argument, defaulting to the repo's
+`versions_released.yaml`.

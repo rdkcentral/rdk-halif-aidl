@@ -15,9 +15,9 @@ namespace audiosink {
 class IAudioSinkControllerListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioSinkControllerListener)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "057ffa4fe9e339f8590839fafb79ebf81cf96282";
+  static constexpr char* HASHVALUE = "057ffa4fe9e339f8590839fafb79ebf81cf96282";
   virtual ::android::binder::Status onStateChanged(::com::rdk::hal::audiosink::State oldState, ::com::rdk::hal::audiosink::State newState) = 0;
   virtual ::android::binder::Status onFirstFrameRendered(int64_t nsPresentationTime) = 0;
   virtual ::android::binder::Status onEndOfStream(int64_t nsPresentationTime) = 0;

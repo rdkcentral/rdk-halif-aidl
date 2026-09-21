@@ -26,9 +26,9 @@ namespace audiosink {
 class IAudioSink : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioSink)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "057ffa4fe9e339f8590839fafb79ebf81cf96282";
+  static constexpr char* HASHVALUE = "057ffa4fe9e339f8590839fafb79ebf81cf96282";
   class Id : public ::android::Parcelable {
   public:
     int32_t value = 0;

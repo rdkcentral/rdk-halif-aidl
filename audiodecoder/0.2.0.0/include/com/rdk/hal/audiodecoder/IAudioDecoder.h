@@ -26,9 +26,9 @@ namespace audiodecoder {
 class IAudioDecoder : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioDecoder)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "bd961e2c8ff65805c8b8debbc0701fda8a4dae78";
+  static constexpr char* HASHVALUE = "bd961e2c8ff65805c8b8debbc0701fda8a4dae78";
   class Id : public ::android::Parcelable {
   public:
     int32_t value = 0;

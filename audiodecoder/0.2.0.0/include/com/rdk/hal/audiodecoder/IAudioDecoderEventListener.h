@@ -16,9 +16,9 @@ namespace audiodecoder {
 class IAudioDecoderEventListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioDecoderEventListener)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "bd961e2c8ff65805c8b8debbc0701fda8a4dae78";
+  static constexpr char* HASHVALUE = "bd961e2c8ff65805c8b8debbc0701fda8a4dae78";
   virtual ::android::binder::Status onDecodeError(::com::rdk::hal::audiodecoder::ErrorCode errorCode, int32_t vendorErrorCode) = 0;
   virtual ::android::binder::Status onStateChanged(::com::rdk::hal::audiodecoder::State oldState, ::com::rdk::hal::audiodecoder::State newState) = 0;
   virtual int32_t getInterfaceVersion() = 0;

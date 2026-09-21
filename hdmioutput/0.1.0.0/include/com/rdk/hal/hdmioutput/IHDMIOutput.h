@@ -25,9 +25,9 @@ namespace hdmioutput {
 class IHDMIOutput : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(HDMIOutput)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 1000;
+  const std::string HASH = "19404cdb282a1b4946d330b0bb3cafdfcec8680c";
+  static constexpr char* HASHVALUE = "19404cdb282a1b4946d330b0bb3cafdfcec8680c";
   class Id : public ::android::Parcelable {
   public:
     int32_t value = 0;

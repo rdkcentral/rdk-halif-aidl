@@ -19,9 +19,9 @@ namespace audiodecoder {
 class IAudioDecoderController : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioDecoderController)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "bd961e2c8ff65805c8b8debbc0701fda8a4dae78";
+  static constexpr char* HASHVALUE = "bd961e2c8ff65805c8b8debbc0701fda8a4dae78";
   virtual ::android::binder::Status setProperty(::com::rdk::hal::audiodecoder::Property property, const ::com::rdk::hal::PropertyValue& propertyValue, bool* _aidl_return) = 0;
   virtual ::android::binder::Status start() = 0;
   virtual ::android::binder::Status stop() = 0;

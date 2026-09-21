@@ -19,9 +19,9 @@ namespace bootreason {
 class IBootReason : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(BootReason)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 1000;
+  const std::string HASH = "d6a194425a9224faf484cd72105ca6226adce9b7";
+  static constexpr char* HASHVALUE = "d6a194425a9224faf484cd72105ca6226adce9b7";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getCapabilities(::com::rdk::hal::bootreason::Capabilities* _aidl_return) = 0;
   virtual ::android::binder::Status getBootCause(::com::rdk::hal::bootreason::BootCause* _aidl_return) = 0;

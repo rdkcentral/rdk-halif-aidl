@@ -23,7 +23,7 @@ graph TB
     subgraph "Stage 2: HAL Modules (module-local)"
         D["&lt;module&gt;/current/<br/>AIDL + generated C++"] -->|cmake build| F[Module Libraries]
         C -->|links against| F
-        F --> G[out/target/lib/halif/]
+        F --> G[out/target/lib/rdk-halif-aidl/]
     end
 
     B -.->|SDK dependency| F
@@ -202,7 +202,7 @@ do_compile() {
 
 do_install() {
     install -d ${D}${libdir}
-    install -m 0755 ${B}/out/target/lib/halif/*.so ${D}${libdir}/
+    install -m 0755 ${B}/out/target/lib/rdk-halif-aidl/*.so ${D}${libdir}/
 
     # Note: Headers not needed on target (runtime only)
     # For development packages, create separate -dev recipe
@@ -276,8 +276,8 @@ full consumer/integrator build contract.
 - **[docs/standards/build_integration.md](docs/standards/build_integration.md)** - Consumer/integrator build contract: direct-CMake switches, required variables, reference BitBake/Bob recipes
 
 - **[tests/README.md](tests/README.md)** - On-demand build verification
-  - `tests/smoke_test.sh` - exercises the `all`, `manifest` and per-version build paths
-  - `tests/fake-yocto/` - emulates the Yocto production build offline
+  - `tests/smoke/smoke_test.sh` - exercises the `all`, `manifest` and per-version build paths
+  - `tests/yocto/` - emulates the Yocto production build offline
 
 ## Copyright and License
 

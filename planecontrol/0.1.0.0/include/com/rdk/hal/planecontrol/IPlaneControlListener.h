@@ -14,9 +14,9 @@ namespace planecontrol {
 class IPlaneControlListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(PlaneControlListener)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 1000;
+  const std::string HASH = "11e8e5b5f7dc1340849d654caa7a1444056272b6";
+  static constexpr char* HASHVALUE = "11e8e5b5f7dc1340849d654caa7a1444056272b6";
   virtual int32_t getInterfaceVersion() = 0;
   virtual std::string getInterfaceHash() = 0;
 };  // class IPlaneControlListener

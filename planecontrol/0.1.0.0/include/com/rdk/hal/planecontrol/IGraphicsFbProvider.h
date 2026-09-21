@@ -17,9 +17,9 @@ namespace planecontrol {
 class IGraphicsFbProvider : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(GraphicsFbProvider)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 1000;
+  const std::string HASH = "11e8e5b5f7dc1340849d654caa7a1444056272b6";
+  static constexpr char* HASHVALUE = "11e8e5b5f7dc1340849d654caa7a1444056272b6";
   virtual ::android::binder::Status getCapabilities(::com::rdk::hal::planecontrol::GraphicsFbCapabilities* _aidl_return) = 0;
   virtual ::android::binder::Status commitGraphicsFb(int32_t graphicsFbId, bool* _aidl_return) = 0;
   virtual ::android::binder::Status createGraphicsFb(int32_t width, int32_t height, ::com::rdk::hal::planecontrol::GraphicsFbInfo* outInfo, ::android::os::ParcelFileDescriptor* _aidl_return) = 0;

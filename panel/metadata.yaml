@@ -22,7 +22,7 @@
 # type        - Responsibility: SOC or OEM                                [manual]
 component: panel
 version: 0.1.0.0
-status: GREEN
+status: AMBER
 description: "Front panel display and button control"
 type: OEM
 
@@ -51,7 +51,7 @@ scope:
 #   owners        - Responsible architecture teams
 notes:
   priority: 3
-  status_detail: "V1 stable"
+  status_detail: "Breaking change in flight: #688 PQ capability normalization (0.2.0.0) in review; GREEN when shipped"
   action: "PQ capability work tracked in #674, #497, #516, #276"
   owners: "Architecture + Graphics_Architecture"
 

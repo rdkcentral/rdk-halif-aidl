@@ -19,9 +19,9 @@ namespace hdmioutput {
 class IHDMIOutputManager : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(HDMIOutputManager)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 1000;
+  const std::string HASH = "19404cdb282a1b4946d330b0bb3cafdfcec8680c";
+  static constexpr char* HASHVALUE = "19404cdb282a1b4946d330b0bb3cafdfcec8680c";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getCapabilities(::com::rdk::hal::hdmioutput::PlatformCapabilities* _aidl_return) = 0;
   virtual ::android::binder::Status getHDMIOutputIds(::std::vector<::com::rdk::hal::hdmioutput::IHDMIOutput::Id>* _aidl_return) = 0;

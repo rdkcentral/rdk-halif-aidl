@@ -17,9 +17,9 @@ namespace hdmioutput {
 class IHDMIOutputControllerListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(HDMIOutputControllerListener)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 1000;
+  const std::string HASH = "19404cdb282a1b4946d330b0bb3cafdfcec8680c";
+  static constexpr char* HASHVALUE = "19404cdb282a1b4946d330b0bb3cafdfcec8680c";
   virtual ::android::binder::Status onHotPlugDetectStateChanged(bool state) = 0;
   virtual ::android::binder::Status onFrameRateChanged() = 0;
   virtual ::android::binder::Status onHDCPStatusChanged(::com::rdk::hal::hdmioutput::HDCPStatus hdcpStatus, ::com::rdk::hal::hdmioutput::HDCPProtocolVersion hdcpProtocolVersion) = 0;

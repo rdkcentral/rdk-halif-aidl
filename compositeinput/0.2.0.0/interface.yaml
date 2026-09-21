@@ -1,5 +1,6 @@
 aidl_interface:
   name: compositeinput
+  version: 2000
   srcs:
     - com/rdk/hal/compositeinput/*.aidl
   imports:

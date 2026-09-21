@@ -16,9 +16,9 @@ namespace compositeinput {
 class ICompositeInputControllerListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(CompositeInputControllerListener)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "bbad93fa82be1d9624c46072ad235ac4ae274556";
+  static constexpr char* HASHVALUE = "bbad93fa82be1d9624c46072ad235ac4ae274556";
   virtual ::android::binder::Status onConnectionChanged(bool connected) = 0;
   virtual ::android::binder::Status onSignalStatusChanged(::com::rdk::hal::compositeinput::SignalStatus signalStatus) = 0;
   virtual ::android::binder::Status onVideoModeChanged(const ::com::rdk::hal::compositeinput::VideoResolution& resolution) = 0;

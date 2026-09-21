@@ -25,9 +25,9 @@ namespace videosink {
 class IVideoSink : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(VideoSink)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "e6f5e88179a225cd57891cdd52ad0096a6dcfe81";
+  static constexpr char* HASHVALUE = "e6f5e88179a225cd57891cdd52ad0096a6dcfe81";
   class Id : public ::android::Parcelable {
   public:
     int32_t value = 0;

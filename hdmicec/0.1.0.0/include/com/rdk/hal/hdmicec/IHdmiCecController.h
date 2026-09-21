@@ -16,9 +16,9 @@ namespace hdmicec {
 class IHdmiCecController : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(HdmiCecController)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 1000;
+  const std::string HASH = "70a901cf2b5493b59578cf5ad220fcf10f96b3b1";
+  static constexpr char* HASHVALUE = "70a901cf2b5493b59578cf5ad220fcf10f96b3b1";
   virtual ::android::binder::Status addLogicalAddresses(const ::std::vector<int32_t>& logicalAddresses, bool* _aidl_return) = 0;
   virtual ::android::binder::Status removeLogicalAddresses(const ::std::vector<int32_t>& logicalAddresses, bool* _aidl_return) = 0;
   virtual ::android::binder::Status sendMessage(const ::std::vector<uint8_t>& message, ::com::rdk::hal::hdmicec::SendMessageStatus* _aidl_return) = 0;

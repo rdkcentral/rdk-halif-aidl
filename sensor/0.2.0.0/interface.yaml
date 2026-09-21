@@ -1,5 +1,6 @@
 aidl_interface:
   name: sensor
+  version: 2000
   srcs:
     - com/rdk/hal/sensor/*/*.aidl
   imports: []

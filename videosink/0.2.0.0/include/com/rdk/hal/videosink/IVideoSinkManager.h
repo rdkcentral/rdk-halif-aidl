@@ -18,9 +18,9 @@ namespace videosink {
 class IVideoSinkManager : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(VideoSinkManager)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "e6f5e88179a225cd57891cdd52ad0096a6dcfe81";
+  static constexpr char* HASHVALUE = "e6f5e88179a225cd57891cdd52ad0096a6dcfe81";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getVideoSinkIds(::std::vector<::com::rdk::hal::videosink::IVideoSink::Id>* _aidl_return) = 0;
   virtual ::android::binder::Status getVideoSink(const ::com::rdk::hal::videosink::IVideoSink::Id& videoSinkId, ::android::sp<::com::rdk::hal::videosink::IVideoSink>* _aidl_return) = 0;

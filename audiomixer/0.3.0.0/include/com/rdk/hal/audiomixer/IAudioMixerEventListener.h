@@ -17,9 +17,9 @@ namespace audiomixer {
 class IAudioMixerEventListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioMixerEventListener)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 3000;
+  const std::string HASH = "ff12e597d51955e239d709062d17dd73b32ddb56";
+  static constexpr char* HASHVALUE = "ff12e597d51955e239d709062d17dd73b32ddb56";
   virtual ::android::binder::Status onInputCodecChanged(int32_t audioMixerInputIndex, ::com::rdk::hal::audiodecoder::Codec codec, ::com::rdk::hal::audiomixer::ContentType contentType) = 0;
   virtual ::android::binder::Status onError(int32_t errorCode, const ::android::String16& message) = 0;
   virtual ::android::binder::Status onStateChanged(::com::rdk::hal::audiomixer::State oldState, ::com::rdk::hal::audiomixer::State newState) = 0;

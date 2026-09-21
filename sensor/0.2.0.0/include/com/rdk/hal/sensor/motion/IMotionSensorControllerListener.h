@@ -16,9 +16,9 @@ namespace motion {
 class IMotionSensorControllerListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(MotionSensorControllerListener)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "a1a83f7c04d62edd76436e8afc6af13e7053a62c";
+  static constexpr char* HASHVALUE = "a1a83f7c04d62edd76436e8afc6af13e7053a62c";
   virtual ::android::binder::Status onStateChanged(::com::rdk::hal::sensor::motion::State oldState, ::com::rdk::hal::sensor::motion::State newState) = 0;
   virtual ::android::binder::Status onActiveWindowEntered() = 0;
   virtual ::android::binder::Status onActiveWindowExited() = 0;

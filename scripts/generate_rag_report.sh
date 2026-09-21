@@ -126,9 +126,15 @@ rag_icon() {
 }
 
 for f in $METADATA_FILES; do
-    TOTAL=$((TOTAL + 1))
-
     comp=$(yaml_val "$f" "component")
+
+    # Non-reviewable shared components: shared base types/enums with no
+    # independent interface contract to review (e.g. common). They still
+    # version and release normally; they are just omitted from this report.
+    case "$comp" in
+        common) continue ;;
+    esac
+
     version=$(yaml_val "$f" "version")
     status=$(yaml_val "$f" "status")
     description=$(yaml_val "$f" "description")
@@ -147,19 +153,25 @@ for f in $METADATA_FILES; do
     path=$(component_path "$f")
     icon=$(rag_icon "$status")
 
-    # Build row (AMBER/RED use full detail, with lifecycle dates — no Reviews column)
-    row="| ${icon} | ${path} | ${version} | ${priority:-—} | ${status_detail:-—} | ${action:-—} | ${review_deadline:-—} | ${target_green:-—} | ${owners:-—} |"
-
-    # Build GREEN row (per-team detail is in the Review Status section)
-    green_row="| ${icon} | ${path} | ${version} | ${description:-—} | ${review_progress} | ${owners:-—} |"
-
-    # Build review detail row with per-team columns
-    detail_row="| ${icon} | ${path} | ${review_progress}"
-    for team in $ALL_TEAMS; do
-        team_status=$(yaml_reviewer_status "$f" "$team")
-        detail_row="${detail_row} | $(review_icon "$team_status")"
-    done
-    detail_row="${detail_row} |"
+    # sensor ships two cleanly separated sub-interfaces — motion and thermal —
+    # each with its own HFP, and the programme tracks them as two capabilities
+    # (component:motion_sensor / component:thermal_sensor). Render one dashboard
+    # row per sub-interface so both show up. Report-only: the module stays one
+    # (one metadata.yaml / interface.yaml / version); every row shares its
+    # status, version and reviews. The sub-interface labels are read from the
+    # snapshot's HFP directories, not hard-coded, so they track the interface.
+    # Scoped to sensor by name: other multi-directory components (e.g. broadcast
+    # demux/frontend) have no per-sub HFP and are not separate capabilities.
+    row_paths="$path"
+    if [ "$comp" = "sensor" ]; then
+        subs=""
+        for d in "$(dirname "$f")/current/com/rdk/hal/${comp}"/*/; do
+            [ -d "$d" ] || continue
+            ls "${d}"hfp-*.yaml >/dev/null 2>&1 || continue
+            subs="${subs}${subs:+ }${comp}/$(basename "$d")"
+        done
+        [ -n "$subs" ] && row_paths="$subs"
+    fi
 
     # Helper: append row to the correct SOC/OEM/Shared bucket
     append_row() {
@@ -183,28 +195,48 @@ for f in $METADATA_FILES; do
         fi
     }
 
-    case "$status" in
-        GREEN)
-            GREEN_COUNT=$((GREEN_COUNT + 1))
-            append_row GREEN_SOC_ROWS GREEN_OEM_ROWS GREEN_SHARED_ROWS "$green_row"
-            append_review_row GREEN_SOC_REVIEW_ROWS GREEN_OEM_REVIEW_ROWS "$detail_row"
-            # If component has a risk note, also list it in AMBER as a watch item
-            if [ -n "$risk" ]; then
-                amber_row="| ${RAG_AMBER} | ${path} *(SVP risk)* | ${version} | ${priority:-—} | ${status_detail:-—} | ${risk} | ${review_deadline:-—} | ${target_green:-—} | ${owners:-—} |"
-                append_row AMBER_SOC_ROWS AMBER_OEM_ROWS AMBER_SHARED_ROWS "$amber_row"
-            fi
-            ;;
-        AMBER)
-            AMBER_COUNT=$((AMBER_COUNT + 1))
-            append_row AMBER_SOC_ROWS AMBER_OEM_ROWS AMBER_SHARED_ROWS "$row"
-            append_review_row AMBER_SOC_REVIEW_ROWS AMBER_OEM_REVIEW_ROWS "${priority:-99}\t${detail_row}"
-            ;;
-        RED)
-            RED_COUNT=$((RED_COUNT + 1))
-            append_row RED_SOC_ROWS RED_OEM_ROWS RED_SHARED_ROWS "$row"
-            append_review_row RED_SOC_REVIEW_ROWS RED_OEM_REVIEW_ROWS "${priority:-99}\t${detail_row}"
-            ;;
-    esac
+    # One row per presentation path (one for most components; two for sensor).
+    # Each presented capability counts once in the totals.
+    for path in $row_paths; do
+        TOTAL=$((TOTAL + 1))
+
+        # Build row (AMBER/RED use full detail, with lifecycle dates — no Reviews column)
+        row="| ${icon} | ${path} | ${version} | ${priority:-—} | ${status_detail:-—} | ${action:-—} | ${review_deadline:-—} | ${target_green:-—} | ${owners:-—} |"
+
+        # Build GREEN row (per-team detail is in the Review Status section)
+        green_row="| ${icon} | ${path} | ${version} | ${description:-—} | ${review_progress} | ${owners:-—} |"
+
+        # Build review detail row with per-team columns
+        detail_row="| ${icon} | ${path} | ${review_progress}"
+        for team in $ALL_TEAMS; do
+            team_status=$(yaml_reviewer_status "$f" "$team")
+            detail_row="${detail_row} | $(review_icon "$team_status")"
+        done
+        detail_row="${detail_row} |"
+
+        case "$status" in
+            GREEN)
+                GREEN_COUNT=$((GREEN_COUNT + 1))
+                append_row GREEN_SOC_ROWS GREEN_OEM_ROWS GREEN_SHARED_ROWS "$green_row"
+                append_review_row GREEN_SOC_REVIEW_ROWS GREEN_OEM_REVIEW_ROWS "$detail_row"
+                # If component has a risk note, also list it in AMBER as a watch item
+                if [ -n "$risk" ]; then
+                    amber_row="| ${RAG_AMBER} | ${path} *(risk)* | ${version} | ${priority:-—} | ${status_detail:-—} | ${risk} | ${review_deadline:-—} | ${target_green:-—} | ${owners:-—} |"
+                    append_row AMBER_SOC_ROWS AMBER_OEM_ROWS AMBER_SHARED_ROWS "$amber_row"
+                fi
+                ;;
+            AMBER)
+                AMBER_COUNT=$((AMBER_COUNT + 1))
+                append_row AMBER_SOC_ROWS AMBER_OEM_ROWS AMBER_SHARED_ROWS "$row"
+                append_review_row AMBER_SOC_REVIEW_ROWS AMBER_OEM_REVIEW_ROWS "${priority:-99}\t${detail_row}"
+                ;;
+            RED)
+                RED_COUNT=$((RED_COUNT + 1))
+                append_row RED_SOC_ROWS RED_OEM_ROWS RED_SHARED_ROWS "$row"
+                append_review_row RED_SOC_REVIEW_ROWS RED_OEM_REVIEW_ROWS "${priority:-99}\t${detail_row}"
+                ;;
+        esac
+    done
 done
 
 # Generate report
@@ -345,6 +377,8 @@ cat >> "$OUTPUT" << 'REVIEW_SECTION'
 ---
 
 ## Review Status by Component
+
+**Column key:** Arch = Architecture · Prod = Product Architecture · AV = AV Architecture · Broadcast = Broadcast Team · Ctrl Mgr = Control Manager Architecture · Graphics = Graphics Architecture · Connectivity = Connectivity Architecture · Kernel = Kernel Architecture · Vendor = Vendor Layer Team. (Architecture and Product Architecture are the same organisational group reviewing as separate stakeholders.)
 
 > ✅ Reviewed | 🔍 In Review | 🔁 Changes Requested | 🔄 Recheck | ☐ Pending | ➖ Abstained | N/A Not assigned
 

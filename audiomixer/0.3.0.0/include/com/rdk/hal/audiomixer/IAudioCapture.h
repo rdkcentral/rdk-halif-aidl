@@ -16,9 +16,9 @@ namespace audiomixer {
 class IAudioCapture : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioCapture)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 3000;
+  const std::string HASH = "ff12e597d51955e239d709062d17dd73b32ddb56";
+  static constexpr char* HASHVALUE = "ff12e597d51955e239d709062d17dd73b32ddb56";
   virtual ::android::binder::Status getSharedMemory(::std::vector<int64_t>* sharedMemorySizeBytes, ::android::os::ParcelFileDescriptor* _aidl_return) = 0;
   virtual ::android::binder::Status releaseSharedMemory() = 0;
   virtual ::android::binder::Status start() = 0;

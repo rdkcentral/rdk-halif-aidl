@@ -23,9 +23,9 @@ namespace audiomixer {
 class IDolbyMs12_2_6_Dap : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(DolbyMs12_2_6_Dap)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 3000;
+  const std::string HASH = "ff12e597d51955e239d709062d17dd73b32ddb56";
+  static constexpr char* HASHVALUE = "ff12e597d51955e239d709062d17dd73b32ddb56";
   virtual ::android::binder::Status getCapabilities(::com::rdk::hal::audiomixer::DolbyMs12_2_6_DapCapabilities* _aidl_return) = 0;
   virtual ::android::binder::Status setSurroundDecoderEnabled(bool enabled) = 0;
   virtual ::android::binder::Status getSurroundDecoderEnabled(bool* _aidl_return) = 0;

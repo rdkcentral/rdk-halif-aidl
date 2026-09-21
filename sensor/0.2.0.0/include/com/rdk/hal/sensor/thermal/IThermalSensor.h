@@ -20,9 +20,9 @@ namespace thermal {
 class IThermalSensor : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(ThermalSensor)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "a1a83f7c04d62edd76436e8afc6af13e7053a62c";
+  static constexpr char* HASHVALUE = "a1a83f7c04d62edd76436e8afc6af13e7053a62c";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status registerEventListener(const ::android::sp<::com::rdk::hal::sensor::thermal::IThermalEventListener>& listener, bool* _aidl_return) = 0;
   virtual ::android::binder::Status unregisterEventListener(const ::android::sp<::com::rdk::hal::sensor::thermal::IThermalEventListener>& listener, bool* _aidl_return) = 0;

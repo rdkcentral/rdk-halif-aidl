@@ -16,9 +16,9 @@ namespace firmwareupdate {
 class IFirmwareUpdateListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(FirmwareUpdateListener)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 2000;
+  const std::string HASH = "a69a1b5b0dc2945ad639a71e4023ba097188c172";
+  static constexpr char* HASHVALUE = "a69a1b5b0dc2945ad639a71e4023ba097188c172";
   virtual ::android::binder::Status onProgress(int32_t percentComplete) = 0;
   virtual ::android::binder::Status onCompleted(::com::rdk::hal::firmwareupdate::FirmwareUpdateResult result, const ::std::string& report) = 0;
   virtual int32_t getInterfaceVersion() = 0;

@@ -19,9 +19,9 @@ namespace audiomixer {
 class IAudioMixerController : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioMixerController)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 3000;
+  const std::string HASH = "ff12e597d51955e239d709062d17dd73b32ddb56";
+  static constexpr char* HASHVALUE = "ff12e597d51955e239d709062d17dd73b32ddb56";
   virtual ::android::binder::Status setInputRouting(const ::std::vector<::com::rdk::hal::audiomixer::InputRouting>& routing, bool* _aidl_return) = 0;
   virtual ::android::binder::Status setProperty(::com::rdk::hal::audiomixer::Property property, const ::com::rdk::hal::PropertyValue& propertyValue, bool* _aidl_return) = 0;
   virtual ::android::binder::Status start() = 0;

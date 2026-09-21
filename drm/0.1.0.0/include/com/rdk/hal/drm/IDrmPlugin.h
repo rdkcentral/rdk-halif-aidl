@@ -26,9 +26,9 @@ namespace drm {
 class IDrmPlugin : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(DrmPlugin)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 1000;
+  const std::string HASH = "77c954ed1bda58039abf0dd6e283f0d896a0cf5d";
+  static constexpr char* HASHVALUE = "77c954ed1bda58039abf0dd6e283f0d896a0cf5d";
   virtual ::android::binder::Status closeSession(const ::std::vector<uint8_t>& sessionId) = 0;
   virtual ::android::binder::Status decrypt(const ::std::vector<uint8_t>& sessionId, const ::std::vector<uint8_t>& keyId, const ::std::vector<uint8_t>& input, const ::std::vector<uint8_t>& iv, ::std::vector<uint8_t>* _aidl_return) = 0;
   virtual ::android::binder::Status encrypt(const ::std::vector<uint8_t>& sessionId, const ::std::vector<uint8_t>& keyId, const ::std::vector<uint8_t>& input, const ::std::vector<uint8_t>& iv, ::std::vector<uint8_t>* _aidl_return) = 0;

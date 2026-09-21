@@ -18,9 +18,9 @@ namespace indicator {
 class IIndicatorManager : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(IndicatorManager)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 1000;
+  const std::string HASH = "e54232b1ab8a4221dd237a4c69ba1d0321a1d5fd";
+  static constexpr char* HASHVALUE = "e54232b1ab8a4221dd237a4c69ba1d0321a1d5fd";
   static const ::std::string& serviceName();
   virtual ::android::binder::Status getIndicatorIds(::std::vector<::com::rdk::hal::indicator::IIndicator::Id>* _aidl_return) = 0;
   virtual ::android::binder::Status getIndicator(const ::com::rdk::hal::indicator::IIndicator::Id& indicatorId, ::android::sp<::com::rdk::hal::indicator::IIndicator>* _aidl_return) = 0;

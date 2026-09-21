@@ -16,9 +16,9 @@ namespace panel {
 class IPanelOutputListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(PanelOutputListener)
-  static const int32_t VERSION = 1;
-  const std::string HASH = "notfrozen";
-  static constexpr char* HASHVALUE = "notfrozen";
+  static const int32_t VERSION = 1000;
+  const std::string HASH = "bb511b0c1499b255ed2becdb75ea3a89a852afb6";
+  static constexpr char* HASHVALUE = "bb511b0c1499b255ed2becdb75ea3a89a852afb6";
   virtual ::android::binder::Status onPictureModeChanged(const ::android::String16& pictureMode) = 0;
   virtual ::android::binder::Status onVideoSourceChanged(::com::rdk::hal::AVSource avSource) = 0;
   virtual ::android::binder::Status onVideoFormatChanged(::com::rdk::hal::videodecoder::DynamicRange dynamicRange) = 0;
