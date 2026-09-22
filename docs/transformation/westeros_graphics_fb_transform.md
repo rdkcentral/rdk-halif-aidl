@@ -36,13 +36,10 @@ HAL boundary — renderable buffers and presentation:
 ```aidl
 @VintfStability
 interface IGraphicsFbProvider {
-    // Buffer lifecycle — vendor allocation behind a standard FD
     GraphicsFbCapabilities getCapabilities();
+    boolean                commitGraphicsFb(in int graphicsFbId);   // presentation
     ParcelFileDescriptor   createGraphicsFb(in int width, in int height, out GraphicsFbInfo outInfo);
     void                   destroyGraphicsFb(in int graphicsFbId);
-
-    // Presentation
-    boolean commitGraphicsFb(in int graphicsFbId);
 }
 
 @VintfStability

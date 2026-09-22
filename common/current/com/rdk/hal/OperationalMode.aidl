@@ -16,19 +16,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.videodecoder;
+package com.rdk.hal;
 
 /**
- *  @brief     Operation modes, returned by getOperationalMode() and set in PROP_OPERATIONAL_MODE property.
- *  @author    Luc Kennedy-Lamb
- *  @author    Peter Stieglitz
- *  @author    Douglas Adler
+ * @brief The operational output mode currently selected by the vendor.
  */
 
 @VintfStability
 @Backing(type="int")
 enum OperationalMode {
-    TUNNELLED = 1 << 0,
-    NON_TUNNELLED = 1 << 1,
-    GRAPHICS_TEXTURE = 1 << 2
+    TUNNELLED = 1,
+    NON_TUNNELLED = 2
 }
