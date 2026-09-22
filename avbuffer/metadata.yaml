@@ -51,8 +51,7 @@ scope:
 #   owners        - Responsible architecture teams
 notes:
   priority: 1
-  status_detail: "Encrypted buffer (DRM/SVP) - Pending on DRM strategy"
-  risk: "May change due to SVP changes from DRM which is being worked on"
+  status_detail: "V1 stable at 0.2.0.0 — SVP path resolved: DRM plugin model shipped (ICryptoPlugin.decrypt, vendor-defined secure memory per HAL.AVBUF.7)"
   owners: "Architecture + AV_Architecture"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]

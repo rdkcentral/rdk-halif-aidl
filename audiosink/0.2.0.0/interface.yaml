@@ -5,7 +5,7 @@ aidl_interface:
     - com/rdk/hal/audiosink/*.aidl
   imports:
     - audiodecoder@0.2.0.0
-    - avclock@0.2.0.0
+    - avclock@0.2.0.1
     - common@0.2.0.0
   stability: vintf
   layout: module-local

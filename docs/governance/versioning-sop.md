@@ -96,23 +96,30 @@ Every PR carries **exactly one change-class label**. The label is the
 single signal of intent — there is no implicit-default class. An
 unlabelled PR is an unfinished PR.
 
-| PR label | Implied bump | Applied when |
-|----------|--------------|--------------|
-| `Breaking Change` | **Generation** (`0.g.m.p` → `0.(g+1).0.0`) | Conventional-commit `!:` marker in the PR title (e.g. `feat(avclock)!: ...`) — renames, removals, signature changes, design re-direction |
-| `Major Change` | **Minor** (`0.g.m.p` → `0.g.(m+1).0`) | Default for real interface work — new methods, new fields appended to parcelables, new enum values added with fallback handling, new sub-interfaces |
-| `documentation` | **Patch** (`0.g.m.p` → `0.g.m.(p+1)`) | Every changed file is doc-like (see `scripts/configure_pr.sh:is_doc()`) — doc tweaks, metadata corrections, HFP YAML changes, comment-only refactors. Auto-applied by `configure_pr.sh`. |
-| `Minor Change` | **Patch** (`0.g.m.p` → `0.g.m.(p+1)`) | Manually applied for a small non-doc change that still belongs at patch level — typo fix in code, log message tweak, internal comment reword. Equivalent to `documentation` from the release-bump perspective; the distinction is semantic (docs-only vs. small code) and only matters to the human reading the label. |
+The label names mean what the version fields mean — the label tier IS the
+field it bumps:
 
-`documentation` and `Minor Change` produce the same release bump
-(`patch`). They exist as separate labels because they describe different
-classes of work: `documentation` is the auto-applied label for the
-docs-only subset; `Minor Change` is the manually-applied label for the
-non-doc patch-class.
+| PR label | Implied bump | Applied when |
+| --- | --- | --- |
+| `Major Change` | **Major** (`0.g.m.p` → `0.(g+1).0.0`) | Breaking interface change — conventional-commit `!:` marker in the PR title (e.g. `feat(avclock)!: ...`): renames, removals, signature changes, design re-direction. Auto-applied by `configure_pr.sh` on the `!:` marker. |
+| `Minor Change` | **Minor** (`0.g.m.p` → `0.g.(m+1).0`) | Backwards-compatible addition — the default for real interface work: new methods, new fields appended to parcelables, new enum values added with fallback handling, new sub-interfaces. |
+| `documentation` | **Bugfix** (`0.g.m.p` → `0.g.m.(p+1)`) | The interface surface is untouched — doc tweaks, metadata corrections, HFP YAML changes, comment-only refactors, trivial non-interface fixes. Auto-applied by `configure_pr.sh` when every changed file is doc-like (see `is_doc()`). |
+
+A PR that carries **no** change-class label but whose linked (closing)
+issue is GitHub type **`Bug`** implies the bugfix bump — the native issue
+type carries the signal, no label needed. An explicit change-class label
+always wins over the issue type (a bug whose fix changes the interface
+surface carries `Minor Change` or `Major Change` accordingly, and the
+structural audit checks the declared class either way).
+
+The `Breaking Change` label is retired — breaking IS the major bump, so a
+separate label was redundant. `scripts/release.sh` still accepts it as a
+deprecated alias of `Major Change` while historical and in-flight PRs
+migrate; do not apply it to new PRs.
 
 If multiple change-class labels are accidentally applied to a single
-PR, `scripts/release.sh` resolves by severity: `Breaking Change` >
-`Major Change` > `Minor Change` / `documentation` (the latter two are
-equivalent at the patch tier). Reviewers should still clean the
+PR, `scripts/release.sh` resolves by severity: `Major Change` >
+`Minor Change` > `documentation`. Reviewers should still clean the
 labelling so each PR carries exactly one.
 
 The PR author edits the component's `metadata.yaml` `version:` to the new
@@ -126,8 +133,8 @@ and deliberate scheduling. It is a **process/governance** label, **independent**
 of the change-class above. The change-class answers *"how does the version
 number move?"*; `CR` answers a **different** question — *"is this an ABI change
 that needs wider review and separate scheduling?"* The two axes are orthogonal,
-so a `CR` carries a change-class label alongside it (an ABI change is a
-`Breaking Change`).
+so a `CR` carries a change-class label alongside it (an ABI change carries
+`Major Change`).
 
 A PR/issue tagged `CR` requires:
 
@@ -137,9 +144,9 @@ A PR/issue tagged `CR` requires:
    release sweep; it is scheduled into a release deliberately.
 
 `CR` does **not** affect the version bump — `scripts/release.sh` never reads it.
-It is therefore *not* a rename of `Breaking Change`: `Breaking Change` remains
-the change-class that drives the generation bump, and conflating the two would
-break the label-driven bump logic.
+It is therefore *not* a change-class: `Major Change` remains the class that
+drives the major bump, and conflating the two would break the label-driven
+bump logic.
 
 #### The Subsume Rule
 
@@ -195,11 +202,13 @@ tagged.
 
 #### Pre-Tag Structural Audit
 
-Before tagging a release, run the structural audit:
+The release flow enforces the structural audit itself: every stage and
+`--apply` invocation first audits the components being written and refuses
+to proceed while their structural class, PR labels and `metadata.yaml`
+disagree. The full-repo sweep is available at any time:
 
 ```bash
-./scripts/release.sh --audit            # report
-./scripts/release.sh --audit --strict   # gate: non-zero exit on any flag
+./scripts/release.sh --audit   # every component; non-zero exit on any flag
 ```
 
 For **every** component — including ones untouched since the last release —
@@ -281,7 +290,7 @@ build time locally, and PR diffs show only authored content.
 
 ##### Enforcement
 
-- **Local:** `./tests/smoke_test.sh` asserts no files are tracked
+- **Local:** `./tests/smoke/smoke_test.sh` asserts no files are tracked
   under `*/current/include/` or `*/current/src/` after
   `[1/4] ./build_modules.sh all --clean`. Any regression (someone
   bypassing `.gitignore` with `git add -f`, or a new generator
@@ -360,7 +369,85 @@ Feedback from one cycle may require design iteration and a subsequent cycle.
 
 ---
 
-## 5. The "14+5" Accelerated Delivery Cycle
+## 5. Raising and Executing a Change
+
+Every change runs through a ticket-driven, auditable process. Nothing reaches
+`develop` without a tracked requirement behind it.
+
+### Where the work is tracked
+
+**JIRA owns the planning view.** Milestone completion and delivery status live
+in JIRA so PMs track progress across releases without working in GitHub.
+
+**GitHub owns engineering truth.** This is a public open-source project, and
+GitHub holds a complete, auditable history of every change, visible to internal
+and external contributors alike. All change context lives where every
+contributor can see it, and engineering status is synced back to JIRA against
+the planning requirements.
+
+### RDK-M core contributors: direct branching
+
+Core contributors have write access and branch from the repository directly.
+
+```text
+ Requirement     Ticket        Branch        PR & Review       Merge
+ ──────────► ──────────► ──────────────► ──────────────► ──────────────►
+                                          If major change:
+  Stakeholder   GitHub       Feature        14-Day Review   Develop
+  identifies    Issue        branch per     + 5-Day         branch
+  need          created      ticket         Resolution      (protected)
+```
+
+### Community contributors: fork-based branching
+
+Contributors without write access work from a fork. The same governance, review
+and approval rules apply to every contribution regardless of its origin.
+
+```text
+ Fork Repo     Clone & Branch    Commit & Push     Submit PR       Review & Merge
+ ──────────► ──────────────► ──────────────► ──────────────► ──────────────►
+  Fork the      Clone locally    Push changes      PR to the       Core team
+  repository    & create a       to your fork      original        reviews &
+  on GitHub     topic branch     on GitHub         repository      approves
+```
+
+### Branch naming
+
+Every change begins with a GitHub issue and is implemented on a branch named
+for it — `feature/{issue#}-{synopsis}`. Branch naming is enforced, so every
+commit traces back to a tracked requirement.
+
+### Audit trail
+
+Every change is traceable from requirement through to release:
+
+| Artefact | What it records |
+|----------|-----------------|
+| **GitHub Issue** | The original requirement, discussion and decisions |
+| **Feature branch** | Named branch linking every commit to the issue |
+| **Pull request** | Review comments, approvals and CI results |
+| **Changelog** | Generated per release from merged work |
+| **Release notes** | Published with every GitHub Release |
+
+### Enforcement
+
+The process is enforced by the repository rather than by convention:
+
+| Control | Mechanism |
+|---------|-----------|
+| Ticket-driven workflow | Branch naming rules |
+| Protected `develop` | Branch protection and rulesets |
+| Reviewer assignment | CODEOWNERS |
+| Contributor licensing | CLA enforcement |
+| Security scanning | FOSSID |
+| Licence scanning | BlackDuck |
+| Copyright headers | Header check |
+| Time-boxed review | The 14+5 cycle, Section 6 |
+| Multi-team sign-off | Four mandatory teams plus a domain reviewer, Section 9 |
+
+---
+
+## 6. The "14+5" Accelerated Delivery Cycle
 
 All HAL interface changes move through a strictly time-boxed review lifecycle.
 
@@ -412,7 +499,7 @@ separately through the PR and merge process.
 
 ---
 
-## 6. Pre-Baseline: The Path to AIDL Baseline 1.0
+## 7. Pre-Baseline: The Path to AIDL Baseline 1.0
 
 ### Current State
 
@@ -519,7 +606,7 @@ been individually frozen. This is the milestone, not a gate.
 
 ---
 
-## 7. Post-Baseline: Maintaining AIDL After Freeze
+## 8. Post-Baseline: Maintaining AIDL After Freeze
 
 Once a component is frozen at AIDL Baseline, it follows AIDL stable
 interface versioning. The rules are strict and non-negotiable.
@@ -554,15 +641,15 @@ that deployed implementations are never broken by upstream changes.
 
 ### Breaking Changes
 
-Breaking changes are signalled via the `Breaking Change` label on the PR or
+Breaking changes are signalled via the `Major Change` label on the PR or
 issue at creation time. This is visible to reviewers immediately and drives
 review prioritisation. When the change is merged and the component is released,
-the version is bumped accordingly (generation bump for pre-baseline, new module
+the version is bumped accordingly (major bump for pre-baseline, new module
 for post-baseline).
 
 ---
 
-## 8. Stakeholder Management & Roles
+## 9. Stakeholder Management & Roles
 
 ### Mandatory Reviewers (all components)
 
@@ -606,7 +693,7 @@ Each reviewer team's sign-off is tracked in `metadata.yaml`:
 
 ---
 
-## 9. Tooling & Automation
+## 10. Tooling & Automation
 
 ### metadata.yaml — Single Source of Truth
 
@@ -656,24 +743,24 @@ Idempotent — safe to re-run.
 | Label | Purpose |
 |-------|---------|
 | `component:<name>` | Maps PRs to a specific HAL/VSI component (auto-detected from metadata.yaml) |
-| `Breaking Change` | Breaking interface change — bumps generation |
-| `Major Change` | Additive interface change — bumps minor (the default for real work) |
-| `Minor Change` | Doc-only / metadata-only / comment-only change — bumps patch |
+| `Major Change` | Breaking interface change — bumps major |
+| `Minor Change` | Additive, backwards-compatible interface change — bumps minor (the default for real work) |
+| `documentation` | Doc-only / metadata-only / comment-only change — bumps bugfix |
 | `CR` | Change Request — ABI change needing wider review sign-off + separate release scheduling (independent of change-class; no bump effect) |
 | `scope:infrastructure` | Repo tooling, CI/CD, governance |
 | `scope:overview` | Tracking ticket spanning multiple components |
 
-Every PR carries **exactly one** of `Breaking Change` / `Major Change` /
-`Minor Change`. The label signals the bump intent; the PR author bumps
+Every PR carries **exactly one** of `Major Change` / `Minor Change` /
+`documentation`. The label signals the bump intent; the PR author bumps
 `metadata.yaml` `version:` accordingly as part of the PR diff (see
 [How PRs Drive the Version Bump](#how-prs-drive-the-version-bump) above
 for the full subsume rule and snapshot-timing model):
 
 | Label | Version bump | Example |
 |-------|-------------|---------|
-| `Breaking Change` | Bump generation, reset minor + patch | `0.1.2.1` → `0.2.0.0` |
-| `Major Change` | Bump minor, reset patch | `0.1.0.0` → `0.1.1.0` |
-| `Minor Change` | Bump patch | `0.1.1.0` → `0.1.1.1` |
+| `Major Change` | Bump major, reset minor + bugfix | `0.1.2.1` → `0.2.0.0` |
+| `Minor Change` | Bump minor, reset bugfix | `0.1.0.0` → `0.1.1.0` |
+| `documentation` | Bump bugfix | `0.1.1.0` → `0.1.1.1` |
 
 Release-time execution (manual):
 

@@ -5,7 +5,7 @@
 # Manual release-time script that:
 #   1) Looks at first-parent changes since the previous release tag/ref.
 #   2) Maps changes to HAL/VSI components via component-level metadata.yaml.
-#   3) Uses PR labels (Breaking Change / Major Change / Minor Change / documentation) when available.
+#   3) Uses PR labels (Major Change / Minor Change / documentation) when available.
 #   4) Computes version bumps and optionally updates metadata.yaml.
 #
 # Default mode is dry-run. Use --apply to write changes.
@@ -257,7 +257,17 @@ verification_clean_once() {
     _VERIFY_CLEAN_DONE=1
     phase "Pre-verification clean (once): build/, out/build/include, build cache"
     rm -rf "${REPO_ROOT}/build"
+    # Preserve the dev-layout binder SDK headers (out/build/include/binder_sdk):
+    # deleting them while out/target/.sdk_ready survives leaves every snapshot
+    # build unable to find binder/IBinder.h, failing verification.
+    if [[ -d "${REPO_ROOT}/out/build/include/binder_sdk" ]]; then
+        mv "${REPO_ROOT}/out/build/include/binder_sdk" "${REPO_ROOT}/out/build/.binder_sdk.keep"
+    fi
     rm -rf "${REPO_ROOT}/out/build/include"
+    if [[ -d "${REPO_ROOT}/out/build/.binder_sdk.keep" ]]; then
+        mkdir -p "${REPO_ROOT}/out/build/include"
+        mv "${REPO_ROOT}/out/build/.binder_sdk.keep" "${REPO_ROOT}/out/build/include/binder_sdk"
+    fi
     rm -f "${BUILD_CACHE_FILE}"
     log "  Cleared build/, out/build/include and ${BUILD_CACHE_FILE#"${REPO_ROOT}/"} —"
     log "  verification builds from clean staging (Binder SDK in out/target kept)."
@@ -507,6 +517,10 @@ plan_load() {
 # Subcommand dispatch — must run BEFORE the standard arg parser sees
 # anything. The subcommands edit the plan file and exit; they don't
 # trigger a release run.
+# Version pins from `stage <module> --version X` — declared before the
+# subcommand parser assigns into it (assoc assignment before declare -A
+# degrades to arithmetic subscript evaluation).
+declare -A PIN_VERSIONS=()
 case "${1:-}" in
     stage)
         shift
@@ -622,7 +636,6 @@ DRY_RUN="${DRY_RUN:-0}"
 SINCE_REF="${SINCE_REF:-}"
 NO_GH="${NO_GH:-0}"
 ACCEPT_ALL="${ACCEPT_ALL:-0}"
-declare -A PIN_VERSIONS=()
 VERBOSE=0
 
 usage() {
@@ -649,19 +662,24 @@ Release run (no subcommand):
                        [--no-gh] [--no-snapshot] [--no-mkdocs]
                        [--no-build] [--verbose]
 
-Structural audit (pre-release gate):
-  ./scripts/release.sh --audit [--since <ref>] [--strict] [--verbose]
+Structural audit:
+  ./scripts/release.sh --audit [--since <ref>] [--verbose]
 
-  Read-only. For EVERY component (not just touched ones) classifies the
-  structural AIDL diff between the last frozen snapshot and current/ via
-  the binder toolchain (aidl_ops dump-surface / diff-surface), then
-  cross-checks it against the PR-label-implied change class and the
-  metadata.yaml declared version. Mismatches are flagged; --strict exits
-  non-zero on any flagged row so release tagging can be gated on a clean
-  audit. Detail of every structural change is printed for flagged rows
+  Read-only, always strict (exits non-zero on any flagged row). For EVERY
+  component (not just touched ones) classifies the structural AIDL diff
+  between the last frozen snapshot and current/ via the binder toolchain
+  (aidl_ops dump-surface / diff-surface), then cross-checks it against
+  the PR-label-implied change class and the metadata.yaml declared
+  version. Detail of every structural change is printed for flagged rows
   (all rows with --verbose).
 
-  Only components staged in the worktree are processed. The detector
+  The gate also runs AUTOMATICALLY on every write/branch path (stage and
+  --apply), scoped to the components being written — no switches needed.
+  --no-audit bypasses it (testing only; a real release MUST audit).
+
+  (Release run only — the standalone --audit above always covers every
+  buildable component.) Only components staged in the worktree are
+  processed. The detector
   computes the bump level from PR labels since the base ref; an explicit
   --version pin from the plan overrides that.
 
@@ -713,19 +731,21 @@ Options:
   --no-mkdocs            Skip updating mkdocs.yml.
   --no-build             Skip the verification build (./build_modules.sh
                          all). Testing only — a real release MUST build.
-  --audit                Structural change-class audit (see above). Read-only.
-  --strict               With --audit: exit non-zero if any row is flagged.
+  --audit                Structural change-class audit (see above). Read-only,
+                         always strict.
+  --no-audit             Skip the automatic write-path audit gate. Testing
+                         only — a real release MUST audit.
   --verbose              Print extra diagnostics.
   --help                 Show this help.
 
-Behavior (#545 change-class labels):
-  - "Breaking Change" label   => generation bump (0.g.m.p -> 0.(g+1).0.0)
-  - "Major Change"    label   => minor bump (0.g.m.p -> 0.g.(m+1).0)
-  - "Minor Change"    label   => patch bump (0.g.m.p -> 0.g.m.(p+1))
-  - "documentation"   label   => patch bump (docs-only; equivalent to Minor Change
-                                 from a release-bump perspective)
+Behavior (#712 change-class labels — label names mean what the fields mean):
+  - "Major Change"    label   => major bump (0.g.m.p -> 0.(g+1).0.0) — breaking
+  - "Minor Change"    label   => minor bump (0.g.m.p -> 0.g.(m+1).0) — additive
+  - "documentation"   label   => bugfix bump (0.g.m.p -> 0.g.m.(p+1))
+  - "Breaking Change" label   => retired; accepted as a deprecated alias of
+                                 Major Change during transition
   - no relevant label         => minor bump (default), unless docs-only heuristic
-                                 says patch
+                                 says bugfix
 
 Per bumped component the script:
   1. ./build_modules.sh <component>        # regenerate current/include + current/src
@@ -767,11 +787,11 @@ EOF
 # (log/phase/warn/die now defined above the plan helpers, near the top.)
 
 RELEASE_VERSION=""
-NO_SNAPSHOT=0
-NO_MKDOCS=0
-NO_BUILD=0
+NO_SNAPSHOT="${NO_SNAPSHOT:-0}"
+NO_MKDOCS="${NO_MKDOCS:-0}"
+NO_BUILD="${NO_BUILD:-0}"
 AUDIT=0
-AUDIT_STRICT=0
+NO_AUDIT="${NO_AUDIT:-0}"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -822,7 +842,11 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --strict)
-            AUDIT_STRICT=1
+            warn "--strict is deprecated: the audit is always strict (#714)."
+            shift
+            ;;
+        --no-audit)
+            NO_AUDIT=1
             shift
             ;;
         --verbose|-v)
@@ -1284,7 +1308,7 @@ component_from_path() {
 is_doc_like_path() {
     local path="$1"
     case "$path" in
-        docs/*|*/docs/*|*.md|*.rst|*.txt|*/README|*/README.*|*/CHANGELOG|*/CHANGELOG.*|*/metadata.yaml|*/hfp-*.yaml)
+        docs/*|*/docs/*|*.md|*.rst|*.txt|*/README|*/README.*|*/CHANGELOG|*/CHANGELOG.*|*/metadata.yaml|*/hfp-*.yaml|mkdocs.yml|*/mkdocs.yml)
             return 0
             ;;
         *)
@@ -1319,6 +1343,7 @@ else
 fi
 
 declare -A PR_LABEL_CACHE=()
+declare -A PR_TYPE_CACHE=()
 declare -A COMMIT_PR_CACHE=()
 declare -A COMP_TOUCHED=()
 declare -A COMP_BREAKING=()
@@ -1349,6 +1374,7 @@ gh_cache_load() {
             l)  # Restore newlines from |-encoded labels
                 PR_LABEL_CACHE[$key]="${value//|/$'\n'}"
                 ;;
+            t)  PR_TYPE_CACHE[$key]="${value}" ;;
         esac
     done < "${GH_CACHE_FILE}"
 }
@@ -1405,6 +1431,30 @@ get_pr_labels() {
     printf '%s\n' "${labels}"
 }
 
+# GitHub-native issue type of the PR's linked (closing) issue. A PR with
+# no change-class label whose linked issue is type "Bug" implies the
+# bugfix bump (#712) — the type field carries the signal; no label needed.
+# Returns "Bug" when any linked issue is a Bug, else the first linked
+# issue's type, else "".
+get_pr_issue_type() {
+    local pr="$1"
+    if [[ -n "${PR_TYPE_CACHE[$pr]+x}" ]]; then
+        printf '%s\n' "${PR_TYPE_CACHE[$pr]}"
+        return 0
+    fi
+    local t=""
+    if [[ "${ENABLE_GH_LABELS}" -eq 1 ]]; then
+        t="$(gh api graphql \
+            -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){pullRequest(number:$n){closingIssuesReferences(first:5){nodes{issueType{name}}}}}}' \
+            -f o="${GH_REPO%%/*}" -f r="${GH_REPO##*/}" -F n="${pr}" \
+            --jq '[.data.repository.pullRequest.closingIssuesReferences.nodes[].issueType.name // empty] | if any(. == "Bug") then "Bug" else (first // "") end' \
+            2>/dev/null || true)"
+    fi
+    PR_TYPE_CACHE[$pr]="${t}"
+    gh_cache_append "t" "${pr}" "${t}"
+    printf '%s\n' "${t}"
+}
+
 phase "Analyzing ${#FP_COMMITS[@]} commit(s) for component impact..."
 _commit_idx=0
 _commit_total=${#FP_COMMITS[@]}
@@ -1419,6 +1469,14 @@ for sha in "${FP_COMMITS[@]}"; do
     parent="$(git rev-parse "${sha}^1" 2>/dev/null || true)"
     [[ -n "${parent}" ]] || continue
 
+    # Skip merge commits (#715): in the squash-merge workflow every
+    # reviewable change is a non-merge commit; merges on develop are
+    # release back-merges (e.g. "Merge tag '0.21.0' into develop") whose
+    # thousand-file diffs would classify every component default-minor.
+    if git rev-parse -q --verify "${sha}^2" >/dev/null 2>&1; then
+        continue
+    fi
+
     mapfile -t changed_files < <(git diff --name-only "${parent}" "${sha}")
     [[ ${#changed_files[@]} -gt 0 ]] || continue
 
@@ -1428,17 +1486,20 @@ for sha in "${FP_COMMITS[@]}"; do
         labels="$(get_pr_labels "${pr_number}")"
     fi
 
-    # Change-class labels (#545). The legacy lowercase forms are still
-    # accepted for backwards compatibility while in-flight PRs migrate.
-    has_breaking_label=0
+    # Change-class labels (#712): the label names mean what the version
+    # fields mean — Major Change = breaking (major bump), Minor Change =
+    # additive (minor bump), documentation = bugfix bump. The retired
+    # "Breaking Change" label (and its legacy lowercase form) is accepted
+    # as a deprecated alias of Major Change while in-flight PRs migrate.
     has_major_label=0
     has_minor_label=0
+    has_bugfix_label=0
     while IFS= read -r lbl; do
         [[ -n "${lbl}" ]] || continue
         case "${lbl}" in
-            "Breaking Change"|"breaking-change")   has_breaking_label=1 ;;
-            "Major Change")                         has_major_label=1 ;;
-            "Minor Change"|"documentation")         has_minor_label=1 ;;
+            "Major Change"|"Breaking Change"|"breaking-change") has_major_label=1 ;;
+            "Minor Change")                                     has_minor_label=1 ;;
+            "documentation")                                    has_bugfix_label=1 ;;
         esac
     done <<< "${labels}"
 
@@ -1466,17 +1527,20 @@ for sha in "${FP_COMMITS[@]}"; do
         [[ -n "${pr_number}" ]] && reason_prefix="PR #${pr_number} (${sha:0:8})"
 
         # Order matters: highest severity wins if multiple change-class
-        # labels are (accidentally) present on a single PR. Breaking >
-        # Major > Minor (a Major+Minor combo resolves to Major, not Minor).
-        if [[ "${has_breaking_label}" -eq 1 ]]; then
+        # labels are (accidentally) present on a single PR. Major >
+        # Minor > documentation (a Minor+doc combo resolves to Minor).
+        if [[ "${has_major_label}" -eq 1 ]]; then
             COMP_BREAKING[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: Breaking Change label"$'\n'
-        elif [[ "${has_major_label}" -eq 1 ]]; then
-            COMP_NON_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: Major Change label"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: Major Change label (breaking)"$'\n'
         elif [[ "${has_minor_label}" -eq 1 ]]; then
+            COMP_NON_DOC[$comp]=1
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: Minor Change label (additive)"$'\n'
+        elif [[ "${has_bugfix_label}" -eq 1 ]]; then
             COMP_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: Minor Change label"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: documentation label (bugfix)"$'\n'
+        elif [[ -n "${pr_number}" ]] && [[ "$(get_pr_issue_type "${pr_number}")" == "Bug" ]]; then
+            COMP_DOC[$comp]=1
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: linked issue type Bug (bugfix)"$'\n'
         elif [[ "${COMMIT_COMP_DOCS_ONLY[$comp]}" -eq 1 ]]; then
             COMP_DOC[$comp]=1
             COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: docs-only heuristic"$'\n'
@@ -1640,6 +1704,82 @@ if [[ ${#PLAN_DROPPED[@]} -gt 0 ]] || [[ ${#PLAN_EXTRA[@]} -gt 0 ]]; then
 fi
 
 # ----------------------------------------------------------------------------
+# AIDL-surface helpers (defined here so the propagation gate below can use
+# them; also used by the per-component write loop and the --audit mode).
+# ----------------------------------------------------------------------------
+
+# Highest released <comp>/<version>/ present at the last tag (the released
+# baseline). Empty when the component has never been released.
+discover_current_version() {
+    local comp="$1"
+    local baseline
+    baseline="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+    [[ -n "${baseline}" ]] || return 0   # no tags → no released baseline
+    git ls-tree -d --name-only "${baseline}" "${comp}/" 2>/dev/null \
+        | awk -F/ '{print $NF}' \
+        | grep -E '^[0-9]+(\.[0-9]+){2,3}$' \
+        | sort -V \
+        | tail -1 || true
+}
+
+# When a component has no released baseline (new since last tag), check
+# whether the operator has pre-staged a snapshot under <comp>/<version>/
+# in HEAD (committed via a "chore" or release-prep PR). If yes, use
+# that as the initial-release version. If no, seed at 0.1.0.0.
+discover_pre_staged_version() {
+    local comp="$1"
+    git ls-tree -d --name-only HEAD "${comp}/" 2>/dev/null \
+        | awk -F/ '{print $NF}' \
+        | grep -E '^[0-9]+(\.[0-9]+){2,3}$' \
+        | sort -V \
+        | tail -1 || true
+}
+
+# Aggregate SHA256 of every .aidl file under a directory tree, sorted by
+# path. Two trees with identical AIDL contents produce the same hash;
+# any add/remove/modify changes the hash. Returns empty string if the
+# directory doesn't exist or has no .aidl files. NOTE: only *.aidl files
+# are hashed — hand-authored C++ headers (e.g. halcompat.h) and docs under
+# current/ are deliberately NOT part of the interface hash (#722).
+compute_aidl_hash_for_dir() {
+    local dir="$1"
+    [[ -d "${dir}" ]] || { echo ""; return 0; }
+    local h
+    h="$(find "${dir}" -name '*.aidl' -type f 2>/dev/null \
+        | sort \
+        | while IFS= read -r f; do
+            printf '%s:%s\n' "${f#${dir}/}" "$(sha256sum "${f}" 2>/dev/null | awk '{print $1}')"
+          done \
+        | sha256sum 2>/dev/null | awk '{print $1}')"
+    [[ "${h}" == "$(echo -n "" | sha256sum | awk '{print $1}')" ]] && h=""
+    echo "${h}"
+}
+
+# Compare a module's current/ AIDL hash against the highest tracked
+# snapshot. Echoes one of: "unchanged" / "CHANGED" / "new" / "missing".
+aidl_hash_status() {
+    local comp="$1"
+    local latest
+    latest="$(discover_current_version "${comp}")"
+    if [[ -z "${latest}" ]]; then
+        echo "new"      # never released; no baseline to compare against
+        return 0
+    fi
+    local cur_hash snap_hash
+    cur_hash="$(compute_aidl_hash_for_dir "${REPO_ROOT}/${comp}/current")"
+    snap_hash="$(compute_aidl_hash_for_dir "${REPO_ROOT}/${comp}/${latest}")"
+    if [[ -z "${cur_hash}" || -z "${snap_hash}" ]]; then
+        echo "missing"  # one side has no .aidl files
+        return 0
+    fi
+    if [[ "${cur_hash}" == "${snap_hash}" ]]; then
+        echo "unchanged"
+    else
+        echo "CHANGED"
+    fi
+}
+
+# ----------------------------------------------------------------------------
 # Transitive bump propagation (subsume rule)
 # ----------------------------------------------------------------------------
 #
@@ -1649,6 +1789,25 @@ fi
 # This walks each component's current/interface.yaml `imports:` list and
 # propagates the highest reachable bump level upward via fixed-point
 # iteration. Bump precedence: Breaking > Major (non-doc) > Minor/Patch (doc).
+
+# AIDL-surface gate BEFORE propagation (#722): a component whose declared
+# AIDL surface (its *.aidl files) is byte-identical to its last released
+# snapshot is not an interface change and must not seed the subsume
+# propagation — even when non-AIDL files under current/ changed (a
+# hand-authored C++ helper like halcompat.h, or docs) and a change-class
+# label was applied. Clearing its direct-bump flags here stops a phantom
+# bump propagating to every importer. (The per-component write loop applies
+# the same suppression to the component's own bump; doing it here as well
+# closes the ordering gap where propagation ran on the un-gated flags.)
+for _gc in "${!COMP_TOUCHED[@]}"; do
+    if [[ "$(aidl_hash_status "${_gc}")" == "unchanged" ]] \
+       && { [[ "${COMP_BREAKING[$_gc]:-0}" -eq 1 ]] \
+            || [[ "${COMP_NON_DOC[$_gc]:-0}" -eq 1 ]] \
+            || [[ "${COMP_DOC[$_gc]:-0}" -eq 1 ]]; }; then
+        unset 'COMP_BREAKING[$_gc]' 'COMP_NON_DOC[$_gc]' 'COMP_DOC[$_gc]' 2>/dev/null || true
+        COMP_REASONS[$_gc]="${COMP_REASONS[$_gc]:-}gate: AIDL surface unchanged — not a propagation source (#722)"$'\n'
+    fi
+done
 
 phase "Propagating transitive bumps via interface.yaml imports..."
 
@@ -1898,13 +2057,14 @@ create_snapshot() {
 
     # Verbose mode dumps full per-step progress; default mode buffers
     # and prints one summary line per module at the end (✓ or ✗).
+    # Refresh: the old snapshot is deleted only AFTER regeneration succeeds
+    # (below, just before the copy). Deleting it first leaves a hole in the
+    # interfaces dependency tree — any consumer snapshot cohort-pinned to
+    # this version makes the regeneration itself fail (unresolved
+    # versioned-import target).
     local refresh_marker=""
     if [[ -d "${snapshot_dir}" ]]; then
-        [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] refreshing existing ${version}/ snapshot (rm -rf + re-create)"
-        rm -rf "${snapshot_dir}" || {
-            warn "Failed to remove existing ${comp}/${version}/ — manual cleanup needed."
-            return 1
-        }
+        [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] refreshing existing ${version}/ snapshot (re-create after regen)"
         refresh_marker=" (refreshed)"
     fi
 
@@ -1959,6 +2119,13 @@ create_snapshot() {
     # unfrozen source-of-truth.
     [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] copying current/ to ${version}/"
     local _cp_rc=0
+    if [[ -d "${snapshot_dir}" ]]; then
+        rm -rf "${snapshot_dir}" || {
+            warn "Failed to remove existing ${comp}/${version}/ — manual cleanup needed."
+            _restore_current
+            return 1
+        }
+    fi
     cp -r "${REPO_ROOT}/${comp}/current" "${snapshot_dir}" || _cp_rc=$?
     _restore_current
     if [[ "${_cp_rc}" -ne 0 ]]; then
@@ -2717,9 +2884,9 @@ log ""
 # Map internal bump tokens to operator-readable change classes.
 bump_label() {
     case "$1" in
-        generation) echo "Breaking" ;;
-        minor)      echo "Major" ;;
-        patch)      echo "Minor" ;;
+        generation) echo "Major (breaking)" ;;
+        minor)      echo "Minor" ;;
+        patch)      echo "Bugfix" ;;
         pinned)     echo "Pinned" ;;
         none)       echo "-" ;;
         *)          echo "$1" ;;
@@ -2738,78 +2905,6 @@ error_count=0
 BUMPED_COMPONENTS=()
 declare -A METADATA_DRIFT=()  # comp -> "metadata_says|discovered_truth"
 
-# Auto-discover the "real" current released version of a component.
-# Uses the LAST RELEASE TAG (not HEAD) as the baseline — phantom
-# snapshots committed to develop without being part of a tagged
-# release (e.g. firmwareupdate/0.2.0.0/ added by a "chore" commit
-# after the flash rename, never in 0.20.0) don't count as released.
-# Picks the highest version present at that tag by `sort -V`.
-discover_current_version() {
-    local comp="$1"
-    local baseline
-    baseline="$(git describe --tags --abbrev=0 2>/dev/null || true)"
-    [[ -n "${baseline}" ]] || return 0   # no tags → no released baseline
-    git ls-tree -d --name-only "${baseline}" "${comp}/" 2>/dev/null \
-        | awk -F/ '{print $NF}' \
-        | grep -E '^[0-9]+(\.[0-9]+){2,3}$' \
-        | sort -V \
-        | tail -1 || true
-}
-
-# When a component has no released baseline (new since last tag), check
-# whether the operator has pre-staged a snapshot under <comp>/<version>/
-# in HEAD (committed via a "chore" or release-prep PR). If yes, use
-# that as the initial-release version. If no, seed at 0.1.0.0.
-discover_pre_staged_version() {
-    local comp="$1"
-    git ls-tree -d --name-only HEAD "${comp}/" 2>/dev/null \
-        | awk -F/ '{print $NF}' \
-        | grep -E '^[0-9]+(\.[0-9]+){2,3}$' \
-        | sort -V \
-        | tail -1 || true
-}
-
-# Aggregate SHA256 of every .aidl file under a directory tree, sorted by
-# path. Two trees with identical AIDL contents produce the same hash;
-# any add/remove/modify changes the hash. Returns empty string if the
-# directory doesn't exist or has no .aidl files.
-compute_aidl_hash_for_dir() {
-    local dir="$1"
-    [[ -d "${dir}" ]] || { echo ""; return 0; }
-    local h
-    h="$(find "${dir}" -name '*.aidl' -type f 2>/dev/null \
-        | sort \
-        | while IFS= read -r f; do
-            printf '%s:%s\n' "${f#${dir}/}" "$(sha256sum "${f}" 2>/dev/null | awk '{print $1}')"
-          done \
-        | sha256sum 2>/dev/null | awk '{print $1}')"
-    [[ "${h}" == "$(echo -n "" | sha256sum | awk '{print $1}')" ]] && h=""
-    echo "${h}"
-}
-
-# Compare a module's current/ AIDL hash against the highest tracked
-# snapshot. Echoes one of: "unchanged" / "CHANGED" / "new" / "missing".
-aidl_hash_status() {
-    local comp="$1"
-    local latest
-    latest="$(discover_current_version "${comp}")"
-    if [[ -z "${latest}" ]]; then
-        echo "new"      # never released; no baseline to compare against
-        return 0
-    fi
-    local cur_hash snap_hash
-    cur_hash="$(compute_aidl_hash_for_dir "${REPO_ROOT}/${comp}/current")"
-    snap_hash="$(compute_aidl_hash_for_dir "${REPO_ROOT}/${comp}/${latest}")"
-    if [[ -z "${cur_hash}" || -z "${snap_hash}" ]]; then
-        echo "missing"  # one side has no .aidl files
-        return 0
-    fi
-    if [[ "${cur_hash}" == "${snap_hash}" ]]; then
-        echo "unchanged"
-    else
-        echo "CHANGED"
-    fi
-}
 
 # ----------------------------------------------------------------------------
 # --audit: structural change-class audit (#633 / #568)
@@ -2821,20 +2916,27 @@ aidl_hash_status() {
 #   structural  what the AIDL actually changed: the binder toolchain's
 #               dump-surface/diff-surface (linux_binder_idl#27) classifies
 #               last-frozen vs current/ as breaking / major / none (the
-#               tool's literal classes; `major` means additive and the
-#               audit table displays it as such).
+#               tool's literal classes: `breaking` displays as major,
+#               `major` means additive and displays as minor).
 #               A surface-identical pair whose .aidl sources still differ
 #               is doc-only (comment/doc edits are stripped from dumps).
 #   label       the change class the PR labels imply (same detector the
 #               release run uses; none when untouched in the window).
 #   declared    metadata.yaml's version field (authors pre-bump it).
 #
-# Gate table (era 0): breaking => generation bump, additive => minor,
-# doc-only => patch, identical => none. Era >= 1 components must never
+# Gate table (era 0): structural breaking => major bump, additive =>
+# minor, surface-identical respin => bugfix, identical => none. Era >= 1
+# components must never
 # classify breaking (standard AIDL discipline) — that row hard-fails
-# regardless of labels. Any disagreement flags the row; --strict turns
-# flags into a non-zero exit so tagging can be gated on a clean audit.
-if [[ "${AUDIT}" -eq 1 ]]; then
+# regardless of labels. Any disagreement flags the row, and flags
+# produce a non-zero exit (strict is the only mode, #714) so tagging
+# is gated on a clean audit.
+# Runs the structural audit over the given components (all buildable
+# components when none are given). Strict is the only mode: returns
+# non-zero when any row is flagged or errors. (#714)
+run_structural_audit() {
+    local _audit_targets=("$@")
+    [[ ${#_audit_targets[@]} -gt 0 ]] || _audit_targets=("${COMPONENTS[@]}")
     _audit_toolchain="${BINDER_TOOLCHAIN_ROOT:-${REPO_ROOT}/build-tools/linux_binder_idl}"
     _audit_ops="${_audit_toolchain}/host/aidl_ops.py"
     [[ -f "${_audit_ops}" ]] \
@@ -2843,7 +2945,7 @@ if [[ "${AUDIT}" -eq 1 ]]; then
         || die "toolchain at ${_audit_toolchain} predates dump-surface/diff-surface — needs linux_binder_idl >= 2.6.0 (the binder_sdk.version pin); re-run ./build_binder.sh."
 
     log ""
-    phase "Structural change-class audit — ${#COMPONENTS[@]} components"
+    phase "Structural change-class audit — ${#_audit_targets[@]} component(s)"
     log ""
 
     _audit_tmp="$(mktemp -d)"
@@ -2861,12 +2963,14 @@ if [[ "${AUDIT}" -eq 1 ]]; then
         esac
     }
 
-    # Human-readable class for the table (code-truth column).
+    # Human-readable class for the table — field words, matching the
+    # label scheme (#712): major = breaking, minor = additive,
+    # bugfix = surface-identical respin.
     _audit_class_display() {
         case "$1" in
-            generation) echo "breaking" ;;
-            minor)      echo "additive" ;;
-            patch)      echo "doc-only" ;;
+            generation) echo "major" ;;
+            minor)      echo "minor" ;;
+            patch)      echo "bugfix" ;;
             none)       echo "none" ;;
             *)          echo "$1" ;;
         esac
@@ -2881,7 +2985,7 @@ if [[ "${AUDIT}" -eq 1 ]]; then
     _audit_flagged=0
     _audit_errors=0
 
-    for comp in $(printf '%s\n' "${COMPONENTS[@]}" | sort); do
+    for comp in $(printf '%s\n' "${_audit_targets[@]}" | sort); do
         if ! is_buildable_component "${comp}"; then
             AUDIT_ROWS+=("$(printf "%-24s %-10s %-11s %-11s %-10s %-10s %s" \
                 "${comp}" "-" "-" "-" "-" "-" "skipped (not buildable)")")
@@ -3015,10 +3119,28 @@ if [[ "${AUDIT}" -eq 1 ]]; then
     else
         log "⚠️  Audit flagged ${_audit_flagged} mismatch(es) + ${_audit_errors} error(s) — see rows above."
     fi
-    if [[ "${AUDIT_STRICT}" -eq 1 && "${_audit_total}" -gt 0 ]]; then
-        exit 1
+    [[ "${_audit_total}" -eq 0 ]] || return 1
+    return 0
+}
+
+if [[ "${AUDIT}" -eq 1 ]]; then
+    run_structural_audit
+    exit $?
+fi
+
+# Write and branch paths run the audit automatically (#714): the
+# components being staged (DO_WRITES) or released (--apply/DO_BRANCH)
+# must have agreeing structural class, labels and metadata BEFORE
+# anything is written or branched. The full-repo sweep remains the
+# standalone --audit; --no-audit (testing only) bypasses this gate.
+if [[ ( "${DO_WRITES}" -eq 1 || "${DO_BRANCH}" -eq 1 ) && "${NO_AUDIT}" -ne 1 ]]; then
+    _gate_targets=()
+    for _c in "${!PLAN_COMPONENTS[@]}"; do
+        is_buildable_component "${_c}" && _gate_targets+=("${_c}")
+    done
+    if [[ ${#_gate_targets[@]} -gt 0 ]] && ! run_structural_audit "${_gate_targets[@]}"; then
+        die "structural audit failed for the staged component(s) — fix the label/metadata/AIDL disagreement before writing (full report: ./scripts/release.sh --audit; bypass for testing ONLY: --no-audit)."
     fi
-    exit 0
 fi
 
 mapfile -t TOUCHED_COMPONENTS < <(printf '%s\n' "${!COMP_TOUCHED[@]}" | sort)

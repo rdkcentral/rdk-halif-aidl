@@ -22,10 +22,10 @@
 #
 # configure_pr.sh — apply the standard configuration to a pull request:
 #   * Labels       — component:<name> for each affected component, plus
-#                    exactly one change-class label (see #545):
-#                      Breaking Change — conventional-commit "!:" in title
-#                      Minor Change    — every changed file is docs-like
-#                      Major Change    — anything else (the default)
+#                    exactly one change-class label (see #712):
+#                      Major Change    — conventional-commit "!:" in title (breaking)
+#                      documentation   — every changed file is docs-like (bugfix)
+#                      Minor Change    — anything else (additive, the default)
 #   * Assignees    — the PR author.
 #   * Reviewers    — every reviewer team declared in the affected components'
 #                    metadata.yaml, mapped to GitHub team slugs. A PR always
@@ -62,9 +62,17 @@ fi
 
 $DRY_RUN && echo "=== DRY RUN — no changes will be made ===" && echo
 
-# Counter for non-fatal issues — surfaced at end of run and used to set a
-# non-zero exit code so CI can detect partial failures (failed gh pr edit
-# calls, unmapped reviewer teams, etc.).
+# EVERY STEP IS ATTEMPTED, THEN THE RUN FAILS IF ANY OF THEM DID.
+#
+# A step that cannot be applied must not stop the ones after it — a PR missing
+# a label is still worth assigning and adding reviewers to — so every mutating
+# call is guarded and records a warning instead of aborting. The count is
+# reported at the end and sets a non-zero exit, so a partial run is never
+# mistaken for a clean one.
+#
+# This matters most where the failure is invisible: a reviewer team that is not
+# a collaborator is rejected by the API, and without the count the run would
+# report success having added no reviewer at all.
 WARN_COUNT=0
 
 # --- Team mapping -----------------------------------------------------------
@@ -113,25 +121,22 @@ print(" ".join(sorted(comps)))
     current_labels=$(echo "$meta" | python3 -c 'import json,sys;print(",".join(l["name"] for l in json.load(sys.stdin)["labels"]))')
     for c in $components; do desired_labels+="component:${c}\n"; done
 
-    # Exactly one change-class label per PR. The selection cascade below
-    # is *predicate-based*, not severity-based — each branch checks the
+    # Exactly one change-class label per PR (#712 — label names mean what
+    # the version fields mean). The selection cascade below is
+    # *predicate-based*, not severity-based — each branch checks the
     # condition that signals that class:
-    #   Breaking Change — conventional-commit "!:" marker in the title
-    #   documentation   — every changed file is doc-like (else branch)
-    #   Major Change    — fallback when neither predicate matches
-    #
-    # `Minor Change` is NOT auto-applied — it's a manually-applied label
-    # for non-doc small changes (typo / log message / comment-only refactor
-    # in code) that should still bump only the patch segment. Both
-    # `documentation` and `Minor Change` drive a patch bump in
-    # scripts/release.sh; `documentation` is the narrower form
-    # (docs-only PRs) and is what this cascade detects automatically.
+    #   Major Change    — conventional-commit "!:" marker in the title
+    #                     (breaking => major bump)
+    #   documentation   — every changed file is doc-like (else branch;
+    #                     bugfix bump)
+    #   Minor Change    — fallback when neither predicate matches
+    #                     (additive interface work => minor bump)
     #
     # The `is_doc()` predicate mirrors scripts/release.sh:is_doc_like_path
     # so the two scripts agree on what counts as docs-only.
     local change_class=""
     if [[ "$title" =~ ^[a-z]+(\([^\)]*\))?!: ]]; then
-        change_class="Breaking Change"
+        change_class="Major Change"
     else
         local docs_only
         docs_only=$(echo "$meta" | python3 -c '
@@ -144,6 +149,7 @@ def is_doc(p):
     if base == "CHANGELOG" or base.startswith("CHANGELOG."): return True
     if base == "metadata.yaml": return True
     if base.startswith("hfp-") and base.endswith(".yaml"): return True
+    if base == "mkdocs.yml": return True
     return False
 fs=[f["path"] for f in json.load(sys.stdin)["files"]]
 print("yes" if fs and all(is_doc(p) for p in fs) else "no")
@@ -151,10 +157,20 @@ print("yes" if fs and all(is_doc(p) for p in fs) else "no")
         if [ "$docs_only" = "yes" ]; then
             change_class="documentation"
         else
-            change_class="Major Change"
+            change_class="Minor Change"
         fi
     fi
     desired_labels+="${change_class}\n"
+
+    # Exactly one change-class label: remove any other class label already
+    # on the PR (including the retired "Breaking Change") so recalculation
+    # never leaves duplicates behind during the #712 transition.
+    local remove_labels=()
+    local cls
+    for cls in "Major Change" "Minor Change" "documentation" "Breaking Change"; do
+        [ "$cls" = "$change_class" ] && continue
+        if [[ ",${current_labels}," == *",${cls},"* ]]; then remove_labels+=("$cls"); fi
+    done
 
     local add_labels=()
     while IFS= read -r lbl; do
@@ -162,12 +178,13 @@ print("yes" if fs and all(is_doc(p) for p in fs) else "no")
         if [[ ",${current_labels}," != *",${lbl},"* ]]; then add_labels+=("$lbl"); fi
     done < <(echo -e "$desired_labels")
 
-    if [ ${#add_labels[@]} -eq 0 ]; then
+    if [ ${#add_labels[@]} -eq 0 ] && [ ${#remove_labels[@]} -eq 0 ]; then
         echo "  labels: up to date"
     else
-        echo "  labels: + ${add_labels[*]}"
+        echo "  labels: + ${add_labels[*]:-} - ${remove_labels[*]:-}"
         if ! $DRY_RUN; then
             local args=(); for l in "${add_labels[@]}"; do args+=(--add-label "$l"); done
+            for l in "${remove_labels[@]}"; do args+=(--remove-label "$l"); done
             if gh pr edit "$pr" --repo "$REPO" "${args[@]}" >/dev/null; then
                 echo "    applied"
             else
@@ -221,9 +238,30 @@ print("yes" if fs and all(is_doc(p) for p in fs) else "no")
     else
         echo "  reviewers: request teams → ${!want_teams[*]}"
         if ! $DRY_RUN; then
+            local -A request_failed=()
             for slug in "${!want_teams[@]}"; do
-                gh pr edit "$pr" --repo "$REPO" --add-reviewer "rdkcentral/${slug}" 2>/dev/null \
-                    && echo "    requested ${slug}" || echo "    WARN: could not request ${slug}"
+                if ! gh pr edit "$pr" --repo "$REPO" --add-reviewer "rdkcentral/${slug}" >/dev/null 2>&1; then
+                    echo "    WARN: could not request ${slug} — is the team a collaborator on ${REPO}?" >&2
+                    request_failed["$slug"]=1
+                    WARN_COUNT=$((WARN_COUNT + 1))
+                fi
+            done
+            # Read back rather than trust the call. A request the API accepts but
+            # does not act on would otherwise be reported as applied, which is how
+            # a mandatory reviewer goes missing without anyone seeing it.
+            local requested
+            requested=$(gh pr view "$pr" --repo "$REPO" --json reviewRequests \
+                --jq '[.reviewRequests[].name // empty] | join(" ")' 2>/dev/null || echo "")
+            for slug in "${!want_teams[@]}"; do
+                if [[ " ${requested} " == *" ${slug} "* ]]; then
+                    echo "    requested ${slug}"
+                elif [ -z "${request_failed[$slug]:-}" ]; then
+                    # A team whose request already failed above is reported and
+                    # counted there; counting it again here would inflate the
+                    # summary for a single failure.
+                    echo "    WARN: ${slug} is not a pending reviewer after the request" >&2
+                    WARN_COUNT=$((WARN_COUNT + 1))
+                fi
             done
         fi
     fi
@@ -266,8 +304,12 @@ else: print("    ")
     else
         echo "  project: status '${cs}' → '${TARGET_STATUS}'"
         if ! $DRY_RUN; then
-            gh api graphql -f query='mutation{updateProjectV2ItemFieldValue(input:{projectId:"'"$proj_id"'",itemId:"'"$item_id"'",fieldId:"'"$field_id"'",value:{singleSelectOptionId:"'"$option_id"'"}}){projectV2Item{id}}}' >/dev/null \
-                && echo "    applied"
+            if gh api graphql -f query='mutation{updateProjectV2ItemFieldValue(input:{projectId:"'"$proj_id"'",itemId:"'"$item_id"'",fieldId:"'"$field_id"'",value:{singleSelectOptionId:"'"$option_id"'"}}){projectV2Item{id}}}' >/dev/null 2>&1; then
+                echo "    applied"
+            else
+                echo "    WARN: could not set project status to '${TARGET_STATUS}'" >&2
+                WARN_COUNT=$((WARN_COUNT + 1))
+            fi
         fi
     fi
 }

@@ -19,7 +19,7 @@ components:
   audiomixer: 0.3.0.0
   audiosink: 0.2.0.0
   avbuffer: 0.2.0.0
-  avclock: 0.2.0.0
+  avclock: 0.2.0.1
   common: 0.2.0.0
   compositeinput: 0.2.0.0
   deepsleep: 0.1.0.0
@@ -31,8 +31,8 @@ components:
   hdmioutput: 0.1.0.0
   indicator: 0.1.0.0
   panel: 0.1.0.0
-  planecontrol: 0.1.0.0
+  planecontrol: 0.2.0.0
   sensor: 0.2.0.0
-  videodecoder: 0.2.0.0
+  videodecoder: 0.2.0.1
   videosink: 0.2.0.0
   bootreason: 0.1.0.0
