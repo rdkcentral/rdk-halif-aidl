@@ -33,7 +33,7 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
 |-|---|---|
 | **HAL.VIDEOSINK.1** | Shall manage a queue of video frames delivered from the client and held ready for presentation, often requiring AV lip sync. ||
 | **HAL.VIDEOSINK.2** | Shall support flushing of the internal queue of video frames and notify the client when a flush operation has completed. ||
-| **HAL.VIDEOSINK.3** | Shall internally manage the release of video frame handles back to the internal pool after they have finished being presented or during a flush. ||
+| **HAL.VIDEOSINK.3** | Shall internally manage the release of video frame handles back to the internal pool after they have been consumed at their presentation time on the attached clock or during a flush. ||
 | **HAL.VIDEOSINK.4** | Shall notify the client when the first frame is presented in the session once opened or after a flush operation. ||
 | **HAL.VIDEOSINK.5** | Shall notify the client when a video underflow occurs.| A video underflow condition is met if an expected frame is not queued in time for its presentation time on the attached clock. |
 | **HAL.VIDEOSINK.6** | Shall provide an API to expose the video sink resources for the client to discover. ||
@@ -190,7 +190,7 @@ Video frame buffers entering the Video Sink shall be delivered as AV Buffer ha
 
 The video frame data in the buffer is vendor specific and is not decoded or understood by the RDK middleware.
 
-Once the data in a video frame buffer has been presented or upon a flush request, the Video Sink shall free handles by calling `IAVBuffer.free()`.
+Once the data in a video frame buffer has been consumed at its presentation time on the attached clock — displayed on the mapped plane when a plane is mapped, or nothing displayed when no plane is mapped — or upon a flush request, the Video Sink shall free handles by calling `IAVBuffer.free()`.
 
 ## Input Buffer Back-Pressure
 
@@ -233,7 +233,7 @@ A `destinationPlaneIndex` of `-1` means the Video Sink has no plane. The attache
 | | Plane mapped | No plane mapped |
 | --- | --- | --- |
 | Queued frames | Consumed at their presentation time on the attached clock | Consumed at their presentation time on the attached clock |
-| Frame buffers | Freed with `IAVBuffer.free()` once presented | Freed with `IAVBuffer.free()` at the same point |
+| Frame buffers | Freed with `IAVBuffer.free()` once consumed on the clock | Freed with `IAVBuffer.free()` at the same point |
 | Display | Rendered on the mapped plane | Nothing displayed |
 | `onFirstFrameRendered()` | Fires on the first frame rendered | Fires on the first frame rendered once a plane becomes mapped |
 | `onVideoUnderflow()` / `onVideoResumed()` | Armed | Armed |
