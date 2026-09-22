@@ -29,3 +29,5 @@ hdmicec:                        # Component object begins
                             # x05 = Version 1.4, Version 1.4a or Version 1.4b
                             # x06 = Version 2.0
                             # See HDMI specification [CEC Version] operand definition.
+    primary_device_type: TV # refer hdmicec/DeviceType.aidl for possible values
+    secondary_device_type: NONE

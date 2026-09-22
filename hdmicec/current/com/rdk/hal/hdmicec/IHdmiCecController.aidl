@@ -47,7 +47,7 @@ interface IHdmiCecController
     * (ref <HDMI Specification 2-0> Section <CEC 11.3.3>) before adding the logical address.
     * A physical device may add at most two logical addresses. Multiple logical addresses
     * are permitted only for the device-type combinations explicitly defined in HDMI
-    * Specification 2.0, Section 11.3.2, Table 11-8. The client can add permitted
+    * Specification 2-0, Section 11.3.2, Table 11-8. The client can add permitted
     * logical addresses in one call or add them one by one.
     *
     * All addresses must be in the directly addressable range of 0 to 14 (0x0 ~ 0xE) or the function will return false.
