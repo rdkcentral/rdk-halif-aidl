@@ -112,18 +112,38 @@ This is where all real media processing occurs.
 
 ### Common Pattern (Audio and Video)
 
-Both diagrams show the same high-level data flow:
+Both diagrams show the same high-level input path:
 
 1. Encoded media enters via the pipeline source  
 2. Data is passed as an **AV buffer handle**  
 3. Buffer is sent to a decoder via the HAL  
-4. Decoder produces processed output (audio samples or video frames)  
-5. Output is passed to the sink  
-6. Sink routes the data to final output
 
-A crucial detail visible in both diagrams:
-- Data is always passed as **opaque buffer handles (`IAVBuffer`)**
-- The middleware never directly accesses raw memory
+The input path is identical on every platform. How decoded output reaches the
+sink depends on the decoder's output mode, described below.
+
+Data crossing the HAL is always passed as **opaque buffer handles
+(`IAVBuffer`)**; the middleware never directly accesses raw memory.
+
+---
+
+### Decoder Output Mode
+
+The decoder's output path is selected by the vendor implementation. It is
+**not configurable through the HAL**, and is not a choice the middleware or the
+application makes.
+
+| Mode | Decoded output | Middleware role |
+|---|---|---|
+| `NON_TUNNELLED` | Returned to middleware as an AV buffer handle via `onFrameOutput()` | Receives each frame and passes it to the sink |
+| `TUNNELLED` | Consumed within the vendor layer; not carried by `onFrameOutput()` | Configures and controls the sink; no decoded data passes through it |
+
+Middleware discovers which mode is in force by calling
+`getCurrentOperationalMode()` on the decoder once it has reached the `STARTED`
+state. The same enum (`com.rdk.hal.OperationalMode`) and the same call apply to
+both the audio and the video decoder.
+
+Control flow is unaffected by the mode: the sink is configured, started,
+flushed and clocked identically in either case.
 
 ---
 
@@ -150,17 +170,7 @@ The diagram shows fan-out from the Audio Manager to multiple **Audio Output Port
 In the video diagram:
 
 - The **Video Decoder** produces frames
-- Frames flow to the **Video Sink**
-
-Two modes are shown:
-
-#### Non-tunnelled
-- Frames returned via buffer handles
-- Middleware participates in frame handling
-
-#### Tunnelled
-- Frames flow directly within vendor pipeline
-- Middleware is bypassed for performance
+- Frames reach the **Video Sink** by the path the vendor's output mode selects
 
 After the sink:
 - Frames are passed to the **SoC Compositor Manager**
