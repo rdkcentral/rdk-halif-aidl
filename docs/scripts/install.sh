@@ -112,7 +112,15 @@ function clone_repo()
             git clone ${repo_url} "${path}" > /dev/null 2>&1 || { ERROR "Git clone failed for ${repo_url}"; return 1; }
             
             pushd ${path} > /dev/null || { ERROR "Failed to enter directory ${path}"; return 1; }
-            git checkout ${version} > /dev/null 2>&1 || { ERROR "Git checkout failed for version ${version}"; popd > /dev/null; return 1; }
+            # Keep git's own message: swallowing it hid a wrong branch name here
+            # for months, because the only symptom was install.sh returning 1
+            # before it reached install_pip_requirements.
+            local _git_err
+            if ! _git_err="$(git checkout "${version}" 2>&1)"; then
+                ERROR "Git checkout failed for version ${version} in ${path}: ${_git_err}"
+                popd > /dev/null
+                return 1
+            fi
             popd > /dev/null
         fi
     fi
@@ -181,7 +189,8 @@ setup_and_enable_venv || return 1
 
 # 2. Clone Repos
 mkdir -p ${EXTERNAL_CONTENT_DIR} || { ERROR "Failed to create ${EXTERNAL_CONTENT_DIR}"; return 1; }
-clone_repo "https://github.com/rdkcentral/ut-core.wiki.git" "${EXTERNAL_CONTENT_DIR}/ut-core-wiki" "main" || return 1
+# GitHub wiki repositories are always on `master`, never `main`.
+clone_repo "https://github.com/rdkcentral/ut-core.wiki.git" "${EXTERNAL_CONTENT_DIR}/ut-core-wiki" "master" || return 1
 
 # 3. Install Pip Req
 install_pip_requirements ${DOCS_DIR}/requirements.txt || return 1
