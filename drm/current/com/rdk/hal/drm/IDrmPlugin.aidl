@@ -577,21 +577,21 @@ interface IDrmPlugin {
      * Unlike getMetrics(), what these keys mean is fixed: each is declared in
      * drm/kvc/current/drm.kvc with a unit and a kind that form part of its
      * identifier, so a consumer comparing two products is comparing the same
-     * figure. A key this product cannot measure reports
-     * `MetricStatus::NOT_SUPPORTED` rather than 0 or -1.
+     * figure. A key this product cannot measure, or an identifier it does not
+     * know, reports `MetricStatus::NOT_SUPPORTED` rather than 0 or -1.
      *
      * Scope is what the driver can observe: work done on keys the session
      * already holds. A licence that was never obtained is a fact about the
      * licence exchange rather than about the decrypt path, and is not here.
      *
-     * @param[in] metrics             Metric keys to query, or null for every served metric.
+     * @param[in] metricIds           Metric identifiers to query, or null for every served metric.
      *
-     * @return MetricSnapshot containing one value per requested key.
+     * @return MetricSnapshot containing one value per requested identifier.
      *     Implicit error codes:
      *       + ERROR_DRM_INVALID_STATE if the metrics are not available to be
      *             returned.
      *
      * @see getMetrics()
      */
-    MetricSnapshot getDeclaredMetrics(in @nullable Metric[] metrics);
+    MetricSnapshot getDeclaredMetrics(in @nullable long[] metricIds);
 }

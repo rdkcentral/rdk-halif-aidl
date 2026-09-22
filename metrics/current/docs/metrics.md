@@ -64,11 +64,10 @@ Each measuring component declares a `Metric` enum backed by `long` whose member 
 Each measuring component's resource interface carries:
 
 ```aidl
-MetricSnapshot getMetric(in Metric metric);
-MetricSnapshot getMetrics(in Metric[] metrics);
-MetricSnapshot getAllMetrics();
-boolean        setMetric(in Metric metric, in long value);
+MetricSnapshot getMetrics(in @nullable long[] metricIds);
 ```
+
+Null asks for every metric the product serves. A list asks for those identifiers, and each comes back with its status — `NOT_SUPPORTED` for one the product cannot measure or does not know. A caller names an identifier by the generated constant for its key.
 
 Each event-raising component's event listener carries:
 
@@ -82,7 +81,7 @@ void onMetricEvent(in MetricEvent event);
 |--|---|---|
 | **HAL.METRICS.1** | Every key shall be the three-segment path `<domain>.<element>.<field>`, declared in the producing component's Key Value Contract. | A bare field name is ambiguous once merged: `frames_decoded` from `av.video_decoder` and `av.audio_decoder` are the same string. |
 | **HAL.METRICS.2** | Every value shall be a signed 64-bit integer. | AIDL `long`. Counters use the positive range; a signed field such as `sync_offset_ms` uses the sign; a boolean-shaped field is 0 or 1. |
-| **HAL.METRICS.3** | All values returned by one `getMetric()`, `getMetrics()` or `getAllMetrics()` call shall be sampled at a single instant and stamped with one `timestampNs`, taken from `CLOCK_MONOTONIC`. | An obligation on the implementation, not a property to be discovered. A component spanning two hardware blocks shall latch both. Paired counters shall never yield an impossible ratio, and a snapshot's age shall always be computable. |
+| **HAL.METRICS.3** | All values returned by one `getMetrics()` call shall be sampled at a single instant and stamped with one `timestampNs`, taken from `CLOCK_MONOTONIC`. | An obligation on the implementation, not a property to be discovered. A component spanning two hardware blocks shall latch both. Paired counters shall never yield an impossible ratio, and a snapshot's age shall always be computable. |
 | **HAL.METRICS.4** | Counters shall be monotonic from resource creation and shall not reset on `open()`, `flush()`, `stop()` or seek. High-water fields shall be monotone non-decreasing between writes, and where declared writable shall accept a write of 0. | Consumers difference from a baseline of their own; a maximum cannot be recovered by subtraction, so the reader zeros it instead. |
 | **HAL.METRICS.5** | A read shall reflect events no older than the element's declared `captureCadenceMs`, which shall not exceed 50 ms. | A maximum staleness, not a rate to capture at. An element may guarantee tighter, never looser. Freshness is a partner-facing promise. |
 | **HAL.METRICS.6** | A field the implementation cannot measure shall be reported `NOT_SUPPORTED`, and a field not derivable at the sampling instant `NOT_AVAILABLE`. | Never `0` and never `-1`. "Cannot measure it" and "measured zero" are different facts, and on a signed field such as `sync_offset_ms` a `-1` sentinel is indistinguishable from a legitimate one-millisecond offset. |
