@@ -31,6 +31,14 @@ VENV_DIR="${SCRIPT_DIR}/python_venv"
 MKDOCS="${VENV_DIR}/bin/mkdocs"
 MIKE="${VENV_DIR}/bin/mike"
 
+# Put the venv on PATH for the rest of the script. Invoking mkdocs and mike by
+# absolute path is not sufficient: mike spawns mkdocs as a *named* subprocess,
+# so with the venv absent from PATH `mike deploy` dies with
+#   error: [Errno 2] No such file or directory: 'mkdocs'
+# VIRTUAL_ENV is exported alongside it so the child sees a fully-formed venv.
+export VIRTUAL_ENV="${VENV_DIR}"
+export PATH="${VENV_DIR}/bin:${PATH}"
+
 cd "${REPO_ROOT}" || { echo "[ERROR] cannot cd to repo root ${REPO_ROOT}"; exit 1; }
 
 # ----------------------------------------------------------------------------
