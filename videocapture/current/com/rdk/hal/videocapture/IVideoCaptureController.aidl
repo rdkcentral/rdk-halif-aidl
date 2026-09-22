@@ -168,7 +168,8 @@ interface IVideoCaptureController
      * holds a reference of its own; a Dma-Buf stays alive while any reference to it
      * does. The memory therefore remains valid for as long as the client holds it,
      * and the client releases it by destroying its imported images and closing those
-     * descriptors. Doing so is what returns the memory to the platform.
+     * descriptors. Doing so is what returns the memory to the platform, and nothing else
+     * does - see `HAL.VIDEOCAPTURE.17`.
      *
      * Nothing writes to the pool after this call: the source is unwired, and a later
      * `start()` delivers a new pool in new memory. Every buffer's content is therefore

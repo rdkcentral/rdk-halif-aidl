@@ -236,6 +236,7 @@ interface IVideoCapture
      * it imported from them remain valid after this call. The memory returns to the
      * platform when the client destroys those images and closes those descriptors, which
      * it does at whatever point suits it and without a further call on this interface.
+     * See `HAL.VIDEOCAPTURE.17`.
      *
      * @param[in] captureController     Instance of the IVideoCaptureController.
      *
