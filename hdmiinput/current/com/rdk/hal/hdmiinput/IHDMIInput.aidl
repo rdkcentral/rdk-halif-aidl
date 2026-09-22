@@ -191,11 +191,10 @@ interface IHDMIInput
      * The returned `IHDMIInputController` interface is used to control the HDMI input port interface
      * including starting and stopping the port for display.
      *
-     * If the client that opened the `IHDMIInputController` crashes or its binder
-     * connection to the service is dropped, then the `IHDMIInputController.stop()` and
-     * `close()` functions are implicitly called to perform clean up, returning the
-     * resource to `State::CLOSED`. A restarted client can then call `open()` again
-     * without any explicit recovery or force-close step.
+     * The HAL holds the controller session for the lifetime of the owning client's
+     * binder connection. On loss of that connection the HAL releases the session:
+     * the port stops, the controller closes, and the resource returns to
+     * `State::CLOSED`, where `open()` succeeds again.
      *
      * Once opened to a `READY` state the HDMI input port HPD line is unasserted and CEC remains inactive.
      *
@@ -240,14 +239,12 @@ interface IHDMIInput
      * 
      * Only one event listener may be registered per port at a time. Attempting to register a second listener will return false.
      *
-     * On successful registration, the listener always receives an initial
-     * `onStateChanged()` callback reflecting the current state, so a client
-     * registering after state transitions have already occurred (e.g. after a
-     * client restart) is synchronized without a separate query.
+     * Registration delivers an initial `onStateChanged()` carrying the port's current
+     * state in both `oldState` and `newState`. Before `open()` that state is `CLOSED`.
      *
      * @param[in] hdmiInputEventListener    Listener object for event callbacks.
      *
-     * @return boolean
+     * @returns boolean
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
      *
