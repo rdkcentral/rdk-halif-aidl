@@ -39,7 +39,7 @@ panel:                  # Component object begins
     - SATURATION
     - HUE
     - MANUAL_BACKLIGHT
-    - GAMMA
+    - SDR_GAMMA
     - COLOR_TEMPERATURE
     - DIMMING_MODE
     - DIMMING_LEVEL
@@ -310,11 +310,71 @@ panel:                  # Component object begins
         minValue: 0
         maxValue: 100
         pictureModeCapabilities: *pqContexts
-    - GAMMA:
+    - SDR_GAMMA:
         isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
+        minValue: 4 # SDRGamma.GAMMA_2_2
+        maxValue: 7 # SDRGamma.BT_1886
+        values: # SDRGamma ordinals supported by this platform
+          - 4 # GAMMA_2_2
+          - 6 # GAMMA_2_4
+          - 7 # BT_1886
+        # SDR only: gamma does not apply to HDR formats, so this parameter
+        # declares its own block instead of referencing *pqContexts.
+        pictureModeCapabilities:
+            - Entertainment:
+                - SDR:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                      - COMPOSITE_1
+            - Dynamic:
+                - SDR:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                      - COMPOSITE_1
+            - Dynamic2:
+                - SDR:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                      - COMPOSITE_1
+            - Sports:
+                - SDR:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                      - COMPOSITE_1
+            - Movie:
+                - SDR:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                      - COMPOSITE_1
+            - Expert:
+                - SDR:
+                    supportedAVSources:
+                      - IP
+                      - TUNER
+                      - HDMI_1
+                      - HDMI_2
+                      - HDMI_3
+                      - COMPOSITE_1
     - COLOR_TEMPERATURE:
         isGlobal: false
         minValue: 0

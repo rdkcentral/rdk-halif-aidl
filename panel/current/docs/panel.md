@@ -78,6 +78,7 @@ The corresponding [`hfp-panel.yaml`](https://github.com/rdkcentral/rdk-halif-aid
 | `PQParameterConfiguration.aidl`       | Configuration value of PQ parameter for a mode/source/format |
 | `PanelType.aidl`                      | Enumeration of panel types (LCD, OLED, etc.)                 |
 | `PictureModeConfiguration.aidl`       | Picture mode, video format, and AV source config             |
+| `SDRGamma.aidl`                       | SDR gamma curves selectable through `PQParameter.SDR_GAMMA`  |
 | `WhiteBalance2PointSettings.aidl`     | 2-point white balance calibration settings                   |
 | `WhiteBalanceMultiPointSettings.aidl` | Multi-point white balance calibration arrays                 |
 
