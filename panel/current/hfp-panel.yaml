@@ -72,6 +72,7 @@ panel:                  # Component object begins
     - DV_CALIBRATION
     - TWO_POINT_WB
     - MULTI_POINT_WB
+    - DYNAMIC_CONTRAST_LEVEL
   supportedRefreshRatesHz:
     - 48
     - 49
@@ -613,4 +614,10 @@ panel:                  # Component object begins
               b: []
         supportedValues:
           multiPointWBValues: []
+        pictureModeCapabilities: *pqContexts
+    - DYNAMIC_CONTRAST_LEVEL:
+        isSupported: true
+        isGlobal: true
+        rangeBound:
+          intBounds: *intBounds0to100
         pictureModeCapabilities: *pqContexts
