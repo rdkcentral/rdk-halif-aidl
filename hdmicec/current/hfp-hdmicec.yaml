@@ -29,5 +29,17 @@ hdmicec:                        # Component object begins
                             # x05 = Version 1.4, Version 1.4a or Version 1.4b
                             # x06 = Version 2.0
                             # See HDMI specification [CEC Version] operand definition.
-    primary_device_type: TV # refer hdmicec/DeviceType.aidl for possible values
-    secondary_device_type: NONE
+    PRIMARY_DEVICE_TYPE: TV # Property::PRIMARY_DEVICE_TYPE, values from DeviceType.aidl
+                            # NONE             = No device type
+                            # TV               = Renders video from HDMI input on a screen
+                            # RECORDING_DEVICE = Source with One Touch Record
+                            # TUNER            = Source with Tuner Control
+                            # PLAYBACK_DEVICE  = Source that is not a recorder or tuner
+                            # AUDIO_SYSTEM     = Renders audio; implements System Audio Control
+                            # CEC_SWITCH       = Switch with no other device type
+                            # PROCESSOR        = Processing device with one output and at least one input
+    SECONDARY_DEVICE_TYPE: NONE  # Property::SECONDARY_DEVICE_TYPE, values from DeviceType.aidl
+                                 # Same values as PRIMARY_DEVICE_TYPE.
+                                 # NONE = no secondary device type; the device allocates one logical address.
+                                 # Any other value must form a combination with PRIMARY_DEVICE_TYPE
+                                 # permitted by HDMI Specification 2.0, Section 11.3.2, Table 11-8.
