@@ -55,8 +55,14 @@ interface IHdmiCecController
     *
     * @param[in] logicalAddresses   An array of logical address to be added.
     *
-    * @returns true if successfully added or false if the logical addresses have not been added.
-     *
+    * @returns
+    *    true  - if successfully added
+    *    false - if the logical addresses cannot be added, including when:
+    *             - more than two logical addresses are supplied;
+    *             - any address is outside the directly addressable range of 0 to 14 (0x0 ~ 0xE);
+    *             - any address has already been added; or
+    *             - the logical address combination is not permitted by HDMI Specification 2-0,
+    *               Section 11.3.2, Table 11-8.
     *
     * @pre The resource must be in State::STARTED.
     *
@@ -89,8 +95,7 @@ interface IHdmiCecController
      * This function writes a complete CEC frame onto the bus and waits for an ACK.
      *
      * The packet contained in the message buffer will follow this format
-     *     (ref <HDMI Specification 1-4> Section <CEC 6.1>) :
-     *     (ref <HDMI Specification 2-0> Section <CEC 2.0 11.1>) :
+     *     (ref <HDMI Specification 2-0> Section <CEC 11.1>) :
      *
      * complete frame  = header block + data block@n
      * header block    = destination logical address (4-bit) + source address (4-bit)@n
@@ -108,9 +113,9 @@ interface IHdmiCecController
      * |------------------------------------------------
      * @endcode
      *
-     * The HAL implementation MUST add the EOM and ACK bits in the message in compliance with HDMI Specification 1-4> Section <CEC 6>.
-     * The HAL implementation MUST comply with all Signalling and Bit Timings described in HDMI Specification 1-4> Section <CEC 5>.
-     * The HAL implementation MUST comply with HDMI Specification 1-4> Section <CEC 7.1> on Frame Re-transmissions.
+     * The HAL implementation MUST add the EOM and ACK bits in the message in compliance with <HDMI Specification 2-0> Section <CEC 11>.
+     * The HAL implementation MUST comply with all Signalling and Bit Timings described in <HDMI Specification 2-0> Section <CEC 11.9.2>.
+     * The HAL implementation MUST comply with <HDMI Specification 2-0> Section <CEC 11.9.3> on Frame Re-transmissions.
      *
      * For a source HDMI device, while HPD is not asserted all sent messages will timeout.
      * It is not considered an error for a message to be sent while HPD is not asserted.

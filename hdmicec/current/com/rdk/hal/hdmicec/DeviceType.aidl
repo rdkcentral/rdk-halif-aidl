@@ -28,41 +28,41 @@ enum DeviceType {
     /**
      * No device type
      */
-    NONE = 0,
+    NONE = -1,
 
     /**
      * Render the video from HDMI input on a screen
      */
-    TV = 1,
+    TV = 0,
 
     /**
      * Generic Source with recording functionality
      * that is expressed via CEC Feature "One Touch Record"
      */
-    RECORDING_DEVICE = 2,
+    RECORDING_DEVICE = 1,
 
     /**
      * Generic Source with tuner functionality that is
      * expressed via CEC Feature "Tuner Control"
      */
-    TUNER = 3,
+    TUNER = 2,
 
     /**
      * Generic Source which is not a recording device or a tuner.
      */
-    PLAYBACK_DEVICE = 4,
+    PLAYBACK_DEVICE = 3,
 
     /**
      * Render the audio from HDMI input (or alternate audio input);
      * implements System Audio Control Feature
      */
-    AUDIO_SYSTEM = 5,
+    AUDIO_SYSTEM = 4,
 
     /**
      * A device according to H14b Section CEC 11.1 which has no other
      * functionality or device type.
      */
-    CEC_SWITCH = 6,
+    CEC_SWITCH = 5,
 
     /**
      * A device that performs processing functions:
@@ -73,5 +73,5 @@ enum DeviceType {
      * requires direct addressing.
      * has no other device types.
      */
-    PROCESSOR = 7
+    PROCESSOR = 6
 }
