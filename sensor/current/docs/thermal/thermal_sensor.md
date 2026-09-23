@@ -50,7 +50,7 @@ The Thermal HAL allows RDK Middleware to receive high-level **thermal action eve
 | **HAL.THERMAL.4** | Shall support querying the current thermal state at any time via a `getCurrentThermalState()` API. | |
 | **HAL.THERMAL.5** | Shall support optional reporting of current temperature readings for platform sensors via `getCurrentTemperatures()`. | |
 | **HAL.THERMAL.6** | Shall provide a `vendorInfo` string field in thermal state change events for vendor-specific debug or telemetry purposes. | |
-| **HAL.THERMAL.7** | Shall update `getCurrentThermalState()` coherently with emitted state change events (`CRITICAL_TEMPERATURE_EXCEEDED` when cooling, `NORMAL` after recovery, `CRITICAL_SHUTDOWN_IMMINENT` before shutdown). | Ensures predictable state → event alignment. |
+| **HAL.THERMAL.7** | Shall update `getCurrentThermalState()` coherently with emitted state change events following the [Thermal State Machine](#thermal-state-machine). | Ensures predictable state → event alignment. |
 
 ---
 
@@ -182,26 +182,9 @@ The HAL emits state change events containing these states, abstracting away plat
 
 ```aidl
 enum State {
-    /**
-     * @brief Normal thermal conditions.
-     */
     NORMAL = 0,
-
-    /**
-    * @brief Temperature has exceeded a critical threshold.
-    *  Platform will be in active mitigation if possible.
-    */
     CRITICAL_TEMPERATURE_EXCEEDED = 1,
-
-    /**
-    * @brief Temperature has recovered from a critical event.
-    *  Platform will return to normal state
-    */
     CRITICAL_TEMPERATURE_RECOVERED = 2,
-
-    /**
-     * @brief Shutdown is imminent due to critical thermal breach.
-     */
     CRITICAL_SHUTDOWN_IMMINENT = 3
 }
 ```
@@ -210,22 +193,32 @@ enum State {
 
 ## Thermal State Machine
 
-`getCurrentThermalState()` returns one of the following values:
-
-| State                              | Description                                                           |
-| --------------------------------   | --------------------------------------------------------------------- |
-| **NORMAL**                         | No mitigation active; platform within safe thermal limits.            |
-| **CRITICAL_TEMPERATURE_EXCEEDED**  | Platform entered critical temperature, if possible platform vendor-defined mitigation is active. |
-| **CRITICAL_TEMPERATURE_RECOVERED** | Platform recovered from critical temperature, and is returning to normal state. |
-| **CRITICAL_SHUTDOWN_IMMINENT**     | Platform entering forced thermal shutdown; critical platform level actions are imminent. |
-
-**Typical transition model:**
-
-```text
-NORMAL  →  CRITICAL_TEMPERATURE_EXCEEDED  →  CRITICAL_SHUTDOWN_IMMINENT
-   ↑          ↓                    ↓
-   └──────────┴──── CRITICAL_TEMPERATURE_RECOVERED (returns to NORMAL)
+```mermaid
+stateDiagram-v2
+    [*] --> NORMAL : service start
+    [*] --> CRITICAL_TEMPERATURE_EXCEEDED : service start, any sensor ≥ exceeded
+    NORMAL --> CRITICAL_TEMPERATURE_EXCEEDED : any sensor ≥ exceeded
+    CRITICAL_TEMPERATURE_EXCEEDED --> CRITICAL_TEMPERATURE_RECOVERED : all sensors < recovered
+    CRITICAL_TEMPERATURE_RECOVERED --> NORMAL : all sensors < recovered for min_cooldown_seconds
+    CRITICAL_TEMPERATURE_RECOVERED --> CRITICAL_TEMPERATURE_EXCEEDED : any sensor ≥ exceeded
+    NORMAL --> CRITICAL_SHUTDOWN_IMMINENT : any sensor ≥ shutdown
+    CRITICAL_TEMPERATURE_EXCEEDED --> CRITICAL_SHUTDOWN_IMMINENT : any sensor ≥ shutdown
+    CRITICAL_TEMPERATURE_RECOVERED --> CRITICAL_SHUTDOWN_IMMINENT : any sensor ≥ shutdown
+    CRITICAL_SHUTDOWN_IMMINENT --> [*] : platform shutdown
 ```
+
+`recovered`, `exceeded` and `shutdown` are each sensor's HFP `triggers` values (`critical_temperature_recovered_celsius`, `critical_temperature_exceeded_celsius`, `entering_critical_shutdown_celsius`). `min_cooldown_seconds` is the HFP `policy.recovery.min_cooldown_seconds`.
+
+| State | Meaning | Entered when |
+| --- | --- | --- |
+| **NORMAL** | No mitigation active; platform within safe thermal limits. | Service start with every sensor below its exceeded threshold; or every sensor has stayed below its recovered threshold for its cooldown period while in `CRITICAL_TEMPERATURE_RECOVERED`. |
+| **CRITICAL_TEMPERATURE_EXCEEDED** | Critical temperature reached; vendor mitigation active where supported. | Any sensor reaches its exceeded threshold. |
+| **CRITICAL_TEMPERATURE_RECOVERED** | Temperature back below the recovered threshold; cooldown in progress. | Every sensor is below its recovered threshold while in `CRITICAL_TEMPERATURE_EXCEEDED`. |
+| **CRITICAL_SHUTDOWN_IMMINENT** | Forced thermal shutdown in progress. Terminal. | Any sensor reaches its shutdown threshold. |
+
+- `getCurrentThermalState()` reports one state for the platform: the worst state across all sensors.
+- Between a sensor's recovered and exceeded thresholds the state does not change. No temperature threshold enters `NORMAL`; the return to `NORMAL` is time-based.
+- Every transition emits exactly one `onThermalStateChange()` event carrying the new state.
 
 ---
 
@@ -245,7 +238,10 @@ sequenceDiagram
     Policy->>HAL: Detect moderate condition, activate mitigation
     HAL->>MW: Emit onThermalStateChange(state=CRITICAL_TEMPERATURE_EXCEEDED)
     MW->>Telemetry: Log event
+    Sensors->>Policy: All sensors below recovered threshold
     HAL->>MW: Emit onThermalStateChange(state=CRITICAL_TEMPERATURE_RECOVERED)
+    Note over Policy: min_cooldown_seconds elapses, all sensors still below recovered threshold
+    HAL->>MW: Emit onThermalStateChange(state=NORMAL)
     MW->>App: Resume normal behaviour
 ```
 
@@ -309,20 +305,31 @@ sensor:
       #   recovered  <  exceeded  <  shutdown
       #
       # • critical_temperature_recovered_celsius :
-      #       Threshold below which the system is considered recovered and
-      #       returns to NORMAL state.
+      #       Threshold below which the sensor is considered recovered. When
+      #       every sensor is below its recovered threshold,
+      #       CRITICAL_TEMPERATURE_RECOVERED is emitted and the recovery
+      #       cooldown (policy.recovery) starts. NORMAL follows only when the
+      #       cooldown completes.
       # • critical_temperature_exceeded_celsius :
       #       Point at which CRITICAL_TEMPERATURE_EXCEEDED is emitted and
       #       mitigation (if supported) becomes active.  This is usually a few
       #       degrees ABOVE operational max to allow early warning.
       # • entering_critical_shutdown_celsius :
-      #       Hard limit at which ENTERING_CRITICAL_SHUTDOWN is emitted and
+      #       Hard limit at which CRITICAL_SHUTDOWN_IMMINENT is emitted and
       #       hardware shutdown is initiated.
+      #
+      # Between the recovered and exceeded thresholds the state does not change.
       triggers:
         critical_temperature_recovered_celsius: 90
         critical_temperature_exceeded_celsius: 98
         entering_critical_shutdown_celsius: 115
 
+      # • recovery.strategy : TIME_BASED is the only defined value.
+      # • recovery.min_cooldown_seconds :
+      #       Time every sensor must stay below its recovered threshold before
+      #       CRITICAL_TEMPERATURE_RECOVERED moves to NORMAL. If any sensor
+      #       reaches its exceeded threshold during the cooldown, the state
+      #       returns to CRITICAL_TEMPERATURE_EXCEEDED.
       policy:
         shutdown_min_downtime_s: 900
         recovery:
