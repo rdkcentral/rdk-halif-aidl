@@ -155,4 +155,11 @@ enum PQParameter
      */
     MULTI_POINT_WB = 38,
 
+    /**
+     * Dynamic contrast.
+     * integer 0..n (0=off, n=maximum level)
+     * A platform offering only on/off declares a maximum of 1.
+     */
+    DYNAMIC_CONTRAST_LEVEL = 39,
+
 }
