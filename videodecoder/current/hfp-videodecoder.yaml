@@ -125,7 +125,7 @@ videodecoder:                   # Component object begins
           primaries: BT601_525
         - range: LIMITED        # SDR BT.601 (625-line / PAL)
           matrix: BT601_625
-          transfer: SMPTE170M
+          transfer: BT470BG_GAMMA28
           primaries: BT470BG
         - range: LIMITED        # SDR BT.709
           matrix: BT709
@@ -210,7 +210,7 @@ videodecoder:                   # Component object begins
           primaries: BT601_525
         - range: LIMITED        # SDR BT.601 (625-line / PAL)
           matrix: BT601_625
-          transfer: SMPTE170M
+          transfer: BT470BG_GAMMA28
           primaries: BT470BG
         - range: LIMITED        # SDR BT.709
           matrix: BT709
