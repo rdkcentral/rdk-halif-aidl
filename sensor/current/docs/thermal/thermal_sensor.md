@@ -195,29 +195,29 @@ enum State {
 
 ```mermaid
 stateDiagram-v2
-    [*] --> NORMAL : service start
-    [*] --> CRITICAL_TEMPERATURE_EXCEEDED : service start, any sensor ≥ exceeded
-    NORMAL --> CRITICAL_TEMPERATURE_EXCEEDED : any sensor ≥ exceeded
-    CRITICAL_TEMPERATURE_EXCEEDED --> CRITICAL_TEMPERATURE_RECOVERED : all sensors < recovered
-    CRITICAL_TEMPERATURE_RECOVERED --> NORMAL : all sensors < recovered for min_cooldown_seconds
-    CRITICAL_TEMPERATURE_RECOVERED --> CRITICAL_TEMPERATURE_EXCEEDED : any sensor ≥ exceeded
-    NORMAL --> CRITICAL_SHUTDOWN_IMMINENT : any sensor ≥ shutdown
-    CRITICAL_TEMPERATURE_EXCEEDED --> CRITICAL_SHUTDOWN_IMMINENT : any sensor ≥ shutdown
-    CRITICAL_TEMPERATURE_RECOVERED --> CRITICAL_SHUTDOWN_IMMINENT : any sensor ≥ shutdown
+    [*] --> NORMAL : service start, temperature < exceeded
+    [*] --> CRITICAL_TEMPERATURE_EXCEEDED : service start, exceeded ≤ temperature < shutdown
+    [*] --> CRITICAL_SHUTDOWN_IMMINENT : service start, temperature ≥ shutdown
+    NORMAL --> CRITICAL_TEMPERATURE_EXCEEDED : temperature ≥ exceeded
+    CRITICAL_TEMPERATURE_EXCEEDED --> CRITICAL_TEMPERATURE_RECOVERED : temperature < recovered
+    CRITICAL_TEMPERATURE_RECOVERED --> NORMAL : temperature < recovered for min_cooldown_seconds
+    CRITICAL_TEMPERATURE_RECOVERED --> CRITICAL_TEMPERATURE_EXCEEDED : temperature ≥ exceeded
+    NORMAL --> CRITICAL_SHUTDOWN_IMMINENT : temperature ≥ shutdown
+    CRITICAL_TEMPERATURE_EXCEEDED --> CRITICAL_SHUTDOWN_IMMINENT : temperature ≥ shutdown
+    CRITICAL_TEMPERATURE_RECOVERED --> CRITICAL_SHUTDOWN_IMMINENT : temperature ≥ shutdown
     CRITICAL_SHUTDOWN_IMMINENT --> [*] : platform shutdown
 ```
 
-`recovered`, `exceeded` and `shutdown` are each sensor's HFP `triggers` values (`critical_temperature_recovered_celsius`, `critical_temperature_exceeded_celsius`, `entering_critical_shutdown_celsius`). `min_cooldown_seconds` is the HFP `policy.recovery.min_cooldown_seconds`.
+Each thermal sensor declared in the HFP runs this state machine on its own readings. `recovered`, `exceeded` and `shutdown` are that sensor's HFP `triggers` values (`critical_temperature_recovered_celsius`, `critical_temperature_exceeded_celsius`, `entering_critical_shutdown_celsius`); `min_cooldown_seconds` is its HFP `policy.recovery.min_cooldown_seconds`.
 
 | State | Meaning | Entered when |
 | --- | --- | --- |
-| **NORMAL** | No mitigation active; platform within safe thermal limits. | Service start with every sensor below its exceeded threshold; or every sensor has stayed below its recovered threshold for its cooldown period while in `CRITICAL_TEMPERATURE_RECOVERED`. |
-| **CRITICAL_TEMPERATURE_EXCEEDED** | Critical temperature reached; vendor mitigation active where supported. | Any sensor reaches its exceeded threshold. |
-| **CRITICAL_TEMPERATURE_RECOVERED** | Temperature back below the recovered threshold; cooldown in progress. | Every sensor is below its recovered threshold while in `CRITICAL_TEMPERATURE_EXCEEDED`. |
-| **CRITICAL_SHUTDOWN_IMMINENT** | Forced thermal shutdown in progress. Terminal. | Any sensor reaches its shutdown threshold. |
+| **NORMAL** | No mitigation active; platform within safe thermal limits. | Service start with the temperature below the exceeded threshold; or the temperature has stayed below the recovered threshold for the cooldown period while in `CRITICAL_TEMPERATURE_RECOVERED`. |
+| **CRITICAL_TEMPERATURE_EXCEEDED** | Critical temperature reached; vendor mitigation active where supported. | The temperature reaches the exceeded threshold; or service start with the temperature at or above the exceeded threshold and below the shutdown threshold. |
+| **CRITICAL_TEMPERATURE_RECOVERED** | Temperature back below the recovered threshold; cooldown in progress. | The temperature falls below the recovered threshold while in `CRITICAL_TEMPERATURE_EXCEEDED`. |
+| **CRITICAL_SHUTDOWN_IMMINENT** | Forced thermal shutdown in progress. Terminal. | The temperature reaches the shutdown threshold, including at service start. |
 
-- `getCurrentThermalState()` reports one state for the platform: the worst state across all sensors.
-- Between a sensor's recovered and exceeded thresholds the state does not change. No temperature threshold enters `NORMAL`; the return to `NORMAL` is time-based.
+- Between the recovered and exceeded thresholds the state does not change. No temperature threshold enters `NORMAL`; the return to `NORMAL` is time-based: the HAL enters `NORMAL` when the cooldown elapses, without waiting for a further temperature reading.
 - Every transition emits exactly one `onThermalStateChange()` event carrying the new state.
 
 ---
@@ -238,9 +238,9 @@ sequenceDiagram
     Policy->>HAL: Detect moderate condition, activate mitigation
     HAL->>MW: Emit onThermalStateChange(state=CRITICAL_TEMPERATURE_EXCEEDED)
     MW->>Telemetry: Log event
-    Sensors->>Policy: All sensors below recovered threshold
+    Sensors->>Policy: Sensor below its recovered threshold
     HAL->>MW: Emit onThermalStateChange(state=CRITICAL_TEMPERATURE_RECOVERED)
-    Note over Policy: min_cooldown_seconds elapses, all sensors still below recovered threshold
+    Note over Policy: min_cooldown_seconds elapses, sensor still below its recovered threshold
     HAL->>MW: Emit onThermalStateChange(state=NORMAL)
     MW->>App: Resume normal behaviour
 ```
@@ -305,9 +305,8 @@ sensor:
       #   recovered  <  exceeded  <  shutdown
       #
       # • critical_temperature_recovered_celsius :
-      #       Threshold below which the sensor is considered recovered. When
-      #       every sensor is below its recovered threshold,
-      #       CRITICAL_TEMPERATURE_RECOVERED is emitted and the recovery
+      #       Threshold below which the sensor is considered recovered. Below
+      #       it, CRITICAL_TEMPERATURE_RECOVERED is emitted and the recovery
       #       cooldown (policy.recovery) starts. NORMAL follows only when the
       #       cooldown completes.
       # • critical_temperature_exceeded_celsius :
@@ -326,8 +325,8 @@ sensor:
 
       # • recovery.strategy : TIME_BASED is the only defined value.
       # • recovery.min_cooldown_seconds :
-      #       Time every sensor must stay below its recovered threshold before
-      #       CRITICAL_TEMPERATURE_RECOVERED moves to NORMAL. If any sensor
+      #       Time the sensor must stay below its recovered threshold before
+      #       CRITICAL_TEMPERATURE_RECOVERED moves to NORMAL. If the sensor
       #       reaches its exceeded threshold during the cooldown, the state
       #       returns to CRITICAL_TEMPERATURE_EXCEEDED.
       policy:

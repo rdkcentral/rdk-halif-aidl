@@ -48,9 +48,8 @@ sensor:
       #   recovered  <  exceeded  <  shutdown
       #
       # • critical_temperature_recovered_celsius :
-      #       Threshold below which the sensor is considered recovered. When
-      #       every sensor is below its recovered threshold,
-      #       CRITICAL_TEMPERATURE_RECOVERED is emitted and the recovery
+      #       Threshold below which the sensor is considered recovered. Below
+      #       it, CRITICAL_TEMPERATURE_RECOVERED is emitted and the recovery
       #       cooldown (policy.recovery) starts. NORMAL follows only when the
       #       cooldown completes.
       # • critical_temperature_exceeded_celsius :
@@ -77,8 +76,8 @@ sensor:
       #
       # • recovery.strategy : TIME_BASED is the only defined value.
       # • recovery.min_cooldown_seconds :
-      #       Time every sensor must stay below its recovered threshold before
-      #       CRITICAL_TEMPERATURE_RECOVERED moves to NORMAL. If any sensor
+      #       Time the sensor must stay below its recovered threshold before
+      #       CRITICAL_TEMPERATURE_RECOVERED moves to NORMAL. If the sensor
       #       reaches its exceeded threshold during the cooldown, the state
       #       returns to CRITICAL_TEMPERATURE_EXCEEDED.
       policy:
