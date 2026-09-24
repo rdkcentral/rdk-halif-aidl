@@ -121,11 +121,18 @@ Both diagrams show the same high-level input path:
 The input path is identical on every platform. How decoded output reaches the
 sink depends on the decoder's output mode, described below.
 
-Data crossing the HAL is passed as **buffer handles**: the `long` values
-returned by `IAVBuffer.alloc()`. `IAVBuffer` is the service that allocates and
-frees them. To read or write the bytes of a non-secure buffer, middleware maps
-its handle with `mapHandle()` from the vendor's AV buffer helper
-(`libavbufferhelper.so`).
+Data crossing the HAL is passed as **AV buffer handles**: opaque `long`
+values managed by the `IAVBuffer` service. A handle is either client-allocated
+or HAL-allocated:
+
+- Middleware allocates input buffers with `IAVBuffer.alloc()`
+- The decoder allocates output frames from its own pools and hands them to
+  middleware in `onFrameOutput()`
+
+The holder of a handle either passes it to the next module (for example, the
+sink) or releases it with `IAVBuffer.free()`, whichever side allocated it. To
+read or write the bytes of a non-secure buffer, middleware maps its handle with
+`mapHandle()` from the vendor's AV buffer helper (`libavbufferhelper.so`).
 
 ---
 
@@ -189,8 +196,8 @@ After the sink:
 
 Both diagrams highlight a shared **buffer model**:
 
-- Buffers are allocated in the vendor layer (SoC AV Buffer Manager) through
-  `IAVBuffer.alloc()`, which returns a `long` handle
+- Buffers are allocated in the vendor layer (SoC AV Buffer Manager), by
+  middleware through `IAVBuffer.alloc()` or by the decoder for its output frames
 - Memory resides in **non-secure or hardware-specific memory**
 - Middleware passes handles across the HAL, and maps a non-secure handle
   through the AV buffer helper when it needs the bytes
@@ -269,6 +276,10 @@ The diagrams explicitly label the HAL interfaces used:
 - `IAudioDecoder`
 - `IAudioSink`
 - `IAudioOutputPort`
+
+The diagram does not label the mixer that owns the output ports. Middleware
+obtains each `IAudioOutputPort` from `IAudioMixer.getAudioOutputPort()` and
+sets mixer input routing with `IAudioMixerController.setInputRouting()`.
 
 ### Video
 - `IVideoDecoder`
