@@ -214,9 +214,9 @@ ${files}"
 #   1. `mike deploy <X.Y.Z> --push`        — publishes this version
 #   2. `mike set-default <X.Y.Z> --push`   — marks it as the "latest"
 # Both are synchronous (blocking) and push to origin/gh-pages directly.
-# Caller passes the release version. Bails (warns, doesn't die) on
-# failure — the release artefact commit + tag is already made, so docs
-# deploy is recoverable later (operator can rerun by hand).
+# Caller passes the release version. Warns with the retry commands and
+# returns 1 on failure; the caller fails the run, because the release
+# artefact commit is already pushed and only the docs step needs a rerun.
 deploy_versioned_docs() {
     local ver="$1"
     local docs_script="${REPO_ROOT}/docs/build_docs.sh"
@@ -728,9 +728,11 @@ Options:
   --no-snapshot          Skip creating <module>/<version>/ frozen snapshots
                          (regenerate-then-copy step). Testing only — a
                          real release MUST snapshot.
-  --no-mkdocs            Skip updating mkdocs.yml.
-  --no-build             Skip the verification build (./build_modules.sh
-                         all). Testing only — a real release MUST build.
+  --no-mkdocs            Skip updating mkdocs.yml and the documentation
+                         build.
+  --no-build             Skip the verification builds (./build_modules.sh
+                         all, ./docs/build_docs.sh build). Testing only —
+                         a real release MUST build.
   --audit                Structural change-class audit (see above). Read-only,
                          always strict.
   --no-audit             Skip the automatic write-path audit gate. Testing
@@ -756,8 +758,10 @@ Per bumped component the script:
 Once per release the script:
   5. Update versions_released.yaml components: map entries
   6. Insert mkdocs.yml nav entries for each <component>/<version>/
-  7. Generate docs/releases/<release>.md skeleton (if absent)
-  8. Prepend CHANGELOG.md section for <release>
+  7. Generate docs/releases/<release>.md skeleton (if absent) and list it
+     under Release Notes in mkdocs.yml
+  8. Prepend CHANGELOG.md section for <release>, then
+     ./docs/build_docs.sh build     # site builds; nav covers every doc set
   9. Audit docs + build configs for version-shaped strings (review only)
  10. ./build_modules.sh all                # build current cohort
  11. ./build_modules.sh manifest           # build released cohort via
@@ -1084,6 +1088,7 @@ if [[ "${COMPLETE}" -eq 1 ]]; then
     #    all gated inside build_docs.sh).
     phase "Releasing versioned docs (./docs/build_docs.sh release ${RELEASE_VERSION})"
     log ""
+    _docs_ok=0
     if [[ ! -x "${REPO_ROOT}/docs/build_docs.sh" ]]; then
         warn "docs/build_docs.sh not found/executable — skipping versioned docs release."
         warn "  Run manually when ready: ./docs/build_docs.sh release ${RELEASE_VERSION}"
@@ -1093,6 +1098,7 @@ if [[ "${COMPLETE}" -eq 1 ]]; then
             warn "  Tag + branches are pushed; retry the docs release later:"
             warn "    ./docs/build_docs.sh release ${RELEASE_VERSION}"
         else
+            _docs_ok=1
             log "  ✓ versioned docs released and set as default."
         fi
     fi
@@ -1132,6 +1138,16 @@ if [[ "${COMPLETE}" -eq 1 ]]; then
             fi
             log "  ✓ GitHub release ${RELEASE_VERSION} published."
         fi
+    fi
+
+    # The GitHub release above is independent of the docs, so it is created
+    # either way; an undeployed site still fails the run.
+    if [[ "${_docs_ok}" -ne 1 ]]; then
+        log ""
+        log "  Tag:      ${RELEASE_VERSION} (on main)"
+        log "  Branches: main + develop updated"
+        log "  Docs:     NOT deployed — retry with ./docs/build_docs.sh release ${RELEASE_VERSION}"
+        die "Release ${RELEASE_VERSION} is incomplete: its documentation is not published."
     fi
 
     log ""
@@ -1252,8 +1268,15 @@ if [[ "${COMMIT}" -eq 1 && "${APPLY}" -ne 1 ]]; then
     # Versioned docs deploy. deploy_versioned_docs runs mike deploy and
     # then (only on success) mike set-default — sequential, blocking,
     # so set-default sees the just-deployed version. mike treats the
-    # version as a string; no git tag required.
-    deploy_versioned_docs "${RELEASE_VERSION}"
+    # version as a string; no git tag required. A failed deploy exits
+    # non-zero: the release branch is pushed, but the release is not done
+    # until its documentation is published.
+    if ! deploy_versioned_docs "${RELEASE_VERSION}"; then
+        log ""
+        log "Release branch ${branch} is committed and pushed; its documentation is NOT deployed."
+        log "Retry the deploy with the commands above, then: git flow release finish ${RELEASE_VERSION}"
+        die "Documentation deploy for ${RELEASE_VERSION} failed."
+    fi
     log ""
     log "Next step (git-flow):"
     log "    git flow release finish ${RELEASE_VERSION}"
@@ -2426,6 +2449,76 @@ PYEOF
 }
 
 # ----------------------------------------------------------------------------
+# Release notes nav entry (#848)
+# ----------------------------------------------------------------------------
+#
+# Add docs/releases/<release>.md as the first (newest) child of the
+# "Release Notes:" nav section:
+#
+#   - Release Notes:
+#     - 0.23.0: releases/0.23.0.md     <- inserted
+#     - 0.22.0: releases/0.22.0.md
+#
+# Idempotent — skips when the entry already exists.
+
+update_mkdocs_release_notes() {
+    local release_version="$1"
+    local mkdocs="${REPO_ROOT}/mkdocs.yml"
+    local entry="releases/${release_version}.md"
+
+    if [[ ! -f "${mkdocs}" ]]; then
+        warn "mkdocs.yml not found — skipping Release Notes nav update."
+        return 1
+    fi
+    if grep -qE "^[[:space:]]*-[[:space:]]+[^:]+:[[:space:]]+${entry//./\\.}[[:space:]]*$" "${mkdocs}"; then
+        log "  mkdocs.yml Release Notes already lists ${release_version}"
+        return 0
+    fi
+
+    if ! python3 - "${mkdocs}" "${release_version}" <<'PYEOF'; then
+import re, sys
+mkdocs_path, version = sys.argv[1:3]
+lines = open(mkdocs_path).read().splitlines(keepends=True)
+
+parent = next((i for i, l in enumerate(lines)
+               if re.match(r"^\s*-\s+Release Notes:\s*$", l)), None)
+if parent is None:
+    sys.stderr.write("'Release Notes:' nav section not found\n")
+    sys.exit(1)
+indent = re.match(r"^(\s*)", lines[parent]).group(1) + "  "
+lines.insert(parent + 1, f"{indent}- {version}: releases/{version}.md\n")
+open(mkdocs_path, "w").write("".join(lines))
+sys.exit(0)
+PYEOF
+        warn "  python mkdocs edit failed; add '${entry}' under Release Notes by hand"
+        return 1
+    fi
+    log "  added Release Notes nav entry: ${release_version}"
+    return 0
+}
+
+# ----------------------------------------------------------------------------
+# Documentation build check (#848)
+# ----------------------------------------------------------------------------
+#
+# Build the site with ./docs/build_docs.sh build, which also fails when a
+# snapshot or release notes page has no nav entry. Output goes to
+# out/release-docs-build.log; the tail is printed on failure.
+
+run_docs_build() {
+    local log_file="${REPO_ROOT}/out/release-docs-build.log"
+    mkdir -p "$(dirname "${log_file}")"
+    phase "Building the documentation site (./docs/build_docs.sh build)..."
+    log "  log: ${log_file#"${REPO_ROOT}"/}"
+    if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh build) >"${log_file}" 2>&1; then
+        tail -n 30 "${log_file}" >&2
+        return 1
+    fi
+    log "  ✓ documentation built."
+    return 0
+}
+
+# ----------------------------------------------------------------------------
 # Release branch (#513)
 #
 # Creates / reuses release/<version> and stages all generated artefacts.
@@ -2547,7 +2640,12 @@ create_release_branch() {
 
         # mike deploy + set-default (sequential, blocking). mike treats
         # the version as a string; no git tag required.
-        deploy_versioned_docs "${release_version}"
+        if ! deploy_versioned_docs "${release_version}"; then
+            log ""
+            log "Release branch ${branch} is committed and pushed; its documentation is NOT deployed."
+            log "Retry the deploy with the commands above, then: git flow release finish ${release_version}"
+            die "Documentation deploy for ${release_version} failed."
+        fi
         log ""
         log "Next step (git-flow):"
         log "    git flow release finish ${release_version}"
@@ -3506,8 +3604,8 @@ if [[ "${DRY_RUN}" -eq 1 && ${#BUMPED_COMPONENTS[@]} -gt 0 ]]; then
     log "  Then once per release:"
     log "    5. Update versions_released.yaml components: map"
     log "    6. Insert mkdocs.yml nav entries for the ${#BUMPED_COMPONENTS[@]} new <module>/<version>/ doc sets"
-    log "    7. Generate docs/releases/${RELEASE_VERSION}.md release-notes skeleton (if absent)"
-    log "    8. Prepend a new ${RELEASE_VERSION} section to CHANGELOG.md"
+    log "    7. Generate docs/releases/${RELEASE_VERSION}.md release-notes skeleton (if absent) and list it under Release Notes"
+    log "    8. Prepend a new ${RELEASE_VERSION} section to CHANGELOG.md, then ./docs/build_docs.sh build"
     log "    9. Audit docs + build configs for version-shaped strings (review only)"
     log "   10. ./build_modules.sh all                 (build current cohort)"
     log "   11. ./build_modules.sh manifest            (build released cohort via versions_released.yaml)"
@@ -3639,12 +3737,26 @@ if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
     log ""
     generate_release_notes_skeleton "${RELEASE_VERSION}"
     (cd "${REPO_ROOT}" && git add "docs/releases/${RELEASE_VERSION}.md") 2>/dev/null || true
+    if [[ "${NO_MKDOCS}" -ne 1 ]]; then
+        update_mkdocs_release_notes "${RELEASE_VERSION}" \
+            || die "Release Notes nav update failed. Aborting release (re-run with --no-mkdocs to bypass for testing)."
+    fi
 
     # 5. CHANGELOG.md — prepend a new section for this release (#580).
     phase "Regenerating CHANGELOG.md section for ${RELEASE_VERSION}..."
     log ""
     regenerate_changelog "${RELEASE_VERSION}"
     (cd "${REPO_ROOT}" && git add CHANGELOG.md) 2>/dev/null || true
+
+    # 5b. Documentation build (#848). The nav, snapshots, release notes and
+    # CHANGELOG are all in place, so this is the site --commit will deploy.
+    # A cut whose documentation does not build stops here.
+    if [[ "${NO_MKDOCS}" -eq 1 || "${NO_BUILD}" -eq 1 ]]; then
+        log ""
+        log "Documentation build: SKIPPED (--no-mkdocs / --no-build)"
+    elif ! run_docs_build; then
+        die "Documentation build failed. Aborting release — fix the site before --apply."
+    fi
 
     # 6. Version-ref audit across docs + build configs (#581 / #582).
     # Informational only — surfaces strings that look like versions so
