@@ -12,310 +12,283 @@
 
 ---
 
-## 1. Overview
+## Summary
+
+**What it is.** A released `rdk-halif-aidl` snapshot is what a vendor HAL and a
+middleware build against. This document states what a snapshot contains, who
+may write it, and how a consumer selects the version it builds against, so that
+a packaging change is assessed against stated requirements.
+
+**The shape.** Each `<component>/<version>/` holds the frozen AIDL, the C++
+bindings generated from it at release, its contract hash and its documentation.
+The release tooling is its only writer, and nothing edits it afterwards. Each
+consumer selects a `(component, version)` pair, and several versions of one
+component build side by side in one integration.
+
+**Why this shape.** Both processes compile the same generated code, because each
+side is a client of some interfaces in a component and a server of others.
+Consumer build hosts carry no AIDL generator, and the generator is versioned
+independently of the interfaces, so shipping the bindings is what gives every
+integrator the same code.
+
+**What it costs.** Across the 34 released snapshots the generated C++ is 130,361
+lines against 42,848 lines of AIDL, about three times the contract it derives
+from. A generator fix reaches a released snapshot only through a deliberate
+refreeze.
+
+**What is still open.** Whether a generator-free build host is a requirement or
+a convenience, which decides between shipping bindings and regenerating at build
+time; and whether the build recipe moves out of the version directories, which
+today each carry a `CMakeLists.txt`. Both are in [Open Issues](#open-issues).
+
+```mermaid
+flowchart LR
+    Owner["Component owner<br/>authors the AIDL"]
+    Gen["linux_binder_idl<br/>AIDL generator"]
+    subgraph REPO["rdk-halif-aidl"]
+        Snap["Released snapshots<br/>keyed by component and version"]
+    end
+    Vendor["Vendor HAL build"]
+    MW["Middleware build"]
+
+    Owner -->|"AIDL, frozen at release"| Snap
+    Gen -->|"C++ bindings, at freeze"| Snap
+    Snap -->|"the component and version it chose"| Vendor
+    Snap -->|"the component and version it chose"| MW
+```
+
+---
+
+## Overview
 
 ### Purpose
 
-A released `rdk-halif-aidl` snapshot is the artefact a vendor HAL and a
-middleware build against. This document settles what that snapshot must
-contain, where the recipe for building it lives, and how a consumer selects the
-version it wants — so that packaging changes can be assessed against stated
-requirements rather than re-argued each time one is proposed.
-
-It leaves the field-level contract to the AIDL itself and the per-component
-build contract to [Ref 2](#5-references).
+Integrating teams have written bespoke recipes to unpick a release, and
+proposals to change the build have repeatedly required editing released
+snapshots. Both come from the same gap: no stated rule for what a released
+snapshot is. This document states that rule as requirements, and records the
+options assessed against them.
 
 ### Scope
 
 - **In scope:** what a `<component>/<version>/` directory holds; how a consumer discovers and selects a version; where build infrastructure lives relative to a frozen snapshot; how generated bindings are produced and committed.
-- **Out of scope:** the AIDL contract of any individual component (each component's own docs); the runtime compatibility predicate applied by clients, which is covered in [Ref 3](#5-references); the Yocto recipes an integrator writes, which are theirs to own per [Ref 2](#5-references).
+- **Out of scope:** the AIDL contract of any individual component (each component's own docs); the runtime compatibility check a client applies ([Ref 3](#references)); the Yocto recipes an integrator writes, which are theirs to own ([Ref 2](#references)).
 
 ### Success Criteria
 
-- **Technical:** two consumers in one integration build against different versions of the same component, each resolving headers, sources and dependencies without hardcoded paths, on a build host carrying no AIDL codegen toolchain.
-- **Product:** an integrator adopts a released snapshot without writing a bespoke recipe to unpick it — the failure that [Ref 5](#5-references) was raised to fix.
+- **Technical:** two consumers in one integration build against different versions of the same component, each resolving headers, sources and dependencies without hardcoded paths, on a build host carrying no AIDL generator.
+- **Product:** an integrator adopts a released snapshot without writing a bespoke recipe to unpick it ([Ref 5](#references)).
 
 ---
 
-## 2. Assumptions
+## Assumptions
 
 These bound everything below. If one is wrong, the architecture changes rather than the detail.
 
-1. **The interface is used symmetrically.** Each side is a client of some interfaces in a component and a server of others, so neither can be shipped half a binding set. See [Ref 1](#5-references).
-2. **C++ is the only backend.** This is what makes committing generated bindings tractable at all; a second backend changes the answer. A released cohort pins one version per component by *default* — that is what `versions_released.yaml` expresses — but the default is not a limit: the build closure is keyed by `(component, version)`, so several versions of one component are built side by side whenever their dependents link different ones. **This is how HALIF-F-003 is met today**, and any packaging change has to preserve it. See [Ref 2](#5-references) and [Ref 9](#5-references).
-3. **Consumers cross-compile in environments we do not fully control.** Weakening: we set the distro and recipes for most consumers today, so this is closer to a decision not to impose a toolchain than a hard constraint.
-4. **The generator is versioned independently of the interfaces.** `linux_binder_idl` releases on its own cadence, so which generator produced a binding is a variable rather than a constant. This is reversible by decision — see [Open Issues](#3-open-issues).
-5. **Released snapshots are contract-immutable and the release tooling is the sole writer of committed bindings.**
+1. **The interface is used symmetrically.** Each side is a client of some interfaces in a component and a server of others, so neither side can be shipped half a binding set ([Ref 1](#references)).
+2. **C++ is the only binding backend.** Committing generated code is tractable for one backend; a second multiplies the generated volume and the review load.
+3. **Consumers cross-compile in build environments this repository does not set.** RDK-E sets the distro and recipes for most consumers today, so this is a decision not to impose a generator on them rather than a hard constraint.
+4. **The generator is versioned independently of the interfaces.** `linux_binder_idl` releases on its own cadence, so which generator produced a binding varies between snapshots.
+5. **Released snapshots are contract-immutable.**
 
 ---
 
-## 3. Open Issues
+## Terminology
 
-| Issue | Resolution |
-|---|---|
-| Is HALIF-N-001 (no codegen toolchain on a consumer build host) binding, or a convenience? | **Open.** We control the distro; a pinned `linux-binder-native` recipe would put the generator on every build host, and codegen for a whole HAL takes seconds. If it is a convenience, Option B in §8 becomes materially stronger. |
-| Do we pin the generator version across platforms? | **Open.** Pinning makes assumption 4 false and retires the determinism argument. It costs a flag-day whenever the generator moves, instead of absorbing the change per component at freeze time. |
-| On a generator defect, do we refreeze deliberately or absorb silently? | **Open.** Refreezing touches released artefacts across a release cycle; regenerate-at-build fixes every consumer on the next build but changes a certified ABI without anyone deciding to. A risk preference, not a technical question. |
-| Should the build recipe move out of the version directories? | **Open.** Required to satisfy HALIF-F-004 enforceably; see the decision candidate in §11. |
-| Should every *installed* artefact path carry the version? | **Open — bears on HALIF-F-002.** HALIF-F-001 and HALIF-F-003 are already satisfied by the staged tree, which carries the version in both places it can: the library name (`lib<component>-v<version>-cpp.so`) and the header path `<mount>/rdk-halif-aidl/include/<component>/<version>/include` — which is what lets vendor and middleware hold different versions without colliding ([Ref 9](#5-references)). What is unsettled is the *installed discovery* surface HALIF-F-002 asks for: a CMake package config or `.pc` file published to a shared prefix. An unversioned one cannot express a version request, so satisfying HALIF-F-002 that way would cost HALIF-F-001 and HALIF-F-003. A consumer's version pin is the interface it wrote its code against and must survive discovery. |
-| No check proves a frozen snapshot's bindings match its AIDL. | **Open.** The `current/` invariant is enforced by the smoke test; the frozen equivalent — regenerate from `<ver>/com/` and diff against `<ver>/{include,src}` — runs nowhere. Cheap to close, and would settle the drift objection with evidence. |
-| The implementation surface ships undocumented. | **Open.** Tracked as [Ref 6](#5-references). Until it lands, HALIF-F-006 is unmet and every IDE tooltip in a HAL implementation is blank. |
-
----
-
-## 4. Terminology
-
-- **Snapshot** — a released `<component>/<version>/` directory: the frozen AIDL, its generated bindings, its contract hash and its documentation.
-- **Binding** — generated C++ produced from AIDL by the toolchain: the `Bp` proxy the caller holds and the `Bn` stub the implementer derives from.
+- **Snapshot** — a released `<component>/<version>/` directory.
+- **Binding** — C++ generated from AIDL: the `Bp` proxy the caller holds and the `Bn` stub the implementer derives from.
 - **Cohort** — the set of component versions an integration pins and builds together.
-- **Era** — the compatibility generation of a component's version scheme; the era transition is a compatibility boundary.
+- **Era** — the compatibility generation of a component's version scheme; crossing an era is a compatibility boundary ([Ref 9](#references)).
 
 ---
 
-## 5. References
+## Context and Drivers
 
-| # | Title | Link |
+- **Drivers:** integrators wrote bespoke recipes because a release carried no standard way to resolve a component's headers, libraries and dependencies ([Ref 5](#references)). Build changes were made by editing released snapshots, with no rule to assess them against.
+- **Version pins:** each side builds against a version it chose and runs against that version or a later minor of it ([Ref 1](#references)). In era `0` vendor and middleware must align on the major, which couples their release cadences; after the AIDL freeze the vendor can hold a major while the middleware moves on. Discovery must therefore resolve the version a consumer states, not whichever version is installed.
+- **Strategic alignment:** standard Linux packaging for consumption, and AOSP's separation of contract from build recipe ([Ref 6](#references)), without AOSP's regenerate-at-build model.
+
+---
+
+## Requirements
+
+### Functional
+
+| Requirement | The architecture must | Traced to |
 |---|---|---|
-| 1 | How each side uses a component, and which code it compiles | [HAL Interface Usage](../key_concepts/hal/hal_interface_usage.md) |
-| 2 | The per-component build and staging contract for integrators | [Third-Party Build Integration](../standards/build_integration.md) |
-| 3 | Client-side version discovery, capability gating and fallback | [Client Usage of Stable AIDL](../whitepapers/client_usage_of_stable_aidl.md) |
-| 4 | The rules on what is committed where, and who may write a snapshot | [HAL Delivery & Versioning SOP](../governance/versioning-sop.md) |
-| 5 | Packaging gap: consumers hardcoding paths | <https://github.com/rdkcentral/rdk-halif-aidl/issues/666> |
-| 6 | Generator strips Doxygen comments from generated headers | <https://github.com/rdkcentral/linux_binder_idl/issues/28> |
-| 7 | AOSP stable AIDL: freeze mechanics and `versions_with_info` | <https://source.android.com/docs/core/architecture/aidl/stable-aidl> |
-| 8 | What the AIDL generator guarantees to its consumers — determinism, interface identity, known deviations. Published by [linux_binder_idl#65](https://github.com/rdkcentral/linux_binder_idl/pull/65) | <https://github.com/rdkcentral/linux_binder_idl/blob/develop/CODEGEN.md> |
-| 9 | The layout contract in force: version selection, role mount points, and why a version sits in the library name but the header *path* | [`rdk-halif-aidl.bb`](../../tests/yocto/meta-rdk-halif-aidl/recipes-halif/rdk-halif-aidl/rdk-halif-aidl.bb) |
-| 10 | The consumable layer and the tests that prove the staging contract | [Yocto integration](../../tests/yocto/README.md) |
-| 11 | The version scheme, the era rules, and the `isCompatible()` predicate | [Versioning Guide](../standards/versioning-guide.md) |
-| 12 | The client-side helper implementing those era rules | [`halcompat.h`](../../common/current/halcompat.h) |
+| **Chosen version** | Let a consumer build against a `(component, version)` pair it chose, independently of what any other consumer selects. | [Ref 1](#references) |
+| **No hardcoded paths** | Let a consumer resolve a component's headers, sources, libraries and transitive dependencies without hardcoded paths. | [Ref 5](#references) |
+| **Side-by-side versions** | Let two consumers in one integration build against different versions of the same component. | [Ref 1](#references) |
+| **Immutable snapshot** | Keep a released `<component>/<version>/` directory unchanged after release. | [Ref 4](#references) |
+| **Tooling-only writes** | Commit generated bindings only through the release tooling, and only into a frozen snapshot. | [Ref 4](#references) |
+| **Documented implementation surface** | Document the surface an engineer implements, per released version. | [Ref 7](#references) |
+
+### Non-functional
+
+| Requirement | Target | How it is proven |
+|---|---|---|
+| **No generator on the build host** | A C++ cross-toolchain and nothing else | A consumer builds in a container with no generator present |
+| **Deterministic bindings** | Byte-identical across integrators for a given release | Regenerate from `<version>/com/` and diff against the committed `<version>/{include,src}` |
+| **Integration cost** | One line in a recipe, two in CMake | The consumer example builds and links through both `find_package` and `pkg-config` |
 
 ---
 
-## 6. Context and Drivers
-
-- **Drivers:** integrating teams were writing bespoke recipes to unpick a release, because the published artefact carried no standard way to resolve a component's headers, libraries and dependencies ([Ref 5](#5-references)). Separately, proposals to change the build have repeatedly required editing released snapshots, with no stated rule to assess them against.
-- **What a version pin is for — the driver behind HALIF-F-001 and HALIF-F-003.** A consumer cannot write code without choosing a version, so each side builds against a fixed major of the contract: the vendor for its implementation, the middleware for its clients. Moving up is a deliberate decision about what to implement and when, which is why HALIF-F-001 is stated as a *chosen* pair rather than a resolved one. Note the two are distinct: a consumer **builds** against one version and **runs** against that version or a later minor of it, since within a major the protocol is backwards-compatible ([Ref 11](#5-references), [Ref 12](#5-references)). In era `0` a major bump breaks the wire, so the two sides' pins **must be aligned**, which couples vendor and middleware release cadences to one another. After the AIDL freeze the vendor can hold a major while the middleware versions independently and keeps evolving. **Decoupling those cadences is what the freeze buys**, and it is why HALIF-F-002 has to resolve a version the consumer *states* rather than whichever one happens to be installed.
-- **Strategic alignment:** moves the repository toward standard Linux packaging conventions for consumption, and toward AOSP's separation of contract from build recipe ([Ref 7](#5-references)) for release integrity — without adopting AOSP's regenerate-at-build model, which their build shape permits and ours does not require.
-
----
-
-## 7. Requirements
-
-### 7.1 Consumption
-
-| # | Requirement |
-|---|---|
-| HALIF-F-001 | A consumer **shall** build against a chosen `(component, version)` pair, independently of what any other consumer selects. |
-| HALIF-F-002 | A consumer **shall** resolve a component's headers, sources, libraries and transitive dependencies without hardcoded paths. |
-| HALIF-F-003 | Two consumers within one integration **shall** build against different versions of the same component. |
-
-### 7.2 Release integrity
-
-| # | Requirement |
-|---|---|
-| HALIF-F-004 | A released `<component>/<version>/` directory **shall** be immutable after release. |
-| HALIF-F-005 | Generated bindings **shall** be committed only by the release tooling, and only into a frozen snapshot. |
-| HALIF-F-006 | The surface an engineer implements **shall** be documented, per released version. |
-
-### 7.3 Non-functional
-
-| # | Requirement | Target | How it is proven |
-|---|---|---|---|
-| HALIF-N-001 | Consumer build-host prerequisites | A C++ cross-toolchain and nothing else; no AIDL codegen toolchain | A consumer builds in a container with no generator present |
-| HALIF-N-002 | Binding determinism across integrators | Byte-identical for a given release | Regenerate from `<ver>/com/` and diff against the committed `<ver>/{include,src}` |
-| HALIF-N-003 | Consumer integration cost | One line in a recipe, two in CMake | The consumer example builds and links through both `find_package` and `pkg-config` |
-
----
-
-## 8. Architecture Options Considered
+## Architecture Options Considered
 
 | Option | Description | Pros | Cons | Decision |
 |---|---|---|---|---|
-| **A: Commit AIDL + generated bindings** | A snapshot carries the frozen AIDL and the C++ produced from it | Satisfies HALIF-N-001 and HALIF-N-002 by default; the shipped artefact is the reviewed artefact; gives HALIF-F-006 something to document | Repository size; a generator fix reaches released snapshots only by deliberate refreeze | **Accepted** — the only option meeting HALIF-N-002 and HALIF-F-006 without additional machinery |
-| **B: Commit AIDL only, consumers regenerate** | AOSP's model ([Ref 7](#5-references)) | Smallest repository; a generator fix reaches everyone on their next build | Fails HALIF-N-001 unless a generator is provisioned everywhere; fails HALIF-N-002 while the generator is a variable; leaves nothing to hang HALIF-F-006 on | **Rejected** — contingent on the first two [Open Issues](#3-open-issues); revisit if either resolves |
-| **C: Ship both, state which path is supported** | Where we already are, since the AIDL is in the snapshot | Costs nothing; lets an integrator who prefers B take it knowingly | Requires recording which generator froze each snapshot | **Accepted as an addition to A** |
-| **D: Document the AIDL, treat bindings as disposable** | Pairs B with a Doxygen AIDL mapping | Cheapest route to contract documentation; works today | Documents the contract surface, not the surface engineers implement — does not satisfy HALIF-F-006 | **Rejected as a substitute; adopted as a complement** |
+| **A: Commit AIDL and generated bindings** | A snapshot carries the frozen AIDL and the C++ produced from it | Meets *No generator on the build host* and *Deterministic bindings* by default; the shipped code is the reviewed code; gives *Documented implementation surface* something to document | Generated volume; a generator fix reaches released snapshots only by deliberate refreeze | **Accepted** — the only option meeting *Deterministic bindings* and *Documented implementation surface* without further machinery |
+| **B: Commit AIDL only, consumers regenerate** | AOSP's model ([Ref 6](#references)) | Smallest repository; a generator fix reaches every consumer on its next build | Needs a generator on every build host; output varies with the generator each integrator holds; nothing to document the implementation surface from | **Rejected** — fails *No generator on the build host* and *Deterministic bindings* while generators vary by integrator |
+| **C: Ship both, state which path is supported** | The AIDL is already in the snapshot, so an integrator may regenerate | Costs nothing; an integrator who prefers B takes it knowingly | Each snapshot must record which generator froze it | **Accepted as an addition to A** |
+| **D: Document the AIDL, treat bindings as disposable** | Pairs B with a Doxygen mapping of the AIDL | Cheapest route to contract documentation; works today | Documents the contract, not the surface engineers implement | **Rejected as a substitute; adopted as a complement** |
 
 ---
 
-## 9. Proposed Architecture
+## Proposed Architecture
 
-**A released snapshot is the contract plus everything derived from it, addressed by `(component, version)`; the recipe that builds it is not part of it.**
-
-The shape follows from [Ref 1](#5-references): both processes compile the same
-generated code, so the snapshot must carry a complete binding set; and each
-consumer selects its own version, so every artefact in a snapshot must be
-addressable by version. What the choice costs is a repository roughly twice the
-size of the AIDL alone, and a generator improvement that reaches released
-snapshots only when someone decides it should.
-
-### High-level diagram
+**A released snapshot is the frozen contract plus the bindings generated from it, addressed by `(component, version)` and written only by the release tooling.**
 
 ```mermaid
 flowchart LR
-    subgraph SNAP["&lt;component&gt;/&lt;version&gt;/ — the released snapshot"]
+    subgraph SNAP["component/version — the released snapshot"]
         direction TB
-        A["com/ — frozen AIDL<br/>the contract"]
+        A["com/ — frozen AIDL"]
         H[".hash — contract fingerprint"]
-        B["include/ · src/ — generated bindings"]
-        D["docs/ · interface.yaml"]
+        B["include/ and src/ — generated bindings"]
+        D["docs/ and interface.yaml"]
     end
 
-    subgraph OUT["outside the version directory"]
-        direction TB
-        R["build recipe<br/>enumerates versions + pinned imports"]:::open
-        M["versions_released.yaml<br/>the cohort manifest"]
-    end
+    Rel["Release tooling"]
+    M["Cohort manifest"]
+    R["Build recipe<br/>placement undecided"]:::open
 
+    Rel -->|"writes once"| SNAP
     A --> B
-    M --> R
-    R -.->|builds| SNAP
+    M -->|"selects versions"| R
+    R -.->|"compiles"| SNAP
     classDef open stroke-dasharray: 4 3
 ```
 
-### Major components and data flow
+### Components
 
-| Component | Owns |
-|---|---|
-| **`<component>/<version>/`** | The frozen contract, its bindings, its hash and its documentation. Immutable after release. |
-| **`<component>/current/`** | The authored AIDL under development. Commits no bindings; the toolchain regenerates them locally. |
-| **Release tooling** | The only writer of a snapshot. Regenerates bindings during freeze and writes contract and bindings in one operation. |
-| **Cohort manifest** | Which version of each component an integration builds. One per consuming layer. |
-| **Build recipe** *(dashed — not yet outside the snapshot)* | How a snapshot is compiled. Enumerates released versions and their pinned imports. |
+| Component | Owner | Owns | Must build |
+|---|---|---|---|
+| **`<component>/<version>/`** | rdk-halif-aidl maintainers | The frozen AIDL, its bindings, its hash and its documentation | A CI check that regenerates each snapshot's bindings from its AIDL and diffs them |
+| **`<component>/current/`** | Component owners | The AIDL under development; commits no bindings | Nothing new |
+| **Release tooling** | rdk-halif-aidl maintainers | The only writer of a snapshot; regenerates the bindings and writes contract and bindings in one operation | Record the generator version in every snapshot it writes |
+| **Cohort manifest** | Each consuming layer | Which version of each component a layer builds by default. The build closure adds every `(component, version)` a dependent links, so several versions of one component build side by side | Nothing new |
+| **Build recipe** | rdk-halif-aidl maintainers | How a snapshot is compiled; today a `CMakeLists.txt` inside each version directory, and the staged layout that carries the version in the library name and the header path ([Ref 8](#references)) | A consumer example that builds through `find_package` and `pkg-config` |
 
 ---
 
-## 10. High Level Design
+## High Level Design
 
-The ordered behaviour that matters here is the freeze, because it is the only
-point at which generated code enters the repository, and every integrity
-requirement rests on it.
+### How does a snapshot come to exist?
 
-### 10.1 How a snapshot comes to exist
-
-`release.sh` is the sole writer. It regenerates from the authored AIDL, then
-writes contract and bindings together in one operation, so the two cannot
-diverge through a manual step.
+[`release.sh`](../../scripts/release.sh) regenerates from the authored AIDL and
+writes contract and bindings together, so the two cannot diverge through a
+manual step.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant Dev as Contributor
+    participant Dev as Component owner
     participant Cur as component/current
-    participant Rel as release.sh
+    participant Rel as Release tooling
     participant Snap as component/version
 
     Dev->>Cur: edit AIDL only
-    Note over Cur: include/ and src/ are gitignored — never committed here
-    Rel->>Cur: audit surface vs last snapshot, classify change
+    Note over Cur: include/ and src/ are gitignored here
+    Rel->>Cur: audit surface against last snapshot, classify change
     Rel->>Cur: regenerate bindings
-    Rel->>Snap: write AIDL + bindings + hash in one operation
-    Note over Snap: immutable from here — see HALIF-F-004
+    Rel->>Snap: write AIDL, bindings and hash in one operation
+    Note over Snap: unchanged from here on
 ```
 
-Committing bindings under `current/` would reintroduce the drift this avoids: a
-binding whose regeneration depends on a contributor remembering to commit it
-goes stale, and a toolchain that rewrites it at build time hides the staleness
-until an incremental build trips over it.
+Committing bindings under `current/` would reintroduce drift: a binding that
+depends on a contributor remembering to commit it goes stale, and a toolchain
+that rewrites it at build time hides the staleness until an incremental build
+trips over it.
 
 ---
 
-## 11. Key Architecture Decisions
+## Key Architecture Decisions
 
-> **Decision:** A frozen snapshot carries both the AIDL and the bindings generated from it; `current/` carries neither.
+> **Decision:** A frozen snapshot carries both the AIDL and the bindings generated from it; `current/` carries only the AIDL.
 >
-> - **Rationale:** consumers compile the bindings, so the release must contain them; `current/` has no consumer, so committing bindings there buys nothing and drifts.
-> - **Consequence:** the repository carries roughly twice the AIDL volume, permanently and per version.
+> - **Rationale:** consumers compile the bindings, so the release must contain them (assumption 1); `current/` has no consumer, so bindings committed there buy nothing and drift.
+> - **Consequence:** the repository carries the generated C++ for every released version, permanently.
 > - **Risk:** a generator defect is baked into every released snapshot. The signal is a generator fix that consumers cannot obtain without a re-release.
 
 > **Decision:** The release tooling is the only writer of committed bindings.
 >
-> - **Rationale:** it is what makes HALIF-F-005 checkable rather than aspirational.
-> - **Consequence:** any process that needs to touch a snapshot must be added to that tooling rather than performed by hand.
-> - **Risk:** a hand-edited snapshot carries none of the guarantees this document claims, and nothing currently detects one.
-
-### Decision candidates — not yet made
-
-These follow from the requirements above but have not been agreed. They are
-listed here rather than in the body so they can be accepted or rejected as
-decisions.
-
-> **Candidate:** Move the build recipe out of the version directories, into one definition generated from the cohort manifest and each component's `interface.yaml`.
->
-> - **Satisfies:** HALIF-F-004 enforceably — a build-system change would touch no released snapshot.
-> - **Consequence:** frozen directories become contract-only; the freeze step stops rewriting build logic; the dependency graph has one home rather than three.
-> - **Risk:** a migration touching every component at once.
-
-> **Candidate:** Every artefact path in an installed prefix carries its version.
->
-> - **Satisfies:** HALIF-F-001 and HALIF-F-003.
-> - **Consequence:** headers, sources, package configuration and pkg-config files gain a version segment, as the library filename already has.
-> - **Risk:** changes installed paths for existing consumers.
+> - **Rationale:** it makes *Tooling-only writes* checkable rather than a matter of discipline.
+> - **Consequence:** any process that needs to touch a snapshot is added to that tooling rather than performed by hand.
+> - **Risk:** a hand-edited snapshot carries none of these guarantees, and nothing detects one until the drift check exists.
 
 ---
 
-## 12. Security Implications
+## Open Issues
 
-| Does this feature… | |
-|---|---|
-| Add or change network endpoints, ports or interfaces? | No |
-| Change services listening on open ports? | No |
-| Change iptables rules or DSCP markings? | No |
-| Add, change or require authentication between components? | No |
-| Add or change connections between networked endpoints? | No |
-| Use private credentials — TLS keys, shared secrets? | No |
-| Store sensitive configuration, device or company information in NV or cloud? | No |
-| Use, retrieve, store or transmit customer data, PII or CPNI? | No |
-| Take input from users or external tools? | No |
-| Use cryptographic functions directly? | No |
-| Rely on existing protocols for security or encryption? | No |
-| Add, use or change open-source packages? | Yes — the snapshot ships generated C++ under the repository licence, which licence scanning inspects directly. |
-| Introduce new C, C++ or bash components? | Yes — the generated bindings, produced by the toolchain and reviewed as part of the release. |
-| Introduce new processes? | No |
+| Issue | Owner | Resolution |
+|---|---|---|
+| Is *No generator on the build host* binding, or a convenience? | RDK-E Architecture | **Open.** RDK-E controls the distro; a pinned `linux-binder-native` recipe would put the generator on every build host, and codegen for a whole HAL takes seconds. If it is a convenience, Option B becomes materially stronger. |
+| Is the generator version pinned across platforms? | RDK-E Architecture | **Open.** Pinning makes assumption 4 false and removes the determinism argument for Option A. It costs a flag-day whenever the generator moves, instead of absorbing the change per component at freeze time. |
+| On a generator defect, is a snapshot refrozen deliberately, or does the fix wait for the next release? | RDK-E Architecture | **Open.** Refreezing touches released snapshots; regenerating at build time fixes every consumer on the next build but changes a certified ABI without anyone deciding to. A risk preference, not a technical question. |
+| Does the build recipe move out of the version directories? | RDK-E Architecture | **Open.** Moving it into one definition generated from the cohort manifest and each component's `interface.yaml` makes *Immutable snapshot* enforceable: a build change touches no released snapshot, the freeze step stops rewriting build logic, and the dependency graph has one home instead of three. The cost is a migration touching every component at once. |
+| Does the installed discovery surface carry the version? | RDK-E Architecture | **Open.** The staged tree already carries the version in the library name and the header path, which meets *Chosen version* and *Side-by-side versions* ([Ref 8](#references)). A CMake package config or `.pc` file published to a shared prefix is what *No hardcoded paths* asks for; an unversioned one cannot express a version request and would lose the other two. |
 
 ---
 
-## 13. Risks
+## Risks
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| A generator defect is baked into released snapshots | Every consumer of that release compiles the defect; the fix needs a refreeze and re-release | Record the generator version in the snapshot so affected releases are identifiable; decide the refreeze policy (see [Open Issues](#3-open-issues)) |
-| A snapshot's bindings drift from its AIDL | The release ships a contract that does not match its own bindings | Add the frozen-equivalent drift check to CI (HALIF-N-002) |
-| Build files inside version directories make immutability unenforceable | Released snapshots are edited routinely, and reviewers have no principled line | Adopt the decision candidate in §11 |
-| Only the library filename carries a version | HALIF-F-001 and HALIF-F-003 cannot be met; a version request is meaningless when one version can be installed | Adopt the second decision candidate in §11 |
+| A generator defect is baked into released snapshots | Every consumer of that release compiles the defect; the fix needs a refreeze and a re-release | The release tooling records the generator version in each snapshot, so affected releases are identifiable |
+| A snapshot's bindings drift from its AIDL | The release ships bindings that do not match its own contract | The CI drift check on released snapshots |
 
 ---
 
-## 14. Dependencies
+## Dependencies
 
 | Dependency | On whom | Needed for |
 |---|---|---|
-| BINDER-F-001 — comment preservation ([Ref 6](#5-references)) | `linux_binder_idl` | HALIF-F-006 |
-| BINDER-F-002, BINDER-F-003 — determinism and generator identity | `linux_binder_idl` | HALIF-N-002, and the refreeze policy decision |
-| BINDER-F-005 — clean compile under `-Werror` | `linux_binder_idl` | HALIF-N-003 |
-| Consumer smoke test through `find_package` and `pkg-config` | This repository's CI | HALIF-N-003 |
+| **BINDER-F-001** — the generator carries documentation comments from the AIDL into the generated headers ([Ref 7](#references)) | `linux_binder_idl` | *Documented implementation surface* |
+| **BINDER-F-002** — the generator produces byte-identical output for identical AIDL at a given generator version | `linux_binder_idl` | *Deterministic bindings* |
+| **BINDER-F-003** — generated output identifies the generator version that produced it | `linux_binder_idl` | Recording the generator version per snapshot |
+| **BINDER-F-004** — binder helper headers are emitted only for interfaces, not for parcelables or enums | `linux_binder_idl` | Generated volume |
+| **BINDER-F-005** — generated code compiles without diagnostics under `-Werror` at C++17 | `linux_binder_idl` | *Integration cost* |
+| Consumer smoke test through `find_package` and `pkg-config` | rdk-halif-aidl CI | *Integration cost* |
+
+The `BINDER-F` identifiers are tracked by the generator's own contract ([Ref 10](#references)).
 
 ---
 
-## 15. Component Requirements
+## Security Implications
 
-### `linux_binder_idl` — the AIDL generator
+All No except:
 
-`HALIF-F-006` and `HALIF-N-002` cannot be met by this repository. They are
-requirements on the generator, which is separately owned and versioned. Stated
-here so the boundary is explicit; the generator's own contract is [Ref 8](#5-references).
+| Does this feature… | Answer |
+|---|---|
+| Add, use or change open-source packages? | Yes — the snapshot ships generated C++ under the repository licence, which licence scanning inspects directly. |
+| Introduce new C, C++ or bash components? | Yes — the generated bindings, produced by the generator and reviewed as part of the release. |
 
-| # | Requirement | Satisfies |
+---
+
+## References
+
+| # | Title | Link |
 |---|---|---|
-| BINDER-F-001 | The generator **shall** carry documentation comments from the AIDL into the generated C++ headers. | HALIF-F-006 |
-| BINDER-F-002 | The generator **shall** produce byte-identical output for identical AIDL input at a given generator version. | HALIF-N-002 |
-| BINDER-F-003 | Generated output **shall** identify the generator version that produced it. | HALIF-N-002, and the refreeze policy decision |
-| BINDER-F-004 | The generator **shall** emit binder helper headers only for interfaces, not for parcelables or enums. | Snapshot size and clarity |
-| BINDER-F-005 | Generated code **shall** compile without diagnostics under `-Werror` at C++17. | HALIF-N-003 |
-
-The decision candidate on client/server separation in §11 also depends on the
-generator: `Bp` and `Bn` implementations are emitted into a single translation
-unit, so no packaging arrangement in this repository can separate them.
+| 1 | How each side uses a component, which code it compiles, and how it selects a version | [HAL Interface Usage](../key_concepts/hal/hal_interface_usage.md) |
+| 2 | The per-component build and staging contract for integrators | [Third-Party Build Integration](../standards/build_integration.md) |
+| 3 | Client-side version discovery, capability gating and fallback | [Client Usage of Stable AIDL](../whitepapers/client_usage_of_stable_aidl.md) |
+| 4 | What is committed where, and who may write a snapshot | [HAL Delivery & Versioning SOP](../governance/versioning-sop.md) |
+| 5 | Packaging gap: consumers hardcoding paths | <https://github.com/rdkcentral/rdk-halif-aidl/issues/666> |
+| 6 | AOSP stable AIDL: freeze mechanics and `versions_with_info` | <https://source.android.com/docs/core/architecture/aidl/stable-aidl> |
+| 7 | Generator strips Doxygen comments from generated headers | <https://github.com/rdkcentral/linux_binder_idl/issues/28> |
+| 8 | The layout in force: version selection, role mount points, and where the version sits | [`rdk-halif-aidl.bb`](../../tests/yocto/meta-rdk-halif-aidl/recipes-halif/rdk-halif-aidl/rdk-halif-aidl.bb) |
+| 9 | The version scheme and the era rules | [Versioning Guide](../standards/versioning-guide.md) |
+| 10 | What the generator guarantees: determinism, interface identity, known deviations | <https://github.com/rdkcentral/linux_binder_idl/blob/develop/CODEGEN.md> |
 
 ---
 
@@ -323,4 +296,4 @@ unit, so no packaging arrangement in this repository can separate them.
 
 | Version | Date | Change |
 |---|---|---|
-| Issue #1 | 2026-09-03 | Initial. Supersedes the *Generated Code in Git* whitepaper. |
+| Issue #1 | 2026-09-24 | Initial. |

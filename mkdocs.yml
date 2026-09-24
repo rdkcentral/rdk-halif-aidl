@@ -162,7 +162,7 @@ nav:
       - RDK Engineering Validation Framework: governance/rdk-engineering-validation-framework.md
       - HAL Delivery & Versioning SOP: governance/versioning-sop.md
     - Architecture:
-      - 'HLA: Released HAL Snapshot Contents': architecture/hla-released-snapshot-contents.md
+      - 'HLA: What a Released HAL Snapshot Contains': architecture/hla-released-snapshot-contents.md
     - White Papers:
       - Documentation in Git: whitepapers/documentation_in_git.md
       - Branching Strategies : whitepapers/branching_strategies.md
