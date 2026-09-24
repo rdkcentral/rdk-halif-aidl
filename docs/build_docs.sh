@@ -113,6 +113,31 @@ EOF
 }
 
 # ----------------------------------------------------------------------------
+# list_subsite_mkdocs() : Print every component mkdocs.yml the top-level nav
+# can include (<component>/current/, <component>/<X.Y.Z.W>/, vsi/<name>/...),
+# one absolute path per line, sorted. The root mkdocs.yml is excluded.
+#
+# Portable across GNU and BSD find: the version filter is a grep -E pass, not
+# find -regextype, which BSD find does not support.
+# ----------------------------------------------------------------------------
+function list_subsite_mkdocs()
+{
+  find "${REPO_ROOT}" -maxdepth 4 \
+       \( -name .git -o -name out -o -name site -o -name build -o -name external_content -o -name python_venv \) -prune \
+       -o -name mkdocs.yml ! -path "${REPO_ROOT}/mkdocs.yml" -print \
+    | sort
+}
+
+# ----------------------------------------------------------------------------
+# list_snapshot_mkdocs() : Print the subset of list_subsite_mkdocs() that are
+# frozen snapshots (<component>/<X.Y.Z.W>/mkdocs.yml).
+# ----------------------------------------------------------------------------
+function list_snapshot_mkdocs()
+{
+  list_subsite_mkdocs | grep -E '/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/mkdocs\.yml$'
+}
+
+# ----------------------------------------------------------------------------
 # normalize_snapshot_site_names() : Ensure every snapshot mkdocs.yml carries a
 # unique site_name.
 #
@@ -136,18 +161,54 @@ function normalize_snapshot_site_names()
     expected="${component}-${version}"
     current_name="$(sed -n 's/^site_name:[[:space:]]*//p' "${snapshot_yml}" | head -1)"
     if [ "${current_name}" != "${expected}" ]; then
-      sed -i "s/^site_name:.*/site_name: ${expected}/" "${snapshot_yml}"
+      # -i.bak + rm: the in-place form GNU and BSD sed both accept.
+      sed -i.bak "s/^site_name:.*/site_name: ${expected}/" "${snapshot_yml}" && rm -f "${snapshot_yml}.bak"
       echo "[INFO]   normalized ${snapshot_yml#"${REPO_ROOT}"/}: site_name '${current_name}' -> '${expected}'"
       fixed=$((fixed + 1))
     fi
-  done < <(find "${REPO_ROOT}" -maxdepth 4 \
-             \( -name out -o -name site -o -name build -o -name external_content -o -name python_venv \) -prune \
-             -o -regextype posix-extended \
-             -regex '.*/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/mkdocs\.yml' -print)
+  done < <(list_snapshot_mkdocs)
 
   if [ ${fixed} -gt 0 ]; then
     echo "[INFO] normalized ${fixed} snapshot site_name(s) — commit the corrected mkdocs.yml file(s)."
   fi
+}
+
+# ----------------------------------------------------------------------------
+# check_nav_coverage() : Report every component doc set and every release
+# notes page that has no entry in the top-level mkdocs.yml nav.
+#
+# The mkdocs-monorepo plugin builds only the doc sets the nav includes, so a
+# snapshot with no nav entry is absent from the site without any warning.
+# Prints one line per missing entry and returns 1 if any are missing.
+# ----------------------------------------------------------------------------
+function check_nav_coverage()
+{
+  local nav="${REPO_ROOT}/mkdocs.yml"
+  local missing=0
+  local subsite_yml notes rel
+
+  while IFS= read -r subsite_yml; do
+    rel="${subsite_yml#"${REPO_ROOT}"/}"
+    if ! grep -qF "'!include ${rel}'" "${nav}"; then
+      echo "[ERROR]   no nav entry for ${rel}"
+      missing=$((missing + 1))
+    fi
+  done < <(list_subsite_mkdocs)
+
+  for notes in "${SCRIPT_DIR}"/releases/*.md; do
+    [ -e "${notes}" ] || continue
+    rel="releases/$(basename "${notes}")"
+    if ! grep -qE "^[[:space:]]*-[[:space:]]+[^:]+:[[:space:]]+${rel//./\\.}[[:space:]]*$" "${nav}"; then
+      echo "[ERROR]   no Release Notes nav entry for docs/${rel}"
+      missing=$((missing + 1))
+    fi
+  done
+
+  if [ ${missing} -gt 0 ]; then
+    echo "[ERROR] ${missing} doc set(s) missing from the mkdocs.yml nav — add them before building."
+    return 1
+  fi
+  return 0
 }
 
 # ----------------------------------------------------------------------------
@@ -161,6 +222,17 @@ function main()
   case "${CMD}" in
     serve|build|deploy|release)
       normalize_snapshot_site_names
+      ;;
+  esac
+
+  # A gap in the nav fails every command that publishes or builds the site;
+  # serve only warns, so a nav edit in progress can still be previewed.
+  case "${CMD}" in
+    build|deploy|release)
+      check_nav_coverage || exit 1
+      ;;
+    serve)
+      check_nav_coverage || echo "[WARNING] serving with an incomplete nav."
       ;;
   esac
 
