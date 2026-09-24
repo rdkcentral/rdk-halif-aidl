@@ -21,7 +21,9 @@ and the requirements a packaging change is assessed against.
 
 **The shape.** Each `<component>/<version>/` holds the frozen AIDL, the C++
 bindings generated from it at release, its contract hash, its documentation and
-the `CMakeLists.txt` that compiles it. The release tooling is its only writer.
+the `CMakeLists.txt` that compiles it. A snapshot is created only when the
+programme cuts a release, and the release tooling is its only writer. A change
+that breaks the ABI enters a release only through the change-request process.
 Each consumer selects a `(component, version)` pair, and several versions of one
 component build side by side in one integration.
 
@@ -73,7 +75,7 @@ records the options assessed.
 
 ### Scope
 
-- **In scope:** what a `<component>/<version>/` directory holds; how a consumer discovers and selects a version; where build infrastructure lives relative to a frozen snapshot; how generated bindings are produced and committed.
+- **In scope:** what a `<component>/<version>/` directory holds; how a consumer discovers and selects a version; where build infrastructure lives relative to a frozen snapshot; how generated bindings are produced and committed; when a snapshot is created, and how a change that breaks the ABI reaches one.
 - **Out of scope:** the AIDL contract of any individual component (each component's own docs); the runtime compatibility check a client applies ([Ref 3](#references)); the Yocto recipes an integrator writes, which are theirs to own ([Ref 2](#references)).
 
 ### Success Criteria
@@ -122,6 +124,8 @@ These bound everything below. If one is wrong, the architecture changes rather t
 | **Side-by-side versions** | Let two consumers in one integration build against different versions of the same component. | Met — the staged tree carries the version in the library name and the header path ([Ref 5](#references)). |
 | **Immutable snapshot** | Keep a released `<component>/<version>/` directory unchanged after release. | Not met — the release tooling rewrites dependency pins in `CMakeLists.txt` and `interface.yaml` inside released cohort snapshots when a dependency advances. |
 | **Tooling-only writes** | Commit generated bindings only through the release tooling, and only into a frozen snapshot. | Met. |
+| **Programme-controlled release** | Create a snapshot only when the programme cuts a release: a milestone, or a patch release on demand, cut from `develop` to `main` and tagged ([Ref 8](#references)). | Met — feature PRs touch `current/` only, and `release.sh` materialises every pending snapshot at release. |
+| **Change request on an ABI change** | Admit a change that breaks the ABI only through the change-request process: `team:*` architecture sign-off, and deliberate scheduling into a release ([Ref 8](#references)). | Met by review — the `CR` label carries it; the release tooling does not check it. |
 | **Documented implementation surface** | Document the surface an engineer implements, per released version. | Not met — the generator drops the AIDL documentation comments from the generated headers. |
 
 ### Non-functional
@@ -195,13 +199,20 @@ dependency pins inside the other cohort snapshots.
 sequenceDiagram
     autonumber
     participant Dev as Component owner
+    participant Arch as Architecture reviewers
     participant Cur as component/current
+    participant Prog as Programme
     participant Rel as Release tooling
     participant Snap as component/version
     participant Other as Other cohort snapshots
 
-    Dev->>Cur: edit AIDL only
+    Dev->>Cur: PR edits AIDL only, labelled with its change class
     Note over Cur: include/ and src/ are gitignored here
+    opt ABI change, labelled Major Change and CR
+        Arch->>Cur: team architecture sign-off
+        Prog->>Prog: schedule the change into a named release
+    end
+    Prog->>Rel: cut a release at a milestone, or a patch release
     Rel->>Cur: audit surface against last snapshot, classify change
     Rel->>Cur: regenerate bindings
     Rel->>Snap: write AIDL, bindings, hash and CMakeLists.txt in one operation
@@ -277,6 +288,7 @@ All No except:
 | 5 | The layout in force: version selection, role mount points, and where the version sits | [`rdk-halif-aidl.bb`](../../tests/yocto/meta-rdk-halif-aidl/recipes-halif/rdk-halif-aidl/rdk-halif-aidl.bb) |
 | 6 | The version scheme and the era rules | [Versioning Guide](../standards/versioning-guide.md) |
 | 7 | What the generator guarantees: determinism, interface identity, known deviations | <https://github.com/rdkcentral/linux_binder_idl/blob/develop/CODEGEN.md> |
+| 8 | Release cadence, when a snapshot is created, and the `CR` label | [HAL Delivery & Versioning SOP](../governance/versioning-sop.md) |
 
 ---
 
