@@ -121,8 +121,11 @@ Both diagrams show the same high-level input path:
 The input path is identical on every platform. How decoded output reaches the
 sink depends on the decoder's output mode, described below.
 
-Data crossing the HAL is always passed as **opaque buffer handles
-(`IAVBuffer`)**; the middleware never directly accesses raw memory.
+Data crossing the HAL is passed as **buffer handles**: the `long` values
+returned by `IAVBuffer.alloc()`. `IAVBuffer` is the service that allocates and
+frees them. To read or write the bytes of a non-secure buffer, middleware maps
+its handle with `mapHandle()` from the vendor's AV buffer helper
+(`libavbufferhelper.so`).
 
 ---
 
@@ -151,7 +154,10 @@ flushed and clocked identically in either case.
 
 In the audio diagram:
 
-- The **Audio Decoder** produces PCM or compressed output
+- The **Audio Decoder** returns decoded frames as PCM (`FrameType.PCM`) or
+  in a SoC-proprietary format (`FrameType.SOC_PROPRIETARY`)
+- Compressed audio for passthrough is tunnelled to the vendor audio subsystem
+  and is never returned by `onFrameOutput()`
 - The **Audio Sink** forwards audio into the hardware path
 - A **SoC Audio Mixer** distributes audio to multiple outputs:
   - Speakers
@@ -183,9 +189,11 @@ After the sink:
 
 Both diagrams highlight a shared **buffer model**:
 
-- Buffers are allocated in the vendor layer (SoC AV Buffer Manager)
+- Buffers are allocated in the vendor layer (SoC AV Buffer Manager) through
+  `IAVBuffer.alloc()`, which returns a `long` handle
 - Memory resides in **non-secure or hardware-specific memory**
-- Middleware interacts only via handles
+- Middleware passes handles across the HAL, and maps a non-secure handle
+  through the AV buffer helper when it needs the bytes
 
 This design:
 - Enables **zero-copy or low-copy operation**
