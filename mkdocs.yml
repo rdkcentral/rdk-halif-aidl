@@ -87,6 +87,8 @@ nav:
         - 0.2.0.1: '!include videodecoder/0.2.0.1/mkdocs.yml'
         - 0.2.0.0: '!include videodecoder/0.2.0.0/mkdocs.yml'
         - 0.1.0.0: '!include videodecoder/0.1.0.0/mkdocs.yml'
+      - Video Capture:
+        - Current: '!include videocapture/current/mkdocs.yml'
       - Video Sink:
         - Current: '!include videosink/current/mkdocs.yml'
         - 0.2.0.0: '!include videosink/0.2.0.0/mkdocs.yml'
