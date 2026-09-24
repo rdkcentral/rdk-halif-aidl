@@ -22,13 +22,8 @@
  * @brief High-level current thermal state for quick health checks.
  *
  * @details
- * One state covers all thermal sensors: it is the worst state across
- * every sensor the platform declares. Thresholds named below are the
- * per-sensor HFP `triggers` values; the cooldown is the per-sensor HFP
- * `policy.recovery.min_cooldown_seconds`.
- *
- * Between a sensor's recovered and exceeded thresholds the state does
- * not change (hysteresis).
+ * Thresholds named below are the thermal sensor's HFP `triggers` values;
+ * the cooldown is its HFP `policy.recovery.min_cooldown_seconds`.
  */
 package com.rdk.hal.sensor.thermal;
 
@@ -37,10 +32,9 @@ enum State {
     /**
      * @brief Normal thermal conditions; no mitigation active.
      *
-     * Entered at service start, unless a sensor is already at or above
-     * its critical_temperature_exceeded_celsius (the service then starts in
-     * CRITICAL_TEMPERATURE_EXCEEDED).
-     * Entered from CRITICAL_TEMPERATURE_RECOVERED once every sensor has
+     * Entered at service start when the sensor is below its
+     * critical_temperature_exceeded_celsius.
+     * Entered from CRITICAL_TEMPERATURE_RECOVERED once the sensor has
      * stayed below its critical_temperature_recovered_celsius for its
      * cooldown period. No temperature threshold enters NORMAL directly.
      */
@@ -50,26 +44,30 @@ enum State {
      * @brief Temperature has exceeded a critical threshold.
      *  Platform will be in active mitigation if possible.
      *
-     * Entered from NORMAL or CRITICAL_TEMPERATURE_RECOVERED when any sensor
+     * Entered from NORMAL or CRITICAL_TEMPERATURE_RECOVERED when the sensor
      * reaches its critical_temperature_exceeded_celsius.
+     * Entered at service start when the sensor is at or above its
+     * critical_temperature_exceeded_celsius and below its
+     * entering_critical_shutdown_celsius.
      */
     CRITICAL_TEMPERATURE_EXCEEDED = 1,
 
     /**
      * @brief Temperature has recovered from a critical event; cooldown in progress.
      *
-     * Entered from CRITICAL_TEMPERATURE_EXCEEDED when every sensor is below
+     * Entered from CRITICAL_TEMPERATURE_EXCEEDED when the sensor is below
      * its critical_temperature_recovered_celsius. Moves to NORMAL when the
      * cooldown period completes, or back to CRITICAL_TEMPERATURE_EXCEEDED if
-     * any sensor reaches its critical_temperature_exceeded_celsius first.
+     * the sensor reaches its critical_temperature_exceeded_celsius first.
      */
     CRITICAL_TEMPERATURE_RECOVERED = 2,
 
     /**
      * @brief Shutdown is imminent due to critical thermal breach.
      *
-     * Entered from any other state when any sensor reaches its
-     * entering_critical_shutdown_celsius. Terminal: no transition leaves
+     * Entered from any other state when the sensor reaches its
+     * entering_critical_shutdown_celsius, or at service start when the
+     * sensor is already at or above it. Terminal: no transition leaves
      * this state.
      *
      * The HAL thermal policy service initiates the shutdown autonomously.
