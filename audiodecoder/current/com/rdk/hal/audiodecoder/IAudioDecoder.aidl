@@ -25,6 +25,7 @@ import com.rdk.hal.audiodecoder.Property;
 import com.rdk.hal.audiodecoder.Codec;
 import com.rdk.hal.audiodecoder.CSDAudioFormat;
 import com.rdk.hal.audiodecoder.State;
+import com.rdk.hal.OperationalMode;
 import com.rdk.hal.PropertyValue;
 
 /**
@@ -49,6 +50,9 @@ interface IAudioDecoder
     parcelable Id {
         /** The undefined ID value. */
         const int UNDEFINED = -1;
+
+        /** Sentinel indicating the sink source is an external non-HAL component rather than a HAL Audio Decoder. */
+        const int EXTERNAL = -2;
 
         /** The actual resource ID */
         int value;
@@ -183,4 +187,19 @@ interface IAudioDecoder
      * @see registerEventListener()
      */
     boolean unregisterEventListener(in IAudioDecoderEventListener audioDecoderEventListener);
+
+    /**
+     * Gets the output mode currently selected by the vendor for this decoder.
+     *
+     * The mode is implementation-selected and is not configurable through
+     * the Audio Decoder HAL.
+     *
+     * @returns Current operational output mode.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+    * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the STARTED state.
+     *
+    * @pre The resource must be in State::STARTED.
+     */
+    OperationalMode getCurrentOperationalMode();
 }
