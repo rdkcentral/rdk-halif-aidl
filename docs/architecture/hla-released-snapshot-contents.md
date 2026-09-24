@@ -145,7 +145,7 @@ These bound everything below. If one is wrong, the architecture changes rather t
 
 ---
 
-## Proposed Architecture
+## Current Architecture
 
 **A released snapshot is the frozen contract, the bindings generated from it and the recipe that compiles them, addressed by `(component, version)` and written only by the release tooling.**
 
