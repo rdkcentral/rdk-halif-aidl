@@ -39,7 +39,8 @@ enum PQParameter
     HUE = 4,                            //!< Picture parameter  is Hue (video plane)  
     //
     MANUAL_BACKLIGHT = 5,               //!< Picture parameter  is Backlight (fixed/global) (not the ALS value)  Setting will fail if ALS enabled.
-    // Valid gamma values are defined in enum SDRGamma.
+    // Value is an SDRGamma ordinal. Valid only with DynamicRange.SDR; a configuration
+    // naming any other format is invalid and setPQParameters() returns false.
     SDR_GAMMA = 6,                      //!< Picture parameter  is SDR Gamma
     // 0..n depending on preconfigured number of presets.
     COLOR_TEMPERATURE = 7,              //!< Picture parameter  is Colour temperature (?)
