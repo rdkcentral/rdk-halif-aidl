@@ -2,7 +2,7 @@
  * If not stated otherwise in this file or this component's LICENSE file the
  * following copyright and licenses apply:
  *
- * Copyright 2024 RDK Management
+ * Copyright 2026 RDK Management
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,30 +16,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal.panel;
-import com.rdk.hal.videodecoder.DynamicRange;
-import com.rdk.hal.AVSource;
 
-/** 
- *  @brief     Picture mode configuration.
- *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
+/**
+ * @file ColourTemperature.aidl
+ * @brief Supported colour temperature presets for panel white balance configuration.
  */
- 
+package com.rdk.hal.panel;
+
 @VintfStability
-parcelable PictureModeConfiguration
-{
-	/**
-	 * The picture mode.
-	 */
-	String pictureMode;
-
-	/**
-	 * The dynamic range.
-	 */
-	DynamicRange dynamicRange;
-
-	/**
-	 * The AV source.
-	 */
-	AVSource source;
+@Backing(type="int")
+enum ColourTemperature {
+    WARM = 0,
+    NORMAL = 1,
+    COLD = 2,
+    SUPER_COLD = 3,
+    CUSTOM = 4,
 }

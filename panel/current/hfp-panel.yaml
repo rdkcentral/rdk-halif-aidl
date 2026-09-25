@@ -24,439 +24,120 @@
 
 panel:                  # Component object begins
   interfaceVersion: current
-  panelType: LCD # LCD = 0, QLED = 1, OLED = 2, MINI_LED = 3,
-  pixelWidth:  3840 # UHD Panel Example
+  panelType: LCD # LCD = 0, QLED = 1, OLED = 2, MINI_LED = 3
+  pixelWidth: 3840   # UHD panel example
   pixelHeight: 2160
-  # 96.5x53.3cm=43 inc panel , 111.8x63.5cm=50 inch panel, 124.5x71.1cm=55 inch panel, 144.8x81.3cm=65 inch panel, 165.1x94cm=75 inch panel
-  widthCm: 124  # 55 inch
+  widthCm: 124      # 55 inch; 43" 96.5x53.3, 50" 111.8x63.5, 55" 124.5x71.1, 65" 144.8x81.3, 75" 165.1x94
   heightCm: 71
   frameRateMatchingSupported: true
   fadeDisplaySupported: true
-  supportedPQParameters:
-    - BRIGHTNESS
-    - CONTRAST
-    - SHARPNESS
-    - SATURATION
-    - HUE
-    - MANUAL_BACKLIGHT
-    - GAMMA
-    - COLOR_TEMPERATURE
-    - DIMMING_MODE
-    - DIMMING_LEVEL
-    - LOW_LATENCY_STATE
-    - SATURATION_RED
-    - SATURATION_BLUE
-    - SATURATION_GREEN
-    - SATURATION_YELLOW
-    - SATURATION_CYAN
-    - SATURATION_MAGENTA
-    - HUE_RED
-    - HUE_BLUE
-    - HUE_GREEN
-    - HUE_YELLOW
-    - HUE_CYAN
-    - HUE_MAGENTA
-    - LUMA_RED
-    - LUMA_BLUE
-    - LUMA_GREEN
-    - LUMA_YELLOW
-    - LUMA_CYAN
-    - LUMA_MAGENTA
-    - MEMC
-    - DYNAMIC_CONTRAST_LEVEL
-    - LOCAL_CONTRAST_LEVEL
-    - LOCAL_DIMMING_ZONES_X
-    - LOCAL_DIMMING_ZONES_Y
-    - AI_PQ_ENGINE
-    - AMBIENT_LIGHT_SENSOR_CONTROL
-  supportedRefreshRatesHz:
-    - 48
-    - 49
-    - 50
-    - 51
-    - 52
-    - 53
-    - 54
-    - 55
-    - 56
-    - 57
-    - 58
-    - 59
-    - 60
-    - 75
-    - 85
-    - 100
-    - 120
-    - 144
-    - 165
-    - 240
-  pictureModeCapabilities: &pqContexts # PictureModeCapabilities
-    - Entertainment: # pictureMode
-        - SDR: # videoFormat
-            supportedAVSources: # AVSource
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-              - COMPOSITE_1
-        - HLG:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - HDR10:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - DOLBY_VISION:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-    - Dynamic:
-        - SDR:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-              - COMPOSITE_1
-        - HLG:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - HDR10:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - DOLBY_VISION:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-    - Dynamic2:
-        - SDR:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-              - COMPOSITE_1
-        - HLG:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - HDR10:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - DOLBY_VISION:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-    - Sports:
-        - SDR:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-              - COMPOSITE_1
-        - HLG:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - HDR10:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - DOLBY_VISION:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-    - Movie:
-        - SDR:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-              - COMPOSITE_1
-        - HLG:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - HDR10:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - DOLBY_VISION:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-    - Expert:
-        - SDR:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-              - COMPOSITE_1
-        - HLG:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - HDR10:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - DOLBY_VISION:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-  colorTemperatureNames: #colorTemperatureNames
-    - Cool
-    - Normal
-    - Warm
-  # Every PQ parameter below is supported across the same picture-mode /
-  # video-format / AV-source set, so each references the *pqContexts anchor
-  # defined once above. A parameter with a narrower support set replaces the
-  # reference with its own pictureModeCapabilities block.
+  supportedPQParameters: [BRIGHTNESS, CONTRAST, SHARPNESS, SATURATION, HUE,
+      MANUAL_BACKLIGHT, SDR_GAMMA, COLOR_TEMPERATURE, DIMMING_MODE, DIMMING_LEVEL,
+      LOW_LATENCY_STATE, SATURATION_RED, SATURATION_BLUE, SATURATION_GREEN,
+      SATURATION_YELLOW, SATURATION_CYAN, SATURATION_MAGENTA, HUE_RED, HUE_BLUE,
+      HUE_GREEN, HUE_YELLOW, HUE_CYAN, HUE_MAGENTA, LUMA_RED, LUMA_BLUE, LUMA_GREEN,
+      LUMA_YELLOW, LUMA_CYAN, LUMA_MAGENTA, MEMC, LOCAL_CONTRAST_LEVEL,
+      MPEG_NOISE_REDUCTION, NOISE_REDUCTION, AI_PQ_ENGINE, AMBIENT_LIGHT_SENSOR_CONTROL,
+      PRECISION_DETAIL, DV_CALIBRATION, TWO_POINT_WB, MULTI_POINT_WB,
+      DYNAMIC_CONTRAST_LEVEL]
+  supportedRefreshRatesHz: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 75, 85,
+      100, 120, 144, 165, 240]
+  supportedAVSources: &allSources [IP, TUNER, HDMI_1, HDMI_2, HDMI_3, COMPOSITE_1]
+  supportedDynamicRanges: [SDR, HLG, HDR10, DOLBY_VISION]
+  supportedColourTemperatures: [WARM, NORMAL, COLD, SUPER_COLD, CUSTOM]
+  # pictureMode -> dynamicRange -> AV sources. Every picture mode supports all four
+  # dynamic ranges; COMPOSITE_1 is SDR-only.
+  pictureModeCapabilities: &pqContexts
+    - Entertainment: &allDynamicRanges
+        - SDR: {supportedAVSources: *allSources}
+        - HLG: {supportedAVSources: &hdrSources [IP, TUNER, HDMI_1, HDMI_2, HDMI_3]}
+        - HDR10: {supportedAVSources: *hdrSources}
+        - DOLBY_VISION: {supportedAVSources: *hdrSources}
+    - Dynamic: *allDynamicRanges
+    - Dynamic2: *allDynamicRanges
+    - Sports: *allDynamicRanges
+    - Movie: *allDynamicRanges
+    - Expert: *allDynamicRanges
+  # One entry per PQParameter, in enum order. Parameters that apply in every context
+  # reference *pqContexts; common integer bounds are anchored once and referenced.
   PQParameterCapabilities:
-    - BRIGHTNESS:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - CONTRAST:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - SHARPNESS:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - SATURATION:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - HUE:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - MANUAL_BACKLIGHT:
-        isGlobal: true
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - GAMMA:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
+    - BRIGHTNESS:                   {isSupported: true, isGlobal: false, rangeBound: {intBounds: &b0to100 {minValue: 0, maxValue: 100}}, pictureModeCapabilities: *pqContexts}
+    - CONTRAST:                     {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - SHARPNESS:                    {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - SATURATION:                   {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - HUE:                          {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - MANUAL_BACKLIGHT:             {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - SDR_GAMMA:                    {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
     - COLOR_TEMPERATURE:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          colourTemperatureBounds:
+            minValue: WARM
+            maxValue: CUSTOM
+        supportedValues: {colourTemperatureValues: [WARM, NORMAL, COLD, SUPER_COLD, CUSTOM]}
         pictureModeCapabilities: *pqContexts
-    - DIMMING_MODE:
-        isGlobal: true
-        minValue: 0
-        maxValue: 2
-        pictureModeCapabilities: *pqContexts
-    - DIMMING_LEVEL:
+    - DIMMING_MODE:                 {isSupported: true, isGlobal: true, rangeBound: {intBounds: {minValue: 0, maxValue: 2}}, pictureModeCapabilities: *pqContexts}
+    - DIMMING_LEVEL:                {isSupported: true, isGlobal: false, rangeBound: {intBounds: {minValue: 0, maxValue: 3}}, pictureModeCapabilities: *pqContexts}
+    - LOW_LATENCY_STATE:            {isSupported: true, isGlobal: true, rangeBound: {intBounds: &b0to1 {minValue: 0, maxValue: 1}}, pictureModeCapabilities: *pqContexts}
+    - SATURATION_RED:               {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - SATURATION_BLUE:              {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - SATURATION_GREEN:             {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - SATURATION_YELLOW:            {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - SATURATION_CYAN:              {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - SATURATION_MAGENTA:           {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - HUE_RED:                      {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - HUE_BLUE:                     {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - HUE_GREEN:                    {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - HUE_YELLOW:                   {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - HUE_CYAN:                     {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - HUE_MAGENTA:                  {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - LUMA_RED:                     {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - LUMA_BLUE:                    {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - LUMA_GREEN:                   {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - LUMA_YELLOW:                  {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - LUMA_CYAN:                    {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - LUMA_MAGENTA:                 {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - MEMC:                         {isSupported: true, isGlobal: true, rangeBound: {intBounds: {minValue: 0, maxValue: 4}}, pictureModeCapabilities: *pqContexts}
+    - LOCAL_CONTRAST_LEVEL:         {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - MPEG_NOISE_REDUCTION:         {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - NOISE_REDUCTION:              {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - AI_PQ_ENGINE:                 {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to1}, pictureModeCapabilities: *pqContexts}
+    - AMBIENT_LIGHT_SENSOR_CONTROL: {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to1}, pictureModeCapabilities: *pqContexts}
+    - PRECISION_DETAIL:             {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+    - DV_CALIBRATION:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 3
-        pictureModeCapabilities: *pqContexts
-    - LOW_LATENCY_STATE:
-        isGlobal: true
-        minValue: 0
-        maxValue: 1
-        pictureModeCapabilities: *pqContexts
-    - SATURATION_RED:
+        rangeBound:
+          dvCalibrationBounds:
+            minBound: {Tmax: 0.0, Tmin: 0.0, Tgamma: 1.8, Rx: 0.0, Ry: 0.0, Gx: 0.0, Gy: 0.0, Bx: 0.0, By: 0.0, Wx: 0.0, Wy: 0.0}
+            maxBound: {Tmax: 10000.0, Tmin: 10000.0, Tgamma: 2.6, Rx: 1.0, Ry: 1.0, Gx: 1.0, Gy: 1.0, Bx: 1.0, By: 1.0, Wx: 1.0, Wy: 1.0}
+        supportedValues: {dvCalibrationValues: []}
+        pictureModeCapabilities:   # DOLBY_VISION only
+          - Entertainment: &dolbyVisionOnly [{DOLBY_VISION: {supportedAVSources: *hdrSources}}]
+          - Dynamic: *dolbyVisionOnly
+          - Dynamic2: *dolbyVisionOnly
+          - Sports: *dolbyVisionOnly
+          - Movie: *dolbyVisionOnly
+          - Expert: *dolbyVisionOnly
+    - TWO_POINT_WB:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          twoPointWBBounds:
+            minBound: {colourTemperature: WARM, twoPointWBColour: WB_COLOR_RED, gain: 0, offset: -1024}
+            maxBound: {colourTemperature: CUSTOM, twoPointWBColour: WB_COLOR_BLUE, gain: 2047, offset: 1023}
+        supportedValues: {twoPointWBValues: []}
         pictureModeCapabilities: *pqContexts
-    - SATURATION_BLUE:
+    - MULTI_POINT_WB:
+        isSupported: true
         isGlobal: false
-        minValue: 0
-        maxValue: 100
+        rangeBound:
+          multiPointWBBounds:
+            # The number of calibration points is vendor-defined; a platform profile
+            # replaces these empty arrays with its min/max vectors.
+            minBound: {colourTemperature: WARM, r: [], g: [], b: []}
+            maxBound: {colourTemperature: CUSTOM, r: [], g: [], b: []}
+        supportedValues: {multiPointWBValues: []}
         pictureModeCapabilities: *pqContexts
-    - SATURATION_GREEN:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - SATURATION_YELLOW:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - SATURATION_CYAN:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - SATURATION_MAGENTA:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - HUE_RED:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - HUE_BLUE:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - HUE_GREEN:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - HUE_YELLOW:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - HUE_CYAN:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - HUE_MAGENTA:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - LUMA_RED:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - LUMA_BLUE:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - LUMA_GREEN:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - LUMA_YELLOW:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - LUMA_CYAN:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - LUMA_MAGENTA:
-        isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - MEMC:
-        isGlobal: true
-        minValue: 0
-        maxValue: 4
-        pictureModeCapabilities: *pqContexts
-    - DYNAMIC_CONTRAST_LEVEL:
-        isGlobal: true
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - LOCAL_CONTRAST_LEVEL:
-        isGlobal: true
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
-    - LOCAL_DIMMING_ZONES_X:
-        isGlobal: true
-        minValue: 1
-        maxValue: 10000
-        pictureModeCapabilities: *pqContexts
-    - LOCAL_DIMMING_ZONES_Y:
-        isGlobal: true
-        minValue: 1
-        maxValue: 10000
-        pictureModeCapabilities: *pqContexts
-    - AI_PQ_ENGINE:
-        isGlobal: true
-        minValue: 0
-        maxValue: 1
-        pictureModeCapabilities: *pqContexts
-    - AMBIENT_LIGHT_SENSOR_CONTROL:
-        isGlobal: true
-        minValue: 0
-        maxValue: 1
-        pictureModeCapabilities: *pqContexts
+    - DYNAMIC_CONTRAST_LEVEL:       {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
