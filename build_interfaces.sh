@@ -42,13 +42,46 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT_PATH="$SCRIPT_DIR/$(basename "${BASH_SOURCE[0]}")"
 
+# Python venv bootstrap (#606). The AIDL generator (host/aidl_ops.py ->
+# host/logger.py) imports colorama and friends, which live in the docs venv.
+# Run under the ambient Python it dies on a fresh clone with ModuleNotFoundError,
+# so a new contributor had to know to `source ./activate_venv.sh` first. Make
+# the script self-contained instead: one command builds a fresh checkout.
+ensure_docs_venv() {
+    local venv_dir="$SCRIPT_DIR/docs/python_venv"
+
+    if [[ ! -x "$venv_dir/bin/python" ]]; then
+        echo "🐍 Bootstrapping Python venv at docs/python_venv ..."
+        # docs/scripts/install.sh uses top-level `return`, so it has to be
+        # sourced rather than executed, and it is not written for `set -e`.
+        # Do both in a subshell: the venv it creates persists on disk, and
+        # neither its shell options nor a non-zero return leak back here.
+        if ! ( set +euo pipefail
+               cd "$SCRIPT_DIR/docs" && source ./scripts/install.sh --quiet ); then
+            echo "❌ Failed to bootstrap the Python venv (docs/scripts/install.sh)." >&2
+            echo "   On Ubuntu: sudo apt install python3-venv python3-pip" >&2
+            return 1
+        fi
+        if [[ ! -x "$venv_dir/bin/python" ]]; then
+            echo "❌ docs/scripts/install.sh completed but $venv_dir/bin/python is missing." >&2
+            return 1
+        fi
+    fi
+
+    # Export rather than `source activate`: the generator is spawned as a
+    # named subprocess, so it needs the venv on PATH, not just in this shell.
+    export VIRTUAL_ENV="$venv_dir"
+    export PATH="$venv_dir/bin:$PATH"
+}
+
 # Host-toolchain guard (#624): build / sdk operations need a native toolchain,
 # and Yocto/cross builds must call CMake directly (see
 # docs/standards/build_integration.md). clean/help do no toolchain work, so
 # they stay usable in any environment.
 case "${1:-}" in
     clean|cleanstable|cleanall|--help|-h|"") ;;
-    *) source "$SCRIPT_DIR/dev_env_guard.sh"; halif_guard_dev_host_env || exit 1 ;;
+    *) source "$SCRIPT_DIR/dev_env_guard.sh"; halif_guard_dev_host_env || exit 1
+       ensure_docs_venv || exit 1 ;;
 esac
 
 # Show help if no arguments or help requested

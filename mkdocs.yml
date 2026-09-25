@@ -95,26 +95,45 @@ nav:
       - Current: '!include bootreason/current/mkdocs.yml'
       - 0.1.0.0: '!include bootreason/0.1.0.0/mkdocs.yml'
     - Broadcast: '!include broadcast/current/mkdocs.yml'
-    - DRM: '!include drm/current/mkdocs.yml'
+    - DRM:
+      - Current: '!include drm/current/mkdocs.yml'
+      - 0.1.0.0: '!include drm/0.1.0.0/mkdocs.yml'
     - HDMI:
-      - HDMI CEC: '!include hdmicec/current/mkdocs.yml'
-      - HDMI Input: '!include hdmiinput/current/mkdocs.yml'
-      - HDMI Output: '!include hdmioutput/current/mkdocs.yml'
+      - HDMI CEC:
+        - Current: '!include hdmicec/current/mkdocs.yml'
+        - 0.1.0.0: '!include hdmicec/0.1.0.0/mkdocs.yml'
+      - HDMI Input:
+        - Current: '!include hdmiinput/current/mkdocs.yml'
+        - 0.1.0.0: '!include hdmiinput/0.1.0.0/mkdocs.yml'
+      - HDMI Output:
+        - Current: '!include hdmioutput/current/mkdocs.yml'
+        - 0.1.0.0: '!include hdmioutput/0.1.0.0/mkdocs.yml'
     - Common:
       - Current: '!include common/current/mkdocs.yml'
       - 0.2.0.0: '!include common/0.2.0.0/mkdocs.yml'
       - 0.1.0.0: '!include common/0.1.0.0/mkdocs.yml'
-    - Composite Input: '!include compositeinput/current/mkdocs.yml'
-    - Deep Sleep: '!include deepsleep/current/mkdocs.yml'
-    - Device Info: '!include deviceinfo/current/mkdocs.yml'
+    - Composite Input:
+      - Current: '!include compositeinput/current/mkdocs.yml'
+      - 0.2.0.0: '!include compositeinput/0.2.0.0/mkdocs.yml'
+    - Deep Sleep:
+      - Current: '!include deepsleep/current/mkdocs.yml'
+      - 0.1.0.0: '!include deepsleep/0.1.0.0/mkdocs.yml'
+    - Device Info:
+      - Current: '!include deviceinfo/current/mkdocs.yml'
+      - 0.1.0.0: '!include deviceinfo/0.1.0.0/mkdocs.yml'
     - Firmware Update:
       - Current: '!include firmwareupdate/current/mkdocs.yml'
       - 0.2.0.0: '!include firmwareupdate/0.2.0.0/mkdocs.yml'
-    - Indicator: '!include indicator/current/mkdocs.yml'
-    - Panel: '!include panel/current/mkdocs.yml'
+    - Indicator:
+      - Current: '!include indicator/current/mkdocs.yml'
+      - 0.1.0.0: '!include indicator/0.1.0.0/mkdocs.yml'
+    - Panel:
+      - Current: '!include panel/current/mkdocs.yml'
+      - 0.1.0.0: '!include panel/0.1.0.0/mkdocs.yml'
     - Plane Control:
       - Current: '!include planecontrol/current/mkdocs.yml'
       - 0.2.0.0: '!include planecontrol/0.2.0.0/mkdocs.yml'
+      - 0.1.0.0: '!include planecontrol/0.1.0.0/mkdocs.yml'
     - Sensor:
       - Current: '!include sensor/current/mkdocs.yml'
       - 0.2.0.0: '!include sensor/0.2.0.0/mkdocs.yml'
@@ -176,6 +195,8 @@ nav:
     - FAQ:
       - Python Development: external_content/ut-core-wiki/FAQ:-Comparing-Python-Development-Platforms.md
     - Release Notes:
+      - 0.22.0: releases/0.22.0.md
+      - 0.21.0: releases/0.21.0.md
       - 0.20.0: releases/0.20.0.md
       - 0.15.1: releases/0.15.1.md
       - 0.15.0: releases/0.15.0.md
