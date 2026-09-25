@@ -33,6 +33,14 @@
 #     the same profile are implicitly supported.
 #   - `maxBitrateInBps` is an inclusive ceiling for the profile/level.
 #     Use `0` only if the SoC vendor doesn't publish a real cap.
+#
+# Colorimetry semantics:
+#   - Each `supportedColorimetries[]` entry mirrors Colorimetry.aidl - the
+#     four independent axes `range`, `matrix`, `transfer`, `primaries`.
+#   - HDR10 and HLG share BT.2020 primaries and matrix; only `transfer`
+#     (SMPTE2084_PQ vs ARIB_STD_B67_HLG) tells them apart.
+#   - Every entry in `supportedDynamicRanges[]` other than SDR needs a
+#     matching colorimetry entry.
 
 videodecoder:                   # Component object begins
   interfaceVersion: current
@@ -111,10 +119,26 @@ videodecoder:                   # Component object begins
         - HDR10_PLUS
         - DOLBY_VISION
       supportedColorimetries:
-        - BT601_525
-        - BT601_625
-        - BT709
-        - BT2020
+        - range: LIMITED        # SDR BT.601 (525-line / NTSC)
+          matrix: BT601_525
+          transfer: SMPTE170M
+          primaries: BT601_525
+        - range: LIMITED        # SDR BT.601 (625-line / PAL)
+          matrix: BT601_625
+          transfer: BT470BG_GAMMA28
+          primaries: BT470BG
+        - range: LIMITED        # SDR BT.709
+          matrix: BT709
+          transfer: BT709
+          primaries: BT709
+        - range: LIMITED        # HDR10 / HDR10+ / Dolby Vision (PQ)
+          matrix: BT2020_NCL
+          transfer: SMPTE2084_PQ
+          primaries: BT2020
+        - range: LIMITED        # HLG
+          matrix: BT2020_NCL
+          transfer: ARIB_STD_B67_HLG
+          primaries: BT2020
       supportsSecure: true
     - 1:                          # Resource object begins (secondary HD decoder)
       supportedCodecs:
@@ -180,7 +204,16 @@ videodecoder:                   # Component object begins
       supportedDynamicRanges:
         - SDR
       supportedColorimetries:
-        - BT601_525
-        - BT601_625
-        - BT709
+        - range: LIMITED        # SDR BT.601 (525-line / NTSC)
+          matrix: BT601_525
+          transfer: SMPTE170M
+          primaries: BT601_525
+        - range: LIMITED        # SDR BT.601 (625-line / PAL)
+          matrix: BT601_625
+          transfer: BT470BG_GAMMA28
+          primaries: BT470BG
+        - range: LIMITED        # SDR BT.709
+          matrix: BT709
+          transfer: BT709
+          primaries: BT709
       supportsSecure: true
