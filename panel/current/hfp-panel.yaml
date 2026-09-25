@@ -56,6 +56,10 @@ panel:                  # Component object begins
         HLG:          [IP, TUNER, HDMI_1, HDMI_2, HDMI_3]
         HDR10:        [IP, TUNER, HDMI_1, HDMI_2, HDMI_3]
         DOLBY_VISION: [IP, TUNER, HDMI_1, HDMI_2, HDMI_3]
+    sdr:                # every picture mode, SDR only
+      pictureModes: [Entertainment, Dynamic, Dynamic2, Sports, Movie, Expert]
+      formatSources:
+        SDR:          [IP, TUNER, HDMI_1, HDMI_2, HDMI_3, COMPOSITE_1]
 
   pqParameters:
     BRIGHTNESS:                   { global: false, range: [0, 100], contexts: [all] }
@@ -64,7 +68,7 @@ panel:                  # Component object begins
     SATURATION:                   { global: false, range: [0, 100], contexts: [all] }
     HUE:                          { global: false, range: [0, 100], contexts: [all] }
     MANUAL_BACKLIGHT:             { global: true,  range: [0, 100], contexts: [all] }
-    SDR_GAMMA:                    { global: false, range: [0, 100], contexts: [all] }
+    SDR_GAMMA:                    { global: false, range: [4, 7],   values: [4, 6, 7], contexts: [sdr] } # SDRGamma: GAMMA_2_2, GAMMA_2_4, BT_1886
     COLOR_TEMPERATURE:            { global: false, range: [0, 2],   contexts: [all] } # index into colorTemperatureNames
     DIMMING_MODE:                 { global: true,  range: [0, 2],   contexts: [all] } # 0=Fixed 1=Global 2=Local
     DIMMING_LEVEL:                { global: false, range: [0, 3],   contexts: [all] }

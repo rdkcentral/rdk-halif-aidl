@@ -59,7 +59,11 @@ parcelable PQParameter
      */
     const @utf8InCpp String MANUAL_BACKLIGHT = "MANUAL_BACKLIGHT";
 
-    /** SDR gamma.  Valid gamma values are defined in enum SDRGamma. */
+    /**
+     * SDR gamma.  The value is an `SDRGamma` ordinal.
+     * Valid only with DynamicRange.SDR; a configuration naming any other format
+     * is invalid and setPQParameters() returns false.
+     */
     const @utf8InCpp String SDR_GAMMA = "SDR_GAMMA";
 
     /**
