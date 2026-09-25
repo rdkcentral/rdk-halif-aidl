@@ -91,186 +91,18 @@ panel:                  # Component object begins
     - 165
     - 240
   pictureModeCapabilities: &pqContexts # PictureModeCapabilities
-    - Entertainment: # pictureMode
+    - Entertainment: &allFormats # pictureMode
         - SDR: &sdrContext # videoFormat
-            supportedAVSources: # AVSource
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-              - COMPOSITE_1
-        - HLG:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - HDR10:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - DOLBY_VISION:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-    - Dynamic:
-        - SDR:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-              - COMPOSITE_1
-        - HLG:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - HDR10:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - DOLBY_VISION:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-    - Dynamic2:
-        - SDR:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-              - COMPOSITE_1
-        - HLG:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - HDR10:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - DOLBY_VISION:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-    - Sports:
-        - SDR:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-              - COMPOSITE_1
-        - HLG:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - HDR10:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - DOLBY_VISION:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-    - Movie:
-        - SDR:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-              - COMPOSITE_1
-        - HLG:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - HDR10:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - DOLBY_VISION:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-    - Expert:
-        - SDR:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-              - COMPOSITE_1
-        - HLG:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - HDR10:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - DOLBY_VISION:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
+            supportedAVSources: [IP, TUNER, HDMI_1, HDMI_2, HDMI_3, COMPOSITE_1] # AVSource
+        - HLG: &hdrContext
+            supportedAVSources: [IP, TUNER, HDMI_1, HDMI_2, HDMI_3]
+        - HDR10: *hdrContext
+        - DOLBY_VISION: *hdrContext
+    - Dynamic: *allFormats
+    - Dynamic2: *allFormats
+    - Sports: *allFormats
+    - Movie: *allFormats
+    - Expert: *allFormats
   colorTemperatureNames: #colorTemperatureNames
     - Cool
     - Normal
@@ -322,18 +154,13 @@ panel:                  # Component object begins
         # references the *sdrContext anchor in each picture mode instead of
         # *pqContexts.
         pictureModeCapabilities:
-          - Entertainment:
+          - Entertainment: &sdrOnly
               - SDR: *sdrContext
-          - Dynamic:
-              - SDR: *sdrContext
-          - Dynamic2:
-              - SDR: *sdrContext
-          - Sports:
-              - SDR: *sdrContext
-          - Movie:
-              - SDR: *sdrContext
-          - Expert:
-              - SDR: *sdrContext
+          - Dynamic: *sdrOnly
+          - Dynamic2: *sdrOnly
+          - Sports: *sdrOnly
+          - Movie: *sdrOnly
+          - Expert: *sdrOnly
     - COLOR_TEMPERATURE:
         isGlobal: false
         minValue: 0
