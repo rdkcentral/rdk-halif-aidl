@@ -92,7 +92,7 @@ panel:                  # Component object begins
     - 240
   pictureModeCapabilities: &pqContexts # PictureModeCapabilities
     - Entertainment: # pictureMode
-        - SDR: # videoFormat
+        - SDR: &sdrContext # videoFormat
             supportedAVSources: # AVSource
               - IP
               - TUNER
@@ -319,62 +319,21 @@ panel:                  # Component object begins
           - 6 # GAMMA_2_4
           - 7 # BT_1886
         # SDR only: gamma does not apply to HDR formats, so this parameter
-        # declares its own block instead of referencing *pqContexts.
+        # references the *sdrContext anchor in each picture mode instead of
+        # *pqContexts.
         pictureModeCapabilities:
-            - Entertainment:
-                - SDR:
-                    supportedAVSources:
-                      - IP
-                      - TUNER
-                      - HDMI_1
-                      - HDMI_2
-                      - HDMI_3
-                      - COMPOSITE_1
-            - Dynamic:
-                - SDR:
-                    supportedAVSources:
-                      - IP
-                      - TUNER
-                      - HDMI_1
-                      - HDMI_2
-                      - HDMI_3
-                      - COMPOSITE_1
-            - Dynamic2:
-                - SDR:
-                    supportedAVSources:
-                      - IP
-                      - TUNER
-                      - HDMI_1
-                      - HDMI_2
-                      - HDMI_3
-                      - COMPOSITE_1
-            - Sports:
-                - SDR:
-                    supportedAVSources:
-                      - IP
-                      - TUNER
-                      - HDMI_1
-                      - HDMI_2
-                      - HDMI_3
-                      - COMPOSITE_1
-            - Movie:
-                - SDR:
-                    supportedAVSources:
-                      - IP
-                      - TUNER
-                      - HDMI_1
-                      - HDMI_2
-                      - HDMI_3
-                      - COMPOSITE_1
-            - Expert:
-                - SDR:
-                    supportedAVSources:
-                      - IP
-                      - TUNER
-                      - HDMI_1
-                      - HDMI_2
-                      - HDMI_3
-                      - COMPOSITE_1
+          - Entertainment:
+              - SDR: *sdrContext
+          - Dynamic:
+              - SDR: *sdrContext
+          - Dynamic2:
+              - SDR: *sdrContext
+          - Sports:
+              - SDR: *sdrContext
+          - Movie:
+              - SDR: *sdrContext
+          - Expert:
+              - SDR: *sdrContext
     - COLOR_TEMPERATURE:
         isGlobal: false
         minValue: 0
