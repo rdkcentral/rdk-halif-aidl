@@ -95,6 +95,7 @@ nav:
       - Current: '!include bootreason/current/mkdocs.yml'
       - 0.1.0.0: '!include bootreason/0.1.0.0/mkdocs.yml'
     - Broadcast: '!include broadcast/current/mkdocs.yml'
+    - RingBuffer: '!include ringbuffer/current/mkdocs.yml'
     - DRM: '!include drm/current/mkdocs.yml'
     - HDMI:
       - HDMI CEC: '!include hdmicec/current/mkdocs.yml'
