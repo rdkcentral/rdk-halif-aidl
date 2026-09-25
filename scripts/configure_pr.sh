@@ -125,17 +125,29 @@ print(" ".join(sorted(comps)))
     # the version fields mean). The selection cascade below is
     # *predicate-based*, not severity-based — each branch checks the
     # condition that signals that class:
-    #   Major Change    — conventional-commit "!:" marker in the title
+    #   Major Change    — the PR carries `CR` or `New Interface`, or the
+    #                     title has a conventional-commit "!:" marker
     #                     (breaking => major bump)
     #   documentation   — every changed file is doc-like (else branch;
     #                     bugfix bump)
     #   Minor Change    — fallback when neither predicate matches
     #                     (additive interface work => minor bump)
     #
+    # `CR` and `New Interface` are orthogonal governance markers rather than
+    # classes, and both describe a change that alters the shape of the
+    # interface, so the class that belongs with them is Major. Checking them
+    # first matters: a CR whose title lacks the `!:` marker would otherwise be
+    # demoted to `Minor Change` here and promoted straight back by
+    # scripts/project_interface_effect.py, leaving the two automations to
+    # fight over the label.
+    #
     # The `is_doc()` predicate mirrors scripts/release.sh:is_doc_like_path
     # so the two scripts agree on what counts as docs-only.
     local change_class=""
-    if [[ "$title" =~ ^[a-z]+(\([^\)]*\))?!: ]]; then
+    if [[ ",${current_labels}," == *",CR,"* ]] || \
+       [[ ",${current_labels}," == *",New Interface,"* ]]; then
+        change_class="Major Change"
+    elif [[ "$title" =~ ^[a-z]+(\([^\)]*\))?!: ]]; then
         change_class="Major Change"
     else
         local docs_only
