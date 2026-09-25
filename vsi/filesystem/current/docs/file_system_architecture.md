@@ -5,6 +5,7 @@
 |Date|Author|Comments|
 |----|------|--------|
 |2024-12-12|G.Weatherup|Initial comprehensive specification|
+|2026-07-31|G.Weatherup|Added loader-discovered components: ICD loader search paths, manifest registration and discovery policy|
 
 !!! warning "Draft Document"
     This document is currently in **draft form** and under active discussion. Specifications, examples, and recommendations may change based on review feedback and implementation experience.
@@ -374,6 +375,53 @@ Each module provides linker configuration in `/etc/ld.so.conf.d/`:
 * **Shared Dependencies**: Common dependencies (e.g., glibc) provided by rootfs
 
 For detailed linking specifications, see [Directory And Dynamic Linking Specification](directory_and_dynamic_linking_specification.md).
+
+## Loader-Discovered Components
+
+The dynamic linker is not the only mechanism that resolves a shared library at runtime. Vulkan, EGL, OpenCL, VA-API and GBM each ship a **loader** that discovers implementations by scanning a set of search paths compiled into the loader itself, reading a JSON or plain-text manifest found there, and loading the library the manifest names.
+
+Those search paths are rootfs paths defined by upstream. The implementations they discover are delivered by a layer. The architecture bridges the two with the same symbolic link strategy used for linker configuration.
+
+### Loader Search Paths
+
+| Loader | Search roots | Manifest subdirectory | Implementation named by |
+|--------|--------------|-----------------------|-------------------------|
+| **Vulkan drivers** | `$XDG_CONFIG_HOME`, `$XDG_CONFIG_DIRS` (`/etc/xdg`), `SYSCONFDIR` (`/etc`), `EXTRASYSCONFDIR`, `$XDG_DATA_HOME`, `$XDG_DATA_DIRS` (`/usr/local/share:/usr/share`) | `vulkan/icd.d/*.json` | `library_path` in the manifest |
+| **Vulkan layers** | as above | `vulkan/explicit_layer.d/`, `vulkan/implicit_layer.d/` | `library_path` in the manifest |
+| **EGL (libglvnd)** | `/etc/glvnd/egl_vendor.d`, `/usr/share/glvnd/egl_vendor.d` | — | `library_path` in the manifest |
+| **OpenCL ICD** | `/etc/OpenCL/vendors` | — | library name in the `.icd` file |
+| **VA-API** | `${libdir}/dri` | — | `<driver>_drv_video.so` |
+| **GBM backends** | `${libdir}/gbm` | — | `<backend>_gbm.so` |
+| **Mesa DRI** | `${libdir}/dri` | — | `<driver>_dri.so` |
+
+Reference: [Vulkan Loader Interface Architecture](https://vulkan.lunarg.com/doc/view/latest/linux/LoaderInterfaceArchitecture.html).
+
+### Manifest Registration
+
+Manifests are delivered inside the owning layer, under that layer's `etc` directory, and exposed to the loader through symbolic links created at boot:
+
+```bash
+# Vulkan driver manifest
+/usr/share/vulkan/icd.d/<vendor>.json -> /vendor/<module>/etc/vulkan/icd.d/<vendor>.json
+
+# EGL vendor manifest (libglvnd)
+/usr/share/glvnd/egl_vendor.d/50_<vendor>.json -> /vendor/<module>/etc/glvnd/egl_vendor.d/50_<vendor>.json
+
+# OpenCL ICD registration
+/etc/OpenCL/vendors/<vendor>.icd -> /vendor/<module>/etc/OpenCL/vendors/<vendor>.icd
+
+# Driver module directories
+/usr/lib/dri -> /vendor/<module>/lib/dri
+/usr/lib/gbm -> /vendor/<module>/lib/gbm
+```
+
+### Discovery Policy
+
+* **Absolute `library_path`**: Loaders resolve a relative `library_path` against the directory holding the manifest. Reached through a rootfs symlink, that directory is the link location rather than the layer, so manifests give an absolute path into the owning layer
+* **No Environment Dependency**: `VK_DRIVER_FILES`, `VK_LAYER_PATH`, `XDG_DATA_DIRS`, `LIBVA_DRIVERS_PATH`, `GBM_BACKENDS_PATH` and `__EGL_VENDOR_LIBRARY_DIRS` each redirect a loader, but user-relative paths and override variables are ignored under setuid, setgid or file capabilities, and are absent from a minimal service environment. The symlinks are the delivery mechanism; the variables are for development and test
+* **Loader Ownership**: The loader itself (for example `libvulkan.so.1`) is a rootfs or middleware component, so it is updated independently of the implementations it discovers
+* **Versioned Together**: Manifests live beside the libraries they name, so a layer update replaces implementation and registration together, and a rollback reverts both
+* **Layer Isolation**: A library named by a manifest, and its dynamic dependencies, resolve within the owning layer
 
 ## Module Traceability and Auditing
 
