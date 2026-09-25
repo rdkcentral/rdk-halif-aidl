@@ -48,15 +48,17 @@ sensor:
       #   recovered  <  exceeded  <  shutdown
       #
       # • critical_temperature_recovered_celsius :
-      #       Threshold below which the system is considered recovered and
-      #       returns to NORMAL state.
+      #       Threshold below which the sensor returns from
+      #       CRITICAL_TEMPERATURE_EXCEEDED to NORMAL.
       # • critical_temperature_exceeded_celsius :
       #       Point at which CRITICAL_TEMPERATURE_EXCEEDED is emitted and
       #       mitigation (if supported) becomes active.  This is usually a few
       #       degrees ABOVE operational max to allow early warning.
       # • entering_critical_shutdown_celsius :
-      #       Hard limit at which ENTERING_CRITICAL_SHUTDOWN is emitted and
+      #       Hard limit at which CRITICAL_SHUTDOWN_IMMINENT is emitted and
       #       hardware shutdown is initiated.
+      #
+      # Between the recovered and exceeded thresholds the state does not change.
       triggers:
         critical_temperature_recovered_celsius: 90
         critical_temperature_exceeded_celsius: 98
@@ -69,11 +71,13 @@ sensor:
       # defined by expert engineering teams during hardware validation.
       # These values are NOT user-configurable and MUST NOT be modified by
       # parties outside of the critical hardware design and validation teams.
+      #
+      # • max_state_events_per_minute :
+      #       Maximum onThermalStateChange() events for this sensor in any
+      #       60 s window. Recommended: 6.
       policy:
         shutdown_min_downtime_s: 900
-        recovery:
-          strategy: TIME_BASED
-          min_cooldown_seconds: 240
+        max_state_events_per_minute: 6
 
       vendor:
         vendorCode: 1001  # Used in com.rdk.hal.sensor.thermal/TemperatureReading.aidl
@@ -103,9 +107,7 @@ sensor:
       # Thermal policy defined by expert engineering teams (not user-configurable).
       policy:
         shutdown_min_downtime_s: 600
-        recovery:
-          strategy: TIME_BASED
-          min_cooldown_seconds: 180
+        max_state_events_per_minute: 6
 
       vendor:
         vendorCode: 1002  # Used in com.rdk.hal.sensor.thermal/TemperatureReading.aidl
