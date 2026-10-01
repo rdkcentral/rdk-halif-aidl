@@ -1,0 +1,8 @@
+# Two dependents that import DIFFERENT versions of common. The plan must carry
+# both common@0.1.0.0 and common@0.2.0.0: a manifest pins top-level versions,
+# a dependency follows the version its dependent's interface.yaml imports.
+default: current
+
+components:
+  audiodecoder: 0.1.0.0   # imports common@0.1.0.0
+  hdmicec: 0.1.0.0        # imports common@0.2.0.0
