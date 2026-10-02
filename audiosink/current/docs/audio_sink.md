@@ -195,7 +195,7 @@ Audio buffers entering the Audio Sink shall be delivered as AV Buffer handles (a
 
 An [AV Buffer](../avbuffer/av_buffer.md) audio pool would be used for PCM data which has come from system memory (e.g. PCM sound clip) or from a soft audio decoder. In this case the audio pool is created against `IAudioDecoder.Id.UNDEFINED`.
 
-The audio data must be in the PCM audio format and sample rate, as reported in `PlatformCapabilities` returned from the `IAudioSinkManager.getPlatformCapabilities()` function.
+The audio data must use a PCM input sample rate from `PlatformCapabilities.supportedSampleRatesHz` and a format from `PlatformCapabilities.supportedPCMFormats`, as returned by `IAudioSinkManager.getPlatformCapabilities()`. Every advertised rate and format combination is accepted by every audio sink.
 
 Once the data in an audio frame buffer has been fully consumed — passed to or processed by the mixer when a mixer input is routed, or consumed at its presentation time on the attached clock when no mixer input is routed — the Audio Sink shall free the handle by calling `IAVBuffer.free()`.
 
