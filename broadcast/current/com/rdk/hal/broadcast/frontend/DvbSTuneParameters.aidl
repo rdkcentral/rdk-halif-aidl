@@ -15,14 +15,17 @@
 package com.rdk.hal.broadcast.frontend;
 
 import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
+import com.rdk.hal.broadcast.frontend.DvbSInputStreamId;
 import com.rdk.hal.broadcast.frontend.DvbSModulation;
 import com.rdk.hal.broadcast.frontend.DvbSPilot;
+import com.rdk.hal.broadcast.frontend.DvbSPlsCode;
 import com.rdk.hal.broadcast.frontend.DvbSPlsMode;
 import com.rdk.hal.broadcast.frontend.DvbSRollOff;
 import com.rdk.hal.broadcast.frontend.DvbSStandard;
-import com.rdk.hal.broadcast.frontend.FrontendConstants;
+import com.rdk.hal.broadcast.frontend.Frequency;
 import com.rdk.hal.broadcast.frontend.SignalDetectMode;
 import com.rdk.hal.broadcast.frontend.SpectralInversion;
+import com.rdk.hal.broadcast.frontend.SymbolRate;
 
 /**
  * @brief DVB-S/S2/S2X-specific tuning parameters.
@@ -33,18 +36,18 @@ import com.rdk.hal.broadcast.frontend.SpectralInversion;
  */
 @VintfStability
 parcelable DvbSTuneParameters {
-    /** The frequency to tune to in Hertz. */
-    long frequency;
+    /** The frequency to tune to. */
+    Frequency frequency;
 
     /** Signal detect mode to use when tuning. */
     SignalDetectMode signalDetectMode;
 
     /**
-     * The symbol rate in symbols per second.
+     * The symbol rate.
      *
-     * Use FrontendConstants.AUTO_SYMBOL_RATE for auto symbol rate detection (if supported, see DvbSCapabilities).
+     * Use SymbolRate.AUTO for auto symbol rate detection (if supported, see DvbSCapabilities).
      */
-    int symbolRate = FrontendConstants.INVALID_SYMBOL_RATE;
+    SymbolRate symbolRate;
 
     /** Which DVB-S standard to use. */
     DvbSStandard dvbSStandard;
@@ -64,14 +67,14 @@ parcelable DvbSTuneParameters {
     /** DVB-S/S2/S2X spectral inversion mode to use when tuning. */
     SpectralInversion inversion;
 
-    /** DVB-S2/S2X input stream identifier; use -1 when not selecting a specific stream. */
-    int inputStreamId = FrontendConstants.INVALID_INPUT_STREAM_ID;
+    /** DVB-S2/S2X input stream identifier; use DvbSInputStreamId.UNDEFINED when not selecting a specific stream. */
+    DvbSInputStreamId inputStreamId;
 
     /** DVB-S2/S2X physical-layer scrambling mode. */
     DvbSPlsMode plsMode;
 
     /** DVB-S2/S2X physical-layer scrambling code (scrambling-sequence index). */
-    int plsCode = FrontendConstants.INVALID_PLS_CODE;
+    DvbSPlsCode plsCode;
 
     /** Reserved for future use. */
     ParcelableHolder extension;

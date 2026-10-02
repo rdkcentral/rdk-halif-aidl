@@ -26,14 +26,20 @@ package com.rdk.hal.broadcast;
  */
 @VintfStability
 parcelable ImplementationVersion {
+    /**
+     * @brief HAL Implementation Version structure.
+     *
+     * This version has to be filled by the service implementation and has to follow semantic versioning. It is not
+     * bound to the interface version.
+     */
     @VintfStability
     parcelable Version {
         /** Major version number. */
-        int major;
+        int major = -1;
         /** Minor version number. */
-        int minor;
+        int minor = -1;
         /** Patch version number. */
-        int patch;
+        int patch = -1;
     }
 
     /** Implementation version. */

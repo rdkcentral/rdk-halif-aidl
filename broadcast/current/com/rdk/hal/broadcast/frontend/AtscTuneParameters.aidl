@@ -15,6 +15,7 @@
 package com.rdk.hal.broadcast.frontend;
 
 import com.rdk.hal.broadcast.frontend.AtscModulation;
+import com.rdk.hal.broadcast.frontend.Frequency;
 import com.rdk.hal.broadcast.frontend.SignalDetectMode;
 
 /**
@@ -26,8 +27,8 @@ import com.rdk.hal.broadcast.frontend.SignalDetectMode;
  */
 @VintfStability
 parcelable AtscTuneParameters {
-    /** The frequency to tune to in Hertz. */
-    long frequency;
+    /** The frequency to tune to. */
+    Frequency frequency;
 
     /** Signal detect mode to use when tuning. */
     SignalDetectMode signalDetectMode;

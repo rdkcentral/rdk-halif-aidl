@@ -90,8 +90,6 @@ enum SignalInfoProperty {
     DVB_T_HIERARCHY,
     /** DVB-T MISO mode. */
     DVB_T_MISO,
-    /** DVB-S/S2/S2X inner FEC. */
-    DVB_S_INNER_FEC,
     /** DVB-S2/S2X pilot mode. */
     DVB_S_PILOT,
     /** DVB-S2/S2X physical-layer scrambling mode. */

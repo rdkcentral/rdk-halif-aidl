@@ -18,6 +18,7 @@ import com.rdk.hal.broadcast.frontend.AtscCapabilities;
 import com.rdk.hal.broadcast.frontend.DvbCCapabilities;
 import com.rdk.hal.broadcast.frontend.DvbSCapabilities;
 import com.rdk.hal.broadcast.frontend.DvbTCapabilities;
+import com.rdk.hal.broadcast.frontend.Frequency;
 import com.rdk.hal.broadcast.frontend.SignalInfoProperty;
 
 /**
@@ -33,20 +34,24 @@ parcelable FrontendCapabilities {
     SignalInfoProperty[] signalInfoProperties;
 
     /** Minimum frequency range of the tuner. */
-    long minFrequency;
+    Frequency minFrequency;
 
     /** Maximum frequency range of the tuner. */
-    long maxFrequency;
+    Frequency maxFrequency;
 
-    /** Range in Hertz from the center frequency that will result in the Tuner obtaining a lock. */
-    long acquireFrequencyRange;
+    /** Range from the center frequency that will result in the Tuner obtaining a lock. */
+    Frequency acquireFrequencyRange;
 
     /** Possible specific capabilities for the frontend type. */
     @VintfStability
     union SpecificCapabilities {
+        /** Capabilities of an ATSC frontend. */
         AtscCapabilities atsc;
+        /** Capabilities of a DVB-C frontend. */
         DvbCCapabilities dvbC;
+        /** Capabilities of a DVB-S, DVB-S2 or DVB-S2X frontend. */
         DvbSCapabilities dvbS;
+        /** Capabilities of a DVB-T or DVB-T2 frontend. */
         DvbTCapabilities dvbT;
     }
 

@@ -26,8 +26,12 @@ package com.rdk.hal.broadcast.frontend;
 enum FrontendType {
     /** Clean value when default initialized. */
     UNDEFINED = 0,
+    /** ATSC terrestrial frontend. */
     ATSC,
+    /** DVB-C cable frontend. */
     DVB_C,
+    /** DVB-S, DVB-S2 and DVB-S2X satellite frontend. */
     DVB_S,
+    /** DVB-T and DVB-T2 terrestrial frontend. */
     DVB_T,
 }

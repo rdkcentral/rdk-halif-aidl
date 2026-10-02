@@ -26,6 +26,8 @@ import com.rdk.hal.broadcast.frontend.DvbTBandwidth;
  */
 @VintfStability
 union Bandwidth {
+    /** Channel bandwidth of a DVB-C carrier. */
     DvbCBandwidth dvbC = DvbCBandwidth.UNDEFINED;
+    /** Channel bandwidth of a DVB-T or DVB-T2 carrier. */
     DvbTBandwidth dvbT;
 }

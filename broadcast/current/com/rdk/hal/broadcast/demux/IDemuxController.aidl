@@ -50,6 +50,8 @@ interface IDemuxController {
      * The filter object will be invalidated. The call to closeFilter() will stop the filter.
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The filter was not opened on this demux.
+     *
+     * @param[in] filter A filter obtained from openFilter() on this demux.
      */
     void closeFilter(in Filter filter);
 }

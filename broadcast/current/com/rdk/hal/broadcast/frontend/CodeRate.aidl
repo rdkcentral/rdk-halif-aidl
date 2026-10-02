@@ -27,7 +27,10 @@ import com.rdk.hal.broadcast.frontend.DvbTCodeRates;
  */
 @VintfStability
 union CodeRate {
+    /** Forward error correction code rate of a DVB-C carrier. */
     DvbCCodeRate dvbC = DvbCCodeRate.UNDEFINED;
+    /** Inner forward error correction code rate of a DVB-S, DVB-S2 or DVB-S2X carrier. */
     DvbSInnerFec dvbS;
+    /** Code rates of a DVB-T or DVB-T2 carrier. */
     DvbTCodeRates dvbT;
 }

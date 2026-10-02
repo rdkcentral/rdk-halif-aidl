@@ -19,6 +19,7 @@ import com.rdk.hal.broadcast.frontend.DvbCBandwidth;
 import com.rdk.hal.broadcast.frontend.DvbCCodeRate;
 import com.rdk.hal.broadcast.frontend.DvbCModulation;
 import com.rdk.hal.broadcast.frontend.SpectralInversion;
+import com.rdk.hal.broadcast.frontend.SymbolRate;
 
 /**
  * @brief DVB-C capability struct.
@@ -32,10 +33,10 @@ import com.rdk.hal.broadcast.frontend.SpectralInversion;
  */
 @VintfStability
 parcelable DvbCCapabilities {
-    /** Minimum symbol rate in Symbols per second. */
-    int minSymbolRate;
-    /** Maximum symbol rate in Symbols per second. */
-    int maxSymbolRate;
+    /** Minimum symbol rate. */
+    SymbolRate minSymbolRate;
+    /** Maximum symbol rate. */
+    SymbolRate maxSymbolRate;
     /** Whether the tuner can autodetect the symbol rate. */
     boolean isAutoSymbolRateSupported;
     /** Supported bandwidths. */

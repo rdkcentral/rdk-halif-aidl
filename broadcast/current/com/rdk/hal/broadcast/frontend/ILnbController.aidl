@@ -35,10 +35,16 @@ interface ILnbController {
      * @brief Set the LNB voltage.
      *
      * Use LnbVoltage.NONE to turn off the LNB power.
+     *
+     * @param[in] voltage The LNB voltage to set.
      */
     void setVoltage(in LnbVoltage voltage);
 
-    /** @brief Set the LNB tone. */
+    /**
+     * @brief Set the LNB tone.
+     *
+     * @param[in] tone The LNB tone to set.
+     */
     void setTone(in LnbTone tone);
 
     /**

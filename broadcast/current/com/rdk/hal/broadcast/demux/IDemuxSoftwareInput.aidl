@@ -39,7 +39,7 @@ interface IDemuxSoftwareInput {
         const int UNDEFINED = -1;
 
         /** The actual resource ID. */
-        int value;
+        int value = UNDEFINED;
     }
 
     /**
@@ -81,6 +81,8 @@ interface IDemuxSoftwareInput {
      * @exception ::android::binder::Status::EX_ILLEGAL_STATE The software input is not opened for writing.
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The bufferSink was not obtained from openForWriting()
      *                                                           on the same software input.
+     *
+     * @param[in] bufferSink The sink obtained from openForWriting() on this software input.
      */
     void closeForWriting(in IRingBufferSink bufferSink);
 
@@ -97,6 +99,8 @@ interface IDemuxSoftwareInput {
      * @exception ::android::binder::Status::EX_ILLEGAL_STATE The software input is not connected to a Demux.
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The provider was not obtained from
      *                                                           acquireDataProvider() on the same software input.
+     *
+     * @param[in] provider The provider obtained from acquireDataProvider() on this software input.
      */
     void releaseDataProvider(in IDemuxDataProvider provider);
 }

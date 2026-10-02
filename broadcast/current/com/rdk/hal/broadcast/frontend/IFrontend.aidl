@@ -44,7 +44,7 @@ interface IFrontend {
         const int UNDEFINED = -1;
 
         /** The actual resource ID. */
-        int value;
+        int value = UNDEFINED;
     }
 
     /**
@@ -132,6 +132,8 @@ interface IFrontend {
      * @exception ::android::binder::Status::EX_ILLEGAL_STATE The frontend has no DemuxDataProvider acquired.
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The provider was not obtained from
      *                                                           acquireDataProvider() on the same frontend.
+     *
+     * @param[in] provider The provider obtained from acquireDataProvider() on this frontend.
      */
     void releaseDataProvider(in IDemuxDataProvider provider);
 

@@ -14,6 +14,8 @@
  */
 package com.rdk.hal.broadcast.demux;
 
+import com.rdk.hal.broadcast.demux.Mpeg2TsPid;
+
 /**
  * @brief MPEG-2 TS tunnel filter-specific parameters.
  *
@@ -24,7 +26,7 @@ package com.rdk.hal.broadcast.demux;
 @VintfStability
 parcelable Mpeg2TsTunnelFilterParameters {
     /** The PID to filter for. */
-    int pid;
+    Mpeg2TsPid pid;
 
     /** Reserved for future use. */
     ParcelableHolder extension;

@@ -25,6 +25,7 @@ import com.rdk.hal.broadcast.frontend.DvbSRollOff;
  */
 @VintfStability
 union RollOff {
+    /** Roll-off factor of a DVB-S2 or DVB-S2X carrier. */
     DvbSRollOff dvbS = DvbSRollOff.UNDEFINED;
     // Reserved for future use.
 }

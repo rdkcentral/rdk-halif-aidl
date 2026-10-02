@@ -24,7 +24,9 @@ package com.rdk.hal.broadcast.frontend;
 @VintfStability
 @Backing(type = "int")
 enum DvbCCodeRate {
+    /** Clean value when default initialized. */
     UNDEFINED = 0,
+    /** The code rate is auto-detected. */
     AUTO,
 
     /** CR_1_2 */
