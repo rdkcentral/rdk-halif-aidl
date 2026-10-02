@@ -29,9 +29,10 @@ enum RingBufferErrorCode {
     /**
      * Overflow.
      *
-     * Only relevant for overflowing ring buffers. Will be issued when the producer acquires a buffer which will include
-     * the current reading position, i.e. the offset of the "oldest" acquire result not yet released by the consumer or
-     * the offset that would be given to the next acquire call if the consumer currently holds no buffer.
+     * Only relevant for ring buffers set to OverflowBehaviour.OVERFLOWING. Will be issued when the producer acquires a
+     * buffer which will include the current reading position, i.e. the offset of the "oldest" acquire result not yet
+     * released by the consumer or the offset that would be given to the next acquire call if the consumer currently
+     * holds no buffer.
      *
      * Delivered asynchronously through the oneway onError callback. Delivery may be triggered by the implementation
      * while it is handling an acquire call, so the callback can run on another thread while the producer's own acquire

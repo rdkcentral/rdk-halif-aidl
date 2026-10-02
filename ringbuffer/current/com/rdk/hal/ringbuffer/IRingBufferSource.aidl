@@ -48,9 +48,9 @@ interface IRingBufferSource {
      * availableForReading may already be out of date by the time the caller inspects it and is advisory only — useful
      * for metrics or coarse decisions, but never as the basis for a read. acquire() is the authoritative operation,
      * and the bytes field of its result is the only trustworthy statement of what the caller may access. The size and
-     * overflow setting are stable while a client is registered.
+     * overflow behaviour are stable while a client is registered.
      *
-     * @returns A snapshot of the ring buffer size, readable byte count and overflow setting.
+     * @returns A snapshot of the ring buffer size, readable byte count and overflow behaviour.
      */
     RingBufferInfo getInfo();
 
@@ -82,13 +82,13 @@ interface IRingBufferSource {
      * again before releasing a previous result is allowed and does not throw. Each result is identified by its own
      * RingBufferAcquireResult.Id.
      *
-     * @note If the ring buffer has been set up to be overflowing, the data acquired by this call may be significantly
-     * newer than the data acquired through the last call to acquire() when an overflow has occurred. Likewise, the
-     * acquired data might mix newer and older data when the overflow hasn't filled the whole requested size. In other
-     * words, the data might be discontinuous. The consumer should be prepared to handle this situation and not assume
-     * that the data acquired is contiguous or in order. Note though, that an overflow will be signalled through the
-     * IRingBufferSourceListener::onError callback and the consumer can choose to discard the acquired data in that
-     * case.
+     * @note If the ring buffer is set to OverflowBehaviour.OVERFLOWING, the data acquired by this call may be
+     * significantly newer than the data acquired through the last call to acquire() when an overflow has occurred.
+     * Likewise, the acquired data might mix newer and older data when the overflow hasn't filled the whole requested
+     * size. In other words, the data might be discontinuous. The consumer should be prepared to handle this situation
+     * and not assume that the data acquired is contiguous or in order. Note though, that an overflow will be
+     * signalled through the IRingBufferSourceListener::onError callback and the consumer can choose to discard the
+     * acquired data in that case.
      *
      * @note The number of bytes available for reading can be less than the requested size, and even zero. The consumer
      * should check the number of bytes available for reading in the returned RingBufferAcquireResult and only read that

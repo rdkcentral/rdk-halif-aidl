@@ -30,14 +30,14 @@ parcelable RingBufferAcquireResult {
         const int UNDEFINED = -1;
 
         /** The actual ID. */
-        int value;
+        int value = UNDEFINED;
     }
 
     /** The ID to correlate acquire and release calls. */
     Id id;
 
     /** The offset in the ring buffer where data can be read/written. */
-    int offset;
+    int offset = -1;
 
     /**
      * The number of bytes that were actually acquired for reading/writing.
@@ -46,7 +46,7 @@ parcelable RingBufferAcquireResult {
      * should check the number of bytes acquired in the returned RingBufferAcquireResult and only read/write that many
      * bytes.
      */
-    int bytes;
+    int bytes = -1;
 
     /**
      * The number of remaining bytes available for reading/writing in the ring buffer after this acquire.
@@ -58,7 +58,7 @@ parcelable RingBufferAcquireResult {
      * when the acquired data is located right before the end of the ring buffer, and the remaining data is located at
      * the beginning of the ring buffer.
      */
-    int remaining;
+    int remaining = -1;
 
     /** Reserved for future use. */
     ParcelableHolder extension;

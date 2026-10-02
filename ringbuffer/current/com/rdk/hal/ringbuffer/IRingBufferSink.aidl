@@ -48,9 +48,9 @@ interface IRingBufferSink {
      * availableForReading may already be out of date by the time the caller inspects it and is advisory only — useful
      * for metrics or coarse decisions, but never as the basis for a write. acquire() is the authoritative operation,
      * and the bytes field of its result is the only trustworthy statement of what the caller may access. The size and
-     * overflow setting are stable while a client is registered.
+     * overflow behaviour are stable while a client is registered.
      *
-     * @returns A snapshot of the ring buffer size, readable byte count and overflow setting.
+     * @returns A snapshot of the ring buffer size, readable byte count and overflow behaviour.
      */
     RingBufferInfo getInfo();
 
@@ -78,9 +78,10 @@ interface IRingBufferSink {
     /**
      * @brief Acquire bytes for writing.
      *
-     * @note If the underlying IRingBuffer is set up to use overflowing behavior, this method will return immediately
-     * with the number of bytes requested, limited by the number of continuous bytes available. It will thus override
-     * data which has not yet been read by the consumer if the producer writes data faster than the consumer reading it.
+     * @note If the underlying IRingBuffer is set to OverflowBehaviour.OVERFLOWING, this method will return
+     * immediately with the number of bytes requested, limited by the number of continuous bytes available. It will
+     * thus override data which has not yet been read by the consumer if the producer writes data faster than the
+     * consumer reading it.
      *
      * @note The producer is not allowed to call this method again before releasing the bytes acquired in the previous
      * call to acquire. This is to prevent fragmentation of the ring buffer and to ensure that the producer can always
@@ -93,8 +94,8 @@ interface IRingBufferSink {
      *
      * @param bytes The number of bytes to acquire for writing.
      * @returns A RingBufferAcquireResult containing the offset in the ring buffer where the producer can start writing
-     *         data and the number of bytes that were actually acquired for writing. Null, if the ring buffer is set up
-     *         not to overflow and the ring buffer is full.
+     *         data and the number of bytes that were actually acquired for writing. Null, if the ring buffer is set
+     *         to OverflowBehaviour.NON_OVERFLOWING and the ring buffer is full.
      */
     @nullable RingBufferAcquireResult acquire(in int bytes);
 

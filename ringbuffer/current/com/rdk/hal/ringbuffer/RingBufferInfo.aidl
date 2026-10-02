@@ -14,6 +14,8 @@
  */
 package com.rdk.hal.ringbuffer;
 
+import com.rdk.hal.ringbuffer.OverflowBehaviour;
+
 /**
  * @brief Information about an IRingBuffer.
  *
@@ -28,13 +30,13 @@ package com.rdk.hal.ringbuffer;
 @VintfStability
 parcelable RingBufferInfo {
     /** The size of the ring buffer in bytes. */
-    int bytes;
+    int bytes = -1;
 
     /** The number of bytes currently available for reading in the ring buffer. */
-    int availableForReading;
+    int availableForReading = -1;
 
-    /** The overflow setting of the ring buffer. */
-    boolean isOverflowing;
+    /** The overflow behaviour in effect for the ring buffer. */
+    OverflowBehaviour overflowBehaviour;
 
     /** Reserved for future use. */
     ParcelableHolder extension;
