@@ -27,7 +27,9 @@ parcelable DvbTCodeRates {
     @VintfStability
     @Backing(type = "int")
     enum Value {
+        /** Clean value when default initialized. */
         UNDEFINED = 0,
+        /** The code rate is auto-detected. */
         AUTO,
 
         /** CR_1_2 applies to DVB-T and DVB-T2. */

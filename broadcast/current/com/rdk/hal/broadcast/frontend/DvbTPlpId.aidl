@@ -14,23 +14,31 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.DvbCCodeRate;
-import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
-import com.rdk.hal.broadcast.frontend.DvbTCodeRates;
-
 /**
- * @brief Available code rates.
+ * @brief A DVB-T2 Physical Layer Pipe (PLP) identifier.
+ *
+ * Applies to DVB-T2 only and is ignored when tuning DVB-T. PLP selection is mandatory for a DVB-T2 frontend, so any
+ * frontend reporting DvbTStandard.T2 in DvbTCapabilities.dvbTStandards accepts an identifier in the range MIN to MAX,
+ * as well as AUTO.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-union CodeRate {
-    /** Forward error correction code rate of a DVB-C carrier. */
-    DvbCCodeRate dvbC = DvbCCodeRate.UNDEFINED;
-    /** Inner forward error correction code rate of a DVB-S, DVB-S2 or DVB-S2X carrier. */
-    DvbSInnerFec dvbS;
-    /** Code rates of a DVB-T or DVB-T2 carrier. */
-    DvbTCodeRates dvbT;
+parcelable DvbTPlpId {
+    /** No PLP selected. */
+    const int UNDEFINED = -2;
+
+    /** Select the PLP automatically. */
+    const int AUTO = -1;
+
+    /** The lowest valid PLP identifier. */
+    const int MIN = 0;
+
+    /** The highest valid PLP identifier. */
+    const int MAX = 255;
+
+    /** The actual PLP identifier. */
+    int value = UNDEFINED;
 }

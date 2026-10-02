@@ -24,6 +24,7 @@ package com.rdk.hal.broadcast.frontend;
 @VintfStability
 @Backing(type = "int")
 enum DvbSPilot {
+    /** Clean value when default initialized. */
     UNDEFINED = 0,
     /** DVB-S2/S2X pilot symbols are auto-detected. */
     AUTO,

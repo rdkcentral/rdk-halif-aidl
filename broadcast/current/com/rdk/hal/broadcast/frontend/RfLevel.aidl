@@ -14,23 +14,24 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.DvbCCodeRate;
-import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
-import com.rdk.hal.broadcast.frontend.DvbTCodeRates;
-
 /**
- * @brief Available code rates.
+ * @brief An RF signal level, carrying its unit in the type.
+ *
+ * Reported through SignalInfoValue for SignalInfoProperty.RF_LEVEL.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-union CodeRate {
-    /** Forward error correction code rate of a DVB-C carrier. */
-    DvbCCodeRate dvbC = DvbCCodeRate.UNDEFINED;
-    /** Inner forward error correction code rate of a DVB-S, DVB-S2 or DVB-S2X carrier. */
-    DvbSInnerFec dvbS;
-    /** Code rates of a DVB-T or DVB-T2 carrier. */
-    DvbTCodeRates dvbT;
+parcelable RfLevel {
+    /**
+     * The signal level in dBm.
+     *
+     * Defaults to -1000.0, which is far outside any physical RF level and means "no reading". AIDL does not permit a
+     * float constant, so unlike every other value type in this package the sentinel cannot be named. A client should
+     * treat any value below -999.0 as absent rather than test for equality, and should in any case take
+     * SignalInfoReturn.readiness as the authoritative statement of whether the reading is usable.
+     */
+    float dBm = -1000.0f;
 }

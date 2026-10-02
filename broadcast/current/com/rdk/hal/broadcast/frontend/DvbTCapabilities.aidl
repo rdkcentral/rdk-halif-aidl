@@ -32,7 +32,7 @@ import com.rdk.hal.broadcast.frontend.SpectralInversion;
  *
  * There is deliberately no capability flag for PLP selection. PLP selection is a mandatory requirement for a DVB-T2
  * frontend, so a frontend that reports DvbTStandard.T2 in dvbTStandards shall support DvbTTuneParameters.plpId,
- * including FrontendConstants.AUTO_PLP_ID.
+ * including DvbTPlpId.AUTO.
  *
  * @author Jan Pedersen
  * @author Christian George

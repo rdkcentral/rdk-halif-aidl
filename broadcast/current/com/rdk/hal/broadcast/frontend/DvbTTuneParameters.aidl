@@ -20,9 +20,10 @@ import com.rdk.hal.broadcast.frontend.DvbTConstellation;
 import com.rdk.hal.broadcast.frontend.DvbTGuardInterval;
 import com.rdk.hal.broadcast.frontend.DvbTHierarchy;
 import com.rdk.hal.broadcast.frontend.DvbTMiso;
+import com.rdk.hal.broadcast.frontend.DvbTPlpId;
 import com.rdk.hal.broadcast.frontend.DvbTStandard;
 import com.rdk.hal.broadcast.frontend.DvbTTransmissionMode;
-import com.rdk.hal.broadcast.frontend.FrontendConstants;
+import com.rdk.hal.broadcast.frontend.Frequency;
 import com.rdk.hal.broadcast.frontend.SignalDetectMode;
 import com.rdk.hal.broadcast.frontend.SpectralInversion;
 
@@ -35,8 +36,8 @@ import com.rdk.hal.broadcast.frontend.SpectralInversion;
  */
 @VintfStability
 parcelable DvbTTuneParameters {
-    /** The frequency to tune to in Hertz. */
-    long frequency;
+    /** The frequency to tune to. */
+    Frequency frequency;
 
     /** Signal detect mode to use when tuning. */
     SignalDetectMode signalDetectMode;
@@ -71,12 +72,12 @@ parcelable DvbTTuneParameters {
     /**
      * The plp id for DVB-T2.
      *
-     * Use FrontendConstants.AUTO_PLP_ID for auto. Otherwise specify a value in the range 0-255.
+     * Use DvbTPlpId.AUTO for auto. Otherwise specify a value in the range DvbTPlpId.MIN to DvbTPlpId.MAX.
      *
      * PLP selection is mandatory for a DVB-T2 frontend, so no capability query is needed: any frontend that reports
      * DvbTStandard.T2 in DvbTCapabilities.dvbTStandards shall honour this field. It is ignored when tuning DVB-T.
      */
-    int plpId = FrontendConstants.INVALID_PLP_ID;
+    DvbTPlpId plpId;
 
     /** Reserved for future use. */
     ParcelableHolder extension;

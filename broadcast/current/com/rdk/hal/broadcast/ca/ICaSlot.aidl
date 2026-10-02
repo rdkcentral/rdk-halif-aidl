@@ -34,7 +34,7 @@ interface ICaSlot {
         const int UNDEFINED = -1;
 
         /** The actual resource ID. */
-        int value;
+        int value = UNDEFINED;
     }
 
     /**

@@ -14,23 +14,28 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.DvbCCodeRate;
-import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
-import com.rdk.hal.broadcast.frontend.DvbTCodeRates;
-
 /**
- * @brief Available code rates.
+ * @brief A symbol rate, carrying its unit in the type.
+ *
+ * Applies to DVB-C and DVB-S/S2/S2X only. The valid range is resource-specific: see minSymbolRate and maxSymbolRate on
+ * DvbCCapabilities or DvbSCapabilities for the frontend in question.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-union CodeRate {
-    /** Forward error correction code rate of a DVB-C carrier. */
-    DvbCCodeRate dvbC = DvbCCodeRate.UNDEFINED;
-    /** Inner forward error correction code rate of a DVB-S, DVB-S2 or DVB-S2X carrier. */
-    DvbSInnerFec dvbS;
-    /** Code rates of a DVB-T or DVB-T2 carrier. */
-    DvbTCodeRates dvbT;
+parcelable SymbolRate {
+    /** No symbol rate selected. */
+    const int UNDEFINED = 0;
+
+    /**
+     * Detect the symbol rate automatically.
+     *
+     * Only valid where the frontend reports isAutoSymbolRateSupported, see DvbCCapabilities and DvbSCapabilities.
+     */
+    const int AUTO = -1;
+
+    /** The symbol rate in symbols per second. */
+    int symbolsPerSecond = UNDEFINED;
 }

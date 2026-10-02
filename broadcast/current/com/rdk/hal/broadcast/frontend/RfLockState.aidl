@@ -26,6 +26,8 @@ package com.rdk.hal.broadcast.frontend;
 enum RfLockState {
     /** Clean value when default initialized. */
     UNDEFINED = 0,
+    /** No RF signal lock has been acquired. */
     UNLOCKED,
+    /** An RF signal lock has been acquired. */
     LOCKED,
 }

@@ -12,25 +12,29 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package com.rdk.hal.broadcast.frontend;
-
-import com.rdk.hal.broadcast.frontend.DvbCCodeRate;
-import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
-import com.rdk.hal.broadcast.frontend.DvbTCodeRates;
+package com.rdk.hal.broadcast.demux;
 
 /**
- * @brief Available code rates.
+ * @brief An MPEG-2 Transport Stream packet identifier.
+ *
+ * Used by every filter that selects packets by PID, whether the filtered data is returned to the client through a
+ * ring buffer or tunnelled to a decoder.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-union CodeRate {
-    /** Forward error correction code rate of a DVB-C carrier. */
-    DvbCCodeRate dvbC = DvbCCodeRate.UNDEFINED;
-    /** Inner forward error correction code rate of a DVB-S, DVB-S2 or DVB-S2X carrier. */
-    DvbSInnerFec dvbS;
-    /** Code rates of a DVB-T or DVB-T2 carrier. */
-    DvbTCodeRates dvbT;
+parcelable Mpeg2TsPid {
+    /** No PID selected. */
+    const int UNDEFINED = -1;
+
+    /** The lowest valid PID. */
+    const int MIN = 0;
+
+    /** The highest valid PID, i.e. 0x1FFF. */
+    const int MAX = 8191;
+
+    /** The actual PID. */
+    int value = UNDEFINED;
 }

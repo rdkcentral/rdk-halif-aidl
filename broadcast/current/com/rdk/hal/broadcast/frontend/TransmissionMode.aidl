@@ -25,6 +25,7 @@ import com.rdk.hal.broadcast.frontend.DvbTTransmissionMode;
  */
 @VintfStability
 union TransmissionMode {
+    /** Transmission mode of a DVB-T or DVB-T2 carrier. */
     DvbTTransmissionMode dvbT = DvbTTransmissionMode.UNDEFINED;
     // Reserved for future use.
 }

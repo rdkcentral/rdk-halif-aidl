@@ -14,23 +14,26 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.DvbCCodeRate;
-import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
-import com.rdk.hal.broadcast.frontend.DvbTCodeRates;
-
 /**
- * @brief Available code rates.
+ * @brief A DVB-T2 system identifier, as carried in the T2 L1 pre-signalling.
+ *
+ * Reported through SignalInfoValue for SignalInfoProperty.T2_SYSTEM_ID.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-union CodeRate {
-    /** Forward error correction code rate of a DVB-C carrier. */
-    DvbCCodeRate dvbC = DvbCCodeRate.UNDEFINED;
-    /** Inner forward error correction code rate of a DVB-S, DVB-S2 or DVB-S2X carrier. */
-    DvbSInnerFec dvbS;
-    /** Code rates of a DVB-T or DVB-T2 carrier. */
-    DvbTCodeRates dvbT;
+parcelable DvbT2SystemId {
+    /** No system identifier. Distinct from MIN, which is a valid identifier. */
+    const int UNDEFINED = -1;
+
+    /** The lowest valid system identifier. */
+    const int MIN = 0;
+
+    /** The highest valid system identifier. */
+    const int MAX = 65535;
+
+    /** The actual system identifier. */
+    int value = UNDEFINED;
 }

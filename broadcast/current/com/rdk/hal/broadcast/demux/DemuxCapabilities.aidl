@@ -26,21 +26,26 @@ import com.rdk.hal.broadcast.demux.FilterType;
 @VintfStability
 parcelable DemuxCapabilities {
     /** Whether the demux accepts data from software sources. */
-    boolean acceptsDataFromSoftware;
+    boolean acceptsDataFromSoftware = false;
 
     /** Whether the demux accepts data from hardware sources. */
-    boolean acceptsDataFromHardware;
+    boolean acceptsDataFromHardware = false;
 
     /** Whether the demux can hold back data. */
-    boolean canHoldBackData;
+    boolean canHoldBackData = false;
 
+    /**
+     * @brief Filter capability.
+     *
+     * This structure describes the capabilities of a filter type.
+     */
     @VintfStability
     parcelable FilterCapability {
         /** The filter type. */
         FilterType filterType;
 
         /** Maximum number of instances of this filter type. */
-        int maxInstances;
+        int maxInstances = -1;
     }
 
     /**

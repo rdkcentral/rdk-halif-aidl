@@ -14,6 +14,7 @@
  */
 package com.rdk.hal.broadcast.demux;
 
+import com.rdk.hal.broadcast.demux.Mpeg2TsPid;
 import com.rdk.hal.ringbuffer.IRingBufferSource;
 import com.rdk.hal.ringbuffer.IRingBufferSourceListener;
 
@@ -37,17 +38,20 @@ interface IMpeg2TsDataFilter {
      * setAllPids()) to a different non-empty will update the filter, but old data may still be read from the filter
      * until the new data is available. Going from an empty list to another empty list does nothing.
      *
-     * Providing a list of PIDs that exceeds getMaxPids() or contains invalid PIDs will throw an exception and not
-     * change the filter state.
+     * Providing a list of PIDs that exceeds getMaxPids() or contains a PID outside the range Mpeg2TsPid.MIN to
+     * Mpeg2TsPid.MAX will throw an exception and not change the filter state.
      *
      * The implementation shall not provide any data before setPids() (with a non-empty list of PIDs) or setAllPids()
      * has been called for the first time. I.e. no data shall be available through the ring buffer that predates the
      * first call to one of these methods.
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The list of PIDs exceeds the maximum number of PIDs
-     *                                                           that can be filtered for or contains invalid PIDs.
+     *                                                           that can be filtered for or contains a PID outside
+     *                                                           the range Mpeg2TsPid.MIN to Mpeg2TsPid.MAX.
+     *
+     * @param[in] pids The PIDs to filter for, at most getMaxPids() of them. An empty list stops the filter.
      */
-    void setPids(in int[] pids);
+    void setPids(in Mpeg2TsPid[] pids);
 
     /**
      * @brief Use this to enable the collection of the full transport stream via wildcard filtering.
@@ -81,6 +85,8 @@ interface IMpeg2TsDataFilter {
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_STATE The filter does not have a consumer registered.
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT The consumer was not registered with this filter.
+     *
+     * @param[in] consumer The source obtained from registerConsumer() on this filter.
      */
     void unregisterConsumer(in IRingBufferSource consumer);
 }

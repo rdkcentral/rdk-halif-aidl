@@ -14,23 +14,26 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.DvbCCodeRate;
-import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
-import com.rdk.hal.broadcast.frontend.DvbTCodeRates;
-
 /**
- * @brief Available code rates.
+ * @brief A Signal Quality Indicator (SQI) as defined in NorDig.
+ *
+ * Reported through SignalInfoValue for SignalInfoProperty.SQI.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-union CodeRate {
-    /** Forward error correction code rate of a DVB-C carrier. */
-    DvbCCodeRate dvbC = DvbCCodeRate.UNDEFINED;
-    /** Inner forward error correction code rate of a DVB-S, DVB-S2 or DVB-S2X carrier. */
-    DvbSInnerFec dvbS;
-    /** Code rates of a DVB-T or DVB-T2 carrier. */
-    DvbTCodeRates dvbT;
+parcelable SignalQualityIndicator {
+    /** No indicator reading. Distinct from MIN, which is a real reading of the worst quality. */
+    const int UNDEFINED = -1;
+
+    /** The lowest valid indicator value. */
+    const int MIN = 0;
+
+    /** The highest valid indicator value. */
+    const int MAX = 100;
+
+    /** The indicator, as a percentage of the NorDig scale. */
+    int percent = UNDEFINED;
 }

@@ -21,6 +21,7 @@ import com.rdk.hal.broadcast.frontend.DvbSPlsMode;
 import com.rdk.hal.broadcast.frontend.DvbSRollOff;
 import com.rdk.hal.broadcast.frontend.DvbSStandard;
 import com.rdk.hal.broadcast.frontend.SpectralInversion;
+import com.rdk.hal.broadcast.frontend.SymbolRate;
 
 /**
  * @brief DVB-S/S2/S2X satellite broadcast standard capabilities.
@@ -34,10 +35,10 @@ import com.rdk.hal.broadcast.frontend.SpectralInversion;
  */
 @VintfStability
 parcelable DvbSCapabilities {
-    /** Minimum symbol rate in Symbols per second. */
-    int minSymbolRate;
-    /** Maximum symbol rate in Symbols per second. */
-    int maxSymbolRate;
+    /** Minimum symbol rate. */
+    SymbolRate minSymbolRate;
+    /** Maximum symbol rate. */
+    SymbolRate maxSymbolRate;
     /** Whether the tuner can autodetect the symbol rate. */
     boolean isAutoSymbolRateSupported;
     /** Supported DVB-S standards. */

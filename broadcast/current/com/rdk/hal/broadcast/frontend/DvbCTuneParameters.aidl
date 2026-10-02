@@ -18,9 +18,10 @@ import com.rdk.hal.broadcast.frontend.DvbCAnnex;
 import com.rdk.hal.broadcast.frontend.DvbCBandwidth;
 import com.rdk.hal.broadcast.frontend.DvbCCodeRate;
 import com.rdk.hal.broadcast.frontend.DvbCModulation;
-import com.rdk.hal.broadcast.frontend.FrontendConstants;
+import com.rdk.hal.broadcast.frontend.Frequency;
 import com.rdk.hal.broadcast.frontend.SignalDetectMode;
 import com.rdk.hal.broadcast.frontend.SpectralInversion;
+import com.rdk.hal.broadcast.frontend.SymbolRate;
 
 /**
  * @brief DVB-C-specific tuning parameters.
@@ -31,18 +32,18 @@ import com.rdk.hal.broadcast.frontend.SpectralInversion;
  */
 @VintfStability
 parcelable DvbCTuneParameters {
-    /** The frequency in Hertz. */
-    long frequency;
+    /** The frequency to tune to. */
+    Frequency frequency;
 
     /** Signal detect mode to use when tuning. */
     SignalDetectMode signalDetectMode;
 
     /**
-     * The symbol rate in symbols per second.
+     * The symbol rate.
      *
-     * Use FrontendConstants.AUTO_SYMBOL_RATE for auto symbol rate detection (if supported, see DvbCCapabilities).
+     * Use SymbolRate.AUTO for auto symbol rate detection (if supported, see DvbCCapabilities).
      */
-    int symbolRate = FrontendConstants.INVALID_SYMBOL_RATE;
+    SymbolRate symbolRate;
 
     /** The bandwidth to use. */
     DvbCBandwidth bandwidth;

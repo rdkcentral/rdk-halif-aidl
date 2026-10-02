@@ -14,23 +14,27 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.DvbCCodeRate;
-import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
-import com.rdk.hal.broadcast.frontend.DvbTCodeRates;
-
 /**
- * @brief Available code rates.
+ * @brief A bit error rate, expressed as a count of error bits per 1 billion bits.
+ *
+ * Reported through SignalInfoValue for SignalInfoProperty.BER and SignalInfoProperty.PRE_BER, the latter being the
+ * rate measured before error correction.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-union CodeRate {
-    /** Forward error correction code rate of a DVB-C carrier. */
-    DvbCCodeRate dvbC = DvbCCodeRate.UNDEFINED;
-    /** Inner forward error correction code rate of a DVB-S, DVB-S2 or DVB-S2X carrier. */
-    DvbSInnerFec dvbS;
-    /** Code rates of a DVB-T or DVB-T2 carrier. */
-    DvbTCodeRates dvbT;
+parcelable Ber {
+    /** No bit error rate reading. Distinct from MIN, which is a real reading of zero errors. */
+    const int UNDEFINED = -1;
+
+    /** The lowest valid bit error rate. */
+    const int MIN = 0;
+
+    /** The highest valid bit error rate, i.e. every bit in error. */
+    const int MAX = 1000000000;
+
+    /** The number of error bits per 1 billion bits. */
+    int errorBitsPerBillion = UNDEFINED;
 }

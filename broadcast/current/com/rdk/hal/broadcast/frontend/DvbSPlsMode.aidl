@@ -24,6 +24,7 @@ package com.rdk.hal.broadcast.frontend;
 @VintfStability
 @Backing(type = "int")
 enum DvbSPlsMode {
+    /** Clean value when default initialized. */
     UNDEFINED = 0,
     /** Auto-selected. */
     AUTO,

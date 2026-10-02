@@ -14,23 +14,22 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.DvbCCodeRate;
-import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
-import com.rdk.hal.broadcast.frontend.DvbTCodeRates;
-
 /**
- * @brief Available code rates.
+ * @brief An RF frequency, carrying its unit in the type.
+ *
+ * Used wherever a frequency is tuned to, reported or bounded, so that a frequency cannot be confused with a symbol
+ * rate or with a frequency expressed in another unit. The valid range is resource-specific: see
+ * FrontendCapabilities.minFrequency and FrontendCapabilities.maxFrequency for the frontend in question.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-union CodeRate {
-    /** Forward error correction code rate of a DVB-C carrier. */
-    DvbCCodeRate dvbC = DvbCCodeRate.UNDEFINED;
-    /** Inner forward error correction code rate of a DVB-S, DVB-S2 or DVB-S2X carrier. */
-    DvbSInnerFec dvbS;
-    /** Code rates of a DVB-T or DVB-T2 carrier. */
-    DvbTCodeRates dvbT;
+parcelable Frequency {
+    /** No frequency selected. */
+    const long UNDEFINED = 0;
+
+    /** The frequency in Hertz. */
+    long hertz = UNDEFINED;
 }

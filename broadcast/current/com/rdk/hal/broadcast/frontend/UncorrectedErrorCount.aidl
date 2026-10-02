@@ -14,23 +14,20 @@
  */
 package com.rdk.hal.broadcast.frontend;
 
-import com.rdk.hal.broadcast.frontend.DvbCCodeRate;
-import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
-import com.rdk.hal.broadcast.frontend.DvbTCodeRates;
-
 /**
- * @brief Available code rates.
+ * @brief A count of errors that the demodulator was unable to correct.
+ *
+ * Reported through SignalInfoValue for SignalInfoProperty.UNCORRECTED_ERRORS.
  *
  * @author Jan Pedersen
  * @author Christian George
  * @author Philipp Trommler
  */
 @VintfStability
-union CodeRate {
-    /** Forward error correction code rate of a DVB-C carrier. */
-    DvbCCodeRate dvbC = DvbCCodeRate.UNDEFINED;
-    /** Inner forward error correction code rate of a DVB-S, DVB-S2 or DVB-S2X carrier. */
-    DvbSInnerFec dvbS;
-    /** Code rates of a DVB-T or DVB-T2 carrier. */
-    DvbTCodeRates dvbT;
+parcelable UncorrectedErrorCount {
+    /** No count available. Distinct from a real count of zero, which means no uncorrected errors. */
+    const long UNDEFINED = -1;
+
+    /** The actual count. */
+    long value = UNDEFINED;
 }

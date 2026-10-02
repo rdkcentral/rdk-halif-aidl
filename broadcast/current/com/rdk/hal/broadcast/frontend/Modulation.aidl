@@ -28,8 +28,12 @@ import com.rdk.hal.broadcast.frontend.DvbTConstellation;
  */
 @VintfStability
 union Modulation {
+    /** Modulation of an ATSC carrier. */
     AtscModulation atsc = AtscModulation.UNDEFINED;
+    /** Modulation of a DVB-C carrier. */
     DvbCModulation dvbC;
+    /** Modulation of a DVB-S, DVB-S2 or DVB-S2X carrier. */
     DvbSModulation dvbS;
+    /** Constellation of a DVB-T or DVB-T2 carrier. */
     DvbTConstellation dvbT;
 }

@@ -25,6 +25,7 @@ import com.rdk.hal.broadcast.frontend.DvbTGuardInterval;
  */
 @VintfStability
 union GuardInterval {
+    /** Guard interval of a DVB-T or DVB-T2 carrier. */
     DvbTGuardInterval dvbT = DvbTGuardInterval.UNDEFINED;
     // Reserved for future use.
 }

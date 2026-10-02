@@ -15,23 +15,34 @@
 package com.rdk.hal.broadcast.frontend;
 
 import com.rdk.hal.broadcast.frontend.Bandwidth;
+import com.rdk.hal.broadcast.frontend.Ber;
+import com.rdk.hal.broadcast.frontend.Cnr;
 import com.rdk.hal.broadcast.frontend.CodeRate;
 import com.rdk.hal.broadcast.frontend.DemodLockState;
 import com.rdk.hal.broadcast.frontend.DvbCAnnex;
-import com.rdk.hal.broadcast.frontend.DvbSInnerFec;
+import com.rdk.hal.broadcast.frontend.DvbSInputStreamId;
 import com.rdk.hal.broadcast.frontend.DvbSPilot;
+import com.rdk.hal.broadcast.frontend.DvbSPlsCode;
 import com.rdk.hal.broadcast.frontend.DvbSPlsMode;
 import com.rdk.hal.broadcast.frontend.DvbSStandard;
+import com.rdk.hal.broadcast.frontend.DvbT2SystemId;
 import com.rdk.hal.broadcast.frontend.DvbTHierarchy;
 import com.rdk.hal.broadcast.frontend.DvbTMiso;
+import com.rdk.hal.broadcast.frontend.DvbTPlpId;
 import com.rdk.hal.broadcast.frontend.DvbTStandard;
+import com.rdk.hal.broadcast.frontend.Frequency;
 import com.rdk.hal.broadcast.frontend.FrontendType;
 import com.rdk.hal.broadcast.frontend.GuardInterval;
 import com.rdk.hal.broadcast.frontend.Modulation;
+import com.rdk.hal.broadcast.frontend.RfLevel;
 import com.rdk.hal.broadcast.frontend.RfLockState;
 import com.rdk.hal.broadcast.frontend.RollOff;
+import com.rdk.hal.broadcast.frontend.SignalQualityIndicator;
+import com.rdk.hal.broadcast.frontend.SignalStrengthIndicator;
 import com.rdk.hal.broadcast.frontend.SpectralInversion;
+import com.rdk.hal.broadcast.frontend.SymbolRate;
 import com.rdk.hal.broadcast.frontend.TransmissionMode;
+import com.rdk.hal.broadcast.frontend.UncorrectedErrorCount;
 
 /**
  * @brief SignalInfo values.
@@ -48,32 +59,32 @@ import com.rdk.hal.broadcast.frontend.TransmissionMode;
 union SignalInfoValue {
     /** The current frontend type used for tuning. */
     FrontendType frontendType = FrontendType.UNDEFINED;
-    /** The actual frequency that the tuner is locked on (in Hertz). */
-    long actualFrequency;
+    /** The actual frequency that the tuner is locked on. */
+    Frequency actualFrequency;
     /** Demodulator lock state. */
     DemodLockState demodLockState;
     /** RF lock state. */
     RfLockState rfLockState;
-    /** RF signal level in dBm. */
-    float rfLevel;
-    /** Carrier to noise ratio in dB. */
-    float cnr;
-    /** Bit error rate - The number of error bits per 1 billion bits (range 0-1,000,000,000). */
-    int ber;
-    /** Pre Viterbi BER - The number of error bits per 1 billion bits before correction (range 0-1,000,000,000). */
-    int preBer;
+    /** RF signal level. */
+    RfLevel rfLevel;
+    /** Carrier to noise ratio. */
+    Cnr cnr;
+    /** Bit error rate. */
+    Ber ber;
+    /** Pre Viterbi BER - the bit error rate before correction. */
+    Ber preBer;
     /** Uncorrected Error count. */
-    long uncorrectedErrors;
-    /** Signal Strength Indicator as defined in NorDig (range 0-100). */
-    int ssi;
-    /** Signal Quality Indicator as defined in NorDig (range 0-100). */
-    int sqi;
-    /** Physical Layer Pipe ID (range 0-255). */
-    int plpId;
-    /** Physical Layer Pipe IDs (range 0-255). */
-    int[] plpIds;
+    UncorrectedErrorCount uncorrectedErrors;
+    /** Signal Strength Indicator as defined in NorDig. */
+    SignalStrengthIndicator ssi;
+    /** Signal Quality Indicator as defined in NorDig. */
+    SignalQualityIndicator sqi;
+    /** Physical Layer Pipe ID. */
+    DvbTPlpId plpId;
+    /** Physical Layer Pipe IDs. */
+    DvbTPlpId[] plpIds;
     /** DVB-T2 System ID. */
-    int t2SystemId;
+    DvbT2SystemId t2SystemId;
     /** The used modulation/sub-modulation. */
     Modulation modulation;
     /** The used guard interval. */
@@ -82,8 +93,8 @@ union SignalInfoValue {
     TransmissionMode transmissionMode;
     /** Bandwidth. */
     Bandwidth bandwidth;
-    /** Symbols per second. */
-    int symbolRate;
+    /** The symbol rate. */
+    SymbolRate symbolRate;
     /** DVB-T Standard. */
     DvbTStandard dvbTStandard;
     /** DVB-S Standard. */
@@ -100,14 +111,12 @@ union SignalInfoValue {
     DvbTHierarchy dvbTHierarchy;
     /** DVB-T MISO mode. */
     DvbTMiso dvbTMiso;
-    /** DVB-S/S2/S2X inner FEC. */
-    DvbSInnerFec dvbSInnerFec;
     /** DVB-S2/S2X pilot mode. */
     DvbSPilot dvbSPilot;
     /** DVB-S2/S2X physical-layer scrambling mode. */
     DvbSPlsMode dvbSPlsMode;
     /** DVB-S2/S2X physical-layer scrambling code. */
-    int dvbSPlsCode;
+    DvbSPlsCode dvbSPlsCode;
     /** DVB-S2/S2X input stream identifier. */
-    int dvbSInputStreamId;
+    DvbSInputStreamId dvbSInputStreamId;
 }

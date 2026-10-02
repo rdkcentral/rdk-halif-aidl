@@ -26,6 +26,8 @@ package com.rdk.hal.broadcast.frontend;
 enum DemodLockState {
     /** Clean value when default initialized. */
     UNDEFINED = 0,
+    /** The demodulator has not locked onto the carrier. */
     UNLOCKED,
+    /** The demodulator has locked onto the carrier. */
     LOCKED,
 }
