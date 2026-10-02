@@ -18,6 +18,7 @@ import com.rdk.hal.ringbuffer.IRingBufferSink;
 import com.rdk.hal.ringbuffer.IRingBufferSinkListener;
 import com.rdk.hal.ringbuffer.IRingBufferSource;
 import com.rdk.hal.ringbuffer.IRingBufferSourceListener;
+import com.rdk.hal.ringbuffer.OverflowBehaviour;
 import com.rdk.hal.ringbuffer.RingBufferInfo;
 
 /**
@@ -55,7 +56,7 @@ interface IRingBuffer {
      *
      * Available to the owning component at any time, including before a producer or consumer has been registered.
      *
-     * @returns A snapshot of the ring buffer size, readable byte count and overflow setting.
+     * @returns A snapshot of the ring buffer size, readable byte count and overflow behaviour.
      */
     RingBufferInfo getInfo();
 
@@ -78,7 +79,7 @@ interface IRingBuffer {
     void setSize(in int bytes);
 
     /**
-     * @brief Set the overflowing behavior of the ring buffer.
+     * @brief Set the overflow behaviour of the ring buffer.
      *
      * The interface defines no default. Whether a ring buffer overflows, and whether that behaviour can be changed at
      * all, is a capability of the particular implementation, so the owning component shall set the behaviour it
@@ -86,15 +87,15 @@ interface IRingBuffer {
      * implementation does not offer it. The value in effect can be read back through getInfo().
      *
      * @exception ::android::binder::Status::EX_ILLEGAL_STATE If there is currently a producer or a consumer registered.
-     * @exception ::android::binder::Status::EX_UNSUPPORTED_OPERATION If the provided overflowing behavior is not
+     * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT If the provided behaviour is
+     *                                                           OverflowBehaviour.UNDEFINED.
+     * @exception ::android::binder::Status::EX_UNSUPPORTED_OPERATION If the provided overflow behaviour is not
      *                                                                supported by the system.
      *
-     * @param enabled If false, producers will receive null from acquire() when the ring buffer is full, avoiding data
-     * loss; the producer can retry after onSpaceAvailable() or drop data at source. If true, producers will be
-     * able to write even when the ring buffer is full, which will result in data loss on the client side, but will not
-     * block the producer.
+     * @param behaviour The overflow behaviour to apply. See OverflowBehaviour for what each value means to the
+     * producer.
      */
-    void setOverflowing(in boolean enabled);
+    void setOverflowBehaviour(in OverflowBehaviour behaviour);
 
     /**
      * @brief Registers a producer to the ring buffer.
@@ -121,6 +122,8 @@ interface IRingBuffer {
      * @exception ::android::binder::Status::EX_ILLEGAL_STATE If there is currently no producer registered.
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT If the provided sink does not match the currently
      *                                                           registered producer.
+     *
+     * @param sink The sink returned by registerProducer() for the producer being unregistered.
      */
     void unregisterProducer(in IRingBufferSink sink);
 
@@ -146,6 +149,8 @@ interface IRingBuffer {
      * @exception ::android::binder::Status::EX_ILLEGAL_STATE If there is currently no consumer registered.
      * @exception ::android::binder::Status::EX_ILLEGAL_ARGUMENT If the provided source does not match the currently
      *                                                           registered consumer.
+     *
+     * @param source The source returned by registerConsumer() for the consumer being unregistered.
      */
     void unregisterConsumer(in IRingBufferSource source);
 }

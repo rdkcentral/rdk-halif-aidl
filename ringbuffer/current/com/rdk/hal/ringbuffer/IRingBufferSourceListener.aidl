@@ -51,5 +51,5 @@ oneway interface IRingBufferSourceListener {
      * @param code The error code indicating the type of error that occurred.
      * @param message A human-readable message providing more details about the error.
      */
-    void onError(in RingBufferErrorCode code, in String message);
+    void onError(in RingBufferErrorCode code, in @utf8InCpp String message);
 }
