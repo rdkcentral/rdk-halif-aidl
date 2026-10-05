@@ -369,7 +369,85 @@ Feedback from one cycle may require design iteration and a subsequent cycle.
 
 ---
 
-## 5. The "14+5" Accelerated Delivery Cycle
+## 5. Raising and Executing a Change
+
+Every change runs through a ticket-driven, auditable process. Nothing reaches
+`develop` without a tracked requirement behind it.
+
+### Where the work is tracked
+
+**JIRA owns the planning view.** Milestone completion and delivery status live
+in JIRA so PMs track progress across releases without working in GitHub.
+
+**GitHub owns engineering truth.** This is a public open-source project, and
+GitHub holds a complete, auditable history of every change, visible to internal
+and external contributors alike. All change context lives where every
+contributor can see it, and engineering status is synced back to JIRA against
+the planning requirements.
+
+### RDK-M core contributors: direct branching
+
+Core contributors have write access and branch from the repository directly.
+
+```text
+ Requirement     Ticket        Branch        PR & Review       Merge
+ ──────────► ──────────► ──────────────► ──────────────► ──────────────►
+                                          If major change:
+  Stakeholder   GitHub       Feature        14-Day Review   Develop
+  identifies    Issue        branch per     + 5-Day         branch
+  need          created      ticket         Resolution      (protected)
+```
+
+### Community contributors: fork-based branching
+
+Contributors without write access work from a fork. The same governance, review
+and approval rules apply to every contribution regardless of its origin.
+
+```text
+ Fork Repo     Clone & Branch    Commit & Push     Submit PR       Review & Merge
+ ──────────► ──────────────► ──────────────► ──────────────► ──────────────►
+  Fork the      Clone locally    Push changes      PR to the       Core team
+  repository    & create a       to your fork      original        reviews &
+  on GitHub     topic branch     on GitHub         repository      approves
+```
+
+### Branch naming
+
+Every change begins with a GitHub issue and is implemented on a branch named
+for it — `feature/{issue#}-{synopsis}`. Branch naming is enforced, so every
+commit traces back to a tracked requirement.
+
+### Audit trail
+
+Every change is traceable from requirement through to release:
+
+| Artefact | What it records |
+|----------|-----------------|
+| **GitHub Issue** | The original requirement, discussion and decisions |
+| **Feature branch** | Named branch linking every commit to the issue |
+| **Pull request** | Review comments, approvals and CI results |
+| **Changelog** | Generated per release from merged work |
+| **Release notes** | Published with every GitHub Release |
+
+### Enforcement
+
+The process is enforced by the repository rather than by convention:
+
+| Control | Mechanism |
+|---------|-----------|
+| Ticket-driven workflow | Branch naming rules |
+| Protected `develop` | Branch protection and rulesets |
+| Reviewer assignment | CODEOWNERS |
+| Contributor licensing | CLA enforcement |
+| Security scanning | FOSSID |
+| Licence scanning | BlackDuck |
+| Copyright headers | Header check |
+| Time-boxed review | The 14+5 cycle, Section 6 |
+| Multi-team sign-off | Four mandatory teams plus a domain reviewer, Section 9 |
+
+---
+
+## 6. The "14+5" Accelerated Delivery Cycle
 
 All HAL interface changes move through a strictly time-boxed review lifecycle.
 
@@ -421,7 +499,7 @@ separately through the PR and merge process.
 
 ---
 
-## 6. Pre-Baseline: The Path to AIDL Baseline 1.0
+## 7. Pre-Baseline: The Path to AIDL Baseline 1.0
 
 ### Current State
 
@@ -528,7 +606,7 @@ been individually frozen. This is the milestone, not a gate.
 
 ---
 
-## 7. Post-Baseline: Maintaining AIDL After Freeze
+## 8. Post-Baseline: Maintaining AIDL After Freeze
 
 Once a component is frozen at AIDL Baseline, it follows AIDL stable
 interface versioning. The rules are strict and non-negotiable.
@@ -571,7 +649,7 @@ for post-baseline).
 
 ---
 
-## 8. Stakeholder Management & Roles
+## 9. Stakeholder Management & Roles
 
 ### Mandatory Reviewers (all components)
 
@@ -615,7 +693,7 @@ Each reviewer team's sign-off is tracked in `metadata.yaml`:
 
 ---
 
-## 9. Tooling & Automation
+## 10. Tooling & Automation
 
 ### metadata.yaml — Single Source of Truth
 

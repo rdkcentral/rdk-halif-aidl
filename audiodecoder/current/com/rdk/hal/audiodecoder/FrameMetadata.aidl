@@ -57,9 +57,15 @@ parcelable FrameMetadata {
 	 * Per-frame — applies only to this decoded frame, not to the stream as a
 	 * whole. Set to 0 (the common case) for no trim.
 	 *
-	 * Carried through unchanged from `InputBufferMetadata.trimStartNs` and
-	 * `trimEndNs` on the corresponding `decodeBufferWithMetadata()` call. The
-	 * AudioSink uses these to trim the PCM before presenting to the mixer.
+	 * These fields carry the trim still outstanding for this frame, and the
+	 * AudioSink applies it before presenting the PCM to the mixer. A decoder
+	 * that has already trimmed the frame itself sets both to 0, so the samples
+	 * are discarded exactly once.
+	 *
+	 * In non-tunnelled mode, a frame with a non-zero trim always carries
+	 * non-null metadata on `IAudioDecoderControllerListener.onFrameOutput()`,
+	 * even when the trim repeats the previous frame's trim. A null metadata
+	 * means zero trim for that frame.
 	 *
 	 * Used for codec priming / encoder delay (AAC LC/HE, Opus pre-skip), AAC
 	 * SBR padding, and gapless playback across track boundaries.
