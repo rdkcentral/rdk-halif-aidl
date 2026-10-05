@@ -59,7 +59,9 @@ parcelable Capabilities
 	boolean supportsFRL;
 
 	/**
-	 * Indicates support for variable refresh rate (VRR).
+	 * Indicates support for HDMI Forum variable refresh rate (VRR),
+	 * as defined by the HDMI 2.1 specification.
+	 * AMD FreeSync support is indicated separately by supportsFreeSync.
 	 */
 	boolean supportsVRR;
 
