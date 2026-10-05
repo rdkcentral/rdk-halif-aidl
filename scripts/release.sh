@@ -1779,6 +1779,29 @@ aidl_hash_status() {
     fi
 }
 
+# Compare a module's hand-authored headers (current/*.h, the next version)
+# against the copies its latest snapshot released (<version>/include/*.h, top
+# level — generated headers sit under include/com/). Echoes "CHANGED" when a
+# header was added, removed or edited, else "unchanged". These ship with the
+# module but are not part of the AIDL hash, so a header-only change needs its
+# own release (#745).
+hand_header_status() {
+    local comp="$1"
+    local latest
+    latest="$(discover_current_version "${comp}")"
+    [[ -n "${latest}" ]] || { echo "unchanged"; return 0; }
+    local cur="${REPO_ROOT}/${comp}/current" rel="${REPO_ROOT}/${comp}/${latest}/include"
+    local cur_list rel_list h
+    cur_list="$(find "${cur}" -maxdepth 1 -name '*.h' -printf '%f\n' 2>/dev/null | sort)"
+    rel_list="$(find "${rel}" -maxdepth 1 -name '*.h' -printf '%f\n' 2>/dev/null | sort)"
+    [[ "${cur_list}" == "${rel_list}" ]] || { echo "CHANGED"; return 0; }
+    while IFS= read -r h; do
+        [[ -n "${h}" ]] || continue
+        cmp -s "${cur}/${h}" "${rel}/${h}" || { echo "CHANGED"; return 0; }
+    done <<< "${cur_list}"
+    echo "unchanged"
+}
+
 # ----------------------------------------------------------------------------
 # Transitive bump propagation (subsume rule)
 # ----------------------------------------------------------------------------
@@ -1799,11 +1822,21 @@ aidl_hash_status() {
 # bump propagating to every importer. (The per-component write loop applies
 # the same suppression to the component's own bump; doing it here as well
 # closes the ordering gap where propagation ran on the un-gated flags.)
+# A component whose hand-authored headers changed (#745) still releases at
+# its own label-derived level: its flags are held here and restored after
+# propagation, so it bumps itself without seeding importers.
+declare -A COMP_HELD_BUMP=()
 for _gc in "${!COMP_TOUCHED[@]}"; do
     if [[ "$(aidl_hash_status "${_gc}")" == "unchanged" ]] \
        && { [[ "${COMP_BREAKING[$_gc]:-0}" -eq 1 ]] \
             || [[ "${COMP_NON_DOC[$_gc]:-0}" -eq 1 ]] \
             || [[ "${COMP_DOC[$_gc]:-0}" -eq 1 ]]; }; then
+        if [[ "$(hand_header_status "${_gc}")" == "CHANGED" ]]; then
+            if [[ "${COMP_BREAKING[$_gc]:-0}" -eq 1 ]]; then COMP_HELD_BUMP[$_gc]=BREAKING
+            elif [[ "${COMP_NON_DOC[$_gc]:-0}" -eq 1 ]]; then COMP_HELD_BUMP[$_gc]=NON_DOC
+            else COMP_HELD_BUMP[$_gc]=DOC; fi
+            COMP_REASONS[$_gc]="${COMP_REASONS[$_gc]:-}gate: hand-authored header(s) changed — releases itself, not a propagation source (#745)"$'\n'
+        fi
         unset 'COMP_BREAKING[$_gc]' 'COMP_NON_DOC[$_gc]' 'COMP_DOC[$_gc]' 2>/dev/null || true
         COMP_REASONS[$_gc]="${COMP_REASONS[$_gc]:-}gate: AIDL surface unchanged — not a propagation source (#722)"$'\n'
     fi
@@ -1870,6 +1903,16 @@ while [[ "${_changed}" -eq 1 ]]; do
         done
     done
     [[ "${_iter}" -gt 20 ]] && break  # safety net; real graphs are shallow
+done
+
+# Restore held header-change bumps (#745). The bump calculation takes the
+# highest flag set, so a stronger transitive bump still wins.
+for _gc in "${!COMP_HELD_BUMP[@]}"; do
+    case "${COMP_HELD_BUMP[$_gc]}" in
+        BREAKING) COMP_BREAKING[$_gc]=1 ;;
+        NON_DOC)  COMP_NON_DOC[$_gc]=1 ;;
+        DOC)      COMP_DOC[$_gc]=1 ;;
+    esac
 done
 
 # Diagnostic block: list every component that bumped purely transitively
@@ -2184,8 +2227,7 @@ create_snapshot() {
     # builds consume headers from include/ only, so a root copy left behind is a
     # duplicate authoritative source (#745). The hand-authored originals stay at
     # the module root in current/ — this moves within the snapshot copy only, so
-    # the dev tree is untouched. Snapshots already released keep whatever they
-    # shipped; this applies to every snapshot cut from here on.
+    # the dev tree is untouched.
     local _nullglob_was=0; shopt -q nullglob && _nullglob_was=1
     shopt -s nullglob
     local _root_hdrs=("${snapshot_dir}"/*.h)
@@ -3219,9 +3261,12 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
     # warranted, regardless of what PR labels said. Catches the case
     # where a Breaking-Change PR (e.g. a build-infrastructure change like
     # #567 gitignoring */current/include) touched non-interface files
-    # under a component, falsely flagging it Breaking.
+    # under a component, falsely flagging it Breaking. A change to the
+    # module's hand-authored headers is a release in its own right (#745),
+    # so it is exempt.
     _hash_for_bump="$(aidl_hash_status "${comp}")"
-    if [[ "${_hash_for_bump}" == "unchanged" && "${bump}" != "none" && "${is_initial}" -ne 1 ]]; then
+    if [[ "${_hash_for_bump}" == "unchanged" && "${bump}" != "none" && "${is_initial}" -ne 1 \
+          && -z "${COMP_HELD_BUMP[$comp]+x}" ]]; then
         COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}gate: AIDL hash unchanged — interface byte-identical to ${current_version}, label-derived bump (${bump}) suppressed"$'\n'
         bump="none"
         # Drop the label flags so the transitive subsume pass doesn't

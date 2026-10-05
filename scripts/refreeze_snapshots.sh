@@ -182,6 +182,15 @@ refreeze_one() {
         return 1
     fi
 
+    # Hand-authored headers (e.g. avbufferhelper.h) sit at the top of the
+    # snapshot's include/ (#623, #745). They are the released version and are
+    # not regenerated, so set them aside across the wipe below. Never re-take
+    # them from current/ — that is the next, unreleased version.
+    local _hand_hdrs
+    _hand_hdrs="$(mktemp -d)"
+    find "${snap}/include" -maxdepth 1 -type f -name '*.h' \
+        -exec cp -p {} "${_hand_hdrs}/" \; 2>/dev/null || true
+
     # Copy back ONLY the identity artefacts. A failure here has already
     # removed the snapshot's old bindings — tell the operator how to
     # recover rather than leaving a silently half-written snapshot.
@@ -189,22 +198,24 @@ refreeze_one() {
     if ! cp -r "${cur}/include" "${cur}/src" "${snap}/" \
         || ! cp "${cur}/interface.yaml" "${snap}/interface.yaml" \
         || ! cp "${cur}/.hash" "${snap}/.hash"; then
+        rm -rf "${_hand_hdrs}"
         restore_current
         warn "[${comp}] copy-back into ${ver}/ failed — snapshot is incomplete; recover with: git checkout -- ${comp}/${ver}/"
         return 1
     fi
 
-    # Re-stage hand-authored module-root headers into the snapshot's
-    # include/ tree (same contract as release.sh create_snapshot, #623).
+    # Restore the released hand-authored headers into include/.
     local hdr
-    for hdr in "${snap}"/*.h; do
+    for hdr in "${_hand_hdrs}"/*.h; do
         [[ -e "${hdr}" ]] || continue
-        if ! cp "${hdr}" "${snap}/include/"; then
+        if ! cp -p "${hdr}" "${snap}/include/"; then
+            rm -rf "${_hand_hdrs}"
             restore_current
-            warn "[${comp}] failed to re-stage $(basename "${hdr}") into ${ver}/include/ — recover with: git checkout -- ${comp}/${ver}/"
+            warn "[${comp}] failed to restore $(basename "${hdr}") into ${ver}/include/ — recover with: git checkout -- ${comp}/${ver}/"
             return 1
         fi
     done
+    rm -rf "${_hand_hdrs}"
 
     restore_current
     (cd "${REPO_ROOT}" && git add "${comp}/${ver}/")
