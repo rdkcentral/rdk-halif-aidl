@@ -28,7 +28,7 @@
 # PV therefore falls back to BitBake's 1.0, which nothing constrains - this
 # recipe only has to PROVIDE linux-binder, and no consumer names a version.
 #
-#   Last verified against: linux_binder_idl 2.6.0
+#   Last verified against: linux_binder_idl 2.7.0
 #
 # That line is a record of what the harness has been run with, not a pin. If it
 # disagrees with binder_sdk.version, binder_sdk.version is right and this needs
