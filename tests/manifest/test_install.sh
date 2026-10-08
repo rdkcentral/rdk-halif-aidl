@@ -4,7 +4,8 @@
 # Builds the two-commons fixture (common@0.1.0.0 and common@0.2.0.0 side by
 # side), installs to a staging prefix, checks the versioned layout, then builds
 # and links the consumer three ways: find_package(CONFIG), pkg-config, and an
-# EXACT-version selection of both commons.
+# EXACT-version selection of both commons. common is built as both .so and
+# .a (HALIF_LIBRARY_TYPE_common=BOTH); every other component as the default .so.
 #
 # Needs the Binder SDK:
 #   BINDER_SDK_DIR          default <repo>/out/target   (lib/binder/libbinder.so)
@@ -22,10 +23,12 @@ SDK_ARGS=(
 )
 fail=0
 check() { if [[ -e "$STAGE/$1" ]]; then echo "ok   $1"; else echo "MISSING $1"; fail=$((fail+1)); fi; }
+check_absent() { if [[ ! -e "$STAGE/$1" ]]; then echo "ok   no $1"; else echo "UNEXPECTED $1"; fail=$((fail+1)); fi; }
 
 echo "== build + install (two-commons fixture) =="
 cmake -S "$ROOT" -B "$WORK/build" "${SDK_ARGS[@]}" \
-    -DHALIF_VERSIONS_FILE="$ROOT/tests/manifest/fixtures/two-commons.yaml"
+    -DHALIF_VERSIONS_FILE="$ROOT/tests/manifest/fixtures/two-commons.yaml" \
+    -DHALIF_LIBRARY_TYPE_common=BOTH
 cmake --build "$WORK/build" -j "$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
 cmake --install "$WORK/build" --prefix "$STAGE" > /dev/null
 
@@ -52,6 +55,8 @@ for f in \
     lib/pkgconfig/rdk-halif-aidl-common-0.2.0.0.pc \
     lib/pkgconfig/rdk-halif-aidl-hdmicec-0.1.0.0.pc
 do check "$f"; done
+echo "== library type is per component: hdmicec is .so only =="
+check_absent lib/libhdmicec-v0.1.0.0-cpp.a
 
 echo "== pkg-config resolves the module and its dependency =="
 export PKG_CONFIG_PATH="$STAGE/lib/pkgconfig"

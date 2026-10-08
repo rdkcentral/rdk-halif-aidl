@@ -302,4 +302,4 @@ DRM HAL implementations must pass:
 
 - AIDL interface definitions in `drm/current/com/rdk/hal/drm/`
 - HAL Feature Profile: `drm/current/hfp-drm.yaml`
-- Build configuration: `drm/current/CMakeLists.txt`
+- Interface definition: `drm/current/interface.yaml` (built by the root `CMakeLists.txt`)

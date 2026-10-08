@@ -31,6 +31,7 @@
 #   3. ./build_modules.sh manifest --file versions_current.yaml        - build the dev cohort (every component at current/)
 #   4. ./build_modules.sh <c> --version <v>                            - build a single released snapshot
 #   5. ./build_modules.sh <c> --version <v> (deps wiped first)         - standalone snapshot build auto-resolves its dependency closure (#638)
+#   6. ./build_modules.sh <c> --library-type STATIC                    - per-component .a instead of .so
 #
 # It is run on demand (no CI wiring). Exit status is 0 only if every check
 # passes.
@@ -45,7 +46,7 @@ REPO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../.." && pwd)"
 cd "${REPO_ROOT}"
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-    sed -n '23,34p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '23,35p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
     exit 0
 fi
 
@@ -77,7 +78,7 @@ echo ""
 # previous build don't inflate the lib counts. `--clean` clears the build
 # tree but not the staged output.
 rm -rf "${HALIF_LIB_DIR}"
-echo "[1/5] ./build_modules.sh all --clean"
+echo "[1/6] ./build_modules.sh all --clean"
 if ./build_modules.sh all --clean > /tmp/smoke_all.log 2>&1; then
     n=$(count_libs 'lib*-vcurrent-cpp.so')
     if [ "${n}" -eq "${EXPECTED_CURRENT}" ]; then
@@ -114,7 +115,7 @@ fi
 # with no snapshot yet) falls through and stays at `-vcurrent-cpp`.
 #######################################################################
 echo ""
-echo "[2/5] ./build_modules.sh manifest      (versions_released.yaml)"
+echo "[2/6] ./build_modules.sh manifest      (versions_released.yaml)"
 # Count via the *same* awk regex `build_modules.sh manifest` uses, so a
 # manifest-format regression that the parser silently drops (e.g.
 # aligned `name  : version` with spaces before the colon) shows up
@@ -159,7 +160,7 @@ fi
 # the in-development cohort devs work against day-to-day.
 #######################################################################
 echo ""
-echo "[3/5] ./build_modules.sh manifest --file versions_current.yaml  (dev)"
+echo "[3/6] ./build_modules.sh manifest --file versions_current.yaml  (dev)"
 if ./build_modules.sh manifest --file versions_current.yaml > /tmp/smoke_manifest_current.log 2>&1; then
     n=$(count_libs 'lib*-vcurrent-cpp.so')
     if [ "${n}" -eq "${EXPECTED_CURRENT}" ]; then
@@ -179,11 +180,11 @@ fi
 # it. (Released via ./release.sh; the snapshots are committed.)
 #######################################################################
 echo ""
-echo "[4/5] per-version snapshot build"
+echo "[4/6] per-version snapshot build"
 SNAP=""
-for d in */[0-9]*.[0-9]*.[0-9]*.[0-9]*/CMakeLists.txt; do
+for d in */[0-9]*.[0-9]*.[0-9]*.[0-9]*/interface.yaml; do
     [ -f "${d}" ] || continue
-    SNAP="${d%/CMakeLists.txt}"
+    SNAP="${d%/interface.yaml}"
     break
 done
 
@@ -209,21 +210,27 @@ fi
 #######################################################################
 # 5. Standalone snapshot build with its dependency closure wiped (#638)
 #
-# Steps 1-4 leave out/build/include + out/target fully populated, so a
-# per-version snapshot build never proves it can stand up its own
-# dependencies. Here we pick a released snapshot that HAS dependencies,
-# wipe those dependencies' staged headers + libraries, then build ONLY
-# that snapshot and assert it auto-resolves and rebuilds the closure
-# (the exact failure mode of #638: missing com/rdk/hal/PropertyValue.h).
+# Steps 1-4 leave out/target fully populated, so a per-version snapshot
+# build never proves it can stand up its own dependencies. Here we pick a
+# released snapshot that HAS dependencies, wipe those dependencies'
+# installed headers + libraries, then build ONLY that snapshot and assert
+# the root build resolves and rebuilds the closure (the exact failure mode
+# of #638: missing com/rdk/hal/PropertyValue.h).
 #######################################################################
 echo ""
-echo "[5/5] standalone snapshot build resolves its dependency closure (#638)"
-# Find the first released snapshot whose CMakeLists declares HAL deps.
+echo "[5/6] standalone snapshot build resolves its dependency closure (#638)"
+HALIF_INC_DIR="${REPO_ROOT}/out/target/include/rdk-halif-aidl"
+# Immediate sibling dependencies a snapshot's interface.yaml imports, as
+# "<comp> <ver>" lines.
+snapshot_deps() {
+    sed -nE 's/^[[:space:]]*-[[:space:]]*([a-z][a-z0-9_]*)@([0-9][0-9.]*)[[:space:]]*$/\1 \2/p' "$1" \
+        | while read -r c v; do [ -d "${REPO_ROOT}/${c}" ] && echo "${c} ${v}"; done | sort -u
+}
 DEPSNAP=""
-for d in */[0-9]*.[0-9]*.[0-9]*.[0-9]*/CMakeLists.txt; do
+for d in */[0-9]*.[0-9]*.[0-9]*.[0-9]*/interface.yaml; do
     [ -f "${d}" ] || continue
-    grep -qE 'HALIF_INCLUDE_DIR\}/[a-z][a-z0-9_]*/[0-9][0-9.]*/include' "${d}" || continue
-    DEPSNAP="${d%/CMakeLists.txt}"
+    [ -n "$(snapshot_deps "${d}")" ] || continue
+    DEPSNAP="${d%/interface.yaml}"
     break
 done
 
@@ -232,22 +239,19 @@ if [ -z "${DEPSNAP}" ]; then
 else
     dcomp="${DEPSNAP%%/*}"
     dver="${DEPSNAP#*/}"
-    dcmake="${DEPSNAP}/CMakeLists.txt"
-    # Immediate dependencies declared by the snapshot's CMakeLists.
-    mapfile -t DEPS < <(grep -oE 'HALIF_INCLUDE_DIR\}/[a-z][a-z0-9_]*/[0-9][0-9.]*/include' "${dcmake}" \
-        | sed -E 's#HALIF_INCLUDE_DIR\}/([^/]+)/([^/]+)/include#\1 \2#' | sort -u)
+    mapfile -t DEPS < <(snapshot_deps "${DEPSNAP}/interface.yaml")
     echo "       target ${dcomp}/${dver}; wiping ${#DEPS[@]} dependency(ies): ${DEPS[*]}"
 
-    # Wipe the target + each dependency's staged headers, libraries and build
-    # dirs so the build genuinely starts from an unstaged state.
-    rm -rf "build/${dcomp}-${dver}" "build/${dcomp}/${dver}"
+    # Wipe the target + each dependency's installed headers, libraries and
+    # build dirs so the build genuinely starts from an unstaged state.
+    rm -rf "build/${dcomp}-${dver}"
     rm -f  "${HALIF_LIB_DIR}/lib${dcomp}-v${dver}-cpp.so"
-    rm -rf "${REPO_ROOT}/out/build/include/${dcomp}/${dver}"
+    rm -rf "${HALIF_INC_DIR}/${dcomp}/${dver}"
     for pair in "${DEPS[@]}"; do
         set -- ${pair}; dep="$1"; depver="$2"
         rm -f  "${HALIF_LIB_DIR}/lib${dep}-v${depver}-cpp.so"
-        rm -rf "${REPO_ROOT}/out/build/include/${dep}/${depver}"
-        rm -rf "build/${dep}-${depver}" "build/${dep}/${depver}"
+        rm -rf "${HALIF_INC_DIR}/${dep}/${depver}"
+        rm -rf "build/${dep}-${depver}"
     done
 
     if ./build_modules.sh "${dcomp}" --version "${dver}" > /tmp/smoke_depclosure.log 2>&1; then
@@ -257,15 +261,41 @@ else
             set -- ${pair}; c="$1"; v="$2"
             [ -f "${HALIF_LIB_DIR}/lib${c}-v${v}-cpp.so" ] || { fail "dep-closure: lib${c}-v${v}-cpp.so not rebuilt"; missing=1; }
         done
-        # Each dependency's headers must have been re-staged (the #638 symptom).
+        # Each dependency's headers must have been re-installed (the #638 symptom).
         for pair in "${DEPS[@]}"; do
             set -- ${pair}; dep="$1"; depver="$2"
-            [ -d "${REPO_ROOT}/out/build/include/${dep}/${depver}/include" ] || { fail "dep-closure: ${dep}/${depver} headers not staged"; missing=1; }
+            [ -d "${HALIF_INC_DIR}/${dep}/${depver}/com" ] || { fail "dep-closure: ${dep}/${depver} headers not installed"; missing=1; }
         done
         [ "${missing}" -eq 0 ] && pass "dep-closure: ${dcomp}/${dver} auto-resolved and rebuilt ${#DEPS[@]} dependency(ies) from a wiped state"
     else
         fail "dep-closure: build_modules.sh exited non-zero (see /tmp/smoke_depclosure.log)"
         tail -15 /tmp/smoke_depclosure.log | sed 's/^/        /'
+    fi
+fi
+
+#######################################################################
+# 6. Static library for one component
+#
+# The library type is chosen per component; SHARED is the default. A
+# STATIC build of one component installs lib<c>-v<ver>-cpp.a.
+#######################################################################
+echo ""
+echo "[6/6] per-component static library"
+if [ -z "${SNAP}" ]; then
+    fail "static: no released snapshot to build"
+else
+    comp="${SNAP%%/*}"
+    ver="${SNAP#*/}"
+    rm -f "${HALIF_LIB_DIR}/lib${comp}-v${ver}-cpp.a"
+    if ./build_modules.sh "${comp}" --version "${ver}" --library-type STATIC --build-dir "build/${comp}-${ver}-static" > /tmp/smoke_static.log 2>&1; then
+        if [ -f "${HALIF_LIB_DIR}/lib${comp}-v${ver}-cpp.a" ]; then
+            pass "static: lib${comp}-v${ver}-cpp.a built"
+        else
+            fail "static: expected ${HALIF_LIB_DIR}/lib${comp}-v${ver}-cpp.a not found"
+        fi
+    else
+        fail "static: build_modules.sh exited non-zero (see /tmp/smoke_static.log)"
+        tail -15 /tmp/smoke_static.log | sed 's/^/        /'
     fi
 fi
 

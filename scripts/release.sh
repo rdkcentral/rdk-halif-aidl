@@ -186,6 +186,7 @@ build_cache_module_hash() {
 #   - The args (so "all" vs "manifest" hash differently)
 #   - The relevant source files (every */current/*.aidl for "all";
 #     versions_released.yaml + every */<version>/*.aidl for "manifest")
+#   - The root build (CMakeLists.txt, CMakeModules/)
 build_cache_build_hash() {
     local args="$*"
     local files
@@ -202,6 +203,11 @@ ${files}"
         files="$(find "${REPO_ROOT}" -maxdepth 4 -path '*/current/com/*' -name '*.aidl' \
                     -type f 2>/dev/null | sort)"
     fi
+    # The build itself is an input too: a change to the root CMake build
+    # invalidates every cached verification.
+    files="${REPO_ROOT}/CMakeLists.txt
+$(find "${REPO_ROOT}/CMakeModules" -type f 2>/dev/null | sort)
+${files}"
     # Hash the args first, then all file contents.
     {
         echo "args:${args}"
@@ -245,32 +251,22 @@ deploy_versioned_docs() {
     return 0
 }
 
-# The first verification build of a release run starts from clean staging,
+# The first verification build of a release run starts from clean output,
 # so the cohort is proven to compile from a clean checkout — not from
-# incrementally staged headers (out/build/include) or a stale build cache
+# previously installed HAL headers and libraries or a stale build cache
 # that could mask a missing dependency (see #638). Runs once per invocation
-# (guarded); the Binder SDK in out/target is preserved, so there is no SDK
-# rebuild and the clean is fast.
+# (guarded); the Binder SDK (out/target/lib/binder, out/build/include/binder_sdk)
+# is preserved, so there is no SDK rebuild and the clean is fast.
 _VERIFY_CLEAN_DONE=0
 verification_clean_once() {
     [[ "${_VERIFY_CLEAN_DONE}" -eq 1 ]] && return 0
     _VERIFY_CLEAN_DONE=1
-    phase "Pre-verification clean (once): build/, out/build/include, build cache"
+    phase "Pre-verification clean (once): build/, installed HAL output, build cache"
     rm -rf "${REPO_ROOT}/build"
-    # Preserve the dev-layout binder SDK headers (out/build/include/binder_sdk):
-    # deleting them while out/target/.sdk_ready survives leaves every snapshot
-    # build unable to find binder/IBinder.h, failing verification.
-    if [[ -d "${REPO_ROOT}/out/build/include/binder_sdk" ]]; then
-        mv "${REPO_ROOT}/out/build/include/binder_sdk" "${REPO_ROOT}/out/build/.binder_sdk.keep"
-    fi
-    rm -rf "${REPO_ROOT}/out/build/include"
-    if [[ -d "${REPO_ROOT}/out/build/.binder_sdk.keep" ]]; then
-        mkdir -p "${REPO_ROOT}/out/build/include"
-        mv "${REPO_ROOT}/out/build/.binder_sdk.keep" "${REPO_ROOT}/out/build/include/binder_sdk"
-    fi
+    rm -rf "${REPO_ROOT}/out/target/lib/rdk-halif-aidl" "${REPO_ROOT}/out/target/include/rdk-halif-aidl"
     rm -f "${BUILD_CACHE_FILE}"
-    log "  Cleared build/, out/build/include and ${BUILD_CACHE_FILE#"${REPO_ROOT}/"} —"
-    log "  verification builds from clean staging (Binder SDK in out/target kept)."
+    log "  Cleared build/, out/target/{lib,include}/rdk-halif-aidl and ${BUILD_CACHE_FILE#"${REPO_ROOT}/"} —"
+    log "  verification builds from clean output (Binder SDK in out/ kept)."
 }
 
 run_verification_build() {
@@ -1949,7 +1945,8 @@ update_metadata() {
 #   3. git add <component>/<version>/   # snapshot now contains bindings
 #
 # Frozen `<version>/` includes everything from `current/`: AIDL,
-# generated include/src, docs, CMakeLists, interface.yaml, hfp-*.yaml.
+# generated include/src, docs, interface.yaml, hfp-*.yaml. It carries no
+# build file: the root CMake build compiles any (component, version).
 
 # A component is considered "buildable" if it has a current/interface.yaml.
 # Components without one (broadcast, ffv, r4ce, …) are incubating — they
@@ -1984,8 +1981,8 @@ is_buildable_component() {
 # at 9: a 10th doc-only respin of the same minor forces a minor bump.
 # getInterfaceHash() is the toolchain's aidl_hash_gen digest. current/ carries
 # neither field, so dev builds report HASH="notfrozen" — the pre-freeze
-# marker. Snapshots are compile-only (their CMakeLists glob src/*.cpp and
-# never regenerate), so both values are baked in at freeze time: stamp
+# marker. Snapshots are compile-only (the build compiles their committed
+# src/ and regenerates them only on request), so both values are baked in at freeze time: stamp
 # current/, regenerate, copy into the snapshot, restore current/.
 _snapshot_version_int() {
     local ver="$1" out="" f i

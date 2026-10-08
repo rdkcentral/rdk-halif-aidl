@@ -123,13 +123,15 @@ find_package(Binder REQUIRED)
 
 # The toolchain generates bindings at build time. A plan with current nodes
 # cannot build without it; released nodes need it only for halif-generate.
-find_package(Python3 COMPONENTS Interpreter)
+# python3 as found on PATH, as aidl_ops.py's own shebang would find it, so an
+# activated venv (activate_venv.sh) supplies the toolchain's Python modules.
+find_program(HALIF_PYTHON NAMES python3 DOC "Python 3 that runs aidl_ops.py")
 find_file(HALIF_AIDL_OPS aidl_ops.py
     HINTS "${HOST_AIDL_DIR}" ENV BINDER_TOOLCHAIN_ROOT
     PATH_SUFFIXES host
     NO_DEFAULT_PATH
     DOC "linux_binder_idl aidl_ops.py, which generates the bindings")
-if(NOT Python3_Interpreter_FOUND)
+if(NOT HALIF_PYTHON)
     set(HALIF_AIDL_OPS "")
 endif()
 if(_needs_aidl AND NOT HALIF_AIDL_OPS)

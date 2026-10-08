@@ -144,7 +144,7 @@ function(_halif_add_generation comp ver out_sources)
         set(generate
             COMMAND "${CMAKE_COMMAND}" -E rm -rf "${dir}/src" "${dir}/include"
             COMMAND "${CMAKE_COMMAND}" -E env AIDL_VERSIONING_SKIP_DIR=out,build
-                    "${Python3_EXECUTABLE}" "${HALIF_AIDL_OPS}" -g ${roots}
+                    "${HALIF_PYTHON}" "${HALIF_AIDL_OPS}" -g ${roots}
                     -o "${CMAKE_BINARY_DIR}/aidl/${comp}/${ver}" "${comp}")
     else()
         set(generate
