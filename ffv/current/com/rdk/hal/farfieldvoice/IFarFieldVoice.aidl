@@ -34,7 +34,7 @@ import com.rdk.hal.farfieldvoice.IFarFieldVoiceControllerListener;
 /**
  *  The Far Field Voice HAL provides a stream of far field audio input to the client
  *  upon detection of a keyword in the audio stream. Following detection of the keyword,
- *  the HAL detects a voice command in the stream and reports it's occurrence to the client.
+ *  the HAL detects a voice command in the stream and reports its occurrence to the client.
  *  This stream is referred to as the Keyword channel. This stream is typically forwarded to
  *  a voice recognition server for interpretation of user intent.
  *
@@ -198,7 +198,7 @@ interface IFarFieldVoice
      * @param[in] farFieldVoiceController    Instance of IFarFieldVoiceController returned by open().
      *
      * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in OPENED State.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if instance is not in State::READY state.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      * @return boolean
