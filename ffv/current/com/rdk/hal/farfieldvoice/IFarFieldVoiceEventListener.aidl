@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.farfieldvoice;
 import com.rdk.hal.farfieldvoice.State;
-import com.rdk.hal.farfieldvoice.PowerMode;
+import com.rdk.hal.farfieldvoice.ListeningMode;
 import com.rdk.hal.farfieldvoice.FailureCode;
 
 /**
@@ -39,19 +39,23 @@ oneway interface IFarFieldVoiceEventListener {
     void onStateChanged(in State oldState, in State newState);
 
     /**
-	 * Callback when Far Field Voice has transitioned to a new power mode.
+	 * Callback when Far Field Voice has transitioned to a new listening mode.
+     *
+     * @param[in] listeningMode     The listening mode now in effect.
+     *
+     * @see IFarFieldVoiceController.setListeningMode()
      */
-    void onEnteredPowerMode(in PowerMode powerMode);
+    void onEnteredListeningMode(in ListeningMode listeningMode);
 
     /**
-	 * Callback when Far Field Voice has failed.
+	 * Callback when the Far Field Voice system or one of its sub-systems has failed
+     * and the service can no longer capture or process audio.
      *
-     * This may be due to a transient hardware error. Closing and reopening
-     * the Far Field Voice Service may recover. Repeated errors likely indicates
-     * a permanent hardware error. It is useful to log this occurrence for later
-     * analysis.
+     * The failure may be transient. The client recovers by closing and reopening the
+     * Far Field Voice service. A failure that repeats after reopening indicates a
+     * permanent fault. The client logs each occurrence with its FailureCode.
      *
      * @param[in] failureCode	The reason for the failure.
      */
-    void onHardwareFailed(in FailureCode failureCode);
+    void onSystemFailure(in FailureCode failureCode);
 }

@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.farfieldvoice;
-import com.rdk.hal.farfieldvoice.PowerMode;
+import com.rdk.hal.farfieldvoice.ListeningMode;
 
 /**
  *  @brief     Far Field Voice service status.
@@ -30,9 +30,9 @@ parcelable Status
 {
 
     /**
-     * Current power mode.
+     * Current listening mode.
      */
-    PowerMode powerMode;
+    ListeningMode listeningMode;
 
     /**
      * Indicates if a keyword was detected on the Keyword channel.
@@ -43,12 +43,4 @@ parcelable Status
      * Indicates if privacy state is active.
      */
     boolean privacyStateActive;
-
-    /**
-     * Vendor specific error code to indicate an error condition. A value of
-     * zero indicates no error.
-     *
-     * This is for information only and useful to log if an error condition occurs.
-     */
-    long vendorErrorCode;
 }
