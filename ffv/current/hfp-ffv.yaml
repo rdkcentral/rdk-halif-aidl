@@ -20,18 +20,24 @@
 
 # HAL Feature Profile (HFP) - Far Field Voice (FFV) Maximum Configuration Reference
 #  This file establishes the baseline maximum configuration for the Far Field Voice (FFV) component, serving as a worst-case scenario reference for test suite execution.
-#  Platform-specific FFV configurations, tailored to unique hardware and software requirements, are derived from this reference. 
+#  Platform-specific FFV configurations, tailored to unique hardware and software requirements, are derived from this reference.
 #     During testing, these platform-specific HFP files are used to validate accurate reporting of supported FFV capabilities by the interface.
-#  The FFV interface's runtime behavior is managed by an internal state machine, ensuring adherence to the declared configurations.
+#  Each key below has the name of the Capabilities.aidl field it declares, so the HFP and the
+#  value returned by IFarFieldVoice.getCapabilities() can be compared field by field.
 
-hal:
-  components:
-    far_field_voice:
-      microphone_channel_count: 1 # channels
-      power_state: "FULL_POWER" # Enum: FULL_POWER, STANDBY, DEEP_SLEEP
-      privacy_mode: false
-      hardware_failure: false
-      noise_reduction: true # Indicates noise reduction support
-      beamforming: true # Indicates beamforming support
-      beamforming_type: "fixed" # Optional: fixed, adaptive, etc.
-      noise_reduction_type: "spectral" # Optional: spectral, etc.
+ffv:                            # Component object begins (matches directory name)
+  interfaceVersion: current
+
+  # Capabilities.microphoneChannelCount - number of microphone inputs.
+  microphoneChannelCount: 1     # channels
+
+  # Capabilities.channelTypes - audio channel types IFarFieldVoiceController.openChannel() accepts.
+  channelTypes:
+    - KEYWORD
+
+  # Capabilities.supportedListeningModes - ListeningMode values
+  # IFarFieldVoiceController.setListeningMode() accepts.
+  supportedListeningModes:
+    - ACTIVE_LISTEN
+    - KEYWORD_ALERT
+    - POWERED_OFF
