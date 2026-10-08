@@ -38,6 +38,19 @@ TESTS_FAILED=0
 
 CMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX:-$(pwd)/out/target}"
 
+# The binder wire protocol the cross-compiled SDK is built for. It follows the
+# KERNEL the image runs, not the toolchain, so it is stated rather than
+# inherited. The ARM target here is row B of
+# docs/standards/build_integration.md: 32-bit userspace on a protocol-8 kernel,
+# which is every kernel from 4.18 and every 64-bit kernel. Set 7 for the legacy
+# row A.
+HALIF_BINDER_PROTOCOL="${HALIF_BINDER_PROTOCOL:-8}"
+case "${HALIF_BINDER_PROTOCOL}" in
+    7|8) ;;
+    *) echo "HALIF_BINDER_PROTOCOL must be 7 or 8 (got '${HALIF_BINDER_PROTOCOL}')" >&2
+       exit 1 ;;
+esac
+
 usage() {
     echo "Usage: $0 [--from ID] [--to ID] [--only ID[,ID...]] [--list] [--help]"
     echo "  --from ID    Start running at test ID (e.g., 3 or 6)"
@@ -745,13 +758,40 @@ test_11() {
           -DCMAKE_INSTALL_PREFIX=${current_dir}/out/target \
           -DCMAKE_INSTALL_LIBDIR=lib/binder \
           -DBUILD_HOST_AIDL=OFF \
-          -DTARGET_LIB32_VERSION=ON \
+          -DBINDER_PROTOCOL=${HALIF_BINDER_PROTOCOL} \
           -DCMAKE_BUILD_TYPE=Release && \
         cmake --build build/binder -- -j\$(nproc) && \
         cmake --install build/binder" \
         >/tmp/arm_sdk_build.log 2>&1; then
         echo "✅ ARM Binder SDK built successfully"
         echo ""
+
+        # The wire protocol is compiled into libbinder, so verify the artifact
+        # rather than trusting the switch. Parcel::ipcSetDataReference takes a
+        # const binder_size_t*, and the protocol selects that type's width, so
+        # the mangled third parameter names the protocol the library speaks:
+        # PKy (const unsigned long long*) is 8, PKj (const unsigned int*) is 7.
+        local sdk_lib="${current_dir}/out/target/lib/binder/libbinder.so"
+        local want_proto="${HALIF_BINDER_PROTOCOL}"
+        local sym=""
+        [ -f "${sdk_lib}" ] && sym=$(grep -ao 'ipcSetDataReferenceEPKh[jm]PK[yj]' "${sdk_lib}" | head -n 1 || true)
+        local got_proto
+        case "${sym}" in
+            *PKy) got_proto=8 ;;
+            *PKj) got_proto=7 ;;
+            *)    got_proto="undetermined" ;;
+        esac
+        if [ "${got_proto}" = "${want_proto}" ]; then
+            echo "✅ ARM Binder SDK speaks protocol ${got_proto}, as requested"
+            echo ""
+        else
+            echo "❌ ARM Binder SDK speaks protocol ${got_proto}, expected ${want_proto}"
+            echo "   libbinder compares protocol versions for exact equality when it"
+            echo "   opens the driver. A mismatch is not caught at build time - every"
+            echo "   binder process terminates at startup on the device."
+            echo "   Library: ${sdk_lib}"
+            return 1
+        fi
     else
         echo "❌ ARM SDK build FAILED!"
         echo ""
