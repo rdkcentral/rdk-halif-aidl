@@ -19,60 +19,46 @@
 package com.rdk.hal.farfieldvoice;
  
 /**
- *  @brief     Far Field Voice States definitions.
+ *  @brief     Far Field Voice service state definitions.
+ *
+ *  The service moves CLOSED -> OPENING -> READY on IFarFieldVoice.open() and
+ *  READY -> CLOSING -> CLOSED on IFarFieldVoice.close(). Each transition is
+ *  notified through IFarFieldVoiceEventListener.onStateChanged().
+ *
+ *  Values 4 to 7 are unassigned.
+ *
  *  @author    Philip Stick
  *  @author    Gary Skrabutenas
  */
 
- 
 @VintfStability
 @Backing(type="int")
 enum State {
-	/** 
-	 *  The HAL server component session is initialising, before transitioning to a closed state
-	 *  or it reflects the state of an unknown HAL resource.
+	/**
+	 *  The service is initialising, before transitioning to the closed state,
+	 *  or the state of the service is unknown.
 	 */
     UNKNOWN = 0,
-	
-	/** 
-	 * Initial state entered when the service connection is established. 
+
+	/**
+	 * Initial state entered when the service connection is established.
+	 * No client controls the service.
 	 */
     CLOSED = 1,
-	
-	/** 
-	 * The HAL server component session is transitioning from closed to ready state. 
+
+	/**
+	 * The service is transitioning from the closed state to the ready state.
 	 */
     OPENING = 2,
-	
-	/** 
-	 * The HAL server component session is open and ready to start, but in a stopped state. 
+
+	/**
+	 * The service is open. The IFarFieldVoiceController returned by open() is valid
+	 * and audio channels can be opened through it.
 	 */
     READY = 3,
-	
-	/** 
-	 * The HAL server component session is transitioning from ready to started state. 
-	 */
-    STARTING = 4,
-	
-	/** 
-	 * The opened HAL server component session has been started. 
-	 */
-    STARTED = 5,
-	
-	/** 
-	 * The started HAL server component session is flushing internal state.
-	 * Once flushed, the HAL server component session enters the started state. 
-	 */
-    FLUSHING = 6,
-	
-	/** 
-	 * The started HAL server component session is stopping and flushing its internal state.
-	 * Once flushed, the HAL server component session enters the ready state. 
-	 */
-    STOPPING = 7,
-	
-	/** 
-	 * The HAL server component session is transitioning from ready to closed state. 
+
+	/**
+	 * The service is transitioning from the ready state to the closed state.
 	 */
     CLOSING = 8
 }

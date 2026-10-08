@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.farfieldvoice;
+import com.rdk.hal.farfieldvoice.ListeningMode;
 
 /**
  *  @brief     Far Field Voice service capabilities.
@@ -36,4 +37,12 @@ parcelable Capabilities
      * Number of microphone inputs.
 	 */
     int microphoneChannelCount;
+
+    /**
+     * Listening modes supported by the platform.
+     *
+     * IFarFieldVoiceController.setListeningMode() accepts only these modes.
+     * ListeningMode::NONE is never listed.
+     */
+    ListeningMode[] supportedListeningModes;
 }

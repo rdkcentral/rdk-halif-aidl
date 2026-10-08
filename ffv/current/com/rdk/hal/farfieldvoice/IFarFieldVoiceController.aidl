@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.farfieldvoice;
-import com.rdk.hal.farfieldvoice.PowerMode;
+import com.rdk.hal.farfieldvoice.ListeningMode;
 
 /**
  *  @brief     Far Field Voice Controller interface.
@@ -69,7 +69,7 @@ interface IFarFieldVoiceController {
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT    Invalid channel type.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE       The channel type is already open, or the
-     *                                                              power mode is invalid for the channel type,
+     *                                                              listening mode is invalid for the channel type,
      *                                                              or the channel type is mutually exclusive
      *                                                              with another open channel.
      * @exception binder::Status::Exception::EX_NULL_POINTER        Pipe create failed.
@@ -111,20 +111,21 @@ interface IFarFieldVoiceController {
     void setPrivacyState(in boolean activate);
 
     /**
-     * Set power mode.
+     * Set listening mode.
      *
-     * If successful, the specified power mode is initialized.
+     * If successful, the specified listening mode is initialized.
      *
      * @pre All audio channels must be in the closed state.
      *
-     * @param[in] powerMode       Selected power mode.
+     * @param[in] listeningMode   Selected listening mode, one of Capabilities.supportedListeningModes.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT    Invalid power mode.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT    Listening mode is ListeningMode::NONE or not in
+     *                                                              Capabilities.supportedListeningModes.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE       All audio channels must be in the closed state.
-     * @exception binder::Status::Exception::EX_NULL_POINTER        Power mode initialization failed.
+     * @exception binder::Status::Exception::EX_NULL_POINTER        Listening mode initialization failed.
      *
-     * @see IFarFieldVoiceEventListener.onEnteredPowerMode(), IFarFieldVoiceEventListener.onHardwareFailed()
+     * @see IFarFieldVoiceEventListener.onEnteredListeningMode(), IFarFieldVoiceEventListener.onSystemFailure()
      */
-    void setPowerMode(in PowerMode powerMode);
+    void setListeningMode(in ListeningMode listeningMode);
 }
