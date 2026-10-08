@@ -27,6 +27,10 @@ import com.rdk.hal.farfieldvoice.IFarFieldVoiceControllerListener;
 
 /**
  *  @brief     Far Field Voice HAL interface.
+ *
+ *  Audio channels, listening modes and the service lifecycle are described in
+ *  the module overview, ffv/current/docs/far_field_voice.md.
+ *
  *  @author    Philip Stick
  *  @author    Gary Skrabutenas
  */
