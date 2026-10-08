@@ -22,7 +22,7 @@
 # rdk-halif-aidl — manifest-driven build of the HAL interface bindings.
 #
 # The caller states WHICH versions to build; CMake resolves the rest from the
-# tree. No <component>/<version>/ directory carries build logic.
+# tree. No <component>/current/ directory carries build logic.
 #
 #   cmake -S . -B build \
 #       -DHALIF_VERSIONS_FILE=versions_released.yaml \      # top-level pins (default)
@@ -30,7 +30,13 @@
 #       -DBINDER_SDK_DIR=<sysroot>                          # Binder SDK (see FindBinder)
 #   cmake --build build && cmake --install build --prefix <prefix>
 #
-#   -DHALIF_PLAN_ONLY=ON   resolve and print the plan, write build/halif_plan.txt, stop.
+#   -DHALIF_PLAN_ONLY=ON            resolve and print the plan, write build/halif_plan.txt, stop.
+#   -DHALIF_LIBRARY_TYPE=SHARED     SHARED (default), STATIC or BOTH, for every component;
+#   -DHALIF_LIBRARY_TYPE_<comp>=... the same for one component.
+#
+# Bindings are generated at build time into <comp>/<ver>/{include,src}:
+# current/ on every build that needs it, a released snapshot only when asked
+# (cmake --build build --target halif-generate).
 #
 # Resolution: CMakeModules/HalifResolve.cmake. Per-node build and packaging:
 # CMakeModules/HalifModule.cmake.
@@ -51,13 +57,18 @@ set(HALIF_VERSIONS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/versions_released.yaml" CAC
 set(HALIF_COMPONENTS "" CACHE STRING
     "Components to build, '<comp>' or '<comp>:<ver>' (empty: every component the manifest pins)")
 option(HALIF_PLAN_ONLY "Resolve and print the build plan, then stop" OFF)
+set(HALIF_LIBRARY_TYPE "SHARED" CACHE STRING
+    "Library type for every component: SHARED, STATIC or BOTH (HALIF_LIBRARY_TYPE_<comp> overrides one)")
+set_property(CACHE HALIF_LIBRARY_TYPE PROPERTY STRINGS SHARED STATIC BOTH)
+set(HALIF_INSTALL_RPATH "" CACHE STRING
+    "RUNPATH written into the installed shared libraries (per-layer library lookup)")
 
 # Binder SDK location. The same variables the previous build and the Yocto
 # recipes pass; FindBinder.cmake reads them.
 set(BINDER_SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/out/target" CACHE PATH "Binder SDK root (libraries)")
 set(BINDER_SDK_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/out/build" CACHE PATH "Binder SDK root (headers)")
 set(HOST_AIDL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build-tools/linux_binder_idl/host" CACHE PATH
-    "Directory holding the host aidl compiler (needed for 'current' nodes only)")
+    "linux_binder_idl host/ directory holding aidl_ops.py (needed to generate bindings)")
 
 # Previous entry point (-DINTERFACE_TARGET=<comp|all> -DAIDL_SRC_VERSION=<ver>).
 if(DEFINED INTERFACE_TARGET AND HALIF_COMPONENTS STREQUAL "")
@@ -110,16 +121,22 @@ endif()
 #######################################################################
 find_package(Binder REQUIRED)
 
-if(_needs_aidl)
-    find_program(HALIF_AIDL_EXECUTABLE NAMES aidl
-        HINTS "${HOST_AIDL_DIR}" "${HOST_AIDL_DIR}/bin"
-        DOC "aidl compiler used to generate bindings for 'current' nodes")
-    if(NOT HALIF_AIDL_EXECUTABLE)
-        message(FATAL_ERROR
-            "The plan contains 'current' nodes, which need the aidl compiler.\n"
-            "Not found under HOST_AIDL_DIR=${HOST_AIDL_DIR}. Run ./build_binder.sh, "
-            "or pass -DHALIF_AIDL_EXECUTABLE=<path>.")
-    endif()
+# The toolchain generates bindings at build time. A plan with current nodes
+# cannot build without it; released nodes need it only for halif-generate.
+find_package(Python3 COMPONENTS Interpreter)
+find_file(HALIF_AIDL_OPS aidl_ops.py
+    HINTS "${HOST_AIDL_DIR}" ENV BINDER_TOOLCHAIN_ROOT
+    PATH_SUFFIXES host
+    NO_DEFAULT_PATH
+    DOC "linux_binder_idl aidl_ops.py, which generates the bindings")
+if(NOT Python3_Interpreter_FOUND)
+    set(HALIF_AIDL_OPS "")
+endif()
+if(_needs_aidl AND NOT HALIF_AIDL_OPS)
+    message(FATAL_ERROR
+        "The plan contains 'current' nodes, whose bindings are generated at build time.\n"
+        "aidl_ops.py was not found under HOST_AIDL_DIR=${HOST_AIDL_DIR} (or Python 3 is missing). "
+        "Run ./build_binder.sh, or pass -DHOST_AIDL_DIR=<linux_binder_idl>/host.")
 endif()
 
 #######################################################################

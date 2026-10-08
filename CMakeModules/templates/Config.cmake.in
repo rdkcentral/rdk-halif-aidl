@@ -12,12 +12,14 @@ include("${CMAKE_CURRENT_LIST_DIR}/@HALIF_PKG@Targets.cmake")
 
 set_and_check(@HALIF_PKG@_INCLUDE_DIR "@PACKAGE_HALIF_INC_INSTALL@")
 set_and_check(@HALIF_PKG@_SOURCE_DIR "@PACKAGE_HALIF_SRC_INSTALL@")
-set(@HALIF_PKG@_LIBRARIES RdkHalifAidl::@HALIF_TGT@)
-set(@HALIF_PKG@_STATIC_LIBRARIES RdkHalifAidl::@HALIF_TGT@-static)
+@HALIF_LIB_VARS@
+# The library this component was built as: the .so, or the .a when it was
+# built STATIC only.
+set(@HALIF_PKG@_LIBRARIES RdkHalifAidl::@HALIF_PRIMARY@)
 
 # Unversioned convenience name: the first version of this component found.
 if(NOT TARGET RdkHalifAidl::@HALIF_COMP_CAP@)
-    add_library(RdkHalifAidl::@HALIF_COMP_CAP@ ALIAS RdkHalifAidl::@HALIF_TGT@)
+    add_library(RdkHalifAidl::@HALIF_COMP_CAP@ ALIAS RdkHalifAidl::@HALIF_PRIMARY@)
 endif()
 
 check_required_components(@HALIF_PKG@)
