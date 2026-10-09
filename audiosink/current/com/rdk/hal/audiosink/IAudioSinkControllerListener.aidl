@@ -62,14 +62,14 @@ oneway interface IAudioSinkControllerListener {
      * completes on the attached clock. It is keyed on that completion
      * rather than on mixing, so it fires whether or not a mixer input is
      * routed. If no frames were queued, `nsPresentationTime` is the
-     * undefined-time sentinel (`IAVClock.UNDEFINED_TIME`).
+     * undefined-time sentinel (`IAudioSinkController.UNDEFINED_TIME`).
      *
      * The behaviour is the same for tunnelled and non-tunnelled audio.
      * With a mixer input routed, the audio may not immediately be heard due
      * to audio mixer and output latencies.
      *
      * @param[in] nsPresentationTime	The presentation time of the final audio frame in nanoseconds,
-     *                                  or `IAVClock.UNDEFINED_TIME` if no frames were queued.
+     *                                  or `IAudioSinkController.UNDEFINED_TIME` if no frames were queued.
      *
      * @see IAudioSinkController.signalEndOfStream()
      */

@@ -2,8 +2,6 @@ aidl_interface:
   name: avbuffer
   srcs:
     - com/rdk/hal/avbuffer/*.aidl
-  imports:
-    - audiodecoder@current
-    - videodecoder@current
+  imports: []
   stability: vintf
   layout: module-local
