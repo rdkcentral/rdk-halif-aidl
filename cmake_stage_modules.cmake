@@ -96,6 +96,26 @@ message(STATUS "Staging module headers from ${REPO_ROOT}...")
 # (in-development) and <module>/<X.Y.Z.W>/include/ (released snapshots).
 # Stage both so cohort-locked snapshot builds can find their transitive
 # headers at `${HALIF_INCLUDE_DIR}/<dep>/<version>/include/` (#544 / #538).
+
+# Hand-authored module-root headers (<module>/current/*.h, e.g. avbufferhelper.h,
+# halcompat.h) are public contract headers that live outside the gitignored
+# generated include/ tree. Stage them at <module>/current/include/<name> so the
+# dev layout matches a released snapshot, where release.sh copies them into
+# <module>/<version>/include/ (#623). Adds to HEADER_COUNT in the caller.
+function(stage_module_root_headers pattern)
+    file(GLOB _root_headers "${pattern}")
+    set(_count ${HEADER_COUNT})
+    foreach(header ${_root_headers})
+        get_filename_component(_current_dir "${header}" DIRECTORY)
+        file(RELATIVE_PATH _rel_current "${REPO_ROOT}" "${_current_dir}")
+        get_filename_component(_name "${header}" NAME)
+        file(MAKE_DIRECTORY "${HALIF_INC_OUT_DIR}/${_rel_current}/include")
+        file(COPY_FILE "${header}" "${HALIF_INC_OUT_DIR}/${_rel_current}/include/${_name}")
+        math(EXPR _count "${_count} + 1")
+    endforeach()
+    set(HEADER_COUNT ${_count} PARENT_SCOPE)
+endfunction()
+
 if (INTERFACE_TARGET STREQUAL "all")
     # Stage all module headers — current/ + every snapshot version.
     file(GLOB MODULE_INC_DIRS LIST_DIRECTORIES true
@@ -116,6 +136,7 @@ if (INTERFACE_TARGET STREQUAL "all")
             endforeach()
         endif()
     endforeach()
+    stage_module_root_headers("${REPO_ROOT}/*/current/*.h")
 
     message(STATUS "Staged ${HEADER_COUNT} HAL interface headers to ${HALIF_INC_OUT_DIR}")
 else()
@@ -137,6 +158,7 @@ else()
             endforeach()
         endif()
     endforeach()
+    stage_module_root_headers("${REPO_ROOT}/${INTERFACE_TARGET}/current/*.h")
 
     if (HEADER_COUNT EQUAL 0)
         message(WARNING "No headers found for ${INTERFACE_TARGET} under current/ or any released snapshot")
