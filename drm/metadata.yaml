@@ -17,6 +17,8 @@
 
 # component   - Machine-readable component identifier                    [manual]
 # version     - Pre-baseline: 0.<generation>.<minor>.<patch>              [release.sh]
+#               GENERATED at release by scripts/release.sh from the PR change-class
+#               labels. Do not edit by hand: engineering teams never change it in a PR.
 # generation  - Architectural era (0 = initial, 1+ = full design cycle)   [release.sh]
 # status      - RAG status: GREEN / AMBER / RED                          [manual]
 # description - One-line human-readable summary                          [manual]

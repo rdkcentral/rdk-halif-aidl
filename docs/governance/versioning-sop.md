@@ -53,8 +53,8 @@ Source of Truth** for every component.
 > **Important:** The component version in `metadata.yaml` tracks the
 > **interface contract** for that individual component. It is independent of
 > the git repository version, which tracks changes across all 33 components
-> via commits and tags. A single git commit may update one component's version
-> without affecting any other.
+> via commits and tags. A release may bump one component's version
+> without affecting any other; between releases it does not change.
 
 ### Pre-Baseline: `0.<generation>.<minor>.<patch>`
 
@@ -65,7 +65,7 @@ interface is right.
 | Field | Meaning | Bumped when |
 |-------|---------|-------------|
 | `0` | Pre-baseline prefix (always `0` until AIDL freeze) | Never — changes to `1` at freeze |
-| `generation` | Architectural era | Breaking change to the interface |
+| `generation` | ABI generation — incremented on any ABI-breaking change, however small | A change that breaks a client built against the previous release |
 | `minor` | ABI-compatible enhancement counter | Non-breaking feature or method added |
 | `patch` | Documentation or trivial fix counter | No interface change |
 
@@ -79,11 +79,65 @@ interface is right.
 
 **Rules:**
 
-- A breaking change (method signature change, removed method, changed semantics)
-  bumps the generation and resets minor + patch to `0.0`
+- A breaking change (anything that stops a client built against the previous
+  release from compiling or running: a removed or renamed method, field, enum
+  value or interface; a changed signature or type; changed semantics of an
+  existing call) bumps the generation and resets minor + patch to `0.0`
 - A non-breaking addition (new method, new enum value) bumps minor and resets
   patch to `0`
 - A documentation-only change bumps patch
+
+#### What "Major" Means
+
+**"Major" is a statement about compatibility, not about size.** A change is
+Major when a client built against the previous release can no longer compile
+or run against the new one. It says nothing about how many lines changed, and
+it does not mean the interface was rewritten or redesigned.
+
+| Change | Class | Why |
+| --- | --- | --- |
+| Remove one enum value | **Major** | A client that uses the value no longer compiles |
+| Rename one method | **Major** | Same |
+| Change a parameter type or a return type | **Major** | Same |
+| Change what an existing call does, with the signature unchanged | **Major** | A client that relied on the old behaviour breaks at runtime |
+| Add twenty methods and three parcelables | Minor | Nothing a client already uses changes |
+| Add an enum value with fallback handling | Minor | Same |
+| Rewrite five hundred lines of documentation | documentation | The interface surface is untouched |
+
+One deleted line can be Major; a large additive PR is Minor. The structural
+audit (`release.sh --audit`) classifies by the same test — what the AIDL
+surface lost or changed — not by diff size.
+
+**A `Major Change` on its own is business as usual.** It is an engineering
+fact about compatibility that moves the version number, and it goes through
+the normal review and the normal cohort release. It is **not** the signal
+that an interface is being rewritten. That signal is the `CR` label (next
+section): `Major Change` + `CR` means the programme must know that an
+interface is being re-written or re-directed, with wider review and its own
+release scheduling.
+
+| Labels | What it tells the programme | Handling |
+| --- | --- | --- |
+| `Major Change` | An ABI-breaking change landed; the component's generation moves | BAU: normal review, normal cohort release |
+| `Major Change` + `CR` | An interface is being re-written or re-directed | Programme awareness, wider sign-off, scheduled into a release deliberately |
+
+The programme reads this from the **Interface effect** field on each item
+in the `halif_aidl` project. Every ticket and PR on the project has that
+field filled in.
+
+**The Interface effect field is the source of truth; the audit is the
+default.** The structural audit reports what the AIDL surface lost or
+changed, and that is the default class. ABI is not the only input: when the
+removed or changed surface is not yet in use by any client, the change may
+be declared Minor — set in the Interface effect field, with the reason (who
+confirmed there are no users) recorded on the ticket. At release,
+`release.sh` compares three signals for every component — the structural
+class, the PR labels, and the Interface effect field — and notes every
+place they disagree. It then asks which is right and the operator corrects
+the others to match: the labels, the field, or (if the code was wrong) the
+change itself. Disabling the audit is not a resolution. The `release.sh`
+support for reading the field, reporting the mismatches and correcting on
+confirmation is #875.
 
 ### How PRs Drive the Version Bump
 
@@ -92,16 +146,19 @@ PR implies is signalled by **labels on the PR**. `scripts/configure_pr.sh`
 applies them automatically from the PR title and changed files; reviewers may
 add or correct them as needed.
 
-Every PR carries **exactly one change-class label**. The label is the
-single signal of intent — there is no implicit-default class. An
-unlabelled PR is an unfinished PR.
+Every PR carries **exactly one change-class label**. The label mirrors the
+**Interface effect** field on the PR's `halif_aidl` project item, which is
+the source of truth; the label exists so that `release.sh` and reviewers can
+read the class from the PR itself. There is no implicit-default class: an
+unlabelled PR, or one whose label and Interface effect disagree, is an
+unfinished PR.
 
 The label names mean what the version fields mean — the label tier IS the
 field it bumps:
 
 | PR label | Implied bump | Applied when |
 | --- | --- | --- |
-| `Major Change` | **Major** (`0.g.m.p` → `0.(g+1).0.0`) | Breaking interface change — conventional-commit `!:` marker in the PR title (e.g. `feat(avclock)!: ...`): renames, removals, signature changes, design re-direction. Auto-applied by `configure_pr.sh` on the `!:` marker. |
+| `Major Change` | **Major** (`0.g.m.p` → `0.(g+1).0.0`) | ABI-breaking change of any size (see [What "Major" Means](#what-major-means)) — conventional-commit `!:` marker in the PR title (e.g. `feat(avclock)!: ...`): a removed or renamed method, field, enum value or interface; a changed signature, type or documented semantics. Not a measure of how much changed. Auto-applied by `configure_pr.sh` on the `!:` marker. |
 | `Minor Change` | **Minor** (`0.g.m.p` → `0.g.(m+1).0`) | Backwards-compatible addition — the default for real interface work: new methods, new fields appended to parcelables, new enum values added with fallback handling, new sub-interfaces. |
 | `documentation` | **Bugfix** (`0.g.m.p` → `0.g.m.(p+1)`) | The interface surface is untouched — doc tweaks, metadata corrections, HFP YAML changes, comment-only refactors, trivial non-interface fixes. Auto-applied by `configure_pr.sh` when every changed file is doc-like (see `is_doc()`). |
 
@@ -122,15 +179,20 @@ PR, `scripts/release.sh` resolves by severity: `Major Change` >
 `Minor Change` > `documentation`. Reviewers should still clean the
 labelling so each PR carries exactly one.
 
-The PR author edits the component's `metadata.yaml` `version:` to the new
-value as part of the PR's diff. Reviewers check that the version bump matches
-the label and the actual change.
+The PR author does **not** edit the component's `metadata.yaml` `version:`.
+It is generated at release time by `scripts/release.sh`, which reads the
+change-class labels of every PR merged since the last release tag and writes
+the resulting version into `metadata.yaml`. Reviewers check that the label
+matches the actual change; the version follows from the label.
 
 #### The `CR` Label (independent — not a change-class)
 
 `CR` (Change Request) marks an **ABI change** that must go through wider review
-and deliberate scheduling. It is a **process/governance** label, **independent**
-of the change-class above. The change-class answers *"how does the version
+and deliberate scheduling: an interface being re-written or re-directed, not
+business-as-usual change. It is the label the **programme** watches; a
+`Major Change` without `CR` is BAU engineering (see
+[What "Major" Means](#what-major-means)). It is a **process/governance**
+label, **independent** of the change-class above. The change-class answers *"how does the version
 number move?"*; `CR` answers a **different** question — *"is this an ABI change
 that needs wider review and separate scheduling?"* The two axes are orthogonal,
 so a `CR` carries a change-class label alongside it (an ABI change carries
@@ -150,39 +212,40 @@ bump logic.
 
 #### The Subsume Rule
 
-Between releases, `metadata.yaml` `version:` represents the **intent for the
-next release** — the highest bump that has been declared since the last
-release tag. A PR bumps `version:` *only if its change is more significant
-than what is already pending.*
+Between releases, `metadata.yaml` `version:` does not change: it is the
+version the component was last released as. At release, `release.sh` bumps
+it once, by the most significant change class among the PRs merged since the
+last release tag.
 
-| Last released | Already pending on `develop` | This PR is… | Action |
+| Last released | Highest class already merged this window | This PR is… | Release result |
 |---|---|---|---|
-| `0.1.0.0` | `0.1.0.0` (unchanged since release) | patch | bump → `0.1.0.1` |
-| `0.1.0.0` | `0.1.0.0` | minor | bump → `0.1.1.0` |
-| `0.1.0.0` | `0.1.0.0` | breaking | bump → `0.2.0.0` |
-| `0.1.0.0` | `0.1.1.0` (a prior PR already bumped minor) | another minor | **no bump — already covered** |
-| `0.1.0.0` | `0.1.1.0` | patch (smaller than pending) | **no bump — subsumed by minor** |
-| `0.1.0.0` | `0.1.1.0` | breaking | bump → `0.2.0.0` (subsumes the minor) |
-| `0.1.0.0` | `0.2.0.0` (a prior PR already bumped breaking) | minor or patch | **no bump — already covered** |
-| `0.1.0.0` | `0.2.0.0` | another breaking | **no bump** (one generation tick per release window) |
-| new component (no prior release) | `0.1.0.0` | anything | no bump — first release is `0.1.0.0` regardless of how many PRs accumulate |
+| `0.1.0.0` | none | patch | `0.1.0.1` |
+| `0.1.0.0` | none | minor | `0.1.1.0` |
+| `0.1.0.0` | none | breaking | `0.2.0.0` |
+| `0.1.0.0` | minor | another minor | `0.1.1.0` — one minor tick covers both |
+| `0.1.0.0` | minor | patch | `0.1.1.0` — subsumed by the minor |
+| `0.1.0.0` | minor | breaking | `0.2.0.0` — subsumes the minor |
+| `0.1.0.0` | breaking | minor or patch | `0.2.0.0` — already covered |
+| `0.1.0.0` | breaking | another breaking | `0.2.0.0` — one generation tick per release window |
+| new component (no prior release) | — | anything | `0.1.0.0` — first release regardless of how many PRs accumulate |
 
-**Net rule:** `next_version = max(current_pending, this_PR_would_imply)`. The
-release version is the aggregate delta since the last tag, not a per-PR
-count. Multiple breaking changes in a single release window batch into one
-generation; multiple feature additions batch into one minor; multiple
+**Net rule:** `next_version = last_released + max(change class over the merged
+PRs)`. The release version is the aggregate delta since the last tag, not a
+per-PR count. Multiple breaking changes in a single release window batch into
+one generation; multiple feature additions batch into one minor; multiple
 docs-only changes batch into one patch.
 
-This is **human-side discipline**, not script-enforced. Reviewers verify
-that the bump (or non-bump) is appropriate for the PR's change.
+`release.sh` applies this rule. The human-side discipline is the label:
+reviewers verify that each PR's change-class label is appropriate for its
+change.
 
 #### When the Snapshot is Created
 
-`metadata.yaml` `version:` is a **forward-looking declaration** of what the
-next release will tag the component as. The `<component>/<version>/`
-snapshot directory is **not** created in feature PRs. It is materialised at
-release time by the top-level `./release.sh`, which reads `metadata.yaml`
-and copies `current/` to `<version>/`.
+`metadata.yaml` `version:` is written by `release.sh` at release time. The
+`<component>/<version>/` snapshot directory is **not** created in feature
+PRs either. Both are materialised together at release time by the top-level
+`./release.sh`, which computes the version, writes it to `metadata.yaml` and
+copies `current/` to `<version>/`.
 
 Feature PRs touch `current/` only:
 
@@ -195,8 +258,8 @@ The toolchain-generated C++ bindings (`current/include/*.h` and
 `current/src/*.cpp`) are not in this list — see
 [Generated Code is Not Committed in `current/`](#generated-code-is-not-committed-in-current) below.
 
-Multiple PRs can accumulate bumps on `develop` without any of them creating
-snapshot directories. The next release event (`release.sh` run during
+Multiple PRs can accumulate on `develop` without any of them touching
+`version:` or creating snapshot directories. The next release event (`release.sh` run during
 release prep) materialises all of the snapshots together and the repo is
 tagged.
 
@@ -219,18 +282,22 @@ where `major` means additive and the audit displays it as such;
 surface-identical trees whose sources still differ count as doc-only), and
 cross-checks three signals per component:
 
-| Signal     | Source                                         |
-|------------|------------------------------------------------|
-| Structural | what the AIDL actually changed (code truth)    |
-| Label      | the change class PR labels imply               |
-| Declared   | `metadata.yaml` `version:` (pre-bumped by PRs) |
+| Signal           | Source                                                          |
+|------------------|-----------------------------------------------------------------|
+| Structural       | what the AIDL actually changed (code truth)                     |
+| Label            | the change class PR labels imply                                |
+| Interface effect | the `halif_aidl` project field — source of truth                |
+| Declared         | `metadata.yaml` `version:` (written by `release.sh` at release) |
 
-A row is flagged when the label class contradicts the structural class,
-when `metadata.yaml` declares a version the structural class doesn't
-support, or when an era ≥ 1 component classifies breaking (forbidden — a
+A row is flagged when the label class, the Interface effect field and the
+structural class do not all agree, when `metadata.yaml` carries a version
+that is neither the last released one nor the computed next one (a hand
+edit), or when an era ≥ 1 component classifies breaking (forbidden — a
 breaking change there requires a new component). Flagged rows print the
-exact structural diff (method/field level) so the fix — relabel the PR,
-correct `metadata.yaml`, or revert the AIDL — is evident from the output.
+exact structural diff (method/field level) and the three signals, so the
+fix — correct the label, correct the Interface effect field, correct
+`metadata.yaml`, or revert the AIDL — is decided by questioning the
+mismatch, not by disabling the audit.
 Release tagging proceeds only on a clean `--audit --strict` pass.
 
 #### Generated Code is Not Committed in `current/`
@@ -642,8 +709,10 @@ that deployed implementations are never broken by upstream changes.
 ### Breaking Changes
 
 Breaking changes are signalled via the `Major Change` label on the PR or
-issue at creation time. This is visible to reviewers immediately and drives
-review prioritisation. When the change is merged and the component is released,
+issue at creation time. "Major" is a compatibility statement, not a size
+statement: a one-line removal is Major, a large additive change is not (see
+[What "Major" Means](#what-major-means)). This is visible to reviewers
+immediately and drives review prioritisation. When the change is merged and the component is released,
 the version is bumped accordingly (major bump for pre-baseline, new module
 for post-baseline).
 
@@ -743,7 +812,7 @@ Idempotent — safe to re-run.
 | Label | Purpose |
 |-------|---------|
 | `component:<name>` | Maps PRs to a specific HAL/VSI component (auto-detected from metadata.yaml) |
-| `Major Change` | Breaking interface change — bumps major |
+| `Major Change` | ABI-breaking interface change of any size, not a measure of volume (see [What "Major" Means](#what-major-means)) — bumps major |
 | `Minor Change` | Additive, backwards-compatible interface change — bumps minor (the default for real work) |
 | `documentation` | Doc-only / metadata-only / comment-only change — bumps bugfix |
 | `CR` | Change Request — ABI change needing wider review sign-off + separate release scheduling (independent of change-class; no bump effect) |
@@ -751,8 +820,8 @@ Idempotent — safe to re-run.
 | `scope:overview` | Tracking ticket spanning multiple components |
 
 Every PR carries **exactly one** of `Major Change` / `Minor Change` /
-`documentation`. The label signals the bump intent; the PR author bumps
-`metadata.yaml` `version:` accordingly as part of the PR diff (see
+`documentation`. The label is the bump signal; `release.sh` applies the bump
+to `metadata.yaml` `version:` at release time (see
 [How PRs Drive the Version Bump](#how-prs-drive-the-version-bump) above
 for the full subsume rule and snapshot-timing model):
 
@@ -770,10 +839,10 @@ Release-time execution (manual):
 ./release.sh
 ```
 
-`./release.sh` reads `metadata.yaml` `version:` verbatim — it does not
-compute bumps; that's the PR author's job, signalled by the label and
-validated by reviewers. Snapshots materialise only at release time, never
-in feature PRs.
+`./release.sh` computes each component's bump from the change-class labels
+of the PRs merged since the last tag and writes the new `version:` into
+`metadata.yaml`. Engineering teams never edit `version:` in a PR. Snapshots
+materialise only at release time, never in feature PRs.
 
 All other state (RAG status, reviewer sign-off, lifecycle dates) is tracked
 in `metadata.yaml` — the Single Source of Truth. PRs are assigned directly
