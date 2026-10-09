@@ -117,7 +117,6 @@ nav:
         - Current: '!include hdmioutput/current/mkdocs.yml'
         - 0.1.0.0: '!include hdmioutput/0.1.0.0/mkdocs.yml'
     - Common:
-      - Current: '!include common/current/mkdocs.yml'
       - 0.2.0.0: '!include common/0.2.0.0/mkdocs.yml'
       - 0.1.0.0: '!include common/0.1.0.0/mkdocs.yml'
     - Composite Input:
