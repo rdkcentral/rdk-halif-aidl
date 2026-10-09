@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiosink;
-import com.rdk.hal.audiodecoder.PCMFormat;
+import com.rdk.hal.audiosink.PCMFormat;
 
 /**
  *  @brief     Audio sink platform capabilities definition.

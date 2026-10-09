@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.audiomixer;
 
-import com.rdk.hal.audiodecoder.Codec;
+import com.rdk.hal.audiomixer.Codec;
 import com.rdk.hal.audiomixer.ContentType;
 
 /**

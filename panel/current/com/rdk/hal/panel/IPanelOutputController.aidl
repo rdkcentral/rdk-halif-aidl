@@ -42,7 +42,7 @@ import com.rdk.hal.panel.PQParameterSelector;
 import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.panel.PictureModeConfiguration;
 import com.rdk.hal.panel.State;
-import com.rdk.hal.videodecoder.DynamicRange;
+import com.rdk.hal.panel.DynamicRange;
 
 @VintfStability
 interface IPanelOutputController {

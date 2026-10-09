@@ -18,14 +18,14 @@
  */
 package com.rdk.hal.audiomixer;
 
-import com.rdk.hal.audiomixer.PropertyValue;
-import com.rdk.hal.audiodecoder.Codec;
 import com.rdk.hal.audiomixer.Capabilities;
+import com.rdk.hal.audiomixer.Codec;
 import com.rdk.hal.audiomixer.IAudioMixerController;
 import com.rdk.hal.audiomixer.IAudioMixerEventListener;
 import com.rdk.hal.audiomixer.IAudioOutputPort;
 import com.rdk.hal.audiomixer.InputRouting;
 import com.rdk.hal.audiomixer.Property;
+import com.rdk.hal.audiomixer.PropertyValue;
 
 /**
  * @brief Audio Mixer HAL interface.
