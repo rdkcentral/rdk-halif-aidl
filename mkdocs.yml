@@ -128,6 +128,8 @@ nav:
     - Firmware Update:
       - Current: '!include firmwareupdate/current/mkdocs.yml'
       - 0.2.0.0: '!include firmwareupdate/0.2.0.0/mkdocs.yml'
+    - HAL Compat:
+      - Current: '!include halcompat/current/mkdocs.yml'
     - Indicator:
       - Current: '!include indicator/current/mkdocs.yml'
       - 0.1.0.0: '!include indicator/0.1.0.0/mkdocs.yml'

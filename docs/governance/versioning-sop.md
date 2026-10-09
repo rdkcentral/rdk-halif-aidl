@@ -597,7 +597,7 @@ The repository contains **33 components** across two responsibility types:
 | `vsi/kernel` | Kernel interface strategy and system abstraction |
 | `vsi/keyvault` | HAL lower-layer key vault and encrypted storage requirements |
 
-#### OEM Components (17)
+#### OEM Components (16)
 
 | Component | Description |
 |-----------|-------------|
@@ -608,7 +608,6 @@ The repository contains **33 components** across two responsibility types:
 | `deviceinfo` | Device information and platform capability reporting |
 | `ffv` | Far-field voice capture and mic array processing |
 | `firmwareupdate` | Update lifecycle for multiple firmware types at multiple locations across the system |
-| `halcompat` | Client-side C++ helpers for service lookup and version compatibility (header-only, no AIDL) |
 | `indicator` | LED and visual indicator state management |
 | `panel` | Front panel display and button control |
 | `r4ce` | RF4CE remote control protocol and pairing |
@@ -618,6 +617,12 @@ The repository contains **33 components** across two responsibility types:
 | `vsi/filesystem` | File system layout standards and partition management |
 | `vsi/linuxinput` | Linux input subsystem and event handling |
 | `vsi/wifi` | Wi-Fi driver integration and network management |
+
+#### Client Components (1)
+
+| Component | Description |
+|-----------|-------------|
+| `halcompat` | Client-side C++ helpers for service lookup and version compatibility (header-only, no AIDL) |
 
 Each component is independently tracked through the RED → AMBER → GREEN
 pipeline. The automated [RAG Status Report](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/RAG_STATUS_REPORT.md) provides
