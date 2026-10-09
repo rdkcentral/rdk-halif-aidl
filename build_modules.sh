@@ -618,8 +618,10 @@ echo "✓ Binder SDK found at $SDK_DIR"
 MODULE_COUNT=$(ls -d "$ROOT_DIR"/*/current/interface.yaml 2>/dev/null | wc -l)
 echo "✓ Found $MODULE_COUNT component interface(s)"
 
-# Validate specific module exists if not building all
-if [[ "$MODULE" != "all" ]]; then
+# Validate specific module exists if not building all. A released snapshot is
+# checked by the snapshot build below: its component may have no current/
+# (e.g. common, which survives only as frozen snapshots).
+if [[ "$MODULE" != "all" && "$VERSION" == "current" ]]; then
     if [[ ! -f "$ROOT_DIR/$MODULE/current/interface.yaml" ]]; then
         echo "❌ ERROR: Component '$MODULE' not found ($ROOT_DIR/$MODULE/current/interface.yaml)"
         echo ""
