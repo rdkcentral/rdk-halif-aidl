@@ -32,6 +32,7 @@ components:
   deviceinfo:     current
   drm:            current
   firmwareupdate: current
+  halcompat:      current
   hdmicec:        current
   hdmiinput:      current
   hdmioutput:     current
