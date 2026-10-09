@@ -65,7 +65,7 @@ interface is right.
 | Field | Meaning | Bumped when |
 |-------|---------|-------------|
 | `0` | Pre-baseline prefix (always `0` until AIDL freeze) | Never — changes to `1` at freeze |
-| `generation` | Architectural era | Breaking change to the interface |
+| `generation` | ABI generation — incremented on any ABI-breaking change, however small | A change that breaks a client built against the previous release |
 | `minor` | ABI-compatible enhancement counter | Non-breaking feature or method added |
 | `patch` | Documentation or trivial fix counter | No interface change |
 
@@ -79,11 +79,34 @@ interface is right.
 
 **Rules:**
 
-- A breaking change (method signature change, removed method, changed semantics)
-  bumps the generation and resets minor + patch to `0.0`
+- A breaking change (anything that stops a client built against the previous
+  release from compiling or running: a removed or renamed method, field, enum
+  value or interface; a changed signature or type; changed semantics of an
+  existing call) bumps the generation and resets minor + patch to `0.0`
 - A non-breaking addition (new method, new enum value) bumps minor and resets
   patch to `0`
 - A documentation-only change bumps patch
+
+#### What "Major" Means
+
+**"Major" is a statement about compatibility, not about size.** A change is
+Major when a client built against the previous release can no longer compile
+or run against the new one. It says nothing about how many lines changed, and
+it does not mean the interface was rewritten or redesigned.
+
+| Change | Class | Why |
+| --- | --- | --- |
+| Remove one enum value | **Major** | A client that uses the value no longer compiles |
+| Rename one method | **Major** | Same |
+| Change a parameter type or a return type | **Major** | Same |
+| Change what an existing call does, with the signature unchanged | **Major** | A client that relied on the old behaviour breaks at runtime |
+| Add twenty methods and three parcelables | Minor | Nothing a client already uses changes |
+| Add an enum value with fallback handling | Minor | Same |
+| Rewrite five hundred lines of documentation | documentation | The interface surface is untouched |
+
+One deleted line can be Major; a large additive PR is Minor. The structural
+audit (`release.sh --audit`) classifies by the same test — what the AIDL
+surface lost or changed — not by diff size.
 
 ### How PRs Drive the Version Bump
 
@@ -101,7 +124,7 @@ field it bumps:
 
 | PR label | Implied bump | Applied when |
 | --- | --- | --- |
-| `Major Change` | **Major** (`0.g.m.p` → `0.(g+1).0.0`) | Breaking interface change — conventional-commit `!:` marker in the PR title (e.g. `feat(avclock)!: ...`): renames, removals, signature changes, design re-direction. Auto-applied by `configure_pr.sh` on the `!:` marker. |
+| `Major Change` | **Major** (`0.g.m.p` → `0.(g+1).0.0`) | ABI-breaking change of any size (see [What "Major" Means](#what-major-means)) — conventional-commit `!:` marker in the PR title (e.g. `feat(avclock)!: ...`): a removed or renamed method, field, enum value or interface; a changed signature, type or documented semantics. Not a measure of how much changed. Auto-applied by `configure_pr.sh` on the `!:` marker. |
 | `Minor Change` | **Minor** (`0.g.m.p` → `0.g.(m+1).0`) | Backwards-compatible addition — the default for real interface work: new methods, new fields appended to parcelables, new enum values added with fallback handling, new sub-interfaces. |
 | `documentation` | **Bugfix** (`0.g.m.p` → `0.g.m.(p+1)`) | The interface surface is untouched — doc tweaks, metadata corrections, HFP YAML changes, comment-only refactors, trivial non-interface fixes. Auto-applied by `configure_pr.sh` when every changed file is doc-like (see `is_doc()`). |
 
@@ -645,8 +668,10 @@ that deployed implementations are never broken by upstream changes.
 ### Breaking Changes
 
 Breaking changes are signalled via the `Major Change` label on the PR or
-issue at creation time. This is visible to reviewers immediately and drives
-review prioritisation. When the change is merged and the component is released,
+issue at creation time. "Major" is a compatibility statement, not a size
+statement: a one-line removal is Major, a large additive change is not (see
+[What "Major" Means](#what-major-means)). This is visible to reviewers
+immediately and drives review prioritisation. When the change is merged and the component is released,
 the version is bumped accordingly (major bump for pre-baseline, new module
 for post-baseline).
 
@@ -746,7 +771,7 @@ Idempotent — safe to re-run.
 | Label | Purpose |
 |-------|---------|
 | `component:<name>` | Maps PRs to a specific HAL/VSI component (auto-detected from metadata.yaml) |
-| `Major Change` | Breaking interface change — bumps major |
+| `Major Change` | ABI-breaking interface change of any size, not a measure of volume (see [What "Major" Means](#what-major-means)) — bumps major |
 | `Minor Change` | Additive, backwards-compatible interface change — bumps minor (the default for real work) |
 | `documentation` | Doc-only / metadata-only / comment-only change — bumps bugfix |
 | `CR` | Change Request — ABI change needing wider review sign-off + separate release scheduling (independent of change-class; no bump effect) |
