@@ -210,7 +210,7 @@ If any video decoder supports SVP in non-tunnelled mode then the Video Sink HAL 
 
 EOS is a discrete signal. After queuing its final frame, the RDK middleware client calls `IVideoSinkController.signalEndOfStream()` to assert that no further frames will be queued. `queueVideoFrame()` only submits a frame and carries no EOS information. The sink must be in `State::STARTED`, otherwise the call throws `EX_ILLEGAL_STATE`. A second call is a no-op, and any subsequent `queueVideoFrame()` throws `EX_ILLEGAL_STATE` until the sink is flushed or stopped and restarted.
 
-All video frame buffers already queued continue to be consumed — and, with a plane mapped, displayed — in the usual way. Once the presentation time of the final queued frame has passed on the attached clock, the sink fires `IVideoSinkControllerListener.onEndOfStream(nsPresentationTime)` exactly once, carrying the presentation time of that final frame. If no frames were queued when `signalEndOfStream()` was called, `nsPresentationTime` is the undefined-time sentinel (`IAVClock.UNDEFINED_TIME`) so the client sees the same callback in all cases.
+All video frame buffers already queued continue to be consumed — and, with a plane mapped, displayed — in the usual way. Once the presentation time of the final queued frame has passed on the attached clock, the sink fires `IVideoSinkControllerListener.onEndOfStream(nsPresentationTime)` exactly once, carrying the presentation time of that final frame. If no frames were queued when `signalEndOfStream()` was called, `nsPresentationTime` is the undefined-time sentinel (`IVideoSinkController.UNDEFINED_TIME`) so the client sees the same callback in all cases.
 
 For non-tunnelled video, the middleware forwards each decoded frame to the Video Sink via `queueVideoFrame()`; once the Video Decoder has fired its own `onEndOfStream()` and the final frame has been queued, the middleware calls `signalEndOfStream()` on the sink.
 
@@ -224,7 +224,7 @@ Setting and changing the mapping requires a call to `IPlaneControl.setVideoSourc
 
 Full details are covered in the [Plane Control HAL](../planecontrol/plane_control.md).
 
-`start()` requires either a valid Video Decoder association or `IVideoDecoder.Id.EXTERNAL` — the latter indicating the sink data source is not a HAL decoder — and nothing else. Starting while the decoder ID is `IVideoDecoder.Id.UNDEFINED` is an error. The mapping may be set or cleared at any point in the session, including while the sink is `STARTED`: a successful mapping change leaves the sink's state unchanged and does not flush the queue; mapping validation or state errors are reported by Plane Control. This is what allows main and PIP sources to be swapped between planes, or unmapped, while playing.
+`start()` requires either a valid Video Decoder association or `IVideoSinkController.VIDEO_DECODER_ID_EXTERNAL` — the latter indicating the sink data source is not a HAL decoder — and nothing else. Starting while the decoder ID is `IVideoSinkController.VIDEO_DECODER_ID_UNDEFINED` is an error. The mapping may be set or cleared at any point in the session, including while the sink is `STARTED`: a successful mapping change leaves the sink's state unchanged and does not flush the queue; mapping validation or state errors are reported by Plane Control. This is what allows main and PIP sources to be swapped between planes, or unmapped, while playing.
 
 ### No Plane Mapped
 
