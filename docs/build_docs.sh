@@ -1,17 +1,13 @@
 #!/usr/bin/env bash
-#** *****************************************************************************
-# *
-# * If not stated otherwise in this file or this component's LICENSE file the
-# * following copyright and licenses apply:
-# *
+
+#/**
 # * Copyright 2025 RDK Management
 # *
 # * Licensed under the Apache License, Version 2.0 (the "License");
 # * you may not use this file except in compliance with the License.
 # * You may obtain a copy of the License at
 # *
-# *
-# http://www.apache.org/licenses/LICENSE-2.0
+# * http://www.apache.org/licenses/LICENSE-2.0
 # *
 # * Unless required by applicable law or agreed to in writing, software
 # * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,7 +15,8 @@
 # * See the License for the specific language governing permissions and
 # * limitations under the License.
 # *
-#* ******************************************************************************
+# * SPDX-License-Identifier: Apache-2.0
+# */
 
 # ----------------------------------------------------------------------------
 # Resolve paths from the script's own location, so the script works no matter
@@ -30,6 +27,14 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"                                # rep
 VENV_DIR="${SCRIPT_DIR}/python_venv"
 MKDOCS="${VENV_DIR}/bin/mkdocs"
 MIKE="${VENV_DIR}/bin/mike"
+
+# Put the venv on PATH for the rest of the script. Invoking mkdocs and mike by
+# absolute path is not sufficient: mike spawns mkdocs as a *named* subprocess,
+# so with the venv absent from PATH `mike deploy` dies with
+#   error: [Errno 2] No such file or directory: 'mkdocs'
+# VIRTUAL_ENV is exported alongside it so the child sees a fully-formed venv.
+export VIRTUAL_ENV="${VENV_DIR}"
+export PATH="${VENV_DIR}/bin:${PATH}"
 
 cd "${REPO_ROOT}" || { echo "[ERROR] cannot cd to repo root ${REPO_ROOT}"; exit 1; }
 
@@ -108,12 +113,56 @@ EOF
 }
 
 # ----------------------------------------------------------------------------
+# normalize_snapshot_site_names() : Ensure every snapshot mkdocs.yml carries a
+# unique site_name.
+#
+# create_snapshot() copies <component>/current/mkdocs.yml verbatim, so a fresh
+# snapshot inherits the bare component site_name. Once the top-level nav
+# registers current/ and the snapshot together, the mkdocs-monorepo plugin
+# rejects the duplicate names and the build aborts. Rewrite each
+# <component>/<X.Y.Z.W>/mkdocs.yml to "site_name: <component>-<version>";
+# current/ keeps the bare component name. Runs before every command that
+# builds the site, so the publish flow needs no manual site-name pass.
+# ----------------------------------------------------------------------------
+function normalize_snapshot_site_names()
+{
+  local fixed=0
+  local snapshot_yml comp_dir version component expected current_name
+
+  while IFS= read -r snapshot_yml; do
+    comp_dir="$(dirname "$(dirname "${snapshot_yml}")")"
+    component="$(basename "${comp_dir}")"
+    version="$(basename "$(dirname "${snapshot_yml}")")"
+    expected="${component}-${version}"
+    current_name="$(sed -n 's/^site_name:[[:space:]]*//p' "${snapshot_yml}" | head -1)"
+    if [ "${current_name}" != "${expected}" ]; then
+      sed -i "s/^site_name:.*/site_name: ${expected}/" "${snapshot_yml}"
+      echo "[INFO]   normalized ${snapshot_yml#"${REPO_ROOT}"/}: site_name '${current_name}' -> '${expected}'"
+      fixed=$((fixed + 1))
+    fi
+  done < <(find "${REPO_ROOT}" -maxdepth 4 \
+             \( -name out -o -name site -o -name build -o -name external_content -o -name python_venv \) -prune \
+             -o -regextype posix-extended \
+             -regex '.*/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/mkdocs\.yml' -print)
+
+  if [ ${fixed} -gt 0 ]; then
+    echo "[INFO] normalized ${fixed} snapshot site_name(s) — commit the corrected mkdocs.yml file(s)."
+  fi
+}
+
+# ----------------------------------------------------------------------------
 # main() : Main entry point. Handle command-line arguments, then run commands.
 # ----------------------------------------------------------------------------
 function main() 
 {
   local CMD=$1
   shift || true  # Shift off the first argument to allow further options
+
+  case "${CMD}" in
+    serve|build|deploy|release)
+      normalize_snapshot_site_names
+      ;;
+  esac
 
   case "${CMD}" in
     serve)
