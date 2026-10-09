@@ -130,6 +130,13 @@ cp -r "${REPO_ROOT}/out/target/lib/binder"        "${SDK}/lib/"     || fail "bin
 # --- build each component against the SDK + already-built siblings ---
 while read -r comp ver; do
     [ -z "${comp}" ] && continue
+    if [ ! -f "${REPO_ROOT}/${comp}/${ver}/CMakeLists.txt" ]; then
+        # Header-only snapshot (e.g. halcompat): no library, stage headers only.
+        install -d "${STAGE}/include/rdk-halif-aidl/${comp}/${ver}"
+        cp -r "${REPO_ROOT}/${comp}/${ver}/include" "${STAGE}/include/rdk-halif-aidl/${comp}/${ver}/" || fail "stage headers ${comp}@${ver}"
+        echo "    ✓ ${comp}@${ver} (headers only)"
+        continue
+    fi
     bdir="${WORK}/obj/${comp}"; mkdir -p "${bdir}"
     cmake -S "${REPO_ROOT}/${comp}/${ver}" -B "${bdir}" \
         -DBINDER_SDK_DIR="${SDK}" -DBINDER_SDK_INCLUDE_DIR="${SDK}" \
