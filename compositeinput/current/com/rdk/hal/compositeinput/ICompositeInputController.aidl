@@ -20,7 +20,7 @@ package com.rdk.hal.compositeinput;
 
 import com.rdk.hal.compositeinput.PortProperty;
 import com.rdk.hal.compositeinput.PropertyKVPair;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.compositeinput.PropertyValue;
 
 /**
  * @brief     Composite Input Controller HAL interface.

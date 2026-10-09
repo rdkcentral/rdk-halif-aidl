@@ -24,7 +24,7 @@ import com.rdk.hal.audiomixer.IAudioMixerEventListener;
 import com.rdk.hal.audiomixer.IAudioOutputPort;
 import com.rdk.hal.audiomixer.Property;
 import com.rdk.hal.audiomixer.InputRouting;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.audiomixer.PropertyValue;
 import com.rdk.hal.audiodecoder.Codec;
 
 /**

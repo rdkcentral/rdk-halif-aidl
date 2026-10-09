@@ -19,7 +19,7 @@
 package com.rdk.hal.audiomixer;
 
 import com.rdk.hal.audiomixer.OutputPortProperty;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.audiomixer.PropertyValue;
 
 /**
  * @brief     Listener interface for audio output port events.

@@ -107,14 +107,13 @@ target_include_directories(${LIB_NAME} PRIVATE
 
 # Dependency component headers (staged by the toolchain build into HALIF_INCLUDE_DIR).
 # Includes the transitive closure of imports so headers reachable via a direct
-# dependency (e.g. common via audiodecoder) are also on the search path.
+# dependency (e.g. avclock via audiosink) are also on the search path.
 if (NOT DEFINED HALIF_INCLUDE_DIR)
     message(FATAL_ERROR "HALIF_INCLUDE_DIR is required (this component has HAL dependencies). "
         "Set it to the directory holding dependency headers (e.g. out/build/include).")
 endif()
 if (DEFINED HALIF_INCLUDE_DIR)
     target_include_directories(${LIB_NAME} PRIVATE
-    "${HALIF_INCLUDE_DIR}/common/current/include"
     "${HALIF_INCLUDE_DIR}/videodecoder/current/include")
 endif()
 
@@ -129,7 +128,7 @@ if (DEFINED HALIF_LIB_DIR)
     target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
 endif()
 
-target_link_libraries(${LIB_NAME} PRIVATE binder utils common-vcurrent-cpp videodecoder-vcurrent-cpp)
+target_link_libraries(${LIB_NAME} PRIVATE binder utils videodecoder-vcurrent-cpp)
 
 # The target_link_directories() above are BUILD-time search paths. By default
 # CMake bakes them into the library as RPATH/RUNPATH, which ships absolute build
