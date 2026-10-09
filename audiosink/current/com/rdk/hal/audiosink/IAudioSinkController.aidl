@@ -23,7 +23,7 @@ import com.rdk.hal.audiosink.Volume;
 import com.rdk.hal.audiosink.VolumeRamp;
 import com.rdk.hal.avclock.IAVClock;
 import com.rdk.hal.audiosink.Property;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.audiosink.PropertyValue;
 
 /**
  *  @brief     Audio Sink Controller HAL interface.

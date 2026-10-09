@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiodecoder;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.audiodecoder.PropertyValue;
 import com.rdk.hal.audiodecoder.CSDAudioFormat;
 import com.rdk.hal.audiodecoder.InputBufferMetadata;
 import com.rdk.hal.audiodecoder.Property;

@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmiinput;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.hdmiinput.PropertyValue;
 import com.rdk.hal.hdmiinput.Capabilities;
 import com.rdk.hal.hdmiinput.HDCPProtocolVersion;
 import com.rdk.hal.hdmiinput.HDCPStatus;

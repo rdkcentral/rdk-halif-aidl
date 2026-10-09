@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.videosink;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.videosink.PropertyValue;
 import com.rdk.hal.avclock.IAVClock;
 import com.rdk.hal.videodecoder.FrameMetadata;
 import com.rdk.hal.videodecoder.IVideoDecoder;

@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.videodecoder;
-import com.rdk.hal.OperationalMode;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.videodecoder.OperationalMode;
+import com.rdk.hal.videodecoder.PropertyValue;
 import com.rdk.hal.videodecoder.Capabilities;
 import com.rdk.hal.videodecoder.Codec;
 import com.rdk.hal.videodecoder.IVideoDecoderController;

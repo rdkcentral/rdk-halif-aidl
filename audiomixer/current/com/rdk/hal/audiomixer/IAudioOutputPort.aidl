@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.audiomixer;
 
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.audiomixer.PropertyValue;
 import com.rdk.hal.audiomixer.IAudioOutputPortController;
 import com.rdk.hal.audiomixer.IAudioOutputPortControllerListener;
 import com.rdk.hal.audiomixer.IAudioOutputPortListener;

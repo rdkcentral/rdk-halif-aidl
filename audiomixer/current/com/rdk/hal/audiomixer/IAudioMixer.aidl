@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.audiomixer;
 
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.audiomixer.PropertyValue;
 import com.rdk.hal.audiodecoder.Codec;
 import com.rdk.hal.audiomixer.Capabilities;
 import com.rdk.hal.audiomixer.IAudioMixerController;

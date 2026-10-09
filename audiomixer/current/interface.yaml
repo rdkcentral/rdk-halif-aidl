@@ -5,6 +5,5 @@ aidl_interface:
   imports:
     - audiodecoder@current
     - audiosink@current
-    - common@current
   stability: vintf
   layout: module-local

@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiosink;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.audiosink.PropertyValue;
 import com.rdk.hal.audiosink.Capabilities;
 import com.rdk.hal.audiosink.ContentType;
 import com.rdk.hal.audiosink.IAudioSinkController;

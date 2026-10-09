@@ -19,7 +19,7 @@
 
 package com.rdk.hal.compositeinput;
 
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.compositeinput.PropertyValue;
 import com.rdk.hal.compositeinput.ICompositeInputController;
 import com.rdk.hal.compositeinput.ICompositeInputControllerListener;
 import com.rdk.hal.compositeinput.ICompositeInputEventListener;
