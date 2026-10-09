@@ -17,11 +17,9 @@
  * limitations under the License.
  */
 package com.rdk.hal.avbuffer;
-import com.rdk.hal.audiodecoder.IAudioDecoder;
 import com.rdk.hal.avbuffer.HeapMetrics;
 import com.rdk.hal.avbuffer.Pool;
 import com.rdk.hal.avbuffer.PoolMetrics;
-import com.rdk.hal.videodecoder.IVideoDecoder;
 
 /**
  *  @brief     AV buffer space listener interface definition.

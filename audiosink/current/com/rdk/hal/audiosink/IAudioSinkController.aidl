@@ -18,12 +18,10 @@
  */
 package com.rdk.hal.audiosink;
 import com.rdk.hal.audiodecoder.FrameMetadata;
-import com.rdk.hal.audiodecoder.IAudioDecoder;
-import com.rdk.hal.audiosink.Volume;
-import com.rdk.hal.audiosink.VolumeRamp;
-import com.rdk.hal.avclock.IAVClock;
 import com.rdk.hal.audiosink.Property;
 import com.rdk.hal.audiosink.PropertyValue;
+import com.rdk.hal.audiosink.Volume;
+import com.rdk.hal.audiosink.VolumeRamp;
 
 /**
  *  @brief     Audio Sink Controller HAL interface.
@@ -83,28 +81,43 @@ import com.rdk.hal.audiosink.PropertyValue;
 
 @VintfStability
 interface IAudioSinkController {
+    /** No audio decoder is associated (`setAudioDecoder()`, `getAudioDecoder()`). */
+    const int AUDIO_DECODER_ID_UNDEFINED = -1;
+
+    /**
+     * The sink is fed by an external non-HAL source, not a HAL Audio Decoder (`setAudioDecoder()`,
+     * `getAudioDecoder()`).
+     */
+    const int AUDIO_DECODER_ID_EXTERNAL = -2;
+
+    /** No AVClock is attached (`attachClock()`, `getClock()`). */
+    const int AV_CLOCK_ID_UNDEFINED = -1;
+
+    /** Undefined presentation time, in nanoseconds. */
+    const long UNDEFINED_TIME = -1L;
+
     /**
      * Sets the audio decoder ID linked to this audio sink.
      *
-     * `IAudioDecoder.Id.UNDEFINED` means that no audio decoder source is
+     * `AUDIO_DECODER_ID_UNDEFINED` means that no audio decoder source is
      * associated. It is the default when the audio sink is opened and may be
      * passed here to clear an existing association, equivalent in effect to
      * the state at `open()`.
      *
-     * `IAudioDecoder.Id.EXTERNAL` indicates that the audio sink is fed by an
+     * `AUDIO_DECODER_ID_EXTERNAL` indicates that the audio sink is fed by an
      * external non-HAL component rather than a HAL Audio Decoder, for example
      * the Clear PCM Audio Playback path. A session associated with `EXTERNAL`
      * may be started.
      *
-     * A valid audio decoder ID is one returned by
+     * A valid audio decoder ID is the `value` of an `IAudioDecoder.Id` returned by
      * `IAudioDecoderManager.getAudioDecoderIds()`. A valid association, or
-     * `IAudioDecoder.Id.EXTERNAL`, is required before the pipeline is started
+     * `AUDIO_DECODER_ID_EXTERNAL`, is required before the pipeline is started
      * in both tunnelled and non-tunnelled modes.
      *
      * @param[in] audioDecoderId        The ID of the audio decoder source,
-     *                                  `IAudioDecoder.Id.EXTERNAL` for an
+     *                                  `AUDIO_DECODER_ID_EXTERNAL` for an
      *                                  external non-HAL source, or
-     *                                  `IAudioDecoder.Id.UNDEFINED` to clear
+     *                                  `AUDIO_DECODER_ID_UNDEFINED` to clear
      *                                  the association.
      *
      * @exception binder::Status::Exception::EX_NONE
@@ -116,26 +129,26 @@ interface IAudioSinkController {
      * @returns boolean
      * @retval true
      *      The audio decoder ID was set, the source was set to
-     *      `IAudioDecoder.Id.EXTERNAL`, or the association was cleared with
-     *      `IAudioDecoder.Id.UNDEFINED`.
+     *      `AUDIO_DECODER_ID_EXTERNAL`, or the association was cleared with
+     *      `AUDIO_DECODER_ID_UNDEFINED`.
      * @retval false
-     *      The ID is not `IAudioDecoder.Id.EXTERNAL` and not one returned by
+     *      The ID is not `AUDIO_DECODER_ID_EXTERNAL` and not one returned by
      *      `IAudioDecoderManager.getAudioDecoderIds()`.
      *
      * @pre The resource must be in State::READY.
      *
      * @see getAudioDecoder(), IAudioDecoderManager.getAudioDecoderIds()
      */
-    boolean setAudioDecoder(in IAudioDecoder.Id audioDecoderId);
+    boolean setAudioDecoder(in int audioDecoderId);
 
     /**
      * Gets the audio decoder ID linked to this audio sink.
      *
-     * Returns the currently associated `IAudioDecoder.Id` in both tunnelled
+     * Returns the currently associated audio decoder ID in both tunnelled
      * and non-tunnelled modes.
      *
-     * @returns IAudioDecoder.Id which can be `IAudioDecoder.Id.UNDEFINED` or
-     *          `IAudioDecoder.Id.EXTERNAL`.
+     * @returns The audio decoder ID, which can be `AUDIO_DECODER_ID_UNDEFINED` or
+     *          `AUDIO_DECODER_ID_EXTERNAL`.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource
@@ -145,7 +158,7 @@ interface IAudioSinkController {
      *
      * @see setAudioDecoder()
      */
-    IAudioDecoder.Id getAudioDecoder();
+    int getAudioDecoder();
 
     /**
      * Sets a property.
@@ -175,7 +188,7 @@ interface IAudioSinkController {
      * clock relationship; the AVClock does not need to be made aware.
      *
      * If a different clock is already attached, this call replaces the
-     * attachment. Calling with `IAVClock.Id.UNDEFINED` is equivalent to
+     * attachment. Calling with `AV_CLOCK_ID_UNDEFINED` is equivalent to
      * `detachClock()`.
      *
      * Can be called in `READY` or `STARTED` state. Attaching during `STARTED`
@@ -183,8 +196,10 @@ interface IAudioSinkController {
      * once the clock is started; the call does not change the sink's
      * state-machine state.
      *
-     * @param[in] clockId   The ID of the AVClock to attach, or
-     *                      `IAVClock.Id.UNDEFINED` to detach.
+     * @param[in] clockId   The ID of the AVClock to attach (the `value` of an
+     *                      `IAVClock.Id` returned by
+     *                      `IAVClockManager.getAVClockIds()`), or
+     *                      `AV_CLOCK_ID_UNDEFINED` to detach.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if `clockId`
@@ -196,14 +211,14 @@ interface IAudioSinkController {
      *
      * @see detachClock(), getClock(), IAVClockManager.getAVClockIds()
      */
-    void attachClock(in IAVClock.Id clockId);
+    void attachClock(in int clockId);
 
     /**
      * Detaches the currently attached AVClock from this audio sink.
      *
      * After this call the sink does NOT consume or present further frames
      * until a clock is attached again. Equivalent to calling
-     * `attachClock(IAVClock.Id.UNDEFINED)`. See the interface @brief for the
+     * `attachClock(AV_CLOCK_ID_UNDEFINED)`. See the interface @brief for the
      * full AVClock-association contract.
      *
      * Idempotent: calling when no clock is attached is a no-op.
@@ -225,7 +240,7 @@ interface IAudioSinkController {
     /**
      * Gets the AVClock ID currently attached to this audio sink.
      *
-     * @returns IAVClock.Id, which is `IAVClock.Id.UNDEFINED` when no clock is
+     * @returns The AVClock ID, which is `AV_CLOCK_ID_UNDEFINED` when no clock is
      *          attached. With no clock attached the sink does not consume or
      *          present output — see the interface @brief.
      *
@@ -237,7 +252,7 @@ interface IAudioSinkController {
      *
      * @see attachClock(), detachClock()
      */
-    IAVClock.Id getClock();
+    int getClock();
 
     /**
      * Starts the audio sink.
@@ -247,10 +262,10 @@ interface IAudioSinkController {
      * a `STARTED` state.
      *
      * The client must call `setAudioDecoder()` with a valid decoder ID, or
-     * `IAudioDecoder.Id.EXTERNAL` for an external non-HAL source such as the
+     * `AUDIO_DECODER_ID_EXTERNAL` for an external non-HAL source such as the
      * Clear PCM Audio Playback path, before calling this method in both
      * tunnelled and non-tunnelled modes. Starting an audio sink while the
-     * associated decoder ID is `IAudioDecoder.Id.UNDEFINED` shall fail.
+     * associated decoder ID is `AUDIO_DECODER_ID_UNDEFINED` shall fail.
      *
      * The AVClock attachment and the mixer input routing are independent of
      * the decoder association above: a sink started with no mixer input
@@ -260,12 +275,12 @@ interface IAudioSinkController {
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *      The resource is not in State::READY, or the associated decoder ID
-     *      is `IAudioDecoder.Id.UNDEFINED`.
+     *      is `AUDIO_DECODER_ID_UNDEFINED`.
      *
      * @pre The resource must be in State::READY.
      * @pre The associated audio decoder ID must not be
-     *      `IAudioDecoder.Id.UNDEFINED`; set a valid decoder ID or
-     *      `IAudioDecoder.Id.EXTERNAL` using `setAudioDecoder()`.
+     *      `AUDIO_DECODER_ID_UNDEFINED`; set a valid decoder ID or
+     *      `AUDIO_DECODER_ID_EXTERNAL` using `setAudioDecoder()`.
      *
      * @see stop(), IAudioSink.close(), setAudioDecoder()
      */
@@ -361,7 +376,7 @@ interface IAudioSinkController {
      *
      * If no frames are queued when this is called, the sink fires
      * `onEndOfStream()` with an undefined-time sentinel
-     * (`IAVClock.UNDEFINED_TIME`) so the client sees the same callback in all
+     * (`UNDEFINED_TIME`) so the client sees the same callback in all
      * cases.
      *
      * A second call is a no-op. After this call `queueAudioFrame()` throws

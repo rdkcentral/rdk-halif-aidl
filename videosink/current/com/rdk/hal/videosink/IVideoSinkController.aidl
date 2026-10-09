@@ -17,11 +17,9 @@
  * limitations under the License.
  */
 package com.rdk.hal.videosink;
-import com.rdk.hal.videosink.PropertyValue;
-import com.rdk.hal.avclock.IAVClock;
 import com.rdk.hal.videodecoder.FrameMetadata;
-import com.rdk.hal.videodecoder.IVideoDecoder;
 import com.rdk.hal.videosink.Property;
+import com.rdk.hal.videosink.PropertyValue;
 
 /**
  *  @brief     Video Sink Controller HAL interface.
@@ -92,6 +90,20 @@ import com.rdk.hal.videosink.Property;
 
 @VintfStability
 interface IVideoSinkController {
+    /** No video decoder is associated (`setVideoDecoder()`, `getVideoDecoder()`). */
+    const int VIDEO_DECODER_ID_UNDEFINED = -1;
+
+    /**
+     * The sink is fed by an external non-HAL source, not a HAL Video Decoder (`setVideoDecoder()`,
+     * `getVideoDecoder()`).
+     */
+    const int VIDEO_DECODER_ID_EXTERNAL = -2;
+
+    /** No AVClock is attached (`attachClock()`, `getClock()`). */
+    const int AV_CLOCK_ID_UNDEFINED = -1;
+
+    /** Undefined presentation time, in nanoseconds. */
+    const long UNDEFINED_TIME = -1L;
     /**
      * Sets a property.
      *
@@ -112,23 +124,23 @@ interface IVideoSinkController {
     /**
      * Sets the Video Decoder ID linked to this Video Sink.
      *
-     * `IVideoDecoder.Id.UNDEFINED` means that no Video Decoder source is
+     * `VIDEO_DECODER_ID_UNDEFINED` means that no Video Decoder source is
      * associated. It is the default when the Video Sink is opened and may be
      * passed here to clear an existing association, equivalent in effect to
      * the state at `open()`.
      *
-     * `IVideoDecoder.Id.EXTERNAL` indicates that the Video Sink is fed by an
+     * `VIDEO_DECODER_ID_EXTERNAL` indicates that the Video Sink is fed by an
      * external non-HAL component rather than a HAL Video Decoder. A session
      * associated with `EXTERNAL` may be started.
      *
-     * A valid Video Decoder ID is one returned by
+     * A valid Video Decoder ID is the `value` of an `IVideoDecoder.Id` returned by
      * `IVideoDecoderManager.getVideoDecoderIds()`. A valid association, or
-     * `IVideoDecoder.Id.EXTERNAL`, is required before the pipeline is started
+     * `VIDEO_DECODER_ID_EXTERNAL`, is required before the pipeline is started
      * in both tunnelled and non-tunnelled modes.
      *
      * @param[in] videoDecoderId
-     *      The ID of the Video Decoder source, `IVideoDecoder.Id.EXTERNAL`
-     *      for an external non-HAL source, or `IVideoDecoder.Id.UNDEFINED`
+     *      The ID of the Video Decoder source, `VIDEO_DECODER_ID_EXTERNAL`
+     *      for an external non-HAL source, or `VIDEO_DECODER_ID_UNDEFINED`
      *      to clear the association.
      *
      * @exception binder::Status::Exception::EX_NONE
@@ -140,27 +152,27 @@ interface IVideoSinkController {
      * @returns boolean
      * @retval true
      *      The Video Decoder ID was set, the source was set to
-     *      `IVideoDecoder.Id.EXTERNAL`, or the association was cleared with
-     *      `IVideoDecoder.Id.UNDEFINED`.
+     *      `VIDEO_DECODER_ID_EXTERNAL`, or the association was cleared with
+     *      `VIDEO_DECODER_ID_UNDEFINED`.
      *
      * @retval false
-     *      The ID is not `IVideoDecoder.Id.EXTERNAL` and not one returned by
+     *      The ID is not `VIDEO_DECODER_ID_EXTERNAL` and not one returned by
      *      `IVideoDecoderManager.getVideoDecoderIds()`.
      *
      * @pre The resource must be in State::READY.
      *
      * @see getVideoDecoder(), IVideoDecoderManager.getVideoDecoderIds()
      */
-    boolean setVideoDecoder(in IVideoDecoder.Id videoDecoderId);
+    boolean setVideoDecoder(in int videoDecoderId);
 
     /**
      * Gets the Video Decoder ID linked to this Video Sink.
      *
-     * Returns the currently associated `IVideoDecoder.Id` in both tunnelled
+     * Returns the currently associated video decoder ID in both tunnelled
      * and non-tunnelled modes.
      *
-     * @returns IVideoDecoder.Id which can be `IVideoDecoder.Id.UNDEFINED` or
-     *          `IVideoDecoder.Id.EXTERNAL`.
+     * @returns The video decoder ID, which can be `VIDEO_DECODER_ID_UNDEFINED` or
+     *          `VIDEO_DECODER_ID_EXTERNAL`.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource
@@ -171,7 +183,7 @@ interface IVideoSinkController {
      *
      * @see setVideoDecoder()
      */
-    IVideoDecoder.Id getVideoDecoder();
+    int getVideoDecoder();
 
     /**
      * Attaches an AVClock to this video sink for AV synchronisation.
@@ -187,7 +199,7 @@ interface IVideoSinkController {
      * clock relationship; the AVClock does not need to be made aware.
      *
      * If a different clock is already attached, this call replaces the
-     * attachment. Calling with `IAVClock.Id.UNDEFINED` is equivalent to
+     * attachment. Calling with `AV_CLOCK_ID_UNDEFINED` is equivalent to
      * `detachClock()`.
      *
      * Can be called in `READY` or `STARTED` state. Attaching during `STARTED`
@@ -195,8 +207,10 @@ interface IVideoSinkController {
      * once the clock is started; the call does not change the sink's
      * state-machine state.
      *
-     * @param[in] clockId   The ID of the AVClock to attach, or
-     *                      `IAVClock.Id.UNDEFINED` to detach.
+     * @param[in] clockId   The ID of the AVClock to attach (the `value` of an
+     *                      `IAVClock.Id` returned by
+     *                      `IAVClockManager.getAVClockIds()`), or
+     *                      `AV_CLOCK_ID_UNDEFINED` to detach.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if `clockId`
@@ -208,14 +222,14 @@ interface IVideoSinkController {
      *
      * @see detachClock(), getClock(), IAVClockManager.getAVClockIds()
      */
-    void attachClock(in IAVClock.Id clockId);
+    void attachClock(in int clockId);
 
     /**
      * Detaches the currently attached AVClock from this video sink.
      *
      * After this call the sink does NOT consume or render further frames
      * until a clock is attached again. Equivalent to calling
-     * `attachClock(IAVClock.Id.UNDEFINED)`. See the interface @brief for the
+     * `attachClock(AV_CLOCK_ID_UNDEFINED)`. See the interface @brief for the
      * full AVClock-association contract.
      *
      * Idempotent: calling when no clock is attached is a no-op.
@@ -237,7 +251,7 @@ interface IVideoSinkController {
     /**
      * Gets the AVClock ID currently attached to this video sink.
      *
-     * @returns IAVClock.Id, which is `IAVClock.Id.UNDEFINED` when no clock is
+     * @returns The AVClock ID, which is `AV_CLOCK_ID_UNDEFINED` when no clock is
      *          attached. With no clock attached the sink does not consume or
      *          render output — see the interface @brief.
      *
@@ -249,7 +263,7 @@ interface IVideoSinkController {
      *
      * @see attachClock(), detachClock()
      */
-    IAVClock.Id getClock();
+    int getClock();
 
     /**
      * Starts the Video Sink.
@@ -259,10 +273,10 @@ interface IVideoSinkController {
      * a `STARTED` state.
      *
      * The client must call `setVideoDecoder()` with a valid decoder ID, or
-     * `IVideoDecoder.Id.EXTERNAL` for an external non-HAL source, before
+     * `VIDEO_DECODER_ID_EXTERNAL` for an external non-HAL source, before
      * calling this method in both tunnelled and non-tunnelled modes. Starting
      * a Video Sink while the associated decoder ID is
-     * `IVideoDecoder.Id.UNDEFINED` shall fail.
+     * `VIDEO_DECODER_ID_UNDEFINED` shall fail.
      *
      * The Video Decoder association is the only association this call
      * requires. The AVClock attachment and the video plane mapping are
@@ -274,12 +288,12 @@ interface IVideoSinkController {
      *
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *      The resource is not in State::READY, or the associated Video
-     *      Decoder ID is `IVideoDecoder.Id.UNDEFINED`.
+     *      Decoder ID is `VIDEO_DECODER_ID_UNDEFINED`.
      *
      * @pre The resource must be in State::READY.
      * @pre The associated Video Decoder ID must not be
-     *      `IVideoDecoder.Id.UNDEFINED`; set a valid decoder ID or
-     *      `IVideoDecoder.Id.EXTERNAL` using `setVideoDecoder()`.
+     *      `VIDEO_DECODER_ID_UNDEFINED`; set a valid decoder ID or
+     *      `VIDEO_DECODER_ID_EXTERNAL` using `setVideoDecoder()`.
      *
      * @see stop(), IVideoSink.open(), setVideoDecoder()
      */
@@ -379,7 +393,7 @@ interface IVideoSinkController {
      *
      * If no frames are queued when this is called, the sink fires
      * `onEndOfStream()` with an undefined-time sentinel
-     * (`IAVClock.UNDEFINED_TIME`) so the client sees the same callback in all
+     * (`UNDEFINED_TIME`) so the client sees the same callback in all
      * cases.
      *
      * A second call is a no-op. After this call `queueVideoFrame()` throws

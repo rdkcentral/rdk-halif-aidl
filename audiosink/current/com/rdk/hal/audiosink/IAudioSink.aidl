@@ -17,13 +17,13 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiosink;
-import com.rdk.hal.audiosink.PropertyValue;
 import com.rdk.hal.audiosink.Capabilities;
 import com.rdk.hal.audiosink.ContentType;
 import com.rdk.hal.audiosink.IAudioSinkController;
 import com.rdk.hal.audiosink.IAudioSinkControllerListener;
 import com.rdk.hal.audiosink.IAudioSinkEventListener;
 import com.rdk.hal.audiosink.Property;
+import com.rdk.hal.audiosink.PropertyValue;
 import com.rdk.hal.audiosink.State;
 
 /**
@@ -98,7 +98,7 @@ interface IAudioSink {
      * If successful, the audio sink transitions to an OPENING state and then a READY state.
      * The following guarantees are made for an opened audio sink:
      *  - Volume is set to the default of 1.0 and unmuted.
-     *  - The linked Audio Decoder is set to IAudioDecoder.Id.UNDEFINED.
+     *  - The linked Audio Decoder is set to IAudioSinkController.AUDIO_DECODER_ID_UNDEFINED.
      *  - All `Property` values are set to their defaults.
      *
      * If the client that opened the `IAudioSinkController` crashes,
