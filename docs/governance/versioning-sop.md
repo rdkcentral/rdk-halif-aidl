@@ -108,6 +108,30 @@ One deleted line can be Major; a large additive PR is Minor. The structural
 audit (`release.sh --audit`) classifies by the same test — what the AIDL
 surface lost or changed — not by diff size.
 
+**A `Major Change` on its own is business as usual.** It is an engineering
+fact about compatibility that moves the version number, and it goes through
+the normal review and the normal cohort release. It is **not** the signal
+that an interface is being rewritten. That signal is the `CR` label (next
+section): `Major Change` + `CR` means the programme must know that an
+interface is being re-written or re-directed, with wider review and its own
+release scheduling.
+
+| Labels | What it tells the programme | Handling |
+| --- | --- | --- |
+| `Major Change` | An ABI-breaking change landed; the component's generation moves | BAU: normal review, normal cohort release |
+| `Major Change` + `CR` | An interface is being re-written or re-directed | Programme awareness, wider sign-off, scheduled into a release deliberately |
+
+**The ticket is the law; the audit is the default.** The structural audit
+reports what the AIDL surface lost or changed, and that is the default
+class. ABI is not the only input: when the removed or changed surface is not
+yet in use by any client, the ticket may declare the change Minor, and that
+decision — who confirmed there are no users — is recorded on the ticket. At
+release the audit still reports the disagreement; the operator resolves it
+by either correcting the label (the code was right) or confirming the
+ticket's class against the ticket (the ticket was right). Disabling the
+audit is not a resolution. The `release.sh` support for a per-component
+confirmation that cites the ticket is #875.
+
 ### How PRs Drive the Version Bump
 
 Pre-baseline component versions advance one PR at a time. The bump that each
@@ -154,8 +178,11 @@ matches the actual change; the version follows from the label.
 #### The `CR` Label (independent — not a change-class)
 
 `CR` (Change Request) marks an **ABI change** that must go through wider review
-and deliberate scheduling. It is a **process/governance** label, **independent**
-of the change-class above. The change-class answers *"how does the version
+and deliberate scheduling: an interface being re-written or re-directed, not
+business-as-usual change. It is the label the **programme** watches; a
+`Major Change` without `CR` is BAU engineering (see
+[What "Major" Means](#what-major-means)). It is a **process/governance**
+label, **independent** of the change-class above. The change-class answers *"how does the version
 number move?"*; `CR` answers a **different** question — *"is this an ABI change
 that needs wider review and separate scheduling?"* The two axes are orthogonal,
 so a `CR` carries a change-class label alongside it (an ABI change carries
