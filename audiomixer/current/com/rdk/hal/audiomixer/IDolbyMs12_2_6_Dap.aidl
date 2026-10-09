@@ -213,8 +213,10 @@ interface IDolbyMs12_2_6_Dap {
 
     /**
      * @brief Sets Dolby Atmos lock mode.
+     * @details This is the only Atmos lock control in the HAL. It applies to this
+     *          output port and persists across playback sessions.
      * @param[in] enabled True to lock Atmos output, false to unlock.
-     * 
+     *
      * @exception binder::Status EX_UNSUPPORTED_OPERATION if this MS12 2.6 feature is not supported.
      */
     void setAtmosLock(in boolean enabled);

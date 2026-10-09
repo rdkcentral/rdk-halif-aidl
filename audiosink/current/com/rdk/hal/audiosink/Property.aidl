@@ -115,23 +115,6 @@ enum Property {
     AV_SOURCE = 5,
 
     /**
-     * When enabled, Dolby Atmos output is locked on audio ports (where possible).
-     * This originated as a Netflix feature to avoid audio artefacts when starting and stopping Atmos stream content.
-     * See https://docs.netflixpartners.com/docs/nrdp/nrdp2024/content-playback/audio-content/dolby-ms12-partner-guidance?selectednrdpRelease=NRDP+2024.1#atmos-locking
-     *
-     * Type: Integer
-     *  0 - disabled (default on open)
-     *  1 - enabled
-     * Access: Read-write.
-     * Write in states: READY
-     *
-     * @exception binder::Status::Exception::EX_NONE for success
-	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
-	 *
-     */
-    DOLBY_ATMOS_LOCK = 6,
-
-    /**
      *
      */
     METRIC_xxxx = 1000,
