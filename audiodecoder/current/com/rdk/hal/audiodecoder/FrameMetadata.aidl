@@ -19,7 +19,7 @@
 package com.rdk.hal.audiodecoder;
 import com.rdk.hal.audiodecoder.PCMMetadata;
 import com.rdk.hal.audiodecoder.Codec;
-import com.rdk.hal.AVSource;
+import com.rdk.hal.audiodecoder.AVSource;
 import com.rdk.hal.audiodecoder.FrameType;
 
 /**

@@ -24,7 +24,7 @@ import com.rdk.hal.audiomixer.IAudioOutputPortListener;
 import com.rdk.hal.audiomixer.OutputPortCapabilities;
 import com.rdk.hal.audiomixer.OutputPortProperty;
 import com.rdk.hal.audiomixer.State;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.audiomixer.PropertyValue;
 
 /**
  * @brief    Audio Output Port HAL interface.

@@ -23,7 +23,7 @@ import com.rdk.hal.videodecoder.DynamicRange;
 import com.rdk.hal.videodecoder.MasteringDisplayInfo;
 import com.rdk.hal.videodecoder.ContentLightLevel;
 import com.rdk.hal.videodecoder.Colorimetry;
-import com.rdk.hal.AVSource;
+import com.rdk.hal.videodecoder.AVSource;
 
 /**
  *  @brief     Decoded video frame metadata, relating to the frame output from the video decoder.
