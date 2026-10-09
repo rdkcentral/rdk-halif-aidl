@@ -19,8 +19,8 @@
 package com.rdk.hal.planecontrol;
 import com.rdk.hal.planecontrol.PlaneType;
 import com.rdk.hal.planecontrol.SourceType;
-import com.rdk.hal.videodecoder.PixelFormat;
-import com.rdk.hal.videodecoder.DynamicRange;
+import com.rdk.hal.planecontrol.PixelFormat;
+import com.rdk.hal.planecontrol.DynamicRange;
  
 /**
  *  @brief     Plane resource capabilities definition.

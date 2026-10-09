@@ -29,7 +29,7 @@ import com.rdk.hal.panel.SDRGamma;
 import com.rdk.hal.panel.ToneMappingLevel;
 import com.rdk.hal.panel.ToneMappingMode;
 import com.rdk.hal.panel.ToneMappingSettings;
-import com.rdk.hal.videodecoder.DynamicRange;
+import com.rdk.hal.panel.DynamicRange;
 
 /**
  * @brief Panel PQ parameter capabilities.

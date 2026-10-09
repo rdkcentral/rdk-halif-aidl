@@ -2,7 +2,6 @@ aidl_interface:
   name: planecontrol
   srcs:
     - com/rdk/hal/planecontrol/*.aidl
-  imports:
-    - videodecoder@current
+  imports: []
   stability: vintf
   layout: module-local
