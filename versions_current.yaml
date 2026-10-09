@@ -26,7 +26,6 @@ components:
   avbuffer:       current
   avclock:        current
   bootreason:  current
-  common:         current
   compositeinput: current
   deepsleep:      current
   deviceinfo:     current
