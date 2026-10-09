@@ -121,6 +121,10 @@ release scheduling.
 | `Major Change` | An ABI-breaking change landed; the component's generation moves | BAU: normal review, normal cohort release |
 | `Major Change` + `CR` | An interface is being re-written or re-directed | Programme awareness, wider sign-off, scheduled into a release deliberately |
 
+The programme reads this from the **Interface effect** field on each item
+in the `halif_aidl` project, not from the labels. Every ticket and PR on the
+project has that field filled in, and it says the same thing as the labels.
+
 **The ticket is the law; the audit is the default.** The structural audit
 reports what the AIDL surface lost or changed, and that is the default
 class. ABI is not the only input: when the removed or changed surface is not
