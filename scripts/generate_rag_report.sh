@@ -128,11 +128,11 @@ rag_icon() {
 for f in $METADATA_FILES; do
     comp=$(yaml_val "$f" "component")
 
-    # Non-reviewable shared components: shared base types/enums with no
-    # independent interface contract to review (e.g. common). They still
-    # version and release normally; they are just omitted from this report.
+    # Components with no vendor interface contract to review: halcompat is a
+    # client-side helper header (no AIDL, no HFP). It still versions and
+    # releases normally; it is just omitted from this report.
     case "$comp" in
-        common) continue ;;
+        halcompat) continue ;;
     esac
 
     version=$(yaml_val "$f" "version")
