@@ -53,8 +53,8 @@ Source of Truth** for every component.
 > **Important:** The component version in `metadata.yaml` tracks the
 > **interface contract** for that individual component. It is independent of
 > the git repository version, which tracks changes across all 33 components
-> via commits and tags. A single git commit may update one component's version
-> without affecting any other.
+> via commits and tags. A release may bump one component's version
+> without affecting any other; between releases it does not change.
 
 ### Pre-Baseline: `0.<generation>.<minor>.<patch>`
 
@@ -122,9 +122,11 @@ PR, `scripts/release.sh` resolves by severity: `Major Change` >
 `Minor Change` > `documentation`. Reviewers should still clean the
 labelling so each PR carries exactly one.
 
-The PR author edits the component's `metadata.yaml` `version:` to the new
-value as part of the PR's diff. Reviewers check that the version bump matches
-the label and the actual change.
+The PR author does **not** edit the component's `metadata.yaml` `version:`.
+It is generated at release time by `scripts/release.sh`, which reads the
+change-class labels of every PR merged since the last release tag and writes
+the resulting version into `metadata.yaml`. Reviewers check that the label
+matches the actual change; the version follows from the label.
 
 #### The `CR` Label (independent — not a change-class)
 
@@ -150,39 +152,40 @@ bump logic.
 
 #### The Subsume Rule
 
-Between releases, `metadata.yaml` `version:` represents the **intent for the
-next release** — the highest bump that has been declared since the last
-release tag. A PR bumps `version:` *only if its change is more significant
-than what is already pending.*
+Between releases, `metadata.yaml` `version:` does not change: it is the
+version the component was last released as. At release, `release.sh` bumps
+it once, by the most significant change class among the PRs merged since the
+last release tag.
 
-| Last released | Already pending on `develop` | This PR is… | Action |
+| Last released | Highest class already merged this window | This PR is… | Release result |
 |---|---|---|---|
-| `0.1.0.0` | `0.1.0.0` (unchanged since release) | patch | bump → `0.1.0.1` |
-| `0.1.0.0` | `0.1.0.0` | minor | bump → `0.1.1.0` |
-| `0.1.0.0` | `0.1.0.0` | breaking | bump → `0.2.0.0` |
-| `0.1.0.0` | `0.1.1.0` (a prior PR already bumped minor) | another minor | **no bump — already covered** |
-| `0.1.0.0` | `0.1.1.0` | patch (smaller than pending) | **no bump — subsumed by minor** |
-| `0.1.0.0` | `0.1.1.0` | breaking | bump → `0.2.0.0` (subsumes the minor) |
-| `0.1.0.0` | `0.2.0.0` (a prior PR already bumped breaking) | minor or patch | **no bump — already covered** |
-| `0.1.0.0` | `0.2.0.0` | another breaking | **no bump** (one generation tick per release window) |
-| new component (no prior release) | `0.1.0.0` | anything | no bump — first release is `0.1.0.0` regardless of how many PRs accumulate |
+| `0.1.0.0` | none | patch | `0.1.0.1` |
+| `0.1.0.0` | none | minor | `0.1.1.0` |
+| `0.1.0.0` | none | breaking | `0.2.0.0` |
+| `0.1.0.0` | minor | another minor | `0.1.1.0` — one minor tick covers both |
+| `0.1.0.0` | minor | patch | `0.1.1.0` — subsumed by the minor |
+| `0.1.0.0` | minor | breaking | `0.2.0.0` — subsumes the minor |
+| `0.1.0.0` | breaking | minor or patch | `0.2.0.0` — already covered |
+| `0.1.0.0` | breaking | another breaking | `0.2.0.0` — one generation tick per release window |
+| new component (no prior release) | — | anything | `0.1.0.0` — first release regardless of how many PRs accumulate |
 
-**Net rule:** `next_version = max(current_pending, this_PR_would_imply)`. The
-release version is the aggregate delta since the last tag, not a per-PR
-count. Multiple breaking changes in a single release window batch into one
-generation; multiple feature additions batch into one minor; multiple
+**Net rule:** `next_version = last_released + max(change class over the merged
+PRs)`. The release version is the aggregate delta since the last tag, not a
+per-PR count. Multiple breaking changes in a single release window batch into
+one generation; multiple feature additions batch into one minor; multiple
 docs-only changes batch into one patch.
 
-This is **human-side discipline**, not script-enforced. Reviewers verify
-that the bump (or non-bump) is appropriate for the PR's change.
+`release.sh` applies this rule. The human-side discipline is the label:
+reviewers verify that each PR's change-class label is appropriate for its
+change.
 
 #### When the Snapshot is Created
 
-`metadata.yaml` `version:` is a **forward-looking declaration** of what the
-next release will tag the component as. The `<component>/<version>/`
-snapshot directory is **not** created in feature PRs. It is materialised at
-release time by the top-level `./release.sh`, which reads `metadata.yaml`
-and copies `current/` to `<version>/`.
+`metadata.yaml` `version:` is written by `release.sh` at release time. The
+`<component>/<version>/` snapshot directory is **not** created in feature
+PRs either. Both are materialised together at release time by the top-level
+`./release.sh`, which computes the version, writes it to `metadata.yaml` and
+copies `current/` to `<version>/`.
 
 Feature PRs touch `current/` only:
 
@@ -195,8 +198,8 @@ The toolchain-generated C++ bindings (`current/include/*.h` and
 `current/src/*.cpp`) are not in this list — see
 [Generated Code is Not Committed in `current/`](#generated-code-is-not-committed-in-current) below.
 
-Multiple PRs can accumulate bumps on `develop` without any of them creating
-snapshot directories. The next release event (`release.sh` run during
+Multiple PRs can accumulate on `develop` without any of them touching
+`version:` or creating snapshot directories. The next release event (`release.sh` run during
 release prep) materialises all of the snapshots together and the repo is
 tagged.
 
@@ -219,11 +222,11 @@ where `major` means additive and the audit displays it as such;
 surface-identical trees whose sources still differ count as doc-only), and
 cross-checks three signals per component:
 
-| Signal     | Source                                         |
-|------------|------------------------------------------------|
-| Structural | what the AIDL actually changed (code truth)    |
-| Label      | the change class PR labels imply               |
-| Declared   | `metadata.yaml` `version:` (pre-bumped by PRs) |
+| Signal     | Source                                                          |
+|------------|-----------------------------------------------------------------|
+| Structural | what the AIDL actually changed (code truth)                     |
+| Label      | the change class PR labels imply                                |
+| Declared   | `metadata.yaml` `version:` (written by `release.sh` at release) |
 
 A row is flagged when the label class contradicts the structural class,
 when `metadata.yaml` declares a version the structural class doesn't
@@ -751,8 +754,8 @@ Idempotent — safe to re-run.
 | `scope:overview` | Tracking ticket spanning multiple components |
 
 Every PR carries **exactly one** of `Major Change` / `Minor Change` /
-`documentation`. The label signals the bump intent; the PR author bumps
-`metadata.yaml` `version:` accordingly as part of the PR diff (see
+`documentation`. The label is the bump signal; `release.sh` applies the bump
+to `metadata.yaml` `version:` at release time (see
 [How PRs Drive the Version Bump](#how-prs-drive-the-version-bump) above
 for the full subsume rule and snapshot-timing model):
 
@@ -770,10 +773,10 @@ Release-time execution (manual):
 ./release.sh
 ```
 
-`./release.sh` reads `metadata.yaml` `version:` verbatim — it does not
-compute bumps; that's the PR author's job, signalled by the label and
-validated by reviewers. Snapshots materialise only at release time, never
-in feature PRs.
+`./release.sh` computes each component's bump from the change-class labels
+of the PRs merged since the last tag and writes the new `version:` into
+`metadata.yaml`. Engineering teams never edit `version:` in a PR. Snapshots
+materialise only at release time, never in feature PRs.
 
 All other state (RAG status, reviewer sign-off, lifecycle dates) is tracked
 in `metadata.yaml` — the Single Source of Truth. PRs are assigned directly
