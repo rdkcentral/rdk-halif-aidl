@@ -312,7 +312,7 @@ cohort — at release time, the script regenerates each module's bindings
 and commits them into the new immutable `<module>/<version>/include/`
 and `<module>/<version>/src/` directories alongside the snapshot's
 AIDL. Frozen `<version>/` snapshots are the consumption artifact;
-consumers pin to them (`common@0.1.0.0`), not to `current/`.
+consumers pin to them (`audiodecoder@0.2.0.0`), not to `current/`.
 
 ##### The rule
 
@@ -603,12 +603,12 @@ The repository contains **33 components** across two responsibility types:
 |-----------|-------------|
 | `boot` | Boot reason tracking and reboot management |
 | `broadcast` | Broadcast tuner and RF frontend interface |
-| `common` | Common types, enumerations, and shared interface definitions |
 | `compositeinput` | Composite video input capture and control |
 | `deepsleep` | Deep sleep and low-power state management |
 | `deviceinfo` | Device information and platform capability reporting |
 | `ffv` | Far-field voice capture and mic array processing |
 | `firmwareupdate` | Update lifecycle for multiple firmware types at multiple locations across the system |
+| `halcompat` | Client-side C++ helpers for service lookup and version compatibility (header-only, no AIDL) |
 | `indicator` | LED and visual indicator state management |
 | `panel` | Front panel display and button control |
 | `r4ce` | RF4CE remote control protocol and pairing |
