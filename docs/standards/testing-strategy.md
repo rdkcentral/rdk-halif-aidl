@@ -1,982 +1,329 @@
-# AIDL Interface Testing Strategy
+# HAL Interface Testing Strategy
 
-## Overview
+This document defines how conformance testing relates to the AIDL interface
+contracts and HAL Feature Profiles (HFP) in this repository, and the rules a
+test-suite author follows. The interface repo (`rdk-halif-aidl`) defines
+**what** a HAL must do; the test suites that verify it are owned by a
+**separate** test project.
 
-This document provides practical guidance for writing version-adaptive L1/L2 tests using the ut-core framework. The goal is to ensure the **latest test suite** works correctly with **any server version** (v1, v2, latest), validating both full functionality on current servers and graceful fallback behavior on older servers.
+## Separation of concerns
 
-## Key Requirements
+Four artifacts, distinct owners:
 
-1. **Version Adaptation**: Single test binary must adapt behavior based on server version detected at runtime
-2. **Client-Like Fallback**: Tests mirror production client fallback patterns (try v2 → catch exception → fall back to v1)
-3. **Platform Independence**: Tests work with any platform via external YAML profiles specifying `platform_caps`
-4. **HFP Validation**: Tests validate capability consistency: `platform_caps ⊆ runtime_caps ⊆ HFP_max_caps`
+| Concern | Artifact | Owned by | Answers |
+| --- | --- | --- | --- |
+| Interface contract | `.aidl` (versioned) | `rdk-halif-aidl` (this repo) | Which methods and types exist at each interface version |
+| Declared capability | `hfp-<component>.yaml` | `rdk-halif-aidl` (this repo) | The maximum feature set a platform's HAL may expose |
+| Runtime capability | `getCapabilities()` | the running service | What this implementation actually supports right now |
+| Test suite + config | ut-core / RAFT suites + per-platform YAML | separate test project | How the interface is exercised on a given platform |
 
-## Testing Levels
+The interface contract and the declared capability profile are **published from
+here**. The test suites and their per-platform configuration are **owned by the
+test project** — they consume this repo's `.aidl` and HFP files.
 
-This document focuses on **L1 (Function Testing)** and **L2 (Unit Testing)**:
+## Test levels and frameworks
 
-- **L1**: Test individual API functions with various input parameters
-- **L2**: Test module-level behavior, state machines, and capability interactions
-- **L3/L4**: Component stimulus and system interface testing (platform-specific, out of scope)
+| Level | Scope | Framework | Config source |
+| --- | --- | --- | --- |
+| L1 | Individual API functions | ut-core (C/C++, on device) | ut-core `ut-kvp` profile YAML |
+| L2 | Module behaviour, state, capability interactions | ut-core (C/C++, on device) | ut-core `ut-kvp` profile YAML |
+| L3 | Component with external stimulus | RAFT / ut-raft (`python_raft`) | RAFT per-platform device/rack YAML |
+| L4 | System / vendor-stack interface (VSI, VST smoke) | RAFT / ut-raft (`python_raft`) | RAFT per-platform device/rack YAML |
 
-Both L1 and L2 tests are typically combined in a single monolithic test binary using ut-core's suite organization and menu system.
+L1/L2 are device-side C/C++ tests built on **ut-core**, typically one
+monolithic binary per component using ut-core's suite organisation. L3/L4 are
+Python suites built on **RAFT** (`python_raft`), with **ut-raft** providing the
+L3–L4 profile classes. The RAFT layer carries its **own per-platform YAML** —
+device descriptors, rack maps, platform configuration — provisioned per
+platform as each suite requires, and independent of the HFP.
 
----
+## The capability model
 
-## Suite-Level Version Discovery
+Two independent axes decide whether a call is valid on a given device. A suite
+checks both, in this order.
 
-Tests use ut-core's suite initialization to discover and cache server version once, making it available to all tests in the suite.
+### Version axis — does the method exist?
 
-### Basic Pattern
+A test binary links one interface version (or `current`) at compile time; the
+running server may be older or newer. The server reports its identity through
+two methods on every interface:
+
+- `int32_t getInterfaceVersion()` — the release version encoded as an int with
+  fixed field widths **1-2-2-1** over `<era>.<major>.<minor>.<bugfix>`
+  (`0.2.0.0` → `2000`, `1.0.0.0` → `100000`); a development build of
+  `current/` reports the generator default.
+- `std::string getInterfaceHash()` — the frozen contract hash, or
+  `"notfrozen"` for a development build, which makes no compatibility promise.
+
+Tests gate on these values through the `halcompat` helpers
+(`common/current/halcompat.h`, installed with the common headers) — the same
+one code path clients use, with the encoding and the era rules internal to the
+helper. See the [AIDL Versioning Guide](versioning-guide.md) for the encoding
+and the era compatibility rules the helper implements.
+
+### Capability axis — is this optional feature supported here?
+
+Within a version, features may be optional per platform. The service reports
+what it supports through `getCapabilities()`. For `bootreason`
+(`Capabilities.aidl`):
 
 ```cpp
-// boot_tests.cpp
+Capabilities caps;
+auto status = service->getCapabilities(&caps);
+// caps.supportedBootCauses is BootCause[]; caps.supportedResetTypes is ResetType[]
+```
+
+A suite treats `getCapabilities()` as the runtime source of truth: it skips
+checks for absent features rather than failing them.
+
+### HFP bounds runtime capability
+
+The HFP (`hfp-<component>.yaml`, in each component's version directory)
+declares the platform's **maximum** supported feature set, keyed by the
+component directory name. Real `bootreason/current/hfp-bootreason.yaml`
+fields:
+
+```yaml
+bootreason:
+    interfaceVersion: current
+    supportedBootCauses:      # subset of BootCause
+      - WATCHDOG
+      - COLD_BOOT
+      # ...
+    supportedResetTypes:      # subset of ResetType
+      - MAINTENANCE_REBOOT
+      # ...
+    supportedPowerSources:    # subset of PowerSource
+      - PSU
+      # ...
+```
+
+The binding invariant a conformance test asserts is:
+
+```text
+getCapabilities()  ⊆  HFP declared features
+```
+
+The HFP is capability declaration, consumed by tests as the upper bound. The
+test framework's own configuration (which tests run, where the device is) is
+the separate per-platform YAML owned by the test project.
+
+## Version-adaptive suites (L1/L2)
+
+One test binary, built against the latest interface, adapts at runtime to
+whatever server version it meets — full coverage on a current server, graceful
+degradation on an older one. This mirrors production client behaviour and
+validates the server's backward-compatibility promise at the same time.
+
+### Discover the version once, at suite init
+
+ut-core suite init/clean functions return `int` (0 for success) and are
+registered with `UT_add_suite()`, which returns the suite handle that
+`UT_add_test()` requires:
+
+```cpp
+// bootreason_tests.cpp
 #include <ut.h>
-#include <aidl/com/rdk/hal/bootreason/IBootReason.h>
+#include <halcompat.h>
+#include <com/rdk/hal/bootreason/IBootReason.h>
 
-using namespace aidl::com::rdk::hal::bootreason;
+using com::rdk::hal::bootreason::IBootReason;
+using com::rdk::hal::bootreason::Capabilities;
+namespace hc = com::rdk::hal::halcompat;
 
-// Suite-level context
-struct BootTestContext {
-    std::shared_ptr<IBootReason> bootService;
-    int32_t serverVersion;
-    std::string serverHash;
-};
+static android::sp<IBootReason> gService;
 
-static BootTestContext* gContext = nullptr;
-
-// Suite initialization - called once before all tests
-void boot_test_suite_init(void) {
-    gContext = new BootTestContext();
-    
-    // Connect to Boot service
-    const std::string serviceName = std::string() + IBootReason::descriptor + "/default";
-    auto bootService = IBootReason::fromBinder(
-        ndk::SpAIBinder(AServiceManager_checkService(serviceName.c_str())));
-    
-    UT_ASSERT_NOT_NULL(bootService.get());
-    gContext->bootService = bootService;
-    
-    // Discover version ONCE at suite level
-    auto status = bootService->getInterfaceVersion(&gContext->serverVersion);
-    UT_ASSERT_TRUE(status.isOk());
-    UT_LOG_INFO("Server version: %d", gContext->serverVersion);
-    
-    // Get hash for integrity check (see client-patterns.md Pattern 1)
-    status = bootService->getInterfaceHash(&gContext->serverHash);
-    UT_ASSERT_TRUE(status.isOk());
-    UT_LOG_INFO("Server hash: %s", gContext->serverHash.c_str());
+static int bootreason_suite_init(void)
+{
+    gService = hc::getService<IBootReason>();
+    if (gService == nullptr) {
+        return -1;
+    }
+    // Dev images run "notfrozen" servers; allow them explicitly.
+    if (!hc::isCompatible(gService, /*allowUnfrozen=*/true)) {
+        return -1;
+    }
+    UT_LOG("Server version: %d hash: %s",
+           gService->getInterfaceVersion(),
+           gService->getInterfaceHash().c_str());
+    return 0;
 }
 
-// Suite cleanup
-void boot_test_suite_cleanup(void) {
-    delete gContext;
-    gContext = nullptr;
+static int bootreason_suite_clean(void)
+{
+    gService = nullptr;
+    return 0;
 }
 ```
 
-**Key Points:**
-- Version queried **once** at suite initialization via `getInterfaceVersion()`
-- Hash queried for integrity validation (detects ABI mismatches)
-- Stored in suite context accessible to all tests
-- See [client-patterns.md](client-patterns.md) Pattern 1 for version discovery rationale
+The version is queried once here; every test in the suite gates on the cached
+service through `halcompat`.
 
----
+### Gate version-specific tests, skip-don't-fail
 
-## Client-Like Fallback in Tests
-
-Tests must mirror production client behavior: attempt newest API first, catch exceptions, fall back to older equivalent. This validates both the test logic AND the server's backward compatibility.
-
-### Try-Catch Fallback Pattern
+Feature gates name the **additive release** that introduced the API. Suppose a
+hypothetical `getBootCount()` was added to `IBootReason` in release 0.2.1.0:
 
 ```cpp
-// L1 Function Test: reboot with reason (v2) falls back to basic reboot (v1)
-void test_l1_reboot_with_fallback(void) {
-    UT_LOG_INFO("Testing reboot with version fallback");
-    
-    bool rebooted = false;
-    
-    if (gContext->serverVersion >= 2) {
-        // Try v2 method: reboot with reason
-        UT_LOG_INFO("Attempting v2 rebootWithReason()");
-        auto status = gContext->bootService->rebootWithReason(RebootReason::SOFTWARE_UPDATE);
-        
-        if (status.isOk()) {
-            UT_LOG_INFO("✓ v2 rebootWithReason succeeded");
-            rebooted = true;
-        } else if (status.getExceptionCode() == EX_UNSUPPORTED_OPERATION) {
-            UT_LOG_WARNING("v2 method unsupported, falling back to v1");
-            // Fall through to v1 fallback
-        } else {
-            UT_FAIL("Unexpected error from rebootWithReason");
-        }
+static void test_l1_boot_count(void)
+{
+    if (!hc::atLeast(gService, 0, 2, 1)) {   // added in 0.2.1.0
+        UT_LOG("Server predates 0.2.1.0 - skipping getBootCount test");
+        return;                              // skip, not a failure
     }
-    
-    // Fallback to v1 basic reboot
-    if (!rebooted) {
-        UT_LOG_INFO("Using v1 reboot()");
-        auto status = gContext->bootService->reboot();
-        UT_ASSERT_TRUE(status.isOk());
-        UT_LOG_INFO("✓ v1 reboot succeeded");
-    }
-    
-    UT_PASS("Reboot succeeded with appropriate method for server version");
+    int32_t count = 0;
+    auto status = gService->getBootCount(&count);
+    UT_ASSERT(status.isOk());
+    UT_ASSERT(count >= 0);
 }
 ```
 
-**Fallback Logic:**
-1. Check cached `serverVersion` to know if v2 methods exist
-2. Attempt v2 method first (if version supports it)
-3. Catch `EX_UNSUPPORTED_OPERATION` → indicates server doesn't support feature
-4. Fall back to v1 equivalent method
-5. Validate v1 method always works (backward compatibility guarantee)
+`hc::atLeast()` applies the era rules internally: in era 1 plain ordering is
+sufficient; in era 0 the gate also requires the same major, because an era-0
+major bump is a breaking change. A test never probes for a method by calling
+it when a version gate can answer first.
 
-This pattern matches [client-patterns.md](client-patterns.md) Pattern 3 (Try-Catch with Fallback).
+### Fallback signals, when probing is the test
 
-### Progressive Enhancement Pattern
+A fallback test deliberately calls the newer method to verify the server's
+behaviour at the boundary. Two distinct signals, per
+[client usage of Stable AIDL](../whitepapers/client_usage_of_stable_aidl.md):
 
 ```cpp
-// L2 Unit Test: get boot details with progressive enhancement
-void test_l2_boot_details_progressive(void) {
-    UT_LOG_INFO("Testing boot details with progressive enhancement");
-    
-    BootDetails details;
-    
-    if (gContext->serverVersion >= 3) {
-        // Try v3: detailed boot info with timestamps
-        auto status = gContext->bootService->getBootDetailsV3(&details);
-        if (status.isOk()) {
-            UT_LOG_INFO("✓ Got v3 boot details with timestamps");
-            UT_ASSERT_NOT_EQUAL(details.bootTimestamp, 0);
-            UT_ASSERT_NOT_EQUAL(details.lastShutdownTimestamp, 0);
-            return;
-        }
-    }
-    
-    if (gContext->serverVersion >= 2) {
-        // Try v2: boot details with count
-        BootDetailsV2 detailsV2;
-        auto status = gContext->bootService->getBootDetailsV2(&detailsV2);
-        if (status.isOk()) {
-            UT_LOG_INFO("✓ Got v2 boot details with count");
-            UT_ASSERT_GE(detailsV2.bootCount, 0);
-            return;
-        }
-    }
-    
-    // Fall back to v1: basic boot state
-    State state;
-    auto status = gContext->bootService->getState(&state);
-    UT_ASSERT_TRUE(status.isOk());
-    UT_LOG_INFO("✓ Got v1 boot state: %d", static_cast<int>(state));
-    
-    UT_PASS("Boot details retrieved using best available API");
+auto status = gService->getBootCount(&count);
+if (status.transactionError() == ::android::UNKNOWN_TRANSACTION) {
+    // Method does not exist on this server (older implementation):
+    // fall back to the pre-0.2.1.0 API.
+} else if (status.exceptionCode() ==
+           ::android::binder::Status::EX_UNSUPPORTED_OPERATION) {
+    // Method exists but the feature is unavailable on this platform:
+    // consistent with getCapabilities() - skip.
+} else {
+    UT_ASSERT(status.isOk());
 }
 ```
 
-**Progressive Enhancement:**
-- Always try newest API first (v3 → v2 → v1)
-- Gracefully degrade through version chain
-- Matches [client-patterns.md](client-patterns.md) Pattern 6
+The cpp backend is non-throwing: every outcome arrives through the returned
+`android::binder::Status` (`status.toString8()` for diagnostics).
 
-### Version-Conditional Test Execution
+### Validate capabilities against the HFP and the platform profile
 
-```cpp
-// L1 Function Test: secure boot (v2+ only)
-void test_l1_secure_boot_version_conditional(void) {
-    UT_LOG_INFO("Testing secure boot (v2+ feature)");
-    
-    if (gContext->serverVersion < 2) {
-        UT_LOG_INFO("Skipping secure boot test - requires v2+ (server is v%d)",
-                    gContext->serverVersion);
-        UT_PASS("Test skipped appropriately for server version");
-        return;
-    }
-    
-    // v2+ test: check secure boot status
-    bool isSecure = false;
-    auto status = gContext->bootService->isSecureBootEnabled(&isSecure);
-    UT_ASSERT_TRUE(status.isOk());
-    
-    UT_LOG_INFO("Secure boot enabled: %s", isSecure ? "YES" : "NO");
-    UT_PASS("Secure boot query succeeded");
-}
-```
-
-**Conditional Execution:**
-- Check `serverVersion` before attempting version-specific API
-- Skip test with clear log message if server doesn't support feature
-- Pass test (not fail) when skipped due to version
-
-### Platform Capability Integration
+L2 suites assert the capability invariant. Platform expectations come from the
+ut-core `ut-kvp` profile passed at run time; HFP list fields are read with the
+list accessors:
 
 ```cpp
-// L2 Unit Test: watchdog capabilities from external profile
-void test_l2_watchdog_with_platform_caps(void) {
-    UT_LOG_INFO("Testing watchdog with platform capabilities");
-    
-    // Get runtime capabilities from server
+static void test_l2_capabilities_within_hfp(void)
+{
     Capabilities caps;
-    auto status = gContext->bootService->getCapabilities(&caps);
-    UT_ASSERT_TRUE(status.isOk());
-    
-    // Read platform capabilities from external YAML profile
-    bool platformSupportsWatchdog = 
-        UT_KVP_PROFILE_GET_BOOL("boot/platform_caps/supportsWatchdog");
-    
-    UT_LOG_INFO("Server reports watchdog: %s", 
-                caps.supportsWatchdog ? "YES" : "NO");
-    UT_LOG_INFO("Platform supports watchdog: %s",
-                platformSupportsWatchdog ? "YES" : "NO");
-    
-    // Validate relationship: platform_caps ⊆ runtime_caps
-    if (platformSupportsWatchdog) {
-        UT_ASSERT_TRUE(caps.supportsWatchdog);
-        UT_LOG_INFO("✓ Platform capability present in runtime capabilities");
-    } else {
-        UT_LOG_INFO("Platform does not support watchdog - runtime state: %s",
-                    caps.supportsWatchdog ? "ENABLED (unexpected)" : "DISABLED (expected)");
+    auto status = gService->getCapabilities(&caps);
+    UT_ASSERT(status.isOk());
+
+    // Declared upper bound, from the platform's HFP.
+    uint32_t declared =
+        UT_KVP_PROFILE_GET_LIST_COUNT("bootreason/supportedBootCauses");
+
+    // Every runtime-reported cause must appear in the declared list.
+    for (auto cause : caps.supportedBootCauses) {
+        UT_ASSERT(hfpDeclaresBootCause(cause, declared));  // suite helper
     }
-    
-    // If both platform and runtime support watchdog, test the API
-    if (platformSupportsWatchdog && caps.supportsWatchdog) {
-        if (gContext->serverVersion >= 2) {
-            // Try v2 watchdog API
-            int32_t timeout = 30;
-            status = gContext->bootService->configureWatchdog(timeout);
-            UT_ASSERT_TRUE(status.isOk());
-            UT_LOG_INFO("✓ Watchdog configured with %d second timeout", timeout);
-        } else {
-            UT_LOG_INFO("v1 server - watchdog configuration not available in this version");
-        }
-    }
-    
-    UT_PASS("Watchdog capabilities validated across platform/runtime/version");
 }
 ```
 
-**Capability Layers:**
+Scalar expectations use the typed accessors —
+`UT_KVP_PROFILE_GET_BOOL(key)`, `UT_KVP_PROFILE_GET_UINT32(key)`,
+`UT_KVP_PROFILE_GET_STRING(key, outBuffer)` — and the
+`UT_ASSERT_EQUAL_KVP_PROFILE_*` assertion macros compare a live value against
+the profile in one step.
 
-1. **Interface Version Capabilities**: What APIs exist in the version (v1: basic, v2: watchdog, secure boot)
-2. **Runtime Capabilities**: What the server implementation supports (`getCapabilities()`)
-3. **Platform Capabilities**: What the hardware supports (external YAML profile `platform_caps`)
-
-**Validation Relationship:**
-```
-platform_caps ⊆ runtime_caps ⊆ version_max_caps ⊆ HFP_max_caps
-```
-
-### Combining Version and Capability Checks
+### Register and run
 
 ```cpp
-// L2 Unit Test: comprehensive version + capability adaptation
-void test_l2_boot_with_full_adaptation(void) {
-    UT_LOG_INFO("Testing boot with version and capability adaptation");
-    
-    // Get runtime capabilities
-    Capabilities caps;
-    auto status = gContext->bootService->getCapabilities(&caps);
-    UT_ASSERT_TRUE(status.isOk());
-    
-    // Read platform capabilities
-    bool platformHasSecureBoot = 
-        UT_KVP_PROFILE_GET_BOOL("boot/platform_caps/supportsSecureBoot");
-    
-    UT_LOG_INFO("Server version: v%d", gContext->serverVersion);
-    UT_LOG_INFO("Runtime caps - secureBoot: %s, watchdog: %s",
-                caps.supportsSecureBoot ? "YES" : "NO",
-                caps.supportsWatchdog ? "YES" : "NO");
-    UT_LOG_INFO("Platform caps - secureBoot: %s",
-                platformHasSecureBoot ? "YES" : "NO");
-    
-    // Test 1: Version check for API availability
-    bool apiSupportsSecureBoot = (gContext->serverVersion >= 2);
-    UT_LOG_INFO("API supports secure boot: %s", 
-                apiSupportsSecureBoot ? "YES (v2+)" : "NO (v1)");
-    
-    // Test 2: Validate capability consistency
-    if (caps.supportsSecureBoot) {
-        // Runtime claims support → API must have the methods
-        UT_ASSERT_TRUE(apiSupportsSecureBoot);
-        UT_LOG_INFO("✓ Runtime capability consistent with API version");
-        
-        // Platform must support it
-        UT_ASSERT_TRUE(platformHasSecureBoot);
-        UT_LOG_INFO("✓ Runtime capability consistent with platform");
-    }
-    
-    // Test 3: Attempt secure boot if all layers support it
-    if (apiSupportsSecureBoot && caps.supportsSecureBoot && platformHasSecureBoot) {
-        bool isSecure;
-        status = gContext->bootService->isSecureBootEnabled(&isSecure);
-        UT_ASSERT_TRUE(status.isOk());
-        UT_LOG_INFO("✓ Secure boot query succeeded: %s", 
-                    isSecure ? "ENABLED" : "DISABLED");
-    } else {
-        UT_LOG_INFO("Secure boot not fully supported - test adapted accordingly");
-    }
-    
-    UT_PASS("Boot tested with full version+capability adaptation");
-}
-```
-
----
-
-## HFP Validation
-
-Tests must validate that runtime capabilities respect the maximum capabilities defined in the HAL Feature Profile (HFP).
-
-### HFP Parsing Utility
-
-```cpp
-// Utility function to parse HFP YAML
-#include <yaml-cpp/yaml.h>
-#include <set>
-#include <string>
-
-struct HFPCapabilities {
-    std::set<std::string> supportedFeatures;
-    std::string interfaceVersion;
-};
-
-HFPCapabilities parseBootHFP(const std::string& hfpPath) {
-    HFPCapabilities hfp;
-    
-    YAML::Node config = YAML::LoadFile(hfpPath);
-    YAML::Node bootConfig = config["Boot"];
-    
-    hfp.interfaceVersion = bootConfig["interfaceVersion"].as<std::string>();
-    
-    if (bootConfig["supportedFeatures"]) {
-        for (const auto& feature : bootConfig["supportedFeatures"]) {
-            hfp.supportedFeatures.insert(feature.as<std::string>());
-        }
-    }
-    
-    return hfp;
-}
-```
-
-### HFP Validation Test
-
-```cpp
-// L2 Unit Test: validate runtime capabilities against HFP
-void test_l2_capabilities_match_hfp(void) {
-    UT_LOG_INFO("Validating runtime capabilities against HFP");
-    
-    // Parse HFP file
-    std::string hfpPath = "../hfp-bootreason.yaml";  // Relative to test binary
-    HFPCapabilities hfp = parseBootHFP(hfpPath);
-    
-    UT_LOG_INFO("HFP interface version: %s", hfp.interfaceVersion.c_str());
-    UT_LOG_INFO("HFP supported features:");
-    for (const auto& feature : hfp.supportedFeatures) {
-        UT_LOG_INFO("  - %s", feature.c_str());
-    }
-    
-    // Get runtime capabilities
-    Capabilities caps;
-    auto status = gContext->bootService->getCapabilities(&caps);
-    UT_ASSERT_TRUE(status.isOk());
-    
-    // Build runtime feature set
-    std::set<std::string> runtimeFeatures;
-    if (caps.supportsWatchdog) runtimeFeatures.insert("WATCHDOG");
-    if (caps.supportsSecureBoot) runtimeFeatures.insert("SECURE_BOOT");
-    if (caps.supportsBootCount) runtimeFeatures.insert("BOOT_COUNT");
-    if (caps.supportsRebootReason) runtimeFeatures.insert("REBOOT_REASON");
-    
-    UT_LOG_INFO("Runtime capabilities:");
-    for (const auto& feature : runtimeFeatures) {
-        UT_LOG_INFO("  - %s", feature.c_str());
-    }
-    
-    // Validation: runtime_caps ⊆ HFP_max_caps
-    for (const auto& feature : runtimeFeatures) {
-        bool inHFP = hfp.supportedFeatures.count(feature) > 0;
-        UT_ASSERT_TRUE(inHFP);
-        if (inHFP) {
-            UT_LOG_INFO("✓ %s is in HFP", feature.c_str());
-        } else {
-            UT_LOG_ERROR("✗ %s NOT in HFP (violation!)", feature.c_str());
-        }
-    }
-    
-    // Note: HFP may list more features than runtime provides
-    // (runtime is platform-specific subset)
-    if (runtimeFeatures.size() < hfp.supportedFeatures.size()) {
-        UT_LOG_INFO("Runtime provides %zu of %zu HFP features (platform-specific)",
-                    runtimeFeatures.size(), hfp.supportedFeatures.size());
-    }
-    
-    UT_PASS("Runtime capabilities validated against HFP");
-}
-```
-
-**HFP Validation Rules:**
-
-1. **Runtime ⊆ HFP**: Every runtime capability must be in HFP (strict subset)
-2. **Platform ⊆ Runtime**: External profile capabilities ⊆ runtime capabilities
-3. **Version Consistency**: HFP version should match or be compatible with server version
-
----
-
-## Multi-Version Test Execution
-
-The same test binary must validate behavior against different server versions. This ensures the **latest tests** work correctly with **all server versions**.
-
-### Test Execution Matrix
-
-```
-                          Server Version
-                    v1         v2         latest (v3)
-Latest Test     ┌─────────┬─────────┬─────────────┐
-Binary          │ Fallback│ Full v2 │ Full v3     │
-                │ to v1   │ features│ features    │
-                │ APIs    │ + v1    │ + v2 + v1   │
-                └─────────┴─────────┴─────────────┘
-```
-
-### Execution Workflow
-
-```bash
-#!/bin/bash
-# test_all_versions.sh - Run latest tests against all server versions
-
-MODULE="boot"
-TEST_BINARY="./build/boot_tests"
-PROFILE_DIR="../profiles"
-
-echo "Running latest $MODULE tests against all server versions"
-
-# Test 1: Against v1 server
-echo ""
-echo "========================================"
-echo "TEST 1: Latest tests vs v1 server"
-echo "========================================"
-# Start v1 server (or connect to existing v1 service)
-# Run tests - expect fallback behavior
-$TEST_BINARY -p $PROFILE_DIR/platform_minimal.yml
-echo "✓ v1 server tests completed"
-
-# Test 2: Against v2 server
-echo ""
-echo "========================================"
-echo "TEST 2: Latest tests vs v2 server"
-echo "========================================"
-# Start v2 server (or connect to existing v2 service)
-# Run tests - expect full v2 + v1 functionality
-$TEST_BINARY -p $PROFILE_DIR/platform_standard.yml
-echo "✓ v2 server tests completed"
-
-# Test 3: Against latest (development) server
-echo ""
-echo "========================================"
-echo "TEST 3: Latest tests vs latest server"
-echo "========================================"
-# Start latest server
-# Run tests - expect full functionality
-$TEST_BINARY -p $PROFILE_DIR/platform_full.yml
-echo "✓ latest server tests completed"
-
-echo ""
-echo "========================================"
-echo "✅ All multi-version tests passed"
-echo "========================================"
-```
-
-### Expected Behavior by Server Version
-
-**Testing against v1 server:**
-
-- ✓ All v1 API tests pass
-- ⚠ v2+ API tests skip with "requires v2+" message
-- ✓ Fallback tests pass (attempt v2 → fall back to v1)
-- ⚠ v2+ capability tests skip if `platform_caps` includes v2 features
-
-**Testing against v2 server:**
-
-- ✓ All v1 API tests pass (backward compatibility)
-- ✓ All v2 API tests pass
-- ✓ Fallback tests pass (v2 API succeeds, no fallback needed)
-- ✓ v2 capability tests pass if `platform_caps` supports them
-
-**Testing against latest (v3) server:**
-
-- ✓ All v1, v2, v3 API tests pass
-- ✓ All fallback chains work (v3→v2→v1)
-- ✓ Latest capability tests pass
-
----
-
-## Test Suite Organization
-
-Using ut-core's suite and menu system for monolithic L1/L2 test organization.
-
-### Suite Structure
-
-```cpp
-// boot_tests.cpp - Single monolithic test binary
-#include <ut.h>
-
-// Forward declarations
-void boot_test_suite_init(void);
-void boot_test_suite_cleanup(void);
-
-// L1 Function Tests
-void test_l1_initialize(void);
-void test_l1_get_state(void);
-void test_l1_reboot(void);
-void test_l1_reboot_with_fallback(void);
-void test_l1_secure_boot_version_conditional(void);
-
-// L2 Unit Tests
-void test_l2_capabilities_basic(void);
-void test_l2_capabilities_match_hfp(void);
-void test_l2_watchdog_with_platform_caps(void);
-void test_l2_boot_with_full_adaptation(void);
-void test_l2_boot_details_progressive(void);
-
-int main(int argc, char** argv) {
-    // Initialize ut-core
+int main(int argc, char** argv)
+{
     UT_init(argc, argv);
-    
-    // Register L1 suite
-    UT_add_suite("Boot L1 Function Tests", boot_test_suite_init, boot_test_suite_cleanup);
-    UT_add_test("Initialize", test_l1_initialize);
-    UT_add_test("Get State", test_l1_get_state);
-    UT_add_test("Reboot", test_l1_reboot);
-    UT_add_test("Reboot with Version Fallback", test_l1_reboot_with_fallback);
-    UT_add_test("Secure Boot (v2+)", test_l1_secure_boot_version_conditional);
-    
-    // Register L2 suite
-    UT_add_suite("Boot L2 Unit Tests", NULL, NULL);
-    UT_add_test("Capabilities Basic", test_l2_capabilities_basic);
-    UT_add_test("Capabilities vs HFP", test_l2_capabilities_match_hfp);
-    UT_add_test("Watchdog with Platform Caps", test_l2_watchdog_with_platform_caps);
-    UT_add_test("Full Version+Capability Adaptation", test_l2_boot_with_full_adaptation);
-    UT_add_test("Boot Details Progressive Enhancement", test_l2_boot_details_progressive);
-    
-    // Run tests (supports ut-core menu, selective execution)
+
+    UT_test_suite_t* pSuiteL1 = UT_add_suite("[L1 bootreason]",
+                                             bootreason_suite_init,
+                                             bootreason_suite_clean);
+    UT_add_test(pSuiteL1, "getBootCause", test_l1_get_boot_cause);
+    UT_add_test(pSuiteL1, "getBootCount (0.2.1.0+)", test_l1_boot_count);
+
+    UT_test_suite_t* pSuiteL2 = UT_add_suite("[L2 bootreason]",
+                                             bootreason_suite_init,
+                                             bootreason_suite_clean);
+    UT_add_test(pSuiteL2, "capabilities within HFP",
+                test_l2_capabilities_within_hfp);
+
     return UT_run_tests();
 }
 ```
 
-### ut-core Test Execution
+The profile is supplied with the `-p` switch; ut-core's modes (`-c` console,
+`-a` automated xUnit XML, `-b` basic) select how results are reported:
 
 ```bash
-# Run all tests
-./boot_tests -p platform_profile.yml
-
-# Run specific suite via menu (interactive)
-./boot_tests -p platform_profile.yml
-# Menu appears:
-# 1. Boot L1 Function Tests
-# 2. Boot L2 Unit Tests
-# 3. Run All
-# Select: 1
-
-# Run specific test
-./boot_tests -p platform_profile.yml -t "Reboot with Version Fallback"
-
-# Run all L1 tests
-./boot_tests -p platform_profile.yml -s "Boot L1 Function Tests"
-
-# Verbose logging
-./boot_tests -p platform_profile.yml -l 5
+./bootreason_tests -p platform_profile.yml -a
 ```
 
-**ut-core Benefits:**
+### Multi-version execution
 
-- Menu-driven test selection
-- YAML profile integration via `-p` flag
-- Suite-level initialization (version discovery once)
-- Selective test execution without recompilation
+The same binary runs unmodified against every server generation:
 
----
+| Server | Expected suite behaviour |
+| --- | --- |
+| Older frozen release | Base tests pass; gated tests skip with a version message; fallback tests exercise the older path |
+| Current frozen release | Everything passes; fallback tests take the new path |
+| Development build (`"notfrozen"`) | Runs only with `allowUnfrozen` — dev images opt in; a production image reporting `"notfrozen"` is a deployment error |
 
-## External YAML Profile Schema
+## Building a suite
 
-Platform-specific capabilities passed to tests via external YAML profiles (location hidden/platform-specific).
-
-### Profile Structure
-
-```yaml
-# platform_full.yml - Full-featured platform
-boot:
-  platform_caps:
-    supportsWatchdog: true
-    supportsSecureBoot: true
-    supportsBootCount: true
-    supportsRebootReason: true
-    hardwareWatchdogPresent: true
-
-videodecoder:
-  platform_caps:
-    maxDecoders: 4
-    supportsHEVC: true
-    supports4K: true
-    supportsHDR: true
-
-# Other module capabilities...
-```
-
-```yaml
-# platform_minimal.yml - Minimal platform
-boot:
-  platform_caps:
-    supportsWatchdog: false
-    supportsSecureBoot: false
-    supportsBootCount: false
-    supportsRebootReason: false
-    hardwareWatchdogPresent: false
-
-videodecoder:
-  platform_caps:
-    maxDecoders: 1
-    supportsHEVC: false
-    supports4K: false
-    supportsHDR: false
-```
-
-### Profile Access in Tests
-
-```cpp
-// Read boolean capability
-bool hasWatchdog = UT_KVP_PROFILE_GET_BOOL("boot/platform_caps/supportsWatchdog");
-
-// Read integer capability
-int maxDecoders = UT_KVP_PROFILE_GET_UINT32("videodecoder/platform_caps/maxDecoders");
-
-// Read string capability
-const char* hwRevision = UT_KVP_PROFILE_GET_STRING("boot/platform_caps/hardwareRevision");
-
-// Check if key exists
-if (UT_KVP_PROFILE_HAS_KEY("boot/platform_caps/supportsSecureBoot")) {
-    // Key present - read value
-}
-```
-
-**Profile Guidelines:**
-
-- Profiles specify `platform_caps` (hardware), NOT interface version
-- Interface version discovered at runtime via `getInterfaceVersion()`
-- Tests combine both: `if (version >= 2 && platform_caps.supports*) { test }`
-- Profiles are **external** (not in VTS repo), passed at test execution
-
----
-
-## Architecture Decisions
-
-### Decision 1: Single vs Multiple Test Binaries
-
-**Option A: Single Test Binary (Recommended)**
-
-**Pros:**
-
-- Simpler build: one CMakeLists.txt, one binary
-- Easier maintenance: all tests in one place
-- Matches monolithic suite philosophy
-- ut-core menu handles test organization
-- Tests adapt to any server version automatically
-- Validates "latest tests work with all versions" requirement
-
-**Cons:**
-
-- Links against latest library version only
-- Cannot test frozen version behavior independently
-- Larger binary size (all test code included)
-
-**Option B: Multiple Test Binaries (per version)**
-
-**Pros:**
-
-- Each binary links to specific library version (bootreason-v1-cpp, boot-v2-cpp)
-- Can test exact frozen version behavior
-- Aligns with freeze_interface.sh workflow (snapshot tests with interface)
-- Smaller per-binary size
-
-**Cons:**
-
-- More complex build: separate CMakeLists.txt per version
-- Duplicate test code across binaries
-- Must maintain multiple binaries as versions grow
-- Harder to ensure test consistency across versions
-
-**Recommendation:** Use **Option A (Single Binary)** for most modules:
-
-- Latest tests validate backward compatibility (primary goal)
-- Single binary easier to maintain
-- Version adaptation in test code matches production client patterns
-- ut-core menu provides organization without binary proliferation
-
-Use **Option B** only if:
-
-- Need to validate exact frozen version snapshot behavior
-- Module has complex version-specific state machines
-- Regression testing requires bit-exact version behavior
-
----
-
-### Decision 2: Capability Test Organization
-
-**Option A: Separate L2 Suite for Capabilities**
-
-**Pros:**
-
-- Clean separation: L1 tests functions, L2 tests capabilities
-- Easy to run capability validation independently
-- Matches documentation structure (L1 vs L2)
-- Clear test organization in ut-core menu
-
-**Cons:**
-
-- Capability checks separated from functional tests
-- May duplicate version checks across suites
-- Deeper menu hierarchy
-
-**Option B: Integrate Capabilities into L1 Functional Tests**
-
-**Pros:**
-
-- Test function + capability together (more realistic)
-- Single version check per test function
-- Shallower menu structure
-- Less test code duplication
-
-**Cons:**
-
-- Mixes functional and capability validation concerns
-- Harder to run "capability validation only"
-- L1/L2 distinction less clear
-
-**Recommendation:** Use **Option A (Separate L2 Suite)** for clarity:
-
-- Matches RDK testing level definitions
-- Easier to validate HFP independently
-- Can run capability validation without functional tests
-- Better aligns with documentation structure
-
-Compromise: Include basic capability checks in L1 tests, comprehensive validation in L2:
-
-```cpp
-// L1: Basic capability check before using feature
-void test_l1_watchdog_basic(void) {
-    Capabilities caps;
-    gContext->bootService->getCapabilities(&caps);
-    
-    if (!caps.supportsWatchdog) {
-        UT_LOG_INFO("Watchdog not supported - test skipped");
-        return;
-    }
-    
-    // Test watchdog functional behavior
-    // ...
-}
-
-// L2: Comprehensive capability validation
-void test_l2_capabilities_match_hfp(void) {
-    // Parse HFP, validate runtime ⊆ HFP, check platform consistency
-    // ...
-}
-```
-
----
-
-## CMake Build Integration
-
-### Linking Test Binary
+Link the test binary against the interface library it targets — the
+development build or a pinned frozen snapshot — plus the binder SDK libraries:
 
 ```cmake
-# bootreason/current/tests/CMakeLists.txt
-cmake_minimum_required(VERSION 3.10)
-project(boot_tests)
-
-# Find ut-core
-find_package(ut-core REQUIRED)
-
-# Find YAML parser for HFP validation
-find_package(yaml-cpp REQUIRED)
-
-# Test binary
-add_executable(boot_tests
-    boot_tests.cpp
-    hfp_parser.cpp
-)
-
-# Link against latest Boot library (for version adaptation testing)
-target_link_libraries(boot_tests
-    bootreason-vcurrent-cpp  # Latest version from stable/generated/bootreason/current/
-    ut-core::ut-core
-    yaml-cpp
-    binder_ndk
-)
-
-# Include AIDL generated headers
-target_include_directories(boot_tests PRIVATE
-    ${CMAKE_SOURCE_DIR}/stable/generated/bootreason/current/include
-)
-
-# Install test binary
-install(TARGETS boot_tests
-    RUNTIME DESTINATION bin/tests
-)
-
-# Copy HFP file for runtime access
-install(FILES
-    ${CMAKE_SOURCE_DIR}/bootreason/current/hfp-bootreason.yaml
-    DESTINATION share/tests/boot
+target_link_libraries(bootreason_tests
+    bootreason-vcurrent-cpp        # or bootreason-v0.2.0.0-cpp, pinned
+    # ... binder SDK + ut-core libraries per the test project's build
 )
 ```
 
-### Building Tests
+Generated headers are module-local (`<module>/current/include/`); snapshot
+libraries are versioned so multiple releases coexist on one image. See
+[Third-Party Build Integration](build_integration.md) for consuming the
+interface libraries from an external build, and the ut-core wiki (in this
+site's Testing section) for the suite build template.
 
-```bash
-# From workspace root
-cd bootreason/current/tests
-mkdir build && cd build
+## Rules for a suite author
 
-# Configure
-cmake ..
-
-# Build
-make
-
-# Run tests (with external profile)
-./boot_tests -p /path/to/platform_profile.yml
-```
-
----
-
-## Complete Example
-
-### Full Test Implementation
-
-See example implementation structure:
-
-```text
-boot/
-├── current/
-│   ├── hfp-bootreason.yaml
-│   ├── com/rdk/hal/boot/
-│   │   ├── IBootReason.aidl
-│   │   └── Capabilities.aidl
-│   └── tests/
-│       ├── CMakeLists.txt
-│       ├── boot_tests.cpp          # Main test binary (shown above)
-│       ├── hfp_parser.cpp          # HFP parsing utility
-│       ├── hfp_parser.h
-│       └── README.md               # Test execution guide
-└── 1/  # Frozen v1 (optional: snapshot tests)
-
-│   └── tests/
-│       ├── CMakeLists.txt
-│       ├── boot_tests.cpp          # Main test binary (shown above)
-│       ├── hfp_parser.cpp          # HFP parsing utility
-│       ├── hfp_parser.h
-│       └── README.md               # Test execution guide
-└── 1/  # Frozen v1 (optional: snapshot tests)
-```
-
-### Sample Test Output
-
-```text
-$ ./boot_tests -p platform_full.yml
-
-================================================
-UT Framework - Boot HAL Tests
-================================================
-Server version: v2
-Server hash: abc123...
-Platform profile: platform_full.yml
-
-Test Suite: Boot L1 Function Tests
-  [PASS] Initialize
-  [PASS] Get State
-  [PASS] Reboot
-  [PASS] Reboot with Version Fallback (used v2 API)
-  [PASS] Secure Boot (v2+)
-
-Test Suite: Boot L2 Unit Tests
-  [PASS] Capabilities Basic
-  [PASS] Capabilities vs HFP (5/6 features supported)
-  [PASS] Watchdog with Platform Caps
-  [PASS] Full Version+Capability Adaptation
-  [PASS] Boot Details Progressive Enhancement (v2 API)
-
-================================================
-Results: 10 tests, 10 passed, 0 failed, 0 skipped
-================================================
-```
-
----
-
-## Best Practices
-
-### Version Discovery
-
-- **Do**: Check version once at suite level, cache result
-- **Don't**: Query version in every test (slow, redundant)
-- **Do**: Log server version at test start for debugging
-- **Don't**: Hard-code version assumptions in test logic
-
-### Fallback Implementation
-
-- **Do**: Mirror production client fallback patterns
-- **Don't**: Create test-only fallback mechanisms
-- **Do**: Validate both success paths (latest API) and fallback paths (older API)
-- **Don't**: Only test "happy path" with latest server
-
-### Capability Testing
-
-- **Do**: Validate `platform_caps ⊆ runtime_caps ⊆ HFP_max_caps`
-- **Don't**: Assume runtime capabilities match HFP exactly
-- **Do**: Test with multiple profile variants (minimal, standard, full)
-- **Don't**: Hard-code capability assumptions
-
-### Test Adaptation
-
-- **Do**: Skip tests gracefully when version doesn't support feature
-- **Don't**: Fail tests due to version limitations
-- **Do**: Log clear messages when tests skip/adapt
-- **Don't**: Silently skip without explanation
-
-### ut-core Integration
-
-- **Do**: Use `UT_KVP_PROFILE_GET_*()` for all platform-specific data
-- **Don't**: Hard-code platform capabilities in test code
-- **Do**: Leverage ut-core menu system for test organization
-- **Don't**: Create separate binaries for test selection
-
----
-
-## Summary
-
-This testing strategy enables **version-adaptive L1/L2 testing** using ut-core framework:
-
-1. **Suite-level version discovery**: Cache version once, use throughout tests
-2. **Client-like fallback**: Tests mirror production client patterns (try v2 → fallback v1)
-3. **Test adaptation**: Combine version checks + platform capabilities for intelligent test behavior
-4. **HFP validation**: Validate capability consistency across API/runtime/platform layers
-5. **Multi-version execution**: Same test binary validates all server versions
-6. **Single monolithic binary**: ut-core menu provides organization without binary proliferation
-7. **External profiles**: Platform-specific capabilities passed via YAML at runtime
-
-**Key Validation:** Latest test suite works correctly with v1, v2, and latest servers through graceful adaptation.
-
----
+- Link against a specific interface version (or `current`); gate
+  newer-release calls with `hc::atLeast()` naming the additive release that
+  introduced them — never probe with raw calls when a gate can answer.
+- Discover the server version once at suite init through `halcompat`; skip
+  gated tests on older servers, don't fail them.
+- Distinguish the two fallback signals: `UNKNOWN_TRANSACTION` means the
+  method doesn't exist (older server); `EX_UNSUPPORTED_OPERATION` means the
+  feature is unavailable on this platform.
+- Treat `getCapabilities()` as the runtime source of truth for optional
+  features, and assert `getCapabilities() ⊆ HFP` as the conformance
+  invariant.
+- Keep platform and device wiring in the test project's per-platform YAML —
+  not hard-coded in the test, and not conflated with the HFP.
+- Treat `"notfrozen"` from a production image as a deployment error;
+  development images opt in with `allowUnfrozen`.
 
 ## References
 
-- [Versioning Guide](versioning-guide.md) - Interface versioning strategy and compatibility rules
-- [Client Patterns](client-patterns.md) - Version discovery and graceful degradation patterns (referenced throughout)
-- [Migration Guide](migration-guide.md) - Upgrading between interface versions
-- [ut-core Documentation](https://github.com/rdkcentral/ut-core/wiki) - Testing framework reference
-- [HFP Files](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/bootreason/current/hfp-bootreason.yaml) - HAL Feature Profile examples
+- [AIDL Versioning Guide](versioning-guide.md) — version encoding, era rules,
+  `halcompat` compatibility checks
+- [Client Usage of Stable AIDL](../whitepapers/client_usage_of_stable_aidl.md)
+  — the fallback signal contract in full
+- [Third-Party Build Integration](build_integration.md) — linking the
+  interface libraries from an external build
+- [References](../references/references.md) — RAFT / `python_raft`, ut-raft,
+  and ut-core repositories and wikis
+- HFP source — `*/current/hfp-*.yaml` in this repository
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 31 December 2025
-**Applies To**: RDK HALIF AIDL v1.0+
-
+**Applies to:** `rdk-halif-aidl`, all components.
