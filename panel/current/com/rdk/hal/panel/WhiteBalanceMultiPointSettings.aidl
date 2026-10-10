@@ -18,14 +18,23 @@
  */
 package com.rdk.hal.panel;
 
+import com.rdk.hal.panel.ColourTemperature;
+
 /** 
- *  @brief     Display panel multi-point white balance settings.
+ *  @brief     Display panel multi-point white balance entry.
+ *             Holds the per-channel arrays for a multi-point white balance calibration entry.
+ *             Used as the value type for PQParameter.MULTI_POINT_WB in set/get/getDefault/getCapabilities operations.
  *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
  */
  
 @VintfStability
 parcelable WhiteBalanceMultiPointSettings
 {
+	/**
+	 * Colour temperature profile this white balance setting applies to.
+	 */
+	ColourTemperature colourTemperature;
+
 	/* TODO: validate against SoC vendor implementations */
 	int[] r;
 	int[] g;

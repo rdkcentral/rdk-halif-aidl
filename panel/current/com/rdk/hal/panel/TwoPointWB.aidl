@@ -17,29 +17,39 @@
  * limitations under the License.
  */
 package com.rdk.hal.panel;
-import com.rdk.hal.videodecoder.DynamicRange;
-import com.rdk.hal.AVSource;
 
-/** 
- *  @brief     Picture mode configuration.
+import com.rdk.hal.panel.ColourTemperature;
+import com.rdk.hal.panel.TwoPointWBColour;
+
+/**
+ *  @brief     2-point white balance entry.
+ *             Holds the gain and offset for a 2-point white balance calibration entry.
+ *             Used as the value type for PQParameter.TWO_POINT_WB in set/get/getDefault/getCapabilities operations.
  *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
  */
- 
+
 @VintfStability
-parcelable PictureModeConfiguration
+parcelable TwoPointWB
 {
-	/**
-	 * The picture mode.
-	 */
-	String pictureMode;
+    /**
+     * Colour temperature profile this white balance entry applies to.
+     */
+    ColourTemperature colourTemperature;
 
-	/**
-	 * The dynamic range.
-	 */
-	DynamicRange dynamicRange;
+    /**
+     * White balance colour channel this entry applies to.
+     */
+    TwoPointWBColour twoPointWBColour;
 
-	/**
-	 * The AV source.
-	 */
-	AVSource source;
+    /**
+     * White balance gain value.
+     * Valid range is 0 to 2047.
+     */
+    int gain;
+
+    /**
+     * White balance offset value.
+     * Valid range is -1024 to 1023.
+     */
+    int offset;
 }
