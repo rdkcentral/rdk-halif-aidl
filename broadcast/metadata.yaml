@@ -23,7 +23,7 @@
 component: broadcast
 version: 0.1.0.0
 status: AMBER
-description: "Broadcast tuner and RF frontend interface"
+description: "Broadcast Frontend, Lnb, Demux interfaces"
 type: OEM
 
 # lifecycle - 14+5 review cycle dates                                    [pr_cycle.sh]
@@ -39,9 +39,13 @@ lifecycle:
 scope:
   - Frontend resource management for broadcast signal reception and tuning
   - Multiple frontend type support with type-specific capabilities
-  - State management (CLOSED -> OPENING -> READY) for frontend operation
+  - LNB Control for DVB-S
   - Tuning operations through controller interface
-  - Tuning and state change event delivery to registered listeners
+  - Tune status and signal information observed by client polling; no listener or callback interface is provided
+  - The Demux abstracts the acquisition of data
+  - Support for software writing to the demux to support the usage of network tuners and DVR
+  - Support for tunnelled Audio/Video/Clock filters
+  - Support for power control of CaSlots (e.g. CiCams)
 
 # notes - Tracking metadata                                              [manual]
 #   priority      - Numeric priority (lower = higher)
@@ -50,17 +54,13 @@ scope:
 #   risk          - Risk notes (appears as watch item on dashboard)
 #   owners        - Responsible architecture teams
 notes:
-  priority: 5
-  status_detail: "Not integrated into the AIDL build - blocked on FMQ (#494)"
-  action: "Blocked: needs the android.hardware.common.fmq AIDL package in the binder SDK (linux_binder_idl#18); then add broadcast/current/interface.yaml - see #494."
-  risk: "broadcast has no interface.yaml and is excluded from the build; SoftwareSink/SoftwareSource use FMQ which the binder SDK does not yet ship."
-  owners: "Vendor_Layer_Team + Broadcast_Team"
+  status_detail: "Extended for DVB-T/C/S and ATSC 1.0 (PR #258); review feedback being applied"
+  action: "Populate hfp-broadcast.yaml and complete the design doc (HAL.BROADCAST.n requirements). Flip to GREEN after Architecture sign-off."
+  risk: "Breaking changes in flight - client token added to five acquiring calls, SignalInfoValue union reordered, symbol-rate capabilities moved to DvbC/DvbSCapabilities. Not safe to implement against until merged."
+  owners: "Broadcast_Team"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
-    Architecture: pending
-    Product_Architecture: pending
-    Broadcast_Team: pending
-    Vendor_Layer_Team: pending
-
+  Architecture: pending
+  Broadcast_Team: reviewed
