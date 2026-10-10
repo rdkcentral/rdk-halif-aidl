@@ -1,0 +1,8 @@
+# A top-level pin to current alongside a released dependent. hdmicec@0.1.0.0
+# imports common@0.2.0.0, so the plan carries common@current (the pin) AND
+# common@0.2.0.0 (the import); the pin does not rewrite the snapshot's contract.
+default: current
+
+components:
+  common: current
+  hdmicec: 0.1.0.0

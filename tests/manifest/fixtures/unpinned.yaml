@@ -1,0 +1,5 @@
+# A component absent from the map resolves to `default:`.
+default: 0.1.0.0
+
+components:
+  hdmicec:

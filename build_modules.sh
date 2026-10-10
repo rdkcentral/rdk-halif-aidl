@@ -22,16 +22,18 @@
 # *
 #** ******************************************************************************
 
-# Production build script for HAL modules
+# Host build script for HAL modules.
 #
-# This script compiles HAL libraries from pre-generated C++ code.
-# It does NOT run AIDL generation - code must already exist in stable/generated/
+# Configures the root CMake build for a selection of (component, version)
+# nodes, builds it and installs it into out/target. The root build resolves
+# dependencies itself, generates current/ bindings at build time and compiles
+# released snapshots from their committed bindings.
 #
 # Usage:
 #   ./build_modules.sh [module|command] [options]
 #
 # Examples:
-#   ./build_modules.sh all              # Build all modules
+#   ./build_modules.sh all              # Build all modules at current
 #   ./build_modules.sh boot             # Build boot module only
 #   ./build_modules.sh all --clean      # Clean build
 #   ./build_modules.sh clean            # Remove out/ directory
@@ -39,15 +41,16 @@
 
 # Show help if no arguments or help requested
 if [[ $# -eq 0 ]] || [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]] || [[ "${1:-}" == "--h" ]]; then
-    cat << 'EOF'
+    cat << 'EOF2'
 Usage: ./build_modules.sh [module|command] [options]
 
-Build HAL module libraries from pre-generated C++ code (Stage 3 only).
+Build HAL module libraries with the root CMake build and install them into
+out/target.
 
 Arguments:
   module     Module to build (default: all)
-             - "all"  : Build all modules
-             - <name> : Build specific module (e.g., boot, videodecoder)
+             - "all"  : Build every component at current
+             - <name> : Build one component, plus the dependencies it imports
 
 Commands:
   manifest   Build the component set from versions_released.yaml (each at
@@ -57,31 +60,32 @@ Commands:
   cleanall   Remove out/ and build/ directories
 
 Options:
-  --clean            Clean build directory before building
-  --version <ver>    Version to build (default: current)
-  --sdk-dir <path>   Binder SDK location (default: out/target)
-  --build-dir <path> CMake build directory (default: build/current)
-  --jobs <N>         Number of parallel build jobs (default: nproc)
-  --help, -h         Show this help message
+  --clean                 Clean build directory before building
+  --version <ver>         Version to build (default: current)
+  --library-type <type>   SHARED (default), STATIC or BOTH, for every component
+  --sdk-dir <path>        Binder SDK location (default: out/target)
+  --build-dir <path>      CMake build directory (default: build/<selection>)
+  --jobs <N>              Number of parallel build jobs (default: nproc)
+  --help, -h              Show this help message
 
 Description:
-  This script performs Stage 3 of the build process:
-  - Compiles pre-generated C++ from stable/generated/
+  - Resolves the selection and every dependency it imports, at the version
+    each interface.yaml pins (CMakeModules/HalifResolve.cmake)
+  - Generates current/ bindings into <module>/current/{include,src} at build
+    time (needs the AIDL toolchain from ./build_binder.sh); released
+    snapshots compile from their committed include/ and src/
   - Links against Binder SDK (must exist from Stage 1 or Yocto)
-  - Outputs libraries to out/target/lib/rdk-halif-aidl/
-  - Outputs headers to out/build/include/
-
-  ⚠️  This is a Stage 3 (compilation only) script.
-  For full workflow, use ./build_interfaces.sh <module>
+  - Installs libraries to out/target/lib/rdk-halif-aidl/
+  - Installs headers to out/target/include/rdk-halif-aidl/<module>/<version>/
+  - Installs CMake package configs and pkg-config files for each module
 
 Prerequisites:
   1. Binder SDK must exist:
      - Development: Run ./build_interfaces.sh <module> (stages SDK)
      - Production: Provided by Yocto's linux-binder recipe
 
-  2. Generated C++ must exist in stable/generated/
-     - Development: Run ./build_interfaces.sh <module> (generates code)
-     - Production: Pre-generated code is committed to repo
+  2. For current/ modules, the AIDL toolchain must exist:
+     - Development: ./build_binder.sh clones it into build-tools/
 
 Build Configuration:
   Use environment variables to control compiler and flags:
@@ -106,7 +110,12 @@ Examples:
   ./build_modules.sh all                              # Build all modules
   ./build_modules.sh boot                             # Build boot only
   ./build_modules.sh boot --version current           # Explicit version
-  ./build_modules.sh boot --version v1                # Build frozen version
+  ./build_modules.sh boot --version 0.1.0.0           # Build a released version
+  ./build_modules.sh boot --library-type STATIC       # .a instead of .so
+
+  # Manifests
+  ./build_modules.sh manifest                         # versions_released.yaml
+  ./build_modules.sh manifest --file versions_current.yaml
 
   # Clean builds
   ./build_modules.sh clean                            # Remove out/ directory
@@ -119,18 +128,22 @@ Examples:
   # Parallel builds
   ./build_modules.sh all --jobs 8                     # 8 parallel jobs
 
+  # Regenerate a released snapshot's committed bindings
+  cmake --build build/<module>-<version> --target halif-generate
+
   # Yocto / cross builds do NOT use this script — invoke CMake directly.
   # See docs/standards/build_integration.md.
 
 Output:
-  Libraries: out/target/lib/rdk-halif-aidl/lib<module>-vcurrent-cpp.so
-  Headers:   out/build/include/<module>/
+  Libraries: out/target/lib/rdk-halif-aidl/lib<module>-v<version>-cpp.so
+  Headers:   out/target/include/rdk-halif-aidl/<module>/<version>/
+  Packages:  out/target/lib/rdk-halif-aidl/cmake/, out/target/lib/rdk-halif-aidl/pkgconfig/
 
 For Development Workflow:
-  To modify AIDL interfaces and regenerate C++ code, use:
+  To stage the SDK and build in one step, use:
     ./build_interfaces.sh <module>
 
-EOF
+EOF2
     exit 0
 fi
 
@@ -260,11 +273,11 @@ if [[ "$skip_preflight" -eq 0 ]]; then
     preflight_check "$@"
 fi
 
+
 #######################################################################
 # Parse Arguments
 #######################################################################
 
-# Check for clean commands first
 case "${1:-}" in
     clean)
         echo "🧹 Cleaning out/ directory..."
@@ -298,165 +311,25 @@ case "${1:-}" in
         # Execute build_binder.sh
         exec "$BUILD_BINDER_SCRIPT" "${@:2}"
         ;;
-    manifest)
-        # Build the component set described by the manifest, each at the
-        # version the manifest pins it to. Default file is the released
-        # cohort (`versions_released.yaml`); dev users override with
-        # `--file versions_current.yaml` to build the in-development tree.
-        MANIFEST="$ROOT_DIR/versions_released.yaml"
-        if [[ "${2:-}" == "--file" && -n "${3:-}" ]]; then
-            MANIFEST="$3"
-        fi
-        if [[ ! -f "$MANIFEST" ]]; then
-            echo "❌ ERROR: version manifest not found: $MANIFEST"
-            exit 1
-        fi
-
-        DEFAULT_VER="$(grep -E '^default:' "$MANIFEST" | head -1 | awk '{print $2}')"
-        DEFAULT_VER="${DEFAULT_VER:-current}"
-
-        # Read "<component> <version>" pairs from the components: map.
-        mapfile -t MANIFEST_PAIRS < <(awk -v def="$DEFAULT_VER" '
-            /^components:/      { inmap=1; next }
-            inmap && /^[^[:space:]#]/ { inmap=0 }
-            inmap && /^[[:space:]]+[A-Za-z0-9_]+:/ {
-                gsub(/:/, " "); print $1, ($2 == "" ? def : $2)
-            }' "$MANIFEST")
-
-        if [[ ${#MANIFEST_PAIRS[@]} -eq 0 ]]; then
-            echo "❌ ERROR: no components listed in $MANIFEST"
-            exit 1
-        fi
-
-        echo "📋 Version manifest: $MANIFEST"
-        echo "   ${#MANIFEST_PAIRS[@]} component(s), default version '${DEFAULT_VER}'"
-
-        # Topologically sort MANIFEST_PAIRS so each component's
-        # dependencies build (and install their headers/libs into
-        # out/target) before the component itself does. Without this,
-        # alphabetical iteration breaks any importer of `common`:
-        # audiodecoder builds before common, can't find common's
-        # PropertyValue.h etc. (#583). The dep graph comes from each
-        # component's <version>/interface.yaml `imports:` list (or
-        # <comp>/current/interface.yaml when version=current).
-        mapfile -t MANIFEST_PAIRS < <(python3 - "$ROOT_DIR" "${MANIFEST_PAIRS[@]}" <<'PYEOF'
-import os, re, sys
-root = sys.argv[1]
-pairs = [arg.split(None, 1) for arg in sys.argv[2:]]
-version_of = {comp: ver for comp, ver in pairs}
-
-def imports_of(comp, ver):
-    """Parse <comp>/<ver>/interface.yaml `imports:` -> [dep names]."""
-    iface = os.path.join(root, comp, ver, "interface.yaml")
-    if not os.path.isfile(iface):
-        return []
-    deps = []
-    in_block = False
-    with open(iface) as f:
-        for line in f:
-            if re.match(r'^  imports:\s*$', line):
-                in_block = True
-                continue
-            if in_block and re.match(r'^  [^ ]', line):
-                break  # next top-level key
-            if in_block:
-                m = re.match(r'^    - ([A-Za-z0-9_]+)(?:@.*)?\s*$', line)
-                if m:
-                    deps.append(m.group(1))
-    return deps
-
-# Build graph + Kahn's BFS toposort.
-graph = {comp: set(imports_of(comp, ver)) for comp, ver in pairs}
-# Restrict edges to deps that are actually in the manifest — external
-# refs (e.g. android.hardware.common.fmq) shouldn't block toposort.
-for comp, deps in graph.items():
-    graph[comp] = {d for d in deps if d in version_of}
-
-indegree = {comp: 0 for comp in graph}
-for comp, deps in graph.items():
-    for d in deps:
-        indegree[comp] += 1
-
-# Reverse map: dep -> [importers]
-importers = {comp: [] for comp in graph}
-for comp, deps in graph.items():
-    for d in deps:
-        importers[d].append(comp)
-
-ready = sorted(c for c, deg in indegree.items() if deg == 0)
-ordered = []
-while ready:
-    c = ready.pop(0)
-    ordered.append(c)
-    for imp in sorted(importers[c]):
-        indegree[imp] -= 1
-        if indegree[imp] == 0:
-            ready.append(imp)
-    ready.sort()
-
-if len(ordered) != len(graph):
-    sys.stderr.write("toposort: cycle detected; falling back to alphabetical\n")
-    ordered = sorted(graph.keys())
-
-for c in ordered:
-    print(f"{c} {version_of[c]}")
-PYEOF
-        )
-
-        # Echo the resolved build order so the operator can see what's
-        # being built when and why.
-        echo "   build order (toposort by imports): $(awk '{print $1}' <<< "$(printf '%s\n' "${MANIFEST_PAIRS[@]}")" | tr '\n' ' ')"
-        echo ""
-
-        # Pre-stage each component's include/ tree into
-        # out/build/include/<comp>/<ver>/include/ so downstream snapshot
-        # builds can satisfy their `${HALIF_INCLUDE_DIR}/<dep>/<ver>/include`
-        # references. The root CMakeLists copy step only handles
-        # */current/include (it pre-dates module-local snapshots), so for
-        # snapshot manifest builds we need this here. Pure copy, no build —
-        # snapshot include/ trees are committed pre-generated C++.
-        echo "   pre-staging snapshot headers into out/build/include/ ..."
-        INC_STAGE="$ROOT_DIR/out/build/include"
-        for pair in "${MANIFEST_PAIRS[@]}"; do
-            read -r comp ver <<< "$pair"
-            src_inc="$ROOT_DIR/$comp/$ver/include"
-            [[ -d "$src_inc" ]] || continue
-            dst_inc="$INC_STAGE/$comp/$ver/include"
-            mkdir -p "$dst_inc"
-            cp -RT "$src_inc" "$dst_inc"
-        done
-        echo ""
-
-        # Components pinned to 'current' build together in one pass; any
-        # component pinned to a released version is built individually.
-        ALL_CURRENT=true
-        for pair in "${MANIFEST_PAIRS[@]}"; do
-            read -r _ ver <<< "$pair"
-            [[ "$ver" != "current" ]] && ALL_CURRENT=false
-        done
-
-        rc=0
-        if $ALL_CURRENT; then
-            "$0" all || rc=$?
-        else
-            for pair in "${MANIFEST_PAIRS[@]}"; do
-                read -r comp ver <<< "$pair"
-                echo "── building ${comp} (version ${ver}) ──"
-                "$0" "$comp" --version "$ver" || rc=$?
-            done
-        fi
-        exit $rc
-        ;;
 esac
 
 MODULE="${1:-all}"
 VERSION="current"
+MANIFEST=""
+LIBRARY_TYPE="SHARED"
 SDK_DIR=""
 BUILD_DIR=""
-JOBS=$(nproc 2>/dev/null || echo 4)
+JOBS=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 CLEAN=false
 
 shift 1 2>/dev/null || true
+
+if [[ "$MODULE" == "manifest" ]]; then
+    # Build the component set described by the manifest, each at the version
+    # the manifest pins it to. Default file is the released cohort; dev users
+    # pass --file versions_current.yaml to build the in-development tree.
+    MANIFEST="$ROOT_DIR/versions_released.yaml"
+fi
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -466,6 +339,15 @@ while [[ $# -gt 0 ]]; do
             ;;
         --version)
             VERSION="$2"
+            shift 2
+            ;;
+        --file)
+            [[ "$MODULE" == "manifest" ]] || { echo "❌ --file applies to 'manifest' only"; exit 1; }
+            MANIFEST="$2"
+            shift 2
+            ;;
+        --library-type)
+            LIBRARY_TYPE="$2"
             shift 2
             ;;
         --sdk-dir)
@@ -494,7 +376,13 @@ if [[ -z "$SDK_DIR" ]]; then
 fi
 
 if [[ -z "$BUILD_DIR" ]]; then
-    BUILD_DIR="$ROOT_DIR/build/current"
+    if [[ "$MODULE" == "manifest" ]]; then
+        BUILD_DIR="$ROOT_DIR/build/manifest-$(basename "$MANIFEST" .yaml)"
+    elif [[ "$MODULE" == "all" ]]; then
+        BUILD_DIR="$ROOT_DIR/build/$VERSION"
+    else
+        BUILD_DIR="$ROOT_DIR/build/$MODULE-$VERSION"
+    fi
 fi
 
 #######################################################################
@@ -502,10 +390,15 @@ fi
 #######################################################################
 
 echo "========================================="
-echo "  HAL Module Build (Stage 3)"
+echo "  HAL Module Build"
 echo "========================================="
+if [[ "$MODULE" == "manifest" ]]; then
+echo "Manifest:   $MANIFEST"
+else
 echo "Module:     $MODULE"
 echo "Version:    $VERSION"
+fi
+echo "Library:    $LIBRARY_TYPE"
 echo "SDK:        $SDK_DIR"
 echo "Build Dir:  $BUILD_DIR"
 echo "Jobs:       $JOBS"
@@ -541,15 +434,29 @@ fi
 
 echo "✓ Binder SDK found at $SDK_DIR"
 
-# Module-local layout: each component holds its own AIDL and generates its
-# own C++ into <module>/current/{include,src}. The CMake configure step
-# generates any missing sources, so there is no central stable/generated
-# tree to pre-check here.
 MODULE_COUNT=$(ls -d "$ROOT_DIR"/*/current/interface.yaml 2>/dev/null | wc -l)
 echo "✓ Found $MODULE_COUNT component interface(s)"
 
-# Validate specific module exists if not building all
-if [[ "$MODULE" != "all" ]]; then
+# What to build: a manifest, every component at one version, or one component.
+# The root build adds every dependency the selection imports.
+if [[ "$MODULE" == "manifest" ]]; then
+    if [[ ! -f "$MANIFEST" ]]; then
+        echo "❌ ERROR: version manifest not found: $MANIFEST"
+        exit 1
+    fi
+    VERSIONS_FILE="$MANIFEST"
+    COMPONENTS=""
+elif [[ "$MODULE" == "all" ]]; then
+    if [[ "$VERSION" != "current" ]]; then
+        echo "❌ ERROR: --version $VERSION cannot be combined with 'all'."
+        echo "   Specify a component, e.g. './build_modules.sh boot --version $VERSION'"
+        echo "   or use './build_modules.sh manifest' for mixed-version builds."
+        exit 1
+    fi
+    VERSIONS_FILE=""
+    COMPONENTS="$(ls -d "$ROOT_DIR"/*/current/interface.yaml \
+        | sed -E 's#.*/([^/]+)/current/interface.yaml#\1:current#' | sort | paste -sd ';' -)"
+else
     if [[ ! -f "$ROOT_DIR/$MODULE/current/interface.yaml" ]]; then
         echo "❌ ERROR: Component '$MODULE' not found ($ROOT_DIR/$MODULE/current/interface.yaml)"
         echo ""
@@ -559,125 +466,16 @@ if [[ "$MODULE" != "all" ]]; then
         echo ""
         exit 1
     fi
-    echo "✓ Component '$MODULE' exists"
-fi
-
-#######################################################################
-# Snapshot build (released version)
-#
-# A non-'current' version selects a released snapshot at <MODULE>/<VERSION>/.
-# The snapshot carries committed pre-generated C++ and a standalone
-# CMakeLists.txt written by release.sh - we just compile and install it.
-# No toolchain involvement, no code generation.
-#######################################################################
-
-# Stage a snapshot's committed include/ tree into out/build/include so that
-# dependents resolve their ${HALIF_INCLUDE_DIR}/<comp>/<ver>/include refs.
-# Pure copy — snapshot include/ trees are committed pre-generated C++.
-stage_snapshot_headers() {
-    local comp="$1" ver="$2"
-    local src_inc="$ROOT_DIR/$comp/$ver/include"
-    [[ -d "$src_inc" ]] || return 0
-    local dst_inc="$ROOT_DIR/out/build/include/$comp/$ver/include"
-    mkdir -p "$dst_inc" || return 1
-    # Fail fast: a silent cp failure leaves dependents to fail later with
-    # missing headers, obscuring the root cause.
-    cp -RT "$src_inc" "$dst_inc" || return 1
-}
-
-# Extract the "<comp> <ver>" dependency pairs a snapshot declares via its
-# ${HALIF_INCLUDE_DIR}/<comp>/<ver>/include references in CMakeLists.txt.
-snapshot_deps() {
-    local cmake_file="$1"
-    # `|| true`: grep exits 1 when a snapshot declares no HAL deps — that is a
-    # normal "empty list", not an error, so don't let it trip `set -o pipefail`.
-    { grep -oE 'HALIF_INCLUDE_DIR\}/[a-z][a-z0-9_]*/[0-9][0-9.]*/include' "$cmake_file" 2>/dev/null || true; } \
-        | sed -E 's#HALIF_INCLUDE_DIR\}/([^/]+)/([^/]+)/include#\1 \2#' \
-        | sort -u
-}
-
-if [[ "$VERSION" != "current" ]]; then
-    if [[ "$MODULE" == "all" ]]; then
-        echo "❌ ERROR: --version $VERSION cannot be combined with 'all'."
-        echo "   Specify a component, e.g. './build_modules.sh boot --version $VERSION'"
-        echo "   or use './build_modules.sh manifest' for mixed-version builds."
-        exit 1
-    fi
-    SNAPSHOT_DIR="$ROOT_DIR/$MODULE/$VERSION"
-    if [[ ! -f "$SNAPSHOT_DIR/CMakeLists.txt" ]]; then
-        echo "❌ ERROR: snapshot $MODULE/$VERSION not found at $SNAPSHOT_DIR."
+    if [[ "$VERSION" != "current" && ! -f "$ROOT_DIR/$MODULE/$VERSION/interface.yaml" ]]; then
+        echo "❌ ERROR: $MODULE/$VERSION is not a released snapshot."
         echo "   Snapshots are produced by the cohort-wide './release.sh' run;"
         echo "   verify the version number is one that has been released."
         exit 1
     fi
-
-    SNAPSHOT_BUILD_DIR="$ROOT_DIR/build/$MODULE/$VERSION"
-    if [[ "$CLEAN" == true ]]; then
-        echo "🧹 Cleaning snapshot build directory: $SNAPSHOT_BUILD_DIR"
-        rm -rf "$SNAPSHOT_BUILD_DIR"
-    fi
-
-    echo ""
-    echo "📸 Snapshot build: $MODULE/$VERSION"
-    echo "    source: $SNAPSHOT_DIR"
-    echo "    build:  $SNAPSHOT_BUILD_DIR"
-    echo ""
-
-    # Resolve and build this snapshot's dependency closure first, so its
-    # dependency headers (out/build/include) and libraries
-    # (out/target/lib/rdk-halif-aidl) are present before we configure. Each dependency
-    # is itself a snapshot build, so transitive deps resolve recursively, and
-    # an already-built dependency is skipped. Without this, a standalone
-    # snapshot build on a fresh checkout fails to find a dependency header
-    # such as com/rdk/hal/PropertyValue.h (#638).
-    while read -r dep dep_ver; do
-        [[ -n "$dep" ]] || continue
-        dep_so="$ROOT_DIR/out/target/lib/rdk-halif-aidl/lib${dep}-v${dep_ver}-cpp.so"
-        dep_inc="$ROOT_DIR/out/build/include/$dep/$dep_ver/include"
-        if [[ -f "$dep_so" && -d "$dep_inc" ]]; then
-            echo "   ✓ dependency ${dep}/${dep_ver} already built"
-            continue
-        fi
-        echo "   ↳ building dependency ${dep}/${dep_ver} ..."
-        "$0" "$dep" --version "$dep_ver" --jobs "$JOBS" --sdk-dir "$SDK_DIR" || {
-            echo "❌ Failed to build dependency ${dep}/${dep_ver} for $MODULE/$VERSION"; exit 1; }
-    done < <(snapshot_deps "$SNAPSHOT_DIR/CMakeLists.txt")
-    echo ""
-
-    # The local dev layout splits binder headers (out/build/include/binder_sdk)
-    # from libs (out/target/lib/binder); BINDER_SDK_INCLUDE_DIR lets the
-    # snapshot CMakeLists find the headers. Yocto stages a flat SDK so
-    # BINDER_SDK_DIR alone resolves both.
-    cmake -S "$SNAPSHOT_DIR" -B "$SNAPSHOT_BUILD_DIR" \
-        -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
-        -DBINDER_SDK_DIR="$SDK_DIR" \
-        -DBINDER_SDK_INCLUDE_DIR="$ROOT_DIR/out/build" \
-        -DHALIF_LIB_DIR="$ROOT_DIR/out/target/lib/rdk-halif-aidl" \
-        -DHALIF_INCLUDE_DIR="$ROOT_DIR/out/build/include" \
-        -DCMAKE_INSTALL_PREFIX="$ROOT_DIR/out/target" || {
-            echo "❌ Snapshot CMake configuration failed"; exit 1; }
-
-    cmake --build "$SNAPSHOT_BUILD_DIR" -j"$JOBS" || {
-        echo "❌ Snapshot build failed"; exit 1; }
-
-    cmake --install "$SNAPSHOT_BUILD_DIR" >/dev/null || {
-        echo "❌ Snapshot install failed"; exit 1; }
-
-    SO_PATH="$ROOT_DIR/out/target/lib/rdk-halif-aidl/lib${MODULE}-v${VERSION}-cpp.so"
-    if [[ -f "$SO_PATH" ]]; then
-        echo "✅ Snapshot built and installed:"
-        echo "    $SO_PATH"
-    else
-        echo "❌ Snapshot library not found at $SO_PATH"; exit 1
-    fi
-
-    # Stage this snapshot's headers so a later dependent build resolves them.
-    stage_snapshot_headers "$MODULE" "$VERSION" \
-        || { echo "❌ Failed to stage snapshot headers for $MODULE/$VERSION"; exit 1; }
-    exit 0
+    echo "✓ Component '$MODULE' exists"
+    VERSIONS_FILE=""
+    COMPONENTS="$MODULE:$VERSION"
 fi
-
-echo ""
 
 #######################################################################
 # Clean if requested
@@ -694,16 +492,25 @@ fi
 # CMake Configure
 #######################################################################
 
+echo ""
 echo "⚙️  Configuring CMake..."
 echo ""
 
-cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
+# The local dev layout splits binder headers (out/build/include/binder_sdk)
+# from libs (out/target/lib/binder); Yocto stages a flat SDK, where
+# BINDER_SDK_DIR alone resolves both.
+TOOLCHAIN_ROOT="${BINDER_TOOLCHAIN_ROOT:-${BINDER_SOURCE_DIR:-$ROOT_DIR/build-tools/linux_binder_idl}}"
+if ! cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
     -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
-    -DINTERFACE_TARGET="$MODULE" \
-    -DAIDL_SRC_VERSION="$VERSION" \
-    -DBINDER_SDK_DIR="$SDK_DIR"
-
-if [[ $? -ne 0 ]]; then
+    -DHALIF_VERSIONS_FILE="$VERSIONS_FILE" \
+    -DHALIF_COMPONENTS="$COMPONENTS" \
+    -DHALIF_LIBRARY_TYPE="$LIBRARY_TYPE" \
+    -DBINDER_SDK_DIR="$SDK_DIR" \
+    -DBINDER_SDK_INCLUDE_DIR="$ROOT_DIR/out/build" \
+    -DHOST_AIDL_DIR="$TOOLCHAIN_ROOT/host" \
+    -DCMAKE_INSTALL_PREFIX="$ROOT_DIR/out/target" \
+    -DCMAKE_INSTALL_LIBDIR="lib/rdk-halif-aidl" \
+    -DCMAKE_INSTALL_INCLUDEDIR="include"; then
     echo ""
     echo "❌ CMake configuration failed"
     exit 1
@@ -714,17 +521,21 @@ echo "✓ CMake configuration complete"
 echo ""
 
 #######################################################################
-# Build
+# Build and install
 #######################################################################
 
 echo "🔨 Building HAL modules..."
 echo ""
 
-cmake --build "$BUILD_DIR" -j"$JOBS"
-
-if [[ $? -ne 0 ]]; then
+if ! cmake --build "$BUILD_DIR" -j"$JOBS"; then
     echo ""
     echo "❌ Build failed"
+    exit 1
+fi
+
+if ! cmake --install "$BUILD_DIR" >/dev/null; then
+    echo ""
+    echo "❌ Install failed"
     exit 1
 fi
 
@@ -738,30 +549,32 @@ echo ""
 
 OUT_DIR="$ROOT_DIR/out/target"
 LIB_DIR="$OUT_DIR/lib/rdk-halif-aidl"
-INC_DIR="$ROOT_DIR/out/build/include"
+INC_DIR="$OUT_DIR/include/rdk-halif-aidl"
 
 echo "========================================="
 echo "  Build Summary"
 echo "========================================="
 echo ""
+echo "Plan: $(paste -sd ',' "$BUILD_DIR/halif_plan.txt" | sed 's/,/, /g')"
+echo ""
 
 # Count built libraries
 if [[ -d "$LIB_DIR" ]]; then
-    LIB_COUNT=$(find "$LIB_DIR" -name "*.so" 2>/dev/null | wc -l)
-    echo "Libraries: $LIB_COUNT built"
+    LIB_COUNT=$(find "$LIB_DIR" -maxdepth 1 \( -name "*.so" -o -name "*.a" \) 2>/dev/null | wc -l)
+    echo "Libraries: $LIB_COUNT installed"
     echo "  Location: $LIB_DIR"
     echo ""
     if [[ $LIB_COUNT -gt 0 ]] && [[ $LIB_COUNT -le 10 ]]; then
-        echo "  Built libraries:"
-        find "$LIB_DIR" -name "*.so" -exec basename {} \; | sort | sed 's/^/    - /'
+        echo "  Installed libraries:"
+        find "$LIB_DIR" -maxdepth 1 \( -name "*.so" -o -name "*.a" \) -exec basename {} \; | sort | sed 's/^/    - /'
         echo ""
     fi
 fi
 
-# Count staged headers
+# Count installed headers
 if [[ -d "$INC_DIR" ]]; then
     HEADER_COUNT=$(find "$INC_DIR" -name "*.h" 2>/dev/null | wc -l)
-    echo "Headers: $HEADER_COUNT staged"
+    echo "Headers: $HEADER_COUNT installed"
     echo "  Location: $INC_DIR"
     echo ""
 fi

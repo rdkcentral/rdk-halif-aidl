@@ -23,8 +23,8 @@
 # Module-local layout (Phase B, #493): each component keeps its AIDL and
 # generated C++ together under <module>/current/. This script:
 #   1. Stages the Binder SDK (Stage 1, via build_binder.sh).
-#   2. Delegates generation + compilation to build_modules.sh, which
-#      regenerates module-local C++ as needed during CMake configure.
+#   2. Delegates generation + compilation to build_modules.sh, whose root
+#      CMake build regenerates module-local C++ at build time.
 # The central stable/ tree is retired; build_modules.sh does the build.
 #
 # Usage:
@@ -84,7 +84,7 @@ Description:
   This script performs a complete build:
   1. Stage 1: Stage Binder SDK from toolchain to out/target/
   2. Stage 2: Generate module-local C++ into <module>/current/{include,src}
-  3. Stage 3: Compile libraries and stage to out/
+  3. Stage 3: Compile libraries and install to out/target/
   Stages 2-3 are delegated to build_modules.sh.
 
   Use 'sdk' or 'sdk-only' command to only perform Stage 1 (SDK staging).
@@ -111,14 +111,14 @@ Examples:
 
 Output Structure:
   <module>/current/
-    include/  src/                      # Generated C++ (module-local, committed)
+    include/  src/                      # Generated C++ (module-local, gitignored)
+  out/build/include/binder_sdk/         # Binder headers (for compilation)
   out/target/
     lib/
       binder/                           # Binder runtime libraries (*.so)
-      halif/                            # HAL interface libraries (*.so)
+      rdk-halif-aidl/                   # HAL interface libraries, cmake/ and pkgconfig/
     include/
-      binder_sdk/                       # Binder headers (for compilation)
-      halif/                            # HAL interface headers
+      rdk-halif-aidl/<module>/<version>/ # HAL interface headers
     .sdk_ready                          # SDK marker file
 
 Workflow:
@@ -285,8 +285,8 @@ mkdir -p "$OUT_DIR"
 # The central stable/ tree is retired: each component generates its C++
 # in place under <module>/current/{include,src}. AIDL update/generation
 # (Stage 2) and compilation (Stage 3) are both handled by
-# build_modules.sh, whose CMake configure step regenerates any missing
-# module-local sources. build_interfaces.sh stays the orchestration
+# build_modules.sh, whose root CMake build regenerates module-local
+# sources at build time. build_interfaces.sh stays the orchestration
 # entry point - it stages the Binder SDK (above) and then delegates.
 #
 # The legacy aidl_ops -u / stable/ machinery is intentionally retained

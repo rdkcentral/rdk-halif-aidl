@@ -134,9 +134,9 @@ refreeze_one() {
     mkdir "${cur}"
 
     # Stage the snapshot's own sources into the current/ slot. Skip the
-    # regenerated trees and the snapshot's cohort-patched CMakeLists —
-    # generation runs with current/'s own (vcurrent) CMakeLists so
-    # dependency lib names and include paths resolve in the dev build.
+    # regenerated trees and the snapshot's own CMakeLists — the root build
+    # generates and compiles current/ from interface.yaml alone, resolving
+    # dependencies at the versions the snapshot's imports pin.
     # NOTE: this function is invoked in an `if` condition, which suppresses
     # errexit for its whole body — every critical command below must carry
     # its own failure handling.
@@ -153,11 +153,6 @@ refreeze_one() {
             return 1
         fi
     done
-    if ! cp "${bak}/CMakeLists.txt" "${cur}/CMakeLists.txt"; then
-        restore_current
-        warn "[${comp}] failed to stage CMakeLists.txt — skipped."
-        return 1
-    fi
 
     # Stamp: contract hash over the snapshot's AIDL (label must be
     # 'latest-version' — anything else fails the generator's integrity
