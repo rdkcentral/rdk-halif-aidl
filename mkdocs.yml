@@ -107,6 +107,7 @@ nav:
     - Composite Input: '!include compositeinput/current/mkdocs.yml'
     - Deep Sleep: '!include deepsleep/current/mkdocs.yml'
     - Device Info: '!include deviceinfo/current/mkdocs.yml'
+    - Far Field Voice: '!include ffv/current/mkdocs.yml'
     - Firmware Update:
       - Current: '!include firmwareupdate/current/mkdocs.yml'
       - 0.2.0.0: '!include firmwareupdate/0.2.0.0/mkdocs.yml'

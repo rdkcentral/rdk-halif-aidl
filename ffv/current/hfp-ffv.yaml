@@ -1,0 +1,43 @@
+
+# *
+# * If not stated otherwise in this file or this component's LICENSE file the
+# * following copyright and licenses apply:
+# *
+# * Copyright 2025 RDK Management
+# *
+# * Licensed under the Apache License, Version 2.0 (the "License");
+# * you may not use this file except in compliance with the License.
+# * You may obtain a copy of the License at
+# *
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing, software
+# * distributed under the License is distributed on an "AS IS" BASIS,
+# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# * See the License for the specific language governing permissions and
+# * limitations under the License.
+# *
+
+# HAL Feature Profile (HFP) - Far Field Voice (FFV) Maximum Configuration Reference
+#  This file establishes the baseline maximum configuration for the Far Field Voice (FFV) component, serving as a worst-case scenario reference for test suite execution.
+#  Platform-specific FFV configurations, tailored to unique hardware and software requirements, are derived from this reference.
+#     During testing, these platform-specific HFP files are used to validate accurate reporting of supported FFV capabilities by the interface.
+#  Each key below has the name of the Capabilities.aidl field it declares, so the HFP and the
+#  value returned by IFarFieldVoice.getCapabilities() can be compared field by field.
+
+ffv:                            # Component object begins (matches directory name)
+  interfaceVersion: current
+
+  # Capabilities.microphoneChannelCount - number of microphone inputs.
+  microphoneChannelCount: 1     # channels
+
+  # Capabilities.channelTypes - audio channel types IFarFieldVoiceController.openChannel() accepts.
+  channelTypes:
+    - KEYWORD
+
+  # Capabilities.supportedListeningModes - ListeningMode values
+  # IFarFieldVoiceController.setListeningMode() accepts.
+  supportedListeningModes:
+    - ACTIVE_LISTEN
+    - KEYWORD_ALERT
+    - POWERED_OFF
