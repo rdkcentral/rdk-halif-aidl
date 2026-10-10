@@ -14,6 +14,7 @@ METADATA_FILES=$(find "$REPO_ROOT" -name "metadata.yaml" -not -path "*/docs/*" -
 
 # Counters
 GREEN_COUNT=0
+GREEN_BREAKING_COUNT=0
 AMBER_COUNT=0
 RED_COUNT=0
 TOTAL=0
@@ -34,6 +35,56 @@ AMBER_SOC_REVIEW_ROWS=""
 AMBER_OEM_REVIEW_ROWS=""
 RED_SOC_REVIEW_ROWS=""
 RED_OEM_REVIEW_ROWS=""
+
+# Open breaking changes, per component, from GitHub.
+#
+# GREEN reads "Interface stable on develop", which is true of develop and says
+# nothing about what is queued against it. A component can be GREEN while a
+# Major Change or CR waits in review, so the dashboard shows an interface as
+# settled on the day it is about to break.
+#
+# This is the one part of the report that is not a pure function of the
+# metadata, so it is optional by construction: no gh, no auth, no network, and
+# the column is simply omitted with a note saying so. release.sh regenerates
+# this report mid-release and must not fail because GitHub is unreachable.
+BREAKING_BY_COMP=""
+BREAKING_AVAILABLE=0
+
+collect_breaking_changes() {
+    command -v gh >/dev/null 2>&1 || return 1
+    gh auth status >/dev/null 2>&1 || return 1
+    local json
+    json=$(gh pr list --repo rdkcentral/rdk-halif-aidl --state open --limit 200 \
+              --json number,labels 2>/dev/null) || return 1
+    [ -n "$json" ] || return 1
+    # component<TAB>#N<TAB>class, one line per (component, breaking PR) pair.
+    BREAKING_BY_COMP=$(printf '%s' "$json" | jq -r '
+        .[]
+        | . as $pr
+        | ([$pr.labels[].name] | map(select(. == "Major Change" or . == "CR"))) as $class
+        | select(($class | length) > 0)
+        | ([$pr.labels[].name] | map(select(startswith("component:")))
+           | map(sub("component:"; ""))) as $comps
+        | $comps[]
+        | "\(.)\t#\($pr.number)\t\(if ($class | index("CR")) then "CR" else "Major" end)"
+    ' 2>/dev/null) || return 1
+    return 0
+}
+
+# Breaking PRs against one component, as a markdown cell.
+breaking_cell() {
+    local comp="$1" cell=""
+    [ "$BREAKING_AVAILABLE" -eq 1 ] || return 0
+    while IFS=$'\t' read -r c num class; do
+        [ "$c" = "$comp" ] || continue
+        cell="${cell}${cell:+<br>}[${num}](https://github.com/rdkcentral/rdk-halif-aidl/pull/${num#\#}) ${class}"
+    done <<< "$BREAKING_BY_COMP"
+    printf '%s' "$cell"
+}
+
+if collect_breaking_changes; then
+    BREAKING_AVAILABLE=1
+fi
 
 # RAG colour indicators
 RAG_GREEN="🟢"
@@ -203,8 +254,15 @@ for f in $METADATA_FILES; do
         # Build row (AMBER/RED use full detail, with lifecycle dates — no Reviews column)
         row="| ${icon} | ${path} | ${version} | ${priority:-—} | ${status_detail:-—} | ${action:-—} | ${review_deadline:-—} | ${target_green:-—} | ${owners:-—} |"
 
-        # Build GREEN row (per-team detail is in the Review Status section)
+        # Build GREEN row (per-team detail is in the Review Status section).
+        # The breaking column is appended only when GitHub was reachable, so
+        # the table shape matches the header emitted below.
         green_row="| ${icon} | ${path} | ${version} | ${description:-—} | ${review_progress} | ${owners:-—} |"
+        breaking=""
+        if [ "$BREAKING_AVAILABLE" -eq 1 ]; then
+            breaking=$(breaking_cell "$path")
+            green_row="| ${icon} | ${path} | ${version} | ${description:-—} | ${review_progress} | ${owners:-—} | ${breaking:-—} |"
+        fi
 
         # Build review detail row with per-team columns
         detail_row="| ${icon} | ${path} | ${review_progress}"
@@ -217,6 +275,7 @@ for f in $METADATA_FILES; do
         case "$status" in
             GREEN)
                 GREEN_COUNT=$((GREEN_COUNT + 1))
+                [ -n "$breaking" ] && GREEN_BREAKING_COUNT=$((GREEN_BREAKING_COUNT + 1))
                 append_row GREEN_SOC_ROWS GREEN_OEM_ROWS GREEN_SHARED_ROWS "$green_row"
                 append_review_row GREEN_SOC_REVIEW_ROWS GREEN_OEM_REVIEW_ROWS "$detail_row"
                 # If component has a risk note, also list it in AMBER as a watch item
@@ -238,6 +297,26 @@ for f in $METADATA_FILES; do
         esac
     done
 done
+
+# GREEN table shape depends on whether the breaking-change lookup ran. When it
+# did not, say so — a silently missing column reads as "nothing is queued".
+if [ "$BREAKING_AVAILABLE" -eq 1 ]; then
+    if [ "$GREEN_BREAKING_COUNT" -gt 0 ]; then
+        BREAKING_NOTE="> ${GREEN_BREAKING_COUNT} GREEN component(s) have an open \`Major Change\` or \`CR\` against them. GREEN describes \`develop\` today, not what is queued — see the **Open breaking changes** column."
+    else
+        BREAKING_NOTE="> No GREEN component has an open \`Major Change\` or \`CR\` against it."
+    fi
+else
+    BREAKING_NOTE="> **Open breaking changes not checked** — GitHub was unreachable when this report was generated, so the column is omitted. GREEN here describes \`develop\` only."
+fi
+
+if [ "$BREAKING_AVAILABLE" -eq 1 ]; then
+    GREEN_TABLE_HEADER="| | Component | Current Version | Description | Reviews | Owners | Open breaking changes |
+|---|-----------|---------|-------------|---------|--------|-----------------------|"
+else
+    GREEN_TABLE_HEADER="| | Component | Current Version | Description | Reviews | Owners |
+|---|-----------|---------|-------------|---------|--------|"
+fi
 
 # Generate report
 cat > "$OUTPUT" << HEADER
@@ -261,35 +340,34 @@ cat > "$OUTPUT" << HEADER
 | ${RAG_AMBER} AMBER | **${AMBER_COUNT}** | Under Active Ingestion — Will enter sprint review when ready |
 | ${RAG_RED} RED | **${RED_COUNT}** | Not Started / Blocked — Strategy or definition required |
 
+${BREAKING_NOTE}
+
 ---
 
 ## ${RAG_GREEN} GREEN — Reviewed & Approved
 
 ### SOC Components
 
-| | Component | Current Version | Description | Reviews | Owners |
-|---|-----------|---------|-------------|---------|--------|
+${GREEN_TABLE_HEADER}
 HEADER
 
 echo -e "$GREEN_SOC_ROWS" >> "$OUTPUT"
 
-cat >> "$OUTPUT" << 'GREEN_OEM'
+cat >> "$OUTPUT" << GREEN_OEM
 
 ### OEM Components
 
-| | Component | Current Version | Description | Reviews | Owners |
-|---|-----------|---------|-------------|---------|--------|
+${GREEN_TABLE_HEADER}
 GREEN_OEM
 
 echo -e "$GREEN_OEM_ROWS" >> "$OUTPUT"
 
 if [ -n "$GREEN_SHARED_ROWS" ]; then
-cat >> "$OUTPUT" << 'GREEN_SHARED'
+cat >> "$OUTPUT" << GREEN_SHARED
 
 ### Shared
 
-| | Component | Current Version | Description | Reviews | Owners |
-|---|-----------|---------|-------------|---------|--------|
+${GREEN_TABLE_HEADER}
 GREEN_SHARED
 echo -e "$GREEN_SHARED_ROWS" >> "$OUTPUT"
 fi
