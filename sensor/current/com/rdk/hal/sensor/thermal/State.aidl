@@ -20,30 +20,52 @@
 /**
  * @file State.aidl
  * @brief High-level current thermal state for quick health checks.
+ *
+ * @details
+ * Each thermal sensor has its own state. Thresholds named below are that
+ * sensor's HFP `triggers` values.
  */
 package com.rdk.hal.sensor.thermal;
 
 @VintfStability
 enum State {
     /**
-     * @brief Normal thermal conditions.
+     * @brief Normal thermal conditions; no mitigation active.
+     *
+     * Entered at service start when the sensor is below its
+     * critical_temperature_exceeded_celsius, and from
+     * CRITICAL_TEMPERATURE_EXCEEDED when the sensor falls below its
+     * critical_temperature_recovered_celsius.
      */
     NORMAL = 0,
 
     /**
-    * @brief Temperature has exceeded a critical threshold.
-    *  Platform will be in active mitigation if possible.
-    */
+     * @brief Temperature has exceeded a critical threshold.
+     *  Platform will be in active mitigation if possible.
+     *
+     * Entered from NORMAL when the sensor reaches its
+     * critical_temperature_exceeded_celsius, and at service start when the
+     * sensor is at or above its critical_temperature_exceeded_celsius and
+     * below its entering_critical_shutdown_celsius.
+     */
     CRITICAL_TEMPERATURE_EXCEEDED = 1,
 
     /**
-    * @brief Temperature has recovered from a critical event.
-    *  Platform will return to normal state
-    */
+     * @brief Temperature has recovered from a critical event.
+     *
+     * @deprecated Deprecated since 2026-09-25. The HAL does not enter this
+     * state: CRITICAL_TEMPERATURE_EXCEEDED returns directly to NORMAL.
+     * Reason: recovery timing is product thermal policy, not interface state.
+     */
     CRITICAL_TEMPERATURE_RECOVERED = 2,
 
     /**
      * @brief Shutdown is imminent due to critical thermal breach.
+     *
+     * Entered from NORMAL or CRITICAL_TEMPERATURE_EXCEEDED when the sensor
+     * reaches its entering_critical_shutdown_celsius, or at service start
+     * when the sensor is already at or above it. Terminal: no transition leaves
+     * this state.
      *
      * The HAL thermal policy service initiates the shutdown autonomously.
      * Clients receiving this event via IThermalEventListener should
