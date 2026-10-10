@@ -1,0 +1,47 @@
+name: "Interface Effect — sync one ticket"
+
+# A change-class label moved on an issue or PR: push it to the project field,
+# and on to the PR's linked issues. See scripts/project_interface_effect.py.
+
+permissions:
+  contents: read
+
+# Issue events only, and deliberately so. Syncing a pull request in real time
+# needs `pull_request_target`, which runs both the workflow and the checkout
+# from the pull request's *base* branch - and anyone with push access can open a
+# pull request whose base is a branch they control, which would put
+# PROJECTS_TOKEN in front of code nobody reviewed. Gating on the base ref does
+# not help: the base branch's own copy of this file is what runs, `if:` and all.
+# A label change on a pull request is picked up by the reconcile sweep instead,
+# within fifteen minutes.
+on:
+  issues:
+    types: [opened, reopened, labeled, unlabeled]
+
+concurrency:
+  # One run at a time per ticket: two label edits in quick succession must not
+  # race each other into the project field.
+  group: interface-effect-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: "Sync Interface Effect"
+    runs-on: ubuntu-latest
+    # PROJECTS_TOKEN is a PAT (or App token) with `project` scope: the built-in
+    # GITHUB_TOKEN cannot read or write organisation projects.
+    if: ${{ github.event.repository.full_name == 'rdkcentral/rdk-halif-aidl' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Sync the ticket"
+        env:
+          GH_TOKEN: ${{ secrets.PROJECTS_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "::warning::PROJECTS_TOKEN is not set — Interface Effect sync skipped"
+            exit 0
+          fi
+          python3 scripts/project_interface_effect.py sync-item \
+            --number "${{ github.event.issue.number }}"
