@@ -45,6 +45,9 @@ import com.rdk.hal.PropertyValue;
 @VintfStability
 interface IAudioDecoder
 {
+	/** Used to indicate a returned time value is not valid and should not be used **/
+	const long UNDEFINED_TIME = -1L;
+
     /** Audio Decoder resource ID type */
     @VintfStability
     parcelable Id {
