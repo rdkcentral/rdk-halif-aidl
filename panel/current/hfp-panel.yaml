@@ -39,7 +39,7 @@ panel:                  # Component object begins
     - SATURATION
     - HUE
     - MANUAL_BACKLIGHT
-    - GAMMA
+    - SDR_GAMMA
     - COLOR_TEMPERATURE
     - DIMMING_MODE
     - DIMMING_LEVEL
@@ -91,186 +91,18 @@ panel:                  # Component object begins
     - 165
     - 240
   pictureModeCapabilities: &pqContexts # PictureModeCapabilities
-    - Entertainment: # pictureMode
-        - SDR: # videoFormat
-            supportedAVSources: # AVSource
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-              - COMPOSITE_1
-        - HLG:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - HDR10:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - DOLBY_VISION:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-    - Dynamic:
-        - SDR:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-              - COMPOSITE_1
-        - HLG:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - HDR10:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - DOLBY_VISION:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-    - Dynamic2:
-        - SDR:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-              - COMPOSITE_1
-        - HLG:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - HDR10:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - DOLBY_VISION:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-    - Sports:
-        - SDR:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-              - COMPOSITE_1
-        - HLG:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - HDR10:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - DOLBY_VISION:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-    - Movie:
-        - SDR:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-              - COMPOSITE_1
-        - HLG:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - HDR10:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - DOLBY_VISION:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-    - Expert:
-        - SDR:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-              - COMPOSITE_1
-        - HLG:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - HDR10:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
-        - DOLBY_VISION:
-            supportedAVSources:
-              - IP
-              - TUNER
-              - HDMI_1
-              - HDMI_2
-              - HDMI_3
+    - Entertainment: &allFormats # pictureMode
+        - SDR: &sdrContext # videoFormat
+            supportedAVSources: [IP, TUNER, HDMI_1, HDMI_2, HDMI_3, COMPOSITE_1] # AVSource
+        - HLG: &hdrContext
+            supportedAVSources: [IP, TUNER, HDMI_1, HDMI_2, HDMI_3]
+        - HDR10: *hdrContext
+        - DOLBY_VISION: *hdrContext
+    - Dynamic: *allFormats
+    - Dynamic2: *allFormats
+    - Sports: *allFormats
+    - Movie: *allFormats
+    - Expert: *allFormats
   colorTemperatureNames: #colorTemperatureNames
     - Cool
     - Normal
@@ -310,11 +142,25 @@ panel:                  # Component object begins
         minValue: 0
         maxValue: 100
         pictureModeCapabilities: *pqContexts
-    - GAMMA:
+    - SDR_GAMMA:
         isGlobal: false
-        minValue: 0
-        maxValue: 100
-        pictureModeCapabilities: *pqContexts
+        minValue: 4 # SDRGamma.GAMMA_2_2
+        maxValue: 7 # SDRGamma.BT_1886
+        values: # SDRGamma ordinals supported by this platform
+          - 4 # GAMMA_2_2
+          - 6 # GAMMA_2_4
+          - 7 # BT_1886
+        # SDR only: gamma does not apply to HDR formats, so this parameter
+        # references the *sdrContext anchor in each picture mode instead of
+        # *pqContexts.
+        pictureModeCapabilities:
+          - Entertainment: &sdrOnly
+              - SDR: *sdrContext
+          - Dynamic: *sdrOnly
+          - Dynamic2: *sdrOnly
+          - Sports: *sdrOnly
+          - Movie: *sdrOnly
+          - Expert: *sdrOnly
     - COLOR_TEMPERATURE:
         isGlobal: false
         minValue: 0
