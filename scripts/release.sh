@@ -2941,7 +2941,7 @@ declare -A METADATA_DRIFT=()  # comp -> "metadata_says|discovered_truth"
 #               is doc-only (comment/doc edits are stripped from dumps).
 #   label       the change class the PR labels imply (same detector the
 #               release run uses; none when untouched in the window).
-#   declared    metadata.yaml's version field (authors pre-bump it).
+#   declared    metadata.yaml's version field (written by release.sh at the cut).
 #
 # Gate table (era 0): structural breaking => major bump, additive =>
 # minor, surface-identical respin => bugfix, identical => none. Era >= 1
@@ -3064,17 +3064,22 @@ run_structural_audit() {
         [[ "${COMP_NON_DOC[$comp]:-0}"  -eq 1 ]] && _label="minor"
         [[ "${COMP_BREAKING[$comp]:-0}" -eq 1 ]] && _label="generation"
 
-        # Expected next version from the STRUCTURAL truth.
+        # Expected next version from the STRUCTURAL truth — except a
+        # behaviour-only breaking change (surface unchanged, source changed,
+        # Major label), which only the label can declare and which the
+        # release run bumps by that label.
         _era="${_prev%%.*}"
         _expected="-"
+        _effective="${_structural}"
+        [[ "${_label}" == "generation" && "${_structural}" == "patch" ]] && _effective="generation"
         if [[ "${_prev}" =~ ^0\. ]]; then
-            compute_next_versions "${_prev}" "${_structural}"
+            compute_next_versions "${_prev}" "${_effective}"
             _expected="${NEXT_VERSION}"
         fi
 
         _flags=()
         _notes=()
-        if [[ "${_era}" =~ ^[0-9]+$ ]] && (( _era >= 1 )) && [[ "${_structural}" == "generation" ]]; then
+        if [[ "${_era}" =~ ^[0-9]+$ ]] && (( _era >= 1 )) && [[ "${_effective}" == "generation" ]]; then
             _flags+=("era ${_era} forbids breaking changes — new component required")
         fi
         if [[ "${_structural}" != "${_label}" ]]; then
@@ -3084,17 +3089,25 @@ run_structural_audit() {
                 # AIDL-hash gate) — the audit mirrors that, or repo-wide
                 # docs/chore commits would flag every component.
                 _notes+=("label bump auto-suppressed (AIDL unchanged)")
+            elif [[ "${_label}" == "generation" && "${_structural}" == "patch" ]]; then
+                # The surface is unchanged but the AIDL source changed: a
+                # behaviour change with the signature intact is breaking, and
+                # only the label can declare it (versioning-sop.md).
+                _notes+=("behaviour-only breaking change declared by label (AIDL surface unchanged)")
             elif [[ "${_label}" == "none" && "${_structural}" != "none" ]]; then
                 _flags+=("code is $(_audit_class_display "${_structural}") but no PR label in window")
             else
                 _flags+=("label says $(_audit_class_display "${_label}"), code is $(_audit_class_display "${_structural}")")
             fi
         fi
+        # metadata.yaml version is written by release.sh at the cut (#872):
+        # before the cut it holds the last released version, after the cut
+        # the computed next one. Either is valid; anything else is a hand edit.
         if [[ "${_expected}" != "-" && -n "${_meta_ver}" && "${_meta_ver}" != "${_expected}" ]]; then
-            if [[ "${_meta_ver}" == "${_prev}" && "${_structural}" != "none" ]]; then
-                _flags+=("bump pending — metadata.yaml not yet pre-bumped to ${_expected}")
+            if [[ "${_meta_ver}" == "${_prev}" ]]; then
+                [[ "${_structural}" != "none" ]] && _notes+=("release.sh writes ${_expected} at the cut")
             else
-                _flags+=("metadata.yaml says ${_meta_ver}, structural expects ${_expected}")
+                _flags+=("metadata.yaml says ${_meta_ver}: neither released ${_prev} nor next ${_expected} — hand edit")
             fi
         fi
 
@@ -3257,13 +3270,16 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
         COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}stage: explicit --version ${NEXT_VERSION}"$'\n'
     fi
 
-    # Drift detection: metadata.yaml is *supposed* to be pre-bumped by
-    # PR authors to the planned next version. If it matches the
-    # detector's NEXT_VERSION, no drift — that's the healthy state.
+    # Drift detection: metadata.yaml holds the released version until
+    # release.sh writes the next one. If it matches the detector's
+    # NEXT_VERSION (already written), no drift either.
     # Real drift = metadata.yaml says X but detector computes Y for the
     # next release. Surface that case so the operator sees the
     # mismatch before it's silently healed (overwritten) at apply time.
-    if [[ -n "${metadata_version}" && "${metadata_version}" != "${NEXT_VERSION}" ]]; then
+    # metadata.yaml still holding the released version is the normal state
+    # before the cut (release.sh writes the next one, #872) — not drift.
+    if [[ -n "${metadata_version}" && "${metadata_version}" != "${NEXT_VERSION}" \
+          && "${metadata_version}" != "${current_version}" ]]; then
         METADATA_DRIFT[$comp]="${metadata_version}|${NEXT_VERSION}"
     fi
 
