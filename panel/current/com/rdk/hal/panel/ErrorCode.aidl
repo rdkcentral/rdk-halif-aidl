@@ -16,19 +16,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-/**
- * @file ColourTemperature.aidl
- * @brief Supported colour temperature presets for panel white balance configuration.
- */
 package com.rdk.hal.panel;
 
+/**
+ * @brief Error codes returned by panel control operations.
+ */
 @VintfStability
 @Backing(type="int")
-enum ColourTemperature {
-    WARM = 0,
-    NORMAL = 1,
-    COLD = 2,
-    SUPER_COLD = 3,
-    CUSTOM = 4,
+enum ErrorCode {
+    SUCCESS = 0,
+    INVALID_ARGUMENT = 1,
+    INVALID_STATE = 2,
+    NOT_SUPPORTED = 3,
+    HARDWARE_FAILURE = 4,
 }

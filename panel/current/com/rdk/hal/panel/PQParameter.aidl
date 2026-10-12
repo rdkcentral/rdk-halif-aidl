@@ -43,8 +43,8 @@ enum PQParameter
     SDR_GAMMA = 6,                      //!< Picture parameter  is SDR Gamma
     /**
      * Colour temperature preset.
-     * Value is represented as a ColourTemperature enum value.
-     * Use getPQParameters() / setPQParameters() with the colourTemperatureValue
+     * Value is represented as a platform-defined string.
+     * Use getPQParameters() / setPQParameters() with the stringValue
      * field of PQParameterConfiguration for this parameter.
      */
     COLOR_TEMPERATURE = 7,
@@ -52,9 +52,11 @@ enum PQParameter
     DIMMING_MODE = 8,                   //!< Picture parameter  is Dimming mode
     // 0..n presets defined by vendor (for global or local dimming)
     DIMMING_LEVEL = 9,                	//!< Picture parameter  is Local dimming level
+
     // Boolean
     LOW_LATENCY_STATE = 10,             //!< Picture parameter  is Low latency state
     //
+
     SATURATION_RED = 11,                //!< Picture parameter  is Component saturation red
     //
     SATURATION_BLUE = 12,               //!< Picture parameter  is Component saturation blue
@@ -161,5 +163,31 @@ enum PQParameter
      * A platform offering only on/off declares a maximum of 1.
      */
     DYNAMIC_CONTRAST_LEVEL = 39,
+
+    /**
+     * AI super resolution (AISR).
+     * boolean
+     */
+    AISR = 40,
+
+    /**
+     * Grouped colour-management settings.
+     * Value is represented as a ColourManagementSettings parcelable.
+     * Use getPQParameters() / setPQParameters() with the colourManagementSettings
+     * field of PQParameterConfiguration for this parameter.
+     */
+    COLOUR_MANAGEMENT_SETTINGS = 41,
+
+    /**
+     * Tone mapping enable state.
+     * boolean
+     */
+    TONE_MAPPING = 42,
+
+    /**
+     * Tone mapping level.
+     * integer 0..n (0=off, n=maximum level)
+     */
+    TONE_MAPPING_LEVEL = 43,
 
 }

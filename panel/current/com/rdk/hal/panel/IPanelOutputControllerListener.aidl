@@ -18,10 +18,9 @@
  */
 package com.rdk.hal.panel;
 
-import com.rdk.hal.AVSource;
+import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.PQParameterConfiguration;
-import com.rdk.hal.panel.State;
 import com.rdk.hal.videodecoder.DynamicRange;
 
 @VintfStability
@@ -45,20 +44,5 @@ oneway interface IPanelOutputControllerListener {
      * @param[in] pictureProperty         The PQ picture property that changed.
      * @param[in] picturePropertyValue    The changed value variant.
      */
-    void onPQParameterChanged(in String pictureMode, in AVSource avSource, in DynamicRange dynamicRange, in PQParameter pictureProperty, in PQParameterConfiguration.Value picturePropertyValue);
-
-    /**
-     * @brief Called when the panel output transitions to a new lifecycle state.
-     *
-     * Fired for all transitions driven by start(), stop(), and error
-     * conditions. The panel output State enum covers STOPPED, STARTING,
-     * STARTED, STOPPING, ERROR - controller acquisition (IPanelOutput.open)
-     * and release (IPanelOutput.close) do not produce dedicated state
-     * values; they bracket the STOPPED period during which the controller
-     * exists.
-     *
-     * @param[in] oldState  The state being left.
-     * @param[in] newState  The state being entered.
-     */
-    void onStateChanged(in State oldState, in State newState);
+    void onPQParameterChanged(in String pictureMode, in PanelSource avSource, in DynamicRange dynamicRange, in PQParameter pictureProperty, in PQParameterConfiguration.Value picturePropertyValue);
 }

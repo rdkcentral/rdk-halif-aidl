@@ -2,7 +2,7 @@
  * If not stated otherwise in this file or this component's LICENSE file the
  * following copyright and licenses apply:
  *
- * Copyright 2024 RDK Management
+ * Copyright 2026 RDK Management
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,187 +17,189 @@
  * limitations under the License.
  */
 package com.rdk.hal.panel;
-import com.rdk.hal.panel.ColourTemperature;
-import com.rdk.hal.panel.PQParameter;
+
+import com.rdk.hal.panel.ColourManagementSettings;
 import com.rdk.hal.panel.DolbyVisionCalibrationSettings;
+import com.rdk.hal.panel.PQParameter;
+import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.panel.TwoPointWB;
 import com.rdk.hal.panel.WhiteBalanceMultiPointSettings;
 import com.rdk.hal.videodecoder.DynamicRange;
-import com.rdk.hal.AVSource;
 
-/** 
- *  @brief     Panel PQ parameter capabilities.
- *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
+/**
+ * @brief Panel PQ parameter capabilities.
  */
- 
 @VintfStability
-parcelable PQParameterCapabilities
-{
+parcelable PQParameterCapabilities {
     /**
      * The PQ parameter being referenced in these capabilities.
      */
     PQParameter pqParameter;
 
-	/** 
+    /**
      * Whether this PQ parameter is supported on the platform.
-     * If unsupported (false) all other values below should be ignored.
+     * If unsupported, all other fields in this parcelable should be ignored.
      */
     boolean isSupported;
 
-	/** 
-     * Whether this PQ parameter globally affects the composite image, including
-     * the graphics plane and all video planes, or is limited to video.
-     * e.g. PQParameter.MANUAL_BACKLIGHT will be global if it represents an LED backlight
-     *      but PQParameter.SHARPNESS may only operate on video.
+    /**
+     * Whether this PQ parameter globally affects the composite image,
+     * including the graphics plane and all video planes, or is limited to
+     * video.
      */
     boolean isGlobal;
 
     /**
-     * Scalar integer minimum/maximum bounds used by all PQ parameters except
-     * COLOR_TEMPERATURE, DV_CALIBRATION, TWO_POINT_WB, and MULTI_POINT_WB.
+     * Scalar integer minimum/maximum bounds used by simple integer-backed PQ
+     * parameters.
      */
+    @VintfStability
     parcelable IntBounds {
-        /** The minimum value for this PQ parameter. */
         int minValue;
-        /** The maximum value for this PQ parameter. */
         int maxValue;
+        @nullable int stepValue;
     }
 
     /**
-     * Colour temperature bounds used when pqParameter == PQParameter.COLOR_TEMPERATURE.
+     * Per-dimming-mode level limits used when pqParameter ==
+     * PQParameter.DIMMING_LEVEL.
      */
-    parcelable ColourTemperatureBounds {
-        /** The minimum supported colour temperature preset. */
-        ColourTemperature minValue;
-        /** The maximum supported colour temperature preset. */
-        ColourTemperature maxValue;
+    @VintfStability
+    parcelable DimmingModeLevelCapability {
+        int dimmingMode;
+        boolean isAdjustable;
+        int minValue;
+        int maxValue;
+        @nullable int stepValue;
+        @nullable int[] supportedValues;
     }
 
     /**
-     * Dolby Vision calibration bounds used when pqParameter == PQParameter.DV_CALIBRATION.
-     * minBound and maxBound contain the per-field minimum and maximum calibration values.
+     * Wrapper for the list of per-mode dimming level capabilities.
      */
+    @VintfStability
+    parcelable DimmingLevelCapabilities {
+        DimmingModeLevelCapability[] modes;
+    }
+
+    /**
+     * Bounds used when pqParameter == PQParameter.DV_CALIBRATION.
+     */
+    @VintfStability
     parcelable DvCalibrationBounds {
-        /** Per-field minimum calibration values. */
         DolbyVisionCalibrationSettings minBound;
-        /** Per-field maximum calibration values. */
         DolbyVisionCalibrationSettings maxBound;
     }
 
     /**
-     * 2-point white balance bounds used when pqParameter == PQParameter.TWO_POINT_WB.
-     * minBound and maxBound contain the per-field minimum and maximum WB values.
+     * Bounds used when pqParameter == PQParameter.TWO_POINT_WB.
      */
+    @VintfStability
     parcelable TwoPointWBBounds {
-        /** Per-field minimum 2-point WB values. */
         TwoPointWB minBound;
-        /** Per-field maximum 2-point WB values. */
         TwoPointWB maxBound;
     }
 
     /**
-     * Multi-point white balance bounds used when pqParameter == PQParameter.MULTI_POINT_WB.
-     * minBound and maxBound contain the per-field minimum and maximum WB values.
+     * Bounds used when pqParameter == PQParameter.MULTI_POINT_WB.
      */
+    @VintfStability
     parcelable MultiPointWBBounds {
-        /** Per-field minimum multi-point WB values. */
         WhiteBalanceMultiPointSettings minBound;
-        /** Per-field maximum multi-point WB values. */
         WhiteBalanceMultiPointSettings maxBound;
     }
 
     /**
-     * Union of scalar integer range bounds, Dolby Vision calibration bounds, or
-     * 2-point white balance bounds.
-     * For all PQ parameters except COLOR_TEMPERATURE, DV_CALIBRATION, TWO_POINT_WB, and MULTI_POINT_WB, use `intBounds`.
-     * For PQParameter.COLOR_TEMPERATURE, use `colourTemperatureBounds`.
-     * For PQParameter.DV_CALIBRATION, use `dvCalibrationBounds`.
-     * For PQParameter.TWO_POINT_WB, use `twoPointWBBounds`.
-     * For PQParameter.MULTI_POINT_WB, use `multiPointWBBounds`.
+     * Bounds used when pqParameter == PQParameter.COLOUR_MANAGEMENT_SETTINGS.
      */
+    @VintfStability
+    parcelable ColourManagementSettingsBounds {
+        ColourManagementSettings minBound;
+        ColourManagementSettings maxBound;
+    }
+
+    /**
+     * Bounds information for the PQ parameter.
+     *
+     * Only one bounds shape is valid for a given PQ parameter, so the active
+     * variant identifies how the parameter's legal range is described.
+        * Integer-backed parameters may also carry an optional step value so large
+        * numeric domains can be represented compactly without enumerating every
+        * allowed value.
+     */
+    @VintfStability
     union RangeBound {
         IntBounds intBounds;
-        ColourTemperatureBounds colourTemperatureBounds;
+        DimmingLevelCapabilities dimmingLevelCapabilities;
         DvCalibrationBounds dvCalibrationBounds;
         TwoPointWBBounds twoPointWBBounds;
         MultiPointWBBounds multiPointWBBounds;
+        ColourManagementSettingsBounds colourManagementSettingsBounds;
     }
-    RangeBound rangeBound;
+    @nullable RangeBound rangeBound;
 
     /**
-     * Union of a list of supported integer values, a list of supported Dolby Vision
-     * calibration settings values, or a list of supported 2-point white balance values.
-    * For all PQ parameters except COLOR_TEMPERATURE, DV_CALIBRATION,
-    * TWO_POINT_WB, and MULTI_POINT_WB,
-     * use the `intValues` variant.
-    * For PQParameter.COLOR_TEMPERATURE, use the `colourTemperatureValues` variant.
-     * For PQParameter.DV_CALIBRATION, use the `dvCalibrationValues` variant.
-     * For PQParameter.TWO_POINT_WB, use the `twoPointWBValues` variant.
-    * For PQParameter.MULTI_POINT_WB, use the `multiPointWBValues` variant.
-     * This only needs to be populated if not all values between min and max are supported.
+     * Discrete supported values for the PQ parameter.
+     *
+     * Only one supported-values shape is valid for a given PQ parameter, so the
+        * active variant identifies how explicit preset values are conveyed.
+        * This is intended for finite preset lists rather than large numeric
+        * domains.
      */
+    @VintfStability
     union SupportedValues {
         /**
-         * Specific integer values between minValue and maxValue that are supported.
-         * Empty array means all integer values in [minValue, maxValue] are valid.
+         * Specific integer values supported for simple integer-backed PQ
+         * parameters.
+         * Empty array means every integer allowed by `rangeBound.intBounds` is
+         * valid.
          */
-        @nullable int[] intValues;
+        @nullable int[] supportedIntValues;
 
         /**
-         * Specific colour temperature presets that are supported.
-         * Empty array means any value within the ColourTemperatureBounds range is valid.
+         * Supported string values used when pqParameter ==
+         * PQParameter.COLOR_TEMPERATURE.
          */
-        ColourTemperature[] colourTemperatureValues;
+        @nullable String[] supportedStringValues;
 
         /**
-         * Specific DolbyVisionCalibrationSettings presets that are supported.
-         * Empty array means any value within the DvCalibrationBounds range is valid.
+         * Specific Dolby Vision calibration presets that are supported.
          */
-        DolbyVisionCalibrationSettings[] dvCalibrationValues;
+        @nullable DolbyVisionCalibrationSettings[] supportedDvCalibrationValues;
 
         /**
-         * Specific TwoPointWB presets that are supported.
-         * Empty array means any value within the TwoPointWBBounds range is valid.
+         * Specific 2-point white balance presets that are supported.
          */
-        TwoPointWB[] twoPointWBValues;
+        @nullable TwoPointWB[] supportedTwoPointWBValues;
 
         /**
-         * Specific WhiteBalanceMultiPointSettings presets that are supported.
-         * Empty array means any value within the MultiPointWBBounds range is valid.
+         * Specific multi-point white balance presets that are supported.
          */
-        WhiteBalanceMultiPointSettings[] multiPointWBValues;
+        @nullable WhiteBalanceMultiPointSettings[] supportedMultiPointWBValues;
+
+        /**
+         * Specific grouped colour-management presets that are supported.
+         */
+        @nullable ColourManagementSettings[] supportedColourManagementSettingsValues;
     }
-    SupportedValues supportedValues;
+    @nullable SupportedValues supportedValues;
 
     /**
-     * Nested PQ parameter picture mode capabilities definition.
+     * Nested PQ parameter picture-mode capabilities definition.
      */
-    parcelable PQParamPictureModeCapabilities
-    {
-        /**
-         * The name of the picture mode.
-         */
+    @VintfStability
+    parcelable PQParamPictureModeCapabilities {
         String pictureMode;
 
         /**
-         * Nested PQ parameter dynamic range capabilities definition.
+         * Nested PQ parameter dynamic-range capabilities definition.
          */
-        parcelable PQParamDynamicRangeCapabilities
-        {
-            /**
-             * The dynamic range.
-             */
+        @VintfStability
+        parcelable PQParamDynamicRangeCapabilities {
             DynamicRange dynamicRange;
-
-            /**
-             * The array of AV sources supported by this PQ parameter for the dynamic range and picture mode.
-             */
-            AVSource[] supportedAVSources;
+            PanelSource[] supportedAVSources;
         }
 
-        /**
-         * Array of PQ parameter dynamic range capabilities, for this picture mode.
-         */
         PQParamDynamicRangeCapabilities[] pqParamDynamicRangeCapabilities;
     }
 

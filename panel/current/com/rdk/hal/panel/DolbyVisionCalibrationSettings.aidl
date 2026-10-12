@@ -29,20 +29,25 @@ package com.rdk.hal.panel;
 @VintfStability
 parcelable DolbyVisionCalibrationSettings
 {
+
     /**
-     * Peak luminance in nits.
+    * Target peak white luminance in nits.
+    * Used by the tone-mapping engine to map HDR content to the panel's
+    * maximum brightness capability.
      * Valid range is 0 to 10000.
      */
     double Tmax;
 
     /**
-     * Minimum luminance in nits.
+    * Target minimum black luminance in nits.
+    * Used by the tone-mapping engine when mapping HDR content to the
+    * panel's black-level capability.
      * Valid range is 0 to 10000.
      */
     double Tmin;
 
     /**
-     * Gamma correction value.
+    * Target display EOTF gamma exponent.
      * Valid range is 1.80 to 2.60.
      */
     double Tgamma;
