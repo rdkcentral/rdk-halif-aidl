@@ -27,7 +27,8 @@ package com.rdk.hal.audiomixer;
  * Each property must be documented with:
  *   - Value type (int, boolean, int[], etc.)
  *   - Access (Read-only, Read-write)
- *   - Writeable in states (READY, STARTED, etc.)
+ *   - Writeable in states (output ports are written only in READY,
+ *     through IAudioOutputPortController)
  *   - Value semantics (enum, range, etc.)
  *
  * @author   Luc Kennedy-Lamb
@@ -42,7 +43,7 @@ enum OutputPortProperty {
      * Type: int
      * Range: 0..100
      * Access: Read-write.
-     * Writeable in states: READY, STARTED
+     * Writeable in states: READY
      */
     VOLUME = 0,
 
@@ -51,7 +52,7 @@ enum OutputPortProperty {
      * Type: int
      * Range: Implementation-dependent.
      * Access: Read-write.
-     * Writeable in states: READY, STARTED
+     * Writeable in states: READY
      */
     DELAY_MS = 1,
 
@@ -59,7 +60,7 @@ enum OutputPortProperty {
      * Output port mute state.
      * Type: boolean
      * Access: Read-write.
-     * Writeable in states: READY, STARTED
+     * Writeable in states: READY
      */
     MUTE = 2,
 
@@ -67,7 +68,7 @@ enum OutputPortProperty {
      * Output port enabled/disabled state.
      * Type: boolean
      * Access: Read-write.
-     * Writeable in states: Any except CLOSED
+     * Writeable in states: READY
      */
     ENABLED = 3,
 
@@ -75,7 +76,7 @@ enum OutputPortProperty {
      * Configured output audio format.
      * Type: int (OutputFormat enum value)
      * Access: Read-write.
-     * Writeable in states: READY, ENABLED
+     * Writeable in states: READY
      */
     OUTPUT_FORMAT = 4,
 
@@ -112,7 +113,7 @@ enum OutputPortProperty {
      * 
      * Type: String 
      * Access: Read-write.
-     * Writeable in states: READY, STARTED
+     * Writeable in states: READY
      * 
      * The value must correspond to a platform-defined AQ profile configuration
      *
