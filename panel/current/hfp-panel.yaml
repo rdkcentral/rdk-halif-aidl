@@ -69,6 +69,8 @@ panel:                  # Component object begins
     - LOCAL_DIMMING_ZONES_Y
     - AI_PQ_ENGINE
     - AMBIENT_LIGHT_SENSOR_CONTROL
+    - HDR_TONE_MAPPING_MODE
+    - HDR_TONE_MAPPING_LEVEL
   supportedRefreshRatesHz:
     - 48
     - 49
@@ -459,4 +461,14 @@ panel:                  # Component object begins
         isGlobal: true
         minValue: 0
         maxValue: 1
+        pictureModeCapabilities: *pqContexts
+    - HDR_TONE_MAPPING_MODE:
+        isGlobal: true
+        minValue: 0
+        maxValue: 2
+        pictureModeCapabilities: *pqContexts
+    - HDR_TONE_MAPPING_LEVEL:
+        isGlobal: true
+        minValue: 0
+        maxValue: 3
         pictureModeCapabilities: *pqContexts

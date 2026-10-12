@@ -120,4 +120,28 @@ enum PQParameter
      */
     AMBIENT_LIGHT_SENSOR_CONTROL = 34,
 
+    /**
+     * HDR Tone Mapping mode.
+     * This is a generic, SoC-independent control used for Gen3 Glass platforms where HDR10/HLG
+     * processing is performed by the HDR Tone Mapping implementation, rather than legacy
+     * HDR Mode APIs implemented using the Dolby Core.
+     * integer, with the following values:
+     *   0 = Dynamic HDR Tone Mapping
+     *   1 = Clipping HDR Tone Mapping / HGiG
+     *   2 = Static HDR Tone Mapping
+     */
+    HDR_TONE_MAPPING_MODE = 35,
+
+    /**
+     * HDR Tone Mapping level.
+     * The level is only applicable to HDR_TONE_MAPPING_MODE values which support levels;
+     * a value of 0 (not applicable) is used otherwise.
+     * integer, with the following values:
+     *   0 = Not applicable, no level is associated with the current HDR_TONE_MAPPING_MODE
+     *   1 = Low HDR Tone Mapping level
+     *   2 = Medium HDR Tone Mapping level
+     *   3 = High HDR Tone Mapping level
+     */
+    HDR_TONE_MAPPING_LEVEL = 36,
+
 }

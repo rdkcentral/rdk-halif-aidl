@@ -36,7 +36,7 @@ To declare the static feature set and ensure alignment between implementation an
 The Panel HAL manages both static capabilities and dynamic runtime control of the display panel. It exposes:
 
 * Panel hardware capabilities including resolution, physical size, panel type (LCD, OLED, QLED, Mini-LED), supported picture quality (PQ) parameters, refresh rates, and picture modes.
-* Picture quality configuration, including brightness, contrast, saturation, hue, gamma, local dimming, and noise reduction.
+* Picture quality configuration, including brightness, contrast, saturation, hue, gamma, local dimming, noise reduction, and HDR tone mapping mode/level.
 * White balance calibration interfaces for 2-point and multi-point adjustments.
 * Factory-level persistent storage of calibration data and test modes via `IFactoryPanel`.
 * Dynamic control over panel enable/disable, picture modes, frame rate matching, and display fading.
