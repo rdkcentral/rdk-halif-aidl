@@ -29,41 +29,46 @@ include(HandleModules)
 find_package(Binder REQUIRED)
 find_package(AndroidUtils REQUIRED)
 
-option(BUILD_CURRENT "Build current version of HAL modules" OFF)
-
-if(BUILD_CURRENT)
-    find_program(
-        AIDL_EXECUTABLE
-        NAMES aidl
-        HINTS ENV PATH "${PROJECT_SOURCE_DIR}/build-tools/linux_binder_idl/build-host"
-        DOC "aidl executable location"
-    )
-    if(NOT AIDL_EXECUTABLE)
-        message(FATAL_ERROR "Unable to find the aidl executable")
-    endif()
-endif()
-
 add_subdirectory("CMakeModules")
 
-add_subdirectory("common")
-add_subdirectory("avclock")
-add_subdirectory("compositeinput")
-add_subdirectory("deepsleep")
-add_subdirectory("deviceinfo")
-add_subdirectory("drm")
-add_subdirectory("firmwareupdate")
-add_subdirectory("hdmicec")
-add_subdirectory("hdmiinput")
-add_subdirectory("hdmioutput")
-add_subdirectory("indicator")
-add_subdirectory("sensor")
-add_subdirectory("videodecoder")
-add_subdirectory("bootreason")
-add_subdirectory("audiosink")
-add_subdirectory("audiodecoder")
-add_subdirectory("audiomixer")
-add_subdirectory("avbuffer")
-add_subdirectory("panel")
-add_subdirectory("planecontrol")
-add_subdirectory("videosink")
+if(NOT INTERFACE_VERSION)
+    parse_versions_yaml("${CMAKE_CURRENT_SOURCE_DIR}/versions_current.yaml" COMPONENTS)
+    # find_program(
+    #     AIDL_EXECUTABLE
+    #     NAMES aidl
+    #     HINTS ENV PATH "${PROJECT_SOURCE_DIR}/build-tools/linux_binder_idl/build-host"
+    #     DOC "aidl executable location"
+    # )
+    # if(NOT AIDL_EXECUTABLE)
+    #     message(FATAL_ERROR "Unable to find the aidl executable")
+    # endif()
+else()
+    parse_versions_yaml("${CMAKE_CURRENT_SOURCE_DIR}/versions_released.yaml" COMPONENTS)
+endif()
 
+# Build all current versions
+if(NOT INTERFACE_TARGET AND NOT INTERFACE_VERSION)
+    foreach(_entry IN LISTS COMPONENTS)
+        string(REGEX MATCH "^([^=]+)=(.*)$" _ "${_entry}")
+        add_module_with_dependencies("${CMAKE_MATCH_1}" "${CMAKE_MATCH_2}")
+    endforeach()
+endif()
+
+# Build all released versions
+if(NOT INTERFACE_TARGET AND INTERFACE_VERSION)
+    foreach(_entry IN LISTS COMPONENTS)
+        string(REGEX MATCH "^([^=]+)=(.*)$" _ "${_entry}")
+        add_module_with_dependencies("${CMAKE_MATCH_1}" "${CMAKE_MATCH_2}")
+    endforeach()
+endif()
+
+
+# Build INTERFACE_TARGET current version
+if(INTERFACE_TARGET AND NOT INTERFACE_VERSION)
+    add_module_with_dependencies("${INTERFACE_TARGET}" "current")
+endif()
+
+# Build INTERFACE_TARGET INTERFACE_VERSION
+if(INTERFACE_TARGET AND INTERFACE_VERSION)
+    add_module_with_dependencies("${INTERFACE_TARGET}" "${INTERFACE_VERSION}")
+endif()

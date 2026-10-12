@@ -18,6 +18,76 @@
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
+function(_collect_module_dependency MODULE VERSION VISITED_IN ORDER_IN VISITED_OUT ORDER_OUT)
+    set(_VISITED "${VISITED_IN}")
+    set(_ORDER "${ORDER_IN}")
+    set(_KEY "${MODULE}:${VERSION}")
+
+    if(_KEY IN_LIST _VISITED)
+        set(${VISITED_OUT} "${_VISITED}" PARENT_SCOPE)
+        set(${ORDER_OUT} "${_ORDER}" PARENT_SCOPE)
+        return()
+    endif()
+
+    foreach(_VISITED_KEY IN LISTS _VISITED)
+        string(REGEX MATCH "^([^:]+):(.+)$" _ "${_VISITED_KEY}")
+        if("${CMAKE_MATCH_1}" STREQUAL "${MODULE}" AND NOT "${CMAKE_MATCH_2}" STREQUAL "${VERSION}")
+            message(FATAL_ERROR "Dependency graph requires multiple versions of ${MODULE}: ${CMAKE_MATCH_2} and ${VERSION}")
+        endif()
+    endforeach()
+
+    list(APPEND _VISITED "${_KEY}")
+    resolve_module_dependency("${PROJECT_SOURCE_DIR}/${MODULE}/${VERSION}" _DIRECT_DEPENDENCIES)
+    list(LENGTH _DIRECT_DEPENDENCIES _DEPENDENCY_COUNT)
+    math(EXPR _REMAINDER "${_DEPENDENCY_COUNT} % 2")
+    IF(NOT _REMAINDER EQUAL 0)
+        message(FATAL_ERROR "Dependencies for ${_KEY} must be module/version pairs")
+    endif()
+
+    if(_DEPENDENCY_COUNT GREATER 0)
+        math(EXPR _LAST_INDEX "${_DEPENDENCY_COUNT} - 2")
+        foreach(_INDEX RANGE 0 ${_LAST_INDEX} 2)
+            math(EXPR _VERSION_INDEX "${_INDEX} + 1")
+            list(GET _DIRECT_DEPENDENCIES ${_INDEX} _DEPENDENCY_MODULE)
+            list(GET _DIRECT_DEPENDENCIES ${_VERSION_INDEX} _DEPENDENCY_VERSION)
+            _collect_module_dependency(
+                "${_DEPENDENCY_MODULE}" "${_DEPENDENCY_VERSION}"
+                "${_VISITED}" "${_ORDER}" _VISITED _ORDER
+            )
+        endforeach()
+    endif()
+
+    list(APPEND _ORDER "${_KEY}")
+    set(${VISITED_OUT} "${_VISITED}" PARENT_SCOPE)
+    set(${ORDER_OUT} "${_ORDER}" PARENT_SCOPE)
+endfunction()
+
+function(resolve_module_dependency_order MODULE VERSION OUT_VAR)
+    set(_VISITED "${MODULE}:${VERSION}")
+    set(_ORDER)
+    resolve_module_dependency("${PROJECT_SOURCE_DIR}/${MODULE}/${VERSION}" _DIRECT_DEPENDENCIES)
+    list(LENGTH _DIRECT_DEPENDENCIES _DEPENDENCY_COUNT)
+    math(EXPR _REMAINDER "${_DEPENDENCY_COUNT} % 2")
+    if(NOT _REMAINDER EQUAL 0)
+        message(FATAL_ERROR "Dependencies for ${MODULE}:${VERSION} must be module/version pairs")
+    endif()
+
+    if(_DEPENDENCY_COUNT GREATER 0)
+        math(EXPR _LAST_INDEX "${_DEPENDENCY_COUNT} - 2")
+        foreach(_INDEX RANGE 0 ${_LAST_INDEX} 2)
+            math(EXPR _VERSION_INDEX "${_INDEX} + 1")
+            list(GET _DIRECT_DEPENDENCIES ${_INDEX} _DEPENDENCY_MODULE)
+            list(GET _DIRECT_DEPENDENCIES ${_VERSION_INDEX} _DEPENDENCY_VERSION)
+            _collect_module_dependency(
+                "${_DEPENDENCY_MODULE}" "${_DEPENDENCY_VERSION}"
+                "${_VISITED}" "${_ORDER}" _VISITED _ORDER
+            )
+        endforeach()
+    endif()
+
+    set(${OUT_VAR} "${_ORDER}" PARENT_SCOPE)
+endfunction()
+
 # Uppercase the first letter of the module name.
 function(_capitalize_module_name MODULE_NAME OUT_VAR)
     string(SUBSTRING "${MODULE_NAME}" 0 1 FIRST_LETTER)
@@ -124,16 +194,15 @@ function(add_versioned)
 
     set(TARGET_NAME "${MODULE_NAME}-v${MODULE_VERSION}-cpp")
     add_library("${TARGET_NAME}" STATIC)
-
     # Find relevant files
-    file(GLOB_RECURSE SRCS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
-    file(GLOB_RECURSE HDRS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
+    file(GLOB_RECURSE SRCS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${MODULE_NAME}/${MODULE_VERSION}/src/*.cpp")
+    file(GLOB_RECURSE HDRS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${MODULE_NAME}/${MODULE_VERSION}/include/*.h")
 
     # Set sources
     target_sources("${TARGET_NAME}" PRIVATE ${SRCS} PUBLIC "$<BUILD_INTERFACE:${HDRS}>")
     target_include_directories("${TARGET_NAME}"
         PUBLIC
-            "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+            "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${MODULE_NAME}/${MODULE_VERSION}/include>"
             "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
     )
 
@@ -192,7 +261,7 @@ function(add_current)
         list(APPEND DEPS "${dep}" "current")
     endforeach()
 
-    set(INTERFACE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+    set(INTERFACE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${MODULE_NAME}/current")
 
     file(GLOB_RECURSE SRCS CONFIGURE_DEPENDS "${INTERFACE_DIR}/com/*.aidl")
 
@@ -217,10 +286,110 @@ function(add_current)
         message(FATAL_ERROR "AIDL generation failed for ${MODULE_NAME}; check the aidl output above.")
     endif()
 
-    file(GLOB_RECURSE SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+    file(GLOB_RECURSE SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/${MODULE_NAME}/current/src/*.cpp")
     if(NOT SOURCE_FILES)
-         message(FATAL_ERROR "Source generation completed but no C++ files found in ${CMAKE_CURRENT_SOURCE_DIR}/src")
+         message(FATAL_ERROR "Source generation completed but no C++ files found in ${CMAKE_CURRENT_SOURCE_DIR}/${MODULE_NAME}/current/src")
     endif()
 
     add_versioned(NAME "${MODULE_NAME}" VERSION "current" DEPENDENCIES ${DEPS})
+endfunction()
+
+function(_add_module_target module version)
+    set(_target_name "${module}-v${version}-cpp")
+    if(TARGET "${_target_name}")
+        return()
+    endif()
+
+    resolve_module_dependency("${PROJECT_SOURCE_DIR}/${module}/${version}" _direct_dependencies)
+    if(version STREQUAL "current")
+        if(NOT AIDL_EXECUTABLE)
+            find_program(
+                AIDL_EXECUTABLE
+                NAMES aidl
+                HINTS ENV PATH "${PROJECT_SOURCE_DIR}/build-tools/linux_binder_idl/build-host"
+                DOC "aidl executable location"
+            )
+            if(NOT AIDL_EXECUTABLE)
+                message(FATAL_ERROR "Unable to find the aidl executable required by ${module}:current")
+            endif()
+        endif()
+
+        set(_dependency_modules)
+        list(LENGTH _direct_dependencies _dependency_count)
+        math(EXPR _remainder "${_dependency_count} % 2")
+        if(NOT _remainder EQUAL 0)
+            message(FATAL_ERROR "Dependencies for ${module}:current must be module/version pairs")
+        endif()
+        if(_dependency_count GREATER 0)
+            math(EXPR _last_index "${_dependency_count} - 2")
+            foreach(_index RANGE 0 ${_last_index} 2)
+                math(EXPR _version_index "${_index} + 1")
+                list(GET _direct_dependencies ${_index} _dependency_module)
+                list(GET _direct_dependencies ${_version_index} _dependency_version)
+                if(NOT _dependency_version STREQUAL "current")
+                    message(FATAL_ERROR "Current module ${module} imports non-current dependency ${_dependency_module}@${_dependency_version}")
+                endif()
+                list(APPEND _dependency_modules "${_dependency_module}")
+            endforeach()
+        endif()
+        add_current(NAME "${module}" DEPENDENCIES ${_dependency_modules})
+    else()
+        add_versioned(NAME "${module}" VERSION "${version}" DEPENDENCIES ${_direct_dependencies})
+    endif()
+endfunction()
+
+function(add_module_with_dependencies module version)
+    resolve_module_dependency_order("${module}" "${version}" _dependency_order)
+    foreach(_dependency IN LISTS _dependency_order)
+        string(REGEX MATCH "^([^:]+):(.+)$" _ "${_dependency}")
+        if(NOT _)
+            message(FATAL_ERROR "Invalid dependency entry '${_dependency}', expected module:version")
+        endif()
+        _add_module_target("${CMAKE_MATCH_1}" "${CMAKE_MATCH_2}")
+    endforeach()
+    _add_module_target("${module}" "${version}")
+endfunction()
+
+# Parses the `components:` map of a versions yaml into <out_var>, a list of "name=version" entries.
+function(parse_versions_yaml yaml_file out_var)
+    file(STRINGS "${yaml_file}" _lines)
+    set(_in_components FALSE)
+    set(_result)
+    foreach(_line IN LISTS _lines)
+        if(_line MATCHES "^components:[ \t]*$")
+            set(_in_components TRUE)
+        elseif(_in_components)
+            if(_line MATCHES "^[ \t]+([^:# \t]+):[ \t]*([^# \t]+)[ \t]*(#.*)?$")
+                list(APPEND _result "${CMAKE_MATCH_1}=${CMAKE_MATCH_2}")
+            elseif(NOT _line MATCHES "^[ \t]*(#.*)?$")
+                set(_in_components FALSE)
+            endif()
+        endif()
+    endforeach()
+    set(${out_var} "${_result}" PARENT_SCOPE)
+endfunction()
+
+#   parse_versions_yaml("${CMAKE_CURRENT_SOURCE_DIR}/versions_current.yaml" COMPONENTS)
+#   foreach(_entry IN LISTS COMPONENTS)
+#       string(REGEX MATCH "^([^=]+)=(.*)$" _ "${_entry}")
+#       # CMAKE_MATCH_1 = name, CMAKE_MATCH_2 = version
+#   endforeach()
+
+function(resolve_module_dependency interface_file_path out_var)
+    file(STRINGS "${interface_file_path}/interface.yaml" _yaml_lines)
+    set(_in_imports FALSE)
+    set(_dependencies)
+    foreach(_line IN LISTS _yaml_lines)
+        if(_line MATCHES "^  imports:[ \t]*$")
+            set(_in_imports TRUE)
+        elseif(_in_imports)
+            if(_line MATCHES "^    -[ \t]*([^@ \t]+)@([^ \t]+)[ \t]*$")
+                list(PREPEND _dependencies "${CMAKE_MATCH_1}" "${CMAKE_MATCH_2}")
+            elseif(NOT _line MATCHES "^[ \t]*$")
+                set(_in_imports FALSE)
+            endif()
+        endif()
+    endforeach()
+
+    set(${out_var} "${_dependencies}" PARENT_SCOPE)
 endfunction()
