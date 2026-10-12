@@ -17,11 +17,9 @@
  * limitations under the License.
  */
 package com.rdk.hal.panel;
-import com.rdk.hal.panel.ColourTemperature;
 import com.rdk.hal.panel.PQParameter;
-import com.rdk.hal.panel.PanelType;
+import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.videodecoder.DynamicRange;
-import com.rdk.hal.AVSource;
  
 /** 
  *  @brief     Panel capabilities definition.
@@ -34,7 +32,7 @@ parcelable Capabilities
     /**
      * The panel type.
      */
-    PanelType panelType;
+    String panelType;
 
     int pixelWidth;
     int pixelHeight;
@@ -48,11 +46,6 @@ parcelable Capabilities
     boolean frameRateMatchingSupported;
 
     /**
-     * Whether display fade control is supported by the device.
-     */
-    boolean fadeDisplaySupported;
-
-    /**
      * The list of supported PQParameters.
      */
     PQParameter[] supportedPQParameters;
@@ -61,6 +54,24 @@ parcelable Capabilities
      * Panel display refresh rates supported in Hz, used in frame rate matching.
      */
     double[] supportedRefreshRatesHz;
+
+    /**
+     * Array of supported colour temperature presets.
+     *
+        * These strings are used directly by `PQParameter.COLOR_TEMPERATURE`
+        * and by colour-temperature-scoped white balance operations.
+     */
+        String[] supportedColourTemperatures;
+
+    /**
+     * All AV sources supported by the panel.
+     */
+        PanelSource[] supportedAVSources;
+
+    /**
+     * All dynamic ranges supported by the panel.
+     */
+    DynamicRange[] supportedDynamicRanges;
 
     /**
      * Defines the dynamic range and AV source capabilities for a picture mode.
@@ -87,7 +98,7 @@ parcelable Capabilities
              * Defines list of AV sources that can be associated for a given 
              * picture mode and a given dynamic range.
              */
-            AVSource[] supportedAVSources;
+            PanelSource[] supportedAVSources;
         }
 
         /**
@@ -101,21 +112,4 @@ parcelable Capabilities
      */
     PictureModeCapabilities[] pictureModeCapabilities;
 
-    /**
-     * Array of supported colour temperature presets.
-     *
-     * These enum values are used directly by `PQParameter.COLOR_TEMPERATURE`
-     * and by colour-temperature-scoped white balance operations.
-     */
-    ColourTemperature[] supportedColourTemperatures;
-
-    /**
-     * All AV sources supported by the panel.
-     */
-    AVSource[] supportedAVSources;
-
-    /**
-     * All dynamic ranges supported by the panel.
-     */
-    DynamicRange[] supportedDynamicRanges;
 }

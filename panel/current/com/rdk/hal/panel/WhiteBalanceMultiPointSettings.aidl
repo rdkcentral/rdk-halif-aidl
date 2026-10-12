@@ -18,8 +18,6 @@
  */
 package com.rdk.hal.panel;
 
-import com.rdk.hal.panel.ColourTemperature;
-
 /** 
  *  @brief     Display panel multi-point white balance entry.
  *             Holds the per-channel arrays for a multi-point white balance calibration entry.
@@ -33,9 +31,8 @@ parcelable WhiteBalanceMultiPointSettings
 	/**
 	 * Colour temperature profile this white balance setting applies to.
 	 */
-	ColourTemperature colourTemperature;
+	String colourTemperature;
 
-	/* TODO: validate against SoC vendor implementations */
 	int[] r;
 	int[] g;
 	int[] b;

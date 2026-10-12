@@ -30,11 +30,13 @@
  */
 package com.rdk.hal.panel;
 
-import com.rdk.hal.AVSource;
+import com.rdk.hal.panel.ErrorCode;
+import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.PQParameterCapabilities;
 import com.rdk.hal.panel.PQParameterConfiguration;
 import com.rdk.hal.panel.PictureModeConfiguration;
+import com.rdk.hal.panel.State;
 import com.rdk.hal.videodecoder.DynamicRange;
 
 @VintfStability
@@ -43,12 +45,14 @@ interface IPanelOutputController {
     /**
      * @brief Start the panel output controller.
      *
+      * This method can only be called in State.STOPPED.
+      *
       * This method returns true on success and false on failure.
       * Calling start() twice without a successful stop() between the two calls
       * is invalid and returns false.
       *
      * On success, the state transitions STOPPED -> STARTING -> STARTED.
-     * IPanelOutputControllerListener.onStateChanged() fires for each
+      * IPanelOutputEventListener.onStateChanged() fires for each
       * transition. If hardware initialization fails, the state transitions
       * to ERROR (observable via onStateChanged()) and this call returns false.
       * Use IPanelOutput.close() to release the panel
@@ -60,15 +64,27 @@ interface IPanelOutputController {
      */
     boolean start();
 
+      /**
+       * @brief Gets the current lifecycle state of the panel output.
+       *
+        * This method can be called in any state.
+        *
+       * @returns Current State value.
+       *
+       * @see IPanelOutputEventListener.onStateChanged()
+       */
+      State getState();
+    
     /**
      * @brief Stop the panel output controller.
      *
-     * This method can only be called after start() has completed successfully.
+      * This method can only be called in any state other than State.STOPPED
+      * or State.STOPPING.
      * Calling stop() twice without a successful start() between the two calls
       * is invalid and returns false.
      *
      * On success, the state transitions STARTED -> STOPPING -> STOPPED.
-     * IPanelOutputControllerListener.onStateChanged() fires for each
+    * IPanelOutputEventListener.onStateChanged() fires for each
      * transition.
      *
       * @returns boolean
@@ -80,7 +96,7 @@ interface IPanelOutputController {
   	/**
 	 * Sets the panel enabled state.
 	 * 
-     * This method can only be called after start() has completed successfully.
+       * This method can only be called in State.STARTED.
      * 
 	 * When enabled the panel shall display the graphics/video composited display image.
 	 * When disabled the panel shall be off where it will not show any image and will disable any backlight.
@@ -99,7 +115,7 @@ interface IPanelOutputController {
   	/**
 	 * Gets the panel enabled state.
 	 * 
-     * This method can only be called after start() has completed successfully.
+       * This method can only be called in State.STARTED.
      * 
 	 * @returns boolean
 	 * @retval true				The panel is enabled.
@@ -113,7 +129,7 @@ interface IPanelOutputController {
 	/**
      * Sets one or more picture modes for the panel.
      * 
-   * This method can only be called after start() has completed successfully.
+   * This method can only be called in State.STARTED.
    * 
      * Each `PictureModeConfiguration` element in the `configurations` array links together
      * a picture mode, dynamic range and AV source.
@@ -132,7 +148,7 @@ interface IPanelOutputController {
     /**
      * Gets one or more picture modes of the panel for a given AV source and dynamic range.
      *
-     * This method can only be called after start() has completed successfully.
+      * This method can only be called in State.STARTED.
      *
      * Input `requestedConfigurations` contains one or more entries where the `dynamicRange` and `source`
      * fields specify the query criteria. The `pictureMode` field may be ignored on input.
@@ -164,7 +180,7 @@ interface IPanelOutputController {
     /**
      * Gets one or more default picture modes for a given AV source and dynamic range.
      *
-     * This method can only be called after start() has completed successfully.
+      * This method can only be called in State.STARTED.
      *
      * Input `requestedConfigurations` defines the query criteria (dynamicRange/source). `pictureMode` is ignored.
      * Output `defaultConfigurations` echoes criteria and populates the default `pictureMode` value.
@@ -185,36 +201,40 @@ interface IPanelOutputController {
      * @see setPictureModes(), getPictureModes()
      */
     boolean getDefaultPictureModes(in PictureModeConfiguration[] requestedConfigurations, out PictureModeConfiguration[] defaultConfigurations);
-
     /**
      * Sets the picture quality parameters.
      *
-     * This method can only be called after start() has completed successfully.
-     *
+   * This method can only be called when the panel output state is STARTED.
+     * 
      * When calibration mode is enabled (see `enableCalibrationMode()`), the supplied PQ parameter
      * values are persisted but not applied to the PQ pipeline, so that calibration measurements are
-     * not disturbed. The persisted values are applied when calibration mode is subsequently disabled.
+   * not disturbed. The panel is kept in a neutral PQ state while calibration is active.
+   * The persisted values are applied when calibration mode is subsequently disabled for the
+   * active picture-mode, source, dynamic-range, and colour-temperature permutation.
      *
      * @param[in] configurations    Array of PQParameterConfiguration values.
      *
-     * @returns boolean
-     * @retval true     The PQ parameters were set.
-     * @retval false    One or more invalid parameter configurations.
+   * @returns ErrorCode
+   * @retval ErrorCode.SUCCESS           The PQ parameters were set.
+   * @retval ErrorCode.INVALID_ARGUMENT  One or more parameter configurations were invalid.
+   * @retval ErrorCode.NOT_SUPPORTED     One or more PQ parameters are unsupported.
+   * @retval ErrorCode.HARDWARE_FAILURE  The HAL could not apply the request.
      *
+   * @exception binder::Status::Exception::EX_ILLEGAL_STATE The panel output is not in STARTED state.
      * 
      * @see getPQParameters(), getDefaultPQParameters(), getPQParameterCapabilities(), enableCalibrationMode(), PQParameterConfiguration
      */
-    boolean setPQParameters(in PQParameterConfiguration[] configurations);
+  ErrorCode setPQParameters(in PQParameterConfiguration[] configurations);
 
     /**
      * Gets the current picture quality (PQ) parameter values.
      *
-     * This method can only be called after start() has completed successfully.
+      * This method can only be called in State.STARTED.
      *
      * Input `requestedConfigurations` specifies one or more PQ parameters to query. Each element's:
      * - `pqParameter` must be valid.
      * - `pictureMode`, `source`, and `dynamicRange` may be concrete values or wildcards per their definitions.
-     * - `value` field is ignored on input.
+    * - `value` field is ignored on input for pure query operations; only the selector fields are used.
      *
      * Output `returnedConfigurations` mirrors ordering and criteria and populates the `value` field.
      *
@@ -241,7 +261,7 @@ interface IPanelOutputController {
     /**
      * Gets the default picture quality (PQ) parameter values.
      *
-     * This method can only be called after start() has completed successfully.
+      * This method can only be called in State.STARTED.
      *
      * Semantics are identical to `getPQParameters()` except the returned `value` reflects factory/default settings.
      *
@@ -264,7 +284,7 @@ interface IPanelOutputController {
 	/**
 	 * Gets the platform capabilities for a PQ parameter.
 	 * 
-     * This method can only be called after start() has completed successfully.
+     * This method can only be called in State.STARTED.
      * 
 	 * The returned PQParameterCapabilities confirms whether the parameter is supported by the platform and its minimum and maximum allowed values.
 	 * It also contains a list of picture modes, dynamic ranges and AV sources that are supported by the PQ parameter.
@@ -280,7 +300,7 @@ interface IPanelOutputController {
     /**
      * Sets the panel refresh rate.
      * 
-     * This method can only be called after start() has completed successfully.
+      * This method can only be called in State.STARTED.
      * 
      * The `refreshRateHz` value must be listed in Capabilities.supportedRefreshRatesHz[].
      *
@@ -298,7 +318,7 @@ interface IPanelOutputController {
     /**
      * Gets the current panel refresh rate.
      *
-     * This method can only be called after start() has completed successfully.
+      * This method can only be called in State.STARTED.
      *
      * @returns double   Refresh rate in Hz.
      *
@@ -309,8 +329,8 @@ interface IPanelOutputController {
 	/**
 	 * Enables or disables frame rate matching (FRM).
      * 
-   * This method can only be called after start() has completed successfully.
-   * 
+  * This method can only be called in State.STARTED.
+     * 
      * When enabled, the panel refresh rate is synchronized with the video frame rate.
      * The refresh rate may be a multiple of the video frame rate or a close match.
      * 
@@ -333,7 +353,7 @@ interface IPanelOutputController {
     /**
      * Gets the frame rate matching enabled state.
      *
-     * This method can only be called after start() has completed successfully.
+      * This method can only be called in State.STARTED.
      *
      * @returns boolean
      * @retval true     Frame rate matching is enabled.
@@ -347,50 +367,50 @@ interface IPanelOutputController {
     /**
 	 * Sets the AV source override used to applying PQ settings.  e.g. AUTO, IP, HDMI, composite, DTV.
 	 * 
-     * This method can only be called after start() has completed successfully.
+    * This method can only be called in State.STARTED.
      * 
-	 * When set to AVSource.AUTO the video source is determined from the video playback subsystem.
+   * When set to a PanelSource with type AUTO the video source is determined from the video playback subsystem.
 	 * Any other value overrides the video source and any other sources being used in the video playback
 	 * subsystem are ignored.
      * 
-	 * Typically AVSource.AUTO is used (and is the default), but override values may be used when 
+   * Typically a PanelSource with type AUTO is used (and is the default), but override values may be used when 
 	 * multi-video display is in operation and the PQ settings corresponding to one of the sources need to be applied.
 	 * 
-	 * @param[in] source	An AVSource enum value.
+   * @param[in] source	A PanelSource value.
 	 * 
-	 * @see getVideoSourceOverride(), AVSource
+   * @see getVideoSourceOverride(), PanelSource
 	 */ 
-  	void setVideoSourceOverride(in AVSource source);
+  void setVideoSourceOverride(in PanelSource source);
   	
   	/**
 	 * Gets the AV source override used to applying PQ settings.
      * 
-     * This method can only be called after start() has completed successfully.
+     * This method can only be called in State.STARTED.
      * 
 	 * This returns the value previously set by a call to setVideoSourceOverride()
-	 * or the default is AUTO.
+   * or the default is a PanelSource with type AUTO.
 	 * 
-	 * @returns AVSource
+   * @returns PanelSource
 	 * 
-	 * @see setVideoSourceOverride(), AVSource
+   * @see setVideoSourceOverride(), PanelSource
 	 */ 
-	AVSource getVideoSourceOverride();
+  PanelSource getVideoSourceOverride();
 
     /**
      * Gets the current video source used to apply PQ settings.
      * 
-     * This method can only be called after start() has completed successfully.
+      * This method can only be called in State.STARTED.
      * 
-     * The returned value is AVSource.UNKNOWN if no video is playing.
+  	 * The returned value has type UNKNOWN if no video is playing.
      *
-     * @returns AVSource     The AV source.
+  	 * @returns PanelSource     The AV source.
      */
-    AVSource getVideoSource();
+      PanelSource getVideoSource();
 
     /**
      * Gets the current dynamic range used to apply PQ settings.
      * 
-     * This method can only be called after start() has completed successfully.
+      * This method can only be called in State.STARTED.
      * 
      * The returned value is DynamicRange.UNKNOWN if no video is playing.
      *
@@ -401,7 +421,7 @@ interface IPanelOutputController {
     /**
      * Gets the current video frame rate used to apply PQ settings.
      * 
-     * This method can only be called after start() has completed successfully.
+      * This method can only be called in State.STARTED.
      * 
      * The returned array is { 0, 0 } if no video is playing.
      *
@@ -413,7 +433,7 @@ interface IPanelOutputController {
     /**
      * Gets the current video resolution used to apply PQ settings.
      *
-     * This method can only be called after start() has completed successfully.
+      * This method can only be called in State.STARTED.
      *
      * The returned array is { 0, 0 } if no video is playing.
      *
@@ -425,8 +445,8 @@ interface IPanelOutputController {
 	/**
 	 * Enables or disables calibration mode for the PQ pipeline.
      * 
-   * This method can only be called after start() has completed successfully.
-   * 
+  * This method can only be called in State.STARTED.
+     * 
      * When enabled, all PQ processing blocks (e.g. brightness, contrast, sharpness, saturation, hue,
      * dimming, noise reduction, CMS, etc.) are set to a neutral or disabled state to allow accurate
      * measurement of the panel output without interference from PQ processing.
@@ -456,7 +476,7 @@ interface IPanelOutputController {
     /**
      * Gets the current calibration mode state.
      *
-     * This method can only be called after start() has completed successfully.
+      * This method can only be called in State.STARTED.
      *
      * @returns boolean
      * @retval true     Calibration mode is enabled.
@@ -467,39 +487,4 @@ interface IPanelOutputController {
      */
     boolean getCalibrationMode();
 
-	/**
-	 * Starts a display fade up or down operation.
-     * 
-     * This method can only be called after start() has completed successfully.
-     * 
-	 * Fades the display linearly between two different luminance levels over a given duration.
-	 * The function call returns immediately after starting the fade which runs asynchronously.
-     * 
-	 * Luminance control depends on the display panel technology and may pertain to LED backlight or
-	 * overal pixel intensity.
-     * 
-	 * The start and end luminance values are expressed as percentages of the normal luminance level
-	 * set by a combination of the picture mode, user setting or ambient light sensor algorithm if active.
-     * 
-	 * A new call to `fadeDisplay()` can be made before the last fade has completed where it will
-	 * stop the operation and leave the luminance at its interrupted level before starting the
-	 * new fade operation.
-     * 
-	 * `fadeDisplay(-1, 0, 500)` will fade the display from its current luminance level to black over 500ms.
-	 * `fadeDisplay(0, 100, 2000)` will fade the display from black to 100% of the normal luminance level over 2 seconds.
-	 * `fadeDisplay(-1, 100, 0)` will immediately jump to 100% of the normal luminance level.
-	 *
-	 * @param[in] start         Percentage of the current luminance value from where the fade starts.
-     *                          A `start` value in the range 0-100% will first set the luminance fade to that level before the fade starts.
-     *                          A `start` value of -1 is used to start at the current luminance fade level.
-	 * @param[in] end           Percentage of current luminance value when fade ends. Valid range is 0-100%.
-	 * @param[in] durationMs    Time duration for the fade to reach the end value. Valid range is 0-10000 ms.
-     *                          When a `durationMs` of 0 is specified, the end fade luminance value is immediately set.
-     * 
-	 * @returns boolean
-     * @retval true     The fade operation was started.
-     * @retval false    The fade operation was not started because one or more parameters are invalid.
-     *
-	 */ 
-	boolean fadeDisplay(in int start, in int end, in int durationMs);
 }

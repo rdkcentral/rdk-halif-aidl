@@ -2,7 +2,7 @@
  * If not stated otherwise in this file or this component's LICENSE file the
  * following copyright and licenses apply:
  *
- * Copyright 2024 RDK Management
+ * Copyright 2026 RDK Management
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,17 +18,15 @@
  */
 package com.rdk.hal.panel;
 
-/** 
- *  @brief     Display panel types.
- *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
+/**
+ * @brief Panel AV source identifier.
+ *
+ * `type` identifies the source family, for example HDMI, COMPOSITE, DTV, IP,
+ * AUTO, or UNKNOWN. `instance` optionally identifies a concrete source within
+ * that family, for example 1 or 2 for HDMI inputs.
  */
- 
 @VintfStability
-@Backing(type="int")
-enum PanelType
-{
-    LCD = 0,
-    QLED = 1,
-    OLED = 2,
-    MINI_LED = 3,
+parcelable PanelSource {
+    String type;
+    @nullable String instance;
 }

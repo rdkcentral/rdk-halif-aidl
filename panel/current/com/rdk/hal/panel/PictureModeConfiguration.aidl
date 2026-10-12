@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.panel;
+import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.videodecoder.DynamicRange;
-import com.rdk.hal.AVSource;
 
 /** 
  *  @brief     Picture mode configuration.
@@ -41,5 +41,5 @@ parcelable PictureModeConfiguration
 	/**
 	 * The AV source.
 	 */
-	AVSource source;
+	PanelSource source;
 }

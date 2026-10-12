@@ -58,14 +58,17 @@ interface IPanelOutput
      * crashes, the HAL implicitly calls stop() and close() to release
      * the panel output.
      *
-     * @param listener Listener for controller callbacks (state changes).
+    * @param listener Listener for exclusive controller callbacks.
      *
      * @returns IPanelOutputController, or null if the panel output cannot be opened.
      *
      * @exception binder::Status EX_ILLEGAL_STATE if panel output is already open.
      * @exception binder::Status EX_NULL_POINTER if listener is null.
      *
-     * @see close(), IPanelOutputController
+    * Lifecycle state changes are reported through registered
+    * `IPanelOutputEventListener` instances.
+    *
+    * @see close(), IPanelOutputController, registerListener()
      */
     @nullable IPanelOutputController open(in IPanelOutputControllerListener listener);
 
