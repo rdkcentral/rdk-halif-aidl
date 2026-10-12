@@ -2176,6 +2176,25 @@ create_snapshot() {
         fi
     fi
 
+    # Give the snapshot's mkdocs.yml its own site_name (#604). The copy above
+    # brings `site_name: <comp>` across verbatim from current/, so once the
+    # top-level nav registers current/ and the snapshot together the
+    # mkdocs-monorepo plugin aborts the whole build on the duplicate:
+    #   [mkdocs-monorepo] You cannot have duplicated site names.
+    # current/ keeps the bare component name; the snapshot takes
+    # <comp>-<version>, matching what the docs nav already expects.
+    local snapshot_mkdocs="${snapshot_dir}/mkdocs.yml"
+    if [[ -f "${snapshot_mkdocs}" ]]; then
+        if grep -qE '^site_name:' "${snapshot_mkdocs}"; then
+            sed -i "s|^site_name:.*|site_name: ${comp}-${version}|" "${snapshot_mkdocs}" || {
+                warn "Failed to set site_name in ${comp}/${version}/mkdocs.yml."
+                return 1
+            }
+        else
+            warn "  [${comp}/${version}] mkdocs.yml has no site_name; docs build will treat it as a duplicate."
+        fi
+    fi
+
     # Stage hand-authored module-root headers (e.g. avbufferhelper.h) into the
     # snapshot's include/ tree (#623). These are public, versioned contract
     # headers that live at the module root in current/ — current/include/ is
