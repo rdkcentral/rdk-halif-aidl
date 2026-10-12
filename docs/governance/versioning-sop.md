@@ -72,7 +72,7 @@ interface is right.
 **Examples:**
 
 - `0.0.0.1` — Initial definition (generation 0), first revision
-- `0.1.0.0` — Entered generation 1 (first full design cycle complete)
+- `0.1.0.0` — Generation 1: the first ABI-breaking change after generation 0
 - `0.1.1.0` — ABI-compatible enhancement added to generation 1
 - `0.1.1.1` — Documentation fix (no interface change)
 - `0.2.0.0` — Breaking change since generation 1 → new generation
@@ -106,7 +106,9 @@ it does not mean the interface was rewritten or redesigned.
 
 One deleted line can be Major; a large additive PR is Minor. The structural
 audit (`release.sh --audit`) classifies by the same test — what the AIDL
-surface lost or changed — not by diff size.
+surface lost or changed — not by diff size. A behaviour change with the
+signature unchanged leaves the surface intact, so the `Major Change` label
+declares it and the audit accepts the label.
 
 **A `Major Change` on its own is business as usual.** It is an engineering
 fact about compatibility that moves the version number, and it goes through
@@ -129,15 +131,12 @@ field filled in.
 default.** The structural audit reports what the AIDL surface lost or
 changed, and that is the default class. ABI is not the only input: when the
 removed or changed surface is not yet in use by any client, the change may
-be declared Minor — set in the Interface effect field, with the reason (who
-confirmed there are no users) recorded on the ticket. At release,
-`release.sh` compares three signals for every component — the structural
-class, the PR labels, and the Interface effect field — and notes every
-place they disagree. It then asks which is right and the operator corrects
-the others to match: the labels, the field, or (if the code was wrong) the
-change itself. Disabling the audit is not a resolution. The `release.sh`
-support for reading the field, reporting the mismatches and correcting on
-confirmation is #875.
+be declared Minor — set in the Interface effect field and the PR label, with
+the reason (who confirmed there are no users) recorded on the ticket. At
+release, `release.sh` compares the structural class with the PR labels for
+every component and flags every place they disagree; the operator corrects
+the label and the field to match, or (if the code was wrong) the change
+itself. Disabling the audit is not a resolution.
 
 ### How PRs Drive the Version Bump
 
@@ -282,21 +281,22 @@ where `major` means additive and the audit displays it as such;
 surface-identical trees whose sources still differ count as doc-only), and
 cross-checks three signals per component:
 
-| Signal           | Source                                                          |
-|------------------|-----------------------------------------------------------------|
-| Structural       | what the AIDL actually changed (code truth)                     |
-| Label            | the change class PR labels imply                                |
-| Interface effect | the `halif_aidl` project field — source of truth                |
-| Declared         | `metadata.yaml` `version:` (written by `release.sh` at release) |
+| Signal     | Source                                                          |
+|------------|-----------------------------------------------------------------|
+| Structural | what the AIDL actually changed (code truth)                     |
+| Label      | the change class PR labels imply                                |
+| Declared   | `metadata.yaml` `version:` (written by `release.sh` at release) |
 
-A row is flagged when the label class, the Interface effect field and the
-structural class do not all agree, when `metadata.yaml` carries a version
-that is neither the last released one nor the computed next one (a hand
-edit), or when an era ≥ 1 component classifies breaking (forbidden — a
-breaking change there requires a new component). Flagged rows print the
-exact structural diff (method/field level) and the three signals, so the
-fix — correct the label, correct the Interface effect field, correct
-`metadata.yaml`, or revert the AIDL — is decided by questioning the
+A row is flagged when the label class and the structural class disagree,
+when `metadata.yaml` carries a version that is neither the last released one
+nor the computed next one (a hand edit), or when an era ≥ 1 component
+classifies breaking (forbidden — a breaking change there requires a new
+component). A `Major Change` label on a component whose AIDL surface is
+unchanged but whose source changed is a behaviour-only breaking change: the
+audit notes it and does not flag it, because only the label can declare
+one. Flagged rows print the exact structural diff (method/field level) and
+the signals, so the fix — correct the label and the Interface effect field,
+correct `metadata.yaml`, or revert the AIDL — is decided by questioning the
 mismatch, not by disabling the audit.
 Release tagging proceeds only on a clean `--audit --strict` pass.
 

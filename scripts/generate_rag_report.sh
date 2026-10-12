@@ -463,7 +463,7 @@ Pre-baseline versions use the format `0.<generation>.<minor>.<patch>`:
 | Field | Meaning | Bumped when |
 |-------|---------|-------------|
 | `0` | Pre-baseline prefix | Changes to AIDL integer at freeze |
-| `generation` | Architectural era (0 = initial, 1+ = full design cycle) | Breaking interface change |
+| `generation` | ABI generation — incremented on any ABI-breaking change, however small | A change that breaks a client built against the previous release |
 | `minor` | ABI-compatible enhancement counter | Non-breaking feature added |
 | `patch` | Documentation or trivial fix counter | No interface change |
 
