@@ -647,14 +647,13 @@ if [[ "$VERSION" != "current" ]]; then
     # The local dev layout splits binder headers (out/build/include/binder_sdk)
     # from libs (out/target/lib/binder); BINDER_SDK_INCLUDE_DIR lets the
     # snapshot CMakeLists find the headers. Yocto stages a flat SDK so
-    # BINDER_SDK_DIR alone resolves both.
-    cmake -S "$SNAPSHOT_DIR" -B "$SNAPSHOT_BUILD_DIR" \
+    # # BINDER_SDK_DIR alone resolves both.
+    echo "$SNAPSHOT_DIR -B $SNAPSHOT_BUILD_DIR"
+    cmake -S "$ROOT_DIR" -B "$SNAPSHOT_BUILD_DIR" \
         -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
-        -DBINDER_SDK_DIR="$SDK_DIR" \
-        -DBINDER_SDK_INCLUDE_DIR="$ROOT_DIR/out/build" \
-        -DHALIF_LIB_DIR="$ROOT_DIR/out/target/lib/rdk-halif-aidl" \
-        -DHALIF_INCLUDE_DIR="$ROOT_DIR/out/build/include" \
-        -DCMAKE_INSTALL_PREFIX="$ROOT_DIR/out/target" || {
+        -DCMAKE_INSTALL_PREFIX="$ROOT_DIR/out/target" \
+        -DINTERFACE_TARGET="$MODULE" \
+        -DINTERFACE_VERSION="$VERSION" || {
             echo "❌ Snapshot CMake configuration failed"; exit 1; }
 
     cmake --build "$SNAPSHOT_BUILD_DIR" -j"$JOBS" || {
@@ -697,12 +696,15 @@ fi
 echo "⚙️  Configuring CMake..."
 echo ""
 
+if [[ "$MODULE" == "all" ]]; then
+cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
+    -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}"
+else
 cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
     -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
     -DINTERFACE_TARGET="$MODULE" \
-    -DAIDL_SRC_VERSION="$VERSION" \
-    -DBINDER_SDK_DIR="$SDK_DIR"
-
+    -DINTERFACE_VERSION="$VERSION"
+fi
 if [[ $? -ne 0 ]]; then
     echo ""
     echo "❌ CMake configuration failed"
