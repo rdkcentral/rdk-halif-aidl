@@ -1,5 +1,0 @@
-if(BUILD_CURRENT)
-    add_subdirectory(current)
-else()
-    add_subdirectory(0.1.0.0)
-endif()
