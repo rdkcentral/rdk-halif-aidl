@@ -74,7 +74,7 @@ Deprecated methods remain callable but should not be used in new implementations
 ### **New Interface Version**
 
 * Add the replacement method(s) in a new AIDL interface version (additive-only — no changes to existing methods).
-* Bump the `minor` field in `metadata.yaml` (see [Versioning SOP](../../governance/versioning-sop.md)).
+* Label the PR `Minor Change`; `release.sh` bumps the `minor` field at release (see [Versioning SOP](../../governance/versioning-sop.md)).
 * The deprecated method remains in the interface unchanged.
 
 ### **Migration Guide**
@@ -141,7 +141,7 @@ Deprecated methods remain callable but should not be used in new implementations
 
 * [ ] `@deprecated` annotation added to AIDL doc comment with date, reason, and replacement
 * [ ] Replacement method added in new interface version (if applicable)
-* [ ] Minor version bumped in metadata.yaml
+* [ ] PR labelled `Minor Change`
 * [ ] HAL module Markdown documentation updated to reflect deprecation
 * [ ] Migration guide documenting old-to-new method mapping
 * [ ] HAL Release Notes updated with Deprecated APIs section
