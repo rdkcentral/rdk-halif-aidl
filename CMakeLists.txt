@@ -33,35 +33,20 @@ add_subdirectory("CMakeModules")
 
 if(NOT INTERFACE_VERSION)
     parse_versions_yaml("${CMAKE_CURRENT_SOURCE_DIR}/versions_current.yaml" COMPONENTS)
-    # find_program(
-    #     AIDL_EXECUTABLE
-    #     NAMES aidl
-    #     HINTS ENV PATH "${PROJECT_SOURCE_DIR}/build-tools/linux_binder_idl/build-host"
-    #     DOC "aidl executable location"
-    # )
-    # if(NOT AIDL_EXECUTABLE)
-    #     message(FATAL_ERROR "Unable to find the aidl executable")
-    # endif()
 else()
     parse_versions_yaml("${CMAKE_CURRENT_SOURCE_DIR}/versions_released.yaml" COMPONENTS)
 endif()
 
-# Build all current versions
-if(NOT INTERFACE_TARGET AND NOT INTERFACE_VERSION)
+# Build all current or release versions
+if(NOT INTERFACE_TARGET)
+    if(INTERFACE_VERSION AND NOT INTERFACE_VERSION STREQUAL "release")
+        message(FATAL_ERROR " Unknown INTERFACE_VERSION ${INTERFACE_VERSION}")
+    endif()
     foreach(_entry IN LISTS COMPONENTS)
         string(REGEX MATCH "^([^=]+)=(.*)$" _ "${_entry}")
         add_module_with_dependencies("${CMAKE_MATCH_1}" "${CMAKE_MATCH_2}")
     endforeach()
 endif()
-
-# Build all released versions
-if(NOT INTERFACE_TARGET AND INTERFACE_VERSION)
-    foreach(_entry IN LISTS COMPONENTS)
-        string(REGEX MATCH "^([^=]+)=(.*)$" _ "${_entry}")
-        add_module_with_dependencies("${CMAKE_MATCH_1}" "${CMAKE_MATCH_2}")
-    endforeach()
-endif()
-
 
 # Build INTERFACE_TARGET current version
 if(INTERFACE_TARGET AND NOT INTERFACE_VERSION)
