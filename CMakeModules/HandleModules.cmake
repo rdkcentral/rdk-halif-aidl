@@ -193,18 +193,21 @@ function(add_versioned)
     cmake_parse_arguments(PARSE_ARGV 0 MODULE "" "NAME;VERSION" "DEPENDENCIES")
 
     set(TARGET_NAME "${MODULE_NAME}-v${MODULE_VERSION}-cpp")
+    set(SHARED_TARGET_NAME "${TARGET_NAME}-shared")
     add_library("${TARGET_NAME}" STATIC)
+    add_library("${SHARED_TARGET_NAME}" SHARED)
     # Find relevant files
     file(GLOB_RECURSE SRCS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${MODULE_NAME}/${MODULE_VERSION}/src/*.cpp")
     file(GLOB_RECURSE HDRS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${MODULE_NAME}/${MODULE_VERSION}/include/*.h")
 
-    # Set sources
-    target_sources("${TARGET_NAME}" PRIVATE ${SRCS} PUBLIC "$<BUILD_INTERFACE:${HDRS}>")
-    target_include_directories("${TARGET_NAME}"
-        PUBLIC
-            "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${MODULE_NAME}/${MODULE_VERSION}/include>"
-            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
-    )
+    foreach(LIBRARY_TARGET IN ITEMS "${TARGET_NAME}" "${SHARED_TARGET_NAME}")
+        target_sources("${LIBRARY_TARGET}" PRIVATE ${SRCS} PUBLIC "$<BUILD_INTERFACE:${HDRS}>")
+        target_include_directories("${LIBRARY_TARGET}"
+            PUBLIC
+                "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${MODULE_NAME}/${MODULE_VERSION}/include>"
+                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+        )
+    endforeach()
 
     # Set relevant compile options
     _capitalize_module_name("${MODULE_NAME}" _MODULE_CAPITALIZED_NAME)
@@ -212,6 +215,10 @@ function(add_versioned)
     add_library(
         "RdkHalifAidl::${_MODULE_CAPITALIZED_NAME}"
         ALIAS "${TARGET_NAME}"
+    )
+    add_library(
+        "RdkHalifAidl::${_MODULE_CAPITALIZED_NAME}Shared"
+        ALIAS "${SHARED_TARGET_NAME}"
     )
 
     set_target_properties(
@@ -221,6 +228,17 @@ function(add_versioned)
         POSITION_INDEPENDENT_CODE ON
         EXPORT_NAME "${_MODULE_CAPITALIZED_NAME}"
     )
+    set_target_properties(
+        "${SHARED_TARGET_NAME}" PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+        POSITION_INDEPENDENT_CODE ON
+        EXPORT_NAME "${_MODULE_CAPITALIZED_NAME}Shared"
+    )
+    set_target_properties(
+        "${SHARED_TARGET_NAME}" PROPERTIES
+        OUTPUT_NAME "${TARGET_NAME}"
+    )
 
     message(DEBUG "Adding module ${MODULE_NAME} version ${MODULE_VERSION} with dependencies: ${MODULE_DEPENDENCIES}")
 
@@ -228,15 +246,17 @@ function(add_versioned)
 
     # Link to binder and the given dependencies
     target_link_libraries("${TARGET_NAME}" PUBLIC ${CMAKE_DEPENDENCIES})
+    target_link_libraries("${SHARED_TARGET_NAME}" PUBLIC ${CMAKE_DEPENDENCIES})
 
     # Create helpers for downstream consumers
     _create_cmake_helpers("${MODULE_NAME}" "${MODULE_VERSION}" "${CMAKE_DEPENDENCIES}" "${FIND_DEPS}" "${SRCS}" "${HDRS}")
     _create_pkgconfig_helpers(${MODULE_NAME} "${MODULE_VERSION}" "${PKG_CONFIG_DEPENDENCIES}")
 
     # Install the library, headers and source files
-    install(TARGETS "${TARGET_NAME}"
+    install(TARGETS "${TARGET_NAME}" "${SHARED_TARGET_NAME}"
         EXPORT "RdkHalifAidl${_MODULE_CAPITALIZED_NAME}Targets"
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
     )
     install(
         DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/"
