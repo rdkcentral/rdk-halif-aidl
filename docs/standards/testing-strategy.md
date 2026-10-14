@@ -25,8 +25,8 @@ test project** — they consume this repo's `.aidl` and HFP files.
 
 | Level | Scope | Framework | Config source |
 | --- | --- | --- | --- |
-| L1 | Individual API functions | ut-core (C/C++, on device) | ut-core `ut-kvp` profile YAML |
-| L2 | Module behaviour, state, capability interactions | ut-core (C/C++, on device) | ut-core `ut-kvp` profile YAML |
+| L1 | Individual API functions | ut-core (C/C++, on device) | The platform's HFP, loaded as the ut-core `ut-kvp` profile |
+| L2 | Module behaviour, state, capability interactions | ut-core (C/C++, on device) | The platform's HFP, loaded as the ut-core `ut-kvp` profile |
 | L3 | Component with external stimulus | RAFT / ut-raft (`python_raft`) | RAFT per-platform device/rack YAML |
 | L4 | System / vendor-stack interface (VSI, VST smoke) | RAFT / ut-raft (`python_raft`) | RAFT per-platform device/rack YAML |
 
@@ -208,9 +208,10 @@ The cpp backend is non-throwing: every outcome arrives through the returned
 
 ### Validate capabilities against the HFP and the platform profile
 
-L2 suites assert the capability invariant. Platform expectations come from the
-ut-core `ut-kvp` profile passed at run time; HFP list fields are read with the
-list accessors:
+L2 suites assert the capability invariant. The platform's HFP file is the
+ut-core `ut-kvp` profile passed at run time, so the suite reads the declared
+upper bound straight from it with the profile accessors; there is no second
+copy of the HFP lists in a separate test profile:
 
 ```cpp
 static void test_l2_capabilities_within_hfp(void)
@@ -259,11 +260,12 @@ int main(int argc, char** argv)
 }
 ```
 
-The profile is supplied with the `-p` switch; ut-core's modes (`-c` console,
-`-a` automated xUnit XML, `-b` basic) select how results are reported:
+The HFP is supplied as the profile with the `-p` switch; ut-core's modes
+(`-c` console, `-a` automated xUnit XML, `-b` basic) select how results are
+reported:
 
 ```bash
-./bootreason_tests -p platform_profile.yml -a
+./bootreason_tests -p hfp-bootreason.yaml -a
 ```
 
 ### Multi-version execution
