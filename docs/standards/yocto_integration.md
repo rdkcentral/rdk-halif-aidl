@@ -13,7 +13,7 @@ during migration.
 | ---- | ------------- | ------- |
 | `tests/yocto/meta-rdk-halif-aidl/` | **yes** | the consumable layer — one `rdk-halif-aidl` recipe, one package per component |
 | `tests/yocto/meta-vendor/`, `tests/yocto/meta-mw/` | **as examples** | role build-config for each mount point (`/vendor`, `/mw`) |
-| `tests/yocto/bitbake/` | **as a test** | runs *real* BitBake on the recipe in a container and asserts the packaging + staging. See its [README](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/tests/yocto/bitbake/README.md). |
+| `tests/yocto/bitbake/` | **as a test** | runs *real* BitBake on the recipe in a container and asserts the packaging + staging. See its [README](https://github.com/rdkcentral/rdk-halif-aidl/blob/main/tests/yocto/bitbake/README.md). |
 | `tests/yocto/ci/` | **as a test** | offline emulation of the build loop (no BitBake) for fast contract checks |
 
 ## How it works
