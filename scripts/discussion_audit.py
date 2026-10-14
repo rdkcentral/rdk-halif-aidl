@@ -50,15 +50,28 @@ Usage: discussion_audit.py [owner/repo] [--account LOGIN] [--project N]
 
 Requires the gh CLI, logged in with read access to the repository.
 """
+import argparse
 import json
 import os
 import re
 import subprocess
 import sys
 
-REPO = next((a for a in sys.argv[1:] if "/" in a and not a.startswith("--")), "rdkcentral/rdk-halif-aidl")
-ACCOUNT = sys.argv[sys.argv.index("--account") + 1] if "--account" in sys.argv else None
-PROJECT = int(sys.argv[sys.argv.index("--project") + 1]) if "--project" in sys.argv else 41
+
+def repo_arg(value):
+    if not re.fullmatch(r"[\w.-]+/[\w.-]+", value):
+        raise argparse.ArgumentTypeError(f"expected owner/repo, got {value!r}")
+    return value
+
+
+parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+parser.add_argument("repo", nargs="?", default="rdkcentral/rdk-halif-aidl", type=repo_arg,
+                    help="repository to audit, owner/repo (default %(default)s)")
+parser.add_argument("--account", help="gh login whose token to use (default: the active gh account)")
+parser.add_argument("--project", type=int, default=41, help="Project number for Status/Priority (default %(default)s)")
+args = parser.parse_args()
+
+REPO, ACCOUNT, PROJECT = args.repo, args.account, args.project
 OWNER, NAME = REPO.split("/")
 
 TOKEN = subprocess.run(["gh", "auth", "token"] + (["--user", ACCOUNT] if ACCOUNT else []),
