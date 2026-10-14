@@ -133,14 +133,19 @@ namespace hc = com::rdk::hal::halcompat;
 
 static android::sp<IBootReason> gService;
 
+// Suite policy, passed to every halcompat call. Dev images run "notfrozen"
+// servers and opt in here; a production run sets it false.
+static constexpr bool kAllowUnfrozen = true;
+
 static int bootreason_suite_init(void)
 {
     gService = hc::getService<IBootReason>();
     if (gService == nullptr) {
         return -1;
     }
-    // Dev images run "notfrozen" servers; allow them explicitly.
-    if (!hc::isCompatible(gService, /*allowUnfrozen=*/true)) {
+    // Oldest release this suite supports. An era-0 major bump is breaking, so
+    // a suite spans one major: here, every 0.2.x.x server.
+    if (!hc::atLeast(gService, 0, 2, 0, 0, kAllowUnfrozen)) {
         return -1;
     }
     UT_LOG("Server version: %d hash: %s",
@@ -157,17 +162,22 @@ static int bootreason_suite_clean(void)
 ```
 
 The version is queried once here; every test in the suite gates on the cached
-service through `halcompat`.
+service through `halcompat`. Init checks the oldest release the suite supports,
+not `hc::isCompatible()`: that is the production-client check, which requires
+the server to be at least the version the client was compiled against, and so
+would reject every older server before a gate could skip.
 
 ### Gate version-specific tests, skip-don't-fail
 
 Feature gates name the **additive release** that introduced the API. Suppose a
-hypothetical `getBootCount()` was added to `IBootReason` in release 0.2.1.0:
+hypothetical `getBootCount()` was added to `IBootReason` in release 0.2.1.0.
+`IBootReason` has no such method: this fragment and the fallback one below show
+the pattern and do not compile against the shipped interface.
 
 ```cpp
 static void test_l1_boot_count(void)
 {
-    if (!hc::atLeast(gService, 0, 2, 1)) {   // added in 0.2.1.0
+    if (!hc::atLeast(gService, 0, 2, 1, 0, kAllowUnfrozen)) {   // added in 0.2.1.0
         UT_LOG("Server predates 0.2.1.0 - skipping getBootCount test");
         return;                              // skip, not a failure
     }
