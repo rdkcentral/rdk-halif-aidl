@@ -209,14 +209,11 @@ ${files}"
     } | sha256sum | awk '{print $1}'
 }
 
-# Deploy the versioned mkdocs site to gh-pages via the project's
-# build_docs.sh wrapper (uses `mike`). Two steps:
-#   1. `mike deploy <X.Y.Z> --push`        — publishes this version
-#   2. `mike set-default <X.Y.Z> --push`   — marks it as the "latest"
-# Both are synchronous (blocking) and push to origin/gh-pages directly.
-# Caller passes the release version. Warns with the retry commands and
-# returns 1 on failure; the caller fails the run, because the release
-# artefact commit is already pushed and only the docs step needs a rerun.
+# Publish the release's docs to GitHub Pages: `build_docs.sh release <X.Y.Z>
+# --publish` deploys the version with mike, makes it the default, and waits
+# for the GitHub Pages build. Warns with the retry command and returns 1 on
+# failure; the caller fails the run, because the release artefact commit is
+# already pushed and only the docs step needs a rerun.
 deploy_versioned_docs() {
     local ver="$1"
     local docs_script="${REPO_ROOT}/docs/build_docs.sh"
@@ -224,24 +221,15 @@ deploy_versioned_docs() {
         warn "Versioned docs deploy: ${docs_script} not found/executable — skipping."
         return 0
     fi
-    phase "Deploying versioned docs for ${ver} → gh-pages (mike deploy)"
+    phase "Publishing docs for ${ver} → GitHub Pages"
     log ""
-    log "Deploying ${ver} via ./docs/build_docs.sh deploy ${ver}"
-    if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh deploy "${ver}"); then
-        warn "mike deploy ${ver} failed."
-        warn "  Release commit + tag are already made; you can retry later:"
-        warn "    ./docs/build_docs.sh deploy ${ver}"
-        warn "    ./docs/build_docs.sh set-default ${ver}"
+    if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh release "${ver}" --publish); then
+        warn "Publishing the ${ver} docs failed."
+        warn "  Release commit + tag are already made; retry with:"
+        warn "    ./docs/build_docs.sh release ${ver} --publish"
         return 1
     fi
-    phase "Setting ${ver} as default version (mike set-default)"
-    log ""
-    if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh set-default "${ver}"); then
-        warn "mike set-default ${ver} failed — version is deployed but not marked as latest."
-        warn "  Retry with: ./docs/build_docs.sh set-default ${ver}"
-        return 1
-    fi
-    log "✓ Versioned docs deployed and ${ver} set as latest."
+    log "✓ Docs for ${ver} published as the default version."
     return 0
 }
 
@@ -708,7 +696,7 @@ Modes:
                   1. git flow release finish X.Y.Z (merges → main, tags,
                      back-merges to develop)
                   2. git push --follow-tags --atomic origin main develop
-                  3. ./docs/build_docs.sh release X.Y.Z (deploy + wait
+                  3. ./docs/build_docs.sh release X.Y.Z --publish (deploy + wait
                      for GitHub Pages publish + set-default — all gated
                      inside the docs script)
                   4. gh release create X.Y.Z from docs/releases/X.Y.Z.md
@@ -885,7 +873,7 @@ done
 #      annotated tag on main + back-merges to develop.
 #   4. git push --follow-tags --atomic origin main develop — pushes
 #      branches AND the new tag in one operation.
-#   5. ./docs/build_docs.sh release X.Y.Z — deploys versioned docs,
+#   5. ./docs/build_docs.sh release X.Y.Z --publish — deploys versioned docs,
 #      waits for GitHub Pages to publish, sets X.Y.Z as default
 #      (all gated inside the docs script).
 #   6. gh release create X.Y.Z — publishes the GitHub release from
@@ -1086,17 +1074,17 @@ if [[ "${COMPLETE}" -eq 1 ]]; then
 
     # 5. Versioned docs deploy (deploy + wait for GH Pages + set-default,
     #    all gated inside build_docs.sh).
-    phase "Releasing versioned docs (./docs/build_docs.sh release ${RELEASE_VERSION})"
+    phase "Releasing versioned docs (./docs/build_docs.sh release ${RELEASE_VERSION} --publish)"
     log ""
     _docs_ok=0
     if [[ ! -x "${REPO_ROOT}/docs/build_docs.sh" ]]; then
         warn "docs/build_docs.sh not found/executable — skipping versioned docs release."
-        warn "  Run manually when ready: ./docs/build_docs.sh release ${RELEASE_VERSION}"
+        warn "  Run manually when ready: ./docs/build_docs.sh release ${RELEASE_VERSION} --publish"
     else
-        if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh release "${RELEASE_VERSION}"); then
+        if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh release "${RELEASE_VERSION}" --publish); then
             warn "./docs/build_docs.sh release ${RELEASE_VERSION} failed."
             warn "  Tag + branches are pushed; retry the docs release later:"
-            warn "    ./docs/build_docs.sh release ${RELEASE_VERSION}"
+            warn "    ./docs/build_docs.sh release ${RELEASE_VERSION} --publish"
         else
             _docs_ok=1
             log "  ✓ versioned docs released and set as default."
@@ -1146,7 +1134,7 @@ if [[ "${COMPLETE}" -eq 1 ]]; then
         log ""
         log "  Tag:      ${RELEASE_VERSION} (on main)"
         log "  Branches: main + develop updated"
-        log "  Docs:     NOT deployed — retry with ./docs/build_docs.sh release ${RELEASE_VERSION}"
+        log "  Docs:     NOT deployed — retry with ./docs/build_docs.sh release ${RELEASE_VERSION} --publish"
         die "Release ${RELEASE_VERSION} is incomplete: its documentation is not published."
     fi
 

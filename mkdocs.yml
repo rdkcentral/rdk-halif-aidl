@@ -21,7 +21,7 @@
 #** ******************************************************************************
 
 site_name: RDK Hardware Porting Kit
-site_url: https://www.github.com/rdkcentral/rdk-halif-aidl
+site_url: https://rdkcentral.github.io/rdk-halif-aidl/
 site_dir: site # Site directory
 docs_dir: docs
 
@@ -33,6 +33,9 @@ exclude_docs: |
 plugins:
   - search
   - monorepo
+
+hooks:
+  - docs/scripts/docs_hooks.py
 
 repo_name: rdkcentral/rdk-halif-aidl
 repo_url: https://github.com/rdkcentral/rdk-halif-aidl
