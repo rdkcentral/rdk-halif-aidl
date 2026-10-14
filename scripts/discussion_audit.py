@@ -122,10 +122,16 @@ def paged(field, nodes_fragment):
 
 
 PAGE = "pageInfo{hasNextPage endCursor}"
+
+
+def is_our_project(item):
+    # Project numbers are per owner: Project N means the repository owner's.
+    p = item["project"]
+    return p["number"] == PROJECT and (p.get("owner") or {}).get("login", "").lower() == OWNER.lower()
 REPLY_NODES = "body"
 COMMENT_NODES = f"id body replies(first:50){{{PAGE} nodes{{{REPLY_NODES}}}}}"
 FIELD_NODES = "... on ProjectV2ItemFieldSingleSelectValue{name field{... on ProjectV2SingleSelectField{name}}}"
-ITEM_NODES = f"id project{{number}} fieldValues(first:50){{{PAGE} nodes{{{FIELD_NODES}}}}}"
+ITEM_NODES = f"id project{{number owner{{... on Organization{{login}} ... on User{{login}}}}}} fieldValues(first:50){{{PAGE} nodes{{{FIELD_NODES}}}}}"
 
 discussions = paged("discussions", f"""id number title url closed stateReason createdAt updatedAt
     category{{name}} body comments(first:100){{{PAGE} nodes{{{COMMENT_NODES}}}}}""")
@@ -142,7 +148,7 @@ for t in tickets:
     page_rest(t, "comments", "Issue", "body")
     page_rest(t, "projectItems", "Issue", ITEM_NODES)
     for item in t["projectItems"]["nodes"]:
-        if item["project"]["number"] == PROJECT:
+        if is_our_project(item):
             page_rest(item, "fieldValues", "ProjectV2Item", FIELD_NODES)
 prs = paged("pullRequests", f"""id number title url state createdAt body comments(first:100){{{PAGE} nodes{{body}}}}""")
 for p in prs:
@@ -218,7 +224,7 @@ def other(d):
 
 def project_field(t, name):
     for item in t["projectItems"]["nodes"]:
-        if item["project"]["number"] != PROJECT:
+        if not is_our_project(item):
             continue
         for v in item["fieldValues"]["nodes"]:
             if v and v.get("field", {}).get("name") == name:
