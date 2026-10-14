@@ -148,7 +148,7 @@ Per frame, `acquireLatestFrame()` returns only a `bufferIndex`, a timestamp and 
 | **HAL.VIDEOCAPTURE.4** | Shall deliver the addressing of every pool buffer once at `IVideoCaptureControllerListener.onPoolReady()`, and thereafter identify each frame by buffer index and presentation time alone.| A buffer's address and shape do not change during a session. Re-sending file descriptors at frame rate would move them across the binder boundary to repeat what was already said. |
 | **HAL.VIDEOCAPTURE.5** | Shall fail `IVideoCaptureController.start()` with an `ErrorCode` when the pool cannot be reserved or the bound source is decoding a codec outside `Capabilities.supportedCodecs` or beyond `maxFrameWidth` × `maxFrameHeight`, in no case falling back to display output.| The failure belongs where it is still a configuration error, not a stream of wrong pixels. |
 | **HAL.VIDEOCAPTURE.6** | Shall deliver captured frames at the resolution the stream decodes to, applying no scaling, rotation, crop, tone-mapping or gamma adjustment, and shall preserve the source colour space, range, transfer characteristics and chroma siting through whatever conversion the declared pixel format and memory layout require of the bound source.| A transform applied here would have to be undone, and one the consumer cannot undo makes the frame unusable. The picture occupies the top-left `VideoFrameView.visibleWidth` × `visibleHeight` of its buffer. The stream's colour description reaches the consumer from the decoder's metadata, not through this interface, so the delivered frame must still be what that description says. |
-| **HAL.VIDEOCAPTURE.7** | Shall drop no more than one frame per 15 seconds of capture, at every resolution from 144p to 2160p, while the client acquires and releases at the presentation cadence.| The capture path is not permitted to lose frames the display path would have shown. A client that stops releasing is not covered by this — that case is **HAL.VIDEOCAPTURE.9**. |
+| **HAL.VIDEOCAPTURE.7** | Shall drop no more than one frame per 15 seconds of capture, at every resolution from 144p up to the product's declared `maxFrameWidth` × `maxFrameHeight`, while the client acquires and releases at the presentation cadence.| The capture path is not permitted to lose frames the display path would have shown. A client that stops releasing is not covered by this — that case is **HAL.VIDEOCAPTURE.9**. |
 | **HAL.VIDEOCAPTURE.8** | Shall carry each frame's presentation time unaltered in `VideoFrameView.presentationTimeNs`.| The time the sink holds for the frame, neither recomputed nor compensated. The scheduling has already been done (**HAL.VIDEOCAPTURE.10**), so it is carried for a client placing the frame on a timeline of its own rather than for one that needs it to draw in sync. |
 | **HAL.VIDEOCAPTURE.9** | Shall allow decode to proceed at full rate independently of the rate at which the client acquires frames, shall never stall decode for want of a buffer, and shall never re-deliver a frame already returned by `acquireLatestFrame()`.| With no Free buffer the new frame is written over the oldest Ready one, whose frame is dropped; with every buffer Locked the new frame is dropped. Decode, presentation, audio and the clock continue in both cases. |
 | **HAL.VIDEOCAPTURE.10** | Shall return from `acquireLatestFrame()` the frame the bound sink would be presenting at that moment, under whatever presentation mode that sink is running. Where the sink is presenting against an attached AV Clock, that is the frame due now with audio latency and AV-sync correction already applied, frames whose presentation time has passed dropped and frames whose time has not yet come held.| A client that draws each frame on receipt is then in sync without computing anything. The sink owns the timing policy and capture inherits it, so a change of presentation mode at the sink needs no change here. |
@@ -519,6 +519,14 @@ void importCapturePoolAsTextures() {
     destroyImportedImages();
 
     for (CapturedPoolBuffer& captured : capturedPool) {
+        // Without EGL_EXT_image_dma_buf_import_modifiers only a linear buffer can be
+        // imported. A non-linear modifier imported without it would be read as
+        // linear and give a corrupt texture, so the pair is refused instead.
+        if (!haveModifierImport && captured.drmModifier != DRM_FORMAT_MOD_LINEAR) {
+            reportCaptureFailure(EGL_BAD_MATCH);
+            return;
+        }
+
         std::vector<EGLint> attributes = {
             EGL_WIDTH,                captured.width,
             EGL_HEIGHT,               captured.height,
@@ -531,9 +539,8 @@ void importCapturePoolAsTextures() {
                 kPlaneOffset[plane], captured.planes[plane].offset,
                 kPlanePitch[plane],  captured.planes[plane].stride,
             });
-            // The modifier is repeated on every plane, split LO/HI. It needs
-            // EGL_EXT_image_dma_buf_import_modifiers; without that extension only
-            // DRM_FORMAT_MOD_LINEAR can be imported, and it is then omitted.
+            // The modifier is repeated on every plane, split LO/HI. Without the
+            // extension the buffer is linear (checked above) and it is omitted.
             if (haveModifierImport) {
                 attributes.insert(attributes.end(), {
                     kPlaneModLow[plane],  (EGLint)(captured.drmModifier & 0xFFFFFFFF),

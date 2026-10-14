@@ -251,6 +251,12 @@ interface IVideoCaptureController
      * absorbing that silently is how a stale index survives to release another client's
      * frame.
      *
+     * An index names a buffer in the pool delivered by the most recent
+     * `IVideoCaptureControllerListener.onPoolReady()` only. A client drops every index it
+     * holds at `stop()`: after the next `start()` the same number names a buffer in the
+     * new pool, and releasing an index carried over from the old one releases that new
+     * buffer - a caller error the implementation cannot tell from a valid release.
+     *
      * This call returns a buffer to the pool. It is not how a client frees memory, which
      * it does by destroying its imported images and closing its descriptors. `stop()` has
      * already returned every buffer to Free, so a call made in `READY` does nothing and
