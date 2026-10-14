@@ -441,8 +441,23 @@ def resolve(labels_class, field_class, synced):
     return labels_class, "field never set"
 
 
+def moved_since_read(project, item, field_class, synced):
+    """True when the board item changed after this snapshot was taken."""
+    fresh = read_item(project, item["id"])
+    if fresh is None:
+        return False
+    fresh_class = (fresh.get("effect") or {}).get("name")
+    fresh_state = (fresh.get("synced") or {}).get("text") or None
+    return fresh_class != field_class or fresh_state != synced
+
+
 def sync_ticket(project, ticket, dry_run, report):
-    """Bring one ticket's labels, project item and stored state into agreement."""
+    """Bring one ticket's labels, project item and stored state into agreement.
+
+    Returns "changed", "would-add", None for nothing to do, or "skipped" when
+    the item moved while the sweep ran - the caller must then not propagate
+    from this ticket's stale snapshot.
+    """
     number = ticket["number"]
     labels = [n["name"] for n in ticket["labels"]["nodes"]]
     labels_class = class_of(labels)
@@ -467,16 +482,34 @@ def sync_ticket(project, ticket, dry_run, report):
     winner, reason = resolve(labels_class, field_class, synced)
 
     if winner is None:
+        # Nothing is classified in this snapshot. Check the board has not been
+        # classified since the read before clearing, or before letting a PR with
+        # linked issues inherit their class over a value someone just chose.
+        has_links = bool((ticket.get("closingIssuesReferences") or {}).get("nodes"))
+        to_clear = bool(field_class or synced or labels_class)
+        if not dry_run and (to_clear or has_links):
+            if moved_since_read(project, item, field_class, synced):
+                report.append(f"#{number}: skipped, the item moved while the sweep ran")
+                return "skipped"
         # The classification is gone from whichever surface still held it.
         # Clearing only the field would leave the labels to restore it on the
         # next sweep, so clearing on the board has to take the labels with it.
-        if field_class or synced or labels_class:
+        if to_clear:
             if not dry_run:
                 if field_class:
                     clear_effect(project, item["id"])
                 if labels_class:
                     remove_owned_labels(ticket["id"], labels)
                 set_state(project, item["id"], "")
+                # Keep the in-memory ticket in step, so propagation in the same
+                # run sees the cleared state and does not reapply the old class.
+                item["effect"] = None
+                item["synced"] = None
+                ticket["labels"]["nodes"] = [
+                    {"name": name}
+                    for name in labels
+                    if name not in OWNED_LABELS or name in KEEP_ALWAYS
+                ]
             report.append(f"#{number}: cleared, classification removed")
             return "changed"
         return None
@@ -494,13 +527,9 @@ def sync_ticket(project, ticket, dry_run, report):
     # first write and step aside if it moved - the next sweep sees the new value
     # rather than this one overwriting it.
     if needs_write and not dry_run:
-        fresh = read_item(project, item["id"])
-        if fresh is not None:
-            fresh_class = (fresh.get("effect") or {}).get("name")
-            fresh_state = (fresh.get("synced") or {}).get("text") or None
-            if fresh_class != field_class or fresh_state != synced:
-                report.append(f"#{number}: skipped, the item moved while the sweep ran")
-                return None
+        if moved_since_read(project, item, field_class, synced):
+            report.append(f"#{number}: skipped, the item moved while the sweep ran")
+            return "skipped"
 
     actions = []
     labels_written = True
@@ -719,7 +748,8 @@ def cmd_reconcile(args):
         # The PR's own surfaces settle first. Propagating an inherited label
         # before that would make a board edit on the PR look like a label edit,
         # and the linked issue's class would quietly win.
-        sync_ticket(project, pr, args.dry_run, report)
+        if sync_ticket(project, pr, args.dry_run, report) == "skipped":
+            continue   # stale snapshot: the next sweep propagates from fresh values
         before = class_of([n["name"] for n in pr["labels"]["nodes"]])
         propagate_pr_to_issues(pr, args.dry_run, report)
         if class_of([n["name"] for n in pr["labels"]["nodes"]]) != before:
@@ -772,7 +802,10 @@ def cmd_sync_item(args):
     report = []
     # Same ordering as the sweep: this ticket's own surfaces first, so an edit
     # made on the board is not mistaken for a label edit once propagation runs.
-    sync_ticket(project, ticket, args.dry_run, report)
+    if sync_ticket(project, ticket, args.dry_run, report) == "skipped":
+        for line in report:
+            print(f"  {line}")
+        return
     before = class_of([n["name"] for n in ticket["labels"]["nodes"]])
     touched = propagate_pr_to_issues(ticket, args.dry_run, report)
     if class_of([n["name"] for n in ticket["labels"]["nodes"]]) != before:
