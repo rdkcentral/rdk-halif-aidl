@@ -218,8 +218,8 @@ deploy_versioned_docs() {
     local ver="$1"
     local docs_script="${REPO_ROOT}/docs/build_docs.sh"
     if [[ ! -x "${docs_script}" ]]; then
-        warn "Versioned docs deploy: ${docs_script} not found/executable — skipping."
-        return 0
+        warn "Versioned docs deploy: ${docs_script} not found/executable."
+        return 1
     fi
     phase "Publishing docs for ${ver} → GitHub Pages"
     log ""

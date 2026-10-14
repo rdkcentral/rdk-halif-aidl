@@ -209,7 +209,7 @@ function check_nav_coverage()
 
   while IFS= read -r subsite_yml; do
     rel="${subsite_yml#"${REPO_ROOT}"/}"
-    if ! grep -qF "'!include ${rel}'" "${nav}"; then
+    if ! grep -qE "^[[:space:]]*-[[:space:]]+[^#:]+:[[:space:]]+'!include ${rel//./\\.}'[[:space:]]*$" "${nav}"; then
       echo "[ERROR]   no nav entry for ${rel}"
       missing=$((missing + 1))
     fi
