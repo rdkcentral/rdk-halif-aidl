@@ -133,9 +133,14 @@ namespace hc = com::rdk::hal::halcompat;
 
 static android::sp<IBootReason> gService;
 
-// Suite policy, passed to every halcompat call. Dev images run "notfrozen"
-// servers and opt in here; a production run sets it false.
+// Suite policy, passed to every halcompat call. Off by default, so a
+// production run reports a "notfrozen" server as the deployment error it is.
+// Development builds opt in with -DHAL_TEST_ALLOW_UNFROZEN.
+#ifdef HAL_TEST_ALLOW_UNFROZEN
 static constexpr bool kAllowUnfrozen = true;
+#else
+static constexpr bool kAllowUnfrozen = false;
+#endif
 
 static int bootreason_suite_init(void)
 {
@@ -298,6 +303,8 @@ target_link_libraries(bootreason_tests
     bootreason-vcurrent-cpp        # or bootreason-v0.2.0.0-cpp, pinned
     # ... binder SDK + ut-core libraries per the test project's build
 )
+# Development builds only, against a "notfrozen" server:
+# target_compile_definitions(bootreason_tests PRIVATE HAL_TEST_ALLOW_UNFROZEN)
 ```
 
 Generated headers are module-local (`<module>/current/include/`); snapshot
