@@ -441,14 +441,46 @@ def resolve(labels_class, field_class, synced):
     return labels_class, "field never set"
 
 
-def moved_since_read(project, item, field_class, synced):
-    """True when the board item changed after this snapshot was taken."""
-    fresh = read_item(project, item["id"])
-    if fresh is None:
+def read_content(content_id):
+    """Re-read an issue's or PR's labels and milestone."""
+    data = gql(
+        """
+        query($id:ID!){ node(id:$id){
+          ... on Issue{ milestone{ id } labels(first:100){ nodes{ name } } }
+          ... on PullRequest{ milestone{ id } labels(first:100){ nodes{ name } } }
+        } }
+        """,
+        {"id": content_id},
+    )
+    return data.get("node") or {}
+
+
+def labels_moved(content_id, snapshot_labels):
+    """True when a ticket's labels changed after the snapshot was taken."""
+    fresh = read_content(content_id)
+    if "labels" not in fresh:
         return False
-    fresh_class = (fresh.get("effect") or {}).get("name")
-    fresh_state = (fresh.get("synced") or {}).get("text") or None
-    return fresh_class != field_class or fresh_state != synced
+    return {n["name"] for n in fresh["labels"]["nodes"]} != set(snapshot_labels)
+
+
+def milestone_moved(content_id, snapshot_milestone):
+    """True when a ticket's milestone changed after the snapshot was taken."""
+    fresh = read_content(content_id)
+    if not fresh:
+        return False
+    return ((fresh.get("milestone") or {}).get("id")) != ((snapshot_milestone or {}).get("id"))
+
+
+def moved_since_read(project, item, field_class, synced, ticket=None, labels=None):
+    """True when the board item, or the ticket's labels, changed after this
+    snapshot was taken. Both feed the decision being written."""
+    fresh = read_item(project, item["id"])
+    if fresh is not None:
+        fresh_class = (fresh.get("effect") or {}).get("name")
+        fresh_state = (fresh.get("synced") or {}).get("text") or None
+        if fresh_class != field_class or fresh_state != synced:
+            return True
+    return ticket is not None and labels_moved(ticket["id"], labels or [])
 
 
 def sync_ticket(project, ticket, dry_run, report):
@@ -488,7 +520,7 @@ def sync_ticket(project, ticket, dry_run, report):
         has_links = bool((ticket.get("closingIssuesReferences") or {}).get("nodes"))
         to_clear = bool(field_class or synced or labels_class)
         if not dry_run and (to_clear or has_links):
-            if moved_since_read(project, item, field_class, synced):
+            if moved_since_read(project, item, field_class, synced, ticket, labels):
                 report.append(f"#{number}: skipped, the item moved while the sweep ran")
                 return "skipped"
         # The classification is gone from whichever surface still held it.
@@ -527,7 +559,7 @@ def sync_ticket(project, ticket, dry_run, report):
     # first write and step aside if it moved - the next sweep sees the new value
     # rather than this one overwriting it.
     if needs_write and not dry_run:
-        if moved_since_read(project, item, field_class, synced):
+        if moved_since_read(project, item, field_class, synced, ticket, labels):
             report.append(f"#{number}: skipped, the item moved while the sweep ran")
             return "skipped"
 
@@ -595,8 +627,13 @@ def mirror_milestone(pr, linked, dry_run, report):
     if not source:
         return
 
+    # Each write re-reads its target first: a milestone someone set while the
+    # sweep ran is newer than this snapshot, so it is left for the next sweep.
     if not pr_milestone:
         if not dry_run:
+            if milestone_moved(pr["id"], pr_milestone):
+                report.append(f"PR #{pr['number']}: milestone skipped, it moved while the sweep ran")
+                return
             set_milestone(pr["id"], source["id"], is_pr=True)
         pr["milestone"] = source
         report.append(f"PR #{pr['number']}: milestone -> {source['title']} (inherited)")
@@ -605,6 +642,9 @@ def mirror_milestone(pr, linked, dry_run, report):
         issue_milestone = issue.get("milestone")
         if not issue_milestone or issue_milestone["title"] != source["title"]:
             if not dry_run:
+                if milestone_moved(issue["id"], issue_milestone):
+                    report.append(f"#{issue['number']}: milestone skipped, it moved while the sweep ran")
+                    continue
                 set_milestone(issue["id"], source["id"], is_pr=False)
             report.append(
                 f"#{issue['number']}: milestone -> {source['title']} "
@@ -638,6 +678,9 @@ def propagate_pr_to_issues(pr, dry_run, report):
             return []
         inherited = min(candidates, key=PRECEDENCE.index)
         if not dry_run:
+            if labels_moved(pr["id"], pr_labels):
+                report.append(f"PR #{pr['number']}: skipped, its labels moved while the sweep ran")
+                return []
             if not apply_labels(pr["id"], inherited, pr_labels):
                 # The write failed, so the PR still has no class. Leave the
                 # local object alone and let the next sweep retry.
@@ -661,6 +704,9 @@ def propagate_pr_to_issues(pr, dry_run, report):
             name for name in WRITEBACK_LABELS[pr_class] if name not in issue_labels
         ]
         if class_of(issue_labels) != pr_class or absent:
+            if not dry_run and labels_moved(issue["id"], issue_labels):
+                report.append(f"#{issue['number']}: skipped, its labels moved while the sweep ran")
+                continue
             if not dry_run and not apply_labels(issue["id"], pr_class, issue_labels):
                 # The write failed. Leave it for the next sweep rather than
                 # reporting a change that did not happen.
