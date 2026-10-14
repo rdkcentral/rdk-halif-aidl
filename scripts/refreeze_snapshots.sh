@@ -186,10 +186,22 @@ refreeze_one() {
     # snapshot's include/ (#623, #745). They are the released version and are
     # not regenerated, so set them aside across the wipe below. Never re-take
     # them from current/ — that is the next, unreleased version.
+    # The backup must succeed before the wipe: an empty or partial set would
+    # silently drop released headers.
     local _hand_hdrs
-    _hand_hdrs="$(mktemp -d)"
-    find "${snap}/include" -maxdepth 1 -type f -name '*.h' \
-        -exec cp -p {} "${_hand_hdrs}/" \; 2>/dev/null || true
+    if ! _hand_hdrs="$(mktemp -d)"; then
+        restore_current
+        warn "[${comp}] could not create a temporary directory for the hand-authored headers; snapshot untouched."
+        return 1
+    fi
+    if [[ -d "${snap}/include" ]] \
+        && ! find "${snap}/include" -maxdepth 1 -type f -name '*.h' \
+                -exec cp -p -t "${_hand_hdrs}" {} +; then
+        rm -rf "${_hand_hdrs}"
+        restore_current
+        warn "[${comp}] could not set aside the hand-authored headers in ${ver}/include/; snapshot untouched."
+        return 1
+    fi
 
     # Copy back ONLY the identity artefacts. A failure here has already
     # removed the snapshot's old bindings — tell the operator how to
