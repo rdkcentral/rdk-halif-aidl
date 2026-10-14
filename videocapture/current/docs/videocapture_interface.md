@@ -772,7 +772,7 @@ The per-product declaration is `format` under `captureCapabilities` in `hfp-vide
 
 ## Buffer Contract
 
-Frames are delivered in the pixel format and memory layout of `Capabilities.format`, with truthful per-plane offsets addressing the actual buffer layout, at the resolution the stream decodes to and in its source colorimetry. No scaling, rotation, crop, tone-mapping or gamma adjustment is applied on this path, and any conversion the declared pair requires preserves the source colour space, range, transfer characteristics and chroma siting. The stream's colour description reaches the consumer from the decoder's metadata, not through this interface.
+Frames are delivered in the pixel format and memory layout of `Capabilities.format`, with truthful per-plane offsets addressing the actual buffer layout, at the resolution the stream decodes to and in its source colourimetry. No scaling, rotation, crop, tone-mapping or gamma adjustment is applied on this path, and any conversion the declared pair requires preserves the source colour space, range, transfer characteristics and chroma siting. The stream's colour description reaches the consumer from the decoder's metadata, not through this interface.
 
 Every pool buffer is `Capabilities.maxFrameWidth` × `maxFrameHeight`. A frame's picture occupies the top-left `VideoFrameView.visibleWidth` × `visibleHeight` of its buffer, so a stream changing resolution within that maximum changes only those values and needs no new pool. A source decoding beyond the maximum fails with `ErrorCode.RESOLUTION_MISMATCH`. Nothing is scaled, so there is no scaling quality to validate.
 
