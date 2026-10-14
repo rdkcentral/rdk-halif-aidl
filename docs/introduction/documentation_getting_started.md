@@ -69,7 +69,7 @@ Build the documentation and deploy to the `gh-pages` branch:
 
 ```bash
 ./build_docs.sh build
-./build_docs.sh deploy
+./build_docs.sh release --publish
 ```
 
 The site will be published at: [https://rdkcentral.github.io/rdk-halif-aidl/](https://rdkcentral.github.io/rdk-halif-aidl/)  

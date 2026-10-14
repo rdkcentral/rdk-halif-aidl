@@ -36,6 +36,24 @@ enum Property
     HAL_CEC_VERSION = 0,
 
     /**
+     * Returns the primary CEC device type configured for the physical device.
+     * The value is one of the DeviceType enum values.
+     *
+     * Type: Int - 32-bit integer value.
+     * Access: Read-only.
+     */
+    PRIMARY_DEVICE_TYPE = 1,
+
+    /**
+     * Returns the secondary CEC device type configured for the physical device,
+     * or DeviceType::NONE when no secondary type is configured.
+     *
+     * Type: Int - 32-bit integer value.
+     * Access: Read-only.
+     */
+    SECONDARY_DEVICE_TYPE = 2,
+
+    /**
      * Returns the total number of Directed CEC messages sent since open.
      * -1 means this metric is not yet implemented by the vendor.
      * 

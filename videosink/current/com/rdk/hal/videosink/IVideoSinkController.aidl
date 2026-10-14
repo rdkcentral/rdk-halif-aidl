@@ -42,14 +42,44 @@ import com.rdk.hal.avclock.IAVClock;
  *      returns `false` until queue space becomes available again. Frames
  *      remain in the queue across the no-clock period.</li>
  *  <li><b>AVClock attached and started</b>: the sink consumes queued frames
- *      at the rate dictated by the clock and renders them on the mapped video
- *      plane — AV synchronisation is in effect (lip-synced with any audio
- *      sink presenting against the same clock). If the clock is paused,
- *      consumption pauses with it and the queue will eventually fill.</li>
+ *      at the rate dictated by the clock, rendering them when a video plane
+ *      is mapped — AV synchronisation is in effect (lip-synced with any audio
+ *      sink presenting against the same clock) whether or not a plane is
+ *      mapped. If the clock is paused, consumption pauses with it and the
+ *      queue will eventually fill.</li>
  *  </ul>
  *  `attachClock()` / `detachClock()` are callable in `READY` or `STARTED` and
  *  do not change the sink's state-machine state. Detaching during `STARTED`
  *  suspends consumption but does not flush the queue or stop the sink.
+ *
+ *  <h3>Video plane mapping and rendering</h3>
+ *  The attached clock gates frame consumption; the mapped video plane gates
+ *  visibility. The plane mapping is owned by Plane Control rather than by this
+ *  controller — it is set for `SourceType::VIDEO_SINK` at this sink's
+ *  `RESOURCE_ID` through
+ *  `IPlaneControl.setVideoSourceDestinationPlaneMapping()`, where a
+ *  `destinationPlaneIndex` of -1 means the sink has no plane.
+ *  <ul>
+ *  <li><b>Plane mapped</b>: queued frames are consumed at their presentation
+ *      times on the attached clock and rendered on that plane.</li>
+ *  <li><b>No plane mapped</b>: queued frames are consumed at their
+ *      presentation times and their buffers freed via `IAVBuffer.free()` at
+ *      exactly the same points as when a plane is mapped, and nothing is
+ *      displayed. The queue drains at clock rate, so the sink stays in sync
+ *      with any audio sink presenting against the same clock and video is
+ *      lip-synced from the moment a plane is mapped.</li>
+ *  </ul>
+ *  `Property.RENDER_FIRST_FRAME` is independent of this contract: it only
+ *  governs whether a single first frame may be displayed ahead of the
+ *  attached clock, and does not change when frames are consumed, freed, or
+ *  when `onEndOfStream()` fires.
+ * The mapping may be set or cleared at any point in the session, including
+ * while `STARTED`. A successful mapping change leaves the sink's state-machine
+ * state unchanged and does not flush the queue. On becoming
+ *  mapped, the sink renders from the first queued frame whose presentation
+ *  time is at or after the current clock time; queued frames whose
+ *  presentation time has already passed are discarded rather than displayed
+ *  late.
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
@@ -87,13 +117,18 @@ interface IVideoSinkController
      * passed here to clear an existing association, equivalent in effect to
      * the state at `open()`.
      *
+     * `IVideoDecoder.Id.EXTERNAL` indicates that the Video Sink is fed by an
+     * external non-HAL component rather than a HAL Video Decoder. A session
+     * associated with `EXTERNAL` may be started.
+     *
      * A valid Video Decoder ID is one returned by
-     * `IVideoDecoderManager.getVideoDecoderIds()`. A valid association is
-     * required before the pipeline is started in both tunnelled and
-     * non-tunnelled modes.
+     * `IVideoDecoderManager.getVideoDecoderIds()`. A valid association, or
+     * `IVideoDecoder.Id.EXTERNAL`, is required before the pipeline is started
+     * in both tunnelled and non-tunnelled modes.
      *
      * @param[in] videoDecoderId
-     *      The ID of the Video Decoder source, or `IVideoDecoder.Id.UNDEFINED`
+     *      The ID of the Video Decoder source, `IVideoDecoder.Id.EXTERNAL`
+     *      for an external non-HAL source, or `IVideoDecoder.Id.UNDEFINED`
      *      to clear the association.
      *
      * @exception binder::Status::Exception::EX_NONE
@@ -104,11 +139,12 @@ interface IVideoSinkController
      *
      * @returns boolean
      * @retval true
-     *      The Video Decoder ID was set, or the association was cleared with
+     *      The Video Decoder ID was set, the source was set to
+     *      `IVideoDecoder.Id.EXTERNAL`, or the association was cleared with
      *      `IVideoDecoder.Id.UNDEFINED`.
      *
      * @retval false
-     *      The ID is not one returned by
+     *      The ID is not `IVideoDecoder.Id.EXTERNAL` and not one returned by
      *      `IVideoDecoderManager.getVideoDecoderIds()`.
      *
      * @pre The resource must be in State::READY.
@@ -123,7 +159,8 @@ interface IVideoSinkController
      * Returns the currently associated `IVideoDecoder.Id` in both tunnelled
      * and non-tunnelled modes.
      *
-     * @returns IVideoDecoder.Id which can be IVideoDecoder.Id.UNDEFINED.
+     * @returns IVideoDecoder.Id which can be `IVideoDecoder.Id.UNDEFINED` or
+     *          `IVideoDecoder.Id.EXTERNAL`.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource
@@ -221,10 +258,17 @@ interface IVideoSinkController
      * If successful the Video Sink transitions to a `STARTING` state and then
      * a `STARTED` state.
      *
-     * The client must call `setVideoDecoder()` with a valid decoder ID before
+     * The client must call `setVideoDecoder()` with a valid decoder ID, or
+     * `IVideoDecoder.Id.EXTERNAL` for an external non-HAL source, before
      * calling this method in both tunnelled and non-tunnelled modes. Starting
      * a Video Sink while the associated decoder ID is
      * `IVideoDecoder.Id.UNDEFINED` shall fail.
+     *
+     * The Video Decoder association is the only association this call
+     * requires. The AVClock attachment and the video plane mapping are
+     * independent of it: a sink started with no plane mapped runs normally
+     * and displays nothing until a plane is mapped — see the interface
+     * @brief.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      *
@@ -234,7 +278,8 @@ interface IVideoSinkController
      *
      * @pre The resource must be in State::READY.
      * @pre The associated Video Decoder ID must not be
-     *      `IVideoDecoder.Id.UNDEFINED`; set it using `setVideoDecoder()`.
+     *      `IVideoDecoder.Id.UNDEFINED`; set a valid decoder ID or
+     *      `IVideoDecoder.Id.EXTERNAL` using `setVideoDecoder()`.
      *
      * @see stop(), IVideoSink.open(), setVideoDecoder()
      */
@@ -258,7 +303,9 @@ interface IVideoSinkController
      * Queues a video frame for display.
      *
      * When the presentation time occurs for the video frame the current mapped video plane is used
-     * to render the video frame.
+     * to render the video frame. With no plane mapped the frame is consumed
+     * and freed at that same presentation time and nothing is displayed — see
+     * the interface @brief.
      *
      * Consumption is gated by the AVClock attachment — see the interface
      * @brief for the full contract. Summary: the sink consumes queued frames
@@ -321,9 +368,13 @@ interface IVideoSinkController
      * Signals end-of-stream to the video sink.
      *
      * Asserts that no further frames will be queued via `queueVideoFrame()`.
-     * The sink renders every already-queued frame in the usual way and then
+     * The sink consumes every already-queued frame at its presentation time
+     * — and, where a plane is mapped, renders it — in the usual way, then
      * fires `IVideoSinkControllerListener.onEndOfStream(nsPresentationTime)`
-     * with the presentation time of the final rendered frame.
+     * with the presentation time of the final queued frame.
+     *
+     * The callback is keyed on that presentation time passing on the attached
+     * clock, so it fires whether or not a video plane is mapped.
      *
      * If no frames are queued when this is called, the sink fires
      * `onEndOfStream()` with an undefined-time sentinel

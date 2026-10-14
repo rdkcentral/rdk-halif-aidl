@@ -35,16 +35,16 @@ parcelable PlatformCapabilities {
     boolean supportsLowLatency;
 
     /**
-     * The native sample rate of system mixer.
-     * PCM audio must be delivered at this sample rate.
+     * Supported PCM input sample rates in Hz.
+     * Every listed rate is accepted with every listed format.
      */
-    int systemMixerSampleRateHz;
+    int[] supportedSampleRatesHz;
 
     /**
-     * The PCM format of the system mixer.
-     * PCM audio must be delivered in this format.
+     * Supported PCM input formats.
+     * Every listed format is accepted with every listed rate.
      */
-    PCMFormat systemMixerPCMFormat;
+    PCMFormat[] supportedPCMFormats;
 
     /**
      * Indicated support for planar format of audio data buffers
@@ -55,13 +55,13 @@ parcelable PlatformCapabilities {
 
     /**
      * Indicates support for a SoC proprietary audio data format.
-     * The Audio decoder can output a completely proprietary audio format that is opaque to the MW. 
+     * The Audio decoder can output a completely proprietary audio format that is opaque to the MW.
      * Where this is the case the SoCProprietary boolean will be set in the FrameMeta returned by the Audio decoder
      * and the frames should be queued on the sink with the same metadata flag set.
      * When SoCProprietary is set the Audio decoder HAL passes audio metadata to the Audio sink HAL using proprietary methods.
      * For convenience the SoC HAL implementation can use the SoCPrivate field in the FrameMetadata to pass opaque metadata between decoder and sink.
-     * 
-     * The MW need only pass the AVBuffer to the sink and must assume that the data format is compatible between decoder and sink. 
+     *
+     * The MW need only pass the AVBuffer to the sink and must assume that the data format is compatible between decoder and sink.
      */
     boolean supportsSoCProprietary;
 

@@ -43,6 +43,9 @@ oneway interface IAudioSinkEventListener {
      *
      * The behaviour is the same for tunnelled and non-tunnelled audio.
      * This occurs on the first audio frame in the session or after a flush() call.
+     * Mixing requires a routed mixer input, so for a sink running with no
+     * mixer input routed this reports the first frame mixed once a mixer
+     * input becomes routed.
      * The frame may not immediately be heard due to the audio pipeline output latency.
      *
      * @param[in] nsPresentationTime	The presentation time of the audio frame in nanoseconds.
@@ -50,13 +53,16 @@ oneway interface IAudioSinkEventListener {
     void onFirstFrameRendered(in long nsPresentationTime);
 
     /**
-     * Callback when the last audio frame has been completely passed to the mixer.
+     * Callback when consumption of the session's final queued audio frame
+     * has completed on the attached clock.
      *
      * The behaviour is the same for tunnelled and non-tunnelled audio.
-     * This occurs on the last frame mixed in the session.
-     * The audio may not immediately be heard due to audio mixer and output latencies.
+     * This occurs once consumption of the last queued frame in the session
+     * completes on the attached clock, whether or not a mixer input is
+     * routed. With a mixer input routed, the audio may not immediately be
+     * heard due to audio mixer and output latencies.
      *
-     * @param[in] nsPresentationTime	The presentation time of the audio frame in nanoseconds.
+     * @param[in] nsPresentationTime	The presentation time of the final audio frame in nanoseconds, or `IAVClock.UNDEFINED_TIME` if no frames were queued.
      */
     void onEndOfStream(in long nsPresentationTime);
 

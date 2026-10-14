@@ -42,6 +42,8 @@ import com.rdk.hal.avclock.State;
 @VintfStability
 interface IAVClock 
 {
+    /** Used to indicate that a clock value is invalid and should not be used **/
+	const long UNDEFINED_TIME = -1L;
 
     /** AV Clock resource ID type */
     @VintfStability

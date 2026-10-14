@@ -9,8 +9,8 @@ The Boot Reason HAL provides a platform-independent interface for managing devic
 !!! info "References"
     |||
     |-|-|
-    |**Interface Definition**|[bootreason/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/bootreason/current)|
-    |**Interface Version**|`current`|
+    |**Interface Definition**|[bootreason/0.1.0.0](https://github.com/rdkcentral/rdk-halif-aidl/tree/0.21.0/bootreason/0.1.0.0)|
+    |**Interface Version**|`0.1.0.0`|
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
 
 !!! tip "Related Pages"

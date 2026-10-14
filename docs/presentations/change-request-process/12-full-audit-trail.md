@@ -2,7 +2,7 @@
 
 Every change is **completely traceable** from requirement through to release:
 
-- Every git commit is via a **named branch** (`feature/{issue#}_{synopsis}`)
+- Every git commit is via a **named branch** (`feature/{issue#}-{synopsis}`)
 - Branch naming enforced, **all changes linked to a tracked issue**
 - All history is **auto-generated from the issues list**
 - **Release notes** detail every change and commit since the last release
