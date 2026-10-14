@@ -79,7 +79,7 @@ TOKEN = subprocess.run(["gh", "auth", "token"] + (["--user", ACCOUNT] if ACCOUNT
 ENV = dict(os.environ, GH_TOKEN=TOKEN)
 
 
-def gql(query, **variables):
+def gql_data(query, **variables):
     args = ["gh", "api", "graphql", "-f", f"query={query}"]
     for k, v in variables.items():
         args += ["-F", f"{k}={v}"] if v is not None else []
@@ -87,7 +87,26 @@ def gql(query, **variables):
                          env=ENV)
     if out.returncode:
         sys.exit(out.stderr)
-    return json.loads(out.stdout)["data"]["repository"]
+    return json.loads(out.stdout)["data"]
+
+
+def gql(query, **variables):
+    return gql_data(query, **variables)["repository"]
+
+
+def page_rest(node, field, fragment, nodes_fragment):
+    """Fetch the rest of a nested connection that the first page did not finish.
+
+    `node` holds the first page as node[field] = {pageInfo, nodes}; the remaining
+    pages are read through node(id:) and appended, so classification sees all of it.
+    """
+    conn = node[field]
+    while conn["pageInfo"]["hasNextPage"]:
+        query = f"""query($id:ID!,$c:String){{node(id:$id){{... on {fragment}{{
+          {field}(first:100,after:$c){{pageInfo{{hasNextPage endCursor}} nodes{{{nodes_fragment}}}}}}}}}}}"""
+        more = gql_data(query, id=node["id"], c=conn["pageInfo"]["endCursor"])["node"][field]
+        conn["nodes"] += more["nodes"]
+        conn["pageInfo"] = more["pageInfo"]
 
 
 def paged(field, nodes_fragment):
@@ -102,23 +121,42 @@ def paged(field, nodes_fragment):
         cursor = page["pageInfo"]["endCursor"]
 
 
-discussions = paged("discussions", """number title url closed stateReason createdAt updatedAt
-    category{name} body comments(first:100){nodes{body replies(first:50){nodes{body}}}}""")
-tickets = paged("issues", """number title url state stateReason createdAt body comments(first:100){nodes{body}}
-    milestone{title} assignees(first:5){nodes{login}}
-    projectItems(first:5){nodes{project{number} fieldValues(first:20){nodes{
-      ... on ProjectV2ItemFieldSingleSelectValue{name field{... on ProjectV2SingleSelectField{name}}}}}}}""")
+PAGE = "pageInfo{hasNextPage endCursor}"
+REPLY_NODES = "body"
+COMMENT_NODES = f"id body replies(first:50){{{PAGE} nodes{{{REPLY_NODES}}}}}"
+FIELD_NODES = "... on ProjectV2ItemFieldSingleSelectValue{name field{... on ProjectV2SingleSelectField{name}}}"
+ITEM_NODES = f"id project{{number}} fieldValues(first:50){{{PAGE} nodes{{{FIELD_NODES}}}}}"
+
+discussions = paged("discussions", f"""id number title url closed stateReason createdAt updatedAt
+    category{{name}} body comments(first:100){{{PAGE} nodes{{{COMMENT_NODES}}}}}""")
+for d in discussions:
+    page_rest(d, "comments", "Discussion", COMMENT_NODES)
+    for c in d["comments"]["nodes"]:
+        page_rest(c, "replies", "DiscussionComment", REPLY_NODES)
+
+tickets = paged("issues", f"""id number title url state stateReason createdAt body comments(first:100){{{PAGE} nodes{{body}}}}
+    milestone{{title}} assignees(first:5){{nodes{{login}}}}
+    projectItems(first:20){{{PAGE} nodes{{{ITEM_NODES}}}}}""")
 for t in tickets:
     t["kind"] = "issue"
-prs = paged("pullRequests", """number title url state createdAt body comments(first:100){nodes{body}}""")
+    page_rest(t, "comments", "Issue", "body")
+    page_rest(t, "projectItems", "Issue", ITEM_NODES)
+    for item in t["projectItems"]["nodes"]:
+        if item["project"]["number"] == PROJECT:
+            page_rest(item, "fieldValues", "ProjectV2Item", FIELD_NODES)
+prs = paged("pullRequests", f"""id number title url state createdAt body comments(first:100){{{PAGE} nodes{{body}}}}""")
 for p in prs:
     p["kind"] = "PR"
+    page_rest(p, "comments", "PullRequest", "body")
 tickets += prs
 
 by_ticket = {t["number"]: t for t in tickets}
 discussions = [d for d in discussions if d["category"]["name"] != "Announcements"]
 by_disc = {d["number"]: d for d in discussions}
 
+# Issues, pull requests and discussions share one number sequence per repository,
+# so #N (or an issues/pull/discussions URL) names exactly one of them; the lookup
+# against by_disc or by_ticket decides which kind it is.
 REF = re.compile(rf"(?:github\.com/{OWNER}/{NAME}/(?:issues|pull|discussions)/|(?<![\w/])#)(\d+)\b")
 
 
