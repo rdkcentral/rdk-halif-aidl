@@ -13,8 +13,8 @@ The **AV Buffer HAL** manages both secure and non-secure memory heaps and pools 
 !!! info References
     |||
     |-|-|
-    |**Interface Definition**|[avbuffer/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/avbuffer/current)|
-    |**Interface Version**|`current`|
+    |**Interface Definition**|[avbuffer/0.2.0.0](https://github.com/rdkcentral/rdk-halif-aidl/tree/0.21.0/avbuffer/0.2.0.0)|
+    |**Interface Version**|`0.2.0.0`|
     | **API Documentation** | *TBD - Doxygen* |
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
     |**VTS Tests**| TBC |

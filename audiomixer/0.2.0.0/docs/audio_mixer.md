@@ -11,8 +11,8 @@ Multiple mixer instances can exist on a platform, each capable of mixing multipl
 !!! info "References"
     |||
     |-|-|
-    |**Interface Definition**|[audiomixer/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiomixer/current)|
-    |**Interface Version**|`current`|
+    |**Interface Definition**|[audiomixer/0.2.0.0](https://github.com/rdkcentral/rdk-halif-aidl/tree/0.21.0/audiomixer/0.2.0.0)|
+    |**Interface Version**|`0.2.0.0`|
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
 
 ---
@@ -439,7 +439,7 @@ Mixers can operate in secure and non-secure paths. Mixer properties such as `MIX
 
 The `IDolbyMs12_2_6_Dap` interface exposes one method per MS12 IDK 2.6 runtime command and is created from `IAudioOutputPort.getDolbyMs12_2_6_Dap()`.
 
-Non-boolean argument constraints are declared per output port in `audiomixer/current/hfp-audiomixer.yaml` under `outputPorts[].supportedAQProcessors[].setFunctions`.
+Non-boolean argument constraints are declared per output port in `audiomixer/0.2.0.0/hfp-audiomixer.yaml` under `outputPorts[].supportedAQProcessors[].setFunctions`.
 
 | Method | Non-boolean constraints |
 | ------ | ----------------------- |

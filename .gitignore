@@ -49,3 +49,5 @@ Makefile
 # Claude Code
 .claude/
 
+
+mkdocs.release.yml
