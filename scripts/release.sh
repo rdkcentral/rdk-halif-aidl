@@ -2063,6 +2063,47 @@ open(path, 'w').write(s)
 PYEOF
 }
 
+# freeze_snapshot_docs <comp> <version> <tag> : Rewrite <comp>/<version>/docs/
+# so the frozen page documents <version>, not current/ (#796).
+#
+#   tree/main/<comp>/current  ->  tree/<tag>/<comp>/<version>
+#   <comp>/current            ->  <comp>/<version>
+#   Interface Version `current` -> `<version>`
+#
+# <tag> is the release that ships the snapshot; a tag-pinned link cannot move
+# as main does. Safe to repeat: a rewritten page no longer matches.
+freeze_snapshot_docs() {
+    local comp="$1" version="$2" tag="$3"
+    local docs_dir="${REPO_ROOT}/${comp}/${version}/docs"
+    local doc
+
+    [[ -d "${docs_dir}" ]] || return 0
+    [[ -n "${tag}" ]] || { warn "  [${comp}/${version}] no release tag to pin the docs links to."; return 1; }
+    while IFS= read -r -d '' doc; do
+        # -i.bak + rm: the in-place form GNU and BSD sed both accept.
+        sed -i.bak \
+            -e "s#/tree/main/${comp}/current#/tree/${tag}/${comp}/${version}#g" \
+            -e "s#${comp}/current#${comp}/${version}#g" \
+            -e "s#|\*\*Interface Version\*\*|\`current\`|#|**Interface Version**|\`${version}\`|#" \
+            "${doc}" && rm -f "${doc}.bak" || return 1
+    done < <(find "${docs_dir}" -name '*.md' -type f -print0)
+}
+
+# check_snapshot_docs : Fail, naming each line, when a snapshot doc's
+# Interface Definition or Interface Version still refers to current/ (#796).
+check_snapshot_docs() {
+    local hits
+    hits="$(cd "${REPO_ROOT}" && find . -path '*/[0-9]*.[0-9]*.[0-9]*.[0-9]*/docs/*' -name '*.md' -type f \
+              -not -path './docs/*' -not -path './build/*' -not -path './out/*' -print0 \
+            | xargs -0 grep -nE '\*\*Interface (Version\*\*\|`current`|Definition\*\*\|.*/current[/)])' 2>/dev/null)"
+    if [[ -n "${hits}" ]]; then
+        warn "  Snapshot docs still reference current/:"
+        while IFS= read -r _hit; do warn "    ${_hit#./}"; done <<< "${hits}"
+        return 1
+    fi
+    return 0
+}
+
 create_snapshot() {
     local comp="$1"
     local version="$2"
@@ -2217,6 +2258,13 @@ create_snapshot() {
             warn "  [${comp}/${version}] mkdocs.yml has no site_name; docs build will treat it as a duplicate."
         fi
     fi
+
+    # Freeze the copied docs to this version (#796): the References table and
+    # any other self-reference still name current/.
+    freeze_snapshot_docs "${comp}" "${version}" "${RELEASE_VERSION}" || {
+        warn "Failed to freeze the docs of ${comp}/${version}."
+        return 1
+    }
 
     # Stage hand-authored module-root headers (e.g. avbufferhelper.h) into the
     # snapshot's include/ tree (#623). These are public, versioned contract
@@ -3717,6 +3765,12 @@ if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
     log ""
     if ! normalize_cohort_snapshot_deps; then
         die "Cohort snapshot dependency normalization failed. Aborting release."
+    fi
+
+    # 2c. Every snapshot's docs name their own version, never current/ (#796).
+    phase "Checking snapshot docs reference their frozen version..."
+    if ! check_snapshot_docs; then
+        die "Snapshot docs still reference current/. Aborting release."
     fi
 
     # 3. mkdocs.yml entries.
