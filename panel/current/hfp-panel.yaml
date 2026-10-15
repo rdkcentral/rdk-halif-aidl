@@ -207,4 +207,13 @@ panel:                  # Component object begins
                 - {toneMappingMode: TONE_MAPPING_DYNAMIC, numSupportedLevels: 1, supportedValues: [TONE_MAPPING_LEVEL_NOT_APPLICABLE]}
                 - {toneMappingMode: TONE_MAPPING_CLIPPING, numSupportedLevels: 1, supportedValues: [TONE_MAPPING_LEVEL_NOT_APPLICABLE]}
                 - {toneMappingMode: TONE_MAPPING_STATIC, numSupportedLevels: 3, supportedValues: [TONE_MAPPING_LEVEL_LOW, TONE_MAPPING_LEVEL_MEDIUM, TONE_MAPPING_LEVEL_HIGH]}
-        pqParamPictureModeCapabilities: *pqContexts
+        pqParamPictureModeCapabilities:
+          - "Entertainment": &hdrOnly
+              - HLG: {supportedAVSources: *hdrSources}
+              - HDR10: {supportedAVSources: *hdrSources}
+              - DOLBY_VISION: {supportedAVSources: *hdrSources}
+          - "Movie": *hdrOnly
+          - "Sports": *hdrOnly
+          - "Game": *hdrOnly
+          - "Custom": *hdrOnly
+          - "Vivid": *hdrOnly
