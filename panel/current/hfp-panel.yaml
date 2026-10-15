@@ -156,19 +156,43 @@ panel:                  # Component object begins
         rangeBound:
           colourManagementSettingsBounds:
             minBound:
-              red: {hue: 0, saturation: 0, luminance: 0}
-              green: {hue: 0, saturation: 0, luminance: 0}
-              blue: {hue: 0, saturation: 0, luminance: 0}
-              yellow: {hue: 0, saturation: 0, luminance: 0}
-              cyan: {hue: 0, saturation: 0, luminance: 0}
-              magenta: {hue: 0, saturation: 0, luminance: 0}
+              redHue: 0
+              redSaturation: 0
+              redLuminance: 0
+              greenHue: 0
+              greenSaturation: 0
+              greenLuminance: 0
+              blueHue: 0
+              blueSaturation: 0
+              blueLuminance: 0
+              yellowHue: 0
+              yellowSaturation: 0
+              yellowLuminance: 0
+              cyanHue: 0
+              cyanSaturation: 0
+              cyanLuminance: 0
+              magentaHue: 0
+              magentaSaturation: 0
+              magentaLuminance: 0
             maxBound:
-              red: {hue: 100, saturation: 100, luminance: 100}
-              green: {hue: 100, saturation: 100, luminance: 100}
-              blue: {hue: 100, saturation: 100, luminance: 100}
-              yellow: {hue: 100, saturation: 100, luminance: 100}
-              cyan: {hue: 100, saturation: 100, luminance: 100}
-              magenta: {hue: 100, saturation: 100, luminance: 100}
+              redHue: 100
+              redSaturation: 100
+              redLuminance: 100
+              greenHue: 100
+              greenSaturation: 100
+              greenLuminance: 100
+              blueHue: 100
+              blueSaturation: 100
+              blueLuminance: 100
+              yellowHue: 100
+              yellowSaturation: 100
+              yellowLuminance: 100
+              cyanHue: 100
+              cyanSaturation: 100
+              cyanLuminance: 100
+              magentaHue: 100
+              magentaSaturation: 100
+              magentaLuminance: 100
         supportedValues: {supportedColourManagementSettingsValues: []}
         pqParamPictureModeCapabilities: *pqContexts
     - DYNAMIC_CONTRAST_LEVEL:       {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
