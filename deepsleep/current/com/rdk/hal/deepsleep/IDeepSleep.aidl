@@ -58,6 +58,8 @@ interface IDeepSleep
      * The `preconfiguredTriggers[]` reported in the `Capabilities` are always enabled as trigger sources.
      * If they are not explicitly specified in the `triggersToWakeUpon[]` array then they are implicitly added.
      *
+     * Once device completes deepsleep, its HALs responsibility to reset the timer.
+     *
      * @param[in] triggersToWakeUpon    Array of wake up trigger events to wake upon after entering deep sleep.
      * @param[out] wokeUpByTriggers     Array of wake up trigger events that occurred when waking the device from deep sleep.
      * @param[out] keyCode              If one of the `wokeUpByTriggers[]` is an RCU based trigger, then keyCode contains the Linux key code.  
@@ -82,6 +84,7 @@ interface IDeepSleep
      * The actual wake time could be adjusted for clock drift and resume latency where applicable.
      *
      * @param[in] seconds   The timer period in seconds which must be > 0.
+     *                      Setting timer to 0 is equivalent to reseting the timer.
      *
      * @returns boolean
      * @retval true - if the wake up timer period was valid.
@@ -97,7 +100,7 @@ interface IDeepSleep
     /**
      * Gets the timer period set by `setWakeUpTimer()`.
      *
-     * If no timer period was previously set, then -1 is returned.
+     * If no timer period was previously set, then 0 is returned.
      *
      * @returns int     The period of the wake up timer in seconds.
      *
