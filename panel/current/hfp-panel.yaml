@@ -69,6 +69,16 @@ panel:                  # Component object begins
     - "Game": *allDynamicRanges
     - "Custom": *allDynamicRanges
     - "Vivid": *allDynamicRanges
+  # SDR-only parameter contexts reuse the same picture modes but limit each one
+  # to the SDR dynamic range.
+  sdrOnlyPictureModeCapabilities: &sdrOnlyPictureModeCapabilities
+    - "Entertainment": &sdrOnlyDynamicRanges
+        - SDR: {supportedAVSources: *allSources}
+    - "Movie": *sdrOnlyDynamicRanges
+    - "Sports": *sdrOnlyDynamicRanges
+    - "Game": *sdrOnlyDynamicRanges
+    - "Custom": *sdrOnlyDynamicRanges
+    - "Vivid": *sdrOnlyDynamicRanges
   # One entry per PQParameter, in enum order. Parameters that apply in every context
   # reference *pqContexts; common integer bounds are anchored once and referenced.
   pqParameterCapabilities:
@@ -82,7 +92,7 @@ panel:                  # Component object begins
         isSupported: true
         isGlobal: false
         supportedValues: {supportedSdrGammaValues: [SDR_GAMMA_1_8, SDR_GAMMA_1_9, SDR_GAMMA_2_0, SDR_GAMMA_2_1, SDR_GAMMA_2_2, SDR_GAMMA_2_3, SDR_GAMMA_2_4, SDR_GAMMA_BT_1886]}
-        pqParamPictureModeCapabilities: *pqContexts
+      pqParamPictureModeCapabilities: *sdrOnlyPictureModeCapabilities
     - COLOR_TEMPERATURE:
         isSupported: true
         isGlobal: false
