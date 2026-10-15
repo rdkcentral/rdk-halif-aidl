@@ -87,12 +87,9 @@ interface IPanelOutputController {
     /**
      * @brief Stop the panel output controller.
      *
-     * Error handling:
-     * - Passing an empty `requestedConfigurations` array throws EX_ILLEGAL_ARGUMENT.
-     * - If any entry contains invalid criteria, the call throws EX_ILLEGAL_ARGUMENT and no
-     *   output values are populated.
-     * - If the criteria are valid but no picture mode can be resolved for one or more entries,
-     *   the call returns false.
+      * This method can only be called in State.STARTED. On success, it
+      * transitions STARTED -> STOPPING -> STOPPED. A runtime or hardware
+      * failure returns false and transitions the controller to ERROR.
      * IPanelOutputEventListener.onStateChanged() fires for each transition.
      *
      * This is the explicit lifecycle shutdown path. It is distinct from
@@ -242,8 +239,8 @@ interface IPanelOutputController {
      * - `TWO_POINT_WB`, `MULTI_POINT_WB`, and `DV_CALIBRATION` requests for the active
      *   permutation are applied immediately so a factory or tuning tool can measure the effect
      *   on screen.
-     * - Other PQ parameter writes are persisted but not applied until calibration mode is
-     *   disabled.
+    * - Other PQ parameter writes, including `SDR_GAMMA`, are persisted but not applied until
+    *   calibration mode is disabled.
      * - All writes remain keyed to their own picture-mode, source, dynamic-range, and
      *   colour-temperature permutation.
      *
@@ -275,11 +272,20 @@ interface IPanelOutputController {
      *
      * This method can only be called in State.STARTED.
      *
-     * Input `requestedConfigurations` specifies one or more PQ parameter selectors to query. Each element's:
-     * - `pqParameter` must be valid.
-     * - `pictureMode`, `source`, and `dynamicRange` may be concrete values or wildcards per their definitions.
-     *
-     * Output `returnedConfigurations` mirrors ordering and criteria and populates the `value` field.
+    * Input `requestedConfigurations` specifies one or more PQ parameter selectors to query. Each element's:
+    * - `pqParameter` must be valid.
+    * - `pictureMode`, `source`, and `dynamicRange` may be concrete values or wildcards per their definitions.
+    *
+    * The selector identifies the PQ parameter and its runtime context only.
+    * For aggregate PQ parameters, the returned `value` payload contains the
+    * entire parameter set for the resolved selector context:
+    * - `COLOUR_MANAGEMENT_SETTINGS` returns one grouped CMS payload.
+    * - `TWO_POINT_WB` returns one array containing all 2-point WB entries for the resolved context.
+    * - `MULTI_POINT_WB` returns one array containing all multi-point WB entries for the resolved context.
+    * - `DV_CALIBRATION` returns one Dolby Vision calibration payload.
+    *
+    * Output `returnedConfigurations` mirrors ordering and criteria and populates the `value` field.
+    * Clients shall interpret each returned entry together with the selector context that produced it.
      *
      * Errors:
      * - Empty input list throws EX_ILLEGAL_ARGUMENT.
@@ -308,7 +314,10 @@ interface IPanelOutputController {
      *
      * This method can only be called in State.STARTED.
      *
-     * Semantics are identical to `getPQParameters()` except the returned `value` reflects factory/default settings.
+    * Semantics are identical to `getPQParameters()` except the returned `value` reflects factory/default settings.
+    * As with `getPQParameters()`, the input selector provides the PQ
+    * parameter and runtime context, while aggregate parameters return their
+    * full stored payload in the `value` union variant.
      *
      * @param[in] requestedConfigurations   Non-empty list of PQ parameter query selectors.
      * @param[out] defaultConfigurations    Populated default PQ parameter values.
@@ -491,7 +500,9 @@ interface IPanelOutputController {
      * When enabled, all PQ processing blocks (e.g. brightness, contrast, sharpness, saturation, hue,
      * dimming, noise reduction, CMS, etc.) are set to a neutral or disabled state to allow accurate
      * measurement of the panel output without interference from PQ processing.
-     * The white balance (WB) and gamma blocks are also set to a neutral or disabled state.
+    * The white balance (WB) and gamma blocks are also set to a neutral or disabled state.
+    * This does not make `SDR_GAMMA` a live calibration write; `SDR_GAMMA` remains deferred until
+    * calibration mode is disabled, like other non-calibration PQ properties.
      *
      * When disabled, the active permutation exits neutral mode and resumes using the latest stored
      * values for that permutation. This includes the stored 2-point white-balance,

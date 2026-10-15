@@ -46,7 +46,7 @@ panel:                  # Component object begins
     - {type: HDMI, instance: "3"}
     - {type: COMPOSITE, instance: "1"}
   supportedDynamicRanges: [SDR, HLG, HDR10, DOLBY_VISION]
-  supportedColourTemperatures: ["WARM", "NORMAL", "COLD", "SUPER_COLD", "CUSTOM"]
+  supportedColourTemperatures: &panelColourTemperatures ["WARM", "NORMAL", "COLD", "SUPER_COLD", "CUSTOM"]
   # pictureMode -> dynamicRange -> AV sources. Every picture mode supports all four
   # dynamic ranges; COMPOSITE_1 is SDR-only.
   pictureModeCapabilities: &pqContexts
@@ -85,7 +85,7 @@ panel:                  # Component object begins
     - COLOR_TEMPERATURE:
         isSupported: true
         isGlobal: false
-        supportedValues: {supportedStringValues: ["WARM", "NORMAL", "COLD", "SUPER_COLD", "CUSTOM"]}
+      supportedValues: {supportedStringValues: *panelColourTemperatures}
         pqParamPictureModeCapabilities: *pqContexts
     - DIMMING_SETTINGS:
         isSupported: true
@@ -124,26 +124,34 @@ panel:                  # Component object begins
     - TWO_POINT_WB:
         isSupported: true
         isGlobal: false
+        # Numeric gain/offset limits live in rangeBound; the discrete colour-
+        # temperature presets are listed separately as strings.
         rangeBound:
-          twoPointWBBounds:
-            minBound: {colourTemperature: "WARM", twoPointWBColour: WB_COLOR_RED, gain: 0, offset: -1024}
-            maxBound: {colourTemperature: "CUSTOM", twoPointWBColour: WB_COLOR_BLUE, gain: 2047, offset: 1023}
-        supportedValues: {supportedTwoPointWBValues: []}
+          twoPointWBCapabilities:
+            redGain: {minValue: 0, maxValue: 2047, stepValue: {value: 1}}
+            redOffset: {minValue: -1024, maxValue: 1023, stepValue: {value: 1}}
+            greenGain: {minValue: 0, maxValue: 2047, stepValue: {value: 1}}
+            greenOffset: {minValue: -1024, maxValue: 1023, stepValue: {value: 1}}
+            blueGain: {minValue: 0, maxValue: 2047, stepValue: {value: 1}}
+            blueOffset: {minValue: -1024, maxValue: 1023, stepValue: {value: 1}}
+        supportedValues: {supportedTwoPointWBValues: *panelColourTemperatures}
         pqParamPictureModeCapabilities: *pqContexts
     - MULTI_POINT_WB:
         isSupported: true
         isGlobal: false
+        # Fixed per-channel limits live in rangeBound; the discrete colour-
+        # temperature presets are listed separately as strings.
         rangeBound:
-          multiPointWBBounds:
-            # The number of calibration points is vendor-defined; a platform profile
-            # replaces these empty arrays with its min/max vectors.
-            minBound: {colourTemperature: "WARM", r: [], g: [], b: []}
-            maxBound: {colourTemperature: "CUSTOM", r: [], g: [], b: []}
-        supportedValues: {supportedMultiPointWBValues: []}
+          multiPointWBCapabilities:
+            r: {minValue: 0, maxValue: 255}
+            g: {minValue: 0, maxValue: 255}
+            b: {minValue: 0, maxValue: 255}
+        supportedValues: {supportedMultiPointWBValues: *panelColourTemperatures}
         pqParamPictureModeCapabilities: *pqContexts
     - COLOUR_MANAGEMENT_SETTINGS:
         isSupported: true
         isGlobal: false
+        # The CMS bounds follow the flattened 18-field parcelable shape.
         rangeBound:
           colourManagementSettingsBounds:
             minBound:

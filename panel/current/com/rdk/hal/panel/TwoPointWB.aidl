@@ -18,11 +18,10 @@
  */
 package com.rdk.hal.panel;
 
-import com.rdk.hal.panel.TwoPointWBColour;
-
 /**
  *  @brief     2-point white balance entry.
- *             Holds the gain and offset for a 2-point white balance calibration entry.
+ *             Holds the RGB gain and offset values for one colour-temperature
+ *             2-point white balance calibration entry.
  *             Used as the value type for PQParameter.TWO_POINT_WB in set/get/getDefault/getCapabilities operations.
  *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
  */
@@ -35,20 +34,21 @@ parcelable TwoPointWB
      */
     String colourTemperature;
 
-    /**
-     * White balance colour channel this entry applies to.
-     */
-    TwoPointWBColour twoPointWBColour;
+    /** Red-channel gain value. Valid range is 0 to 2047. */
+    int redGain;
 
-    /**
-     * White balance gain value.
-     * Valid range is 0 to 2047.
-     */
-    int gain;
+    /** Red-channel offset value. Valid range is -1024 to 1023. */
+    int redOffset;
 
-    /**
-     * White balance offset value.
-     * Valid range is -1024 to 1023.
-     */
-    int offset;
+    /** Green-channel gain value. Valid range is 0 to 2047. */
+    int greenGain;
+
+    /** Green-channel offset value. Valid range is -1024 to 1023. */
+    int greenOffset;
+
+    /** Blue-channel gain value. Valid range is 0 to 2047. */
+    int blueGain;
+
+    /** Blue-channel offset value. Valid range is -1024 to 1023. */
+    int blueOffset;
 }

@@ -37,7 +37,7 @@ The Panel HAL manages both static capabilities and dynamic runtime control of th
 
 * Panel hardware capabilities including resolution, physical size, panel type (LCD, OLED, QLED, Mini-LED), supported picture quality (PQ) parameters, refresh rates, picture modes, dynamic ranges, and AV sources.
 * Picture quality configuration, including brightness, contrast, saturation, hue, gamma, local dimming, and noise reduction.
-* White balance calibration through PQ parameters, with 2-point and multi-point entries scoped by picture mode, dynamic range, AV source, and colour temperature.
+* White balance calibration through PQ parameters, with 2-point and multi-point entries scoped by picture mode, dynamic range, AV source, and colour temperature. The white-balance preset lists reuse the same platform-defined colour-temperature strings exposed through `Capabilities.supportedColourTemperatures`.
 * Dynamic control over panel enable/disable, picture modes, frame rate matching, and calibration mode.
 * Event callbacks for real-time updates on picture mode, PQ parameter, video source, dynamic range, resolution, frame rate, and refresh rate changes.
 
@@ -81,7 +81,7 @@ The corresponding `hfp-panel.yaml` file includes structured declarations for:
 | `DimmingSettings.aidl`                | Grouped local dimming mode and level settings |
 | `PanelSource.aidl`                    | Typed string-based panel source identifier                   |
 | `PQParameter.aidl`                    | Enumeration of supported picture quality parameters, including 2-point and multi-point white balance |
-| `PQParameterCapabilities.aidl`        | Capabilities per PQ parameter by picture mode and dynamic range, including compact integer ranges, structured WB bounds, grouped CMS bounds, and preset values |
+| `PQParameterCapabilities.aidl`        | Capabilities per PQ parameter by picture mode and dynamic range, including compact integer ranges, structured WB bounds, grouped CMS bounds, and preset values. For WB, numeric limits live in `rangeBound` while discrete colour temperatures live in `supportedValues`. |
 | `PQParameterConfiguration.aidl`       | Bundled selector and value for a PQ parameter instance, including structured WB values |
 | `PQParameterSelector.aidl`            | Query selector for PQ parameter, picture mode, dynamic range, and AV source |
 | `PQParameterValue.aidl`               | Typed PQ parameter value union used by set/get operations and callbacks |
@@ -91,9 +91,8 @@ The corresponding `hfp-panel.yaml` file includes structured declarations for:
 | `ToneMappingSettings.aidl`            | Grouped HDR tone-mapping mode and level settings |
 | `PictureModeConfiguration.aidl`       | Picture mode, dynamic range, and AV source config             |
 | `State.aidl`                          | Panel controller lifecycle state enumeration                 |
-| `TwoPointWB.aidl`                     | Two-point white balance calibration entry keyed by colour temperature and WB colour channel |
-| `TwoPointWBColour.aidl`               | Enumeration of supported 2-point white balance colour channels |
-| `WhiteBalanceMultiPointSettings.aidl` | Multi-point white balance calibration entry keyed by colour temperature |
+| `TwoPointWB.aidl`                     | Two-point white balance calibration entry keyed by colour temperature with explicit RGB gain/offset fields |
+| `WhiteBalanceMultiPointSettings.aidl` | Multi-point white balance calibration entry keyed by colour temperature with per-channel vectors |
 
 ---
 
@@ -162,18 +161,19 @@ flowchart TD
 * Picture mode configurations and PQ parameters are set via `setPictureModes()` and `setPQParameters()` once the controller is in `STARTED`. If `open()` returns a `STOPPED` controller, middleware reaches `STARTED` by calling `start()` first.
 * The panel output enable state controls display and backlight through the controller and is orthogonal to controller lifecycle.
 * Frame rate matching adjusts panel refresh rate dynamically to match video content.
-* PQ parameter queries provide `PQParameterSelector` entries as input and receive `PQParameterConfiguration` entries as output so the returned values remain bundled with the selector context.
+* PQ parameter queries provide `PQParameterSelector` entries as input and receive `PQParameterConfiguration` entries as output so the returned values remain bundled with the selector context. Aggregate PQ parameters return their full payload in a single `PQParameterConfiguration` value.
 * SDR gamma values are exchanged through `PQParameterValue` using the `sdrGamma` variant for `PQParameter.SDR_GAMMA`.
 * Colour temperature values are exchanged through `PQParameterValue` using the `stringValue` variant for `PQParameter.COLOR_TEMPERATURE`.
 * Dimming values are exchanged through `PQParameterValue`, using `dimmingSettings` for `PQParameter.DIMMING_SETTINGS`.
 * Integer-backed PQ parameters may expose a compact `rangeBound.intBounds` representation with `minValue`, `maxValue`, and optional `stepValue` instead of enumerating every valid value.
-* White balance values are exchanged through `PQParameterValue`, using `TwoPointWB` for `PQParameter.TWO_POINT_WB` and `WhiteBalanceMultiPointSettings` for `PQParameter.MULTI_POINT_WB`.
+* White balance values are exchanged through `PQParameterValue`, using aggregate array-backed variants for `PQParameter.TWO_POINT_WB` and `PQParameter.MULTI_POINT_WB` so the full set can be read or written in one shot.
 * Tone-mapping values are exchanged through `PQParameterValue`, using `toneMappingSettings` for `PQParameter.TONE_MAPPING_SETTINGS`.
 * `PQParameterCapabilities` associates supported dimming levels with each dimming mode through `rangeBound.dimmingSettingsCapabilities.modeLevelCapabilities`.
 * `PQParameterCapabilities` associates supported tone-mapping levels with each tone-mapping mode through `rangeBound.toneMappingSettingsCapabilities.modeLevelCapabilities`.
-* `TwoPointWB` entries carry both a colour-temperature string and `TwoPointWBColour` so each gain and offset pair targets a specific colour-temperature preset and RGB channel.
-* Calibration mode holds the non-calibration PQ pipeline in a neutral state, applies white-balance and calibration-targeted writes live for the active permutation, and defers unrelated PQ writes until calibration mode is disabled.
-* Grouped CMS values can be exchanged through `PQParameter.COLOUR_MANAGEMENT_SETTINGS` to reduce write traffic while preserving read-modify-apply updates.
+* `TwoPointWB` entries carry one colour-temperature string together with explicit red, green, and blue gain/offset values; `PQParameterValue.twoPointWBSettings` carries the full array of these entries.
+* `WhiteBalanceMultiPointSettings` entries carry one colour-temperature string and the per-channel arrays for that temperature; `PQParameterValue.multiPointWBSettings` carries the full array of these entries. `PQParameterCapabilities.supportedMultiPointWBValues` enumerates the same platform-defined colour-temperature strings used by `Capabilities.supportedColourTemperatures`.
+* Calibration mode holds the non-calibration PQ pipeline in a neutral state, applies white-balance and calibration-targeted writes live for the active permutation, and defers unrelated PQ writes, including `SDR_GAMMA`, until calibration mode is disabled.
+* Grouped CMS values can be exchanged through `PQParameter.COLOUR_MANAGEMENT_SETTINGS` to reduce write traffic while preserving read-modify-apply updates. The payload is one aggregate parcelable containing 18 integer fields: hue, saturation, and luminance for each of red, green, blue, yellow, cyan, and magenta, matching the flattened `ColourManagementSettings` parcelable.
 
 ### Calibration Workflow
 
@@ -182,7 +182,7 @@ Calibration mode is scoped to the active picture-mode, source, dynamic-range, an
 1. The client ensures the controller is in `STARTED`, then selects the picture-mode, source, dynamic range, and colour temperature it wants to calibrate.
 2. The client calls `enableCalibrationMode(true)`. The HAL snapshots the latest stored values for that active permutation, then forces the non-calibration PQ pipeline into a neutral state.
 3. While calibration mode is enabled, `setPQParameters()` applies `TWO_POINT_WB`, `MULTI_POINT_WB`, and `DV_CALIBRATION` writes immediately for the active permutation so a tuning tool can measure the panel output live.
-4. While calibration mode is enabled, non-calibration PQ writes are accepted and persisted, but they are not applied until calibration mode is disabled.
+4. While calibration mode is enabled, non-calibration PQ writes, including `SDR_GAMMA`, are accepted and persisted, but they are not applied until calibration mode is disabled.
 5. The client repeats measurement and adjustment as needed using the live calibration-targeted writes.
 6. The client calls `enableCalibrationMode(false)`. The HAL exits neutral mode for the active permutation and resumes using the latest stored values for that permutation, including the stored `TWO_POINT_WB`, `MULTI_POINT_WB`, and `DV_CALIBRATION` values associated with the active picture mode, source, dynamic range, and colour temperature. Deferred non-calibration writes also become active at that point.
 
@@ -193,7 +193,7 @@ Repeated `enableCalibrationMode(true)` or `enableCalibrationMode(false)` calls a
 The Panel HAL uses Binder exceptions for invalid arguments, null output parameters, and invalid lifecycle state. Boolean returns and `ErrorCode` values are used only after the request itself has been accepted as well-formed.
 
 * `setPQParameters()` returns `ErrorCode.SUCCESS`, `INVALID_ARGUMENT`, `INVALID_STATE`, `NOT_SUPPORTED`, or `HARDWARE_FAILURE` for a valid call.
-* `getPQParameters()` and `getDefaultPQParameters()` throw `EX_ILLEGAL_ARGUMENT` for malformed selectors or empty input, throw `EX_ILLEGAL_STATE` if the controller is not `STARTED`, and return `false` only when the selectors are valid but one or more values cannot be resolved.
+* `getPQParameters()` and `getDefaultPQParameters()` throw `EX_ILLEGAL_ARGUMENT` for malformed selectors or empty input, throw `EX_ILLEGAL_STATE` if the controller is not `STARTED`, and return `false` only when the selectors are valid but one or more values cannot be resolved. For `COLOUR_MANAGEMENT_SETTINGS`, `TWO_POINT_WB`, `MULTI_POINT_WB`, and `DV_CALIBRATION`, the returned `PQParameterValue` contains the complete aggregate payload for the resolved selector context rather than a single sub-entry.
 * `getPictureModes()` and `getDefaultPictureModes()` follow the same pattern: exceptions for malformed input or invalid state, `false` only when valid criteria cannot be resolved.
 * `start()` and `stop()` use `EX_ILLEGAL_STATE` for invalid transitions. A `false` return indicates a runtime or hardware failure after a valid transition request. If the panel remains in `ERROR` after `close()` and a fresh `open()`/`start()` attempt, the platform may need a full device reboot or power cycle to clear latched display hardware; treat that as a last-resort recovery action.
 
@@ -216,7 +216,7 @@ The table below lists the capability shape expected for each `PQParameter` value
 
 For the preset-list entries, the union members are declared as `@nullable` arrays, so the array field itself may be omitted when no explicit presets are provided. In the Panel HFP examples, the common convention is to keep the field present and use an empty array to mean that the structured range exists but no discrete preset list is advertised.
 
-`stepValue` is only defined on `rangeBound.intBounds` for simple integer-backed parameters. There is no generic step-value field for `DolbyVisionCalibrationSettings`, `TwoPointWB`, `WhiteBalanceMultiPointSettings`, or `ColourManagementSettings`; those types are represented either by their own min/max bounds in `rangeBound` or by explicit preset arrays in `supportedValues`. When the preset arrays are omitted or empty, clients should treat the min/max structured bounds as the full supported domain for that capability.
+`stepValue` is only defined on `rangeBound.intBounds` for simple integer-backed parameters. `RangeBound` is a general capability-bounds container and is not limited to a literal min/max pair. There is no generic step-value field for `DolbyVisionCalibrationSettings`, `TwoPointWBCapabilities`, `MultiPointWBCapabilities`, or `ColourManagementSettings`; those types are represented either by their own min/max bounds in `rangeBound` or by explicit preset arrays in `supportedValues`. The colour-temperature field itself is a discrete string and is advertised through `supportedValues.supportedStringValues` for `COLOR_TEMPERATURE` and through `supportedTwoPointWBValues` / `supportedMultiPointWBValues` for the WB parameters. For multi-point WB, the capability bounds are fixed per channel, not per calibration point. When the preset arrays are omitted or empty, clients should treat the structured bounds as the full supported numeric domain for that capability.
 
 | PQParameter | Expected capability fields | Notes |
 | --- | --- | --- |
@@ -238,8 +238,8 @@ For the preset-list entries, the union members are declared as `@nullable` array
 | `AMBIENT_LIGHT_SENSOR_CONTROL` | `rangeBound.intBounds` | Boolean-like integer control, usually `0` or `1`. |
 | `PRECISION_DETAIL` | `rangeBound.intBounds` | Integer-backed control. |
 | `DV_CALIBRATION` | `rangeBound.dvCalibrationBounds`, optionally `supportedValues.supportedDvCalibrationValues` | Structured Dolby Vision calibration bounds plus optional concrete presets. |
-| `TWO_POINT_WB` | `rangeBound.twoPointWBBounds`, optionally `supportedValues.supportedTwoPointWBValues` | Structured 2-point white-balance bounds plus optional concrete presets. |
-| `MULTI_POINT_WB` | `rangeBound.multiPointWBBounds`, optionally `supportedValues.supportedMultiPointWBValues` | Structured multi-point white-balance bounds plus optional concrete presets. |
+| `TWO_POINT_WB` | `rangeBound.twoPointWBCapabilities`, optionally `supportedValues.supportedTwoPointWBValues` | Numeric gain/offset bounds for a WB preset; discrete colour temperatures are listed separately as strings and normally match `Capabilities.supportedColourTemperatures`. |
+| `MULTI_POINT_WB` | `rangeBound.multiPointWBCapabilities`, optionally `supportedValues.supportedMultiPointWBValues` | Fixed per-channel bounds for a WB preset; discrete colour temperatures are listed separately as strings and normally match `Capabilities.supportedColourTemperatures`. |
 | `DYNAMIC_CONTRAST_LEVEL` | `rangeBound.intBounds` | Integer-backed control. |
 | `AISR` | `rangeBound.intBounds` | Integer-backed control. |
 | `COLOUR_MANAGEMENT_SETTINGS` | `rangeBound.colourManagementSettingsBounds`, optionally `supportedValues.supportedColourManagementSettingsValues` | Structured grouped CMS bounds plus optional concrete presets. |
@@ -252,7 +252,7 @@ For capability consumers, the nested picture-mode scoping is always carried by `
 ## Modes of Operation
 
 * Runtime picture modes configurable by client with dynamic range and typed panel-source scoping.
-* 2-point and multi-point white balance entries configurable per picture mode, dynamic range, and AV source, with 2-point white balance also scoped by colour temperature and WB colour channel.
+* 2-point and multi-point white balance entries configurable per picture mode, dynamic range, and AV source, with 2-point white balance carrying one aggregate RGB gain/offset set per colour temperature.
 * Frame rate matching mode enabled/disabled by client.
 * Calibration mode is available on the controller for PQ pipeline validation workflows, with live white-balance and calibration-targeted updates and deferred application of unrelated PQ writes.
 
@@ -344,7 +344,7 @@ flowchart LR
 
 * Supports platform-defined panel-type strings so vendors can expose informative values without revising an enum.
 * Supports multiple refresh rates and frame rate matching.
-* Supports string-based colour temperature presets that can be applied to both 2-point and multi-point white balance entries.
+* Supports string-based colour temperature presets that can be applied to both 2-point and multi-point white balance entries, reusing the same platform-defined strings exposed by `Capabilities.supportedColourTemperatures`.
 * Supports advanced PQ parameters including AI PQ engine, grouped CMS settings, tone-mapping settings, and noise reduction.
 * Supports compact numeric capability definitions with `minValue`, `maxValue`, and optional `stepValue` for regularly spaced integer controls.
 * Supports calibration mode on the runtime controller.
@@ -358,7 +358,7 @@ Each platform must include `hfp-panel.yaml` to define the platform-specific impl
 * Static capabilities such as panel dimensions, panel type, refresh rates, supported AV sources, dynamic ranges, PQ parameters, and picture modes.
 * Supported colour temperature string values aligned with the implementation-defined presets exposed by `Capabilities`.
 * Lists of supported PQ parameters and picture modes.
-* Capabilities of each PQ parameter per picture mode, panel source, and dynamic range, including compact `intBounds` with optional step values, grouped `dimmingSettingsCapabilities`, grouped `toneMappingSettingsCapabilities`, and structured `dvCalibrationBounds`, `twoPointWBBounds`, `multiPointWBBounds`, and `colourManagementSettingsBounds` shapes.
+* Capabilities of each PQ parameter per picture mode, panel source, and dynamic range, including compact `intBounds` with optional step values, grouped `dimmingSettingsCapabilities`, grouped `toneMappingSettingsCapabilities`, and structured `dvCalibrationBounds`, `twoPointWBCapabilities`, `multiPointWBCapabilities`, and `colourManagementSettingsBounds` shapes. For white balance, discrete colour temperatures are carried by the supported preset lists rather than the bounds parcelables, and multi-point WB uses fixed per-channel bounds rather than per-point bound arrays.
 * Preset value lists where the domain is finite, using `supportedSdrGammaValues`, `supportedStringValues`, `supportedIntValues`, `supportedDimmingSettingsValues`, `supportedDvCalibrationValues`, `supportedTwoPointWBValues`, `supportedMultiPointWBValues`, `supportedColourManagementSettingsValues`, and `supportedToneMappingSettingsValues` as appropriate.
 * Declared as structured sections aligned with the AIDL interfaces; panel capabilities are returned by `IPanelOutput.getCapabilities()`, while per-parameter capabilities are returned by `IPanelOutputController.getPQParameterCapabilities()`.
 

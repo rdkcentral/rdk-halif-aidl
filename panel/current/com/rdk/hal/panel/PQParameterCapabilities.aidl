@@ -29,8 +29,6 @@ import com.rdk.hal.panel.SDRGamma;
 import com.rdk.hal.panel.ToneMappingLevel;
 import com.rdk.hal.panel.ToneMappingMode;
 import com.rdk.hal.panel.ToneMappingSettings;
-import com.rdk.hal.panel.TwoPointWB;
-import com.rdk.hal.panel.WhiteBalanceMultiPointSettings;
 import com.rdk.hal.videodecoder.DynamicRange;
 
 /**
@@ -135,21 +133,34 @@ parcelable PQParameterCapabilities {
     }
 
     /**
-     * Bounds used when pqParameter == PQParameter.TWO_POINT_WB.
+     * Capability bounds used when pqParameter == PQParameter.TWO_POINT_WB.
+     *
+        * The supported colour temperatures are discrete strings and are listed in
+        * SupportedValues. This structure only carries the allowed numeric ranges
+        * for the RGB gain and offset fields.
      */
     @VintfStability
-    parcelable TwoPointWBBounds {
-        TwoPointWB minBound;
-        TwoPointWB maxBound;
+    parcelable TwoPointWBCapabilities {
+        IntBounds redGain;
+        IntBounds redOffset;
+        IntBounds greenGain;
+        IntBounds greenOffset;
+        IntBounds blueGain;
+        IntBounds blueOffset;
     }
 
     /**
-     * Bounds used when pqParameter == PQParameter.MULTI_POINT_WB.
+     * Capability bounds used when pqParameter == PQParameter.MULTI_POINT_WB.
+     *
+        * The supported colour temperatures are discrete strings and are listed in
+        * SupportedValues. This structure only carries the fixed min/max bounds for
+        * the red, green, and blue channel values.
      */
     @VintfStability
-    parcelable MultiPointWBBounds {
-        WhiteBalanceMultiPointSettings minBound;
-        WhiteBalanceMultiPointSettings maxBound;
+    parcelable MultiPointWBCapabilities {
+        IntBounds r;
+        IntBounds g;
+        IntBounds b;
     }
 
     /**
@@ -169,12 +180,13 @@ parcelable PQParameterCapabilities {
      * Integer-backed parameters may also carry an optional step value so large
      * numeric domains can be represented compactly without enumerating every
      * allowed value.
-     * Structured parcelables such as DolbyVisionCalibrationSettings,
-     * TwoPointWB, WhiteBalanceMultiPointSettings, and
-     * ColourManagementSettings do not use stepValue; they are represented
-     * either by their own min/max bounds in RangeBound or by explicit preset
-     * arrays in SupportedValues. When the preset arrays are omitted or empty,
-     * the structured min/max bounds define the full supported domain.
+      * Structured parcelables such as DolbyVisionCalibrationSettings,
+      * TwoPointWBCapabilities, MultiPointWBCapabilities, and
+      * ColourManagementSettings do not use stepValue. For white balance, the
+      * numeric field limits live in RangeBound while the discrete colour
+      * temperature names live in SupportedValues. When the preset arrays are
+      * omitted or empty, the structured min/max bounds define the full supported
+      * numeric domain.
      */
     @VintfStability
     union RangeBound {
@@ -182,8 +194,8 @@ parcelable PQParameterCapabilities {
         DimmingSettingsCapabilities dimmingSettingsCapabilities;
         ToneMappingSettingsCapabilities toneMappingSettingsCapabilities;
         DvCalibrationBounds dvCalibrationBounds;
-        TwoPointWBBounds twoPointWBBounds;
-        MultiPointWBBounds multiPointWBBounds;
+        TwoPointWBCapabilities twoPointWBCapabilities;
+        MultiPointWBCapabilities multiPointWBCapabilities;
         ColourManagementSettingsBounds colourManagementSettingsBounds;
     }
     @nullable RangeBound rangeBound;
@@ -232,14 +244,16 @@ parcelable PQParameterCapabilities {
         @nullable DolbyVisionCalibrationSettings[] supportedDvCalibrationValues;
 
         /**
-         * Specific 2-point white balance presets that are supported.
+         * Specific 2-point white balance colour-temperature strings that are
+         * supported.
          */
-        @nullable TwoPointWB[] supportedTwoPointWBValues;
+        @nullable String[] supportedTwoPointWBValues;
 
         /**
-         * Specific multi-point white balance presets that are supported.
+         * Specific multi-point white balance colour-temperature strings that
+         * are supported.
          */
-        @nullable WhiteBalanceMultiPointSettings[] supportedMultiPointWBValues;
+        @nullable String[] supportedMultiPointWBValues;
 
         /**
          * Specific grouped colour-management presets that are supported.

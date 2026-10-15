@@ -23,21 +23,28 @@ package com.rdk.hal.panel;
  *
  * This structure allows clients to update the complete CMS state with a single
  * read-modify-apply cycle instead of issuing separate writes for each colour
- * component.
+ * component. It carries one integer value for each hue, saturation, and
+ * luminance slot across the six CMS colours: red, green, blue, yellow, cyan,
+ * and magenta.
  */
 @VintfStability
 parcelable ColourManagementSettings {
-    @VintfStability
-    parcelable ColourAdjustment {
-        int hue;
-        int saturation;
-        int luminance;
-    }
-
-    ColourAdjustment red;
-    ColourAdjustment green;
-    ColourAdjustment blue;
-    ColourAdjustment yellow;
-    ColourAdjustment cyan;
-    ColourAdjustment magenta;
+    int redHue;
+    int redSaturation;
+    int redLuminance;
+    int greenHue;
+    int greenSaturation;
+    int greenLuminance;
+    int blueHue;
+    int blueSaturation;
+    int blueLuminance;
+    int yellowHue;
+    int yellowSaturation;
+    int yellowLuminance;
+    int cyanHue;
+    int cyanSaturation;
+    int cyanLuminance;
+    int magentaHue;
+    int magentaSaturation;
+    int magentaLuminance;
 }
