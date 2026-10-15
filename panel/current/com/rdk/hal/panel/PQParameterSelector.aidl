@@ -24,6 +24,12 @@ import com.rdk.hal.videodecoder.DynamicRange;
 
 /**
  * @brief Selector for a PQ parameter configuration.
+ *
+ * The selector identifies the PQ parameter and its runtime context only.
+ * White-balance values are not addressed by additional selector keys; the
+ * corresponding read operations return the complete 2-point or multi-point
+ * white-balance bundle for the selected picture-mode, source, and dynamic-
+ * range context.
  */
 @VintfStability
 parcelable PQParameterSelector {
@@ -34,15 +40,13 @@ parcelable PQParameterSelector {
 
     /**
      * The picture mode.
-     * null means wildcard which applies to all supported picture modes.
      */
-    @nullable String pictureMode;
+    String pictureMode;
 
     /**
      * The AV source.
-     * null means wildcard which applies to all supported AV sources.
      */
-    @nullable PanelSource source;
+    PanelSource source;
 
     /**
      * The dynamic range.

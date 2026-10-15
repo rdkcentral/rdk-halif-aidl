@@ -135,9 +135,9 @@ parcelable PQParameterCapabilities {
     /**
      * Capability bounds used when pqParameter == PQParameter.TWO_POINT_WB.
      *
-        * The supported colour temperatures are discrete strings and are listed in
-        * SupportedValues. This structure only carries the allowed numeric ranges
-        * for the RGB gain and offset fields.
+      * The supported colour temperatures are discrete strings and are listed in
+      * SupportedValues. This structure only carries the allowed numeric ranges
+      * for the RGB gain and offset fields.
      */
     @VintfStability
     parcelable TwoPointWBCapabilities {
@@ -152,9 +152,9 @@ parcelable PQParameterCapabilities {
     /**
      * Capability bounds used when pqParameter == PQParameter.MULTI_POINT_WB.
      *
-        * The supported colour temperatures are discrete strings and are listed in
-        * SupportedValues. This structure only carries the fixed min/max bounds for
-        * the red, green, and blue channel values.
+      * The supported colour temperatures are discrete strings and are listed in
+      * SupportedValues. This structure only carries the fixed min/max bounds for
+      * the red, green, and blue channel values.
      */
     @VintfStability
     parcelable MultiPointWBCapabilities {
@@ -180,13 +180,13 @@ parcelable PQParameterCapabilities {
      * Integer-backed parameters may also carry an optional step value so large
      * numeric domains can be represented compactly without enumerating every
      * allowed value.
-      * Structured parcelables such as DolbyVisionCalibrationSettings,
-      * TwoPointWBCapabilities, MultiPointWBCapabilities, and
-      * ColourManagementSettings do not use stepValue. For white balance, the
-      * numeric field limits live in RangeBound while the discrete colour
-      * temperature names live in SupportedValues. When the preset arrays are
-      * omitted or empty, the structured min/max bounds define the full supported
-      * numeric domain.
+        * Structured parcelables such as DolbyVisionCalibrationSettings,
+        * TwoPointWBCapabilities, MultiPointWBCapabilities, and
+        * ColourManagementSettings do not use stepValue. For white balance, the
+        * numeric field limits live in RangeBound while the discrete colour
+        * temperature names live in SupportedValues. When the preset arrays are
+        * omitted or empty, the structured min/max bounds define the full supported
+        * numeric domain.
      */
     @VintfStability
     union RangeBound {

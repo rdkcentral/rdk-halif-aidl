@@ -41,9 +41,9 @@ union PQParameterValue {
     DimmingSettings dimmingSettings;
     /** Dolby Vision calibration settings used when pqParameter == PQParameter.DV_CALIBRATION. */
     DolbyVisionCalibrationSettings dvCalibrationSettings;
-    /** Aggregate 2-point white balance settings used when pqParameter == PQParameter.TWO_POINT_WB. */
+    /** Aggregate 2-point white balance settings used when pqParameter == PQParameter.TWO_POINT_WB; the array contains the full bundle for the resolved selector context. */
     TwoPointWB[] twoPointWBSettings;
-    /** Aggregate multi-point white balance settings used when pqParameter == PQParameter.MULTI_POINT_WB. */
+    /** Aggregate multi-point white balance settings used when pqParameter == PQParameter.MULTI_POINT_WB; the array contains the full bundle for the resolved selector context. */
     WhiteBalanceMultiPointSettings[] multiPointWBSettings;
     /** Grouped colour-management settings used when pqParameter == PQParameter.COLOUR_MANAGEMENT_SETTINGS. */
     ColourManagementSettings colourManagementSettings;
