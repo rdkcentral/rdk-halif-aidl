@@ -84,7 +84,7 @@ interface IDeepSleep
      * The platform is expected to wake the device within ±/- 5 seconds of the programmed period.
      * The actual wake time could be adjusted for clock drift and resume latency where applicable.
      *
-     * @param[in] seconds   The timer period in seconds which must be > 0.
+     * @param[in] seconds   The timer period in seconds which must be >= 0.
      *                      Setting the timer to 0 is equivalent to disabling the timer-based wake-up trigger.
      *
      * @returns boolean
