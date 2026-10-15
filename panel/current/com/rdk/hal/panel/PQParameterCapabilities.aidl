@@ -19,9 +19,16 @@
 package com.rdk.hal.panel;
 
 import com.rdk.hal.panel.ColourManagementSettings;
+import com.rdk.hal.panel.DimmingLevel;
+import com.rdk.hal.panel.DimmingMode;
+import com.rdk.hal.panel.DimmingSettings;
 import com.rdk.hal.panel.DolbyVisionCalibrationSettings;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.PanelSource;
+import com.rdk.hal.panel.SDRGamma;
+import com.rdk.hal.panel.ToneMappingLevel;
+import com.rdk.hal.panel.ToneMappingMode;
+import com.rdk.hal.panel.ToneMappingSettings;
 import com.rdk.hal.panel.TwoPointWB;
 import com.rdk.hal.panel.WhiteBalanceMultiPointSettings;
 import com.rdk.hal.videodecoder.DynamicRange;
@@ -57,29 +64,65 @@ parcelable PQParameterCapabilities {
     parcelable IntBounds {
         int minValue;
         int maxValue;
-        @nullable int stepValue;
+        @VintfStability
+        parcelable StepValue {
+            int value;
+        }
+        @nullable StepValue stepValue;
     }
 
     /**
-     * Per-dimming-mode level limits used when pqParameter ==
-     * PQParameter.DIMMING_LEVEL.
+    * Per-dimming-mode level limits used when pqParameter ==
+    * PQParameter.DIMMING_SETTINGS.
      */
     @VintfStability
     parcelable DimmingModeLevelCapability {
-        int dimmingMode;
-        boolean isAdjustable;
-        int minValue;
-        int maxValue;
-        @nullable int stepValue;
-        @nullable int[] supportedValues;
+        DimmingMode dimmingMode;
+        int numSupportedLevels;
+        DimmingLevel[] supportedValues;
     }
 
     /**
      * Wrapper for the list of per-mode dimming level capabilities.
      */
     @VintfStability
-    parcelable DimmingLevelCapabilities {
-        DimmingModeLevelCapability[] modes;
+    parcelable DimmingModeLevelCapabilities {
+        DimmingModeLevelCapability[] entries;
+    }
+
+    /**
+     * Capabilities for grouped dimming settings.
+     */
+    @VintfStability
+    parcelable DimmingSettingsCapabilities {
+        DimmingModeLevelCapabilities modeLevelCapabilities;
+    }
+
+    /**
+    * Per-tone-mapping-mode level support used when pqParameter ==
+    * PQParameter.TONE_MAPPING_SETTINGS.
+     */
+    @VintfStability
+    parcelable ToneMappingModeLevelCapability {
+        ToneMappingMode toneMappingMode;
+        int numSupportedLevels;
+        ToneMappingLevel[] supportedValues;
+    }
+
+    /**
+     * Wrapper for the list of per-mode tone-mapping level capabilities.
+     */
+    @VintfStability
+    parcelable ToneMappingModeLevelCapabilities {
+        ToneMappingModeLevelCapability[] entries;
+    }
+
+    /**
+     * Capabilities for grouped tone-mapping settings.
+     */
+    @VintfStability
+    parcelable ToneMappingSettingsCapabilities {
+        ToneMappingModeLevelCapabilities modeLevelCapabilities;
     }
 
     /**
@@ -123,14 +166,21 @@ parcelable PQParameterCapabilities {
      *
      * Only one bounds shape is valid for a given PQ parameter, so the active
      * variant identifies how the parameter's legal range is described.
-        * Integer-backed parameters may also carry an optional step value so large
-        * numeric domains can be represented compactly without enumerating every
-        * allowed value.
+     * Integer-backed parameters may also carry an optional step value so large
+     * numeric domains can be represented compactly without enumerating every
+     * allowed value.
+     * Structured parcelables such as DolbyVisionCalibrationSettings,
+     * TwoPointWB, WhiteBalanceMultiPointSettings, and
+     * ColourManagementSettings do not use stepValue; they are represented
+     * either by their own min/max bounds in RangeBound or by explicit preset
+     * arrays in SupportedValues. When the preset arrays are omitted or empty,
+     * the structured min/max bounds define the full supported domain.
      */
     @VintfStability
     union RangeBound {
         IntBounds intBounds;
-        DimmingLevelCapabilities dimmingLevelCapabilities;
+        DimmingSettingsCapabilities dimmingSettingsCapabilities;
+        ToneMappingSettingsCapabilities toneMappingSettingsCapabilities;
         DvCalibrationBounds dvCalibrationBounds;
         TwoPointWBBounds twoPointWBBounds;
         MultiPointWBBounds multiPointWBBounds;
@@ -142,9 +192,12 @@ parcelable PQParameterCapabilities {
      * Discrete supported values for the PQ parameter.
      *
      * Only one supported-values shape is valid for a given PQ parameter, so the
-        * active variant identifies how explicit preset values are conveyed.
-        * This is intended for finite preset lists rather than large numeric
-        * domains.
+     * active variant identifies how explicit preset values are conveyed.
+     * This is intended for finite preset lists rather than large numeric
+     * domains. These arrays are nullable; implementations may omit them or use
+     * an empty array when no explicit presets are advertised. When a structured
+     * capability uses min/max bounds instead of explicit presets, the bounds
+     * describe the full supported domain.
      */
     @VintfStability
     union SupportedValues {
@@ -157,10 +210,21 @@ parcelable PQParameterCapabilities {
         @nullable int[] supportedIntValues;
 
         /**
+         * Supported SDR gamma values used when pqParameter ==
+         * PQParameter.SDR_GAMMA.
+         */
+        @nullable SDRGamma[] supportedSdrGammaValues;
+
+        /**
          * Supported string values used when pqParameter ==
          * PQParameter.COLOR_TEMPERATURE.
          */
         @nullable String[] supportedStringValues;
+
+        /**
+         * Specific grouped dimming presets that are supported.
+         */
+        @nullable DimmingSettings[] supportedDimmingSettingsValues;
 
         /**
          * Specific Dolby Vision calibration presets that are supported.
@@ -181,6 +245,12 @@ parcelable PQParameterCapabilities {
          * Specific grouped colour-management presets that are supported.
          */
         @nullable ColourManagementSettings[] supportedColourManagementSettingsValues;
+
+        /**
+         * Specific grouped tone-mapping presets that are supported.
+         */
+        @nullable ToneMappingSettings[] supportedToneMappingSettingsValues;
+
     }
     @nullable SupportedValues supportedValues;
 

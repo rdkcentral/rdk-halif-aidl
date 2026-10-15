@@ -20,8 +20,8 @@ package com.rdk.hal.panel;
 
 /**
  *  @brief     Dolby Vision calibration settings.
- *             Holds the calibration parameters for Dolby Vision including peak and minimum
- *             luminance (Tmax, Tmin), gamma correction (Tgamma), and the CIE 1931 xy
+ *             Legacy field names are retained for wire compatibility.
+ *             Holds peak and minimum luminance, gamma correction, and the CIE 1931 xy
  *             chromaticity coordinates for Red, Green, Blue and White primaries.
  *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
  */
@@ -31,7 +31,7 @@ parcelable DolbyVisionCalibrationSettings
 {
 
     /**
-    * Target peak white luminance in nits.
+    * Peak white luminance in nits (legacy field name `Tmax`).
     * Used by the tone-mapping engine to map HDR content to the panel's
     * maximum brightness capability.
      * Valid range is 0 to 10000.
@@ -39,7 +39,7 @@ parcelable DolbyVisionCalibrationSettings
     double Tmax;
 
     /**
-    * Target minimum black luminance in nits.
+    * Minimum black luminance in nits (legacy field name `Tmin`).
     * Used by the tone-mapping engine when mapping HDR content to the
     * panel's black-level capability.
      * Valid range is 0 to 10000.
@@ -47,7 +47,7 @@ parcelable DolbyVisionCalibrationSettings
     double Tmin;
 
     /**
-    * Target display EOTF gamma exponent.
+    * Display EOTF gamma exponent (legacy field name `Tgamma`).
      * Valid range is 1.80 to 2.60.
      */
     double Tgamma;
