@@ -272,20 +272,25 @@ interface IPanelOutputController {
      *
      * This method can only be called in State.STARTED.
      *
-    * Input `requestedConfigurations` specifies one or more PQ parameter selectors to query. Each element's:
-    * - `pqParameter` must be valid.
-    * - `pictureMode`, `source`, and `dynamicRange` may be concrete values or wildcards per their definitions.
-    *
-    * The selector identifies the PQ parameter and its runtime context only.
-    * For aggregate PQ parameters, the returned `value` payload contains the
-    * entire parameter set for the resolved selector context:
-    * - `COLOUR_MANAGEMENT_SETTINGS` returns one grouped CMS payload.
-    * - `TWO_POINT_WB` returns one array containing all 2-point WB entries for the resolved context.
-    * - `MULTI_POINT_WB` returns one array containing all multi-point WB entries for the resolved context.
-    * - `DV_CALIBRATION` returns one Dolby Vision calibration payload.
-    *
-    * Output `returnedConfigurations` mirrors ordering and criteria and populates the `value` field.
-    * Clients shall interpret each returned entry together with the selector context that produced it.
+      * Input `requestedConfigurations` specifies one or more PQ parameter selectors to query. Each element's:
+      * - `pqParameter` must be valid.
+      * - `pictureMode` and `source` must be concrete values.
+      * - `dynamicRange` must be a valid selector value for the requested parameter.
+      *
+      * The selector identifies the PQ parameter and its runtime context only.
+      * The selector does not expand across picture modes or AV sources.
+      * White-balance parameters are returned as aggregate bundles for the
+      * resolved context; no additional white-balance selector keys are required
+      * or defined on `PQParameterSelector`.
+      * For aggregate PQ parameters, the returned `value` payload contains the
+      * entire parameter set for the resolved selector context:
+      * - `COLOUR_MANAGEMENT_SETTINGS` returns one grouped CMS payload.
+      * - `TWO_POINT_WB` returns one array containing all 2-point WB entries for the resolved context.
+      * - `MULTI_POINT_WB` returns one array containing all multi-point WB entries for the resolved context.
+      * - `DV_CALIBRATION` returns one Dolby Vision calibration payload.
+      *
+      * Output `returnedConfigurations` mirrors ordering and criteria and populates the `value` field.
+      * Clients shall interpret each returned entry together with the selector context that produced it.
      *
      * Errors:
      * - Empty input list throws EX_ILLEGAL_ARGUMENT.
@@ -314,10 +319,12 @@ interface IPanelOutputController {
      *
      * This method can only be called in State.STARTED.
      *
-    * Semantics are identical to `getPQParameters()` except the returned `value` reflects factory/default settings.
-    * As with `getPQParameters()`, the input selector provides the PQ
-    * parameter and runtime context, while aggregate parameters return their
-    * full stored payload in the `value` union variant.
+      * Semantics are identical to `getPQParameters()` except the returned `value` reflects factory/default settings.
+      * As with `getPQParameters()`, the input selector provides the PQ
+      * parameter and runtime context, while aggregate parameters return their
+      * full stored payload in the `value` union variant.
+      * White-balance defaults are returned as the full 2-point or multi-point
+      * bundle for the resolved context.
      *
      * @param[in] requestedConfigurations   Non-empty list of PQ parameter query selectors.
      * @param[out] defaultConfigurations    Populated default PQ parameter values.
@@ -483,7 +490,7 @@ interface IPanelOutputController {
     /**
      * Gets the current video resolution used to apply PQ settings.
      *
-      * This method can only be called in State.STARTED.
+     * This method can only be called in State.STARTED.
      *
      * The returned array is { 0, 0 } if no video is playing.
      *
@@ -500,9 +507,9 @@ interface IPanelOutputController {
      * When enabled, all PQ processing blocks (e.g. brightness, contrast, sharpness, saturation, hue,
      * dimming, noise reduction, CMS, etc.) are set to a neutral or disabled state to allow accurate
      * measurement of the panel output without interference from PQ processing.
-    * The white balance (WB) and gamma blocks are also set to a neutral or disabled state.
-    * This does not make `SDR_GAMMA` a live calibration write; `SDR_GAMMA` remains deferred until
-    * calibration mode is disabled, like other non-calibration PQ properties.
+     * The white balance (WB) and gamma blocks are also set to a neutral or disabled state.
+     * This does not make `SDR_GAMMA` a live calibration write; `SDR_GAMMA` remains deferred until
+     * calibration mode is disabled, like other non-calibration PQ properties.
      *
      * When disabled, the active permutation exits neutral mode and resumes using the latest stored
      * values for that permutation. This includes the stored 2-point white-balance,
@@ -534,7 +541,7 @@ interface IPanelOutputController {
     /**
      * Gets the current calibration mode state.
      *
-      * This method can only be called in State.STARTED.
+     * This method can only be called in State.STARTED.
      *
      * @returns boolean
      * @retval true     Calibration mode is enabled.

@@ -24,7 +24,8 @@
 
 panel:                  # Component object begins
   interfaceVersion: current
-  panelType: LCD # LCD = 0, QLED = 1, OLED = 2, MINI_LED = 3
+  # Free-form vendor panel type string returned by Capabilities.panelType.
+  panelType: "LCD"
   pixelWidth: 3840   # UHD panel example
   pixelHeight: 2160
   widthCm: 124      # 55 inch; 43" 96.5x53.3, 50" 111.8x63.5, 55" 124.5x71.1, 65" 144.8x81.3, 75" 165.1x94
@@ -78,14 +79,14 @@ panel:                  # Component object begins
     - HUE:                          {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
     - MANUAL_BACKLIGHT:             {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
     - SDR_GAMMA:
-      isSupported: true
-      isGlobal: false
-      supportedValues: {supportedSdrGammaValues: [SDR_GAMMA_1_8, SDR_GAMMA_1_9, SDR_GAMMA_2_0, SDR_GAMMA_2_1, SDR_GAMMA_2_2, SDR_GAMMA_2_3, SDR_GAMMA_2_4, SDR_GAMMA_BT_1886]}
-      pqParamPictureModeCapabilities: *pqContexts
+        isSupported: true
+        isGlobal: false
+        supportedValues: {supportedSdrGammaValues: [SDR_GAMMA_1_8, SDR_GAMMA_1_9, SDR_GAMMA_2_0, SDR_GAMMA_2_1, SDR_GAMMA_2_2, SDR_GAMMA_2_3, SDR_GAMMA_2_4, SDR_GAMMA_BT_1886]}
+        pqParamPictureModeCapabilities: *pqContexts
     - COLOR_TEMPERATURE:
         isSupported: true
         isGlobal: false
-      supportedValues: {supportedStringValues: *panelColourTemperatures}
+        supportedValues: {supportedStringValues: *panelColourTemperatures}
         pqParamPictureModeCapabilities: *pqContexts
     - DIMMING_SETTINGS:
         isSupported: true
