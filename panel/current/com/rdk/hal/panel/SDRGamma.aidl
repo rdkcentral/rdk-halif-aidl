@@ -33,5 +33,4 @@ enum SDRGamma {
     SDR_GAMMA_2_3 = 5, //!< SDR gamma is 2.3.
     SDR_GAMMA_2_4 = 6, //!< SDR gamma is 2.4.
     SDR_GAMMA_BT_1886 = 7, //!< SDR gamma is ITU-R BT.1886.
-    SDR_GAMMA_MAX = 8, //!< End of enum.
 }
