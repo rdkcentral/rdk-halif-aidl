@@ -29,5 +29,4 @@ enum TwoPointWBColour {
     WB_COLOR_RED = 0,
     WB_COLOR_GREEN = 1,
     WB_COLOR_BLUE = 2,
-    WB_COLOR_MAX = 3,
 }

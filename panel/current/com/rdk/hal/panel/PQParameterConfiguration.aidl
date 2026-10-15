@@ -17,13 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.panel;
-import com.rdk.hal.panel.ColourManagementSettings;
-import com.rdk.hal.panel.PanelSource;
-import com.rdk.hal.panel.PQParameter;
-import com.rdk.hal.panel.DolbyVisionCalibrationSettings;
-import com.rdk.hal.panel.TwoPointWB;
-import com.rdk.hal.panel.WhiteBalanceMultiPointSettings;
-import com.rdk.hal.videodecoder.DynamicRange;
+import com.rdk.hal.panel.PQParameterSelector;
+import com.rdk.hal.panel.PQParameterValue;
 
 /** 
  *  @brief     PQ parameter configuration.
@@ -34,55 +29,13 @@ import com.rdk.hal.videodecoder.DynamicRange;
 parcelable PQParameterConfiguration
 {
 	/**
-	 * The PQ parameter.
+	 * Selector identifying the PQ parameter instance.
 	 */
-	PQParameter pqParameter;
-
-	/**
-	 * The picture mode.
-	 * null means wildcard which applies to all supported picture modes.
-	 */
-	@nullable String pictureMode;
-
-	/**
-	 * The AV source.
-	 * null means wildcard which applies to all supported AV sources.
-	 */
-	@nullable PanelSource source;
-
-	/**
-	 * The dynamic range.
-	 * DynamicRange.UNKNOWN means wildcard which applies to all supported dynamic ranges.
-	 */
-	DynamicRange dynamicRange;
+	PQParameterSelector selector;
 	
 	/**
 	 * The value for the PQ parameter.
-	 * For all PQ parameters except PQParameter.COLOR_TEMPERATURE,
-	 * PQParameter.DV_CALIBRATION, PQParameter.TWO_POINT_WB, and
-	 * PQParameter.MULTI_POINT_WB, and
-	 * PQParameter.COLOUR_MANAGEMENT_SETTINGS,
-	 * use the `intValue` variant.
-	 * For PQParameter.COLOR_TEMPERATURE, use the `stringValue` variant.
-	 * For PQParameter.DV_CALIBRATION, use the `dvCalibrationSettings` variant.
-	 * For PQParameter.TWO_POINT_WB, use the `twoPointWBSettings` variant.
-	 * For PQParameter.MULTI_POINT_WB, use the `multiPointWBSettings` variant.
-	 * For PQParameter.COLOUR_MANAGEMENT_SETTINGS, use the `colourManagementSettings` variant.
+	 * The active variant must match `selector.pqParameter`.
 	 */
-	@VintfStability
-	union Value {
-		/** Integer value used by all PQ parameters except COLOR_TEMPERATURE, DV_CALIBRATION, TWO_POINT_WB, MULTI_POINT_WB, and COLOUR_MANAGEMENT_SETTINGS. */
-		int intValue;
-		/** String value used when pqParameter == PQParameter.COLOR_TEMPERATURE. */
-		String stringValue;
-		/** Dolby Vision calibration settings used when pqParameter == PQParameter.DV_CALIBRATION. */
-		DolbyVisionCalibrationSettings dvCalibrationSettings;
-		/** 2-point white balance settings used when pqParameter == PQParameter.TWO_POINT_WB. */
-		TwoPointWB twoPointWBSettings;
-		/** Multi-point white balance settings used when pqParameter == PQParameter.MULTI_POINT_WB. */
-		WhiteBalanceMultiPointSettings multiPointWBSettings;
-		/** Grouped colour-management settings used when pqParameter == PQParameter.COLOUR_MANAGEMENT_SETTINGS. */
-		ColourManagementSettings colourManagementSettings;
-	}
-	Value value;
+	PQParameterValue value;
 }

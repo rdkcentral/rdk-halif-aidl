@@ -30,85 +30,82 @@ panel:                  # Component object begins
   widthCm: 124      # 55 inch; 43" 96.5x53.3, 50" 111.8x63.5, 55" 124.5x71.1, 65" 144.8x81.3, 75" 165.1x94
   heightCm: 71
   frameRateMatchingSupported: true
-  fadeDisplaySupported: true
   supportedPQParameters: [BRIGHTNESS, CONTRAST, SHARPNESS, SATURATION, HUE,
-      MANUAL_BACKLIGHT, SDR_GAMMA, COLOR_TEMPERATURE, DIMMING_MODE, DIMMING_LEVEL,
-      LOW_LATENCY_STATE, SATURATION_RED, SATURATION_BLUE, SATURATION_GREEN,
-      SATURATION_YELLOW, SATURATION_CYAN, SATURATION_MAGENTA, HUE_RED, HUE_BLUE,
-      HUE_GREEN, HUE_YELLOW, HUE_CYAN, HUE_MAGENTA, LUMA_RED, LUMA_BLUE, LUMA_GREEN,
-      LUMA_YELLOW, LUMA_CYAN, LUMA_MAGENTA, MEMC, LOCAL_CONTRAST_LEVEL,
+      MANUAL_BACKLIGHT, SDR_GAMMA, COLOR_TEMPERATURE, DIMMING_SETTINGS,
+      LOW_LATENCY_STATE, MEMC, LOCAL_CONTRAST_LEVEL,
       MPEG_NOISE_REDUCTION, NOISE_REDUCTION, AI_PQ_ENGINE, AMBIENT_LIGHT_SENSOR_CONTROL,
       PRECISION_DETAIL, DV_CALIBRATION, TWO_POINT_WB, MULTI_POINT_WB,
-      COLOUR_MANAGEMENT_SETTINGS, DYNAMIC_CONTRAST_LEVEL]
+      COLOUR_MANAGEMENT_SETTINGS, DYNAMIC_CONTRAST_LEVEL, TONE_MAPPING_SETTINGS]
   supportedRefreshRatesHz: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 75, 85,
       100, 120, 144, 165, 240]
-  supportedAVSources: &allSources [IP, TUNER, HDMI_1, HDMI_2, HDMI_3, COMPOSITE_1]
+  supportedAVSources: &allSources
+    - {type: IP}
+    - {type: TUNER}
+    - {type: HDMI, instance: "1"}
+    - {type: HDMI, instance: "2"}
+    - {type: HDMI, instance: "3"}
+    - {type: COMPOSITE, instance: "1"}
   supportedDynamicRanges: [SDR, HLG, HDR10, DOLBY_VISION]
-  supportedColourTemperatures: [WARM, NORMAL, COLD, SUPER_COLD, CUSTOM]
+  supportedColourTemperatures: ["WARM", "NORMAL", "COLD", "SUPER_COLD", "CUSTOM"]
   # pictureMode -> dynamicRange -> AV sources. Every picture mode supports all four
   # dynamic ranges; COMPOSITE_1 is SDR-only.
   pictureModeCapabilities: &pqContexts
-    - Entertainment: &allDynamicRanges
+    - "Entertainment": &allDynamicRanges
         - SDR: {supportedAVSources: *allSources}
-        - HLG: {supportedAVSources: &hdrSources [IP, TUNER, HDMI_1, HDMI_2, HDMI_3]}
-        - HDR10: {supportedAVSources: *hdrSources}
-        - DOLBY_VISION: {supportedAVSources: *hdrSources}
-    - Dynamic: *allDynamicRanges
-    - Dynamic2: *allDynamicRanges
-    - Sports: *allDynamicRanges
-    - Movie: *allDynamicRanges
-    - Expert: *allDynamicRanges
+        - HLG:
+            supportedAVSources: &hdrSources
+              - {type: IP}
+              - {type: TUNER}
+              - {type: HDMI, instance: "1"}
+              - {type: HDMI, instance: "2"}
+              - {type: HDMI, instance: "3"}
+        - HDR10:
+            supportedAVSources: *hdrSources
+        - DOLBY_VISION:
+            supportedAVSources: *hdrSources
+    - "Movie": *allDynamicRanges
+    - "Sports": *allDynamicRanges
+    - "Game": *allDynamicRanges
+    - "Custom": *allDynamicRanges
+    - "Vivid": *allDynamicRanges
   # One entry per PQParameter, in enum order. Parameters that apply in every context
   # reference *pqContexts; common integer bounds are anchored once and referenced.
-  PQParameterCapabilities:
-    - BRIGHTNESS:                   {isSupported: true, isGlobal: false, rangeBound: {intBounds: &b0to100 {minValue: 0, maxValue: 100, stepValue: 1}}, pictureModeCapabilities: *pqContexts}
-    - CONTRAST:                     {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - SHARPNESS:                    {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - SATURATION:                   {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - HUE:                          {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - MANUAL_BACKLIGHT:             {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - SDR_GAMMA:                    {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+  pqParameterCapabilities:
+    - BRIGHTNESS:                   {isSupported: true, isGlobal: false, rangeBound: {intBounds: &b0to100 {minValue: 0, maxValue: 100, stepValue: {value: 1}}}, pqParamPictureModeCapabilities: *pqContexts}
+    - CONTRAST:                     {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - SHARPNESS:                    {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - SATURATION:                   {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - HUE:                          {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - MANUAL_BACKLIGHT:             {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - SDR_GAMMA:
+      isSupported: true
+      isGlobal: false
+      supportedValues: {supportedSdrGammaValues: [SDR_GAMMA_1_8, SDR_GAMMA_1_9, SDR_GAMMA_2_0, SDR_GAMMA_2_1, SDR_GAMMA_2_2, SDR_GAMMA_2_3, SDR_GAMMA_2_4, SDR_GAMMA_BT_1886]}
+      pqParamPictureModeCapabilities: *pqContexts
     - COLOR_TEMPERATURE:
         isSupported: true
         isGlobal: false
-        supportedValues: {supportedStringValues: [WARM, NORMAL, COLD, SUPER_COLD, CUSTOM]}
-        pictureModeCapabilities: *pqContexts
-    - DIMMING_MODE:                 {isSupported: true, isGlobal: true, rangeBound: {intBounds: {minValue: 0, maxValue: 2, stepValue: 1}}, pictureModeCapabilities: *pqContexts}
-    - DIMMING_LEVEL:
+        supportedValues: {supportedStringValues: ["WARM", "NORMAL", "COLD", "SUPER_COLD", "CUSTOM"]}
+        pqParamPictureModeCapabilities: *pqContexts
+    - DIMMING_SETTINGS:
         isSupported: true
-        isGlobal: false
+        isGlobal: true
         rangeBound:
-          dimmingLevelCapabilities:
-            modes:
-              - {dimmingMode: 0, isAdjustable: true, minValue: 0, maxValue: 3, stepValue: 1, supportedValues: [0, 1, 2, 3]}
-              - {dimmingMode: 1, isAdjustable: false, minValue: 1, maxValue: 1, stepValue: 1, supportedValues: [1]}
-        pictureModeCapabilities: *pqContexts
-    - LOW_LATENCY_STATE:            {isSupported: true, isGlobal: true, rangeBound: {intBounds: &b0to1 {minValue: 0, maxValue: 1, stepValue: 1}}, pictureModeCapabilities: *pqContexts}
-    - SATURATION_RED:               {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - SATURATION_BLUE:              {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - SATURATION_GREEN:             {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - SATURATION_YELLOW:            {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - SATURATION_CYAN:              {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - SATURATION_MAGENTA:           {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - HUE_RED:                      {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - HUE_BLUE:                     {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - HUE_GREEN:                    {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - HUE_YELLOW:                   {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - HUE_CYAN:                     {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - HUE_MAGENTA:                  {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - LUMA_RED:                     {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - LUMA_BLUE:                    {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - LUMA_GREEN:                   {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - LUMA_YELLOW:                  {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - LUMA_CYAN:                    {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - LUMA_MAGENTA:                 {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - MEMC:                         {isSupported: true, isGlobal: true, rangeBound: {intBounds: {minValue: 0, maxValue: 4, stepValue: 1}}, pictureModeCapabilities: *pqContexts}
-    - LOCAL_CONTRAST_LEVEL:         {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - MPEG_NOISE_REDUCTION:         {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - NOISE_REDUCTION:              {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
-    - AI_PQ_ENGINE:                 {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to1}, pictureModeCapabilities: *pqContexts}
-    - AMBIENT_LIGHT_SENSOR_CONTROL: {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to1}, pictureModeCapabilities: *pqContexts}
-    - PRECISION_DETAIL:             {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+          dimmingSettingsCapabilities:
+            modeLevelCapabilities:
+              entries:
+                - {dimmingMode: DIMMING_MODE_FIXED, numSupportedLevels: 1, supportedValues: [DIMMING_LEVEL_NOT_APPLICABLE]}
+                - {dimmingMode: DIMMING_MODE_GLOBAL, numSupportedLevels: 3, supportedValues: [DIMMING_LEVEL_LOW, DIMMING_LEVEL_MEDIUM, DIMMING_LEVEL_HIGH]}
+                - {dimmingMode: DIMMING_MODE_LOCAL, numSupportedLevels: 3, supportedValues: [DIMMING_LEVEL_LOW, DIMMING_LEVEL_MEDIUM, DIMMING_LEVEL_HIGH]}
+        pqParamPictureModeCapabilities: *pqContexts
+    - LOW_LATENCY_STATE:            {isSupported: true, isGlobal: true, rangeBound: {intBounds: &b0to1 {minValue: 0, maxValue: 1, stepValue: {value: 1}}}, pqParamPictureModeCapabilities: *pqContexts}
+    - MEMC:                         {isSupported: true, isGlobal: true, rangeBound: {intBounds: {minValue: 0, maxValue: 4, stepValue: {value: 1}}}, pqParamPictureModeCapabilities: *pqContexts}
+    - LOCAL_CONTRAST_LEVEL:         {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - MPEG_NOISE_REDUCTION:         {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - NOISE_REDUCTION:              {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - AI_PQ_ENGINE:                 {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to1}, pqParamPictureModeCapabilities: *pqContexts}
+    - AMBIENT_LIGHT_SENSOR_CONTROL: {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to1}, pqParamPictureModeCapabilities: *pqContexts}
+    - PRECISION_DETAIL:             {isSupported: true, isGlobal: false, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
     - DV_CALIBRATION:
         isSupported: true
         isGlobal: false
@@ -117,22 +114,22 @@ panel:                  # Component object begins
             minBound: {Tmax: 0.0, Tmin: 0.0, Tgamma: 1.8, Rx: 0.0, Ry: 0.0, Gx: 0.0, Gy: 0.0, Bx: 0.0, By: 0.0, Wx: 0.0, Wy: 0.0}
             maxBound: {Tmax: 10000.0, Tmin: 10000.0, Tgamma: 2.6, Rx: 1.0, Ry: 1.0, Gx: 1.0, Gy: 1.0, Bx: 1.0, By: 1.0, Wx: 1.0, Wy: 1.0}
         supportedValues: {supportedDvCalibrationValues: []}
-        pictureModeCapabilities:   # DOLBY_VISION only
-          - Entertainment: &dolbyVisionOnly [{DOLBY_VISION: {supportedAVSources: *hdrSources}}]
-          - Dynamic: *dolbyVisionOnly
-          - Dynamic2: *dolbyVisionOnly
-          - Sports: *dolbyVisionOnly
-          - Movie: *dolbyVisionOnly
-          - Expert: *dolbyVisionOnly
+        pqParamPictureModeCapabilities:   # DOLBY_VISION only
+          - "Entertainment": &dolbyVisionOnly [{DOLBY_VISION: {supportedAVSources: *hdrSources}}]
+          - "Movie": *dolbyVisionOnly
+          - "Sports": *dolbyVisionOnly
+          - "Game": *dolbyVisionOnly
+          - "Custom": *dolbyVisionOnly
+          - "Vivid": *dolbyVisionOnly
     - TWO_POINT_WB:
         isSupported: true
         isGlobal: false
         rangeBound:
           twoPointWBBounds:
-            minBound: {colourTemperature: WARM, twoPointWBColour: WB_COLOR_RED, gain: 0, offset: -1024}
-            maxBound: {colourTemperature: CUSTOM, twoPointWBColour: WB_COLOR_BLUE, gain: 2047, offset: 1023}
+            minBound: {colourTemperature: "WARM", twoPointWBColour: WB_COLOR_RED, gain: 0, offset: -1024}
+            maxBound: {colourTemperature: "CUSTOM", twoPointWBColour: WB_COLOR_BLUE, gain: 2047, offset: 1023}
         supportedValues: {supportedTwoPointWBValues: []}
-        pictureModeCapabilities: *pqContexts
+        pqParamPictureModeCapabilities: *pqContexts
     - MULTI_POINT_WB:
         isSupported: true
         isGlobal: false
@@ -140,10 +137,10 @@ panel:                  # Component object begins
           multiPointWBBounds:
             # The number of calibration points is vendor-defined; a platform profile
             # replaces these empty arrays with its min/max vectors.
-            minBound: {colourTemperature: WARM, r: [], g: [], b: []}
-            maxBound: {colourTemperature: CUSTOM, r: [], g: [], b: []}
+            minBound: {colourTemperature: "WARM", r: [], g: [], b: []}
+            maxBound: {colourTemperature: "CUSTOM", r: [], g: [], b: []}
         supportedValues: {supportedMultiPointWBValues: []}
-        pictureModeCapabilities: *pqContexts
+        pqParamPictureModeCapabilities: *pqContexts
     - COLOUR_MANAGEMENT_SETTINGS:
         isSupported: true
         isGlobal: false
@@ -164,5 +161,17 @@ panel:                  # Component object begins
               cyan: {hue: 100, saturation: 100, luminance: 100}
               magenta: {hue: 100, saturation: 100, luminance: 100}
         supportedValues: {supportedColourManagementSettingsValues: []}
-        pictureModeCapabilities: *pqContexts
-    - DYNAMIC_CONTRAST_LEVEL:       {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to100}, pictureModeCapabilities: *pqContexts}
+        pqParamPictureModeCapabilities: *pqContexts
+    - DYNAMIC_CONTRAST_LEVEL:       {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - AISR:                         {isSupported: false, isGlobal: false}
+    - TONE_MAPPING_SETTINGS:
+        isSupported: true
+        isGlobal: false
+        rangeBound:
+          toneMappingSettingsCapabilities:
+            modeLevelCapabilities:
+              entries:
+                - {toneMappingMode: TONE_MAPPING_DYNAMIC, numSupportedLevels: 1, supportedValues: [TONE_MAPPING_LEVEL_NOT_APPLICABLE]}
+                - {toneMappingMode: TONE_MAPPING_CLIPPING, numSupportedLevels: 1, supportedValues: [TONE_MAPPING_LEVEL_NOT_APPLICABLE]}
+                - {toneMappingMode: TONE_MAPPING_STATIC, numSupportedLevels: 3, supportedValues: [TONE_MAPPING_LEVEL_LOW, TONE_MAPPING_LEVEL_MEDIUM, TONE_MAPPING_LEVEL_HIGH]}
+        pqParamPictureModeCapabilities: *pqContexts
