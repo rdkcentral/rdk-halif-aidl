@@ -159,6 +159,8 @@ panel:                  # Component object begins
             b: {minValue: 0, maxValue: 255}
         supportedValues: {supportedMultiPointWBValues: *panelColourTemperatures}
         pqParamPictureModeCapabilities: *pqContexts
+    - DYNAMIC_CONTRAST_LEVEL:       {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
+    - AISR:                         {isSupported: false, isGlobal: false}
     - COLOUR_MANAGEMENT_SETTINGS:
         isSupported: true
         isGlobal: false
@@ -205,8 +207,6 @@ panel:                  # Component object begins
               magentaLuminance: 100
         supportedValues: {supportedColourManagementSettingsValues: []}
         pqParamPictureModeCapabilities: *pqContexts
-    - DYNAMIC_CONTRAST_LEVEL:       {isSupported: true, isGlobal: true, rangeBound: {intBounds: *b0to100}, pqParamPictureModeCapabilities: *pqContexts}
-    - AISR:                         {isSupported: false, isGlobal: false}
     - TONE_MAPPING_SETTINGS:
         isSupported: true
         isGlobal: false
