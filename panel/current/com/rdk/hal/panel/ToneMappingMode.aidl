@@ -2,7 +2,7 @@
  * If not stated otherwise in this file or this component's LICENSE file the
  * following copyright and licenses apply:
  *
- * Copyright 2024 RDK Management
+ * Copyright 2026 RDK Management
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,22 +18,14 @@
  */
 package com.rdk.hal.panel;
 
-/** 
- *  @brief     Display panel 2 point white balance settings.
- *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
+/**
+ * @brief HDR tone-mapping mode.
  */
- 
 @VintfStability
-parcelable WhiteBalance2PointSettings
-{
-	/* TODO: define what the valid range is - or provide an API for it. */
-
-	parcelable Point {
-		int gain;
-		int offset;
-	}
-
-	Point r;
-	Point g;
-	Point b;
+@Backing(type="int")
+enum ToneMappingMode {
+    TONE_MAPPING_INVALID = -1,
+    TONE_MAPPING_DYNAMIC = 0,
+    TONE_MAPPING_CLIPPING = 1,
+    TONE_MAPPING_STATIC = 2,
 }

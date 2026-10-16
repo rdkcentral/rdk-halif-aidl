@@ -17,9 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.panel;
-import com.rdk.hal.panel.PQParameter;
-import com.rdk.hal.videodecoder.DynamicRange;
-import com.rdk.hal.AVSource;
+import com.rdk.hal.panel.PQParameterSelector;
+import com.rdk.hal.panel.PQParameterValue;
 
 /** 
  *  @brief     PQ parameter configuration.
@@ -30,30 +29,13 @@ import com.rdk.hal.AVSource;
 parcelable PQParameterConfiguration
 {
 	/**
-	 * The PQ parameter.
+	 * Selector identifying the PQ parameter instance.
 	 */
-	PQParameter pqParameter;
-
-	/**
-	 * The picture mode.
-	 * null means wildcard which applies to all supported picture modes.
-	 */
-	@nullable String pictureMode;
-
-	/**
-	 * The AV source.
-	 * AVSource.UNKNOWN means wildcard which applies to all supported AV sources.
-	 */
-	AVSource source;
-
-	/**
-	 * The video format dynamic range.
-	 * DynamicRange.UNKNOWN means wildcard which applies to all supported dynamic range formats.
-	 */
-	DynamicRange format;
+	PQParameterSelector selector;
 	
 	/**
 	 * The value for the PQ parameter.
+	 * The active variant must match `selector.pqParameter`.
 	 */
-	int value;
+	PQParameterValue value;
 }
