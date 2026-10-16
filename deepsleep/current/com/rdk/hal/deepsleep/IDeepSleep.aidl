@@ -58,6 +58,13 @@ interface IDeepSleep
      * The `preconfiguredTriggers[]` reported in the `Capabilities` are always enabled as trigger sources.
      * If they are not explicitly specified in the `triggersToWakeUpon[]` array then they are implicitly added.
      *
+     * `WakeUpTrigger.TIMER` is armed only when `setWakeUpTimer()` has set a period greater than 0.
+     * With a period of 0 the HAL does not program the timer, even if `WakeUpTrigger.TIMER` is in
+     * `preconfiguredTriggers[]` or `triggersToWakeUpon[]`.
+     *
+     * If the timer expires before the device has entered deep sleep, the HAL abandons deep sleep and
+     * returns true with `WakeUpTrigger.TIMER` in `wokeUpByTriggers[]`.
+     *
      * If a wake-up timer is configured, the HAL is responsible for resetting the timer after the device exits deep sleep,
      * regardless of which wake-up trigger caused the exit.
      *
@@ -84,8 +91,9 @@ interface IDeepSleep
      * The platform is expected to wake the device within ±/- 5 seconds of the programmed period.
      * The actual wake time could be adjusted for clock drift and resume latency where applicable.
      *
-     * @param[in] seconds   The timer period in seconds which must be >= 0.
-     *                      Setting the timer to 0 is equivalent to disabling the timer-based wake-up trigger.
+     * @param[in] seconds   The timer period in seconds which must be >= 0. Negative values are invalid.
+     *                      0 disables the timer: the HAL does not program the timer and `WakeUpTrigger.TIMER`
+     *                      is not armed, even if it is in `Capabilities.preconfiguredTriggers[]`.
      *
      * @returns boolean
      * @retval true - if the wake up timer period was valid.
