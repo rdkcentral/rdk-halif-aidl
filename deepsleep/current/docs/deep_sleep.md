@@ -100,10 +100,7 @@ It operates at the HAL layer and is used by middleware components responsible fo
   		- RCU_BT
   		- TIMER
   		- FRONT_PANEL
-  	defaultWakeUpTimerSeconds: 0
   ```
-
-* `defaultWakeUpTimerSeconds` is the wake-up timer period the HAL uses until `setWakeUpTimer()` is called, and resets to after every wake. 0 means no timer. The middleware is expected to set its own period for the product.
 
 * `preconfiguredTriggers[]` are always armed by the platform, regardless of whether the client includes them in the `enterDeepSleep()` call.
 

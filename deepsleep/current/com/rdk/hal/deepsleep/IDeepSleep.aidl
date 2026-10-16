@@ -65,8 +65,7 @@ interface IDeepSleep
      * If the timer expires before the device has entered deep sleep, the HAL abandons deep sleep and
      * returns true with `WakeUpTrigger.TIMER` in `wokeUpByTriggers[]`.
      *
-     * After the device exits deep sleep, whichever trigger woke it, the HAL resets the timer period to the
-     * platform default `defaultWakeUpTimerSeconds` declared in the HAL Feature Profile.
+     * After the device exits deep sleep, whichever trigger woke it, the HAL resets the timer period to 0.
      *
      * @param[in] triggersToWakeUpon    Array of wake up trigger events to wake upon after entering deep sleep.
      * @param[out] wokeUpByTriggers     Array of wake up trigger events that occurred when waking the device from deep sleep.
@@ -88,9 +87,10 @@ interface IDeepSleep
      * The timer starts when `enterDeepSleep()` is called and `WakeUpTrigger.TIMER` is listed in the `triggersToWakeUpon[]` array.
      * The timer must support at least 7 days.
      *
-     * Until this is called, and again after every wake, the HAL uses the platform default
-     * `defaultWakeUpTimerSeconds` declared in the HAL Feature Profile. The middleware is expected to set
-     * its own period to suit the product.
+     * The period is 0 until this is called, and is reset to 0 after every wake, so the middleware sets it
+     * before each `enterDeepSleep()`. The middleware calculates the period from real time, for example the
+     * seconds until the product's scheduled wake time. The HAL programs the period exactly as requested: a
+     * period shorter than the time the device takes to enter deep sleep wakes it straight away.
      *
      * The platform is expected to wake the device within ±/- 5 seconds of the programmed period.
      * The actual wake time could be adjusted for clock drift and resume latency where applicable.
@@ -113,8 +113,7 @@ interface IDeepSleep
     /**
      * Gets the timer period set by `setWakeUpTimer()`.
      *
-     * If no period has been set since the last wake, the platform default `defaultWakeUpTimerSeconds`
-     * from the HAL Feature Profile is returned. 0 means no timer.
+     * If no period has been set since the last wake, 0 is returned, meaning no timer.
      *
      * @returns int     The period of the wake up timer in seconds.
      *
