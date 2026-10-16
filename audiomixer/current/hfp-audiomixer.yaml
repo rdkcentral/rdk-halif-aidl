@@ -99,6 +99,7 @@ audiomixer:
         - DELAY_MS
         - OUTPUT_FORMAT
         - CONNECTION_STATE
+        - DOLBY_MS12_AUDIO_PROFILE
       supportedOutputFormats:
         - AUTO
         - PCM_STEREO
@@ -213,6 +214,14 @@ audiomixer:
                 enabled: [true, false]
               default:
                 enabled: false
+      # Dolby MS12 audio profiles for this port (OutputPortCapabilities.dolbyMs12AudioProfiles).
+      # The first entry is the default. Each name must match a profile in the platform's
+      # MS12 configuration; select one with OutputPortProperty.DOLBY_MS12_AUDIO_PROFILE.
+      # Omit the key when the port has no MS12 audio profiles.
+      dolbyMs12AudioProfiles:
+        - Music
+        - Movie
+        - Sports
       supportsAudioCapture: false
 
     - id: 1
