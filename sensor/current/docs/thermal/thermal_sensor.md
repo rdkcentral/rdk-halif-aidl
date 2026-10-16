@@ -6,7 +6,7 @@ It abstracts the underlying hardware sensors, vendor thermal policy engine, and 
 Thermal thresholds are defined at multiple severity levels, allowing the system or user space components to **receive early warning events** and communicate thermal stress to the user, indicating that the device will shut down if the condition is not rectified.
 
 The vendor thermal policy remains responsible for determining exact threshold values and corresponding mitigation strategies.
-When any level is breached, the HAL emits a well-defined `ThermalActionEvent` describing the new thermal condition.
+When any level is breached, the HAL emits an `ActionEvent` describing the sensor's new state.
 
 This layered model keeps thermal management flexible across hardware implementations while ensuring consistent signalling behaviour to upper layers.
 
@@ -47,7 +47,7 @@ The Thermal HAL allows RDK Middleware to receive high-level **thermal action eve
 | **HAL.THERMAL.1** | Shall provide an event-driven API to report vendor-defined thermal state changes to RDK Middleware using the `State` enum. | |
 | **HAL.THERMAL.2** | Shall not expose or require Middleware to manage raw temperature thresholds or thermal policy decisions. | |
 | **HAL.THERMAL.3** | Shall emit all thermal state change events to registered Middleware clients and support registering / unregistering of such clients. | |
-| **HAL.THERMAL.4** | Shall support querying the current thermal state at any time via a `getCurrentThermalState()` API. | |
+| **HAL.THERMAL.4** | Shall support querying the worst current state across all sensors at any time via `getCurrentThermalState()`. | |
 | **HAL.THERMAL.5** | Shall support optional reporting of current temperature readings for platform sensors via `getCurrentTemperatures()`. | |
 | **HAL.THERMAL.6** | Shall provide a `vendorInfo` string field in thermal state change events for vendor-specific debug or telemetry purposes. | |
 | **HAL.THERMAL.7** | Shall update `getCurrentThermalState()` coherently with emitted state change events following the [Thermal State Machine](#thermal-state-machine). | Ensures predictable state → event alignment. |
@@ -168,7 +168,7 @@ graph RL
 
 The Thermal HAL exposes a small, extensible set of **thermal states**, represented by the **`State`** enum.
 
-These states represent high-level system thermal conditions determined by the platform's vendor-defined Thermal Policy Engine.
+Each thermal sensor is in one of these states, determined by the platform's vendor-defined Thermal Policy Engine.
 
 They enable general principles of:
 
