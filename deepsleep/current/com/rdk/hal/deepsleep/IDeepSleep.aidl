@@ -65,8 +65,8 @@ interface IDeepSleep
      * If the timer expires before the device has entered deep sleep, the HAL abandons deep sleep and
      * returns true with `WakeUpTrigger.TIMER` in `wokeUpByTriggers[]`.
      *
-     * If a wake-up timer is configured, the HAL is responsible for resetting the timer after the device exits deep sleep,
-     * regardless of which wake-up trigger caused the exit.
+     * After the device exits deep sleep, whichever trigger woke it, the HAL resets the timer period to the
+     * platform default `defaultWakeUpTimerSeconds` declared in the HAL Feature Profile.
      *
      * @param[in] triggersToWakeUpon    Array of wake up trigger events to wake upon after entering deep sleep.
      * @param[out] wokeUpByTriggers     Array of wake up trigger events that occurred when waking the device from deep sleep.
@@ -87,6 +87,10 @@ interface IDeepSleep
      *
      * The timer starts when `enterDeepSleep()` is called and `WakeUpTrigger.TIMER` is listed in the `triggersToWakeUpon[]` array.
      * The timer must support at least 7 days.
+     *
+     * Until this is called, and again after every wake, the HAL uses the platform default
+     * `defaultWakeUpTimerSeconds` declared in the HAL Feature Profile. The middleware is expected to set
+     * its own period to suit the product.
      *
      * The platform is expected to wake the device within ±/- 5 seconds of the programmed period.
      * The actual wake time could be adjusted for clock drift and resume latency where applicable.
@@ -109,7 +113,8 @@ interface IDeepSleep
     /**
      * Gets the timer period set by `setWakeUpTimer()`.
      *
-     * If no timer period was previously set, then 0 is returned.
+     * If no period has been set since the last wake, the platform default `defaultWakeUpTimerSeconds`
+     * from the HAL Feature Profile is returned. 0 means no timer.
      *
      * @returns int     The period of the wake up timer in seconds.
      *

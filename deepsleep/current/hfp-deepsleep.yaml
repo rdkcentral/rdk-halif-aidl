@@ -39,3 +39,6 @@ deepsleep:                      # Component object begins
         - RCU_BT
         - TIMER
         - FRONT_PANEL
+    # Wake-up timer period the HAL uses until setWakeUpTimer() is called, and resets to after every wake.
+    # 0 = no timer (TIMER is not armed). The middleware is expected to set its own period for the product.
+    defaultWakeUpTimerSeconds: 0
