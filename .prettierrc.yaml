@@ -1,0 +1,18 @@
+# Prettier configuration.
+#
+# A repository config file takes precedence over the editor's Prettier settings,
+# so this pins formatting for everyone regardless of local preferences. It exists
+# mainly because a user-level "prettier.tabWidth": 4 was silently reindenting YAML
+# from two spaces to four, producing large whitespace-only diffs.
+#
+# Markdown under docs/ is excluded entirely - see .prettierignore.
+
+printWidth: 120
+proseWrap: preserve
+
+overrides:
+  - files:
+      - "*.yaml"
+      - "*.yml"
+    options:
+      tabWidth: 2

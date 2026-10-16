@@ -25,7 +25,8 @@ components:
   audiosink:      current
   avbuffer:       current
   avclock:        current
-  bootreason:  current
+  bootreason:     current
+  broadcast:      current
   common:         current
   compositeinput: current
   deepsleep:      current
@@ -38,6 +39,7 @@ components:
   indicator:      current
   panel:          current
   planecontrol:   current
+  ringbuffer:     current
   sensor:         current
   videodecoder:   current
   videosink:      current

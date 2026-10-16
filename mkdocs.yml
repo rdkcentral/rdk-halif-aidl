@@ -99,7 +99,10 @@ nav:
     - Boot Reason:
       - Current: '!include bootreason/current/mkdocs.yml'
       - 0.1.0.0: '!include bootreason/0.1.0.0/mkdocs.yml'
-    - Broadcast: '!include broadcast/current/mkdocs.yml'
+    - Broadcast:
+      - Current: '!include broadcast/current/mkdocs.yml'
+    - RingBuffer:
+      - Current: '!include ringbuffer/current/mkdocs.yml'
     - DRM:
       - Current: '!include drm/current/mkdocs.yml'
       - 0.1.0.0: '!include drm/0.1.0.0/mkdocs.yml'
