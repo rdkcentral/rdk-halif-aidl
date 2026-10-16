@@ -53,8 +53,11 @@ interface IThermalSensor {
     boolean unregisterEventListener(in IThermalEventListener listener);
 
     /**
-     * @brief Query the current high-level thermal state.
-     * @return State Current thermal state.
+     * @brief Query the worst current state across all thermal sensors.
+     * @details Each sensor has its own state; this returns the most severe
+     * (NORMAL < CRITICAL_TEMPERATURE_EXCEEDED < CRITICAL_SHUTDOWN_IMMINENT).
+     * Use onThermalStateChange() events to see which sensor changed.
+     * @return State Worst current sensor state.
      */
     State getCurrentThermalState();
 
