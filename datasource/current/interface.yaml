@@ -1,0 +1,8 @@
+aidl_interface:
+  name: datasource
+  srcs:
+    - com/rdk/hal/datasource/*.aidl
+  imports:
+    - common@current
+  stability: vintf
+  layout: module-local
