@@ -40,4 +40,5 @@ components:
   planecontrol:   current
   sensor:         current
   videodecoder:   current
+  videocapture:   current
   videosink:      current

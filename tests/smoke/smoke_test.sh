@@ -59,6 +59,12 @@ fail() { echo "  FAIL  $1"; FAIL=$((FAIL + 1)); }
 # Number of components expected at current/ (one interface.yaml each).
 EXPECTED_CURRENT=$(ls -d ./*/current/interface.yaml 2>/dev/null | wc -l)
 
+# Number of components with at least one released snapshot (<comp>/<X.Y.Z.W>/).
+# A new component has none until its first release, so it is in the dev tree
+# and versions_current.yaml but not in versions_released.yaml.
+EXPECTED_RELEASABLE=$(ls -d ./*/[0-9]*.[0-9]*.[0-9]*.[0-9]*/ 2>/dev/null \
+                      | cut -d/ -f2 | sort -u | wc -l)
+
 count_libs() {  # count_libs <glob>
     find "${HALIF_LIB_DIR}" -name "$1" -type f 2>/dev/null | wc -l
 }
@@ -123,20 +129,22 @@ EXPECTED_RELEASED=$(awk '/^components:/ {inmap=1; next}
                         inmap && /^[^[:space:]#]/ {inmap=0}
                         inmap && /^[[:space:]]+[A-Za-z0-9_]+:/ {n++}
                         END {print n+0}' "${REPO_ROOT}/versions_released.yaml")
-# Sanity check: the released cohort should cover every component the dev
-# tree has. If the parser drops most lines, EXPECTED_RELEASED falls below
-# EXPECTED_CURRENT and we surface it before the build phase.
-if [ "${EXPECTED_RELEASED}" -lt "${EXPECTED_CURRENT}" ]; then
-    fail "manifest (released): parsed ${EXPECTED_RELEASED} entries from versions_released.yaml, expected >= ${EXPECTED_CURRENT} — likely a manifest-format regression"
+# Sanity check: the released cohort should cover every component that has a
+# released snapshot. If the parser drops most lines, EXPECTED_RELEASED falls
+# below EXPECTED_RELEASABLE and we surface it before the build phase.
+if [ "${EXPECTED_RELEASED}" -lt "${EXPECTED_RELEASABLE}" ]; then
+    fail "manifest (released): parsed ${EXPECTED_RELEASED} entries from versions_released.yaml, expected >= ${EXPECTED_RELEASABLE} released components — likely a manifest-format regression"
 fi
 if ./build_modules.sh manifest > /tmp/smoke_manifest_released.log 2>&1; then
     # Count ONLY versioned snapshot libs (`-v<X.Y.Z.W>-cpp.so`) — phase 2
     # exists specifically to validate the released cohort produces those.
     # Phase 1's `-vcurrent-cpp.so` libs are excluded from the count so a
     # silent regression here can't be masked by phase 1's leftover libs.
-    # Components pinned to `current` in the manifest (e.g. new modules
-    # with no snapshot yet) are excluded from both the count and the
-    # EXPECTED_VERSIONED expectation below.
+    # Components pinned to `current` in the manifest are excluded from both
+    # the count and the EXPECTED_VERSIONED expectation below. A new module
+    # with no snapshot yet is not listed here at all - the Yocto planner
+    # (halif_plan.py) rejects any entry without a released snapshot - so it
+    # is built by phases 1 and 3 only.
     EXPECTED_VERSIONED=$(awk '/^components:/ {inmap=1; next}
                               inmap && /^[^[:space:]#]/ {inmap=0}
                               inmap && /^[[:space:]]+[A-Za-z0-9_]+:[[:space:]]+[0-9]/ {n++}
