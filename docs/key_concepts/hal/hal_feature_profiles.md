@@ -1,6 +1,6 @@
 # HAL Feature Profile (HFP)
 
-The **HAL Feature Profile (HFP)** is a structured, YAML-based declaration provided by OEMs to define the supported feature set for their vendor layer implementation. It serves as both a **machine-readable contract** and **validation reference** between the platform and RDK middleware.
+The **HAL Feature Profile (HFP)** is a structured, YAML-based declaration of the HAL feature set a product supports. Each product has its own HFP set, negotiated between product architecture, the SoC vendor and the OEM. It serves as both a **machine-readable contract** and **validation reference** between the platform and RDK middleware.
 
 ---
 
@@ -8,6 +8,7 @@ The **HAL Feature Profile (HFP)** is a structured, YAML-based declaration provid
 
 | Version | Date        | Author       | Comment         |
 | ------- | ----------- | ------------ | --------------- |
+| 1.3     | 19 Oct 2026 | G. Weatherup | Product HFP lifecycle and file header |
 | 1.2     | 23 Jun 2025 | G. Weatherup | Improved format |
 | 1.1     | 24 Mar 2025 | G. Weatherup | Added clarity   |
 | 1.0     | 17 Feb 2025 | G. Weatherup | First revision  |
@@ -36,13 +37,44 @@ Maintaining the HFP in sync with the actual HAL implementation and runtime behav
 
 ---
 
-## HFP Location and Delivery
+## Product HFP Lifecycle
 
-Each platform is expected to define and maintain its own HAL Feature Profile (`HFP`) tailored to its **driver configuration** and **hardware capabilities**. The responsibility for creating and updating the HFP lies with the **OEM or platform integrator**.
+```mermaid
+flowchart LR
+    REF[RDK reference HFPs<br/>rdk-halif-aidl<br/>defaults only] --> PA[Product architecture<br/>defines the product HFP set]
+    PA --> SOC[SoC vendor<br/>reviews and contests]
+    PA --> OEM[OEM<br/>reviews and contests]
+    SOC --> NEG{Discussion<br/>and approval}
+    OEM --> NEG
+    NEG -->|refine| PA
+    NEG --> REL[Released product HFP set<br/>tagged in the internal<br/>product HFP repository]
+    REL --> VTS[VTS<br/>tests the product]
+```
 
-The examples provided in the HAL repository serve as **reference templates** only. They illustrate the expected **format**, **schema**, and **field usage**, but are not exhaustive or mandatory definitions.
+Each product has its own HFP set: one HFP per HAL component the product uses. The HFPs reflect the product. They record the agreement between what the product requires and what the SoC vendor and the OEM can provide.
 
-### Standard File Locations
+1. **Reference.** The HFPs in this repository (`<component>/current/hfp-<component>.yaml`) hold the RDK defaults. They are independent of any product.
+2. **Definition.** Product architecture creates the product HFP set from the reference HFPs, stating how the product is to operate.
+3. **Negotiation.** The set is given to the SoC vendor and the OEM, who may contest any entry: a codec that cannot be decoded, a limit that cannot be met, a mode of operation that is not used. Every change is agreed through discussion and approval.
+4. **Release.** The agreed set is kept in a common internal product HFP repository. A release is a git tag on that repository, and the merged pull request that precedes it is the approval record. The build stamps the tag and commit hash into the packaged set, so every VTS result names the HFP release it ran against.
+5. **Re-release.** When a negotiation reopens for an OEM or a SoC vendor, the change goes through a new pull request and a new tag.
+
+### Layers
+
+| Layer | Supplies |
+|---|---|
+| RDK reference | The defaults in this repository. |
+| Product | The product HFP set, defined by product architecture. |
+| SoC vendor | HFPs for SoC-provided components, such as the audio and video pipeline. A SoC vendor may supply its own HFPs as the starting point. |
+| OEM | HFPs for OEM vendor-layer components, such as deviceinfo, firmware update and sensors. The OEM may layer on top of or modify the SoC vendor's entries to meet the product requirements. |
+
+Not every HFP has a SoC vendor layer: OEM components are agreed between product architecture and the OEM.
+
+### Middleware view
+
+The middleware binary is identical on every platform, and it does not read the HFP. It discovers every capability at runtime through the AIDL interfaces: codecs, limits, resources and modes of operation. The HFP records what those runtime answers must be on the product, and VTS asserts them.
+
+### Installed File Locations
 
 ```text
 vendor/<vendor_name>/<platform>/config/hal_feature_profile.yaml
@@ -55,6 +87,43 @@ vendor/<vendor_name>/<platform>/config/components/<component>.yaml
 ```
 
 These may be merged via include directives, YAML anchors, or pre-processing scripts.
+
+---
+
+## HFP File Layout
+
+Every HFP file, reference or product, is laid out in this order:
+
+1. **Licence block.**
+2. **HFP header**: the component, the identity of the product the HFP was agreed for, the layers it derives from, and a link to the [Product HFP Lifecycle](#product-hfp-lifecycle).
+3. **Component notes**: semantics of the fields that the AIDL does not state. Optional.
+4. **YAML body**: the root key is the component name, and its first entry is `interfaceVersion`.
+
+The header holds fixed identity only. The HFP release, date and approval come from git (the release tag, its date and the merged pull request), not from text in the file. A file cannot carry its own commit hash, so the layers it derives from are recorded as git URLs pinned to a tag or commit hash.
+
+### Product HFP header
+
+```yaml
+# HAL Feature Profile (HFP): videodecoder
+#
+# Product:     <product name>
+# Platform:    <platform / board>
+# SoC vendor:  <vendor>   SoC: <part>
+# OEM:         <oem>
+#
+# Derived from:
+#   Reference:  https://github.com/rdkcentral/rdk-halif-aidl/blob/<tag>/videodecoder/current/hfp-videodecoder.yaml
+#   SoC vendor: https://<internal-git>/<soc-hfp-repo>/blob/<hash>/hfp-videodecoder.yaml
+#   OEM:        https://<internal-git>/<oem-hfp-repo>/blob/<hash>/hfp-videodecoder.yaml
+#
+# Lifecycle: https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle
+```
+
+`Derived from` lists only the layers that apply. An OEM component with no SoC vendor layer omits the `SoC vendor` line.
+
+### Reference HFP header
+
+The HFPs in this repository use the same header with every identity field set to `RDK reference` and no `Derived from` list.
 
 ---
 
