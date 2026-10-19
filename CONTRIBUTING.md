@@ -10,6 +10,8 @@ You can submit your changes for review via that site, by raising an issue in git
 - create a pull request [https://github.com/rdkcentral/ut-core/compare](https://github.com/rdkcentral/ut-core/compare) when the code changes are ready for review.
 - The team will review, and if accepted your changes will be merged to the mainline.
 
+- Commit with your public GitHub identity. Set `git config user.email` to your GitHub noreply address (`<id>+<login>@users.noreply.github.com`, shown under GitHub > Settings > Emails). Commits from a corporate address (listed in [.github/denied-commit-email-domains.txt](.github/denied-commit-email-domains.txt)) fail the PR check.
+
 - In order to contribute code, first-time users are requested to agree to the [license](https://wiki.rdkcentral.com/signup.action).
 
 - Note: This contributing.md is draft, and is expected to change based on Tier1/Tier2 requirements TBC.

@@ -1,0 +1,10 @@
+# Email domains that must not appear as a commit author or committer.
+#
+# These addresses resolve to employer-managed GitHub accounts, not the
+# contributor's public ID. Commit with your GitHub noreply address instead:
+#
+#   git config user.email <id>+<login>@users.noreply.github.com
+#
+# One domain per line. A domain also matches its subdomains.
+sky.uk
+comcast.com
