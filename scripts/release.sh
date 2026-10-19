@@ -2080,7 +2080,6 @@ freeze_snapshot_docs() {
 # freeze_snapshot_hfp <comp> <version> <tag> : Pin the header of every
 # <comp>/<version>/**/hfp-*.yaml to the release that ships it (#896).
 #
-#   # Version:   current (unreleased)  ->  # Version:   <version>, release <tag>
 #   # Source:    .../blob/develop/<comp>/current/<f>
 #                                       ->  # Source:    .../blob/<tag>/<comp>/<version>/<f>
 #                                           # Latest:    .../blob/develop/<comp>/current/<f>
@@ -2102,7 +2101,6 @@ import re, sys
 comp, version, tag, paths = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4:]
 for path in paths:
     s = open(path).read()
-    s = s.replace("# Version:   current (unreleased)", f"# Version:   {version}, release {tag}")
     def pin(m):
         latest = m.group(1) + "develop/" + comp + "/current/" + m.group(2)
         pinned = m.group(1) + tag + "/" + comp + "/" + version + "/" + m.group(2)

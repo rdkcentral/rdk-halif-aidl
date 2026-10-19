@@ -25,7 +25,6 @@
 # Product:   RDK-E reference defaults (not a shipping product)
 # Platform:  RDK
 # Supplier:  OEM (expected; confirmed per product)
-# Version:   current (unreleased)
 # Source:    https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/sensor/current/com/rdk/hal/sensor/thermal/hfp-sensor-thermal.yaml
 #
 # RDK reference HFP: the defaults each product HFP set is derived from.
