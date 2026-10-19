@@ -22,6 +22,8 @@ jobs:
           fetch-depth: 0
 
       - name: "Check commit author and committer emails"
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           scripts/check_commit_emails.sh \
             "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"

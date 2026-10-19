@@ -25,9 +25,13 @@
 # message trailers are checked as well as the author and committer.
 #
 #   error    author or committer is not a GitHub noreply address
-#   error    a trailer (Co-authored-by:, Signed-off-by:, ...) carries an
-#            email that is not a GitHub noreply address
-#   warning  any Co-authored-by: trailer
+#   error    a trailer (Co-authored-by:, Signed-off-by:, ...) names someone
+#            without a GitHub noreply address - who is it?
+#   warning  a co-author that is a GitHub bot account, not a person
+#   warning  any other co-author, to be confirmed by the reviewer
+#
+# Bot accounts are told apart through the GitHub API when GH_TOKEN is set;
+# without it every GitHub co-author gets the plain warning.
 #
 # Permitted:
 #   <id>+<login>@users.noreply.github.com   a contributor's public GitHub ID
@@ -43,6 +47,20 @@ range="${1:-origin/develop..HEAD}"
 permitted() {
     local email="${1,,}"
     [[ "${email}" == *@users.noreply.github.com || "${email}" == noreply@github.com ]]
+}
+
+# Prints the GitHub account type (User, Bot, ...) of a noreply address,
+# or nothing when it cannot be looked up.
+account_type() {
+    local local_part="${1%%@*}" endpoint
+    [[ -n "${GH_TOKEN:-}" ]] && command -v gh >/dev/null || return 0
+    # <id>+<login>: look up by id, as some bots (Copilot) have no users/<login>.
+    if [[ "${local_part}" =~ ^([0-9]+)\+ ]]; then
+        endpoint="user/${BASH_REMATCH[1]}"
+    else
+        endpoint="users/${local_part}"
+    fi
+    gh api "${endpoint}" --jq .type 2>/dev/null || true
 }
 
 # report <error|warning> <title> <message>
@@ -72,19 +90,26 @@ for sha in $(git rev-list "${range}"); do
 
     declare -A seen=()
     while IFS= read -r line; do
-        [[ "${line}" =~ ^[[:space:]]*([A-Za-z-]+):.*\<([^\>]+@[^\>]+)\> ]] || continue
+        [[ "${line}" =~ ^[[:space:]]*([A-Za-z-]+):[[:space:]]*([^\<]*)\<([^\>]+@[^\>]+)\> ]] || continue
         key="${BASH_REMATCH[1]}"
-        email="${BASH_REMATCH[2]}"
+        name="${BASH_REMATCH[2]%"${BASH_REMATCH[2]##*[![:space:]]}"}"
+        email="${BASH_REMATCH[3]}"
         [[ -n "${seen[${key,,} ${email,,}]:-}" ]] && continue
         seen["${key,,} ${email,,}"]=1
+        who="${name:+${name} }<${email}>"
         if ! permitted "${email}"; then
             trailer_failures=$((trailer_failures + 1))
-            report error "Commit message email" \
-                "${sha:0:8} '${key}: <${email}>' is not a GitHub noreply address: ${subject}"
+            report error "${key}" \
+                "${sha:0:8} ${key}: ${who} is not a GitHub account - who is this? ${subject}"
         elif [[ "${key,,}" == co-authored-by ]]; then
             warnings=$((warnings + 1))
-            report warning "Co-authored-by" \
-                "${sha:0:8} has a Co-authored-by trailer for <${email}>: ${subject}"
+            if [[ "$(account_type "${email}")" == Bot ]]; then
+                report warning "Co-authored-by" \
+                    "${sha:0:8} co-author ${who} is a bot account, not a person: ${subject}"
+            else
+                report warning "Co-authored-by" \
+                    "${sha:0:8} co-author ${who} - confirm they co-authored this: ${subject}"
+            fi
         fi
     done < <(git log -1 --format=%B "${sha}")
 done
@@ -105,11 +130,11 @@ fi
 if (( trailer_failures > 0 )); then
     cat >&2 <<'EOF'
 
-Commit messages must not carry email addresses other than GitHub noreply
-addresses: a squash merge copies them onto develop. Remove the trailer
-with an interactive rebase ('reword'), then push with --force-with-lease.
-Tools that add trailers automatically (such as an AI assistant's
-Co-Authored-By line) must be configured not to.
+Every person named in a commit trailer must be a GitHub account, given
+by its noreply address: a squash merge copies the trailer onto develop.
+A tool is not a co-author. Remove the trailer with an interactive rebase
+('reword') and push with --force-with-lease, and configure any tool that
+adds trailers automatically not to.
 EOF
 fi
 
