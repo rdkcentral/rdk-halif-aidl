@@ -25,16 +25,20 @@
 # message trailers are checked as well as the author and committer.
 #
 #   error    author or committer is not a GitHub noreply address
-#   error    a trailer (Co-authored-by:, Signed-off-by:, ...) names someone
-#            without a GitHub noreply address - who is it?
+#   error    the range or a commit cannot be read
+#   error    an address on a trailer line (Co-authored-by:, Signed-off-by:,
+#            Cc:, ...) is not a GitHub noreply address - who is it?
+#   error    a trailer's noreply address names an account that does not exist
 #   warning  a co-author that is a GitHub bot account, not a person
 #   warning  any other co-author, to be confirmed by the reviewer
 #
-# Bot accounts are told apart through the GitHub API when GH_TOKEN is set;
-# without it every GitHub co-author gets the plain warning.
+# Accounts are looked up through the GitHub API when GH_TOKEN is set;
+# without it, or if the API fails, nonexistent accounts are not detected and
+# every GitHub co-author gets the plain warning.
 #
 # Permitted:
 #   <id>+<login>@users.noreply.github.com   a contributor's public GitHub ID
+#   <login>@users.noreply.github.com        the same, for pre-2017 accounts
 #   noreply@github.com                      commits made in the GitHub web UI
 #
 # Usage: scripts/check_commit_emails.sh [<range>]
@@ -46,13 +50,14 @@ range="${1:-origin/develop..HEAD}"
 
 permitted() {
     local email="${1,,}"
-    [[ "${email}" == *@users.noreply.github.com || "${email}" == noreply@github.com ]]
+    [[ "${email}" =~ ^[^@[:space:]]+@users\.noreply\.github\.com$ || "${email}" == noreply@github.com ]]
 }
 
 # Prints the GitHub account type (User, Bot, ...) of a noreply address,
-# or nothing when it cannot be looked up.
+# "Missing" when GitHub says the account does not exist, or nothing when it
+# cannot be looked up (no GH_TOKEN, no gh, API failure).
 account_type() {
-    local local_part="${1%%@*}" endpoint
+    local local_part="${1%%@*}" endpoint out
     [[ -n "${GH_TOKEN:-}" ]] && command -v gh >/dev/null || return 0
     # <id>+<login>: look up by id, as some bots (Copilot) have no users/<login>.
     if [[ "${local_part}" =~ ^([0-9]+)\+ ]]; then
@@ -60,7 +65,11 @@ account_type() {
     else
         endpoint="users/${local_part}"
     fi
-    gh api "${endpoint}" --jq .type 2>/dev/null || true
+    if out="$(gh api "${endpoint}" --jq .type 2>&1)"; then
+        echo "${out}"
+    elif [[ "${out}" == *"HTTP 404"* ]]; then
+        echo Missing
+    fi
 }
 
 # report <error|warning> <title> <message>
@@ -76,9 +85,13 @@ identity_failures=0
 trailer_failures=0
 warnings=0
 
-for sha in $(git rev-list "${range}"); do
-    IFS=$'\t' read -r author_email committer_email subject \
-        < <(git log -1 --format='%ae%x09%ce%x09%s' "${sha}")
+# Checked assignments: a range or commit git cannot read fails the check.
+revs="$(git rev-list "${range}")"
+
+for sha in ${revs}; do
+    info="$(git log -1 --format='%ae%x09%ce%x09%s' "${sha}")"
+    message="$(git log -1 --format=%B "${sha}")"
+    IFS=$'\t' read -r author_email committer_email subject <<< "${info}"
 
     for role in author committer; do
         if [[ "${role}" == author ]]; then email="${author_email}"; else email="${committer_email}"; fi
@@ -88,30 +101,42 @@ for sha in $(git rev-list "${range}"); do
             "${sha:0:8} ${role} <${email}> is not a GitHub noreply address: ${subject}"
     done
 
+    # Every address on a "Key: value" line is checked, bare or in <...>,
+    # however many the line carries.
     declare -A seen=()
     while IFS= read -r line; do
-        [[ "${line}" =~ ^[[:space:]]*([A-Za-z-]+):[[:space:]]*([^\<]*)\<([^\>]+@[^\>]+)\> ]] || continue
+        [[ "${line}" =~ ^[[:space:]]*([A-Za-z-]+):[[:space:]]*(.*@.*)$ ]] || continue
         key="${BASH_REMATCH[1]}"
-        name="${BASH_REMATCH[2]%"${BASH_REMATCH[2]##*[![:space:]]}"}"
-        email="${BASH_REMATCH[3]}"
-        [[ -n "${seen[${key,,} ${email,,}]:-}" ]] && continue
-        seen["${key,,} ${email,,}"]=1
-        who="${name:+${name} }<${email}>"
-        if ! permitted "${email}"; then
-            trailer_failures=$((trailer_failures + 1))
-            report error "${key}" \
-                "${sha:0:8} ${key}: ${who} is not a GitHub account - who is this? ${subject}"
-        elif [[ "${key,,}" == co-authored-by ]]; then
-            warnings=$((warnings + 1))
-            if [[ "$(account_type "${email}")" == Bot ]]; then
-                report warning "Co-authored-by" \
-                    "${sha:0:8} co-author ${who} is a bot account, not a person: ${subject}"
-            else
-                report warning "Co-authored-by" \
-                    "${sha:0:8} co-author ${who} - confirm they co-authored this: ${subject}"
+        value="${BASH_REMATCH[2]}"
+        while IFS= read -r email; do
+            [[ -n "${seen[${key,,} ${email,,}]:-}" ]] && continue
+            seen["${key,,} ${email,,}"]=1
+            if ! permitted "${email}"; then
+                trailer_failures=$((trailer_failures + 1))
+                report error "${key}" \
+                    "${sha:0:8} ${key}: <${email}> is not a GitHub account - who is this? ${subject}"
+                continue
             fi
-        fi
-    done < <(git log -1 --format=%B "${sha}")
+            [[ "${email,,}" == noreply@github.com ]] && continue
+            type="$(account_type "${email}")"
+            if [[ "${type}" == Missing ]]; then
+                trailer_failures=$((trailer_failures + 1))
+                report error "${key}" \
+                    "${sha:0:8} ${key}: <${email}> names a GitHub account that does not exist: ${subject}"
+            elif [[ "${key,,}" == co-authored-by && "${type}" == Bot ]]; then
+                warnings=$((warnings + 1))
+                report warning "Co-authored-by" \
+                    "${sha:0:8} co-author <${email}> is a bot account, not a person: ${subject}"
+            elif [[ "${key,,}" == co-authored-by ]]; then
+                warnings=$((warnings + 1))
+                report warning "Co-authored-by" \
+                    "${sha:0:8} co-author <${email}> - confirm they co-authored this: ${subject}"
+            fi
+        # The local part may be empty (so "<@users.noreply.github.com>" is
+        # caught); the domain needs a dot, so an "@mention" is not an address.
+        done < <(grep -oE '[^][[:space:]<>,;"()@]*@[^][[:space:]<>,;"()@]+\.[^][[:space:]<>,;"()@]+' <<< "${value}")
+    done <<< "${message}"
+    unset seen
 done
 
 if (( identity_failures > 0 )); then

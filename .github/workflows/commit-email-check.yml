@@ -11,6 +11,8 @@ permissions:
 on:
   pull_request:
     branches: [develop, main]
+    # edited: retargeting a PR to develop or main must re-run the check.
+    types: [opened, synchronize, reopened, edited]
 
 jobs:
   check:
