@@ -58,5 +58,10 @@ enum HDROutputMode
     /**
      * Output is encoded using Dolby Vision HDR.
      */
-    DOLBY_VISION = 4
+    DOLBY_VISION = 4,
+
+    /**
+     * Output is standard dynamic range; HDR content is tone-mapped to SDR.
+     */
+    SDR = 5
 }
