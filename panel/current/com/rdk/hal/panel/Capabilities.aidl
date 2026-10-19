@@ -18,9 +18,8 @@
  */
 package com.rdk.hal.panel;
 import com.rdk.hal.panel.PQParameter;
-import com.rdk.hal.panel.PanelType;
+import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.videodecoder.DynamicRange;
-import com.rdk.hal.AVSource;
  
 /** 
  *  @brief     Panel capabilities definition.
@@ -33,7 +32,7 @@ parcelable Capabilities
     /**
      * The panel type.
      */
-    PanelType panelType;
+    String panelType;
 
     int pixelWidth;
     int pixelHeight;
@@ -47,11 +46,6 @@ parcelable Capabilities
     boolean frameRateMatchingSupported;
 
     /**
-     * Whether display fade control is supported by the device.
-     */
-    boolean fadeDisplaySupported;
-
-    /**
      * The list of supported PQParameters.
      */
     PQParameter[] supportedPQParameters;
@@ -61,8 +55,26 @@ parcelable Capabilities
      */
     double[] supportedRefreshRatesHz;
 
-    /*
-     * Defines the video format and AV source capabilities for a picture mode.
+    /**
+     * Array of supported colour temperature presets.
+     *
+        * These strings are used directly by `PQParameter.COLOR_TEMPERATURE`
+        * and by colour-temperature-scoped white balance operations.
+     */
+        String[] supportedColourTemperatures;
+
+    /**
+     * All AV sources supported by the panel.
+     */
+        PanelSource[] supportedAVSources;
+
+    /**
+     * All dynamic ranges supported by the panel.
+     */
+    DynamicRange[] supportedDynamicRanges;
+
+    /**
+     * Defines the dynamic range and AV source capabilities for a picture mode.
      */
     parcelable PictureModeCapabilities
     {
@@ -72,37 +84,32 @@ parcelable Capabilities
         String pictureMode;
 
         /**
-         * Defines a video format capability for a picture mode.
+         * Defines the list of dynamic ranges, and the list of AV sources for each
+         * dynamic range, that can be associated with a given picture mode.
          */
-        parcelable VideoFormatCapabilities
+        parcelable DynamicRangeCapabilities
         {
             /**
-             * The dynamic range video format.
+             * The dynamic range that can be associated for the picture mode.
              */
-            DynamicRange videoFormat;
+            DynamicRange dynamicRange;
 
             /**
-             * Lists the AV sources supported by this picture mode and video format.
+             * Defines list of AV sources that can be associated for a given 
+             * picture mode and a given dynamic range.
              */
-            AVSource[] supportedAVSources;
+            PanelSource[] supportedAVSources;
         }
 
         /**
-         * Lists the video format capabilities for a picture mode.
+         * Lists the dynamic range capabilities for a picture mode.
          */
-        VideoFormatCapabilities[] videoFormatCapabilities;
+        DynamicRangeCapabilities[] dynamicRangeCapabilities;
     }
 
     /**
-     * Array of picture modes and their capabilities, listing the video formats and AV sources supported.
+     * Array of picture modes and their capabilities, listing the dynamic ranges and AV sources supported.
      */
     PictureModeCapabilities[] pictureModeCapabilities;
 
-    /**
-     * Array of color temperature names.
-     * e.g. { "Cool", "Normal", "Warm" }.
-     * Each index of the String[] corresponds to the index of a color temperature preset
-     * used in `PQParameter.COLOR_TEMPERATURE` and functions such as `set2PointWhiteBalance()`.
-     */
-    String[] colorTemperatureNames;
 }

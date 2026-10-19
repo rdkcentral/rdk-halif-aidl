@@ -17,46 +17,37 @@
  * limitations under the License.
  */
 package com.rdk.hal.panel;
+import com.rdk.hal.panel.PanelSource;
+import com.rdk.hal.panel.State;
 import com.rdk.hal.videodecoder.DynamicRange;
-import com.rdk.hal.AVSource;
 
 /** 
- *  @brief     Display Panel Output Listener interface.
+ *  @brief     Display Panel Output Event Listener interface.
  *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
  */
 
 @VintfStability
-oneway interface IPanelOutputListener
+oneway interface IPanelOutputEventListener
 {
-    /**
-     * Callback when the picture mode changes.
-     * 
-     * This can occur on an AVSource or DynamicRange change in the video
-     * or occurs after a call to setPictureMode().
-     * 
-     * @param[in] pictureMode   The new picture mode.
-     */
-    void onPictureModeChanged(in String pictureMode);
- 
     /**
      * Callback when the video source being tracked for PQ settings changes.
      * 
-     * This occurs when video starts, stops or on an AVSource change to the video.
-     * When video stops then `AVSource.UNKNOWN` is passed in the call.
+    * This occurs when video starts, stops or on a source change to the video.
+    * When video stops then a `PanelSource` with type `UNKNOWN` is passed.
      * 
      * @param[in] avSource      The new AV source.
-     */
-    void onVideoSourceChanged(in AVSource avSource);
+     */
+    void onVideoSourceChanged(in PanelSource avSource);
 
     /**
-     * Callback when the dynamic range video format being tracked for PQ settings changes.
+     * Callback when the dynamic range being tracked for PQ settings changes.
      * 
      * This occurs when video starts, stops or on a DynamicRange change in the video.
      * When video stops then `DynamicRange.UNKNOWN` is passed in the call.
      *
-     * @param[in] dynamicRange      The new dynamic range video format.
-     */
-    void onVideoFormatChanged(in DynamicRange dynamicRange);
+     * @param[in] dynamicRange      The new dynamic range.
+     */
+    void onDynamicRangeChanged(in DynamicRange dynamicRange);
 
     /**
      * Callback when the video frame rate being tracked for PQ settings changes.
@@ -66,7 +57,7 @@ oneway interface IPanelOutputListener
      *
      * @param[in] frameRateNumerator        The numerator of the frame rate.
      * @param[in] frameRateDenominator      The denominator of the frame rate.
-     */
+     */
     void onVideoFrameRateChanged(in int frameRateNumerator, in int frameRateDenominator);
  
     /**
@@ -77,7 +68,7 @@ oneway interface IPanelOutputListener
      *
      * @param[in] width     The video frame width.
      * @param[in] height    The video frame height.
-     */
+     */
     void onVideoResolutionChanged(in int width, in int height);
 
     /**
@@ -87,7 +78,19 @@ oneway interface IPanelOutputListener
      * matching is enabled and it adjusts the refresh rate to best match the video frame rate.
      * 
      * @param[in] refreshRateHz     The new panel refresh rate.
-     */
+     */
     void onRefreshRateChanged(in double refreshRateHz);
+
+    /**
+     * Callback when the panel output transitions to a new lifecycle state.
+     *
+     * Fired for all transitions driven by start(), stop(), and error
+     * conditions. The panel output State enum covers STOPPED, STARTING,
+     * STARTED, STOPPING, and ERROR.
+     *
+     * @param[in] oldState  The state being left.
+     * @param[in] newState  The state being entered.
+     */
+    void onStateChanged(in State oldState, in State newState);
 
 }
