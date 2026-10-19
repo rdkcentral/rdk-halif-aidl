@@ -22,9 +22,8 @@
 
 # HAL Feature Profile (HFP): compositeinput
 #
-# Product:   RDK-E reference defaults (not a shipping product)
-# Platform:  RDK
-# Supplier:  SoC vendor (expected; confirmed per product)
+# Platform:  RDK (RDK-E)
+# Supplier:  SoC
 # Source:    [develop: compositeinput/current](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/compositeinput/current/hfp-compositeinput.yaml)
 #
 # RDK reference HFP: the defaults each product HFP set is derived from.

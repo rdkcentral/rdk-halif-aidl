@@ -113,21 +113,20 @@ Header links use the `[description](link)` form, so the release and version read
 ```yaml
 # HAL Feature Profile (HFP): videodecoder
 #
-# Product:   <product name>
-# Platform:  <platform / board>
-# Supplier:  SoC vendor: <vendor>, SoC: <part>
-# Source:    [Release <tag>: <product> videodecoder](https://<internal-git>/<product-hfp-repo>/blob/<tag>/hfp-videodecoder.yaml)
-# Latest:    [main: <product> videodecoder](https://<internal-git>/<product-hfp-repo>/blob/main/hfp-videodecoder.yaml)
+# Platform:  <ProductCode> (RDK-E)
+# Supplier:  SoC: <vendor>, <part>
+# Source:    [Release <tag>: <ProductCode> videodecoder](https://<internal-git>/<product-hfp-repo>/blob/<tag>/hfp-videodecoder.yaml)
+# Latest:    [main: <ProductCode> videodecoder](https://<internal-git>/<product-hfp-repo>/blob/main/hfp-videodecoder.yaml)
 #
 # Derived from:
 #   Reference:  [Release <tag>: videodecoder <version>](https://github.com/rdkcentral/rdk-halif-aidl/blob/<tag>/videodecoder/<version>/hfp-videodecoder.yaml)
-#   SoC vendor: [<vendor> <hash>: videodecoder](https://<internal-git>/<soc-hfp-repo>/blob/<hash>/hfp-videodecoder.yaml)
+#   SoC:        [<vendor> <hash>: videodecoder](https://<internal-git>/<soc-hfp-repo>/blob/<hash>/hfp-videodecoder.yaml)
 #   OEM:        [<oem> <hash>: videodecoder](https://<internal-git>/<oem-hfp-repo>/blob/<hash>/hfp-videodecoder.yaml)
 #
 # Lifecycle: [Product HFP Lifecycle](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle)
 ```
 
-`Supplier` names the one party that supplies the component: the SoC vendor and its SoC part, or the OEM (`Supplier:  OEM: <oem>`). `Derived from` lists only the layers that apply. An OEM component with no SoC vendor layer omits the `SoC vendor` line.
+`Platform` is the product code followed by `(RDK-E)`. `Supplier` names the one party that supplies the component: `SoC: <vendor>, <part>`, or `OEM: <oem>`. `Derived from` lists only the layers that apply. An OEM component with no SoC layer omits the `SoC` line.
 
 ### Reference HFP header
 
@@ -136,13 +135,12 @@ The HFPs in this repository use the same header with no `Derived from` list:
 ```yaml
 # HAL Feature Profile (HFP): videodecoder
 #
-# Product:   RDK-E reference defaults (not a shipping product)
-# Platform:  RDK
-# Supplier:  SoC vendor (expected; confirmed per product)
+# Platform:  RDK (RDK-E)
+# Supplier:  SoC
 # Source:    [develop: videodecoder/current](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/videodecoder/current/hfp-videodecoder.yaml)
 ```
 
-`Supplier` states which kind of party is expected to supply the component, `SoC vendor` or `OEM`. Each product confirms it. When a component version is released, `release.sh` pins `Source` in the frozen copy to the release tag and adds `Latest`.
+`Platform` is `RDK (RDK-E)`. `Supplier` states which party is expected to supply the component, `SoC` or `OEM`; each product HFP names the actual vendor or OEM. When a component version is released, `release.sh` pins `Source` in the frozen copy to the release tag and adds `Latest`.
 
 ---
 

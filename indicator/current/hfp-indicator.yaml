@@ -22,9 +22,8 @@
 
 # HAL Feature Profile (HFP): indicator
 #
-# Product:   RDK-E reference defaults (not a shipping product)
-# Platform:  RDK
-# Supplier:  OEM (expected; confirmed per product)
+# Platform:  RDK (RDK-E)
+# Supplier:  OEM
 # Source:    [develop: indicator/current](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/indicator/current/hfp-indicator.yaml)
 #
 # RDK reference HFP: the defaults each product HFP set is derived from.

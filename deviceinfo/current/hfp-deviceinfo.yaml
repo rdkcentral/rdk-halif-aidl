@@ -22,9 +22,8 @@
 
 # HAL Feature Profile (HFP): deviceinfo
 #
-# Product:   RDK-E reference defaults (not a shipping product)
-# Platform:  RDK
-# Supplier:  OEM (expected; confirmed per product)
+# Platform:  RDK (RDK-E)
+# Supplier:  OEM
 # Source:    [develop: deviceinfo/current](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/deviceinfo/current/hfp-deviceinfo.yaml)
 #
 # RDK reference HFP: the defaults each product HFP set is derived from.
