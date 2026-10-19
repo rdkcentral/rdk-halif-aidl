@@ -56,11 +56,13 @@ Mixer instances are accessed and controlled via `IAudioMixer`, with additional l
 | IAudioMixerEventListener.aidl | Event callbacks (errors, state changes, codec updates) |
 | IAudioOutputPort.aidl         | Output port control interface                          |
 | IAudioOutputPortListener.aidl | Listener interface for port events                     |
+| ActiveOutputFormat.aidl       | The audio an output port is emitting now               |
+| ImmersiveFormat.aidl          | Immersive audio on an output (Dolby Atmos, DTS:X)      |
 | IAudioCapture.aidl            | Output-port audio capture control interface            |
 | IAudioCaptureListener.aidl    | Audio capture callbacks                                |
 | AudioCaptureData.aidl         | Audio capture metadata payload                         |
 | AudioCapturePcmInfo.aidl      | PCM capture format metadata                            |
-| Channel.aidl                  | PCM channel position enum for `AudioCapturePcmInfo.channelMap` |
+| Channel.aidl                  | Channel position enum for `AudioCapturePcmInfo.channelMap` and `ActiveOutputFormat.channelMap` |
 | AudioCaptureError.aidl        | Audio capture error codes                              |
 | Capabilities.aidl             | Supported input types, codecs, secure path flag and supported properties |
 | MixerInput.aidl               | Per-input supported codec and content type definitions |
@@ -423,7 +425,32 @@ sequenceDiagram
 
 * `CONNECTION_STATE` transitions through `PENDING` (during EDID / CEC / HDCP / pairing handshake) before `CONNECTED`.
 * `SUPPORTED_AUDIO_FORMATS` and `DOLBY_ATMOS_SUPPORT` may change on reconnect — the new sink could have a different capability set than the previous one. The HAL fires `onPropertyChanged` for any capability that actually changes.
-* The previously configured `OUTPUT_FORMAT` is re-applied. If the new sink does not support it (e.g. previous sink was MAT-capable, new one is not), `OUTPUT_FORMAT` falls back to `AUTO` and the HAL fires `onPropertyChanged(OUTPUT_FORMAT, ...)` with the resolved format.
+* The configured `OUTPUT_FORMAT` is kept and re-applied. If the new sink does not support it (e.g. previous sink was MAT-capable, new one is not), the HAL resolves to the best format the sink supports, as for `AUTO`, and fires `onActiveOutputFormatChanged()` with the result. `OUTPUT_FORMAT` is not rewritten.
+* Immersive content given to a port that can no longer carry it is not an error: the HAL emits the channel bed or a downmix and reports `ActiveOutputFormat.immersive = NONE`.
+
+### Active output format
+
+`OUTPUT_FORMAT` is what the client configured; `ActiveOutputFormat` is what the port is emitting now. Read it with `IAudioOutputPort.getActiveOutputFormat()`; every change arrives whole in one `IAudioOutputPortListener.onActiveOutputFormatChanged()`, so format, channel layout and Atmos are never seen out of step. It is null while the port emits nothing.
+
+| Field | Meaning |
+|---|---|
+| `format` | `OutputFormat` on the wire; never `AUTO` or `PASSTHROUGH` |
+| `isPassthrough` | Source bitstream sent unchanged |
+| `sampleRateHz` | Sample rate in Hz |
+| `channelMap` | `Channel` positions in frame order; length is the channel count. For a bitstream, the coded bed |
+| `immersive` | `ImmersiveFormat`: `NONE`, `DOLBY_ATMOS`, `DTS_X` |
+
+Each port reports independently. One Atmos source can leave three ports at once:
+
+| Port | `format` | `isPassthrough` | `channelMap` | `immersive` |
+|---|---|---|---|---|
+| EARC to an AVR | `MAT` | false | 7.1 bed | `DOLBY_ATMOS` |
+| SPDIF | `AC3` | false | 5.1 | `NONE` |
+| SPEAKERS (rendered on the TV) | `PCM_MULTICHANNEL` | false | 3.1.2 | `DOLBY_ATMOS` |
+
+A bitstream format with `DOLBY_ATMOS` means an external decoder renders the objects; a PCM format with `DOLBY_ATMOS` means the HAL rendered them.
+
+`DOLBY_ATMOS_SUPPORT` answers whether Atmos is possible with the device connected now; `OutputPortCapabilities.supportsDolbyAtmos` whether the port can ever carry it; `ActiveOutputFormat.immersive` whether it is being output.
 
 For ports without hot-plug detection (`SPDIF`, `SPEAKERS`, `COMPOSITE`), the HFP typically omits `CONNECTION_STATE` from `supportedProperties` — the port is treated as always connected and no events are fired. If a platform does declare `CONNECTION_STATE` for a non-hotplug port, it stays at `UNKNOWN`.
 

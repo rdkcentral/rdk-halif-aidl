@@ -223,6 +223,7 @@ audiomixer:
         - Movie
         - Sports
       supportsAudioCapture: false
+      supportsDolbyAtmos: true  # Dolby Digital Plus with Atmos when the sink supports it
 
     - id: 1
       portName: SPDIF
@@ -236,6 +237,7 @@ audiomixer:
       supportedAQProcessors:
         - id: UNDEFINED
       supportsAudioCapture: false
+      supportsDolbyAtmos: false
 
     - id: 2
       portName: PCM_CAPTURE
@@ -248,6 +250,7 @@ audiomixer:
       supportedAQProcessors:
         - id: UNDEFINED
       supportsAudioCapture: true
+      supportsDolbyAtmos: false
 
       # Supported channel configurations for audio capture
       supportedChannelLayouts:
