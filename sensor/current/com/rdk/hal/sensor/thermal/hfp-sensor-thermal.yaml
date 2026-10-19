@@ -22,10 +22,9 @@
 
 # HAL Feature Profile (HFP): sensor.thermal
 #
-# Product:     RDK reference
-# Platform:    RDK reference
-# SoC vendor:  RDK reference   SoC: RDK reference
-# OEM:         RDK reference
+# Product:   RDK-E reference defaults (not a shipping product)
+# Platform:  Any RDK-E device
+# Supplier:  OEM
 #
 # RDK reference HFP: the defaults each product HFP set is derived from.
 # Lifecycle: https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle

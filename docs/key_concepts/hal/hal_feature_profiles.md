@@ -106,10 +106,9 @@ The header holds fixed identity only. The HFP release, date and approval come fr
 ```yaml
 # HAL Feature Profile (HFP): videodecoder
 #
-# Product:     <product name>
-# Platform:    <platform / board>
-# SoC vendor:  <vendor>   SoC: <part>
-# OEM:         <oem>
+# Product:   <product name>
+# Platform:  <platform / board>
+# Supplier:  SoC vendor: <vendor>, SoC: <part>
 #
 # Derived from:
 #   Reference:  https://github.com/rdkcentral/rdk-halif-aidl/blob/<tag>/videodecoder/current/hfp-videodecoder.yaml
@@ -119,11 +118,11 @@ The header holds fixed identity only. The HFP release, date and approval come fr
 # Lifecycle: https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle
 ```
 
-`Derived from` lists only the layers that apply. An OEM component with no SoC vendor layer omits the `SoC vendor` line.
+`Supplier` names the one party that supplies the component: the SoC vendor and its SoC part, or the OEM (`Supplier:  OEM: <oem>`). `Derived from` lists only the layers that apply. An OEM component with no SoC vendor layer omits the `SoC vendor` line.
 
 ### Reference HFP header
 
-The HFPs in this repository use the same header with every identity field set to `RDK reference` and no `Derived from` list.
+The HFPs in this repository use the same header, with `Product` and `Platform` stating that they are the RDK-E reference defaults for any RDK-E device, `Supplier` stating which kind of party supplies the component (`SoC vendor` or `OEM`), and no `Derived from` list.
 
 ---
 
