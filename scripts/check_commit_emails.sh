@@ -20,8 +20,14 @@
 # *
 #** ******************************************************************************
 #
-# check_commit_emails.sh — fail when a commit in a range is authored or
-# committed with anything other than a GitHub noreply address (#898).
+# check_commit_emails.sh — check the email addresses in a range of commits
+# (#898). A squash merge copies every commit message onto develop, so the
+# message trailers are checked as well as the author and committer.
+#
+#   error    author or committer is not a GitHub noreply address
+#   error    a trailer (Co-authored-by:, Signed-off-by:, ...) carries an
+#            email that is not a GitHub noreply address
+#   warning  any Co-authored-by: trailer
 #
 # Permitted:
 #   <id>+<login>@users.noreply.github.com   a contributor's public GitHub ID
@@ -39,22 +45,51 @@ permitted() {
     [[ "${email}" == *@users.noreply.github.com || "${email}" == noreply@github.com ]]
 }
 
-failures=0
-while IFS=$'\t' read -r sha author_email committer_email subject; do
+# report <error|warning> <title> <message>
+report() {
+    if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+        echo "::$1 title=$2::$3"
+    else
+        echo "${1^^}: $3" >&2
+    fi
+}
+
+identity_failures=0
+trailer_failures=0
+warnings=0
+
+for sha in $(git rev-list "${range}"); do
+    IFS=$'\t' read -r author_email committer_email subject \
+        < <(git log -1 --format='%ae%x09%ce%x09%s' "${sha}")
+
     for role in author committer; do
         if [[ "${role}" == author ]]; then email="${author_email}"; else email="${committer_email}"; fi
         permitted "${email}" && continue
-        failures=$((failures + 1))
-        msg="${sha:0:8} ${role} <${email}> is not a GitHub noreply address: ${subject}"
-        if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
-            echo "::error title=Commit email::${msg}"
-        else
-            echo "ERROR: ${msg}" >&2
-        fi
+        identity_failures=$((identity_failures + 1))
+        report error "Commit email" \
+            "${sha:0:8} ${role} <${email}> is not a GitHub noreply address: ${subject}"
     done
-done < <(git log --format='%H%x09%ae%x09%ce%x09%s' "${range}")
 
-if (( failures > 0 )); then
+    declare -A seen=()
+    while IFS= read -r line; do
+        [[ "${line}" =~ ^[[:space:]]*([A-Za-z-]+):.*\<([^\>]+@[^\>]+)\> ]] || continue
+        key="${BASH_REMATCH[1]}"
+        email="${BASH_REMATCH[2]}"
+        [[ -n "${seen[${key,,} ${email,,}]:-}" ]] && continue
+        seen["${key,,} ${email,,}"]=1
+        if ! permitted "${email}"; then
+            trailer_failures=$((trailer_failures + 1))
+            report error "Commit message email" \
+                "${sha:0:8} '${key}: <${email}>' is not a GitHub noreply address: ${subject}"
+        elif [[ "${key,,}" == co-authored-by ]]; then
+            warnings=$((warnings + 1))
+            report warning "Co-authored-by" \
+                "${sha:0:8} has a Co-authored-by trailer for <${email}>: ${subject}"
+        fi
+    done < <(git log -1 --format=%B "${sha}")
+done
+
+if (( identity_failures > 0 )); then
     cat >&2 <<'EOF'
 
 Commits must use your GitHub noreply address, shown under
@@ -65,7 +100,21 @@ On a branch that carries only your own commits:
   git rebase -x 'git commit --amend --no-edit --reset-author' origin/develop
   git push --force-with-lease
 EOF
+fi
+
+if (( trailer_failures > 0 )); then
+    cat >&2 <<'EOF'
+
+Commit messages must not carry email addresses other than GitHub noreply
+addresses: a squash merge copies them onto develop. Remove the trailer
+with an interactive rebase ('reword'), then push with --force-with-lease.
+Tools that add trailers automatically (such as an AI assistant's
+Co-Authored-By line) must be configured not to.
+EOF
+fi
+
+if (( identity_failures + trailer_failures > 0 )); then
     exit 1
 fi
 
-echo "All commits in ${range} use GitHub noreply addresses."
+echo "All commits in ${range} use GitHub noreply addresses (${warnings} Co-authored-by warning(s))."

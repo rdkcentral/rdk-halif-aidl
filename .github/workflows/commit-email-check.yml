@@ -1,8 +1,9 @@
 name: "Commit email check"
 
 # Fails when a PR commit is authored or committed with anything other than a
-# GitHub noreply address, so every commit is credited to the contributor's
-# public GitHub ID (#898).
+# GitHub noreply address, or its message carries a trailer (Co-authored-by:,
+# Signed-off-by:, ...) with any other address: a squash merge copies commit
+# messages onto develop. Every Co-authored-by: trailer raises a warning (#898).
 
 permissions:
   contents: read
