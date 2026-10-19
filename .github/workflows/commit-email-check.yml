@@ -1,0 +1,29 @@
+name: "Commit email check"
+
+# Fails when a PR commit is authored or committed with anything other than a
+# GitHub noreply address, or its message carries a trailer (Co-authored-by:,
+# Signed-off-by:, ...) with any other address: a squash merge copies commit
+# messages onto develop. Every Co-authored-by: trailer raises a warning (#898).
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  check:
+    name: "Commit email check"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "Check commit author and committer emails"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          scripts/check_commit_emails.sh \
+            "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
