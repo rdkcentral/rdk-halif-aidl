@@ -1,9 +1,8 @@
 name: "Commit email check"
 
-# Fails when a PR commit is authored or committed with a corporate email
-# address, which GitHub credits to an employer-managed account instead of the
-# contributor's public ID (#898). The denied domains are listed in
-# .github/denied-commit-email-domains.txt.
+# Fails when a PR commit is authored or committed with anything other than a
+# GitHub noreply address, so every commit is credited to the contributor's
+# public GitHub ID (#898).
 
 permissions:
   contents: read
