@@ -25,10 +25,10 @@
 # Product:   RDK-E reference defaults (not a shipping product)
 # Platform:  RDK
 # Supplier:  SoC vendor (expected; confirmed per product)
-# Source:    https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/compositeinput/current/hfp-compositeinput.yaml
+# Source:    [develop: compositeinput/current](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/compositeinput/current/hfp-compositeinput.yaml)
 #
 # RDK reference HFP: the defaults each product HFP set is derived from.
-# Lifecycle: https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle
+# Lifecycle: [Product HFP Lifecycle](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle)
 #
 # Property keys are unquoted PortProperty enum identifiers as defined in
 # com.rdk.hal.compositeinput.PortProperty (PortProperty.aidl).

@@ -2077,12 +2077,13 @@ freeze_snapshot_docs() {
     done < <(find "${docs_dir}" -name '*.md' -type f -print0)
 }
 
-# freeze_snapshot_hfp <comp> <version> <tag> : Pin the header of every
-# <comp>/<version>/**/hfp-*.yaml to the release that ships it (#896).
+# freeze_snapshot_hfp <comp> <version> <tag> : Pin the Source link in the
+# header of every <comp>/<version>/**/hfp-*.yaml to the release that ships
+# it (#896), and add a Latest link to the development copy:
 #
-#   # Source:    .../blob/develop/<comp>/current/<f>
-#                                       ->  # Source:    .../blob/<tag>/<comp>/<version>/<f>
-#                                           # Latest:    .../blob/develop/<comp>/current/<f>
+#   # Source:    [develop: <comp>/current](.../blob/develop/<comp>/current/<f>)
+#     ->  # Source:    [Release <tag>: <comp> <version>](.../blob/<tag>/<comp>/<version>/<f>)
+#         # Latest:    [develop: <comp>/current](.../blob/develop/<comp>/current/<f>)
 #
 # A frozen HFP read outside the repo then names both the release it came from
 # and where the latest copy lives. Safe to repeat: a pinned header no longer
@@ -2102,10 +2103,12 @@ comp, version, tag, paths = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4:]
 for path in paths:
     s = open(path).read()
     def pin(m):
-        latest = m.group(1) + "develop/" + comp + "/current/" + m.group(2)
-        pinned = m.group(1) + tag + "/" + comp + "/" + version + "/" + m.group(2)
+        base, rel = m.group(1), m.group(2)
+        latest = f"[develop: {comp}/current]({base}develop/{comp}/current/{rel})"
+        pinned = f"[Release {tag}: {comp} {version}]({base}{tag}/{comp}/{version}/{rel})"
         return f"# Source:    {pinned}\n# Latest:    {latest}\n"
-    s = re.sub(r"# Source:    (https://\S+/blob/)develop/" + re.escape(comp) + r"/current/(\S+)\n", pin, s)
+    s = re.sub(r"# Source:    \[[^\]]*\]\((https://\S+/blob/)develop/" + re.escape(comp)
+               + r"/current/([^)\s]+)\)\n", pin, s)
     open(path, "w").write(s)
 PYEOF
 }

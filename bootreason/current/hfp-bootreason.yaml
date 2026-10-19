@@ -25,10 +25,10 @@
 # Product:   RDK-E reference defaults (not a shipping product)
 # Platform:  RDK
 # Supplier:  SoC vendor (expected; confirmed per product)
-# Source:    https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/bootreason/current/hfp-bootreason.yaml
+# Source:    [develop: bootreason/current](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/bootreason/current/hfp-bootreason.yaml)
 #
 # RDK reference HFP: the defaults each product HFP set is derived from.
-# Lifecycle: https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle
+# Lifecycle: [Product HFP Lifecycle](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle)
 
 bootreason:                 # Component object begins (matches directory name)
     interfaceVersion: current

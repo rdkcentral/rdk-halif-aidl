@@ -103,10 +103,10 @@ The release, date and approval of an HFP come from git: the release tag, its dat
 
 | Line | Unreleased | Released |
 |---|---|---|
-| `Source` | the file on the development branch | the file at the release tag |
-| `Latest` | omitted | the file on the development branch |
+| `Source` | `[develop: <component>/current](…)`, the file on the development branch | `[Release <tag>: <component> <version>](…)`, the file at the release tag |
+| `Latest` | omitted | `[develop: <component>/current](…)`, the file on the development branch |
 
-A copy that is passed on outside the repository therefore names the release it came from and where the latest copy lives. A file cannot carry its own commit hash, so the layers it derives from are recorded as git URLs pinned to a tag or commit hash.
+Header links use the `[description](link)` form, so the release and version read from the link text and the URL can be followed. A copy that is passed on outside the repository therefore names the release it came from and where the latest copy lives. A file cannot carry its own commit hash, so the layers it derives from are recorded as git URLs pinned to a tag or commit hash.
 
 ### Product HFP header
 
@@ -116,15 +116,15 @@ A copy that is passed on outside the repository therefore names the release it c
 # Product:   <product name>
 # Platform:  <platform / board>
 # Supplier:  SoC vendor: <vendor>, SoC: <part>
-# Source:    https://<internal-git>/<product-hfp-repo>/blob/<tag>/hfp-videodecoder.yaml
-# Latest:    https://<internal-git>/<product-hfp-repo>/blob/main/hfp-videodecoder.yaml
+# Source:    [Release <tag>: <product> videodecoder](https://<internal-git>/<product-hfp-repo>/blob/<tag>/hfp-videodecoder.yaml)
+# Latest:    [main: <product> videodecoder](https://<internal-git>/<product-hfp-repo>/blob/main/hfp-videodecoder.yaml)
 #
 # Derived from:
-#   Reference:  https://github.com/rdkcentral/rdk-halif-aidl/blob/<tag>/videodecoder/current/hfp-videodecoder.yaml
-#   SoC vendor: https://<internal-git>/<soc-hfp-repo>/blob/<hash>/hfp-videodecoder.yaml
-#   OEM:        https://<internal-git>/<oem-hfp-repo>/blob/<hash>/hfp-videodecoder.yaml
+#   Reference:  [Release <tag>: videodecoder <version>](https://github.com/rdkcentral/rdk-halif-aidl/blob/<tag>/videodecoder/<version>/hfp-videodecoder.yaml)
+#   SoC vendor: [<vendor> <hash>: videodecoder](https://<internal-git>/<soc-hfp-repo>/blob/<hash>/hfp-videodecoder.yaml)
+#   OEM:        [<oem> <hash>: videodecoder](https://<internal-git>/<oem-hfp-repo>/blob/<hash>/hfp-videodecoder.yaml)
 #
-# Lifecycle: https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle
+# Lifecycle: [Product HFP Lifecycle](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle)
 ```
 
 `Supplier` names the one party that supplies the component: the SoC vendor and its SoC part, or the OEM (`Supplier:  OEM: <oem>`). `Derived from` lists only the layers that apply. An OEM component with no SoC vendor layer omits the `SoC vendor` line.
@@ -139,7 +139,7 @@ The HFPs in this repository use the same header with no `Derived from` list:
 # Product:   RDK-E reference defaults (not a shipping product)
 # Platform:  RDK
 # Supplier:  SoC vendor (expected; confirmed per product)
-# Source:    https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/videodecoder/current/hfp-videodecoder.yaml
+# Source:    [develop: videodecoder/current](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/videodecoder/current/hfp-videodecoder.yaml)
 ```
 
 `Supplier` states which kind of party is expected to supply the component, `SoC vendor` or `OEM`. Each product confirms it. When a component version is released, `release.sh` pins `Source` in the frozen copy to the release tag and adds `Latest`.

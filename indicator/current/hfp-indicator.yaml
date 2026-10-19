@@ -25,10 +25,10 @@
 # Product:   RDK-E reference defaults (not a shipping product)
 # Platform:  RDK
 # Supplier:  OEM (expected; confirmed per product)
-# Source:    https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/indicator/current/hfp-indicator.yaml
+# Source:    [develop: indicator/current](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/indicator/current/hfp-indicator.yaml)
 #
 # RDK reference HFP: the defaults each product HFP set is derived from.
-# Lifecycle: https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle
+# Lifecycle: [Product HFP Lifecycle](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle)
 #
 # This section defines the feature profile for the indicator Hardware Abstraction Layer (HAL).
 # It specifies the interface version, multi-instance support, and the list of supported states
