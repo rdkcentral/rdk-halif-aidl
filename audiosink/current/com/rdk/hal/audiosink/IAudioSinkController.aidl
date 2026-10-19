@@ -301,9 +301,10 @@ interface IAudioSinkController {
      * `signalEndOfStream()` has been invoked on this session.
      *
      * Throws `binder::Status::Exception::EX_UNSUPPORTED_OPERATION` when the
-     * controller is configured for tunnel mode - this API is not part of the
-     * data path in tunnel; the sink is fed by the decoder internally and the
-     * vendor is responsible for the internal EOS propagation. See
+     * associated decoder's getCurrentOperationalMode() is TUNNELLED - this API
+     * is not part of the data path in tunnel; the sink is fed by the decoder
+     * internally and the vendor is responsible for the internal EOS
+     * propagation. See
      * [Discussion #492](https://github.com/rdkcentral/rdk-halif-aidl/discussions/492).
      *
      * @param[in] nsPresentationTime The presentation time of the audio frame in nanoseconds.
@@ -320,7 +321,7 @@ interface IAudioSinkController {
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the `STARTED` state, or if an audio frame is passed after `signalEndOfStream()`.
-     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if the controller is configured for tunnel mode.
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if the associated decoder's getCurrentOperationalMode() is TUNNELLED.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT If an invalid argument is provided.
      *
      * @pre The resource must be in the `STARTED` state.

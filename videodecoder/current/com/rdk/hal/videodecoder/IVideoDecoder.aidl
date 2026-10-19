@@ -269,11 +269,15 @@ interface IVideoDecoder
     boolean unregisterEventListener(in IVideoDecoderEventListener videoDecoderEventListener);
 
     /**
-     * Gets the output mode currently selected by the vendor for this decoder.
+     * Gets the operational mode of the current session.
      *
-     * The mode is implementation-selected and is not configurable through
-     * the Video Decoder HAL. TUNNELLED output is consumed within the vendor
-     * layer; NON_TUNNELLED output is returned through onFrameOutput().
+     * The mode is fixed per product by the HAL Feature Profile (HFP) and
+     * defaults to NON_TUNNELLED. It is decided by the time start() succeeds,
+     * is constant until stop(), and depends only on the codec, the secure
+     * argument to open() and the properties set in READY. It is not
+     * configurable through the Video Decoder HAL. TUNNELLED output is
+     * consumed within the vendor layer; NON_TUNNELLED output is returned
+     * through onFrameOutput().
      *
      * @returns Current operational output mode.
      *
