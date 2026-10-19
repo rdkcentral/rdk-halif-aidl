@@ -37,6 +37,14 @@ TESTS_PASSED=0
 TESTS_FAILED=0
 
 CMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX:-$(pwd)/out/target}"
+# Install layout the root build is given here, matching build_modules.sh:
+# libraries in out/target/lib/rdk-halif-aidl, headers in
+# out/target/include/rdk-halif-aidl/<module>/<version>.
+HALIF_INSTALL_LAYOUT=(
+    -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}"
+    -DCMAKE_INSTALL_LIBDIR=lib/rdk-halif-aidl
+    -DCMAKE_INSTALL_INCLUDEDIR=include
+)
 
 # The binder wire protocol the cross-compiled SDK is built for. It follows the
 # KERNEL the image runs, not the toolchain, so it is stated rather than
@@ -478,11 +486,11 @@ test_8() {
     fi
     
     echo ""
-    echo "==> cmake -S . -B build/current -DINTERFACE_TARGET=bootreason -DAIDL_SRC_VERSION=current"
+    echo "==> cmake -S . -B build/current -DHALIF_VERSIONS_FILE= -DHALIF_COMPONENTS=bootreason:current"
     if cmake -S . -B build/current \
-        -DINTERFACE_TARGET=bootreason \
-        -DAIDL_SRC_VERSION=current \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
+        -DHALIF_VERSIONS_FILE= \
+        -DHALIF_COMPONENTS=bootreason:current \
+        "${HALIF_INSTALL_LAYOUT[@]}" \
         >/tmp/cmake_config.log 2>&1; then
         echo "✅ CMake configuration successful"
     else
@@ -533,11 +541,12 @@ test_9() {
     fi
     
     echo ""
-    echo "==> cmake -S . -B build/production -DINTERFACE_TARGET=all"
+    # No selection: the default manifest (versions_released.yaml), every
+    # component at its released version — what a production build consumes.
+    echo "==> cmake -S . -B build/production -DCMAKE_BUILD_TYPE=Release"
     if cmake -S . -B build/production \
-        -DINTERFACE_TARGET=all \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
+        "${HALIF_INSTALL_LAYOUT[@]}" \
         >/tmp/cmake_prod_config.log 2>&1; then
         echo "✅ CMake production configuration successful"
     else
@@ -615,9 +624,9 @@ test_10() {
     echo ""
     echo "==> Test 10.1: Build bootreason module (current version)"
     if cmake -S . -B build/test10-bootreason \
-        -DINTERFACE_TARGET=bootreason \
-        -DAIDL_SRC_VERSION=current \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
+        -DHALIF_VERSIONS_FILE= \
+        -DHALIF_COMPONENTS=bootreason:current \
+        "${HALIF_INSTALL_LAYOUT[@]}" \
         >/tmp/cmake_test10_boot_config.log 2>&1 && \
        cmake --build build/test10-bootreason -- -j"$(nproc)" \
         >/tmp/cmake_test10_boot_build.log 2>&1 && \
@@ -634,9 +643,9 @@ test_10() {
     echo ""
     echo "==> Test 10.2: Build common module (current version)"
     if cmake -S . -B build/test10-common \
-        -DINTERFACE_TARGET=common \
-        -DAIDL_SRC_VERSION=current \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
+        -DHALIF_VERSIONS_FILE= \
+        -DHALIF_COMPONENTS=common:current \
+        "${HALIF_INSTALL_LAYOUT[@]}" \
         >/tmp/cmake_test10_common_config.log 2>&1 && \
        cmake --build build/test10-common -- -j"$(nproc)" \
         >/tmp/cmake_test10_common_build.log 2>&1 && \
@@ -653,9 +662,9 @@ test_10() {
     echo ""
     echo "==> Test 10.3: Build deviceinfo module (current version)"
     if cmake -S . -B build/test10-deviceinfo \
-        -DINTERFACE_TARGET=deviceinfo \
-        -DAIDL_SRC_VERSION=current \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
+        -DHALIF_VERSIONS_FILE= \
+        -DHALIF_COMPONENTS=deviceinfo:current \
+        "${HALIF_INSTALL_LAYOUT[@]}" \
         >/tmp/cmake_test10_deviceinfo_config.log 2>&1 && \
        cmake --build build/test10-deviceinfo -- -j"$(nproc)" \
         >/tmp/cmake_test10_deviceinfo_build.log 2>&1 && \
@@ -672,13 +681,15 @@ test_10() {
     echo ""
     echo "==> Test 10.4: Build with CMAKE_BUILD_TYPE=Debug"
     if cmake -S . -B build/test10-debug \
-        -DINTERFACE_TARGET=firmwareupdate \
-        -DAIDL_SRC_VERSION=current \
+        -DHALIF_VERSIONS_FILE= \
+        -DHALIF_COMPONENTS=firmwareupdate:current \
         -DCMAKE_BUILD_TYPE=Debug \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
+        "${HALIF_INSTALL_LAYOUT[@]}" \
         >/tmp/cmake_test10_debug_config.log 2>&1 && \
        cmake --build build/test10-debug -- -j"$(nproc)" \
-        >/tmp/cmake_test10_debug_build.log 2>&1; then
+        >/tmp/cmake_test10_debug_build.log 2>&1 && \
+       cmake --install build/test10-debug \
+        >/tmp/cmake_test10_debug_install.log 2>&1; then
         echo "✅ Debug build successful"
         test -f ./out/target/lib/rdk-halif-aidl/libfirmwareupdate-vcurrent-cpp.so && echo "✅ Debug library created"
     else
