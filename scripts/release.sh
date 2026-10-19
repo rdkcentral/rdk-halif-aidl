@@ -2077,6 +2077,41 @@ freeze_snapshot_docs() {
     done < <(find "${docs_dir}" -name '*.md' -type f -print0)
 }
 
+# freeze_snapshot_hfp <comp> <version> <tag> : Pin the header of every
+# <comp>/<version>/**/hfp-*.yaml to the release that ships it (#896).
+#
+#   # Version:   current (unreleased)  ->  # Version:   <version>, release <tag>
+#   # Source:    .../blob/develop/<comp>/current/<f>
+#                                       ->  # Source:    .../blob/<tag>/<comp>/<version>/<f>
+#                                           # Latest:    .../blob/develop/<comp>/current/<f>
+#
+# A frozen HFP read outside the repo then names both the release it came from
+# and where the latest copy lives. Safe to repeat: a pinned header no longer
+# matches.
+freeze_snapshot_hfp() {
+    local comp="$1" version="$2" tag="$3"
+    local snap_dir="${REPO_ROOT}/${comp}/${version}"
+
+    local hfps=() f
+    [[ -n "${tag}" ]] || { warn "  [${comp}/${version}] no release tag to pin the HFP header to."; return 1; }
+    while IFS= read -r -d '' f; do hfps+=("${f}"); done \
+        < <(find "${snap_dir}" -name 'hfp-*.yaml' -type f -print0)
+    [[ ${#hfps[@]} -gt 0 ]] || return 0
+    python3 - "${comp}" "${version}" "${tag}" "${hfps[@]}" <<'PYEOF'
+import re, sys
+comp, version, tag, paths = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4:]
+for path in paths:
+    s = open(path).read()
+    s = s.replace("# Version:   current (unreleased)", f"# Version:   {version}, release {tag}")
+    def pin(m):
+        latest = m.group(1) + "develop/" + comp + "/current/" + m.group(2)
+        pinned = m.group(1) + tag + "/" + comp + "/" + version + "/" + m.group(2)
+        return f"# Source:    {pinned}\n# Latest:    {latest}\n"
+    s = re.sub(r"# Source:    (https://\S+/blob/)develop/" + re.escape(comp) + r"/current/(\S+)\n", pin, s)
+    open(path, "w").write(s)
+PYEOF
+}
+
 # check_snapshot_docs : Fail, naming each line, when a snapshot doc's
 # Interface Definition or Interface Version still refers to current/ (#796).
 check_snapshot_docs() {
@@ -2251,6 +2286,10 @@ create_snapshot() {
     # any other self-reference still name current/.
     freeze_snapshot_docs "${comp}" "${version}" "${RELEASE_VERSION}" || {
         warn "Failed to freeze the docs of ${comp}/${version}."
+        return 1
+    }
+    freeze_snapshot_hfp "${comp}" "${version}" "${RELEASE_VERSION}" || {
+        warn "Failed to pin the HFP header of ${comp}/${version}."
         return 1
     }
 
