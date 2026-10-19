@@ -23,8 +23,10 @@
 # HAL Feature Profile (HFP): hdmioutput
 #
 # Product:   RDK-E reference defaults (not a shipping product)
-# Platform:  Any RDK-E device
-# Supplier:  SoC vendor
+# Platform:  RDK
+# Supplier:  SoC vendor (expected; confirmed per product)
+# Version:   current (unreleased)
+# Source:    https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/hdmioutput/current/hfp-hdmioutput.yaml
 #
 # RDK reference HFP: the defaults each product HFP set is derived from.
 # Lifecycle: https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle

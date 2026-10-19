@@ -95,11 +95,19 @@ These may be merged via include directives, YAML anchors, or pre-processing scri
 Every HFP file, reference or product, is laid out in this order:
 
 1. **Licence block.**
-2. **HFP header**: the component, the identity of the product the HFP was agreed for, the layers it derives from, and a link to the [Product HFP Lifecycle](#product-hfp-lifecycle).
+2. **HFP header**: the component, the identity of the product the HFP was agreed for, its version and source of truth, the layers it derives from, and a link to the [Product HFP Lifecycle](#product-hfp-lifecycle).
 3. **Component notes**: semantics of the fields that the AIDL does not state. Optional.
 4. **YAML body**: the root key is the component name, and its first entry is `interfaceVersion`.
 
-The header holds fixed identity only. The HFP release, date and approval come from git (the release tag, its date and the merged pull request), not from text in the file. A file cannot carry its own commit hash, so the layers it derives from are recorded as git URLs pinned to a tag or commit hash.
+The release, date and approval of an HFP come from git: the release tag, its date and the merged pull request. They are never typed into the file by hand. The release tooling writes them into the header when it releases the file:
+
+| Line | Unreleased | Released |
+|---|---|---|
+| `Version` | `current (unreleased)` | the version and the release tag |
+| `Source` | the file on the development branch | the file at the release tag |
+| `Latest` | omitted | the file on the development branch |
+
+A copy that is passed on outside the repository therefore names the release it came from and where the latest copy lives. A file cannot carry its own commit hash, so the layers it derives from are recorded as git URLs pinned to a tag or commit hash.
 
 ### Product HFP header
 
@@ -109,6 +117,9 @@ The header holds fixed identity only. The HFP release, date and approval come fr
 # Product:   <product name>
 # Platform:  <platform / board>
 # Supplier:  SoC vendor: <vendor>, SoC: <part>
+# Version:   <product HFP release>, release <tag>
+# Source:    https://<internal-git>/<product-hfp-repo>/blob/<tag>/hfp-videodecoder.yaml
+# Latest:    https://<internal-git>/<product-hfp-repo>/blob/main/hfp-videodecoder.yaml
 #
 # Derived from:
 #   Reference:  https://github.com/rdkcentral/rdk-halif-aidl/blob/<tag>/videodecoder/current/hfp-videodecoder.yaml
@@ -122,7 +133,19 @@ The header holds fixed identity only. The HFP release, date and approval come fr
 
 ### Reference HFP header
 
-The HFPs in this repository use the same header, with `Product` and `Platform` stating that they are the RDK-E reference defaults for any RDK-E device, `Supplier` stating which kind of party supplies the component (`SoC vendor` or `OEM`), and no `Derived from` list.
+The HFPs in this repository use the same header with no `Derived from` list:
+
+```yaml
+# HAL Feature Profile (HFP): videodecoder
+#
+# Product:   RDK-E reference defaults (not a shipping product)
+# Platform:  RDK
+# Supplier:  SoC vendor (expected; confirmed per product)
+# Version:   current (unreleased)
+# Source:    https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/videodecoder/current/hfp-videodecoder.yaml
+```
+
+`Supplier` states which kind of party is expected to supply the component, `SoC vendor` or `OEM`. Each product confirms it. When a component version is released, `release.sh` pins `Version` and `Source` in the frozen copy to the release tag and adds `Latest`.
 
 ---
 

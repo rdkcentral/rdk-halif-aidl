@@ -23,8 +23,10 @@
 # HAL Feature Profile (HFP): panel
 #
 # Product:   RDK-E reference defaults (not a shipping product)
-# Platform:  Any RDK-E device
-# Supplier:  OEM
+# Platform:  RDK
+# Supplier:  OEM (expected; confirmed per product)
+# Version:   current (unreleased)
+# Source:    https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/panel/current/hfp-panel.yaml
 #
 # RDK reference HFP: the defaults each product HFP set is derived from.
 # Lifecycle: https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle
