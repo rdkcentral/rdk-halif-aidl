@@ -72,6 +72,16 @@ account_type() {
     fi
 }
 
+# Prints every address in a trailer value, one per line. Anything in <...>
+# containing an @ is an address whatever its shape (<person@localhost>,
+# <@users.noreply.github.com>, <49699333+dependabot[bot]@...>). Outside
+# brackets the domain needs a dot, so an "@login" mention is not an address.
+addresses() {
+    grep -oE '<[^<>]*@[^<>]*>' <<< "$1" | tr -d '<>' || true
+    sed -E 's/<[^<>]*>//g' <<< "$1" \
+        | grep -oE '[^[:space:]<>,;"()@]*@[^][[:space:]<>,;"()@]+\.[^][[:space:]<>,;"()@]+' || true
+}
+
 # report <error|warning> <title> <message>
 report() {
     if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
@@ -117,8 +127,8 @@ for sha in ${revs}; do
                     "${sha:0:8} ${key}: <${email}> is not a GitHub account - who is this? ${subject}"
                 continue
             fi
-            [[ "${email,,}" == noreply@github.com ]] && continue
-            type="$(account_type "${email}")"
+            type=""
+            [[ "${email,,}" == noreply@github.com ]] || type="$(account_type "${email}")"
             if [[ "${type}" == Missing ]]; then
                 trailer_failures=$((trailer_failures + 1))
                 report error "${key}" \
@@ -132,9 +142,7 @@ for sha in ${revs}; do
                 report warning "Co-authored-by" \
                     "${sha:0:8} co-author <${email}> - confirm they co-authored this: ${subject}"
             fi
-        # The local part may be empty (so "<@users.noreply.github.com>" is
-        # caught); the domain needs a dot, so an "@mention" is not an address.
-        done < <(grep -oE '[^][[:space:]<>,;"()@]*@[^][[:space:]<>,;"()@]+\.[^][[:space:]<>,;"()@]+' <<< "${value}")
+        done < <(addresses "${value}")
     done <<< "${message}"
     unset seen
 done
