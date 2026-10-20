@@ -1,0 +1,11 @@
+aidl_interface:
+  name: broadcast
+  srcs:
+  - com/rdk/hal/broadcast/*.aidl
+  - com/rdk/hal/broadcast/ca/*.aidl
+  - com/rdk/hal/broadcast/demux/*.aidl
+  - com/rdk/hal/broadcast/frontend/*.aidl
+  imports:
+    - ringbuffer@current
+  stability: vintf
+  layout: module-local
