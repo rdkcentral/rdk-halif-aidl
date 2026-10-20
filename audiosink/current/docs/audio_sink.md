@@ -206,6 +206,12 @@ To avoid wasted binder transactions, the client SHOULD wait for `IAudioSinkContr
 
 Continuing to call `queueAudioFrame()` while the queue is full is permitted but will return `false` repeatedly until space is available.
 
+## Audio Trim
+
+The `FrameMetadata.trimStartNs` and `trimEndNs` passed to `queueAudioFrame()` carry the trim still outstanding for that frame. The Audio Sink discards `trimStartNs` from the start of the frame and `trimEndNs` from its end before passing the PCM to the mixer, converting each to whole samples as `round(ns × sample_rate ÷ 1_000_000_000)` at the sample rate of the queued PCM. Zero values, or null metadata, mean no trim.
+
+A decoder that has already trimmed the frame passes zeros, so the samples are discarded exactly once. In tunnelled mode `queueAudioFrame()` is not used, and the vendor carries the trim from decoder to sink internally. The full contract, including how a trim is split across frames, is in the Audio Decoder's [trim contract](../audiodecoder/audio_decoder.md#the-trim-contract).
+
 ## Secure Audio Processing
 
 If any audio decoder supports SAP in non-tunnelled mode then the Audio Sink HAL must also support SAP to be able to process secure AV buffers of decoded PCM data, otherwise SAP support is optional.
