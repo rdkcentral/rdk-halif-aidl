@@ -1,0 +1,10 @@
+Language: Java
+BasedOnStyle: Google
+IndentWidth: 4
+ColumnLimit: 120
+BreakAfterJavaFieldAnnotations: false
+---
+Language: Cpp
+BasedOnStyle: Google
+IndentWidth: 4
+ColumnLimit: 120
