@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.videosink;
-import com.rdk.hal.videodecoder.FrameMetadata;
+import com.rdk.hal.videosink.FrameMetadata;
 import com.rdk.hal.videosink.Property;
 import com.rdk.hal.videosink.PropertyValue;
 
