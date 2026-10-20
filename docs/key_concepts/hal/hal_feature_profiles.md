@@ -245,6 +245,19 @@ Tooling for HFP consumption and validation should support:
 * **Gap Detection**: Report missing mandatory components or undeclared features
 * **Compliance Reporting**: Output summaries for QA, integrators, or certification
 
+### Schema validation
+
+Every reference HFP has a [Pykwalify](https://github.com/Grokzen/pykwalify) schema beside it, `hfp-<component>-schema.yaml`, which freezes into each release with the HFP. A product HFP is checked against the schema of the release it derives from:
+
+```bash
+scripts/validate_hfp.sh hfp-videodecoder.yaml                    # against current/
+scripts/validate_hfp.sh --release 0.3.0.0 hfp-videodecoder.yaml  # against a release
+```
+
+The schema requires every key the reference HFP carries, rejects keys it does not, checks each value's type, and holds each enum-valued field to its AIDL enum, so a product may list any value the interface defines. The first run creates `build/hfp-venv` with pykwalify.
+
+Schemas are generated, never edited. After changing a reference HFP, or an AIDL enum one uses, run `scripts/validate_hfp.sh --generate` and commit the result; `scripts/validate_hfp.sh --check` fails while any schema is out of date.
+
 ---
 
 ## Versioning and Schema Evolution
