@@ -69,6 +69,7 @@ enum Property
      *
      * Type: Integer (enum AVSource)
      * Access: Read/Write.
+     * Write in states: READY
      *
      * @exception binder::Status::Exception::EX_NONE for success
      *
@@ -84,6 +85,7 @@ enum Property
      *
      * Type: Boolean (0 = don't render, 1 = render)
      * Access: Read/Write.
+     * Write in states: READY
      *
      * @exception binder::Status::Exception::EX_NONE for success
      *
