@@ -33,9 +33,9 @@ The decoded audio output can be delivered via two distinct paths:
 
 ## Operational Modes
 
-The choice between tunnelled and non-tunnelled mode is made on a per-codec basis during the initialization of the audio decoder. This flexibility allows the system to optimize performance for different audio formats. It's important to note that the audio decoder can switch between these modes for different codec instances, but a single codec instance must operate in one mode or the other for the duration of its use. The operational mode of the audio decoder is independent of the video decoder's mode. This means that it is perfectly valid to have tunnelled video and non-tunnelled audio, or vice-versa.
+The operational mode is fixed per product by the HAL Feature Profile and defaults to non-tunnelled; see [HAL Pipeline Operational Mode](../key_concepts/hal/hal_pipeline_operational_mode.md). The operational mode of the audio decoder is independent of the video decoder's mode, so tunnelled video with non-tunnelled audio, or the reverse, is valid.
 
-Clients can query the current output mode with `IAudioDecoder.getCurrentOperationalMode()` while the resource is in the `STARTED` state. The mode is selected by the vendor and is read-only.
+Clients read the mode with `IAudioDecoder.getCurrentOperationalMode()` after every `start()`. It is read-only.
 
 ## PCM Handling
 
@@ -276,7 +276,7 @@ In some cases the passthrough mode enabled on some output ports may have to work
 
 ## Tunnelled and Non-Tunnelled Audio
 
-The Audio Decoder makes its own run-time choice about whether audio is tunnelled or non-tunnelled.
+Whether audio is tunnelled or non-tunnelled is declared in the product HFP; see [HAL Pipeline Operational Mode](../key_concepts/hal/hal_pipeline_operational_mode.md).
 
 Tunnelled audio is required when any audio output ports are in passthrough mode. Tunnelled audio may also be required for some audio codecs that need a vendor integrated decoder/mixer such as Dolby MS12.
 

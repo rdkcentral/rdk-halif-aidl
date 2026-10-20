@@ -20,7 +20,14 @@
 # *
 #** ******************************************************************************
 
-# HAL Feature Profile for avclock
+# HAL Feature Profile (HFP): avclock
+#
+# Platform:  RDK (RDK-E)
+# Supplier:  SoC
+# Source:    [develop: avclock/current](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/avclock/current/hfp-avclock.yaml)
+#
+# RDK reference HFP: the defaults each product HFP set is derived from.
+# Lifecycle: [Product HFP Lifecycle](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle)
 
 avclock:                        # Component object begins
   interfaceVersion: current

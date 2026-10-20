@@ -20,8 +20,15 @@
 # *
 #** ******************************************************************************
 
-# HAL Feature Profile for drm
-# NOTE: Use the directory name (lowercase) as the top-level key for consistency with file location
+# HAL Feature Profile (HFP): drm
+#
+# Platform:  RDK (RDK-E)
+# Supplier:  SoC
+# Source:    [develop: drm/current](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/drm/current/hfp-drm.yaml)
+#
+# RDK reference HFP: the defaults each product HFP set is derived from.
+# Lifecycle: [Product HFP Lifecycle](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle)
+
 drm:                  # Component object begins (matches directory name)
     interfaceVersion: current
 

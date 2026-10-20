@@ -20,8 +20,14 @@
 # *
 #** ******************************************************************************
 
-# HAL Feature Profile for cec
-
+# HAL Feature Profile (HFP): hdmicec
+#
+# Platform:  RDK (RDK-E)
+# Supplier:  SoC
+# Source:    [develop: hdmicec/current](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/hdmicec/current/hfp-hdmicec.yaml)
+#
+# RDK reference HFP: the defaults each product HFP set is derived from.
+# Lifecycle: [Product HFP Lifecycle](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle)
 
 hdmicec:                        # Component object begins
     interfaceVersion: current

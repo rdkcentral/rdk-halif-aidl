@@ -20,7 +20,14 @@
 # *
 #** ******************************************************************************
 
-# HAL Feature Profile for deep_sleep
+# HAL Feature Profile (HFP): deepsleep
+#
+# Platform:  RDK (RDK-E)
+# Supplier:  SoC
+# Source:    [develop: deepsleep/current](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/deepsleep/current/hfp-deepsleep.yaml)
+#
+# RDK reference HFP: the defaults each product HFP set is derived from.
+# Lifecycle: [Product HFP Lifecycle](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle)
 
 deepsleep:                      # Component object begins
     interfaceVersion: current

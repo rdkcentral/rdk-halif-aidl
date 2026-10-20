@@ -20,7 +20,14 @@
 # *
 #** ******************************************************************************
 
-# HAL Feature Profile for planecontrol
+# HAL Feature Profile (HFP): planecontrol
+#
+# Platform:  RDK (RDK-E)
+# Supplier:  SoC
+# Source:    [develop: planecontrol/current](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/planecontrol/current/hfp-planecontrol.yaml)
+#
+# RDK reference HFP: the defaults each product HFP set is derived from.
+# Lifecycle: [Product HFP Lifecycle](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle)
 
 planecontrol:                   # Component object begins
   interfaceVersion: current

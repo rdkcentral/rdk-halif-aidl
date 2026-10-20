@@ -20,8 +20,15 @@
 # *
 #** ******************************************************************************
 
-# HAL Feature Profile for boot
-# NOTE: Use the directory name (lowercase) as the top-level key for consistency with file location
+# HAL Feature Profile (HFP): bootreason
+#
+# Platform:  RDK (RDK-E)
+# Supplier:  SoC
+# Source:    [develop: bootreason/current](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/bootreason/current/hfp-bootreason.yaml)
+#
+# RDK reference HFP: the defaults each product HFP set is derived from.
+# Lifecycle: [Product HFP Lifecycle](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle)
+
 bootreason:                 # Component object begins (matches directory name)
     interfaceVersion: current
     # Supported causes of device boot (from BootCause.aidl)

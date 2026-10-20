@@ -20,7 +20,14 @@
 # *
 #** ******************************************************************************
 
-# HAL Feature Profile for videodecoder
+# HAL Feature Profile (HFP): videodecoder
+#
+# Platform:  RDK (RDK-E)
+# Supplier:  SoC
+# Source:    [develop: videodecoder/current](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/videodecoder/current/hfp-videodecoder.yaml)
+#
+# RDK reference HFP: the defaults each product HFP set is derived from.
+# Lifecycle: [Product HFP Lifecycle](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/docs/key_concepts/hal/hal_feature_profiles.md#product-hfp-lifecycle)
 #
 # Mirrors CodecCapabilities.aidl + Profile.aidl field-for-field.
 # Reference implementation aligned with

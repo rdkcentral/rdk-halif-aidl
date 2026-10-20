@@ -7,9 +7,10 @@ The output of the video decoder can follow two paths:
 - **Non-tunnelled mode** – The decoded video is returned to the RDK media pipeline as a video frame buffer along with metadata.
 - **Tunnelled mode** – The decoded video is passed directly through the vendor layer.
 
-The selected output mode is implementation-defined for each decoder instance. Clients can
-query it with `IVideoDecoder.getCurrentOperationalMode()` while the resource is in the `STARTED` state. It is read-only;
-clients must not assume that tunnelled output can be enabled or disabled through a property.
+The operational mode is fixed per product by the HAL Feature Profile and defaults to non-tunnelled; see
+[HAL Pipeline Operational Mode](../key_concepts/hal/hal_pipeline_operational_mode.md). Clients read it with
+`IVideoDecoder.getCurrentOperationalMode()` after every `start()`. It is read-only; no property enables or
+disables tunnelled output.
 
 Video and audio are independent. A pipeline may pass video from decoder to sink within the vendor layer while returning decoded audio to the client.
 
