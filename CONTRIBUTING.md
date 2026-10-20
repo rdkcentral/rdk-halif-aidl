@@ -10,7 +10,21 @@ You can submit your changes for review via that site, by raising an issue in git
 - create a pull request [https://github.com/rdkcentral/ut-core/compare](https://github.com/rdkcentral/ut-core/compare) when the code changes are ready for review.
 - The team will review, and if accepted your changes will be merged to the mainline.
 
-- Commit with your public GitHub identity. Set `git config user.email` to your GitHub noreply address (`<id>+<login>@users.noreply.github.com`, shown under GitHub > Settings > Emails). Commits from any other address fail the PR check.
+## Commit email verification
+
+Pull requests targeting `develop` or `main` run the required **Commit email
+check**. It verifies every commit in the pull request because a squash merge
+copies each commit message into the target branch's history.
+
+- Commit authors and committers must use a GitHub noreply address:
+  `<id>+<login>@users.noreply.github.com`, shown in GitHub **Settings >
+  Emails**. GitHub web commits may use `noreply@github.com`.
+- Every email address in a commit trailer, such as `Co-authored-by:`,
+  `Signed-off-by:` or `Cc:`, must also be a GitHub noreply address.
+
+See the [Commit Email Verification guide](docs/standards/commit_email_verification.md)
+to configure Git, run the check locally and correct rejected commits or
+trailers.
 
 - In order to contribute code, first-time users are requested to agree to the [license](https://wiki.rdkcentral.com/signup.action).
 
