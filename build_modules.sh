@@ -194,12 +194,56 @@ export CXXFLAGS="${CXXFLAGS:-} ${WARNING_SUPPRESSION_FLAGS}"
 #
 # Skipped for clean / cleanall / help — those should work in any state.
 
+# Bootstrap the Binder SDK + AIDL toolchain via build_binder.sh.
+#
+# build-tools/ is gitignored and entirely untracked, and out/ is a build
+# artefact, so a CLEAN CLONE has neither the toolchain nor the SDK.
+# build_binder.sh is the single bootstrap for both: it clones the pinned
+# linux_binder_idl toolchain and builds the SDK into out/target.
+#
+# Only ever auto-bootstraps the DEFAULT LOCAL layout. If the caller pointed
+# at a toolchain/SDK explicitly (BINDER_SDK_DIR, BINDER_TOOLCHAIN_ROOT,
+# BINDER_SOURCE_DIR or --sdk-dir — i.e. Yocto and cross-compile flows) a
+# missing artefact is a recipe/configuration error and must stay a hard
+# failure: we must never silently build a host SDK over a cross-compiled one.
+#
+# Returns 0 if the bootstrap ran and succeeded, 1 if it is not applicable.
+_BINDER_BOOTSTRAP_DONE=0
+bootstrap_binder_sdk() {
+    local reason="$1"
+
+    # Explicit override => not our business to bootstrap.
+    if [[ -n "${BINDER_SDK_DIR:-}" || -n "${BINDER_TOOLCHAIN_ROOT:-}" || -n "${BINDER_SOURCE_DIR:-}" ]]; then
+        return 1
+    fi
+    # Only attempt once per run.
+    [[ "$_BINDER_BOOTSTRAP_DONE" -eq 1 ]] && return 1
+    [[ -x "$ROOT_DIR/build_binder.sh" ]] || return 1
+
+    _BINDER_BOOTSTRAP_DONE=1
+    echo "ℹ️  ${reason}"
+    echo "    Bootstrapping via ./build_binder.sh (one-time; subsequent builds reuse it)."
+    echo ""
+    if ! "$ROOT_DIR/build_binder.sh"; then
+        echo "" >&2
+        echo "❌ build_binder.sh failed; cannot continue." >&2
+        exit 1
+    fi
+    echo ""
+    return 0
+}
+
 preflight_check() {
     # Toolchain artefacts present. Honour BINDER_TOOLCHAIN_ROOT /
     # BINDER_SOURCE_DIR / BINDER_SDK_DIR overrides used by Yocto and
     # cross-compile flows (a non-default toolchain location is a
     # legitimate state and shouldn't fail the local-tree check).
     local toolchain_root="${BINDER_TOOLCHAIN_ROOT:-${BINDER_SOURCE_DIR:-$ROOT_DIR/build-tools/linux_binder_idl}}"
+    if [[ ! -f "$toolchain_root/host/aidl_ops.py" ]]; then
+        # Clean clone: build-tools/ is untracked, so bootstrap it rather
+        # than failing with instructions the caller would just follow.
+        bootstrap_binder_sdk "AIDL toolchain not found at $toolchain_root/host/aidl_ops.py." || true
+    fi
     if [[ ! -f "$toolchain_root/host/aidl_ops.py" ]]; then
         echo "❌ AIDL toolchain not found at $toolchain_root/host/aidl_ops.py." >&2
         echo "   Fix: run ./build_binder.sh to bootstrap, symlink build-tools/" >&2
@@ -224,6 +268,11 @@ preflight_check() {
     done
     if [[ -z "$sdk_dir" ]]; then
         sdk_dir="$ROOT_DIR/out/target/lib/binder"
+    fi
+    if [[ ! -d "$sdk_dir" ]]; then
+        # Clean clone / out/ wiped: stage the SDK instead of hard-failing.
+        # No-op when the caller pinned --sdk-dir or BINDER_SDK_DIR (Yocto).
+        bootstrap_binder_sdk "Binder SDK runtime not found at $sdk_dir." || true
     fi
     if [[ ! -d "$sdk_dir" ]]; then
         echo "❌ Binder SDK runtime not found at $sdk_dir." >&2
@@ -528,17 +577,13 @@ echo ""
 # out of the box. In Yocto the SDK is staged by the linux-binder recipe
 # (DEPENDS = "linux-binder") and SDK_DIR points outside the repo, so we
 # never auto-build there - that case is a recipe configuration error.
+#
+# This re-checks the .sdk_ready MARKER (preflight only proves the lib dir
+# exists): an interrupted build_binder.sh can leave the directory behind
+# with no marker, and that SDK is not safe to build against.
 if [[ ! -f "$SDK_DIR/.sdk_ready" ]]; then
-    if [[ "$SDK_DIR" == "$ROOT_DIR/out/target" && -x "$ROOT_DIR/build_binder.sh" ]]; then
-        echo "ℹ️  Binder SDK not found at $SDK_DIR — staging it via build_binder.sh"
-        echo "    (one-time prerequisite; subsequent builds reuse it)"
-        echo ""
-        if ! "$ROOT_DIR/build_binder.sh"; then
-            echo ""
-            echo "❌ build_binder.sh failed; cannot continue."
-            exit 1
-        fi
-        echo ""
+    if [[ "$SDK_DIR" == "$ROOT_DIR/out/target" ]]; then
+        bootstrap_binder_sdk "Binder SDK at $SDK_DIR is missing its .sdk_ready marker." || true
     fi
     if [[ ! -f "$SDK_DIR/.sdk_ready" ]]; then
         echo "❌ ERROR: Binder SDK not found at $SDK_DIR"

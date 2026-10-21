@@ -759,6 +759,23 @@ Options:
   --verbose              Print extra diagnostics.
   --help                 Show this help.
 
+Environment:
+  Prerequisites are bootstrapped automatically. build-tools/ is untracked
+  and out/ is a build artefact, so on a CLEAN CLONE any mutating run
+  (staged writes, --apply, --audit) stages the pinned AIDL toolchain and
+  the Binder SDK via ./build_binder.sh before the detector runs. Read-only
+  runs (bare scan, --dry-run, --check-metadata) never trigger it.
+
+  BINDER_SDK_DIR         Pre-staged Binder SDK (Yocto / cross-compile).
+  BINDER_TOOLCHAIN_ROOT  Pre-staged AIDL toolchain location.
+  BINDER_SOURCE_DIR      Alias for the above.
+                         Setting any of these disables auto-bootstrap: a
+                         missing artefact is then a recipe error, and
+                         building a host SDK over a cross-compiled one
+                         would be wrong.
+  SKIP_SDK_BOOTSTRAP=1   Skip the toolchain/SDK preflight entirely.
+  SKIP_LINK_CHECK=1      Skip the repo-root markdown link validation.
+
 Behavior (#712 change-class labels — label names mean what the fields mean):
   - "Major Change"    label   => major bump (0.g.m.p -> 0.(g+1).0.0) — breaking
   - "Minor Change"    label   => minor bump (0.g.m.p -> 0.g.(m+1).0) — additive
@@ -1367,6 +1384,51 @@ if [[ "${SKIP_LINK_CHECK:-0}" -ne 1 ]]; then
     else
         warn "Broken relative links in repo-root markdown (non-fatal in read-only mode):"
         printf '%s\n' "${_link_errs}" >&2
+    fi
+fi
+
+# Preflight: Binder SDK + AIDL toolchain (clean-clone bootstrap).
+#
+# build-tools/ is gitignored and untracked and out/ is a build artefact, so a
+# CLEAN CLONE has neither the pinned AIDL toolchain nor the Binder SDK.
+# Every mutating path needs both: snapshots regenerate bindings through
+# build_modules.sh, and the change-class audit shells out to aidl_ops.py.
+#
+# Done HERE, before the detector, deliberately. Without it the first demand
+# for the toolchain comes minutes later during snapshot creation — after
+# commit-walking, GitHub label lookups and planning — and aborts the run
+# mid-pipeline. Bootstrapping up front costs the same build but leaves the
+# pipeline intact.
+#
+# Read-only runs (bare scan, --dry-run, --check-metadata) are NOT gated: they
+# never invoke the toolchain, and forcing a multi-minute SDK build on someone
+# just previewing the plan would be hostile.
+#
+# Skipped when the caller pinned a toolchain/SDK explicitly (Yocto and
+# cross-compile set BINDER_SDK_DIR / BINDER_TOOLCHAIN_ROOT / BINDER_SOURCE_DIR)
+# — there a missing artefact is a recipe error, not something to paper over by
+# building a host SDK. Escape hatch: SKIP_SDK_BOOTSTRAP=1.
+if [[ ( "${DO_WRITES}" -eq 1 || "${DO_BRANCH}" -eq 1 || "${AUDIT}" -eq 1 ) \
+      && "${SKIP_SDK_BOOTSTRAP:-0}" -ne 1 \
+      && -z "${BINDER_SDK_DIR:-}${BINDER_TOOLCHAIN_ROOT:-}${BINDER_SOURCE_DIR:-}" ]]; then
+    phase "Validating Binder SDK + AIDL toolchain..."
+    _tc="${REPO_ROOT}/build-tools/linux_binder_idl/host/aidl_ops.py"
+    _sdk_marker="${REPO_ROOT}/out/target/.sdk_ready"
+    if [[ -f "${_tc}" && -f "${_sdk_marker}" ]]; then
+        log "    ✓ toolchain and Binder SDK present"
+    else
+        [[ -f "${_tc}" ]]         || log "    • AIDL toolchain missing (${_tc#"${REPO_ROOT}/"})"
+        [[ -f "${_sdk_marker}" ]] || log "    • Binder SDK missing (${_sdk_marker#"${REPO_ROOT}/"})"
+        [[ -x "${REPO_ROOT}/build_binder.sh" ]] \
+            || die "build_binder.sh not found or not executable — cannot bootstrap the Binder SDK."
+        log "    Bootstrapping via ./build_binder.sh (one-time; several minutes)..."
+        log ""
+        (cd "${REPO_ROOT}" && ./build_binder.sh) \
+            || die "build_binder.sh failed — cannot continue the release."
+        log ""
+        [[ -f "${_sdk_marker}" ]] \
+            || die "build_binder.sh completed but ${_sdk_marker#"${REPO_ROOT}/"} is still absent."
+        log "    ✓ Binder SDK bootstrapped"
     fi
 fi
 
