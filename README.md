@@ -143,23 +143,29 @@ Compiles the committed module-local C++ into `lib<module>-v<version>-cpp.so`.
 Requires only CMake, a C++ compiler and the staged linux_binder SDK — no Python,
 no AIDL compiler, and no linux_binder_idl source.
 
-> **Note (#635):** the one-shot root build (`cmake -S . -DINTERFACE_TARGET=all`)
+> **Note (#635):** the one-shot root build (`cmake -S . -B build`)
 > is the **integrated dev** path — it pulls in the linux_binder_idl toolchain
 > (`CMakeLists.inc`) and so requires that source tree. It is **not** for a
 > standalone Yocto recipe; use the per-component build above.
 
-### Version manifest (`versions.yaml`)
+### Version manifests
 
-`versions.yaml` is the manifest of which version of each component to build —
-`current` (the in-development interface) or a released `<version>/` snapshot.
-`./build_modules.sh manifest` builds the set it lists:
+`versions_released.yaml` selects the released component cohort by default, while
+`versions_current.yaml` selects the in-development cohort. An alternate file can
+select `current` or a released `<version>/` snapshot for each component.
+`./build_modules.sh manifest` builds the selected set:
 
 ```bash
-./build_modules.sh manifest               # build everything in versions.yaml
-./build_modules.sh manifest --file alt.yaml
+./build_modules.sh manifest                              # versions_released.yaml
+./build_modules.sh manifest --file versions_current.yaml # current cohort
+./build_modules.sh manifest --file alt.yaml              # alternate manifest
 ```
 
-A component absent from the manifest falls back to its `default:` entry.
+A root CMake build uses the same selection model. Leave `INTERFACE_TARGET`
+unset to build every component in `INTERFACE_RELEASE_FILE`. For a single
+component, set `INTERFACE_TARGET`; its version defaults to `current`, and its
+dependency versions come from that version's `interface.yaml` imports. Set
+`INTERFACE_VERSION` to select a released snapshot explicitly.
 
 ## Scripts
 
@@ -191,7 +197,7 @@ do_configure() {
     CC="${CC}" CXX="${CXX}" \
     CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" LDFLAGS="${LDFLAGS}" \
     cmake -S ${S} -B ${B} \
-          -DINTERFACE_TARGET=all \
+          -DINTERFACE_RELEASE_FILE=${S}/versions_released.yaml \
           -DBINDER_SDK_DIR=${STAGING_DIR}${prefix} \
           -DBINDER_SDK_INCLUDE_DIR=${STAGING_DIR}${prefix}
 }
@@ -228,13 +234,14 @@ Yocto's build system automatically provides these variables with appropriate cro
 
 Used when building HAL libraries for deployment:
 
-| Variable                 | Purpose                           | Default      | Required |
-|--------------------------|-----------------------------------|--------------|----------|
-| `INTERFACE_TARGET`       | Module(s) to build                | `all`        | No       |
-| `AIDL_SRC_VERSION`       | Version to build                  | `current`    | No       |
-| `BINDER_SDK_DIR`         | linux_binder SDK libs location    | `out/target` | **Yes**  |
-| `BINDER_SDK_INCLUDE_DIR` | linux_binder SDK headers location | `out/build`  | Yocto    |
-| `OUT_DIR`                | Output directory                  | `out`        | No       |
+| Variable                 | Purpose                                      | Default                  | Required |
+|--------------------------|----------------------------------------------|--------------------------|----------|
+| `INTERFACE_TARGET`       | Single module to build; unset builds manifest | Unset                    | No       |
+| `INTERFACE_VERSION`      | Version of `INTERFACE_TARGET`                | `current`                | No       |
+| `INTERFACE_RELEASE_FILE` | Component version manifest                   | `versions_released.yaml` | No       |
+| `BINDER_SDK_DIR`         | linux_binder SDK libs location               | `out/target`             | **Yes**  |
+| `BINDER_SDK_INCLUDE_DIR` | linux_binder SDK headers location            | `out/build`              | Yocto    |
+| `OUT_DIR`                | Output directory                             | `out`                    | No       |
 
 `BINDER_SDK_DIR` and `BINDER_SDK_INCLUDE_DIR` differ only in the local dev
 tree (libs in `out/target`, headers in `out/build`). A Yocto-staged SDK is
@@ -244,7 +251,7 @@ flat, so set both to the same staging prefix.
 
 ```bash
 cmake -B build \
-      -DINTERFACE_TARGET=boot \
+      -DINTERFACE_TARGET=bootreason \
       -DBINDER_SDK_DIR=/usr
 ```
 

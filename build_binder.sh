@@ -359,9 +359,9 @@ build_sdk() {
 # 4. SETUP PATH (Exports to current shell)
 # ------------------------------------------------------------------------------
 setup_path() {
-    AIDL_BIN="$SDK_INSTALL_DIR/bin"
-    if [ ! -d "$AIDL_BIN" ]; then
-        echo "⚠️  Warning: AIDL bin directory not found: $AIDL_BIN"
+    local AIDL_BIN="$BINDER_REPO_DIR/out/host/bin"
+    if [ ! -x "$AIDL_BIN/aidl" ]; then
+        echo "⚠️  Warning: AIDL compiler not found: $AIDL_BIN/aidl"
         return 1
     fi
 
@@ -371,11 +371,18 @@ setup_path() {
     fi
 }
 
+build_aidl() {
+    echo "Building aidl tool"
+    (cd "$BINDER_REPO_DIR" && bash build-linux-binder-aidl.sh) || return 1
+    echo "✓ aidl tool build complete"
+}
+
 # ------------------------------------------------------------------------------
 # MAIN EXECUTION
 # ------------------------------------------------------------------------------
 clone_repo || exit 1
 clean_build
+build_aidl || exit 1
 build_sdk || exit 1
 setup_path
 
