@@ -2486,6 +2486,12 @@ compute_header_hash_for_dir() {
     echo "${h}"
 }
 
+is_header_only_component() {
+    local comp="$1"
+    [[ ! -f "${REPO_ROOT}/${comp}/current/interface.yaml" ]] || return 1
+    compgen -G "${REPO_ROOT}/${comp}/current/*.h" >/dev/null
+}
+
 # Compare a module's current/ AIDL hash against the highest tracked
 # snapshot. Echoes one of: "unchanged" / "CHANGED" / "new" / "missing".
 # A header-only component compares its headers instead (current/*.h against
@@ -2819,12 +2825,6 @@ is_buildable_component() {
 # versioned like any other component — bumped by its labels, gated on its
 # header content instead of an AIDL hash — but has no bindings or library,
 # so its snapshot is a copy of current/ with the headers staged in include/.
-is_header_only_component() {
-    local comp="$1"
-    [[ ! -f "${REPO_ROOT}/${comp}/current/interface.yaml" ]] || return 1
-    compgen -G "${REPO_ROOT}/${comp}/current/*.h" >/dev/null
-}
-
 # ----------------------------------------------------------------------------
 # Frozen interface VERSION + contract HASH (#633)
 # ----------------------------------------------------------------------------
