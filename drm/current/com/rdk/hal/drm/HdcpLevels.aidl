@@ -31,6 +31,9 @@ package com.rdk.hal.drm;
 
 import com.rdk.hal.drm.HdcpLevel;
 
+/**
+ * The HDCP levels of the device.
+ */
 @VintfStability
 parcelable HdcpLevels {
     /** The lowest HDCP level for any connected displays. */

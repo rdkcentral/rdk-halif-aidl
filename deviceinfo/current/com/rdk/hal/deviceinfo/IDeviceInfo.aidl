@@ -20,7 +20,7 @@ package com.rdk.hal.deviceinfo;
 import com.rdk.hal.deviceinfo.Capabilities;
 import com.rdk.hal.deviceinfo.Property;
 
-/** 
+/**
  *  @brief     Device Information HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -32,18 +32,18 @@ import com.rdk.hal.deviceinfo.Property;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 
 @VintfStability
-interface IDeviceInfo
-{
+interface IDeviceInfo {
     /** The service name to publish. To be returned by getServiceName() in the derived class. */
     const @utf8InCpp String serviceName = "DeviceInfo";
-    
+
     /**
      * Gets the capabilities of the Device Info service.
      *
@@ -53,24 +53,20 @@ interface IDeviceInfo
     Capabilities getCapabilities();
 
     /**
-    * Gets a persisted device property by key.
-    *
-    * On success, returns a `Property` parcelable (see Property.aidl).
-    * @see `PropertyType.aidl` for supported formats and validation rules.
-    *
-    * Property key strings must be one of the keys listed in `getCapabilities().supportedProperties[]`.
-    *
-    * @param[in] propertyKey  The key of a property to retrieve.
-    * @returns Property parcelable with metadata, or null if unsupported.
+     * Gets a persisted device property by key.
      *
-    *
-    * @see getCapabilities(), Property.aidl, PropertyType.aidl
-    */
+     * On success, returns a `Property` parcelable (see Property.aidl).
+     * @see `PropertyType.aidl` for supported formats and validation rules.
+     *
+     * Property key strings must be one of the keys listed in `getCapabilities().supportedProperties[]`.
+     *
+     * @param[in] propertyKey  The key of a property to retrieve.
+     * @returns Property parcelable with metadata, or null if unsupported.
+     *
+     *
+     * @see getCapabilities(), Property.aidl, PropertyType.aidl
+     */
     @nullable Property getProperty(in String propertyKey);
 
     /** @} */
 }
-
-
-
-

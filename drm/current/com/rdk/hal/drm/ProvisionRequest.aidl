@@ -28,6 +28,9 @@
  */
 package com.rdk.hal.drm;
 
+/**
+ * A provisioning request to be sent to a provisioning server.
+ */
 @VintfStability
 parcelable ProvisionRequest {
     /** The opaque certificate request blob. */

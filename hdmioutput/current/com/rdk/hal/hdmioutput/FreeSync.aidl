@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.hdmioutput;
 
-/** 
+/**
  *  @brief     HDMI AMD FreeSync enum.
  *
  *  Describes the level of AMD FreeSync support provided by the HDMI output.
@@ -34,8 +34,7 @@ package com.rdk.hal.hdmioutput;
  */
 @VintfStability
 @Backing(type = "int")
-enum FreeSync 
-{
+enum FreeSync {
     /**
      * No FreeSync support.
      */

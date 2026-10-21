@@ -29,7 +29,6 @@
 package com.rdk.hal.drm;
 import com.rdk.hal.drm.DecryptArgs;
 
-
 /**
  * ICryptoPlugin is the HAL for vendor-provided crypto plugins.
  *
@@ -41,13 +40,17 @@ interface ICryptoPlugin {
     /**
      * Decrypt an array of subsamples from the source memory buffer to the
      * destination memory buffer.
-     * 
+     *
      * Decrypt is a synchronous call.
      * After decryption the source AVBuffer must be recycled/freed by the caller.
-     * This approach is the same as Android and is unlike other RDK-E AIDL HALs where the HAL component consumes and frees buffers.
-     * 
-     * @return number of decrypted bytes
-     * 
+     * This approach is the same as Android and is unlike other RDK-E AIDL HALs where the HAL component consumes and
+     * frees buffers.
+     *
+     * @param[in] args The decrypt arguments: key, initialisation vector, crypto mode and pattern, subsamples, and the
+     *     source and destination AVBuffer handles.
+     *
+     * @returns Number of decrypted bytes.
+     *
      * Error codes are returned via binder::status EX_SERVICE_SPECIFIC error codes
      *     Implicit error codes:
      *       + ERROR_DRM_CANNOT_HANDLE in other failure cases
@@ -94,18 +97,16 @@ interface ICryptoPlugin {
     /**
      * Associate a mediadrm session with this crypto session.
      *
-     * The session (if known) can be passed in at creation, or this call can be used. 
+     * The session (if known) can be passed in at creation, or this call can be used.
      * Potentially the sessionID can change if there is a key change.
      *
      * @param sessionId the MediaDrm session ID to associate with
      *     this crypto session
-     * @return (implicit) the status of the call, status can be:
+     *
+     * Errors are reported via binder::status EX_SERVICE_SPECIFIC:
      *     ERROR_DRM_SESSION_NOT_OPENED if the session is not opened, or
      *     ERROR_DRM_CANNOT_HANDLE if the operation is not supported by
      *         the drm scheme
      */
     void setMediaDrmSession(in byte[] sessionId);
-
-
-
 }

@@ -18,10 +18,10 @@
  */
 package com.rdk.hal.audiomixer;
 
+import com.rdk.hal.audiomixer.AQProcessor;
+import com.rdk.hal.audiomixer.OutputFormat;
 import com.rdk.hal.audiomixer.OutputPortProperty;
 import com.rdk.hal.audiomixer.OutputPortType;
-import com.rdk.hal.audiomixer.OutputFormat;
-import com.rdk.hal.audiomixer.AQProcessor;
 
 /**
  * @brief    Capabilities for an audio output port.
@@ -34,27 +34,26 @@ import com.rdk.hal.audiomixer.AQProcessor;
  */
 @VintfStability
 parcelable OutputPortCapabilities {
-
     /**
-    * @brief Human-readable name or role for this output port (e.g., "HDMI", "SPDIF", "Speakers").
-    * @details Required, declared per output port in hfp-audiomixer.yaml under
-    *          outputPorts[].portName. Used for debugging, logging, and
-    *          user-facing diagnostics. For programmatic type identification
-    *          and policy branching, use `portType` instead.
-    */
+     * @brief Human-readable name or role for this output port (e.g., "HDMI", "SPDIF", "Speakers").
+     * @details Required, declared per output port in hfp-audiomixer.yaml under
+     *          outputPorts[].portName. Used for debugging, logging, and
+     *          user-facing diagnostics. For programmatic type identification
+     *          and policy branching, use `portType` instead.
+     */
     String portName;
 
     /**
-    * @brief Programmatic type of this output port.
-    * @details Declared per output port in hfp-audiomixer.yaml under
-    *          outputPorts[].portType. Middleware should branch on this enum
-    *          (not on the string `portName`) when applying type-specific
-    *          policy — e.g. transcode-to-AC3 only on SPDIF, hot-unplug
-    *          handling only on HDMI/ARC/EARC, pairing flow only on BLUETOOTH.
-    *
-    *          Multiple ports of the same type may exist (e.g. two HDMI
-    *          outputs); use `portName` to distinguish them.
-    */
+     * @brief Programmatic type of this output port.
+     * @details Declared per output port in hfp-audiomixer.yaml under
+     *          outputPorts[].portType. Middleware should branch on this enum
+     *          (not on the string `portName`) when applying type-specific
+     *          policy — e.g. transcode-to-AC3 only on SPDIF, hot-unplug
+     *          handling only on HDMI/ARC/EARC, pairing flow only on BLUETOOTH.
+     *
+     *          Multiple ports of the same type may exist (e.g. two HDMI
+     *          outputs); use `portName` to distinguish them.
+     */
     OutputPortType portType;
 
     /**

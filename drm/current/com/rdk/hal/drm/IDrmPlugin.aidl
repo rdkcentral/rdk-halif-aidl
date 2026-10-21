@@ -33,8 +33,8 @@ package com.rdk.hal.drm;
 import com.rdk.hal.drm.DrmMetricGroup;
 import com.rdk.hal.drm.HdcpLevels;
 import com.rdk.hal.drm.IDrmPluginListener;
-import com.rdk.hal.drm.KeySetId;
 import com.rdk.hal.drm.KeyRequest;
+import com.rdk.hal.drm.KeySetId;
 import com.rdk.hal.drm.KeyStatus;
 import com.rdk.hal.drm.KeyType;
 import com.rdk.hal.drm.KeyValue;
@@ -42,7 +42,6 @@ import com.rdk.hal.drm.NumberOfSessions;
 import com.rdk.hal.drm.ProvideProvisionResponseResult;
 import com.rdk.hal.drm.ProvisionRequest;
 import com.rdk.hal.drm.SecurityLevel;
-
 
 /**
  * IDrmPlugin is used to interact with a specific drm plugin that was
@@ -58,7 +57,7 @@ interface IDrmPlugin {
      *
      * @param sessionId the session id the call applies to
      *
-     * @return (implicit) the status of the call:
+     * Errors are reported via binder::status EX_SERVICE_SPECIFIC:
      *     BAD_VALUE if the sessionId is invalid
      *     ERROR_DRM_INVALID_STATE if the HAL is in a state where
      *         the session cannot be closed.
@@ -108,7 +107,7 @@ interface IDrmPlugin {
      * Return the currently negotiated and max supported HDCP levels.
      *
      * For a HDMI source device:
-     * 
+     *
      * The current level is based on the display(s) the device is connected to.
      * If multiple HDCP-capable displays are simultaneously connected to
      * separate interfaces, this method returns the lowest negotiated HDCP level
@@ -121,17 +120,17 @@ interface IDrmPlugin {
      * does not have HDCP 2.x keys, then the maximum HDCP capability would be
      * reported as 1.x. If multiple HDCP-capable interfaces are present, it
      * indicates the highest of the maximum HDCP levels of all interfaces.
-     * 
+     *
      * For a HDMI sink device:
-     * 
-     * On a Smart TV where the SoC is wired directly to the internal panel, 
-     * the DRM stack typically reports the Maximum Security Level the hardware can 
+     *
+     * On a Smart TV where the SoC is wired directly to the internal panel,
+     * the DRM stack typically reports the Maximum Security Level the hardware can
      * attest to.
      *
      * This method should only be used for informational purposes, not for
      * enforcing compliance with HDCP requirements. Trusted enforcement of HDCP
      * policies must be handled by the DRM system.
-     * 
+     *
      * Polling should be avoided or at a level that has very low performance impact on the system.
      *
      * @return HdcpLevels parcelable
@@ -141,7 +140,7 @@ interface IDrmPlugin {
      */
     HdcpLevels getHdcpLevels();
 
-      /**
+    /**
      * A key request/response exchange occurs between the app and a License
      * Server to obtain the keys required to decrypt the content.
      * getKeyRequest() is used to obtain an opaque key request blob that is
@@ -178,8 +177,8 @@ interface IDrmPlugin {
      *             such that a retry of the operation is likely to succeed
      *       + ERROR_DRM_SESSION_NOT_OPENED if the session is not opened
      */
-    KeyRequest getKeyRequest(in byte[] scope, in byte[] initData, in String mimeType,
-            in KeyType keyType, in KeyValue[] optionalParameters);
+    KeyRequest getKeyRequest(
+        in byte[] scope, in byte[] initData, in String mimeType, in KeyType keyType, in KeyValue[] optionalParameters);
 
     /**
      * Returns the plugin-specific metrics. Multiple metric groups may be
@@ -273,8 +272,7 @@ interface IDrmPlugin {
      *             resources such that a retry of the operation is likely
      *             to succeed
      */
-    ProvisionRequest getProvisionRequest(
-            in String certificateType, in String certificateAuthority);
+    ProvisionRequest getProvisionRequest(in String certificateType, in String certificateAuthority);
 
     /**
      * Return the current security level of a session. A session has an initial
@@ -383,7 +381,7 @@ interface IDrmPlugin {
      *
      * @param sessionId the session id the call applies to
      *
-     * @return (implicit) the status of the call:
+     * Errors are reported via binder::status EX_SERVICE_SPECIFIC:
      *     BAD_VALUE if the sessionId is invalid
      *     ERROR_DRM_INVALID_STATE if the HAL is in a state where
      *         the keys cannot be removed.
@@ -416,7 +414,7 @@ interface IDrmPlugin {
      *     Standard Names for Cipher Transforms and is case insensitive. An
      *     example algorithm is "AES/CBC/PKCS5Padding".
      *
-     * @return (implicit) the status of the call:
+     * Errors are reported via binder::status EX_SERVICE_SPECIFIC:
      *     BAD_VALUE if any parameters are invalid
      *     ERROR_DRM_INVALID_STATE  if the HAL is in a state where
      *         the algorithm cannot be set.
@@ -425,7 +423,7 @@ interface IDrmPlugin {
     void setCipherAlgorithm(in byte[] sessionId, in String algorithm);
 
     /**
-     * Plugins call the following methods to deliver events 
+     * Plugins call the following methods to deliver events
      *
      *
      * Set a listener for a drm session. This allows the drm HAL to
@@ -443,7 +441,7 @@ interface IDrmPlugin {
      *     Standard Names for Mac Algorithms and is case insensitive. An example MAC
      *     algorithm string is "HmacSHA256".
      *
-     * @return (implicit) the status of the call:
+     * Errors are reported via binder::status EX_SERVICE_SPECIFIC:
      *     BAD_VALUE if any parameters are invalid
      *     ERROR_DRM_INVALID_STATE  if the HAL is in a state where
      *         the algorithm cannot be set.
@@ -459,7 +457,7 @@ interface IDrmPlugin {
      * @param sessionId drm session id
      * @param playbackId high level playback id
      *
-     * @return (implicit) the status of the call:
+     * Errors are reported via binder::status EX_SERVICE_SPECIFIC:
      *    ERROR_DRM_SESSION_NOT_OPENED if the drm session cannot be found
      */
     void setPlaybackId(in byte[] sessionId, in String playbackId);
@@ -470,7 +468,7 @@ interface IDrmPlugin {
      * @param propertyName the name of the property
      * @param value the value to write
      *
-     * @return (implicit) the status of the call:
+     * Errors are reported via binder::status EX_SERVICE_SPECIFIC:
      *     BAD_VALUE if the property name is invalid
      *     ERROR_DRM_CANNOT_HANDLE if the property is not supported
      *     ERROR_DRM_INVALID_STATE if the HAL is in a state where the
@@ -484,7 +482,7 @@ interface IDrmPlugin {
      * @param propertyName the name of the property
      * @param value the value to write
      *
-     * @return (implicit) status of the call:
+     * Errors are reported via binder::status EX_SERVICE_SPECIFIC:
      *     BAD_VALUE if the property name is invalid
      *     ERROR_DRM_CANNOT_HANDLE if the property is not supported
      *     ERROR_DRM_INVALID_STATE if the HAL is in a state where the
@@ -528,9 +526,7 @@ interface IDrmPlugin {
      *             signRSA operation operation cannot be performed
      *       + ERROR_DRM_SESSION_NOT_OPENED if the session is not opened
      */
-    byte[] signRSA(
-            in byte[] sessionId, in String algorithm, in byte[] message,
-            in byte[] wrappedKey);
+    byte[] signRSA(in byte[] sessionId, in String algorithm, in byte[] message, in byte[] wrappedKey);
 
     /**
      * Compute a hash of the provided message using the mac algorithm specified
@@ -549,8 +545,5 @@ interface IDrmPlugin {
      *       + ERROR_DRM_INVALID_STATE if the HAL is in a state where the
      *             verify operation cannot be performed.
      */
-    boolean verify(
-            in byte[] sessionId, in byte[] keyId, in byte[] message,
-            in byte[] signature);
-
+    boolean verify(in byte[] sessionId, in byte[] keyId, in byte[] message, in byte[] signature);
 }

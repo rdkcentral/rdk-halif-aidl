@@ -27,8 +27,8 @@ import com.rdk.hal.audiomixer.OutputFormat;
  * Encapsulates metadata for a single audio frame stored in shared-memory ring buffer.
  *
  * The data captured by the Audio Capture interface is the same as the data output by the port.
- * When a capture port provides a capture interface for a physical output (e.g. HDMI, Speakers, etc.) 
- * then the captured data is a copy. 
+ * When a capture port provides a capture interface for a physical output (e.g. HDMI, Speakers, etc.)
+ * then the captured data is a copy.
  */
 @VintfStability
 parcelable AudioCaptureData {

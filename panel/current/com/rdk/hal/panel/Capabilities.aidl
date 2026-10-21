@@ -20,24 +20,29 @@ package com.rdk.hal.panel;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.videodecoder.DynamicRange;
- 
-/** 
+
+/**
  *  @brief     Panel capabilities definition.
  *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
  */
 
 @VintfStability
-parcelable Capabilities
-{
+parcelable Capabilities {
     /**
      * The panel type.
      */
     String panelType;
 
+    /** Panel width in pixels. */
     int pixelWidth;
+
+    /** Panel height in pixels. */
     int pixelHeight;
 
-    int widthCm;    // centimeters
+    /** Panel width in centimetres. */
+    int widthCm;
+
+    /** Panel height in centimetres. */
     int heightCm;
 
     /**
@@ -58,15 +63,15 @@ parcelable Capabilities
     /**
      * Array of supported colour temperature presets.
      *
-        * These strings are used directly by `PQParameter.COLOR_TEMPERATURE`
-        * and by colour-temperature-scoped white balance operations.
+     * These strings are used directly by `PQParameter.COLOR_TEMPERATURE`
+     * and by colour-temperature-scoped white balance operations.
      */
-        String[] supportedColourTemperatures;
+    String[] supportedColourTemperatures;
 
     /**
      * All AV sources supported by the panel.
      */
-        PanelSource[] supportedAVSources;
+    PanelSource[] supportedAVSources;
 
     /**
      * All dynamic ranges supported by the panel.
@@ -76,8 +81,7 @@ parcelable Capabilities
     /**
      * Defines the dynamic range and AV source capabilities for a picture mode.
      */
-    parcelable PictureModeCapabilities
-    {
+    parcelable PictureModeCapabilities {
         /**
          * The picture mode.
          */
@@ -87,15 +91,14 @@ parcelable Capabilities
          * Defines the list of dynamic ranges, and the list of AV sources for each
          * dynamic range, that can be associated with a given picture mode.
          */
-        parcelable DynamicRangeCapabilities
-        {
+        parcelable DynamicRangeCapabilities {
             /**
              * The dynamic range that can be associated for the picture mode.
              */
             DynamicRange dynamicRange;
 
             /**
-             * Defines list of AV sources that can be associated for a given 
+             * Defines list of AV sources that can be associated for a given
              * picture mode and a given dynamic range.
              */
             PanelSource[] supportedAVSources;
@@ -111,5 +114,4 @@ parcelable Capabilities
      * Array of picture modes and their capabilities, listing the dynamic ranges and AV sources supported.
      */
     PictureModeCapabilities[] pictureModeCapabilities;
-
 }

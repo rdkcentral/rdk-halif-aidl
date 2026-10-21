@@ -17,12 +17,12 @@
  * limitations under the License.
  */
 package com.rdk.hal.bootreason;
-import com.rdk.hal.bootreason.Capabilities;
-import com.rdk.hal.bootreason.ResetType;
 import com.rdk.hal.bootreason.BootCause;
+import com.rdk.hal.bootreason.Capabilities;
 import com.rdk.hal.bootreason.PowerSource;
+import com.rdk.hal.bootreason.ResetType;
 
-/** 
+/**
  *  @brief     Boot Reason HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -30,15 +30,15 @@ import com.rdk.hal.bootreason.PowerSource;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 
 @VintfStability
-interface IBootReason
-{
+interface IBootReason {
     /** The service name to publish. To be returned by getServiceName() in the derived class. */
     const @utf8InCpp String serviceName = "BootReason";
 
@@ -52,7 +52,7 @@ interface IBootReason
 
     /**
      * Gets the reason the device was booted.
-     * 
+     *
      * @returns BootCause
      *
      */
@@ -64,18 +64,18 @@ interface IBootReason
      * scenarios.
      *
      * @param[in] cause           BootCause value.
-     * @param[in] causeString     Free-form reboot reason string (64 bytes)
+     * @param[in] reasonString    Free-form reboot reason string (64 bytes)
      */
     void setBootCause(in BootCause cause, in String reasonString);
 
     /**
      * Performs a shutdown and warm reboot of the device.
-     * 
+     *
      * A number of reset types can be applied as part of the reboot process.
      * On success this function does not return.
-     * 
+     *
      * @param[in] resetType     ResetType value
-     * @param[in] causeString  Free-form reset reason string (64 bytes)
+     * @param[in] reasonString  Free-form reset reason string (64 bytes)
      */
     void reboot(in ResetType resetType, in String reasonString);
 

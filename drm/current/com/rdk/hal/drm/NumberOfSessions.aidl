@@ -30,6 +30,9 @@
 
 package com.rdk.hal.drm;
 
+/**
+ * The number of drm sessions.
+ */
 @VintfStability
 parcelable NumberOfSessions {
     /** The number of currently opened sessions. */

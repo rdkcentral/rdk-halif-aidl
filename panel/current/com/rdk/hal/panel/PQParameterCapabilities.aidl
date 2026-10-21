@@ -60,23 +60,31 @@ parcelable PQParameterCapabilities {
      */
     @VintfStability
     parcelable IntBounds {
+        /** Minimum value. */
         int minValue;
+        /** Maximum value. */
         int maxValue;
+        /** Spacing between allowed values, for regularly spaced controls. */
         @VintfStability
         parcelable StepValue {
+            /** The step between consecutive allowed values. */
             int value;
         }
+        /** The step value. Null if the allowed values are not regularly spaced. */
         @nullable StepValue stepValue;
     }
 
     /**
-    * Per-dimming-mode level limits used when pqParameter ==
-    * PQParameter.DIMMING_SETTINGS.
+     * Per-dimming-mode level limits used when pqParameter ==
+     * PQParameter.DIMMING_SETTINGS.
      */
     @VintfStability
     parcelable DimmingModeLevelCapability {
+        /** The dimming mode. */
         DimmingMode dimmingMode;
+        /** Number of levels supported for the mode, the length of supportedValues. */
         int numSupportedLevels;
+        /** The levels supported for the mode. */
         DimmingLevel[] supportedValues;
     }
 
@@ -85,6 +93,7 @@ parcelable PQParameterCapabilities {
      */
     @VintfStability
     parcelable DimmingModeLevelCapabilities {
+        /** One entry for each supported dimming mode. */
         DimmingModeLevelCapability[] entries;
     }
 
@@ -93,17 +102,21 @@ parcelable PQParameterCapabilities {
      */
     @VintfStability
     parcelable DimmingSettingsCapabilities {
+        /** The supported dimming levels for each dimming mode. */
         DimmingModeLevelCapabilities modeLevelCapabilities;
     }
 
     /**
-    * Per-tone-mapping-mode level support used when pqParameter ==
-    * PQParameter.TONE_MAPPING_SETTINGS.
+     * Per-tone-mapping-mode level support used when pqParameter ==
+     * PQParameter.TONE_MAPPING_SETTINGS.
      */
     @VintfStability
     parcelable ToneMappingModeLevelCapability {
+        /** The tone-mapping mode. */
         ToneMappingMode toneMappingMode;
+        /** Number of levels supported for the mode, the length of supportedValues. */
         int numSupportedLevels;
+        /** The levels supported for the mode. */
         ToneMappingLevel[] supportedValues;
     }
 
@@ -112,6 +125,7 @@ parcelable PQParameterCapabilities {
      */
     @VintfStability
     parcelable ToneMappingModeLevelCapabilities {
+        /** One entry for each supported tone-mapping mode. */
         ToneMappingModeLevelCapability[] entries;
     }
 
@@ -120,6 +134,7 @@ parcelable PQParameterCapabilities {
      */
     @VintfStability
     parcelable ToneMappingSettingsCapabilities {
+        /** The supported tone-mapping levels for each tone-mapping mode. */
         ToneMappingModeLevelCapabilities modeLevelCapabilities;
     }
 
@@ -128,38 +143,49 @@ parcelable PQParameterCapabilities {
      */
     @VintfStability
     parcelable DvCalibrationBounds {
+        /** The minimum value of each field. */
         DolbyVisionCalibrationSettings minBound;
+        /** The maximum value of each field. */
         DolbyVisionCalibrationSettings maxBound;
     }
 
     /**
      * Capability bounds used when pqParameter == PQParameter.TWO_POINT_WB.
      *
-      * The supported colour temperatures are discrete strings and are listed in
-      * SupportedValues. This structure only carries the allowed numeric ranges
-      * for the RGB gain and offset fields.
+     * The supported colour temperatures are discrete strings and are listed in
+     * SupportedValues. This structure only carries the allowed numeric ranges
+     * for the RGB gain and offset fields.
      */
     @VintfStability
     parcelable TwoPointWBCapabilities {
+        /** Bounds for the red gain. */
         IntBounds redGain;
+        /** Bounds for the red offset. */
         IntBounds redOffset;
+        /** Bounds for the green gain. */
         IntBounds greenGain;
+        /** Bounds for the green offset. */
         IntBounds greenOffset;
+        /** Bounds for the blue gain. */
         IntBounds blueGain;
+        /** Bounds for the blue offset. */
         IntBounds blueOffset;
     }
 
     /**
      * Capability bounds used when pqParameter == PQParameter.MULTI_POINT_WB.
      *
-      * The supported colour temperatures are discrete strings and are listed in
-      * SupportedValues. This structure only carries the fixed min/max bounds for
-      * the red, green, and blue channel values.
+     * The supported colour temperatures are discrete strings and are listed in
+     * SupportedValues. This structure only carries the fixed min/max bounds for
+     * the red, green, and blue channel values.
      */
     @VintfStability
     parcelable MultiPointWBCapabilities {
+        /** Bounds for the red channel values. */
         IntBounds r;
+        /** Bounds for the green channel values. */
         IntBounds g;
+        /** Bounds for the blue channel values. */
         IntBounds b;
     }
 
@@ -168,7 +194,9 @@ parcelable PQParameterCapabilities {
      */
     @VintfStability
     parcelable ColourManagementSettingsBounds {
+        /** The minimum value of each field. */
         ColourManagementSettings minBound;
+        /** The maximum value of each field. */
         ColourManagementSettings maxBound;
     }
 
@@ -180,24 +208,33 @@ parcelable PQParameterCapabilities {
      * Integer-backed parameters may also carry an optional step value so large
      * numeric domains can be represented compactly without enumerating every
      * allowed value.
-        * Structured parcelables such as DolbyVisionCalibrationSettings,
-        * TwoPointWBCapabilities, MultiPointWBCapabilities, and
-        * ColourManagementSettings do not use stepValue. For white balance, the
-        * numeric field limits live in RangeBound while the discrete colour
-        * temperature names live in SupportedValues. When the preset arrays are
-        * omitted or empty, the structured min/max bounds define the full supported
-        * numeric domain.
+     * Structured parcelables such as DolbyVisionCalibrationSettings,
+     * TwoPointWBCapabilities, MultiPointWBCapabilities, and
+     * ColourManagementSettings do not use stepValue. For white balance, the
+     * numeric field limits live in RangeBound while the discrete colour
+     * temperature names live in SupportedValues. When the preset arrays are
+     * omitted or empty, the structured min/max bounds define the full supported
+     * numeric domain.
      */
     @VintfStability
     union RangeBound {
+        /** Bounds for simple integer-backed PQ parameters. */
         IntBounds intBounds;
+        /** Used when pqParameter == PQParameter.DIMMING_SETTINGS. */
         DimmingSettingsCapabilities dimmingSettingsCapabilities;
+        /** Used when pqParameter == PQParameter.TONE_MAPPING_SETTINGS. */
         ToneMappingSettingsCapabilities toneMappingSettingsCapabilities;
+        /** Used when pqParameter == PQParameter.DV_CALIBRATION. */
         DvCalibrationBounds dvCalibrationBounds;
+        /** Used when pqParameter == PQParameter.TWO_POINT_WB. */
         TwoPointWBCapabilities twoPointWBCapabilities;
+        /** Used when pqParameter == PQParameter.MULTI_POINT_WB. */
         MultiPointWBCapabilities multiPointWBCapabilities;
+        /** Used when pqParameter == PQParameter.COLOUR_MANAGEMENT_SETTINGS. */
         ColourManagementSettingsBounds colourManagementSettingsBounds;
     }
+
+    /** The bounds for the PQ parameter. Null if the parameter uses supportedValues only. */
     @nullable RangeBound rangeBound;
 
     /**
@@ -264,8 +301,9 @@ parcelable PQParameterCapabilities {
          * Specific grouped tone-mapping presets that are supported.
          */
         @nullable ToneMappingSettings[] supportedToneMappingSettingsValues;
-
     }
+
+    /** The discrete preset values for the PQ parameter. Null if it uses rangeBound only. */
     @nullable SupportedValues supportedValues;
 
     /**
@@ -273,6 +311,7 @@ parcelable PQParameterCapabilities {
      */
     @VintfStability
     parcelable PQParamPictureModeCapabilities {
+        /** The picture mode. */
         String pictureMode;
 
         /**
@@ -280,10 +319,13 @@ parcelable PQParameterCapabilities {
          */
         @VintfStability
         parcelable PQParamDynamicRangeCapabilities {
+            /** The dynamic range. */
             DynamicRange dynamicRange;
+            /** The AV sources for which the PQ parameter is supported in this picture mode and dynamic range. */
             PanelSource[] supportedAVSources;
         }
 
+        /** The dynamic ranges, and their AV sources, supported for this picture mode. */
         PQParamDynamicRangeCapabilities[] pqParamDynamicRangeCapabilities;
     }
 

@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package com.rdk.hal.audiomixer;
+package com.rdk.hal.audiomixer;
 
 /**
  * @brief     Audio Quality Processor type.
@@ -29,7 +29,7 @@
  * @author   Gerald Weatherup
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum AQProcessor {
     /** Undefined or no AQ processor. */
     UNDEFINED = 0,

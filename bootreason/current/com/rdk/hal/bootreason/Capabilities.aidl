@@ -20,7 +20,7 @@ package com.rdk.hal.bootreason;
 import com.rdk.hal.bootreason.BootCause;
 import com.rdk.hal.bootreason.ResetType;
 
-/** 
+/**
  *  @brief     Boot service capabilities definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -28,8 +28,7 @@ import com.rdk.hal.bootreason.ResetType;
  */
 
 @VintfStability
-parcelable Capabilities
-{
+parcelable Capabilities {
     /** Array of boot causes supported by the boot service. */
     BootCause[] supportedBootCauses;
 

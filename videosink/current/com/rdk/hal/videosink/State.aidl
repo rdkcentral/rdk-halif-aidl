@@ -34,7 +34,7 @@ package com.rdk.hal.videosink;
  *  @author    Gerald Weatherup
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum State {
 
     /** Initial / unknown state. */

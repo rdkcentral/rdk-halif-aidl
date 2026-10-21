@@ -17,10 +17,10 @@
  * limitations under the License.
  */
 package com.rdk.hal.avclock;
-import com.rdk.hal.avclock.State;
 import com.rdk.hal.avclock.ClockTime;
+import com.rdk.hal.avclock.State;
 
-/** 
+/**
  *  @brief     Controller callbacks listener interface from AV Clock.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -29,9 +29,8 @@ import com.rdk.hal.avclock.ClockTime;
 
 @VintfStability
 oneway interface IAVClockControllerListener {
-  
     /**
-	 * Callback when the AV Clock has transitioned to a new state.
+     * Callback when the AV Clock has transitioned to a new state.
      *
      * @param[in] oldState	            The state transitioned from.
      * @param[in] newState              The new state transitioned to.
@@ -63,4 +62,4 @@ oneway interface IAVClockControllerListener {
      * @see ClockMode
      */
     void onPrimed(in ClockTime currentClockTime);
- }
+}

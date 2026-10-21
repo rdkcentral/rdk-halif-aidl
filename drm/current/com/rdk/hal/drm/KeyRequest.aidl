@@ -31,6 +31,9 @@ package com.rdk.hal.drm;
 
 import com.rdk.hal.drm.KeyRequestType;
 
+/**
+ * A key request to be sent to a license server.
+ */
 @VintfStability
 parcelable KeyRequest {
     /** The opaque key request blob. */

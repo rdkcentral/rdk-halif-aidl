@@ -34,8 +34,7 @@ package com.rdk.hal.hdmioutput;
  */
 @VintfStability
 @Backing(type = "int")
-enum Property
-{
+enum Property {
     /**
      * Unique ID for the HDMI output resource instance.
      *

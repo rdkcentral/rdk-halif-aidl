@@ -44,40 +44,40 @@ oneway interface IAudioCaptureListener {
      * @param[in] metadata Audio frame metadata (channels, sample rate, timestamp, format).
      *
      * The client must call IAudioCapture.releaseData(offsetBytes, lengthBytes) after reading.
-     * 
-     * @returns Void (one-way result does not wait for callback completion).
+     *
+     * This is a one-way call; it does not wait for the callback to complete.
      */
     void onDataAvailable(in long offsetBytes, in int lengthBytes, in AudioCaptureData metadata);
 
     /**
      * @brief Called when audio capture stream has successfully started.
-     * 
+     *
      * Signals that the capture interface has transitioned to active/streaming state
      * and audio frames are being delivered via onDataAvailable() calls.
-     * 
-     * @returns Void (one-way result does not wait for callback completion).
+     *
+     * This is a one-way call; it does not wait for the callback to complete.
      */
     void onStarted();
 
     /**
      * @brief Called when audio capture stream has stopped.
-     * 
+     *
      * Signals that the capture interface has transitioned to idle/stopped state.
      * No further onDataAvailable() callbacks will be delivered.
-     * 
-     * @returns Void (one-way result does not wait for callback completion).
+     *
+     * This is a one-way call; it does not wait for the callback to complete.
      */
     void onStopped();
 
     /**
      * @brief Called when an error occurs during audio capture.
      * ERROR_OVERFLOW indicates new incoming data was dropped and is lost.
-     * 
+     *
      * @param[in] error Error code indicating the type of failure.
      * @param[in] message Human-readable error description.
-     * 
-     * @returns Void (one-way result does not wait for callback completion).
-     * 
+     *
+     * This is a one-way call; it does not wait for the callback to complete.
+     *
      * @exception None (one-way interface never throws).
      */
     void onError(in AudioCaptureError error, in String message);

@@ -27,6 +27,8 @@ package com.rdk.hal.panel;
  */
 @VintfStability
 parcelable PanelSource {
+    /** The source family, for example HDMI, COMPOSITE, DTV, IP, AUTO or UNKNOWN. */
     String type;
+    /** The concrete source within the family, for example 1 or 2 for HDMI inputs. Null if not specified. */
     @nullable String instance;
 }

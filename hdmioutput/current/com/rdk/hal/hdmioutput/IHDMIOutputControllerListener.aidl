@@ -18,8 +18,8 @@
  */
 package com.rdk.hal.hdmioutput;
 
-import com.rdk.hal.hdmioutput.HDCPStatus;
 import com.rdk.hal.hdmioutput.HDCPProtocolVersion;
+import com.rdk.hal.hdmioutput.HDCPStatus;
 
 /**
  *  @brief     Controller callbacks listener interface from HDMI output.
@@ -36,8 +36,7 @@ import com.rdk.hal.hdmioutput.HDCPProtocolVersion;
  *  @author    Gerald Weatherup
  */
 @VintfStability
-oneway interface IHDMIOutputControllerListener
-{
+oneway interface IHDMIOutputControllerListener {
     /**
      * Device hotplug state changed event.
      *

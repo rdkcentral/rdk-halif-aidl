@@ -27,7 +27,6 @@ package com.rdk.hal.sensor.thermal;
 
 @VintfStability
 parcelable TemperatureReading {
-    
     /** @brief Human-readable identifier (e.g., "SoC Die", "DDR", "PMIC"). */
     String sensorName;
 
@@ -40,12 +39,14 @@ parcelable TemperatureReading {
     /** @brief Monotonic timestamp (ms) when this reading was sampled. */
     long timestampMonotonicMs;
 
-    /** @brief Optional vendor reason/diagnostic code.
+    /**
+     * @brief Optional vendor reason/diagnostic code.
      *         Used for telemetry or diagnostics.
      */
     int vendorCode;
 
-    /** @brief Optional vendor info string (domain, details, etc.).
+    /**
+     * @brief Optional vendor info string (domain, details, etc.).
      *         May be null or empty, and used for telemetry or diagnostics.
      */
     String vendorInfo;

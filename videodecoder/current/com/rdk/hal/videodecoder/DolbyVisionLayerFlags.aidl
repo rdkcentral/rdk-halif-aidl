@@ -36,7 +36,6 @@ package com.rdk.hal.videodecoder;
  */
 @VintfStability
 parcelable DolbyVisionLayerFlags {
-
     /**
      * true if a Dolby Vision Base Layer is present.
      */

@@ -31,7 +31,10 @@ import com.rdk.hal.panel.WhiteBalanceMultiPointSettings;
  */
 @VintfStability
 union PQParameterValue {
-    /** Integer value used by all PQ parameters except SDR_GAMMA, COLOR_TEMPERATURE, DIMMING_SETTINGS, DV_CALIBRATION, TWO_POINT_WB, MULTI_POINT_WB, COLOUR_MANAGEMENT_SETTINGS, and TONE_MAPPING_SETTINGS. */
+    /**
+     * Integer value used by all PQ parameters except SDR_GAMMA, COLOR_TEMPERATURE, DIMMING_SETTINGS, DV_CALIBRATION,
+     * TWO_POINT_WB, MULTI_POINT_WB, COLOUR_MANAGEMENT_SETTINGS, and TONE_MAPPING_SETTINGS.
+     */
     int intValue;
     /** SDR gamma value used when pqParameter == PQParameter.SDR_GAMMA. */
     SDRGamma sdrGamma;
@@ -41,9 +44,15 @@ union PQParameterValue {
     DimmingSettings dimmingSettings;
     /** Dolby Vision calibration settings used when pqParameter == PQParameter.DV_CALIBRATION. */
     DolbyVisionCalibrationSettings dvCalibrationSettings;
-    /** Aggregate 2-point white balance settings used when pqParameter == PQParameter.TWO_POINT_WB; the array contains the full bundle for the resolved selector context. */
+    /**
+     * Aggregate 2-point white balance settings used when pqParameter == PQParameter.TWO_POINT_WB; the array contains
+     * the full bundle for the resolved selector context.
+     */
     TwoPointWB[] twoPointWBSettings;
-    /** Aggregate multi-point white balance settings used when pqParameter == PQParameter.MULTI_POINT_WB; the array contains the full bundle for the resolved selector context. */
+    /**
+     * Aggregate multi-point white balance settings used when pqParameter == PQParameter.MULTI_POINT_WB; the array
+     * contains the full bundle for the resolved selector context.
+     */
     WhiteBalanceMultiPointSettings[] multiPointWBSettings;
     /** Grouped colour-management settings used when pqParameter == PQParameter.COLOUR_MANAGEMENT_SETTINGS. */
     ColourManagementSettings colourManagementSettings;

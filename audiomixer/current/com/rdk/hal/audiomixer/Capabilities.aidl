@@ -44,7 +44,7 @@ parcelable Capabilities {
      * List of property keys supported by this mixer.
      * e.g. MIXING_MODE and MUTE.
      */
-    Property[] supportedProperties; 
+    Property[] supportedProperties;
 
     /**
      * @brief Describes the available audio mixer input specifications.
@@ -67,10 +67,9 @@ parcelable Capabilities {
     MixerInput[] inputs;
 
     /**
-    * @brief Human-readable name for this audio mixer instance.
-    * May be null if not set by the platform.
-    *          Although optional, this field is intended to aid debugging, logging, and platform introspection.
-    */
+     * @brief Human-readable name for this audio mixer instance.
+     * May be null if not set by the platform.
+     *          Although optional, this field is intended to aid debugging, logging, and platform introspection.
+     */
     @nullable String name;
-
 }

@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.hdmioutput;
 
-/** 
+/**
  *  @brief     HDMI HDR output mode enum.
  *
  *  Defines the HDR output encoding mode for HDMI video signals.
@@ -32,8 +32,7 @@ package com.rdk.hal.hdmioutput;
  */
 @VintfStability
 @Backing(type = "int")
-enum HDROutputMode
-{
+enum HDROutputMode {
     /**
      * Automatically switches based on primary video content,
      * or outputs SDR when no HDR content is active.

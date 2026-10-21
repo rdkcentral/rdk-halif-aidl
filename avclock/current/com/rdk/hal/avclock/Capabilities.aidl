@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.avclock;
- 
-/** 
+
+/**
  *  @brief     AV Clock capabilities definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -26,6 +26,4 @@ package com.rdk.hal.avclock;
  */
 
 @VintfStability
-parcelable Capabilities
-{
-}
+parcelable Capabilities {}

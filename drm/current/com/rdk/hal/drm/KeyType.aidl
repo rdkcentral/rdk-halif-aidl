@@ -29,8 +29,11 @@
 
 package com.rdk.hal.drm;
 
+/**
+ * The type of keys being requested.
+ */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum KeyType {
     /**
      * Drm keys can be for offline content or for online streaming.

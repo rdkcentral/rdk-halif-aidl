@@ -34,7 +34,10 @@ package com.rdk.hal.drm;
  */
 @VintfStability
 union DrmMetricValue {
+    /** The value as a 64-bit integer. */
     long int64Value;
+    /** The value as a double. */
     double doubleValue;
+    /** The value as a string. */
     String stringValue;
 }

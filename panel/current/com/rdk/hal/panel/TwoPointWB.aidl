@@ -27,8 +27,7 @@ package com.rdk.hal.panel;
  */
 
 @VintfStability
-parcelable TwoPointWB
-{
+parcelable TwoPointWB {
     /**
      * Colour temperature profile this white balance entry applies to.
      */

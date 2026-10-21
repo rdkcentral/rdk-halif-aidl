@@ -17,25 +17,25 @@
  * limitations under the License.
  */
 package com.rdk.hal.bootreason;
- 
-/** 
+
+/**
  *  @brief     Reset types.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
 
-@VintfStability 
+@VintfStability
 @Backing(type = "int")
 enum ResetType {
 
-    /** 
+    /**
      * Upon restart, the system shall come up and delete all persistent data partitions and recreate them.
      * BootCause will be reported as WARM_RESET
      */
     FULL_SYSTEM_RESET = 0,
 
-    /** 
+    /**
      * Upon restart, the current application image is invalidated and shall NOT be selected for loading
      * on the next boot. If the platform supports multiple application image banks then the alternate
      * bank should be selected; otherwise the Disaster Recovery Image (DRI) will be loaded.
@@ -47,7 +47,7 @@ enum ResetType {
      */
     INVALIDATE_CURRENT_APPLICATION_IMAGE = 1,
 
-    /** 
+    /**
      * Upon restart, the system shall enter disaster recovery mode by loading the
      * Disaster Recovery Image (DRI).
      * BootCause will be reported as WARM_RESET
@@ -71,8 +71,8 @@ enum ResetType {
     MAINTENANCE_REBOOT = 3,
 
     /**
-     * Performing Reboot for a Software reason (which is specifically not a Maintenance Reboot). The caller **MUST** set the reasonString
-     * BootCause will be reported as WARM_RESET, unless overridden by setBootCause prior to reboot.
+     * Performing Reboot for a Software reason (which is specifically not a Maintenance Reboot). The caller **MUST** set
+     * the reasonString BootCause will be reported as WARM_RESET, unless overridden by setBootCause prior to reboot.
      */
     SOFTWARE_REBOOT = 4,
 }

@@ -27,30 +27,30 @@ import com.rdk.hal.videodecoder.IVideoDecoder;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 
 @VintfStability
-interface IVideoDecoderManager
-{
+interface IVideoDecoderManager {
     /** The service name to publish. To be returned by getServiceName() in the derived class. */
     const @utf8InCpp String serviceName = "VideoDecoderManager";
 
     /**
-	 * Gets the platform list of Video Decoder IDs.
+     * Gets the platform list of Video Decoder IDs.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns IVideoDecoder.Id[]
      *
      */
-	IVideoDecoder.Id[] getVideoDecoderIds();
+    IVideoDecoder.Id[] getVideoDecoderIds();
 
     /**
-	 * Gets a Video Decoder interface.
+     * Gets a Video Decoder interface.
      *
      * @param[in] videoDecoderId	The ID of the video decoder.
      *
@@ -60,5 +60,4 @@ interface IVideoDecoderManager
      *
      */
     @nullable IVideoDecoder getVideoDecoder(in IVideoDecoder.Id videoDecoderId);
-
 }

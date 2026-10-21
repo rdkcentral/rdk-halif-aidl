@@ -30,7 +30,6 @@ package com.rdk.hal.videodecoder;
 
 @VintfStability
 parcelable MasteringDisplayInfo {
-
     /**
      * CIE 1931 chromaticity coordinate for the green display primary, x-axis.
      * Scaled by 50000. Range: 0-50000.
