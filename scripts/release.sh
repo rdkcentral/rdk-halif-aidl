@@ -13,6 +13,45 @@
 
 set -euo pipefail
 
+# ----------------------------------------------------------------------------
+# Platform guard — GNU userland + bash 4+ required.
+# ----------------------------------------------------------------------------
+# This script leans on GNU/bash-4 behaviour throughout: associative arrays
+# (declare -A), mapfile, find -printf, and GNU sed's `-i -E`.
+#
+# The dangerous one is `sed -i -E`. BSD/macOS sed reads -i's argument as a
+# BACKUP SUFFIX, so `sed -i -E 's/.../.../' file` silently treats "-E" as the
+# suffix and writes a stray `file-E` instead of editing in place — no error,
+# no diagnostic, and a release that looks like it worked but changed nothing.
+#
+# Fail loudly and early instead. Deliberately written to run under bash 3.2
+# (no associative arrays, no mapfile) so macOS reaches this message rather
+# than dying on a cryptic `declare: -A: invalid option`.
+_platform_problems=""
+if [ -z "${BASH_VERSINFO:-}" ] || [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
+    _platform_problems="${_platform_problems}
+  - bash 4+ required (found ${BASH_VERSION:-unknown}); needs declare -A and mapfile."
+fi
+if ! sed --version 2>/dev/null | grep -q 'GNU sed'; then
+    _platform_problems="${_platform_problems}
+  - GNU sed required; BSD sed misreads 'sed -i -E' and writes stray *-E files."
+fi
+if ! find --version 2>/dev/null | grep -q 'GNU findutils'; then
+    _platform_problems="${_platform_problems}
+  - GNU findutils required; BSD find has no -printf."
+fi
+if [ -n "${_platform_problems}" ]; then
+    printf 'ERROR: release.sh requires a GNU userland (Linux).%s\n' "${_platform_problems}" >&2
+    printf '\nOn macOS: run this on a Linux host, or install GNU tools and put them\n' >&2
+    printf 'first on PATH:\n' >&2
+    printf '    brew install bash gnu-sed findutils\n' >&2
+    printf '    PATH="$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$(brew --prefix)/opt/findutils/libexec/gnubin:$PATH"\n' >&2
+    printf '\nOverride at your own risk with SKIP_PLATFORM_CHECK=1.\n' >&2
+    [ "${SKIP_PLATFORM_CHECK:-0}" = "1" ] || exit 1
+    printf 'SKIP_PLATFORM_CHECK=1 set — continuing anyway.\n' >&2
+fi
+unset _platform_problems
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${REPO_ROOT}"
@@ -323,7 +362,7 @@ run_verification_build() {
 # there; `drop <module>` reverts them. No separate YAML file.
 #
 # Subcommands:
-#   ./release.sh stage <module> [--version X.Y.Z.W]     write snapshot + metadata
+#   ./release.sh stage <module>... [--version X.Y.Z.W]  write snapshot + metadata
 #   ./release.sh stage all                              same, for every qualifying module
 #   ./release.sh drop  <module>                         revert the writes
 #   ./release.sh plan                                   read-only table view
@@ -538,22 +577,33 @@ case "${1:-}" in
             # No more positional args expected; any --flags fall through.
         else
             _add_ver=""
-            shift || true
+            _last_comp=""
+            _staged_any=0
             while [[ $# -gt 0 ]]; do
                 case "$1" in
-                    --version) [[ $# -ge 2 ]] || die "--version requires a value"
-                               _add_ver="$2"; shift 2 ;;
-                    *) die "stage: unknown option $1" ;;
+                    --version)
+                        [[ $# -ge 2 ]] || die "--version requires a value"
+                        [[ -n "${_last_comp}" ]] \
+                            || die "stage: --version must follow a <module> name."
+                        PIN_VERSIONS[${_last_comp}]="$2"
+                        shift 2
+                        ;;
+                    # Not a stage option — hand the rest to the main parser so
+                    # `stage <module> --no-build` works like `stage all` does.
+                    -*) break ;;
+                    *)
+                        [[ -f "${REPO_ROOT}/${1}/metadata.yaml" ]] \
+                            || die "stage: ${1}/metadata.yaml not found — no such component."
+                        STAGE_AND_WRITE_MODULES+=("${1}")
+                        _last_comp="${1}"
+                        _staged_any=1
+                        shift
+                        ;;
                 esac
             done
-            # Validate the module exists.
-            [[ -n "${_add_comp}" ]] || die "stage: missing <module> argument. Usage: ./release.sh stage <module> [--version X.Y.Z.W]"
-            [[ -f "${REPO_ROOT}/${_add_comp}/metadata.yaml" ]] \
-                || die "stage: ${_add_comp}/metadata.yaml not found — no such component."
-            # Push onto the write-pipeline queue + record any version pin.
-            STAGE_AND_WRITE_MODULES+=("${_add_comp}")
+            [[ "${_staged_any}" -eq 1 ]] \
+                || die "stage: missing <module> argument. Usage: ./release.sh stage <module>... [--version X.Y.Z.W]"
             STAGE_AND_WRITE=1
-            [[ -n "${_add_ver}" ]] && PIN_VERSIONS[${_add_comp}]="${_add_ver}"
             # Fall through to the standard pipeline; it processes the queue.
         fi
         ;;
@@ -643,7 +693,7 @@ usage() {
 Release Version Bump Tool
 
 Subcommands (manage what's staged for the next release):
-  ./release.sh stage <module> [--version X.Y.Z.W]     stage module (auto-bump unless --version pinned)
+  ./release.sh stage <module>... [--version X.Y.Z.W]   stage module(s) (auto-bump unless --version pinned)
   ./release.sh drop   <module>                         unstage module
   ./release.sh plan                                    show current plan
   ./release.sh check  [<module>]                       preview detected changes for ALL touched
@@ -775,6 +825,9 @@ Environment:
                          would be wrong.
   SKIP_SDK_BOOTSTRAP=1   Skip the toolchain/SDK preflight entirely.
   SKIP_LINK_CHECK=1      Skip the repo-root markdown link validation.
+  SKIP_PLATFORM_CHECK=1  Skip the GNU-userland / bash-4 guard. Risky: BSD sed
+                         misreads `sed -i -E` as a backup suffix and silently
+                         writes stray *-E files instead of editing in place.
 
 Behavior (#712 change-class labels — label names mean what the fields mean):
   - "Major Change"    label   => major bump (0.g.m.p -> 0.(g+1).0.0) — breaking
@@ -1355,9 +1408,11 @@ fi
 # Mapping:
 #   bare ./release.sh              read-only plan/check view (DO_WRITES=0, DO_BRANCH=0)
 #   ./release.sh <module>...       writes for staged modules (DO_WRITES=1, DO_BRANCH=0)
-#   ./release.sh --apply           branch + commit + tag only (DO_WRITES=0, DO_BRANCH=1).
+#   ./release.sh --apply           branch (+ commit/push with --commit) only
+#                                  (DO_WRITES=0, DO_BRANCH=1). No tag — git
+#                                  flow release finish makes that on main.
 #                                  Writes are expected to be done already by
-#                                  prior `./release.sh <module>` invocations.
+#                                  prior `./release.sh stage <module>` runs.
 DO_WRITES=0
 DO_BRANCH=0
 if [[ "${STAGE_AND_WRITE}" -eq 1 ]]; then
