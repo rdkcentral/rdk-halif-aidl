@@ -17,17 +17,17 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiosink;
- 
-/** 
+
+/**
  * @brief     AV source type definitions.
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
  * @author    Douglas Adler
  */
- 
+
 @VintfStability
 @Backing(type="int")
-enum AVSource {   
+enum AVSource {
 
 	/**
 	 * Source is automatically determined by the system.
