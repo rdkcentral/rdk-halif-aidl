@@ -54,6 +54,16 @@ phase() { echo "${_C_CYAN}==>${_C_RESET} ${_C_BOLD}$*${_C_RESET}" >&2; }
 warn()  { echo "${_C_YELLOW}WARN:${_C_RESET} $*" >&2; }
 die()   { echo "${_C_RED}${_C_BOLD}ERROR:${_C_RESET} ${_C_RED}$*${_C_RESET}" >&2; exit 1; }
 
+# Rewrite a component's metadata.yaml `version:` field. Defined here with the
+# other primitives because --refresh-metadata (early in the flow) and the
+# release write loop (late) both call it.
+update_metadata() {
+    local file="$1"
+    local new_version="$2"
+
+    sed -i -E "s/^version:.*/version: ${new_version}/" "${file}"
+}
+
 # ----------------------------------------------------------------------------
 # Markdown link validation (#626)
 # ----------------------------------------------------------------------------
@@ -620,6 +630,8 @@ STAGE_AND_WRITE="${STAGE_AND_WRITE:-0}"
 APPLY="${APPLY:-0}"
 COMMIT="${COMMIT:-0}"
 COMPLETE="${COMPLETE:-0}"
+REFRESH_METADATA="${REFRESH_METADATA:-0}"
+REFRESH_CHECK_ONLY="${REFRESH_CHECK_ONLY:-0}"
 DRY_RUN="${DRY_RUN:-0}"
 SINCE_REF="${SINCE_REF:-}"
 NO_GH="${NO_GH:-0}"
@@ -643,6 +655,13 @@ Subcommands (manage what's staged for the next release):
                                                        <comp>/<version>/ snapshot dirs and
                                                        docs/releases/X.Y.Z.md, and wipe the plan.
                                                        Use after --apply or to abort a half-done run.
+
+Metadata + RAG report refresh:
+  ./release.sh --refresh-metadata                      sync metadata.yaml version: to the tracked
+                                                       snapshot, regenerate RAG_STATUS_REPORT.md,
+                                                       git add both, stop. Operator commits.
+  ./release.sh --check-metadata                        same comparison, read-only, non-zero exit
+                                                       if either is stale. Suitable for CI.
 
 Release run (no subcommand):
   ./scripts/release.sh [--dry-run] [--apply] [--since <ref>]
@@ -683,11 +702,12 @@ Modes:
                 versions_released.yaml, mkdocs.yml, generate
                 docs/releases/X.Y.Z.md skeleton, prepend the CHANGELOG.md
                 section, run both verification builds, then create the
-                release/X.Y.Z branch + X.Y.Z tag. Operator pushes
-                manually after review.
+                release/X.Y.Z branch. With --commit it also commits and
+                pushes that branch. No tag is created here — `git flow
+                release finish X.Y.Z` makes the tag on main.
 
-  --dry-run     Alias of the default — same read-only view. Kept for
-                operators who reach for the explicit flag out of habit.
+  --dry-run     Read-only like the default, plus a step-by-step preview of
+                the pipeline the default run would execute.
 
   --complete    Ship the release end-to-end from an already-committed
                 release/X.Y.Z branch. Must be run AFTER --apply --commit
@@ -704,6 +724,17 @@ Modes:
                 from the first incomplete step.
 
 Options:
+  --commit               On --apply, also commit the release artefacts and
+                         push the release/X.Y.Z branch, then deploy the
+                         versioned docs. Without it --apply stages only and
+                         stops for review via `git diff --cached`.
+  --refresh-metadata     Sync metadata.yaml version: to the highest tracked
+                         snapshot, regenerate RAG_STATUS_REPORT.md, git add
+                         both, and exit. Runs nothing else — no detector, no
+                         snapshot, no build, no branch.
+  --check-metadata       Read-only form of the above. Exits non-zero if
+                         metadata.yaml or the report is stale. The report's
+                         Generated date is ignored in the comparison.
   --since <ref>          Base reference to diff from (default: nearest
                          reachable tag).
   --release-version X.Y.Z
@@ -804,6 +835,15 @@ while [[ $# -gt 0 ]]; do
             COMPLETE=1
             shift
             ;;
+        --refresh-metadata)
+            REFRESH_METADATA=1
+            shift
+            ;;
+        --check-metadata)
+            REFRESH_METADATA=1
+            REFRESH_CHECK_ONLY=1
+            shift
+            ;;
         --dry-run)
             DRY_RUN=1
             shift
@@ -856,6 +896,149 @@ while [[ $# -gt 0 ]]; do
 done
 
 [[ "${DRY_RUN}" -eq 1 && "${APPLY}" -eq 1 ]] && die "--dry-run and --apply are mutually exclusive"
+
+# ----------------------------------------------------------------------------
+# --refresh-metadata / --check-metadata
+# ----------------------------------------------------------------------------
+#
+# metadata.yaml is the SOURCE OF TRUTH, not a generated file: `status`,
+# `reviewers`, `description`, `scope` and `notes` are human judgements that no
+# script can derive. Only two things about it are machine-owned:
+#
+#   1. `version:` — must equal the highest frozen <comp>/<version>/ snapshot
+#      actually tracked in git (the field header says "[release.sh] ... Do not
+#      edit by hand").
+#   2. RAG_STATUS_REPORT.md — generated FROM every metadata.yaml.
+#
+# release.sh already maintains both, but only on a write path with something
+# staged. A PR that edits metadata.yaml alone (say, flipping reviewers to
+# `recheck` after a breaking change) therefore leaves the committed report
+# stale until the next release — which is exactly how videodecoder advertised
+# "4/4 reviewed" for seven weeks while its metadata said `recheck`.
+#
+# This mode closes that gap without touching the release pipeline:
+#   --refresh-metadata   sync version:, regenerate the report, git add both,
+#                        and stop. The operator reviews and commits.
+#   --check-metadata     same comparison, writes nothing, non-zero exit if
+#                        anything is out of date. Suitable for CI.
+#
+# The report embeds today's date, so the comparison deliberately ignores the
+# `Generated` row — otherwise a check would fail every day regardless of
+# content.
+if [[ "${REFRESH_METADATA}" -eq 1 ]]; then
+    if [[ "${REFRESH_CHECK_ONLY}" -eq 1 ]]; then
+        phase "Checking metadata.yaml + RAG_STATUS_REPORT.md are up to date (read-only)"
+    else
+        phase "Refreshing metadata.yaml + RAG_STATUS_REPORT.md"
+    fi
+    log ""
+
+    _refresh_stale=0
+
+    # 1. version: must match the highest tracked snapshot dir.
+    _version_fixed=()
+    _version_unreleased=()
+    for _meta in "${REPO_ROOT}"/*/metadata.yaml; do
+        [[ -f "${_meta}" ]] || continue
+        _comp="${_meta%/metadata.yaml}"
+        _comp="${_comp#${REPO_ROOT}/}"
+        _meta_ver="$(awk -F': *' '$1=="version"{print $2; exit}' "${_meta}")"
+        # Highest frozen snapshot tracked in git for this component.
+        # `|| true`: grep exits 1 when a component has no frozen snapshot yet,
+        # which under `set -o pipefail` would abort the whole run.
+        _tracked_ver="$(git -C "${REPO_ROOT}" ls-tree -d --name-only HEAD "${_comp}/" 2>/dev/null \
+            | awk -F/ '{print $NF}' \
+            | grep -E '^[0-9]+(\.[0-9]+){2,3}$' \
+            | sort -V | tail -1 || true)"
+        if [[ -z "${_tracked_ver}" ]]; then
+            # Never released — nothing to derive from, so metadata.yaml's
+            # value is the only statement of intent. Report, never rewrite.
+            _version_unreleased+=("${_comp} (metadata.yaml=${_meta_ver:-unset})")
+            continue
+        fi
+        [[ "${_meta_ver}" == "${_tracked_ver}" ]] && continue
+        _refresh_stale=1
+        _version_fixed+=("${_comp}: ${_meta_ver:-unset} -> ${_tracked_ver}")
+        if [[ "${REFRESH_CHECK_ONLY}" -ne 1 ]]; then
+            update_metadata "${_meta}" "${_tracked_ver}"
+            (cd "${REPO_ROOT}" && git add -- "${_comp}/metadata.yaml") || \
+                warn "git add ${_comp}/metadata.yaml failed"
+        fi
+    done
+
+    if [[ ${#_version_fixed[@]} -gt 0 ]]; then
+        if [[ "${REFRESH_CHECK_ONLY}" -eq 1 ]]; then
+            warn "metadata.yaml version: disagrees with the tracked snapshot:"
+        else
+            log "  version: synced to the highest tracked snapshot:"
+        fi
+        for _f in "${_version_fixed[@]}"; do log "      ${_f}"; done
+    else
+        log "  ✓ every released component's version: matches its tracked snapshot"
+    fi
+    if [[ ${#_version_unreleased[@]} -gt 0 ]]; then
+        log ""
+        log "  ℹ️  No released snapshot yet (version: left as declared):"
+        for _f in "${_version_unreleased[@]}"; do log "      ${_f}"; done
+    fi
+
+    # 2. RAG_STATUS_REPORT.md — regenerate and compare ignoring the date row.
+    log ""
+    _rag_script="${REPO_ROOT}/scripts/generate_rag_report.sh"
+    _rag_report="${REPO_ROOT}/RAG_STATUS_REPORT.md"
+    if [[ ! -x "${_rag_script}" ]]; then
+        warn "scripts/generate_rag_report.sh not executable — skipping report refresh."
+    else
+        _rag_before="$(mktemp)"
+        cp "${_rag_report}" "${_rag_before}" 2>/dev/null || : >"${_rag_before}"
+        if ! "${_rag_script}" >/dev/null; then
+            rm -f "${_rag_before}"
+            die "generate_rag_report.sh failed."
+        fi
+        # `Generated` carries today's date; comparing it would make the check
+        # fail every day regardless of content.
+        if diff -q <(grep -v '^| \*\*Generated\*\*' "${_rag_before}") \
+                   <(grep -v '^| \*\*Generated\*\*' "${_rag_report}") >/dev/null 2>&1; then
+            log "  ✓ RAG_STATUS_REPORT.md already up to date"
+            # Restore the original so a no-op refresh doesn't dirty the
+            # worktree with nothing but a date change.
+            cp "${_rag_before}" "${_rag_report}"
+        else
+            _refresh_stale=1
+            if [[ "${REFRESH_CHECK_ONLY}" -eq 1 ]]; then
+                warn "RAG_STATUS_REPORT.md is out of date with respect to metadata.yaml:"
+                diff <(grep -v '^| \*\*Generated\*\*' "${_rag_before}") \
+                     <(grep -v '^| \*\*Generated\*\*' "${_rag_report}") \
+                    | head -40 >&2 || true
+                cp "${_rag_before}" "${_rag_report}"
+            else
+                log "  ✓ RAG_STATUS_REPORT.md regenerated"
+                (cd "${REPO_ROOT}" && git add -- RAG_STATUS_REPORT.md) || \
+                    warn "git add RAG_STATUS_REPORT.md failed"
+            fi
+        fi
+        rm -f "${_rag_before}"
+    fi
+
+    log ""
+    if [[ "${REFRESH_CHECK_ONLY}" -eq 1 ]]; then
+        if [[ "${_refresh_stale}" -eq 1 ]]; then
+            warn "Out of date. Regenerate and commit with:"
+            warn "    ./release.sh --refresh-metadata"
+            exit 1
+        fi
+        log "✓ metadata.yaml and RAG_STATUS_REPORT.md are up to date."
+        exit 0
+    fi
+    if [[ "${_refresh_stale}" -eq 1 ]]; then
+        log "Staged for commit. Review and commit with:"
+        log "    git diff --cached"
+        log "    git commit -m 'chore(metadata): refresh metadata.yaml + RAG status report'"
+    else
+        log "Nothing to do — already up to date."
+    fi
+    exit 0
+fi
 
 # ----------------------------------------------------------------------------
 # --complete: ship the release end-to-end (#TBD follow-up)
@@ -1820,6 +2003,40 @@ for _gc in "${!COMP_TOUCHED[@]}"; do
     fi
 done
 
+# Resolve the cohort version a dependency should be pinned to.
+#
+# Checks the in-flight release plan FIRST, then falls back to the manifest on
+# disk. Ordering matters: create_snapshot runs BEFORE update_versions_released
+# rewrites versions_released.yaml, so a dependency being released for the first
+# time in this same cycle is not yet in the file. Reading only the file left
+# such a dep unresolved and the snapshot pinned to `current`.
+#
+# Echoes the version and returns 0, or returns 1 when the dep is unknown.
+# BUMPED_COMPONENTS is populated later in the script, so the expansion is
+# guarded — early callers (the dependency-closure pass) see an empty plan and
+# fall through to the manifest, which is exactly what they want.
+cohort_version_of() {
+    local dep="$1"
+    local entry
+    for entry in "${BUMPED_COMPONENTS[@]:-}"; do
+        [[ -z "${entry}" ]] && continue
+        if [[ "${entry%%:*}" == "${dep}" ]]; then
+            printf '%s\n' "${entry##*:}"
+            return 0
+        fi
+    done
+    local versions_yaml="${REPO_ROOT}/versions_released.yaml"
+    if [[ -f "${versions_yaml}" ]]; then
+        local dep_ver
+        dep_ver="$(awk -v k="${dep}:" '$1==k{print $2; exit}' "${versions_yaml}")"
+        if [[ -n "${dep_ver}" ]]; then
+            printf '%s\n' "${dep_ver}"
+            return 0
+        fi
+    fi
+    return 1
+}
+
 phase "Propagating transitive bumps via interface.yaml imports..."
 
 declare -A COMP_IMPORTS=()       # comp -> "dep1 dep2 ..." (just names, no @version)
@@ -1883,6 +2100,93 @@ while [[ "${_changed}" -eq 1 ]]; do
     [[ "${_iter}" -gt 20 ]] && break  # safety net; real graphs are shallow
 done
 
+# ----------------------------------------------------------------------------
+# Reverse dependency closure — pull unreleased deps INTO the cohort.
+#
+# The subsume pass above walks forwards (dep bumps -> dependents inherit). It
+# cannot pull a component in, because it is gated on COMP_TOUCHED. That left a
+# gap: releasing a component whose dependency has never been released at all
+# (e.g. broadcast imports ringbuffer@current, and ringbuffer is absent from
+# versions_released.yaml) produced a frozen snapshot pinned to a dependency
+# with no released version. The manifest build then dropped the edge, sorted
+# the importer first, and failed.
+#
+# So: for every component being released, walk its interface.yaml imports and
+# pull in any sibling dep that has no released version yet. Such a dep must be
+# cut in the same cohort or the importer's snapshot cannot be pinned.
+#
+# Deps that ARE already released are left alone — they only join the cohort if
+# they changed, which the subsume pass handles.
+phase "Closing over unreleased dependencies..."
+
+declare -A COMP_DEP_CLOSURE=()   # comp -> 1 (pulled in purely as a dependency)
+declare -A COMP_DEP_UNRELEASABLE=()  # comp -> importer (unreleased AND not buildable)
+
+_iter=0
+_changed=1
+while [[ "${_changed}" -eq 1 ]]; do
+    _changed=0
+    _iter=$((_iter + 1))
+    for comp in "${!COMP_IMPORTS[@]}"; do
+        [[ -n "${COMP_TOUCHED[$comp]:-}" ]] || continue
+        for dep in ${COMP_IMPORTS[$comp]}; do
+            # Already in the cohort — nothing to do.
+            [[ -n "${COMP_TOUCHED[$dep]:-}" ]] && continue
+            # Not a component in this repo (external ref) — skip.
+            [[ -d "${REPO_ROOT}/${dep}" ]] || continue
+            # Already has a released version — it does not need to be re-cut
+            # just to be pinnable.
+            if cohort_version_of "${dep}" >/dev/null 2>&1; then
+                continue
+            fi
+            # Unreleased AND not buildable (no current/interface.yaml) — it
+            # cannot be cut, so the importer cannot be released either.
+            # Record it; the gate below turns this into a hard error.
+            if [[ ! -f "${REPO_ROOT}/${dep}/current/interface.yaml" ]]; then
+                COMP_DEP_UNRELEASABLE[$dep]="${comp}"
+                continue
+            fi
+            # Unreleased dependency of a released component: pull it in at the
+            # lowest bump level, since nothing about it necessarily changed —
+            # it simply needs a first released version to be pinnable.
+            COMP_DOC[$dep]=1
+            COMP_TOUCHED[$dep]=1
+            COMP_DEP_CLOSURE[$dep]=1
+            COMP_REASONS[$dep]="${COMP_REASONS[$dep]:-}dependency closure: ${comp} imports ${dep}, which has no released version"$'\n'
+            _changed=1
+        done
+    done
+    [[ "${_iter}" -gt 20 ]] && break  # safety net; real graphs are shallow
+done
+
+if [[ ${#COMP_DEP_UNRELEASABLE[@]} -gt 0 ]]; then
+    warn "Components staged for release depend on unreleasable components:"
+    for _dep in $(printf '%s\n' "${!COMP_DEP_UNRELEASABLE[@]}" | sort); do
+        warn "    ${COMP_DEP_UNRELEASABLE[$_dep]} imports ${_dep}, which has no released"
+        warn "      version and no ${_dep}/current/interface.yaml (so it cannot be cut)."
+    done
+    warn "  Either add the missing current/interface.yaml so the dependency can be"
+    warn "  released, or drop the importing component from this release."
+    # Mirrors the root-markdown link check: fatal for any mutating run so a
+    # broken cohort can never be cut, advisory in read-only plan mode so the
+    # operator still gets the full table.
+    if [[ "${DO_WRITES}" -eq 1 || "${DO_BRANCH}" -eq 1 || "${COMMIT}" -eq 1 ]]; then
+        die "Aborting release: unreleasable dependency in the cohort."
+    fi
+fi
+
+if [[ ${#COMP_DEP_CLOSURE[@]} -gt 0 ]]; then
+    log ""
+    log "ℹ️  Pulled into the release as unreleased dependencies:"
+    for comp in $(printf '%s\n' "${!COMP_DEP_CLOSURE[@]}" | sort); do
+        log "      - ${comp}"
+    done
+    log "    These have no released version, so importers cannot pin them."
+    log "    They are cut at the lowest bump level alongside their importers."
+else
+    log "    ✓ every dependency of a released component already has a released version"
+fi
+
 # Diagnostic block: list every component that bumped purely transitively
 # so the operator sees WHY a "quiet" component is suddenly on the list.
 if [[ ${#COMP_TRANSITIVE[@]} -gt 0 ]]; then
@@ -1935,13 +2239,6 @@ compute_next_versions() {
     fi
 
     NEXT_NOTE="unsupported version format"
-}
-
-update_metadata() {
-    local file="$1"
-    local new_version="$2"
-
-    sed -i -E "s/^version:.*/version: ${new_version}/" "${file}"
 }
 
 # ----------------------------------------------------------------------------
@@ -2209,23 +2506,33 @@ create_snapshot() {
         }
         # Dep names + include paths — read each <dep>-vcurrent-cpp occurrence
         # (own module already replaced above) and resolve to its cohort version
-        # in versions_released.yaml. Then do the same for include paths.
-        local versions_yaml="${REPO_ROOT}/versions_released.yaml"
-        if [[ -f "${versions_yaml}" ]]; then
-            local dep dep_ver
-            while read -r dep; do
-                [[ -z "${dep}" ]] && continue
-                dep_ver="$(awk -v k="${dep}:" '$1==k{print $2; exit}' "${versions_yaml}")"
-                if [[ -n "${dep_ver}" ]]; then
-                    sed -i "s/${dep}-vcurrent-cpp/${dep}-v${dep_ver}-cpp/g" "${snapshot_cmake}"
-                    sed -i "s|HALIF_INCLUDE_DIR}/${dep}/current/|HALIF_INCLUDE_DIR}/${dep}/${dep_ver}/|g" "${snapshot_cmake}"
-                else
-                    warn "  [${comp}/${version}] dep '${dep}' not in versions_released.yaml; left as -vcurrent-cpp (build will fail at verification)."
-                fi
-            done < <(grep -oE '[a-z][a-z0-9_]*-vcurrent-cpp' "${snapshot_cmake}" | grep -oE '^[a-z][a-z0-9_]*' | sort -u)
-        else
-            warn "  [${comp}/${version}] versions_released.yaml missing; dep links left as -vcurrent-cpp."
-        fi
+        # via cohort_version_of (in-flight plan, then versions_released.yaml).
+        #
+        # An unresolvable dep is fatal. Leaving the ref as `-vcurrent-cpp`
+        # produces a frozen snapshot that points at a moving target and that
+        # cannot link, and the failure only surfaced minutes later in the
+        # verification build with no pointer back to the real cause.
+        local dep dep_ver
+        while read -r dep; do
+            [[ -z "${dep}" ]] && continue
+            if ! dep_ver="$(cohort_version_of "${dep}")"; then
+                warn "  [${comp}/${version}] dependency '${dep}' has no released version."
+                warn "    '${comp}' imports '${dep}', but '${dep}' is neither staged in this"
+                warn "    release nor present in versions_released.yaml, so the frozen"
+                warn "    snapshot cannot pin it. Stage '${dep}' in the same release:"
+                warn "        ./release.sh stage ${dep} ${comp}"
+                warn "    (or mark '${comp}' incubating by removing ${comp}/current/interface.yaml)."
+                return 1
+            fi
+            if [[ "${dep_ver}" == "current" ]]; then
+                warn "  [${comp}/${version}] dependency '${dep}' resolves to 'current'."
+                warn "    A frozen snapshot must not import @current — it is non-deterministic."
+                warn "    Stage '${dep}' so it gets a real released version."
+                return 1
+            fi
+            sed -i "s/${dep}-vcurrent-cpp/${dep}-v${dep_ver}-cpp/g" "${snapshot_cmake}"
+            sed -i "s|HALIF_INCLUDE_DIR}/${dep}/current/|HALIF_INCLUDE_DIR}/${dep}/${dep_ver}/|g" "${snapshot_cmake}"
+        done < <(grep -oE '[a-z][a-z0-9_]*-vcurrent-cpp' "${snapshot_cmake}" | grep -oE '^[a-z][a-z0-9_]*' | sort -u)
     fi
 
     # Give the snapshot's mkdocs.yml its own site_name (#604). The copy above
@@ -2340,9 +2647,9 @@ for comp, ver in sorted(cohort.items()):
         for dep, dep_ver in cohort.items():
             if dep == comp or dep_ver == "current":
                 continue
-            text = re.sub(rf"(?<![A-Za-z0-9_]){re.escape(dep)}-v[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+-cpp",
+            text = re.sub(rf"(?<![A-Za-z0-9_]){re.escape(dep)}-v(?:current|[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)-cpp",
                           f"{dep}-v{dep_ver}-cpp", text)
-            text = re.sub(rf"(HALIF_INCLUDE_DIR}}/{re.escape(dep)}/)[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/",
+            text = re.sub(rf"(HALIF_INCLUDE_DIR}}/{re.escape(dep)}/)(?:current|[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/",
                           rf"\g<1>{dep_ver}/", text)
         if text != orig:
             open(cmake, "w").write(text)

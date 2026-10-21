@@ -369,7 +369,18 @@ def imports_of(comp, ver):
 graph = {comp: set(imports_of(comp, ver)) for comp, ver in pairs}
 # Restrict edges to deps that are actually in the manifest — external
 # refs (e.g. android.hardware.common.fmq) shouldn't block toposort.
+#
+# A dropped edge that names a sibling HAL component (i.e. a directory in the
+# repo) is NOT an external ref — it means the manifest is incomplete, and the
+# importer will sort ahead of a dependency that never gets built at all. Warn
+# loudly rather than silently producing a build order that cannot work.
 for comp, deps in graph.items():
+    missing = {d for d in deps if d not in version_of}
+    for d in sorted(missing):
+        if os.path.isdir(os.path.join(root, d)):
+            sys.stderr.write(
+                f"⚠️  toposort: '{comp}' imports '{d}', which is not in the "
+                f"manifest — edge dropped and '{d}' will NOT be built.\n")
     graph[comp] = {d for d in deps if d in version_of}
 
 indegree = {comp: 0 for comp in graph}
@@ -587,11 +598,17 @@ stage_snapshot_headers() {
 
 # Extract the "<comp> <ver>" dependency pairs a snapshot declares via its
 # ${HALIF_INCLUDE_DIR}/<comp>/<ver>/include references in CMakeLists.txt.
+#
+# The version segment matches `current` as well as numeric snapshots. A
+# digits-only pattern silently returned an empty dep list for any snapshot
+# still pointing at an unreleased dependency (e.g. broadcast -> ringbuffer@current),
+# so the dependency-closure loop below built nothing and CMake then failed on
+# the missing headers with no indication of the real cause.
 snapshot_deps() {
     local cmake_file="$1"
     # `|| true`: grep exits 1 when a snapshot declares no HAL deps — that is a
     # normal "empty list", not an error, so don't let it trip `set -o pipefail`.
-    { grep -oE 'HALIF_INCLUDE_DIR\}/[a-z][a-z0-9_]*/[0-9][0-9.]*/include' "$cmake_file" 2>/dev/null || true; } \
+    { grep -oE 'HALIF_INCLUDE_DIR\}/[a-z][a-z0-9_]*/(current|[0-9][0-9.]*)/include' "$cmake_file" 2>/dev/null || true; } \
         | sed -E 's#HALIF_INCLUDE_DIR\}/([^/]+)/([^/]+)/include#\1 \2#' \
         | sort -u
 }
