@@ -88,6 +88,8 @@ AIDL_ENUM_MEMBER_RE = re.compile(r"^(\w+)")
 # Doxygen comment trailing the declaration it documents.
 AIDL_TRAILING_DOC_RE = re.compile(r"/\*(?:\*<?|!<)\s*(.*?)\s*\*/\s*$")
 AIDL_TRAILING_LINE_DOC_RE = re.compile(r"//[!/]<\s*(.*?)\s*$")
+# The same comment left open at the end of the line and closed on a later one.
+AIDL_TRAILING_OPEN_RE = re.compile(r"/\*(?:\*<?|!<)(?!.*\*/)")
 AIDL_METHOD_RE = re.compile(r"\b(\w+)\s*\(")
 # The statement scanner consumes the terminating `;`, so a field name is the
 # last identifier before the default value or the end of the declaration.
@@ -443,9 +445,14 @@ class _AidlParser:
                 while "*/" not in block[-1] and index < len(lines):
                     block.append(lines[index])
                     index += 1
+                block[-1], terminator, remainder = block[-1].partition("*/")
+                block[-1] += terminator
                 block[0] = re.sub(r"^(\s*)/\*[*!]<?", r"\1/**", block[0])
                 self._add_doc(Doc(block))
-                continue
+                stripped = remainder.strip()
+                lineno = index
+                if not stripped:
+                    continue
 
             if stripped.startswith("/*"):
                 # License header or other non-Doxygen block comment.
@@ -453,6 +460,18 @@ class _AidlParser:
                     stripped = lines[index].strip()
                     index += 1
                 continue
+
+            # `FOO = 1, /**< first\n * more */` runs over several lines. Read it
+            # whole, or its text would be parsed as declarations.
+            # An opener after a `//` is just text, hence the search of the code part only.
+            opener = AIDL_TRAILING_OPEN_RE.search(_strip_line_comment(stripped))
+            if opener and "*/" in stripped[opener.start() :]:
+                opener = None  # closed on this line, with a `//` inside it
+            if opener:
+                doc, rest, index = self._read_trailing_block(stripped[opener.start() :], lines, index)
+                self.line_doc = doc
+                self._scan_line(_strip_line_comment(stripped[: opener.start()]).rstrip(), lineno)
+                stripped = rest
 
             # `int intValue; /**< ... */` documents the declaration it follows,
             # so it has to be in hand before the statement is flushed.
@@ -462,15 +481,37 @@ class _AidlParser:
                 stripped = stripped[: trailing.start()].rstrip()
             # Whatever `//` comment is left is not documentation, and must not
             # reach the scanner: its text would become part of the declaration.
-            stripped = _strip_line_comment(stripped).rstrip()
-            self._scan(stripped, lineno)
-            # A trailing block on an unterminated declaration - the last enum
-            # value, which needs no comma - must survive to the flush.
-            if self.line_doc and self.statement.strip() and self.statement_doc is None:
-                self.statement_doc = self.line_doc
-            self.line_doc = None
+            self._scan_line(_strip_line_comment(stripped).rstrip(), lineno)
 
         return self.file
+
+    @staticmethod
+    def _read_trailing_block(text: str, lines: list[str], index: int) -> tuple[Doc, str, int]:
+        """Read a trailing comment that is open at the end of `text`.
+
+        Returns the documentation, whatever code follows the closing `*/`, and
+        the index of the next unread line.
+        """
+        block = [re.sub(r"^/\*[*!]<?", "/**", text)]
+        while index < len(lines):
+            block.append(lines[index])
+            index += 1
+            if "*/" in block[-1]:
+                break
+        end = block[-1].find("*/")
+        if end < 0:  # never closed: the rest of the file is comment
+            return Doc(block), "", index
+        rest = block[-1][end + 2 :].strip()
+        block[-1] = block[-1][: end + 2]
+        return Doc(block), rest, index
+
+    def _scan_line(self, text: str, lineno: int) -> None:
+        self._scan(text, lineno)
+        # A trailing block on an unterminated declaration - the last enum
+        # value, which needs no comma - must survive to the flush.
+        if self.line_doc and self.statement.strip() and self.statement_doc is None:
+            self.statement_doc = self.line_doc
+        self.line_doc = None
 
     def _add_doc(self, doc: Doc) -> None:
         # An `@file` tag makes the block file documentation wherever it sits,
@@ -926,6 +967,14 @@ def validate_tree(aidl_dir: Path, include_dir: Path | None, report: Report) -> N
         type_name, _, member_name = qualified.rpartition(".")
         path, line = locations.get((type_name, member_name), (include_dir / header, 0))
         report.add(path, line, "headers", f"{qualified} is documented but is not declared in {header}")
+
+    reported = {(f.path, f.message.split(":")[0]) for f in report.findings if f.category == "returns"}
+    for entry in stats.return_drift:
+        header, _, qualified = entry.partition(": ")
+        type_name, _, member_name = qualified.rpartition(".")
+        path, line = locations.get((type_name, member_name), (include_dir / header, 0))
+        if (path, qualified) not in reported:
+            report.add(path, line, "returns", f"{qualified}: documents a return value but {header} declares none")
 
 
 def _validate_member(path: Path, type_doc: TypeDoc, member: Member, report: Report) -> None:
