@@ -61,6 +61,7 @@ nav:
       - AIDL Versioning Guide: standards/versioning-guide.md
       - Third-Party Build Integration: standards/build_integration.md
       - Yocto Integration: standards/yocto_integration.md
+      - Commit Email Verification: standards/commit_email_verification.md
   - Vendor HAL Interfaces (VHI):
     - Overview: key_concepts/hal/hal_interfaces.md
     - Interface Generation: introduction/interface_generation.md
