@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: Android utils
+Description: Android utils library for binder
+Version: 1.0.0
+Libs: -L${libdir} -lutils
+Cflags: -I${includedir}
