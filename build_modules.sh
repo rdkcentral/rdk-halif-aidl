@@ -124,7 +124,7 @@ Examples:
 
 Output:
   Libraries: out/target/lib/rdk-halif-aidl/lib<module>-vcurrent-cpp.so
-  Headers:   out/build/include/<module>/
+  Headers:   out/target/include/<module>/
 
 For Development Workflow:
   To modify AIDL interfaces and regenerate C++ code, use:
@@ -374,15 +374,12 @@ case "${1:-}" in
             exit 1
         fi
 
-        DEFAULT_VER="$(grep -E '^default:' "$MANIFEST" | head -1 | awk '{print $2}')"
-        DEFAULT_VER="${DEFAULT_VER:-current}"
-
         # Read "<component> <version>" pairs from the components: map.
-        mapfile -t MANIFEST_PAIRS < <(awk -v def="$DEFAULT_VER" '
+        mapfile -t MANIFEST_PAIRS < <(awk '
             /^components:/      { inmap=1; next }
             inmap && /^[^[:space:]#]/ { inmap=0 }
-            inmap && /^[[:space:]]+[A-Za-z0-9_]+:/ {
-                gsub(/:/, " "); print $1, ($2 == "" ? def : $2)
+            inmap && /^[[:space:]]+[A-Za-z0-9_]+:[[:space:]]*[^[:space:]#]/ {
+                gsub(/:/, " "); print $1, $2
             }' "$MANIFEST")
 
         if [[ ${#MANIFEST_PAIRS[@]} -eq 0 ]]; then
@@ -391,7 +388,7 @@ case "${1:-}" in
         fi
 
         echo "📋 Version manifest: $MANIFEST"
-        echo "   ${#MANIFEST_PAIRS[@]} component(s), default version '${DEFAULT_VER}'"
+        echo "   ${#MANIFEST_PAIRS[@]} component(s)"
 
         # Topologically sort MANIFEST_PAIRS so each component's
         # dependencies build (and install their headers/libs into
@@ -611,9 +608,9 @@ fi
 echo "✓ Binder SDK found at $SDK_DIR"
 
 # Module-local layout: each component holds its own AIDL and generates its
-# own C++ into <module>/current/{include,src}. The CMake configure step
-# generates any missing sources, so there is no central stable/generated
-# tree to pre-check here.
+# own C++ into <module>/current/{include,src}. The build generates the
+# sources whenever an AIDL file changes, so there is no central
+# stable/generated tree to pre-check here.
 MODULE_COUNT=$(ls -d "$ROOT_DIR"/*/current/interface.yaml 2>/dev/null | wc -l)
 echo "✓ Found $MODULE_COUNT component interface(s)"
 
@@ -640,37 +637,6 @@ fi
 # No toolchain involvement, no code generation.
 #######################################################################
 
-# Stage a snapshot's committed include/ tree into out/build/include so that
-# dependents resolve their ${HALIF_INCLUDE_DIR}/<comp>/<ver>/include refs.
-# Pure copy — snapshot include/ trees are committed pre-generated C++.
-stage_snapshot_headers() {
-    local comp="$1" ver="$2"
-    local src_inc="$ROOT_DIR/$comp/$ver/include"
-    [[ -d "$src_inc" ]] || return 0
-    local dst_inc="$ROOT_DIR/out/build/include/$comp/$ver/include"
-    mkdir -p "$dst_inc" || return 1
-    # Fail fast: a silent cp failure leaves dependents to fail later with
-    # missing headers, obscuring the root cause.
-    cp -RT "$src_inc" "$dst_inc" || return 1
-}
-
-# Extract the "<comp> <ver>" dependency pairs a snapshot declares via its
-# ${HALIF_INCLUDE_DIR}/<comp>/<ver>/include references in CMakeLists.txt.
-#
-# The version segment matches `current` as well as numeric snapshots. A
-# digits-only pattern silently returned an empty dep list for any snapshot
-# still pointing at an unreleased dependency (e.g. broadcast -> ringbuffer@current),
-# so the dependency-closure loop below built nothing and CMake then failed on
-# the missing headers with no indication of the real cause.
-snapshot_deps() {
-    local cmake_file="$1"
-    # `|| true`: grep exits 1 when a snapshot declares no HAL deps — that is a
-    # normal "empty list", not an error, so don't let it trip `set -o pipefail`.
-    { grep -oE 'HALIF_INCLUDE_DIR\}/[a-z][a-z0-9_]*/(current|[0-9][0-9.]*)/include' "$cmake_file" 2>/dev/null || true; } \
-        | sed -E 's#HALIF_INCLUDE_DIR\}/([^/]+)/([^/]+)/include#\1 \2#' \
-        | sort -u
-}
-
 if [[ "$VERSION" != "current" ]]; then
     if [[ "$MODULE" == "all" ]]; then
         echo "❌ ERROR: --version $VERSION cannot be combined with 'all'."
@@ -679,7 +645,7 @@ if [[ "$VERSION" != "current" ]]; then
         exit 1
     fi
     SNAPSHOT_DIR="$ROOT_DIR/$MODULE/$VERSION"
-    if [[ ! -f "$SNAPSHOT_DIR/CMakeLists.txt" ]]; then
+    if [[ ! -d "$SNAPSHOT_DIR" ]]; then
         echo "❌ ERROR: snapshot $MODULE/$VERSION not found at $SNAPSHOT_DIR."
         echo "   Snapshots are produced by the cohort-wide './release.sh' run;"
         echo "   verify the version number is one that has been released."
@@ -698,45 +664,17 @@ if [[ "$VERSION" != "current" ]]; then
     echo "    build:  $SNAPSHOT_BUILD_DIR"
     echo ""
 
-    # Resolve and build this snapshot's dependency closure first, so its
-    # dependency headers (out/build/include) and libraries
-    # (out/target/lib/rdk-halif-aidl) are present before we configure. Each dependency
-    # is itself a snapshot build, so transitive deps resolve recursively, and
-    # an already-built dependency is skipped. Without this, a standalone
-    # snapshot build on a fresh checkout fails to find a dependency header
-    # such as com/rdk/hal/PropertyValue.h (#638).
-    while read -r dep dep_ver; do
-        [[ -n "$dep" ]] || continue
-        dep_so="$ROOT_DIR/out/target/lib/rdk-halif-aidl/lib${dep}-v${dep_ver}-cpp.so"
-        dep_inc="$ROOT_DIR/out/build/include/$dep/$dep_ver/include"
-        if [[ -f "$dep_so" && -d "$dep_inc" ]]; then
-            echo "   ✓ dependency ${dep}/${dep_ver} already built"
-            continue
-        fi
-        echo "   ↳ building dependency ${dep}/${dep_ver} ..."
-        "$0" "$dep" --version "$dep_ver" --jobs "$JOBS" --sdk-dir "$SDK_DIR" || {
-            echo "❌ Failed to build dependency ${dep}/${dep_ver} for $MODULE/$VERSION"; exit 1; }
-    done < <(snapshot_deps "$SNAPSHOT_DIR/CMakeLists.txt")
-    echo ""
-
-    # The local dev layout splits binder headers (out/build/include/binder_sdk)
-    # from libs (out/target/lib/binder); BINDER_SDK_INCLUDE_DIR lets the
-    # snapshot CMakeLists find the headers. Yocto stages a flat SDK so
-    # BINDER_SDK_DIR alone resolves both. HALIF_INCLUDE_DIR is unused by
-    # snapshots with no imports, hence --no-warn-unused-cli.
-    cmake -S "$SNAPSHOT_DIR" -B "$SNAPSHOT_BUILD_DIR" --no-warn-unused-cli \
-        -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
-        -DBINDER_SDK_DIR="$SDK_DIR" \
-        -DBINDER_SDK_INCLUDE_DIR="$ROOT_DIR/out/build" \
-        -DHALIF_LIB_DIR="$ROOT_DIR/out/target/lib/rdk-halif-aidl" \
-        -DHALIF_INCLUDE_DIR="$ROOT_DIR/out/build/include" \
-        -DCMAKE_INSTALL_PREFIX="$ROOT_DIR/out/target" || {
+    cmake -S "$ROOT_DIR" -B "$SNAPSHOT_BUILD_DIR" \
+        -DINTERFACE_TARGET="$MODULE" \
+        -DINTERFACE_VERSION="$VERSION" \
+        -DCMAKE_PREFIX_PATH="$SDK_DIR" \
+        -DBUILD_MODULES_MODE=ON || {
             echo "❌ Snapshot CMake configuration failed"; exit 1; }
 
     cmake --build "$SNAPSHOT_BUILD_DIR" -j"$JOBS" || {
         echo "❌ Snapshot build failed"; exit 1; }
 
-    cmake --install "$SNAPSHOT_BUILD_DIR" >/dev/null || {
+    cmake --install "$SNAPSHOT_BUILD_DIR"  >/dev/null || {
         echo "❌ Snapshot install failed"; exit 1; }
 
     SO_PATH="$ROOT_DIR/out/target/lib/rdk-halif-aidl/lib${MODULE}-v${VERSION}-cpp.so"
@@ -747,9 +685,6 @@ if [[ "$VERSION" != "current" ]]; then
         echo "❌ Snapshot library not found at $SO_PATH"; exit 1
     fi
 
-    # Stage this snapshot's headers so a later dependent build resolves them.
-    stage_snapshot_headers "$MODULE" "$VERSION" \
-        || { echo "❌ Failed to stage snapshot headers for $MODULE/$VERSION"; exit 1; }
     exit 0
 fi
 
@@ -773,70 +708,48 @@ fi
 echo "⚙️  Configuring CMake..."
 echo ""
 
-cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
-    -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
-    -DINTERFACE_TARGET="$MODULE" \
-    -DAIDL_SRC_VERSION="$VERSION" \
-    -DBINDER_SDK_DIR="$SDK_DIR"
+declare -a cmake_args=("-S" "$ROOT_DIR" "-B" "$BUILD_DIR" "-DBUILD_MODULES_MODE=ON" "-DCMAKE_PREFIX_PATH=$SDK_DIR")
+if [[ "$MODULE" == "all" ]]; then
+    cmake_args+=("-DINTERFACE_RELEASE_FILE=versions_current.yaml")
+else
+    # CMakeLists.txt defaults to current if target but no version is provided
+    cmake_args+=("-DINTERFACE_TARGET=$MODULE")
+fi
 
-if [[ $? -ne 0 ]]; then
+cmake "${cmake_args[@]}" || {
     echo ""
     echo "❌ CMake configuration failed"
     exit 1
-fi
+}
 
 echo ""
 echo "✓ CMake configuration complete"
 echo ""
 
 #######################################################################
-# Post-generation: re-inject AIDL documentation
-#######################################################################
-#
-# The configure step above runs the AIDL codegen, and aidl-cpp strips every
-# comment on the way out — the headers engineers include carry no docs at all
-# (docs/whitepapers/release_documentation_strategy.md).
-# scripts/aidl_comment_inject.py writes the AIDL Doxygen blocks back into
-# <module>/current/include/, each marked with a `// @aidl-doc` line so repeat
-# runs replace rather than accumulate.
-#
-# Runs here, before compilation, so the post-build staging step
-# (cmake_stage_modules.cmake) copies the annotated headers into
-# out/build/include/. Comments only, so it cannot change what is compiled —
-# a failure is reported but does not fail the build.
-#
-# Set HALIF_SKIP_DOC_INJECT=1 to skip.
-
-DOC_INJECT_SCRIPT="$ROOT_DIR/scripts/aidl_comment_inject.py"
-
-if [[ "${HALIF_SKIP_DOC_INJECT:-0}" == "1" ]]; then
-    echo "⏭️  Skipping AIDL documentation injection (HALIF_SKIP_DOC_INJECT=1)"
-    echo ""
-elif [[ ! -f "$DOC_INJECT_SCRIPT" ]]; then
-    echo "⚠️  AIDL documentation injection skipped: $DOC_INJECT_SCRIPT not found"
-    echo ""
-else
-    if ! python3 "$DOC_INJECT_SCRIPT" --repo-root "$ROOT_DIR" --version "$VERSION" "$MODULE"; then
-        echo "⚠️  AIDL documentation injection failed — generated headers are"
-        echo "    undocumented, but the build continues (comments only)."
-    fi
-    echo ""
-fi
-
-#######################################################################
 # Build
 #######################################################################
+#
+# The build generates the C++ bindings from the AIDL files (see add_current()
+# in CMakeModules/HandleModules.cmake) and re-injects the AIDL documentation
+# into the headers, since aidl-cpp strips every comment
+# (docs/whitepapers/release_documentation_strategy.md). Both happen before
+# compilation, so the install step copies the annotated headers.
 
 echo "🔨 Building HAL modules..."
 echo ""
 
-cmake --build "$BUILD_DIR" -j"$JOBS"
-
-if [[ $? -ne 0 ]]; then
+cmake --build "$BUILD_DIR" -j"$JOBS" || {
     echo ""
     echo "❌ Build failed"
     exit 1
-fi
+}
+
+cmake --install "$BUILD_DIR" || {
+    echo ""
+    echo "❌ Install failed"
+    exit 1
+}
 
 echo ""
 echo "✓ Build complete"
@@ -848,7 +761,7 @@ echo ""
 
 OUT_DIR="$ROOT_DIR/out/target"
 LIB_DIR="$OUT_DIR/lib/rdk-halif-aidl"
-INC_DIR="$ROOT_DIR/out/build/include"
+INC_DIR="$OUT_DIR/include"
 
 echo "========================================="
 echo "  Build Summary"
@@ -871,7 +784,7 @@ fi
 # Count staged headers
 if [[ -d "$INC_DIR" ]]; then
     HEADER_COUNT=$(find "$INC_DIR" -name "*.h" 2>/dev/null | wc -l)
-    echo "Headers: $HEADER_COUNT staged"
+    echo "Headers: $HEADER_COUNT installed"
     echo "  Location: $INC_DIR"
     echo ""
 fi

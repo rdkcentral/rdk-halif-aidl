@@ -52,7 +52,8 @@ git clone git@github.com:rdkcentral/rdk-halif-aidl.git
 
 **Generate the AIDL proxy and native interfaces:**
 
-The following example demonstrates generating interfaces for the `audiodecoder` module. Adapt the `AIDL_TARGET` CMake variable for other modules.
+The following example demonstrates generating interfaces for the `audiodecoder` module. Adapt the
+`INTERFACE_TARGET` CMake variable for other modules.
 
 ```bash
 cd hal
@@ -63,7 +64,8 @@ sc docker run rdk-kirkstone /bin/bash
 # Optional: Set AIDL binary path if not in system PATH.  Replace with the actual path from the previous step.
 export PATH=$PATH:/path/to/linux_binder_idl/local/bin
 
-cmake -DAIDL_TARGET=audiodecoder .
+cmake -S . -B build -DINTERFACE_TARGET=audiodecoder
+cmake --build build
 ```
 
 !!! warning
@@ -71,35 +73,46 @@ cmake -DAIDL_TARGET=audiodecoder .
 
 **Locate the generated files:**
 
-The generated proxy and interface files will be placed under `audiodecoder/gen/<version>`.  For example:
+Generated proxy and interface files for a current module are written beside
+the AIDL source during the build. The generated `src` and `include`
+directories are ignored by Git and are not committed. For example:
 
 ```
-hal/audiodecoder/gen/current/cpp/com/rdk/hal/audiodecoder/...  (C++ files)
-hal/audiodecoder/gen/current/h/com/rdk/hal/audiodecoder/...   (Header files)
-hal/audiodecoder/current/com/rdk/hal/audiodecoder/...        (AIDL files)
+hal/audiodecoder/current/src/com/rdk/hal/audiodecoder/...      (C++ files)
+hal/audiodecoder/current/include/com/rdk/hal/audiodecoder/...  (Header files)
+hal/audiodecoder/current/com/rdk/hal/audiodecoder/...          (AIDL source files)
 ```
 
 ## Example CMake Commands
 
 ```bash
 # Use a custom path to the `aidl` binary
-cmake -DAIDL_TARGET=audiodecoder -DAIDL_BIN=/home/example/bin/aidl .
+cmake -S . -B build -DINTERFACE_TARGET=audiodecoder \
+    -DAIDL_EXECUTABLE=/home/example/bin/aidl
 
-# Specify a specific AIDL interface version (e.g., version 2)
-cmake -DAIDL_TARGET=audiodecoder -DAIDL_SRC_VERSION=2 .
+# Specify a released AIDL interface version
+cmake -S . -B build -DINTERFACE_TARGET=audiodecoder \
+    -DINTERFACE_VERSION=0.3.0.0
 
-# Specify a custom output directory for generated files
-cmake -DAIDL_TARGET=audiodecoder -DAIDL_GEN_DIR=/home/example/example_out .
+# Build all versions selected by an alternate manifest
+cmake -S . -B build \
+    -DINTERFACE_RELEASE_FILE=versions_current.yaml
 ```
 
 ## CMake Variables
 
-| Variable        | Description                                                              |
-|-----------------|--------------------------------------------------------------------------|
-| `AIDL_BIN`      | *Optional*. Path to the `aidl` executable. If not set, CMake will attempt to locate it. |
-| `AIDL_GEN_DIR`  | *Optional*. Output directory for generated files. Default: `<module>/gen/<version>`. |
-| `AIDL_SRC_VERSION` | *Optional*. Version of the AIDL interface to generate. Default: `current`.     |
-| `AIDL_TARGET`   | *Mandatory*. Name of the module for which to generate interfaces.         |
+| Variable                 | Description |
+|--------------------------|-------------|
+| `AIDL_EXECUTABLE`        | *Optional*. Path to the `aidl` executable. CMake locates it when a current interface needs generation. |
+| `INTERFACE_TARGET`       | *Optional*. Module to build. When unset, CMake builds every component selected by the versions manifest. |
+| `INTERFACE_VERSION`      | *Optional*. Version of `INTERFACE_TARGET`. Default: `current`. |
+| `INTERFACE_RELEASE_FILE` | *Optional*. Component version manifest. Default: `versions_released.yaml`. |
+
+For a single-module build, `<module>/<version>/interface.yaml` is the module
+manifest: its `imports` select the complete dependency version set. For a
+multi-module build, `INTERFACE_RELEASE_FILE` selects the top-level module
+versions, and each selected module's `interface.yaml` supplies its dependency
+closure.
 
 ## Notes
 

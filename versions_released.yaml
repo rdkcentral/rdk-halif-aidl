@@ -8,11 +8,8 @@
 #     ./build_modules.sh manifest                                   # this file (default)
 #     ./build_modules.sh manifest --file versions_current.yaml      # dev cohort
 #
-# A component absent from the `components:` map falls back to `default:`.
-# `default: current` ensures any newly-added component (no released
-# snapshot yet) still builds against its current sibling.
-
-default: current
+# Only components listed in the `components:` map are built; a component
+# without a released snapshot is not listed.
 
 components:
   audiodecoder: 0.3.0.0

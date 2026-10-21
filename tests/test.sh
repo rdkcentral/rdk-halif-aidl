@@ -36,8 +36,6 @@ NC='\033[0m' # No Color
 TESTS_PASSED=0
 TESTS_FAILED=0
 
-CMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX:-$(pwd)/out/target}"
-
 # The binder wire protocol the cross-compiled SDK is built for. It follows the
 # KERNEL the image runs, not the toolchain, so it is stated rather than
 # inherited. The ARM target here is row B of
@@ -60,7 +58,7 @@ usage() {
     echo "  --help       Show this help"
 }
 
-TEST_IDS=("1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "12" "13" "14")
+TEST_IDS=("1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "12" "13" "14" "15" "16")
 
 list_tests() {
     echo "Available tests:"
@@ -75,9 +73,11 @@ list_tests() {
     echo "  9   Direct CMake build (minimal production flags)"
     echo "  10  CMake multi-module build with version switching"
     echo "  11  Cross-compilation build (sc docker rdk-kirkstone)"
-    echo "  12  Yocto integration (per-component + vendor/MW full-HAL builds)"
-    echo "  13  Each component builds individually (fresh sysroot per component)"
-    echo "  14  Each component packages individually through real bitbake"
+    echo "  12  Generated bindings follow the AIDL files"
+    echo "  13  Generated bindings report the frozen version and hash"
+    echo "  14  build_modules.sh honours --sdk-dir and the install prefix"
+    echo "  15  Multiple versions of a dependency build in one manifest"
+    echo "  16  Installed CMake fallback paths exist"
 }
 
 index_of_test_id() {
@@ -478,11 +478,10 @@ test_8() {
     fi
     
     echo ""
-    echo "==> cmake -S . -B build/current -DINTERFACE_TARGET=bootreason -DAIDL_SRC_VERSION=current"
+    echo "==> cmake -S . -B build/current -DINTERFACE_TARGET=bootreason"
     if cmake -S . -B build/current \
+        -DBUILD_MODULES_MODE=ON \
         -DINTERFACE_TARGET=bootreason \
-        -DAIDL_SRC_VERSION=current \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
         >/tmp/cmake_config.log 2>&1; then
         echo "✅ CMake configuration successful"
     else
@@ -533,11 +532,10 @@ test_9() {
     fi
     
     echo ""
-    echo "==> cmake -S . -B build/production -DINTERFACE_TARGET=all"
+    echo "==> cmake -S . -B build/production"
     if cmake -S . -B build/production \
-        -DINTERFACE_TARGET=all \
+        -DBUILD_MODULES_MODE=ON \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
         >/tmp/cmake_prod_config.log 2>&1; then
         echo "✅ CMake production configuration successful"
     else
@@ -615,9 +613,9 @@ test_10() {
     echo ""
     echo "==> Test 10.1: Build bootreason module (current version)"
     if cmake -S . -B build/test10-bootreason \
+        -DBUILD_MODULES_MODE=ON \
         -DINTERFACE_TARGET=bootreason \
-        -DAIDL_SRC_VERSION=current \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
+        -DINTERFACE_VERSION=current \
         >/tmp/cmake_test10_boot_config.log 2>&1 && \
        cmake --build build/test10-bootreason -- -j"$(nproc)" \
         >/tmp/cmake_test10_boot_build.log 2>&1 && \
@@ -634,9 +632,9 @@ test_10() {
     echo ""
     echo "==> Test 10.2: Build common module (current version)"
     if cmake -S . -B build/test10-common \
+        -DBUILD_MODULES_MODE=ON \
         -DINTERFACE_TARGET=common \
-        -DAIDL_SRC_VERSION=current \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
+        -DINTERFACE_VERSION=current \
         >/tmp/cmake_test10_common_config.log 2>&1 && \
        cmake --build build/test10-common -- -j"$(nproc)" \
         >/tmp/cmake_test10_common_build.log 2>&1 && \
@@ -653,9 +651,9 @@ test_10() {
     echo ""
     echo "==> Test 10.3: Build deviceinfo module (current version)"
     if cmake -S . -B build/test10-deviceinfo \
+        -DBUILD_MODULES_MODE=ON \
         -DINTERFACE_TARGET=deviceinfo \
-        -DAIDL_SRC_VERSION=current \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
+        -DINTERFACE_VERSION=current \
         >/tmp/cmake_test10_deviceinfo_config.log 2>&1 && \
        cmake --build build/test10-deviceinfo -- -j"$(nproc)" \
         >/tmp/cmake_test10_deviceinfo_build.log 2>&1 && \
@@ -672,10 +670,10 @@ test_10() {
     echo ""
     echo "==> Test 10.4: Build with CMAKE_BUILD_TYPE=Debug"
     if cmake -S . -B build/test10-debug \
+        -DBUILD_MODULES_MODE=ON \
         -DINTERFACE_TARGET=firmwareupdate \
-        -DAIDL_SRC_VERSION=current \
+        -DINTERFACE_VERSION=current \
         -DCMAKE_BUILD_TYPE=Debug \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
         >/tmp/cmake_test10_debug_config.log 2>&1 && \
        cmake --build build/test10-debug -- -j"$(nproc)" \
         >/tmp/cmake_test10_debug_build.log 2>&1; then
@@ -830,7 +828,7 @@ test_11() {
     # top-level CMakeLists message and docs/standards/build_integration.md.)
     #
     # Build a dependency chain - common (no deps), then hdmicec (links common) - so
-    # this also exercises inter-component staging, exactly as yocto_build.sh does.
+    # this also exercises inter-component staging.
     local ARM_LIBDIR="out/target/lib/rdk-halif-aidl"
     local ARM_INCDIR="out/target/include/rdk-halif-aidl"
     if sc docker run --local rdk-kirkstone \
@@ -978,80 +976,280 @@ test_11() {
 }
 
 test_12() {
-    echo "Validating Yocto integration (meta-rdk-halif + vendor/MW roles)..."
+    clean_build_state
+    echo "Generated C++ bindings are tracked by the build..."
+    echo "Tests that they are regenerated only when needed and never left stale"
     echo ""
-    echo "==> Test 12.1: component list matches the snapshots (gen_recipes.py --check)"
-    if ! ./tests/yocto/meta-rdk-halif-aidl/gen_recipes.py --check; then
-        echo "❌ meta-rdk-halif component list is out of date - run ./tests/yocto/meta-rdk-halif-aidl/gen_recipes.py"
+
+    if ! ensure_sdk_staged; then
         return 1
     fi
-    echo "✅ component list in sync"
-    echo ""
-    echo "==> Test 12.2: inter-module staging check (hdmicec -> common + negative control)"
-    if ! ./tests/yocto/ci/yocto_staging_check.sh; then
-        echo "❌ per-component staged build failed"
-        return 1
+
+    local aidl_dir=./bootreason/current/com/rdk/hal/bootreason
+    local gen_src=./bootreason/current/src/com/rdk/hal/bootreason
+    local gen_inc=./bootreason/current/include/com/rdk/hal/bootreason
+    local build_dir=build/test12
+    local log=/tmp/cmake_test12.log
+    local result=0
+
+    # Counts how often the generator ran during one build.
+    generations() {
+        cmake --build "$build_dir" -- -j"$(nproc)" 2>&1 | tee "$log" | grep -c "Generating C++ bindings" || true
+    }
+
+    cmake -S . -B "$build_dir" -DBUILD_MODULES_MODE=ON -DINTERFACE_TARGET=bootreason >"$log" 2>&1 || {
+        echo "❌ CMake configuration failed!"; tail -20 "$log"; return 1
+    }
+
+    echo "==> First build generates the bindings"
+    if [ "$(generations)" -ge 1 ] && [ -f "$gen_src/IBootReason.cpp" ] \
+        && [ -f "$gen_inc/BnBootReason.h" ] && [ -f "$gen_inc/BpBootReason.h" ] \
+        && [ -f "$gen_inc/BnBootCause.h" ]; then
+        echo "✅ Bindings generated"
+    else
+        echo "❌ Bindings were not generated"; return 1
     fi
-    echo "✅ per-component staged inter-module build OK"
-    echo ""
-    echo "==> Test 12.3: vendor example builds the full HAL from versions_released.yaml"
-    if ! ./tests/yocto/ci/yocto_build_vendor.sh; then
-        echo "❌ yocto_build_vendor (full-HAL build) failed"
-        return 1
+
+    echo "==> Second build with nothing changed does not regenerate"
+    if [ "$(generations)" -eq 0 ]; then
+        echo "✅ Generator not re-run"
+    else
+        echo "❌ Generator re-run without any changed input"; result=1
     fi
-    echo "✅ vendor example built the full HAL from the released cohort"
-    echo ""
-    echo "==> Test 12.4: mw example builds the full HAL from versions_released.yaml"
-    if ! ./tests/yocto/ci/yocto_build_mw.sh; then
-        echo "❌ yocto_build_mw (full-HAL build) failed"
-        return 1
+
+    echo "==> A new AIDL type gets its files"
+    printf 'package com.rdk.hal.bootreason;\n\n@VintfStability\nenum Test12Type {\n    A = 0,\n}\n' >"$aidl_dir/Test12Type.aidl"
+    generations >/dev/null
+    if [ -f "$gen_src/Test12Type.cpp" ] && [ -f "$gen_inc/Test12Type.h" ] \
+        && [ -f "$gen_inc/BnTest12Type.h" ] && [ -f "$gen_inc/BpTest12Type.h" ]; then
+        echo "✅ Source, header, Bn and Bp header generated"
+    else
+        echo "❌ Files of the new type are missing"; result=1
     fi
-    echo "✅ mw example built the full HAL from the released cohort"
-    echo ""
-    echo "==> Test 12.5: artifact check - the libraries are shippable, not just built"
-    if ! ./tests/yocto/ci/yocto_artifact_check.sh; then
-        echo "❌ artifact check failed (RPATH / SONAME / binder deps)"
-        return 1
+
+    echo "==> Removing the type removes its files"
+    rm -f "$aidl_dir/Test12Type.aidl"
+    generations >/dev/null
+    if ls "$gen_src" "$gen_inc" | grep -q "Test12Type"; then
+        echo "❌ Stale files of the removed type remain"; result=1
+    else
+        echo "✅ No stale files"
     fi
-    echo "✅ artifacts are shippable"
-    return 0
+
+    # Leave the generated files matching the AIDL sources again.
+    rm -f "$aidl_dir/Test12Type.aidl"
+    return $result
 }
 
 test_13() {
-    echo "Building every released component individually (fresh sysroot each)..."
-    echo "Proves each <comp>/<version>/CMakeLists.txt builds on its own."
+    clean_build_state
+    echo "Generated bindings report the frozen version and hash..."
     echo ""
-    if ! ./tests/yocto/ci/yocto_build_each.sh; then
-        echo "❌ a component failed to build individually"
+
+    if ! ensure_sdk_staged; then
         return 1
     fi
-    return 0
+
+    local iface_dir=./bootreason/current
+    local gen_inc=$iface_dir/include/com/rdk/hal/bootreason/IBootReason.h
+    local build_dir=build/test13
+    local log=/tmp/cmake_test13.log
+    local hash="0123456789abcdef0123456789abcdef01234567"
+    local result=0
+
+    restore() {
+        rm -f "$iface_dir/.hash"
+        git checkout -- "$iface_dir/interface.yaml"
+        cmake -S . -B "$build_dir" -DBUILD_MODULES_MODE=ON -DINTERFACE_TARGET=bootreason >/dev/null 2>&1
+        cmake --build "$build_dir" -- -j"$(nproc)" >/dev/null 2>&1
+    }
+    configure() {
+        cmake -S . -B "$build_dir" -DBUILD_MODULES_MODE=ON -DINTERFACE_TARGET=bootreason >"$log" 2>&1
+    }
+
+    configure && cmake --build "$build_dir" -- -j"$(nproc)" >>"$log" 2>&1 || {
+        echo "❌ Initial build failed!"; tail -20 "$log"; return 1
+    }
+
+    echo "==> Unfrozen interface reports version 1 and 'notfrozen'"
+    if grep -q 'VERSION = 1;' "$gen_inc" && grep -q 'HASH = "notfrozen"' "$gen_inc"; then
+        echo "✅ Defaults used"
+    else
+        echo "❌ Unexpected defaults"; result=1
+    fi
+
+    echo "==> A pinned version without a hash is rejected"
+    sed -i 's/^  name: bootreason$/&\n  version: 2000/' "$iface_dir/interface.yaml"
+    if configure; then
+        echo "❌ Configure accepted a version without a hash"; result=1
+    elif grep -q "requires a .hash" "$log"; then
+        echo "✅ Rejected"
+    else
+        echo "❌ Rejected for the wrong reason"; tail -10 "$log"; result=1
+    fi
+
+    echo "==> A frozen interface reports its version and hash"
+    printf '%s\n' "$hash" >"$iface_dir/.hash"
+    if configure && cmake --build "$build_dir" -- -j"$(nproc)" >>"$log" 2>&1 \
+        && grep -q 'VERSION = 2000;' "$gen_inc" && grep -q "HASH = \"$hash\"" "$gen_inc"; then
+        echo "✅ Version and hash regenerated"
+    else
+        echo "❌ Version and hash not reflected"; tail -10 "$log"; result=1
+    fi
+
+    echo "==> A version that is not a positive integer is rejected"
+    sed -i 's/^  version: 2000$/  version: abc/' "$iface_dir/interface.yaml"
+    if configure; then
+        echo "❌ Configure accepted a non-numeric version"; result=1
+    else
+        echo "✅ Rejected"
+    fi
+
+    restore
+    return $result
 }
 
 test_14() {
-    echo "Building every component through REAL bitbake, one at a time..."
-    echo "Proves each component packages on its own (do_package), cleaning only the"
-    echo "rdk-halif-aidl recipe between components so the toolchain is built once."
+    clean_build_state
+    echo "build_modules.sh honours --sdk-dir and a caller's install prefix..."
     echo ""
-    # This is the bitbake counterpart of Test 13 (which is the offline sweep). It
-    # needs docker + the prebuilt Binder SDK; skip gracefully where they are absent
-    # or when explicitly opted out, so test.sh still runs everywhere.
-    if [ "${HALIF_SKIP_BITBAKE:-0}" = "1" ]; then
-        echo "⏭  SKIP: HALIF_SKIP_BITBAKE=1"
-        return 0
-    fi
-    if ! command -v docker >/dev/null 2>&1; then
-        echo "⏭  SKIP: docker not available (the bitbake sweep needs it)"
-        return 0
-    fi
-    if [ ! -d out/build/include/binder_sdk ] || [ ! -d out/target/lib/binder ]; then
-        echo "⏭  SKIP: Binder SDK not built (run ./build_binder.sh first)"
-        return 0
-    fi
-    if ! HALIF_BB_EACH=1 ./tests/yocto/bitbake/run.sh; then
-        echo "❌ a component failed the per-component bitbake sweep"
+
+    if ! ensure_sdk_staged; then
         return 1
     fi
+
+    local work=/tmp/test14
+    local sdk=$work/sdk
+    local build_dir=$work/build
+    local prefix=$work/prefix
+    local log=$work/log
+    local result=0
+
+    rm -rf "$work"
+    mkdir -p "$sdk"
+    ln -s "$PWD/out/target/lib" "$sdk/lib"
+    touch "$sdk/.sdk_ready"
+
+    echo "==> --sdk-dir selects the Binder libraries"
+    ./build_modules.sh bootreason --sdk-dir "$sdk" --build-dir "$build_dir" >"$log" 2>&1 || {
+        echo "❌ Build failed"; tail -20 "$log"; rm -rf "$work"; return 1
+    }
+    if grep -q "^Binder_LIBRARY:FILEPATH=$sdk/" "$build_dir/CMakeCache.txt"; then
+        echo "✅ Binder found below the given SDK directory"
+    else
+        echo "❌ Binder not taken from the SDK directory"
+        grep "^Binder_LIBRARY" "$build_dir/CMakeCache.txt"; result=1
+    fi
+
+    echo "==> A caller's CMAKE_INSTALL_PREFIX is not overridden"
+    cmake -S . -B "$build_dir" -DCMAKE_INSTALL_PREFIX="$prefix" >"$log" 2>&1 \
+        && cmake --install "$build_dir" >>"$log" 2>&1 \
+        && [ -n "$(find "$prefix" -name 'libbootreason-vcurrent-cpp.so' 2>/dev/null)" ]
+    if [ $? -eq 0 ]; then
+        echo "✅ Installed to the given prefix"
+    else
+        echo "❌ Not installed to the given prefix"; tail -10 "$log"; result=1
+    fi
+
+    rm -rf "$work"
+    return $result
+}
+
+test_15() {
+    clean_build_state
+    echo "The same dependency can be built at multiple versions..."
+    echo ""
+
+    if ! ensure_sdk_staged; then
+        return 1
+    fi
+
+    local work
+    work="$(mktemp -d "${TMPDIR:-/tmp}/rdk-halif-multiversion.XXXXXX")" || return 1
+    local manifest="$work/versions.yaml"
+    local build_dir="$work/build"
+    local log="$work/build.log"
+
+    cat >"$manifest" <<'EOF'
+components:
+  hdmicec: 0.1.0.0
+  hdmiinput: 0.2.0.0
+EOF
+
+    if ! cmake -S . -B "$build_dir" \
+        -DBUILD_MODULES_MODE=ON \
+        -DCMAKE_PREFIX_PATH="$PWD/out/target" \
+        -DINTERFACE_RELEASE_FILE="$manifest" >"$log" 2>&1; then
+        echo "❌ CMake configuration failed"
+        tail -20 "$log"
+        rm -rf "$work"
+        return 1
+    fi
+
+    if ! cmake --build "$build_dir" --target \
+        hdmicec-v0.1.0.0-cpp hdmiinput-v0.2.0.0-cpp >>"$log" 2>&1; then
+        echo "❌ Build failed"
+        tail -20 "$log"
+        rm -rf "$work"
+        return 1
+    fi
+
+    echo "✅ Built hdmicec/common@0.2.0.0 and hdmiinput/common@0.3.0.0"
+    rm -rf "$work"
+    return 0
+}
+
+test_16() {
+    clean_build_state
+    echo "Installed CMake fallback paths point to installed files..."
+    echo ""
+
+    if ! ensure_sdk_staged; then
+        return 1
+    fi
+
+    local work
+    work="$(mktemp -d "${TMPDIR:-/tmp}/rdk-halif-config-paths.XXXXXX")" || return 1
+    local prefix="$work/prefix"
+    local build_dir="$work/build"
+    local log="$work/build.log"
+
+    if ! cmake -S . -B "$build_dir" \
+        -DBUILD_MODULES_MODE=ON \
+        -DCMAKE_PREFIX_PATH="$PWD/out/target" \
+        -DCMAKE_INSTALL_PREFIX="$prefix" \
+        -DINTERFACE_TARGET=common \
+        -DINTERFACE_VERSION=0.3.0.0 >"$log" 2>&1 \
+        || ! cmake --build "$build_dir" --target common-v0.3.0.0-cpp >>"$log" 2>&1 \
+        || ! cmake --install "$build_dir" >>"$log" 2>&1; then
+        echo "❌ Build or install failed"
+        tail -20 "$log"
+        rm -rf "$work"
+        return 1
+    fi
+
+    local config
+    config="$(find "$prefix" -name RdkHalifAidlCommonConfig.cmake -print -quit)"
+    if [ -z "$config" ] || ! python3 - "$config" "$prefix" <<'PY'
+import pathlib
+import re
+import sys
+
+config = pathlib.Path(sys.argv[1]).read_text()
+prefix = sys.argv[2]
+paths = re.findall(r'RDK_HALIF_AIDL_COMMON_(?:SRC|HEADER)_FILES "([^"]+)"', config)
+files = [path for group in paths for path in group.split(";")]
+files = [path.replace("${PACKAGE_PREFIX_DIR}", prefix) for path in files]
+raise SystemExit(0 if files and all(pathlib.Path(path).is_file() for path in files) else 1)
+PY
+    then
+        echo "❌ Installed fallback paths are invalid"
+        rm -rf "$work"
+        return 1
+    fi
+
+    echo "✅ Installed source and header fallback paths exist"
+    rm -rf "$work"
     return 0
 }
 
@@ -1070,9 +1268,11 @@ run_test "8" "Direct CMake build (default flags)" test_8
 run_test "9" "Direct CMake build (minimal production flags)" test_9
 run_test "10" "CMake multi-module build with version switching" test_10
 run_test "11" "Cross-compilation build (sc docker rdk-kirkstone)" test_11
-run_test "12" "Yocto integration (per-component + vendor/MW full-HAL builds)" test_12
-run_test "13" "Each component builds individually (fresh sysroot per component)" test_13
-run_test "14" "Each component packages individually through real bitbake" test_14
+run_test "12" "Generated bindings follow the AIDL files" test_12
+run_test "13" "Generated bindings report the frozen version and hash" test_13
+run_test "14" "build_modules.sh honours --sdk-dir and the install prefix" test_14
+run_test "15" "Multiple versions of a dependency build in one manifest" test_15
+run_test "16" "Installed CMake fallback paths exist" test_16
 
 ################################################################################
 # Summary

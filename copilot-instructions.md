@@ -69,16 +69,22 @@ Each `hfp-{module}.yaml` declares static capabilities:
 
 ### Root Level Build
 ```bash
-# Generate AIDL code for specific module
-cmake -DAIDL_TARGET={module} -DAIDL_SRC_VERSION=current .
-make
+# Build a specific module's current interface and its declared dependencies
+cmake -S . -B build -DINTERFACE_TARGET={module}
+cmake --build build
+
+# Build the released cohort selected by the default versions manifest
+cmake -S . -B build
+cmake --build build
 ```
 
-### Required CMake Variables
-- `AIDL_TARGET`: Module to build (e.g., "boot", "videodecoder")
-- `AIDL_SRC_VERSION`: Version directory (typically "current")
-- `AIDL_GEN_DIR`: Output directory (defaults to `gen/{module}/{version}`)
-- `AIDL_BIN`: Path to AIDL compiler (from linux_binder_idl tools)
+### Root CMake Variables
+- `INTERFACE_TARGET`: Optional module to build (e.g., "bootreason", "videodecoder"); leave unset to build a manifest
+- `INTERFACE_VERSION`: Version of `INTERFACE_TARGET` (default: `current`)
+- `INTERFACE_RELEASE_FILE`: Component version manifest (default: `versions_released.yaml`)
+
+Each selected module version declares its dependency versions in
+`<module>/<version>/interface.yaml`.
 
 ### Module CMakeLists.txt Pattern
 ```cmake
@@ -138,7 +144,7 @@ set(COMMON_VERSION "current")
 1. **Create New HAL**: Copy existing module structure, update package names
 2. **Design AIDL**: Start with main interface, add supporting types
 3. **Update HFP**: Define static capabilities in `hfp-{module}.yaml`, this is the max caps of the module from the API definition, and will be tailored per platform later.
-4. **Build**: Use root-level CMake with `AIDL_TARGET` set to your module
+4. **Build**: Use root-level CMake with `INTERFACE_TARGET` set to your module
 5. **Document**: Follow established documentation patterns in each component's `current/docs/`
 
 ## Testing & Validation
