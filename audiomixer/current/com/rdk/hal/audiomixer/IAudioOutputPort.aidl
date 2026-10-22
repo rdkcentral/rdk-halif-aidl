@@ -18,6 +18,7 @@
  */
 package com.rdk.hal.audiomixer;
 
+import com.rdk.hal.audiomixer.ActiveOutputFormat;
 import com.rdk.hal.audiomixer.IAudioOutputPortController;
 import com.rdk.hal.audiomixer.IAudioOutputPortControllerListener;
 import com.rdk.hal.audiomixer.IAudioOutputPortListener;
@@ -175,5 +176,22 @@ interface IAudioOutputPort {
      * @see registerEventListener()
      */
     boolean unregisterEventListener(in IAudioOutputPortListener audioOutputPortEventListener);
+
+    /**
+     * @brief    Gets the audio this port is emitting now.
+     *
+     *           Does not require ownership and is available in any state.
+     *           Changes are delivered whole by
+     *           IAudioOutputPortListener.onActiveOutputFormatChanged().
+     *
+     * @returns  The active format, or null when the port is emitting
+     *           nothing: CONNECTION_STATE is not CONNECTED on a port that
+     *           declares it, the port is disabled, or the mixer is not
+     *           STARTED.
+     *
+     * @see ActiveOutputFormat
+     * @see OutputPortProperty.OUTPUT_FORMAT
+     */
+    @nullable ActiveOutputFormat getActiveOutputFormat();
 
 }

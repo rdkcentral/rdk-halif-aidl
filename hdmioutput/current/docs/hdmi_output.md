@@ -63,7 +63,9 @@ The `HDMIOutput` HAL provides control over:
 | `IHDMIOutputEventListener.aidl`        | Event listener interface for HDMI-related events                     |
 | `Capabilities.aidl`                    | Describes supported video formats, pixel formats, color spaces, etc. |
 | `HDCPStatus.aidl`                      | Enum for HDCP authentication states                                  |
+| `ActiveOutputFormat.aidl`              | The video signal the output is sending now                           |
 | `HDROutputMode.aidl`                   | HDR mode declaration                                                 |
+| `QuantizationRange.aidl`               | Limited or full quantization range                                   |
 | `SPDSource.aidl`                       | Enum for identifying SPD signal types                                |
 | `VIC.aidl`                             | Enum for HDMI Video ID Codes                                         |
 | `Property.aidl`, `PropertyKVPair.aidl` | General key-value properties and HDMI metadata support               |
@@ -130,6 +132,7 @@ flowchart TD
 | Hotplug     | `onHotPlugDetectStateChanged()`  | Notifies client when a cable is connected or removed |
 | EDID Change | `onEDID()`                       | Indicates that sink EDID has changed                 |
 | HDCP        | `onHDCPStatusChanged()`          | HDCP authentication state updates                    |
+| Active format | `onActiveOutputFormatChanged()` | The signal on the wire changed; delivered whole     |
 
 ---
 
@@ -139,6 +142,21 @@ flowchart TD
 2. **AVAILABLE**: Sink detected, capabilities read
 3. **CONFIGURED**: VIC set and HDMI signal configured
 4. **ERROR**: Error state due to HDCP failure or signal loss
+
+---
+
+## Active Output Format
+
+`Property` keys hold what the client configured; `ActiveOutputFormat` is the signal being sent now. Read it with `IHDMIOutput.getActiveOutputFormat()`; every change arrives whole in one `IHDMIOutputEventListener.onActiveOutputFormatChanged()`. A switch into HDR changes EOTF, colorimetry and colour depth together, and a client sees all three change in the same event. It is null while no signal is being sent.
+
+| Field | Meaning |
+|---|---|
+| `vic` | Video mode on the wire |
+| `colorimetry`, `extendedColorimetry`, `additionalColorimetryExtension` | AVI InfoFrame C, EC, ACE |
+| `colorDepth` | Bits per colour component |
+| `pixelFormat` | Chroma format (AVI InfoFrame Y) |
+| `quantizationRange` | `LIMITED` or `FULL` (AVI InfoFrame Q / YQ) |
+| `hdrOutputMode` | Dynamic range being signalled; `SDR` or an HDR mode, never `AUTO` |
 
 ---
 

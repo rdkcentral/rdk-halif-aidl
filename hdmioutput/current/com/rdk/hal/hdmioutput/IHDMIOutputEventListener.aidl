@@ -18,6 +18,7 @@
  */
 package com.rdk.hal.hdmioutput;
 
+import com.rdk.hal.hdmioutput.ActiveOutputFormat;
 import com.rdk.hal.hdmioutput.State;
 
 /**
@@ -57,4 +58,16 @@ oneway interface IHDMIOutputEventListener
      * @see IHDMIOutput.open(), IHDMIOutput.close()
      */
     void onStateChanged(in State oldState, in State newState);
+
+    /**
+     * Callback triggered when the video signal on the output changes.
+     *
+     * Fires once per change, with every field of the new signal: a VIC or
+     * HDR_OUTPUT_MODE write, AUTO resolving to a different mode as content
+     * changes, or renegotiation with a new sink. Fires with null when the
+     * output stops sending a signal (see `IHDMIOutput.getActiveOutputFormat()`).
+     *
+     * @param[in] activeOutputFormat  The new active format, or null.
+     */
+    void onActiveOutputFormatChanged(in @nullable ActiveOutputFormat activeOutputFormat);
 }

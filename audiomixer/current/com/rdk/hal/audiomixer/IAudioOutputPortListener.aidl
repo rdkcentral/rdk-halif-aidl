@@ -18,6 +18,7 @@
  */
 package com.rdk.hal.audiomixer;
 
+import com.rdk.hal.audiomixer.ActiveOutputFormat;
 import com.rdk.hal.audiomixer.OutputPortProperty;
 import com.rdk.hal.PropertyValue;
 
@@ -46,9 +47,10 @@ oneway interface IAudioOutputPortListener {
      *                  (UNKNOWN / DISCONNECTED / CONNECTED / PENDING / FAULT).
      *                  Clients should not poll CONNECTION_STATE — register a
      *                  listener instead.</li>
-     *              <li><b>OUTPUT_FORMAT</b> — when the active format changes
-     *                  (e.g. AUTO mode resolves to a different codec after
-     *                  EDID/CEC re-negotiation).</li>
+     *              <li><b>OUTPUT_FORMAT</b> — when the configured value is
+     *                  written. What it resolves to (e.g. AUTO after
+     *                  EDID/CEC re-negotiation) is delivered by
+     *                  onActiveOutputFormatChanged().</li>
      *              <li><b>VOLUME / MUTE</b> — when changed by another component
      *                  (e.g. system audio service adjusting per-port master).</li>
      *              <li><b>SUPPORTED_AUDIO_FORMATS / DOLBY_ATMOS_SUPPORT</b> —
@@ -66,4 +68,17 @@ oneway interface IAudioOutputPortListener {
      * @param[in] newValue   The new PropertyValue.
      */
     void onPropertyChanged(in OutputPortProperty property, in PropertyValue newValue);
+
+    /**
+     * @brief     Called when the audio this port is emitting changes.
+     * @details   Fires once per change, with every field of the new state:
+     *            a codec change at the source, a reconnect to a sink with a
+     *            different capability set, an OUTPUT_FORMAT write, or Atmos
+     *            starting or stopping in the content. Fires with null when
+     *            the port stops emitting (see
+     *            IAudioOutputPort.getActiveOutputFormat()).
+     *
+     * @param[in] activeOutputFormat  The new active format, or null.
+     */
+    void onActiveOutputFormatChanged(in @nullable ActiveOutputFormat activeOutputFormat);
 }

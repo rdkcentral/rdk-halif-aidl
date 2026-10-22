@@ -97,4 +97,15 @@ parcelable OutputPortCapabilities {
      * @see     IAudioOutputPortController.getAudioCapture()
      */
     boolean supportsAudioCapture;
+
+    /**
+     * @brief   True when this port can carry or render Dolby Atmos with a
+     *          capable sink connected.
+     *
+     * @details Fixed for the port's lifetime; declared in the HFP under
+     *          outputPorts[].supportsDolbyAtmos. Whether Atmos is possible
+     *          with the device connected now is
+     *          OutputPortProperty.DOLBY_ATMOS_SUPPORT.
+     */
+    boolean supportsDolbyAtmos;
 }

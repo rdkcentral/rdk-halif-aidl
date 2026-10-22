@@ -18,6 +18,7 @@
  */
 package com.rdk.hal.hdmioutput;
 
+import com.rdk.hal.hdmioutput.ActiveOutputFormat;
 import com.rdk.hal.hdmioutput.Capabilities;
 import com.rdk.hal.hdmioutput.IHDMIOutputController;
 import com.rdk.hal.hdmioutput.Property;
@@ -160,4 +161,18 @@ interface IHDMIOutput
      * @see registerEventListener()
      */
     boolean unregisterEventListener(in IHDMIOutputEventListener hdmiOutputEventListener);
+
+    /**
+     * Gets the video signal this output is sending now.
+     *
+     * Does not require the controller and can be called in any state.
+     * Changes are delivered whole by
+     * `IHDMIOutputEventListener.onActiveOutputFormatChanged()`.
+     *
+     * @returns ActiveOutputFormat, or null when no signal is being sent
+     *          (not `STARTED`, or hot plug detect is low).
+     *
+     * @see ActiveOutputFormat
+     */
+    @nullable ActiveOutputFormat getActiveOutputFormat();
 }
