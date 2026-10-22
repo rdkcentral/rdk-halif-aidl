@@ -103,7 +103,7 @@ interface IIndicator {
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid state string.
      *
      */
-    boolean set(in String state);
+    boolean set(in @utf8InCpp String state);
 
     /**
      * Gets the current indicator state.
@@ -114,5 +114,5 @@ interface IIndicator {
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      */
-    String get();
+    @utf8InCpp String get();
 }

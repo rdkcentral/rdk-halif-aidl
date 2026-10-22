@@ -46,7 +46,7 @@ oneway interface IAudioMixerEventListener {
      * @param[in] errorCode  An implementation-defined or HAL-standard error code.
      * @param[in] message    Human-readable error message, may be empty.
      */
-    void onError(in int errorCode, in String message);
+    void onError(in int errorCode, in @utf8InCpp String message);
 
     /**
      * @brief     Called when the mixer state changes (e.g., READY, STARTED, STOPPING).

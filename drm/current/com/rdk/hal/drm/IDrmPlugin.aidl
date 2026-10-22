@@ -177,8 +177,8 @@ interface IDrmPlugin {
      *             such that a retry of the operation is likely to succeed
      *       + ERROR_DRM_SESSION_NOT_OPENED if the session is not opened
      */
-    KeyRequest getKeyRequest(
-        in byte[] scope, in byte[] initData, in String mimeType, in KeyType keyType, in KeyValue[] optionalParameters);
+    KeyRequest getKeyRequest(in byte[] scope, in byte[] initData, in @utf8InCpp String mimeType, in KeyType keyType,
+        in KeyValue[] optionalParameters);
 
     /**
      * Returns the plugin-specific metrics. Multiple metric groups may be
@@ -217,7 +217,7 @@ interface IDrmPlugin {
      *       + ERROR_DRM_INVALID_STATE if the HAL is in a state where the
      *             property cannot be obtained
      */
-    byte[] getPropertyByteArray(in String propertyName);
+    byte[] getPropertyByteArray(in @utf8InCpp String propertyName);
 
     /**
      * A drm scheme can have properties that are settable and readable
@@ -247,7 +247,7 @@ interface IDrmPlugin {
      *       + ERROR_DRM_INVALID_STATE if the HAL is in a state where the
      *             property cannot be obtained
      */
-    String getPropertyString(in String propertyName);
+    @utf8InCpp String getPropertyString(in @utf8InCpp String propertyName);
 
     /**
      * A provision request/response exchange occurs between the app
@@ -272,7 +272,8 @@ interface IDrmPlugin {
      *             resources such that a retry of the operation is likely
      *             to succeed
      */
-    ProvisionRequest getProvisionRequest(in String certificateType, in String certificateAuthority);
+    ProvisionRequest getProvisionRequest(
+        in @utf8InCpp String certificateType, in @utf8InCpp String certificateAuthority);
 
     /**
      * Return the current security level of a session. A session has an initial
@@ -399,7 +400,7 @@ interface IDrmPlugin {
      * @return must be true if and only if a secure decoder is
      *     required for the specified mime-type & security level
      */
-    boolean requiresSecureDecoder(in String mime, in SecurityLevel level);
+    boolean requiresSecureDecoder(in @utf8InCpp String mime, in SecurityLevel level);
 
     /**
      * The following methods implement operations on a CryptoSession to support
@@ -420,7 +421,7 @@ interface IDrmPlugin {
      *         the algorithm cannot be set.
      *     ERROR_DRM_SESSION_NOT_OPENED if the session is not opened
      */
-    void setCipherAlgorithm(in byte[] sessionId, in String algorithm);
+    void setCipherAlgorithm(in byte[] sessionId, in @utf8InCpp String algorithm);
 
     /**
      * Plugins call the following methods to deliver events
@@ -447,7 +448,7 @@ interface IDrmPlugin {
      *         the algorithm cannot be set.
      *     ERROR_DRM_SESSION_NOT_OPENED if the session is not opened
      */
-    void setMacAlgorithm(in byte[] sessionId, in String algorithm);
+    void setMacAlgorithm(in byte[] sessionId, in @utf8InCpp String algorithm);
 
     /**
      * Set playback id of a drm session. The playback id can be used to join drm session metrics
@@ -460,7 +461,7 @@ interface IDrmPlugin {
      * Errors are reported via binder::status EX_SERVICE_SPECIFIC:
      *    ERROR_DRM_SESSION_NOT_OPENED if the drm session cannot be found
      */
-    void setPlaybackId(in byte[] sessionId, in String playbackId);
+    void setPlaybackId(in byte[] sessionId, in @utf8InCpp String playbackId);
 
     /**
      * Write a property byte array value given the property name
@@ -474,7 +475,7 @@ interface IDrmPlugin {
      *     ERROR_DRM_INVALID_STATE if the HAL is in a state where the
      *         property cannot be set
      */
-    void setPropertyByteArray(in String propertyName, in byte[] value);
+    void setPropertyByteArray(in @utf8InCpp String propertyName, in byte[] value);
 
     /**
      * Write a property string value given the property name
@@ -488,7 +489,7 @@ interface IDrmPlugin {
      *     ERROR_DRM_INVALID_STATE if the HAL is in a state where the
      *         property cannot be set
      */
-    void setPropertyString(in String propertyName, in String value);
+    void setPropertyString(in @utf8InCpp String propertyName, in @utf8InCpp String value);
 
     /**
      * Compute a signature over the provided message using the mac algorithm
@@ -526,7 +527,7 @@ interface IDrmPlugin {
      *             signRSA operation operation cannot be performed
      *       + ERROR_DRM_SESSION_NOT_OPENED if the session is not opened
      */
-    byte[] signRSA(in byte[] sessionId, in String algorithm, in byte[] message, in byte[] wrappedKey);
+    byte[] signRSA(in byte[] sessionId, in @utf8InCpp String algorithm, in byte[] message, in byte[] wrappedKey);
 
     /**
      * Compute a hash of the provided message using the mac algorithm specified

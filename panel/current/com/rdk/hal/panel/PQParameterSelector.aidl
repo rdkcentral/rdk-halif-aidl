@@ -41,7 +41,7 @@ parcelable PQParameterSelector {
     /**
      * The picture mode.
      */
-    String pictureMode;
+    @utf8InCpp String pictureMode;
 
     /**
      * The AV source.

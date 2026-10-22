@@ -41,7 +41,7 @@ parcelable OutputPortCapabilities {
      *          user-facing diagnostics. For programmatic type identification
      *          and policy branching, use `portType` instead.
      */
-    String portName;
+    @utf8InCpp String portName;
 
     /**
      * @brief Programmatic type of this output port.
@@ -77,7 +77,7 @@ parcelable OutputPortCapabilities {
      * If there are no defined MS12 Audio Profiles for this audio port then
      * dolbyMs12AudioProfiles is not populated with profile strings.
      */
-    @nullable String[] dolbyMs12AudioProfiles;
+    @nullable @utf8InCpp String[] dolbyMs12AudioProfiles;
 
     /**
      * @brief   True when this port supports audio capture via

@@ -39,7 +39,7 @@ union PQParameterValue {
     /** SDR gamma value used when pqParameter == PQParameter.SDR_GAMMA. */
     SDRGamma sdrGamma;
     /** String value used when pqParameter == PQParameter.COLOR_TEMPERATURE. */
-    String stringValue;
+    @utf8InCpp String stringValue;
     /** Grouped dimming settings used when pqParameter == PQParameter.DIMMING_SETTINGS. */
     DimmingSettings dimmingSettings;
     /** Dolby Vision calibration settings used when pqParameter == PQParameter.DV_CALIBRATION. */

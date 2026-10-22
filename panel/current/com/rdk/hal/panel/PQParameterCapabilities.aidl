@@ -268,7 +268,7 @@ parcelable PQParameterCapabilities {
          * Supported string values used when pqParameter ==
          * PQParameter.COLOR_TEMPERATURE.
          */
-        @nullable String[] supportedStringValues;
+        @nullable @utf8InCpp String[] supportedStringValues;
 
         /**
          * Specific grouped dimming presets that are supported.
@@ -284,13 +284,13 @@ parcelable PQParameterCapabilities {
          * Specific 2-point white balance colour-temperature strings that are
          * supported.
          */
-        @nullable String[] supportedTwoPointWBValues;
+        @nullable @utf8InCpp String[] supportedTwoPointWBValues;
 
         /**
          * Specific multi-point white balance colour-temperature strings that
          * are supported.
          */
-        @nullable String[] supportedMultiPointWBValues;
+        @nullable @utf8InCpp String[] supportedMultiPointWBValues;
 
         /**
          * Specific grouped colour-management presets that are supported.
@@ -312,7 +312,7 @@ parcelable PQParameterCapabilities {
     @VintfStability
     parcelable PQParamPictureModeCapabilities {
         /** The picture mode. */
-        String pictureMode;
+        @utf8InCpp String pictureMode;
 
         /**
          * Nested PQ parameter dynamic-range capabilities definition.

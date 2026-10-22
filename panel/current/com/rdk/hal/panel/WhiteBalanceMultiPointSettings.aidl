@@ -31,7 +31,7 @@ parcelable WhiteBalanceMultiPointSettings {
     /**
      * Colour temperature profile this white balance setting applies to.
      */
-    String colourTemperature;
+    @utf8InCpp String colourTemperature;
 
     /**
      * Red-channel white point values for this colour temperature.

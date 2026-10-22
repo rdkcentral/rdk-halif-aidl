@@ -80,5 +80,5 @@ oneway interface IAudioCaptureListener {
      *
      * @exception None (one-way interface never throws).
      */
-    void onError(in AudioCaptureError error, in String message);
+    void onError(in AudioCaptureError error, in @utf8InCpp String message);
 }

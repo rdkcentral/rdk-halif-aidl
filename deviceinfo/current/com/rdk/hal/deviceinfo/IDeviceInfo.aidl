@@ -66,7 +66,7 @@ interface IDeviceInfo {
      *
      * @see getCapabilities(), Property.aidl, PropertyType.aidl
      */
-    @nullable Property getProperty(in String propertyKey);
+    @nullable Property getProperty(in @utf8InCpp String propertyKey);
 
     /** @} */
 }

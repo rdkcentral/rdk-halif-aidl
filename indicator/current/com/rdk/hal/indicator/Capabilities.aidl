@@ -31,5 +31,5 @@ package com.rdk.hal.indicator;
 @VintfStability
 parcelable Capabilities {
     /** Array of supported state key strings. */
-    String[] supportedStates;
+    @utf8InCpp String[] supportedStates;
 }

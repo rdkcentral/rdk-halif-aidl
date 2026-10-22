@@ -39,5 +39,5 @@ union DrmMetricValue {
     /** The value as a double. */
     double doubleValue;
     /** The value as a string. */
-    String stringValue;
+    @utf8InCpp String stringValue;
 }

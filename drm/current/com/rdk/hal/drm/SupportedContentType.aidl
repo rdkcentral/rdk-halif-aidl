@@ -37,7 +37,7 @@ import com.rdk.hal.drm.SecurityLevel;
 @VintfStability
 parcelable SupportedContentType {
     /** Supported mime type. E.g. cenc, video/mp4, etc */
-    String mime;
+    @utf8InCpp String mime;
 
     /** Minimum supported security level (inclusive) */
     SecurityLevel minLevel;

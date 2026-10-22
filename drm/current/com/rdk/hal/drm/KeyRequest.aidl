@@ -58,5 +58,5 @@ parcelable KeyRequest {
      * override this URL. If the HAL implementation does not provide
      * a defaultUrl, the returned string must be empty.
      */
-    String defaultUrl;
+    @utf8InCpp String defaultUrl;
 }

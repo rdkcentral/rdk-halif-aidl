@@ -34,7 +34,7 @@ package com.rdk.hal.drm;
 @VintfStability
 parcelable KeyValue {
     /** The key. */
-    String key;
+    @utf8InCpp String key;
     /** The value. */
-    String value;
+    @utf8InCpp String value;
 }

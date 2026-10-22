@@ -28,10 +28,10 @@ package com.rdk.hal.sensor.thermal;
 @VintfStability
 parcelable TemperatureReading {
     /** @brief Human-readable identifier (e.g., "SoC Die", "DDR", "PMIC"). */
-    String sensorName;
+    @utf8InCpp String sensorName;
 
     /** @brief Optional location/domain hint (e.g., "CPU", "GPU", "Board"). */
-    String location;
+    @utf8InCpp String location;
 
     /** @brief Temperature in degrees Celsius. */
     double temperatureCelsius;
@@ -49,5 +49,5 @@ parcelable TemperatureReading {
      * @brief Optional vendor info string (domain, details, etc.).
      *         May be null or empty, and used for telemetry or diagnostics.
      */
-    String vendorInfo;
+    @utf8InCpp String vendorInfo;
 }

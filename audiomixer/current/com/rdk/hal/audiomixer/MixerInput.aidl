@@ -59,5 +59,5 @@ parcelable MixerInput {
      *          Examples: "main", "assoc", "pcm1", "pcm2", "aux".
      *          Although optional, this field aids debugging, logging, and platform introspection.
      */
-    @nullable String name;
+    @nullable @utf8InCpp String name;
 }

@@ -30,5 +30,5 @@ parcelable Capabilities {
     /**
      * Array of supported property key strings.
      */
-    String[] supportedProperties;
+    @utf8InCpp String[] supportedProperties;
 }

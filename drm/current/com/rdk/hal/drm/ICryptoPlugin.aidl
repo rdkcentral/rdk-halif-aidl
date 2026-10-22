@@ -92,7 +92,7 @@ interface ICryptoPlugin {
      * @return must be true only if a secure decoder is required
      * for the specified mime-type
      */
-    boolean requiresSecureDecoderComponent(in String mime);
+    boolean requiresSecureDecoderComponent(in @utf8InCpp String mime);
 
     /**
      * Associate a mediadrm session with this crypto session.

@@ -30,7 +30,7 @@ parcelable PictureModeConfiguration {
     /**
      * The picture mode.
      */
-    String pictureMode;
+    @utf8InCpp String pictureMode;
 
     /**
      * The dynamic range.

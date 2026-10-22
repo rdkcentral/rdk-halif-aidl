@@ -31,7 +31,7 @@ parcelable Capabilities {
     /**
      * The panel type.
      */
-    String panelType;
+    @utf8InCpp String panelType;
 
     /** Panel width in pixels. */
     int pixelWidth;
@@ -66,7 +66,7 @@ parcelable Capabilities {
      * These strings are used directly by `PQParameter.COLOR_TEMPERATURE`
      * and by colour-temperature-scoped white balance operations.
      */
-    String[] supportedColourTemperatures;
+    @utf8InCpp String[] supportedColourTemperatures;
 
     /**
      * All AV sources supported by the panel.
@@ -85,7 +85,7 @@ parcelable Capabilities {
         /**
          * The picture mode.
          */
-        String pictureMode;
+        @utf8InCpp String pictureMode;
 
         /**
          * Defines the list of dynamic ranges, and the list of AV sources for each

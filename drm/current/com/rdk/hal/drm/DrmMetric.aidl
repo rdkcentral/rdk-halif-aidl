@@ -40,7 +40,7 @@ import com.rdk.hal.drm.DrmMetricNamedValue;
 @VintfStability
 parcelable DrmMetric {
     /** The name of the metric. */
-    String name;
+    @utf8InCpp String name;
 
     /**
      * Detail(s) about the metric being captured.

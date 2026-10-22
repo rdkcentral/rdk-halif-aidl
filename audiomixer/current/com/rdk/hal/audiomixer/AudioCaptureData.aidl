@@ -60,7 +60,7 @@ parcelable AudioCaptureData {
      * codecName is purely informative and intended only for diagnostic purposes.
      * Do not rely on the string value for logical operations.
      */
-    @nullable String codecName;
+    @nullable @utf8InCpp String codecName;
 
     /**
      * PCM sample encoding details (bit depth, signedness, byte order).

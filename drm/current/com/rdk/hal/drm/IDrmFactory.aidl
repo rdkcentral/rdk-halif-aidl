@@ -53,7 +53,7 @@ interface IDrmFactory {
      *     Implicit error codes:
      *       + ERROR_DRM_CANNOT_HANDLE if the plugin cannot be created.
      */
-    @nullable com.rdk.hal.drm.IDrmPlugin createDrmPlugin(in Uuid uuid, in String appPackageName);
+    @nullable com.rdk.hal.drm.IDrmPlugin createDrmPlugin(in Uuid uuid, in @utf8InCpp String appPackageName);
 
     /**
      * Create a crypto plugin for the specified uuid and scheme-specific

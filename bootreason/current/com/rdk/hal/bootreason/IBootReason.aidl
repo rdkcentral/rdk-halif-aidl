@@ -66,7 +66,7 @@ interface IBootReason {
      * @param[in] cause           BootCause value.
      * @param[in] reasonString    Free-form reboot reason string (64 bytes)
      */
-    void setBootCause(in BootCause cause, in String reasonString);
+    void setBootCause(in BootCause cause, in @utf8InCpp String reasonString);
 
     /**
      * Performs a shutdown and warm reboot of the device.
@@ -77,7 +77,7 @@ interface IBootReason {
      * @param[in] resetType     ResetType value
      * @param[in] reasonString  Free-form reset reason string (64 bytes)
      */
-    void reboot(in ResetType resetType, in String reasonString);
+    void reboot(in ResetType resetType, in @utf8InCpp String reasonString);
 
     /**
      * Gets the device power source.

@@ -36,7 +36,7 @@ oneway interface IPanelOutputControllerListener {
      *
      * @param[in] pictureMode   The new picture mode.
      */
-    void onPictureModeChanged(in String pictureMode);
+    void onPictureModeChanged(in @utf8InCpp String pictureMode);
 
     /**
      * Callback when a PQ picture property value changes.
@@ -47,6 +47,6 @@ oneway interface IPanelOutputControllerListener {
      * @param[in] pictureProperty         The PQ picture property that changed.
      * @param[in] picturePropertyValue    The changed value variant.
      */
-    void onPQParameterChanged(in String pictureMode, in PanelSource avSource, in DynamicRange dynamicRange,
+    void onPQParameterChanged(in @utf8InCpp String pictureMode, in PanelSource avSource, in DynamicRange dynamicRange,
         in PQParameter pictureProperty, in PQParameterValue picturePropertyValue);
 }

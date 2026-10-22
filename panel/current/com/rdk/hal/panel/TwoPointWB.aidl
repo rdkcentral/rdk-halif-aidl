@@ -31,7 +31,7 @@ parcelable TwoPointWB {
     /**
      * Colour temperature profile this white balance entry applies to.
      */
-    String colourTemperature;
+    @utf8InCpp String colourTemperature;
 
     /** Red-channel gain value. Valid range is 0 to 2047. */
     int redGain;

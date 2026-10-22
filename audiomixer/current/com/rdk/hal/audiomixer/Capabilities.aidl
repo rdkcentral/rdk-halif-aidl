@@ -71,5 +71,5 @@ parcelable Capabilities {
      * May be null if not set by the platform.
      *          Although optional, this field is intended to aid debugging, logging, and platform introspection.
      */
-    @nullable String name;
+    @nullable @utf8InCpp String name;
 }
