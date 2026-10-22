@@ -92,6 +92,12 @@ cp -r "${REPO_ROOT}/out/target/lib/binder"        "${SDK}/lib/"     || fail "bin
 build_into() {
     local stage="$1" comp="$2" ver="$3"
     local bdir="${ROOT}/obj/${comp}-${ver}"   # separate line: use the locals above
+    if [ ! -f "${REPO_ROOT}/${comp}/${ver}/CMakeLists.txt" ]; then
+        # Header-only snapshot (e.g. halcompat): no library, stage headers only.
+        install -d "${stage}/include/rdk-halif-aidl/${comp}/${ver}"
+        cp -r "${REPO_ROOT}/${comp}/${ver}/include" "${stage}/include/rdk-halif-aidl/${comp}/${ver}/" || return 1
+        return 0
+    fi
     mkdir -p "${bdir}"
     cmake -S "${REPO_ROOT}/${comp}/${ver}" -B "${bdir}" \
         -DBINDER_SDK_DIR="${SDK}" -DBINDER_SDK_INCLUDE_DIR="${SDK}" \
@@ -125,7 +131,13 @@ for pair in "${PAIRS[@]}"; do
         [ -z "${c}" ] && continue
         build_into "${stage}" "${c}" "${v}" || { ok=false; break; }
     done <<< "${cplan}"
-    if ${ok} && [ -f "${stage}/lib/rdk-halif-aidl/lib${comp}-v${ver}-cpp.so" ]; then
+    # A header-only component's product is its staged include/ tree, not a .so.
+    if [ -f "${REPO_ROOT}/${comp}/${ver}/CMakeLists.txt" ]; then
+        product="${stage}/lib/rdk-halif-aidl/lib${comp}-v${ver}-cpp.so"
+    else
+        product="${stage}/include/rdk-halif-aidl/${comp}/${ver}/include"
+    fi
+    if ${ok} && [ -e "${product}" ]; then
         if [ -n "${deps}" ]; then
             echo "  ✓ ${comp}@${ver}  (deps built first: ${deps% })"
         else

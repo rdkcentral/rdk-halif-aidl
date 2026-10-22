@@ -1,7 +1,7 @@
 # If not stated otherwise in this file or this component's LICENSE file the
 # following copyright and licenses apply:
 #
-# Copyright 2024 RDK Management
+# Copyright 2026 RDK Management
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,16 +17,15 @@
 
 # component   - Machine-readable component identifier                    [manual]
 # version     - Pre-baseline: 0.<generation>.<minor>.<patch>              [release.sh]
-#               GENERATED at release by scripts/release.sh from the PR change-class
-#               labels. Do not edit by hand: engineering teams never change it in a PR.
 # status      - RAG status: GREEN / AMBER / RED                          [manual]
 # description - One-line human-readable summary                          [manual]
-# type        - Responsibility: SOC or OEM                                [manual]
-component: common
-version: 0.2.0.0
+# type        - Responsibility: SOC or OEM; CLIENT for a middleware-side
+#               helper with no vendor implementation                      [manual]
+component: halcompat
+version: 0.1.0.0
 status: GREEN
-description: "Shared base AIDL types and definitions used across all HAL interfaces"
-type: OEM
+description: "Client-side C++ compatibility helpers: service lookup, isCompatible() and atLeast() feature gates (header-only, no AIDL)"
+type: CLIENT
 
 # lifecycle - 14+5 review cycle dates                                    [pr_cycle.sh]
 #   review_started    - Date the review window opened
@@ -39,9 +38,10 @@ lifecycle:
 
 # scope - High-level architectural responsibilities                       [manual]
 scope:
-  - Shared parcelable and enum definitions imported by other HAL interfaces
-  - Common property value and state representations
-  - Shared error and AV source types
+  - Service lookup by a generated interface's serviceName()
+  - Compatibility predicate over getInterfaceVersion() and getInterfaceHash(), with the era rules internal to the helper
+  - Feature gates on additive releases via atLeast(era, major, minor, bugfix)
+  - Rejection of unfrozen development servers unless the client opts in
 
 # notes - Tracking metadata                                              [manual]
 #   priority      - Numeric priority (lower = higher)
@@ -50,10 +50,14 @@ scope:
 #   risk          - Risk notes (appears as watch item on dashboard)
 #   owners        - Responsible architecture teams
 notes:
+  priority: 3
+  status_detail: "Header-only; ships as halcompat/<version>/include/halcompat.h with no library to link"
   owners: "Architecture"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
-    Architecture: pending
-    Product_Architecture: pending
+    Architecture: reviewed
+    Product_Architecture: abstained
+    AV_Architecture: abstained
+    Vendor_Layer_Team: abstained

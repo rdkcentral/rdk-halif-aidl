@@ -136,11 +136,16 @@ if ./build_modules.sh manifest > /tmp/smoke_manifest_released.log 2>&1; then
     # silent regression here can't be masked by phase 1's leftover libs.
     # Components pinned to `current` in the manifest (e.g. new modules
     # with no snapshot yet) are excluded from both the count and the
-    # EXPECTED_VERSIONED expectation below.
-    EXPECTED_VERSIONED=$(awk '/^components:/ {inmap=1; next}
-                              inmap && /^[^[:space:]#]/ {inmap=0}
-                              inmap && /^[[:space:]]+[A-Za-z0-9_]+:[[:space:]]+[0-9]/ {n++}
-                              END {print n+0}' "${REPO_ROOT}/versions_released.yaml")
+    # EXPECTED_VERSIONED expectation below, as are header-only snapshots
+    # (no CMakeLists.txt, e.g. halcompat), which build no library.
+    EXPECTED_VERSIONED=0
+    while read -r _comp _ver; do
+        [ -f "${REPO_ROOT}/${_comp}/${_ver}/CMakeLists.txt" ] \
+            && EXPECTED_VERSIONED=$((EXPECTED_VERSIONED + 1))
+    done < <(awk '/^components:/ {inmap=1; next}
+                  inmap && /^[^[:space:]#]/ {inmap=0}
+                  inmap && /^[[:space:]]+[A-Za-z0-9_]+:[[:space:]]+[0-9]/ {gsub(":", ""); print $1, $2}' \
+                  "${REPO_ROOT}/versions_released.yaml")
     n=$(count_libs 'lib*-v[0-9]*-cpp.so')
     if [ "${n}" -ge "${EXPECTED_VERSIONED}" ]; then
         pass "manifest (released): ${n} lib*-v<X.Y.Z.W>-cpp.so built (>= ${EXPECTED_VERSIONED} versioned-pin entries expected)"

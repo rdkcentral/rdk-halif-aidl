@@ -21,7 +21,7 @@ package com.rdk.hal.compositeinput;
 
 import com.rdk.hal.compositeinput.PortProperty;
 import com.rdk.hal.compositeinput.State;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.compositeinput.PropertyValue;
 
 /**
  * @brief Event listener interface for composite input port observation.

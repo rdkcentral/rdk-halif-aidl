@@ -25,7 +25,7 @@ import com.rdk.hal.hdmioutput.PropertyKVPair;
 import com.rdk.hal.hdmioutput.IHDMIOutputControllerListener;
 import com.rdk.hal.hdmioutput.IHDMIOutputEventListener;
 import com.rdk.hal.hdmioutput.State;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.hdmioutput.PropertyValue;
 
 /**
  *  @brief     HDMI Output HAL interface.

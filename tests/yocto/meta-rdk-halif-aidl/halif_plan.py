@@ -64,7 +64,8 @@ together):
   `-- tests/yocto/meta-rdk-halif-aidl/
       `-- halif_plan.py               <- this file
 
-A component is only discovered if <comp>/<ver>/CMakeLists.txt exists, so
+A component is only discovered if <comp>/<ver>/CMakeLists.txt exists, or
+<comp>/<ver>/include/ for a header-only component (no library), so
 placeholder directories are ignored.
 """
 import os
@@ -83,13 +84,21 @@ def version_tuple(v):
     return tuple(int(x) for x in v.split("."))
 
 
+def is_header_only(comp, ver):
+    """A header-only snapshot (e.g. halcompat) ships include/ and no library."""
+    d = os.path.join(REPO_ROOT, comp, ver)
+    return (not os.path.isfile(os.path.join(d, "CMakeLists.txt"))
+            and os.path.isdir(os.path.join(d, "include")))
+
+
 def released_versions(comp):
     d = os.path.join(REPO_ROOT, comp)
     if not os.path.isdir(d):
         return []
     return sorted(
         (v for v in os.listdir(d)
-         if VER_RE.match(v) and os.path.isfile(os.path.join(d, v, "CMakeLists.txt"))),
+         if VER_RE.match(v) and (os.path.isfile(os.path.join(d, v, "CMakeLists.txt"))
+                                 or is_header_only(comp, v))),
         key=version_tuple,
     )
 
@@ -105,6 +114,8 @@ def all_components():
 def links(comp, ver):
     """Return {dep_comp: dep_ver} the snapshot links, from its CMakeLists."""
     out = {}
+    if is_header_only(comp, ver):
+        return out
     with open(os.path.join(REPO_ROOT, comp, ver, "CMakeLists.txt")) as fh:
         text = fh.read()
     for block in re.findall(r"target_link_libraries\(([^)]*)\)", text):

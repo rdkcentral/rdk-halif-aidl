@@ -24,7 +24,7 @@ import com.rdk.hal.videodecoder.ContentLightLevel;
 import com.rdk.hal.videodecoder.Colorimetry;
 import com.rdk.hal.videodecoder.InputBufferMetadata;
 import com.rdk.hal.videodecoder.VideoDecoderStreamConfig;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.videodecoder.PropertyValue;
 
 /**
  *  @brief     Video Decoder Controller HAL interface.

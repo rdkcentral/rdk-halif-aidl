@@ -630,22 +630,22 @@ test_10() {
         return 1
     fi
     
-    # Test 2: Build common module
+    # Test 2: Build hdmicec module (no HAL imports)
     echo ""
-    echo "==> Test 10.2: Build common module (current version)"
-    if cmake -S . -B build/test10-common \
-        -DINTERFACE_TARGET=common \
+    echo "==> Test 10.2: Build hdmicec module (current version)"
+    if cmake -S . -B build/test10-hdmicec \
+        -DINTERFACE_TARGET=hdmicec \
         -DAIDL_SRC_VERSION=current \
         -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
-        >/tmp/cmake_test10_common_config.log 2>&1 && \
-       cmake --build build/test10-common -- -j"$(nproc)" \
-        >/tmp/cmake_test10_common_build.log 2>&1 && \
-       cmake --install build/test10-common \
-        >/tmp/cmake_test10_common_install.log 2>&1; then
-        echo "✅ Common module build successful"
-        verify_module_library common || return 1
+        >/tmp/cmake_test10_hdmicec_config.log 2>&1 && \
+       cmake --build build/test10-hdmicec -- -j"$(nproc)" \
+        >/tmp/cmake_test10_hdmicec_build.log 2>&1 && \
+       cmake --install build/test10-hdmicec \
+        >/tmp/cmake_test10_hdmicec_install.log 2>&1; then
+        echo "✅ HDMI CEC module build successful"
+        verify_module_library hdmicec || return 1
     else
-        echo "❌ Common module build failed!"
+        echo "❌ HDMI CEC module build failed!"
         return 1
     fi
     

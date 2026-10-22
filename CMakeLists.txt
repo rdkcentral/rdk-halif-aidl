@@ -255,6 +255,47 @@ set(ENV{AIDL_VERSIONING_SKIP_DIR} "out,build")
 
 include("${HOST_AIDL_DIR}/CMakeLists.inc")
 
+# The toolchain registers <comp>-vcurrent-cpp for every component it loads,
+# including one that survives only as frozen snapshots (e.g. common). Such a
+# component has no current/ to generate from, so drop its current target. A
+# frozen snapshot that declares <comp>@current links <comp>'s newest frozen
+# version instead, which is what that snapshot's own CMakeLists.txt links.
+set(_aidl_targets_with_current)
+set(_no_current)
+foreach(_t IN LISTS aidl_targets)
+    if (_t MATCHES "^(.+)-vcurrent-cpp$")
+        set(_comp "${CMAKE_MATCH_1}")
+        if (NOT EXISTS "${CMAKE_SOURCE_DIR}/${_comp}/current/interface.yaml")
+            message(STATUS "No current/ for ${_comp}: skipping ${_t}")
+            list(APPEND _no_current ${_comp})
+            continue()
+        endif()
+    endif()
+    list(APPEND _aidl_targets_with_current ${_t})
+endforeach()
+set(aidl_targets ${_aidl_targets_with_current})
+
+foreach(_comp IN LISTS _no_current)
+    set(_frozen)
+    foreach(_t IN LISTS aidl_targets)
+        if (_t MATCHES "^${_comp}-v[0-9.]+-cpp$")
+            list(APPEND _frozen ${_t})
+        endif()
+    endforeach()
+    if (NOT _frozen)
+        continue()
+    endif()
+    list(SORT _frozen COMPARE NATURAL ORDER DESCENDING)
+    list(GET _frozen 0 _newest)
+    foreach(_t IN LISTS aidl_targets)
+        if ("${${_t}_deps}" MATCHES "(^| )${_comp}-vcurrent-cpp( |$)")
+            string(REGEX REPLACE "(^| )${_comp}-vcurrent-cpp( |$)" "\\1${_newest}\\2"
+                ${_t}_deps "${${_t}_deps}")
+            message(STATUS "${_t}: ${_comp}@current resolves to ${_newest}")
+        endif()
+    endforeach()
+endforeach()
+
 #######################################################################
 # Build interface libraries based on INTERFACE_TARGET and INTERFACE_VERSION
 #######################################################################

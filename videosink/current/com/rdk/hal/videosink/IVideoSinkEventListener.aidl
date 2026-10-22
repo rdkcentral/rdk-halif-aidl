@@ -60,7 +60,7 @@ oneway interface IVideoSinkEventListener
      * indicates the expected time between this callback and actual display.
      *
      * @param[in] nsPresentationTime    The presentation time of the final video frame,
-     *                                  or `IAVClock.UNDEFINED_TIME` if no frames were queued.
+     *                                  or `IVideoSinkController.UNDEFINED_TIME` if no frames were queued.
      */
     void onEndOfStream(in long nsPresentationTime);
 

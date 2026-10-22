@@ -20,7 +20,7 @@ package com.rdk.hal.panel;
 
 import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.panel.PQParameter;
-import com.rdk.hal.videodecoder.DynamicRange;
+import com.rdk.hal.panel.DynamicRange;
 
 /**
  * @brief Selector for a PQ parameter configuration.

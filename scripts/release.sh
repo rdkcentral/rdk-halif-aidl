@@ -1766,8 +1766,34 @@ compute_aidl_hash_for_dir() {
     echo "${h}"
 }
 
+# Aggregate SHA256 of the *.h files directly in a directory (not recursive),
+# keyed by file name. Used for a header-only component's interface: its
+# current/*.h against the released <version>/include/*.h. Empty when there are
+# no headers.
+compute_header_hash_for_dir() {
+    local dir="$1"
+    [[ -d "${dir}" ]] || { echo ""; return 0; }
+    local h
+    h="$(find "${dir}" -maxdepth 1 -name '*.h' -type f 2>/dev/null \
+        | sort \
+        | while IFS= read -r f; do
+            printf '%s:%s\n' "$(basename "${f}")" "$(sha256sum "${f}" 2>/dev/null | awk '{print $1}')"
+          done \
+        | sha256sum 2>/dev/null | awk '{print $1}')"
+    [[ "${h}" == "$(echo -n "" | sha256sum | awk '{print $1}')" ]] && h=""
+    echo "${h}"
+}
+
+is_header_only_component() {
+    local comp="$1"
+    [[ ! -f "${REPO_ROOT}/${comp}/current/interface.yaml" ]] || return 1
+    compgen -G "${REPO_ROOT}/${comp}/current/*.h" >/dev/null
+}
+
 # Compare a module's current/ AIDL hash against the highest tracked
 # snapshot. Echoes one of: "unchanged" / "CHANGED" / "new" / "missing".
+# A header-only component compares its headers instead (current/*.h against
+# <latest>/include/*.h), since the headers are its whole interface.
 aidl_hash_status() {
     local comp="$1"
     local latest
@@ -1777,8 +1803,13 @@ aidl_hash_status() {
         return 0
     fi
     local cur_hash snap_hash
-    cur_hash="$(compute_aidl_hash_for_dir "${REPO_ROOT}/${comp}/current")"
-    snap_hash="$(compute_aidl_hash_for_dir "${REPO_ROOT}/${comp}/${latest}")"
+    if is_header_only_component "${comp}"; then
+        cur_hash="$(compute_header_hash_for_dir "${REPO_ROOT}/${comp}/current")"
+        snap_hash="$(compute_header_hash_for_dir "${REPO_ROOT}/${comp}/${latest}/include")"
+    else
+        cur_hash="$(compute_aidl_hash_for_dir "${REPO_ROOT}/${comp}/current")"
+        snap_hash="$(compute_aidl_hash_for_dir "${REPO_ROOT}/${comp}/${latest}")"
+    fi
     if [[ -z "${cur_hash}" || -z "${snap_hash}" ]]; then
         echo "missing"  # one side has no .aidl files
         return 0
@@ -1973,6 +2004,11 @@ is_buildable_component() {
     [[ -f "${REPO_ROOT}/${comp}/current/interface.yaml" ]]
 }
 
+# A header-only component (e.g. halcompat) ships hand-authored C++ headers
+# and no AIDL: current/*.h and no current/interface.yaml. It is released and
+# versioned like any other component — bumped by its labels, gated on its
+# header content instead of an AIDL hash — but has no bindings or library,
+# so its snapshot is a copy of current/ with the headers staged in include/.
 # ----------------------------------------------------------------------------
 # Frozen interface VERSION + contract HASH (#633)
 # ----------------------------------------------------------------------------
@@ -2147,10 +2183,13 @@ create_snapshot() {
         fi
     fi
 
-    [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] regenerating bindings via build_modules.sh..."
     local build_log="${REPO_ROOT}/out/release-snapshot-${comp//\//_}.log"
     mkdir -p "$(dirname "${build_log}")"
-    if [[ "${VERBOSE}" -eq 1 ]]; then
+    if is_header_only_component "${comp}"; then
+        # No AIDL, so no bindings to regenerate and no library to build.
+        [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] header-only: no bindings to regenerate"
+    elif [[ "${VERBOSE}" -eq 1 ]]; then
+        log "  [${comp}] regenerating bindings via build_modules.sh..."
         if ! (cd "${REPO_ROOT}" && ./build_modules.sh "${comp}" 2>&1 | tee "${build_log}"); then
             warn "Failed to regenerate ${comp} bindings — see ${build_log}."
             _restore_current
@@ -3324,7 +3363,7 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
     # bumping/snapshotting. They re-enter as soon as interface.yaml is
     # added. Reason text is sourced from metadata.yaml notes.status_detail
     # when present, so the operator sees WHY without spelunking.
-    if ! is_buildable_component "${comp}"; then
+    if ! is_buildable_component "${comp}" && ! is_header_only_component "${comp}"; then
         reason="$(awk '
             /^notes:/ {in_notes=1; next}
             in_notes && /^[^ ]/ {in_notes=0}
@@ -3644,6 +3683,10 @@ if [[ "${DRY_RUN}" -eq 1 && ${#BUMPED_COMPONENTS[@]} -gt 0 ]]; then
         version="${entry##*:}"
         if [[ ! -d "${REPO_ROOT}/${comp}/current" ]]; then
             log "    ${comp} ${version}: placeholder component (no current/) — metadata.yaml bump only, no snapshot"
+            continue
+        fi
+        if is_header_only_component "${comp}"; then
+            log "    ${comp} ${version}: header-only component — cp -r ${comp}/current/ ${comp}/${version}/, stage *.h into ${version}/include/, git add, bump metadata.yaml"
             continue
         fi
         log "    ${comp} ${version}:"

@@ -80,8 +80,8 @@ minor therefore forces a minor bump.
 
 ## Client Compatibility Checks
 
-Clients use the `halcompat` helpers (`common/current/halcompat.h`, installed
-with the common headers) — the same calls in every era, with the encoding
+Clients use the `halcompat` helpers (`halcompat/current/halcompat.h`, installed
+by the `halcompat` component) — the same calls in every era, with the encoding
 and the era rules internal to the helper:
 
 ```cpp

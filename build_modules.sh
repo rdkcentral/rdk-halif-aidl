@@ -548,9 +548,23 @@ echo "✓ Binder SDK found at $SDK_DIR"
 MODULE_COUNT=$(ls -d "$ROOT_DIR"/*/current/interface.yaml 2>/dev/null | wc -l)
 echo "✓ Found $MODULE_COUNT component interface(s)"
 
-# Validate specific module exists if not building all
-if [[ "$MODULE" != "all" ]]; then
+# Validate specific module exists if not building all. A released snapshot is
+# checked by the snapshot build below: its component may have no current/
+# (e.g. common, which survives only as frozen snapshots).
+if [[ "$MODULE" != "all" && "$VERSION" == "current" ]]; then
     if [[ ! -f "$ROOT_DIR/$MODULE/current/interface.yaml" ]]; then
+        # Header-only component (e.g. halcompat): hand-authored headers at
+        # <module>/current/*.h and no AIDL, so nothing to generate or compile.
+        # Stage the headers where a consumer expects them — the same layout
+        # cmake_stage_modules.cmake produces for every module.
+        if compgen -G "$ROOT_DIR/$MODULE/current/*.h" >/dev/null; then
+            HDR_DST="$ROOT_DIR/out/build/include/$MODULE/current/include"
+            echo "📄 '$MODULE' is a header-only component — no AIDL to generate or build."
+            mkdir -p "$HDR_DST" && cp "$ROOT_DIR/$MODULE"/current/*.h "$HDR_DST"/ || {
+                echo "❌ Failed to stage $MODULE headers into $HDR_DST"; exit 1; }
+            echo "✅ Headers staged: $HDR_DST/"
+            exit 0
+        fi
         echo "❌ ERROR: Component '$MODULE' not found ($ROOT_DIR/$MODULE/current/interface.yaml)"
         echo ""
         echo "Available components:"
@@ -604,6 +618,14 @@ if [[ "$VERSION" != "current" ]]; then
         exit 1
     fi
     SNAPSHOT_DIR="$ROOT_DIR/$MODULE/$VERSION"
+    # A header-only snapshot (e.g. halcompat) has include/ and no
+    # CMakeLists.txt: there is no library, only headers to stage.
+    if [[ ! -f "$SNAPSHOT_DIR/CMakeLists.txt" && -d "$SNAPSHOT_DIR/include" ]]; then
+        stage_snapshot_headers "$MODULE" "$VERSION" \
+            || { echo "❌ Failed to stage snapshot headers for $MODULE/$VERSION"; exit 1; }
+        echo "✅ Header-only snapshot $MODULE/$VERSION staged (no library)"
+        exit 0
+    fi
     if [[ ! -f "$SNAPSHOT_DIR/CMakeLists.txt" ]]; then
         echo "❌ ERROR: snapshot $MODULE/$VERSION not found at $SNAPSHOT_DIR."
         echo "   Snapshots are produced by the cohort-wide './release.sh' run;"

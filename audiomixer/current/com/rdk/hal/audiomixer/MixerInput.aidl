@@ -19,7 +19,7 @@
  package com.rdk.hal.audiomixer;
 
 import com.rdk.hal.audiomixer.ContentType;
-import com.rdk.hal.audiodecoder.Codec;
+import com.rdk.hal.audiomixer.Codec;
 
 /**
  * @brief Audio Mixer Input Capability Definition.

@@ -113,8 +113,9 @@ echo "========================================="
 PLAN="$("${REPO_ROOT}/tests/yocto/meta-rdk-halif-aidl/halif_plan.py" --versions "${VERSIONS}")" \
     || fail "halif_plan.py --versions ${VERSIONS}"
 N=$(printf '%s\n' "${PLAN}" | grep -c .)
+EXPECTED_LIBS=0
 echo ""
-echo "[plan] ${N} components to build, versions read from ${VERSIONS} (dependency order):"
+echo "[plan] ${N} components to process, versions read from ${VERSIONS} (dependency order):"
 printf '%s\n' "${PLAN}" | awk 'NF{printf "         %s@%s\n", $1, $2}'
 echo ""
 
@@ -128,8 +129,17 @@ cp -r "${REPO_ROOT}/out/build/include/binder_sdk" "${SDK}/include/" || fail "bin
 cp -r "${REPO_ROOT}/out/target/lib/binder"        "${SDK}/lib/"     || fail "binder libs"
 
 # --- build each component against the SDK + already-built siblings ---
+install -d "${STAGE}/lib/rdk-halif-aidl"
 while read -r comp ver; do
     [ -z "${comp}" ] && continue
+    if [ ! -f "${REPO_ROOT}/${comp}/${ver}/CMakeLists.txt" ]; then
+        # Header-only snapshot (e.g. halcompat): no library, stage headers only.
+        install -d "${STAGE}/include/rdk-halif-aidl/${comp}/${ver}"
+        cp -r "${REPO_ROOT}/${comp}/${ver}/include" "${STAGE}/include/rdk-halif-aidl/${comp}/${ver}/" || fail "stage headers ${comp}@${ver}"
+        echo "    ✓ ${comp}@${ver} (headers only)"
+        continue
+    fi
+    EXPECTED_LIBS=$((EXPECTED_LIBS + 1))
     bdir="${WORK}/obj/${comp}"; mkdir -p "${bdir}"
     cmake -S "${REPO_ROOT}/${comp}/${ver}" -B "${bdir}" \
         -DBINDER_SDK_DIR="${SDK}" -DBINDER_SDK_INCLUDE_DIR="${SDK}" \
@@ -149,7 +159,7 @@ install -d "${HALIF_DEST}" "${HALIF_DEST}/include"
 cp -a "${STAGE}/lib/rdk-halif-aidl/." "${HALIF_DEST}/"
 cp -a "${STAGE}/include/rdk-halif-aidl/." "${HALIF_DEST}/include/"
 GOT=$(find "${HALIF_DEST}" -maxdepth 1 -name 'lib*-cpp.so' | wc -l)
-[ "${GOT}" -eq "${N}" ] || fail "installed ${GOT} of ${N} HAL libraries to ${HALIF_DEST}"
+[ "${GOT}" -eq "${EXPECTED_LIBS}" ] || fail "installed ${GOT} of ${EXPECTED_LIBS} HAL libraries to ${HALIF_DEST}"
 
 echo ""
 echo "========================================="
