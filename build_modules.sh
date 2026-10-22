@@ -776,6 +776,40 @@ echo "✓ CMake configuration complete"
 echo ""
 
 #######################################################################
+# Post-generation: re-inject AIDL documentation
+#######################################################################
+#
+# The configure step above runs the AIDL codegen, and aidl-cpp strips every
+# comment on the way out — the headers engineers include carry no docs at all
+# (docs/whitepapers/release_documentation_strategy.md).
+# scripts/aidl_comment_inject.py writes the AIDL Doxygen blocks back into
+# <module>/current/include/, each marked with a `// @aidl-doc` line so repeat
+# runs replace rather than accumulate.
+#
+# Runs here, before compilation, so the post-build staging step
+# (cmake_stage_modules.cmake) copies the annotated headers into
+# out/build/include/. Comments only, so it cannot change what is compiled —
+# a failure is reported but does not fail the build.
+#
+# Set HALIF_SKIP_DOC_INJECT=1 to skip.
+
+DOC_INJECT_SCRIPT="$ROOT_DIR/scripts/aidl_comment_inject.py"
+
+if [[ "${HALIF_SKIP_DOC_INJECT:-0}" == "1" ]]; then
+    echo "⏭️  Skipping AIDL documentation injection (HALIF_SKIP_DOC_INJECT=1)"
+    echo ""
+elif [[ ! -f "$DOC_INJECT_SCRIPT" ]]; then
+    echo "⚠️  AIDL documentation injection skipped: $DOC_INJECT_SCRIPT not found"
+    echo ""
+else
+    if ! python3 "$DOC_INJECT_SCRIPT" --repo-root "$ROOT_DIR" --version "$VERSION" "$MODULE"; then
+        echo "⚠️  AIDL documentation injection failed — generated headers are"
+        echo "    undocumented, but the build continues (comments only)."
+    fi
+    echo ""
+fi
+
+#######################################################################
 # Build
 #######################################################################
 
