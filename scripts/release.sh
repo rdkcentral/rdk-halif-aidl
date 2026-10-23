@@ -375,7 +375,8 @@ run_verification_build() {
 #
 # Subcommands:
 #   ./release.sh stage <module>... [--version X.Y.Z.W]  write snapshot + metadata
-#   ./release.sh stage all                              same, for every qualifying module
+#   ./release.sh stage all [<module> --version X]...    same, for every qualifying module
+#   ./release.sh unpin <module>|all                     forget a remembered --version pin
 #   ./release.sh drop  <module>                         revert the writes
 #   ./release.sh plan                                   read-only table view
 #   ./release.sh check [<module>]                       preview without staging
@@ -465,7 +466,13 @@ plan_clean() {
     done < <(find "${REPO_ROOT}/docs/releases" -maxdepth 1 -type f -name '[0-9]*.md' -print0 2>/dev/null)
     [[ ${removed_notes} -gt 0 ]] && log "  Removed ${removed_notes} untracked docs/releases/X.Y.Z.md file(s)."
 
-    # 4. Wipe the gh API cache so a fresh run re-pulls PR labels in case
+    # 4. Forget remembered --version pins (out/.release-pins).
+    if [[ -f "${REPO_ROOT}/out/.release-pins" ]]; then
+        rm -f "${REPO_ROOT}/out/.release-pins"
+        log "  Cleared remembered version pins (out/.release-pins)."
+    fi
+
+    # 5. Wipe the gh API cache so a fresh run re-pulls PR labels in case
     # any were changed since the last run. (commit→PR mappings are
     # immutable, but labels can be re-applied.)
     if [[ -f "${REPO_ROOT}/out/.gh-cache" ]]; then
@@ -570,6 +577,38 @@ plan_load() {
 # subcommand parser assigns into it (assoc assignment before declare -A
 # degrades to arithmetic subscript evaluation).
 declare -A PIN_VERSIONS=()
+
+# Pins are remembered in out/.release-pins (gitignored) so the operator sets
+# the odd version once — `stage all avclock --version 0.2.1.0` — and later
+# `stage all` / --apply runs keep it. Each line is tied to the last release
+# tag, so a pin lapses once that release is tagged. Format, tab-delimited:
+#   <module><TAB><X.Y.Z.W><TAB><last tag when pinned>
+PIN_FILE="${REPO_ROOT}/out/.release-pins"
+_pin_baseline="$(git -C "${REPO_ROOT}" describe --tags --abbrev=0 2>/dev/null || true)"
+pins_load() {
+    [[ -f "${PIN_FILE}" ]] || return 0
+    local comp ver base
+    while IFS=$'\t' read -r comp ver base; do
+        [[ -n "${comp}" && "${base}" == "${_pin_baseline}" ]] && PIN_VERSIONS[$comp]="${ver}"
+    done < "${PIN_FILE}"
+    return 0
+}
+pins_save() {
+    mkdir -p "$(dirname "${PIN_FILE}")"
+    local comp
+    : > "${PIN_FILE}"
+    for comp in $(printf '%s\n' "${!PIN_VERSIONS[@]}" | sort); do
+        printf '%s\t%s\t%s\n' "${comp}" "${PIN_VERSIONS[$comp]}" "${_pin_baseline}" >> "${PIN_FILE}"
+    done
+    [[ ${#PIN_VERSIONS[@]} -gt 0 ]] || rm -f "${PIN_FILE}"
+}
+pin_set() {
+    [[ "$2" =~ ^[0-9]+(\.[0-9]+){3}$ ]] || die "pin: '$2' is not a version (X.Y.Z.W)."
+    [[ -f "${REPO_ROOT}/$1/metadata.yaml" ]] || die "pin: $1/metadata.yaml not found — no such component."
+    PIN_VERSIONS[$1]="$2"
+}
+pins_load
+
 case "${1:-}" in
     stage)
         shift
@@ -593,11 +632,10 @@ case "${1:-}" in
             while [[ $# -gt 0 && "$1" != -* ]]; do
                 [[ "${2:-}" == "--version" && -n "${3:-}" ]] \
                     || die "stage all: pin a module as '<module> --version X.Y.Z.W'"
-                [[ -f "${REPO_ROOT}/$1/metadata.yaml" ]] \
-                    || die "stage all: $1/metadata.yaml not found — no such component."
-                PIN_VERSIONS[$1]="$3"
+                pin_set "$1" "$3"
                 shift 3
             done
+            pins_save
         else
             _add_ver=""
             _last_comp=""
@@ -608,7 +646,7 @@ case "${1:-}" in
                         [[ $# -ge 2 ]] || die "--version requires a value"
                         [[ -n "${_last_comp}" ]] \
                             || die "stage: --version must follow a <module> name."
-                        PIN_VERSIONS[${_last_comp}]="$2"
+                        pin_set "${_last_comp}" "$2"
                         shift 2
                         ;;
                     # Not a stage option — hand the rest to the main parser so
@@ -627,12 +665,26 @@ case "${1:-}" in
             [[ "${_staged_any}" -eq 1 ]] \
                 || die "stage: missing <module> argument. Usage: ./release.sh stage <module>... [--version X.Y.Z.W]"
             STAGE_AND_WRITE=1
+            pins_save
             # Fall through to the standard pipeline; it processes the queue.
         fi
         ;;
     drop)
         shift
         plan_remove "${1:-}"
+        exit 0
+        ;;
+    unpin)
+        shift
+        [[ -n "${1:-}" ]] || die "unpin: name a module, or 'all'."
+        if [[ "$1" == "all" ]]; then
+            PIN_VERSIONS=()
+        else
+            [[ -n "${PIN_VERSIONS[$1]+x}" ]] || die "unpin: $1 is not pinned."
+            unset 'PIN_VERSIONS[$1]'
+        fi
+        pins_save
+        log "✓ Unpinned $1. It is staged by its labels on the next stage run."
         exit 0
         ;;
     plan)
@@ -694,6 +746,14 @@ case "${1:-}" in
         ;;
 esac
 
+if [[ ${#PIN_VERSIONS[@]} -gt 0 ]]; then
+    _pin_list=""
+    for _c in $(printf '%s\n' "${!PIN_VERSIONS[@]}" | sort); do
+        _pin_list="${_pin_list:+${_pin_list}, }${_c} ${PIN_VERSIONS[$_c]}"
+    done
+    log "📌 Pinned versions: ${_pin_list}  (./release.sh unpin <module>|all to drop)"
+fi
+
 # Defaults for arg parser. Use ${VAR:-0} so the subcommand fall-throughs
 # above can pre-set flags without us stomping them here.
 CHECK_MODE="${CHECK_MODE:-0}"
@@ -717,6 +777,11 @@ Release Version Bump Tool
 
 Subcommands (manage what's staged for the next release):
   ./release.sh stage <module>... [--version X.Y.Z.W]   stage module(s) (auto-bump unless --version pinned)
+  ./release.sh stage all [<module> --version X.Y.Z.W]...
+                                                       stage every qualifying module, pinning the
+                                                       ones named. Pins are remembered (out/.release-pins)
+                                                       for later stage/--apply runs until the next tag.
+  ./release.sh unpin  <module>|all                     forget a remembered pin
   ./release.sh drop   <module>                         unstage module
   ./release.sh plan                                    show current plan
   ./release.sh check  [<module>]                       preview detected changes for ALL touched
