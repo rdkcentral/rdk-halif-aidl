@@ -18,17 +18,21 @@
  */
 package com.rdk.hal.hdmicec;
 
+/**
+ * @brief HDMI CEC HAL property identifiers.
+ */
 @VintfStability
-@Backing(type="int")
-enum Property 
-{
+@Backing(type = "int")
+enum Property {
     /**
      * CEC version supported by the HAL and HW.
      *
      * A byte value representing the CEC version supported by the HW and SW HAL implementation.
-     * The value complies with the encoding used by the [CEC Version] CEC operand described in the appropriate HDMI specification.
+     * The value complies with the encoding used by the [CEC Version] CEC operand described in the appropriate HDMI
+     * specification.
      *
-     * Please note that this value is NOT transmitted or obtained over the CEC bus. It is statically defined by the implementation.
+     * Please note that this value is NOT transmitted or obtained over the CEC bus. It is statically defined by the
+     * implementation.
      *
      * Type: Byte - 8-bit integer value.
      * Access: Read-only.
@@ -56,7 +60,7 @@ enum Property
     /**
      * Returns the total number of Directed CEC messages sent since open.
      * -1 means this metric is not yet implemented by the vendor.
-     * 
+     *
      * If this property is read in the CLOSED state it will report 0.
      *
      * Type: Int - 32-bit signed integer value.
@@ -68,7 +72,7 @@ enum Property
     /**
      * Returns the number of Broadcast CEC messages sent since open.
      * -1 means this metric is not yet implemented by the vendor.
-     * 
+     *
      * If this property is read in the CLOSED state it will report 0.
      *
      * Type: Int - 32-bit signed integer value.
@@ -80,7 +84,7 @@ enum Property
     /**
      * Returns the total number of Directed CEC messages sent and acknowledged since open.
      * -1 means this metric is not yet implemented by the vendor.
-     * 
+     *
      * If this property is read in the CLOSED state it will report 0.
      *
      * Type: Int - 32-bit signed integer value.
@@ -93,7 +97,7 @@ enum Property
      * Returns the total number of Broadcast CEC messages sent and acknowledged since open.
      * An acknowledgement implies a NACK in accordance with the inverted sense described in CEC specification.
      * -1 means this metric is not yet implemented by the vendor.
-     * 
+     *
      * If this property is read in the CLOSED state it will report 0.
      *
      * Type: Int - 32-bit signed integer value.
@@ -105,7 +109,7 @@ enum Property
     /**
      * Returns the total number of arbitration failures since open.
      * -1 means this metric is not yet implemented by the vendor.
-     * 
+     *
      * If this property is read in the CLOSED state it will report 0.
      *
      * Type: Int - 32-bit signed integer value.

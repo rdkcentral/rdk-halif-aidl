@@ -26,19 +26,34 @@ package com.rdk.hal.audiomixer;
  */
 @VintfStability
 parcelable DolbyMs12_2_6_DapCapabilities {
+    /** Whether `setSurroundDecoderEnabled()` is supported. */
     boolean supportsSurroundDecoderEnabled;
+    /** Whether `setBassEnhancer()` is supported. */
     boolean supportsBassEnhancer;
+    /** Whether `setVolumeLeveller()` is supported. */
     boolean supportsVolumeLeveller;
+    /** Whether `setSurroundVirtualizer()` is supported. */
     boolean supportsSurroundVirtualizer;
+    /** Whether `setMediaIntelligentSteering()` is supported. */
     boolean supportsMediaIntelligentSteering;
+    /** Whether `setPostGain()` is supported. */
     boolean supportsPostGain;
+    /** Whether `setDialogueEnhancer()` is supported. */
     boolean supportsDialogueEnhancer;
+    /** Whether `setIntelligentEqualizerMode()` is supported. */
     boolean supportsIntelligentEqualizerMode;
+    /** Whether `setGraphicEqualizerMode()` is supported. */
     boolean supportsGraphicEqualizerMode;
+    /** Whether `setDynamicRangeControlMode()` is supported. */
     boolean supportsDynamicRangeControlMode;
+    /** Whether `setAtmosLock()` is supported. */
     boolean supportsAtmosLock;
+    /** Whether `setDownmixMode()` is supported. */
     boolean supportsDownmixMode;
+    /** Whether `setVolumeModelerEnabled()` is supported. */
     boolean supportsVolumeModelerEnabled;
+    /** Whether `setCenterSpreadingEnabled()` is supported. */
     boolean supportsCenterSpreadingEnabled;
+    /** Whether `setActiveDownmixEnabled()` is supported. */
     boolean supportsActiveDownmixEnabled;
 }

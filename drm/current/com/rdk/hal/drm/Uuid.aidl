@@ -29,7 +29,11 @@
 
 package com.rdk.hal.drm;
 
+/**
+ * A 128-bit UUID, used to identify a crypto scheme.
+ */
 @VintfStability
 parcelable Uuid {
+    /** The 16 bytes of the UUID. */
     byte[16] uuid;
 }

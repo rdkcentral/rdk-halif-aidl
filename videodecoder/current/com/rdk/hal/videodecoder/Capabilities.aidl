@@ -29,28 +29,27 @@ import com.rdk.hal.videodecoder.DynamicRange;
  */
 
 @VintfStability
-parcelable Capabilities
-{
-	/**
-	 * Array of CodecCapability parcelables supported by this video decoder instance.
-	 */
+parcelable Capabilities {
+    /**
+     * Array of CodecCapability parcelables supported by this video decoder instance.
+     */
     CodecCapabilities[] supportedCodecs;
 
-	/**
-	 * Array of DynamicRange values supported by this video decoder instance.
-	 */
+    /**
+     * Array of DynamicRange values supported by this video decoder instance.
+     */
     DynamicRange[] supportedDynamicRanges;
 
-	/**
-	 * Array of Colorimetry values that this decoder instance can detect and report
-	 * in FrameMetadata.colorimetry. An empty array indicates colorimetry detection
-	 * is not supported.
-	 */
+    /**
+     * Array of Colorimetry values that this decoder instance can detect and report
+     * in FrameMetadata.colorimetry. An empty array indicates colorimetry detection
+     * is not supported.
+     */
     Colorimetry[] supportedColorimetries;
 
-	/**
-	 * Indicates if this decoder instance can work in secure video path (SVP) mode.
-	 * @see Property.SECURE_VIDEO
-	 */
+    /**
+     * Indicates if this decoder instance can work in secure video path (SVP) mode.
+     * @see Property.SECURE_VIDEO
+     */
     boolean supportsSecure;
 }

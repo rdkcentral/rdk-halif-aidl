@@ -27,15 +27,14 @@ import com.rdk.hal.videosink.State;
  */
 
 @VintfStability
-oneway interface IVideoSinkControllerListener
-{
+oneway interface IVideoSinkControllerListener {
     /**
      * Callback when the first video frame has been rendered.
      *
      * The behaviour is the same for tunnelled and non-tunnelled video operating modes.
      * This occurs on the first frame rendered after an `open()` or `flush()` call.
-	 * The frame may not immediately be visible due to video pipeline and compositor functions.
-	 * The associated plane `Capabilities.vsyncDisplayLatency` indicates the expected time between
+     * The frame may not immediately be visible due to video pipeline and compositor functions.
+     * The associated plane `Capabilities.vsyncDisplayLatency` indicates the expected time between
      * this callback and actual display.
      *
      * Rendering requires a mapped video plane, so for a sink running with no
@@ -60,7 +59,7 @@ oneway interface IVideoSinkControllerListener
      * sentinel (`IAVClock.UNDEFINED_TIME`).
      *
      * The behaviour is the same for tunnelled and non-tunnelled video operating modes.
-	 * The frame may not immediately be visible due to video pipeline and compositor functions.
+     * The frame may not immediately be visible due to video pipeline and compositor functions.
      * With a plane mapped, the associated plane `Capabilities.vsyncDisplayLatency`
      * indicates the expected time between this callback and actual display.
      *
@@ -76,9 +75,9 @@ oneway interface IVideoSinkControllerListener
      *
      * This occurs if the frame queue is empty at the next expected AV Clock based
      * presentation time for a video frame.
-	 * The callback occurs only once when the queue becomes empty.
-	 * The `onVideoResumed()` callback informs the client when video playback restarts,
-	 * which allows the `onVideoUnderflow()` to occur again.
+     * The callback occurs only once when the queue becomes empty.
+     * The `onVideoResumed()` callback informs the client when video playback restarts,
+     * which allows the `onVideoUnderflow()` to occur again.
      *
      * Underflow detection follows frame consumption, which the attached clock
      * gates, so this pair of callbacks applies whether or not a video plane is
@@ -91,7 +90,7 @@ oneway interface IVideoSinkControllerListener
     /**
      * Callback to indicate that video has resumed presentation after a video underflow event.
      *
-	 * The `onVideoUnderflow()` can occur again after `onVideoResumed()` has been called.
+     * The `onVideoUnderflow()` can occur again after `onVideoResumed()` has been called.
      *
      * @see onVideoUnderflow()
      */

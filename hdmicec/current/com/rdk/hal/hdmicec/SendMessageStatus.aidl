@@ -17,18 +17,17 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmicec;
- 
-/** 
+
+/**
  * @brief       Message status definitions returned from IHdmiCecController.sendMessage()
  * @author      Luc Kennedy-Lamb
  * @author      Peter Stieglitz
  * @author      Douglas Adler
  */
- 
+
 @VintfStability
-@Backing(type="int")
-enum SendMessageStatus 
-{
+@Backing(type = "int")
+enum SendMessageStatus {
     /**
      * The SendMessageStatus indicates the state of the message transmission by reporting
      * CEC line arbitration and, if successful, the state of the ACK bit for last header/data block transmission.
@@ -41,17 +40,17 @@ enum SendMessageStatus
      * Broadcast Message: One or more devices rejected the message.
      *                    At least one retransmission was attempted.
      */
-    ACK_STATE_0 = 0, 
+    ACK_STATE_0 = 0,
 
     /**
      * Directly Addressed Message: The message was not acknowledged by the directly addressed follower.
      *                             At least one retransmission was attempted.
      * Broadcast Message: The message was sent and not rejected by any device.
-     */  
+     */
     ACK_STATE_1 = 1,
 
     /**
      * CEC line arbitration, after two attempts, failed. The message was not sent.
-     */  
+     */
     BUSY = 2
 }

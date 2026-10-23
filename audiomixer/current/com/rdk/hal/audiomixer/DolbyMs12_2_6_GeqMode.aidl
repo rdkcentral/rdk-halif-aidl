@@ -22,10 +22,14 @@ package com.rdk.hal.audiomixer;
  * @brief Graphic equalizer preset mode for Dolby MS12 runtime command control.
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum DolbyMs12_2_6_GeqMode {
+    /** Graphic equaliser disabled. */
     OFF = 0,
+    /** Open preset. */
     OPEN = 1,
+    /** Rich preset. */
     RICH = 2,
+    /** Focused preset. */
     FOCUSED = 3
 }

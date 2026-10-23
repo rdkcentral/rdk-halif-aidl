@@ -19,31 +19,29 @@
 package com.rdk.hal.hdmiinput;
 import com.rdk.hal.hdmiinput.FreeSync;
 
-/** 
+/**
  *  @brief     HDMI input platform capabilities definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
+
 @VintfStability
-parcelable PlatformCapabilities
-{
-	/**
-	 * Defines the maximum number of HDMI input ports that can be concurrently started.
-	 * This is a hardware/platform constraint that limits how many HDMI input ports
-	 * can be in the STARTED state simultaneously. Attempting to start an additional
-	 * port beyond this limit will result in an EX_ILLEGAL_STATE exception.
-	 * 
-	 * @see IHDMIInputController.start()
-	 */
-	int maximumConcurrentStartedPorts;
+parcelable PlatformCapabilities {
+    /**
+     * Defines the maximum number of HDMI input ports that can be concurrently started.
+     * This is a hardware/platform constraint that limits how many HDMI input ports
+     * can be in the STARTED state simultaneously. Attempting to start an additional
+     * port beyond this limit will result in an EX_ILLEGAL_STATE exception.
+     *
+     * @see IHDMIInputController.start()
+     */
+    int maximumConcurrentStartedPorts;
 
-	/**
-	 * Indicates type of AMD FreeSync supported by the platform.
-	 * `FreeSync.UNSUPPORTED` if not supported.
-	 * @see Capabilities.supportsFreeSync to identify which ports support FreeSync.
-	 */
-	FreeSync freeSync;
-
+    /**
+     * Indicates type of AMD FreeSync supported by the platform.
+     * `FreeSync.UNSUPPORTED` if not supported.
+     * @see Capabilities.supportsFreeSync to identify which ports support FreeSync.
+     */
+    FreeSync freeSync;
 }

@@ -41,9 +41,8 @@ package com.rdk.hal.compositeinput;
  * @author Gerald Weatherup
  */
 @VintfStability
-@Backing(type="int")
-enum PortProperty
-{
+@Backing(type = "int")
+enum PortProperty {
     /**
      * Signal strength of the composite input, in dBm.
      *

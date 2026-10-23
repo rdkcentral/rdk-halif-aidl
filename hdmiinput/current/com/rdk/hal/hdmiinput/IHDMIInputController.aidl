@@ -17,13 +17,13 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmiinput;
-import com.rdk.hal.hdmiinput.Property;
-import com.rdk.hal.hdmiinput.PropertyKVPair;
+import com.rdk.hal.PropertyValue;
 import com.rdk.hal.hdmiinput.HDCPProtocolVersion;
 import com.rdk.hal.hdmiinput.HDCPStatus;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.hdmiinput.Property;
+import com.rdk.hal.hdmiinput.PropertyKVPair;
 
-/** 
+/**
  *  @brief     HDMI Input Controller HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -31,16 +31,15 @@ import com.rdk.hal.PropertyValue;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 
-
 @VintfStability
-interface IHDMIInputController
-{
+interface IHDMIInputController {
     /**
      * Gets the current connection state for a device attached to the HDMI input port.
      *
@@ -79,7 +78,7 @@ interface IHDMIInputController
      * @see stop(), IHDMIInput.open(), PlatformCapabilities.maximumConcurrentStartedPorts
      */
     void start();
- 
+
     /**
      * Stops the HDMI input.
      *
@@ -102,18 +101,19 @@ interface IHDMIInputController
      *
      * The EDID defined in `edid` is set for the HDMI input port.
      * This function can only be called when the interface is open and in the `READY` state.
-     * 
+     *
      * The RDK middleware is responsible for providing an EDID that only reflects the
      * known capabilities of this HDMI input port.
      *
      * @exception binder::Status EX_ILLEGAL_STATE
      *     Thrown if the resource is not in State::READY
-     * 
+     *
      * @param[in] edid  EDID data as a byte array. Must be valid and standards-compliant (typically 128 or 256 bytes).
-     * 
+     *
      * @return boolean
      * @retval true     The EDID was set successfully.
-     * @retval false    Indicates an error condition (e.g., resource not available, invalid state, or parameter validation failure).
+     * @retval false    Indicates an error condition (e.g., resource not available, invalid state, or parameter
+     * validation failure).
      *
      *
      * @see getEDID(), getCapabilities()

@@ -18,17 +18,16 @@
  */
 package com.rdk.hal.planecontrol;
 
-import com.rdk.hal.planecontrol.IPlaneControlListener;
-import com.rdk.hal.planecontrol.PlaneCapabilities;
-import com.rdk.hal.planecontrol.SourcePlaneMapping;
-import com.rdk.hal.planecontrol.Property;
-import com.rdk.hal.planecontrol.PropertyKVPair;
 import com.rdk.hal.PropertyValue;
 import com.rdk.hal.planecontrol.IGraphicsFbProvider;
 import com.rdk.hal.planecontrol.IGraphicsFbProviderListener;
+import com.rdk.hal.planecontrol.IPlaneControlListener;
+import com.rdk.hal.planecontrol.PlaneCapabilities;
+import com.rdk.hal.planecontrol.Property;
+import com.rdk.hal.planecontrol.PropertyKVPair;
+import com.rdk.hal.planecontrol.SourcePlaneMapping;
 
- 
-/** 
+/**
  *  @brief     Plane Control HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -36,21 +35,21 @@ import com.rdk.hal.planecontrol.IGraphicsFbProviderListener;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
- 
+
 @VintfStability
-interface IPlaneControl
-{
+interface IPlaneControl {
     /** The service name to publish. To be returned by getServiceName() in the derived class. */
     const @utf8InCpp String serviceName = "PlaneControl";
 
     /**
      * Gets the platform plane resources and their capabilities.
-     * 
+     *
      * This function can be called at any time and is not dependent on any Plane Control state.
      * The returned value is not allowed to change between calls.
      *
@@ -63,22 +62,23 @@ interface IPlaneControl
 
     /**
      * Sets the destination plane for one or more video sources.
-     * 
+     *
      * This function allows multiple video [source -> plane] mappings to be changed together.
      * Operations such as main and PIP video swaps can be performed using this call.
-     * 
+     *
      * To unmap a source from its plane, map it to a `destinationPlaneIndex` of -1.
-     * 
+     *
      * If a source type and source index appear multiple times in the mapping list then the call fails.
      * If a plane index appears multiple times in the mapping list then the call fails.
-     * If a plane index is already mapped to a source, then the exception status ``binder::Status EX_ILLEGAL_STATE`` is returned.
+     * If a plane index is already mapped to a source, then the exception status ``binder::Status EX_ILLEGAL_STATE`` is
+     * returned.
      *
      * @param[in] listSourcePlaneMapping    An array of video source to video plane mappings.
      *
      * @returns boolean
      * @retval true     The mapping was updated.
      * @retval false    One or more mappings were invalid.
-     * 
+     *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      *
@@ -86,28 +86,28 @@ interface IPlaneControl
      * @see getVideoSourceDestinationPlaneMapping()
      */
     boolean setVideoSourceDestinationPlaneMapping(in SourcePlaneMapping[] listSourcePlaneMapping);
-  
+
     /**
      * Gets the video source to plane mapping for all video planes.
-     * 
+     *
      * This function always returns an array with one element for each video plane.
      * If a video plane has no source mapped, then `SourceType.NONE` is mapped to it.
-     * 
+     *
      * @returns SourcePlaneMapping[]    An array of video source to video plane mappings.
-     * 
+     *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      *
      * @see setVideoSourceDestinationPlaneMapping()
      */
     SourcePlaneMapping[] getVideoSourceDestinationPlaneMapping();
-  
+
     /**
      * Gets a property of a plane.
-     * 
+     *
      * @param[in] planeResourceIndex    The plane resource index.
      * @param[in] property              Property enum.
-     * 
+     *
      * @returns PropertyValue or null on invalid parameter.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
@@ -120,17 +120,17 @@ interface IPlaneControl
 
     /**
      * Sets a property of a plane.
-     * 
+     *
      * @param[in] planeResourceIndex    The plane resource index.
      * @param[in] property              Property enum.
      * @param[in] propertyValue         Property value.
-     * 
+     *
      * @returns boolean
      * @retval true     Property was set successfully.
      * @retval false    Invalid plane index, property or property value parameter.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value. 
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      *
      *
      * @see getProperty(), setPropertyMultiAtomic()
@@ -166,36 +166,37 @@ interface IPlaneControl
      * @retval false                    The property values could not be retrieved.
      *
      * @exception binder::Status::Exception::EX_NONE             Success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid plane index, property key(s) or empty input list.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT Invalid plane index, property key(s) or empty input
+     * list.
      * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
      *
      *
      * @see getProperty(), setPropertyMultiAtomic()
      */
     boolean getPropertyMulti(in int planeResourceIndex, in Property[] properties, out PropertyKVPair[] propertyKVList);
-  
+
     /**
      * Sets multiple properties atomically for a plane.
-     * 
+     *
      * For example, the `X`, `Y`, `WIDTH` and `HEIGHT` properties can be set in a single call.
      * Properties must only appear once in the list.
-     * 
+     *
      * @param[in] planeResourceIndex    The plane resource index.
      * @param[in] propertyKVList        Array of property key-value pairs.
-     * 
+     *
      * @returns boolean
      * @retval true     Properties were set successfully.
      * @retval false    Invalid plane index, property or property value parameter.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
-     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      *
      * @see setProperty(), getPropertyMulti()
      */
     boolean setPropertyMultiAtomic(in int planeResourceIndex, in PropertyKVPair[] propertyKVList);
- 
+
     /**
      * Registers a callback listener for events generated by the Plane Control.
      *
@@ -203,19 +204,19 @@ interface IPlaneControl
      * registration attempts.
      *
      * @param[in] listener              IPlaneControlListener interface.
-     * 
+     *
      * @returns boolean
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      *
      * @see unregisterListener()
      */
     boolean registerListener(in IPlaneControlListener listener);
- 
+
     /**
      * Unregisters a callback listener for events generated by the Plane Control.
      *
@@ -238,7 +239,7 @@ interface IPlaneControl
      *
      * A provider is only available for plane resources of type GRAPHICS. The
      * method returns `null` rather than throwing an exception.
-     * All graphics planes must support a Graphics Frame Buffer Provider. 
+     * All graphics planes must support a Graphics Frame Buffer Provider.
      *
      * @param[in] planeResourceIndex               The ID of the plane resource.
      * @param[in] graphicsFbProviderListener       Listener for provider callbacks.
@@ -251,5 +252,7 @@ interface IPlaneControl
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      */
-    @nullable IGraphicsFbProvider getGraphicsFbProvider(in int planeResourceIndex, in IGraphicsFbProviderListener graphicsFbProviderListener); 
+    @nullable
+    IGraphicsFbProvider getGraphicsFbProvider(
+        in int planeResourceIndex, in IGraphicsFbProviderListener graphicsFbProviderListener);
 }

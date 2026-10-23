@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.deviceinfo;
- 
-/** 
+
+/**
  *  @brief     Device Information HAL capabilities definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -26,10 +26,9 @@ package com.rdk.hal.deviceinfo;
  */
 
 @VintfStability
-parcelable Capabilities
-{
-    /** 
+parcelable Capabilities {
+    /**
      * Array of supported property key strings.
      */
-    String[] supportedProperties;
+    @utf8InCpp String[] supportedProperties;
 }

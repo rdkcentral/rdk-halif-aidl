@@ -23,7 +23,7 @@ package com.rdk.hal.hdmicec;
  */
 
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum DeviceType {
     /**
      * No device type

@@ -24,7 +24,7 @@ package com.rdk.hal.audiomixer;
  * Enumeration of error codes used in IAudioCaptureListener callbacks.
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum AudioCaptureError {
     /**
      * Ring buffer overflow occurred because client consumption was too slow.

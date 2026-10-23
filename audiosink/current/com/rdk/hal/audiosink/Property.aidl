@@ -26,7 +26,7 @@ package com.rdk.hal.audiosink;
  */
 
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum Property {
 
     /**
@@ -36,8 +36,8 @@ enum Property {
      * Access: Read-only.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
-	 *
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+     *
      */
     RESOURCE_ID = 0,
 
@@ -51,37 +51,38 @@ enum Property {
      * Write in states: READY
      *
      * @exception binder::Status::Exception::EX_NONE for success
-	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
-	 *
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+     *
      */
     REFERENCE_LEVEL = 1,
 
     /**
      * The render output latency in nanoseconds.
-     * This is the time from an audio frame being rendered from the queue to being output (HDMI/ARC/BT/internal speakers).
+     * This is the time from an audio frame being rendered from the queue to being output (HDMI/ARC/BT/internal
+     * speakers).
      *
      * Type: Integer
      * Access: Read-only.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
-	 *
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+     *
      */
     RENDER_LATENCY_NS = 2,
 
     /**
-    * The queue depth of the audio output path in nanoseconds.
-    *
-    * This value represents the total amount of audio data, measured in nanoseconds,
-    * that is currently buffered and queued for playback in the audio output path.
-    *
-    * Type: Integer
-    * Access: Read-only.
-    *
-    * @exception binder::Status::Exception::EX_NONE for success
-	* @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
-	*
-    */
+     * The queue depth of the audio output path in nanoseconds.
+     *
+     * This value represents the total amount of audio data, measured in nanoseconds,
+     * that is currently buffered and queued for playback in the audio output path.
+     *
+     * Type: Integer
+     * Access: Read-only.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+     *
+     */
     QUEUE_DEPTH_NS = 3,
 
     /**
@@ -93,8 +94,8 @@ enum Property {
      * Write in states: READY
      *
      * @exception binder::Status::Exception::EX_NONE for success
-	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
-	 *
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+     *
      */
     MIXER_ID = 4,
 
@@ -109,8 +110,8 @@ enum Property {
      * Write in states: READY
      *
      * @exception binder::Status::Exception::EX_NONE for success
-	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
-	 *
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+     *
      */
     AV_SOURCE = 5,
 
@@ -119,4 +120,3 @@ enum Property {
      */
     METRIC_xxxx = 1000,
 }
-

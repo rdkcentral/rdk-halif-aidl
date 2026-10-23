@@ -27,8 +27,7 @@ package com.rdk.hal.firmwareupdate;
 
 @VintfStability
 @Backing(type = "int")
-enum FirmwareUpdateResult
-{
+enum FirmwareUpdateResult {
     /**
      * General error result code.
      * Additional details should be provided in the `onCompleted()` `report` string parameter.

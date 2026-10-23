@@ -19,9 +19,9 @@
 
 package com.rdk.hal.compositeinput;
 
+import com.rdk.hal.PropertyValue;
 import com.rdk.hal.compositeinput.PortProperty;
 import com.rdk.hal.compositeinput.State;
-import com.rdk.hal.PropertyValue;
 
 /**
  * @brief Event listener interface for composite input port observation.
@@ -42,8 +42,7 @@ import com.rdk.hal.PropertyValue;
  * transitions.
  */
 @VintfStability
-oneway interface ICompositeInputEventListener
-{
+oneway interface ICompositeInputEventListener {
     /**
      * Callback when the port has transitioned to a new state.
      *

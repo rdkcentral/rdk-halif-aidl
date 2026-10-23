@@ -46,6 +46,9 @@ Makefile
 *.pdf
 !docs/presentations/**/*.pdf
 
+# Regenerated on demand by scripts/aidl_validation_report.py
+/VALIDATION_REPORT.md
+
 # Claude Code
 .claude/
 

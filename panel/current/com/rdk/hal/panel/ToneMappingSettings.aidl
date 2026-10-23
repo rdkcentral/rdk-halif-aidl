@@ -26,6 +26,8 @@ import com.rdk.hal.panel.ToneMappingMode;
  */
 @VintfStability
 parcelable ToneMappingSettings {
+    /** The tone-mapping mode. */
     ToneMappingMode mode;
+    /** The tone-mapping level, one of the levels supported for the mode. */
     ToneMappingLevel level;
 }

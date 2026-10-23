@@ -17,18 +17,17 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmiinput;
- 
-/** 
+
+/**
  *  @brief     HDMI Input Signal State enumeration.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Amit Patel
  */
- 
+
 @VintfStability
 @Backing(type = "int")
-enum SignalState
-{
+enum SignalState {
     /**
      * Unknown signal state.
      *
@@ -38,21 +37,21 @@ enum SignalState
 
     /**
      * No signal detected.
-     * 
+     *
      * HDMI source device may be disconnected, powered off or in standby.
      */
     NO_SIGNAL = 0,
 
     /**
      * Unstable signal detected.
-     * 
+     *
      * Potential problem with cable, cable connection, port or transitionally during start up.
      */
     UNSTABLE = 1,
 
     /**
      * Unsupported signal detected.
-     * 
+     *
      * An aspect of the incoming signal is out of range of the HDMI port capabilities.
      * e.g. resolution, color depth, frame rate.
      */

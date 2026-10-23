@@ -20,7 +20,7 @@ package com.rdk.hal.hdmiinput;
 import com.rdk.hal.hdmiinput.IHDMIInput;
 import com.rdk.hal.hdmiinput.PlatformCapabilities;
 
-/** 
+/**
  *  @brief     HDMI Input Manager HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -29,15 +29,15 @@ import com.rdk.hal.hdmiinput.PlatformCapabilities;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 
 @VintfStability
-interface IHDMIInputManager
-{
+interface IHDMIInputManager {
     /** The service name to publish. To be returned by getServiceName() in the derived class. */
     const @utf8InCpp String serviceName = "HDMIInputManager";
 
@@ -53,15 +53,15 @@ interface IHDMIInputManager
     PlatformCapabilities getCapabilities();
 
     /**
-	 * Gets the platform list of HDMI input IDs.
-     * 
+     * Gets the platform list of HDMI input IDs.
+     *
      * @returns IHDMIInput.Id[]
      *
      */
-	IHDMIInput.Id[] getHDMIInputIds();
- 
+    IHDMIInput.Id[] getHDMIInputIds();
+
     /**
-	 * Gets a HDMI input interface.
+     * Gets a HDMI input interface.
      *
      * @param[in] hdmiInputId  The HDMI input port ID, must be one of the values returned by getHDMIInputIds().
      *
@@ -69,5 +69,4 @@ interface IHDMIInputManager
      *
      */
     @nullable IHDMIInput getHDMIInput(in IHDMIInput.Id hdmiInputId);
-
 }

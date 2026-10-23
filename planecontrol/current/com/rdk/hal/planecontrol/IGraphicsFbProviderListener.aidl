@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.planecontrol;
-  
-/** 
+
+/**
  *  @brief     Callbacks listener interface from graphics frame buffer provider.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -26,8 +26,7 @@ package com.rdk.hal.planecontrol;
  */
 
 @VintfStability
-oneway interface IGraphicsFbProviderListener
-{
+oneway interface IGraphicsFbProviderListener {
     /**
      * @brief     Called after a call to commitGraphicsFb() when the Graphics Frame Buffer has become current.
      * @param[in] oldGraphicsFbId  The Frame Id of the old frame replaced by the newly committed frame.

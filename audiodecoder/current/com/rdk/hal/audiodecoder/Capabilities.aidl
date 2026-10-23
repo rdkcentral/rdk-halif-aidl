@@ -27,16 +27,15 @@ import com.rdk.hal.audiodecoder.Codec;
  */
 
 @VintfStability
-parcelable Capabilities
-{
-	/**
-	 * Array of Codec enum values supported by this audio decoder instance.
-	 */
+parcelable Capabilities {
+    /**
+     * Array of Codec enum values supported by this audio decoder instance.
+     */
     Codec[] supportedCodecs;
 
-	/**
-	 * Indicates if this decoder instance can work in secure audio path (SAP) mode.
-	 * @see Property.SECURE_AUDIO
-	 */
+    /**
+     * Indicates if this decoder instance can work in secure audio path (SAP) mode.
+     * @see Property.SECURE_AUDIO
+     */
     boolean supportsSecure;
 }

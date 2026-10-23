@@ -28,6 +28,9 @@
  */
 package com.rdk.hal.drm;
 
+/**
+ * A provisioning request to be sent to a provisioning server.
+ */
 @VintfStability
 parcelable ProvisionRequest {
     /** The opaque certificate request blob. */
@@ -39,5 +42,5 @@ parcelable ProvisionRequest {
      * override this URL. If the HAL implementation does not provide
      * a defaultUrl, the returned string must be empty.
      */
-    String defaultUrl;
+    @utf8InCpp String defaultUrl;
 }

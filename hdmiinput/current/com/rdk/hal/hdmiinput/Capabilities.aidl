@@ -17,82 +17,81 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmiinput;
+import com.rdk.hal.hdmiinput.HDCPProtocolVersion;
 import com.rdk.hal.hdmiinput.HDMIVersion;
 import com.rdk.hal.hdmiinput.VIC;
-import com.rdk.hal.hdmiinput.HDCPProtocolVersion;
 
-/** 
+/**
  *  @brief     HDMI input port device capabilities definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
+
 @VintfStability
-parcelable Capabilities
-{
-	/**
-	 * The array of HDMI versions the port supports.
-	 * Specifying more than one HDMI version indicates support for switching between versions.
-	 * @Note: supportsQMS requires supportsVRR to be true. supportsFreeSync is only meaningful if supportsVRR is true.
-	 */
-	HDMIVersion[] supportedVersions;
+parcelable Capabilities {
+    /**
+     * The array of HDMI versions the port supports.
+     * Specifying more than one HDMI version indicates support for switching between versions.
+     * @Note: supportsQMS requires supportsVRR to be true. supportsFreeSync is only meaningful if supportsVRR is true.
+     */
+    HDMIVersion[] supportedVersions;
 
-	/**
-	 * The array of VIC the port supports.
-	 */
-	VIC[] supportedVICs;
+    /**
+     * The array of VIC the port supports.
+     */
+    VIC[] supportedVICs;
 
-	/**
-	 * The array of HDCP protocol versions the HDMI input port supports.
-	 */
-	HDCPProtocolVersion[] supportedHDCPProtocolVersions;
+    /**
+     * The array of HDCP protocol versions the HDMI input port supports.
+     */
+    HDCPProtocolVersion[] supportedHDCPProtocolVersions;
 
-	/**
-	 * Indicates support for stereo (3D) video.
-	 */
-	boolean supports3D;
+    /**
+     * Indicates support for stereo (3D) video.
+     */
+    boolean supports3D;
 
-	/**
-	 * Indicates support for fixed rate link (FRL).
-	 */
-	boolean supportsFRL;
+    /**
+     * Indicates support for fixed rate link (FRL).
+     */
+    boolean supportsFRL;
 
-	/**
-	 * Indicates support for HDMI Forum variable refresh rate (VRR),
-	 * as defined by the HDMI 2.1 specification.
-	 * AMD FreeSync support is indicated separately by supportsFreeSync.
-	 */
-	boolean supportsVRR;
+    /**
+     * Indicates support for HDMI Forum variable refresh rate (VRR),
+     * as defined by the HDMI 2.1 specification.
+     * AMD FreeSync support is indicated separately by supportsFreeSync.
+     */
+    boolean supportsVRR;
 
-	/**
-	 * Indicates support for AMD FreeSync.
-	 * @see PlatformCapabilities.freeSync to determine the type of FreeSync.
-	 */
-	boolean supportsFreeSync;
+    /**
+     * Indicates support for AMD FreeSync.
+     * @see PlatformCapabilities.freeSync to determine the type of FreeSync.
+     */
+    boolean supportsFreeSync;
 
-	/**
-	 * Indicates support quick media switching (QMS is VRR with M_CONST).
- 	 */
-	boolean supportsQMS;
+    /**
+     * Indicates support quick media switching (QMS is VRR with M_CONST).
+     */
+    boolean supportsQMS;
 
-	/**
-	 * Indicates support for automatic low latency mode (ALLM).
-	 */
-	boolean supportsALLM;
+    /**
+     * Indicates support for automatic low latency mode (ALLM).
+     */
+    boolean supportsALLM;
 
-	/**
-	 * Indicates support for quick frame transport (QFT is aka Fast VActive).
-	 */
-	boolean supportsQFT;
+    /**
+     * Indicates support for quick frame transport (QFT is aka Fast VActive).
+     */
+    boolean supportsQFT;
 
-	/**
-	 * Indicates support for audio return channel (ARC).
-	 */
-	boolean supportsARC;
+    /**
+     * Indicates support for audio return channel (ARC).
+     */
+    boolean supportsARC;
 
-	/**
-	 * Indicates support for enhanced audio return channel (eARC).
-	 */
-	boolean supportsEARC;
+    /**
+     * Indicates support for enhanced audio return channel (eARC).
+     */
+    boolean supportsEARC;
 }

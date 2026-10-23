@@ -24,29 +24,27 @@ import com.rdk.hal.compositeinput.PropertyMetadata;
 
 /**
  * @brief Platform-wide capabilities for composite input.
- * 
+ *
  * Describes the overall capabilities of the composite input subsystem,
  * including supported features, video standards, and available ports.
  */
 @VintfStability
-parcelable PlatformCapabilities
-{
+parcelable PlatformCapabilities {
     /**
      * @brief Feature flags for optional functionality.
      */
     @VintfStability
-    parcelable FeatureFlags
-    {
+    parcelable FeatureFlags {
         /** True if Macrovision copy protection detection is supported. */
         boolean macrovisionDetectionSupported;
 
         // Signal-metrics support is inferred from the presence of METRIC_*
         // keys in supportedProperties — no separate flag needed.
     }
-    
+
     /** HAL version (semantic versioning, e.g., "1.0.0"). */
     @utf8InCpp String halVersion;
-    
+
     /** Maximum number of ports supported. */
     byte maxPorts;
 

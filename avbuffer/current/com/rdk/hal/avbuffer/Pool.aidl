@@ -17,17 +17,16 @@
  * limitations under the License.
  */
 package com.rdk.hal.avbuffer;
- 
-/** 
+
+/**
  *  @brief     AV buffer pool definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
 
-@VintfStability 
-parcelable Pool
-{
+@VintfStability
+parcelable Pool {
     /** Handle for the pool. */
     byte handle;
 }
