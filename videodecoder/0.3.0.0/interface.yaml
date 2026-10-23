@@ -1,0 +1,9 @@
+aidl_interface:
+  name: videodecoder
+  version: 3000
+  srcs:
+    - com/rdk/hal/videodecoder/*.aidl
+  imports:
+    - common@0.3.0.0
+  stability: vintf
+  layout: module-local

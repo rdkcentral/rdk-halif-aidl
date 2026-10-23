@@ -148,7 +148,7 @@ case "${1:-}" in
     *) source "$SCRIPT_DIR/dev_env_guard.sh"; halif_guard_dev_host_env || exit 1 ;;
 esac
 
-# Suppress three classes of unfixable upstream noise so the verification
+# Suppress four classes of unfixable upstream noise so the verification
 # build output stays readable.
 #
 #   -Wno-write-strings  AOSP aidl-cpp emits
@@ -173,6 +173,20 @@ esac
 #                       `__builtin_unreachable()`. Bites every union
 #                       (PropertyValue, DrmMetricValue, …).
 #
+#   -Wno-deprecated-declarations
+#                       An AIDL `@deprecated` becomes
+#                       `__attribute__((deprecated))` in the generated C++,
+#                       and the generated code then uses it itself: the enum
+#                       toString() switch and enum_values array, the proxy
+#                       and the stub. aidl-cpp only guards those uses with
+#                       `#pragma clang diagnostic`, which GCC ignores
+#                       (e.g. sensor thermal State::CRITICAL_TEMPERATURE_RECOVERED,
+#                       #846). Suppressed in this build only: the attribute
+#                       stays in the shipped headers, so engineering builds
+#                       (Yocto recipes, not this script) still warn on
+#                       deprecated items until they move to the later
+#                       revision that removes them.
+#
 # Plumbed two ways:
 #   1. Export CXXFLAGS — picked up on first cmake configure of any
 #      build dir (and by build_binder.sh if it's already exported in
@@ -181,7 +195,7 @@ esac
 #      defeats stale build/<dir>/CMakeCache.txt where the flags weren't
 #      captured on the original configure (env-CXXFLAGS only seeds the
 #      cache the FIRST time).
-WARNING_SUPPRESSION_FLAGS="-Wno-write-strings -Wno-attributes -Wno-return-type"
+WARNING_SUPPRESSION_FLAGS="-Wno-write-strings -Wno-attributes -Wno-return-type -Wno-deprecated-declarations"
 export CXXFLAGS="${CXXFLAGS:-} ${WARNING_SUPPRESSION_FLAGS}"
 
 #######################################################################
