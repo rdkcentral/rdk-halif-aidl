@@ -1674,7 +1674,7 @@ declare -A COMP_FILES=()
 # Format, tab-delimited:
 #   p<TAB>SHA<TAB>PR_NUMBER          (resolved through GitHub only)
 #   l<TAB>PR_NUMBER<TAB>LABEL1|LABEL2|LABEL3
-#   r<TAB>PR_NUMBER<TAB>ISSUE1,ISSUE2<TAB>TITLE
+#   r<TAB>PR_NUMBER<TAB>ISSUE1,ISSUE2<US>TITLE   (US = \x1f; non-empty only)
 # Labels are joined with `|` (which can't appear in label names).
 GH_CACHE_FILE="${REPO_ROOT}/out/.gh-cache"
 
@@ -1778,26 +1778,28 @@ get_pr_issue_type() {
     printf '%s\n' "${t}"
 }
 
-# Title and closing-issue numbers of a PR, as "ISSUES<TAB>TITLE" (ISSUES
-# comma-separated, either part may be empty). Only feeds the derivation
-# text, so a reviewer can look up what each label came from (#923).
-get_pr_refs() {
-    local pr="$1"
-    if [[ -n "${PR_REFS_CACHE[$pr]+x}" ]]; then
-        printf '%s\n' "${PR_REFS_CACHE[$pr]}"
-        return 0
-    fi
-    local refs=""
+# Title and closing-issue numbers of a PR, cached as "ISSUES<US>TITLE"
+# (ISSUES comma-separated, US = \x1f — not a tab, which the cache reader
+# collapses when ISSUES is empty). Only feeds the derivation text, so a
+# reviewer can look up what each label came from (#923).
+#
+# Called directly, never in $(...), so the in-memory cache survives for
+# every component the PR touched. An empty result (offline, --no-gh, API
+# failure) is reused for this run but not persisted, so a later online
+# run retries; a real response always carries the title.
+load_pr_refs() {
+    local pr="$1" refs=""
+    [[ -n "${pr}" && -z "${PR_REFS_CACHE[$pr]+x}" ]] || return 0
     if [[ "${ENABLE_GH_LABELS}" -eq 1 ]]; then
         refs="$(gh api graphql \
             -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){pullRequest(number:$n){title closingIssuesReferences(first:10){nodes{number}}}}}' \
             -f o="${GH_REPO%%/*}" -f r="${GH_REPO##*/}" -F n="${pr}" \
-            --jq '.data.repository.pullRequest | ([.closingIssuesReferences.nodes[].number | tostring] | join(",")) + "\t" + (.title // "")' \
+            --jq '.data.repository.pullRequest | select(.title) | ([.closingIssuesReferences.nodes[].number | tostring] | join(",")) + "\u001f" + .title' \
             2>/dev/null || true)"
     fi
     PR_REFS_CACHE[$pr]="${refs}"
-    gh_cache_append "r" "${pr}" "${refs}"
-    printf '%s\n' "${refs}"
+    [[ -n "${refs}" ]] && gh_cache_append "r" "${pr}" "${refs}"
+    return 0
 }
 
 # " — "TITLE"; issues #A, #B; files: F1, F2 +N more" for a derivation line.
@@ -1806,10 +1808,10 @@ get_pr_refs() {
 pr_ref_suffix() {
     local pr="$1" subject="$2" files="$3"
     local refs="" title="" issues="" n out=""
-    [[ -n "${pr}" ]] && refs="$(get_pr_refs "${pr}")"
+    [[ -n "${pr}" ]] && refs="${PR_REFS_CACHE[$pr]:-}"
     if [[ -n "${refs}" ]]; then
-        issues="${refs%%$'\t'*}"
-        title="${refs#*$'\t'}"
+        issues="${refs%%$'\x1f'*}"
+        title="${refs#*$'\x1f'}"
     fi
     while read -r n; do
         [[ -n "${n}" && "${n}" != "${pr}" && ",${issues}," != *",${n},"* ]] \
@@ -1896,6 +1898,7 @@ for sha in "${FP_COMMITS[@]}"; do
         fi
     done
 
+    load_pr_refs "${pr_number}"
     for comp in "${!COMMIT_COMP_TOUCHED[@]}"; do
         # Colour on a TTY only (the _C_* are empty otherwise): PR bold, the
         # label by severity, the references dim.
