@@ -1554,7 +1554,7 @@ declare -A COMP_FILES=()
 #
 # File: out/.gh-cache  (gitignored — out/ already is)
 # Format, tab-delimited:
-#   c<TAB>SHA<TAB>PR_NUMBER          (PR_NUMBER may be empty)
+#   p<TAB>SHA<TAB>PR_NUMBER          (resolved through GitHub only)
 #   l<TAB>PR_NUMBER<TAB>LABEL1|LABEL2|LABEL3
 # Labels are joined with `|` (which can't appear in label names).
 GH_CACHE_FILE="${REPO_ROOT}/out/.gh-cache"
@@ -1564,7 +1564,9 @@ gh_cache_load() {
     local kind key value
     while IFS=$'\t' read -r kind key value; do
         case "${kind}" in
-            c)  COMMIT_PR_CACHE[$key]="${value}" ;;
+            # `c` entries came from the subject-first lookup and may name
+            # an issue (#920); they are ignored so the commit is re-asked.
+            p)  COMMIT_PR_CACHE[$key]="${value}" ;;
             l)  # Restore newlines from |-encoded labels
                 PR_LABEL_CACHE[$key]="${value//|/$'\n'}"
                 ;;
@@ -1590,10 +1592,14 @@ get_pr_for_commit() {
         return 0
     fi
 
+    # GitHub's commit -> PR association is authoritative. A trailing "(#N)"
+    # in the subject is only a fallback (local or cherry-picked commits):
+    # squash merges often carry the ISSUE number there, not the PR (#920).
+    # Only a resolved mapping is persisted: a subject guess or an empty
+    # result (offline, --no-gh, API failure) is returned uncached so a
+    # later online run asks GitHub again.
     local pr=""
     if [[ "${subject}" =~ ^Merge\ pull\ request\ \#([0-9]+) ]]; then
-        pr="${BASH_REMATCH[1]}"
-    elif [[ "${subject}" =~ \(#([0-9]+)\)$ ]]; then
         pr="${BASH_REMATCH[1]}"
     elif [[ "${ENABLE_GH_LABELS}" -eq 1 ]]; then
         pr="$(gh api "repos/${GH_REPO}/commits/${sha}/pulls" --jq '.[0].number' 2>/dev/null || true)"
@@ -1601,9 +1607,12 @@ get_pr_for_commit() {
             pr=""
         fi
     fi
-
-    COMMIT_PR_CACHE[$sha]="${pr}"
-    gh_cache_append "c" "${sha}" "${pr}"
+    if [[ -n "${pr}" ]]; then
+        COMMIT_PR_CACHE[$sha]="${pr}"
+        gh_cache_append "p" "${sha}" "${pr}"
+    elif [[ "${subject}" =~ \(#([0-9]+)\)$ ]]; then
+        pr="${BASH_REMATCH[1]}"
+    fi
     printf '%s\n' "${pr}"
 }
 
