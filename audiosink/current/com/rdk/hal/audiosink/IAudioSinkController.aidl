@@ -22,6 +22,8 @@ import com.rdk.hal.audiosink.VolumeRamp;
 import com.rdk.hal.audiodecoder.IAudioDecoder;
 import com.rdk.hal.audiodecoder.FrameMetadata;
 import com.rdk.hal.avclock.IAVClock;
+import com.rdk.hal.audiosink.Property;
+import com.rdk.hal.PropertyValue;
 
 /**
  *  @brief     Audio Sink Controller HAL interface.
@@ -144,6 +146,21 @@ interface IAudioSinkController {
      * @see setAudioDecoder()
      */
     IAudioDecoder.Id getAudioDecoder();
+
+    /**
+     * Sets a property.
+     *
+     * @param[in] property              The key of a property from the Property enum.
+     * @param[in] propertyValue         Holds the value to set.
+     *
+     * @returns true if the property was successfully set, otherwise false on error.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
+     *
+     * @see getProperty()
+     */
+    boolean setProperty(in Property property, in PropertyValue propertyValue);
 
     /**
      * Attaches an AVClock to this audio sink for AV synchronisation.
