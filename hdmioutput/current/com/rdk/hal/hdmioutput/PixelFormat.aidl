@@ -34,8 +34,7 @@ package com.rdk.hal.hdmioutput;
  */
 @VintfStability
 @Backing(type = "int")
-enum PixelFormat
-{
+enum PixelFormat {
     /**
      * RGB 4:4:4 pixel format.
      * Full bandwidth, no chroma subsampling.

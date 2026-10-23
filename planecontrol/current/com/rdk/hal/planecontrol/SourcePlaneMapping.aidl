@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.planecontrol;
-import com.rdk.hal.planecontrol.SourceType; 
- 
+import com.rdk.hal.planecontrol.SourceType;
+
 /**
  *  @brief     Video source to plane mapping definition.
  *  @author    Luc Kennedy-Lamb
@@ -27,19 +27,18 @@ import com.rdk.hal.planecontrol.SourceType;
  */
 
 @VintfStability
-parcelable SourcePlaneMapping
-{
+parcelable SourcePlaneMapping {
     /**
      * The video source type to map.
-     */    
-    SourceType sourceType;  
- 
+     */
+    SourceType sourceType;
+
     /**
      * The index of the video source.
      * Ignored if `sourceType` is `SourceType.NONE`.
      */
     int sourceIndex;
- 
+
     /**
      * The index of the plane to use as the destination for the video source.
      * A value of -1 indicates no plane.

@@ -35,6 +35,8 @@ package com.rdk.hal.drm;
  */
 @VintfStability
 parcelable SubSample {
+    /** Number of bytes of clear (unencrypted) data. */
     int numBytesOfClearData;
+    /** Number of bytes of encrypted data. */
     int numBytesOfEncryptedData;
 }

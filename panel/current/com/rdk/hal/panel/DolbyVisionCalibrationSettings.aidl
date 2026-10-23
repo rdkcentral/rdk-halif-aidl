@@ -27,27 +27,25 @@ package com.rdk.hal.panel;
  */
 
 @VintfStability
-parcelable DolbyVisionCalibrationSettings
-{
-
+parcelable DolbyVisionCalibrationSettings {
     /**
-    * Peak white luminance in nits (legacy field name `Tmax`).
-    * Used by the tone-mapping engine to map HDR content to the panel's
-    * maximum brightness capability.
+     * Peak white luminance in nits (legacy field name `Tmax`).
+     * Used by the tone-mapping engine to map HDR content to the panel's
+     * maximum brightness capability.
      * Valid range is 0 to 10000.
      */
     double Tmax;
 
     /**
-    * Minimum black luminance in nits (legacy field name `Tmin`).
-    * Used by the tone-mapping engine when mapping HDR content to the
-    * panel's black-level capability.
+     * Minimum black luminance in nits (legacy field name `Tmin`).
+     * Used by the tone-mapping engine when mapping HDR content to the
+     * panel's black-level capability.
      * Valid range is 0 to 10000.
      */
     double Tmin;
 
     /**
-    * Display EOTF gamma exponent (legacy field name `Tgamma`).
+     * Display EOTF gamma exponent (legacy field name `Tgamma`).
      * Valid range is 1.80 to 2.60.
      */
     double Tgamma;

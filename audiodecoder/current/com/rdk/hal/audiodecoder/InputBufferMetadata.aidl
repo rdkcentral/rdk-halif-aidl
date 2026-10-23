@@ -38,7 +38,6 @@ package com.rdk.hal.audiodecoder;
 
 @VintfStability
 parcelable InputBufferMetadata {
-
     /**
      * Presentation time of the encoded audio frame in nanoseconds.
      */

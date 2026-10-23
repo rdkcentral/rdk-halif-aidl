@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.planecontrol;
 
- /**
+/**
  *  @brief      Dma-Buf interface capabilities definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -26,29 +26,35 @@ package com.rdk.hal.planecontrol;
  */
 
 @VintfStability
-parcelable GraphicsFbCapabilities
-{
-   /**
-     * The maxGraphicsFrameBuffers indicates the maximum number of frame buffers that can be created for use on this plane.
+parcelable GraphicsFbCapabilities {
+    /**
+     * The maxGraphicsFrameBuffers indicates the maximum number of frame buffers that can be created for use on this
+     * plane.
      */
     int maxGraphicsFrameBuffers;
 
-    /** 
+    /**
      * The maximum width and height in pixels that the frame buffer can be created with.
      * Typically the width and height will match the plane width and height.
      */
     int maxGraphicsFbWidth;
+
+    /** The maximum height in pixels that the frame buffer can be created with. */
     int maxGraphicsFbHeight;
 
-    /* The pixel format of the returned graphics frame. */
-    /* This is an opaque value expected to be known to the client EGL implementation */
-    /* For validation purposes a constant value in the hfp can be used. */
-    /* This value is opaque in that it is passed through this interface without any undertsnading of its value. */
-    int format;   
+    /**
+     * The pixel format of the returned graphics frame.
+     * This is an opaque value expected to be known to the client EGL implementation.
+     * For validation purposes a constant value in the hfp can be used.
+     * This value is opaque in that it is passed through this interface without any understanding of its value.
+     */
+    int format;
 
-    /*  modifiers that describe the buffer format. */ 
-    /* This is an opaque value expected to be known to the client EGL implementation */
-    /* For validation purposes a constant value in the hfp can be used. */
-    /* This value is opaque in that it is passed through this interface without any undertsnading of its value. */
+    /**
+     * Modifiers that describe the buffer format.
+     * This is an opaque value expected to be known to the client EGL implementation.
+     * For validation purposes a constant value in the hfp can be used.
+     * This value is opaque in that it is passed through this interface without any understanding of its value.
+     */
     long modifier;
 }

@@ -22,8 +22,10 @@ package com.rdk.hal.audiomixer;
  * @brief Dynamic range control mode for Dolby MS12 runtime command control.
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum DolbyMs12_2_6_DrcMode {
+    /** Line mode dynamic range control. */
     LINE = 0,
+    /** RF mode dynamic range control. */
     RF = 1
 }

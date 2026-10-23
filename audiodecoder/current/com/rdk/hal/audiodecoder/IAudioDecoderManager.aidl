@@ -27,22 +27,20 @@ import com.rdk.hal.audiodecoder.IAudioDecoder;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 
 @VintfStability
-interface IAudioDecoderManager
-{
-
+interface IAudioDecoderManager {
     /** The service name to publish. To be returned by getServiceName() in the derived class. */
     const @utf8InCpp String serviceName = "audiodecodermanager";
 
-
     /**
-	 * Get all audio decoder resource IDs.
+     * Get all audio decoder resource IDs.
      *
      * The list of audio decoders is static in the system and does not change
      * between calls.
@@ -55,7 +53,7 @@ interface IAudioDecoderManager
     IAudioDecoder.Id[] getAudioDecoderIds();
 
     /**
-	 * Gets an audio decoder resource index interface.
+     * Gets an audio decoder resource index interface.
      *
      * @param[in] decoderResourceId     The ID of the audio decoder resource.
      *

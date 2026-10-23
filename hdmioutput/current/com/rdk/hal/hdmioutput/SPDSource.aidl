@@ -34,8 +34,7 @@ package com.rdk.hal.hdmioutput;
  */
 @VintfStability
 @Backing(type = "byte")
-enum SPDSource
-{
+enum SPDSource {
     /** Unknown or undefined source */
     UNKNOWN = 0x00,
 

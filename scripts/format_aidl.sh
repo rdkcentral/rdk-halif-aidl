@@ -42,7 +42,8 @@ usage() {
     cat <<EOF
 Usage: ./scripts/format_aidl.sh [--all | <component|dir> ...]
 
-Formats AIDL files with clang-format, using the repository root's .clang-format.
+Formats AIDL files with clang-format, using the repository root's .clang-format, and
+appends a final newline to any file that lacks one.
 
   (no option)      Format the default set in FORMAT_DIRS (currently: ${FORMAT_DIRS[*]:-none configured})
   --all            Format every component with AIDL (${#ALL_DIRS[@]} components)
@@ -128,6 +129,10 @@ for dir in "${TARGET_DIRS[@]}"; do
                 echo "❌ Failed to format ${f}" >&2
                 format_failed=1
                 continue
+            fi
+            # clang-format leaves a missing final newline missing; the guidelines require one.
+            if [[ -n "$(tail -c1 "${f}.tmp")" ]]; then
+                printf '\n' >> "${f}.tmp"
             fi
             if ! mv "${f}.tmp" "${f}"; then
                 rm -f "${f}.tmp"

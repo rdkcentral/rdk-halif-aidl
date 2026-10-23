@@ -19,6 +19,7 @@
 
 package com.rdk.hal.compositeinput;
 
+import com.rdk.hal.PropertyValue;
 import com.rdk.hal.compositeinput.ICompositeInputController;
 import com.rdk.hal.compositeinput.ICompositeInputControllerListener;
 import com.rdk.hal.compositeinput.ICompositeInputEventListener;
@@ -28,7 +29,6 @@ import com.rdk.hal.compositeinput.PortProperty;
 import com.rdk.hal.compositeinput.PortStatus;
 import com.rdk.hal.compositeinput.PropertyKVPair;
 import com.rdk.hal.compositeinput.State;
-import com.rdk.hal.PropertyValue;
 
 /**
  * @brief     Composite Input Port HAL interface.
@@ -65,8 +65,7 @@ import com.rdk.hal.PropertyValue;
  * - Failure: returns a service-specific exception; output parameters are undefined.
  */
 @VintfStability
-interface ICompositeInputPort
-{
+interface ICompositeInputPort {
     /**
      * Gets the port ID.
      *

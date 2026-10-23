@@ -22,8 +22,10 @@ package com.rdk.hal.audiomixer;
  * @brief Downmix mode for Dolby MS12 runtime command control.
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum DolbyMs12_2_6_DownmixMode {
+    /** Lt/Rt (left total, right total) matrix-encoded stereo downmix. */
     LT_RT = 0,
+    /** Lo/Ro (left only, right only) stereo downmix. */
     LO_RO = 1
 }

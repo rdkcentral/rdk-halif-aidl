@@ -29,8 +29,7 @@ import com.rdk.hal.compositeinput.PropertyMetadata;
  * which may differ from platform capabilities if ports have varying features.
  */
 @VintfStability
-parcelable PortCapabilities
-{
+parcelable PortCapabilities {
     /**
      * Array of PortProperty enum values supported by this port.
      *

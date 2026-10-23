@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.planecontrol;
-  
+
 /**
  *  @brief     Plane type definition.
  *  @author    Luc Kennedy-Lamb
@@ -26,16 +26,15 @@ package com.rdk.hal.planecontrol;
  */
 
 @VintfStability
-@Backing(type="int")
-enum PlaneType
-{
-    /** 
+@Backing(type = "int")
+enum PlaneType {
+    /**
      *  Video plane.
      */
     VIDEO = 0,
- 
-    /** 
+
+    /**
      *  Graphics plane.
      */
-    GRAPHICS = 1, 
+    GRAPHICS = 1,
 }

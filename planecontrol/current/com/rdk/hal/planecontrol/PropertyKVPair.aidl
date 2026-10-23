@@ -17,9 +17,9 @@
  * limitations under the License.
  */
 package com.rdk.hal.planecontrol;
-import com.rdk.hal.planecontrol.Property;
 import com.rdk.hal.PropertyValue;
- 
+import com.rdk.hal.planecontrol.Property;
+
 /**
  *  @brief     Key-value pair for plane properties.
  *  @author    Luc Kennedy-Lamb
@@ -28,11 +28,10 @@ import com.rdk.hal.PropertyValue;
  */
 
 @VintfStability
-parcelable PropertyKVPair{
- 
-    /* Property enum key. */
-    Property property;  
- 
-    /* Property value. */
+parcelable PropertyKVPair {
+    /** Property enum key. */
+    Property property;
+
+    /** Property value. */
     PropertyValue propertyValue;
 }
