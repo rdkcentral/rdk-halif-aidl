@@ -30,9 +30,21 @@ if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
     _C_YELLOW=$'\033[33m'
     _C_BLUE=$'\033[34m'
     _C_CYAN=$'\033[36m'
+    _C_LINK=1
 else
     _C_RESET= _C_BOLD= _C_DIM= _C_RED= _C_GREEN= _C_YELLOW= _C_BLUE= _C_CYAN=
+    _C_LINK=
 fi
+
+# TEXT as an OSC 8 hyperlink to URL on a TTY (terminals without OSC 8 show
+# TEXT alone); plain TEXT otherwise, so logs carry no escape codes.
+_link() {
+    if [[ -n "${_C_LINK}" ]]; then
+        printf '\033]8;;%s\033\\%s\033]8;;\033\\' "$1" "$2"
+    else
+        printf '%s' "$2"
+    fi
+}
 
 log() {
     # Highlight a few common idioms so the right thing draws the eye.
@@ -324,7 +336,8 @@ run_verification_build() {
 #
 # Subcommands:
 #   ./release.sh stage <module> [--version X.Y.Z.W]     write snapshot + metadata
-#   ./release.sh stage all                              same, for every qualifying module
+#   ./release.sh stage all [<module> --version X]...    same, for every qualifying module
+#   ./release.sh unpin <module>|all                     forget a remembered --version pin
 #   ./release.sh drop  <module>                         revert the writes
 #   ./release.sh plan                                   read-only table view
 #   ./release.sh check [<module>]                       preview without staging
@@ -414,7 +427,13 @@ plan_clean() {
     done < <(find "${REPO_ROOT}/docs/releases" -maxdepth 1 -type f -name '[0-9]*.md' -print0 2>/dev/null)
     [[ ${removed_notes} -gt 0 ]] && log "  Removed ${removed_notes} untracked docs/releases/X.Y.Z.md file(s)."
 
-    # 4. Wipe the gh API cache so a fresh run re-pulls PR labels in case
+    # 4. Forget remembered --version pins (out/.release-pins).
+    if [[ -f "${REPO_ROOT}/out/.release-pins" ]]; then
+        rm -f "${REPO_ROOT}/out/.release-pins"
+        log "  Cleared remembered version pins (out/.release-pins)."
+    fi
+
+    # 5. Wipe the gh API cache so a fresh run re-pulls PR labels in case
     # any were changed since the last run. (commit→PR mappings are
     # immutable, but labels can be re-applied.)
     if [[ -f "${REPO_ROOT}/out/.gh-cache" ]]; then
@@ -519,6 +538,38 @@ plan_load() {
 # subcommand parser assigns into it (assoc assignment before declare -A
 # degrades to arithmetic subscript evaluation).
 declare -A PIN_VERSIONS=()
+
+# Pins are remembered in out/.release-pins (gitignored) so the operator sets
+# the odd version once — `stage all avclock --version 0.2.1.0` — and later
+# `stage all` / --apply runs keep it. Each line is tied to the last release
+# tag, so a pin lapses once that release is tagged. Format, tab-delimited:
+#   <module><TAB><X.Y.Z.W><TAB><last tag when pinned>
+PIN_FILE="${REPO_ROOT}/out/.release-pins"
+_pin_baseline="$(git -C "${REPO_ROOT}" describe --tags --abbrev=0 2>/dev/null || true)"
+pins_load() {
+    [[ -f "${PIN_FILE}" ]] || return 0
+    local comp ver base
+    while IFS=$'\t' read -r comp ver base; do
+        [[ -n "${comp}" && "${base}" == "${_pin_baseline}" ]] && PIN_VERSIONS[$comp]="${ver}"
+    done < "${PIN_FILE}"
+    return 0
+}
+pins_save() {
+    mkdir -p "$(dirname "${PIN_FILE}")"
+    local comp
+    : > "${PIN_FILE}"
+    for comp in $(printf '%s\n' "${!PIN_VERSIONS[@]}" | sort); do
+        printf '%s\t%s\t%s\n' "${comp}" "${PIN_VERSIONS[$comp]}" "${_pin_baseline}" >> "${PIN_FILE}"
+    done
+    [[ ${#PIN_VERSIONS[@]} -gt 0 ]] || rm -f "${PIN_FILE}"
+}
+pin_set() {
+    [[ "$2" =~ ^[0-9]+(\.[0-9]+){3}$ ]] || die "pin: '$2' is not a version (X.Y.Z.W)."
+    [[ -f "${REPO_ROOT}/$1/metadata.yaml" ]] || die "pin: $1/metadata.yaml not found — no such component."
+    PIN_VERSIONS[$1]="$2"
+}
+pins_load
+
 case "${1:-}" in
     stage)
         shift
@@ -535,7 +586,17 @@ case "${1:-}" in
             # loop; without STAGE_AND_WRITE=1, DO_WRITES stays 0 and the
             # snapshot/metadata pipeline never fires.
             STAGE_AND_WRITE=1
-            # No more positional args expected; any --flags fall through.
+            # Optional pins: `stage all <module> --version X.Y.Z.W ...`
+            # override the label-derived bump for that module; the audit
+            # accepts a pin at or above the code's level. Any --flags
+            # after them fall through to the main parser.
+            while [[ $# -gt 0 && "$1" != -* ]]; do
+                [[ "${2:-}" == "--version" && -n "${3:-}" ]] \
+                    || die "stage all: pin a module as '<module> --version X.Y.Z.W'"
+                pin_set "$1" "$3"
+                shift 3
+            done
+            pins_save
         else
             _add_ver=""
             shift || true
@@ -553,13 +614,29 @@ case "${1:-}" in
             # Push onto the write-pipeline queue + record any version pin.
             STAGE_AND_WRITE_MODULES+=("${_add_comp}")
             STAGE_AND_WRITE=1
-            [[ -n "${_add_ver}" ]] && PIN_VERSIONS[${_add_comp}]="${_add_ver}"
+            if [[ -n "${_add_ver}" ]]; then
+                pin_set "${_add_comp}" "${_add_ver}"
+                pins_save
+            fi
             # Fall through to the standard pipeline; it processes the queue.
         fi
         ;;
     drop)
         shift
         plan_remove "${1:-}"
+        exit 0
+        ;;
+    unpin)
+        shift
+        [[ -n "${1:-}" ]] || die "unpin: name a module, or 'all'."
+        if [[ "$1" == "all" ]]; then
+            PIN_VERSIONS=()
+        else
+            [[ -n "${PIN_VERSIONS[$1]+x}" ]] || die "unpin: $1 is not pinned."
+            unset 'PIN_VERSIONS[$1]'
+        fi
+        pins_save
+        log "✓ Unpinned $1. It is staged by its labels on the next stage run."
         exit 0
         ;;
     plan)
@@ -621,6 +698,14 @@ case "${1:-}" in
         ;;
 esac
 
+if [[ ${#PIN_VERSIONS[@]} -gt 0 ]]; then
+    _pin_list=""
+    for _c in $(printf '%s\n' "${!PIN_VERSIONS[@]}" | sort); do
+        _pin_list="${_pin_list:+${_pin_list}, }${_c} ${PIN_VERSIONS[$_c]}"
+    done
+    log "📌 Pinned versions: ${_pin_list}  (./release.sh unpin <module>|all to drop)"
+fi
+
 # Defaults for arg parser. Use ${VAR:-0} so the subcommand fall-throughs
 # above can pre-set flags without us stomping them here.
 CHECK_MODE="${CHECK_MODE:-0}"
@@ -644,6 +729,11 @@ Release Version Bump Tool
 
 Subcommands (manage what's staged for the next release):
   ./release.sh stage <module> [--version X.Y.Z.W]     stage module (auto-bump unless --version pinned)
+  ./release.sh stage all [<module> --version X.Y.Z.W]...
+                                                       stage every qualifying module, pinning the
+                                                       ones named. Pins are remembered (out/.release-pins)
+                                                       for later stage/--apply runs until the next tag.
+  ./release.sh unpin  <module>|all                     forget a remembered pin
   ./release.sh drop   <module>                         unstage module
   ./release.sh plan                                    show current plan
   ./release.sh check  [<module>]                       preview detected changes for ALL touched
@@ -1538,6 +1628,7 @@ fi
 
 declare -A PR_LABEL_CACHE=()
 declare -A PR_TYPE_CACHE=()
+declare -A PR_REFS_CACHE=()
 declare -A COMMIT_PR_CACHE=()
 declare -A COMP_TOUCHED=()
 declare -A COMP_BREAKING=()
@@ -1545,6 +1636,7 @@ declare -A COMP_NON_DOC=()
 declare -A COMP_DOC=()
 declare -A COMP_REASONS=()
 declare -A COMP_FILES=()
+declare -A COMP_LABEL_PRS=()   # "comp:level" -> " PR PR ..." that set it
 
 # Persistent gh-API cache: commit→PR and PR→labels lookups survive
 # across invocations. SHAs and PR numbers are immutable so the cache
@@ -1556,6 +1648,7 @@ declare -A COMP_FILES=()
 # Format, tab-delimited:
 #   c<TAB>SHA<TAB>PR_NUMBER          (PR_NUMBER may be empty)
 #   l<TAB>PR_NUMBER<TAB>LABEL1|LABEL2|LABEL3
+#   n<TAB>PR_NUMBER<TAB>ISSUE1,ISSUE2<US>TITLE   (US = \x1f; non-empty only)
 # Labels are joined with `|` (which can't appear in label names).
 GH_CACHE_FILE="${REPO_ROOT}/out/.gh-cache"
 
@@ -1569,6 +1662,9 @@ gh_cache_load() {
                 PR_LABEL_CACHE[$key]="${value//|/$'\n'}"
                 ;;
             t)  PR_TYPE_CACHE[$key]="${value}" ;;
+            # `r` entries used a tab separator that the reader mangled;
+            # they are ignored so the PR is re-asked.
+            n)  [[ "${value}" =~ ^[0-9,]*$'\x1f'. ]] && PR_REFS_CACHE[$key]="${value}" ;;
         esac
     done < "${GH_CACHE_FILE}"
 }
@@ -1649,6 +1745,68 @@ get_pr_issue_type() {
     printf '%s\n' "${t}"
 }
 
+# Title and closing-issue numbers of a PR, cached as "ISSUES<US>TITLE"
+# (ISSUES comma-separated, US = \x1f — not a tab, which the cache reader
+# collapses when ISSUES is empty). Only feeds the derivation text, so a
+# reviewer can look up what each label came from (#923).
+#
+# Called directly, never in $(...), so the in-memory cache survives for
+# every component the PR touched. An empty result (offline, --no-gh, API
+# failure) is reused for this run but not persisted, so a later online
+# run retries; a real response always carries the title.
+load_pr_refs() {
+    local pr="$1" refs=""
+    [[ -n "${pr}" && -z "${PR_REFS_CACHE[$pr]+x}" ]] || return 0
+    if [[ "${ENABLE_GH_LABELS}" -eq 1 ]]; then
+        # A failed query (e.g. #N is an issue, not a PR) prints its error
+        # body on stdout; keep only a well-formed "ISSUES<US>TITLE".
+        refs="$(gh api graphql \
+            -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){pullRequest(number:$n){title closingIssuesReferences(first:10){nodes{number}}}}}' \
+            -f o="${GH_REPO%%/*}" -f r="${GH_REPO##*/}" -F n="${pr}" \
+            --jq '.data.repository.pullRequest | select(.title) | ([.closingIssuesReferences.nodes[].number | tostring] | join(",")) + "\u001f" + .title' \
+            2>/dev/null)" || refs=""
+        [[ "${refs}" =~ ^[0-9,]*$'\x1f'. ]] || refs=""
+    fi
+    PR_REFS_CACHE[$pr]="${refs}"
+    [[ -n "${refs}" ]] && gh_cache_append "n" "${pr}" "${refs}"
+    return 0
+}
+
+# " — "TITLE"; issues #A, #B; files: F1, F2 +N more" for a derivation line.
+# Issues are the PR's closing issues plus any other #N the subject cites
+# (e.g. "gh #836", or "(#846)" when the subject names the issue).
+pr_ref_suffix() {
+    local pr="$1" subject="$2" files="$3"
+    local refs="" title="" issues="" n out=""
+    [[ -n "${pr}" ]] && refs="${PR_REFS_CACHE[$pr]:-}"
+    if [[ -n "${refs}" ]]; then
+        issues="${refs%%$'\x1f'*}"
+        title="${refs#*$'\x1f'}"
+    fi
+    while read -r n; do
+        [[ -n "${n}" && "${n}" != "${pr}" && ",${issues}," != *",${n},"* ]] \
+            && issues="${issues:+${issues},}${n}"
+    done < <(grep -oE '#[0-9]+' <<<"${subject}" | tr -d '#')
+    [[ -n "${title}" ]] && out=" — \"${title}\""
+    if [[ -n "${issues}" ]]; then
+        local -a nums
+        local linked=""
+        IFS=, read -ra nums <<<"${issues}"
+        for n in "${nums[@]}"; do
+            linked="${linked:+${linked}, }$(_link "https://github.com/${GH_REPO:-rdkcentral/rdk-halif-aidl}/issues/${n}" "#${n}")"
+        done
+        out="${out}; issues ${linked}"
+    fi
+    if [[ -n "${files}" ]]; then
+        local -a f
+        mapfile -t f < <(printf '%s' "${files}" | grep .)
+        local shown="${f[*]:0:6}"
+        out="${out}; files: ${shown// /, }"
+        (( ${#f[@]} > 6 )) && out="${out} +$(( ${#f[@]} - 6 )) more"
+    fi
+    printf '%s' "${out}"
+}
+
 phase "Analyzing ${#FP_COMMITS[@]} commit(s) for component impact..."
 _commit_idx=0
 _commit_total=${#FP_COMMITS[@]}
@@ -1699,6 +1857,7 @@ for sha in "${FP_COMMITS[@]}"; do
 
     declare -A COMMIT_COMP_TOUCHED=()
     declare -A COMMIT_COMP_DOCS_ONLY=()
+    declare -A COMMIT_COMP_FILES=()
 
     for file in "${changed_files[@]}"; do
         comp="$(component_from_path "${file}" || true)"
@@ -1707,6 +1866,7 @@ for sha in "${FP_COMMITS[@]}"; do
         COMP_TOUCHED[$comp]=1
         COMMIT_COMP_TOUCHED[$comp]=1
         COMP_FILES[$comp]="${COMP_FILES[$comp]:-}${file}"$'\n'
+        COMMIT_COMP_FILES[$comp]="${COMMIT_COMP_FILES[$comp]:-}${file##*/}"$'\n'
 
         if [[ -z "${COMMIT_COMP_DOCS_ONLY[$comp]+x}" ]]; then
             COMMIT_COMP_DOCS_ONLY[$comp]=1
@@ -1716,31 +1876,39 @@ for sha in "${FP_COMMITS[@]}"; do
         fi
     done
 
+    load_pr_refs "${pr_number}"
     for comp in "${!COMMIT_COMP_TOUCHED[@]}"; do
-        reason_prefix="commit ${sha:0:8}"
-        [[ -n "${pr_number}" ]] && reason_prefix="PR #${pr_number} (${sha:0:8})"
+        # Colour on a TTY only (the _C_* are empty otherwise): PR bold, the
+        # label by severity, the references dim.
+        reason_prefix="${_C_BOLD}commit ${sha:0:8}${_C_RESET}"
+        [[ -n "${pr_number}" ]] && reason_prefix="${_C_BOLD}PR $(_link "https://github.com/${GH_REPO:-rdkcentral/rdk-halif-aidl}/pull/${pr_number}" "#${pr_number}")${_C_RESET} (${sha:0:8})"
+        reason_refs="${_C_DIM}$(pr_ref_suffix "${pr_number}" "${subject}" "${COMMIT_COMP_FILES[$comp]:-}")${_C_RESET}"
 
         # Order matters: highest severity wins if multiple change-class
         # labels are (accidentally) present on a single PR. Major >
         # Minor > documentation (a Minor+doc combo resolves to Minor).
         if [[ "${has_major_label}" -eq 1 ]]; then
             COMP_BREAKING[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: Major Change label (breaking)"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: ${_C_RED}Major Change label (breaking)${_C_RESET}${reason_refs}"$'\n'
+            [[ -n "${pr_number}" ]] && COMP_LABEL_PRS["${comp}:generation"]+=" ${pr_number}"
         elif [[ "${has_minor_label}" -eq 1 ]]; then
             COMP_NON_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: Minor Change label (additive)"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: ${_C_YELLOW}Minor Change label (additive)${_C_RESET}${reason_refs}"$'\n'
+            [[ -n "${pr_number}" ]] && COMP_LABEL_PRS["${comp}:minor"]+=" ${pr_number}"
         elif [[ "${has_bugfix_label}" -eq 1 ]]; then
             COMP_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: documentation label (bugfix)"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: ${_C_GREEN}documentation label (bugfix)${_C_RESET}${reason_refs}"$'\n'
+            [[ -n "${pr_number}" ]] && COMP_LABEL_PRS["${comp}:patch"]+=" ${pr_number}"
         elif [[ -n "${pr_number}" ]] && [[ "$(get_pr_issue_type "${pr_number}")" == "Bug" ]]; then
             COMP_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: linked issue type Bug (bugfix)"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: ${_C_GREEN}linked issue type Bug (bugfix)${_C_RESET}${reason_refs}"$'\n'
         elif [[ "${COMMIT_COMP_DOCS_ONLY[$comp]}" -eq 1 ]]; then
             COMP_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: docs-only heuristic"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: ${_C_GREEN}docs-only heuristic${_C_RESET}${reason_refs}"$'\n'
         else
             COMP_NON_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: default minor (no relevant label)"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: ${_C_YELLOW}default minor (no relevant label)${_C_RESET}${reason_refs}"$'\n'
+            [[ -n "${pr_number}" ]] && COMP_LABEL_PRS["${comp}:default"]+=" ${pr_number}"
         fi
     done
 done
@@ -3426,6 +3594,41 @@ run_structural_audit() {
     # Human-readable class for the table — field words, matching the
     # label scheme (#712): major = breaking, minor = additive,
     # bugfix = surface-identical respin.
+    # "To resolve" commands for a label/code disagreement: each fix the
+    # operator can pick, with the PRs and versions filled in.
+    _audit_label_hints() {
+        local comp="$1" label="$2" code="$3" code_next="$4"
+        local -A rank=([none]=0 [patch]=1 [minor]=2 [generation]=3)
+        local -A name=([none]="documentation" [patch]="documentation" [minor]="Minor Change" [generation]="Major Change")
+        local repo="${GH_REPO:-rdkcentral/rdk-halif-aidl}"
+        _pr_links() {   # " 1 2 2" -> "#1, #2" as links
+            local pr out=""
+            for pr in $(tr ' ' '\n' <<<"$1" | grep . | sort -un); do
+                out="${out:+${out}, }$(_link "https://github.com/${repo}/pull/${pr}" "#${pr}")"
+            done
+            printf '%s' "${out}"
+        }
+        local set_by defaulted inherited
+        set_by="$(_pr_links "${COMP_LABEL_PRS[${comp}:${label}]:-}")"
+        defaulted="$(_pr_links "${COMP_LABEL_PRS[${comp}:default]:-}")"
+        inherited="$(grep -oE '^subsume: [^ ]+' <<<"${COMP_REASONS[$comp]:-}" | awk '{print $2}' | sort -u | paste -sd, - | sed 's/,/, /g')"
+        if (( rank[$label] > rank[$code] )); then
+            echo "The label is higher than the code. Either:"
+            echo "  • release at the code's level:  ./release.sh stage all ${comp} --version ${code_next}"
+            [[ -n "${set_by}" ]] && echo "  • or correct the '${name[$label]}' label on ${set_by}, then ./release.sh clean"
+            [[ -z "${set_by}" && -n "${defaulted}" ]] \
+                && echo "  • or add the '${name[$code]}' label to ${defaulted} (no change-class label, so it defaulted to minor), then ./release.sh clean"
+            [[ -n "${inherited}" ]] && echo "  • the level is also inherited from ${inherited}, which it imports; settling that first may settle this"
+            echo "  • or keep it, if the change breaks behaviour the surface does not show"
+        else
+            local touched
+            touched="$(_pr_links "${COMP_LABEL_PRS[${comp}:patch]:-} ${COMP_LABEL_PRS[${comp}:minor]:-} ${COMP_LABEL_PRS[${comp}:generation]:-} ${COMP_LABEL_PRS[${comp}:default]:-}")"
+            echo "The code is higher than the label. Label the PR that made the change '${name[$code]}'${touched:+ (one of ${touched})}:"
+            echo "  gh pr edit <N> --repo ${repo} --add-label '${name[$code]}'"
+            echo "  then ./release.sh clean, so the cached labels are re-read"
+        fi
+    }
+
     _audit_class_display() {
         case "$1" in
             generation) echo "major" ;;
@@ -3513,13 +3716,18 @@ run_structural_audit() {
         _expected="-"
         _effective="${_structural}"
         [[ "${_label}" == "generation" && "${_structural}" == "patch" ]] && _effective="generation"
+        _code_next="-"
         if [[ "${_prev}" =~ ^0\. ]]; then
+            compute_next_versions "${_prev}" "${_structural}"
+            _code_next="${NEXT_VERSION}"
             compute_next_versions "${_prev}" "${_effective}"
             _expected="${NEXT_VERSION}"
         fi
 
         _flags=()
         _notes=()
+        _hints=()
+        _label_flag=""
         if [[ "${_era}" =~ ^[0-9]+$ ]] && (( _era >= 1 )) && [[ "${_effective}" == "generation" ]]; then
             _flags+=("era ${_era} forbids breaking changes — new component required")
         fi
@@ -3536,10 +3744,37 @@ run_structural_audit() {
                 # only the label can declare it (versioning-sop.md).
                 _notes+=("behaviour-only breaking change declared by label (AIDL surface unchanged)")
             elif [[ "${_label}" == "none" && "${_structural}" != "none" ]]; then
-                _flags+=("code is $(_audit_class_display "${_structural}") but no PR label in window")
+                _label_flag="code is $(_audit_class_display "${_structural}") but no PR label in window"
             else
-                _flags+=("label says $(_audit_class_display "${_label}"), code is $(_audit_class_display "${_structural}")")
+                _label_flag="label says $(_audit_class_display "${_label}"), code is $(_audit_class_display "${_structural}")"
             fi
+        fi
+
+        # Operator pin (`stage all <comp> --version X`): accepted at or above
+        # the code's own level — it can lower an over-stated label, never
+        # hide a change the code makes.
+        _pin="${PIN_VERSIONS[$comp]:-}"
+        # A pin from an earlier `stage` run lives on as the version stage
+        # wrote: metadata.yaml moved off the released version, with an
+        # uncommitted <comp>/<version>/ snapshot beside it. --apply sees it
+        # that way, since PIN_VERSIONS only lasts for one invocation.
+        if [[ -z "${_pin}" && -n "${_meta_ver}" && "${_meta_ver}" != "${_prev}" \
+              && -d "${REPO_ROOT}/${comp}/${_meta_ver}" \
+              && -z "$(git -C "${REPO_ROOT}" ls-files -- "${comp}/${_meta_ver}" | head -1)" ]]; then
+            _pin="${_meta_ver}"
+        fi
+        if [[ -n "${_pin}" && "${_code_next}" != "-" ]]; then
+            if [[ "$(printf '%s\n%s\n' "${_pin}" "${_code_next}" | sort -V | head -1)" == "${_code_next}" ]]; then
+                _notes+=("pinned to ${_pin} by stage --version${_label_flag:+ (${_label_flag})}")
+                _expected="${_pin}"
+                _label_flag=""
+            else
+                _flags+=("pin ${_pin} is below the code's level ${_code_next}")
+            fi
+        fi
+        if [[ -n "${_label_flag}" ]]; then
+            _flags+=("${_label_flag}")
+            _hints+=("$(_audit_label_hints "${comp}" "${_label}" "${_structural}" "${_code_next}")")
         fi
         # metadata.yaml version is written by release.sh at the cut (#872):
         # before the cut it holds the last released version, after the cut
@@ -3549,6 +3784,7 @@ run_structural_audit() {
                 [[ "${_structural}" != "none" ]] && _notes+=("release.sh writes ${_expected} at the cut")
             else
                 _flags+=("metadata.yaml says ${_meta_ver}: neither released ${_prev} nor next ${_expected} — hand edit")
+                _hints+=("Set version: ${_prev} in ${comp}/metadata.yaml — release.sh writes ${_expected} at the cut.")
             fi
         fi
 
@@ -3566,10 +3802,13 @@ run_structural_audit() {
 
         # Buffer diff detail for flagged rows (all rows under --verbose).
         if [[ -n "${_detail}" && ( ${#_flags[@]} -gt 0 || "${VERBOSE}" -eq 1 ) ]]; then
-            AUDIT_DETAIL+=("${comp} — ${_class}:"$'\n'"${_detail}")
+            AUDIT_DETAIL+=("${comp} — $(_audit_class_display "${_structural}") change:"$'\n'"${_detail}")
         fi
         if [[ ${#_flags[@]} -gt 0 && -n "${COMP_REASONS[$comp]:-}" ]]; then
             AUDIT_DETAIL+=("${comp} — label derivation:"$'\n'"$(sed 's/^/  /' <<<"${COMP_REASONS[$comp]%$'\n'}")")
+        fi
+        if [[ ${#_hints[@]} -gt 0 ]]; then
+            AUDIT_DETAIL+=("${_C_CYAN}${comp} — to resolve:${_C_RESET}"$'\n'"$(printf '%s\n' "${_hints[@]}" | sed 's/^/  /')")
         fi
     done
 
