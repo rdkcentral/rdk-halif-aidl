@@ -314,6 +314,17 @@ function(add_current)
          message(FATAL_ERROR "Source generation completed but no C++ files found in ${CMAKE_CURRENT_SOURCE_DIR}/${MODULE_NAME}/current/src")
     endif()
 
+    set(DOC_INJECT_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/scripts/aidl_comment_inject.py")
+    execute_process(
+        COMMAND python3
+        ${DOC_INJECT_SCRIPT}
+        --repo-root ${CMAKE_CURRENT_SOURCE_DIR}
+        --version "current" "${MODULE_NAME}"
+        RESULT_VARIABLE inject_result
+    )
+    if(NOT inject_result EQUAL 0)
+        message(FATAL_ERROR "AIDL doc injects failed for ${MODULE_NAME};.")
+    endif()
     add_versioned(NAME "${MODULE_NAME}" VERSION "current" DEPENDENCIES ${DEPS})
 endfunction()
 
