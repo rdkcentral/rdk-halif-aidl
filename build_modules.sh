@@ -709,8 +709,9 @@ if [[ "$VERSION" != "current" ]]; then
     # The local dev layout splits binder headers (out/build/include/binder_sdk)
     # from libs (out/target/lib/binder); BINDER_SDK_INCLUDE_DIR lets the
     # snapshot CMakeLists find the headers. Yocto stages a flat SDK so
-    # BINDER_SDK_DIR alone resolves both.
-    cmake -S "$SNAPSHOT_DIR" -B "$SNAPSHOT_BUILD_DIR" \
+    # BINDER_SDK_DIR alone resolves both. HALIF_INCLUDE_DIR is unused by
+    # snapshots with no imports, hence --no-warn-unused-cli.
+    cmake -S "$SNAPSHOT_DIR" -B "$SNAPSHOT_BUILD_DIR" --no-warn-unused-cli \
         -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
         -DBINDER_SDK_DIR="$SDK_DIR" \
         -DBINDER_SDK_INCLUDE_DIR="$ROOT_DIR/out/build" \

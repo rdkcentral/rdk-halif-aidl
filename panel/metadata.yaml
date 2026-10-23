@@ -23,7 +23,7 @@
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: panel
-version: 0.1.0.0
+version: 0.2.0.0
 status: GREEN
 description: "Front panel display and button control"
 type: OEM
