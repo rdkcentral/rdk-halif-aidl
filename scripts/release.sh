@@ -1554,7 +1554,7 @@ declare -A COMP_FILES=()
 #
 # File: out/.gh-cache  (gitignored — out/ already is)
 # Format, tab-delimited:
-#   p<TAB>SHA<TAB>PR_NUMBER          (PR_NUMBER may be empty)
+#   p<TAB>SHA<TAB>PR_NUMBER          (resolved through GitHub only)
 #   l<TAB>PR_NUMBER<TAB>LABEL1|LABEL2|LABEL3
 # Labels are joined with `|` (which can't appear in label names).
 GH_CACHE_FILE="${REPO_ROOT}/out/.gh-cache"
@@ -1595,6 +1595,9 @@ get_pr_for_commit() {
     # GitHub's commit -> PR association is authoritative. A trailing "(#N)"
     # in the subject is only a fallback (local or cherry-picked commits):
     # squash merges often carry the ISSUE number there, not the PR (#920).
+    # Only a resolved mapping is persisted: a subject guess or an empty
+    # result (offline, --no-gh, API failure) is returned uncached so a
+    # later online run asks GitHub again.
     local pr=""
     if [[ "${subject}" =~ ^Merge\ pull\ request\ \#([0-9]+) ]]; then
         pr="${BASH_REMATCH[1]}"
@@ -1604,12 +1607,12 @@ get_pr_for_commit() {
             pr=""
         fi
     fi
-    if [[ -z "${pr}" && "${subject}" =~ \(#([0-9]+)\)$ ]]; then
+    if [[ -n "${pr}" ]]; then
+        COMMIT_PR_CACHE[$sha]="${pr}"
+        gh_cache_append "p" "${sha}" "${pr}"
+    elif [[ "${subject}" =~ \(#([0-9]+)\)$ ]]; then
         pr="${BASH_REMATCH[1]}"
     fi
-
-    COMMIT_PR_CACHE[$sha]="${pr}"
-    gh_cache_append "p" "${sha}" "${pr}"
     printf '%s\n' "${pr}"
 }
 
