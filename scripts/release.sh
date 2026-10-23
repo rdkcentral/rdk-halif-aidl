@@ -30,9 +30,21 @@ if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
     _C_YELLOW=$'\033[33m'
     _C_BLUE=$'\033[34m'
     _C_CYAN=$'\033[36m'
+    _C_LINK=1
 else
     _C_RESET= _C_BOLD= _C_DIM= _C_RED= _C_GREEN= _C_YELLOW= _C_BLUE= _C_CYAN=
+    _C_LINK=
 fi
+
+# TEXT as an OSC 8 hyperlink to URL on a TTY (terminals without OSC 8 show
+# TEXT alone); plain TEXT otherwise, so logs carry no escape codes.
+_link() {
+    if [[ -n "${_C_LINK}" ]]; then
+        printf '\033]8;;%s\033\\%s\033]8;;\033\\' "$1" "$2"
+    else
+        printf '%s' "$2"
+    fi
+}
 
 log() {
     # Highlight a few common idioms so the right thing draws the eye.
@@ -1557,7 +1569,7 @@ declare -A COMP_FILES=()
 # Format, tab-delimited:
 #   c<TAB>SHA<TAB>PR_NUMBER          (PR_NUMBER may be empty)
 #   l<TAB>PR_NUMBER<TAB>LABEL1|LABEL2|LABEL3
-#   r<TAB>PR_NUMBER<TAB>ISSUE1,ISSUE2<US>TITLE   (US = \x1f; non-empty only)
+#   n<TAB>PR_NUMBER<TAB>ISSUE1,ISSUE2<US>TITLE   (US = \x1f; non-empty only)
 # Labels are joined with `|` (which can't appear in label names).
 GH_CACHE_FILE="${REPO_ROOT}/out/.gh-cache"
 
@@ -1571,7 +1583,9 @@ gh_cache_load() {
                 PR_LABEL_CACHE[$key]="${value//|/$'\n'}"
                 ;;
             t)  PR_TYPE_CACHE[$key]="${value}" ;;
-            r)  PR_REFS_CACHE[$key]="${value}" ;;
+            # `r` entries used a tab separator that the reader mangled;
+            # they are ignored so the PR is re-asked.
+            n)  [[ "${value}" =~ ^[0-9,]*$'\x1f'. ]] && PR_REFS_CACHE[$key]="${value}" ;;
         esac
     done < "${GH_CACHE_FILE}"
 }
@@ -1665,14 +1679,17 @@ load_pr_refs() {
     local pr="$1" refs=""
     [[ -n "${pr}" && -z "${PR_REFS_CACHE[$pr]+x}" ]] || return 0
     if [[ "${ENABLE_GH_LABELS}" -eq 1 ]]; then
+        # A failed query (e.g. #N is an issue, not a PR) prints its error
+        # body on stdout; keep only a well-formed "ISSUES<US>TITLE".
         refs="$(gh api graphql \
             -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){pullRequest(number:$n){title closingIssuesReferences(first:10){nodes{number}}}}}' \
             -f o="${GH_REPO%%/*}" -f r="${GH_REPO##*/}" -F n="${pr}" \
             --jq '.data.repository.pullRequest | select(.title) | ([.closingIssuesReferences.nodes[].number | tostring] | join(",")) + "\u001f" + .title' \
-            2>/dev/null || true)"
+            2>/dev/null)" || refs=""
+        [[ "${refs}" =~ ^[0-9,]*$'\x1f'. ]] || refs=""
     fi
     PR_REFS_CACHE[$pr]="${refs}"
-    [[ -n "${refs}" ]] && gh_cache_append "r" "${pr}" "${refs}"
+    [[ -n "${refs}" ]] && gh_cache_append "n" "${pr}" "${refs}"
     return 0
 }
 
@@ -1692,7 +1709,15 @@ pr_ref_suffix() {
             && issues="${issues:+${issues},}${n}"
     done < <(grep -oE '#[0-9]+' <<<"${subject}" | tr -d '#')
     [[ -n "${title}" ]] && out=" — \"${title}\""
-    [[ -n "${issues}" ]] && out="${out}; issues #${issues//,/, #}"
+    if [[ -n "${issues}" ]]; then
+        local -a nums
+        local linked=""
+        IFS=, read -ra nums <<<"${issues}"
+        for n in "${nums[@]}"; do
+            linked="${linked:+${linked}, }$(_link "https://github.com/${GH_REPO:-rdkcentral/rdk-halif-aidl}/issues/${n}" "#${n}")"
+        done
+        out="${out}; issues ${linked}"
+    fi
     if [[ -n "${files}" ]]; then
         local -a f
         mapfile -t f < <(printf '%s' "${files}" | grep .)
@@ -1777,7 +1802,7 @@ for sha in "${FP_COMMITS[@]}"; do
         # Colour on a TTY only (the _C_* are empty otherwise): PR bold, the
         # label by severity, the references dim.
         reason_prefix="${_C_BOLD}commit ${sha:0:8}${_C_RESET}"
-        [[ -n "${pr_number}" ]] && reason_prefix="${_C_BOLD}PR #${pr_number}${_C_RESET} (${sha:0:8})"
+        [[ -n "${pr_number}" ]] && reason_prefix="${_C_BOLD}PR $(_link "https://github.com/${GH_REPO:-rdkcentral/rdk-halif-aidl}/pull/${pr_number}" "#${pr_number}")${_C_RESET} (${sha:0:8})"
         reason_refs="${_C_DIM}$(pr_ref_suffix "${pr_number}" "${subject}" "${COMMIT_COMP_FILES[$comp]:-}")${_C_RESET}"
 
         # Order matters: highest severity wins if multiple change-class
