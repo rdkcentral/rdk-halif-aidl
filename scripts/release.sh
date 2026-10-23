@@ -1655,6 +1655,7 @@ fi
 
 declare -A PR_LABEL_CACHE=()
 declare -A PR_TYPE_CACHE=()
+declare -A PR_REFS_CACHE=()
 declare -A COMMIT_PR_CACHE=()
 declare -A COMP_TOUCHED=()
 declare -A COMP_BREAKING=()
@@ -1673,6 +1674,7 @@ declare -A COMP_FILES=()
 # Format, tab-delimited:
 #   p<TAB>SHA<TAB>PR_NUMBER          (resolved through GitHub only)
 #   l<TAB>PR_NUMBER<TAB>LABEL1|LABEL2|LABEL3
+#   r<TAB>PR_NUMBER<TAB>ISSUE1,ISSUE2<TAB>TITLE
 # Labels are joined with `|` (which can't appear in label names).
 GH_CACHE_FILE="${REPO_ROOT}/out/.gh-cache"
 
@@ -1688,6 +1690,7 @@ gh_cache_load() {
                 PR_LABEL_CACHE[$key]="${value//|/$'\n'}"
                 ;;
             t)  PR_TYPE_CACHE[$key]="${value}" ;;
+            r)  PR_REFS_CACHE[$key]="${value}" ;;
         esac
     done < "${GH_CACHE_FILE}"
 }
@@ -1775,6 +1778,55 @@ get_pr_issue_type() {
     printf '%s\n' "${t}"
 }
 
+# Title and closing-issue numbers of a PR, as "ISSUES<TAB>TITLE" (ISSUES
+# comma-separated, either part may be empty). Only feeds the derivation
+# text, so a reviewer can look up what each label came from (#923).
+get_pr_refs() {
+    local pr="$1"
+    if [[ -n "${PR_REFS_CACHE[$pr]+x}" ]]; then
+        printf '%s\n' "${PR_REFS_CACHE[$pr]}"
+        return 0
+    fi
+    local refs=""
+    if [[ "${ENABLE_GH_LABELS}" -eq 1 ]]; then
+        refs="$(gh api graphql \
+            -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){pullRequest(number:$n){title closingIssuesReferences(first:10){nodes{number}}}}}' \
+            -f o="${GH_REPO%%/*}" -f r="${GH_REPO##*/}" -F n="${pr}" \
+            --jq '.data.repository.pullRequest | ([.closingIssuesReferences.nodes[].number | tostring] | join(",")) + "\t" + (.title // "")' \
+            2>/dev/null || true)"
+    fi
+    PR_REFS_CACHE[$pr]="${refs}"
+    gh_cache_append "r" "${pr}" "${refs}"
+    printf '%s\n' "${refs}"
+}
+
+# " — "TITLE"; issues #A, #B; files: F1, F2 +N more" for a derivation line.
+# Issues are the PR's closing issues plus any other #N the subject cites
+# (e.g. "gh #836", or "(#846)" when the subject names the issue).
+pr_ref_suffix() {
+    local pr="$1" subject="$2" files="$3"
+    local refs="" title="" issues="" n out=""
+    [[ -n "${pr}" ]] && refs="$(get_pr_refs "${pr}")"
+    if [[ -n "${refs}" ]]; then
+        issues="${refs%%$'\t'*}"
+        title="${refs#*$'\t'}"
+    fi
+    while read -r n; do
+        [[ -n "${n}" && "${n}" != "${pr}" && ",${issues}," != *",${n},"* ]] \
+            && issues="${issues:+${issues},}${n}"
+    done < <(grep -oE '#[0-9]+' <<<"${subject}" | tr -d '#')
+    [[ -n "${title}" ]] && out=" — \"${title}\""
+    [[ -n "${issues}" ]] && out="${out}; issues #${issues//,/, #}"
+    if [[ -n "${files}" ]]; then
+        local -a f
+        mapfile -t f < <(printf '%s' "${files}" | grep .)
+        local shown="${f[*]:0:6}"
+        out="${out}; files: ${shown// /, }"
+        (( ${#f[@]} > 6 )) && out="${out} +$(( ${#f[@]} - 6 )) more"
+    fi
+    printf '%s' "${out}"
+}
+
 phase "Analyzing ${#FP_COMMITS[@]} commit(s) for component impact..."
 _commit_idx=0
 _commit_total=${#FP_COMMITS[@]}
@@ -1825,6 +1877,7 @@ for sha in "${FP_COMMITS[@]}"; do
 
     declare -A COMMIT_COMP_TOUCHED=()
     declare -A COMMIT_COMP_DOCS_ONLY=()
+    declare -A COMMIT_COMP_FILES=()
 
     for file in "${changed_files[@]}"; do
         comp="$(component_from_path "${file}" || true)"
@@ -1833,6 +1886,7 @@ for sha in "${FP_COMMITS[@]}"; do
         COMP_TOUCHED[$comp]=1
         COMMIT_COMP_TOUCHED[$comp]=1
         COMP_FILES[$comp]="${COMP_FILES[$comp]:-}${file}"$'\n'
+        COMMIT_COMP_FILES[$comp]="${COMMIT_COMP_FILES[$comp]:-}${file##*/}"$'\n'
 
         if [[ -z "${COMMIT_COMP_DOCS_ONLY[$comp]+x}" ]]; then
             COMMIT_COMP_DOCS_ONLY[$comp]=1
@@ -1843,30 +1897,33 @@ for sha in "${FP_COMMITS[@]}"; do
     done
 
     for comp in "${!COMMIT_COMP_TOUCHED[@]}"; do
-        reason_prefix="commit ${sha:0:8}"
-        [[ -n "${pr_number}" ]] && reason_prefix="PR #${pr_number} (${sha:0:8})"
+        # Colour on a TTY only (the _C_* are empty otherwise): PR bold, the
+        # label by severity, the references dim.
+        reason_prefix="${_C_BOLD}commit ${sha:0:8}${_C_RESET}"
+        [[ -n "${pr_number}" ]] && reason_prefix="${_C_BOLD}PR #${pr_number}${_C_RESET} (${sha:0:8})"
+        reason_refs="${_C_DIM}$(pr_ref_suffix "${pr_number}" "${subject}" "${COMMIT_COMP_FILES[$comp]:-}")${_C_RESET}"
 
         # Order matters: highest severity wins if multiple change-class
         # labels are (accidentally) present on a single PR. Major >
         # Minor > documentation (a Minor+doc combo resolves to Minor).
         if [[ "${has_major_label}" -eq 1 ]]; then
             COMP_BREAKING[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: Major Change label (breaking)"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: ${_C_RED}Major Change label (breaking)${_C_RESET}${reason_refs}"$'\n'
         elif [[ "${has_minor_label}" -eq 1 ]]; then
             COMP_NON_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: Minor Change label (additive)"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: ${_C_YELLOW}Minor Change label (additive)${_C_RESET}${reason_refs}"$'\n'
         elif [[ "${has_bugfix_label}" -eq 1 ]]; then
             COMP_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: documentation label (bugfix)"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: ${_C_GREEN}documentation label (bugfix)${_C_RESET}${reason_refs}"$'\n'
         elif [[ -n "${pr_number}" ]] && [[ "$(get_pr_issue_type "${pr_number}")" == "Bug" ]]; then
             COMP_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: linked issue type Bug (bugfix)"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: ${_C_GREEN}linked issue type Bug (bugfix)${_C_RESET}${reason_refs}"$'\n'
         elif [[ "${COMMIT_COMP_DOCS_ONLY[$comp]}" -eq 1 ]]; then
             COMP_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: docs-only heuristic"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: ${_C_GREEN}docs-only heuristic${_C_RESET}${reason_refs}"$'\n'
         else
             COMP_NON_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: default minor (no relevant label)"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: ${_C_YELLOW}default minor (no relevant label)${_C_RESET}${reason_refs}"$'\n'
         fi
     done
 done
