@@ -94,6 +94,86 @@ or a sink with its clock detached, is the low-power idle point within `STARTED`.
 
 ---
 
+## Client death and Resource clean-up
+
+Client process death is a normal lifecycle event. In this section, **client death**
+means that a client process exits or is killed, or that its Binder transport is
+lost. It does not mean that the HAL service itself has died.
+
+Binder does not call `stop()` or `close()` when a client dies. It only reports the
+death of a watched Binder object through a death recipient (`linkToDeath()` or
+`AIBinder_linkToDeath()`). The HAL service implementation owns the resulting state
+transition and hardware clean-up.
+
+For an exclusive session, the controller listener passed to `open()` is the
+**ownership liveness token**. A separately registered event listener is an
+independent subscription and is watched independently. Where an interface uses the
+same Binder object for both roles, one death notification may satisfy both
+obligations, but the session and subscription clean-up rules still both apply.
+
+### Interfaces without `open()` or listener registration
+
+`linkToDeath()` requires a remote Binder object owned by the client. The Binder
+object representing the HAL service is owned by the server, so the service cannot
+link to its own Binder to detect which client has died. Binder caller PID/UID values
+identify a transaction caller but are not durable liveness tokens, and completion or
+failure of a synchronous transaction is not a client-death notification.
+
+An interface without `open()`, a listener, or another client-supplied Binder token
+shall choose one of these designs:
+
+| Interface behaviour | Client-death design |
+|---|---|
+| Stateless query or atomic configuration | No death recipient is required. The call either completes or fails, and committed hardware state is not reverted merely because the caller later dies. Examples include `getCapabilities()` and `IIndicator.set()`. |
+| Service-owned or system-owned operation | The operation continues independently after acceptance. Its completion, cancellation and recovery rules shall not depend on caller liveness. |
+| Client-owned long-running operation | The method shall receive a client-implemented typed listener or liveness-token interface. The service links to that Binder before accepting the operation and unlinks when the operation ends. |
+| Asynchronous operation with a listener | The listener Binder is the liveness token if the interface explicitly defines the operation as client-owned. Otherwise its death only removes listener delivery and the service-owned operation continues. |
+
+Adding a listener or token solely for death monitoring is an AIDL surface change.
+Existing methods shall not claim death-triggered cancellation when they accept only
+values or structured data. If backward compatibility prevents changing such a method, a
+new token-bearing method shall be added at the end of the interface and the original
+method shall retain caller-independent semantics.
+
+| # | Requirement | Comments |
+|---|---|---|
+| HAL.LIFECYCLE.22 | A HAL service that grants an exclusive session through `open()` shall register a death recipient on the controller listener Binder supplied to that call. | Registration is part of acquiring the session. If the listener is already dead or death monitoring cannot be established, `open()` shall fail and roll back without granting ownership. |
+| HAL.LIFECYCLE.23 | The service shall unlink the ownership death recipient when the matching `close()` completes. | The service shall also unlink it when a failed `open()` is rolled back. Explicit close and death clean-up may race, so unlinking and clean-up shall be idempotent and associated with the specific session generation. |
+| HAL.LIFECYCLE.24 | The service shall register a death recipient on every Binder passed to `registerEventListener()` and unlink it when the matching `unregisterEventListener()` completes. | A listener used only for event observation does not own the resource. |
+| HAL.LIFECYCLE.25 | Death of the ownership liveness token shall cause the service to release that client's session. | The HAL performs clean-up itself; AIDL/Binder does not implicitly invoke interface methods. Death of the ownership listener is treated as loss of the owner even if the client process remains alive. |
+| HAL.LIFECYCLE.26 | Death clean-up shall produce the same observable resource and hardware end state as a successful explicit `stop()` followed by `close()`. | The resource reaches `CLOSED`, queued or in-flight work owned by the session is discarded or completed as specified by the component, controller handles are invalidated, and hardware reaches its documented closed-state condition. Clean-up is an internal operation; the service does not make Binder calls to the dead client. |
+| HAL.LIFECYCLE.27 | The Binder death recipient shall only identify the affected registration/session and schedule synchronised, idempotent clean-up. | Potentially blocking stop, drain, driver or listener-notification work shall not run on the Binder death-recipient thread. A late death notification after explicit unlink shall be harmless. |
+| HAL.LIFECYCLE.28 | When an event-listener Binder dies, the service shall remove that listener registration and release all state held solely for that registration. | If that listener is not the ownership liveness token, its death shall not close another client's session. A client that registered a listener but never opened a resource therefore loses only that subscription. |
+| HAL.LIFECYCLE.29 | Surviving event listeners for the same resource shall receive the normal state-change notifications caused by death clean-up. | The dead listener is dropped and is not called. Notifications follow the ordering in [Session State Management](hal_session_state_management.md), ending in `CLOSED`; component documentation may define additional hardware-specific events. |
+| HAL.LIFECYCLE.30 | Death clean-up shall reach `CLOSED` within 500 milliseconds after the service receives the death notification. | This matches the target-state bound in `HAL.STATE.2`. A subsequent `open()` shall not succeed until clean-up is complete; while clean-up is in progress it may wait within the bound or return the interface's normal unavailable/busy failure. |
+| HAL.LIFECYCLE.31 | After death clean-up completes, a restarted client shall acquire the resource using the normal `open()` flow. | No force-close, takeover or recovery call is required. The new session receives a new controller and death-recipient association. |
+| HAL.LIFECYCLE.32 | A component may strengthen this contract with hardware-specific clean-up, but shall not weaken the common ownership, `CLOSED` end-state, timing or re-open guarantees. | Examples include de-asserting an HDMI-input HPD line or detaching an audio mix. The component documentation states such additional effects. |
+| HAL.LIFECYCLE.33 | A service shall use `linkToDeath()` only with a client-supplied Binder whose documented lifetime represents the session, subscription or operation being monitored. | The service Binder, caller PID/UID and transaction lifetime shall not be used as substitutes. |
+| HAL.LIFECYCLE.34 | A method that accepts no client-supplied Binder shall have caller-independent semantics. | Client death neither rolls back completed configuration nor implicitly cancels accepted work. |
+| HAL.LIFECYCLE.35 | If caller death must cancel a long-running operation, the interface shall accept a typed client Binder token and define the clean-up boundary. | The contract states whether death cancels only work not yet committed, aborts active hardware work, or allows an irreversible operation to complete safely. |
+| HAL.LIFECYCLE.36 | Death of a listener Binder shall cancel an operation only when the interface explicitly defines that Binder as its operation liveness token. | Otherwise the dead listener is removed and the operation continues without further delivery to it. |
+
+```mermaid
+sequenceDiagram
+    participant Client as Owning client
+    participant Binder as Binder driver
+    participant HAL as HAL service
+    participant Observer as Surviving listener
+
+    Client->>HAL: open(ownerListener)
+    HAL->>Binder: linkToDeath(ownerListener)
+    HAL-->>Client: controller
+    Client-xBinder: process exit / kill / transport loss
+    Binder-->>HAL: binderDied(ownerListener)
+    Note over HAL: schedule synchronised clean-up
+    HAL->>HAL: perform internal stop/close-equivalent clean-up
+    HAL-->>Observer: onStateChanged(... → CLOSED)
+    Note over HAL: controller invalid hardware in closed state
+    Note over HAL: later open() may now succeed
+```
+
+---
+
 ## Service teardown and de-registration
 
 De-registration from the Service Manager is **not** a low-power mechanism. It is the
