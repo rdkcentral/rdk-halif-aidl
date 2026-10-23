@@ -36,8 +36,7 @@ package com.rdk.hal.hdmioutput;
  */
 @VintfStability
 @Backing(type = "int")
-enum AdditionalColorimetryExtension 
-{
+enum AdditionalColorimetryExtension {
     /**
      * DCI-P3 RGB with D65 white point.
      * HDMI AVI InfoFrame: C=3, EC=7, ACE=0

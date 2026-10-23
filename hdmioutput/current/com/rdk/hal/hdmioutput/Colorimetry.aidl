@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.hdmioutput;
 
-/** 
+/**
  *  @brief     HDMI Colorimetry enum.
  *
  *  Represents the base colorimetry values encoded in the AVI InfoFrame field C.
@@ -34,8 +34,7 @@ package com.rdk.hal.hdmioutput;
  */
 @VintfStability
 @Backing(type = "int")
-enum Colorimetry 
-{
+enum Colorimetry {
     /**
      * No colorimetry data – AVI InfoFrame C=0
      */

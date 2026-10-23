@@ -19,19 +19,17 @@
 package com.rdk.hal.indicator;
 
 /**
- * /**
- * * @brief Indicator service capabilities definition.
- * *
- * * Defines the capabilities of the indicator service, including supported states.
- * * @author Luc Kennedy-Lamb
- * * @author Peter Stieglitz
- * * @author Douglas Adler
- * * @author Gerald Weatherup
- * */
+ * @brief Indicator service capabilities definition.
+ *
+ * Defines the capabilities of the indicator service, including supported states.
+ * @author Luc Kennedy-Lamb
+ * @author Peter Stieglitz
+ * @author Douglas Adler
+ * @author Gerald Weatherup
+ */
 
 @VintfStability
-parcelable Capabilities
-{
+parcelable Capabilities {
     /** Array of supported state key strings. */
-    String[] supportedStates;
+    @utf8InCpp String[] supportedStates;
 }

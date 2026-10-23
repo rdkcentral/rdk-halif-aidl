@@ -32,7 +32,7 @@ parcelable Capabilities {
     /**
      * @brief Human-readable sensor name (e.g. "PIR-Front-1" or "Radar-SoC-0").
      */
-    String sensorName;
+    @utf8InCpp String sensorName;
 
     /**
      * @brief Minimum supported sensitivity (0 if sensitivity not supported).

@@ -17,11 +17,10 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiodecoder;
-import com.rdk.hal.audiodecoder.CSDAudioFormat;
-import com.rdk.hal.audiodecoder.Property;
-import com.rdk.hal.audiodecoder.InputBufferMetadata;
-
 import com.rdk.hal.PropertyValue;
+import com.rdk.hal.audiodecoder.CSDAudioFormat;
+import com.rdk.hal.audiodecoder.InputBufferMetadata;
+import com.rdk.hal.audiodecoder.Property;
 
 /**
  *  @brief     Audio Decoder Controller HAL interface.
@@ -31,15 +30,15 @@ import com.rdk.hal.PropertyValue;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 
 @VintfStability
 interface IAudioDecoderController {
-
     /**
      * Sets a property.
      *
@@ -58,9 +57,8 @@ interface IAudioDecoderController {
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);
 
-
     /**
-	 * Starts the audio decoder.
+     * Starts the audio decoder.
      *
      * The audio decoder must be in a ready state before it can be started.
      * If successful the audio decoder transitions to a `STARTING` state and then a `STARTED` state.
@@ -75,7 +73,7 @@ interface IAudioDecoderController {
     void start();
 
     /**
-	 * Stops the audio decoder.
+     * Stops the audio decoder.
      *
      * The decoder enters the `STOPPING` state and then any input data buffers that have been passed for decode but have
      * not yet been decoded are freed automatically.  This is effectively the same as a flush.
@@ -147,7 +145,7 @@ interface IAudioDecoderController {
     boolean decodeBufferWithMetadata(in long bufferHandle, in InputBufferMetadata metadata);
 
     /**
-	 * Starts a flush operation on the decoder.
+     * Starts a flush operation on the decoder.
      *
      * The audio decoder must be in a state of `STARTED`.
      * Any input data buffers that have been passed for decode but have
@@ -161,10 +159,10 @@ interface IAudioDecoderController {
      *
      * @pre The resource must be in State::STARTED.
      */
-	void flush(in boolean reset);
+    void flush(in boolean reset);
 
     /**
-	 * Signals a discontinuity in the audio stream.
+     * Signals a discontinuity in the audio stream.
      *
      * This is the sole PTS discontinuity signal on the input side. The client
      * calls it between the last buffer before the discontinuity and the first

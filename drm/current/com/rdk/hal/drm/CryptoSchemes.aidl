@@ -32,9 +32,11 @@ package com.rdk.hal.drm;
 import com.rdk.hal.drm.SupportedContentType;
 import com.rdk.hal.drm.Uuid;
 
+/**
+ * The crypto schemes supported by a drm plugin factory.
+ */
 @VintfStability
 parcelable CryptoSchemes {
-
     /**
      * Supported crypto schemes
      */
@@ -44,5 +46,4 @@ parcelable CryptoSchemes {
      * Supported mime types, and supported SecurityLevels for each mime
      */
     List<SupportedContentType> mimeTypes;
-
 }

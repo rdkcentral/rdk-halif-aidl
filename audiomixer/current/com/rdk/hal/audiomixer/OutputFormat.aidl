@@ -34,7 +34,7 @@ package com.rdk.hal.audiomixer;
  * @author    Douglas Adler
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum OutputFormat {
     /** Automatically select the best supported format for the connected sink. */
     AUTO = 0,

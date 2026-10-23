@@ -25,12 +25,12 @@ package com.rdk.hal.panel;
 @Backing(type = "int")
 enum SDRGamma {
     SDR_GAMMA_INVALID = -1, //!< SDR gamma is invalid.
-    SDR_GAMMA_1_8 = 0, //!< SDR gamma is 1.8.
-    SDR_GAMMA_1_9 = 1, //!< SDR gamma is 1.9.
-    SDR_GAMMA_2_0 = 2, //!< SDR gamma is 2.0.
-    SDR_GAMMA_2_1 = 3, //!< SDR gamma is 2.1.
-    SDR_GAMMA_2_2 = 4, //!< SDR gamma is 2.2.
-    SDR_GAMMA_2_3 = 5, //!< SDR gamma is 2.3.
-    SDR_GAMMA_2_4 = 6, //!< SDR gamma is 2.4.
-    SDR_GAMMA_BT_1886 = 7, //!< SDR gamma is ITU-R BT.1886.
+    SDR_GAMMA_1_8 = 0,      //!< SDR gamma is 1.8.
+    SDR_GAMMA_1_9 = 1,      //!< SDR gamma is 1.9.
+    SDR_GAMMA_2_0 = 2,      //!< SDR gamma is 2.0.
+    SDR_GAMMA_2_1 = 3,      //!< SDR gamma is 2.1.
+    SDR_GAMMA_2_2 = 4,      //!< SDR gamma is 2.2.
+    SDR_GAMMA_2_3 = 5,      //!< SDR gamma is 2.3.
+    SDR_GAMMA_2_4 = 6,      //!< SDR gamma is 2.4.
+    SDR_GAMMA_BT_1886 = 7,  //!< SDR gamma is ITU-R BT.1886.
 }

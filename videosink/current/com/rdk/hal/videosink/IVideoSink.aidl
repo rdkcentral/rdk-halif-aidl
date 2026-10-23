@@ -17,12 +17,12 @@
  * limitations under the License.
  */
 package com.rdk.hal.videosink;
+import com.rdk.hal.PropertyValue;
 import com.rdk.hal.videosink.Capabilities;
 import com.rdk.hal.videosink.IVideoSinkController;
 import com.rdk.hal.videosink.IVideoSinkControllerListener;
 import com.rdk.hal.videosink.IVideoSinkEventListener;
 import com.rdk.hal.videosink.Property;
-import com.rdk.hal.PropertyValue;
 import com.rdk.hal.videosink.State;
 
 /**
@@ -33,15 +33,15 @@ import com.rdk.hal.videosink.State;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 
 @VintfStability
-interface IVideoSink
-{
+interface IVideoSink {
     /** Video Sink resource ID type */
     @VintfStability
     parcelable Id {
@@ -81,10 +81,10 @@ interface IVideoSink
     @nullable PropertyValue getProperty(in Property property);
 
     /**
-	 * Gets the current Video Sink state.
+     * Gets the current Video Sink state.
      *
      * @returns State enum value.
-	 *
+     *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      *
@@ -93,7 +93,7 @@ interface IVideoSink
     State getState();
 
     /**
-	 * Opens the Video Sink.
+     * Opens the Video Sink.
      *
      * If successful the Video Sink transitions to an OPENING state and then a READY state.
      *
@@ -136,7 +136,7 @@ interface IVideoSink
     boolean close(in IVideoSinkController videoSinkController);
 
     /**
-	 * Registers a Video Sink event listener.
+     * Registers a Video Sink event listener.
      *
      * An `IVideoSinkEventListener` can only be registered once and will fail on subsequent
      * registration attempts.
@@ -156,7 +156,7 @@ interface IVideoSink
     boolean registerEventListener(in IVideoSinkEventListener videoSinkEventListener);
 
     /**
-	 * Unregisters a Video Sink event listener.
+     * Unregisters a Video Sink event listener.
      *
      * @param[in] videoSinkEventListener	    Listener object for callbacks.
      *

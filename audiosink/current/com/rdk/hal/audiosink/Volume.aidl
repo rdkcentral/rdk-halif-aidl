@@ -27,15 +27,14 @@ package com.rdk.hal.audiosink;
 
 @VintfStability
 parcelable Volume {
-
-	/**
-	 * Volume level of the audio sink.
-	 * Range from 0.0 (minimum/muted) to 1.0 (maximum) in logarithmic dB scale.
-	 */
+    /**
+     * Volume level of the audio sink.
+     * Range from 0.0 (minimum/muted) to 1.0 (maximum) in logarithmic dB scale.
+     */
     double volume;
 
-	/**
-	 * Muted state of the audio sink.
-	 */
-	boolean muted;
+    /**
+     * Muted state of the audio sink.
+     */
+    boolean muted;
 }

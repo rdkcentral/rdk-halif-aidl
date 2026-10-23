@@ -26,7 +26,7 @@ package com.rdk.hal.audiomixer;
  * @author   Douglas Adler
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum Property {
     /**
      * Current latency of the mixer in milliseconds.
@@ -46,17 +46,17 @@ enum Property {
     DEBUG_TAP_ENABLED = 1,
 
     /**
-    * Mixer operating mode (e.g., NORMAL, DUCKED).
-    *
-    * Designed for runtime changes in response to policy or stream priority.
-    * TODO: Future Expansion
-    *
-    * Type: MixingMode (Enum) @see com.rdk.hal.audiomixer.MixingMode
-    * Access: Read-write.
-    * Writeable in states: READY, STARTED
-    *
-    * @see MixingMode
-    */
+     * Mixer operating mode (e.g., NORMAL, DUCKED).
+     *
+     * Designed for runtime changes in response to policy or stream priority.
+     * TODO: Future Expansion
+     *
+     * Type: MixingMode (Enum) @see com.rdk.hal.audiomixer.MixingMode
+     * Access: Read-write.
+     * Writeable in states: READY, STARTED
+     *
+     * @see MixingMode
+     */
     MIXING_MODE = 2,
 
     /**

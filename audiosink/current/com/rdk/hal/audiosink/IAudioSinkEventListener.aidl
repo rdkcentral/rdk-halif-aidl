@@ -29,9 +29,8 @@ import com.rdk.hal.audiosink.State;
 
 @VintfStability
 oneway interface IAudioSinkEventListener {
-
     /**
-	 * Callback when the sink has transitioned to a new state.
+     * Callback when the sink has transitioned to a new state.
      *
      * @param[in] oldState	            The state transitioned from.
      * @param[in] newState              The new state transitioned to.
@@ -62,7 +61,8 @@ oneway interface IAudioSinkEventListener {
      * routed. With a mixer input routed, the audio may not immediately be
      * heard due to audio mixer and output latencies.
      *
-     * @param[in] nsPresentationTime	The presentation time of the final audio frame in nanoseconds, or `IAVClock.UNDEFINED_TIME` if no frames were queued.
+     * @param[in] nsPresentationTime	The presentation time of the final audio frame in nanoseconds, or
+     * `IAVClock.UNDEFINED_TIME` if no frames were queued.
      */
     void onEndOfStream(in long nsPresentationTime);
 
@@ -70,16 +70,16 @@ oneway interface IAudioSinkEventListener {
      * Callback to indicate a audio frame buffer underflow condition.
      *
      * This occurs if the frame queue is empty at the AV sync clock based presentation time.
-	 * The callback occurs only once when the queue becomes empty.
-	 * The onAudioResumed() callback informs the client when video playback restarts,
-	 * which allows the onAudioUnderflow() to occur again.
+     * The callback occurs only once when the queue becomes empty.
+     * The onAudioResumed() callback informs the client when video playback restarts,
+     * which allows the onAudioUnderflow() to occur again.
      */
     void onAudioUnderflow();
 
     /**
      * Callback to indicate that audio has resumed after an audio underflow event.
      *
-	 * The onAudioUnderflow() can occur again after onAudioResumed() has been called.
+     * The onAudioUnderflow() can occur again after onAudioResumed() has been called.
      *
      * @param[in] nsPresentationTime	The presentation time of the audio frame in nanoseconds.
      */

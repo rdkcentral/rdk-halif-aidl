@@ -17,13 +17,13 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmicec;
+import com.rdk.hal.PropertyValue;
 import com.rdk.hal.hdmicec.IHdmiCecController;
 import com.rdk.hal.hdmicec.IHdmiCecEventListener;
 import com.rdk.hal.hdmicec.Property;
-import com.rdk.hal.PropertyValue;
 import com.rdk.hal.hdmicec.State;
 
-/** 
+/**
  *  @brief     HDMI CEC HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -31,15 +31,15 @@ import com.rdk.hal.hdmicec.State;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 
 @VintfStability
-interface IHdmiCec 
-{
+interface IHdmiCec {
     /** The service name to publish. To be returned by getServiceName() in the derived class. */
     const @utf8InCpp String serviceName = "HdmiCec";
 
@@ -53,7 +53,7 @@ interface IHdmiCec
      *
      *
      * @see IHdmiCecEventListener.onStateChanged().
-     */  
+     */
     State getState();
 
     /**
@@ -63,52 +63,55 @@ interface IHdmiCec
      *
      * @returns PropertyValue or null if the property key is unknown.
      *
-     * 
+     *
      * @see setProperty()
      */
     @nullable PropertyValue getProperty(in Property property);
 
     /**
      * @brief Gets the logical addresses that have been set for filtering.
-     * 
+     *
      * The broadcast address 0xF is always implied as being filtered as a logical address and
      * not returned in this array.
      *
-     * @returns int[] - an array of addresses. The size of the array will be zero if no additional addresses have been set.
+     * @returns int[] - an array of addresses. The size of the array will be zero if no additional addresses have been
+     *     set.
      *
-     * 
+     *
      * @see addLogicalAddress(), removeLogicalAddress()
      */
     int[] getLogicalAddresses();
 
     /**
      * @brief Opens the HDMI CEC interface for control.
-     * 
+     *
      * If successful the HDMI CEC interface transitions directly to the STARTED state.
-     * Before logical addresses are added all broadcast messages will be processed and callbacks generated. 
-     * The returned IHdmiCecController interface is used by the client to set a logical addresses and 
+     * Before logical addresses are added all broadcast messages will be processed and callbacks generated.
+     * The returned IHdmiCecController interface is used by the client to set a logical addresses and
      * send CEC message buffers over the CEC bus.
      * An IHdmiCecEventListener must be provided to receive incoming CEC message and state change events.
-     * 
-     * Only a single instance can be opened. Attempts to open again, by this or another process will fail with `binder::Status EX_ILLEGAL_STATE`.
-     * On opening all necessary logical addresses will be required to be added by the client.
      *
-     * For a source HDMI device; on detecting the de-assertion of HPD, the Controller Client must close an opened 
+     * Only a single instance can be opened. Attempts to open again, by this or another process will fail with
+     * `binder::Status EX_ILLEGAL_STATE`. On opening all necessary logical addresses will be required to be added by the
+     * client.
+     *
+     * For a source HDMI device; on detecting the de-assertion of HPD, the Controller Client must close an opened
      * IHdmiCecController interface, or remove all previously added logical addresses.
      * It is not considered an error for a client to open the HDMI device while HPD is not asserted.
      *
      * If the client that opened the `IHdmiCecController` crashes,
      * then close() is implicitly called to perform clean up.
      *
-     * @param[in] cecControllerListener         A IHdmiCecEventListener for the Controller Client to receive callbacks through.
+     * @param[in] cecControllerListener         A IHdmiCecEventListener for the Controller Client to receive callbacks
+     * through.
      *
-     * @exception binder::Status EX_ILLEGAL_STATE 
-     * 
+     * @exception binder::Status EX_ILLEGAL_STATE
+     *
      * @returns IHdmiCecController or null on error.
      *
-     * 
+     *
      * @pre The resource must be in State::CLOSED.
-     * 
+     *
      * @see close()
      */
     @nullable IHdmiCecController open(in IHdmiCecEventListener cecControllerListener);
@@ -122,7 +125,7 @@ interface IHdmiCec
      * On closing the HDMI CEC interface, all added logical addresses are removed.
      * On the return of close() no more callbacks will occur to the IHdmiCecEventListener
      * passed in the open() call.
-     * 
+     *
      * @param[in] hdmiCecController     Instance of IHdmiCecController.
      *
      * @return boolean
@@ -138,11 +141,12 @@ interface IHdmiCec
 
     /**
      * Registers a CEC event listener.
-     * 
-     * This allows a client, other than the Controlling client, to receive messages and monitor the state for diagnostic purposes.
-     * 
+     *
+     * This allows a client, other than the Controlling client, to receive messages and monitor the state for diagnostic
+     * purposes.
+     *
      * @param[in] cecEventListener    Listener object for event callbacks.
-     * 
+     *
      * @return boolean
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
@@ -154,7 +158,7 @@ interface IHdmiCec
 
     /**
      * Unregisters a CEC event listener.
-     * 
+     *
      * @param[in] cecEventListener    Listener object for event callbacks.
      *
      * @return boolean
@@ -164,5 +168,5 @@ interface IHdmiCec
      *
      * @see registerEventListener()
      */
-    boolean  unregisterEventListener(in IHdmiCecEventListener cecEventListener);
+    boolean unregisterEventListener(in IHdmiCecEventListener cecEventListener);
 }

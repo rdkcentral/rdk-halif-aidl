@@ -20,22 +20,21 @@ package com.rdk.hal.panel;
 import com.rdk.hal.panel.PQParameterSelector;
 import com.rdk.hal.panel.PQParameterValue;
 
-/** 
+/**
  *  @brief     PQ parameter configuration.
  *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
  */
- 
+
 @VintfStability
-parcelable PQParameterConfiguration
-{
-	/**
-	 * Selector identifying the PQ parameter instance.
-	 */
-	PQParameterSelector selector;
-	
-	/**
-	 * The value for the PQ parameter.
-	 * The active variant must match `selector.pqParameter`.
-	 */
-	PQParameterValue value;
+parcelable PQParameterConfiguration {
+    /**
+     * Selector identifying the PQ parameter instance.
+     */
+    PQParameterSelector selector;
+
+    /**
+     * The value for the PQ parameter.
+     * The active variant must match `selector.pqParameter`.
+     */
+    PQParameterValue value;
 }

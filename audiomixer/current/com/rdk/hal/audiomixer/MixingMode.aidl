@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package com.rdk.hal.audiomixer;
+package com.rdk.hal.audiomixer;
 
 /**
  * @brief Defines the available mixer operating modes.
@@ -30,7 +30,7 @@
  * @copyright Copyright 2024 RDK Management
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum MixingMode {
     /**
      * Standard mixing behaviour. All streams mix at their configured volumes.

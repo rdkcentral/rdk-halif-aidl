@@ -21,11 +21,11 @@ package com.rdk.hal.audiomixer;
 
 /**
  * @brief Audio capture interface for output ports.
- * 
+ *
  * Provides stateful control over audio capture sessions on an output port.
  * Clients obtain shared memory, call start() to begin streaming, receive async callbacks via IAudioCaptureListener,
  * acknowledge consumed data with releaseData(), then call stop() to end the session.
- * 
+ *
  * Example lifecycle:
  * @code
  *   long[] ringBufferSizeBytes = new long[1];
@@ -35,10 +35,11 @@ package com.rdk.hal.audiomixer;
  *   // Client reads from shared memory then calls releaseData(offset, length).
  *   capture.stop();
  * @endcode
- * 
+ *
  * The data format captured is that of the output port.
  * Where an output port is physical, the capture interface captures the data format currently being output.
- * Where the output port is a dedicated capture port setting the OUTPUT_FORMAT directly controls the format of captured data. 
+ * Where the output port is a dedicated capture port setting the OUTPUT_FORMAT directly controls the format of captured
+ * data.
  */
 @VintfStability
 interface IAudioCapture {
@@ -60,7 +61,7 @@ interface IAudioCapture {
     ParcelFileDescriptor getSharedMemory(out long[] sharedMemorySizeBytes);
 
     /**
-     * @brief Release the shared-memory ring buffer 
+     * @brief Release the shared-memory ring buffer
      *
      * This method may be called only when capturing of audio data has not been started
      * yet, or after a previous capture session has been stopped.
@@ -73,28 +74,28 @@ interface IAudioCapture {
 
     /**
      * @brief Start audio capture stream using the configured format.
-     * 
+     *
      * Transitions capture interface from stopped to started state. Listener will receive
      * onStarted() callback, followed by repeated onDataAvailable() callbacks as audio
      * frames become available. Call stop() to end the stream.
      *
      * Ring buffer state is reset on every start() following a stop() transition.
-     * 
+     *
      * @exception binder::Status EX_ILLEGAL_STATE if start is called when capture is not stopped
      * or if the shared memory ring buffer has not been acquired by the client.
-     * 
+     *
      */
     void start();
 
     /**
      * @brief Stop audio capture stream.
-     * 
+     *
      * Transitions capture interface from started to stopped state. Listener will receive
      * onStopped() callback after this method returns. No further onDataAvailable() callbacks
      * will be delivered.
-     * 
+     *
      * @exception binder::Status EX_ILLEGAL_STATE if stop is called when not started.
-     * 
+     *
      */
     void stop();
 

@@ -37,7 +37,6 @@ import com.rdk.hal.sensor.motion.State;
 
 @VintfStability
 oneway interface IMotionSensorControllerListener {
-
     /**
      * @brief Called when the sensor transitions to a new lifecycle state.
      *

@@ -26,8 +26,9 @@ package com.rdk.hal.audiosink;
  */
 
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum ErrorCode {
+    /** Placeholder. No audio sink error codes are defined yet. */
     xxx = 1,
 
 }
