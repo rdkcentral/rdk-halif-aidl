@@ -266,6 +266,10 @@ full consumer/integrator build contract.
 
 ## Additional Documentation
 
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution workflow and required
+  pull-request checks; see the [Commit Email Verification guide](docs/standards/commit_email_verification.md)
+  for commit-email requirements and remediation
+
 - **[linux_binder_idl BUILD guide](https://github.com/rdkcentral/linux_binder_idl/blob/develop/BUILD.md)** - Binder SDK recipe build guide
   - Yocto/BitBake recipe examples for linux-binder SDK
   - Cross-compilation configuration for ARM targets (aarch64, armhf)
