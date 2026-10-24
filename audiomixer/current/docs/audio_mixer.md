@@ -455,6 +455,44 @@ Non-boolean argument constraints are declared per output port in `audiomixer/cur
 
 For these constrained arguments, out-of-range values shall raise `EX_ILLEGAL_ARGUMENT`.
 
+### Mapping from the Device Settings audio HAL
+
+A platform migrating from the Device Settings audio HAL declares MS12 support as a
+bitmask in `Sink_AudioSettings.yaml`:
+
+```yaml
+MS12_Capabilities: 0xFFF   # OR of the dsMS12SUPPORT_* bits
+```
+
+Each bit becomes one boolean in `DolbyMs12_2_6_DapCapabilities`, returned by
+`IDolbyMs12_2_6_Dap.getCapabilities()`.
+
+| `dsMS12SUPPORT_*` bit | `DolbyMs12_2_6_DapCapabilities` field |
+| --------------------- | ------------------------------------- |
+| `InteligentEqualizer` (1 << 1) | `supportsIntelligentEqualizerMode` |
+| `DialogueEnhancer` (1 << 2) | `supportsDialogueEnhancer` |
+| `Volumeleveller` (1 << 3) | `supportsVolumeLeveller` |
+| `BassEnhancer` (1 << 4) | `supportsBassEnhancer` |
+| `SurroundDecoder` (1 << 5) | `supportsSurroundDecoderEnabled` |
+| `DRCMode` (1 << 6) | `supportsDynamicRangeControlMode` |
+| `SurroundVirtualizer` (1 << 7) | `supportsSurroundVirtualizer` |
+| `MISteering` (1 << 8) | `supportsMediaIntelligentSteering` |
+| `GraphicEqualizer` (1 << 9) | `supportsGraphicEqualizerMode` |
+
+`dsMS12SUPPORT_DolbyVolume` (1 << 0) and `dsMS12SUPPORT_LEConfig` (1 << 10) have no
+agreed counterpart; the correspondence to `supportsVolumeModelerEnabled` and
+`supportsPostGain` is unconfirmed and is tracked by #839.
+
+`supportsAtmosLock`, `supportsDownmixMode`, `supportsCenterSpreadingEnabled` and
+`supportsActiveDownmixEnabled` have no bit in the Device Settings mask. A platform
+that supports those commands declares them in the HFP YAML; a platform migrating a
+Device Settings profile with no further information declares them false.
+
+The `MS12_AudioProfiles` list and its `ms12_audio_profiles.ini` names become
+`OutputPortCapabilities.dolbyMs12AudioProfiles`, selected through
+`OutputPortProperty.DOLBY_MS12_AUDIO_PROFILE`. `MS12_AudioProfileCount` has no
+equivalent — the array length carries it.
+
 ---
 
 ## Event Handling
