@@ -577,35 +577,85 @@ plan_load() {
 # subcommand parser assigns into it (assoc assignment before declare -A
 # degrades to arithmetic subscript evaluation).
 declare -A PIN_VERSIONS=()
+# Confirmed change classes from `stage <module> --confirm major|minor|bugfix
+# "<reason>"` (#875): the operator settles the class, the version follows
+# from the released one. Stored as the internal bump name (generation,
+# minor, patch) and resolved where the released version is known.
+declare -A PIN_CLASS=()
+declare -A PIN_REASON=()
 
 # Pins are remembered in out/.release-pins (gitignored) so the operator sets
 # the odd version once — `stage all avclock --version 0.2.1.0` — and later
 # `stage all` / --apply runs keep it. Each line is tied to the last release
 # tag, so a pin lapses once that release is tagged. Format, tab-delimited:
-#   <module><TAB><X.Y.Z.W><TAB><last tag when pinned>
+#   <module><TAB><X.Y.Z.W | major | minor | bugfix><TAB><last tag when pinned>[<TAB><reason>]
 PIN_FILE="${REPO_ROOT}/out/.release-pins"
 _pin_baseline="$(git -C "${REPO_ROOT}" describe --tags --abbrev=0 2>/dev/null || true)"
+_class_bump() {   # major|minor|bugfix -> internal bump name
+    case "$1" in
+        major)  echo "generation" ;;
+        minor)  echo "minor" ;;
+        bugfix) echo "patch" ;;
+        *)      return 1 ;;
+    esac
+}
+_bump_class() {   # internal bump name -> major|minor|bugfix
+    case "$1" in
+        generation) echo "major" ;;
+        patch)      echo "bugfix" ;;
+        *)          echo "$1" ;;
+    esac
+}
 pins_load() {
     [[ -f "${PIN_FILE}" ]] || return 0
-    local comp ver base
-    while IFS=$'\t' read -r comp ver base; do
-        [[ -n "${comp}" && "${base}" == "${_pin_baseline}" ]] && PIN_VERSIONS[$comp]="${ver}"
+    local comp val base reason
+    while IFS=$'\t' read -r comp val base reason; do
+        [[ -n "${comp}" && "${base}" == "${_pin_baseline}" ]] || continue
+        if [[ "${val}" =~ ^[0-9]+(\.[0-9]+){3}$ ]]; then
+            PIN_VERSIONS[$comp]="${val}"
+        elif _class_bump "${val}" >/dev/null; then
+            PIN_CLASS[$comp]="$(_class_bump "${val}")"
+        fi
+        [[ -n "${reason}" ]] && PIN_REASON[$comp]="${reason}"
     done < "${PIN_FILE}"
     return 0
 }
 pins_save() {
     mkdir -p "$(dirname "${PIN_FILE}")"
-    local comp
+    local comp val
     : > "${PIN_FILE}"
-    for comp in $(printf '%s\n' "${!PIN_VERSIONS[@]}" | sort); do
-        printf '%s\t%s\t%s\n' "${comp}" "${PIN_VERSIONS[$comp]}" "${_pin_baseline}" >> "${PIN_FILE}"
+    for comp in $(printf '%s\n' "${!PIN_VERSIONS[@]}" "${!PIN_CLASS[@]}" | sort -u); do
+        val="${PIN_VERSIONS[$comp]:-$(_bump_class "${PIN_CLASS[$comp]:-}")}"
+        printf '%s\t%s\t%s\t%s\n' "${comp}" "${val}" "${_pin_baseline}" "${PIN_REASON[$comp]:-}" >> "${PIN_FILE}"
     done
-    [[ ${#PIN_VERSIONS[@]} -gt 0 ]] || rm -f "${PIN_FILE}"
+    [[ ${#PIN_VERSIONS[@]} -gt 0 || ${#PIN_CLASS[@]} -gt 0 ]] || rm -f "${PIN_FILE}"
 }
 pin_set() {
     [[ "$2" =~ ^[0-9]+(\.[0-9]+){3}$ ]] || die "pin: '$2' is not a version (X.Y.Z.W)."
     [[ -f "${REPO_ROOT}/$1/metadata.yaml" ]] || die "pin: $1/metadata.yaml not found — no such component."
     PIN_VERSIONS[$1]="$2"
+    unset 'PIN_CLASS[$1]' 'PIN_REASON[$1]'
+}
+pin_confirm() {   # <module> <major|minor|bugfix> <reason>
+    [[ -f "${REPO_ROOT}/$1/metadata.yaml" ]] || die "confirm: $1/metadata.yaml not found — no such component."
+    _class_bump "$2" >/dev/null || die "confirm: '$2' is not a change class (major, minor or bugfix)."
+    [[ -n "${3// /}" && "$3" != -* ]] \
+        || die "confirm: say why — ./release.sh stage all $1 --confirm $2 \"<reason>\""
+    PIN_CLASS[$1]="$(_class_bump "$2")"
+    PIN_REASON[$1]="${3//$'\t'/ }"
+    unset 'PIN_VERSIONS[$1]'
+}
+# One `stage all` pin: `<module> --version X.Y.Z.W` or
+# `<module> --confirm <class> "<reason>"`.
+_stage_pin_args() {
+    case "${2:-}" in
+        --version)
+            [[ -n "${3:-}" ]] || die "--version requires a value"
+            pin_set "$1" "$3" ;;
+        --confirm)
+            pin_confirm "$1" "${3:-}" "${4:-}" ;;
+        *)  die "stage all: pin a module as '<module> --version X.Y.Z.W' or '<module> --confirm major|minor|bugfix \"<reason>\"'" ;;
+    esac
 }
 pins_load
 
@@ -625,15 +675,14 @@ case "${1:-}" in
             # loop; without STAGE_AND_WRITE=1, DO_WRITES stays 0 and the
             # snapshot/metadata pipeline never fires.
             STAGE_AND_WRITE=1
-            # Optional pins: `stage all <module> --version X.Y.Z.W ...`
-            # override the label-derived bump for that module; the audit
-            # accepts a pin at or above the code's level. Any --flags
-            # after them fall through to the main parser.
+            # Optional pins: `stage all <module> --version X.Y.Z.W ...` or
+            # `stage all <module> --confirm <class> "<reason>" ...` override
+            # the label-derived bump for that module; the audit accepts one
+            # at or above the code's level. Any --flags after them fall
+            # through to the main parser.
             while [[ $# -gt 0 && "$1" != -* ]]; do
-                [[ "${2:-}" == "--version" && -n "${3:-}" ]] \
-                    || die "stage all: pin a module as '<module> --version X.Y.Z.W'"
-                pin_set "$1" "$3"
-                shift 3
+                _stage_pin_args "$@"
+                [[ "$2" == "--confirm" ]] && shift 4 || shift 3
             done
             pins_save
         else
@@ -649,6 +698,12 @@ case "${1:-}" in
                         pin_set "${_last_comp}" "$2"
                         shift 2
                         ;;
+                    --confirm)
+                        [[ -n "${_last_comp}" ]] \
+                            || die "stage: --confirm must follow a <module> name."
+                        pin_confirm "${_last_comp}" "${2:-}" "${3:-}"
+                        shift 3
+                        ;;
                     # Not a stage option — hand the rest to the main parser so
                     # `stage <module> --no-build` works like `stage all` does.
                     -*) break ;;
@@ -663,7 +718,7 @@ case "${1:-}" in
                 esac
             done
             [[ "${_staged_any}" -eq 1 ]] \
-                || die "stage: missing <module> argument. Usage: ./release.sh stage <module>... [--version X.Y.Z.W]"
+                || die "stage: missing <module> argument. Usage: ./release.sh stage <module>... [--version X.Y.Z.W | --confirm major|minor|bugfix \"<reason>\"]"
             STAGE_AND_WRITE=1
             pins_save
             # Fall through to the standard pipeline; it processes the queue.
@@ -678,21 +733,24 @@ case "${1:-}" in
         shift
         [[ -n "${1:-}" ]] || die "unpin: name a module, or 'all'."
         if [[ "$1" == "all" ]]; then
-            _unpin=("${!PIN_VERSIONS[@]}")
+            mapfile -t _unpin < <(printf '%s\n' "${!PIN_VERSIONS[@]}" "${!PIN_CLASS[@]}" | grep . | sort -u)
         else
-            [[ -n "${PIN_VERSIONS[$1]+x}" ]] || die "unpin: $1 is not pinned."
+            [[ -n "${PIN_VERSIONS[$1]+x}" || -n "${PIN_CLASS[$1]+x}" ]] || die "unpin: $1 is not pinned."
             _unpin=("$1")
         fi
         # A module already staged at its pinned version keeps that version in
         # metadata.yaml + its snapshot, and the audit recovers it as a pin.
         # Unstage it first, or the unpin would be silently undone.
         for _c in "${_unpin[@]}"; do
-            [[ -d "${REPO_ROOT}/${_c}/${PIN_VERSIONS[$_c]}" \
-               && ( -z "${_pin_baseline}" \
-                    || -z "$(git -C "${REPO_ROOT}" ls-tree -d --name-only "${_pin_baseline}" -- "${_c}/${PIN_VERSIONS[$_c]}")" ) ]] \
-                && die "unpin: ${_c} is staged at its pinned ${PIN_VERSIONS[$_c]}. Unstage it first: ./release.sh drop ${_c}"
+            for _vd in "${REPO_ROOT}/${_c}"/*/; do
+                _v="${_vd%/}"; _v="${_v##*/}"
+                [[ "${_v}" =~ ^[0-9]+(\.[0-9]+){3}$ ]] || continue
+                [[ -n "${_pin_baseline}" \
+                   && -n "$(git -C "${REPO_ROOT}" ls-tree -d --name-only "${_pin_baseline}" -- "${_c}/${_v}")" ]] && continue
+                die "unpin: ${_c} is staged at ${_v}. Unstage it first: ./release.sh drop ${_c}"
+            done
         done
-        for _c in "${_unpin[@]}"; do unset 'PIN_VERSIONS[$_c]'; done
+        for _c in "${_unpin[@]}"; do unset 'PIN_VERSIONS[$_c]' 'PIN_CLASS[$_c]' 'PIN_REASON[$_c]'; done
         pins_save
         log "✓ Unpinned $1. It is staged by its labels on the next stage run."
         exit 0
@@ -756,10 +814,11 @@ case "${1:-}" in
         ;;
 esac
 
-if [[ ${#PIN_VERSIONS[@]} -gt 0 ]]; then
+if [[ ${#PIN_VERSIONS[@]} -gt 0 || ${#PIN_CLASS[@]} -gt 0 ]]; then
     _pin_list=""
-    for _c in $(printf '%s\n' "${!PIN_VERSIONS[@]}" | sort); do
-        _pin_list="${_pin_list:+${_pin_list}, }${_c} ${PIN_VERSIONS[$_c]}"
+    for _c in $(printf '%s\n' "${!PIN_VERSIONS[@]}" "${!PIN_CLASS[@]}" | sort -u); do
+        _pin_list="${_pin_list:+${_pin_list}, }${_c} ${PIN_VERSIONS[$_c]:-$(_bump_class "${PIN_CLASS[$_c]:-}")}"
+        [[ -n "${PIN_REASON[$_c]:-}" ]] && _pin_list="${_pin_list} (${PIN_REASON[$_c]})"
     done
     log "📌 Pinned versions: ${_pin_list}  (./release.sh unpin <module>|all to drop)"
 fi
@@ -791,6 +850,11 @@ Subcommands (manage what's staged for the next release):
                                                        stage every qualifying module, pinning the
                                                        ones named. Pins are remembered (out/.release-pins)
                                                        for later stage/--apply runs until the next tag.
+  ./release.sh stage all <module> --confirm major|minor|bugfix "<reason>"
+                                                       settle a label/code disagreement by class: the
+                                                       version follows from the released one, the reason
+                                                       goes into the derivation and the release notes.
+                                                       Also works after `stage <module>`; remembered like a pin.
   ./release.sh unpin  <module>|all                     forget a remembered pin
   ./release.sh drop   <module>                         unstage module
   ./release.sh plan                                    show current plan
@@ -3485,7 +3549,7 @@ generate_release_notes_skeleton() {
         for entry in "${BUMPED_COMPONENTS[@]}"; do
             local comp="${entry%%:*}"
             local version="${entry##*:}"
-            echo "- \`${comp}\` → ${version}"
+            echo "- \`${comp}\` → ${version}${PIN_CLASS[$comp]:+ (confirmed $(_bump_class "${PIN_CLASS[$comp]}"): ${PIN_REASON[$comp]:-})}"
         done
         echo ""
         echo "## Highlights"
@@ -3659,6 +3723,7 @@ bump_label() {
         minor)      echo "Minor" ;;
         patch)      echo "Bugfix" ;;
         pinned)     echo "Pinned" ;;
+        confirmed)  echo "Confirmed" ;;
         none)       echo "-" ;;
         *)          echo "$1" ;;
     esac
@@ -3756,13 +3821,18 @@ run_structural_audit() {
         defaulted="$(_pr_links "${COMP_LABEL_PRS[${comp}:default]:-}")"
         inherited="$(grep -oE '^subsume: [^ ]+' <<<"${COMP_REASONS[$comp]:-}" | awk '{print $2}' | sort -u | paste -sd, - | sed 's/,/, /g')"
         if (( rank[$label] > rank[$code] )); then
-            echo "The label is higher than the code. Either:"
-            echo "  • release at the code's level:  ./release.sh stage all ${comp} --version ${code_next}"
+            local lc cc
+            lc="$(_audit_class_display "${label}")"; cc="$(_audit_class_display "${code}")"
+            echo "The label is higher than the code. Confirm which is right, and why:"
+            echo "  • ${cc}, if the label over-states the change:"
+            echo "      ./release.sh stage all ${comp} --confirm ${cc} \"<why it is ${cc}>\""
+            echo "  • ${lc}, if the change breaks behaviour the surface does not show:"
+            echo "      ./release.sh stage all ${comp} --confirm ${lc} \"<what behaviour changed>\""
             [[ -n "${set_by}" ]] && echo "  • or correct the '${name[$label]}' label on ${set_by}, then ./release.sh clean"
             [[ -z "${set_by}" && -n "${defaulted}" ]] \
                 && echo "  • or add the '${name[$code]}' label to ${defaulted} (no change-class label, so it defaulted to minor), then ./release.sh clean"
             [[ -n "${inherited}" ]] && echo "  • the level is also inherited from ${inherited}, which it imports; settling that first may settle this"
-            echo "  • or keep it, if the change breaks behaviour the surface does not show"
+            echo "  (an exact version also works: ./release.sh stage all ${comp} --version ${code_next})"
         else
             local touched
             touched="$(_pr_links "${COMP_LABEL_PRS[${comp}:patch]:-} ${COMP_LABEL_PRS[${comp}:minor]:-} ${COMP_LABEL_PRS[${comp}:generation]:-} ${COMP_LABEL_PRS[${comp}:default]:-}")"
@@ -3893,10 +3963,17 @@ run_structural_audit() {
             fi
         fi
 
-        # Operator pin (`stage all <comp> --version X`): accepted at or above
-        # the code's own level — it can lower an over-stated label, never
-        # hide a change the code makes.
+        # Operator pin (`stage all <comp> --version X`, or a confirmed class
+        # `--confirm minor "<reason>"` resolved against the released version):
+        # accepted at or above the code's own level — it can lower an
+        # over-stated label, never hide a change the code makes.
         _pin="${PIN_VERSIONS[$comp]:-}"
+        _pin_note="pinned to ${_pin} by stage --version"
+        if [[ -z "${_pin}" && -n "${PIN_CLASS[$comp]:-}" && "${_prev}" =~ ^0\. ]]; then
+            compute_next_versions "${_prev}" "${PIN_CLASS[$comp]}"
+            _pin="${NEXT_VERSION}"
+            _pin_note="confirmed $(_bump_class "${PIN_CLASS[$comp]}") (${_pin}): ${PIN_REASON[$comp]:-}"
+        fi
         # A pin from an earlier `stage` run lives on as the version stage
         # wrote: metadata.yaml moved off the released version, with a
         # <comp>/<version>/ snapshot beside it that the last release tag does
@@ -3907,21 +3984,27 @@ run_structural_audit() {
               && ( -z "${_pin_baseline}" \
                    || -z "$(git -C "${REPO_ROOT}" ls-tree -d --name-only "${_pin_baseline}" -- "${comp}/${_meta_ver}")" ) ]]; then
             _pin="${_meta_ver}"
+            _pin_note="staged at ${_pin} by an earlier stage run"
         fi
         if [[ -n "${_pin}" && "${_code_next}" != "-" ]]; then
             if [[ "$(printf '%s\n%s\n' "${_pin}" "${_code_next}" | sort -V | head -1)" == "${_code_next}" ]]; then
-                _notes+=("pinned to ${_pin} by stage --version${_label_flag:+ (${_label_flag})}")
+                _notes+=("${_pin_note}${_label_flag:+ (${_label_flag})}")
                 _expected="${_pin}"
                 _label_flag=""
                 PIN_VERSIONS[$comp]="${_pin}"
             else
-                _flags+=("pin ${_pin} is below the code's level ${_code_next}")
+                if [[ -n "${PIN_CLASS[$comp]:-}" && -z "${PIN_VERSIONS[$comp]:-}" ]]; then
+                    _flags+=("confirmed $(_bump_class "${PIN_CLASS[$comp]}") is below the code's level ($(_audit_class_display "${_structural}"))")
+                else
+                    _flags+=("pin ${_pin} is below the code's level ${_code_next}")
+                fi
                 # Once staged, metadata.yaml holds the old pin and the audit
                 # rejects a re-pin as a hand edit, so unstage first.
-                if [[ -n "${PIN_VERSIONS[$comp]:-}" && "${_meta_ver}" == "${_prev}" ]]; then
-                    _hints+=("Pin at or above the code's level: ./release.sh stage all ${comp} --version ${_code_next}  (or ./release.sh unpin ${comp})")
+                _code_class="$(_audit_class_display "${_structural}")"
+                if [[ -n "${PIN_VERSIONS[$comp]:-}${PIN_CLASS[$comp]:-}" && "${_meta_ver}" == "${_prev}" ]]; then
+                    _hints+=("Confirm at or above the code's level: ./release.sh stage all ${comp} --confirm ${_code_class} \"<reason>\"  (or ./release.sh unpin ${comp})")
                 else
-                    _hints+=("Re-stage at or above the code's level: ./release.sh drop ${comp} && ./release.sh stage ${comp} --version ${_code_next}")
+                    _hints+=("Re-stage at or above the code's level: ./release.sh drop ${comp} && ./release.sh stage ${comp} --confirm ${_code_class} \"<reason>\"")
                 fi
             fi
         fi
@@ -4105,10 +4188,14 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
     # over the label-derived auto-bump. PIN_VERSIONS lives in-memory
     # only — once the stage call's writes complete, the pinned version
     # is recorded in the snapshot dir + metadata.yaml.
-    if [[ -n "${PIN_VERSIONS[$comp]:-}" ]]; then
+    if [[ -n "${PIN_VERSIONS[$comp]:-}" && -z "${PIN_CLASS[$comp]:-}" ]]; then
         NEXT_VERSION="${PIN_VERSIONS[$comp]}"
         bump="pinned"
         COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}stage: explicit --version ${NEXT_VERSION}"$'\n'
+    elif [[ -n "${PIN_CLASS[$comp]:-}" ]]; then
+        compute_next_versions "${current_version}" "${PIN_CLASS[$comp]}"
+        bump="confirmed"
+        COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}stage: confirmed $(_bump_class "${PIN_CLASS[$comp]}") — ${PIN_REASON[$comp]:-}"$'\n'
     fi
 
     # Drift detection: metadata.yaml holds the released version until
