@@ -15,7 +15,7 @@ This layered model keeps thermal management flexible across hardware implementat
 !!! info "References"
     |||
     |-|-|
-    |**Interface Definition**|[sensor/current/thermal](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/sensor/current/thermal)|
+    |**Interface Definition**|[`sensor/0.2.0.0/com/rdk/hal/sensor/thermal`](https://github.com/rdkcentral/rdk-halif-aidl/tree/0.21.0/sensor/0.2.0.0/com/rdk/hal/sensor/thermal)|
     |**API Documentation**| *TBD* |
     |**HAL Interface Type**|[AIDL and Binder](../../introduction/aidl_and_binder.md)|
     |**Initialization - TBC**| [systemd](../../vsi/systemd/current/systemd.md) - **hal-sensor-thermal.service** |

@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.planecontrol;
-  
+
 /**
  *  @brief     Plane aspect ratio definition.
  *  @author    Luc Kennedy-Lamb
@@ -26,22 +26,21 @@ package com.rdk.hal.planecontrol;
  */
 
 @VintfStability
-@Backing(type="int")
-enum AspectRatio
-{
-    /*
+@Backing(type = "int")
+enum AspectRatio {
+    /**
      * The full video frame is displayed centered in the plane maintaining aspect ratio
      * with letterbox or pillarbox bars as needed.
      */
     FULL_WITH_ASPECT = 0,
- 
-    /*
+
+    /**
      * The full frame is displayed in the plane and stretched as needed.
      * Aspect ratio may be distorted.
      */
     FULL_STRETCH = 1,
- 
-    /*
+
+    /**
      * The frame is zoomed to fill the plane maintaining aspect ratio
      * where the zoom may crop some of the video frame.
      */

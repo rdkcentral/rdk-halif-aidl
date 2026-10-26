@@ -18,11 +18,11 @@
  */
 package com.rdk.hal.videodecoder;
 
-import com.rdk.hal.videodecoder.Fraction;
 import com.rdk.hal.videodecoder.Colorimetry;
-import com.rdk.hal.videodecoder.MasteringDisplayInfo;
 import com.rdk.hal.videodecoder.ContentLightLevel;
 import com.rdk.hal.videodecoder.DolbyVisionLayerFlags;
+import com.rdk.hal.videodecoder.Fraction;
+import com.rdk.hal.videodecoder.MasteringDisplayInfo;
 
 /**
  *  @brief     Per-buffer metadata carried with input buffers submitted via
@@ -35,11 +35,11 @@ import com.rdk.hal.videodecoder.DolbyVisionLayerFlags;
  *  <h3>Field semantics</h3>
  *  The fields fall into two categories with distinct semantics:
  *
- *  <h4>Non-nullable per-buffer fields (`nsPresentationTime`, `discontinuity`)</h4>
- *  These describe the encoded frame itself. Each `decodeBufferWithMetadata()`
- *  call is self-describing for these fields: the HAL MUST NOT carry state
- *  from this parcelable across calls. A subsequent call with default-valued
- *  fields replaces, it does not preserve, the previous call's values.
+ *  <h4>Non-nullable per-buffer field (`nsPresentationTime`)</h4>
+ *  Describes the encoded frame itself. Each `decodeBufferWithMetadata()`
+ *  call is self-describing for this field: the HAL MUST NOT carry state
+ *  from this parcelable across calls. A subsequent call's value replaces,
+ *  it does not preserve, the previous call's value.
  *
  *  <h4>Override fields (`colorimetry`, `masteringDisplayInfo`,
  *  `contentLightLevel`, `dolbyVisionLayerFlags`, `pixelAspectRatio`)</h4>
@@ -84,22 +84,10 @@ import com.rdk.hal.videodecoder.DolbyVisionLayerFlags;
 
 @VintfStability
 parcelable InputBufferMetadata {
-
     /**
      * Presentation time of the encoded frame in nanoseconds.
      */
     long nsPresentationTime;
-
-    /**
-     * Reserved for a future release. Clients MUST set this to false in v1.
-     *
-     * Use `IVideoDecoderController.signalDiscontinuity()` to signal a PTS
-     * discontinuity in v1. This field will become authoritative in a later
-     * release once migration is complete.
-     *
-     * @see IVideoDecoderController.signalDiscontinuity()
-     */
-    boolean discontinuity;
 
     /**
      * Optional colorimetry override applied from this buffer onward.

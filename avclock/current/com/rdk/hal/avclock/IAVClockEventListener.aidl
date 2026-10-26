@@ -19,7 +19,7 @@
 package com.rdk.hal.avclock;
 import com.rdk.hal.avclock.State;
 
-/** 
+/**
  *  @brief     Event callbacks listener interface from AV Clock.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -28,12 +28,11 @@ import com.rdk.hal.avclock.State;
 
 @VintfStability
 oneway interface IAVClockEventListener {
-  
     /**
-	 * Callback when the AV Clock has transitioned to a new state.
+     * Callback when the AV Clock has transitioned to a new state.
      *
      * @param[in] oldState	            The state transitioned from.
      * @param[in] newState              The new state transitioned to.
      */
     void onStateChanged(in State oldState, in State newState);
- }
+}

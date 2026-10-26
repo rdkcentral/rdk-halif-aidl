@@ -28,8 +28,11 @@
  */
 package com.rdk.hal.drm;
 
+/**
+ * The security level of a drm plugin or session.
+ */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum SecurityLevel {
     /**
      * Unable to determine the security level

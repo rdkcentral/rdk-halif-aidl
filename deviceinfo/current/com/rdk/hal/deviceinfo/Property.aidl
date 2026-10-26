@@ -26,7 +26,7 @@ import com.rdk.hal.deviceinfo.PropertyType;
 @VintfStability
 parcelable Property {
     /** Property key string (e.g., "MANUFACTURER") */
-    String key;
+    @utf8InCpp String key;
     /** Data type, defined by PropertyType enum (see PropertyType.aidl) */
     PropertyType type;
     /** Maximum size in bytes */

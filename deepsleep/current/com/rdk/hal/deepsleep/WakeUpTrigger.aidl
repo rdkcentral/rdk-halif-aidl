@@ -18,73 +18,72 @@
  */
 package com.rdk.hal.deepsleep;
 
-/** 
+/**
  *  @brief     Deep sleep wake up triggers.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
+
 @VintfStability
-@Backing(type="int")
-enum WakeUpTrigger
-{
+@Backing(type = "int")
+enum WakeUpTrigger {
     /**
      * Deep sleep wakeup reason is unknown.
      * This should never be used but is provided if the wake reason cannot be
      * determined due to an internal error.
      */
     ERROR_UNKNOWN = -1,
- 
+
     /**
      * Deep sleep wakeup reason is due to IR Remote.
      * The specific IR codes to wake upon are product specific and
      * determined by the vendor layer implementation.
      */
     RCU_IR = 0,
- 
+
     /**
      * Deep sleep wakeup reason is due to RCU Bluetooth Remote.
      */
     RCU_BT = 1,
- 
+
     /**
      * Deep sleep wakeup reason is due to RCU RF4CE Remote.
      */
     RCU_RF4CE = 2,
- 
+
     /**
      * Deep sleep wakeup reason is is due to LAN.
      * The standard WOL magic packet is used.
      */
     LAN = 3,
- 
+
     /**
      * Deep sleep wakeup reason is is due to Wireless LAN.
      * The standard WOW magic packet is used.
      */
     WLAN = 4,
- 
+
     /**
      * Deep sleep wakeup reason is is due to Clock Timer.
      */
     TIMER = 5,
- 
+
     /**
      * Deep sleep wakeup reason is is due to Front Panel Button.
      */
     FRONT_PANEL = 6,
- 
+
     /**
      * Deep sleep wakeup reason is due to HDMI CEC Message.
      */
     CEC = 7,
- 
+
     /**
      * Deep sleep wakeup reason is due to Motion Detection.
      */
     PRESENCE = 8,
- 
+
     /**
      * Deep sleep wakeup reason is due to User Voice.
      */

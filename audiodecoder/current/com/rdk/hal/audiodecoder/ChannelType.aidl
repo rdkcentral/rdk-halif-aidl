@@ -26,18 +26,30 @@ package com.rdk.hal.audiodecoder;
  */
 
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum ChannelType {
-	MONO = 0,
-	FRONT_LEFT = 1,
-	FRONT_RIGHT = 2,
-	FRONT_CENTER = 3,
-	LFE = 4,
-	SIDE_LEFT = 5,
-	SIDE_RIGHT = 6,
-	UP_LEFT = 7,
-	UP_RIGHT = 8,
-	BACK_LEFT = 9,
-	BACK_RIGHT = 10,
-	BACK_CENTER = 11,
+    /** Single mono channel. */
+    MONO = 0,
+    /** Front left channel. */
+    FRONT_LEFT = 1,
+    /** Front right channel. */
+    FRONT_RIGHT = 2,
+    /** Front centre channel. */
+    FRONT_CENTER = 3,
+    /** Low-frequency effects channel. */
+    LFE = 4,
+    /** Side left channel. */
+    SIDE_LEFT = 5,
+    /** Side right channel. */
+    SIDE_RIGHT = 6,
+    /** Upper left channel. */
+    UP_LEFT = 7,
+    /** Upper right channel. */
+    UP_RIGHT = 8,
+    /** Back left channel. */
+    BACK_LEFT = 9,
+    /** Back right channel. */
+    BACK_RIGHT = 10,
+    /** Back centre channel. */
+    BACK_CENTER = 11,
 }

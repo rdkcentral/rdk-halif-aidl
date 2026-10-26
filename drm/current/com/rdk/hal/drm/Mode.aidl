@@ -33,10 +33,14 @@ package com.rdk.hal.drm;
  * Enumerate the supported crypto modes
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum Mode {
+    /** The data is not encrypted. */
     UNENCRYPTED = 0,
+    /** AES counter mode (CTR). */
     AES_CTR = 1,
+    /** AES cipher block chaining with ciphertext stealing (CBC-CTS). */
     AES_CBC_CTS = 2,
+    /** AES cipher block chaining (CBC). */
     AES_CBC = 3,
 }

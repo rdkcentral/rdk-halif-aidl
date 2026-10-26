@@ -30,47 +30,47 @@ package com.rdk.hal.hdmioutput;
  */
 
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum State {
-	/**
-	 *  The HAL server component session is initialising, before transitioning to a closed state
-	 *  or it reflects the state of an unknown HAL resource.
-	 */
+    /**
+     *  The HAL server component session is initialising, before transitioning to a closed state
+     *  or it reflects the state of an unknown HAL resource.
+     */
     UNKNOWN = 0,
 
-	/**
-	 * Initial state entered when the service connection is established.
-	 */
+    /**
+     * Initial state entered when the service connection is established.
+     */
     CLOSED = 1,
 
-	/**
-	 * The HAL server component session is transitioning from closed to ready state.
-	 */
+    /**
+     * The HAL server component session is transitioning from closed to ready state.
+     */
     OPENING = 2,
 
-	/**
-	 * The HAL server component session is open and ready to start, but in a stopped state.
-	 */
+    /**
+     * The HAL server component session is open and ready to start, but in a stopped state.
+     */
     READY = 3,
 
-	/**
-	 * The HAL server component session is transitioning from ready to started state.
-	 */
+    /**
+     * The HAL server component session is transitioning from ready to started state.
+     */
     STARTING = 4,
 
-	/**
-	 * The opened HAL server component session has been started.
-	 */
+    /**
+     * The opened HAL server component session has been started.
+     */
     STARTED = 5,
 
-	/**
-	 * The started HAL server component session is stopping.
-	 * Once stopped, the HAL server component session enters the ready state.
-	 */
+    /**
+     * The started HAL server component session is stopping.
+     * Once stopped, the HAL server component session enters the ready state.
+     */
     STOPPING = 6,
 
-	/**
-	 * The HAL server component session is transitioning from ready to closed state.
-	 */
+    /**
+     * The HAL server component session is transitioning from ready to closed state.
+     */
     CLOSING = 7
 }

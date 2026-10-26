@@ -17,14 +17,14 @@
  * limitations under the License.
  */
 package com.rdk.hal.videodecoder;
-import com.rdk.hal.videodecoder.Property;
-import com.rdk.hal.videodecoder.CSDVideoFormat;
-import com.rdk.hal.videodecoder.MasteringDisplayInfo;
-import com.rdk.hal.videodecoder.ContentLightLevel;
-import com.rdk.hal.videodecoder.Colorimetry;
-import com.rdk.hal.videodecoder.InputBufferMetadata;
-import com.rdk.hal.videodecoder.VideoDecoderStreamConfig;
 import com.rdk.hal.PropertyValue;
+import com.rdk.hal.videodecoder.CSDVideoFormat;
+import com.rdk.hal.videodecoder.Colorimetry;
+import com.rdk.hal.videodecoder.ContentLightLevel;
+import com.rdk.hal.videodecoder.InputBufferMetadata;
+import com.rdk.hal.videodecoder.MasteringDisplayInfo;
+import com.rdk.hal.videodecoder.Property;
+import com.rdk.hal.videodecoder.VideoDecoderStreamConfig;
 
 /**
  *  @brief     Video Decoder Controller HAL interface.
@@ -34,15 +34,15 @@ import com.rdk.hal.PropertyValue;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 
 @VintfStability
-interface IVideoDecoderController
-{
+interface IVideoDecoderController {
     /**
      * Starts the Video Decoder.
      *
@@ -119,8 +119,8 @@ interface IVideoDecoderController
      * Each call is self-describing; the HAL MUST NOT carry any field of
      * `InputBufferMetadata` across calls.
      *
-     * The `metadata.discontinuity` field is reserved in v1 and MUST be false.
-     * Use `signalDiscontinuity()` to signal a PTS discontinuity.
+     * A PTS discontinuity is signalled by calling `signalDiscontinuity()`
+     * before the first buffer that follows the discontinuity.
      *
      * @param[in] bufferHandle  A handle to the AV buffer containing the encoded
      *                          video frame. MUST be a valid handle.
@@ -137,11 +137,12 @@ interface IVideoDecoderController
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT if `bufferHandle` is
-     *            invalid or if `metadata.discontinuity` is true.
+     *            invalid.
      *
      * @pre The resource must be in State::STARTED.
      *
      * @see InputBufferMetadata
+     * @see signalDiscontinuity()
      * @see IVideoDecoderControllerListener.onFrameOutput()
      */
     boolean decodeBufferWithMetadata(in long bufferHandle, in InputBufferMetadata metadata);
@@ -168,19 +169,27 @@ interface IVideoDecoderController
     /**
      * Signals a discontinuity in the video stream.
      *
-     * The Video Decoder must be in a state of `STARTED`.
-     * Buffers that follow this call passed in `decodeBufferWithMetadata()` shall be
-     * regarded as PTS discontinuous to any video frames past or already held in the
-     * Video Decoder.
+     * This is the sole PTS discontinuity signal on the input side. The client
+     * calls it between the last buffer before the discontinuity and the first
+     * buffer after it: buffers passed to `decodeBufferWithMetadata()` after
+     * this call returns are PTS discontinuous with every buffer passed before
+     * it and with every frame already held in the Video Decoder.
      *
-     * This method remains the authoritative path for signalling discontinuity in
-     * v1. The `InputBufferMetadata.discontinuity` field is reserved and MUST be
-     * false until a later release migrates the signalling path.
+     * The decoder MUST reset its PTS tracking and interpolation state before
+     * decoding the first buffer passed after this call, and MUST NOT
+     * interpolate timestamps across the discontinuity. Buffers passed before
+     * this call, and frames already held in the Video Decoder, are decoded
+     * and output as normal.
+     *
+     * The first frame output from buffers passed after this call carries
+     * `FrameMetadata.discontinuity = true`.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
      * @pre The resource must be in State::STARTED.
+     *
+     * @see FrameMetadata.discontinuity
      */
     void signalDiscontinuity();
 
@@ -227,46 +236,47 @@ interface IVideoDecoderController
     void signalEndOfStream();
 
     /**
-    * Sends codec specific data to initialise the Video Decoder.
-    *
-    * This function sends codec-specific data to the Video Decoder for initialisation.
-    * The Video Decoder must be in the `STARTED` state before calling this function.
-    *
-    * Some video media requires out-of-band codec-specific data to describe the video stream.
-    * This data is pre-filtered from the container or provided by the application. When
-    * required, this function must be called before video frame buffers are passed to
-    * `decodeBufferWithMetadata()`.
-    *
-    * The format of the `codecData` parameter depends on the `csdVideoFormat`:
-    *
-    * For `AVC_DECODER_CONFIGURATION_RECORD` (H.264/AVC), this is the
-    * `AVCDecoderConfigurationRecord`, starting with the configuration version byte.
-    * See ISO/IEC 14496-15:2022, 5.3.3.1.2 and
-    * https://www.iso.org/standard/83336.html for more details.
-    *
-    * For `HEVC_DECODER_CONFIGURATION_RECORD` (H.265/HEVC), this is the
-    * `HEVCDecoderConfigurationRecord`, starting with the configuration version byte.
-    * See ISO/IEC 23008-2 and https://www.iso.org/standard/85457.html for
-    * further information.
-    *
-    * For `AV1_DECODER_CONFIGURATION_RECORD` (AV1 video), this is the
-    * `AV1CodecConfigurationRecord`, starting with the first configuration version byte.
-    * See https://aomediacodec.github.io/av1-isobmff/#av1codecconfigurationbox-section
-    * for more details.
-    *
-    * @param[in] csdVideoFormat The codec specific data format. This must match the codec specified in the `open()` call.
-    * @param[in] codecData      The byte array of codec data. This must not be empty.
-    *
-    * @returns boolean
-    * @retval true  The codec data was successfully set.
-    * @retval false Invalid parameter or empty codec data array.
-    *
-    * @exception binder::Status::Exception::EX_NONE for success
-    * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the `STARTED` state.
+     * Sends codec specific data to initialise the Video Decoder.
      *
-    *
-    * @pre The resource must be in the `STARTED` state.
-    */
+     * This function sends codec-specific data to the Video Decoder for initialisation.
+     * The Video Decoder must be in the `STARTED` state before calling this function.
+     *
+     * Some video media requires out-of-band codec-specific data to describe the video stream.
+     * This data is pre-filtered from the container or provided by the application. When
+     * required, this function must be called before video frame buffers are passed to
+     * `decodeBufferWithMetadata()`.
+     *
+     * The format of the `codecData` parameter depends on the `csdVideoFormat`:
+     *
+     * For `AVC_DECODER_CONFIGURATION_RECORD` (H.264/AVC), this is the
+     * `AVCDecoderConfigurationRecord`, starting with the configuration version byte.
+     * See ISO/IEC 14496-15:2022, 5.3.3.1.2 and
+     * https://www.iso.org/standard/83336.html for more details.
+     *
+     * For `HEVC_DECODER_CONFIGURATION_RECORD` (H.265/HEVC), this is the
+     * `HEVCDecoderConfigurationRecord`, starting with the configuration version byte.
+     * See ISO/IEC 23008-2 and https://www.iso.org/standard/85457.html for
+     * further information.
+     *
+     * For `AV1_DECODER_CONFIGURATION_RECORD` (AV1 video), this is the
+     * `AV1CodecConfigurationRecord`, starting with the first configuration version byte.
+     * See https://aomediacodec.github.io/av1-isobmff/#av1codecconfigurationbox-section
+     * for more details.
+     *
+     * @param[in] csdVideoFormat The codec specific data format. This must match the codec specified in the `open()`
+     * call.
+     * @param[in] codecData      The byte array of codec data. This must not be empty.
+     *
+     * @returns boolean
+     * @retval true  The codec data was successfully set.
+     * @retval false Invalid parameter or empty codec data array.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the `STARTED` state.
+     *
+     *
+     * @pre The resource must be in the `STARTED` state.
+     */
     boolean parseCodecSpecificData(in CSDVideoFormat csdVideoFormat, in byte[] codecData);
 
     /**

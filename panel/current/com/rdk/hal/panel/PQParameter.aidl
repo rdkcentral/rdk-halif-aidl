@@ -17,107 +17,134 @@
  * limitations under the License.
  */
 package com.rdk.hal.panel;
- 
-/** 
+
+/**
  *  @brief     PQ Parameter enumeration.
  *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
  */
 
-@VintfStability 
+@VintfStability
 @Backing(type = "int")
-enum PQParameter
-{
-    // 
-    BRIGHTNESS = 0,                     //!< Picture parameter  is Brightness (video pixels)
-    //
-    CONTRAST = 1,                       //!< Picture parameter  is Contrast (video plane) 
-    //
-    SHARPNESS = 2,                      //!< Picture parameter  is Sharpness (video plane)  
-    //
-    SATURATION = 3,                     //!< Picture parameter  is Saturation (video plane)  
-    //
-    HUE = 4,                            //!< Picture parameter  is Hue (video plane)  
-    //
-    MANUAL_BACKLIGHT = 5,               //!< Picture parameter  is Backlight (fixed/global) (not the ALS value)  Setting will fail if ALS enabled.
-    // Valid gamma values are defined in enum SDRGamma.
-    SDR_GAMMA = 6,                      //!< Picture parameter  is SDR Gamma
-    // 0..n depending on preconfigured number of presets.
-    COLOR_TEMPERATURE = 7,              //!< Picture parameter  is Colour temperature (?)
-    // 0=Fixed 1=Global 2=Local
-    DIMMING_MODE = 8,                   //!< Picture parameter  is Dimming mode
-    // 0..n presets defined by vendor (for global or local dimming)
-    DIMMING_LEVEL = 9,                	//!< Picture parameter  is Local dimming level
-    // Boolean
-    LOW_LATENCY_STATE = 10,             //!< Picture parameter  is Low latency state
-    //
-    SATURATION_RED = 11,                //!< Picture parameter  is Component saturation red
-    //
-    SATURATION_BLUE = 12,               //!< Picture parameter  is Component saturation blue
-    //
-    SATURATION_GREEN = 13,              //!< Picture parameter  is Component saturation green
-    //
-    SATURATION_YELLOW = 14,             //!< Picture parameter  is Component saturation yellow
-    //
-    SATURATION_CYAN = 15,               //!< Picture parameter  is Component saturation cyan
-    //
-    SATURATION_MAGENTA = 16,            //!< Picture parameter  is Component saturation magenta
-    //
-    HUE_RED = 17,                       //!< Picture parameter  is Component hue red
-    //
-    HUE_BLUE = 18,                      //!< Picture parameter  is Component hue blue
-    //
-    HUE_GREEN = 19,                     //!< Picture parameter  is Component hue green
-    //
-    HUE_YELLOW = 20,                    //!< Picture parameter  is Component hue yellow
-    //
-    HUE_CYAN = 21,                      //!< Picture parameter  is Component hue cyan
-    //
-    HUE_MAGENTA = 22,                   //!< Picture parameter  is Component hue magenta
-    //
-    LUMA_RED = 23,                      //!< Picture parameter  is Component luma red
-    //
-    LUMA_BLUE = 24,                     //!< Picture parameter  is Component luma blue
-    //
-    LUMA_GREEN = 25,                    //!< Picture parameter  is Component luma green
-    //
-    LUMA_YELLOW = 26,                   //!< Picture parameter  is Component luma yellow
-    //
-    LUMA_CYAN = 27,                     //!< Picture parameter  is Component luma cyan
-    //
-    LUMA_MAGENTA = 28,                  //!< Picture parameter  is Component luma magenta
-    // TBD: Boolean or Integer scale?
-    MEMC = 29,                  		//!< Picture parameter  is MEMC
-    // 0..n (0=off, n=maximum level)
-    LOCAL_CONTRAST_LEVEL = 30,          //!< Picture parameter  is Local contrast
+enum PQParameter {
+    /** Brightness control for video pixels. Integer value. */
+    BRIGHTNESS = 0,
+
+    /** Contrast control for the video plane. Integer value. */
+    CONTRAST = 1,
+
+    /** Sharpness control for the video plane. Integer value. */
+    SHARPNESS = 2,
+
+    /** Saturation control for the video plane. Integer value. */
+    SATURATION = 3,
+
+    /** Hue control for the video plane. Integer value. */
+    HUE = 4,
 
     /**
-     * LED backlight local dimming zones matrix dimensions.
+     * Manual backlight control. Integer value.
+     * Setting will fail if ALS control is enabled.
      */
-    //LOCAL_DIMMING_ZONES_X = 31,  MOVE TO Caps if needed.
-    //LOCAL_DIMMING_ZONES_Y = 32,
+    MANUAL_BACKLIGHT = 5,
 
     /**
-     * MPEG noise reduction.
-     * integer 0..n (0=off, n=maximum level)
+     * SDR gamma control. Enum value represented as SDRGamma.
+     * Use getPQParameters() / setPQParameters() with the sdrGamma
+     * variant of PQParameterValue for this parameter.
      */
-    MPEG_NOISE_REDUCTION = 31,
+    SDR_GAMMA = 6,
 
     /**
-     * Noise reduction.
-     * integer 0..n (0=off, n=maximum level)
+     * Colour temperature preset. String value.
+     * Use getPQParameters() / setPQParameters() with the stringValue
+     * variant of PQParameterValue for this parameter.
      */
-    NOISE_REDUCTION = 32,
+    COLOR_TEMPERATURE = 7,
 
     /**
-     * AI picture quality management engine.
-     * boolean
+     * Dimming settings. Parcelled as DimmingSettings.
+     * Use getPQParameters() / setPQParameters() with the dimmingSettings
+     * variant of PQParameterValue for this parameter.
      */
-    AI_PQ_ENGINE = 33,
+    DIMMING_SETTINGS = 8,
+
+    /** Low-latency mode enable state. Integer value, typically 0 or 1. */
+    LOW_LATENCY_STATE = 9,
+
+    /** Motion estimation / motion compensation control. Integer value. */
+    MEMC = 10,
+
+    /** Local contrast level. Integer value. */
+    LOCAL_CONTRAST_LEVEL = 11,
 
     /**
-     * Ambient light sensor (ALS) control.
-     * boolean
+     * MPEG noise reduction. Integer value.
      */
-    AMBIENT_LIGHT_SENSOR_CONTROL = 34,
+    MPEG_NOISE_REDUCTION = 12,
 
+    /**
+     * Noise reduction. Integer value.
+     */
+    NOISE_REDUCTION = 13,
+
+    /**
+     * AI picture quality management engine. Boolean-like integer value, typically 0 or 1.
+     */
+    AI_PQ_ENGINE = 14,
+
+    /**
+     * Ambient light sensor (ALS) control. Boolean-like integer value, typically 0 or 1.
+     */
+    AMBIENT_LIGHT_SENSOR_CONTROL = 15,
+
+    /**
+     * Precision detail enhancement level. Integer value.
+     */
+    PRECISION_DETAIL = 16,
+
+    /**
+     * Dolby Vision calibration settings. Parcelled as DolbyVisionCalibrationSettings.
+     * Use getPQParameters() / setPQParameters() with the dvCalibrationSettings
+     * variant of PQParameterValue for this parameter.
+     */
+    DV_CALIBRATION = 17,
+
+    /**
+     * 2-point white balance calibration settings. Parcelled as TwoPointWB.
+     * Use getPQParameters() / setPQParameters() with the twoPointWBSettings
+     * variant of PQParameterValue for this parameter.
+     */
+    TWO_POINT_WB = 18,
+
+    /**
+     * Multi-point white balance calibration settings. Parcelled as WhiteBalanceMultiPointSettings.
+     * Use getPQParameters() / setPQParameters() with the multiPointWBSettings
+     * variant of PQParameterValue for this parameter.
+     */
+    MULTI_POINT_WB = 19,
+
+    /**
+     * Dynamic contrast. Integer value.
+     * A platform offering only on/off declares a maximum of 1.
+     */
+    DYNAMIC_CONTRAST_LEVEL = 20,
+
+    /**
+     * AI super resolution (AISR). Integer value.
+     */
+    AISR = 21,
+
+    /**
+     * Grouped colour-management settings. Parcelled as ColourManagementSettings.
+     * Use getPQParameters() / setPQParameters() with the colourManagementSettings
+     * variant of PQParameterValue for this parameter.
+     */
+    COLOUR_MANAGEMENT_SETTINGS = 22,
+
+    /**
+     * Tone mapping settings. Parcelled as ToneMappingSettings.
+     * Use getPQParameters() / setPQParameters() with the toneMappingSettings
+     * variant of PQParameterValue for this parameter.
+     */
+    TONE_MAPPING_SETTINGS = 23,
 }

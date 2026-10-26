@@ -209,39 +209,27 @@ ${files}"
     } | sha256sum | awk '{print $1}'
 }
 
-# Deploy the versioned mkdocs site to gh-pages via the project's
-# build_docs.sh wrapper (uses `mike`). Two steps:
-#   1. `mike deploy <X.Y.Z> --push`        — publishes this version
-#   2. `mike set-default <X.Y.Z> --push`   — marks it as the "latest"
-# Both are synchronous (blocking) and push to origin/gh-pages directly.
-# Caller passes the release version. Bails (warns, doesn't die) on
-# failure — the release artefact commit + tag is already made, so docs
-# deploy is recoverable later (operator can rerun by hand).
+# Publish the release's docs to GitHub Pages: `build_docs.sh release <X.Y.Z>
+# --publish` deploys the version with mike, makes it the default, and waits
+# for the GitHub Pages build. Warns with the retry command and returns 1 on
+# failure; the caller fails the run, because the release artefact commit is
+# already pushed and only the docs step needs a rerun.
 deploy_versioned_docs() {
     local ver="$1"
     local docs_script="${REPO_ROOT}/docs/build_docs.sh"
     if [[ ! -x "${docs_script}" ]]; then
-        warn "Versioned docs deploy: ${docs_script} not found/executable — skipping."
-        return 0
-    fi
-    phase "Deploying versioned docs for ${ver} → gh-pages (mike deploy)"
-    log ""
-    log "Deploying ${ver} via ./docs/build_docs.sh deploy ${ver}"
-    if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh deploy "${ver}"); then
-        warn "mike deploy ${ver} failed."
-        warn "  Release commit + tag are already made; you can retry later:"
-        warn "    ./docs/build_docs.sh deploy ${ver}"
-        warn "    ./docs/build_docs.sh set-default ${ver}"
+        warn "Versioned docs deploy: ${docs_script} not found/executable."
         return 1
     fi
-    phase "Setting ${ver} as default version (mike set-default)"
+    phase "Publishing docs for ${ver} → GitHub Pages"
     log ""
-    if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh set-default "${ver}"); then
-        warn "mike set-default ${ver} failed — version is deployed but not marked as latest."
-        warn "  Retry with: ./docs/build_docs.sh set-default ${ver}"
+    if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh release "${ver}" --publish); then
+        warn "Publishing the ${ver} docs failed."
+        warn "  Release commit + tag are already made; retry with:"
+        warn "    ./docs/build_docs.sh release ${ver} --publish"
         return 1
     fi
-    log "✓ Versioned docs deployed and ${ver} set as latest."
+    log "✓ Docs for ${ver} published as the default version."
     return 0
 }
 
@@ -708,7 +696,7 @@ Modes:
                   1. git flow release finish X.Y.Z (merges → main, tags,
                      back-merges to develop)
                   2. git push --follow-tags --atomic origin main develop
-                  3. ./docs/build_docs.sh release X.Y.Z (deploy + wait
+                  3. ./docs/build_docs.sh release X.Y.Z --publish (deploy + wait
                      for GitHub Pages publish + set-default — all gated
                      inside the docs script)
                   4. gh release create X.Y.Z from docs/releases/X.Y.Z.md
@@ -728,9 +716,11 @@ Options:
   --no-snapshot          Skip creating <module>/<version>/ frozen snapshots
                          (regenerate-then-copy step). Testing only — a
                          real release MUST snapshot.
-  --no-mkdocs            Skip updating mkdocs.yml.
-  --no-build             Skip the verification build (./build_modules.sh
-                         all). Testing only — a real release MUST build.
+  --no-mkdocs            Skip updating mkdocs.yml and the documentation
+                         build.
+  --no-build             Skip the verification builds (./build_modules.sh
+                         all, ./docs/build_docs.sh build). Testing only —
+                         a real release MUST build.
   --audit                Structural change-class audit (see above). Read-only,
                          always strict.
   --no-audit             Skip the automatic write-path audit gate. Testing
@@ -756,8 +746,10 @@ Per bumped component the script:
 Once per release the script:
   5. Update versions_released.yaml components: map entries
   6. Insert mkdocs.yml nav entries for each <component>/<version>/
-  7. Generate docs/releases/<release>.md skeleton (if absent)
-  8. Prepend CHANGELOG.md section for <release>
+  7. Generate docs/releases/<release>.md skeleton (if absent) and list it
+     under Release Notes in mkdocs.yml
+  8. Prepend CHANGELOG.md section for <release>, then
+     ./docs/build_docs.sh build     # site builds; nav covers every doc set
   9. Audit docs + build configs for version-shaped strings (review only)
  10. ./build_modules.sh all                # build current cohort
  11. ./build_modules.sh manifest           # build released cohort via
@@ -881,7 +873,7 @@ done
 #      annotated tag on main + back-merges to develop.
 #   4. git push --follow-tags --atomic origin main develop — pushes
 #      branches AND the new tag in one operation.
-#   5. ./docs/build_docs.sh release X.Y.Z — deploys versioned docs,
+#   5. ./docs/build_docs.sh release X.Y.Z --publish — deploys versioned docs,
 #      waits for GitHub Pages to publish, sets X.Y.Z as default
 #      (all gated inside the docs script).
 #   6. gh release create X.Y.Z — publishes the GitHub release from
@@ -1082,17 +1074,19 @@ if [[ "${COMPLETE}" -eq 1 ]]; then
 
     # 5. Versioned docs deploy (deploy + wait for GH Pages + set-default,
     #    all gated inside build_docs.sh).
-    phase "Releasing versioned docs (./docs/build_docs.sh release ${RELEASE_VERSION})"
+    phase "Releasing versioned docs (./docs/build_docs.sh release ${RELEASE_VERSION} --publish)"
     log ""
+    _docs_ok=0
     if [[ ! -x "${REPO_ROOT}/docs/build_docs.sh" ]]; then
         warn "docs/build_docs.sh not found/executable — skipping versioned docs release."
-        warn "  Run manually when ready: ./docs/build_docs.sh release ${RELEASE_VERSION}"
+        warn "  Run manually when ready: ./docs/build_docs.sh release ${RELEASE_VERSION} --publish"
     else
-        if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh release "${RELEASE_VERSION}"); then
+        if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh release "${RELEASE_VERSION}" --publish); then
             warn "./docs/build_docs.sh release ${RELEASE_VERSION} failed."
             warn "  Tag + branches are pushed; retry the docs release later:"
-            warn "    ./docs/build_docs.sh release ${RELEASE_VERSION}"
+            warn "    ./docs/build_docs.sh release ${RELEASE_VERSION} --publish"
         else
+            _docs_ok=1
             log "  ✓ versioned docs released and set as default."
         fi
     fi
@@ -1132,6 +1126,16 @@ if [[ "${COMPLETE}" -eq 1 ]]; then
             fi
             log "  ✓ GitHub release ${RELEASE_VERSION} published."
         fi
+    fi
+
+    # The GitHub release above is independent of the docs, so it is created
+    # either way; an undeployed site still fails the run.
+    if [[ "${_docs_ok}" -ne 1 ]]; then
+        log ""
+        log "  Tag:      ${RELEASE_VERSION} (on main)"
+        log "  Branches: main + develop updated"
+        log "  Docs:     NOT deployed — retry with ./docs/build_docs.sh release ${RELEASE_VERSION} --publish"
+        die "Release ${RELEASE_VERSION} is incomplete: its documentation is not published."
     fi
 
     log ""
@@ -1252,8 +1256,15 @@ if [[ "${COMMIT}" -eq 1 && "${APPLY}" -ne 1 ]]; then
     # Versioned docs deploy. deploy_versioned_docs runs mike deploy and
     # then (only on success) mike set-default — sequential, blocking,
     # so set-default sees the just-deployed version. mike treats the
-    # version as a string; no git tag required.
-    deploy_versioned_docs "${RELEASE_VERSION}"
+    # version as a string; no git tag required. A failed deploy exits
+    # non-zero: the release branch is pushed, but the release is not done
+    # until its documentation is published.
+    if ! deploy_versioned_docs "${RELEASE_VERSION}"; then
+        log ""
+        log "Release branch ${branch} is committed and pushed; its documentation is NOT deployed."
+        log "Retry the deploy with the commands above, then: git flow release finish ${RELEASE_VERSION}"
+        die "Documentation deploy for ${RELEASE_VERSION} failed."
+    fi
     log ""
     log "Next step (git-flow):"
     log "    git flow release finish ${RELEASE_VERSION}"
@@ -2040,6 +2051,47 @@ open(path, 'w').write(s)
 PYEOF
 }
 
+# freeze_snapshot_docs <comp> <version> <tag> : Rewrite <comp>/<version>/docs/
+# so the frozen page documents <version>, not current/ (#796).
+#
+#   tree/main/<comp>/current  ->  tree/<tag>/<comp>/<version>
+#   <comp>/current            ->  <comp>/<version>
+#   Interface Version `current` -> `<version>`
+#
+# <tag> is the release that ships the snapshot; a tag-pinned link cannot move
+# as main does. Safe to repeat: a rewritten page no longer matches.
+freeze_snapshot_docs() {
+    local comp="$1" version="$2" tag="$3"
+    local docs_dir="${REPO_ROOT}/${comp}/${version}/docs"
+    local doc
+
+    [[ -d "${docs_dir}" ]] || return 0
+    [[ -n "${tag}" ]] || { warn "  [${comp}/${version}] no release tag to pin the docs links to."; return 1; }
+    while IFS= read -r -d '' doc; do
+        # -i.bak + rm: the in-place form GNU and BSD sed both accept.
+        sed -i.bak \
+            -e "s#/tree/main/${comp}/current#/tree/${tag}/${comp}/${version}#g" \
+            -e "s#${comp}/current#${comp}/${version}#g" \
+            -e "s#|\*\*Interface Version\*\*|\`current\`|#|**Interface Version**|\`${version}\`|#" \
+            "${doc}" && rm -f "${doc}.bak" || return 1
+    done < <(find "${docs_dir}" -name '*.md' -type f -print0)
+}
+
+# check_snapshot_docs : Fail, naming each line, when a snapshot doc's
+# Interface Definition or Interface Version still refers to current/ (#796).
+check_snapshot_docs() {
+    local hits
+    hits="$(cd "${REPO_ROOT}" && find . -path '*/[0-9]*.[0-9]*.[0-9]*.[0-9]*/docs/*' -name '*.md' -type f \
+              -not -path './docs/*' -not -path './build/*' -not -path './out/*' -print0 \
+            | xargs -0 grep -nE '\*\*Interface (Version\*\*\|`current`|Definition\*\*\|.*/current[/)])' 2>/dev/null)"
+    if [[ -n "${hits}" ]]; then
+        warn "  Snapshot docs still reference current/:"
+        while IFS= read -r _hit; do warn "    ${_hit#./}"; done <<< "${hits}"
+        return 1
+    fi
+    return 0
+}
+
 create_snapshot() {
     local comp="$1"
     local version="$2"
@@ -2175,6 +2227,32 @@ create_snapshot() {
             warn "  [${comp}/${version}] versions_released.yaml missing; dep links left as -vcurrent-cpp."
         fi
     fi
+
+    # Give the snapshot's mkdocs.yml its own site_name (#604). The copy above
+    # brings `site_name: <comp>` across verbatim from current/, so once the
+    # top-level nav registers current/ and the snapshot together the
+    # mkdocs-monorepo plugin aborts the whole build on the duplicate:
+    #   [mkdocs-monorepo] You cannot have duplicated site names.
+    # current/ keeps the bare component name; the snapshot takes
+    # <comp>-<version>, matching what the docs nav already expects.
+    local snapshot_mkdocs="${snapshot_dir}/mkdocs.yml"
+    if [[ -f "${snapshot_mkdocs}" ]]; then
+        if grep -qE '^site_name:' "${snapshot_mkdocs}"; then
+            sed -i "s|^site_name:.*|site_name: ${comp}-${version}|" "${snapshot_mkdocs}" || {
+                warn "Failed to set site_name in ${comp}/${version}/mkdocs.yml."
+                return 1
+            }
+        else
+            warn "  [${comp}/${version}] mkdocs.yml has no site_name; docs build will treat it as a duplicate."
+        fi
+    fi
+
+    # Freeze the copied docs to this version (#796): the References table and
+    # any other self-reference still name current/.
+    freeze_snapshot_docs "${comp}" "${version}" "${RELEASE_VERSION}" || {
+        warn "Failed to freeze the docs of ${comp}/${version}."
+        return 1
+    }
 
     # Stage hand-authored module-root headers (e.g. avbufferhelper.h) into the
     # snapshot's include/ tree (#623). These are public, versioned contract
@@ -2407,6 +2485,76 @@ PYEOF
 }
 
 # ----------------------------------------------------------------------------
+# Release notes nav entry (#848)
+# ----------------------------------------------------------------------------
+#
+# Add docs/releases/<release>.md as the first (newest) child of the
+# "Release Notes:" nav section:
+#
+#   - Release Notes:
+#     - 0.23.0: releases/0.23.0.md     <- inserted
+#     - 0.22.0: releases/0.22.0.md
+#
+# Idempotent — skips when the entry already exists.
+
+update_mkdocs_release_notes() {
+    local release_version="$1"
+    local mkdocs="${REPO_ROOT}/mkdocs.yml"
+    local entry="releases/${release_version}.md"
+
+    if [[ ! -f "${mkdocs}" ]]; then
+        warn "mkdocs.yml not found — skipping Release Notes nav update."
+        return 1
+    fi
+    if grep -qE "^[[:space:]]*-[[:space:]]+[^:]+:[[:space:]]+${entry//./\\.}[[:space:]]*$" "${mkdocs}"; then
+        log "  mkdocs.yml Release Notes already lists ${release_version}"
+        return 0
+    fi
+
+    if ! python3 - "${mkdocs}" "${release_version}" <<'PYEOF'; then
+import re, sys
+mkdocs_path, version = sys.argv[1:3]
+lines = open(mkdocs_path).read().splitlines(keepends=True)
+
+parent = next((i for i, l in enumerate(lines)
+               if re.match(r"^\s*-\s+Release Notes:\s*$", l)), None)
+if parent is None:
+    sys.stderr.write("'Release Notes:' nav section not found\n")
+    sys.exit(1)
+indent = re.match(r"^(\s*)", lines[parent]).group(1) + "  "
+lines.insert(parent + 1, f"{indent}- {version}: releases/{version}.md\n")
+open(mkdocs_path, "w").write("".join(lines))
+sys.exit(0)
+PYEOF
+        warn "  python mkdocs edit failed; add '${entry}' under Release Notes by hand"
+        return 1
+    fi
+    log "  added Release Notes nav entry: ${release_version}"
+    return 0
+}
+
+# ----------------------------------------------------------------------------
+# Documentation build check (#848)
+# ----------------------------------------------------------------------------
+#
+# Build the site with ./docs/build_docs.sh build, which also fails when a
+# snapshot or release notes page has no nav entry. Output goes to
+# out/release-docs-build.log; the tail is printed on failure.
+
+run_docs_build() {
+    local log_file="${REPO_ROOT}/out/release-docs-build.log"
+    mkdir -p "$(dirname "${log_file}")"
+    phase "Building the documentation site (./docs/build_docs.sh build)..."
+    log "  log: ${log_file#"${REPO_ROOT}"/}"
+    if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh build) >"${log_file}" 2>&1; then
+        tail -n 30 "${log_file}" >&2
+        return 1
+    fi
+    log "  ✓ documentation built."
+    return 0
+}
+
+# ----------------------------------------------------------------------------
 # Release branch (#513)
 #
 # Creates / reuses release/<version> and stages all generated artefacts.
@@ -2528,7 +2676,12 @@ create_release_branch() {
 
         # mike deploy + set-default (sequential, blocking). mike treats
         # the version as a string; no git tag required.
-        deploy_versioned_docs "${release_version}"
+        if ! deploy_versioned_docs "${release_version}"; then
+            log ""
+            log "Release branch ${branch} is committed and pushed; its documentation is NOT deployed."
+            log "Retry the deploy with the commands above, then: git flow release finish ${release_version}"
+            die "Documentation deploy for ${release_version} failed."
+        fi
         log ""
         log "Next step (git-flow):"
         log "    git flow release finish ${release_version}"
@@ -2922,7 +3075,7 @@ declare -A METADATA_DRIFT=()  # comp -> "metadata_says|discovered_truth"
 #               is doc-only (comment/doc edits are stripped from dumps).
 #   label       the change class the PR labels imply (same detector the
 #               release run uses; none when untouched in the window).
-#   declared    metadata.yaml's version field (authors pre-bump it).
+#   declared    metadata.yaml's version field (written by release.sh at the cut).
 #
 # Gate table (era 0): structural breaking => major bump, additive =>
 # minor, surface-identical respin => bugfix, identical => none. Era >= 1
@@ -3045,17 +3198,22 @@ run_structural_audit() {
         [[ "${COMP_NON_DOC[$comp]:-0}"  -eq 1 ]] && _label="minor"
         [[ "${COMP_BREAKING[$comp]:-0}" -eq 1 ]] && _label="generation"
 
-        # Expected next version from the STRUCTURAL truth.
+        # Expected next version from the STRUCTURAL truth — except a
+        # behaviour-only breaking change (surface unchanged, source changed,
+        # Major label), which only the label can declare and which the
+        # release run bumps by that label.
         _era="${_prev%%.*}"
         _expected="-"
+        _effective="${_structural}"
+        [[ "${_label}" == "generation" && "${_structural}" == "patch" ]] && _effective="generation"
         if [[ "${_prev}" =~ ^0\. ]]; then
-            compute_next_versions "${_prev}" "${_structural}"
+            compute_next_versions "${_prev}" "${_effective}"
             _expected="${NEXT_VERSION}"
         fi
 
         _flags=()
         _notes=()
-        if [[ "${_era}" =~ ^[0-9]+$ ]] && (( _era >= 1 )) && [[ "${_structural}" == "generation" ]]; then
+        if [[ "${_era}" =~ ^[0-9]+$ ]] && (( _era >= 1 )) && [[ "${_effective}" == "generation" ]]; then
             _flags+=("era ${_era} forbids breaking changes — new component required")
         fi
         if [[ "${_structural}" != "${_label}" ]]; then
@@ -3065,17 +3223,25 @@ run_structural_audit() {
                 # AIDL-hash gate) — the audit mirrors that, or repo-wide
                 # docs/chore commits would flag every component.
                 _notes+=("label bump auto-suppressed (AIDL unchanged)")
+            elif [[ "${_label}" == "generation" && "${_structural}" == "patch" ]]; then
+                # The surface is unchanged but the AIDL source changed: a
+                # behaviour change with the signature intact is breaking, and
+                # only the label can declare it (versioning-sop.md).
+                _notes+=("behaviour-only breaking change declared by label (AIDL surface unchanged)")
             elif [[ "${_label}" == "none" && "${_structural}" != "none" ]]; then
                 _flags+=("code is $(_audit_class_display "${_structural}") but no PR label in window")
             else
                 _flags+=("label says $(_audit_class_display "${_label}"), code is $(_audit_class_display "${_structural}")")
             fi
         fi
+        # metadata.yaml version is written by release.sh at the cut (#872):
+        # before the cut it holds the last released version, after the cut
+        # the computed next one. Either is valid; anything else is a hand edit.
         if [[ "${_expected}" != "-" && -n "${_meta_ver}" && "${_meta_ver}" != "${_expected}" ]]; then
-            if [[ "${_meta_ver}" == "${_prev}" && "${_structural}" != "none" ]]; then
-                _flags+=("bump pending — metadata.yaml not yet pre-bumped to ${_expected}")
+            if [[ "${_meta_ver}" == "${_prev}" ]]; then
+                [[ "${_structural}" != "none" ]] && _notes+=("release.sh writes ${_expected} at the cut")
             else
-                _flags+=("metadata.yaml says ${_meta_ver}, structural expects ${_expected}")
+                _flags+=("metadata.yaml says ${_meta_ver}: neither released ${_prev} nor next ${_expected} — hand edit")
             fi
         fi
 
@@ -3238,13 +3404,16 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
         COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}stage: explicit --version ${NEXT_VERSION}"$'\n'
     fi
 
-    # Drift detection: metadata.yaml is *supposed* to be pre-bumped by
-    # PR authors to the planned next version. If it matches the
-    # detector's NEXT_VERSION, no drift — that's the healthy state.
+    # Drift detection: metadata.yaml holds the released version until
+    # release.sh writes the next one. If it matches the detector's
+    # NEXT_VERSION (already written), no drift either.
     # Real drift = metadata.yaml says X but detector computes Y for the
     # next release. Surface that case so the operator sees the
     # mismatch before it's silently healed (overwritten) at apply time.
-    if [[ -n "${metadata_version}" && "${metadata_version}" != "${NEXT_VERSION}" ]]; then
+    # metadata.yaml still holding the released version is the normal state
+    # before the cut (release.sh writes the next one, #872) — not drift.
+    if [[ -n "${metadata_version}" && "${metadata_version}" != "${NEXT_VERSION}" \
+          && "${metadata_version}" != "${current_version}" ]]; then
         METADATA_DRIFT[$comp]="${metadata_version}|${NEXT_VERSION}"
     fi
 
@@ -3487,8 +3656,8 @@ if [[ "${DRY_RUN}" -eq 1 && ${#BUMPED_COMPONENTS[@]} -gt 0 ]]; then
     log "  Then once per release:"
     log "    5. Update versions_released.yaml components: map"
     log "    6. Insert mkdocs.yml nav entries for the ${#BUMPED_COMPONENTS[@]} new <module>/<version>/ doc sets"
-    log "    7. Generate docs/releases/${RELEASE_VERSION}.md release-notes skeleton (if absent)"
-    log "    8. Prepend a new ${RELEASE_VERSION} section to CHANGELOG.md"
+    log "    7. Generate docs/releases/${RELEASE_VERSION}.md release-notes skeleton (if absent) and list it under Release Notes"
+    log "    8. Prepend a new ${RELEASE_VERSION} section to CHANGELOG.md, then ./docs/build_docs.sh build"
     log "    9. Audit docs + build configs for version-shaped strings (review only)"
     log "   10. ./build_modules.sh all                 (build current cohort)"
     log "   11. ./build_modules.sh manifest            (build released cohort via versions_released.yaml)"
@@ -3586,6 +3755,12 @@ if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
         die "Cohort snapshot dependency normalization failed. Aborting release."
     fi
 
+    # 2c. Every snapshot's docs name their own version, never current/ (#796).
+    phase "Checking snapshot docs reference their frozen version..."
+    if ! check_snapshot_docs; then
+        die "Snapshot docs still reference current/. Aborting release."
+    fi
+
     # 3. mkdocs.yml entries.
     if [[ "${NO_MKDOCS}" -eq 1 ]]; then
         log ""
@@ -3620,12 +3795,26 @@ if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
     log ""
     generate_release_notes_skeleton "${RELEASE_VERSION}"
     (cd "${REPO_ROOT}" && git add "docs/releases/${RELEASE_VERSION}.md") 2>/dev/null || true
+    if [[ "${NO_MKDOCS}" -ne 1 ]]; then
+        update_mkdocs_release_notes "${RELEASE_VERSION}" \
+            || die "Release Notes nav update failed. Aborting release (re-run with --no-mkdocs to bypass for testing)."
+    fi
 
     # 5. CHANGELOG.md — prepend a new section for this release (#580).
     phase "Regenerating CHANGELOG.md section for ${RELEASE_VERSION}..."
     log ""
     regenerate_changelog "${RELEASE_VERSION}"
     (cd "${REPO_ROOT}" && git add CHANGELOG.md) 2>/dev/null || true
+
+    # 5b. Documentation build (#848). The nav, snapshots, release notes and
+    # CHANGELOG are all in place, so this is the site --commit will deploy.
+    # A cut whose documentation does not build stops here.
+    if [[ "${NO_MKDOCS}" -eq 1 || "${NO_BUILD}" -eq 1 ]]; then
+        log ""
+        log "Documentation build: SKIPPED (--no-mkdocs / --no-build)"
+    elif ! run_docs_build; then
+        die "Documentation build failed. Aborting release — fix the site before --apply."
+    fi
 
     # 6. Version-ref audit across docs + build configs (#581 / #582).
     # Informational only — surfaces strings that look like versions so

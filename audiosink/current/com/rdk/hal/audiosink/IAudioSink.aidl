@@ -17,13 +17,13 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiosink;
+import com.rdk.hal.PropertyValue;
+import com.rdk.hal.audiosink.Capabilities;
+import com.rdk.hal.audiosink.ContentType;
 import com.rdk.hal.audiosink.IAudioSinkController;
 import com.rdk.hal.audiosink.IAudioSinkControllerListener;
 import com.rdk.hal.audiosink.IAudioSinkEventListener;
-import com.rdk.hal.audiosink.Capabilities;
-import com.rdk.hal.audiosink.ContentType;
 import com.rdk.hal.audiosink.Property;
-import com.rdk.hal.PropertyValue;
 import com.rdk.hal.audiosink.State;
 
 /**
@@ -34,16 +34,15 @@ import com.rdk.hal.audiosink.State;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 
 @VintfStability
-interface IAudioSink
-{
-
+interface IAudioSink {
     /** Audio Sink resource ID type */
     @VintfStability
     parcelable Id {
@@ -97,8 +96,8 @@ interface IAudioSink
      */
     boolean setProperty(in Property property, in PropertyValue propertyValue);
 
-	/**
-	 * Gets the current audio sink state.
+    /**
+     * Gets the current audio sink state.
      *
      * @returns State enum value.
      *
@@ -109,33 +108,34 @@ interface IAudioSink
     State getState();
 
     /**
-    * Opens the audio sink.
-    *
-    * If successful, the audio sink transitions to an OPENING state and then a READY state.
-    * The following guarantees are made for an opened audio sink:
-    *  - Volume is set to the default of 1.0 and unmuted.
-    *  - The linked Audio Decoder is set to IAudioDecoder.Id.UNDEFINED.
-    *  - All `Property` values are set to their defaults.
-    *
-    * If the client that opened the `IAudioSinkController` crashes,
-    * then `stop()` and `close()` are implicitly called on the `IAudioSinkController` to perform cleanup.
-    *
-    * @param[in] contentType                     The content type of the audio sink.
-    * @param[in] audioSinkControllerListener     Callback listener for controller events.
-    *
-    * @returns IAudioSinkController or null On error
-    *
-    * @exception binder::Status::Exception::EX_NONE for success.
-    * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
-    * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
-    * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     * Opens the audio sink.
      *
-    *
-    * @pre The resource must be in the CLOSED state.
-    *
-    * @see close()
-    */
-    @nullable IAudioSinkController open(in ContentType contentType, in IAudioSinkControllerListener audioSinkControllerListener);
+     * If successful, the audio sink transitions to an OPENING state and then a READY state.
+     * The following guarantees are made for an opened audio sink:
+     *  - Volume is set to the default of 1.0 and unmuted.
+     *  - The linked Audio Decoder is set to IAudioDecoder.Id.UNDEFINED.
+     *  - All `Property` values are set to their defaults.
+     *
+     * If the client that opened the `IAudioSinkController` crashes,
+     * then `stop()` and `close()` are implicitly called on the `IAudioSinkController` to perform cleanup.
+     *
+     * @param[in] contentType                     The content type of the audio sink.
+     * @param[in] audioSinkControllerListener     Callback listener for controller events.
+     *
+     * @returns IAudioSinkController or null On error
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
+     *
+     *
+     * @pre The resource must be in the CLOSED state.
+     *
+     * @see close()
+     */
+    @nullable
+    IAudioSinkController open(in ContentType contentType, in IAudioSinkControllerListener audioSinkControllerListener);
 
     /**
      * Closes the audio sink.
@@ -162,7 +162,7 @@ interface IAudioSink
     boolean close(in IAudioSinkController audioSinkController);
 
     /**
-	 * Registers an audio sink event listener.
+     * Registers an audio sink event listener.
      *
      * An `IAudioSinkEventListener` can only be registered once and will fail on subsequent
      * registration attempts.
@@ -182,7 +182,7 @@ interface IAudioSink
     boolean registerEventListener(in IAudioSinkEventListener audioSinkEventListener);
 
     /**
-	 * Unregisters an audio sink event listener.
+     * Unregisters an audio sink event listener.
      *
      * @param[in] audioSinkEventListener	    Listener object for event callbacks.
      *

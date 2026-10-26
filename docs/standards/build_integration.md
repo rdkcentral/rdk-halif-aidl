@@ -29,15 +29,84 @@ scripts are Python, so the build host has Python — it just never runs codegen.
 ## Stage 1 — Binder SDK
 
 The Binder SDK (libbinder/libutils + headers) is delivered by the `linux-binder`
-recipe and staged into the recipe sysroot. Configure it with
-`-DBUILD_HOST_AIDL=OFF` — the host AIDL tool runs on the build host and is not
-part of a target image. See the
-[linux_binder_idl BUILD guide](https://github.com/rdkcentral/linux_binder_idl/blob/develop/BUILD.md)
-for cross-compilation flags and runtime/systemd setup. The essential line:
+recipe and staged into the recipe sysroot. Two switches configure it, and a
+recipe states both explicitly rather than inheriting a default:
+
+| Switch | Value to pass | Why |
+| ------ | ------------- | --- |
+| `BUILD_HOST_AIDL` | `OFF`, on every platform | the host AIDL tool runs on the build host and is not part of a target image |
+| `BINDER_PROTOCOL` | `8` — or the kernel's protocol, if a legacy platform is still in the fleet | libbinder compares protocol versions for exact equality when it opens the driver |
+
+**The ELF class is not a switch.** It follows `CC`/`CXX`, and nothing in the
+Binder SDK can change it — point the build at the right cross-compiler and a
+32-bit toolchain produces a 32-bit `libbinder.so`. `TARGET_BITNESS=32|64` exists
+only as an optional assertion, for a build that should *stop* if the toolchain
+is not what was expected.
+
+State both rather than relying on a default: a recipe that says what it wants
+does not change meaning when a default does.
+
+An older recipe may pass `BINDER_IPC_32BIT` or the
+`TARGET_LIB32_VERSION` / `TARGET_LIB64_VERSION` pair. Those spellings are
+deprecated — the Binder SDK still honours them, so such a recipe keeps building,
+but a new one writes `BINDER_PROTOCOL` and `TARGET_BITNESS`.
+
+### The three platform configurations
+
+Bitness is a property of the role; the wire protocol is a property of the
+platform. There is one kernel, so it serves one protocol, and every role on the
+device speaks that one.
+
+| | The kernel it matches | Switches |
+| --- | ------ | -------- |
+| **A** — legacy all-32-bit | a 32-bit kernel whose resolved config has `CONFIG_ANDROID_BINDER_IPC_32BIT=y` | `-DBINDER_PROTOCOL=7`, built with a 32-bit toolchain |
+| **B** — 32-bit userspace on a protocol-8 kernel | every other 32-bit userspace: a 32-bit kernel with that symbol unset or absent, and 32-bit middleware on a 64-bit kernel | `-DBINDER_PROTOCOL=8`, built with a 32-bit toolchain |
+| **C** — 64-bit userspace | any 64-bit kernel | `-DBINDER_PROTOCOL=8`, built with a 64-bit toolchain |
+
+**The kernel version does not decide the row — its config does.** Being 32-bit
+at 4.17 or older is what makes protocol 7 *possible*; it is not what makes it
+apply. Two devices on the same silicon and the same kernel version can sit in
+different rows.
+
+Determining which protocol a kernel serves, and reading its resolved `.config`
+to find out, is covered in
+[`PROTOCOL.md`](https://github.com/rdkcentral/linux_binder_idl/blob/develop/PROTOCOL.md).
+A build that needs it derived rather than stated can use
+`example/yocto/binder-protocol-from-kernel.inc` from the same repository.
+
+**Row A is the one that must state its switch.** `BINDER_PROTOCOL` defaults to
+`8` on every toolchain, so rows B and C are what a build inherits without
+asking; a legacy platform is the exception and states `-DBINDER_PROTOCOL=7`.
+Being 32-bit does not imply protocol 7 — row B is 32-bit throughout and runs
+protocol 8. Protocol 8 carries 64-bit wire *fields*, which a 32-bit process
+fills by zero-extension — it is the mixed-capable protocol, not the 64-bit one.
+Protocol 7 is the legacy-compat option, and its 32-bit fields cannot hold a
+64-bit pointer, which is why the kernel option is `depends on !64BIT` and why a
+protocol-7 platform is all-32-bit throughout.
+
+**On a 64-bit kernel two SDKs ship** — a 32-bit one for the middleware and a
+64-bit one for the vendor: different ELF classes, both protocol 8, because both
+talk to the same kernel.
+
+A protocol mismatch is not caught at build time. It surfaces on the device,
+where every binder process terminates at startup.
 
 ```bitbake
-EXTRA_OECMAKE = "-DBUILD_HOST_AIDL=OFF"
+# Row B — 32-bit userspace on a protocol-8 kernel. The 32-bit ELF class comes
+# from the cross-toolchain, so it is not stated here.
+EXTRA_OECMAKE = " \
+    -DBUILD_HOST_AIDL=OFF \
+    -DBINDER_PROTOCOL=8 \
+"
 ```
+
+`BUILD_HOST_AIDL` is fixed at `OFF`. `BINDER_PROTOCOL` is the platform-dependent
+one, and a recipe can derive it from the kernel's resolved `.config` instead of
+declaring it, so nothing is hand-maintained per platform. See
+[`PROTOCOL.md`](https://github.com/rdkcentral/linux_binder_idl/blob/develop/PROTOCOL.md)
+for that derivation, the full switch matrix and the verification steps, and the
+[linux_binder_idl BUILD guide](https://github.com/rdkcentral/linux_binder_idl/blob/develop/BUILD.md)
+for cross-compilation flags and runtime/systemd setup.
 
 ## Stage 2 — HAL interface libraries (per component)
 

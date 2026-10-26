@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.hdmioutput;
 
-/** 
+/**
  *  @brief     HDMI content type enum.
  *
  *  Maps to the AVI InfoFrame fields ITC (InfoFrame Type Code) and CN (Content Type),

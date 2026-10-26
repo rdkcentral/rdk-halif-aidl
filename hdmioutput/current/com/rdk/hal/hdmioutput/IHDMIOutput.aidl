@@ -18,14 +18,14 @@
  */
 package com.rdk.hal.hdmioutput;
 
+import com.rdk.hal.PropertyValue;
 import com.rdk.hal.hdmioutput.Capabilities;
 import com.rdk.hal.hdmioutput.IHDMIOutputController;
-import com.rdk.hal.hdmioutput.Property;
-import com.rdk.hal.hdmioutput.PropertyKVPair;
 import com.rdk.hal.hdmioutput.IHDMIOutputControllerListener;
 import com.rdk.hal.hdmioutput.IHDMIOutputEventListener;
+import com.rdk.hal.hdmioutput.Property;
+import com.rdk.hal.hdmioutput.PropertyKVPair;
 import com.rdk.hal.hdmioutput.State;
-import com.rdk.hal.PropertyValue;
 
 /**
  *  @brief     HDMI Output HAL interface.
@@ -41,14 +41,14 @@ import com.rdk.hal.PropertyValue;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 @VintfStability
-interface IHDMIOutput
-{
+interface IHDMIOutput {
     /** HDMI Output resource ID type */
     @VintfStability
     parcelable Id {

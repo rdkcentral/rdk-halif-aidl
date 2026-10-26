@@ -34,7 +34,6 @@ import com.rdk.hal.audiomixer.State;
  */
 @VintfStability
 oneway interface IAudioOutputPortControllerListener {
-
     /**
      * @brief    Called when the output port transitions to a new lifecycle state.
      *

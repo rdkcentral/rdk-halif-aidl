@@ -39,7 +39,7 @@ package com.rdk.hal.videodecoder;
  * @enum CSDVideoFormat
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum CSDVideoFormat {
     /**
      * AVC Decoder Configuration Record (H.264/AVC).
@@ -68,5 +68,3 @@ enum CSDVideoFormat {
      */
     AV1_DECODER_CONFIGURATION_RECORD = 2
 }
-
-

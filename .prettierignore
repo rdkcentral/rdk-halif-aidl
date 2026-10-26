@@ -1,0 +1,13 @@
+# Prettier does not understand MkDocs Material syntax and rewrites it into
+# something that no longer renders.
+#
+# The specific failure: admonition bodies ("!!! info", "!!! tip") must be
+# indented by four spaces to belong to the block. Prettier reformats the
+# markdown table or list inside them and strips that indent, which silently
+# moves the content outside the admonition. Blocks have been de-indented by
+# format-on-save more than once.
+#
+# Interface documentation is authored for MkDocs, not for Prettier, so it is
+# excluded wholesale.
+
+**/docs/**/*.md

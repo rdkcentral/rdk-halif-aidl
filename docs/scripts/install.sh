@@ -1,17 +1,13 @@
 #!/usr/bin/env bash
-#** *****************************************************************************
-# *
-# * If not stated otherwise in this file or this component's LICENSE file the
-# * following copyright and licenses apply:
-# *
+
+#/**
 # * Copyright 2025 RDK Management
 # *
 # * Licensed under the Apache License, Version 2.0 (the "License");
 # * you may not use this file except in compliance with the License.
 # * You may obtain a copy of the License at
 # *
-# *
-# http://www.apache.org/licenses/LICENSE-2.0
+# * http://www.apache.org/licenses/LICENSE-2.0
 # *
 # * Unless required by applicable law or agreed to in writing, software
 # * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,7 +15,9 @@
 # * See the License for the specific language governing permissions and
 # * limitations under the License.
 # *
-#* ******************************************************************************
+# * SPDX-License-Identifier: Apache-2.0
+# */
+
 MY_PATH="$(realpath ${BASH_SOURCE[0]})"
 MY_DIR="$(dirname ${MY_PATH})"
 VENV_NAME="python_venv"
@@ -112,7 +110,28 @@ function clone_repo()
             git clone ${repo_url} "${path}" > /dev/null 2>&1 || { ERROR "Git clone failed for ${repo_url}"; return 1; }
             
             pushd ${path} > /dev/null || { ERROR "Failed to enter directory ${path}"; return 1; }
-            git checkout ${version} > /dev/null 2>&1 || { ERROR "Git checkout failed for version ${version}"; popd > /dev/null; return 1; }
+
+            # ${version} may be a single ref or a space-separated preference
+            # list. GitHub wiki repositories sit on `master` today, but `main`
+            # is the current default elsewhere, so callers can name both and
+            # keep working whichever way a repository migrates.
+            #
+            # Keep git's own message on failure: swallowing it is what hid a
+            # wrong branch name here, because the only visible symptom was
+            # install.sh returning 1 before install_pip_requirements ran.
+            local _ref _git_err="" _checked_out=0
+            for _ref in ${version}; do
+                if _git_err="$(git checkout "${_ref}" 2>&1)"; then
+                    _checked_out=1
+                    break
+                fi
+            done
+
+            if [ ${_checked_out} -eq 0 ]; then
+                ERROR "Git checkout failed for '${version}' in ${path}: ${_git_err}"
+                popd > /dev/null
+                return 1
+            fi
             popd > /dev/null
         fi
     fi
@@ -181,7 +200,9 @@ setup_and_enable_venv || return 1
 
 # 2. Clone Repos
 mkdir -p ${EXTERNAL_CONTENT_DIR} || { ERROR "Failed to create ${EXTERNAL_CONTENT_DIR}"; return 1; }
-clone_repo "https://github.com/rdkcentral/ut-core.wiki.git" "${EXTERNAL_CONTENT_DIR}/ut-core-wiki" "main" || return 1
+# GitHub wikis are on `master` today; `main` is listed first so the preferred
+# name wins automatically if the wiki is ever migrated.
+clone_repo "https://github.com/rdkcentral/ut-core.wiki.git" "${EXTERNAL_CONTENT_DIR}/ut-core-wiki" "main master" || return 1
 
 # 3. Install Pip Req
 install_pip_requirements ${DOCS_DIR}/requirements.txt || return 1

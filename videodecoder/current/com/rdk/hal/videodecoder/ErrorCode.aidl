@@ -26,8 +26,9 @@ package com.rdk.hal.videodecoder;
  */
 
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum ErrorCode {
+    /** Placeholder. No video decoder error codes are defined yet. */
     xxxx = 1,
 
 }

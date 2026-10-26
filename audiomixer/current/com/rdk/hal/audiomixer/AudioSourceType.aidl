@@ -28,9 +28,8 @@ package com.rdk.hal.audiomixer;
  * @author    Gerald Weatherup
  */
 @VintfStability
-@Backing(type="int")
-enum AudioSourceType
-{
+@Backing(type = "int")
+enum AudioSourceType {
     /**
      * No audio source is connected to the mixer input. Default/disconnected state.
      */

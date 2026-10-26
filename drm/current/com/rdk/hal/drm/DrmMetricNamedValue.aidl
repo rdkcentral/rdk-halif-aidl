@@ -36,6 +36,8 @@ import com.rdk.hal.drm.DrmMetricValue;
  */
 @VintfStability
 parcelable DrmMetricNamedValue {
-    String name;
+    /** The name of the value. It may be empty if the metric has only one value. */
+    @utf8InCpp String name;
+    /** The value. */
     DrmMetricValue value;
 }

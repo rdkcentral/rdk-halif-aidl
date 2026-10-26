@@ -37,7 +37,6 @@ import com.rdk.hal.drm.SubSample;
  */
 @VintfStability
 parcelable DecryptArgs {
-
     /**
      * A flag to indicate if a secure decoder is being used.
      *
@@ -80,7 +79,7 @@ parcelable DecryptArgs {
 
     /**
      * Input AVBuffer handle for the encrypted data.
-     * 
+     *
      * It is the responsibility of the caller to recycle/free the allocated AVBuffer after the call to decrypt returns.
      */
     long sourceBufferHandle;
@@ -89,5 +88,4 @@ parcelable DecryptArgs {
      * Output AVBuffer handle for the decrypted data.
      */
     long destinationBufferHandle;
-
 }

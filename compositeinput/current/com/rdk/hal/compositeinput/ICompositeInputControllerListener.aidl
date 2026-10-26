@@ -39,7 +39,6 @@ import com.rdk.hal.compositeinput.VideoResolution;
  */
 @VintfStability
 oneway interface ICompositeInputControllerListener {
-
     /**
      * Called when the port connection state changes.
      *

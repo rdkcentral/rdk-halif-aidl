@@ -71,8 +71,7 @@ interface IDrmPluginListener {
      * @param hasNewUsableKey indicates if the event includes at least one
      * key that has become usable.
      */
-    oneway void onKeysChange(
-            in byte[] sessionId, in KeyStatus[] keyStatusList, in boolean hasNewUsableKey);
+    oneway void onKeysChange(in byte[] sessionId, in KeyStatus[] keyStatusList, in boolean hasNewUsableKey);
 
     /**
      * Some device crypto hardware is incapable of retaining crypto

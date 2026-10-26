@@ -28,6 +28,9 @@
  */
 package com.rdk.hal.drm;
 
+/**
+ * The result of providing a provisioning response.
+ */
 @VintfStability
 parcelable ProvideProvisionResponseResult {
     /**
