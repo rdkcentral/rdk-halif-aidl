@@ -3858,6 +3858,18 @@ run_structural_audit() {
     AUDIT_ROWS+=("$(printf "%-24s %-10s %-11s %-11s %-10s %-10s %s" \
         "---------" "------" "----------" "-----" "--------" "--------" "------")")
     AUDIT_DETAIL=()          # buffered per-component diff detail blocks
+    DOUBT_ROWS=()            # label/code disagreements, settled or not
+
+    # PR numbers -> "#1, #2": the plain text (for column width) and the
+    # same text with each number a clickable link.
+    _doubt_prs() {
+        local repo="${GH_REPO:-rdkcentral/rdk-halif-aidl}" pr plain="" linked=""
+        for pr in $(tr ' ' '\n' <<<"$1" | grep . | sort -un); do
+            plain="${plain:+${plain}, }#${pr}"
+            linked="${linked:+${linked}, }$(_link "https://github.com/${repo}/pull/${pr}" "#${pr}")"
+        done
+        printf '%s\t%s' "${plain:--}" "${linked:--}"
+    }
     _audit_flagged=0
     _audit_errors=0
 
@@ -3963,6 +3975,7 @@ run_structural_audit() {
             fi
         fi
 
+        _doubt="${_label_flag}"
         # Operator pin (`stage all <comp> --version X`, or a confirmed class
         # `--confirm minor "<reason>"` resolved against the released version):
         # accepted at or above the code's own level — it can lower an
@@ -3985,6 +3998,12 @@ run_structural_audit() {
                    || -z "$(git -C "${REPO_ROOT}" ls-tree -d --name-only "${_pin_baseline}" -- "${comp}/${_meta_ver}")" ) ]]; then
             _pin="${_meta_ver}"
             _pin_note="staged at ${_pin} by an earlier stage run"
+            # The pins file is local and lapses; the release notes keep the
+            # confirmation and its reason, so read them back from there.
+            local _confirmed
+            _confirmed="$(grep -hoE "^- \`${comp}\` → ${_pin//./\\.} \(confirmed (major|minor|bugfix): .*\)$" \
+                "${REPO_ROOT}"/docs/releases/*.md 2>/dev/null | head -1 | sed -E 's/^[^(]*\((.*)\)$/\1/' || true)"
+            [[ -n "${_confirmed}" ]] && _pin_note="${_confirmed/:/ (${_pin}):}"
         fi
         if [[ -n "${_pin}" && "${_code_next}" != "-" ]]; then
             if [[ "$(printf '%s\n%s\n' "${_pin}" "${_code_next}" | sort -V | head -1)" == "${_code_next}" ]]; then
@@ -4036,11 +4055,33 @@ run_structural_audit() {
             "${comp}" "${_prev}" "$(_audit_class_display "${_structural}")" \
             "$(_audit_class_display "${_label}")" "${_expected}" "${_meta_ver:--}" "${_status}")")
 
-        # Buffer diff detail for flagged rows (all rows under --verbose).
-        if [[ -n "${_detail}" && ( ${#_flags[@]} -gt 0 || "${VERBOSE}" -eq 1 ) ]]; then
+        # A doubt stays visible after it is settled: its row says what each
+        # side claims, the PRs behind the label, what the code changed, and
+        # the decision (or the command that makes one).
+        if [[ -n "${_doubt}" ]]; then
+            local _lc _cc _by _changes _decision
+            _lc="$(_audit_class_display "${_label}")"; _cc="$(_audit_class_display "${_structural}")"
+            if [[ "${_label}" == "none" ]]; then
+                _by="$(_doubt_prs "${COMP_LABEL_PRS[${comp}:default]:-}")"
+            else
+                _by="$(_doubt_prs "${COMP_LABEL_PRS[${comp}:${_label}]:-}")"
+            fi
+            _changes="$(awk 'NF { n[$1]++ } END { for (k in n) { s = k; gsub(/_/, " ", s); printf "%s%d %s", sep, n[k], s; sep = ", " } }' <<<"${_detail}")"
+            if [[ -z "${_label_flag}" ]]; then
+                _decision="${_pin_note}"
+            elif [[ "${_label}" == "none" ]] || [[ "${_cc}" == "major" && "${_lc}" != "major" ]] || [[ "${_cc}" == "minor" && "${_lc}" == "bugfix" ]]; then
+                _decision="open: label a PR '${_cc}'"
+            else
+                _decision="open: --confirm ${_cc} or --confirm ${_lc}, with a reason"
+            fi
+            DOUBT_ROWS+=("${comp}"$'\t'"${_cc}"$'\t'"${_lc}"$'\t'"${_by}"$'\t'"${_changes:-surface unchanged}"$'\t'"${_decision}")
+        fi
+
+        # Buffer diff detail for flagged and doubted rows (all rows under --verbose).
+        if [[ -n "${_detail}" && ( ${#_flags[@]} -gt 0 || -n "${_doubt}" || "${VERBOSE}" -eq 1 ) ]]; then
             AUDIT_DETAIL+=("${comp} — $(_audit_class_display "${_structural}") change:"$'\n'"${_detail}")
         fi
-        if [[ ${#_flags[@]} -gt 0 && -n "${COMP_REASONS[$comp]:-}" ]]; then
+        if [[ ( ${#_flags[@]} -gt 0 || -n "${_doubt}" ) && -n "${COMP_REASONS[$comp]:-}" ]]; then
             AUDIT_DETAIL+=("${comp} — label derivation:"$'\n'"$(sed 's/^/  /' <<<"${COMP_REASONS[$comp]%$'\n'}")")
         fi
         if [[ ${#_hints[@]} -gt 0 ]]; then
@@ -4051,6 +4092,31 @@ run_structural_audit() {
     for row in "${AUDIT_ROWS[@]}"; do
         log "  ${row}"
     done
+    if [[ ${#DOUBT_ROWS[@]} -gt 0 ]]; then
+        log ""
+        phase "Doubts — the labels and the code disagree (${#DOUBT_ROWS[@]})"
+        log ""
+        # Width from the plain text; the link escapes print no characters.
+        local _w=(9 4 5 11 12) _r _f
+        for _r in "${DOUBT_ROWS[@]}"; do
+            IFS=$'\t' read -r -a _f <<<"${_r}"
+            (( ${#_f[0]} > _w[0] )) && _w[0]=${#_f[0]}
+            (( ${#_f[1]} > _w[1] )) && _w[1]=${#_f[1]}
+            (( ${#_f[2]} > _w[2] )) && _w[2]=${#_f[2]}
+            (( ${#_f[3]} > _w[3] )) && _w[3]=${#_f[3]}
+            (( ${#_f[5]} > _w[4] )) && _w[4]=${#_f[5]}
+        done
+        _doubt_line() {   # comp code label by-plain by-shown changes decision
+            local pad=$(( _w[3] - ${#4} ))
+            log "$(printf "  %-${_w[0]}s  %-${_w[1]}s  %-${_w[2]}s  %s%*s  %-${_w[4]}s  %s" "$1" "$2" "$3" "$5" "${pad}" "" "$6" "$7")"
+        }
+        _doubt_line "Component" "Code" "Label" "Labelled by" "Labelled by" "Code changes" "Decision"
+        _doubt_line "---------" "----" "-----" "-----------" "-----------" "------------" "--------"
+        for _r in "${DOUBT_ROWS[@]}"; do
+            IFS=$'\t' read -r -a _f <<<"${_r}"
+            _doubt_line "${_f[0]}" "${_f[1]}" "${_f[2]}" "${_f[3]}" "${_f[4]}" "${_f[5]}" "${_f[6]}"
+        done
+    fi
     if [[ ${#AUDIT_DETAIL[@]} -gt 0 ]]; then
         log ""
         phase "Structural diff detail"
