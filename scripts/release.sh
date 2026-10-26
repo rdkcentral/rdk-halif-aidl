@@ -1761,7 +1761,7 @@ declare -A COMP_LABEL_PRS=()   # "comp:level" -> " PR PR ..." that set it
 #
 # File: out/.gh-cache  (gitignored — out/ already is)
 # Format, tab-delimited:
-#   p<TAB>SHA<TAB>PR_NUMBER          (resolved through GitHub only)
+#   m<TAB>SHA<TAB>PR_NUMBER          (resolved through GitHub, merged PRs only)
 #   l<TAB>PR_NUMBER<TAB>LABEL1|LABEL2|LABEL3
 #   n<TAB>PR_NUMBER<TAB>ISSUE1,ISSUE2<US>TITLE   (US = \x1f; non-empty only)
 # Labels are joined with `|` (which can't appear in label names).
@@ -1773,8 +1773,9 @@ gh_cache_load() {
     while IFS=$'\t' read -r kind key value; do
         case "${kind}" in
             # `c` entries came from the subject-first lookup and may name
-            # an issue (#920); they are ignored so the commit is re-asked.
-            p)  COMMIT_PR_CACHE[$key]="${value}" ;;
+            # an issue (#920); `p` entries may name an open PR whose branch
+            # merely contains the commit. Both are ignored so it is re-asked.
+            m)  COMMIT_PR_CACHE[$key]="${value}" ;;
             l)  # Restore newlines from |-encoded labels
                 PR_LABEL_CACHE[$key]="${value//|/$'\n'}"
                 ;;
@@ -1813,14 +1814,20 @@ get_pr_for_commit() {
     if [[ "${subject}" =~ ^Merge\ pull\ request\ \#([0-9]+) ]]; then
         pr="${BASH_REMATCH[1]}"
     elif [[ "${ENABLE_GH_LABELS}" -eq 1 ]]; then
-        pr="$(gh api "repos/${GH_REPO}/commits/${sha}/pulls" --jq '.[0].number' 2>/dev/null || true)"
+        # The list names every PR whose branch contains the commit, open
+        # ones included: a release branch merged into a feature branch makes
+        # that PR claim every release commit. Only the earliest merged PR
+        # brought the commit in.
+        pr="$(gh api "repos/${GH_REPO}/commits/${sha}/pulls" \
+            --jq '[.[] | select(.merged_at != null)] | sort_by(.merged_at) | .[0].number // empty' \
+            2>/dev/null || true)"
         if ! [[ "${pr}" =~ ^[0-9]+$ ]]; then
             pr=""
         fi
     fi
     if [[ -n "${pr}" ]]; then
         COMMIT_PR_CACHE[$sha]="${pr}"
-        gh_cache_append "p" "${sha}" "${pr}"
+        gh_cache_append "m" "${sha}" "${pr}"
     elif [[ "${subject}" =~ \(#([0-9]+)\)$ ]]; then
         pr="${BASH_REMATCH[1]}"
     fi
