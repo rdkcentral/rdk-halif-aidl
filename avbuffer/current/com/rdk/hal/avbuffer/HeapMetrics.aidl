@@ -17,23 +17,22 @@
  * limitations under the License.
  */
 package com.rdk.hal.avbuffer;
- 
-/** 
+
+/**
  *  @brief     AV buffer heap metrics definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
 
-@VintfStability 
-parcelable HeapMetrics 
-{
+@VintfStability
+parcelable HeapMetrics {
     /** The heap type. */
     boolean secure;
 
     /** Total bytes used by pools created inside the heap. */
-	int bytesUsed;
+    int bytesUsed;
 
     /** Total bytes of heap storage. */
-  	int bytesTotal; 
+    int bytesTotal;
 }

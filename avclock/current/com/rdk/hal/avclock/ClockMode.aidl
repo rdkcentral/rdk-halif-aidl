@@ -18,41 +18,41 @@
  */
 package com.rdk.hal.avclock;
 
-/** 
+/**
  *  @brief     AV clock modes.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
+
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum ClockMode {
 
-	/**
-	 * AUTO will use AUDIO_MASTER if there is an audio source available otherwise VIDEO_MASTER.
-	 * AUTO is the default clock mode after a call to `open()`.
-	 */
-	AUTO = 0,
-	
-	/**
-	 * Use PCR samples as the clock source as provided in successive calls to `notifyPCRSample()`. 
-	 * PCR can only be used on live broadcasts and calls to `setPlaybackRate()` are not allowed.
+    /**
+     * AUTO will use AUDIO_MASTER if there is an audio source available otherwise VIDEO_MASTER.
+     * AUTO is the default clock mode after a call to `open()`.
+     */
+    AUTO = 0,
+
+    /**
+     * Use PCR samples as the clock source as provided in successive calls to `notifyPCRSample()`.
+     * PCR can only be used on live broadcasts and calls to `setPlaybackRate()` are not allowed.
      * The AV Clock timebase is phase locked to the incoming PCR sample values.
      */
-	PCR = 1,
+    PCR = 1,
 
-	/** 
-	 * Use the audio source as the clock master. 
+    /**
+     * Use the audio source as the clock master.
      * The AV Clock is crash locked to the first audio sample PTS received for playback.
      * The AV Clock timebase is linked to the audio subsystem clock.
      */
-	AUDIO_MASTER = 2,
+    AUDIO_MASTER = 2,
 
-	/** 
-	 * Use the video source as the clock master. 
+    /**
+     * Use the video source as the clock master.
      * The AV Clock is crash locked to the first video frame PTS received for playback.
      * The AV Clock timebase is driven by the vendor implementation.
      */
-	VIDEO_MASTER = 3,
+    VIDEO_MASTER = 3,
 }

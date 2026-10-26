@@ -20,8 +20,8 @@ package com.rdk.hal.audiomixer;
 
 /**
  * @brief    Enumerates extensible property keys for Audio Output Port.
- * Used as the key in setProperty/getProperty and onPropertyChanged for 
- *           forward-compatible and vendor-specific configuration. 
+ * Used as the key in setProperty/getProperty and onPropertyChanged for
+ *           forward-compatible and vendor-specific configuration.
  *           All properties can be read in any state unless otherwise specified.
  *
  * Each property must be documented with:
@@ -36,7 +36,7 @@ package com.rdk.hal.audiomixer;
  * @author   Douglas Adler
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum OutputPortProperty {
     /**
      * Output port volume.
@@ -110,11 +110,11 @@ enum OutputPortProperty {
 
     /**
      * Sets the Dolby MS12 Audio Profile/Preset (e.g. "Music", "Movie", "Sports", etc)
-     * 
-     * Type: String 
+     *
+     * Type: String
      * Access: Read-write.
      * Writeable in states: READY
-     * 
+     *
      * The value must correspond to a platform-defined AQ profile configuration
      *
      * @see com.rdk.hal.audiomixer.OutputPortCapabilities.dolbyMs12AudioProfiles
@@ -126,9 +126,10 @@ enum OutputPortProperty {
      * Type: int
      * Access: Read-only.
      *
-     * A count of the underflow (starvation) events that the consumer of the output port has experienced since the port was enabled.
-     * A single underflow event is considered to be when the consumer, unexpectedly, has no data to consume until normal data flow resumes.
-     * When the port is disabled, the last count should be held until the port is re-enabled, and the count reset.
+     * A count of the underflow (starvation) events that the consumer of the output port has experienced since the port
+     * was enabled. A single underflow event is considered to be when the consumer, unexpectedly, has no data to consume
+     * until normal data flow resumes. When the port is disabled, the last count should be held until the port is
+     * re-enabled, and the count reset.
      */
     METRIC_UNDERFLOWS = 11,
 
@@ -138,8 +139,9 @@ enum OutputPortProperty {
      * Access: Read-only.
      *
      * A count of the overflow events that the producer has experienced since the port was enabled.
-     * A single overflow event is considered to be when the producer, unexpectedly, has no buffer space available to write the data.
-     * When the port is disabled, the last count should be held until the port is re-enabled, and the count reset.
+     * A single overflow event is considered to be when the producer, unexpectedly, has no buffer space available to
+     * write the data. When the port is disabled, the last count should be held until the port is re-enabled, and the
+     * count reset.
      */
     METRIC_OVERFLOWS = 12,
 

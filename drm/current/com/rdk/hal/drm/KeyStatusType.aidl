@@ -29,8 +29,11 @@
 
 package com.rdk.hal.drm;
 
+/**
+ * The usability status of a key.
+ */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum KeyStatusType {
     /**
      * The key is currently usable to decrypt media data.

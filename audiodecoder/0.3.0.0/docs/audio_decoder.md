@@ -1,0 +1,639 @@
+# Audio Decoder
+
+This document provides an overview of the Audio Decoder Hardware Abstraction Layer (HAL) service, which facilitates the decoding of compressed audio streams within the device. The HAL defines the interfaces through which the RDK (Reference Design Kit) middleware interacts with the vendor-specific audio decoding implementation.
+
+## References
+
+!!! info References
+    |||
+    |-|-|
+    |**Interface Definition**|[audiodecoder/0.3.0.0](https://github.com/rdkcentral/rdk-halif-aidl/tree/0.23.0/audiodecoder/0.3.0.0)|
+    |**Interface Version**|`0.3.0.0`|
+    |**API Documentation**| *TBD* |
+    |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
+    |**VTS Tests**| TBC |
+    |**Reference Implementation - vComponent**|TBC|
+
+## Related Pages
+
+!!! tip "Related Pages"
+    - [Audio Sink](../audiosink/audio_sink.md)
+    - [AV Buffer](../avbuffer/av_buffer.md)
+    - [Session State Management](../key_concepts/hal/hal_session_state_management.md)
+
+## Functionality
+
+The Audio Decoder HAL service accepts compressed audio data as input. This data can be provided in secure buffers if the underlying vendor implementation supports secure audio processing. This is crucial for premium content protection.
+
+The decoded audio output can be delivered via two distinct paths:
+
+- **Non-Tunnelled Mode:** In this mode, the decoded audio, typically in Pulse Code Modulation (PCM) format, is returned to the RDK media pipeline as a frame buffer along with associated metadata (e.g., sample rate, bit depth, number of channels). This allows for further processing within the RDK middleware, such as volume control, audio effects, or synchronization with other media streams.
+
+- **Tunnelled Mode:** In this mode, the decoded audio is passed directly to the audio mixer through the vendor layer. This bypasses the RDK media pipeline for audio processing. Tunnelled mode is often preferred for performance reasons, especially in resource-constrained devices, as it reduces latency and CPU overhead. It's often used when the audio stream is simple, and the RDK post-processing isn't required.
+
+## Operational Modes
+
+The choice between tunnelled and non-tunnelled mode is made on a per-codec basis during the initialization of the audio decoder. This flexibility allows the system to optimize performance for different audio formats. It's important to note that the audio decoder can switch between these modes for different codec instances, but a single codec instance must operate in one mode or the other for the duration of its use. The operational mode of the audio decoder is independent of the video decoder's mode. This means that it is perfectly valid to have tunnelled video and non-tunnelled audio, or vice-versa.
+
+Clients can query the current output mode with `IAudioDecoder.getCurrentOperationalMode()` while the resource is in the `STARTED` state. The mode is selected by the vendor and is read-only.
+
+## PCM Handling
+
+Uncompressed PCM audio streams do not require decoding. Therefore, they bypass the Audio Decoder HAL entirely. Instead, they are routed directly to the [Audio Sink](../audiosink/audio_sink.md) service for mixing and playback. This is an important distinction to make for clarity.
+
+## Implementation Requirements
+
+|# | Requirement | Comments |
+|---|---| ---- |
+| **HAL.AUDIODECODER.1** | Starting and stopping audio streams shall never produce an audible click or pop artefact due to the audio waveform the audio streaming was started or stopped at. |This requirement works in conjunction with the audio mixer. |
+| **HAL.AUDIODECODER.2** | An audio decoder shall indicate its support for secure audio processing through its resource capabilities. |
+| **HAL.AUDIODECODER.3** | An audio decoder advertising the secure audio processing capability that receives a secure buffer of compressed audio shall output decoded audio to secure buffers either returned to the client or tunnelled to the mixer.|Secure audio path must be maintained.|
+| **HAL.AUDIODECODER.4** | An audio decoder can tunnel decoded audio to a mixer or the vendor audio sub-system for passthrough and/or return the decoded audio as PCM to the client. |
+| **HAL.AUDIODECODER.5** | When the client enables the audio decoder low latency property and the audio decoder and platform support low latency audio then the audio frame metadata shall indicate low latency. |
+| **HAL.AUDIODECODER.6** | Each audio decoder resource shall be presented by a unique ID. |
+| **HAL.AUDIODECODER.7** | Each audio decoder resource shall provide an API to expose its capabilities for secure audio processing and supported codecs. |
+| **HAL.AUDIODECODER.8** | Only 1 client connection shall be allowed to open and control an audio decoder resource. |
+| **HAL.AUDIODECODER.9**| Multiple client connections shall be allowed to register for events from an audio decoder resource.|
+| **HAL.AUDIODECODER.10** | Audio frame metadata shall be returned to a controlling client on the first audio frame decoded after an open or flush, and thereafter only when the frame metadata changes. | Not sent on every decoded audio frame buffer unless changed since previous. In non-tunnelled mode, a frame with a non-zero trim always carries metadata — see [The trim contract](#the-trim-contract). |
+| **HAL.AUDIODECODER.11** | The audio frame output buffer from an audio decoder shall match the platform PCM audio format required for mixing. | See com.rdk.hal.audiosink.PlatformCapabilities |
+| **HAL.AUDIODECODER.12** | If a client process exits, the Audio Decoder server shall automatically stop and close any Audio Decoder instance controlled by that client. |
+
+## Interface Definition
+
+The interface can be found by following this link [audiodecoder](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/audiodecoder)
+
+| Interface | Description |
+|---| ----- |
+| `IAudioDecoderManager.aidl` | Audio Decoder Manager HAL which provides access to `IAudioDecoder` resource instances. |
+| `IAudioDecoder.aidl` | Audio Decoder interface for a single audio decoder resource instance. |
+| `IAudioDecoderController.aidl` | Controller interface for an `IAudioDecoder` resource instance. |
+| `IAudioDecoderControllerListener.aidl` | Listener callbacks interface to clients from an `IAudioDecoderController`. |
+| `IAudioDecoderEventListener.aidl` | Listener callbacks interface to clients from an `IAudioDecoder`. |
+| `Capabilities.aidl` | Parcelable describing the capabilities of an `IAudioDecoder` resource instance. |
+| `ChannelType.aidl` | Enum list of audio channel types. |
+| `Codec.aidl` | Enum list of audio codecs. |
+| `CSDAudioFormat.aidl` | Enum list of audio codec specific data formats. |
+| `ErrorCode.aidl` | Enum list of audio decoder error codes. |
+| `FrameMetadata.aidl` | Parcelable of audio frame metadata passed from the audio decoder. |
+| `PCMFormat.aidl` | Enum list of PCM coding formats. |
+| `Property.aidl` | Enum list of audio decoder properties. |
+| `OperationalMode.aidl` | Common enum value describing the current output routing mode. |
+
+## Initialization
+
+The [systemd](../vsi/systemd/current/systemd.md) `hal-audio_decoder_manager.service` unit file is provided by the vendor layer to start the service and should include [Wants](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=) or [Requires](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=) directives to start any platform driver services it depends upon.
+
+The Audio Decoder Manager service depends on the [Service Manager](../vsi/service_manager/current/service_manager.md) to register itself as a service.
+
+Upon starting, the service shall register the `IAudioDecoderManager` interface with the [Service Manager](../vsi/service_manager/current/service_manager.md) using the String `IAudioDecoderManager.serviceName` and immediately become operational.
+
+## Product Customization
+
+The `IAudioDecoderManager.getAudioDecoderIds()` should return an array of `IAudioDecoder.Id` parcelables to uniquely represent all of the audio decoder resources supported by the vendor layer. Typically, the ID value starts at 0 for the first audio decoder and increments by 1 for each additional audio decoder.
+
+The `Capabilities` parcelable returned by the `IAudioDecoder.getCapabilities()` function lists all of the `Codec` types supported by this audio decoder instance and indicates if the secure audio path can be used.
+
+An audio decoder instance may support any number of audio codecs, but can only operate on one compressed audio stream in an open session. Concurrent audio decode requires multiple audio decoder instances to be opened.
+
+## System Context
+
+The Audio Decoder HAL can provide functionality to multiple clients.
+
+Typically an RDK middleware GStreamer audio decoder element will work with a single `IAudioDecoder` instance and pass it [AV Buffer](../avbuffer/av_buffer.md) handles for decode.
+
+The RDK middleware resource management system will examine the number of audio decoder resources and their capabilities, so they can be allocated to streaming sessions.
+
+```mermaid
+flowchart TD
+    RDKClientComponent("RDKClientComponent")
+    subgraph Listeners["Listeners"]
+        IAudioDecoderEventListener("IAudioDecoderEventListener")
+        IAudioDecoderControllerListener("IAudioDecoderControllerListener")
+    end
+    subgraph IAudioDecoderHAL["Audio Decoder HAL"]
+        IAudioDecoderManager("IAudioDecoderManager <br>(Service)")
+        IAudioDecoder("IAudioDecoder <br>(Instance)")
+        IAudioDecoderController("IAudioDecoderController <br>(Instance)")
+    end
+    subgraph OutputComponents["Output"]
+        AudioFramePool("Audio Frame Pool")
+        PlatformDecoder("Platform Integrated Decoder/Mixer")
+        AudioOutput("Audio Output Ports in passthrough")
+    end
+    RDKClientComponent -- createAudioPool() <br> alloc() <br> free() <br> destroyPool() --> IAVBuffer(IAVBuffer)
+    RDKClientComponent -- getIAudioDecoderIds() <br> getIAudioDecoder() --> IAudioDecoderManager
+    RDKClientComponent -- getCapabilities() <br> getState() <br> open() <br> close() --> IAudioDecoder
+    RDKClientComponent -- registerEventListener() <br> unregisterEventListener() --> IAudioDecoder
+    RDKClientComponent -- start() <br> stop() <br> setProperty() <br> decodeBufferWithMetadata() <br> flush() <br> signalDiscontinuity() <br> parseCodecSpecificData() --> IAudioDecoderController
+    IAudioDecoderManager --> IAudioDecoder --> IAudioDecoderController
+    IAudioDecoder -- onStateChanged() <br> onDecodeError() --> IAudioDecoderEventListener
+    IAudioDecoderEventListener --> RDKClientComponent
+    IAudioDecoderControllerListener --> RDKClientComponent
+    IAudioDecoderController -- onFrameOutput() --> IAudioDecoderControllerListener
+    IAudioDecoderController -- alloc() --> AudioFramePool
+    IAudioDecoderManager -- free() --> IAVBuffer
+    IAudioDecoderController -. tunneled audio -.-> PlatformDecoder
+    IAudioDecoderController -. tunneled audio <br>(passthrough) -.-> AudioOutput
+
+    classDef background fill:#121212,stroke:none,color:#E0E0E0;
+    classDef blue fill:#1565C0,stroke:#E0E0E0,stroke-width:2px,color:#E0E0E0;
+    classDef lightGrey fill:#616161,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
+    classDef wheat fill:#FFB74D,stroke:#424242,stroke-width:2px,color:#000000;
+    classDef green fill:#4CAF50,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
+    classDef default fill:#1E1E1E,stroke:#E0E0E0,stroke-width:1px,color:#E0E0E0;
+
+    RDKClientComponent:::blue
+    IAudioDecoderManager:::wheat
+    IAudioDecoderController:::wheat
+    IAudioDecoder:::wheat
+    IAVBuffer:::green
+    IAudioDecoderControllerListener:::wheat
+    IAudioDecoderEventListener:::wheat
+    AudioFramePool:::green
+    PlatformDecoder:::green
+    AudioOutput:::green
+```
+
+## Resource Management
+
+The `IAudioDecoderManager` provides access to one or more `IAudioDecoder` sub-interfaces which each represent an audio decoder resource instance offered by the platform.
+
+Each `IAudioDecoder` resource instance is assigned a unique integer ID, which is used in `IAudioDecoder.Id.value` and can be read from `RESOURCE_ID` using the `IAudioDecoder.getProperty()` function.
+
+To use an `IAudioDecoder` resource instance it must be opened by a client, which returns an `IAudioDecoderController` sub-interface to access buffer decoding and additional state controls.
+
+!!! Important
+    Any number of clients can access the `IAudioDecoderManager` service and get access to the `IAudioDecoder` sub-interfaces, but only 1 client can `open()` an `IAudioDecoder` and access its `IAudioDecoderController` sub-interface.
+
+The diagram below shows the relationship between the Audio Decodeer HAL interfaces and resource instances.
+
+```mermaid
+graph LR
+
+    %% --- Encapsulating Everything Inside "Audio Decoder HAL" ---
+    IAudioDecoderManager("IAudioDecoderManager")
+
+    %% --- Audio Decoder Manager Service Spawns Instances ---
+    IAudioDecoderManager --> ADI1("IAudioDecoder <br> ID = 0")
+    IAudioDecoderManager --> ADI2("IAudioDecoder <br> ID = 1")
+    IAudioDecoderManager --> ADI3("IAudioDecoder <br> ID = 2")
+
+    %% --- Each Instance Has a Controller ---
+    ADI1 --> ADIC1("IAudioDecoderController")
+    ADI2 --> ADIC2("IAudioDecoderController")
+    ADI3 --> ADIC3("IAudioDecoderController")
+
+    %% --- High Contrast Styling (Rounded Box Simulation) ---
+    classDef background fill:#121212,stroke:none,color:#E0E0E0;
+    classDef manager fill:#388E3C,stroke:#1B5E20,stroke-width:2px,color:#FFFFFF;
+    classDef instance1 fill:#FFC107,stroke:#FF8F00,stroke-width:2px,color:#000000;
+    classDef instance2 fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#000000;
+    classDef instance3 fill:#F44336,stroke:#B71C1C,stroke-width:2px,color:#FFFFFF;
+    classDef controller fill:#00ACC1,stroke:#006064,stroke-width:2px,color:#000000;
+
+    %% --- Apply Colors ---
+    class IAudioDecoderManager manager;
+    class ADI1 instance1;
+    class ADI2 instance2;
+    class ADI3 instance3;
+    class ADIC1 instance1;
+    class ADIC2 instance2;
+    class ADIC3 instance3;
+
+    %% --- Consistent Link Colors Per Instance ---
+    %% Yellow for Instance 0
+    linkStyle 0,3 stroke:#AA8800,stroke-width:2px;
+    %% Orange for Instance 1
+    linkStyle 1,4 stroke:#CC5500,stroke-width:2px;
+    %% Red for Instance 2
+    linkStyle 2,5 stroke:#CC2200,stroke-width:2px;
+```
+
+## Codec Support
+
+Each RDK product defines the audio codecs it requires for IP streaming, apps, broadcast, input ports and output ports.
+
+Some codecs are subject to third party licensing agreements and may therefore only be included in some products.
+
+The list below indicates the list of audio codecs which are mandatory for the platform to support as either software decode (non-secure) or hardware/vendor decode (potentially secure).
+
+Where a codec is optional for hardware/vendor support and is not implemented by the vendor supplied audio decoder then it shall be implemented as an RDK software decoder if required by the product specification.
+
+| Codec | Typical Use Case | Hardware/Vendor Support |
+|---|---|---|
+| MPEG-1/2 audio layer II | Broadcast streams, IP streams, files | **Mandatory** |
+| MPEG-1/2 audio layer III | MP3 files | Optional |
+| AAC-LC | Broadcast streams, IP streams, files | **Mandatory** |
+| HE-AAC | Broadcast streams, IP streams, files | **Mandatory** |
+| HE-AAC v2 | Broadcast streams, IP streams, files | **Mandatory** |
+| exHE-AAC | Broadcast streams, IP streams, files | Optional |
+| AAC-ELD | Apple AirPlay | Optional |
+| Apple Lossless Audio Codec (ALAC) | Apple AirPlay | Optional |
+| Dolby AC-3 | Broadcast streams, IP streams, files | **Mandatory** (if platform is licensed) |
+| Dolby E-AC-3 | Broadcast streams, IP streams, files | **Mandatory** (if platform is licensed) |
+| Dolby E-AC-3+JOC (Atmos) | Broadcast streams, IP streams, files | **Mandatory** (if platform is licensed) |
+| Dolby AC-4 | Broadcast streams, IP streams | **Mandatory** (if platform is licensed) |
+| USAC | IP streams | Optional |
+| SBC | Bluetooth | Optional |
+| FLAC | Amazon Music app, files | Optional |
+| Vorbis | WebM, files | Optional |
+| Opus | WebM, files | Optional |
+| AVS | Broadcast streams, files | Optional |
+| WMA | Files | Optional |
+| RealAudio | Files | Optional |
+
+## Encrypted Audio Playback
+
+Encrypted audio is copied into a non-secure buffer by the application and then decrypted into a secure buffer. The secure buffer is then decoded by an audio decoder accessed through the `IAudioDecoderController` interface.
+
+## Secure Audio Processing
+
+Secure audio processing (SAP) is a requirement for RDK-E but not all platforms may have support initially. Audio decoder instances shall declare themselves as secure or non-secure by setting `Capabilities.supportsSecure` appropriately.
+
+A secure audio decoder shall be able to handle secure AV buffers and decoded PCM output from the decoder shall be either contained in secure AV buffers or securely tunnelled in the vendor layer.
+
+If any audio decoder supports SAP in non-tunnelled mode then the Audio Sink HAL must also support SAP to be able to process secure AV buffers of decoded PCM data, otherwise SAP support is optional.
+
+## Clear PCM Audio Playback
+
+PCM stream data can originate in the RDK media pipeline from multiple sources; from an application, from the RDK middleware or from a software audio decoder.  In these cases the PCM data does not enter an Audio Decoder and is passed directly to the Audio Sink HAL.
+
+Clear PCM audio is copied into a non-secure [AV Buffer](../avbuffer/av_buffer.md) and then queued at the Audio Sink where it is then mixed for audio output.
+
+No buffer decryption or audio decode is required for clear PCM audio buffers.
+
+## Audio Passthrough Mode
+
+Audio passthrough can be selected on some output ports which can be applied individually to HDMI output (STB profile), S/PDIF and ARC/eARC (TV profile) ports of the device.
+
+Passthrough mode is intended to output the original audio stream to the sink device without decode or mixing of other audio inputs.
+
+If the sink device on a port cannot support the audio codec being streamed, then the user selected passthrough mode cannot be honored on that port and normal audio decode and mixing shall apply.
+
+When audio passthrough is enabled and possible, then audio stream buffers passed to the Audio Decoder HAL are tunnelled to the vendor audio subsystem for output.
+
+In some cases the passthrough mode enabled on some output ports may have to work concurrently with other audio ports not in passthrough mode. This use case requires the audio decoder to tunnel the compressed audio for passthrough *and* decode it for mixing.
+
+## Tunnelled and Non-Tunnelled Audio
+
+The Audio Decoder makes its own run-time choice about whether audio is tunnelled or non-tunnelled.
+
+Tunnelled audio is required when any audio output ports are in passthrough mode. Tunnelled audio may also be required for some audio codecs that need a vendor integrated decoder/mixer such as Dolby MS12.
+
+When only tunnelled audio is in operation, no audio frame pool buffer handles containing decoded PCM audio are handed back to the controller client and the `frameBufferHandle` value -1 is passed in `onFrameOutput()` callbacks to indicate tunnelled mode.
+
+## Frame Metadata
+
+As audio frames are decoded, the metadata which related to the frames must be passed to the client over `IAudioDecoderControllerListener.onFrameOutput()`.
+
+In non-tunnelled operating mode, the frame buffer handle and metadata related to the frame must be passed in the same `onFrameOutput()` call.
+
+To conserve CPU load, the frame metadata is only passed with the first decoded frame after a `start()`, the first decoded frame after a `flush()`, if the frame metadata changes, or — in non-tunnelled mode — with any frame that carries a non-zero trim, even when that trim repeats the previous frame's trim (see [The trim contract](#the-trim-contract)).
+
+If the frame metadata does not need to be passed, then the `@nullable FrameMetadata metadata` parameter should be passed as null in `onFrameOutput()`.
+
+When operating in tunnelled mode, if there is no frame metadata to be passed, then no call to `onFrameOutput()` should be made because there is no frame buffer handle or frame metadata to return to the client.
+
+## Low Latency Mode
+
+A media pipeline is operating in low latency mode when the audio decoder and video decoder (if present) are set with a `LOW_LATENCY_MODE` property to 1 (enabled).
+
+The platform support for low latency audio is indicated in the Audio Sink HAL `PlatformCapabilities`.
+
+## Receiver Mixed Supplementary Audio Decoding
+
+Supplementary audio that is receiver mixed is common in TV broadcasting where the main audio and supplementary audio share a common codec but require 2 audio decoders and mixing.
+
+An audio decoder used for supplementary audio is identical to a primary audio decoder, but the indication of its use for supplementary audio is set in the Audio Sink HAL.
+
+Any metadata associated with the supplementary/primary audio mix levels is left to the vendor to extract and manage in the vendor layer implementation.
+
+## Audio Stream Discontinuities
+
+Where the client has knowledge of PTS discontinuities in the audio stream, it shall call `IAudioDecoderController.signalDiscontinuity()` between the AV buffers passed to `decodeBufferWithMetadata()`.
+
+The decoder resets its PTS tracking and interpolation state before decoding the first [AV Buffer](../avbuffer/av_buffer.md) passed after the call, and does not interpolate timestamps across the discontinuity. Buffers passed before the call are decoded and output as normal. The first frame output from buffers passed after the call carries `FrameMetadata.discontinuity = true`.
+
+## Mid-Stream Format Changes
+
+An **in-codec** format change — the sample rate or channel count changing without a change of codec, for example AAC 44.1 kHz stereo becoming 48 kHz 5.1 — is absorbed by the decoder while it remains in `State::STARTED`. No `stop()` / `start()` cycle is required, no `flush()`, and no call from the client.
+
+**The decoder detects the change from the bitstream.** The codecs that can present an in-codec format change carry it in-band: AAC in the ADTS header or AudioSpecificConfig, AC-3 and E-AC-3 in the syncframe (`fscod`, `acmod`), MP3 in the frame header. The decoder therefore holds the authoritative values before the client could supply them.
+
+Opus is the exception, and needs no detection: its decoded output is always 48 kHz regardless of the source, so an Opus stream cannot present a mid-stream sample-rate change. The `input sample rate` field in the identification header records the original source rate for information only and is not the output rate. Channel count is fixed for the stream by the same header.
+
+**The change surfaces on the output side.** Frame metadata is delivered with the first decoded frame after `start()`, the first after `flush()`, and whenever it changes — so a format change is one of the occasions on which `FrameMetadata` is delivered. The first frame produced under the new format carries a non-null `FrameMetadata` whose `metadata` field holds the new `sampleRate`, `numChannels` and `channelTypes`. Frames after it carry null until some part of the frame metadata changes again, so the client retains the last values it was given. That delivery is the notification; there is no separate signal to subscribe to.
+
+`setAudioFormat()` is a **setup-time hint**, valid in `State::READY`. It supplies container-derived values for codecs whose codec-specific data does not carry them, so the decoder can size its output before the first frame arrives. It is not a runtime reconfiguration call.
+
+`signalDiscontinuity()` covers PTS discontinuities and carries no format information.
+
+```mermaid
+sequenceDiagram
+    participant MW as Middleware
+    participant Dec as IAudioDecoderController
+    participant Listener as IAudioDecoderControllerListener
+    Note over MW,Listener: Mid-session. The 44.1 kHz stereo format was<br/>delivered on the first frame after start().
+    MW->>Dec: decodeBufferWithMetadata(handleN, {pts, ...})
+    Note right of Dec: still 44.1 kHz stereo — format unchanged
+    Dec-->>Listener: onFrameOutput(nsPresentationTime, frameAVBufferHandle, metadata=null)
+    MW->>Dec: decodeBufferWithMetadata(handleN+1, {pts, ...})
+    Note right of Dec: 48 kHz 5.1 detected in the bitstream
+    Dec-->>Listener: onFrameOutput(nsPresentationTime, frameAVBufferHandle, metadata=FrameMetadata{metadata=PCMMetadata{sampleRate=48000, numChannels=6, ...}})
+    Note over MW: Non-null metadata is the notification — client retains the new format
+    MW->>Dec: decodeBufferWithMetadata(handleN+2, {pts, ...})
+    Dec-->>Listener: onFrameOutput(nsPresentationTime, frameAVBufferHandle, metadata=null)
+```
+
+A **codec** change — AAC to AC-3, say — is out of scope. The decoder backend itself must be reconfigured, so those require `stop()` → `setAudioFormat()` → `start()`.
+
+## End of Stream Signalling
+
+End-of-stream is a discrete signal, not a per-buffer flag. The client drives it with `IAudioDecoderController.signalEndOfStream()` and observes completion through `IAudioDecoderControllerListener.onEndOfStream()`. Audio EOS is always client-signalled - no supported audio elementary stream (MP3, AAC, AC-3/E-AC-3, Opus, Vorbis) carries an in-bitstream EOS marker, so `FrameMetadata.bitstreamEOS` is always false for audio.
+
+**Input side:** when the client has submitted its final buffer, it calls `IAudioDecoderController.signalEndOfStream()`. This is the authoritative "I will submit no further buffers" signal and the only input-side EOS path. `decodeBufferWithMetadata()` only submits data and carries no EOS information; `InputBufferMetadata` has no EOS field. The decoder must be in `State::STARTED` and at least one buffer must have been submitted on the session, otherwise the call throws `EX_ILLEGAL_STATE`. A second call is a no-op, and any subsequent `decodeBufferWithMetadata()` throws `EX_ILLEGAL_STATE`.
+
+This is distinct from `stop()` and `flush()`, which abruptly discard any held frames. `signalEndOfStream()` drains them: the HAL decodes and emits every held frame in presentation order via `onFrameOutput()` (each with its `FrameMetadata`), dropping none.
+
+**Output side:** after the final `onFrameOutput()` of the drained session, the HAL fires `IAudioDecoderControllerListener.onEndOfStream()` exactly once. It is delivered on the same listener and ordered in-band - it follows the last frame on the same ordered callback channel. After this callback the decoder remains in `State::STARTED` but is drained; no further `onFrameOutput()` is delivered until `flush()` or `stop()` + `start()`.
+
+Behaviour is identical in tunnelled and non-tunnelled modes. In tunnelled mode the decoder→sink data flow is vendor-internal, so the vendor propagates the EOS signal from decoder to sink. The middleware observes the same sequencing in both modes: `decoder.onEndOfStream()` (decode complete) followed by `sink.onEndOfStream(nsPresentationTime)` (presentation complete) with the correct presentation timing.
+
+## Codec Priming, Padding, and Gapless Playback
+
+Modern lossy audio codecs (AAC, MP3, Vorbis, Opus) do not encode a stream sample-for-sample. The encoded form contains **more samples than the original media** because of two unavoidable artefacts of how block-transform codecs work:
+
+- **Encoder priming** — leading samples at the start of the stream, used by the encoder's overlap/window analysis. The first decoded frame is not the first sample of the original audio; the leading priming samples are silence (or noise) and must be discarded on playback.
+- **Final padding** — trailing samples at the end, used to round the original media duration up to a whole number of encoded frames. The last decoded frame contains real audio followed by encoder-generated padding that must be discarded on playback.
+
+Typical priming amounts:
+
+| Codec | Leading trim (typical) |
+|---|---|
+| AAC-LC | 2048 samples (two 1024-sample frames) |
+| HE-AAC v1/v2 | 2048 + extra SBR latency |
+| MP3 | 1105 samples with LAME: its 576-sample encoder delay plus the decoder's own 529-sample delay. The LAME tag stores the encoder delay; the middleware adds the 529. |
+| Vorbis | Variable per stream, signalled by Ogg granule positions |
+| Opus | Variable; every stream signals its pre-skip |
+
+**Resampling adds another layer.** When the source media is resampled before encoding (or re-encoded at a different rate from the original), the resampled sample count rarely divides evenly into the codec's frame size. The leftover samples land in a final frame padded out to the full frame size with encoder-generated silence. For example, 1 s at 44.1 kHz resampled to 48 kHz produces 48,000 samples, which does not divide evenly into AAC's 1024-samples/frame, so the last AAC frame contains real PCM plus padding to fill the frame.
+
+This is correct behaviour — **the encoded stream carries the full sample count, priming and padding included.** What removes them is the trim metadata described below, and the contract is that they are discarded **exactly once** before the PCM reaches the mixer.
+
+What the encoded stream holds, and what the trim removes:
+
+```mermaid
+block-beta
+    columns 20
+    primed["priming<br/>trimStartNs"]:3
+    src1["source audio"]:14
+    pad["padding<br/>trimEndNs"]:3
+    space:20
+    space:3
+    src2["source audio — presented to the mixer"]:14
+    space:3
+
+    style primed fill:#FFE0B2,stroke:#E65100,color:#BF360C,font-weight:bold;
+    style pad    fill:#FFE0B2,stroke:#E65100,color:#BF360C,font-weight:bold;
+    style src1   fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20,font-weight:bold;
+    style src2   fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20,font-weight:bold;
+```
+
+The encoded run holds the priming, the source audio and the padding. Applying the trim discards `trimStartNs` from the front and `trimEndNs` from the back, leaving audio whose duration matches the source sample-accurately. The trim is applied by the decoder or by the sink, as covered under [The trim contract](#the-trim-contract) below.
+
+### The trim contract
+
+`InputBufferMetadata.trimStartNs` and `trimEndNs` carry per-frame trim durations on each `decodeBufferWithMetadata()` call. The corresponding `FrameMetadata.trimStartNs` / `trimEndNs` on `onFrameOutput()` carry whatever trim is still outstanding to the sink, which applies it before presenting the PCM to the mixer.
+
+**The trim behaviour is defined by this interface and is not negotiable.** The samples must be trimmed as specified. What *is* an implementation choice is **where** the trim is applied — a vendor may apply it inside the decoder (for example via FFmpeg's `AV_PKT_DATA_SKIP_SAMPLES` during decode) or in the sink.
+
+A decoder that trims the frame itself sets `FrameMetadata.trimStartNs` / `trimEndNs` to 0, so the sink does not discard the same samples again:
+
+| Where the trim is applied | `FrameMetadata.trim*` | Sink |
+|---|---|---|
+| Sink | carried through from `InputBufferMetadata` | applies the trim |
+| Decoder | 0 | nothing to do |
+
+The observable result is identical either way: the PCM leaving the Audio Sink into the Audio Mixer has been trimmed exactly as `InputBufferMetadata` specified.
+
+The trim is strictly **per-buffer**. Each `decodeBufferWithMetadata()` call's values apply only to the single decoded frame produced from that buffer and are not carried forward. The HAL holds no trim state across buffers. Where a trim region spans multiple input buffers, the middleware translates it into per-buffer trim metadata before calling the decoder.
+
+Because the trim is per-frame, in non-tunnelled mode a frame with a non-zero trim always carries non-null `FrameMetadata` on `onFrameOutput()`, even when its trim repeats the previous frame's trim. A null `metadata` means zero trim for that frame: when the middleware forwards such a frame to `queueAudioFrame()`, it passes the last metadata with both trim fields set to 0.
+
+### Codec scope
+
+| Codec | Trim required | Source of the values |
+|---|---|---|
+| **Opus** | Always | Every Opus stream carries a pre-skip: `OpusHead.pre_skip` in Ogg (RFC 7845 §5.1), `CodecDelay` in WebM, and `PreSkip` in the `dOps` box in MP4. Trailing trim comes from the final Ogg page's granule position (RFC 7845, End Trimming), WebM `DiscardPadding`, or the MP4 edit list. |
+| **AAC** | When the container signals it | MP4 `edts/elst`, the `iTunSMPB` atom, or Matroska `CodecDelay` and `DiscardPadding`. ADTS-AAC signals nothing, so nothing is trimmed. |
+| **MP3** | When the container signals it | `iTunSMPB`, or the LAME tag that follows the Xing / `Info` header in the first frame and stores the encoder delay and padding. |
+| **Vorbis** | When the container signals it | In Ogg, granule positions (Vorbis I specification, Appendix A): the first audio page's granule position gives the leading trim and the final page's granule position gives the trailing trim. In WebM, `CodecDelay` and `DiscardPadding`. |
+| **Dolby (DD+ / AC-4 / Atmos)** | Not applicable | No encoder pre-skip in the decode contract and no `CodecDelay` equivalent in the carriage spec. In passthrough-only operation no PCM is produced. |
+
+Trim is a no-op when the values are zero, which is always the case for Dolby decoded paths.
+
+### End-to-end data flow
+
+```mermaid
+sequenceDiagram
+    participant MW as Middleware
+    participant Demux as Demuxer / Parser
+    participant Dec as IAudioDecoderController
+    participant Listener as IAudioDecoderControllerListener
+    participant Sink as IAudioSinkController
+    Note over MW,Sink: Non-tunnelled, sink-applies case. In tunnelled mode the decoder feeds the sink internally.<br/>A decoder that trims the frame itself reports 0 in FrameMetadata.trim* and the sink does nothing.
+    Note over MW,Demux: Container parsed — priming and padding values extracted
+    Note over MW,Dec: 2048 priming samples span two 1024-sample frames,<br/>so the leading trim is split across the first two buffers
+    MW->>Dec: decodeBufferWithMetadata(handle1, {nsPresentationTime, trimStartNs=21_333_333, trimEndNs=0, ...})
+    Dec-->>Listener: onFrameOutput(nsPresentationTime, handle1_pcm, {trimStartNs=21_333_333, trimEndNs=0, ...})
+    MW->>Sink: queueAudioFrame(nsPresentationTime, handle1_pcm, {trimStartNs=21_333_333, ...})
+    MW->>Dec: decodeBufferWithMetadata(handle2, {nsPresentationTime, trimStartNs=21_333_333, trimEndNs=0, ...})
+    Dec-->>Listener: onFrameOutput(nsPresentationTime, handle2_pcm, {trimStartNs=21_333_333, trimEndNs=0, ...})
+    MW->>Sink: queueAudioFrame(nsPresentationTime, handle2_pcm, {trimStartNs=21_333_333, ...})
+    Note over Sink: Sink discards frames 1 and 2 in full — 42.67 ms of priming
+    Note over MW,Dec: ... middle of stream, no trim ...
+    MW->>Dec: decodeBufferWithMetadata(handleN, {nsPresentationTime, trimStartNs=0, trimEndNs=2_666_667, ...})
+    Note right of Dec: Final frame — trim trailing padding
+    MW->>Dec: signalEndOfStream()
+    Dec-->>Listener: onFrameOutput(nsPresentationTime, handleN_pcm, {trimStartNs=0, trimEndNs=2_666_667, ...})
+    MW->>Sink: queueAudioFrame(nsPresentationTime, handleN_pcm, {trimEndNs=2_666_667, ...})
+    Dec-->>Listener: onEndOfStream()
+    Note over Sink: Sink discards last 2.67 ms of PCM
+    MW->>Sink: signalEndOfStream()
+    Sink-->>MW: onEndOfStream(nsPresentationTime)
+```
+
+End-of-stream is a discrete signal — see [End of Stream Signalling](#end-of-stream-signalling). Neither `InputBufferMetadata` nor `FrameMetadata` carries an application EOS flag, so the trim on the final frame and the EOS signal are independent of one another.
+
+After the trim is applied, the audible output matches the original source duration sample-accurately, regardless of priming/padding inflation.
+
+### Where the values come from — container metadata sources
+
+Middleware extracts priming/padding from the container and translates them to nanosecond durations. The table gives the total **leading trim** (priming) and **trailing trim** (padding); where either is longer than one frame, the middleware splits it across consecutive buffers, as [The trim contract](#the-trim-contract) requires.
+
+| Container | Source | Translation to trim |
+|---|---|---|
+| **MP4 / ISOBMFF** | `edts/elst` edit list | `media_time` is in the media timescale (`mdhd.timescale`); `segment_duration` is in the movie timescale (`mvhd.timescale`).<br/>Leading trim = `media_time ÷ mdhd.timescale`.<br/>Trailing trim = (encoded media duration − `media_time` − `segment_duration × mdhd.timescale ÷ mvhd.timescale`) ÷ `mdhd.timescale`, where the encoded media duration is the sum of the track's sample durations in `mdhd` units.<br/>A `segment_duration` of 0, common in fragmented MP4, runs the edit to the end of the media, so there is no trailing trim.<br/>These rules apply to the list's non-empty edit (`media_time` ≥ 0). A leading empty edit (`media_time` = −1) delays presentation and contributes no trim. A list with more than one non-empty edit describes a presentation timeline beyond priming and padding, and the middleware resolves it with its general edit-list handling before deriving any trim. |
+| **MP4 (iTunes-style)** | `iTunSMPB` text in `udta` | Space-separated hexadecimal words: the first is reserved, the second is the priming (leading trim) in samples, the third is the padding (trailing trim) in samples, and the fourth is the original sample count. |
+| **WebM / Matroska** | `CodecDelay` on the audio track; `DiscardPadding` on the final block | Both are in nanoseconds: `CodecDelay` → leading trim, `DiscardPadding` → trailing trim, directly. |
+| **Ogg Opus** | `OpusHead.pre_skip`; final page granule position | Leading trim = `pre_skip ÷ 48000` (Opus pre-skip is always in 48 kHz units regardless of stream rate). Trailing trim = the samples the final page's granule position cuts from its last packet (RFC 7845, End Trimming). |
+| **Opus in MP4** | `PreSkip` in the `dOps` box; `edts/elst` | Leading trim = `PreSkip ÷ 48000`. The edit list's `media_time` signals the same pre-skip; the leading trim is that single value, not the sum of the two. Trailing trim = the edit-list rule above. |
+| **Ogg Vorbis** | First audio page and final page granule positions | Leading trim = the samples the first audio page's granule position falls short of what the page decodes; trailing trim = the samples the final page's granule position cuts from its last packet (Vorbis I specification, Appendix A). |
+| **ADTS AAC** (no container) | None | No priming/padding metadata available; leading and trailing trims are unknown, and the output contains the priming and padding |
+
+Sample counts convert to seconds by dividing by the rate they are counted at: 48 kHz for Opus (`pre_skip`, `PreSkip` and Ogg Opus granule positions), and the stream's decoded sample rate for `iTunSMPB`, the LAME tag and Ogg Vorbis granule positions. Each duration then converts to nanoseconds as `seconds × 1_000_000_000`, rounded to the nearest nanosecond.
+
+**Worked example** — AAC-LC at 48 kHz with 2048-sample priming:
+
+```text
+priming             = 2048 samples = two 1024-sample frames
+leading trim        = 2048 / 48000 × 1_000_000_000
+                    ≈ 42.67 ms
+trimStartNs (frame 1) = 1024 / 48000 × 1_000_000_000
+                      = 21_333_333 ns   (rounded to nearest ns)
+trimStartNs (frame 2) = 21_333_333 ns
+```
+
+Both leading frames are discarded in full; the source audio starts at the first sample of frame 3.
+
+If the same stream was originally 44.1 kHz with a 1-second source duration and was resampled to 48 kHz before encoding, the encoder produces 48,000 + 2048 = 50,048 samples → 49 AAC frames (50,176 samples) with `50,176 − 50,048 = 128 samples` of padding in the final frame:
+
+```text
+trimEndNs (final frame) = 128 / 48000 × 1_000_000_000
+                        = 2_666_667 ns   (rounded to nearest ns)
+                        ≈ 2.67 ms
+```
+
+### What to validate in tests
+
+The right metric for "did the decoder behave correctly" is **total post-trim audio data**, not frame count:
+
+| Validation | Valid? | Why |
+|---|---|---|
+| Input AAC frame count == output PCM frame count | ❌ | Resampling and encoder framing change the count; not a HAL conformance signal |
+| Sink-applies case: (last output PTS − first output PTS + final frame duration) − leading trim − trailing trim == source duration | ✅ | PTS-based; counts the final frame's own duration and subtracts the trim the sink applies inside the leading and trailing frames. Where the decoder applies the trim, its output frames are already shortened; use the sample count below. |
+| Total post-trim PCM sample count == the source's expected sample count at the output rate (`source_duration × output_sample_rate`, rounded by the pipeline's resampling convention) | ✅ | Sample-accurate and independent of which stage applies the trim; the conformance check for whether priming/padding was handled correctly |
+
+If a test reports "extra output frames after resampling" or similar frame-count mismatches, the decoder is almost certainly behaving correctly and the test logic needs to switch to one of the post-trim validations above. Where the sink applies the trim, the decoder's output correctly carries the full encoded sample count, priming and padding included; where the decoder applies it, that output is already shortened. Either way the HAL contract is that the trim is applied exactly once before the mixer, which is what makes the audible output sample-accurate to the source.
+
+If a test pipeline produces resampled audio without the container priming/padding metadata (some FFmpeg paths do not emit `edts/elst` or `iTunSMPB` on resampled output), middleware has no source for `trimStartNs` / `trimEndNs` and the padding leaks through. The fix is in the test pipeline (preserve or compute the priming/padding values), not the HAL.
+
+## Decoded Audio Frame Buffers
+
+Decoded audio frame buffers are only passed from the audio decoder to the client when operating in non-tunnelled mode.
+
+If the input [AV Buffer](../avbuffer/av_buffer.md) that contained the coded audio frame was passed in a secure buffer, then the corresponding decoded audio frame must be output in a secure audio frame buffer.
+
+Audio frame buffers are passed back as handles in the `IAudioDecoderControllerListener.onFrameOutput()` function `frameBufferHandle` parameter. In tunnelled mode, -1 is passed as the handle value to indicate that no frame buffer handle is being provided since the audio is consumed internally by the vendor layer.
+
+The format of the data in the decoded audio frame buffer is always PCM and described by the `FrameMetadata`.
+
+The frame buffer handle is later passed to the Audio Sink for queuing before presentation and is then freed.
+
+The vendor layer is expected to manage the pool of decoded audio buffers privately.
+
+If the frame buffer pool is empty then the audio decoder cannot output the next decoded frame until a new frame buffer becomes available. While frame output is blocked, it is reasonable for the audio decoder service to either buffer additional coded input buffers or to reject new calls to `decodeBufferWithMetadata()` with a `false` return value.
+
+## Input Buffer Back-Pressure
+
+`IAudioDecoderController.decodeBufferWithMetadata()` returns `false` when the internal decode buffer queue is full. Buffer ownership remains with the caller and the buffer must be retained for re-submission.
+
+To avoid wasted binder transactions, the client SHOULD wait for `IAudioDecoderControllerListener.onDecodeBufferAvailable()` before calling `decodeBufferWithMetadata()` again. The callback fires exactly once per back-pressure episode: when the internal queue transitions from full to has-space. If the client continues to call `decodeBufferWithMetadata()` during back-pressure (receiving `false` repeatedly), only one callback is delivered per transition. It is not fired in steady-state operation.
+
+Continuing to call `decodeBufferWithMetadata()` while the queue is full is permitted but will return `false` repeatedly until space is available.
+
+## Presentation Time for Audio Frames
+
+The presentation time base units for audio frames is nanoseconds and passed in an int64 (long in AIDL definition) variable type. Video buffers shared the same time base units of nanoseconds.
+
+When coded audio frames are passed in through [AV Buffer](../avbuffer/av_buffer.md) handles to `IAudioDecoderController.decodeBufferWithMetadata()` the `InputBufferMetadata.nsPresentationTime` field represents the audio frame presentation time.
+
+Calls to `IAudioDecoderControllerListener.onFrameOutput()` with frame buffer handles (non-tunnelled mode) and/or frame metadata shall use the same `nsPresentationTime`.
+
+## Dolby MS12 and AC-4 Audio Decoding
+
+MS12 is a platform integrated decoder/mixer which requires the compressed audio bitstreams to be tunnelled from the Audio Decoder. Decoded audio frame buffers are not expected to be returned to the RDK middleware.
+
+The Dolby AC-4 codec is a bitstream that can contain multiple compressed audio channels which are grouped together in presentations. A presentation is a mix of one or more channels from the bitstream and is achieved in the vendor layer.
+
+A licensed Dolby MS12 implementation is required in the vendor layer to support AC-4.
+
+By default, an AC-4 audio decoder must use the user preferences for the presentation selection, but players shall also be able to override some or all of these settings without affecting the user preferences. Players must also be able to manually select an AC-4 presentation.
+
+The Audio Mixer provides the platform user preferences for AC-4 default presentation selection.
+
+The Audio Decoder also provides properties which allow for an override of the platform user preferences for the current player session.
+
+## Audio Decoder States
+
+The Audio Decoder HAL follows the standard Session State Management paradigm.
+
+When an Audio Decoder session enters a `FLUSHING` or `STOPPING` transitory state it shall free any AV buffers it is holding.
+
+The sequence diagram below shows the behavior of the callbacks.
+
+```mermaid
+sequenceDiagram
+    %% --- RDK Audio Decoder ---
+    box rgb(30,136,229) RDK Audio Decoder 
+        participant Client as RDK Client
+        participant IAudioDecoderEventListener as IAudioDecoderEventListener
+        participant IAudioDecoderControllerListener as IAudioDecoderControllerListener
+    end
+    
+    %% --- Audio Decoder Server ---
+    box rgb(249,168,37) Audio Decoder Server
+        participant ADC as IAudioDecoder
+        participant Controller as IAudioDecoderController
+    end
+    
+    %% --- Audio AV Buffer ---
+    box rgb(67,160,71) Audio AV Buffer
+        participant IAVBuffer as IAVBuffer
+    end
+
+    Client->>ADC: registerEventListener(IAudioDecoderEventListener)
+    
+    Note over ADC: open() transitions from CLOSED → OPENING → READY
+    Client->>ADC: open(IAudioDecoderControllerListener)
+    ADC-->>IAudioDecoderEventListener: onStateChanged(CLOSED → OPENING)
+    ADC->>Controller: new
+    ADC-->>IAudioDecoderEventListener: onStateChanged(OPENING → READY)
+    ADC-->>Client: IAudioDecoderController
+
+    Note over ADC: start() transitions from READY → STARTING → STARTED
+    Client->>Controller: start()
+    ADC-->>IAudioDecoderEventListener: onStateChanged(READY → STARTING)
+    ADC-->>IAudioDecoderEventListener: onStateChanged(STARTING → STARTED)
+
+    Note over Client: Client can now send AV buffers
+    Client->>Controller: decodeBufferWithMetadata(bufferHandle=1, {pts, trimStartNs=0, trimEndNs=0, ...})
+    Client->>Controller: decodeBufferWithMetadata(bufferHandle=2, {pts, trimStartNs=0, trimEndNs=0, ...})
+    Controller-->>IAudioDecoderControllerListener: onFrameOutput(pts, frameBufferHandle=1000, metadata)
+    Controller->>IAVBuffer: free(bufferHandle=1)
+
+    Note over ADC: flush() transitions from STARTED → FLUSHING → STARTED
+    Client->>Controller: flush()
+    ADC-->>IAudioDecoderEventListener: onStateChanged(STARTED → FLUSHING)
+    Controller->>IAVBuffer: free(bufferHandle=2)
+    ADC-->>IAudioDecoderEventListener: onStateChanged(FLUSHING → STARTED)
+    Client->>Controller: decodeBufferWithMetadata(bufferHandle=3, {pts, trimStartNs=0, trimEndNs=0, ...})
+
+    Note over Controller: signalEndOfStream() drains the decoder,<br>emits held frames, then fires onEndOfStream() once
+    Client->>Controller: signalEndOfStream()
+    Controller-->>IAudioDecoderControllerListener: onFrameOutput(pts, frameBufferHandle=1002, metadata)
+    Controller->>IAVBuffer: free(bufferHandle=3)
+    Controller-->>IAudioDecoderControllerListener: onEndOfStream()
+
+    Note over ADC: stop() transitions from STARTED → STOPPING → READY
+    Client->>Controller: stop()
+    ADC-->>IAudioDecoderEventListener: onStateChanged(STARTED → STOPPING)
+    ADC-->>IAudioDecoderEventListener: onStateChanged(STOPPING → READY)
+
+    Note over ADC: close() transitions from READY → CLOSING → CLOSED
+    Client->>ADC: close()
+    ADC-->>IAudioDecoderEventListener: onStateChanged(READY → CLOSING)
+    ADC->>Controller: delete
+    ADC-->>IAudioDecoderEventListener: onStateChanged(CLOSING → CLOSED)
+    Client->>ADC: unregisterEventListener(IAudioDecoderEventListener)
+```

@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.hdmioutput;
 
-/** 
+/**
  *  @brief     HDMI standard version.
  *
  *  Represents the major HDMI specification versions supported by a given output.
@@ -31,8 +31,7 @@ package com.rdk.hal.hdmioutput;
  */
 @VintfStability
 @Backing(type = "int")
-enum HDMIVersion
-{
+enum HDMIVersion {
     /**
      * HDMI version 1.3 or 1.3a.
      */

@@ -148,7 +148,7 @@ case "${1:-}" in
     *) source "$SCRIPT_DIR/dev_env_guard.sh"; halif_guard_dev_host_env || exit 1 ;;
 esac
 
-# Suppress three classes of unfixable upstream noise so the verification
+# Suppress four classes of unfixable upstream noise so the verification
 # build output stays readable.
 #
 #   -Wno-write-strings  AOSP aidl-cpp emits
@@ -173,6 +173,20 @@ esac
 #                       `__builtin_unreachable()`. Bites every union
 #                       (PropertyValue, DrmMetricValue, …).
 #
+#   -Wno-deprecated-declarations
+#                       An AIDL `@deprecated` becomes
+#                       `__attribute__((deprecated))` in the generated C++,
+#                       and the generated code then uses it itself: the enum
+#                       toString() switch and enum_values array, the proxy
+#                       and the stub. aidl-cpp only guards those uses with
+#                       `#pragma clang diagnostic`, which GCC ignores
+#                       (e.g. sensor thermal State::CRITICAL_TEMPERATURE_RECOVERED,
+#                       #846). Suppressed in this build only: the attribute
+#                       stays in the shipped headers, so engineering builds
+#                       (Yocto recipes, not this script) still warn on
+#                       deprecated items until they move to the later
+#                       revision that removes them.
+#
 # Plumbed two ways:
 #   1. Export CXXFLAGS — picked up on first cmake configure of any
 #      build dir (and by build_binder.sh if it's already exported in
@@ -181,7 +195,7 @@ esac
 #      defeats stale build/<dir>/CMakeCache.txt where the flags weren't
 #      captured on the original configure (env-CXXFLAGS only seeds the
 #      cache the FIRST time).
-WARNING_SUPPRESSION_FLAGS="-Wno-write-strings -Wno-attributes -Wno-return-type"
+WARNING_SUPPRESSION_FLAGS="-Wno-write-strings -Wno-attributes -Wno-return-type -Wno-deprecated-declarations"
 export CXXFLAGS="${CXXFLAGS:-} ${WARNING_SUPPRESSION_FLAGS}"
 
 #######################################################################
@@ -194,12 +208,56 @@ export CXXFLAGS="${CXXFLAGS:-} ${WARNING_SUPPRESSION_FLAGS}"
 #
 # Skipped for clean / cleanall / help — those should work in any state.
 
+# Bootstrap the Binder SDK + AIDL toolchain via build_binder.sh.
+#
+# build-tools/ is gitignored and entirely untracked, and out/ is a build
+# artefact, so a CLEAN CLONE has neither the toolchain nor the SDK.
+# build_binder.sh is the single bootstrap for both: it clones the pinned
+# linux_binder_idl toolchain and builds the SDK into out/target.
+#
+# Only ever auto-bootstraps the DEFAULT LOCAL layout. If the caller pointed
+# at a toolchain/SDK explicitly (BINDER_SDK_DIR, BINDER_TOOLCHAIN_ROOT,
+# BINDER_SOURCE_DIR or --sdk-dir — i.e. Yocto and cross-compile flows) a
+# missing artefact is a recipe/configuration error and must stay a hard
+# failure: we must never silently build a host SDK over a cross-compiled one.
+#
+# Returns 0 if the bootstrap ran and succeeded, 1 if it is not applicable.
+_BINDER_BOOTSTRAP_DONE=0
+bootstrap_binder_sdk() {
+    local reason="$1"
+
+    # Explicit override => not our business to bootstrap.
+    if [[ -n "${BINDER_SDK_DIR:-}" || -n "${BINDER_TOOLCHAIN_ROOT:-}" || -n "${BINDER_SOURCE_DIR:-}" ]]; then
+        return 1
+    fi
+    # Only attempt once per run.
+    [[ "$_BINDER_BOOTSTRAP_DONE" -eq 1 ]] && return 1
+    [[ -x "$ROOT_DIR/build_binder.sh" ]] || return 1
+
+    _BINDER_BOOTSTRAP_DONE=1
+    echo "ℹ️  ${reason}"
+    echo "    Bootstrapping via ./build_binder.sh (one-time; subsequent builds reuse it)."
+    echo ""
+    if ! "$ROOT_DIR/build_binder.sh"; then
+        echo "" >&2
+        echo "❌ build_binder.sh failed; cannot continue." >&2
+        exit 1
+    fi
+    echo ""
+    return 0
+}
+
 preflight_check() {
     # Toolchain artefacts present. Honour BINDER_TOOLCHAIN_ROOT /
     # BINDER_SOURCE_DIR / BINDER_SDK_DIR overrides used by Yocto and
     # cross-compile flows (a non-default toolchain location is a
     # legitimate state and shouldn't fail the local-tree check).
     local toolchain_root="${BINDER_TOOLCHAIN_ROOT:-${BINDER_SOURCE_DIR:-$ROOT_DIR/build-tools/linux_binder_idl}}"
+    if [[ ! -f "$toolchain_root/host/aidl_ops.py" ]]; then
+        # Clean clone: build-tools/ is untracked, so bootstrap it rather
+        # than failing with instructions the caller would just follow.
+        bootstrap_binder_sdk "AIDL toolchain not found at $toolchain_root/host/aidl_ops.py." || true
+    fi
     if [[ ! -f "$toolchain_root/host/aidl_ops.py" ]]; then
         echo "❌ AIDL toolchain not found at $toolchain_root/host/aidl_ops.py." >&2
         echo "   Fix: run ./build_binder.sh to bootstrap, symlink build-tools/" >&2
@@ -224,6 +282,11 @@ preflight_check() {
     done
     if [[ -z "$sdk_dir" ]]; then
         sdk_dir="$ROOT_DIR/out/target/lib/binder"
+    fi
+    if [[ ! -d "$sdk_dir" ]]; then
+        # Clean clone / out/ wiped: stage the SDK instead of hard-failing.
+        # No-op when the caller pinned --sdk-dir or BINDER_SDK_DIR (Yocto).
+        bootstrap_binder_sdk "Binder SDK runtime not found at $sdk_dir." || true
     fi
     if [[ ! -d "$sdk_dir" ]]; then
         echo "❌ Binder SDK runtime not found at $sdk_dir." >&2
@@ -528,17 +591,13 @@ echo ""
 # out of the box. In Yocto the SDK is staged by the linux-binder recipe
 # (DEPENDS = "linux-binder") and SDK_DIR points outside the repo, so we
 # never auto-build there - that case is a recipe configuration error.
+#
+# This re-checks the .sdk_ready MARKER (preflight only proves the lib dir
+# exists): an interrupted build_binder.sh can leave the directory behind
+# with no marker, and that SDK is not safe to build against.
 if [[ ! -f "$SDK_DIR/.sdk_ready" ]]; then
-    if [[ "$SDK_DIR" == "$ROOT_DIR/out/target" && -x "$ROOT_DIR/build_binder.sh" ]]; then
-        echo "ℹ️  Binder SDK not found at $SDK_DIR — staging it via build_binder.sh"
-        echo "    (one-time prerequisite; subsequent builds reuse it)"
-        echo ""
-        if ! "$ROOT_DIR/build_binder.sh"; then
-            echo ""
-            echo "❌ build_binder.sh failed; cannot continue."
-            exit 1
-        fi
-        echo ""
+    if [[ "$SDK_DIR" == "$ROOT_DIR/out/target" ]]; then
+        bootstrap_binder_sdk "Binder SDK at $SDK_DIR is missing its .sdk_ready marker." || true
     fi
     if [[ ! -f "$SDK_DIR/.sdk_ready" ]]; then
         echo "❌ ERROR: Binder SDK not found at $SDK_DIR"
@@ -664,8 +723,9 @@ if [[ "$VERSION" != "current" ]]; then
     # The local dev layout splits binder headers (out/build/include/binder_sdk)
     # from libs (out/target/lib/binder); BINDER_SDK_INCLUDE_DIR lets the
     # snapshot CMakeLists find the headers. Yocto stages a flat SDK so
-    # BINDER_SDK_DIR alone resolves both.
-    cmake -S "$SNAPSHOT_DIR" -B "$SNAPSHOT_BUILD_DIR" \
+    # BINDER_SDK_DIR alone resolves both. HALIF_INCLUDE_DIR is unused by
+    # snapshots with no imports, hence --no-warn-unused-cli.
+    cmake -S "$SNAPSHOT_DIR" -B "$SNAPSHOT_BUILD_DIR" --no-warn-unused-cli \
         -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
         -DBINDER_SDK_DIR="$SDK_DIR" \
         -DBINDER_SDK_INCLUDE_DIR="$ROOT_DIR/out/build" \
@@ -729,6 +789,40 @@ fi
 echo ""
 echo "✓ CMake configuration complete"
 echo ""
+
+#######################################################################
+# Post-generation: re-inject AIDL documentation
+#######################################################################
+#
+# The configure step above runs the AIDL codegen, and aidl-cpp strips every
+# comment on the way out — the headers engineers include carry no docs at all
+# (docs/whitepapers/release_documentation_strategy.md).
+# scripts/aidl_comment_inject.py writes the AIDL Doxygen blocks back into
+# <module>/current/include/, each marked with a `// @aidl-doc` line so repeat
+# runs replace rather than accumulate.
+#
+# Runs here, before compilation, so the post-build staging step
+# (cmake_stage_modules.cmake) copies the annotated headers into
+# out/build/include/. Comments only, so it cannot change what is compiled —
+# a failure is reported but does not fail the build.
+#
+# Set HALIF_SKIP_DOC_INJECT=1 to skip.
+
+DOC_INJECT_SCRIPT="$ROOT_DIR/scripts/aidl_comment_inject.py"
+
+if [[ "${HALIF_SKIP_DOC_INJECT:-0}" == "1" ]]; then
+    echo "⏭️  Skipping AIDL documentation injection (HALIF_SKIP_DOC_INJECT=1)"
+    echo ""
+elif [[ ! -f "$DOC_INJECT_SCRIPT" ]]; then
+    echo "⚠️  AIDL documentation injection skipped: $DOC_INJECT_SCRIPT not found"
+    echo ""
+else
+    if ! python3 "$DOC_INJECT_SCRIPT" --repo-root "$ROOT_DIR" --version "$VERSION" "$MODULE"; then
+        echo "⚠️  AIDL documentation injection failed — generated headers are"
+        echo "    undocumented, but the build continues (comments only)."
+    fi
+    echo ""
+fi
 
 #######################################################################
 # Build

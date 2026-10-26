@@ -38,8 +38,7 @@ import com.rdk.hal.audiomixer.AudioSourceType;
  * @author    Gerald Weatherup
  */
 @VintfStability
-parcelable InputRouting
-{
+parcelable InputRouting {
     /**
      * The audio source type to route to this mixer input.
      */

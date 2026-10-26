@@ -29,17 +29,15 @@ import com.rdk.hal.compositeinput.PortProperty;
  * metadata are defined in the HFP YAML configuration.
  */
 @VintfStability
-parcelable PropertyMetadata
-{
+parcelable PropertyMetadata {
     /**
      * @brief Property value type enumeration.
      *
      * Indicates which field of PropertyValue union should be used.
      */
     @VintfStability
-    @Backing(type="int")
-    enum PropertyType
-    {
+    @Backing(type = "int")
+    enum PropertyType {
         /** Boolean value - maps to PropertyValue.booleanValue */
         BOOLEAN = 0,
 

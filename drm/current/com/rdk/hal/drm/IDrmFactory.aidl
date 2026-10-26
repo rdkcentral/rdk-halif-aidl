@@ -53,8 +53,7 @@ interface IDrmFactory {
      *     Implicit error codes:
      *       + ERROR_DRM_CANNOT_HANDLE if the plugin cannot be created.
      */
-    @nullable com.rdk.hal.drm.IDrmPlugin createDrmPlugin(
-            in Uuid uuid, in String appPackageName);
+    @nullable com.rdk.hal.drm.IDrmPlugin createDrmPlugin(in Uuid uuid, in @utf8InCpp String appPackageName);
 
     /**
      * Create a crypto plugin for the specified uuid and scheme-specific
@@ -63,13 +62,13 @@ interface IDrmFactory {
      * @param uuid uniquely identifies the drm scheme. See
      *     http://dashif.org/identifiers/protection for uuid assignments
      *
-     * @param initData scheme-specific init data. 
-     *        The initData can (if known) contain the SessionId created by DRMPlugin::openSession(), else a byte array of zero length.
+     * @param initData scheme-specific init data.
+     *        The initData can (if known) contain the SessionId created by DRMPlugin::openSession(), else a byte array
+     * of zero length.
      *
      * @return A crypto plugin instance if successful, or null if not created.
      */
-    @nullable com.rdk.hal.drm.ICryptoPlugin createCryptoPlugin(
-            in Uuid uuid, in byte[] initData);
+    @nullable com.rdk.hal.drm.ICryptoPlugin createCryptoPlugin(in Uuid uuid, in byte[] initData);
 
     /**
      * Return vector of uuids identifying crypto schemes supported by
@@ -79,5 +78,4 @@ interface IDrmFactory {
      *      each uuid can be used as input to createPlugin.
      */
     CryptoSchemes getSupportedCryptoSchemes();
-
 }

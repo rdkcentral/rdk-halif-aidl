@@ -30,37 +30,38 @@ package com.rdk.hal.audiomixer;
  * - **Front**: Left, Right, Centre
  * - **Low-Frequency**: Subwoofer / LFE
  * - **Surround/Rear**: Side Left, Side Right, Rear Left, Rear Right, Rear Centre
- * - **Height/Overhead**: Top Front Left, Top Front Right, Top Front Centre, Top Side Left, Top Side Right, Top Rear Left, Top Rear Right
+ * - **Height/Overhead**: Top Front Left, Top Front Right, Top Front Centre, Top Side Left, Top Side Right, Top Rear
+ * Left, Top Rear Right
  * - **Wide**: Wide Left, Wide Right
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum Channel {
     // Front channels
-    CH_FL = 0,   // Front Left
-    CH_FR = 1,   // Front Right
-    CH_FC = 2,   // Front Centre
+    CH_FL = 0, //!< Front Left
+    CH_FR = 1, //!< Front Right
+    CH_FC = 2, //!< Front Centre
 
     // Low-frequency channel
-    CH_LFE = 3,  // Subwoofer / Low-Frequency Effects
+    CH_LFE = 3, //!< Subwoofer / Low-Frequency Effects
 
     // Surround / rear channels
-    CH_SL = 4,   // Side Left
-    CH_SR = 5,   // Side Right
-    CH_RL = 6,   // Rear Left
-    CH_RR = 7,   // Rear Right
-    CH_RC = 8,   // Rear Centre
+    CH_SL = 4, //!< Side Left
+    CH_SR = 5, //!< Side Right
+    CH_RL = 6, //!< Rear Left
+    CH_RR = 7, //!< Rear Right
+    CH_RC = 8, //!< Rear Centre
 
     // Height / overhead channels
-    CH_TFL = 9,  // Top Front Left
-    CH_TFR = 10,  // Top Front Right
-    CH_TFC = 11,  // Top Front Centre
-    CH_TSL = 12,  // Top Side Left
-    CH_TSR = 13,  // Top Side Right
-    CH_TRL = 14,  // Top Rear Left
-    CH_TRR = 15,  // Top Rear Right
+    CH_TFL = 9,  //!< Top Front Left
+    CH_TFR = 10, //!< Top Front Right
+    CH_TFC = 11, //!< Top Front Centre
+    CH_TSL = 12, //!< Top Side Left
+    CH_TSR = 13, //!< Top Side Right
+    CH_TRL = 14, //!< Top Rear Left
+    CH_TRR = 15, //!< Top Rear Right
 
     // Wide channels
-    CH_WL = 16,   // Wide Left
-    CH_WR = 17,   // Wide Right
+    CH_WL = 16, //!< Wide Left
+    CH_WR = 17, //!< Wide Right
 }

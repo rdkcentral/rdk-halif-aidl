@@ -19,8 +19,8 @@
 
 package com.rdk.hal.compositeinput;
 
-import com.rdk.hal.compositeinput.PlatformCapabilities;
 import com.rdk.hal.compositeinput.ICompositeInputPort;
+import com.rdk.hal.compositeinput.PlatformCapabilities;
 
 /**
  * @brief Composite Input Manager interface.
@@ -29,8 +29,7 @@ import com.rdk.hal.compositeinput.ICompositeInputPort;
  * This manager interface allows discovery and access to individual composite input ports.
  */
 @VintfStability
-interface ICompositeInputManager
-{
+interface ICompositeInputManager {
     /** The service name to publish. */
     const @utf8InCpp String serviceName = "composite_input";
 

@@ -30,7 +30,6 @@ package com.rdk.hal.videodecoder;
 
 @VintfStability
 parcelable ContentLightLevel {
-
     /**
      * Maximum Content Light Level (MaxCLL).
      * The peak luminance of any single pixel across the entire content,

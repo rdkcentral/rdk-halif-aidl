@@ -22,9 +22,12 @@ package com.rdk.hal.audiomixer;
  * @brief Surround virtualizer operating mode for Dolby MS12 runtime command control.
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum DolbyMs12_2_6_VirtualizerMode {
+    /** Surround virtualizer disabled. */
     OFF = 0,
+    /** Operates at the boost set by the client. */
     MANUAL = 1,
+    /** The boost is determined automatically. */
     AUTO = 2
 }

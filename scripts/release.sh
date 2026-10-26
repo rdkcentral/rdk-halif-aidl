@@ -13,6 +13,45 @@
 
 set -euo pipefail
 
+# ----------------------------------------------------------------------------
+# Platform guard — GNU userland + bash 4+ required.
+# ----------------------------------------------------------------------------
+# This script leans on GNU/bash-4 behaviour throughout: associative arrays
+# (declare -A), mapfile, find -printf, and GNU sed's `-i -E`.
+#
+# The dangerous one is `sed -i -E`. BSD/macOS sed reads -i's argument as a
+# BACKUP SUFFIX, so `sed -i -E 's/.../.../' file` silently treats "-E" as the
+# suffix and writes a stray `file-E` instead of editing in place — no error,
+# no diagnostic, and a release that looks like it worked but changed nothing.
+#
+# Fail loudly and early instead. Deliberately written to run under bash 3.2
+# (no associative arrays, no mapfile) so macOS reaches this message rather
+# than dying on a cryptic `declare: -A: invalid option`.
+_platform_problems=""
+if [ -z "${BASH_VERSINFO:-}" ] || [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
+    _platform_problems="${_platform_problems}
+  - bash 4+ required (found ${BASH_VERSION:-unknown}); needs declare -A and mapfile."
+fi
+if ! sed --version 2>/dev/null | grep -q 'GNU sed'; then
+    _platform_problems="${_platform_problems}
+  - GNU sed required; BSD sed misreads 'sed -i -E' and writes stray *-E files."
+fi
+if ! find --version 2>/dev/null | grep -q 'GNU findutils'; then
+    _platform_problems="${_platform_problems}
+  - GNU findutils required; BSD find has no -printf."
+fi
+if [ -n "${_platform_problems}" ]; then
+    printf 'ERROR: release.sh requires a GNU userland (Linux).%s\n' "${_platform_problems}" >&2
+    printf '\nOn macOS: run this on a Linux host, or install GNU tools and put them\n' >&2
+    printf 'first on PATH:\n' >&2
+    printf '    brew install bash gnu-sed findutils\n' >&2
+    printf '    PATH="$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$(brew --prefix)/opt/findutils/libexec/gnubin:$PATH"\n' >&2
+    printf '\nOverride at your own risk with SKIP_PLATFORM_CHECK=1.\n' >&2
+    [ "${SKIP_PLATFORM_CHECK:-0}" = "1" ] || exit 1
+    printf 'SKIP_PLATFORM_CHECK=1 set — continuing anyway.\n' >&2
+fi
+unset _platform_problems
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${REPO_ROOT}"
@@ -335,7 +374,7 @@ run_verification_build() {
 # there; `drop <module>` reverts them. No separate YAML file.
 #
 # Subcommands:
-#   ./release.sh stage <module> [--version X.Y.Z.W]     write snapshot + metadata
+#   ./release.sh stage <module>... [--version X.Y.Z.W]  write snapshot + metadata
 #   ./release.sh stage all [<module> --version X]...    same, for every qualifying module
 #   ./release.sh unpin <module>|all                     forget a remembered --version pin
 #   ./release.sh drop  <module>                         revert the writes
@@ -599,25 +638,34 @@ case "${1:-}" in
             pins_save
         else
             _add_ver=""
-            shift || true
+            _last_comp=""
+            _staged_any=0
             while [[ $# -gt 0 ]]; do
                 case "$1" in
-                    --version) [[ $# -ge 2 ]] || die "--version requires a value"
-                               _add_ver="$2"; shift 2 ;;
-                    *) die "stage: unknown option $1" ;;
+                    --version)
+                        [[ $# -ge 2 ]] || die "--version requires a value"
+                        [[ -n "${_last_comp}" ]] \
+                            || die "stage: --version must follow a <module> name."
+                        pin_set "${_last_comp}" "$2"
+                        shift 2
+                        ;;
+                    # Not a stage option — hand the rest to the main parser so
+                    # `stage <module> --no-build` works like `stage all` does.
+                    -*) break ;;
+                    *)
+                        [[ -f "${REPO_ROOT}/${1}/metadata.yaml" ]] \
+                            || die "stage: ${1}/metadata.yaml not found — no such component."
+                        STAGE_AND_WRITE_MODULES+=("${1}")
+                        _last_comp="${1}"
+                        _staged_any=1
+                        shift
+                        ;;
                 esac
             done
-            # Validate the module exists.
-            [[ -n "${_add_comp}" ]] || die "stage: missing <module> argument. Usage: ./release.sh stage <module> [--version X.Y.Z.W]"
-            [[ -f "${REPO_ROOT}/${_add_comp}/metadata.yaml" ]] \
-                || die "stage: ${_add_comp}/metadata.yaml not found — no such component."
-            # Push onto the write-pipeline queue + record any version pin.
-            STAGE_AND_WRITE_MODULES+=("${_add_comp}")
+            [[ "${_staged_any}" -eq 1 ]] \
+                || die "stage: missing <module> argument. Usage: ./release.sh stage <module>... [--version X.Y.Z.W]"
             STAGE_AND_WRITE=1
-            if [[ -n "${_add_ver}" ]]; then
-                pin_set "${_add_comp}" "${_add_ver}"
-                pins_save
-            fi
+            pins_save
             # Fall through to the standard pipeline; it processes the queue.
         fi
         ;;
@@ -728,7 +776,7 @@ usage() {
 Release Version Bump Tool
 
 Subcommands (manage what's staged for the next release):
-  ./release.sh stage <module> [--version X.Y.Z.W]     stage module (auto-bump unless --version pinned)
+  ./release.sh stage <module>... [--version X.Y.Z.W]   stage module(s) (auto-bump unless --version pinned)
   ./release.sh stage all [<module> --version X.Y.Z.W]...
                                                        stage every qualifying module, pinning the
                                                        ones named. Pins are remembered (out/.release-pins)
@@ -848,6 +896,26 @@ Options:
                          only — a real release MUST audit.
   --verbose              Print extra diagnostics.
   --help                 Show this help.
+
+Environment:
+  Prerequisites are bootstrapped automatically. build-tools/ is untracked
+  and out/ is a build artefact, so on a CLEAN CLONE any mutating run
+  (staged writes, --apply, --audit) stages the pinned AIDL toolchain and
+  the Binder SDK via ./build_binder.sh before the detector runs. Read-only
+  runs (bare scan, --dry-run, --check-metadata) never trigger it.
+
+  BINDER_SDK_DIR         Pre-staged Binder SDK (Yocto / cross-compile).
+  BINDER_TOOLCHAIN_ROOT  Pre-staged AIDL toolchain location.
+  BINDER_SOURCE_DIR      Alias for the above.
+                         Setting any of these disables auto-bootstrap: a
+                         missing artefact is then a recipe error, and
+                         building a host SDK over a cross-compiled one
+                         would be wrong.
+  SKIP_SDK_BOOTSTRAP=1   Skip the toolchain/SDK preflight entirely.
+  SKIP_LINK_CHECK=1      Skip the repo-root markdown link validation.
+  SKIP_PLATFORM_CHECK=1  Skip the GNU-userland / bash-4 guard. Risky: BSD sed
+                         misreads `sed -i -E` as a backup suffix and silently
+                         writes stray *-E files instead of editing in place.
 
 Behavior (#712 change-class labels — label names mean what the fields mean):
   - "Major Change"    label   => major bump (0.g.m.p -> 0.(g+1).0.0) — breaking
@@ -1428,9 +1496,11 @@ fi
 # Mapping:
 #   bare ./release.sh              read-only plan/check view (DO_WRITES=0, DO_BRANCH=0)
 #   ./release.sh <module>...       writes for staged modules (DO_WRITES=1, DO_BRANCH=0)
-#   ./release.sh --apply           branch + commit + tag only (DO_WRITES=0, DO_BRANCH=1).
+#   ./release.sh --apply           branch (+ commit/push with --commit) only
+#                                  (DO_WRITES=0, DO_BRANCH=1). No tag — git
+#                                  flow release finish makes that on main.
 #                                  Writes are expected to be done already by
-#                                  prior `./release.sh <module>` invocations.
+#                                  prior `./release.sh stage <module>` runs.
 DO_WRITES=0
 DO_BRANCH=0
 if [[ "${STAGE_AND_WRITE}" -eq 1 ]]; then
@@ -1457,6 +1527,51 @@ if [[ "${SKIP_LINK_CHECK:-0}" -ne 1 ]]; then
     else
         warn "Broken relative links in repo-root markdown (non-fatal in read-only mode):"
         printf '%s\n' "${_link_errs}" >&2
+    fi
+fi
+
+# Preflight: Binder SDK + AIDL toolchain (clean-clone bootstrap).
+#
+# build-tools/ is gitignored and untracked and out/ is a build artefact, so a
+# CLEAN CLONE has neither the pinned AIDL toolchain nor the Binder SDK.
+# Every mutating path needs both: snapshots regenerate bindings through
+# build_modules.sh, and the change-class audit shells out to aidl_ops.py.
+#
+# Done HERE, before the detector, deliberately. Without it the first demand
+# for the toolchain comes minutes later during snapshot creation — after
+# commit-walking, GitHub label lookups and planning — and aborts the run
+# mid-pipeline. Bootstrapping up front costs the same build but leaves the
+# pipeline intact.
+#
+# Read-only runs (bare scan, --dry-run, --check-metadata) are NOT gated: they
+# never invoke the toolchain, and forcing a multi-minute SDK build on someone
+# just previewing the plan would be hostile.
+#
+# Skipped when the caller pinned a toolchain/SDK explicitly (Yocto and
+# cross-compile set BINDER_SDK_DIR / BINDER_TOOLCHAIN_ROOT / BINDER_SOURCE_DIR)
+# — there a missing artefact is a recipe error, not something to paper over by
+# building a host SDK. Escape hatch: SKIP_SDK_BOOTSTRAP=1.
+if [[ ( "${DO_WRITES}" -eq 1 || "${DO_BRANCH}" -eq 1 || "${AUDIT}" -eq 1 ) \
+      && "${SKIP_SDK_BOOTSTRAP:-0}" -ne 1 \
+      && -z "${BINDER_SDK_DIR:-}${BINDER_TOOLCHAIN_ROOT:-}${BINDER_SOURCE_DIR:-}" ]]; then
+    phase "Validating Binder SDK + AIDL toolchain..."
+    _tc="${REPO_ROOT}/build-tools/linux_binder_idl/host/aidl_ops.py"
+    _sdk_marker="${REPO_ROOT}/out/target/.sdk_ready"
+    if [[ -f "${_tc}" && -f "${_sdk_marker}" ]]; then
+        log "    ✓ toolchain and Binder SDK present"
+    else
+        [[ -f "${_tc}" ]]         || log "    • AIDL toolchain missing (${_tc#"${REPO_ROOT}/"})"
+        [[ -f "${_sdk_marker}" ]] || log "    • Binder SDK missing (${_sdk_marker#"${REPO_ROOT}/"})"
+        [[ -x "${REPO_ROOT}/build_binder.sh" ]] \
+            || die "build_binder.sh not found or not executable — cannot bootstrap the Binder SDK."
+        log "    Bootstrapping via ./build_binder.sh (one-time; several minutes)..."
+        log ""
+        (cd "${REPO_ROOT}" && ./build_binder.sh) \
+            || die "build_binder.sh failed — cannot continue the release."
+        log ""
+        [[ -f "${_sdk_marker}" ]] \
+            || die "build_binder.sh completed but ${_sdk_marker#"${REPO_ROOT}/"} is still absent."
+        log "    ✓ Binder SDK bootstrapped"
     fi
 fi
 
@@ -1646,7 +1761,7 @@ declare -A COMP_LABEL_PRS=()   # "comp:level" -> " PR PR ..." that set it
 #
 # File: out/.gh-cache  (gitignored — out/ already is)
 # Format, tab-delimited:
-#   c<TAB>SHA<TAB>PR_NUMBER          (PR_NUMBER may be empty)
+#   p<TAB>SHA<TAB>PR_NUMBER          (resolved through GitHub only)
 #   l<TAB>PR_NUMBER<TAB>LABEL1|LABEL2|LABEL3
 #   n<TAB>PR_NUMBER<TAB>ISSUE1,ISSUE2<US>TITLE   (US = \x1f; non-empty only)
 # Labels are joined with `|` (which can't appear in label names).
@@ -1657,7 +1772,9 @@ gh_cache_load() {
     local kind key value
     while IFS=$'\t' read -r kind key value; do
         case "${kind}" in
-            c)  COMMIT_PR_CACHE[$key]="${value}" ;;
+            # `c` entries came from the subject-first lookup and may name
+            # an issue (#920); they are ignored so the commit is re-asked.
+            p)  COMMIT_PR_CACHE[$key]="${value}" ;;
             l)  # Restore newlines from |-encoded labels
                 PR_LABEL_CACHE[$key]="${value//|/$'\n'}"
                 ;;
@@ -1686,10 +1803,14 @@ get_pr_for_commit() {
         return 0
     fi
 
+    # GitHub's commit -> PR association is authoritative. A trailing "(#N)"
+    # in the subject is only a fallback (local or cherry-picked commits):
+    # squash merges often carry the ISSUE number there, not the PR (#920).
+    # Only a resolved mapping is persisted: a subject guess or an empty
+    # result (offline, --no-gh, API failure) is returned uncached so a
+    # later online run asks GitHub again.
     local pr=""
     if [[ "${subject}" =~ ^Merge\ pull\ request\ \#([0-9]+) ]]; then
-        pr="${BASH_REMATCH[1]}"
-    elif [[ "${subject}" =~ \(#([0-9]+)\)$ ]]; then
         pr="${BASH_REMATCH[1]}"
     elif [[ "${ENABLE_GH_LABELS}" -eq 1 ]]; then
         pr="$(gh api "repos/${GH_REPO}/commits/${sha}/pulls" --jq '.[0].number' 2>/dev/null || true)"
@@ -1697,9 +1818,12 @@ get_pr_for_commit() {
             pr=""
         fi
     fi
-
-    COMMIT_PR_CACHE[$sha]="${pr}"
-    gh_cache_append "c" "${sha}" "${pr}"
+    if [[ -n "${pr}" ]]; then
+        COMMIT_PR_CACHE[$sha]="${pr}"
+        gh_cache_append "p" "${sha}" "${pr}"
+    elif [[ "${subject}" =~ \(#([0-9]+)\)$ ]]; then
+        pr="${BASH_REMATCH[1]}"
+    fi
     printf '%s\n' "${pr}"
 }
 

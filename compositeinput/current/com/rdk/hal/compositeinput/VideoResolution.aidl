@@ -27,8 +27,7 @@ package com.rdk.hal.compositeinput;
  * and color decoding internally, providing standardized digital output.
  */
 @VintfStability
-parcelable VideoResolution
-{
+parcelable VideoResolution {
     /** Horizontal resolution in pixels (e.g., 720). */
     int pixelWidth;
 

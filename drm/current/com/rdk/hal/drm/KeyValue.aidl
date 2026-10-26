@@ -28,8 +28,13 @@
  */
 package com.rdk.hal.drm;
 
+/**
+ * A key and value string pair.
+ */
 @VintfStability
 parcelable KeyValue {
-    String key;
-    String value;
+    /** The key. */
+    @utf8InCpp String key;
+    /** The value. */
+    @utf8InCpp String value;
 }

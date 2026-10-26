@@ -18,29 +18,28 @@
  */
 package com.rdk.hal.hdmiinput;
 
-/** 
+/**
  *  @brief     HDCP version enum.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Amit Patel
  */
- 
+
 @VintfStability
 @Backing(type = "int")
-enum HDCPProtocolVersion
-{
-	/**
-	 * HDCP protocol is not supported or unknown.
-	 */
-	UNDEFINED = 0,
+enum HDCPProtocolVersion {
+    /**
+     * HDCP protocol is not supported or unknown.
+     */
+    UNDEFINED = 0,
 
-	/**
-	 * HDCP protocol version 1.x
-	 */
-	VERSION_1_X = 1,
+    /**
+     * HDCP protocol version 1.x
+     */
+    VERSION_1_X = 1,
 
-	/**
-	 * HDCP protocol version 2.x
-	 */
-	VERSION_2_X = 2,
+    /**
+     * HDCP protocol version 2.x
+     */
+    VERSION_2_X = 2,
 }

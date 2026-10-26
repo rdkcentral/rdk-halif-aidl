@@ -28,8 +28,11 @@
  */
 package com.rdk.hal.drm;
 
+/**
+ * The status codes used by the drm plugins.
+ */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum Status {
     /**
      * The DRM plugin must return OK when an operation completes without any

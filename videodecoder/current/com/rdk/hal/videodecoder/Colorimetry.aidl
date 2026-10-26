@@ -18,10 +18,10 @@
  */
 package com.rdk.hal.videodecoder;
 
-import com.rdk.hal.videodecoder.ColorRange;
 import com.rdk.hal.videodecoder.ColorMatrix;
-import com.rdk.hal.videodecoder.TransferCharacteristics;
 import com.rdk.hal.videodecoder.ColorPrimaries;
+import com.rdk.hal.videodecoder.ColorRange;
+import com.rdk.hal.videodecoder.TransferCharacteristics;
 
 /**
  *  @brief     Full colorimetry signalling for a video stream — the four
@@ -59,7 +59,6 @@ import com.rdk.hal.videodecoder.ColorPrimaries;
  */
 @VintfStability
 parcelable Colorimetry {
-
     /**
      * Sample quantisation range (limited / studio vs full / computer).
      * GStreamer mapping: `GstVideoColorimetry.range` → `hdrColorimetry[0]`.

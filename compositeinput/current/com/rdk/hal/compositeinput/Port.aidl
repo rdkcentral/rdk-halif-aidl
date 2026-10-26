@@ -26,8 +26,7 @@ package com.rdk.hal.compositeinput;
  * The port ID is available via ICompositeInputPort.getId().
  */
 @VintfStability
-parcelable Port
-{
+parcelable Port {
     /** Human-readable port name (e.g., "Front Panel", "Rear"). */
     @utf8InCpp String name;
 
