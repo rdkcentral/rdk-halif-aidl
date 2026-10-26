@@ -21,27 +21,26 @@ import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.panel.State;
 import com.rdk.hal.videodecoder.DynamicRange;
 
-/** 
+/**
  *  @brief     Display Panel Output Event Listener interface.
  *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
  */
 
 @VintfStability
-oneway interface IPanelOutputEventListener
-{
+oneway interface IPanelOutputEventListener {
     /**
      * Callback when the video source being tracked for PQ settings changes.
-     * 
-    * This occurs when video starts, stops or on a source change to the video.
-    * When video stops then a `PanelSource` with type `UNKNOWN` is passed.
-     * 
+     *
+     * This occurs when video starts, stops or on a source change to the video.
+     * When video stops then a `PanelSource` with type `UNKNOWN` is passed.
+     *
      * @param[in] avSource      The new AV source.
      */
     void onVideoSourceChanged(in PanelSource avSource);
 
     /**
      * Callback when the dynamic range being tracked for PQ settings changes.
-     * 
+     *
      * This occurs when video starts, stops or on a DynamicRange change in the video.
      * When video stops then `DynamicRange.UNKNOWN` is passed in the call.
      *
@@ -51,7 +50,7 @@ oneway interface IPanelOutputEventListener
 
     /**
      * Callback when the video frame rate being tracked for PQ settings changes.
-     * 
+     *
      * This occurs when video starts, stops or on a frame rate change in the video.
      * When video stops then the frame rate 0/0 is passed in the call.
      *
@@ -59,10 +58,10 @@ oneway interface IPanelOutputEventListener
      * @param[in] frameRateDenominator      The denominator of the frame rate.
      */
     void onVideoFrameRateChanged(in int frameRateNumerator, in int frameRateDenominator);
- 
+
     /**
      * Callback when the video resolution being tracked for PQ settings changes.
-     * 
+     *
      * This occurs when video starts, stops or on a resolution change in the video.
      * When video stops then width and height 0,0 are passed in the call.
      *
@@ -73,10 +72,10 @@ oneway interface IPanelOutputEventListener
 
     /**
      * Callback when the panel refresh rate changes.
-     * 
+     *
      * This occurs when `setRefreshRate()` sets a new refresh rate or if frame rate
      * matching is enabled and it adjusts the refresh rate to best match the video frame rate.
-     * 
+     *
      * @param[in] refreshRateHz     The new panel refresh rate.
      */
     void onRefreshRateChanged(in double refreshRateHz);
@@ -92,5 +91,4 @@ oneway interface IPanelOutputEventListener
      * @param[in] newState  The state being entered.
      */
     void onStateChanged(in State oldState, in State newState);
-
 }

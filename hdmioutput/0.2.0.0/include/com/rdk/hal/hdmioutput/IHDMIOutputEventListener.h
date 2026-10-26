@@ -31,8 +31,8 @@ class IHDMIOutputEventListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(HDMIOutputEventListener)
   static const int32_t VERSION = 2000;
-  const std::string HASH = "da2bdb87e132357fe6f9e19ac44749eb9339f1b5";
-  static constexpr char* HASHVALUE = "da2bdb87e132357fe6f9e19ac44749eb9339f1b5";
+  const std::string HASH = "1ca5bda96fbbe2b88aac65291c41d4b17179a64b";
+  static constexpr char* HASHVALUE = "1ca5bda96fbbe2b88aac65291c41d4b17179a64b";
   // @aidl-doc
   /**
    * Callback triggered when the HDMI output changes state.

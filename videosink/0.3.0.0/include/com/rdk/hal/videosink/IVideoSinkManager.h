@@ -24,17 +24,18 @@ namespace videosink {
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 class IVideoSinkManager : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(VideoSinkManager)
   static const int32_t VERSION = 3000;
-  const std::string HASH = "670f95dc021cdc6aa9c40df7fd7ceaf53ec5ca6e";
-  static constexpr char* HASHVALUE = "670f95dc021cdc6aa9c40df7fd7ceaf53ec5ca6e";
+  const std::string HASH = "da350441651184f9632c4dbf59d960ce6767f0bf";
+  static constexpr char* HASHVALUE = "da350441651184f9632c4dbf59d960ce6767f0bf";
   // @aidl-doc
   /** The service name to publish. To be returned by getServiceName() in the derived class. */
   static const ::std::string& serviceName();

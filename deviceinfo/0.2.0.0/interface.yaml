@@ -1,0 +1,8 @@
+aidl_interface:
+  name: deviceinfo
+  version: 2000
+  srcs:
+    - com/rdk/hal/deviceinfo/*.aidl
+  imports: []
+  stability: vintf
+  layout: module-local

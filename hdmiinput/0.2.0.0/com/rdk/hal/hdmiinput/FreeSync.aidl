@@ -18,34 +18,33 @@
  */
 package com.rdk.hal.hdmiinput;
 
-/** 
+/**
  *  @brief     HDMI AMD FreeSync enum.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Amit Patel
  */
- 
+
 @VintfStability
 @Backing(type = "int")
-enum FreeSync
-{
-	/**
-	 * No FreeSync support.
-	 */
-	UNSUPPORTED = 0,
+enum FreeSync {
+    /**
+     * No FreeSync support.
+     */
+    UNSUPPORTED = 0,
 
-	/**
-	 * AMD FreeSync
-	 */
-	FREESYNC = 1,
+    /**
+     * AMD FreeSync
+     */
+    FREESYNC = 1,
 
-	/**
-	 * AMD FreeSync Premium
-	 */
-	FREESYNC_PREMIUM = 2,
+    /**
+     * AMD FreeSync Premium
+     */
+    FREESYNC_PREMIUM = 2,
 
-	/**
-	 * AMD FreeSync Premium Pro
-	 */
-	FREESYNC_PREMIUM_PRO = 3
+    /**
+     * AMD FreeSync Premium Pro
+     */
+    FREESYNC_PREMIUM_PRO = 3
 }

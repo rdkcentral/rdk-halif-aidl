@@ -26,173 +26,172 @@ package com.rdk.hal.videodecoder;
  */
 
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum Property {
-	/**
-	 * Unique ID per decoder resource instance.
-	 *
-	 * Type: Integer
-	 * Access: Read-only.
-	 *
-	 * @exception binder::Status::Exception::EX_NONE for success
-	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
-	 *
-	 */
-	RESOURCE_ID = 0,
+    /**
+     * Unique ID per decoder resource instance.
+     *
+     * Type: Integer
+     * Access: Read-only.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+     *
+     */
+    RESOURCE_ID = 0,
 
-	/**
-	 * Video decode buffer input queue size in bytes.
-	 * The default is set by the vendor to best suit the platform.
-	 *
-	 * Type: Integer
-	 * Access: Read-only.
-	 *
-	 * @exception binder::Status::Exception::EX_NONE for success
-	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
-	 *
-	 */
-	INPUT_QUEUE_DEPTH = 1,
+    /**
+     * Video decode buffer input queue size in bytes.
+     * The default is set by the vendor to best suit the platform.
+     *
+     * Type: Integer
+     * Access: Read-only.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+     *
+     */
+    INPUT_QUEUE_DEPTH = 1,
 
-	/**
-	 * Number of frame buffers in the vendor frame buffer pool.
-	 * The default is vendor defined.
-	 *
-	 * Type: Integer
-	 * Access: Read-only
-	 *
-	 * @exception binder::Status::Exception::EX_NONE for success
-	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
-	 *.
-	 */
+    /**
+     * Number of frame buffers in the vendor frame buffer pool.
+     * The default is vendor defined.
+     *
+     * Type: Integer
+     * Access: Read-only
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+     *.
+     */
     OUTPUT_FRAME_POOL_SIZE = 2,
 
-	/**
-	 * Low latency mode sets the expectation that no B-frames will be delivered in
-	 * the video stream or B-frames can be skipped over and the decoder should
-	 * output decoded frames as soon as possible.
-	 * Low latency video is often combined with low latency audio decoder/sink
-	 * operation for gaming and casting applications.
-	 * Can be set while video decoder resource is in READY.
-	 *
-	 * Type: Integer
-	 *  0 - off (default on open)
-	 *  1 - on
-	 * Access: Read-write.
-	 * Write in states: READY
-	 *
-	 * @exception binder::Status::Exception::EX_NONE for success
-	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
-	 *
-	 */
-	LOW_LATENCY_MODE = 4,
+    /**
+     * Low latency mode sets the expectation that no B-frames will be delivered in
+     * the video stream or B-frames can be skipped over and the decoder should
+     * output decoded frames as soon as possible.
+     * Low latency video is often combined with low latency audio decoder/sink
+     * operation for gaming and casting applications.
+     * Can be set while video decoder resource is in READY.
+     *
+     * Type: Integer
+     *  0 - off (default on open)
+     *  1 - on
+     * Access: Read-write.
+     * Write in states: READY
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+     *
+     */
+    LOW_LATENCY_MODE = 4,
 
-	/**
-	 * The policy to follow when video decode errors occur.
-	 *
-	 * Type: Integer
-	 *  0 - output corrupt frames (default on open)
-	 *  1 - conceal corrupt frames, not output from decoder
-	 * Access: Read-write.
-	 * Write in states: READY
-	 *
-	 * @exception binder::Status::Exception::EX_NONE for success
-	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
-	 *
-	 */
-	DECODE_ERROR_POLICY = 5,
+    /**
+     * The policy to follow when video decode errors occur.
+     *
+     * Type: Integer
+     *  0 - output corrupt frames (default on open)
+     *  1 - conceal corrupt frames, not output from decoder
+     * Access: Read-write.
+     * Write in states: READY
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+     *
+     */
+    DECODE_ERROR_POLICY = 5,
 
-	/**
-	 * Set by the client to specify the AV source of the stream.
-	 * The AVSource is also set inside the FrameMetadata when output by a decoder.
-	 *
-	 * Type: Integer
-	 *  0 - AVUNKNOWN (default on open)
-	 * @see enum AVSource for possible values.
-	 * Access: Read-write.
-	 * Write in states: READY
-	 *
-	 * @exception binder::Status::Exception::EX_NONE for success
-	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
-	 *
-	 */
-	AV_SOURCE = 6,
+    /**
+     * Set by the client to specify the AV source of the stream.
+     * The AVSource is also set inside the FrameMetadata when output by a decoder.
+     *
+     * Type: Integer
+     *  0 - AVUNKNOWN (default on open)
+     * @see enum AVSource for possible values.
+     * Access: Read-write.
+     * Write in states: READY
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state.
+     *
+     */
+    AV_SOURCE = 6,
 
-	/**
-	 * Set by the client to request SHA-1 calculation for the decoded video frame.
-	 * Scans pixel locations from the top left, along lines and down all rows.
-	 * The SHA-1 is returned in the frame metadata.
-	 *
-	 * Type: Integer
-	 *  0 - off (default on open)
-	 *  1 - on
-	 * Access: Read-write.
-	 * Write in states: READY, STARTED
-	 *
-	 * @exception binder::Status::Exception::EX_NONE for success
-	 * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state or non STARTED state.
-	 *
-	 */
-	SHA1_CALC = 7,
+    /**
+     * Set by the client to request SHA-1 calculation for the decoded video frame.
+     * Scans pixel locations from the top left, along lines and down all rows.
+     * The SHA-1 is returned in the frame metadata.
+     *
+     * Type: Integer
+     *  0 - off (default on open)
+     *  1 - on
+     * Access: Read-write.
+     * Write in states: READY, STARTED
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if try to modify in non READY state or non STARTED state.
+     *
+     */
+    SHA1_CALC = 7,
 
-	/**
-	 * Indicates if the video decoder was opened for secure video path.
-	 *
-	 * Type: Integer
-	 *  0 - off
-	 *  1 - on (only if supported)
-	 * Access: Read-only.
-	 * @see Capabilities.supportsSecure IVideoDecoder.open()
-	 *
-	 * @exception binder::Status::Exception::EX_NONE for success
-	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
-	 *
-	 */
-	SECURE_VIDEO = 8,
+    /**
+     * Indicates if the video decoder was opened for secure video path.
+     *
+     * Type: Integer
+     *  0 - off
+     *  1 - on (only if supported)
+     * Access: Read-only.
+     * @see Capabilities.supportsSecure IVideoDecoder.open()
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+     *
+     */
+    SECURE_VIDEO = 8,
 
-	/**
-	 * Count of decoded frames.
-	 * This metric is reset on open(), flush() and stop() calls.
-	 *
-	 * Type: Integer
-	 *  -1 means this metric is not yet implemented by the vendor.
-	 * Access: Read-only.
-	 *
-	 * @exception binder::Status::Exception::EX_NONE for success
-	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
-	 *
-	 */
-	METRIC_FRAMES_DECODED = 1000,
+    /**
+     * Count of decoded frames.
+     * This metric is reset on open(), flush() and stop() calls.
+     *
+     * Type: Integer
+     *  -1 means this metric is not yet implemented by the vendor.
+     * Access: Read-only.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+     *
+     */
+    METRIC_FRAMES_DECODED = 1000,
 
-	/**
-	 * Count of decode errors.
-	 * This metric is reset on open(), flush() and stop() calls.
-	 *
-	 * Type: Integer
-	 *  -1 means this metric is not yet implemented by the vendor.
-	 * Access: Read-only.
-	 *
-	 * @exception binder::Status::Exception::EX_NONE for success
-	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
-	 *
-	 */
-	METRIC_DECODE_ERRORS = 1001,
+    /**
+     * Count of decode errors.
+     * This metric is reset on open(), flush() and stop() calls.
+     *
+     * Type: Integer
+     *  -1 means this metric is not yet implemented by the vendor.
+     * Access: Read-only.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+     *
+     */
+    METRIC_DECODE_ERRORS = 1001,
 
-	/**
-	 * Count of frames dropped.
-	 * No frame was output due to corruption or decode error that could not
-	 * deliver a frame suitable for display.
-	 * This count includes any frames received before the first reference frame.
-	 * This metric is reset on open(), flush() and stop() calls.
-	 *
-	 * Type: Integer
-	 *  -1 means this metric is not yet implemented by the vendor.
-	 * Access: Read-only.
-	 *
-	 * @exception binder::Status::Exception::EX_NONE for success
-	 * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
-	 *
-	 */
-	METRIC_FRAMES_DROPPED = 1002,
-
+    /**
+     * Count of frames dropped.
+     * No frame was output due to corruption or decode error that could not
+     * deliver a frame suitable for display.
+     * This count includes any frames received before the first reference frame.
+     * This metric is reset on open(), flush() and stop() calls.
+     *
+     * Type: Integer
+     *  -1 means this metric is not yet implemented by the vendor.
+     * Access: Read-only.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+     *
+     */
+    METRIC_FRAMES_DROPPED = 1002,
 
 }

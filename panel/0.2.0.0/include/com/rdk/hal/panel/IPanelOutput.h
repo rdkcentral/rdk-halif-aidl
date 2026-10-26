@@ -24,10 +24,11 @@ namespace panel {
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  *  - <b>Boolean / ErrorCode results</b>: A returned boolean `false` or a non-success `ErrorCode`
  *    indicates that the call was accepted and processed but could not complete successfully for the
  *    documented reasons. Input validation and invalid controller state are still reported via Binder
@@ -37,8 +38,8 @@ class IPanelOutput : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(PanelOutput)
   static const int32_t VERSION = 2000;
-  const std::string HASH = "ad01bbf3a2f440a172cbb53d051a83f99e4b4ef3";
-  static constexpr char* HASHVALUE = "ad01bbf3a2f440a172cbb53d051a83f99e4b4ef3";
+  const std::string HASH = "4479c03b862f1fd8020fb7ad2d043139bb832d75";
+  static constexpr char* HASHVALUE = "4479c03b862f1fd8020fb7ad2d043139bb832d75";
   // @aidl-doc
   /** The service name to publish. To be returned by getServiceName() in the derived class. */
   static const ::std::string& serviceName();

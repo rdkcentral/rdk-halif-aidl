@@ -24,8 +24,8 @@ class IVideoDecoderEventListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(VideoDecoderEventListener)
   static const int32_t VERSION = 3000;
-  const std::string HASH = "922cc8ec92962ec7843061aae427af80fb4c37a1";
-  static constexpr char* HASHVALUE = "922cc8ec92962ec7843061aae427af80fb4c37a1";
+  const std::string HASH = "ff9b64beb2c3c9a1fe1277a0c2d0e8080dfc4d0d";
+  static constexpr char* HASHVALUE = "ff9b64beb2c3c9a1fe1277a0c2d0e8080dfc4d0d";
   // @aidl-doc
   /**
    * Callback when the decoder has raised an error.

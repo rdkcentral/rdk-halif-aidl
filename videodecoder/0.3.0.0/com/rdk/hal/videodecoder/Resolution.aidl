@@ -34,7 +34,6 @@ package com.rdk.hal.videodecoder;
  */
 @VintfStability
 parcelable Resolution {
-
     /**
      * Frame width in pixels. Must be > 0.
      */

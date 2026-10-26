@@ -25,8 +25,8 @@ class IVideoDecoderControllerListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(VideoDecoderControllerListener)
   static const int32_t VERSION = 3000;
-  const std::string HASH = "922cc8ec92962ec7843061aae427af80fb4c37a1";
-  static constexpr char* HASHVALUE = "922cc8ec92962ec7843061aae427af80fb4c37a1";
+  const std::string HASH = "ff9b64beb2c3c9a1fe1277a0c2d0e8080dfc4d0d";
+  static constexpr char* HASHVALUE = "ff9b64beb2c3c9a1fe1277a0c2d0e8080dfc4d0d";
   // @aidl-doc
   /**
    * Callback when a full video frame has been decoded or the frame metadata needs to be notified.
@@ -86,7 +86,8 @@ public:
    * The output video frame can be delivered before or after the onUserDataOutput().
    * The user data must be delivered in the same frame presentation order as the output frames.
    *
-   * The userData byte array contains SEI NAL data, typically conforming to the "user_data_registered_itu_t_t35" structure, used for captioning:
+   * The userData byte array contains SEI NAL data, typically conforming to the "user_data_registered_itu_t_t35"
+   * structure, used for captioning:
    * - Begins with the ITU-T T.35 country_code (0xB5 for USA)
    * - Followed by provider_code (0x0031 for ATSC)
    * - Includes a user_identifier string (usually 'GA94')
@@ -95,7 +96,8 @@ public:
    *
    * The RDK media pipeline must parse this data to extract embedded CEA-608 or CEA-708 caption packets.
    * Each `onUserDataOutput()` call corresponds to a single decoded video frame and maintains AV sync for captions.
-   * This approach standardises the delivery of caption-related data across all platforms supporting embedded SEI in compressed video streams.
+   * This approach standardises the delivery of caption-related data across all platforms supporting embedded SEI in
+   * compressed video streams.
    *
    * @param[in] nsPresentationTime  The presentation time.
    * @param[in] userData            Array of bytes containing the SEI user data (e.g., ATSC A/72 caption payload).

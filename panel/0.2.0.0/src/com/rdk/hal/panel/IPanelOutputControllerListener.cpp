@@ -23,7 +23,7 @@ BpPanelOutputControllerListener::BpPanelOutputControllerListener(const ::android
     : BpInterface<IPanelOutputControllerListener>(_aidl_impl){
 }
 
-::android::binder::Status BpPanelOutputControllerListener::onPictureModeChanged(const ::android::String16& pictureMode) {
+::android::binder::Status BpPanelOutputControllerListener::onPictureModeChanged(const ::std::string& pictureMode) {
   ::android::Parcel _aidl_data;
   _aidl_data.markForBinder(remoteStrong());
   ::android::Parcel _aidl_reply;
@@ -33,7 +33,7 @@ BpPanelOutputControllerListener::BpPanelOutputControllerListener(const ::android
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = _aidl_data.writeString16(pictureMode);
+  _aidl_ret_status = _aidl_data.writeUtf8AsUtf16(pictureMode);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
@@ -49,7 +49,7 @@ BpPanelOutputControllerListener::BpPanelOutputControllerListener(const ::android
   return _aidl_status;
 }
 
-::android::binder::Status BpPanelOutputControllerListener::onPQParameterChanged(const ::android::String16& pictureMode, const ::com::rdk::hal::panel::PanelSource& avSource, ::com::rdk::hal::videodecoder::DynamicRange dynamicRange, ::com::rdk::hal::panel::PQParameter pictureProperty, const ::com::rdk::hal::panel::PQParameterValue& picturePropertyValue) {
+::android::binder::Status BpPanelOutputControllerListener::onPQParameterChanged(const ::std::string& pictureMode, const ::com::rdk::hal::panel::PanelSource& avSource, ::com::rdk::hal::videodecoder::DynamicRange dynamicRange, ::com::rdk::hal::panel::PQParameter pictureProperty, const ::com::rdk::hal::panel::PQParameterValue& picturePropertyValue) {
   ::android::Parcel _aidl_data;
   _aidl_data.markForBinder(remoteStrong());
   ::android::Parcel _aidl_reply;
@@ -59,7 +59,7 @@ BpPanelOutputControllerListener::BpPanelOutputControllerListener(const ::android
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
-  _aidl_ret_status = _aidl_data.writeString16(pictureMode);
+  _aidl_ret_status = _aidl_data.writeUtf8AsUtf16(pictureMode);
   if (((_aidl_ret_status) != (::android::OK))) {
     goto _aidl_error;
   }
@@ -150,12 +150,12 @@ BnPanelOutputControllerListener::BnPanelOutputControllerListener()
   switch (_aidl_code) {
   case BnPanelOutputControllerListener::TRANSACTION_onPictureModeChanged:
   {
-    ::android::String16 in_pictureMode;
+    ::std::string in_pictureMode;
     if (!(_aidl_data.checkInterface(this))) {
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
     }
-    _aidl_ret_status = _aidl_data.readString16(&in_pictureMode);
+    _aidl_ret_status = _aidl_data.readUtf8FromUtf16(&in_pictureMode);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }
@@ -168,7 +168,7 @@ BnPanelOutputControllerListener::BnPanelOutputControllerListener()
   break;
   case BnPanelOutputControllerListener::TRANSACTION_onPQParameterChanged:
   {
-    ::android::String16 in_pictureMode;
+    ::std::string in_pictureMode;
     ::com::rdk::hal::panel::PanelSource in_avSource;
     ::com::rdk::hal::videodecoder::DynamicRange in_dynamicRange;
     ::com::rdk::hal::panel::PQParameter in_pictureProperty;
@@ -177,7 +177,7 @@ BnPanelOutputControllerListener::BnPanelOutputControllerListener()
       _aidl_ret_status = ::android::BAD_TYPE;
       break;
     }
-    _aidl_ret_status = _aidl_data.readString16(&in_pictureMode);
+    _aidl_ret_status = _aidl_data.readUtf8FromUtf16(&in_pictureMode);
     if (((_aidl_ret_status) != (::android::OK))) {
       break;
     }

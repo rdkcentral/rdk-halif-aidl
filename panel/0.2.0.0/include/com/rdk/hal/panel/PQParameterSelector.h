@@ -6,6 +6,7 @@
 #include <com/rdk/hal/panel/PQParameter.h>
 #include <com/rdk/hal/panel/PanelSource.h>
 #include <com/rdk/hal/videodecoder/DynamicRange.h>
+#include <string>
 #include <tuple>
 #include <utils/String16.h>
 
@@ -30,7 +31,7 @@ public:
   ::com::rdk::hal::panel::PQParameter pqParameter = ::com::rdk::hal::panel::PQParameter(0);
   // @aidl-doc
   /** The picture mode. */
-  ::android::String16 pictureMode;
+  ::std::string pictureMode;
   // @aidl-doc
   /** The AV source. */
   ::com::rdk::hal::panel::PanelSource source;

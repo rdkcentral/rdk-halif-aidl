@@ -42,8 +42,8 @@ class IPanelOutputController : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(PanelOutputController)
   static const int32_t VERSION = 2000;
-  const std::string HASH = "ad01bbf3a2f440a172cbb53d051a83f99e4b4ef3";
-  static constexpr char* HASHVALUE = "ad01bbf3a2f440a172cbb53d051a83f99e4b4ef3";
+  const std::string HASH = "4479c03b862f1fd8020fb7ad2d043139bb832d75";
+  static constexpr char* HASHVALUE = "4479c03b862f1fd8020fb7ad2d043139bb832d75";
   // @aidl-doc
   /**
    * @brief Start the panel output controller.
@@ -99,7 +99,8 @@ public:
    *
    * @param[out] _aidl_return boolean
    *   - true: The panel output was stopped successfully.
-   *   - false: The HAL accepted the request but could not complete the stop because of a runtime or hardware failure.
+   *   - false: The HAL accepted the request but could not complete the stop because of a runtime or hardware
+   *     failure.
    *
    * @returns ::android::binder::Status - ::android::binder::Status::EX_NONE on success, or one of the values below.
    * @retval ::android::binder::Status::EX_ILLEGAL_STATE The panel output is not in STARTED state.
@@ -264,11 +265,13 @@ public:
    *   - ErrorCode.INVALID_ARGUMENT: One or more parameter configurations were invalid.
    *   - ErrorCode.NOT_SUPPORTED: One or more PQ parameters are unsupported.
    *   - ErrorCode.HARDWARE_FAILURE: The HAL could not apply the request.
-   * @see getPQParameters(), getDefaultPQParameters(), getPQParameterCapabilities(), enableCalibrationMode(), PQParameterConfiguration
+   * @see getPQParameters(), getDefaultPQParameters(), getPQParameterCapabilities(), enableCalibrationMode(),
+   *     PQParameterConfiguration
    *
    * @returns ::android::binder::Status - ::android::binder::Status::EX_NONE on success, or one of the values below.
    * @retval ::android::binder::Status::EX_ILLEGAL_STATE The panel output is not in STARTED state.
-   * @retval ::android::binder::Status::EX_ILLEGAL_ARGUMENT The configuration list is empty or contains invalid selectors or value variants.
+   * @retval ::android::binder::Status::EX_ILLEGAL_ARGUMENT The configuration list is empty or contains invalid
+   * selectors or value variants.
    */
   virtual ::android::binder::Status setPQParameters(const ::std::vector<::com::rdk::hal::panel::PQParameterConfiguration>& configurations, ::com::rdk::hal::panel::ErrorCode* _aidl_return) = 0;
   // @aidl-doc
@@ -309,7 +312,8 @@ public:
    * @param[out] _aidl_return boolean
    *   - true: All PQ parameter values were successfully returned.
    *   - false: The selectors were valid but one or more values could not be returned.
-   * @see setPQParameters(), getDefaultPQParameters(), getPQParameterCapabilities(), PQParameterSelector, PQParameterConfiguration
+   * @see setPQParameters(), getDefaultPQParameters(), getPQParameterCapabilities(), PQParameterSelector,
+   *     PQParameterConfiguration
    *
    * @returns ::android::binder::Status - one of the values below.
    * @retval ::android::binder::Status::EX_NONE Success.
@@ -337,7 +341,8 @@ public:
    * @param[out] _aidl_return boolean
    *   - true: All default PQ parameters were successfully returned.
    *   - false: The selectors were valid but one or more default values could not be returned.
-   * @see setPQParameters(), getPQParameters(), getPQParameterCapabilities(), PQParameterSelector, PQParameterConfiguration
+   * @see setPQParameters(), getPQParameters(), getPQParameterCapabilities(), PQParameterSelector,
+   *     PQParameterConfiguration
    *
    * @returns ::android::binder::Status - one of the values below.
    * @retval ::android::binder::Status::EX_NONE Success.
@@ -352,8 +357,9 @@ public:
    *
    * This method can only be called in State.STARTED.
    *
-   * The returned PQParameterCapabilities confirms whether the parameter is supported by the platform and its minimum and maximum allowed values.
-   * It also contains a list of picture modes, dynamic ranges and AV sources that are supported by the PQ parameter.
+   * The returned PQParameterCapabilities confirms whether the parameter is supported by the platform and its minimum
+   * and maximum allowed values. It also contains a list of picture modes, dynamic ranges and AV sources that are
+   * supported by the PQ parameter.
    *
    * @param[in] pqParameter PQParameter
    *

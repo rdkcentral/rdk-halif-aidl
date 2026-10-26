@@ -12,10 +12,20 @@ namespace panel {
 // @aidl-doc
 /** @brief HDR tone-mapping level. */
 enum class ToneMappingLevel : int32_t {
+  // @aidl-doc
+  /** Invalid or unset level. */
   TONE_MAPPING_LEVEL_INVALID = -1,
+  // @aidl-doc
+  /** The tone-mapping mode has no selectable levels. */
   TONE_MAPPING_LEVEL_NOT_APPLICABLE = 0,
+  // @aidl-doc
+  /** Low tone-mapping level. */
   TONE_MAPPING_LEVEL_LOW = 1,
+  // @aidl-doc
+  /** Medium tone-mapping level. */
   TONE_MAPPING_LEVEL_MEDIUM = 2,
+  // @aidl-doc
+  /** High tone-mapping level. */
   TONE_MAPPING_LEVEL_HIGH = 3,
 };
 }  // namespace panel

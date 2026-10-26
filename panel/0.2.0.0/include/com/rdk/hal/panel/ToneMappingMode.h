@@ -12,9 +12,17 @@ namespace panel {
 // @aidl-doc
 /** @brief HDR tone-mapping mode. */
 enum class ToneMappingMode : int32_t {
+  // @aidl-doc
+  /** Invalid or unset mode. */
   TONE_MAPPING_INVALID = -1,
+  // @aidl-doc
+  /** Tone mapping adapts to the content. */
   TONE_MAPPING_DYNAMIC = 0,
+  // @aidl-doc
+  /** Luminance above the panel's capability is clipped. */
   TONE_MAPPING_CLIPPING = 1,
+  // @aidl-doc
+  /** A fixed tone curve is applied. */
   TONE_MAPPING_STATIC = 2,
 };
 }  // namespace panel

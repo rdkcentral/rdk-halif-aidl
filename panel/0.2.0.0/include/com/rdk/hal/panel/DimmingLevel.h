@@ -12,10 +12,20 @@ namespace panel {
 // @aidl-doc
 /** @brief Local dimming level. */
 enum class DimmingLevel : int32_t {
+  // @aidl-doc
+  /** Invalid or unset level. */
   DIMMING_LEVEL_INVALID = -1,
+  // @aidl-doc
+  /** The dimming mode has no selectable levels. */
   DIMMING_LEVEL_NOT_APPLICABLE = 0,
+  // @aidl-doc
+  /** Low dimming level. */
   DIMMING_LEVEL_LOW = 1,
+  // @aidl-doc
+  /** Medium dimming level. */
   DIMMING_LEVEL_MEDIUM = 2,
+  // @aidl-doc
+  /** High dimming level. */
   DIMMING_LEVEL_HIGH = 3,
 };
 }  // namespace panel

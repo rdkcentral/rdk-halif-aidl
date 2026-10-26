@@ -23,23 +23,59 @@ namespace panel {
  */
 class ColourManagementSettings : public ::android::Parcelable {
 public:
+  // @aidl-doc
+  /** Red hue adjustment. */
   int32_t redHue = 0;
+  // @aidl-doc
+  /** Red saturation adjustment. */
   int32_t redSaturation = 0;
+  // @aidl-doc
+  /** Red luminance adjustment. */
   int32_t redLuminance = 0;
+  // @aidl-doc
+  /** Green hue adjustment. */
   int32_t greenHue = 0;
+  // @aidl-doc
+  /** Green saturation adjustment. */
   int32_t greenSaturation = 0;
+  // @aidl-doc
+  /** Green luminance adjustment. */
   int32_t greenLuminance = 0;
+  // @aidl-doc
+  /** Blue hue adjustment. */
   int32_t blueHue = 0;
+  // @aidl-doc
+  /** Blue saturation adjustment. */
   int32_t blueSaturation = 0;
+  // @aidl-doc
+  /** Blue luminance adjustment. */
   int32_t blueLuminance = 0;
+  // @aidl-doc
+  /** Yellow hue adjustment. */
   int32_t yellowHue = 0;
+  // @aidl-doc
+  /** Yellow saturation adjustment. */
   int32_t yellowSaturation = 0;
+  // @aidl-doc
+  /** Yellow luminance adjustment. */
   int32_t yellowLuminance = 0;
+  // @aidl-doc
+  /** Cyan hue adjustment. */
   int32_t cyanHue = 0;
+  // @aidl-doc
+  /** Cyan saturation adjustment. */
   int32_t cyanSaturation = 0;
+  // @aidl-doc
+  /** Cyan luminance adjustment. */
   int32_t cyanLuminance = 0;
+  // @aidl-doc
+  /** Magenta hue adjustment. */
   int32_t magentaHue = 0;
+  // @aidl-doc
+  /** Magenta saturation adjustment. */
   int32_t magentaSaturation = 0;
+  // @aidl-doc
+  /** Magenta luminance adjustment. */
   int32_t magentaLuminance = 0;
   inline bool operator!=(const ColourManagementSettings& rhs) const {
     return std::tie(redHue, redSaturation, redLuminance, greenHue, greenSaturation, greenLuminance, blueHue, blueSaturation, blueLuminance, yellowHue, yellowSaturation, yellowLuminance, cyanHue, cyanSaturation, cyanLuminance, magentaHue, magentaSaturation, magentaLuminance) != std::tie(rhs.redHue, rhs.redSaturation, rhs.redLuminance, rhs.greenHue, rhs.greenSaturation, rhs.greenLuminance, rhs.blueHue, rhs.blueSaturation, rhs.blueLuminance, rhs.yellowHue, rhs.yellowSaturation, rhs.yellowLuminance, rhs.cyanHue, rhs.cyanSaturation, rhs.cyanLuminance, rhs.magentaHue, rhs.magentaSaturation, rhs.magentaLuminance);

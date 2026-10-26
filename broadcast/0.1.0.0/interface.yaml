@@ -7,6 +7,6 @@ aidl_interface:
   - com/rdk/hal/broadcast/demux/*.aidl
   - com/rdk/hal/broadcast/frontend/*.aidl
   imports:
-    - ringbuffer@current
+    - ringbuffer@0.1.0.0
   stability: vintf
   layout: module-local

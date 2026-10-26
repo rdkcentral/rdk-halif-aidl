@@ -18,10 +18,20 @@ namespace videodecoder {
  *  @author    Gerald Weatherup
  */
 enum class Codec : int32_t {
+  // @aidl-doc
+  /** MPEG-2 Video (ISO/IEC 13818-2) */
   MPEG2_VIDEO = 1,
+  // @aidl-doc
+  /** H.264/AVC (ITU-T H.264 | ISO/IEC 14496-10) */
   H264_AVC = 2,
+  // @aidl-doc
+  /** H.265/HEVC (ITU-T H.265 | ISO/IEC 23008-2) */
   H265_HEVC = 3,
+  // @aidl-doc
+  /** VP9 (IETF RFC 7741) */
   VP9 = 4,
+  // @aidl-doc
+  /** AV1 (AOMedia Video 1) */
   AV1 = 5,
 };
 }  // namespace videodecoder

@@ -23,8 +23,8 @@ class IPanelOutputEventListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(PanelOutputEventListener)
   static const int32_t VERSION = 2000;
-  const std::string HASH = "ad01bbf3a2f440a172cbb53d051a83f99e4b4ef3";
-  static constexpr char* HASHVALUE = "ad01bbf3a2f440a172cbb53d051a83f99e4b4ef3";
+  const std::string HASH = "4479c03b862f1fd8020fb7ad2d043139bb832d75";
+  static constexpr char* HASHVALUE = "4479c03b862f1fd8020fb7ad2d043139bb832d75";
   // @aidl-doc
   /**
    * Callback when the video source being tracked for PQ settings changes.

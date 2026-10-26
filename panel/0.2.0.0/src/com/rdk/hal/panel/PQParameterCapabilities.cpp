@@ -970,9 +970,9 @@ namespace panel {
     }
     return ::android::OK; }
   case supportedStringValues: {
-    ::std::optional<::std::vector<::std::optional<::android::String16>>> _aidl_value;
-    if ((_aidl_ret_status = _aidl_parcel->readString16Vector(&_aidl_value)) != ::android::OK) return _aidl_ret_status;
-    if constexpr (std::is_trivially_copyable_v<::std::optional<::std::vector<::std::optional<::android::String16>>>>) {
+    ::std::optional<::std::vector<::std::optional<::std::string>>> _aidl_value;
+    if ((_aidl_ret_status = _aidl_parcel->readUtf8VectorFromUtf16Vector(&_aidl_value)) != ::android::OK) return _aidl_ret_status;
+    if constexpr (std::is_trivially_copyable_v<::std::optional<::std::vector<::std::optional<::std::string>>>>) {
       set<supportedStringValues>(_aidl_value);
     } else {
       // NOLINTNEXTLINE(performance-move-const-arg)
@@ -1000,9 +1000,9 @@ namespace panel {
     }
     return ::android::OK; }
   case supportedTwoPointWBValues: {
-    ::std::optional<::std::vector<::std::optional<::android::String16>>> _aidl_value;
-    if ((_aidl_ret_status = _aidl_parcel->readString16Vector(&_aidl_value)) != ::android::OK) return _aidl_ret_status;
-    if constexpr (std::is_trivially_copyable_v<::std::optional<::std::vector<::std::optional<::android::String16>>>>) {
+    ::std::optional<::std::vector<::std::optional<::std::string>>> _aidl_value;
+    if ((_aidl_ret_status = _aidl_parcel->readUtf8VectorFromUtf16Vector(&_aidl_value)) != ::android::OK) return _aidl_ret_status;
+    if constexpr (std::is_trivially_copyable_v<::std::optional<::std::vector<::std::optional<::std::string>>>>) {
       set<supportedTwoPointWBValues>(_aidl_value);
     } else {
       // NOLINTNEXTLINE(performance-move-const-arg)
@@ -1010,9 +1010,9 @@ namespace panel {
     }
     return ::android::OK; }
   case supportedMultiPointWBValues: {
-    ::std::optional<::std::vector<::std::optional<::android::String16>>> _aidl_value;
-    if ((_aidl_ret_status = _aidl_parcel->readString16Vector(&_aidl_value)) != ::android::OK) return _aidl_ret_status;
-    if constexpr (std::is_trivially_copyable_v<::std::optional<::std::vector<::std::optional<::android::String16>>>>) {
+    ::std::optional<::std::vector<::std::optional<::std::string>>> _aidl_value;
+    if ((_aidl_ret_status = _aidl_parcel->readUtf8VectorFromUtf16Vector(&_aidl_value)) != ::android::OK) return _aidl_ret_status;
+    if constexpr (std::is_trivially_copyable_v<::std::optional<::std::vector<::std::optional<::std::string>>>>) {
       set<supportedMultiPointWBValues>(_aidl_value);
     } else {
       // NOLINTNEXTLINE(performance-move-const-arg)
@@ -1048,11 +1048,11 @@ namespace panel {
   switch (getTag()) {
   case supportedIntValues: return _aidl_parcel->writeInt32Vector(get<supportedIntValues>());
   case supportedSdrGammaValues: return _aidl_parcel->writeEnumVector(get<supportedSdrGammaValues>());
-  case supportedStringValues: return _aidl_parcel->writeString16Vector(get<supportedStringValues>());
+  case supportedStringValues: return _aidl_parcel->writeUtf8VectorAsUtf16Vector(get<supportedStringValues>());
   case supportedDimmingSettingsValues: return _aidl_parcel->writeParcelableVector(get<supportedDimmingSettingsValues>());
   case supportedDvCalibrationValues: return _aidl_parcel->writeParcelableVector(get<supportedDvCalibrationValues>());
-  case supportedTwoPointWBValues: return _aidl_parcel->writeString16Vector(get<supportedTwoPointWBValues>());
-  case supportedMultiPointWBValues: return _aidl_parcel->writeString16Vector(get<supportedMultiPointWBValues>());
+  case supportedTwoPointWBValues: return _aidl_parcel->writeUtf8VectorAsUtf16Vector(get<supportedTwoPointWBValues>());
+  case supportedMultiPointWBValues: return _aidl_parcel->writeUtf8VectorAsUtf16Vector(get<supportedMultiPointWBValues>());
   case supportedColourManagementSettingsValues: return _aidl_parcel->writeParcelableVector(get<supportedColourManagementSettingsValues>());
   case supportedToneMappingSettingsValues: return _aidl_parcel->writeParcelableVector(get<supportedToneMappingSettingsValues>());
   }
@@ -1083,7 +1083,7 @@ namespace panel {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = _aidl_parcel->readString16(&pictureMode);
+  _aidl_ret_status = _aidl_parcel->readUtf8FromUtf16(&pictureMode);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }
@@ -1102,7 +1102,7 @@ namespace panel {
   ::android::status_t _aidl_ret_status = ::android::OK;
   auto _aidl_start_pos = _aidl_parcel->dataPosition();
   _aidl_parcel->writeInt32(0);
-  _aidl_ret_status = _aidl_parcel->writeString16(pictureMode);
+  _aidl_ret_status = _aidl_parcel->writeUtf8AsUtf16(pictureMode);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }

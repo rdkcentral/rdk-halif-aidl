@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.hdmioutput;
 
-/** 
+/**
  *  @brief     HDCP status type enum.
  *
  *  Describes the current state of HDCP negotiation and authentication on the HDMI output.
@@ -31,8 +31,7 @@ package com.rdk.hal.hdmioutput;
  */
 @VintfStability
 @Backing(type = "int")
-enum HDCPStatus
-{
+enum HDCPStatus {
     /**
      * Connection status is unknown or the sink is not powered.
      */

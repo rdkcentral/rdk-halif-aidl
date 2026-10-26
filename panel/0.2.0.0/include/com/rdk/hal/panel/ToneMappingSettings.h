@@ -16,7 +16,11 @@ namespace panel {
 /** @brief Grouped HDR tone-mapping settings. */
 class ToneMappingSettings : public ::android::Parcelable {
 public:
+  // @aidl-doc
+  /** The tone-mapping mode. */
   ::com::rdk::hal::panel::ToneMappingMode mode = ::com::rdk::hal::panel::ToneMappingMode(0);
+  // @aidl-doc
+  /** The tone-mapping level, one of the levels supported for the mode. */
   ::com::rdk::hal::panel::ToneMappingLevel level = ::com::rdk::hal::panel::ToneMappingLevel(0);
   inline bool operator!=(const ToneMappingSettings& rhs) const {
     return std::tie(mode, level) != std::tie(rhs.mode, rhs.level);

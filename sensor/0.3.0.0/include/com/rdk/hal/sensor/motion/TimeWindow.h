@@ -1,0 +1,83 @@
+#pragma once
+// @aidl-doc
+/**
+ * @file TimeWindow.h
+ * @brief Defines a daily time window when the motion sensor should be active.
+ *
+ * Time windows allow scheduling when the sensor actively monitors for motion.
+ * Outside these windows, motion events are suppressed. Multiple windows can
+ * be configured for different periods throughout the day (e.g., business hours
+ * and evening hours).
+ */
+
+#include <android/binder_to_string.h>
+#include <binder/Parcel.h>
+#include <binder/Status.h>
+#include <cstdint>
+#include <tuple>
+#include <utils/String16.h>
+
+namespace com {
+namespace rdk {
+namespace hal {
+namespace sensor {
+namespace motion {
+class TimeWindow : public ::android::Parcelable {
+public:
+  // @aidl-doc
+  /**
+   * @brief Start time in seconds since midnight (0-86399).
+   *
+   * Value must be in range [0, 86399]. For 24-hour monitoring,
+   * set both startTimeOfDaySeconds and endTimeOfDaySeconds to 0.
+   */
+  int32_t startTimeOfDaySeconds = 0;
+  // @aidl-doc
+  /**
+   * @brief End time in seconds since midnight (0-86399).
+   *
+   * Value must be in range [0, 86399]. If endTimeOfDaySeconds is
+   * less than startTimeOfDaySeconds, the window wraps across midnight.
+   * For 24-hour monitoring, set both values to 0.
+   */
+  int32_t endTimeOfDaySeconds = 0;
+  inline bool operator!=(const TimeWindow& rhs) const {
+    return std::tie(startTimeOfDaySeconds, endTimeOfDaySeconds) != std::tie(rhs.startTimeOfDaySeconds, rhs.endTimeOfDaySeconds);
+  }
+  inline bool operator<(const TimeWindow& rhs) const {
+    return std::tie(startTimeOfDaySeconds, endTimeOfDaySeconds) < std::tie(rhs.startTimeOfDaySeconds, rhs.endTimeOfDaySeconds);
+  }
+  inline bool operator<=(const TimeWindow& rhs) const {
+    return std::tie(startTimeOfDaySeconds, endTimeOfDaySeconds) <= std::tie(rhs.startTimeOfDaySeconds, rhs.endTimeOfDaySeconds);
+  }
+  inline bool operator==(const TimeWindow& rhs) const {
+    return std::tie(startTimeOfDaySeconds, endTimeOfDaySeconds) == std::tie(rhs.startTimeOfDaySeconds, rhs.endTimeOfDaySeconds);
+  }
+  inline bool operator>(const TimeWindow& rhs) const {
+    return std::tie(startTimeOfDaySeconds, endTimeOfDaySeconds) > std::tie(rhs.startTimeOfDaySeconds, rhs.endTimeOfDaySeconds);
+  }
+  inline bool operator>=(const TimeWindow& rhs) const {
+    return std::tie(startTimeOfDaySeconds, endTimeOfDaySeconds) >= std::tie(rhs.startTimeOfDaySeconds, rhs.endTimeOfDaySeconds);
+  }
+
+  ::android::Parcelable::Stability getStability() const override { return ::android::Parcelable::Stability::STABILITY_VINTF; }
+  ::android::status_t readFromParcel(const ::android::Parcel* _aidl_parcel) final;
+  ::android::status_t writeToParcel(::android::Parcel* _aidl_parcel) const final;
+  static const ::android::String16& getParcelableDescriptor() {
+    static const ::android::StaticString16 DESCIPTOR (u"com.rdk.hal.sensor.motion.TimeWindow");
+    return DESCIPTOR;
+  }
+  inline std::string toString() const {
+    std::ostringstream os;
+    os << "TimeWindow{";
+    os << "startTimeOfDaySeconds: " << ::android::internal::ToString(startTimeOfDaySeconds);
+    os << ", endTimeOfDaySeconds: " << ::android::internal::ToString(endTimeOfDaySeconds);
+    os << "}";
+    return os.str();
+  }
+};  // class TimeWindow
+}  // namespace motion
+}  // namespace sensor
+}  // namespace hal
+}  // namespace rdk
+}  // namespace com

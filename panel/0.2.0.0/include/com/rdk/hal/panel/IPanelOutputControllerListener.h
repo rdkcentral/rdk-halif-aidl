@@ -8,6 +8,7 @@
 #include <com/rdk/hal/panel/PanelSource.h>
 #include <com/rdk/hal/videodecoder/DynamicRange.h>
 #include <cstdint>
+#include <string>
 #include <utils/String16.h>
 #include <utils/StrongPointer.h>
 
@@ -15,12 +16,14 @@ namespace com {
 namespace rdk {
 namespace hal {
 namespace panel {
+// @aidl-doc
+/** @brief Callbacks linked to the exclusive panel output controller. */
 class IPanelOutputControllerListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(PanelOutputControllerListener)
   static const int32_t VERSION = 2000;
-  const std::string HASH = "ad01bbf3a2f440a172cbb53d051a83f99e4b4ef3";
-  static constexpr char* HASHVALUE = "ad01bbf3a2f440a172cbb53d051a83f99e4b4ef3";
+  const std::string HASH = "4479c03b862f1fd8020fb7ad2d043139bb832d75";
+  static constexpr char* HASHVALUE = "4479c03b862f1fd8020fb7ad2d043139bb832d75";
   // @aidl-doc
   /**
    * Callback when the picture mode changes.
@@ -32,7 +35,7 @@ public:
    *
    * @returns ::android::binder::Status - ::android::binder::Status::EX_NONE on success.
    */
-  virtual ::android::binder::Status onPictureModeChanged(const ::android::String16& pictureMode) = 0;
+  virtual ::android::binder::Status onPictureModeChanged(const ::std::string& pictureMode) = 0;
   // @aidl-doc
   /**
    * Callback when a PQ picture property value changes.
@@ -45,7 +48,7 @@ public:
    *
    * @returns ::android::binder::Status - ::android::binder::Status::EX_NONE on success.
    */
-  virtual ::android::binder::Status onPQParameterChanged(const ::android::String16& pictureMode, const ::com::rdk::hal::panel::PanelSource& avSource, ::com::rdk::hal::videodecoder::DynamicRange dynamicRange, ::com::rdk::hal::panel::PQParameter pictureProperty, const ::com::rdk::hal::panel::PQParameterValue& picturePropertyValue) = 0;
+  virtual ::android::binder::Status onPQParameterChanged(const ::std::string& pictureMode, const ::com::rdk::hal::panel::PanelSource& avSource, ::com::rdk::hal::videodecoder::DynamicRange dynamicRange, ::com::rdk::hal::panel::PQParameter pictureProperty, const ::com::rdk::hal::panel::PQParameterValue& picturePropertyValue) = 0;
   virtual int32_t getInterfaceVersion() = 0;
   virtual std::string getInterfaceHash() = 0;
 };  // class IPanelOutputControllerListener
@@ -55,10 +58,10 @@ public:
   ::android::IBinder* onAsBinder() override {
     return nullptr;
   }
-  ::android::binder::Status onPictureModeChanged(const ::android::String16& /*pictureMode*/) override {
+  ::android::binder::Status onPictureModeChanged(const ::std::string& /*pictureMode*/) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
-  ::android::binder::Status onPQParameterChanged(const ::android::String16& /*pictureMode*/, const ::com::rdk::hal::panel::PanelSource& /*avSource*/, ::com::rdk::hal::videodecoder::DynamicRange /*dynamicRange*/, ::com::rdk::hal::panel::PQParameter /*pictureProperty*/, const ::com::rdk::hal::panel::PQParameterValue& /*picturePropertyValue*/) override {
+  ::android::binder::Status onPQParameterChanged(const ::std::string& /*pictureMode*/, const ::com::rdk::hal::panel::PanelSource& /*avSource*/, ::com::rdk::hal::videodecoder::DynamicRange /*dynamicRange*/, ::com::rdk::hal::panel::PQParameter /*pictureProperty*/, const ::com::rdk::hal::panel::PQParameterValue& /*picturePropertyValue*/) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   int32_t getInterfaceVersion() override {

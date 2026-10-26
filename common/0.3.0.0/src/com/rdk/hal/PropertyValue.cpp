@@ -123,9 +123,9 @@ namespace hal {
     }
     return ::android::OK; }
   case stringValue: {
-    ::android::String16 _aidl_value;
-    if ((_aidl_ret_status = _aidl_parcel->readString16(&_aidl_value)) != ::android::OK) return _aidl_ret_status;
-    if constexpr (std::is_trivially_copyable_v<::android::String16>) {
+    ::std::string _aidl_value;
+    if ((_aidl_ret_status = _aidl_parcel->readUtf8FromUtf16(&_aidl_value)) != ::android::OK) return _aidl_ret_status;
+    if constexpr (std::is_trivially_copyable_v<::std::string>) {
       set<stringValue>(_aidl_value);
     } else {
       // NOLINTNEXTLINE(performance-move-const-arg)
@@ -156,7 +156,7 @@ namespace hal {
   case longValue: return _aidl_parcel->writeInt64(get<longValue>());
   case floatValue: return _aidl_parcel->writeFloat(get<floatValue>());
   case doubleValue: return _aidl_parcel->writeDouble(get<doubleValue>());
-  case stringValue: return _aidl_parcel->writeString16(get<stringValue>());
+  case stringValue: return _aidl_parcel->writeUtf8AsUtf16(get<stringValue>());
   case intArrayValue: return _aidl_parcel->writeInt32Vector(get<intArrayValue>());
   }
   __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, "can't reach here");
