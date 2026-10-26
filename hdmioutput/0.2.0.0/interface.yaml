@@ -4,6 +4,6 @@ aidl_interface:
   srcs:
     - com/rdk/hal/hdmioutput/*.aidl
   imports:
-    - common@0.3.0.0
+    - common@current
   stability: vintf
   layout: module-local

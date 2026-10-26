@@ -115,7 +115,7 @@ endif()
 if (DEFINED HALIF_INCLUDE_DIR)
     target_include_directories(${LIB_NAME} PRIVATE
     "${HALIF_INCLUDE_DIR}/audiodecoder/0.3.0.0/include"
-    "${HALIF_INCLUDE_DIR}/common/0.3.0.0/include"
+    "${HALIF_INCLUDE_DIR}/common/current/include"
     "${HALIF_INCLUDE_DIR}/videodecoder/0.3.0.0/include")
 endif()
 

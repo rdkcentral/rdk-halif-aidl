@@ -69,9 +69,10 @@ if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
     _C_YELLOW=$'\033[33m'
     _C_BLUE=$'\033[34m'
     _C_CYAN=$'\033[36m'
+    _C_MAGENTA=$'\033[35m'
     _C_LINK=1
 else
-    _C_RESET= _C_BOLD= _C_DIM= _C_RED= _C_GREEN= _C_YELLOW= _C_BLUE= _C_CYAN=
+    _C_RESET= _C_BOLD= _C_DIM= _C_RED= _C_GREEN= _C_YELLOW= _C_BLUE= _C_CYAN= _C_MAGENTA=
     _C_LINK=
 fi
 
@@ -83,6 +84,42 @@ _link() {
     else
         printf '%s' "$2"
     fi
+}
+
+# TEXT left-aligned in WIDTH columns, then wrapped in COLOR, so escape
+# codes never upset the column widths. WIDTH 0 means no padding.
+_cell() {
+    local w="$1" c="$2" s="$3"
+    [[ "${w}" -gt 0 ]] && s="$(printf "%-${w}s" "${s}")"
+    if [[ -n "${c}" && -n "${_C_RESET}" ]]; then
+        printf '%s%s%s' "${c}" "${s}" "${_C_RESET}"
+    else
+        printf '%s' "${s}"
+    fi
+}
+
+# Colour for a change class however it is spelt: major is a rebuild (red),
+# minor additive (yellow), bugfix docs-only (cyan), a confirm or pin is a
+# human override worth a second look (magenta), no change recedes (dim).
+_class_color() {
+    case "${1,,}" in
+        major*|generation|breaking*) printf '%s' "${_C_RED}${_C_BOLD}" ;;
+        minor*)                      printf '%s' "${_C_YELLOW}" ;;
+        bugfix*|patch*)              printf '%s' "${_C_CYAN}" ;;
+        confirmed*|pinned*)          printf '%s' "${_C_MAGENTA}${_C_BOLD}" ;;
+        initial*)                    printf '%s' "${_C_GREEN}" ;;
+        none|-|"")                   printf '%s' "${_C_DIM}" ;;
+    esac
+}
+
+# Colour for a status cell: ok is green, a warning red, a note yellow.
+_status_color() {
+    case "$1" in
+        ok)          printf '%s' "${_C_GREEN}" ;;
+        ok\ *)       printf '%s' "${_C_GREEN}" ;;
+        ⚠️*|blocked*) printf '%s' "${_C_RED}${_C_BOLD}" ;;
+        *)           printf '%s' "${_C_YELLOW}" ;;
+    esac
 }
 
 log() {
@@ -3925,6 +3962,7 @@ run_structural_audit() {
             echo "The compiler says ${cc} (${code_next}), which is released; the hints say ${lc}."
             echo "  Correct the hint on the PR that made the change${touched:+ (one of ${touched})}: label '${name[$code]}', Interface Effect ${cc}."
         fi
+        return 0   # a trailing false [[ ]] above would fail the caller under set -e
     }
 
     _bump_rank() {
@@ -4129,9 +4167,20 @@ run_structural_audit() {
             _status="ok ($(IFS='; '; echo "${_notes[*]}"))"
         fi
 
-        AUDIT_ROWS+=("$(printf "%-24s %-10s %-11s %-11s %-10s %-10s %s" \
-            "${comp}" "${_prev}" "${_code_class}" \
-            "$(_audit_class_display "${_label}")" "${_expected}" "${_meta_ver:--}" "${_status}")")
+        # Colour carries the review: the compiler's class by severity, the
+        # label yellow where it disagrees, the version bold where it moves.
+        _lbl_disp="$(_audit_class_display "${_label}")"
+        _lbl_color="${_C_DIM}"
+        [[ -n "${_doubt}" ]] && _lbl_color="${_C_YELLOW}${_C_BOLD}"
+        _exp_color=""
+        [[ "${_expected}" != "${_prev}" && "${_expected}" != "-" ]] && _exp_color="${_C_BOLD}"
+        AUDIT_ROWS+=("$(printf "%-24s %-10s %s %s %s %-10s %s" \
+            "${comp}" "${_prev}" \
+            "$(_cell 11 "$(_class_color "${_code_class}")" "${_code_class}")" \
+            "$(_cell 11 "${_lbl_color}" "${_lbl_disp}")" \
+            "$(_cell 10 "${_exp_color}" "${_expected}")" \
+            "${_meta_ver:--}" \
+            "$(_cell 0 "$(_status_color "${_status}")" "${_status}")")")
 
         # A doubt stays visible after it is settled: its row says what the
         # hints claim (labels, Interface Effect), the PRs behind them, what
@@ -4201,16 +4250,33 @@ run_structural_audit() {
             (( ${#_f[4]} > _w[4] )) && _w[4]=${#_f[4]}
             (( ${#_f[6]} > _w[5] )) && _w[5]=${#_f[6]}
         done
+        # Optional 9th..11th args colour the compiler, label and decision.
         _doubt_line() {
             local pad=$(( _w[4] - ${#5} ))
-            log "$(printf "  %-${_w[0]}s  %-${_w[1]}s  %-${_w[2]}s  %-${_w[3]}s  %s%*s  %-${_w[5]}s  %s" "$1" "$2" "$3" "$4" "$6" "${pad}" "" "$7" "$8")"
+            log "$(printf "  %-${_w[0]}s  %s  %s  %-${_w[3]}s  %s%*s  %-${_w[5]}s  %s" "$1" \
+                "$(_cell "${_w[1]}" "${9:-}" "$2")" "$(_cell "${_w[2]}" "${10:-}" "$3")" \
+                "$4" "$6" "${pad}" "" "$7" "$(_cell 0 "${11:-}" "$8")")"
         }
-        _doubt_line "Component" "Compiler" "Label" "Effect" "Labelled by" "Labelled by" "Compiler found" "Decision"
-        _doubt_line "---------" "--------" "-----" "------" "-----------" "-----------" "--------------" "--------"
+        # Decision: blocked must be fixed (red), a confirm or label to
+        # correct needs a human call (yellow), a recorded confirm is settled.
+        _decision_color() {
+            case "$1" in
+                blocked*)                      printf '%s' "${_C_RED}${_C_BOLD}" ;;
+                *--confirm*|*under-states*)    printf '%s' "${_C_YELLOW}${_C_BOLD}" ;;
+                *)                             printf '%s' "${_C_GREEN}" ;;
+            esac
+        }
+        _doubt_line "Component" "Compiler" "Label" "Effect" "Labelled by" "Labelled by" "Compiler found" "Decision" \
+            "${_C_BOLD}" "${_C_BOLD}" "${_C_BOLD}"
+        _doubt_line "---------" "--------" "-----" "------" "-----------" "-----------" "--------------" "--------" \
+            "${_C_DIM}" "${_C_DIM}" "${_C_DIM}"
         for _r in "${DOUBT_ROWS[@]}"; do
             IFS=$'\t' read -r -a _f <<<"${_r}"
-            _doubt_line "${_f[0]}" "${_f[1]}" "${_f[2]}" "${_f[3]}" "${_f[4]}" "${_f[5]}" "${_f[6]}" "${_f[7]}"
+            _doubt_line "${_f[0]}" "${_f[1]}" "${_f[2]}" "${_f[3]}" "${_f[4]}" "${_f[5]}" "${_f[6]}" "${_f[7]}" \
+                "$(_class_color "${_f[1]}")" "${_C_YELLOW}" "$(_decision_color "${_f[7]}")"
         done
+        log ""
+        log "  $(_cell 0 "${_C_RED}${_C_BOLD}" blocked): fix before the cut   $(_cell 0 "${_C_YELLOW}${_C_BOLD}" yellow): your call — confirm or correct the label   $(_cell 0 "${_C_GREEN}" green): settled"
     fi
     if [[ ${#AUDIT_DETAIL[@]} -gt 0 ]]; then
         log ""
@@ -4427,9 +4493,16 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
         _status_display="ok"
     fi
 
-    TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-16s %-8s %s" \
-        "${comp}" "${current_version}" "${NEXT_VERSION}" \
-        "${_bump_display}" "${_planned}" "${_status_display}")")
+    _next_color=""
+    [[ "${NEXT_VERSION}" != "${current_version}" ]] && _next_color="${_C_BOLD}"
+    _planned_color="${_C_DIM}"
+    [[ "${_planned}" == "yes" ]] && _planned_color=""
+    TABLE_ROWS+=("$(printf "%-24s %-10s %s %s %s %s" \
+        "${comp}" "${current_version}" \
+        "$(_cell 10 "${_next_color}" "${NEXT_VERSION}")" \
+        "$(_cell 16 "$(_class_color "${_bump_display}")" "${_bump_display}")" \
+        "$(_cell 8 "${_planned_color}" "${_planned}")" \
+        "$(_cell 0 "$(_status_color "${_status_display}")" "${_status_display}")")")
 
     # Verbose detail: enabled only by --verbose. Keeps the default view a
     # compact one-line-per-module table; `--verbose` shows AIDL hash status,
