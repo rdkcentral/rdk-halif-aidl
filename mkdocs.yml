@@ -83,12 +83,12 @@ nav:
         - 0.1.0.0: '!include audiosink/0.1.0.0/mkdocs.yml'
       - AV Buffer:
         - Current: '!include avbuffer/current/mkdocs.yml'
-        - 0.3.0.0: '!include avbuffer/0.3.0.0/mkdocs.yml'
+        - 0.2.1.0: '!include avbuffer/0.2.1.0/mkdocs.yml'
         - 0.2.0.0: '!include avbuffer/0.2.0.0/mkdocs.yml'
         - 0.1.0.0: '!include avbuffer/0.1.0.0/mkdocs.yml'
       - AV Clock:
         - Current: '!include avclock/current/mkdocs.yml'
-        - 0.2.1.0: '!include avclock/0.2.1.0/mkdocs.yml'
+        - 0.3.0.0: '!include avclock/0.3.0.0/mkdocs.yml'
         - 0.2.0.1: '!include avclock/0.2.0.1/mkdocs.yml'
         - 0.2.0.0: '!include avclock/0.2.0.0/mkdocs.yml'
         - 0.1.0.0: '!include avclock/0.1.0.0/mkdocs.yml'
@@ -141,7 +141,7 @@ nav:
       - 0.2.0.0: '!include compositeinput/0.2.0.0/mkdocs.yml'
     - Deep Sleep:
       - Current: '!include deepsleep/current/mkdocs.yml'
-      - 0.2.0.0: '!include deepsleep/0.2.0.0/mkdocs.yml'
+      - 0.1.1.0: '!include deepsleep/0.1.1.0/mkdocs.yml'
       - 0.1.0.0: '!include deepsleep/0.1.0.0/mkdocs.yml'
     - Device Info:
       - Current: '!include deviceinfo/current/mkdocs.yml'
@@ -149,7 +149,7 @@ nav:
       - 0.1.0.0: '!include deviceinfo/0.1.0.0/mkdocs.yml'
     - Firmware Update:
       - Current: '!include firmwareupdate/current/mkdocs.yml'
-      - 0.3.0.0: '!include firmwareupdate/0.3.0.0/mkdocs.yml'
+      - 0.2.0.1: '!include firmwareupdate/0.2.0.1/mkdocs.yml'
       - 0.2.0.0: '!include firmwareupdate/0.2.0.0/mkdocs.yml'
     - Indicator:
       - Current: '!include indicator/current/mkdocs.yml'

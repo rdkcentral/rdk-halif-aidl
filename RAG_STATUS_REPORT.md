@@ -28,8 +28,8 @@
 |---|-----------|---------|-------------|---------|--------|
 | 🟢 | audiodecoder | 0.3.0.0 | Audio decoder resource management and codec format support | 4/4 | Architecture + AV_Architecture |
 | 🟢 | audiosink | 0.3.0.0 | Audio output rendering and sink device management | 4/4 | Architecture + AV_Architecture |
-| 🟢 | avbuffer | 0.3.0.0 | AV buffer allocation and secure video path management | 4/4 | Architecture + AV_Architecture |
-| 🟢 | avclock | 0.2.1.0 | Audio/video clock synchronization and timing control | 4/4 | Architecture + AV_Architecture |
+| 🟢 | avbuffer | 0.2.1.0 | AV buffer allocation and secure video path management | 4/4 | Architecture + AV_Architecture |
+| 🟢 | avclock | 0.3.0.0 | Audio/video clock synchronization and timing control | 4/4 | Architecture + AV_Architecture |
 | 🟢 | drm | 0.2.0.0 | DRM plugin and crypto plugin interfaces for content protection | 4/4 | Architecture + AV_Architecture |
 | 🟢 | hdmicec | 0.2.0.0 | HDMI CEC protocol messaging and device control | 4/4 | Architecture + AV_Architecture |
 | 🟢 | hdmiinput | 0.2.0.0 | HDMI input port management and signal detection | 4/4 | Architecture + AV_Architecture |
@@ -45,9 +45,9 @@
 | 🟢 | bootreason | 0.2.0.0 | Boot reason tracking and reboot management | 4/4 | Architecture + MW_Team |
 | 🟢 | broadcast | 0.1.0.0 | Broadcast Frontend, Lnb, Demux interfaces | 2/2 | Broadcast_Team |
 | 🟢 | compositeinput | 0.3.0.0 | Composite video input capture and control | 4/4 | Architecture + AV_Architecture |
-| 🟢 | deepsleep | 0.2.0.0 | Deep sleep and low-power state management | 4/4 | Architecture |
+| 🟢 | deepsleep | 0.1.1.0 | Deep sleep and low-power state management | 4/4 | Architecture |
 | 🟢 | deviceinfo | 0.2.0.0 | Device information and platform capability reporting | 4/4 | Architecture + Kernel_Architecture |
-| 🟢 | firmwareupdate | 0.3.0.0 | Update lifecycle for multiple firmware types at multiple locations across the system | 1/4 | Architecture + Kernel_Architecture |
+| 🟢 | firmwareupdate | 0.2.0.1 | Update lifecycle for multiple firmware types at multiple locations across the system | 1/4 | Architecture + Kernel_Architecture |
 | 🟢 | indicator | 0.2.0.0 | LED and visual indicator state management | 4/4 | Architecture + Graphics_Architecture |
 | 🟢 | panel | 0.2.0.0 | Front panel display and button control | 2/4 | Architecture + Graphics_Architecture |
 | 🟢 | ringbuffer | 0.1.0.0 | Generic ring buffer interface for opaque data | 2/2 | Broadcast_Team |
