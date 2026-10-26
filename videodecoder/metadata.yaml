@@ -23,8 +23,8 @@
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: videodecoder
-version: 0.2.0.1
-status: GREEN
+version: 0.3.0.0
+status: AMBER
 description: "Video decoder resource management and codec support"
 type: SOC
 
@@ -53,6 +53,9 @@ scope:
 #   owners        - Responsible architecture teams
 notes:
   owners: "Architecture + AV_Architecture"
+  status_detail: "Breaking changes awaiting review: OperationalMode removed (7771f2ae), InputBufferMetadata.discontinuity activated then removed (76281243, 694aaf3b)"
+  action: "All four reviewer teams to re-review and sign off; flip to GREEN once reviewed."
+  risk: "All four teams on recheck (0/4) since 7771f2ae — the interface carries unreviewed breaking changes, so it is not safe to implement against yet."
 
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained

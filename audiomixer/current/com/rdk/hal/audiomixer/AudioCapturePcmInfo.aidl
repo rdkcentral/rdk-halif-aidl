@@ -23,7 +23,7 @@ import com.rdk.hal.audiomixer.Channel;
 
 /**
  * @brief PCM sample format descriptor for captured audio.
- * 
+ *
  * Describes the binary encoding of PCM samples within an AudioCaptureData frame.
  * Only populated when AudioCaptureData.format is PCM_STEREO or PCM_MULTICHANNEL.
  */

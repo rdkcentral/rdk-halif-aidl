@@ -18,29 +18,29 @@
  */
 package com.rdk.hal.audiodecoder;
 
-/** 
- * @brief	Different frame types the Audio Decoder can output	
+/**
+ * @brief	Different frame types the Audio Decoder can output
  * @author	Luc Kennedy-Lamb
  * @author	Peter Stieglitz
  * @author	Douglas Adler
  */
- 
+
 @VintfStability
-@Backing(type="byte")
+@Backing(type = "byte")
 enum FrameType {
     /**
      * The decoded audio data is PCM
-     * The PCMMetadata in FrameMetadata is valid 
+     * The PCMMetadata in FrameMetadata is valid
      *
      */
     PCM = 0,
 
     /**
      * The decoded audio data is an opaque proprietary format.
-     * The PCMMetadata in FrameMetadata is not valid 
-     * The FrameMetadata contains a SoCPrivate field that if of 
-     * non-zero length is used by the HAL implementation to pass 
-     * SoC HAL specific opaque metadata. 
+     * The PCMMetadata in FrameMetadata is not valid
+     * The FrameMetadata contains a SoCPrivate field that if of
+     * non-zero length is used by the HAL implementation to pass
+     * SoC HAL specific opaque metadata.
      *
      */
     SOC_PROPRIETARY = 1,

@@ -1,0 +1,9 @@
+aidl_interface:
+  name: hdmioutput
+  version: 2000
+  srcs:
+    - com/rdk/hal/hdmioutput/*.aidl
+  imports:
+    - common@0.3.0.0
+  stability: vintf
+  layout: module-local

@@ -26,23 +26,23 @@ package com.rdk.hal.audiosink;
  */
 
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum VolumeRamp {
 
-	/**
-	 * Linear fade
-	 */
+    /**
+     * Linear fade
+     */
     LINEAR = 0,
 
-	/**
-	 * In-cubic fade
-	 * TODO: define reference formula
-	 */
+    /**
+     * In-cubic fade
+     * TODO: define reference formula
+     */
     IN_CUBIC = 1,
 
-	/**
-	 * Out-cubic fade
-	 * TODO: define reference formula
-	 */
+    /**
+     * Out-cubic fade
+     * TODO: define reference formula
+     */
     OUT_CUBIC = 2,
 }

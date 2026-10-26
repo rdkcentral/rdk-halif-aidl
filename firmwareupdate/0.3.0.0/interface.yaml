@@ -1,0 +1,8 @@
+aidl_interface:
+  name: firmwareupdate
+  version: 3000
+  srcs:
+    - com/rdk/hal/firmwareupdate/*.aidl
+  imports: []
+  stability: vintf
+  layout: module-local

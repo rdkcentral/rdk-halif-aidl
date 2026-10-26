@@ -19,16 +19,15 @@
 package com.rdk.hal.hdmiinput;
 import com.rdk.hal.hdmiinput.State;
 
-/** 
+/**
  *  @brief     Event callbacks listener interface from HDMI input.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
+
 @VintfStability
 oneway interface IHDMIInputEventListener {
- 
     /**
      Callback when the HDMI input has transitioned to a new state.
      *
@@ -44,5 +43,5 @@ oneway interface IHDMIInputEventListener {
      *
      * @param[in] edid  The new EDID data as a byte array.
      */
-    void onEDIDChange(in byte[] edid);    
+    void onEDIDChange(in byte[] edid);
 }

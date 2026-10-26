@@ -18,8 +18,8 @@
  */
 package com.rdk.hal.audiomixer;
 
-import com.rdk.hal.audiomixer.OutputPortProperty;
 import com.rdk.hal.PropertyValue;
+import com.rdk.hal.audiomixer.OutputPortProperty;
 
 /**
  * @brief     Listener interface for audio output port events.
@@ -32,7 +32,6 @@ import com.rdk.hal.PropertyValue;
  */
 @VintfStability
 oneway interface IAudioOutputPortListener {
-
     /**
      * @brief     Called when a dynamic property value changes.
      * @details   Fires for any property whose value changes after the listener

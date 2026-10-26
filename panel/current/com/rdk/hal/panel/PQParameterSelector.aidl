@@ -18,8 +18,8 @@
  */
 package com.rdk.hal.panel;
 
-import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.panel.PQParameter;
+import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.videodecoder.DynamicRange;
 
 /**
@@ -41,7 +41,7 @@ parcelable PQParameterSelector {
     /**
      * The picture mode.
      */
-    String pictureMode;
+    @utf8InCpp String pictureMode;
 
     /**
      * The AV source.

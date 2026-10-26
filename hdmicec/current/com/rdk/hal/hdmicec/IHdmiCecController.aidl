@@ -27,66 +27,66 @@ import com.rdk.hal.hdmicec.SendMessageStatus;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 
 @VintfStability
-interface IHdmiCecController
-{
+interface IHdmiCecController {
     /**
-    * @brief Adds one or more Logical Addresses to be message filtered by the host device.
-    *
-    * This function adds the specified Logical Addresses such that directly addressed CEC messages with a matching
-    * destination address will be received by this device.
-    * The HAL will immediately ACK and produce callbacks for all received messages.
-    *
-    * The Client must first acquire a logical address using the CEC Logical Address Allocation method
-    * (ref <HDMI Specification 2-0> Section <CEC 11.3.3>) before adding the logical address.
-    * A physical device may add at most two logical addresses. Multiple logical addresses
-    * are permitted only for the device-type combinations explicitly defined in HDMI
-    * Specification 2-0, Section 11.3.2, Table 11-8. The client can add permitted
-    * logical addresses in one call or add them one by one.
-    *
-    * All addresses must be in the directly addressable range of 0 to 14 (0x0 ~ 0xE) or the function will return false.
-    * If any addresses passed in are already added then the function will return false.
-    *
-    * @param[in] logicalAddresses   An array of logical address to be added.
-    *
-    * @returns
-    *    true  - if successfully added
-    *    false - if the logical addresses cannot be added, including when:
-    *             - more than two logical addresses are supplied;
-    *             - any address is outside the directly addressable range of 0 to 14 (0x0 ~ 0xE);
-    *             - any address has already been added; or
-    *             - the logical address combination is not permitted by HDMI Specification 2-0,
-    *               Section 11.3.2, Table 11-8.
-    *
-    * @pre The resource must be in State::STARTED.
-    *
-    * @see IHdmiCec.getLogicalAddresses(), removeLogicalAddresses(), IHdmiCecEventListener.onMessageReceived()
-    */
+     * @brief Adds one or more Logical Addresses to be message filtered by the host device.
+     *
+     * This function adds the specified Logical Addresses such that directly addressed CEC messages with a matching
+     * destination address will be received by this device.
+     * The HAL will immediately ACK and produce callbacks for all received messages.
+     *
+     * The Client must first acquire a logical address using the CEC Logical Address Allocation method
+     * (ref <HDMI Specification 2-0> Section <CEC 11.3.3>) before adding the logical address.
+     * A physical device may add at most two logical addresses. Multiple logical addresses
+     * are permitted only for the device-type combinations explicitly defined in HDMI
+     * Specification 2-0, Section 11.3.2, Table 11-8. The client can add permitted
+     * logical addresses in one call or add them one by one.
+     *
+     * All addresses must be in the directly addressable range of 0 to 14 (0x0 ~ 0xE) or the function will return false.
+     * If any addresses passed in are already added then the function will return false.
+     *
+     * @param[in] logicalAddresses   An array of logical address to be added.
+     *
+     * @returns
+     *    true  - if successfully added
+     *    false - if the logical addresses cannot be added, including when:
+     *             - more than two logical addresses are supplied;
+     *             - any address is outside the directly addressable range of 0 to 14 (0x0 ~ 0xE);
+     *             - any address has already been added; or
+     *             - the logical address combination is not permitted by HDMI Specification 2-0,
+     *               Section 11.3.2, Table 11-8.
+     *
+     * @pre The resource must be in State::STARTED.
+     *
+     * @see IHdmiCec.getLogicalAddresses(), removeLogicalAddresses(), IHdmiCecEventListener.onMessageReceived()
+     */
     boolean addLogicalAddresses(in int[] logicalAddresses);
 
     /**
-    * @brief Removes Logical Addresses that have been previously added.
-    *
-    * The HAL will not produce callbacks for received messages where the destination logical address is removed.
-    * The HAL will not ACK messages where the logical address is removed.
-    * All addresses must be in the directly addressable range of 0 to 14 (0x0 ~ 0xE) or the function will return false.
-    * If any addresses passed in are not added then the function will return false.
-    *
-    * @param[in] logicalAddresses   An array of logical addresses to be removed.
-    *
-    * @pre The resource must be in State::STARTED.
-    *
-    * @returns true on successfully removing and false if one or more logical addresses have not been previously added.
+     * @brief Removes Logical Addresses that have been previously added.
      *
-    *
-    * @see IHdmiCec.getLogicalAddresses(), addLogicalAddresses()
-    */
+     * The HAL will not produce callbacks for received messages where the destination logical address is removed.
+     * The HAL will not ACK messages where the logical address is removed.
+     * All addresses must be in the directly addressable range of 0 to 14 (0x0 ~ 0xE) or the function will return false.
+     * If any addresses passed in are not added then the function will return false.
+     *
+     * @param[in] logicalAddresses   An array of logical addresses to be removed.
+     *
+     * @pre The resource must be in State::STARTED.
+     *
+     * @returns true on successfully removing and false if one or more logical addresses have not been previously added.
+     *
+     *
+     * @see IHdmiCec.getLogicalAddresses(), addLogicalAddresses()
+     */
     boolean removeLogicalAddresses(in int[] logicalAddresses);
 
     /**
@@ -113,9 +113,10 @@ interface IHdmiCecController
      * |------------------------------------------------
      * @endcode
      *
-     * The HAL implementation MUST add the EOM and ACK bits in the message in compliance with <HDMI Specification 2-0> Section <CEC 11>.
-     * The HAL implementation MUST comply with all Signalling and Bit Timings described in <HDMI Specification 2-0> Section <CEC 11.9.2>.
-     * The HAL implementation MUST comply with <HDMI Specification 2-0> Section <CEC 11.9.3> on Frame Re-transmissions.
+     * The HAL implementation MUST add the EOM and ACK bits in the message in compliance with <HDMI Specification 2-0>
+     * Section <CEC 11>. The HAL implementation MUST comply with all Signalling and Bit Timings described in <HDMI
+     * Specification 2-0> Section <CEC 11.9.2>. The HAL implementation MUST comply with <HDMI Specification 2-0> Section
+     * <CEC 11.9.3> on Frame Re-transmissions.
      *
      * For a source HDMI device, while HPD is not asserted all sent messages will timeout.
      * It is not considered an error for a message to be sent while HPD is not asserted.
@@ -132,5 +133,4 @@ interface IHdmiCecController
      * @see IHdmiCec.open()
      */
     SendMessageStatus sendMessage(in byte[] message);
-
 }

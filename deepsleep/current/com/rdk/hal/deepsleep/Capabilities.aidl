@@ -18,8 +18,8 @@
  */
 package com.rdk.hal.deepsleep;
 import com.rdk.hal.deepsleep.WakeUpTrigger;
- 
-/** 
+
+/**
  *  @brief     Deep sleep capabilities definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -27,10 +27,9 @@ import com.rdk.hal.deepsleep.WakeUpTrigger;
  */
 
 @VintfStability
-parcelable Capabilities
-{
-    /** 
-     * Array of wake up triggers supported by the deep sleep service. 
+parcelable Capabilities {
+    /**
+     * Array of wake up triggers supported by the deep sleep service.
      */
     WakeUpTrigger[] supportedTriggers;
 

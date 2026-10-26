@@ -18,10 +18,10 @@
  */
 package com.rdk.hal.audiomixer;
 
+import com.rdk.hal.PropertyValue;
 import com.rdk.hal.audiomixer.InputRouting;
 import com.rdk.hal.audiomixer.Property;
 import com.rdk.hal.audiosink.VolumeRamp;
-import com.rdk.hal.PropertyValue;
 
 /**
  * @brief     Audio Mixer Controller HAL interface.
@@ -54,7 +54,6 @@ import com.rdk.hal.PropertyValue;
  */
 @VintfStability
 interface IAudioMixerController {
-
     /**
      * @brief     Sets the audio source routing for one or more inputs on this mixer instance.
      * Allows multiple audio [source -> mixer input] mappings to be configured.

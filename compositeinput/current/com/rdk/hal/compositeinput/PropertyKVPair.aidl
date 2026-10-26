@@ -19,8 +19,8 @@
 
 package com.rdk.hal.compositeinput;
 
-import com.rdk.hal.compositeinput.PortProperty;
 import com.rdk.hal.PropertyValue;
+import com.rdk.hal.compositeinput.PortProperty;
 
 /**
  * @brief Key-value pair for composite input port properties.
@@ -29,8 +29,7 @@ import com.rdk.hal.PropertyValue;
  * ICompositeInputController.setPropertyMulti() for batch operations.
  */
 @VintfStability
-parcelable PropertyKVPair
-{
+parcelable PropertyKVPair {
     /**
      * Property key (from the PortProperty enum).
      *

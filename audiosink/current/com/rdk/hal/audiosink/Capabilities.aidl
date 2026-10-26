@@ -27,18 +27,17 @@ import com.rdk.hal.audiosink.ContentType;
  */
 
 @VintfStability
-parcelable Capabilities
-{
-	/**
-	 * Indicates if this audio sink instance can work in secure audio path (SAP) mode.
-	 * @see Property.SECURE_AUDIO
-	 */
-	boolean supportsSecure;
+parcelable Capabilities {
+    /**
+     * Indicates if this audio sink instance can work in secure audio path (SAP) mode.
+     * @see Property.SECURE_AUDIO
+     */
+    boolean supportsSecure;
 
-	/**
-	 * List of content types supported by this audio sink instance.
-	 * Clients should check this before calling `open()` with a given `ContentType`.
-	 * @see IAudioSink.open()
-	 */
-	ContentType[] supportedContentTypes;
+    /**
+     * List of content types supported by this audio sink instance.
+     * Clients should check this before calling `open()` with a given `ContentType`.
+     * @see IAudioSink.open()
+     */
+    ContentType[] supportedContentTypes;
 }

@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.hdmioutput;
 
-/** 
+/**
  *  @brief     HDCP protocol version enum.
  *
  *  Identifies the supported version of HDCP (High-bandwidth Digital Content Protection)
@@ -31,8 +31,7 @@ package com.rdk.hal.hdmioutput;
  */
 @VintfStability
 @Backing(type = "int")
-enum HDCPProtocolVersion
-{
+enum HDCPProtocolVersion {
     /**
      * HDCP protocol is not supported or unknown.
      */

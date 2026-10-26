@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.avclock;
- 
+
 /**
  * @brief Represents a snapshot of the AV System Time Clock (STC) along with its associated Linux system timestamp.
  *
@@ -25,8 +25,8 @@ package com.rdk.hal.avclock;
  * The System Time Clock (STC) is used to regulate AV playback, ensuring both Audio and Video stay in sync.
  * On some platforms the Audio clock *is* the STC, and it may not match the Linux wall clock.
  *
- * This structure allows consumers to retrieve the current STC value and know when (in system time) that value was sampled.
- * This is essential for tasks such as subtitle scheduling or time-domain synchronization.
+ * This structure allows consumers to retrieve the current STC value and know when (in system time) that value was
+ * sampled. This is essential for tasks such as subtitle scheduling or time-domain synchronization.
  *
  * Common use-case: Subtitle rendering
  *
@@ -41,7 +41,8 @@ package com.rdk.hal.avclock;
  *
  * Note on virtual devices:
  * On virtual platforms (e.g., QEMU), the STC and the system clock may initially progress at the same rate.
- * Thus, clockTimeNs may be equal to sampleTimestampNs. This will change if proper broadcast clock recovery is introduced.
+ * Thus, clockTimeNs may be equal to sampleTimestampNs. This will change if proper broadcast clock recovery is
+ * introduced.
  *
  * @see https://linux.die.net/man/2/clock_gettime for CLOCK_MONOTONIC_RAW behavior.
  *
@@ -51,9 +52,7 @@ package com.rdk.hal.avclock;
  * @author Gerald Weatherup
  */
 @VintfStability
-parcelable ClockTime 
-{
-
+parcelable ClockTime {
     /**
      * The current STC (System Time Clock) value in nanoseconds.
      * This clock governs AV playback timing and may differ in rate from system wall clock time.

@@ -24,7 +24,7 @@
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: drm
-version: 0.1.0.0
+version: 0.2.0.0
 generation: 1
 status: GREEN
 description: "DRM plugin and crypto plugin interfaces for content protection"

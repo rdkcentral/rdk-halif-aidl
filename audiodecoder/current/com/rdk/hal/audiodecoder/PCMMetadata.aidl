@@ -20,7 +20,7 @@ package com.rdk.hal.audiodecoder;
 import com.rdk.hal.audiodecoder.ChannelType;
 import com.rdk.hal.audiodecoder.PCMFormat;
 
-/** 
+/**
  *  @brief     PCM Audio frame metadata.
  *
  *  The format fields on this parcelable - numChannels, channelTypes,
@@ -44,7 +44,6 @@ import com.rdk.hal.audiodecoder.PCMFormat;
 
 @VintfStability
 parcelable PCMMetadata {
-
     /**
      * Number of audio channels in this frame.
      *
@@ -84,7 +83,7 @@ parcelable PCMMetadata {
     boolean planarFormat;
 
     /**
-     * Private extension for future use. 
+     * Private extension for future use.
      */
     ParcelableHolder extension;
 }

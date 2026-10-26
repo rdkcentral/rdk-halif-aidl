@@ -33,7 +33,7 @@ package com.rdk.hal.drm;
  * An app determines the type of a key request returned from getKeyRequest.
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum KeyRequestType {
     /**
      * Key request type is for an initial license request

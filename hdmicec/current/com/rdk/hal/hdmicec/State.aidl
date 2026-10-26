@@ -17,25 +17,24 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmicec;
- 
-/** 
+
+/**
  * @brief     HAL component states.
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
  * @author    Douglas Adler
  */
- 
+
 @VintfStability
-@Backing(type="int")
-enum State 
-{
-    /** 
-    * Initial state and default.
-    */
+@Backing(type = "int")
+enum State {
+    /**
+     * Initial state and default.
+     */
     CLOSED = 0,
 
-    /** 
-    * The HAL server component session is started. 
-    */
+    /**
+     * The HAL server component session is started.
+     */
     STARTED = 1
 }

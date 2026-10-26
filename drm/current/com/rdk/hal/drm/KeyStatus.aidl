@@ -37,6 +37,8 @@ import com.rdk.hal.drm.KeyStatusType;
  */
 @VintfStability
 parcelable KeyStatus {
+    /** The ID of the key. */
     byte[] keyId;
+    /** The usability status of the key. */
     KeyStatusType type;
 }

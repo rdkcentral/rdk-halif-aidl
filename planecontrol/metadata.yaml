@@ -23,7 +23,7 @@
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: planecontrol
-version: 0.2.0.0
+version: 0.3.0.0
 status: GREEN
 description: "Graphics and video plane composition control"
 type: SOC

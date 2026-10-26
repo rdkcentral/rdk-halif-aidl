@@ -34,8 +34,7 @@ import com.rdk.hal.compositeinput.VideoResolution;
  * keys — this avoids duplicating data across two read paths.
  */
 @VintfStability
-parcelable PortStatus
-{
+parcelable PortStatus {
     /** Port ID (0 to maxPorts-1). */
     int portId;
 

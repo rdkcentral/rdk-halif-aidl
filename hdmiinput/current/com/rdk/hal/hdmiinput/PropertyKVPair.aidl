@@ -17,10 +17,10 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmiinput;
-import com.rdk.hal.hdmiinput.Property;
 import com.rdk.hal.PropertyValue;
- 
-/** 
+import com.rdk.hal.hdmiinput.Property;
+
+/**
  *  @brief     Key-value pair for video decoder properties.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -28,11 +28,10 @@ import com.rdk.hal.PropertyValue;
  */
 
 @VintfStability
-parcelable PropertyKVPair{
- 
-    /* Property enum key. */
-    Property property;  
- 
-    /* Property value. */
+parcelable PropertyKVPair {
+    /** Property enum key. */
+    Property property;
+
+    /** Property value. */
     PropertyValue propertyValue;
 }

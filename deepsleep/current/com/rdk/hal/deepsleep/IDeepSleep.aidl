@@ -18,10 +18,10 @@
  */
 package com.rdk.hal.deepsleep;
 import com.rdk.hal.deepsleep.Capabilities;
-import com.rdk.hal.deepsleep.WakeUpTrigger;
 import com.rdk.hal.deepsleep.KeyCode;
+import com.rdk.hal.deepsleep.WakeUpTrigger;
 
-/** 
+/**
  *  @brief     Deep Sleep HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -29,15 +29,15 @@ import com.rdk.hal.deepsleep.KeyCode;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 
 @VintfStability
-interface IDeepSleep
-{
+interface IDeepSleep {
     /** The service name to publish. To be returned by getServiceName() in the derived class. */
     const @utf8InCpp String serviceName = "DeepSleep";
 
@@ -52,8 +52,9 @@ interface IDeepSleep
     /**
      * Places the device into deep sleep which is configured to wake on a set of trigger types.
      *
-     * The function will block until it resumes from standby and then returns the triggers that occured to wake up the device.
-     * Upon return, the system clock has been adjusted to closely represent the actual elapsed time spent in deep sleep.
+     * The function will block until it resumes from standby and then returns the triggers that occured to wake up the
+     * device. Upon return, the system clock has been adjusted to closely represent the actual elapsed time spent in
+     * deep sleep.
      *
      * The `preconfiguredTriggers[]` reported in the `Capabilities` are always enabled as trigger sources.
      * If they are not explicitly specified in the `triggersToWakeUpon[]` array then they are implicitly added.
@@ -68,24 +69,26 @@ interface IDeepSleep
      * After the device exits deep sleep, whichever trigger woke it, the HAL resets the timer period to 0.
      *
      * @param[in] triggersToWakeUpon    Array of wake up trigger events to wake upon after entering deep sleep.
-     * @param[out] wokeUpByTriggers     Array of wake up trigger events that occurred when waking the device from deep sleep.
-     * @param[out] keyCode              If one of the `wokeUpByTriggers[]` is an RCU based trigger, then keyCode contains the Linux key code.  
-     *                                  `null` if not applicable.
+     * @param[out] wokeUpByTriggers     Array of wake up trigger events that occurred when waking the device from deep
+     * sleep.
+     * @param[out] keyCode              If one of the `wokeUpByTriggers[]` is an RCU based trigger, then keyCode
+     * contains the Linux key code. `null` if not applicable.
      *
      * @returns boolean - true on success or false if any of the triggers are not supported on the device.
      * @retval true - the deep sleep was successful and woke up on one of the explicit or implicit triggers.
      * @retval false - deep sleep could not be entered.
      *
-     * 
+     *
      * @see setWakeUpTimer()
      */
-    boolean enterDeepSleep(in WakeUpTrigger[] triggersToWakeUpon, out WakeUpTrigger[] wokeUpByTriggers, out @nullable KeyCode keyCode);
+    boolean enterDeepSleep(
+        in WakeUpTrigger[] triggersToWakeUpon, out WakeUpTrigger[] wokeUpByTriggers, out @nullable KeyCode keyCode);
 
     /**
      * Sets the timer period to wake the device from deep sleep.
      *
-     * The timer starts when `enterDeepSleep()` is called and `WakeUpTrigger.TIMER` is listed in the `triggersToWakeUpon[]` array.
-     * The timer must support at least 7 days.
+     * The timer starts when `enterDeepSleep()` is called and `WakeUpTrigger.TIMER` is listed in the
+     * `triggersToWakeUpon[]` array. The timer must support at least 7 days.
      *
      * The period is 0 until this is called, and is reset to 0 after every wake, so the middleware sets it
      * before each `enterDeepSleep()`. The middleware calculates the period from real time, for example the
@@ -105,7 +108,7 @@ interface IDeepSleep
      *
      *
      * @pre The WakeUpTrigger.TIMER must be listed in the Capabilities.supportedTriggers array.
-     * 
+     *
      * @see getWakeUpTimer(), enterDeepSleep()
      */
     boolean setWakeUpTimer(in int seconds);
@@ -119,7 +122,7 @@ interface IDeepSleep
      *
      *
      * @pre The WakeUpTrigger.TIMER must be listed in the Capabilities.supportedTriggers array.
-     * 
+     *
      * @see setWakeUpTimer()
      */
     int getWakeUpTimer();

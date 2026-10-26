@@ -30,9 +30,8 @@ package com.rdk.hal.hdmiinput;
  * @author Gerald Weatherup
  */
 @VintfStability
-@Backing(type="int")
-enum Property 
-{
+@Backing(type = "int")
+enum Property {
     /**
      * Unique ID for the HDMI input port.
      *

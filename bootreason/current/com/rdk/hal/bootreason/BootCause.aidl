@@ -18,17 +18,16 @@
  */
 package com.rdk.hal.bootreason;
 
-/** 
+/**
  *  @brief Reasons the device booted.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
+
 @VintfStability
-@Backing(type="int")
-enum BootCause
-{
+@Backing(type = "int")
+enum BootCause {
     /** Boot Reason is unknown. */
     ERROR_UNKNOWN = -1,
 

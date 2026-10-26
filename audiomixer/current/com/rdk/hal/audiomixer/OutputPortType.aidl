@@ -34,7 +34,7 @@ package com.rdk.hal.audiomixer;
  * @copyright Copyright 2026 RDK Management
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum OutputPortType {
     /** Type cannot be determined or is platform-specific. */
     UNKNOWN = 0,

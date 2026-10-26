@@ -17,17 +17,17 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmiinput;
- 
-/** 
+
+/**
  * @brief     HAL component states.
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
  * @author    Douglas Adler
  * @author    Gerald Weatherup
  */
- 
+
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum State {
 
     /**
@@ -40,8 +40,8 @@ enum State {
      */
     OPENING = 1,
 
-    /** 
-     * The HAL server component session is open and ready to start. 
+    /**
+     * The HAL server component session is open and ready to start.
      */
     READY = 2,
 

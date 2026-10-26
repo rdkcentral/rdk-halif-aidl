@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.videodecoder;
-import com.rdk.hal.videodecoder.Property;
 import com.rdk.hal.PropertyValue;
+import com.rdk.hal.videodecoder.Property;
 
 /**
  *  @brief     Key-value pair for video decoder properties.
@@ -28,11 +28,10 @@ import com.rdk.hal.PropertyValue;
  */
 
 @VintfStability
-parcelable PropertyKVPair{
-
-    /* Property enum key. */
+parcelable PropertyKVPair {
+    /** Property enum key. */
     Property property;
 
-    /* Property value. */
+    /** Property value. */
     PropertyValue propertyValue;
 }

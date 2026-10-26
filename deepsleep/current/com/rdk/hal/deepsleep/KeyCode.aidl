@@ -17,17 +17,16 @@
  * limitations under the License.
  */
 package com.rdk.hal.deepsleep;
- 
-/** 
+
+/**
  *  @brief     Deep sleep key code definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
 
-@VintfStability 
+@VintfStability
 parcelable KeyCode {
-
     /**
      * The RCU key code that was the wake up trigger.
      * The value is a standard Linux key code.
