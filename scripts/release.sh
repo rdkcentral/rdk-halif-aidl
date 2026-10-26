@@ -678,11 +678,21 @@ case "${1:-}" in
         shift
         [[ -n "${1:-}" ]] || die "unpin: name a module, or 'all'."
         if [[ "$1" == "all" ]]; then
-            PIN_VERSIONS=()
+            _unpin=("${!PIN_VERSIONS[@]}")
         else
             [[ -n "${PIN_VERSIONS[$1]+x}" ]] || die "unpin: $1 is not pinned."
-            unset 'PIN_VERSIONS[$1]'
+            _unpin=("$1")
         fi
+        # A module already staged at its pinned version keeps that version in
+        # metadata.yaml + its snapshot, and the audit recovers it as a pin.
+        # Unstage it first, or the unpin would be silently undone.
+        for _c in "${_unpin[@]}"; do
+            [[ -d "${REPO_ROOT}/${_c}/${PIN_VERSIONS[$_c]}" \
+               && ( -z "${_pin_baseline}" \
+                    || -z "$(git -C "${REPO_ROOT}" ls-tree -d --name-only "${_pin_baseline}" -- "${_c}/${PIN_VERSIONS[$_c]}")" ) ]] \
+                && die "unpin: ${_c} is staged at its pinned ${PIN_VERSIONS[$_c]}. Unstage it first: ./release.sh drop ${_c}"
+        done
+        for _c in "${_unpin[@]}"; do unset 'PIN_VERSIONS[$_c]'; done
         pins_save
         log "✓ Unpinned $1. It is staged by its labels on the next stage run."
         exit 0
@@ -3899,7 +3909,9 @@ run_structural_audit() {
                 PIN_VERSIONS[$comp]="${_pin}"
             else
                 _flags+=("pin ${_pin} is below the code's level ${_code_next}")
-                if [[ -n "${PIN_VERSIONS[$comp]:-}" ]]; then
+                # Once staged, metadata.yaml holds the old pin and the audit
+                # rejects a re-pin as a hand edit, so unstage first.
+                if [[ -n "${PIN_VERSIONS[$comp]:-}" && "${_meta_ver}" == "${_prev}" ]]; then
                     _hints+=("Pin at or above the code's level: ./release.sh stage all ${comp} --version ${_code_next}  (or ./release.sh unpin ${comp})")
                 else
                     _hints+=("Re-stage at or above the code's level: ./release.sh drop ${comp} && ./release.sh stage ${comp} --version ${_code_next}")
