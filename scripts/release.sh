@@ -678,11 +678,21 @@ case "${1:-}" in
         shift
         [[ -n "${1:-}" ]] || die "unpin: name a module, or 'all'."
         if [[ "$1" == "all" ]]; then
-            PIN_VERSIONS=()
+            _unpin=("${!PIN_VERSIONS[@]}")
         else
             [[ -n "${PIN_VERSIONS[$1]+x}" ]] || die "unpin: $1 is not pinned."
-            unset 'PIN_VERSIONS[$1]'
+            _unpin=("$1")
         fi
+        # A module already staged at its pinned version keeps that version in
+        # metadata.yaml + its snapshot, and the audit recovers it as a pin.
+        # Unstage it first, or the unpin would be silently undone.
+        for _c in "${_unpin[@]}"; do
+            [[ -d "${REPO_ROOT}/${_c}/${PIN_VERSIONS[$_c]}" \
+               && ( -z "${_pin_baseline}" \
+                    || -z "$(git -C "${REPO_ROOT}" ls-tree -d --name-only "${_pin_baseline}" -- "${_c}/${PIN_VERSIONS[$_c]}")" ) ]] \
+                && die "unpin: ${_c} is staged at its pinned ${PIN_VERSIONS[$_c]}. Unstage it first: ./release.sh drop ${_c}"
+        done
+        for _c in "${_unpin[@]}"; do unset 'PIN_VERSIONS[$_c]'; done
         pins_save
         log "✓ Unpinned $1. It is staged by its labels on the next stage run."
         exit 0
@@ -1997,7 +2007,9 @@ for sha in "${FP_COMMITS[@]}"; do
         COMP_TOUCHED[$comp]=1
         COMMIT_COMP_TOUCHED[$comp]=1
         COMP_FILES[$comp]="${COMP_FILES[$comp]:-}${file}"$'\n'
-        COMMIT_COMP_FILES[$comp]="${COMMIT_COMP_FILES[$comp]:-}${file##*/}"$'\n'
+        # Component-relative, so current/ and a released snapshot's copy of
+        # the same file stay distinguishable in the derivation.
+        COMMIT_COMP_FILES[$comp]="${COMMIT_COMP_FILES[$comp]:-}${file#"${comp}"/}"$'\n'
 
         if [[ -z "${COMMIT_COMP_DOCS_ONLY[$comp]+x}" ]]; then
             COMMIT_COMP_DOCS_ONLY[$comp]=1
@@ -3886,12 +3898,14 @@ run_structural_audit() {
         # hide a change the code makes.
         _pin="${PIN_VERSIONS[$comp]:-}"
         # A pin from an earlier `stage` run lives on as the version stage
-        # wrote: metadata.yaml moved off the released version, with an
-        # uncommitted <comp>/<version>/ snapshot beside it. --apply sees it
-        # that way, since PIN_VERSIONS only lasts for one invocation.
+        # wrote: metadata.yaml moved off the released version, with a
+        # <comp>/<version>/ snapshot beside it that the last release tag does
+        # not hold. stage git-adds the snapshot, so test against the tag, not
+        # the index. Kept in PIN_VERSIONS so the next-version step honours it.
         if [[ -z "${_pin}" && -n "${_meta_ver}" && "${_meta_ver}" != "${_prev}" \
               && -d "${REPO_ROOT}/${comp}/${_meta_ver}" \
-              && -z "$(git -C "${REPO_ROOT}" ls-files -- "${comp}/${_meta_ver}" | head -1)" ]]; then
+              && ( -z "${_pin_baseline}" \
+                   || -z "$(git -C "${REPO_ROOT}" ls-tree -d --name-only "${_pin_baseline}" -- "${comp}/${_meta_ver}")" ) ]]; then
             _pin="${_meta_ver}"
         fi
         if [[ -n "${_pin}" && "${_code_next}" != "-" ]]; then
@@ -3899,8 +3913,16 @@ run_structural_audit() {
                 _notes+=("pinned to ${_pin} by stage --version${_label_flag:+ (${_label_flag})}")
                 _expected="${_pin}"
                 _label_flag=""
+                PIN_VERSIONS[$comp]="${_pin}"
             else
                 _flags+=("pin ${_pin} is below the code's level ${_code_next}")
+                # Once staged, metadata.yaml holds the old pin and the audit
+                # rejects a re-pin as a hand edit, so unstage first.
+                if [[ -n "${PIN_VERSIONS[$comp]:-}" && "${_meta_ver}" == "${_prev}" ]]; then
+                    _hints+=("Pin at or above the code's level: ./release.sh stage all ${comp} --version ${_code_next}  (or ./release.sh unpin ${comp})")
+                else
+                    _hints+=("Re-stage at or above the code's level: ./release.sh drop ${comp} && ./release.sh stage ${comp} --version ${_code_next}")
+                fi
             fi
         fi
         if [[ -n "${_label_flag}" ]]; then
@@ -3977,8 +3999,16 @@ fi
 # anything is written or branched. The full-repo sweep remains the
 # standalone --audit; --no-audit (testing only) bypasses this gate.
 if [[ ( "${DO_WRITES}" -eq 1 || "${DO_BRANCH}" -eq 1 ) && "${NO_AUDIT}" -ne 1 ]]; then
+    # `stage all` picks its modules later, in the per-component loop, so on
+    # a fresh tree PLAN_COMPONENTS is empty here. Audit everything it may
+    # write instead: every touched module and every pinned one.
+    declare -A _gate_set=()
+    for _c in "${!PLAN_COMPONENTS[@]}"; do _gate_set[$_c]=1; done
+    if [[ "${ACCEPT_ALL}" -eq 1 ]]; then
+        for _c in "${!COMP_TOUCHED[@]}" "${!PIN_VERSIONS[@]}"; do _gate_set[$_c]=1; done
+    fi
     _gate_targets=()
-    for _c in "${!PLAN_COMPONENTS[@]}"; do
+    for _c in $(printf '%s\n' "${!_gate_set[@]}" | sort); do
         is_buildable_component "${_c}" && _gate_targets+=("${_c}")
     done
     if [[ ${#_gate_targets[@]} -gt 0 ]] && ! run_structural_audit "${_gate_targets[@]}"; then
