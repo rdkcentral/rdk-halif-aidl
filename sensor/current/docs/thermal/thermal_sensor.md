@@ -6,7 +6,7 @@ It abstracts the underlying hardware sensors, vendor thermal policy engine, and 
 Thermal thresholds are defined at multiple severity levels, allowing the system or user space components to **receive early warning events** and communicate thermal stress to the user, indicating that the device will shut down if the condition is not rectified.
 
 The vendor thermal policy remains responsible for determining exact threshold values and corresponding mitigation strategies.
-When any level is breached, the HAL emits a well-defined `ThermalActionEvent` describing the new thermal condition.
+When any level is breached, the HAL emits an `ActionEvent` describing the sensor's new state.
 
 This layered model keeps thermal management flexible across hardware implementations while ensuring consistent signalling behaviour to upper layers.
 
@@ -15,7 +15,7 @@ This layered model keeps thermal management flexible across hardware implementat
 !!! info "References"
     |||
     |-|-|
-    |**Interface Definition**|[sensor/current/thermal](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/sensor/current/thermal)|
+    |**Interface Definition**|[`sensor/current/com/rdk/hal/sensor/thermal`](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/sensor/current/com/rdk/hal/sensor/thermal)|
     |**API Documentation**| *TBD* |
     |**HAL Interface Type**|[AIDL and Binder](../../introduction/aidl_and_binder.md)|
     |**Initialization - TBC**| [systemd](../../vsi/systemd/current/systemd.md) - **hal-sensor-thermal.service** |
@@ -47,10 +47,10 @@ The Thermal HAL allows RDK Middleware to receive high-level **thermal action eve
 | **HAL.THERMAL.1** | Shall provide an event-driven API to report vendor-defined thermal state changes to RDK Middleware using the `State` enum. | |
 | **HAL.THERMAL.2** | Shall not expose or require Middleware to manage raw temperature thresholds or thermal policy decisions. | |
 | **HAL.THERMAL.3** | Shall emit all thermal state change events to registered Middleware clients and support registering / unregistering of such clients. | |
-| **HAL.THERMAL.4** | Shall support querying the current thermal state at any time via a `getCurrentThermalState()` API. | |
+| **HAL.THERMAL.4** | Shall support querying the worst current state across all sensors at any time via `getCurrentThermalState()`. | |
 | **HAL.THERMAL.5** | Shall support optional reporting of current temperature readings for platform sensors via `getCurrentTemperatures()`. | |
 | **HAL.THERMAL.6** | Shall provide a `vendorInfo` string field in thermal state change events for vendor-specific debug or telemetry purposes. | |
-| **HAL.THERMAL.7** | Shall update `getCurrentThermalState()` coherently with emitted state change events (`CRITICAL_TEMPERATURE_EXCEEDED` when cooling, `NORMAL` after recovery, `CRITICAL_SHUTDOWN_IMMINENT` before shutdown). | Ensures predictable state → event alignment. |
+| **HAL.THERMAL.7** | Shall update `getCurrentThermalState()` coherently with emitted state change events following the [Thermal State Machine](#thermal-state-machine). | Ensures predictable state → event alignment. |
 
 ---
 
@@ -61,8 +61,8 @@ The Thermal HAL allows RDK Middleware to receive high-level **thermal action eve
 | `com/rdk/hal/sensor/thermal/IThermalSensor.aidl` | Main service interface for registering listeners and querying state/telemetry. |
 | `com/rdk/hal/sensor/thermal/IThermalEventListener.aidl` | One-way callback for thermal state change events. |
 | `com/rdk/hal/sensor/thermal/ActionEvent.aidl` | Parcelable event payload, including `state`, `timestampMonotonicMs`, and `temperatureReading`. |
-| `com/rdk/hal/sensor/thermal/State.aidl` | Thermal state enumeration: `NORMAL`, `CRITICAL_TEMPERATURE_EXCEEDED`, `CRITICAL_TEMPERATURE_RECOVERED`, `CRITICAL_SHUTDOWN_IMMINENT`. |
-| `com/rdk/hal/sensor/thermal/TemperatureReading.aidl` | Optional per-sensor telemetry record (°C + timestamp). |
+| `com/rdk/hal/sensor/thermal/State.aidl` | Thermal state enumeration: `NORMAL`, `CRITICAL_TEMPERATURE_EXCEEDED`, `CRITICAL_SHUTDOWN_IMMINENT`; `CRITICAL_TEMPERATURE_RECOVERED` is deprecated. |
+| `com/rdk/hal/sensor/thermal/TemperatureReading.aidl` | Per-sensor temperature record (°C + timestamp); carried on every state change event. |
 
 ---
 
@@ -168,7 +168,7 @@ graph RL
 
 The Thermal HAL exposes a small, extensible set of **thermal states**, represented by the **`State`** enum.
 
-These states represent high-level system thermal conditions determined by the platform's vendor-defined Thermal Policy Engine.
+Each thermal sensor is in one of these states, determined by the platform's vendor-defined Thermal Policy Engine.
 
 They enable general principles of:
 
@@ -182,26 +182,9 @@ The HAL emits state change events containing these states, abstracting away plat
 
 ```aidl
 enum State {
-    /**
-     * @brief Normal thermal conditions.
-     */
     NORMAL = 0,
-
-    /**
-    * @brief Temperature has exceeded a critical threshold.
-    *  Platform will be in active mitigation if possible.
-    */
     CRITICAL_TEMPERATURE_EXCEEDED = 1,
-
-    /**
-    * @brief Temperature has recovered from a critical event.
-    *  Platform will return to normal state
-    */
     CRITICAL_TEMPERATURE_RECOVERED = 2,
-
-    /**
-     * @brief Shutdown is imminent due to critical thermal breach.
-     */
     CRITICAL_SHUTDOWN_IMMINENT = 3
 }
 ```
@@ -210,22 +193,32 @@ enum State {
 
 ## Thermal State Machine
 
-`getCurrentThermalState()` returns one of the following values:
+Each thermal sensor declared in the HFP has its own state machine. The product's thermal specification decides when each transition occurs; the sensor's HFP `triggers` declare the thresholds it uses.
 
-| State                              | Description                                                           |
-| --------------------------------   | --------------------------------------------------------------------- |
-| **NORMAL**                         | No mitigation active; platform within safe thermal limits.            |
-| **CRITICAL_TEMPERATURE_EXCEEDED**  | Platform entered critical temperature, if possible platform vendor-defined mitigation is active. |
-| **CRITICAL_TEMPERATURE_RECOVERED** | Platform recovered from critical temperature, and is returning to normal state. |
-| **CRITICAL_SHUTDOWN_IMMINENT**     | Platform entering forced thermal shutdown; critical platform level actions are imminent. |
-
-**Typical transition model:**
-
-```text
-NORMAL  →  CRITICAL_TEMPERATURE_EXCEEDED  →  CRITICAL_SHUTDOWN_IMMINENT
-   ↑          ↓                    ↓
-   └──────────┴──── CRITICAL_TEMPERATURE_RECOVERED (returns to NORMAL)
+```mermaid
+stateDiagram-v2
+    [*] --> NORMAL : service start, temperature < exceeded
+    [*] --> CRITICAL_TEMPERATURE_EXCEEDED : service start, exceeded ≤ temperature < shutdown
+    [*] --> CRITICAL_SHUTDOWN_IMMINENT : service start, temperature ≥ shutdown
+    NORMAL --> CRITICAL_TEMPERATURE_EXCEEDED : temperature ≥ exceeded
+    CRITICAL_TEMPERATURE_EXCEEDED --> NORMAL : temperature < recovered
+    NORMAL --> CRITICAL_SHUTDOWN_IMMINENT : temperature ≥ shutdown
+    CRITICAL_TEMPERATURE_EXCEEDED --> CRITICAL_SHUTDOWN_IMMINENT : temperature ≥ shutdown
+    CRITICAL_SHUTDOWN_IMMINENT --> [*] : platform shutdown
 ```
+
+`recovered`, `exceeded` and `shutdown` are the sensor's HFP `triggers` values (`critical_temperature_recovered_celsius`, `critical_temperature_exceeded_celsius`, `entering_critical_shutdown_celsius`).
+
+| State | Meaning | Entered when |
+| --- | --- | --- |
+| **NORMAL** | No mitigation active; the sensor is within safe thermal limits. | Service start with the temperature below the exceeded threshold; or the temperature falls below the recovered threshold while in `CRITICAL_TEMPERATURE_EXCEEDED`. |
+| **CRITICAL_TEMPERATURE_EXCEEDED** | Critical temperature reached; vendor mitigation active where supported. | The temperature reaches the exceeded threshold; or service start with the temperature at or above the exceeded threshold and below the shutdown threshold. |
+| **CRITICAL_TEMPERATURE_RECOVERED** | Deprecated. | Not entered. |
+| **CRITICAL_SHUTDOWN_IMMINENT** | Forced thermal shutdown in progress. Terminal. | The temperature reaches the shutdown threshold, including at service start. |
+
+- Between the recovered and exceeded thresholds the state does not change.
+- Each `onThermalStateChange()` event carries the sensor's new state and its `temperatureReading`, which identifies the sensor and is always set.
+- The HAL emits no more than the sensor's HFP `policy.max_state_events_per_minute` events for that sensor in any 60 s window. A transition that would exceed the limit is not emitted at once: when the limit next allows an event, the HAL emits one event carrying the sensor's current state, if that differs from the state last emitted for the sensor. `CRITICAL_SHUTDOWN_IMMINENT` is always emitted immediately.
 
 ---
 
@@ -241,12 +234,53 @@ sequenceDiagram
     participant MW
     participant App
 
-    Sensors->>Policy: Report current temperatures
-    Policy->>HAL: Detect moderate condition, activate mitigation
+    Sensors->>Policy: Sensor reaches its exceeded threshold
+    Policy->>HAL: Activate mitigation
     HAL->>MW: Emit onThermalStateChange(state=CRITICAL_TEMPERATURE_EXCEEDED)
     MW->>Telemetry: Log event
-    HAL->>MW: Emit onThermalStateChange(state=CRITICAL_TEMPERATURE_RECOVERED)
+    Sensors->>Policy: Sensor falls below its recovered threshold
+    HAL->>MW: Emit onThermalStateChange(state=NORMAL)
     MW->>App: Resume normal behaviour
+```
+
+---
+
+### Independent Sensors
+
+```mermaid
+sequenceDiagram
+    participant Die as Sensor soc_die
+    participant Board as Sensor board
+    participant HAL
+    participant MW
+
+    Die->>HAL: 99 °C, at or above its exceeded threshold (98 °C)
+    HAL->>MW: onThermalStateChange(CRITICAL_TEMPERATURE_EXCEEDED, temperatureReading.sensorName = "SoC Die")
+    Board->>HAL: 66 °C, below its exceeded threshold (70 °C)
+    Note over HAL: board stays NORMAL, no event
+    Die->>HAL: 89 °C, below its recovered threshold (90 °C)
+    HAL->>MW: onThermalStateChange(NORMAL, temperatureReading.sensorName = "SoC Die")
+```
+
+---
+
+### Event Rate Limit
+
+```mermaid
+sequenceDiagram
+    participant Die as Sensor soc_die
+    participant HAL
+    participant MW
+
+    Note over Die,MW: max_state_events_per_minute = 6. Six events already emitted for soc_die in this 60 s window, the last one NORMAL
+    Die->>HAL: Reaches its exceeded threshold
+    Note over HAL: Limit reached, event held
+    Die->>HAL: Falls below its recovered threshold
+    Die->>HAL: Reaches its exceeded threshold
+    Note over HAL: Window allows an event
+    HAL->>MW: onThermalStateChange(CRITICAL_TEMPERATURE_EXCEEDED), one event for the current state
+    Die->>HAL: Reaches its shutdown threshold
+    HAL->>MW: onThermalStateChange(CRITICAL_SHUTDOWN_IMMINENT), never held
 ```
 
 ---
@@ -309,25 +343,28 @@ sensor:
       #   recovered  <  exceeded  <  shutdown
       #
       # • critical_temperature_recovered_celsius :
-      #       Threshold below which the system is considered recovered and
-      #       returns to NORMAL state.
+      #       Threshold below which the sensor returns from
+      #       CRITICAL_TEMPERATURE_EXCEEDED to NORMAL.
       # • critical_temperature_exceeded_celsius :
       #       Point at which CRITICAL_TEMPERATURE_EXCEEDED is emitted and
       #       mitigation (if supported) becomes active.  This is usually a few
       #       degrees ABOVE operational max to allow early warning.
       # • entering_critical_shutdown_celsius :
-      #       Hard limit at which ENTERING_CRITICAL_SHUTDOWN is emitted and
+      #       Hard limit at which CRITICAL_SHUTDOWN_IMMINENT is emitted and
       #       hardware shutdown is initiated.
+      #
+      # Between the recovered and exceeded thresholds the state does not change.
       triggers:
         critical_temperature_recovered_celsius: 90
         critical_temperature_exceeded_celsius: 98
         entering_critical_shutdown_celsius: 115
 
+      # • max_state_events_per_minute :
+      #       Maximum onThermalStateChange() events for this sensor in any
+      #       60 s window. Recommended: 6.
       policy:
         shutdown_min_downtime_s: 900
-        recovery:
-          strategy: TIME_BASED
-          min_cooldown_seconds: 240
+        max_state_events_per_minute: 6
 
       vendor:
         vendorCode: 1001  # Used in com.rdk.hal.sensor.thermal/TemperatureReading.aidl
@@ -356,9 +393,7 @@ sensor:
 
       policy:
         shutdown_min_downtime_s: 600
-        recovery:
-          strategy: TIME_BASED
-          min_cooldown_seconds: 180
+        max_state_events_per_minute: 6
 
       vendor:
         vendorCode: 1002  # Used in com.rdk.hal.sensor.thermal/TemperatureReading.aidl

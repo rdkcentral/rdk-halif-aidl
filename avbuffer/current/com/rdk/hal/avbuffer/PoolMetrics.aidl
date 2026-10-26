@@ -19,22 +19,21 @@
 package com.rdk.hal.avbuffer;
 import com.rdk.hal.avbuffer.Pool;
 
-/** 
+/**
  *  @brief     AV buffer pool metrics definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
 
-@VintfStability 
-parcelable PoolMetrics 
-{
+@VintfStability
+parcelable PoolMetrics {
     /** Handle for a pool. */
     Pool poolHandle;
 
     /** Total bytes used by allocations created inside the pool. */
-	int bytesUsed;
+    int bytesUsed;
 
     /** Total bytes of pool storage. */
-  	int bytesTotal; 
+    int bytesTotal;
 }

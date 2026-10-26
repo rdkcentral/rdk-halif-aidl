@@ -21,22 +21,21 @@ package com.rdk.hal.compositeinput;
 
 /**
  * @brief Composite input signal status.
- * 
+ *
  * Describes the current state of the composite video signal detection.
  */
 @VintfStability
-@Backing(type="int")
-enum SignalStatus
-{
+@Backing(type = "int")
+enum SignalStatus {
     /** No signal detected on the port. */
     NO_SIGNAL = 0,
-    
+
     /** Signal detected but unstable or not locked. */
     UNSTABLE = 1,
-    
+
     /** Signal detected but format is not supported. */
     NOT_SUPPORTED = 2,
-    
+
     /** Signal detected, locked, and stable. */
     STABLE = 3,
 }

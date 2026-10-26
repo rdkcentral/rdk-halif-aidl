@@ -17,15 +17,15 @@
  * limitations under the License.
  */
 package com.rdk.hal.avclock;
+import com.rdk.hal.PropertyValue;
 import com.rdk.hal.avclock.Capabilities;
 import com.rdk.hal.avclock.IAVClockController;
 import com.rdk.hal.avclock.IAVClockControllerListener;
 import com.rdk.hal.avclock.IAVClockEventListener;
 import com.rdk.hal.avclock.Property;
-import com.rdk.hal.PropertyValue;
 import com.rdk.hal.avclock.State;
 
-/** 
+/**
  *  @brief     AV Clock HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -33,15 +33,17 @@ import com.rdk.hal.avclock.State;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 
 @VintfStability
-interface IAVClock 
-{
+interface IAVClock {
+    /** Used to indicate that a clock value is invalid and should not be used **/
+    const long UNDEFINED_TIME = -1L;
 
     /** AV Clock resource ID type */
     @VintfStability
@@ -55,7 +57,7 @@ interface IAVClock
 
     /**
      * Gets the capabilities for this AV Clock.
-     * 
+     *
      * This function can be called at any time and is not dependant on any AV Clock state.
      * The returned value is not allowed to change between calls.
      *
@@ -66,8 +68,8 @@ interface IAVClock
      */
     Capabilities getCapabilities();
 
-	/**
-	 * Gets the current AV Clock state.
+    /**
+     * Gets the current AV Clock state.
      *
      * @returns State enum value.
      *
@@ -99,8 +101,8 @@ interface IAVClock
     @nullable PropertyValue getProperty(in Property property);
 
     /**
-	 * Opens the AV Clock.
-     * 
+     * Opens the AV Clock.
+     *
      * While the AV Clock is in the `OPENING` state, these defaults are set on the AV Clock:
      *  - Mode is set to `ClockMode::AUTO`
      *  - Playback rate is set to 1.0
@@ -109,7 +111,7 @@ interface IAVClock
      * `attachClock()` / `detachClock()` / `getClock()` on the audio and video
      * sink controllers (`IAudioSinkController`, `IVideoSinkController`),
      * passing this clock's `IAVClock.Id`. The AV Clock holds no sink state.
-     * 
+     *
      * If successful the AV Clock transitions to the `OPENING` state and then to the `READY` state.
      * If an internal error occurs, the AV Clock transitions to the `OPENING` state and then back to the `CLOSED` state
      * with a null interface returned.
@@ -120,15 +122,15 @@ interface IAVClock
      * @param[in] avClockControllerListener		    Listener object for controller callbacks.
      *
      * @returns IAVClockController interface or null on internal error.
-     * 
+     *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
-     * 
+     *
      * @pre AV Clock is in State::CLOSED state.
-     * 
+     *
      * @see close(), IAVClockController
      */
     @nullable IAVClockController open(in IAVClockControllerListener avClockControllerListener);
@@ -148,7 +150,7 @@ interface IAVClock
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If instance is not in OPENED State.
-     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object. 
+     * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
      *
      * @pre AV Clock has been successfully opened and is in the State::READY state.
@@ -157,10 +159,9 @@ interface IAVClock
      */
     boolean close(in IAVClockController avClockController);
 
-
     /**
-	 * Registers an AV Clock event listener.
-     * 
+     * Registers an AV Clock event listener.
+     *
      * An `IAVClockEventListener` can only be registered once and will fail on subsequent
      * registration attempts.
      *
@@ -179,8 +180,8 @@ interface IAVClock
     boolean registerEventListener(in IAVClockEventListener avClockEventListener);
 
     /**
-	 * Unregisters an AV Clock event listener.
-     * 
+     * Unregisters an AV Clock event listener.
+     *
      * @param[in] avClockEventListener	    Listener object for event callbacks.
      *
      * @return boolean
@@ -194,5 +195,4 @@ interface IAVClock
      * @see registerEventListener()
      */
     boolean unregisterEventListener(in IAVClockEventListener avClockEventListener);
-
 }

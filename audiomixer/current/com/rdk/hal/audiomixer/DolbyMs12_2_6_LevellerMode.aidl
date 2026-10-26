@@ -22,9 +22,12 @@ package com.rdk.hal.audiomixer;
  * @brief Volume leveller operating mode for Dolby MS12 runtime command control.
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum DolbyMs12_2_6_LevellerMode {
+    /** Volume leveller disabled. */
     OFF = 0,
+    /** Operates at the level set by the client. */
     MANUAL = 1,
+    /** The level is determined automatically. */
     AUTO = 2
 }

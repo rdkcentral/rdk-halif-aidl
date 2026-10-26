@@ -18,10 +18,10 @@
  */
 package com.rdk.hal.planecontrol;
 
-import com.rdk.hal.planecontrol.GraphicsFbInfo;
 import com.rdk.hal.planecontrol.GraphicsFbCapabilities;
+import com.rdk.hal.planecontrol.GraphicsFbInfo;
 
-/** 
+/**
  *  @brief     Graphics Frame Buffer (Fb) interface.
  *  @author    Gerald Weatherup
  *  @author    Peter Stieglitz
@@ -29,16 +29,15 @@ import com.rdk.hal.planecontrol.GraphicsFbCapabilities;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
- 
-@VintfStability
-interface IGraphicsFbProvider
-{
 
+@VintfStability
+interface IGraphicsFbProvider {
     /**
      * Gets the graphics frame buffer capabilities.
      *
@@ -56,10 +55,11 @@ interface IGraphicsFbProvider
      * Commit the graphics frame buffer to be displayed on the graphics plane.
      *
      * This is a non-blocking function to commit this frame buffer to display at the earliest opportunity.
-     * After the frame has been displayed an event is raised to indicate that the buffer, previously on display, is now free to be re-used.
-     * 
+     * After the frame has been displayed an event is raised to indicate that the buffer, previously on display, is now
+     * free to be re-used.
+     *
      * @param[in] graphicsFbId                The Frame Id of the buffer to replace the currently displaying buffer
-     * 
+     *
      * @returns boolean
      * @retval true     The frame was accepted for display.
      * @retval false    The frame was not accepted because the graphics frame id is invalid or unknown to this provider.
@@ -71,37 +71,38 @@ interface IGraphicsFbProvider
      * @see createGraphicsFb()
      */
     boolean commitGraphicsFb(in int graphicsFbId);
- 
+
     /**
      * Creates a graphics frame buffer for this plane.
-     * 
-     * This function can be called multiple times to create up to the maximum allowed graphics frames specified in the plane resources capabilities. 
-     * The returned file descriptor can be the same for all created graphics frame buffers.
-     * 
-     * @param[in] width                 The requested width of the graphics frame buffer.  
-     * @param[in] height                The requested height of the graphics frame buffer.  
+     *
+     * This function can be called multiple times to create up to the maximum allowed graphics frames specified in the
+     * plane resources capabilities. The returned file descriptor can be the same for all created graphics frame
+     * buffers.
+     *
+     * @param[in] width                 The requested width of the graphics frame buffer.
+     * @param[in] height                The requested height of the graphics frame buffer.
      * @param[out] outInfo              A parcelable describing the graphics frame buffer.
      *
      * @returns A Dma-Buf file descriptor and the associated graphics frame buffer info.
-     * 
-     * width and height must not exceed the GraphicsFbCapabilities. 
-     * 
+     *
+     * width and height must not exceed the GraphicsFbCapabilities.
+     *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
      *
-     * 
+     *
      * @see destroyGraphicsFb()
      */
-    ParcelFileDescriptor createGraphicsFb(in int width, in int height, out GraphicsFbInfo outInfo );
+    ParcelFileDescriptor createGraphicsFb(in int width, in int height, out GraphicsFbInfo outInfo);
 
     /**
      * Frees a graphics frame buffer.
-     * 
+     *
      * @param[in] graphicsFbId    The graphics frame buffer identifier
-     * 
+     *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid value.
-     * 
+     *
      * @see createGraphicsFb()
      */
     void destroyGraphicsFb(in int graphicsFbId);

@@ -22,13 +22,20 @@ package com.rdk.hal.audiomixer;
  * @brief Intelligent equalizer preset mode for Dolby MS12 runtime command control.
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum DolbyMs12_2_6_IeqMode {
+    /** Intelligent equaliser disabled. */
     OFF = 0,
+    /** Open preset. */
     OPEN = 1,
+    /** Rich preset. */
     RICH = 2,
+    /** Focused preset. */
     FOCUSED = 3,
+    /** Balanced preset. */
     BALANCED = 4,
+    /** Warm preset. */
     WARM = 5,
+    /** Detailed preset. */
     DETAILED = 6
 }

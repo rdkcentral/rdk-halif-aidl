@@ -5,17 +5,21 @@
 # clones the toolchain. Keep it pinned so the committed module-local
 # generated C++ always matches the generator that produced it.
 #
-# Pinned to release tag 2.6.0 (linux_binder_idl) which ships:
-#  - AIDL surface dump & structural diff toolchain (linux_binder_idl#27/#48):
-#    aidl_ops dump-surface emits the declared surface as canonical
-#    deterministic text; diff-surface classifies the structural difference
-#    (breaking / major / none) — the engine consumed by the release audit
-#    gate (#633/#568) to validate declared bump classes.
-# The AIDL generator is byte-identical to 2.5.0, so committed module-local C++
-# is unchanged by this bump — it is a toolchain-currency bump, not a regen.
-# Previously 2.5.0, which decoupled the binder wire protocol from compile
-# bitness (linux_binder_idl#42/#45/#46/#47) and added the QEMU kernel-matrix
-# round-trip harness (linux_binder_idl#40/#41).
+# Pinned to release tag 2.7.0 (linux_binder_idl), which ships:
+#  - protocol 8 by default on every toolchain, with BINDER_PROTOCOL=7|8 and
+#    TARGET_BITNESS=32|64 as the switches (linux_binder_idl#68/#69/#72); the
+#    old BINDER_IPC_32BIT and TARGET_LIB32_VERSION/TARGET_LIB64_VERSION are
+#    still honoured but deprecated;
+#  - servicemanager registering without requesting callers' security
+#    contexts, so binder works under AppArmor (linux_binder_idl#90/#91);
+#  - the Yocto reference recipe on Kirkstone (linux_binder_idl#87/#88), and
+#    host/logger.py without colorama (linux_binder_idl#81/#89).
+# Its AIDL generator emits #include <mutex> in Bp*.h (linux_binder_idl#59).
+# Every HAL module's committed C++ already carries it; the frozen
+# examples/aidl_versioning snapshots predate it and pick it up on regeneration.
+# Previously 2.6.0, which shipped the AIDL surface dump & structural diff
+# toolchain (linux_binder_idl#27/#48) consumed by the release audit gate
+# (#633/#568).
 #
 # Override for a one-off build with:  BINDER_VERSION=<ref> ./build_binder.sh
-2.6.0
+2.7.0

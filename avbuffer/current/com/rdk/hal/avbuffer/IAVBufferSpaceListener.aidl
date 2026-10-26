@@ -17,13 +17,13 @@
  * limitations under the License.
  */
 package com.rdk.hal.avbuffer;
+import com.rdk.hal.audiodecoder.IAudioDecoder;
 import com.rdk.hal.avbuffer.HeapMetrics;
 import com.rdk.hal.avbuffer.Pool;
 import com.rdk.hal.avbuffer.PoolMetrics;
 import com.rdk.hal.videodecoder.IVideoDecoder;
-import com.rdk.hal.audiodecoder.IAudioDecoder;
 
-/** 
+/**
  *  @brief     AV buffer space listener interface definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -31,12 +31,11 @@ import com.rdk.hal.audiodecoder.IAudioDecoder;
  */
 
 @VintfStability
-oneway interface IAVBufferSpaceListener
-{
+oneway interface IAVBufferSpaceListener {
     /**
      * Callback in response to IAVBuffer.notifyWhenSpaceAvailable() when the
      * requested space for an allocation becomes available in the pool.
-     * 
+     *
      * @see IAVBuffer.notifyWhenSpaceAvailable()
      */
     void onSpaceAvailable();

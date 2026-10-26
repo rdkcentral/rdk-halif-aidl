@@ -1,0 +1,8 @@
+aidl_interface:
+  name: deepsleep
+  version: 1010
+  srcs:
+    - com/rdk/hal/deepsleep/*.aidl
+  imports: []
+  stability: vintf
+  layout: module-local

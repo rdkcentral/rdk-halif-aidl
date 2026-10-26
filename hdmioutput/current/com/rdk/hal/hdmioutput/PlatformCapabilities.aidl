@@ -33,8 +33,7 @@ import com.rdk.hal.hdmioutput.FreeSync;
  *  @author    Gerald Weatherup
  */
 @VintfStability
-parcelable PlatformCapabilities
-{
+parcelable PlatformCapabilities {
     /**
      * The default/native frame rate the platform uses for HDMI output.
      *

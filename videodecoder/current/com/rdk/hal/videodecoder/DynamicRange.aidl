@@ -35,7 +35,7 @@ package com.rdk.hal.videodecoder;
  * @enum DynamicRange
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum DynamicRange {
     /**
      * Dynamic range is unknown or not reported.

@@ -1,0 +1,9 @@
+aidl_interface:
+  name: compositeinput
+  version: 3000
+  srcs:
+    - com/rdk/hal/compositeinput/*.aidl
+  imports:
+    - common@0.3.0.0
+  stability: vintf
+  layout: module-local

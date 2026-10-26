@@ -19,7 +19,7 @@
 
 ## 🚧 Document Under Construction
 
-This document serves as a **placeholder**.
+This document serves as a **placeholder** for common HAL types, including the shared `OperationalMode` enum.
 
 The content is **not yet released** and is currently **under construction**.
 

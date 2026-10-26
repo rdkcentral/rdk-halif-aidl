@@ -97,6 +97,10 @@ hdmioutput:
         - HDR10_PLUS
         - DOLBY_VISION
 
+      # Indicates whether the platform supports forcing a specific HDR output mode
+      # even when content doesn't natively use that mode
+      supportsForcedHDROutputModes: true
+
       # Content types supported (from ContentType.aidl)
       # These map to AVI InfoFrame ITC/CN fields
       supportedContentTypes:

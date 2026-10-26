@@ -18,16 +18,16 @@
  */
 package com.rdk.hal.hdmioutput;
 
-import com.rdk.hal.hdmioutput.HDMIVersion;
-import com.rdk.hal.hdmioutput.VIC;
-import com.rdk.hal.hdmioutput.PixelFormat;
-import com.rdk.hal.hdmioutput.HDROutputMode;
-import com.rdk.hal.hdmioutput.HDCPProtocolVersion;
+import com.rdk.hal.hdmioutput.AdditionalColorimetryExtension;
 import com.rdk.hal.hdmioutput.Colorimetry;
 import com.rdk.hal.hdmioutput.ExtendedColorimetry;
-import com.rdk.hal.hdmioutput.AdditionalColorimetryExtension;
+import com.rdk.hal.hdmioutput.HDCPProtocolVersion;
+import com.rdk.hal.hdmioutput.HDMIVersion;
+import com.rdk.hal.hdmioutput.HDROutputMode;
+import com.rdk.hal.hdmioutput.PixelFormat;
+import com.rdk.hal.hdmioutput.VIC;
 
-/** 
+/**
  *  @brief     HDMI output port device capabilities definition.
  *
  *  This parcelable encapsulates all HDMI output-related feature support
@@ -40,8 +40,7 @@ import com.rdk.hal.hdmioutput.AdditionalColorimetryExtension;
  *  @author    Gerald Weatherup
  */
 @VintfStability
-parcelable Capabilities 
-{
+parcelable Capabilities {
     /**
      * The array of HDMI versions the port supports.
      */

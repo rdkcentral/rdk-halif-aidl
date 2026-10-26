@@ -1,6 +1,6 @@
 # Step 2: Development on Feature Branch
 
-- Developer creates a **named branch**: `feature/{issue#}_{synopsis}`
+- Developer creates a **named branch**: `feature/{issue#}-{synopsis}`
 - Follows the **Git-Flow** branching model, consistent with internal repositories
 - First-time contributors must sign the **Contributor License Agreement (CLA)**
 - Work is isolated - **no direct commits to develop or main**

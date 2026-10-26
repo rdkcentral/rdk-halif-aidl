@@ -28,8 +28,7 @@ import com.rdk.hal.hdmicec.State;
  */
 
 @VintfStability
-oneway interface IHdmiCecEventListener 
-{
+oneway interface IHdmiCecEventListener {
     /**
      * Callback to be invoked for each frame arrival.
      *
@@ -72,8 +71,8 @@ oneway interface IHdmiCecEventListener
      * When registered the HAL invokes this callback after sending, or attempting to send a message.
      * The message's send status allows the listener to know the result of the message transmission.
      *
-     * The intention of this listener is to allow diagnostic tools to monitor CEC traffic between the CEC Controller Client
-     * and the HAL.
+     * The intention of this listener is to allow diagnostic tools to monitor CEC traffic between the CEC Controller
+     * Client and the HAL.
      *
      * The frame contained in the buffer will follow this format
      *     (ref <HDMI Specification 1-4> Section <CEC 6.1>) :

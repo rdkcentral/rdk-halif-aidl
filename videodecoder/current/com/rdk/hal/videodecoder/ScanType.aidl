@@ -26,8 +26,10 @@ package com.rdk.hal.videodecoder;
  */
 
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum ScanType {
+    /** Progressive scan frame. */
     PROGRESSIVE_FRAME = 0,
+    /** Interlaced scan frame. */
     INTERLACED_FRAME = 1,
 }

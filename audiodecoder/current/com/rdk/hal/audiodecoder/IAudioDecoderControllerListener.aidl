@@ -29,33 +29,38 @@ import com.rdk.hal.audiodecoder.FrameMetadata;
 @VintfStability
 oneway interface IAudioDecoderControllerListener {
     /**
-    * Called when an audio frame has been decoded or when frame metadata needs notification.
-    *
-    * In tunnelled mode, audio data is consumed by the vendor layer, so no PCM buffer is returned.
-    *
-    * Otherwise, `frameAVBufferHandle` is a valid AVBuffer handle to a decoded PCM buffer,
-    * and `metadata` is non-null for the first frame after `State::START` or `State::FLUSHING`,
-    * or whenever stream metadata changes. Metadata may be null if unchanged since the last callback.
-    *
-    * Ownership semantics for `frameAVBufferHandle`:
-    * - The client receives ownership of the AVBuffer handle when this callback is invoked.
-    * - The client is responsible for managing the handle's lifecycle: either passing it to the next
-    *   module (e.g., audio sink) or explicitly freeing it via IAVBuffer.free() when no longer needed.
-    *
-    * End-of-stream is NOT delivered on this callback. Client-signalled EOS
-    * is a discrete event - see `onEndOfStream()`, which the HAL fires exactly
-    * once after the final `onFrameOutput()` of a session drained by
-    * `IAudioDecoderController.signalEndOfStream()`.
-    *
-    * @param[in] nsPresentationTime    The presentation timestamp in nanoseconds, or -1 if only metadata is being returned.
-    * @param[in] frameAVBufferHandle   AVBuffer handle to the decoded audio frame buffer. Valid handle in
-    *                                   non-tunnelled mode; -1 in tunnelled mode.
-    * @param[in] metadata              FrameMetadata for the audio frame. Nullable on routine
-    *                                  callbacks (in tunnelled mode or when unchanged).
-    *
-    * @see IAudioDecoderController.decodeBufferWithMetadata(), IAVBuffer.free(),
-    *      onEndOfStream()
-    */
+     * Called when an audio frame has been decoded or when frame metadata needs notification.
+     *
+     * In tunnelled mode, audio data is consumed by the vendor layer, so no PCM buffer is returned.
+     *
+     * Otherwise, `frameAVBufferHandle` is a valid AVBuffer handle to a decoded PCM buffer,
+     * and `metadata` is non-null for the first frame after `State::START` or `State::FLUSHING`,
+     * or whenever stream metadata changes. Metadata may be null if unchanged since the last callback,
+     * except that a frame with a non-zero trim always carries non-null metadata, even when the trim
+     * repeats the previous frame's trim; a null metadata means zero trim for that frame.
+     * See `FrameMetadata.trimStartNs`.
+     *
+     * Ownership semantics for `frameAVBufferHandle`:
+     * - The client receives ownership of the AVBuffer handle when this callback is invoked.
+     * - The client is responsible for managing the handle's lifecycle: either passing it to the next
+     *   module (e.g., audio sink) or explicitly freeing it via IAVBuffer.free() when no longer needed.
+     *
+     * End-of-stream is NOT delivered on this callback. Client-signalled EOS
+     * is a discrete event - see `onEndOfStream()`, which the HAL fires exactly
+     * once after the final `onFrameOutput()` of a session drained by
+     * `IAudioDecoderController.signalEndOfStream()`.
+     *
+     * @param[in] nsPresentationTime    The presentation timestamp in nanoseconds, or -1 if only metadata is being
+     * returned.
+     * @param[in] frameAVBufferHandle   AVBuffer handle to the decoded audio frame buffer. Valid handle in
+     *                                   non-tunnelled mode; -1 in tunnelled mode.
+     * @param[in] metadata              FrameMetadata for the audio frame. Nullable on routine
+     *                                  callbacks (in tunnelled mode or when unchanged); always
+     *                                  non-null in non-tunnelled mode for a frame with a non-zero trim.
+     *
+     * @see IAudioDecoderController.decodeBufferWithMetadata(), IAVBuffer.free(),
+     *      onEndOfStream()
+     */
     void onFrameOutput(in long nsPresentationTime, in long frameAVBufferHandle, in @nullable FrameMetadata metadata);
 
     /**

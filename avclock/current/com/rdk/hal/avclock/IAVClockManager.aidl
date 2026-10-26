@@ -19,7 +19,7 @@
 package com.rdk.hal.avclock;
 import com.rdk.hal.avclock.IAVClock;
 
-/** 
+/**
  *  @brief     AV Clock Manager HAL interface.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -27,28 +27,28 @@ import com.rdk.hal.avclock.IAVClock;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 
 @VintfStability
-interface IAVClockManager 
-{
+interface IAVClockManager {
     /** The service name to publish. To be returned by getServiceName() in the derived class. */
     const @utf8InCpp String serviceName = "AVClockManager";
 
     /**
-	 * Gets the list of platform AV Clock IDs.
-     * 
+     * Gets the list of platform AV Clock IDs.
+     *
      * @returns IAVClock.Id[]       Array of IDs.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      *
      */
-	IAVClock.Id[] getAVClockIds();   
+    IAVClock.Id[] getAVClockIds();
 
     /**
      * Gets the AV Clock interface for a given ID.

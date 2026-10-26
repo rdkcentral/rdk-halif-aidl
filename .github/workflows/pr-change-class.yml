@@ -1,0 +1,64 @@
+name: "Change class — compiler vs label"
+
+# The AIDL compiler classifies what a pull request does to each component it
+# touches (scripts/pr_change_class.py, via scripts/aidl_compat.py: checkapi for
+# the wire contract, regenerated C++ headers for the source contract, imported
+# types included). The check fails when the change-class label is below that,
+# so a break such as #917's @utf8InCpp strings is labelled while the pull
+# request is open instead of surfacing at the release cut. A label above the
+# compiler passes: behaviour can change behind an unchanged API, and the
+# release's `stage --confirm` records the reason.
+#
+# Safe on `pull_request`: read-only token, no secrets. Re-runs on label edits.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+    paths:
+      - "**/current/**"
+
+concurrency:
+  group: change-class-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: "Change-class label covers the compiler's class"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # The aidl compiler is built from linux_binder_idl at the revision
+      # binder_sdk.version pins; the first build is slow, later runs reuse it.
+      - name: "Restore the binder toolchain"
+        uses: actions/cache@v4
+        with:
+          path: |
+            build-tools
+            out/target
+          key: binder-${{ runner.os }}-${{ hashFiles('binder_sdk.version', 'build_binder.sh') }}
+
+      - name: "Build the binder toolchain"
+        run: |
+          if [[ ! -x build-tools/linux_binder_idl/out/host/bin/aidl ]]; then
+            ./build_binder.sh
+          fi
+
+      - name: "Check out the base"
+        run: git worktree add --detach "${RUNNER_TEMP}/base" "${{ github.event.pull_request.base.sha }}"
+
+      - name: "Compare the label with the compiler"
+        env:
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: |
+          python3 scripts/pr_change_class.py \
+            --aidl "${PWD}/build-tools/linux_binder_idl/out/host/bin/aidl" \
+            --base "${RUNNER_TEMP}/base" \
+            --base-ref "${{ github.event.pull_request.base.sha }}" \
+            --labels "${LABELS}" \
+            --summary "${GITHUB_STEP_SUMMARY}"

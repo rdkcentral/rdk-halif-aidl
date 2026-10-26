@@ -28,7 +28,11 @@
  */
 package com.rdk.hal.drm;
 
+/**
+ * The identifier of a set of persisted offline keys.
+ */
 @VintfStability
 parcelable KeySetId {
+    /** The opaque key set id. */
     byte[] keySetId;
 }

@@ -17,15 +17,16 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiodecoder;
+import com.rdk.hal.OperationalMode;
+import com.rdk.hal.PropertyValue;
+import com.rdk.hal.audiodecoder.CSDAudioFormat;
+import com.rdk.hal.audiodecoder.Capabilities;
+import com.rdk.hal.audiodecoder.Codec;
+import com.rdk.hal.audiodecoder.IAudioDecoderController;
 import com.rdk.hal.audiodecoder.IAudioDecoderControllerListener;
 import com.rdk.hal.audiodecoder.IAudioDecoderEventListener;
-import com.rdk.hal.audiodecoder.IAudioDecoderController;
-import com.rdk.hal.audiodecoder.Capabilities;
 import com.rdk.hal.audiodecoder.Property;
-import com.rdk.hal.audiodecoder.Codec;
-import com.rdk.hal.audiodecoder.CSDAudioFormat;
 import com.rdk.hal.audiodecoder.State;
-import com.rdk.hal.PropertyValue;
 
 /**
  *  @brief     Audio Decoder HAL interface.
@@ -35,25 +36,27 @@ import com.rdk.hal.PropertyValue;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 
 @VintfStability
-interface IAudioDecoder
-{
+interface IAudioDecoder {
     /** Audio Decoder resource ID type */
     @VintfStability
     parcelable Id {
         /** The undefined ID value. */
         const int UNDEFINED = -1;
 
+        /** Sentinel indicating the sink source is an external non-HAL component rather than a HAL Audio Decoder. */
+        const int EXTERNAL = -2;
+
         /** The actual resource ID */
         int value;
     }
-
 
     /**
      * Gets the audio decoder capabilities.
@@ -80,11 +83,11 @@ interface IAudioDecoder
      */
     @nullable PropertyValue getProperty(in Property property);
 
-	/**
-	 * Gets the current state of the audio decoder resource.
+    /**
+     * Gets the current state of the audio decoder resource.
      *
      * @returns State enum value.
-	 *
+     *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @see IAudioDecoderListener.onStateChanged().
@@ -92,7 +95,7 @@ interface IAudioDecoder
     State getState();
 
     /**
-	 * Opens the specified audio decoder resource index to decode the specified codec.
+         * Opens the specified audio decoder resource index to decode the specified codec.
      *
      * If successful the audio decoder transitions to an `OPENING` state and then a `READY` state
      * which is notified to any registered `IAudioDecoderEventListener` interfaces.
@@ -124,7 +127,9 @@ interface IAudioDecoder
      *
      * @see IAudioDecoderController, IAudioDecoderController.close(), registerEventListener()
      */
-    @nullable IAudioDecoderController open(in Codec codec, in boolean secure, in IAudioDecoderControllerListener audioDecoderControllerListener);
+    @nullable
+    IAudioDecoderController open(
+        in Codec codec, in boolean secure, in IAudioDecoderControllerListener audioDecoderControllerListener);
 
     /**
      * Closes the audio decoder.
@@ -150,7 +155,7 @@ interface IAudioDecoder
     boolean close(in IAudioDecoderController audioDecoderController);
 
     /**
-	 * Registers an audio decoder event listener.
+     * Registers an audio decoder event listener.
      *
      * An `IAudioDecoderEventListener` can only be registered once and will fail on subsequent
      * registration attempts.
@@ -169,7 +174,7 @@ interface IAudioDecoder
     boolean registerEventListener(in IAudioDecoderEventListener audioDecoderEventListener);
 
     /**
-	 * Unregisters an audio decoder event listener.
+     * Unregisters an audio decoder event listener.
      *
      * @param[in] audioDecoderEventListener	    Listener object for callbacks.
      *
@@ -183,4 +188,19 @@ interface IAudioDecoder
      * @see registerEventListener()
      */
     boolean unregisterEventListener(in IAudioDecoderEventListener audioDecoderEventListener);
+
+    /**
+     * Gets the output mode currently selected by the vendor for this decoder.
+     *
+     * The mode is implementation-selected and is not configurable through
+     * the Audio Decoder HAL.
+     *
+     * @returns Current operational output mode.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the STARTED state.
+     *
+     * @pre The resource must be in State::STARTED.
+     */
+    OperationalMode getCurrentOperationalMode();
 }

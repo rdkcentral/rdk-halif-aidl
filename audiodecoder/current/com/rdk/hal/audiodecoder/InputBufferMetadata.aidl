@@ -38,22 +38,10 @@ package com.rdk.hal.audiodecoder;
 
 @VintfStability
 parcelable InputBufferMetadata {
-
     /**
      * Presentation time of the encoded audio frame in nanoseconds.
      */
     long nsPresentationTime;
-
-    /**
-     * Reserved for a future release. Clients MUST set this to false in v1.
-     *
-     * Use `IAudioDecoderController.signalDiscontinuity()` to signal a PTS
-     * discontinuity in v1. This field will become authoritative in a later
-     * release once migration is complete.
-     *
-     * @see IAudioDecoderController.signalDiscontinuity()
-     */
-    boolean discontinuity;
 
     /**
      * Duration to trim from the start of the decoded audio frame, in nanoseconds.
@@ -73,10 +61,12 @@ parcelable InputBufferMetadata {
      * - Gapless playback across track boundaries
      *
      * Data flow: the middleware sets this here on each
-     * `decodeBufferWithMetadata()` call; the HAL carries it through unchanged to
-     * the matching `FrameMetadata.trimStartNs` on the corresponding
-     * `IAudioDecoderControllerListener.onFrameOutput()` callback; the AudioSink
-     * applies the trim when presenting PCM to the mixer.
+     * `decodeBufferWithMetadata()` call, and the trim is applied exactly once
+     * before the PCM reaches the mixer. Either the decoder trims the frame
+     * itself and sets both `FrameMetadata.trimStartNs` and
+     * `FrameMetadata.trimEndNs` to 0, or it passes both through on
+     * `IAudioDecoderControllerListener.onFrameOutput()` and the AudioSink
+     * applies them.
      *
      * Type rationale: `int` (not `long`) — at nanosecond precision, max value is
      * ~2.1 seconds, sufficient for any per-frame priming/padding trim.

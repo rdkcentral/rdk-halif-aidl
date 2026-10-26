@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.planecontrol;
-  
+
 /**
  *  @brief     Video plane sources definition.
  *  @author    Luc Kennedy-Lamb
@@ -26,26 +26,25 @@ package com.rdk.hal.planecontrol;
  */
 
 @VintfStability
-@Backing(type="int")
-enum SourceType
-{
-    /** 
-     *  No video source is set for the video plane. Default value for all planes. 
+@Backing(type = "int")
+enum SourceType {
+    /**
+     *  No video source is set for the video plane. Default value for all planes.
      */
     NONE = 0,
- 
-    /** 
-     *  A video sink is set as the source for the video plane. 
+
+    /**
+     *  A video sink is set as the source for the video plane.
      */
-    VIDEO_SINK = 1, 
-     
-    /** 
-     *  A HDMI input is set as the source for the video plane. 
+    VIDEO_SINK = 1,
+
+    /**
+     *  A HDMI input is set as the source for the video plane.
      */
-    HDMI = 2,   
- 
-    /** 
-     * A composite input is set as the source for the video plane. 
+    HDMI = 2,
+
+    /**
+     * A composite input is set as the source for the video plane.
      */
     COMPOSITE = 3
 }

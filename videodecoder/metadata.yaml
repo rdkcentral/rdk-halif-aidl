@@ -17,12 +17,14 @@
 
 # component   - Machine-readable component identifier                    [manual]
 # version     - Pre-baseline: 0.<generation>.<minor>.<patch>              [release.sh]
+#               GENERATED at release by scripts/release.sh from the PR change-class
+#               labels. Do not edit by hand: engineering teams never change it in a PR.
 # status      - RAG status: GREEN / AMBER / RED                          [manual]
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: videodecoder
-version: 0.2.0.1
-status: GREEN
+version: 0.3.0.0
+status: AMBER
 description: "Video decoder resource management and codec support"
 type: SOC
 
@@ -38,7 +40,7 @@ lifecycle:
 # scope - High-level architectural responsibilities                       [manual]
 scope:
   - Video decoder resource management for multiple codec formats (H.264, HEVC, VP9, etc.)
-  - Tunnelled and non-tunnelled operational mode support
+  - Decoded frame delivery to a linked video sink or back to the client in frame buffers
   - Manager interface for decoder discovery and resource allocation
   - Secure and non-secure video playback paths
   - Buffer pool management and codec-specific capabilities per decoder
@@ -51,12 +53,15 @@ scope:
 #   owners        - Responsible architecture teams
 notes:
   owners: "Architecture + AV_Architecture"
+  status_detail: "Breaking changes awaiting review: OperationalMode removed (7771f2ae), InputBufferMetadata.discontinuity activated then removed (76281243, 694aaf3b)"
+  action: "All four reviewer teams to re-review and sign off; flip to GREEN once reviewed."
+  risk: "All four teams on recheck (0/4) since 7771f2ae — the interface carries unreviewed breaking changes, so it is not safe to implement against yet."
 
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
-    Architecture: reviewed
-    Product_Architecture: reviewed
-    AV_Architecture: reviewed
-    Vendor_Layer_Team: reviewed
+    Architecture: recheck
+    Product_Architecture: recheck
+    AV_Architecture: recheck
+    Vendor_Layer_Team: recheck
 

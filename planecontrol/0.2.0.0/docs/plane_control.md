@@ -11,8 +11,8 @@ Each plane is configurable through a set of properties that clients can read or 
 !!! info References
     |||
     |-|-|
-    |**Interface Definition**|[planecontrol/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/planecontrol/current)|
-    |**Interface Version**|`current`|
+    |**Interface Definition**|[planecontrol/0.2.0.0](https://github.com/rdkcentral/rdk-halif-aidl/tree/0.22.0/planecontrol/0.2.0.0)|
+    |**Interface Version**|`0.2.0.0`|
     | **API Documentation** | *TBD - Doxygen* |
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
     |**VTS Tests**| [https://github.com/rdkcentral/rdk-halif-binder-test-planecontrol](https://github.com/rdkcentral/rdk-halif-binder-test-planecontrol) |

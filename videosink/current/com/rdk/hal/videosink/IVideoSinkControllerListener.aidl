@@ -27,34 +27,41 @@ import com.rdk.hal.videosink.State;
  */
 
 @VintfStability
-oneway interface IVideoSinkControllerListener
-{
+oneway interface IVideoSinkControllerListener {
     /**
      * Callback when the first video frame has been rendered.
      *
      * The behaviour is the same for tunnelled and non-tunnelled video operating modes.
      * This occurs on the first frame rendered after an `open()` or `flush()` call.
-	 * The frame may not immediately be visible due to video pipeline and compositor functions.
-	 * The associated plane `Capabilities.vsyncDisplayLatency` indicates the expected time between
+     * The frame may not immediately be visible due to video pipeline and compositor functions.
+     * The associated plane `Capabilities.vsyncDisplayLatency` indicates the expected time between
      * this callback and actual display.
+     *
+     * Rendering requires a mapped video plane, so for a sink running with no
+     * plane mapped this reports the first frame rendered once a plane becomes
+     * mapped.
      *
      * @param[in] nsPresentationTime    The presentation time of the frame.
      */
     void onFirstFrameRendered(in long nsPresentationTime);
 
     /**
-     * Callback when the last video frame has been rendered.
+     * Callback when the presentation time of the session's final queued frame
+     * has passed on the attached clock.
      *
      * Triggered after the client called `IVideoSinkController.signalEndOfStream()`
      * to assert that no further frames will be queued. Fires exactly once per
-     * session, ordered strictly after the final queued frame has been rendered.
+     * session, ordered strictly after the presentation time of the final
+     * queued frame has passed on the attached clock. It is keyed on that
+     * presentation time rather than on rendering, so it fires whether or not a
+     * video plane is mapped.
      * If no frames were queued, `nsPresentationTime` is the undefined-time
      * sentinel (`IAVClock.UNDEFINED_TIME`).
      *
      * The behaviour is the same for tunnelled and non-tunnelled video operating modes.
-	 * The frame may not immediately be visible due to video pipeline and compositor functions.
-     * The associated plane `Capabilities.vsyncDisplayLatency` indicates the expected time between
-     * this callback and actual display.
+     * The frame may not immediately be visible due to video pipeline and compositor functions.
+     * With a plane mapped, the associated plane `Capabilities.vsyncDisplayLatency`
+     * indicates the expected time between this callback and actual display.
      *
      * @param[in] nsPresentationTime    The presentation time of the final video frame,
      *                                  or `IAVClock.UNDEFINED_TIME` if no frames were queued.
@@ -68,9 +75,13 @@ oneway interface IVideoSinkControllerListener
      *
      * This occurs if the frame queue is empty at the next expected AV Clock based
      * presentation time for a video frame.
-	 * The callback occurs only once when the queue becomes empty.
-	 * The `onVideoResumed()` callback informs the client when video playback restarts,
-	 * which allows the `onVideoUnderflow()` to occur again.
+     * The callback occurs only once when the queue becomes empty.
+     * The `onVideoResumed()` callback informs the client when video playback restarts,
+     * which allows the `onVideoUnderflow()` to occur again.
+     *
+     * Underflow detection follows frame consumption, which the attached clock
+     * gates, so this pair of callbacks applies whether or not a video plane is
+     * mapped.
      *
      * @see onVideoResumed()
      */
@@ -79,7 +90,7 @@ oneway interface IVideoSinkControllerListener
     /**
      * Callback to indicate that video has resumed presentation after a video underflow event.
      *
-	 * The `onVideoUnderflow()` can occur again after `onVideoResumed()` has been called.
+     * The `onVideoUnderflow()` can occur again after `onVideoResumed()` has been called.
      *
      * @see onVideoUnderflow()
      */

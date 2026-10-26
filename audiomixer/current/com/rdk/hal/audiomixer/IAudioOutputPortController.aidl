@@ -18,11 +18,11 @@
  */
 package com.rdk.hal.audiomixer;
 
+import com.rdk.hal.PropertyValue;
 import com.rdk.hal.audiomixer.IAudioCapture;
 import com.rdk.hal.audiomixer.IAudioCaptureListener;
 import com.rdk.hal.audiomixer.IDolbyMs12_2_6_Dap;
 import com.rdk.hal.audiomixer.OutputPortProperty;
-import com.rdk.hal.PropertyValue;
 
 /**
  * @brief    Audio Output Port Controller HAL interface.
@@ -47,14 +47,13 @@ import com.rdk.hal.PropertyValue;
  */
 @VintfStability
 interface IAudioOutputPortController {
-
     /**
      * @brief    Sets a property value for the controlled output port.
      *
      *           The property must be writable in the current port state. Property
-     *           writability is documented per-key in OutputPortProperty.aidl
-     *           (e.g., VOLUME is writable in READY/STARTED, TRANSCODE_FORMAT is
-     *           writable only in READY).
+     *           writability is documented per-key in OutputPortProperty.aidl.
+     *           Output port properties are written in READY, the only state in
+     *           which this controller exists (e.g., VOLUME, OUTPUT_FORMAT).
      *
      * @param[in] property  Property key (from OutputPortProperty enum).
      * @param[in] value     Property value; union field must match the property type.
@@ -82,8 +81,8 @@ interface IAudioOutputPortController {
      *           lifetime of the controller. No separate DAP-level
      *           open()/close() is needed.
      *
-     *           Supported when the port's IAQProcessor reports
-     *           AQProcessor.DOLBY_MS12_2_6 via getProcessorType().
+     *           Supported when OutputPortCapabilities.supportedAQProcessors
+     *           for this port contains AQProcessor.DOLBY_MS12_2_6.
      *
      * @returns  IDolbyMs12_2_6_Dap runtime command interface.
      *
@@ -91,7 +90,7 @@ interface IAudioOutputPortController {
      *            DAP is not supported on this port.
      *
      * @see IAudioOutputPort.open()
-     * @see IAQProcessor.getProcessorType()
+     * @see OutputPortCapabilities.supportedAQProcessors
      */
     IDolbyMs12_2_6_Dap getDolbyMs12_2_6_Dap();
 

@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package com.rdk.hal.audiomixer;
+package com.rdk.hal.audiomixer;
 
 /**
  * @brief Enumerates supported content types for audio mixer inputs.
@@ -28,7 +28,7 @@
  * @copyright Copyright 2024 RDK Management
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum ContentType {
     UNDEFINED = -1, /**< Undefined or unspecified type. */
     CLIP = 0,       /**< System sounds or short samples. */

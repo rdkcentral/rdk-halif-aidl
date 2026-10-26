@@ -38,7 +38,6 @@ import com.rdk.hal.sensor.motion.TimeWindow;
 
 @VintfStability
 interface IMotionSensorController {
-
     /**
      * @brief Start the motion sensor.
      *

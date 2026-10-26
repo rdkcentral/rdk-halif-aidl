@@ -17,14 +17,15 @@
  * limitations under the License.
  */
 package com.rdk.hal.videodecoder;
+import com.rdk.hal.OperationalMode;
+import com.rdk.hal.PropertyValue;
 import com.rdk.hal.videodecoder.Capabilities;
-import com.rdk.hal.videodecoder.IVideoDecoderController;
-import com.rdk.hal.videodecoder.Property;
-import com.rdk.hal.videodecoder.PropertyKVPair;
 import com.rdk.hal.videodecoder.Codec;
+import com.rdk.hal.videodecoder.IVideoDecoderController;
 import com.rdk.hal.videodecoder.IVideoDecoderControllerListener;
 import com.rdk.hal.videodecoder.IVideoDecoderEventListener;
-import com.rdk.hal.PropertyValue;
+import com.rdk.hal.videodecoder.Property;
+import com.rdk.hal.videodecoder.PropertyKVPair;
 import com.rdk.hal.videodecoder.State;
 
 /**
@@ -35,21 +36,23 @@ import com.rdk.hal.videodecoder.State;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 
 @VintfStability
-interface IVideoDecoder
-{
-
+interface IVideoDecoder {
     /** Video decoder resource ID type */
     @VintfStability
     parcelable Id {
         /** The undefined ID value. */
         const int UNDEFINED = -1;
+
+        /** Sentinel indicating the sink source is an external non-HAL component rather than a HAL Video Decoder. */
+        const int EXTERNAL = -2;
 
         /** The actual resource ID */
         int value;
@@ -119,10 +122,10 @@ interface IVideoDecoder
     boolean getPropertyMulti(in Property[] properties, out PropertyKVPair[] propertyKVList);
 
     /**
-	 * Gets the current Video Decoder state.
+     * Gets the current Video Decoder state.
      *
      * @returns State enum value.
-	 *
+     *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      *
@@ -131,7 +134,7 @@ interface IVideoDecoder
     State getState();
 
     /**
-	 * Opens the Video Decoder to decode the specified codec.
+     * Opens the Video Decoder to decode the specified codec.
      *
      * If successful the Video Decoder transitions to an `OPENING` state and then a `READY` state
      * which is notified to any registered `IVideoDecoderEventListener` interfaces.
@@ -162,26 +165,28 @@ interface IVideoDecoder
      *
      * @see IVideoDecoderController, IVideoDecoderController.close(), registerEventListener()
      */
-    @nullable IVideoDecoderController open(in Codec codec, in boolean secure, in IVideoDecoderControllerListener videoDecoderControllerListener);
+    @nullable
+    IVideoDecoderController open(
+        in Codec codec, in boolean secure, in IVideoDecoderControllerListener videoDecoderControllerListener);
 
     /**
-	 * Opens the Video Decoder to decode the specified codec with a specified maximum resolution.
-     * 
+     * Opens the Video Decoder to decode the specified codec with a specified maximum resolution.
+     *
      * If successful the Video Decoder transitions to an `OPENING` state and then a `READY` state
      * which is notified to any registered `IVideoDecoderEventListener` interfaces.
-     * 
+     *
      * Controller related callbacks are made through the `IVideoDecoderControllerListener`
      * passed into the call.
-     * 
+     *
      * The returned `IVideoDecoderController` interface is used by the client to feed data buffers
      * for decode and manage the decoding flow.
      *
      * If the client that opened the `IVideoDecoderController` crashes,
      * then the `IVideoDecoderController` has `stop()` and `close()` implicitly called to perform clean up.
      *
-     * The decoder will be opened expecting frames up to a maximum of `maxWidth` and `maxHeight'. 
-     * If `maxWidth` and `maxHeight' exceed that specified in the `CodecCapabilities` then binder::Status::Exception::EX_ILLEGAL_ARGUMENT
-     * will be returned.
+     * The decoder will be opened expecting frames up to a maximum of `maxWidth` and `maxHeight'.
+     * If `maxWidth` and `maxHeight' exceed that specified in the `CodecCapabilities` then
+     * binder::Status::Exception::EX_ILLEGAL_ARGUMENT will be returned.
      *
      * @param[in] codec                             The codec to configure the Video Decoder for.
      * @param[in] secure                            The Video Decoder secure mode.
@@ -190,18 +195,19 @@ interface IVideoDecoder
      * @param[in] maxHeight                         maximum height of the decoded frame.
      *
      * @returns IVideoDecoderController or null if the codec or the requested secure mode is not supported.
-     * 
+     *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE If the resource is not in the CLOSED state.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
-     * 
+     *
      * @pre The resource must be in State::CLOSED.
-     * 
+     *
      * @see IVideoDecoderController, IVideoDecoderController.close(), registerEventListener()
      */
-    @nullable IVideoDecoderController openWithResolution(in Codec codec, in boolean secure, in IVideoDecoderControllerListener videoDecoderControllerListener, in int maxWidth, in int maxHeight);
-
+    @nullable
+    IVideoDecoderController openWithResolution(in Codec codec, in boolean secure,
+        in IVideoDecoderControllerListener videoDecoderControllerListener, in int maxWidth, in int maxHeight);
 
     /**
      * Closes the Video Decoder.
@@ -228,7 +234,7 @@ interface IVideoDecoder
     boolean close(in IVideoDecoderController videoDecoderController);
 
     /**
-	 * Registers a Video Decoder event listener.
+     * Registers a Video Decoder event listener.
      *
      * An `IVideoDecoderEventListener` can only be registered once and will fail on subsequent
      * registration attempts.
@@ -248,7 +254,7 @@ interface IVideoDecoder
     boolean registerEventListener(in IVideoDecoderEventListener videoDecoderEventListener);
 
     /**
-	 * Unregisters a Video Decoder event listener.
+     * Unregisters a Video Decoder event listener.
      *
      * @param[in] videoDecoderEventListener	    Listener object for event callbacks.
      *
@@ -263,4 +269,20 @@ interface IVideoDecoder
      * @see registerEventListener()
      */
     boolean unregisterEventListener(in IVideoDecoderEventListener videoDecoderEventListener);
+
+    /**
+     * Gets the output mode currently selected by the vendor for this decoder.
+     *
+     * The mode is implementation-selected and is not configurable through
+     * the Video Decoder HAL. TUNNELLED output is consumed within the vendor
+     * layer; NON_TUNNELLED output is returned through onFrameOutput().
+     *
+     * @returns Current operational output mode.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the STARTED state.
+     *
+     * @pre The resource must be in State::STARTED.
+     */
+    OperationalMode getCurrentOperationalMode();
 }

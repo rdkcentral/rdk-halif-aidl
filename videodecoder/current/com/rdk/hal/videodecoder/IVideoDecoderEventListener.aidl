@@ -29,9 +29,8 @@ import com.rdk.hal.videodecoder.State;
 
 @VintfStability
 oneway interface IVideoDecoderEventListener {
-
     /**
-	 * Callback when the decoder has raised an error.
+     * Callback when the decoder has raised an error.
      *
      * @param[in] errorCode 		    An ErrorCode enum value.
      * @param[in] vendorErrorCode  	    A vendor specific error code.
@@ -39,7 +38,7 @@ oneway interface IVideoDecoderEventListener {
     void onDecodeError(in ErrorCode errorCode, in int vendorErrorCode);
 
     /**
-	 * Callback when the decoder has transitioned to a new state.
+     * Callback when the decoder has transitioned to a new state.
      *
      * @param[in] oldState	            The state that the decoder has transitioned from.
      * @param[in] newState              The new state that the decoder has transitioned to.
