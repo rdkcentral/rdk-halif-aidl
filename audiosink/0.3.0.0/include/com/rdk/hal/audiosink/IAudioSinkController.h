@@ -1,0 +1,506 @@
+#pragma once
+
+#include <binder/IBinder.h>
+#include <binder/IInterface.h>
+#include <binder/Status.h>
+#include <com/rdk/hal/audiodecoder/FrameMetadata.h>
+#include <com/rdk/hal/audiodecoder/IAudioDecoder.h>
+#include <com/rdk/hal/audiosink/Volume.h>
+#include <com/rdk/hal/audiosink/VolumeRamp.h>
+#include <com/rdk/hal/avclock/IAVClock.h>
+#include <cstdint>
+#include <utils/String16.h>
+#include <utils/StrongPointer.h>
+
+namespace com {
+namespace rdk {
+namespace hal {
+namespace audiosink {
+// @aidl-doc
+/**
+ *  @brief     Audio Sink Controller HAL interface.
+ *  @author    Luc Kennedy-Lamb
+ *  @author    Peter Stieglitz
+ *  @author    Douglas Adler
+ *
+ *  <h3>AVClock association and audio output</h3>
+ *  An audio sink presents output only when an AVClock is attached and started.
+ *  The clock association is owned by the sink — clients call `attachClock()` /
+ *  `detachClock()` / `getClock()` on this controller to manage it. The AVClock
+ *  itself does not need to be made aware of which sinks present against it.
+ *  <ul>
+ *  <li><b>No AVClock attached</b> (the default after `open()`, or after
+ *      `detachClock()`): the sink does NOT produce audio output. Frames passed
+ *      to `queueAudioFrame()` accumulate in the internal queue until the queue
+ *      fills, after which `queueAudioFrame()` returns `false` until queue
+ *      space becomes available again. Frames remain in the queue across the
+ *      no-clock period.</li>
+ *  <li><b>AVClock attached and started</b>: the sink consumes queued frames
+ *      at the rate dictated by the clock — AV synchronisation is in effect.
+ *      If the clock is paused, consumption pauses with it and the queue will
+ *      eventually fill in the same way as the no-clock state.</li>
+ *  </ul>
+ *  `attachClock()` / `detachClock()` are callable in `READY` or `STARTED` and
+ *  do not change the sink's state-machine state. Detaching during `STARTED`
+ *  suspends consumption but does not flush the queue or stop the sink; the
+ *  same is true of attaching to a clock that is paused.
+ *
+ *  <h3>Mixer input routing and audibility</h3>
+ *  The attached clock gates frame consumption; the routed mixer input gates
+ *  audibility. The routing is owned by the Audio Mixer rather than by this
+ *  controller — `IAudioMixerController` routes `AudioSourceType.AUDIO_SINK` at
+ *  this sink's resource index to a mixer input, and `AudioSourceType.NONE`
+ *  clears that routing. With no mixer input routed, queued frames are consumed
+ *  at their presentation times and their buffers freed via `IAVBuffer.free()`
+ *  at exactly the same points as when a mixer input is routed, and nothing is
+ *  audible. The queue drains at clock rate, so the sink stays in sync with any
+ *  video sink presenting against the same clock. `onFirstFrameRendered()`
+ *  reports the first frame mixed, so with no mixer input routed it fires
+ *  once a mixer input becomes routed and the first queued frame is mixed.
+ *
+ *  The routing may be set or cleared at any point in the session, including
+ *  while `STARTED`. A successful routing change leaves the sink's
+ *  state-machine state unchanged and does not flush the queue; validation
+ *  and state errors from `IAudioMixerController.setInputRouting()` are
+ *  reported by the Audio Mixer.
+ *
+ *  <h3>Exception Handling</h3>
+ *  Unless otherwise specified, this interface follows standard Android Binder semantics:
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
+ */
+class IAudioSinkController : public ::android::IInterface {
+public:
+  DECLARE_META_INTERFACE(AudioSinkController)
+  static const int32_t VERSION = 3000;
+  const std::string HASH = "217303eaf0f0e7ddd5a52b527b23759e877e9dcd";
+  static constexpr char* HASHVALUE = "217303eaf0f0e7ddd5a52b527b23759e877e9dcd";
+  // @aidl-doc
+  /**
+   * Sets the audio decoder ID linked to this audio sink.
+   *
+   * `IAudioDecoder.Id.UNDEFINED` means that no audio decoder source is
+   * associated. It is the default when the audio sink is opened and may be
+   * passed here to clear an existing association, equivalent in effect to
+   * the state at `open()`.
+   *
+   * `IAudioDecoder.Id.EXTERNAL` indicates that the audio sink is fed by an
+   * external non-HAL component rather than a HAL Audio Decoder, for example
+   * the Clear PCM Audio Playback path. A session associated with `EXTERNAL`
+   * may be started.
+   *
+   * A valid audio decoder ID is one returned by
+   * `IAudioDecoderManager.getAudioDecoderIds()`. A valid association, or
+   * `IAudioDecoder.Id.EXTERNAL`, is required before the pipeline is started
+   * in both tunnelled and non-tunnelled modes.
+   *
+   * @param[in] audioDecoderId        The ID of the audio decoder source,
+   *                                  `IAudioDecoder.Id.EXTERNAL` for an
+   *                                  external non-HAL source, or
+   *                                  `IAudioDecoder.Id.UNDEFINED` to clear
+   *                                  the association.
+   *
+   * @param[out] _aidl_return boolean
+   *   - true:
+   *     The audio decoder ID was set, the source was set to
+   *     `IAudioDecoder.Id.EXTERNAL`, or the association was cleared with
+   *     `IAudioDecoder.Id.UNDEFINED`.
+   *   - false:
+   *     The ID is not `IAudioDecoder.Id.EXTERNAL` and not one returned by
+   *     `IAudioDecoderManager.getAudioDecoderIds()`.
+   * @pre The resource must be in State::READY.
+   *
+   * @see getAudioDecoder(), IAudioDecoderManager.getAudioDecoderIds()
+   *
+   * @returns ::android::binder::Status - one of the values below.
+   * @retval ::android::binder::Status::EX_NONE
+   *   Operation completed successfully.
+   *
+   * @retval ::android::binder::Status::EX_ILLEGAL_STATE
+   *   The resource is not in State::READY.
+   */
+  virtual ::android::binder::Status setAudioDecoder(const ::com::rdk::hal::audiodecoder::IAudioDecoder::Id& audioDecoderId, bool* _aidl_return) = 0;
+  // @aidl-doc
+  /**
+   * Gets the audio decoder ID linked to this audio sink.
+   *
+   * Returns the currently associated `IAudioDecoder.Id` in both tunnelled
+   * and non-tunnelled modes.
+   *
+   * @param[out] _aidl_return IAudioDecoder.Id which can be `IAudioDecoder.Id.UNDEFINED` or
+   *                          `IAudioDecoder.Id.EXTERNAL`.
+   *
+   * @pre The resource must be in State::READY or State::STARTED.
+   *
+   * @see setAudioDecoder()
+   *
+   * @returns ::android::binder::Status - one of the values below.
+   * @retval ::android::binder::Status::EX_NONE for success
+   * @retval ::android::binder::Status::EX_ILLEGAL_STATE if the resource
+   *         is not in State::READY or State::STARTED.
+   */
+  virtual ::android::binder::Status getAudioDecoder(::com::rdk::hal::audiodecoder::IAudioDecoder::Id* _aidl_return) = 0;
+  // @aidl-doc
+  /**
+   * Attaches an AVClock to this audio sink for AV synchronisation.
+   *
+   * The sink consumes and presents queued frames only while the attached
+   * clock is started. With no clock attached, frames queued via
+   * `queueAudioFrame()` accumulate but are not consumed. See the interface
+   * @brief for the full AVClock-association contract.
+   *
+   * The same AVClock may be attached to multiple sinks (typically one audio
+   * sink and one video sink for AV-synchronised playback). The sink owns its
+   * clock relationship; the AVClock does not need to be made aware.
+   *
+   * If a different clock is already attached, this call replaces the
+   * attachment. Calling with `IAVClock.Id.UNDEFINED` is equivalent to
+   * `detachClock()`.
+   *
+   * Can be called in `READY` or `STARTED` state. Attaching during `STARTED`
+   * causes the sink to begin clock-paced consumption from the next frame
+   * once the clock is started; the call does not change the sink's
+   * state-machine state.
+   *
+   * @param[in] clockId   The ID of the AVClock to attach, or
+   *                      `IAVClock.Id.UNDEFINED` to detach.
+   *
+   * @pre The resource must be in State::READY or State::STARTED.
+   *
+   * @see detachClock(), getClock(), IAVClockManager.getAVClockIds()
+   *
+   * @returns ::android::binder::Status - one of the values below.
+   * @retval ::android::binder::Status::EX_NONE for success.
+   * @retval ::android::binder::Status::EX_ILLEGAL_ARGUMENT if `clockId`
+   *         does not refer to an existing AVClock instance.
+   * @retval ::android::binder::Status::EX_ILLEGAL_STATE if the sink is
+   *         not in `READY` or `STARTED`.
+   */
+  virtual ::android::binder::Status attachClock(const ::com::rdk::hal::avclock::IAVClock::Id& clockId) = 0;
+  // @aidl-doc
+  /**
+   * Detaches the currently attached AVClock from this audio sink.
+   *
+   * After this call the sink does NOT consume or present further frames
+   * until a clock is attached again. Equivalent to calling
+   * `attachClock(IAVClock.Id.UNDEFINED)`. See the interface @brief for the
+   * full AVClock-association contract.
+   *
+   * Idempotent: calling when no clock is attached is a no-op.
+   *
+   * Does not change the sink's state-machine state and does not flush the
+   * internal queue — frames already queued remain queued and will be
+   * consumed once a clock is attached and started.
+   *
+   * @pre The resource must be in State::READY or State::STARTED.
+   *
+   * @see attachClock(), getClock()
+   *
+   * @returns ::android::binder::Status - one of the values below.
+   * @retval ::android::binder::Status::EX_NONE for success
+   * @retval ::android::binder::Status::EX_ILLEGAL_STATE if the sink is
+   *         not in `READY` or `STARTED`.
+   */
+  virtual ::android::binder::Status detachClock() = 0;
+  // @aidl-doc
+  /**
+   * Gets the AVClock ID currently attached to this audio sink.
+   *
+   * @param[out] _aidl_return IAVClock.Id, which is `IAVClock.Id.UNDEFINED` when no clock is
+   *                          attached. With no clock attached the sink does not consume or
+   *                          present output — see the interface @brief.
+   *
+   * @pre The resource must be in State::READY or State::STARTED.
+   *
+   * @see attachClock(), detachClock()
+   *
+   * @returns ::android::binder::Status - one of the values below.
+   * @retval ::android::binder::Status::EX_NONE for success
+   * @retval ::android::binder::Status::EX_ILLEGAL_STATE if the sink is
+   *         not in `READY` or `STARTED`.
+   */
+  virtual ::android::binder::Status getClock(::com::rdk::hal::avclock::IAVClock::Id* _aidl_return) = 0;
+  // @aidl-doc
+  /**
+   * Starts the audio sink.
+   *
+   * The audio sink must be in a `READY` state before it can be started.
+   * If successful the audio sink transitions to a `STARTING` state and then
+   * a `STARTED` state.
+   *
+   * The client must call `setAudioDecoder()` with a valid decoder ID, or
+   * `IAudioDecoder.Id.EXTERNAL` for an external non-HAL source such as the
+   * Clear PCM Audio Playback path, before calling this method in both
+   * tunnelled and non-tunnelled modes. Starting an audio sink while the
+   * associated decoder ID is `IAudioDecoder.Id.UNDEFINED` shall fail.
+   *
+   * The AVClock attachment and the mixer input routing are independent of
+   * the decoder association above: a sink started with no mixer input
+   * routed runs normally and is inaudible until a mixer input is routed —
+   * see the interface @brief.
+   *
+   * @pre The resource must be in State::READY.
+   * @pre The associated audio decoder ID must not be
+   *      `IAudioDecoder.Id.UNDEFINED`; set a valid decoder ID or
+   *      `IAudioDecoder.Id.EXTERNAL` using `setAudioDecoder()`.
+   *
+   * @see stop(), IAudioSink.close(), setAudioDecoder()
+   *
+   * @returns ::android::binder::Status - one of the values below.
+   * @retval ::android::binder::Status::EX_NONE for success
+   * @retval ::android::binder::Status::EX_ILLEGAL_STATE
+   *   The resource is not in State::READY, or the associated decoder ID
+   *   is `IAudioDecoder.Id.UNDEFINED`.
+   */
+  virtual ::android::binder::Status start() = 0;
+  // @aidl-doc
+  /**
+   * Stops the audio sink.
+   *
+   * The sink enters the `STOPPING` state and then the `READY` state.
+   *
+   * @pre The resource must be in State::STARTED.
+   *
+   * @see start()
+   *
+   * @returns ::android::binder::Status - one of the values below.
+   * @retval ::android::binder::Status::EX_NONE for success.
+   * @retval ::android::binder::Status::EX_ILLEGAL_STATE
+   */
+  virtual ::android::binder::Status stop() = 0;
+  // @aidl-doc
+  /**
+   * Queues an audio frame for clock-paced consumption.
+   *
+   * The audio sink must be in the `STARTED` state. The frame is mixed only
+   * while a mixer input is routed — see the interface @brief.
+   * Buffers can be either non-secure or secure to support SAP (Secure Audio Path).
+   * Each call shall reference a single audio frame with a presentation timestamp.
+   *
+   * Consumption is gated by the AVClock attachment — see the interface
+   * @brief for the full contract. Summary: the sink consumes queued frames
+   * only while an AVClock attached via `attachClock()` is started. With no
+   * clock attached (default after `open()` or after `detachClock()`), or
+   * with the clock paused, this method accepts frames into the internal
+   * queue but the sink does NOT consume them; once the queue fills, the
+   * method returns `false` until queue space becomes available again.
+   *
+   * The audio sink may also refuse the buffer if its internal resource usage prevents it from accepting it at that
+   * time.
+   *
+   * Buffer Ownership: Ownership of the buffer transfers to the Audio Sink HAL only
+   * when `queueAudioFrame()` accepts the buffer (returns true). Once accepted, the HAL is
+   * responsible for freeing the buffer after processing. The caller must not modify or
+   * access the buffer after a successful call. If the call returns false or throws an
+   * exception, ownership remains with the caller.
+   *
+   * End-of-stream signalling: this method only queues frames - it carries
+   * no end-of-stream flag. After queuing its final frame the client calls
+   * `signalEndOfStream()`, which tells the sink no more frames will be
+   * queued.
+   *
+   * Throws `binder::Status::Exception::EX_ILLEGAL_STATE` if called after
+   * `signalEndOfStream()` has been invoked on this session.
+   *
+   * Throws `binder::Status::Exception::EX_UNSUPPORTED_OPERATION` when the
+   * controller is configured for tunnel mode - this API is not part of the
+   * data path in tunnel; the sink is fed by the decoder internally and the
+   * vendor is responsible for the internal EOS propagation. See
+   * [Discussion #492](https://github.com/rdkcentral/rdk-halif-aidl/discussions/492).
+   *
+   * @param[in] nsPresentationTime The presentation time of the audio frame in nanoseconds.
+   * @param[in] bufferHandle       A handle to the AV buffer containing the audio frame.
+   * @param[in] metadata           A FrameMetadata parcelable describing the audio frame.
+   *
+   * @param[out] _aidl_return boolean
+   *   - true: Buffer successfully queued for consumption. Buffer ownership transfers to HAL.
+   *   - false: Buffer queue is full. Buffer ownership remains with caller.
+   *     The client SHOULD wait for `IAudioSinkControllerListener.onFrameBufferAvailable()`
+   *     before retrying, to avoid wasted binder transactions. Continuing to call this
+   *     method while the queue is full is permitted but will return `false` repeatedly
+   *     until space is available.
+   * @pre The resource must be in the `STARTED` state.
+   *
+   * @returns ::android::binder::Status - one of the values below.
+   * @retval ::android::binder::Status::EX_NONE for success
+   * @retval ::android::binder::Status::EX_ILLEGAL_STATE if the resource is not in the `STARTED` state, or if an
+   * audio frame is passed after `signalEndOfStream()`.
+   * @retval ::android::binder::Status::EX_UNSUPPORTED_OPERATION if the controller is configured for tunnel mode.
+   * @retval ::android::binder::Status::EX_ILLEGAL_ARGUMENT If an invalid argument is provided.
+   */
+  virtual ::android::binder::Status queueAudioFrame(int64_t nsPresentationTime, int64_t bufferHandle, const ::com::rdk::hal::audiodecoder::FrameMetadata& metadata, bool* _aidl_return) = 0;
+  // @aidl-doc
+  /**
+   * Signals end-of-stream to the audio sink.
+   *
+   * Asserts that no further frames will be queued via `queueAudioFrame()`.
+   * The sink consumes every already-queued frame at its presentation time
+   * — and, where a mixer input is routed, makes it audible — in the usual
+   * way, then fires `IAudioSinkControllerListener.onEndOfStream(nsPresentationTime)`
+   * with the presentation time of the final queued frame. The callback
+   * fires once consumption of that final frame completes on the attached
+   * clock (its buffer is freed via `IAVBuffer.free()`), not merely once
+   * its presentation time is reached, so it fires whether or not a mixer
+   * input is routed.
+   *
+   * If no frames are queued when this is called, the sink fires
+   * `onEndOfStream()` with an undefined-time sentinel
+   * (`IAVClock.UNDEFINED_TIME`) so the client sees the same callback in all
+   * cases.
+   *
+   * A second call is a no-op. After this call `queueAudioFrame()` throws
+   * `EX_ILLEGAL_STATE` until the sink is flushed or stopped and restarted.
+   *
+   * Behaviour is identical in tunnelled and non-tunnelled modes - the MW calls this
+   * method the same way. In tunnelled mode the decoder->sink data flow is
+   * vendor-internal; the vendor must implement the EOS signal propagation
+   * from decoder to sink so the sink can fire
+   * `onEndOfStream(nsPresentationTime)` with the correct presentation
+   * timing. The MW observes the same sequencing in both modes:
+   * `decoder.onEndOfStream()` (decode complete) followed by
+   * `sink.onEndOfStream(nsPresentationTime)` (presentation complete).
+   *
+   * @pre The resource must be in the `STARTED` state.
+   *
+   * @see IAudioSinkControllerListener.onEndOfStream()
+   *
+   * @returns ::android::binder::Status - one of the values below.
+   * @retval ::android::binder::Status::EX_NONE for success
+   * @retval ::android::binder::Status::EX_ILLEGAL_STATE if the resource
+   *         is not in the `STARTED` state.
+   */
+  virtual ::android::binder::Status signalEndOfStream() = 0;
+  // @aidl-doc
+  /**
+   * Starts a flush operation on the sink.
+   *
+   * The audio sink must be in a state of STARTED.
+   * Any data buffers that have been passed for mixing but have
+   * not yet been processed are freed by the audio sink.
+   *
+   * @pre The resource must be in State::STARTED.
+   *
+   * @see IAudioSinkControllerListener.onFlushComplete()
+   *
+   * @returns ::android::binder::Status - one of the values below.
+   * @retval ::android::binder::Status::EX_NONE for success
+   * @retval ::android::binder::Status::EX_ILLEGAL_STATE
+   */
+  virtual ::android::binder::Status flush() = 0;
+  // @aidl-doc
+  /**
+   * Gets the current volume for this audio sink.
+   *
+   * @param[out] _aidl_return Volume parcelable.
+   *
+   * @pre The resource must be in State::READY or State::STARTED.
+   *
+   * @returns ::android::binder::Status - one of the values below.
+   * @retval ::android::binder::Status::EX_NONE for success
+   * @retval ::android::binder::Status::EX_ILLEGAL_STATE
+   */
+  virtual ::android::binder::Status getVolume(::com::rdk::hal::audiosink::Volume* _aidl_return) = 0;
+  // @aidl-doc
+  /**
+   * Set the audio sink volume level and mute state.
+   *
+   * @param[in] volume    Volume parcelable.
+   *
+   * @param[out] _aidl_return boolean - true if the volume was successfully set or false if the Volume parcelable was invalid.
+   *
+   * @pre The resource must be in State::READY or State::STARTED.
+   *
+   * @returns ::android::binder::Status - one of the values below.
+   * @retval ::android::binder::Status::EX_NONE for success
+   * @retval ::android::binder::Status::EX_ILLEGAL_STATE
+   */
+  virtual ::android::binder::Status setVolume(const ::com::rdk::hal::audiosink::Volume& volume, bool* _aidl_return) = 0;
+  // @aidl-doc
+  /**
+   * Set a volume ramp.
+   *
+   * The volume ramp operation is set to run over a period of time starting now from the current volume level
+   * to the target volume level.  The muted state is unaffected, which means the volume ramp operation
+   * continues while muted and can by unmuted at any time.
+   *
+   * The VolumeRamp type describes the curve to follow during the ramp.
+   *
+   * If any volume ramp is in progress then it is stopped and replaced with this new volume ramp request
+   * and the ramp starts from the interrupted ramp last volume level.
+   * When stop() is called, any volume ramp in progress is stopped and the volume is set to targetVolume.
+   *
+   * @param[in] targetVolume    	    Target volume level at end of ramp.
+   * @param[in] overMs    		    The duration of the ramp in milliseconds.
+   * @param[in] volumeRamp    	    The curve type for the ramp.
+   *
+   * @param[out] _aidl_return boolean - true if the volume ramp is started or false if any parameters are invalid.
+   *
+   * @pre The resource must be in State::STARTED.
+   *
+   * @returns ::android::binder::Status - one of the values below.
+   * @retval ::android::binder::Status::EX_NONE for success
+   * @retval ::android::binder::Status::EX_ILLEGAL_STATE
+   */
+  virtual ::android::binder::Status setVolumeRamp(double targetVolume, int32_t overMs, ::com::rdk::hal::audiosink::VolumeRamp volumeRamp, bool* _aidl_return) = 0;
+  virtual int32_t getInterfaceVersion() = 0;
+  virtual std::string getInterfaceHash() = 0;
+};  // class IAudioSinkController
+
+class IAudioSinkControllerDefault : public IAudioSinkController {
+public:
+  ::android::IBinder* onAsBinder() override {
+    return nullptr;
+  }
+  ::android::binder::Status setAudioDecoder(const ::com::rdk::hal::audiodecoder::IAudioDecoder::Id& /*audioDecoderId*/, bool* /*_aidl_return*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status getAudioDecoder(::com::rdk::hal::audiodecoder::IAudioDecoder::Id* /*_aidl_return*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status attachClock(const ::com::rdk::hal::avclock::IAVClock::Id& /*clockId*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status detachClock() override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status getClock(::com::rdk::hal::avclock::IAVClock::Id* /*_aidl_return*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status start() override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status stop() override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status queueAudioFrame(int64_t /*nsPresentationTime*/, int64_t /*bufferHandle*/, const ::com::rdk::hal::audiodecoder::FrameMetadata& /*metadata*/, bool* /*_aidl_return*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status signalEndOfStream() override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status flush() override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status getVolume(::com::rdk::hal::audiosink::Volume* /*_aidl_return*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status setVolume(const ::com::rdk::hal::audiosink::Volume& /*volume*/, bool* /*_aidl_return*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status setVolumeRamp(double /*targetVolume*/, int32_t /*overMs*/, ::com::rdk::hal::audiosink::VolumeRamp /*volumeRamp*/, bool* /*_aidl_return*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  int32_t getInterfaceVersion() override {
+    return 0;
+  }
+  std::string getInterfaceHash() override {
+    return "";
+  }
+};  // class IAudioSinkControllerDefault
+}  // namespace audiosink
+}  // namespace hal
+}  // namespace rdk
+}  // namespace com

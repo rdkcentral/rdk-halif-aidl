@@ -27,8 +27,7 @@ import com.rdk.hal.firmwareupdate.FirmwareUpdateResult;
  */
 
 @VintfStability
-oneway interface IFirmwareUpdateListener
-{
+oneway interface IFirmwareUpdateListener {
     /**
      * Callback which occurs during the background firmware update operation to provide progress reports.
      *

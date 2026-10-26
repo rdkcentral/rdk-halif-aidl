@@ -1,0 +1,9 @@
+aidl_interface:
+  name: avclock
+  version: 2010
+  srcs:
+    - com/rdk/hal/avclock/*.aidl
+  imports:
+    - common@current
+  stability: vintf
+  layout: module-local

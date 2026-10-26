@@ -1,0 +1,10 @@
+aidl_interface:
+  name: panel
+  version: 2000
+  srcs:
+    - com/rdk/hal/panel/*.aidl
+  imports:
+    - common@0.3.0.0
+    - videodecoder@0.3.0.0
+  stability: vintf
+  layout: module-local

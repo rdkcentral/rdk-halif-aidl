@@ -22,11 +22,16 @@ package com.rdk.hal.panel;
  * @brief Local dimming level.
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum DimmingLevel {
+    /** Invalid or unset level. */
     DIMMING_LEVEL_INVALID = -1,
+    /** The dimming mode has no selectable levels. */
     DIMMING_LEVEL_NOT_APPLICABLE = 0,
+    /** Low dimming level. */
     DIMMING_LEVEL_LOW = 1,
+    /** Medium dimming level. */
     DIMMING_LEVEL_MEDIUM = 2,
+    /** High dimming level. */
     DIMMING_LEVEL_HIGH = 3,
 }

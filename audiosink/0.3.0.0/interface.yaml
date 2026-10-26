@@ -1,0 +1,11 @@
+aidl_interface:
+  name: audiosink
+  version: 3000
+  srcs:
+    - com/rdk/hal/audiosink/*.aidl
+  imports:
+    - audiodecoder@current
+    - avclock@current
+    - common@current
+  stability: vintf
+  layout: module-local

@@ -29,22 +29,40 @@ package com.rdk.hal.panel;
  */
 @VintfStability
 parcelable ColourManagementSettings {
+    /** Red hue adjustment. */
     int redHue;
+    /** Red saturation adjustment. */
     int redSaturation;
+    /** Red luminance adjustment. */
     int redLuminance;
+    /** Green hue adjustment. */
     int greenHue;
+    /** Green saturation adjustment. */
     int greenSaturation;
+    /** Green luminance adjustment. */
     int greenLuminance;
+    /** Blue hue adjustment. */
     int blueHue;
+    /** Blue saturation adjustment. */
     int blueSaturation;
+    /** Blue luminance adjustment. */
     int blueLuminance;
+    /** Yellow hue adjustment. */
     int yellowHue;
+    /** Yellow saturation adjustment. */
     int yellowSaturation;
+    /** Yellow luminance adjustment. */
     int yellowLuminance;
+    /** Cyan hue adjustment. */
     int cyanHue;
+    /** Cyan saturation adjustment. */
     int cyanSaturation;
+    /** Cyan luminance adjustment. */
     int cyanLuminance;
+    /** Magenta hue adjustment. */
     int magentaHue;
+    /** Magenta saturation adjustment. */
     int magentaSaturation;
+    /** Magenta luminance adjustment. */
     int magentaLuminance;
 }

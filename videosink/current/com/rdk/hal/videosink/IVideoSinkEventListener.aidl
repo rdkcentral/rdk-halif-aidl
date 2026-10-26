@@ -27,8 +27,7 @@ import com.rdk.hal.videosink.State;
  */
 
 @VintfStability
-oneway interface IVideoSinkEventListener
-{
+oneway interface IVideoSinkEventListener {
     /**
      * Callback when the first video frame has been rendered.
      *

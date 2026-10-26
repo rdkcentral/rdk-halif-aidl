@@ -35,7 +35,6 @@ package com.rdk.hal.videodecoder;
  */
 @VintfStability
 parcelable Fraction {
-
     /**
      * Numerator. Must be >= 0.
      */

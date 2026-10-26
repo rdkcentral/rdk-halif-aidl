@@ -3,6 +3,7 @@ BasedOnStyle: Google
 IndentWidth: 4
 ColumnLimit: 120
 BreakAfterJavaFieldAnnotations: false
+AlignTrailingComments: true
 ---
 Language: Cpp
 BasedOnStyle: Google

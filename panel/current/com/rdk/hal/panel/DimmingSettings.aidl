@@ -26,6 +26,8 @@ import com.rdk.hal.panel.DimmingMode;
  */
 @VintfStability
 parcelable DimmingSettings {
+    /** The dimming mode. */
     DimmingMode mode;
+    /** The dimming level, one of the levels supported for the mode. */
     DimmingLevel level;
 }

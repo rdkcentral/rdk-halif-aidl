@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Generated** | 2026-07-15 |
-| **Components** | 31 |
-| 🟢 **GREEN** | 19 |
-| 🟡 **AMBER** | 12 |
+| **Generated** | 2026-10-23 |
+| **Components** | 32 |
+| 🟢 **GREEN** | 21 |
+| 🟡 **AMBER** | 11 |
 | 🔴 **RED** | 0 |
 
 ---
@@ -14,8 +14,8 @@
 
 | Status | Count | Meaning |
 |--------|-------|---------|
-| 🟢 GREEN | **19** | Reviewed & Approved — Interface stable on develop |
-| 🟡 AMBER | **12** | Under Active Ingestion — Will enter sprint review when ready |
+| 🟢 GREEN | **21** | Reviewed & Approved — Interface stable on develop |
+| 🟡 AMBER | **11** | Under Active Ingestion — Will enter sprint review when ready |
 | 🔴 RED | **0** | Not Started / Blocked — Strategy or definition required |
 
 ---
@@ -35,7 +35,6 @@
 | 🟢 | hdmiinput | 0.1.0.0 | HDMI input port management and signal detection | 4/4 | Architecture + AV_Architecture |
 | 🟢 | hdmioutput | 0.1.0.0 | HDMI output port configuration and display control | 4/4 | Architecture + AV_Architecture |
 | 🟢 | planecontrol | 0.2.0.0 | Graphics and video plane composition control | 5/5 | Architecture + Graphics_Architecture |
-| 🟢 | videodecoder | 0.2.0.1 | Video decoder resource management and codec support | 4/4 | Architecture + AV_Architecture |
 | 🟢 | videosink | 0.2.0.0 | Video output rendering and display sink management | 4/4 | Architecture + AV_Architecture |
 
 
@@ -44,11 +43,14 @@
 | | Component | Current Version | Description | Reviews | Owners |
 |---|-----------|---------|-------------|---------|--------|
 | 🟢 | bootreason | 0.1.0.0 | Boot reason tracking and reboot management | 4/4 | Architecture + MW_Team |
+| 🟢 | broadcast | 0.1.0.0 | Broadcast Frontend, Lnb, Demux interfaces | 2/2 | Broadcast_Team |
 | 🟢 | compositeinput | 0.2.0.0 | Composite video input capture and control | 4/4 | Architecture + AV_Architecture |
 | 🟢 | deepsleep | 0.1.0.0 | Deep sleep and low-power state management | 4/4 | Architecture |
 | 🟢 | deviceinfo | 0.1.0.0 | Device information and platform capability reporting | 4/4 | Architecture + Kernel_Architecture |
 | 🟢 | firmwareupdate | 0.2.0.0 | Update lifecycle for multiple firmware types at multiple locations across the system | 1/4 | Architecture + Kernel_Architecture |
 | 🟢 | indicator | 0.1.0.0 | LED and visual indicator state management | 4/4 | Architecture + Graphics_Architecture |
+| 🟢 | panel | 0.1.0.0 | Front panel display and button control | 2/4 | Architecture + Graphics_Architecture |
+| 🟢 | ringbuffer | 0.1.0.0 | Generic ring buffer interface for opaque data | 2/2 | Broadcast_Team |
 | 🟢 | sensor/motion | 0.2.0.0 | Hardware sensor data acquisition and monitoring | 4/4 | Architecture + Kernel_Architecture |
 | 🟢 | sensor/thermal | 0.2.0.0 | Hardware sensor data acquisition and monitoring | 4/4 | Architecture + Kernel_Architecture |
 
@@ -62,6 +64,7 @@
 | | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
 |---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
 | 🟡 | audiomixer | 0.3.0.0 | — | AQ parameter API in review | Land AQ processor API (PR #573) + OutputPortType BLUETOOTH→CAPTURE rename (#708) — both batch into one 0.4.0.0 major bump (0.23.0). Flip to GREEN when shipped. | — | — | Architecture + Vendor_Layer_Team + AV_Architecture |
+| 🟡 | videodecoder | 0.2.0.1 | — | Breaking changes awaiting review: OperationalMode removed (7771f2ae), InputBufferMetadata.discontinuity activated then removed (76281243, 694aaf3b) | All four reviewer teams to re-review and sign off; flip to GREEN once reviewed. | — | — | Architecture + AV_Architecture |
 | 🟡 | vsi/kernel | 0.0.0.1 | 1 | Strategy required | Not blocking progress - Architecture Strategy | — | — | Architecture |
 | 🟡 | vsi/graphics | 0.0.0.1 | 6 | Docs required | Not blocking progress - Define Versions & write up vision and direction, Planning Out Evolution of the platform, RDK-M | — | — | Architecture + Graphics_Architecture |
 
@@ -70,8 +73,6 @@
 
 | | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
 |---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
-| 🟡 | panel | 0.1.0.0 | 3 | Breaking change in flight: #688 PQ capability normalization (0.2.0.0) in review; GREEN when shipped | PQ capability work tracked in #674, #497, #516, #276 | — | — | Architecture + Graphics_Architecture |
-| 🟡 | broadcast | 0.1.0.0 | 5 | Not integrated into the AIDL build - blocked on FMQ (#494) | Blocked: needs the android.hardware.common.fmq AIDL package in the binder SDK (linux_binder_idl#18); then add broadcast/current/interface.yaml - see #494. | — | — | Vendor_Layer_Team + Broadcast_Team |
 | 🟡 | r4ce | 0.0.0.1 | 5 | API Definition in progress | Control Manager Team - API Definition started | — | — | Architecture + Control_Manager_Architecture |
 | 🟡 | vsi/bluetooth | 0.0.0.1 | 6 | Docs required | Not blocking progress - Have discussions write up methodology, Discussions with Bluetooth Team | — | — | Architecture + Connectivity_Architecture |
 | 🟡 | vsi/linuxinput | 0.0.0.1 | 6 | Docs required | Not blocking progress - Write up methodology | — | — | Architecture + Kernel_Architecture |
@@ -118,7 +119,6 @@
 | 🟢 | hdmiinput | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
 | 🟢 | hdmioutput | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
 | 🟢 | planecontrol | 5/5 | ✅ | ✅ | ✅ | N/A | N/A | ✅ | N/A | N/A | ✅ |
-| 🟢 | videodecoder | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
 | 🟢 | videosink | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
 
 ### SOC — 🟡 AMBER
@@ -128,6 +128,7 @@
 | 🟡 | vsi/kernel | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |
 | 🟡 | vsi/graphics | 0/4 | ☐ | ☐ | N/A | N/A | N/A | ☐ | N/A | N/A | ☐ |
 | 🟡 | audiomixer | 0/4 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
+| 🟡 | videodecoder | 0/4 | 🔄 | 🔄 | 🔄 | N/A | N/A | N/A | N/A | N/A | 🔄 |
 
 ### SOC — 🔴 RED
 
@@ -139,11 +140,14 @@
 | | Component | Progress | Arch | Prod | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel | Vendor |
 |---|-----------|----------|------|------|-----|-----------|----------|----------|--------------|--------|--------|
 | 🟢 | bootreason | 4/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
+| 🟢 | broadcast | 2/2 | ✅ | N/A | N/A | ✅ | N/A | N/A | N/A | N/A | N/A |
 | 🟢 | compositeinput | 4/4 | ✅ | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ |
 | 🟢 | deepsleep | 4/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
 | 🟢 | deviceinfo | 4/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
 | 🟢 | firmwareupdate | 1/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ✅ |
 | 🟢 | indicator | 4/4 | ✅ | ✅ | N/A | N/A | N/A | ✅ | N/A | N/A | ✅ |
+| 🟢 | panel | 2/4 | ✅ | ✅ | N/A | N/A | N/A | ☐ | N/A | N/A | ☐ |
+| 🟢 | ringbuffer | 2/2 | ✅ | N/A | N/A | ✅ | N/A | N/A | N/A | N/A | N/A |
 | 🟢 | sensor/motion | 4/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
 | 🟢 | sensor/thermal | 4/4 | ✅ | ✅ | N/A | N/A | N/A | N/A | N/A | ✅ | ✅ |
 
@@ -151,8 +155,6 @@
 
 | | Component | Progress | Arch | Prod | AV | Broadcast | Ctrl Mgr | Graphics | Connectivity | Kernel | Vendor |
 |---|-----------|----------|------|------|-----|-----------|----------|----------|--------------|--------|--------|
-| 🟡 | panel | 2/4 | ✅ | ✅ | N/A | N/A | N/A | ☐ | N/A | N/A | ☐ |
-| 🟡 | broadcast | 0/4 | ☐ | ☐ | N/A | ☐ | N/A | N/A | N/A | N/A | ☐ |
 | 🟡 | r4ce | 0/4 | ☐ | ☐ | N/A | N/A | ☐ | N/A | N/A | N/A | ☐ |
 | 🟡 | vsi/bluetooth | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | ☐ | N/A | ☐ |
 | 🟡 | vsi/linuxinput | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmiinput;
+import com.rdk.hal.PropertyValue;
 import com.rdk.hal.hdmiinput.Capabilities;
 import com.rdk.hal.hdmiinput.HDCPProtocolVersion;
 import com.rdk.hal.hdmiinput.HDCPStatus;
@@ -27,11 +28,8 @@ import com.rdk.hal.hdmiinput.IHDMIInputEventListener;
 import com.rdk.hal.hdmiinput.Property;
 import com.rdk.hal.hdmiinput.PropertyKVPair;
 import com.rdk.hal.hdmiinput.State;
-import com.rdk.hal.hdmiinput.HDCPProtocolVersion;
-import com.rdk.hal.hdmiinput.HDCPStatus;
-import com.rdk.hal.PropertyValue;
 
-/** 
+/**
  *  @brief     HDMI Input HAL interface for a single port.
  *  @see com.rdk.hal.hdmiinput.State - for state transitions
  *  @author    Luc Kennedy-Lamb
@@ -41,15 +39,14 @@ import com.rdk.hal.PropertyValue;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 @VintfStability
-interface IHDMIInput 
-{
-
+interface IHDMIInput {
     /** HDMI input resource ID type */
     @VintfStability
     parcelable Id {
@@ -62,7 +59,7 @@ interface IHDMIInput
 
     /**
      * Gets the capabilities for this HDMI input port.
-     * 
+     *
      * This function can be called at any time and is not dependant on any HDMI input state.
      * The returned value is not allowed to change between calls.
      *
@@ -90,12 +87,12 @@ interface IHDMIInput
      *
      *
      * @see IHDMIInputEventListener.onStateChanged().
-     */  
+     */
     State getState();
- 
+
     /**
      * Gets the current EDID set for the HDMI input port.
-     * 
+     *
      * If no EDID has been explicitly set via setEDID(), a default EDID is returned.
      * When multiple default EDID versions are supported (as listed in Capabilities.supportedVersions[]),
      * the latest supported default EDID version is returned.
@@ -105,24 +102,25 @@ interface IHDMIInput
      * The EDID returned in `edid` is set for the HDMI input port.
      *
      * @param[out] edid     The EDID data.
-     * 
+     *
      * @return boolean
      * @retval true     The EDID was retrieved successfully.
-     * @retval false    Indicates an error condition (e.g., resource not available, invalid state, or parameter validation failure).
+     * @retval false    Indicates an error condition (e.g., resource not available, invalid state, or parameter
+     * validation failure).
      *
      *
      * @see setEDID(), getDefaultEDID()
      */
     boolean getEDID(out byte[] edid);
-    
+
     /**
      * Gets the default EDID for the HDMI input port for a given HDMI version.
-     * 
+     *
      * Spec Info : CTA 861 standards
      *
      * A default EDID is defined for each HDMIVersion listed as as supported in the
      * `Capabilities.supportedVersions[]`.
-     * 
+     *
      * The RDK middleware is expected to set an EDID based on the defined default
      * EDID for a port/version after feature modification.
      *
@@ -155,7 +153,8 @@ interface IHDMIInput
      *
      * If HDCP is not in use, then `HDCPStatus.UNKNOWN` is returned.
      *
-     * In case of persistent error (e.g., repeated authentication failure), client should close and re-open the session to reset the state.
+     * In case of persistent error (e.g., repeated authentication failure), client should close and re-open the session
+     * to reset the state.
      *
      * @returns HDCPStatus
      *
@@ -169,7 +168,8 @@ interface IHDMIInput
      *
      * For InfoFrame payload, starting with the InfoFrame type code. See HDMI Specification 2.0, Section 8.x for layout.
      *
-     * @returns InfoFrame data byte array, or empty array if no InfoFrame has been received since last device connection or start.
+     * @returns InfoFrame data byte array, or empty array if no InfoFrame has been received since last device connection
+     *     or start.
      *
      *
      * @see IHDMIInputControllerListener.onSPDInfoFrame()
@@ -178,16 +178,16 @@ interface IHDMIInput
 
     /**
      * Opens the HDMI input port instance.
-     * 
+     *
      * If successful the HDMI input transitions to an `OPENING` state and then a `READY` state
      * which is notified to any registered `IHDMIInputEventListener` interfaces.
-     * 
+     *
      * Controller related callbacks are made through the `IHDMIInputControllerListener`
      * passed into the call.
-     * 
+     *
      * The `IHDMIInputControllerListener.onConnectionStateChanged()` callback is always fired during
      * the `OPENING` state to indicate the current connected/disconnected state.
-     * 
+     *
      * The returned `IHDMIInputController` interface is used to control the HDMI input port interface
      * including starting and stopping the port for display.
      *
@@ -201,12 +201,12 @@ interface IHDMIInput
      * @param[in] hdmiInputControllerListener    Listener object for controller callbacks.
      *
      * @returns IHDMIInputController, or null if the port cannot be opened (e.g. invalid state).
-     * 
-     * @exception binder::Status EX_ILLEGAL_STATE 
      *
-     * 
+     * @exception binder::Status EX_ILLEGAL_STATE
+     *
+     *
      * @pre The resource must be in State::CLOSED.
-     * 
+     *
      * @see IHDMIInputController, close(), registerEventListener()
      */
     @nullable IHDMIInputController open(in IHDMIInputControllerListener hdmiInputControllerListener);
@@ -217,7 +217,7 @@ interface IHDMIInput
      * The HDMI input must be in a `READY` state before it can be closed.
      * If successful the HDMI input transitions to a `CLOSING` state and then a `CLOSED` state.
      * Then `onStateChanged(CLOSING, CLOSED)` will be notified on any registered event listener interfaces.
-     * 
+     *
      * The `hdmiInputController` parameter must be the same instance returned from the `open()` function
      * otherwise `false` is returned.
      *
@@ -236,8 +236,9 @@ interface IHDMIInput
 
     /**
      * Registers a HDMI input event listener.
-     * 
-     * Only one event listener may be registered per port at a time. Attempting to register a second listener will return false.
+     *
+     * Only one event listener may be registered per port at a time. Attempting to register a second listener will
+     * return false.
      *
      * Registration delivers an initial `onStateChanged()` carrying the port's current
      * state in both `oldState` and `newState`. Before `open()` that state is `CLOSED`.
@@ -255,7 +256,7 @@ interface IHDMIInput
 
     /**
      * Unregisters a HDMI input event listener.
-     * 
+     *
      * @param[in] hdmiInputEventListener    Listener object for event callbacks.
      *
      * @return boolean

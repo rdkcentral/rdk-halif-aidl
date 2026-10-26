@@ -18,8 +18,8 @@
  */
 package com.rdk.hal.hdmioutput;
 
-import com.rdk.hal.hdmioutput.Property;
 import com.rdk.hal.PropertyValue;
+import com.rdk.hal.hdmioutput.Property;
 
 /**
  *  @brief     Key-value pair for HDMI output properties.
@@ -34,8 +34,7 @@ import com.rdk.hal.PropertyValue;
  *  @author    Gerald Weatherup
  */
 @VintfStability
-parcelable PropertyKVPair
-{
+parcelable PropertyKVPair {
     /**
      * The property key to access.
      *

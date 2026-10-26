@@ -37,7 +37,7 @@ package com.rdk.hal.videodecoder;
  *  @author    Gerald Weatherup
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum ColorRange {
 
     /** Range not signalled / unknown. */

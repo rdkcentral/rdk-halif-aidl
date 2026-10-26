@@ -17,43 +17,42 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmiinput;
- 
-/** 
+
+/**
  *  @brief     HDCP status type enum.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Amit Patel
  *  @author    Gerald Weatherup
  */
- 
+
 @VintfStability
 @Backing(type = "int")
-enum HDCPStatus
-{
-	/**
-	 * Not connected, not powered.
-	 *
-	 * Indicates the state is not yet determined or the operation is not applicable. Clients should poll or retry later.
-	 */
-	UNKNOWN = -1,
+enum HDCPStatus {
+    /**
+     * Not connected, not powered.
+     *
+     * Indicates the state is not yet determined or the operation is not applicable. Clients should poll or retry later.
+     */
+    UNKNOWN = -1,
 
-	/**
-	 * The connection is unauthenticated.
-	 */
-	UNAUTHENTICATED = 0,
+    /**
+     * The connection is unauthenticated.
+     */
+    UNAUTHENTICATED = 0,
 
-	/**
-	 * HDCP authentication is in progress.
-	 */
-	AUTHENTICATION_IN_PROGRESS = 1,
+    /**
+     * HDCP authentication is in progress.
+     */
+    AUTHENTICATION_IN_PROGRESS = 1,
 
-	/**
-	 * HDCP authentication failed.
-	 */
-	AUTHENTICATION_FAILURE = 2,
-	
-	/**
-	 * HDCP is successfully authenticated.
-	 */
-	AUTHENTICATED = 3,
+    /**
+     * HDCP authentication failed.
+     */
+    AUTHENTICATION_FAILURE = 2,
+
+    /**
+     * HDCP is successfully authenticated.
+     */
+    AUTHENTICATED = 3,
 }

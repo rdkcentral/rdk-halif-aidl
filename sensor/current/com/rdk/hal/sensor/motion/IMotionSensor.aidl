@@ -51,19 +51,19 @@
  */
 package com.rdk.hal.sensor.motion;
 
-import com.rdk.hal.sensor.motion.State;
 import com.rdk.hal.sensor.motion.Capabilities;
 import com.rdk.hal.sensor.motion.IMotionSensorController;
 import com.rdk.hal.sensor.motion.IMotionSensorControllerListener;
 import com.rdk.hal.sensor.motion.IMotionSensorEventListener;
+import com.rdk.hal.sensor.motion.State;
 
 @VintfStability
 interface IMotionSensor {
-
     /**
      * @brief Motion sensor resource identifier type.
      */
-    @VintfStability parcelable Id {
+    @VintfStability
+    parcelable Id {
         /**
          * @brief Undefined/invalid ID value.
          */

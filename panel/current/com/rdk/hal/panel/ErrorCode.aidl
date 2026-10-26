@@ -22,11 +22,16 @@ package com.rdk.hal.panel;
  * @brief Error codes returned by panel control operations.
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum ErrorCode {
+    /** The request was applied. */
     SUCCESS = 0,
+    /** One or more arguments were invalid. */
     INVALID_ARGUMENT = 1,
+    /** The request is not valid in the current state. */
     INVALID_STATE = 2,
+    /** The request is not supported by the platform. */
     NOT_SUPPORTED = 3,
+    /** The HAL could not apply the request. */
     HARDWARE_FAILURE = 4,
 }
