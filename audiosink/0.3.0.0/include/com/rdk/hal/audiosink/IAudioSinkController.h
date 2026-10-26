@@ -3,8 +3,10 @@
 #include <binder/IBinder.h>
 #include <binder/IInterface.h>
 #include <binder/Status.h>
+#include <com/rdk/hal/PropertyValue.h>
 #include <com/rdk/hal/audiodecoder/FrameMetadata.h>
 #include <com/rdk/hal/audiodecoder/IAudioDecoder.h>
+#include <com/rdk/hal/audiosink/Property.h>
 #include <com/rdk/hal/audiosink/Volume.h>
 #include <com/rdk/hal/audiosink/VolumeRamp.h>
 #include <com/rdk/hal/avclock/IAVClock.h>
@@ -76,8 +78,8 @@ class IAudioSinkController : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioSinkController)
   static const int32_t VERSION = 3000;
-  const std::string HASH = "217303eaf0f0e7ddd5a52b527b23759e877e9dcd";
-  static constexpr char* HASHVALUE = "217303eaf0f0e7ddd5a52b527b23759e877e9dcd";
+  const std::string HASH = "250b70f29eb723ed19aef2f8ff2401d7f3b80297";
+  static constexpr char* HASHVALUE = "250b70f29eb723ed19aef2f8ff2401d7f3b80297";
   // @aidl-doc
   /**
    * Sets the audio decoder ID linked to this audio sink.
@@ -143,6 +145,22 @@ public:
    *         is not in State::READY or State::STARTED.
    */
   virtual ::android::binder::Status getAudioDecoder(::com::rdk::hal::audiodecoder::IAudioDecoder::Id* _aidl_return) = 0;
+  // @aidl-doc
+  /**
+   * Sets a property.
+   *
+   * @param[in] property              The key of a property from the Property enum.
+   * @param[in] propertyValue         Holds the value to set.
+   *
+   * @param[out] _aidl_return true if the property was successfully set, otherwise false on error.
+   *
+   * @see IAudioSink.getProperty()
+   *
+   * @returns ::android::binder::Status - one of the values below.
+   * @retval ::android::binder::Status::EX_NONE for success.
+   * @retval ::android::binder::Status::EX_ILLEGAL_ARGUMENT for invalid parameters.
+   */
+  virtual ::android::binder::Status setProperty(::com::rdk::hal::audiosink::Property property, const ::com::rdk::hal::PropertyValue& propertyValue, bool* _aidl_return) = 0;
   // @aidl-doc
   /**
    * Attaches an AVClock to this audio sink for AV synchronisation.
@@ -458,6 +476,9 @@ public:
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status getAudioDecoder(::com::rdk::hal::audiodecoder::IAudioDecoder::Id* /*_aidl_return*/) override {
+    return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
+  }
+  ::android::binder::Status setProperty(::com::rdk::hal::audiosink::Property /*property*/, const ::com::rdk::hal::PropertyValue& /*propertyValue*/, bool* /*_aidl_return*/) override {
     return ::android::binder::Status::fromStatusT(::android::UNKNOWN_TRANSACTION);
   }
   ::android::binder::Status attachClock(const ::com::rdk::hal::avclock::IAVClock::Id& /*clockId*/) override {

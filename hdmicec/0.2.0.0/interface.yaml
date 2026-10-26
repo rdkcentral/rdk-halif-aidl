@@ -1,6 +1,6 @@
 aidl_interface:
   name: hdmicec
-  version: 1010
+  version: 2000
   srcs:
     - com/rdk/hal/hdmicec/*.aidl
   imports:

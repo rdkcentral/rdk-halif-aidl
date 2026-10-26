@@ -16,6 +16,7 @@ public:
   virtual ~BpAudioSinkController() = default;
   ::android::binder::Status setAudioDecoder(const ::com::rdk::hal::audiodecoder::IAudioDecoder::Id& audioDecoderId, bool* _aidl_return) override;
   ::android::binder::Status getAudioDecoder(::com::rdk::hal::audiodecoder::IAudioDecoder::Id* _aidl_return) override;
+  ::android::binder::Status setProperty(::com::rdk::hal::audiosink::Property property, const ::com::rdk::hal::PropertyValue& propertyValue, bool* _aidl_return) override;
   ::android::binder::Status attachClock(const ::com::rdk::hal::avclock::IAVClock::Id& clockId) override;
   ::android::binder::Status detachClock() override;
   ::android::binder::Status getClock(::com::rdk::hal::avclock::IAVClock::Id* _aidl_return) override;

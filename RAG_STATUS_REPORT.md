@@ -31,7 +31,7 @@
 | 🟢 | avbuffer | 0.3.0.0 | AV buffer allocation and secure video path management | 4/4 | Architecture + AV_Architecture |
 | 🟢 | avclock | 0.2.1.0 | Audio/video clock synchronization and timing control | 4/4 | Architecture + AV_Architecture |
 | 🟢 | drm | 0.2.0.0 | DRM plugin and crypto plugin interfaces for content protection | 4/4 | Architecture + AV_Architecture |
-| 🟢 | hdmicec | 0.1.1.0 | HDMI CEC protocol messaging and device control | 4/4 | Architecture + AV_Architecture |
+| 🟢 | hdmicec | 0.2.0.0 | HDMI CEC protocol messaging and device control | 4/4 | Architecture + AV_Architecture |
 | 🟢 | hdmiinput | 0.2.0.0 | HDMI input port management and signal detection | 4/4 | Architecture + AV_Architecture |
 | 🟢 | hdmioutput | 0.2.0.0 | HDMI output port configuration and display control | 4/4 | Architecture + AV_Architecture |
 | 🟢 | planecontrol | 0.3.0.0 | Graphics and video plane composition control | 5/5 | Architecture + Graphics_Architecture |

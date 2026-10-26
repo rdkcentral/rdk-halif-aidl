@@ -16,7 +16,6 @@ public:
   virtual ~BpAudioSink() = default;
   ::android::binder::Status getCapabilities(::com::rdk::hal::audiosink::Capabilities* _aidl_return) override;
   ::android::binder::Status getProperty(::com::rdk::hal::audiosink::Property property, ::std::optional<::com::rdk::hal::PropertyValue>* _aidl_return) override;
-  ::android::binder::Status setProperty(::com::rdk::hal::audiosink::Property property, const ::com::rdk::hal::PropertyValue& propertyValue, bool* _aidl_return) override;
   ::android::binder::Status getState(::com::rdk::hal::audiosink::State* _aidl_return) override;
   ::android::binder::Status open(::com::rdk::hal::audiosink::ContentType contentType, const ::android::sp<::com::rdk::hal::audiosink::IAudioSinkControllerListener>& audioSinkControllerListener, ::android::sp<::com::rdk::hal::audiosink::IAudioSinkController>* _aidl_return) override;
   ::android::binder::Status close(const ::android::sp<::com::rdk::hal::audiosink::IAudioSinkController>& audioSinkController, bool* _aidl_return) override;

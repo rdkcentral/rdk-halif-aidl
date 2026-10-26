@@ -9,8 +9,8 @@ The HDMI-CEC HAL provides low-level bus access for Consumer Electronics Control 
 !!! info "References"
     |Reference|Link|
     |-|-|
-    |**Interface Definition**|[hdmicec/0.1.1.0](https://github.com/rdkcentral/rdk-halif-aidl/tree/0.23.0/hdmicec/0.1.1.0)|
-    |**Interface Version**|`0.1.1.0`|
+    |**Interface Definition**|[hdmicec/0.2.0.0](https://github.com/rdkcentral/rdk-halif-aidl/tree/0.23.0/hdmicec/0.2.0.0)|
+    |**Interface Version**|`0.2.0.0`|
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
     |**[1] High Definition Multimedia Specification 1.4b**|[Available from hdmi.org](https://www.hdmi.org/spec/hdmi1_4b)|
     |**[2] High Definition Multimedia Interface Specification 2.1**|[Available from hdmi.org](https://www.hdmi.org/spec/index)|

@@ -77,24 +77,9 @@ interface IAudioSink {
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid property value.
      *
      *
-     * @see setProperty()
+     * @see IAudioSinkController.setProperty()
      */
     @nullable PropertyValue getProperty(in Property property);
-
-    /**
-     * Sets a property.
-     *
-     * @param[in] property              The key of a property from the Property enum.
-     * @param[in] propertyValue         Holds the value to set.
-     *
-     * @returns true if the property was successfully set, otherwise false on error.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
-     *
-     * @see getProperty()
-     */
-    boolean setProperty(in Property property, in PropertyValue propertyValue);
 
     /**
      * Gets the current audio sink state.

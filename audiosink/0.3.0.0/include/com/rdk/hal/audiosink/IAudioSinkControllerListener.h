@@ -23,8 +23,8 @@ class IAudioSinkControllerListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(AudioSinkControllerListener)
   static const int32_t VERSION = 3000;
-  const std::string HASH = "217303eaf0f0e7ddd5a52b527b23759e877e9dcd";
-  static constexpr char* HASHVALUE = "217303eaf0f0e7ddd5a52b527b23759e877e9dcd";
+  const std::string HASH = "250b70f29eb723ed19aef2f8ff2401d7f3b80297";
+  static constexpr char* HASHVALUE = "250b70f29eb723ed19aef2f8ff2401d7f3b80297";
   // @aidl-doc
   /**
    * Callback when the sink has transitioned to a new state.

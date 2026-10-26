@@ -26,7 +26,7 @@ components:
   deviceinfo: 0.2.0.0
   drm: 0.2.0.0
   firmwareupdate: 0.3.0.0
-  hdmicec: 0.1.1.0
+  hdmicec: 0.2.0.0
   hdmiinput: 0.2.0.0
   hdmioutput: 0.2.0.0
   indicator: 0.2.0.0

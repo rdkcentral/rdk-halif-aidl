@@ -120,7 +120,7 @@ nav:
     - HDMI:
       - HDMI CEC:
         - Current: '!include hdmicec/current/mkdocs.yml'
-        - 0.1.1.0: '!include hdmicec/0.1.1.0/mkdocs.yml'
+        - 0.2.0.0: '!include hdmicec/0.2.0.0/mkdocs.yml'
         - 0.1.0.0: '!include hdmicec/0.1.0.0/mkdocs.yml'
       - HDMI Input:
         - Current: '!include hdmiinput/current/mkdocs.yml'

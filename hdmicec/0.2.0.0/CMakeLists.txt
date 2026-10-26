@@ -52,11 +52,11 @@
 #   HALIF_INSTALL_RPATH     - RPATH to embed in the library (default: none, so
 #                             no build paths leak into the shipped .so)
 cmake_minimum_required(VERSION 3.16)
-project(hdmicec-v0.1.1.0-cpp LANGUAGES CXX)
+project(hdmicec-v0.2.0.0-cpp LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(LIB_NAME "hdmicec-v0.1.1.0-cpp")
+set(LIB_NAME "hdmicec-v0.2.0.0-cpp")
 
 if (NOT DEFINED BINDER_SDK_DIR)
     message(FATAL_ERROR "BINDER_SDK_DIR must be set")

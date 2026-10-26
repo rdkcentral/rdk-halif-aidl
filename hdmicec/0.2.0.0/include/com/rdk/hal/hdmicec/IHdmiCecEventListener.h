@@ -24,7 +24,7 @@ namespace hdmicec {
 class IHdmiCecEventListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(HdmiCecEventListener)
-  static const int32_t VERSION = 1010;
+  static const int32_t VERSION = 2000;
   const std::string HASH = "e6856e41e56df2162e16424bd2e6cd2c38d8697a";
   static constexpr char* HASHVALUE = "e6856e41e56df2162e16424bd2e6cd2c38d8697a";
   // @aidl-doc
