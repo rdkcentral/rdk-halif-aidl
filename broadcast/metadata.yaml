@@ -24,7 +24,7 @@
 # type        - Responsibility: SOC or OEM                                [manual]
 component: broadcast
 version: 0.1.0.0
-status: AMBER
+status: GREEN
 description: "Broadcast Frontend, Lnb, Demux interfaces"
 type: OEM
 
@@ -56,13 +56,12 @@ scope:
 #   risk          - Risk notes (appears as watch item on dashboard)
 #   owners        - Responsible architecture teams
 notes:
-  status_detail: "Extended for DVB-T/C/S and ATSC 1.0 (PR #258); review feedback being applied"
-  action: "Populate hfp-broadcast.yaml and complete the design doc (HAL.BROADCAST.n requirements). Flip to GREEN after Architecture sign-off."
-  risk: "Breaking changes in flight - client token added to six calls (five acquisitions plus the createSoftwareInput() creation claim), SignalInfoValue union reordered, symbol-rate capabilities moved to DvbC/DvbSCapabilities. Not safe to implement against until merged."
+  status_detail: "Extended for DVB-T/C/S and ATSC 1.0 (PR #258, merged); integrated into the AIDL build (#494 closed)"
+  action: "Populate hfp-broadcast.yaml and complete the design doc (HAL.BROADCAST.n requirements)."
   owners: "Broadcast_Team"
 
 # reviewers - Sign-off status per stakeholder team                       [manual]
 #   Values: pending | in_review | changes_requested | recheck | reviewed | abstained
 reviewers:
-  Architecture: pending
-  Broadcast_Team: reviewed
+    Architecture: reviewed
+    Broadcast_Team: reviewed

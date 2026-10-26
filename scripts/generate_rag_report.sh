@@ -64,12 +64,16 @@ yaml_nested() {
 # Parse reviewer map (Team: status) and return "reviewed/total" count
 yaml_review_progress() {
     local file="$1"
+    # Indentation-agnostic: yaml_reviewer_status below matches any depth, so a
+    # depth-specific pattern here silently reported 0/0 for a component whose
+    # reviewers block was indented differently, while its per-team columns
+    # still rendered correctly.
     awk '
         /^reviewers:/ {found=1; next}
         found && /^[^ #]/ {found=0}
-        found && /^    [A-Za-z]/ {
+        found && /^[ \t]+[A-Za-z]/ {
             split($0, a, ": ")
-            gsub(/^ +/, "", a[1])
+            gsub(/^[ \t]+/, "", a[1])
             total++
             if (a[2] == "reviewed") reviewed++
             else if (a[2] == "abstained") abstained++

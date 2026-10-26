@@ -1,0 +1,84 @@
+/*
+ * If not stated otherwise in this file or this component's LICENSE file the following copyright and licenses apply:
+ *
+ * Copyright 2026 RDK Management
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+package com.rdk.hal.broadcast.frontend;
+
+import com.rdk.hal.broadcast.frontend.DvbTBandwidth;
+import com.rdk.hal.broadcast.frontend.DvbTCodeRates;
+import com.rdk.hal.broadcast.frontend.DvbTConstellation;
+import com.rdk.hal.broadcast.frontend.DvbTGuardInterval;
+import com.rdk.hal.broadcast.frontend.DvbTHierarchy;
+import com.rdk.hal.broadcast.frontend.DvbTMiso;
+import com.rdk.hal.broadcast.frontend.DvbTPlpId;
+import com.rdk.hal.broadcast.frontend.DvbTStandard;
+import com.rdk.hal.broadcast.frontend.DvbTTransmissionMode;
+import com.rdk.hal.broadcast.frontend.Frequency;
+import com.rdk.hal.broadcast.frontend.SignalDetectMode;
+import com.rdk.hal.broadcast.frontend.SpectralInversion;
+
+/**
+ * @brief DVB-T-specific tuning parameters.
+ *
+ * @author Jan Pedersen
+ * @author Christian George
+ * @author Philipp Trommler
+ */
+@VintfStability
+parcelable DvbTTuneParameters {
+    /** The frequency to tune to. */
+    Frequency frequency;
+
+    /** Signal detect mode to use when tuning. */
+    SignalDetectMode signalDetectMode;
+
+    /** The bandwidth to use. */
+    DvbTBandwidth bandwidth;
+
+    /** Which DVB-T Standard to use. */
+    DvbTStandard dvbTStandard;
+
+    /** The constellation to use. */
+    DvbTConstellation constellation;
+
+    /** LP and HP code rates for DVB-T/T2. */
+    DvbTCodeRates codeRates;
+
+    /** The guard interval to use. */
+    DvbTGuardInterval guardInterval;
+
+    /** The transmission mode to use. */
+    DvbTTransmissionMode transmissionMode;
+
+    /** DVB-T/T2 spectral inversion mode to use when tuning. */
+    SpectralInversion inversion;
+
+    /** DVB-T hierarchical transmission mode. */
+    DvbTHierarchy hierarchy;
+
+    /** DVB-T MISO mode to use when tuning. */
+    DvbTMiso misoMode;
+
+    /**
+     * The plp id for DVB-T2.
+     *
+     * Use DvbTPlpId.AUTO for auto. Otherwise specify a value in the range DvbTPlpId.MIN to DvbTPlpId.MAX.
+     *
+     * PLP selection is mandatory for a DVB-T2 frontend, so no capability query is needed: any frontend that reports
+     * DvbTStandard.T2 in DvbTCapabilities.dvbTStandards shall honour this field. It is ignored when tuning DVB-T.
+     */
+    DvbTPlpId plpId;
+
+    /** Reserved for future use. */
+    ParcelableHolder extension;
+}
