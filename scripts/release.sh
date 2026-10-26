@@ -1014,6 +1014,12 @@ Options:
   --no-build             Skip the verification builds (./build_modules.sh
                          all, ./docs/build_docs.sh build). Testing only —
                          a real release MUST build.
+  --sync-labels [--write]
+                         Record the release's decision on each PR (#875):
+                         set its change-class label to the class its
+                         components were released at, with a comment
+                         saying why (and the --confirm reason). Previews;
+                         --write applies. --complete runs it before the tag.
   --audit                Structural change-class audit (see above). Read-only,
                          always strict.
   --no-audit             Skip the automatic write-path audit gate. Testing
@@ -1097,6 +1103,8 @@ NO_MKDOCS="${NO_MKDOCS:-0}"
 NO_BUILD="${NO_BUILD:-0}"
 AUDIT=0
 NO_AUDIT="${NO_AUDIT:-0}"
+SYNC_LABELS=0
+SYNC_WRITE=0
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -1153,6 +1161,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         --audit)
             AUDIT=1
+            shift
+            ;;
+        --sync-labels)
+            SYNC_LABELS=1
+            shift
+            ;;
+        --write)
+            SYNC_WRITE=1
             shift
             ;;
         --strict)
@@ -1465,6 +1481,11 @@ if [[ "${COMPLETE}" -eq 1 ]]; then
     if git -C "${REPO_ROOT}" rev-parse --verify "refs/tags/${RELEASE_VERSION}" >/dev/null 2>&1; then
         log "  ✓ tag ${RELEASE_VERSION} already exists locally — skipping git flow release finish."
     else
+        # Labels record the release's decision; after the tag the baseline
+        # moves on and the pins lapse, so this is the last point to write it.
+        log "Recording the released change classes on the PRs..."
+        "${SCRIPT_DIR}/release.sh" --sync-labels --write --release-version "${RELEASE_VERSION}" \
+            || warn "--sync-labels failed; labels are hints, so the release continues. Re-run it from a checkout of ${RELEASE_VERSION}^ if wanted."
         log "Running git flow release finish ${RELEASE_VERSION}..."
         if ! (cd "${REPO_ROOT}" && \
                 GIT_MERGE_AUTOEDIT=no \
@@ -1878,11 +1899,10 @@ declare -A COMP_REASONS=()
 declare -A COMP_FILES=()
 declare -A COMP_LABEL_PRS=()   # "comp:level" -> " PR PR ..." that set it
 
-# Persistent gh-API cache: commit→PR and PR→labels lookups survive
-# across invocations. SHAs and PR numbers are immutable so the cache
-# never goes stale. Labels CAN change (re-labelled PRs), so we treat
-# label entries as soft cache and refresh ad hoc — but commit-to-PR
-# pairs are forever once recorded.
+# Persistent gh-API cache. Commit→PR pairs and PR titles never change, so
+# they are kept. Labels, issue types and the Interface Effect can change
+# at any time: an online run re-reads them once per run, and the cached
+# copy serves only offline (--no-gh) runs.
 #
 # File: out/.gh-cache  (gitignored — out/ already is)
 # Format, tab-delimited:
@@ -1902,16 +1922,27 @@ gh_cache_load() {
             # an issue (#920); `p` entries may name an open PR whose branch
             # merely contains the commit. Both are ignored so it is re-asked.
             m)  COMMIT_PR_CACHE[$key]="${value}" ;;
-            l)  # Restore newlines from |-encoded labels
+            # Labels, issue types and the Interface Effect can be edited at
+            # any time, so an online run asks again; the cached value is the
+            # offline (--no-gh) fallback only. A relabel was invisible before.
+            l)  [[ "${ENABLE_GH_LABELS}" -eq 1 ]] && continue
+                # Restore newlines from |-encoded labels
                 PR_LABEL_CACHE[$key]="${value//|/$'\n'}"
                 ;;
-            t)  PR_TYPE_CACHE[$key]="${value}" ;;
+            t)  [[ "${ENABLE_GH_LABELS}" -eq 1 ]] || PR_TYPE_CACHE[$key]="${value}" ;;
             # `r` entries used a tab separator that the reader mangled;
             # they are ignored so the PR is re-asked.
             n)  [[ "${value}" =~ ^[0-9,]*$'\x1f'. ]] && PR_REFS_CACHE[$key]="${value}" ;;
-            e)  PR_EFFECT_CACHE[$key]="${value}" ;;
+            e)  [[ "${ENABLE_GH_LABELS}" -eq 1 ]] || PR_EFFECT_CACHE[$key]="${value}" ;;
         esac
     done < "${GH_CACHE_FILE}"
+    # Online, drop the soft entries from the file too, so it holds one
+    # current copy of each instead of growing by a copy per run.
+    if [[ "${ENABLE_GH_LABELS}" -eq 1 ]]; then
+        grep -vE $'^(l|t|e)\t' "${GH_CACHE_FILE}" > "${GH_CACHE_FILE}.tmp" || true
+        mv "${GH_CACHE_FILE}.tmp" "${GH_CACHE_FILE}"
+    fi
+    return 0
 }
 
 gh_cache_append() {
@@ -4314,6 +4345,135 @@ run_structural_audit() {
 
 if [[ "${AUDIT}" -eq 1 ]]; then
     run_structural_audit
+    exit $?
+fi
+
+# ----------------------------------------------------------------------------
+# --sync-labels: write the release's change classes back to the PRs (#875)
+# ----------------------------------------------------------------------------
+#
+# Labels are hints until the release decides; afterwards they should record
+# what was released. A component's released class goes to a PR when that PR
+# is the only one that changed the component's AIDL since the last tag, or
+# when the component's --confirm reason names it (#N). A PR takes the highest
+# class attributed to it. Its label is raised to that, and lowered only when
+# every component it changed is attributed to it — a PR sharing a component
+# with others may own the higher class, so it is never lowered on a guess.
+# The Interface Effect follows the label (project-interface-effect-reconcile).
+# Each changed PR gets one comment listing its components' released classes.
+
+_SYNC_LABEL=([3]="Major Change" [2]="Minor Change" [1]="documentation")
+_sync_rank() {
+    case "$1" in major) echo 3 ;; minor) echo 2 ;; bugfix) echo 1 ;; *) echo 0 ;; esac
+}
+_sync_label_rank() {   # labels (newline-separated) -> rank of the class they carry
+    local labels="$1"
+    if grep -qxE 'Major Change|Breaking Change' <<<"${labels}"; then echo 3
+    elif grep -qx 'Minor Change' <<<"${labels}"; then echo 2
+    elif grep -qx 'documentation' <<<"${labels}"; then echo 1
+    else echo 0
+    fi
+}
+
+run_sync_labels() {
+    local base="${_pin_baseline}" release_version="${RELEASE_VERSION:-}"
+    [[ -n "${base}" ]] || die "--sync-labels: no release tag to compare against."
+    [[ "${ENABLE_GH_LABELS}" -eq 1 ]] || die "--sync-labels needs GitHub access (gh, not --no-gh)."
+    if [[ -z "${release_version}" ]]; then
+        release_version="$(git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD | sed -nE 's#^release/##p')"
+    fi
+    [[ -n "${release_version}" ]] || die "--sync-labels: run on release/X.Y.Z or pass --release-version."
+    local marker="<!-- release.sh sync-labels ${release_version} -->"
+
+    phase "Change-class labels from the ${release_version} cut (since ${base})"
+    local -A PR_TOUCHED=() PR_OWNED=() PR_RANK=() PR_LINES=()
+    local comp prev rel cls note line sha subject pr prs reason
+    for comp in "${COMPONENTS[@]}"; do
+        prev="$(discover_current_version "${comp}")"
+        rel="$(awk -F': *' '$1=="version"{print $2; exit}' "${REPO_ROOT}/${comp}/metadata.yaml" 2>/dev/null)"
+        [[ -n "${prev}" && -n "${rel}" && "${rel}" != "${prev}" ]] || continue
+        cls="$(_bump_class "$(_version_bump "${prev}" "${rel}")")"
+        prs=""
+        while IFS=$'\t' read -r sha subject; do
+            [[ -n "${sha}" ]] || continue
+            pr="$(get_pr_for_commit "${sha}" "${subject}")"
+            [[ -n "${pr}" ]] && prs+="${pr}"$'\n'
+        done < <(git -C "${REPO_ROOT}" log --no-merges --format='%H%x09%s' "${base}..HEAD" \
+                    -- ":(glob)${comp}/current/**/*.aidl")
+        prs="$(grep . <<<"${prs}" | sort -un || true)"
+        for pr in ${prs}; do PR_TOUCHED[$pr]+="${comp} "; done
+        reason="${PIN_REASON[$comp]:-}"
+        if [[ -z "${reason}" ]]; then
+            reason="$(grep -hoE "^- \`${comp}\` → ${rel//./\\.} \(confirmed (major|minor|bugfix): .*\)$" \
+                "${REPO_ROOT}/docs/releases/${release_version}.md" 2>/dev/null | head -1 \
+                | sed -E 's/^[^:]*: (.*)\)$/\1/' || true)"
+        fi
+        local owners=""
+        if [[ -n "${reason}" ]]; then
+            owners="$(grep -oE '#[0-9]+' <<<"${reason}" | tr -d '#' | sort -un || true)"
+            note="${comp} ${prev} → ${rel}: ${cls}, confirmed — ${reason}"
+        else
+            note="${comp} ${prev} → ${rel}: ${cls}, the compiler's class"
+        fi
+        [[ -z "${owners}" && "$(grep -c . <<<"${prs}")" -eq 1 ]] && owners="${prs}"
+        for pr in ${owners}; do
+            PR_OWNED[$pr]+="${comp} "
+            PR_LINES[$pr]+="- ${note}"$'\n'
+            [[ "$(_sync_rank "${cls}")" -gt "${PR_RANK[$pr]:-0}" ]] && PR_RANK[$pr]="$(_sync_rank "${cls}")"
+        done
+    done
+
+    local changed=0 have want labels verb c all
+    log ""
+    log "$(printf "  %-6s %-14s %-14s %s" "PR" "Label now" "Released as" "Action")"
+    log "$(printf "  %-6s %-14s %-14s %s" "--" "---------" "-----------" "------")"
+    for pr in $(printf '%s\n' "${!PR_RANK[@]}" | sort -n); do
+        labels="$(get_pr_labels "${pr}")"
+        have="$(_sync_label_rank "${labels}")"
+        want="${PR_RANK[$pr]}"
+        all=1
+        for c in ${PR_TOUCHED[$pr]}; do
+            [[ " ${PR_OWNED[$pr]} " == *" ${c} "* ]] || all=0
+        done
+        verb="keep"
+        if [[ "${want}" -gt "${have}" ]]; then verb="raise"
+        elif [[ "${want}" -lt "${have}" && "${all}" -eq 1 ]]; then verb="lower"
+        fi
+        log "$(printf "  %-6s %-14s %-14s %s" "$(_link "https://github.com/${GH_REPO}/pull/${pr}" "#${pr}")" \
+            "${_SYNC_LABEL[$have]:-none}" "${_SYNC_LABEL[$want]}" \
+            "$(_cell 0 "$([[ "${verb}" == keep ]] && printf '%s' "${_C_DIM}" || printf '%s' "${_C_YELLOW}${_C_BOLD}")" "${verb}")")"
+        [[ "${verb}" != "keep" ]] || continue
+        changed=$((changed + 1))
+        [[ "${SYNC_WRITE}" -eq 1 ]] || continue
+        local l
+        for l in "Major Change" "Breaking Change" "Minor Change"; do
+            [[ "${l}" != "${_SYNC_LABEL[$want]}" ]] && grep -qx "${l}" <<<"${labels}" \
+                && gh api -X DELETE "repos/${GH_REPO}/issues/${pr}/labels/${l// /%20}" >/dev/null
+        done
+        gh api -X POST "repos/${GH_REPO}/issues/${pr}/labels" -f "labels[]=${_SYNC_LABEL[$want]}" >/dev/null \
+            || { warn "#${pr}: could not set '${_SYNC_LABEL[$want]}'"; continue; }
+        if ! gh api --paginate "repos/${GH_REPO}/issues/${pr}/comments" --jq '.[].body' 2>/dev/null | grep -qF "${marker}"; then
+            gh api "repos/${GH_REPO}/issues/${pr}/comments" -f body="${marker}
+Release ${release_version} labels this pull request **${_SYNC_LABEL[$want]}**, the class its components were released at:
+
+${PR_LINES[$pr]}
+The AIDL compiler classifies each component at the cut (\`release.sh\`); a confirmed class is the release owner's override, with the reason given." >/dev/null \
+                || warn "#${pr}: label set, comment failed"
+        fi
+    done
+    log ""
+    if [[ "${changed}" -eq 0 ]]; then
+        log "✓ Every attributable PR's label already matches the release."
+    elif [[ "${SYNC_WRITE}" -eq 1 ]]; then
+        log "✓ ${changed} PR label(s) updated; the Interface Effect follows within 15 minutes."
+    else
+        log "ℹ️  ${changed} PR label(s) to change. Apply with: ./release.sh --sync-labels --write"
+    fi
+    return 0
+}
+
+if [[ "${SYNC_LABELS}" -eq 1 ]]; then
+    run_sync_labels
     exit $?
 fi
 
