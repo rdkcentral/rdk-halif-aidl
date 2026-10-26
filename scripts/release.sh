@@ -5140,7 +5140,24 @@ else
     if [[ "${error_count}" -gt 0 ]]; then
         log "⚠️  ${error_count} module(s) need manual action above before applying."
     fi
-    log "Apply: ./release.sh --apply --release-version ${RELEASE_VERSION}    |    Reset: ./release.sh clean"
+    # On release/X.Y.Z with every planned snapshot committed and unmodified,
+    # the cut is done: the next step is --complete, not another --apply.
+    _cut_committed=0
+    if [[ "$(git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD)" == "release/${RELEASE_VERSION}" ]]; then
+        _cut_committed=1
+        for _cv in "${BUMPED_COMPONENTS[@]}"; do
+            if [[ -z "$(git -C "${REPO_ROOT}" ls-tree -d --name-only HEAD -- "${_cv%%:*}/${_cv#*:}")" \
+                  || -n "$(git -C "${REPO_ROOT}" status --porcelain -- "${_cv%%:*}/${_cv#*:}")" ]]; then
+                _cut_committed=0
+                break
+            fi
+        done
+    fi
+    if [[ "${_cut_committed}" -eq 1 ]]; then
+        log "Cut committed on release/${RELEASE_VERSION}. Next: ./release.sh --complete    |    Labels: ./release.sh --sync-labels"
+    else
+        log "Apply: ./release.sh --apply --release-version ${RELEASE_VERSION}    |    Reset: ./release.sh clean"
+    fi
 fi
 
 if [[ "${error_count}" -gt 0 ]]; then
