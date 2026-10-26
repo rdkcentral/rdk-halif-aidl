@@ -620,6 +620,10 @@ declare -A PIN_VERSIONS=()
 # minor, patch) and resolved where the released version is known.
 declare -A PIN_CLASS=()
 declare -A PIN_REASON=()
+# A version an earlier `stage` run already wrote, which the audit accepted:
+# 1 = the compiler's version, 2 = a confirmation the release notes record.
+# It is reused like a pin but is not one, so the plan shows its class.
+declare -A PIN_STAGED=()
 
 # Pins are remembered in out/.release-pins (gitignored) so the operator sets
 # the odd version once — `stage all avclock --version 0.2.1.0` — and later
@@ -635,6 +639,15 @@ _class_bump() {   # major|minor|bugfix -> internal bump name
         bugfix) echo "patch" ;;
         *)      return 1 ;;
     esac
+}
+_version_bump() {   # 0.g.m.p old, new -> internal bump name
+    local -a a b
+    IFS=. read -r -a a <<<"$1"; IFS=. read -r -a b <<<"$2"
+    if   [[ "${a[1]:-}" != "${b[1]:-}" ]]; then echo "generation"
+    elif [[ "${a[2]:-}" != "${b[2]:-}" ]]; then echo "minor"
+    elif [[ "${a[3]:-}" != "${b[3]:-}" ]]; then echo "patch"
+    else echo "none"
+    fi
 }
 _bump_class() {   # internal bump name -> major|minor|bugfix
     case "$1" in
@@ -3847,7 +3860,7 @@ log ""
 # Map internal bump tokens to operator-readable change classes.
 bump_label() {
     case "$1" in
-        generation) echo "Major (breaking)" ;;
+        generation) echo "Major" ;;
         minor)      echo "Minor" ;;
         patch)      echo "Bugfix" ;;
         pinned)     echo "Pinned" ;;
@@ -3861,8 +3874,8 @@ bump_label() {
 # diagnostic blocks) so the final-decision table is the last thing
 # the operator sees.
 TABLE_ROWS=()
-TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-16s %-8s %s" "Module" "Current" "Next" "Bump" "Planned" "Status")")
-TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-16s %-8s %s" "------" "-------" "----" "----" "-------" "------")")
+TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-18s %-8s %s" "Module" "Current" "Next" "Bump" "Planned" "Status")")
+TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-18s %-8s %s" "------" "-------" "----" "----" "-------" "------")")
 
 changed_count=0
 error_count=0
@@ -4132,6 +4145,7 @@ run_structural_audit() {
                 _notes+=("${_pin_note}")
                 _expected="${_pin}"
                 PIN_VERSIONS[$comp]="${_pin}"
+                [[ "${_pin_recovered}" -gt 0 ]] && PIN_STAGED[$comp]="${_pin_recovered}"
             else
                 if [[ -n "${PIN_CLASS[$comp]:-}" && -z "${PIN_VERSIONS[$comp]:-}" ]]; then
                     _flags+=("confirmed $(_bump_class "${PIN_CLASS[$comp]}") is below the compiler's ${_code_class}")
@@ -4331,7 +4345,7 @@ declare -A SKIPPED_NOT_BUILDABLE=()
 for comp in "${TOUCHED_COMPONENTS[@]}"; do
     meta="${REPO_ROOT}/${comp}/metadata.yaml"
     if [[ ! -f "${meta}" ]]; then
-        TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-16s %-8s %s" "${comp}" "-" "-" "-" "no" "metadata missing")")
+        TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-18s %-8s %s" "${comp}" "-" "-" "-" "no" "metadata missing")")
         error_count=$((error_count + 1))
         continue
     fi
@@ -4350,7 +4364,7 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
                 gsub(/^"|"$/, "");
                 print; exit
             }' "${meta}" 2>/dev/null)"
-        TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-16s %-8s %s" "${comp}" "-" "-" "skipped" "no" "not buildable")")
+        TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-18s %-8s %s" "${comp}" "-" "-" "skipped" "no" "not buildable")")
         SKIPPED_NOT_BUILDABLE[$comp]="${reason:-no current/interface.yaml}"
         continue
     fi
@@ -4429,13 +4443,24 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
     # over the label-derived auto-bump. PIN_VERSIONS lives in-memory
     # only — once the stage call's writes complete, the pinned version
     # is recorded in the snapshot dir + metadata.yaml.
-    if [[ -n "${PIN_VERSIONS[$comp]:-}" && -z "${PIN_CLASS[$comp]:-}" ]]; then
+    # The Bump column always shows the class; bump_source says who set it
+    # when it was not the compiler: "confirmed" (stage --confirm, with a
+    # reason) or "pinned" (stage --version). A version an earlier stage run
+    # wrote keeps the class it was staged at.
+    bump_source=""
+    if [[ -n "${PIN_STAGED[$comp]:-}" ]]; then
         NEXT_VERSION="${PIN_VERSIONS[$comp]}"
-        bump="pinned"
+        bump="$(_version_bump "${current_version}" "${NEXT_VERSION}")"
+        [[ "${PIN_STAGED[$comp]}" -eq 2 ]] && bump_source="confirmed"
+    elif [[ -n "${PIN_VERSIONS[$comp]:-}" && -z "${PIN_CLASS[$comp]:-}" ]]; then
+        NEXT_VERSION="${PIN_VERSIONS[$comp]}"
+        bump="$(_version_bump "${current_version}" "${NEXT_VERSION}")"
+        bump_source="pinned"
         COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}stage: explicit --version ${NEXT_VERSION}"$'\n'
     elif [[ -n "${PIN_CLASS[$comp]:-}" ]]; then
         compute_next_versions "${current_version}" "${PIN_CLASS[$comp]}"
-        bump="confirmed"
+        bump="${PIN_CLASS[$comp]}"
+        bump_source="confirmed"
         COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}stage: confirmed $(_bump_class "${PIN_CLASS[$comp]}") — ${PIN_REASON[$comp]:-}"$'\n'
     fi
 
@@ -4486,7 +4511,7 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
 
     # Initial release IS the bump — surface it in the Bump column rather
     # than leaving Bump="-" with Status="initial release" (redundant).
-    _bump_display="$(bump_label "${bump}")"
+    _bump_display="$(bump_label "${bump}")${bump_source:+ (${bump_source})}"
     _status_display="${status}"
     if [[ "${is_initial}" -eq 1 && "${status}" == "initial release" ]]; then
         _bump_display="initial release"
@@ -4500,7 +4525,7 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
     TABLE_ROWS+=("$(printf "%-24s %-10s %s %s %s %s" \
         "${comp}" "${current_version}" \
         "$(_cell 10 "${_next_color}" "${NEXT_VERSION}")" \
-        "$(_cell 16 "$(_class_color "${_bump_display}")" "${_bump_display}")" \
+        "$(_cell 18 "$(_class_color "${bump_source:-${_bump_display}}")" "${_bump_display}")" \
         "$(_cell 8 "${_planned_color}" "${_planned}")" \
         "$(_cell 0 "$(_status_color "${_status_display}")" "${_status_display}")")")
 
@@ -4925,6 +4950,8 @@ log ""
 for _row in "${TABLE_ROWS[@]}"; do
     log "${_row}"
 done
+log ""
+log "Bump is the compiler's class unless marked: $(_cell 0 "${_C_MAGENTA}${_C_BOLD}" "(confirmed)") = stage --confirm, with a reason; $(_cell 0 "${_C_MAGENTA}${_C_BOLD}" "(pinned)") = stage --version."
 
 # Count modules by Planned state for the summary line below.
 _planned_count=${#ACTUAL_PLAN[@]}

@@ -117,7 +117,7 @@ if (DEFINED HALIF_INCLUDE_DIR)
     "${HALIF_INCLUDE_DIR}/audiodecoder/0.3.0.0/include"
     "${HALIF_INCLUDE_DIR}/common/0.3.0.0/include"
     "${HALIF_INCLUDE_DIR}/audiosink/0.3.0.0/include"
-    "${HALIF_INCLUDE_DIR}/avclock/current/include")
+    "${HALIF_INCLUDE_DIR}/avclock/0.3.0.0/include")
 endif()
 
 target_link_directories(${LIB_NAME} PRIVATE
