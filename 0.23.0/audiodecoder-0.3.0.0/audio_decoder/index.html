@@ -1,0 +1,8676 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://rdkcentral.github.io/rdk-halif-aidl/0.23.0/audiodecoder-0.3.0.0/audio_decoder/">
+      
+      
+        <link rel="prev" href="../../introduction/interface_generation/">
+      
+      
+        <link rel="next" href="../../audiodecoder-0.2.0.0/audio_decoder/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>0.3.0.0 - RDK Hardware Porting Kit</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#audio-decoder" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="RDK Hardware Porting Kit" class="md-header__button md-logo" aria-label="RDK Hardware Porting Kit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            RDK Hardware Porting Kit
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              0.3.0.0
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/rdkcentral/rdk-halif-aidl" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rdkcentral/rdk-halif-aidl
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="RDK Hardware Porting Kit" class="md-nav__button md-logo" aria-label="RDK Hardware Porting Kit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    RDK Hardware Porting Kit
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/rdkcentral/rdk-halif-aidl" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rdkcentral/rdk-halif-aidl
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduction/the_software_stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Software Stack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware Abstraction Layer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Hardware Abstraction Layer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduction/aidl_and_binder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Key Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Key Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../key_concepts/hal/hal_interface_usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HAL Interface Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../key_concepts/hal/hal_properties/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HAL Properties
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../key_concepts/hal/hal_feature_profiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HAL Feature Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../key_concepts/hal/hal_naming_conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HAL Naming Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../key_concepts/hal/hal_session_state_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HAL Session State Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../key_concepts/hal/hal_resource_lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HAL Resource Lifecycle
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../key_concepts/hal/hal_api_deprecation_governance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HAL API Deprecation Governance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Standards
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Standards
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standards/direct_branching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Development Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standards/forked_based_branching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fork-Based Contribution Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standards/git_flow_branching_strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Git Flow Branching Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standards/semantic_versioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Semantic Versioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standards/versioning-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AIDL Versioning Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standards/build_integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Third-Party Build Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standards/yocto_integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Yocto Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vendor HAL Interfaces (VHI)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vendor HAL Interfaces (VHI)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../key_concepts/hal/hal_interfaces/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduction/interface_generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interface Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AV Subsystem
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    AV Subsystem
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_3_1" id="__nav_4_3_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audio Decoder
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_3_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Audio Decoder
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.3.0.0
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.3.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Pages
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#functionality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functionality
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#operational-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Operational Modes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pcm-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PCM Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interface-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interface Definition
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#initialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Initialization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#product-customization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Product Customization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resource-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resource Management
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#codec-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Codec Support
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#encrypted-audio-playback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Encrypted Audio Playback
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#secure-audio-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Secure Audio Processing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#clear-pcm-audio-playback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Clear PCM Audio Playback
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audio-passthrough-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio Passthrough Mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tunnelled-and-non-tunnelled-audio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tunnelled and Non-Tunnelled Audio
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#frame-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Frame Metadata
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#low-latency-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Low Latency Mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#receiver-mixed-supplementary-audio-decoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Receiver Mixed Supplementary Audio Decoding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audio-stream-discontinuities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio Stream Discontinuities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mid-stream-format-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mid-Stream Format Changes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#end-of-stream-signalling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End of Stream Signalling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#codec-priming-padding-and-gapless-playback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Codec Priming, Padding, and Gapless Playback
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Codec Priming, Padding, and Gapless Playback">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-trim-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The trim contract
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#codec-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Codec scope
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#end-to-end-data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-end data flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#where-the-values-come-from-container-metadata-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where the values come from — container metadata sources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-to-validate-in-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What to validate in tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decoded-audio-frame-buffers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decoded Audio Frame Buffers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#input-buffer-back-pressure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input Buffer Back-Pressure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#presentation-time-for-audio-frames" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Presentation Time for Audio Frames
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dolby-ms12-and-ac-4-audio-decoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dolby MS12 and AC-4 Audio Decoding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audio-decoder-states" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio Decoder States
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../audiodecoder-0.2.0.0/audio_decoder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../audiodecoder-0.1.0.0/audio_decoder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3_2" id="__nav_4_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audio Mixer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Audio Mixer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../audiomixer-0.4.0.0/audio_mixer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.4.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../audiomixer-0.3.0.0/audio_mixer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.3.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../audiomixer-0.2.0.0/audio_mixer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../audiomixer-0.1.0.1/audio_mixer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3_3" id="__nav_4_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audio Sink
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Audio Sink
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../audiosink-0.3.0.0/audio_sink/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.3.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../audiosink-0.2.0.0/audio_sink/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../audiosink-0.1.0.0/audio_sink/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3_4" id="__nav_4_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AV Buffer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    AV Buffer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../avbuffer-0.2.1.0/av_buffer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.1.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../avbuffer-0.2.0.0/av_buffer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../avbuffer-0.1.0.0/av_buffer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3_5" id="__nav_4_3_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AV Clock
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    AV Clock
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../avclock-0.3.0.0/av_clock/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.3.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../avclock-0.2.0.1/av_clock/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../avclock-0.2.0.0/av_clock/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../avclock-0.1.0.0/av_clock/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3_6" id="__nav_4_3_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Video Decoder
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Video Decoder
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../videodecoder-0.3.0.0/video_decoder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.3.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../videodecoder-0.2.0.1/video_decoder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../videodecoder-0.2.0.0/video_decoder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../videodecoder-0.1.0.0/video_decoder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3_7" id="__nav_4_3_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Video Sink
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Video Sink
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../videosink-0.3.0.0/video_sink/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.3.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../videosink-0.2.0.0/video_sink/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../videosink-0.1.0.0/video_sink/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Boot Reason
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Boot Reason
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bootreason-0.2.0.0/bootreason/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bootreason-0.1.0.0/bootreason/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Broadcast
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Broadcast
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../broadcast-0.1.0.0/broadcast/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RingBuffer
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    RingBuffer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ringbuffer-0.1.0.0/ringbuffer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DRM
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    DRM
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../drm-0.2.0.0/drm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../drm-0.1.0.0/drm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_8" id="__nav_4_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HDMI
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    HDMI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_8_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_8_1" id="__nav_4_8_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HDMI CEC
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_8_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_8_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    HDMI CEC
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hdmicec-0.2.0.0/hdmi_cec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hdmicec-0.1.0.0/hdmi_cec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_8_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_8_2" id="__nav_4_8_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HDMI Input
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_8_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_8_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    HDMI Input
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hdmiinput-0.2.0.0/hdmi_input/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hdmiinput-0.1.0.0/hdmi_input/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_8_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_8_3" id="__nav_4_8_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HDMI Output
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_8_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_8_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    HDMI Output
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hdmioutput-0.2.0.0/hdmi_output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hdmioutput-0.1.0.0/hdmi_output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_9" id="__nav_4_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Common
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Common
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../common-0.3.0.0/common/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.3.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../common-0.2.0.0/common/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../common-0.1.0.0/common/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_10" id="__nav_4_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Composite Input
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Composite Input
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compositeinput-0.3.0.0/composite_input/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.3.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compositeinput-0.2.0.0/composite_input/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_11" id="__nav_4_11_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deep Sleep
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Deep Sleep
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deepsleep-0.1.1.0/deep_sleep/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.1.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deepsleep-0.1.0.0/deep_sleep/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_12" id="__nav_4_12_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Device Info
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Device Info
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deviceinfo-0.2.0.0/device_info/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deviceinfo-0.1.0.0/device_info/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_13" id="__nav_4_13_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Firmware Update
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Firmware Update
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../firmwareupdate-0.2.0.1/firmwareupdate/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../firmwareupdate-0.2.0.0/firmwareupdate/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_14" id="__nav_4_14_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Indicator
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Indicator
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../indicator-0.2.0.0/indicator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../indicator-0.1.0.0/indicator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_15" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_15" id="__nav_4_15_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Panel
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Panel
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../panel-0.2.0.0/panel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../panel-0.1.0.0/panel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_16" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_16" id="__nav_4_16_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plane Control
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_16">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Plane Control
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planecontrol-0.3.0.0/plane_control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.3.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planecontrol-0.2.0.0/plane_control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../planecontrol-0.1.0.0/plane_control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_17" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_17" id="__nav_4_17_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sensor
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_17">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sensor
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_17_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_17_1" id="__nav_4_17_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.3.0.0
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_17_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_17_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    0.3.0.0
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sensor-0.3.0.0/motion/motion_sensor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Motion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sensor-0.3.0.0/thermal/thermal_sensor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Thermal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sensor-0.3.0.0/sensor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sensor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_17_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_17_2" id="__nav_4_17_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.2.0.0
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_17_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_17_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    0.2.0.0
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sensor-0.2.0.0/motion/motion_sensor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Motion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sensor-0.2.0.0/thermal/thermal_sensor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Thermal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sensor-0.2.0.0/sensor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sensor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_17_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_17_3" id="__nav_4_17_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.1.0.0
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_17_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_17_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    0.1.0.0
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sensor-0.1.0.0/motion/motion_sensor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Motion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sensor-0.1.0.0/thermal/thermal_sensor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Thermal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sensor-0.1.0.0/sensor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sensor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vendor System Interfaces (VSI)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vendor System Interfaces (VSI)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_1" id="__nav_5_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File System
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    File System
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../filesystem/directory_and_dynamic_linking_specification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Directory and Dynamic Linking Specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../filesystem/file_system_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File System Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../filesystem/logging_system/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logging System
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bluetooth/bluetooth/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bluetooth
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../graphics/graphics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Graphics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vsi/service_manager/current/service_manager/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Service Manager
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vsi/boot_sequence/current/module_boot_sequence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module Boot Sequence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wifi/wifi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Wi-Fi
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vsi/systemd/current/systemd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Systemd
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../kernel/kernel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kernel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../linuxinput/linux_input/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Linux Input
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transformation Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Transformation Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transformation/westeros_graphics_fb_transform/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Westeros onto IGraphicsFbProvider
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vendor Tests Suites (VTS)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Vendor Tests Suites (VTS)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../external_content/ut-core-wiki/3.-Standards%3A-Levels-of-Test-for-Vendor-Layer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Levels of Test
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_2" id="__nav_7_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Level 4
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Level 4
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../external_content/ut-core-wiki/3.3.-Standards%3A-L4-%E2%80%90-System-Interface-Testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    L4 System Interface (VSI)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../external_content/ut-core-wiki/3.4.-Standards%3A-L4%3A-Vendor-Full-Stack-%E2%80%90-Video-%E2%80%90-Smoke-Regression-Test/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    L4 Smoke Test (VST)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Framework
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Testing Framework
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../external_content/ut-core-wiki/3.2.-Standards%3A-Requirements-for-building-testing-suites/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Framework Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_8_2" id="__nav_8_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Key Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Key Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../external_content/ut-core-wiki/3.1.-Standards%3A-Overview-of-Test%E2%80%90Driven-Development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Test Driven Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../external_content/ut-core-wiki/FAQ%3A-Black%E2%80%90Box-Testing-and-Code-Coverage-Metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Black Box Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../external_content/ut-core-wiki/3.0.1-Standards%3A-Testing-Feedback-Loops/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feedback Loops
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_8_3" id="__nav_8_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UT-Core Test Framework
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    UT-Core Test Framework
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../external_content/ut-core-wiki/Home/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UT-Core Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../external_content/ut-core-wiki/FAQ%3A-UT-Core-Framework-Overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Level Actors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Virtual Device
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Virtual Device
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../external_content/ut-core-wiki/5.0%3A-Standards%3A-vDevice-Overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    What is the vDevice
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../external_content/ut-core-wiki/5.0.1%3A-Standards%3A-vDevice-Architecture-Overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_9_3" id="__nav_9_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Key Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Key Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../external_content/ut-core-wiki/5.1.0%3A-Standards%3A-vDevice-Controller/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Controller
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../external_content/ut-core-wiki/5.1.1%3A-Standards%3A-vDevice-Control-Plane/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Control Plane
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/gstreamer/gstreamer_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GStreamer AV Pipelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Misc
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Misc
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/references/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    References
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_11_2" id="__nav_11_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation Standards
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_11_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Documentation Standards
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduction/documentation_getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../standards/interface_template/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interface Template
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_11_3" id="__nav_11_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_11_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Governance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../governance/rdk-release-documentation-structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RDK Documentation Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../governance/rdk-engineering-validation-framework/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RDK Engineering Validation Framework
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../governance/versioning-sop/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HAL Delivery & Versioning SOP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_11_4" id="__nav_11_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_11_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/hla-released-snapshot-contents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HLA: What a Released HAL Snapshot Contains
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_11_5" id="__nav_11_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    White Papers
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_11_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    White Papers
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../whitepapers/documentation_in_git/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation in Git
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../whitepapers/branching_strategies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Branching Strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../whitepapers/doxygen_code_documentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Doxygen Code Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../whitepapers/engineering_goals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Achieving Engineering Goal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../whitepapers/standardizing_git_commit_messages/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commit Message Standards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../whitepapers/interface_version_alignment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interface Version Alignment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../whitepapers/client_usage_of_stable_aidl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Client Usage of Stable AIDL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../whitepapers/right_format_right_job/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Right Format for the Right Job
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../external_content/ut-core-wiki/1.2.-Standards%3A-Issue-Description-Guideline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Filing an Issue
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_11_7" id="__nav_11_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_11_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    FAQ
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../external_content/ut-core-wiki/FAQ%3A-Comparing-Python-Development-Platforms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_11_8" id="__nav_11_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_11_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Release Notes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/0.23.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.23.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/0.22.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.22.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/0.21.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.21.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/0.20.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.20.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/0.15.1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.15.1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/0.15.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.15.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/0.14.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0.14.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ChangeLog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Pages
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#functionality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functionality
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#operational-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Operational Modes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pcm-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PCM Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interface-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interface Definition
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#initialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Initialization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#product-customization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Product Customization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resource-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resource Management
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#codec-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Codec Support
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#encrypted-audio-playback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Encrypted Audio Playback
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#secure-audio-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Secure Audio Processing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#clear-pcm-audio-playback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Clear PCM Audio Playback
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audio-passthrough-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio Passthrough Mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tunnelled-and-non-tunnelled-audio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tunnelled and Non-Tunnelled Audio
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#frame-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Frame Metadata
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#low-latency-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Low Latency Mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#receiver-mixed-supplementary-audio-decoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Receiver Mixed Supplementary Audio Decoding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audio-stream-discontinuities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio Stream Discontinuities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mid-stream-format-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mid-Stream Format Changes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#end-of-stream-signalling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End of Stream Signalling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#codec-priming-padding-and-gapless-playback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Codec Priming, Padding, and Gapless Playback
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Codec Priming, Padding, and Gapless Playback">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-trim-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The trim contract
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#codec-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Codec scope
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#end-to-end-data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-end data flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#where-the-values-come-from-container-metadata-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where the values come from — container metadata sources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-to-validate-in-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What to validate in tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decoded-audio-frame-buffers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decoded Audio Frame Buffers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#input-buffer-back-pressure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input Buffer Back-Pressure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#presentation-time-for-audio-frames" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Presentation Time for Audio Frames
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dolby-ms12-and-ac-4-audio-decoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dolby MS12 and AC-4 Audio Decoding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audio-decoder-states" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio Decoder States
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="audio-decoder">Audio Decoder</h1>
+<p>This document provides an overview of the Audio Decoder Hardware Abstraction Layer (HAL) service, which facilitates the decoding of compressed audio streams within the device. The HAL defines the interfaces through which the RDK (Reference Design Kit) middleware interacts with the vendor-specific audio decoding implementation.</p>
+<h2 id="references">References</h2>
+<div class="admonition info references">
+<p class="admonition-title">Info</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Interface Definition</strong></td>
+<td><a href="https://github.com/rdkcentral/rdk-halif-aidl/tree/0.23.0/audiodecoder/0.3.0.0">audiodecoder/0.3.0.0</a></td>
+</tr>
+<tr>
+<td><strong>Interface Version</strong></td>
+<td><code>0.3.0.0</code></td>
+</tr>
+<tr>
+<td><strong>API Documentation</strong></td>
+<td><em>TBD</em></td>
+</tr>
+<tr>
+<td><strong>HAL Interface Type</strong></td>
+<td><a href="../../introduction/aidl_and_binder/">AIDL and Binder</a></td>
+</tr>
+<tr>
+<td><strong>VTS Tests</strong></td>
+<td>TBC</td>
+</tr>
+<tr>
+<td><strong>Reference Implementation - vComponent</strong></td>
+<td>TBC</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="related-pages">Related Pages</h2>
+<div class="admonition tip">
+<p class="admonition-title">Related Pages</p>
+<ul>
+<li><a href="../audiosink/audio_sink.md">Audio Sink</a></li>
+<li><a href="../avbuffer/av_buffer.md">AV Buffer</a></li>
+<li><a href="../../key_concepts/hal/hal_session_state_management/">Session State Management</a></li>
+</ul>
+</div>
+<h2 id="functionality">Functionality</h2>
+<p>The Audio Decoder HAL service accepts compressed audio data as input. This data can be provided in secure buffers if the underlying vendor implementation supports secure audio processing. This is crucial for premium content protection.</p>
+<p>The decoded audio output can be delivered via two distinct paths:</p>
+<ul>
+<li>
+<p><strong>Non-Tunnelled Mode:</strong> In this mode, the decoded audio, typically in Pulse Code Modulation (PCM) format, is returned to the RDK media pipeline as a frame buffer along with associated metadata (e.g., sample rate, bit depth, number of channels). This allows for further processing within the RDK middleware, such as volume control, audio effects, or synchronization with other media streams.</p>
+</li>
+<li>
+<p><strong>Tunnelled Mode:</strong> In this mode, the decoded audio is passed directly to the audio mixer through the vendor layer. This bypasses the RDK media pipeline for audio processing. Tunnelled mode is often preferred for performance reasons, especially in resource-constrained devices, as it reduces latency and CPU overhead. It's often used when the audio stream is simple, and the RDK post-processing isn't required.</p>
+</li>
+</ul>
+<h2 id="operational-modes">Operational Modes</h2>
+<p>The choice between tunnelled and non-tunnelled mode is made on a per-codec basis during the initialization of the audio decoder. This flexibility allows the system to optimize performance for different audio formats. It's important to note that the audio decoder can switch between these modes for different codec instances, but a single codec instance must operate in one mode or the other for the duration of its use. The operational mode of the audio decoder is independent of the video decoder's mode. This means that it is perfectly valid to have tunnelled video and non-tunnelled audio, or vice-versa.</p>
+<p>Clients can query the current output mode with <code>IAudioDecoder.getCurrentOperationalMode()</code> while the resource is in the <code>STARTED</code> state. The mode is selected by the vendor and is read-only.</p>
+<h2 id="pcm-handling">PCM Handling</h2>
+<p>Uncompressed PCM audio streams do not require decoding. Therefore, they bypass the Audio Decoder HAL entirely. Instead, they are routed directly to the <a href="../audiosink/audio_sink.md">Audio Sink</a> service for mixing and playback. This is an important distinction to make for clarity.</p>
+<h2 id="implementation-requirements">Implementation Requirements</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Requirement</th>
+<th>Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>HAL.AUDIODECODER.1</strong></td>
+<td>Starting and stopping audio streams shall never produce an audible click or pop artefact due to the audio waveform the audio streaming was started or stopped at.</td>
+<td>This requirement works in conjunction with the audio mixer.</td>
+</tr>
+<tr>
+<td><strong>HAL.AUDIODECODER.2</strong></td>
+<td>An audio decoder shall indicate its support for secure audio processing through its resource capabilities.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.AUDIODECODER.3</strong></td>
+<td>An audio decoder advertising the secure audio processing capability that receives a secure buffer of compressed audio shall output decoded audio to secure buffers either returned to the client or tunnelled to the mixer.</td>
+<td>Secure audio path must be maintained.</td>
+</tr>
+<tr>
+<td><strong>HAL.AUDIODECODER.4</strong></td>
+<td>An audio decoder can tunnel decoded audio to a mixer or the vendor audio sub-system for passthrough and/or return the decoded audio as PCM to the client.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.AUDIODECODER.5</strong></td>
+<td>When the client enables the audio decoder low latency property and the audio decoder and platform support low latency audio then the audio frame metadata shall indicate low latency.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.AUDIODECODER.6</strong></td>
+<td>Each audio decoder resource shall be presented by a unique ID.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.AUDIODECODER.7</strong></td>
+<td>Each audio decoder resource shall provide an API to expose its capabilities for secure audio processing and supported codecs.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.AUDIODECODER.8</strong></td>
+<td>Only 1 client connection shall be allowed to open and control an audio decoder resource.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.AUDIODECODER.9</strong></td>
+<td>Multiple client connections shall be allowed to register for events from an audio decoder resource.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>HAL.AUDIODECODER.10</strong></td>
+<td>Audio frame metadata shall be returned to a controlling client on the first audio frame decoded after an open or flush, and thereafter only when the frame metadata changes.</td>
+<td>Not sent on every decoded audio frame buffer unless changed since previous. In non-tunnelled mode, a frame with a non-zero trim always carries metadata — see <a href="#the-trim-contract">The trim contract</a>.</td>
+</tr>
+<tr>
+<td><strong>HAL.AUDIODECODER.11</strong></td>
+<td>The audio frame output buffer from an audio decoder shall match the platform PCM audio format required for mixing.</td>
+<td>See com.rdk.hal.audiosink.PlatformCapabilities</td>
+</tr>
+<tr>
+<td><strong>HAL.AUDIODECODER.12</strong></td>
+<td>If a client process exits, the Audio Decoder server shall automatically stop and close any Audio Decoder instance controlled by that client.</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="interface-definition">Interface Definition</h2>
+<p>The interface can be found by following this link <a href="https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/audiodecoder">audiodecoder</a></p>
+<table>
+<thead>
+<tr>
+<th>Interface</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>IAudioDecoderManager.aidl</code></td>
+<td>Audio Decoder Manager HAL which provides access to <code>IAudioDecoder</code> resource instances.</td>
+</tr>
+<tr>
+<td><code>IAudioDecoder.aidl</code></td>
+<td>Audio Decoder interface for a single audio decoder resource instance.</td>
+</tr>
+<tr>
+<td><code>IAudioDecoderController.aidl</code></td>
+<td>Controller interface for an <code>IAudioDecoder</code> resource instance.</td>
+</tr>
+<tr>
+<td><code>IAudioDecoderControllerListener.aidl</code></td>
+<td>Listener callbacks interface to clients from an <code>IAudioDecoderController</code>.</td>
+</tr>
+<tr>
+<td><code>IAudioDecoderEventListener.aidl</code></td>
+<td>Listener callbacks interface to clients from an <code>IAudioDecoder</code>.</td>
+</tr>
+<tr>
+<td><code>Capabilities.aidl</code></td>
+<td>Parcelable describing the capabilities of an <code>IAudioDecoder</code> resource instance.</td>
+</tr>
+<tr>
+<td><code>ChannelType.aidl</code></td>
+<td>Enum list of audio channel types.</td>
+</tr>
+<tr>
+<td><code>Codec.aidl</code></td>
+<td>Enum list of audio codecs.</td>
+</tr>
+<tr>
+<td><code>CSDAudioFormat.aidl</code></td>
+<td>Enum list of audio codec specific data formats.</td>
+</tr>
+<tr>
+<td><code>ErrorCode.aidl</code></td>
+<td>Enum list of audio decoder error codes.</td>
+</tr>
+<tr>
+<td><code>FrameMetadata.aidl</code></td>
+<td>Parcelable of audio frame metadata passed from the audio decoder.</td>
+</tr>
+<tr>
+<td><code>PCMFormat.aidl</code></td>
+<td>Enum list of PCM coding formats.</td>
+</tr>
+<tr>
+<td><code>Property.aidl</code></td>
+<td>Enum list of audio decoder properties.</td>
+</tr>
+<tr>
+<td><code>OperationalMode.aidl</code></td>
+<td>Common enum value describing the current output routing mode.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="initialization">Initialization</h2>
+<p>The <a href="../../vsi/systemd/current/systemd/">systemd</a> <code>hal-audio_decoder_manager.service</code> unit file is provided by the vendor layer to start the service and should include <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=">Wants</a> or <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Requires=">Requires</a> directives to start any platform driver services it depends upon.</p>
+<p>The Audio Decoder Manager service depends on the <a href="../../vsi/service_manager/current/service_manager/">Service Manager</a> to register itself as a service.</p>
+<p>Upon starting, the service shall register the <code>IAudioDecoderManager</code> interface with the <a href="../../vsi/service_manager/current/service_manager/">Service Manager</a> using the String <code>IAudioDecoderManager.serviceName</code> and immediately become operational.</p>
+<h2 id="product-customization">Product Customization</h2>
+<p>The <code>IAudioDecoderManager.getAudioDecoderIds()</code> should return an array of <code>IAudioDecoder.Id</code> parcelables to uniquely represent all of the audio decoder resources supported by the vendor layer. Typically, the ID value starts at 0 for the first audio decoder and increments by 1 for each additional audio decoder.</p>
+<p>The <code>Capabilities</code> parcelable returned by the <code>IAudioDecoder.getCapabilities()</code> function lists all of the <code>Codec</code> types supported by this audio decoder instance and indicates if the secure audio path can be used.</p>
+<p>An audio decoder instance may support any number of audio codecs, but can only operate on one compressed audio stream in an open session. Concurrent audio decode requires multiple audio decoder instances to be opened.</p>
+<h2 id="system-context">System Context</h2>
+<p>The Audio Decoder HAL can provide functionality to multiple clients.</p>
+<p>Typically an RDK middleware GStreamer audio decoder element will work with a single <code>IAudioDecoder</code> instance and pass it <a href="../avbuffer/av_buffer.md">AV Buffer</a> handles for decode.</p>
+<p>The RDK middleware resource management system will examine the number of audio decoder resources and their capabilities, so they can be allocated to streaming sessions.</p>
+<pre class="mermaid"><code>flowchart TD
+    RDKClientComponent("RDKClientComponent")
+    subgraph Listeners["Listeners"]
+        IAudioDecoderEventListener("IAudioDecoderEventListener")
+        IAudioDecoderControllerListener("IAudioDecoderControllerListener")
+    end
+    subgraph IAudioDecoderHAL["Audio Decoder HAL"]
+        IAudioDecoderManager("IAudioDecoderManager &lt;br&gt;(Service)")
+        IAudioDecoder("IAudioDecoder &lt;br&gt;(Instance)")
+        IAudioDecoderController("IAudioDecoderController &lt;br&gt;(Instance)")
+    end
+    subgraph OutputComponents["Output"]
+        AudioFramePool("Audio Frame Pool")
+        PlatformDecoder("Platform Integrated Decoder/Mixer")
+        AudioOutput("Audio Output Ports in passthrough")
+    end
+    RDKClientComponent -- createAudioPool() &lt;br&gt; alloc() &lt;br&gt; free() &lt;br&gt; destroyPool() --&gt; IAVBuffer(IAVBuffer)
+    RDKClientComponent -- getIAudioDecoderIds() &lt;br&gt; getIAudioDecoder() --&gt; IAudioDecoderManager
+    RDKClientComponent -- getCapabilities() &lt;br&gt; getState() &lt;br&gt; open() &lt;br&gt; close() --&gt; IAudioDecoder
+    RDKClientComponent -- registerEventListener() &lt;br&gt; unregisterEventListener() --&gt; IAudioDecoder
+    RDKClientComponent -- start() &lt;br&gt; stop() &lt;br&gt; setProperty() &lt;br&gt; decodeBufferWithMetadata() &lt;br&gt; flush() &lt;br&gt; signalDiscontinuity() &lt;br&gt; parseCodecSpecificData() --&gt; IAudioDecoderController
+    IAudioDecoderManager --&gt; IAudioDecoder --&gt; IAudioDecoderController
+    IAudioDecoder -- onStateChanged() &lt;br&gt; onDecodeError() --&gt; IAudioDecoderEventListener
+    IAudioDecoderEventListener --&gt; RDKClientComponent
+    IAudioDecoderControllerListener --&gt; RDKClientComponent
+    IAudioDecoderController -- onFrameOutput() --&gt; IAudioDecoderControllerListener
+    IAudioDecoderController -- alloc() --&gt; AudioFramePool
+    IAudioDecoderManager -- free() --&gt; IAVBuffer
+    IAudioDecoderController -. tunneled audio -.-&gt; PlatformDecoder
+    IAudioDecoderController -. tunneled audio &lt;br&gt;(passthrough) -.-&gt; AudioOutput
+
+    classDef background fill:#121212,stroke:none,color:#E0E0E0;
+    classDef blue fill:#1565C0,stroke:#E0E0E0,stroke-width:2px,color:#E0E0E0;
+    classDef lightGrey fill:#616161,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
+    classDef wheat fill:#FFB74D,stroke:#424242,stroke-width:2px,color:#000000;
+    classDef green fill:#4CAF50,stroke:#E0E0E0,stroke-width:2px,color:#FFFFFF;
+    classDef default fill:#1E1E1E,stroke:#E0E0E0,stroke-width:1px,color:#E0E0E0;
+
+    RDKClientComponent:::blue
+    IAudioDecoderManager:::wheat
+    IAudioDecoderController:::wheat
+    IAudioDecoder:::wheat
+    IAVBuffer:::green
+    IAudioDecoderControllerListener:::wheat
+    IAudioDecoderEventListener:::wheat
+    AudioFramePool:::green
+    PlatformDecoder:::green
+    AudioOutput:::green</code></pre>
+<h2 id="resource-management">Resource Management</h2>
+<p>The <code>IAudioDecoderManager</code> provides access to one or more <code>IAudioDecoder</code> sub-interfaces which each represent an audio decoder resource instance offered by the platform.</p>
+<p>Each <code>IAudioDecoder</code> resource instance is assigned a unique integer ID, which is used in <code>IAudioDecoder.Id.value</code> and can be read from <code>RESOURCE_ID</code> using the <code>IAudioDecoder.getProperty()</code> function.</p>
+<p>To use an <code>IAudioDecoder</code> resource instance it must be opened by a client, which returns an <code>IAudioDecoderController</code> sub-interface to access buffer decoding and additional state controls.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Any number of clients can access the <code>IAudioDecoderManager</code> service and get access to the <code>IAudioDecoder</code> sub-interfaces, but only 1 client can <code>open()</code> an <code>IAudioDecoder</code> and access its <code>IAudioDecoderController</code> sub-interface.</p>
+</div>
+<p>The diagram below shows the relationship between the Audio Decodeer HAL interfaces and resource instances.</p>
+<pre class="mermaid"><code>graph LR
+
+    %% --- Encapsulating Everything Inside "Audio Decoder HAL" ---
+    IAudioDecoderManager("IAudioDecoderManager")
+
+    %% --- Audio Decoder Manager Service Spawns Instances ---
+    IAudioDecoderManager --&gt; ADI1("IAudioDecoder &lt;br&gt; ID = 0")
+    IAudioDecoderManager --&gt; ADI2("IAudioDecoder &lt;br&gt; ID = 1")
+    IAudioDecoderManager --&gt; ADI3("IAudioDecoder &lt;br&gt; ID = 2")
+
+    %% --- Each Instance Has a Controller ---
+    ADI1 --&gt; ADIC1("IAudioDecoderController")
+    ADI2 --&gt; ADIC2("IAudioDecoderController")
+    ADI3 --&gt; ADIC3("IAudioDecoderController")
+
+    %% --- High Contrast Styling (Rounded Box Simulation) ---
+    classDef background fill:#121212,stroke:none,color:#E0E0E0;
+    classDef manager fill:#388E3C,stroke:#1B5E20,stroke-width:2px,color:#FFFFFF;
+    classDef instance1 fill:#FFC107,stroke:#FF8F00,stroke-width:2px,color:#000000;
+    classDef instance2 fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#000000;
+    classDef instance3 fill:#F44336,stroke:#B71C1C,stroke-width:2px,color:#FFFFFF;
+    classDef controller fill:#00ACC1,stroke:#006064,stroke-width:2px,color:#000000;
+
+    %% --- Apply Colors ---
+    class IAudioDecoderManager manager;
+    class ADI1 instance1;
+    class ADI2 instance2;
+    class ADI3 instance3;
+    class ADIC1 instance1;
+    class ADIC2 instance2;
+    class ADIC3 instance3;
+
+    %% --- Consistent Link Colors Per Instance ---
+    %% Yellow for Instance 0
+    linkStyle 0,3 stroke:#AA8800,stroke-width:2px;
+    %% Orange for Instance 1
+    linkStyle 1,4 stroke:#CC5500,stroke-width:2px;
+    %% Red for Instance 2
+    linkStyle 2,5 stroke:#CC2200,stroke-width:2px;</code></pre>
+<h2 id="codec-support">Codec Support</h2>
+<p>Each RDK product defines the audio codecs it requires for IP streaming, apps, broadcast, input ports and output ports.</p>
+<p>Some codecs are subject to third party licensing agreements and may therefore only be included in some products.</p>
+<p>The list below indicates the list of audio codecs which are mandatory for the platform to support as either software decode (non-secure) or hardware/vendor decode (potentially secure).</p>
+<p>Where a codec is optional for hardware/vendor support and is not implemented by the vendor supplied audio decoder then it shall be implemented as an RDK software decoder if required by the product specification.</p>
+<table>
+<thead>
+<tr>
+<th>Codec</th>
+<th>Typical Use Case</th>
+<th>Hardware/Vendor Support</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MPEG-1/2 audio layer II</td>
+<td>Broadcast streams, IP streams, files</td>
+<td><strong>Mandatory</strong></td>
+</tr>
+<tr>
+<td>MPEG-1/2 audio layer III</td>
+<td>MP3 files</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>AAC-LC</td>
+<td>Broadcast streams, IP streams, files</td>
+<td><strong>Mandatory</strong></td>
+</tr>
+<tr>
+<td>HE-AAC</td>
+<td>Broadcast streams, IP streams, files</td>
+<td><strong>Mandatory</strong></td>
+</tr>
+<tr>
+<td>HE-AAC v2</td>
+<td>Broadcast streams, IP streams, files</td>
+<td><strong>Mandatory</strong></td>
+</tr>
+<tr>
+<td>exHE-AAC</td>
+<td>Broadcast streams, IP streams, files</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>AAC-ELD</td>
+<td>Apple AirPlay</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>Apple Lossless Audio Codec (ALAC)</td>
+<td>Apple AirPlay</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>Dolby AC-3</td>
+<td>Broadcast streams, IP streams, files</td>
+<td><strong>Mandatory</strong> (if platform is licensed)</td>
+</tr>
+<tr>
+<td>Dolby E-AC-3</td>
+<td>Broadcast streams, IP streams, files</td>
+<td><strong>Mandatory</strong> (if platform is licensed)</td>
+</tr>
+<tr>
+<td>Dolby E-AC-3+JOC (Atmos)</td>
+<td>Broadcast streams, IP streams, files</td>
+<td><strong>Mandatory</strong> (if platform is licensed)</td>
+</tr>
+<tr>
+<td>Dolby AC-4</td>
+<td>Broadcast streams, IP streams</td>
+<td><strong>Mandatory</strong> (if platform is licensed)</td>
+</tr>
+<tr>
+<td>USAC</td>
+<td>IP streams</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>SBC</td>
+<td>Bluetooth</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>FLAC</td>
+<td>Amazon Music app, files</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>Vorbis</td>
+<td>WebM, files</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>Opus</td>
+<td>WebM, files</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>AVS</td>
+<td>Broadcast streams, files</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>WMA</td>
+<td>Files</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>RealAudio</td>
+<td>Files</td>
+<td>Optional</td>
+</tr>
+</tbody>
+</table>
+<h2 id="encrypted-audio-playback">Encrypted Audio Playback</h2>
+<p>Encrypted audio is copied into a non-secure buffer by the application and then decrypted into a secure buffer. The secure buffer is then decoded by an audio decoder accessed through the <code>IAudioDecoderController</code> interface.</p>
+<h2 id="secure-audio-processing">Secure Audio Processing</h2>
+<p>Secure audio processing (SAP) is a requirement for RDK-E but not all platforms may have support initially. Audio decoder instances shall declare themselves as secure or non-secure by setting <code>Capabilities.supportsSecure</code> appropriately.</p>
+<p>A secure audio decoder shall be able to handle secure AV buffers and decoded PCM output from the decoder shall be either contained in secure AV buffers or securely tunnelled in the vendor layer.</p>
+<p>If any audio decoder supports SAP in non-tunnelled mode then the Audio Sink HAL must also support SAP to be able to process secure AV buffers of decoded PCM data, otherwise SAP support is optional.</p>
+<h2 id="clear-pcm-audio-playback">Clear PCM Audio Playback</h2>
+<p>PCM stream data can originate in the RDK media pipeline from multiple sources; from an application, from the RDK middleware or from a software audio decoder.  In these cases the PCM data does not enter an Audio Decoder and is passed directly to the Audio Sink HAL.</p>
+<p>Clear PCM audio is copied into a non-secure <a href="../avbuffer/av_buffer.md">AV Buffer</a> and then queued at the Audio Sink where it is then mixed for audio output.</p>
+<p>No buffer decryption or audio decode is required for clear PCM audio buffers.</p>
+<h2 id="audio-passthrough-mode">Audio Passthrough Mode</h2>
+<p>Audio passthrough can be selected on some output ports which can be applied individually to HDMI output (STB profile), S/PDIF and ARC/eARC (TV profile) ports of the device.</p>
+<p>Passthrough mode is intended to output the original audio stream to the sink device without decode or mixing of other audio inputs.</p>
+<p>If the sink device on a port cannot support the audio codec being streamed, then the user selected passthrough mode cannot be honored on that port and normal audio decode and mixing shall apply.</p>
+<p>When audio passthrough is enabled and possible, then audio stream buffers passed to the Audio Decoder HAL are tunnelled to the vendor audio subsystem for output.</p>
+<p>In some cases the passthrough mode enabled on some output ports may have to work concurrently with other audio ports not in passthrough mode. This use case requires the audio decoder to tunnel the compressed audio for passthrough <em>and</em> decode it for mixing.</p>
+<h2 id="tunnelled-and-non-tunnelled-audio">Tunnelled and Non-Tunnelled Audio</h2>
+<p>The Audio Decoder makes its own run-time choice about whether audio is tunnelled or non-tunnelled.</p>
+<p>Tunnelled audio is required when any audio output ports are in passthrough mode. Tunnelled audio may also be required for some audio codecs that need a vendor integrated decoder/mixer such as Dolby MS12.</p>
+<p>When only tunnelled audio is in operation, no audio frame pool buffer handles containing decoded PCM audio are handed back to the controller client and the <code>frameBufferHandle</code> value -1 is passed in <code>onFrameOutput()</code> callbacks to indicate tunnelled mode.</p>
+<h2 id="frame-metadata">Frame Metadata</h2>
+<p>As audio frames are decoded, the metadata which related to the frames must be passed to the client over <code>IAudioDecoderControllerListener.onFrameOutput()</code>.</p>
+<p>In non-tunnelled operating mode, the frame buffer handle and metadata related to the frame must be passed in the same <code>onFrameOutput()</code> call.</p>
+<p>To conserve CPU load, the frame metadata is only passed with the first decoded frame after a <code>start()</code>, the first decoded frame after a <code>flush()</code>, if the frame metadata changes, or — in non-tunnelled mode — with any frame that carries a non-zero trim, even when that trim repeats the previous frame's trim (see <a href="#the-trim-contract">The trim contract</a>).</p>
+<p>If the frame metadata does not need to be passed, then the <code>@nullable FrameMetadata metadata</code> parameter should be passed as null in <code>onFrameOutput()</code>.</p>
+<p>When operating in tunnelled mode, if there is no frame metadata to be passed, then no call to <code>onFrameOutput()</code> should be made because there is no frame buffer handle or frame metadata to return to the client.</p>
+<h2 id="low-latency-mode">Low Latency Mode</h2>
+<p>A media pipeline is operating in low latency mode when the audio decoder and video decoder (if present) are set with a <code>LOW_LATENCY_MODE</code> property to 1 (enabled).</p>
+<p>The platform support for low latency audio is indicated in the Audio Sink HAL <code>PlatformCapabilities</code>.</p>
+<h2 id="receiver-mixed-supplementary-audio-decoding">Receiver Mixed Supplementary Audio Decoding</h2>
+<p>Supplementary audio that is receiver mixed is common in TV broadcasting where the main audio and supplementary audio share a common codec but require 2 audio decoders and mixing.</p>
+<p>An audio decoder used for supplementary audio is identical to a primary audio decoder, but the indication of its use for supplementary audio is set in the Audio Sink HAL.</p>
+<p>Any metadata associated with the supplementary/primary audio mix levels is left to the vendor to extract and manage in the vendor layer implementation.</p>
+<h2 id="audio-stream-discontinuities">Audio Stream Discontinuities</h2>
+<p>Where the client has knowledge of PTS discontinuities in the audio stream, it shall call <code>IAudioDecoderController.signalDiscontinuity()</code> between the AV buffers passed to <code>decodeBufferWithMetadata()</code>.</p>
+<p>The decoder resets its PTS tracking and interpolation state before decoding the first <a href="../avbuffer/av_buffer.md">AV Buffer</a> passed after the call, and does not interpolate timestamps across the discontinuity. Buffers passed before the call are decoded and output as normal. The first frame output from buffers passed after the call carries <code>FrameMetadata.discontinuity = true</code>.</p>
+<h2 id="mid-stream-format-changes">Mid-Stream Format Changes</h2>
+<p>An <strong>in-codec</strong> format change — the sample rate or channel count changing without a change of codec, for example AAC 44.1 kHz stereo becoming 48 kHz 5.1 — is absorbed by the decoder while it remains in <code>State::STARTED</code>. No <code>stop()</code> / <code>start()</code> cycle is required, no <code>flush()</code>, and no call from the client.</p>
+<p><strong>The decoder detects the change from the bitstream.</strong> The codecs that can present an in-codec format change carry it in-band: AAC in the ADTS header or AudioSpecificConfig, AC-3 and E-AC-3 in the syncframe (<code>fscod</code>, <code>acmod</code>), MP3 in the frame header. The decoder therefore holds the authoritative values before the client could supply them.</p>
+<p>Opus is the exception, and needs no detection: its decoded output is always 48 kHz regardless of the source, so an Opus stream cannot present a mid-stream sample-rate change. The <code>input sample rate</code> field in the identification header records the original source rate for information only and is not the output rate. Channel count is fixed for the stream by the same header.</p>
+<p><strong>The change surfaces on the output side.</strong> Frame metadata is delivered with the first decoded frame after <code>start()</code>, the first after <code>flush()</code>, and whenever it changes — so a format change is one of the occasions on which <code>FrameMetadata</code> is delivered. The first frame produced under the new format carries a non-null <code>FrameMetadata</code> whose <code>metadata</code> field holds the new <code>sampleRate</code>, <code>numChannels</code> and <code>channelTypes</code>. Frames after it carry null until some part of the frame metadata changes again, so the client retains the last values it was given. That delivery is the notification; there is no separate signal to subscribe to.</p>
+<p><code>setAudioFormat()</code> is a <strong>setup-time hint</strong>, valid in <code>State::READY</code>. It supplies container-derived values for codecs whose codec-specific data does not carry them, so the decoder can size its output before the first frame arrives. It is not a runtime reconfiguration call.</p>
+<p><code>signalDiscontinuity()</code> covers PTS discontinuities and carries no format information.</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant MW as Middleware
+    participant Dec as IAudioDecoderController
+    participant Listener as IAudioDecoderControllerListener
+    Note over MW,Listener: Mid-session. The 44.1 kHz stereo format was&lt;br/&gt;delivered on the first frame after start().
+    MW-&gt;&gt;Dec: decodeBufferWithMetadata(handleN, {pts, ...})
+    Note right of Dec: still 44.1 kHz stereo — format unchanged
+    Dec--&gt;&gt;Listener: onFrameOutput(nsPresentationTime, frameAVBufferHandle, metadata=null)
+    MW-&gt;&gt;Dec: decodeBufferWithMetadata(handleN+1, {pts, ...})
+    Note right of Dec: 48 kHz 5.1 detected in the bitstream
+    Dec--&gt;&gt;Listener: onFrameOutput(nsPresentationTime, frameAVBufferHandle, metadata=FrameMetadata{metadata=PCMMetadata{sampleRate=48000, numChannels=6, ...}})
+    Note over MW: Non-null metadata is the notification — client retains the new format
+    MW-&gt;&gt;Dec: decodeBufferWithMetadata(handleN+2, {pts, ...})
+    Dec--&gt;&gt;Listener: onFrameOutput(nsPresentationTime, frameAVBufferHandle, metadata=null)</code></pre>
+<p>A <strong>codec</strong> change — AAC to AC-3, say — is out of scope. The decoder backend itself must be reconfigured, so those require <code>stop()</code> → <code>setAudioFormat()</code> → <code>start()</code>.</p>
+<h2 id="end-of-stream-signalling">End of Stream Signalling</h2>
+<p>End-of-stream is a discrete signal, not a per-buffer flag. The client drives it with <code>IAudioDecoderController.signalEndOfStream()</code> and observes completion through <code>IAudioDecoderControllerListener.onEndOfStream()</code>. Audio EOS is always client-signalled - no supported audio elementary stream (MP3, AAC, AC-3/E-AC-3, Opus, Vorbis) carries an in-bitstream EOS marker, so <code>FrameMetadata.bitstreamEOS</code> is always false for audio.</p>
+<p><strong>Input side:</strong> when the client has submitted its final buffer, it calls <code>IAudioDecoderController.signalEndOfStream()</code>. This is the authoritative "I will submit no further buffers" signal and the only input-side EOS path. <code>decodeBufferWithMetadata()</code> only submits data and carries no EOS information; <code>InputBufferMetadata</code> has no EOS field. The decoder must be in <code>State::STARTED</code> and at least one buffer must have been submitted on the session, otherwise the call throws <code>EX_ILLEGAL_STATE</code>. A second call is a no-op, and any subsequent <code>decodeBufferWithMetadata()</code> throws <code>EX_ILLEGAL_STATE</code>.</p>
+<p>This is distinct from <code>stop()</code> and <code>flush()</code>, which abruptly discard any held frames. <code>signalEndOfStream()</code> drains them: the HAL decodes and emits every held frame in presentation order via <code>onFrameOutput()</code> (each with its <code>FrameMetadata</code>), dropping none.</p>
+<p><strong>Output side:</strong> after the final <code>onFrameOutput()</code> of the drained session, the HAL fires <code>IAudioDecoderControllerListener.onEndOfStream()</code> exactly once. It is delivered on the same listener and ordered in-band - it follows the last frame on the same ordered callback channel. After this callback the decoder remains in <code>State::STARTED</code> but is drained; no further <code>onFrameOutput()</code> is delivered until <code>flush()</code> or <code>stop()</code> + <code>start()</code>.</p>
+<p>Behaviour is identical in tunnelled and non-tunnelled modes. In tunnelled mode the decoder→sink data flow is vendor-internal, so the vendor propagates the EOS signal from decoder to sink. The middleware observes the same sequencing in both modes: <code>decoder.onEndOfStream()</code> (decode complete) followed by <code>sink.onEndOfStream(nsPresentationTime)</code> (presentation complete) with the correct presentation timing.</p>
+<h2 id="codec-priming-padding-and-gapless-playback">Codec Priming, Padding, and Gapless Playback</h2>
+<p>Modern lossy audio codecs (AAC, MP3, Vorbis, Opus) do not encode a stream sample-for-sample. The encoded form contains <strong>more samples than the original media</strong> because of two unavoidable artefacts of how block-transform codecs work:</p>
+<ul>
+<li><strong>Encoder priming</strong> — leading samples at the start of the stream, used by the encoder's overlap/window analysis. The first decoded frame is not the first sample of the original audio; the leading priming samples are silence (or noise) and must be discarded on playback.</li>
+<li><strong>Final padding</strong> — trailing samples at the end, used to round the original media duration up to a whole number of encoded frames. The last decoded frame contains real audio followed by encoder-generated padding that must be discarded on playback.</li>
+</ul>
+<p>Typical priming amounts:</p>
+<table>
+<thead>
+<tr>
+<th>Codec</th>
+<th>Leading trim (typical)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AAC-LC</td>
+<td>2048 samples (two 1024-sample frames)</td>
+</tr>
+<tr>
+<td>HE-AAC v1/v2</td>
+<td>2048 + extra SBR latency</td>
+</tr>
+<tr>
+<td>MP3</td>
+<td>1105 samples with LAME: its 576-sample encoder delay plus the decoder's own 529-sample delay. The LAME tag stores the encoder delay; the middleware adds the 529.</td>
+</tr>
+<tr>
+<td>Vorbis</td>
+<td>Variable per stream, signalled by Ogg granule positions</td>
+</tr>
+<tr>
+<td>Opus</td>
+<td>Variable; every stream signals its pre-skip</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Resampling adds another layer.</strong> When the source media is resampled before encoding (or re-encoded at a different rate from the original), the resampled sample count rarely divides evenly into the codec's frame size. The leftover samples land in a final frame padded out to the full frame size with encoder-generated silence. For example, 1 s at 44.1 kHz resampled to 48 kHz produces 48,000 samples, which does not divide evenly into AAC's 1024-samples/frame, so the last AAC frame contains real PCM plus padding to fill the frame.</p>
+<p>This is correct behaviour — <strong>the encoded stream carries the full sample count, priming and padding included.</strong> What removes them is the trim metadata described below, and the contract is that they are discarded <strong>exactly once</strong> before the PCM reaches the mixer.</p>
+<p>What the encoded stream holds, and what the trim removes:</p>
+<pre class="mermaid"><code>block-beta
+    columns 20
+    primed["priming&lt;br/&gt;trimStartNs"]:3
+    src1["source audio"]:14
+    pad["padding&lt;br/&gt;trimEndNs"]:3
+    space:20
+    space:3
+    src2["source audio — presented to the mixer"]:14
+    space:3
+
+    style primed fill:#FFE0B2,stroke:#E65100,color:#BF360C,font-weight:bold;
+    style pad    fill:#FFE0B2,stroke:#E65100,color:#BF360C,font-weight:bold;
+    style src1   fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20,font-weight:bold;
+    style src2   fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20,font-weight:bold;</code></pre>
+<p>The encoded run holds the priming, the source audio and the padding. Applying the trim discards <code>trimStartNs</code> from the front and <code>trimEndNs</code> from the back, leaving audio whose duration matches the source sample-accurately. The trim is applied by the decoder or by the sink, as covered under <a href="#the-trim-contract">The trim contract</a> below.</p>
+<h3 id="the-trim-contract">The trim contract</h3>
+<p><code>InputBufferMetadata.trimStartNs</code> and <code>trimEndNs</code> carry per-frame trim durations on each <code>decodeBufferWithMetadata()</code> call. The corresponding <code>FrameMetadata.trimStartNs</code> / <code>trimEndNs</code> on <code>onFrameOutput()</code> carry whatever trim is still outstanding to the sink, which applies it before presenting the PCM to the mixer.</p>
+<p><strong>The trim behaviour is defined by this interface and is not negotiable.</strong> The samples must be trimmed as specified. What <em>is</em> an implementation choice is <strong>where</strong> the trim is applied — a vendor may apply it inside the decoder (for example via FFmpeg's <code>AV_PKT_DATA_SKIP_SAMPLES</code> during decode) or in the sink.</p>
+<p>A decoder that trims the frame itself sets <code>FrameMetadata.trimStartNs</code> / <code>trimEndNs</code> to 0, so the sink does not discard the same samples again:</p>
+<table>
+<thead>
+<tr>
+<th>Where the trim is applied</th>
+<th><code>FrameMetadata.trim*</code></th>
+<th>Sink</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sink</td>
+<td>carried through from <code>InputBufferMetadata</code></td>
+<td>applies the trim</td>
+</tr>
+<tr>
+<td>Decoder</td>
+<td>0</td>
+<td>nothing to do</td>
+</tr>
+</tbody>
+</table>
+<p>The observable result is identical either way: the PCM leaving the Audio Sink into the Audio Mixer has been trimmed exactly as <code>InputBufferMetadata</code> specified.</p>
+<p>The trim is strictly <strong>per-buffer</strong>. Each <code>decodeBufferWithMetadata()</code> call's values apply only to the single decoded frame produced from that buffer and are not carried forward. The HAL holds no trim state across buffers. Where a trim region spans multiple input buffers, the middleware translates it into per-buffer trim metadata before calling the decoder.</p>
+<p>Because the trim is per-frame, in non-tunnelled mode a frame with a non-zero trim always carries non-null <code>FrameMetadata</code> on <code>onFrameOutput()</code>, even when its trim repeats the previous frame's trim. A null <code>metadata</code> means zero trim for that frame: when the middleware forwards such a frame to <code>queueAudioFrame()</code>, it passes the last metadata with both trim fields set to 0.</p>
+<h3 id="codec-scope">Codec scope</h3>
+<table>
+<thead>
+<tr>
+<th>Codec</th>
+<th>Trim required</th>
+<th>Source of the values</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Opus</strong></td>
+<td>Always</td>
+<td>Every Opus stream carries a pre-skip: <code>OpusHead.pre_skip</code> in Ogg (RFC 7845 §5.1), <code>CodecDelay</code> in WebM, and <code>PreSkip</code> in the <code>dOps</code> box in MP4. Trailing trim comes from the final Ogg page's granule position (RFC 7845, End Trimming), WebM <code>DiscardPadding</code>, or the MP4 edit list.</td>
+</tr>
+<tr>
+<td><strong>AAC</strong></td>
+<td>When the container signals it</td>
+<td>MP4 <code>edts/elst</code>, the <code>iTunSMPB</code> atom, or Matroska <code>CodecDelay</code> and <code>DiscardPadding</code>. ADTS-AAC signals nothing, so nothing is trimmed.</td>
+</tr>
+<tr>
+<td><strong>MP3</strong></td>
+<td>When the container signals it</td>
+<td><code>iTunSMPB</code>, or the LAME tag that follows the Xing / <code>Info</code> header in the first frame and stores the encoder delay and padding.</td>
+</tr>
+<tr>
+<td><strong>Vorbis</strong></td>
+<td>When the container signals it</td>
+<td>In Ogg, granule positions (Vorbis I specification, Appendix A): the first audio page's granule position gives the leading trim and the final page's granule position gives the trailing trim. In WebM, <code>CodecDelay</code> and <code>DiscardPadding</code>.</td>
+</tr>
+<tr>
+<td><strong>Dolby (DD+ / AC-4 / Atmos)</strong></td>
+<td>Not applicable</td>
+<td>No encoder pre-skip in the decode contract and no <code>CodecDelay</code> equivalent in the carriage spec. In passthrough-only operation no PCM is produced.</td>
+</tr>
+</tbody>
+</table>
+<p>Trim is a no-op when the values are zero, which is always the case for Dolby decoded paths.</p>
+<h3 id="end-to-end-data-flow">End-to-end data flow</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    participant MW as Middleware
+    participant Demux as Demuxer / Parser
+    participant Dec as IAudioDecoderController
+    participant Listener as IAudioDecoderControllerListener
+    participant Sink as IAudioSinkController
+    Note over MW,Sink: Non-tunnelled, sink-applies case. In tunnelled mode the decoder feeds the sink internally.&lt;br/&gt;A decoder that trims the frame itself reports 0 in FrameMetadata.trim* and the sink does nothing.
+    Note over MW,Demux: Container parsed — priming and padding values extracted
+    Note over MW,Dec: 2048 priming samples span two 1024-sample frames,&lt;br/&gt;so the leading trim is split across the first two buffers
+    MW-&gt;&gt;Dec: decodeBufferWithMetadata(handle1, {nsPresentationTime, trimStartNs=21_333_333, trimEndNs=0, ...})
+    Dec--&gt;&gt;Listener: onFrameOutput(nsPresentationTime, handle1_pcm, {trimStartNs=21_333_333, trimEndNs=0, ...})
+    MW-&gt;&gt;Sink: queueAudioFrame(nsPresentationTime, handle1_pcm, {trimStartNs=21_333_333, ...})
+    MW-&gt;&gt;Dec: decodeBufferWithMetadata(handle2, {nsPresentationTime, trimStartNs=21_333_333, trimEndNs=0, ...})
+    Dec--&gt;&gt;Listener: onFrameOutput(nsPresentationTime, handle2_pcm, {trimStartNs=21_333_333, trimEndNs=0, ...})
+    MW-&gt;&gt;Sink: queueAudioFrame(nsPresentationTime, handle2_pcm, {trimStartNs=21_333_333, ...})
+    Note over Sink: Sink discards frames 1 and 2 in full — 42.67 ms of priming
+    Note over MW,Dec: ... middle of stream, no trim ...
+    MW-&gt;&gt;Dec: decodeBufferWithMetadata(handleN, {nsPresentationTime, trimStartNs=0, trimEndNs=2_666_667, ...})
+    Note right of Dec: Final frame — trim trailing padding
+    MW-&gt;&gt;Dec: signalEndOfStream()
+    Dec--&gt;&gt;Listener: onFrameOutput(nsPresentationTime, handleN_pcm, {trimStartNs=0, trimEndNs=2_666_667, ...})
+    MW-&gt;&gt;Sink: queueAudioFrame(nsPresentationTime, handleN_pcm, {trimEndNs=2_666_667, ...})
+    Dec--&gt;&gt;Listener: onEndOfStream()
+    Note over Sink: Sink discards last 2.67 ms of PCM
+    MW-&gt;&gt;Sink: signalEndOfStream()
+    Sink--&gt;&gt;MW: onEndOfStream(nsPresentationTime)</code></pre>
+<p>End-of-stream is a discrete signal — see <a href="#end-of-stream-signalling">End of Stream Signalling</a>. Neither <code>InputBufferMetadata</code> nor <code>FrameMetadata</code> carries an application EOS flag, so the trim on the final frame and the EOS signal are independent of one another.</p>
+<p>After the trim is applied, the audible output matches the original source duration sample-accurately, regardless of priming/padding inflation.</p>
+<h3 id="where-the-values-come-from-container-metadata-sources">Where the values come from — container metadata sources</h3>
+<p>Middleware extracts priming/padding from the container and translates them to nanosecond durations. The table gives the total <strong>leading trim</strong> (priming) and <strong>trailing trim</strong> (padding); where either is longer than one frame, the middleware splits it across consecutive buffers, as <a href="#the-trim-contract">The trim contract</a> requires.</p>
+<table>
+<thead>
+<tr>
+<th>Container</th>
+<th>Source</th>
+<th>Translation to trim</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>MP4 / ISOBMFF</strong></td>
+<td><code>edts/elst</code> edit list</td>
+<td><code>media_time</code> is in the media timescale (<code>mdhd.timescale</code>); <code>segment_duration</code> is in the movie timescale (<code>mvhd.timescale</code>).<br/>Leading trim = <code>media_time ÷ mdhd.timescale</code>.<br/>Trailing trim = (encoded media duration − <code>media_time</code> − <code>segment_duration × mdhd.timescale ÷ mvhd.timescale</code>) ÷ <code>mdhd.timescale</code>, where the encoded media duration is the sum of the track's sample durations in <code>mdhd</code> units.<br/>A <code>segment_duration</code> of 0, common in fragmented MP4, runs the edit to the end of the media, so there is no trailing trim.<br/>These rules apply to the list's non-empty edit (<code>media_time</code> ≥ 0). A leading empty edit (<code>media_time</code> = −1) delays presentation and contributes no trim. A list with more than one non-empty edit describes a presentation timeline beyond priming and padding, and the middleware resolves it with its general edit-list handling before deriving any trim.</td>
+</tr>
+<tr>
+<td><strong>MP4 (iTunes-style)</strong></td>
+<td><code>iTunSMPB</code> text in <code>udta</code></td>
+<td>Space-separated hexadecimal words: the first is reserved, the second is the priming (leading trim) in samples, the third is the padding (trailing trim) in samples, and the fourth is the original sample count.</td>
+</tr>
+<tr>
+<td><strong>WebM / Matroska</strong></td>
+<td><code>CodecDelay</code> on the audio track; <code>DiscardPadding</code> on the final block</td>
+<td>Both are in nanoseconds: <code>CodecDelay</code> → leading trim, <code>DiscardPadding</code> → trailing trim, directly.</td>
+</tr>
+<tr>
+<td><strong>Ogg Opus</strong></td>
+<td><code>OpusHead.pre_skip</code>; final page granule position</td>
+<td>Leading trim = <code>pre_skip ÷ 48000</code> (Opus pre-skip is always in 48 kHz units regardless of stream rate). Trailing trim = the samples the final page's granule position cuts from its last packet (RFC 7845, End Trimming).</td>
+</tr>
+<tr>
+<td><strong>Opus in MP4</strong></td>
+<td><code>PreSkip</code> in the <code>dOps</code> box; <code>edts/elst</code></td>
+<td>Leading trim = <code>PreSkip ÷ 48000</code>. The edit list's <code>media_time</code> signals the same pre-skip; the leading trim is that single value, not the sum of the two. Trailing trim = the edit-list rule above.</td>
+</tr>
+<tr>
+<td><strong>Ogg Vorbis</strong></td>
+<td>First audio page and final page granule positions</td>
+<td>Leading trim = the samples the first audio page's granule position falls short of what the page decodes; trailing trim = the samples the final page's granule position cuts from its last packet (Vorbis I specification, Appendix A).</td>
+</tr>
+<tr>
+<td><strong>ADTS AAC</strong> (no container)</td>
+<td>None</td>
+<td>No priming/padding metadata available; leading and trailing trims are unknown, and the output contains the priming and padding</td>
+</tr>
+</tbody>
+</table>
+<p>Sample counts convert to seconds by dividing by the rate they are counted at: 48 kHz for Opus (<code>pre_skip</code>, <code>PreSkip</code> and Ogg Opus granule positions), and the stream's decoded sample rate for <code>iTunSMPB</code>, the LAME tag and Ogg Vorbis granule positions. Each duration then converts to nanoseconds as <code>seconds × 1_000_000_000</code>, rounded to the nearest nanosecond.</p>
+<p><strong>Worked example</strong> — AAC-LC at 48 kHz with 2048-sample priming:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>priming             = 2048 samples = two 1024-sample frames
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>leading trim        = 2048 / 48000 × 1_000_000_000
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>                    ≈ 42.67 ms
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>trimStartNs (frame 1) = 1024 / 48000 × 1_000_000_000
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>                      = 21_333_333 ns   (rounded to nearest ns)
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>trimStartNs (frame 2) = 21_333_333 ns
+</span></code></pre></div>
+<p>Both leading frames are discarded in full; the source audio starts at the first sample of frame 3.</p>
+<p>If the same stream was originally 44.1 kHz with a 1-second source duration and was resampled to 48 kHz before encoding, the encoder produces 48,000 + 2048 = 50,048 samples → 49 AAC frames (50,176 samples) with <code>50,176 − 50,048 = 128 samples</code> of padding in the final frame:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>trimEndNs (final frame) = 128 / 48000 × 1_000_000_000
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>                        = 2_666_667 ns   (rounded to nearest ns)
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>                        ≈ 2.67 ms
+</span></code></pre></div>
+<h3 id="what-to-validate-in-tests">What to validate in tests</h3>
+<p>The right metric for "did the decoder behave correctly" is <strong>total post-trim audio data</strong>, not frame count:</p>
+<table>
+<thead>
+<tr>
+<th>Validation</th>
+<th>Valid?</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Input AAC frame count == output PCM frame count</td>
+<td>❌</td>
+<td>Resampling and encoder framing change the count; not a HAL conformance signal</td>
+</tr>
+<tr>
+<td>Sink-applies case: (last output PTS − first output PTS + final frame duration) − leading trim − trailing trim == source duration</td>
+<td>✅</td>
+<td>PTS-based; counts the final frame's own duration and subtracts the trim the sink applies inside the leading and trailing frames. Where the decoder applies the trim, its output frames are already shortened; use the sample count below.</td>
+</tr>
+<tr>
+<td>Total post-trim PCM sample count == the source's expected sample count at the output rate (<code>source_duration × output_sample_rate</code>, rounded by the pipeline's resampling convention)</td>
+<td>✅</td>
+<td>Sample-accurate and independent of which stage applies the trim; the conformance check for whether priming/padding was handled correctly</td>
+</tr>
+</tbody>
+</table>
+<p>If a test reports "extra output frames after resampling" or similar frame-count mismatches, the decoder is almost certainly behaving correctly and the test logic needs to switch to one of the post-trim validations above. Where the sink applies the trim, the decoder's output correctly carries the full encoded sample count, priming and padding included; where the decoder applies it, that output is already shortened. Either way the HAL contract is that the trim is applied exactly once before the mixer, which is what makes the audible output sample-accurate to the source.</p>
+<p>If a test pipeline produces resampled audio without the container priming/padding metadata (some FFmpeg paths do not emit <code>edts/elst</code> or <code>iTunSMPB</code> on resampled output), middleware has no source for <code>trimStartNs</code> / <code>trimEndNs</code> and the padding leaks through. The fix is in the test pipeline (preserve or compute the priming/padding values), not the HAL.</p>
+<h2 id="decoded-audio-frame-buffers">Decoded Audio Frame Buffers</h2>
+<p>Decoded audio frame buffers are only passed from the audio decoder to the client when operating in non-tunnelled mode.</p>
+<p>If the input <a href="../avbuffer/av_buffer.md">AV Buffer</a> that contained the coded audio frame was passed in a secure buffer, then the corresponding decoded audio frame must be output in a secure audio frame buffer.</p>
+<p>Audio frame buffers are passed back as handles in the <code>IAudioDecoderControllerListener.onFrameOutput()</code> function <code>frameBufferHandle</code> parameter. In tunnelled mode, -1 is passed as the handle value to indicate that no frame buffer handle is being provided since the audio is consumed internally by the vendor layer.</p>
+<p>The format of the data in the decoded audio frame buffer is always PCM and described by the <code>FrameMetadata</code>.</p>
+<p>The frame buffer handle is later passed to the Audio Sink for queuing before presentation and is then freed.</p>
+<p>The vendor layer is expected to manage the pool of decoded audio buffers privately.</p>
+<p>If the frame buffer pool is empty then the audio decoder cannot output the next decoded frame until a new frame buffer becomes available. While frame output is blocked, it is reasonable for the audio decoder service to either buffer additional coded input buffers or to reject new calls to <code>decodeBufferWithMetadata()</code> with a <code>false</code> return value.</p>
+<h2 id="input-buffer-back-pressure">Input Buffer Back-Pressure</h2>
+<p><code>IAudioDecoderController.decodeBufferWithMetadata()</code> returns <code>false</code> when the internal decode buffer queue is full. Buffer ownership remains with the caller and the buffer must be retained for re-submission.</p>
+<p>To avoid wasted binder transactions, the client SHOULD wait for <code>IAudioDecoderControllerListener.onDecodeBufferAvailable()</code> before calling <code>decodeBufferWithMetadata()</code> again. The callback fires exactly once per back-pressure episode: when the internal queue transitions from full to has-space. If the client continues to call <code>decodeBufferWithMetadata()</code> during back-pressure (receiving <code>false</code> repeatedly), only one callback is delivered per transition. It is not fired in steady-state operation.</p>
+<p>Continuing to call <code>decodeBufferWithMetadata()</code> while the queue is full is permitted but will return <code>false</code> repeatedly until space is available.</p>
+<h2 id="presentation-time-for-audio-frames">Presentation Time for Audio Frames</h2>
+<p>The presentation time base units for audio frames is nanoseconds and passed in an int64 (long in AIDL definition) variable type. Video buffers shared the same time base units of nanoseconds.</p>
+<p>When coded audio frames are passed in through <a href="../avbuffer/av_buffer.md">AV Buffer</a> handles to <code>IAudioDecoderController.decodeBufferWithMetadata()</code> the <code>InputBufferMetadata.nsPresentationTime</code> field represents the audio frame presentation time.</p>
+<p>Calls to <code>IAudioDecoderControllerListener.onFrameOutput()</code> with frame buffer handles (non-tunnelled mode) and/or frame metadata shall use the same <code>nsPresentationTime</code>.</p>
+<h2 id="dolby-ms12-and-ac-4-audio-decoding">Dolby MS12 and AC-4 Audio Decoding</h2>
+<p>MS12 is a platform integrated decoder/mixer which requires the compressed audio bitstreams to be tunnelled from the Audio Decoder. Decoded audio frame buffers are not expected to be returned to the RDK middleware.</p>
+<p>The Dolby AC-4 codec is a bitstream that can contain multiple compressed audio channels which are grouped together in presentations. A presentation is a mix of one or more channels from the bitstream and is achieved in the vendor layer.</p>
+<p>A licensed Dolby MS12 implementation is required in the vendor layer to support AC-4.</p>
+<p>By default, an AC-4 audio decoder must use the user preferences for the presentation selection, but players shall also be able to override some or all of these settings without affecting the user preferences. Players must also be able to manually select an AC-4 presentation.</p>
+<p>The Audio Mixer provides the platform user preferences for AC-4 default presentation selection.</p>
+<p>The Audio Decoder also provides properties which allow for an override of the platform user preferences for the current player session.</p>
+<h2 id="audio-decoder-states">Audio Decoder States</h2>
+<p>The Audio Decoder HAL follows the standard Session State Management paradigm.</p>
+<p>When an Audio Decoder session enters a <code>FLUSHING</code> or <code>STOPPING</code> transitory state it shall free any AV buffers it is holding.</p>
+<p>The sequence diagram below shows the behavior of the callbacks.</p>
+<pre class="mermaid"><code>sequenceDiagram
+    %% --- RDK Audio Decoder ---
+    box rgb(30,136,229) RDK Audio Decoder 
+        participant Client as RDK Client
+        participant IAudioDecoderEventListener as IAudioDecoderEventListener
+        participant IAudioDecoderControllerListener as IAudioDecoderControllerListener
+    end
+
+    %% --- Audio Decoder Server ---
+    box rgb(249,168,37) Audio Decoder Server
+        participant ADC as IAudioDecoder
+        participant Controller as IAudioDecoderController
+    end
+
+    %% --- Audio AV Buffer ---
+    box rgb(67,160,71) Audio AV Buffer
+        participant IAVBuffer as IAVBuffer
+    end
+
+    Client-&gt;&gt;ADC: registerEventListener(IAudioDecoderEventListener)
+
+    Note over ADC: open() transitions from CLOSED → OPENING → READY
+    Client-&gt;&gt;ADC: open(IAudioDecoderControllerListener)
+    ADC--&gt;&gt;IAudioDecoderEventListener: onStateChanged(CLOSED → OPENING)
+    ADC-&gt;&gt;Controller: new
+    ADC--&gt;&gt;IAudioDecoderEventListener: onStateChanged(OPENING → READY)
+    ADC--&gt;&gt;Client: IAudioDecoderController
+
+    Note over ADC: start() transitions from READY → STARTING → STARTED
+    Client-&gt;&gt;Controller: start()
+    ADC--&gt;&gt;IAudioDecoderEventListener: onStateChanged(READY → STARTING)
+    ADC--&gt;&gt;IAudioDecoderEventListener: onStateChanged(STARTING → STARTED)
+
+    Note over Client: Client can now send AV buffers
+    Client-&gt;&gt;Controller: decodeBufferWithMetadata(bufferHandle=1, {pts, trimStartNs=0, trimEndNs=0, ...})
+    Client-&gt;&gt;Controller: decodeBufferWithMetadata(bufferHandle=2, {pts, trimStartNs=0, trimEndNs=0, ...})
+    Controller--&gt;&gt;IAudioDecoderControllerListener: onFrameOutput(pts, frameBufferHandle=1000, metadata)
+    Controller-&gt;&gt;IAVBuffer: free(bufferHandle=1)
+
+    Note over ADC: flush() transitions from STARTED → FLUSHING → STARTED
+    Client-&gt;&gt;Controller: flush()
+    ADC--&gt;&gt;IAudioDecoderEventListener: onStateChanged(STARTED → FLUSHING)
+    Controller-&gt;&gt;IAVBuffer: free(bufferHandle=2)
+    ADC--&gt;&gt;IAudioDecoderEventListener: onStateChanged(FLUSHING → STARTED)
+    Client-&gt;&gt;Controller: decodeBufferWithMetadata(bufferHandle=3, {pts, trimStartNs=0, trimEndNs=0, ...})
+
+    Note over Controller: signalEndOfStream() drains the decoder,&lt;br&gt;emits held frames, then fires onEndOfStream() once
+    Client-&gt;&gt;Controller: signalEndOfStream()
+    Controller--&gt;&gt;IAudioDecoderControllerListener: onFrameOutput(pts, frameBufferHandle=1002, metadata)
+    Controller-&gt;&gt;IAVBuffer: free(bufferHandle=3)
+    Controller--&gt;&gt;IAudioDecoderControllerListener: onEndOfStream()
+
+    Note over ADC: stop() transitions from STARTED → STOPPING → READY
+    Client-&gt;&gt;Controller: stop()
+    ADC--&gt;&gt;IAudioDecoderEventListener: onStateChanged(STARTED → STOPPING)
+    ADC--&gt;&gt;IAudioDecoderEventListener: onStateChanged(STOPPING → READY)
+
+    Note over ADC: close() transitions from READY → CLOSING → CLOSED
+    Client-&gt;&gt;ADC: close()
+    ADC--&gt;&gt;IAudioDecoderEventListener: onStateChanged(READY → CLOSING)
+    ADC-&gt;&gt;Controller: delete
+    ADC--&gt;&gt;IAudioDecoderEventListener: onStateChanged(CLOSING → CLOSED)
+    Client-&gt;&gt;ADC: unregisterEventListener(IAudioDecoderEventListener)</code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../../introduction/interface_generation/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Interface Generation">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Interface Generation
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../audiodecoder-0.2.0.0/audio_decoder/" class="md-footer__link md-footer__link--next" aria-label="Next: 0.2.0.0">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                0.2.0.0
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.footer", "navigation.sections", "navigation.top", "navigation.tracking", "navigation.instant", "toc.follow", "content.code.copy", "content.code.annotate", "content.tooltips", "content.print.stylesheet", "search.highlight", "search.suggest", "search.share", "header.autohide", "announce.dismiss"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.1/mermaid.min.js"></script>
+      
+        <script src="../../javascript/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>
