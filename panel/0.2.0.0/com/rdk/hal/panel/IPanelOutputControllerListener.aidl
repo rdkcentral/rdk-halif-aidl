@@ -18,22 +18,25 @@
  */
 package com.rdk.hal.panel;
 
-import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.PQParameterValue;
+import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.videodecoder.DynamicRange;
 
+/**
+ * @brief Callbacks linked to the exclusive panel output controller.
+ */
 @VintfStability
 oneway interface IPanelOutputControllerListener {
     /**
      * Callback when the picture mode changes.
-     * 
-    * This can occur on an AVSource or DynamicRange change in the video
-    * or occurs after a call to setPictureModes().
-     * 
+     *
+     * This can occur on an AVSource or DynamicRange change in the video
+     * or occurs after a call to setPictureModes().
+     *
      * @param[in] pictureMode   The new picture mode.
      */
-    void onPictureModeChanged(in String pictureMode);
+    void onPictureModeChanged(in @utf8InCpp String pictureMode);
 
     /**
      * Callback when a PQ picture property value changes.
@@ -44,5 +47,6 @@ oneway interface IPanelOutputControllerListener {
      * @param[in] pictureProperty         The PQ picture property that changed.
      * @param[in] picturePropertyValue    The changed value variant.
      */
-    void onPQParameterChanged(in String pictureMode, in PanelSource avSource, in DynamicRange dynamicRange, in PQParameter pictureProperty, in PQParameterValue picturePropertyValue);
+    void onPQParameterChanged(in @utf8InCpp String pictureMode, in PanelSource avSource, in DynamicRange dynamicRange,
+        in PQParameter pictureProperty, in PQParameterValue picturePropertyValue);
 }

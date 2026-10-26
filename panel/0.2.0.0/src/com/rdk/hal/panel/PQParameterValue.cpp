@@ -30,9 +30,9 @@ namespace panel {
     }
     return ::android::OK; }
   case stringValue: {
-    ::android::String16 _aidl_value;
-    if ((_aidl_ret_status = _aidl_parcel->readString16(&_aidl_value)) != ::android::OK) return _aidl_ret_status;
-    if constexpr (std::is_trivially_copyable_v<::android::String16>) {
+    ::std::string _aidl_value;
+    if ((_aidl_ret_status = _aidl_parcel->readUtf8FromUtf16(&_aidl_value)) != ::android::OK) return _aidl_ret_status;
+    if constexpr (std::is_trivially_copyable_v<::std::string>) {
       set<stringValue>(_aidl_value);
     } else {
       // NOLINTNEXTLINE(performance-move-const-arg)
@@ -108,7 +108,7 @@ namespace panel {
   switch (getTag()) {
   case intValue: return _aidl_parcel->writeInt32(get<intValue>());
   case sdrGamma: return _aidl_parcel->writeInt32(static_cast<int32_t>(get<sdrGamma>()));
-  case stringValue: return _aidl_parcel->writeString16(get<stringValue>());
+  case stringValue: return _aidl_parcel->writeUtf8AsUtf16(get<stringValue>());
   case dimmingSettings: return _aidl_parcel->writeParcelable(get<dimmingSettings>());
   case dvCalibrationSettings: return _aidl_parcel->writeParcelable(get<dvCalibrationSettings>());
   case twoPointWBSettings: return _aidl_parcel->writeParcelableVector(get<twoPointWBSettings>());

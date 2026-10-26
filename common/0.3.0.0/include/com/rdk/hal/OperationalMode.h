@@ -11,7 +11,11 @@ namespace hal {
 // @aidl-doc
 /** @brief The operational output mode currently selected by the vendor. */
 enum class OperationalMode : int32_t {
+  // @aidl-doc
+  /** Output is consumed by the vendor layer and is not returned to the client. */
   TUNNELLED = 1,
+  // @aidl-doc
+  /** Output is returned to the client. */
   NON_TUNNELLED = 2,
 };
 }  // namespace hal

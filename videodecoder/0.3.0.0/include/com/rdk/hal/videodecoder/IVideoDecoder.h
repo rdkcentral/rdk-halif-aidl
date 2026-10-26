@@ -35,17 +35,18 @@ namespace videodecoder {
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 class IVideoDecoder : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(VideoDecoder)
   static const int32_t VERSION = 3000;
-  const std::string HASH = "922cc8ec92962ec7843061aae427af80fb4c37a1";
-  static constexpr char* HASHVALUE = "922cc8ec92962ec7843061aae427af80fb4c37a1";
+  const std::string HASH = "ff9b64beb2c3c9a1fe1277a0c2d0e8080dfc4d0d";
+  static constexpr char* HASHVALUE = "ff9b64beb2c3c9a1fe1277a0c2d0e8080dfc4d0d";
   // @aidl-doc
   /** Video decoder resource ID type */
   class Id : public ::android::Parcelable {
@@ -220,8 +221,8 @@ public:
    * then the `IVideoDecoderController` has `stop()` and `close()` implicitly called to perform clean up.
    *
    * The decoder will be opened expecting frames up to a maximum of `maxWidth` and `maxHeight'.
-   * If `maxWidth` and `maxHeight' exceed that specified in the `CodecCapabilities` then binder::Status::Exception::EX_ILLEGAL_ARGUMENT
-   * will be returned.
+   * If `maxWidth` and `maxHeight' exceed that specified in the `CodecCapabilities` then
+   * binder::Status::Exception::EX_ILLEGAL_ARGUMENT will be returned.
    *
    * @param[in] codec                             The codec to configure the Video Decoder for.
    * @param[in] secure                            The Video Decoder secure mode.

@@ -21,7 +21,11 @@ namespace hdmiinput {
  */
 class PropertyKVPair : public ::android::Parcelable {
 public:
+  // @aidl-doc
+  /** Property enum key. */
   ::com::rdk::hal::hdmiinput::Property property = ::com::rdk::hal::hdmiinput::Property(0);
+  // @aidl-doc
+  /** Property value. */
   ::com::rdk::hal::PropertyValue propertyValue;
   inline bool operator!=(const PropertyKVPair& rhs) const {
     return std::tie(property, propertyValue) != std::tie(rhs.property, rhs.propertyValue);

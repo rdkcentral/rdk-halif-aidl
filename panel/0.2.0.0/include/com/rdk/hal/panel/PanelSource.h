@@ -4,6 +4,7 @@
 #include <binder/Parcel.h>
 #include <binder/Status.h>
 #include <optional>
+#include <string>
 #include <tuple>
 #include <utils/String16.h>
 
@@ -21,8 +22,12 @@ namespace panel {
  */
 class PanelSource : public ::android::Parcelable {
 public:
-  ::android::String16 type;
-  ::std::optional<::android::String16> instance;
+  // @aidl-doc
+  /** The source family, for example HDMI, COMPOSITE, DTV, IP, AUTO or UNKNOWN. */
+  ::std::string type;
+  // @aidl-doc
+  /** The concrete source within the family, for example 1 or 2 for HDMI inputs. Null if not specified. */
+  ::std::optional<::std::string> instance;
   inline bool operator!=(const PanelSource& rhs) const {
     return std::tie(type, instance) != std::tie(rhs.type, rhs.instance);
   }

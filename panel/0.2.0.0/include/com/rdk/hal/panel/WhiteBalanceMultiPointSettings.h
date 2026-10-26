@@ -4,6 +4,7 @@
 #include <binder/Parcel.h>
 #include <binder/Status.h>
 #include <cstdint>
+#include <string>
 #include <tuple>
 #include <utils/String16.h>
 #include <vector>
@@ -24,7 +25,7 @@ class WhiteBalanceMultiPointSettings : public ::android::Parcelable {
 public:
   // @aidl-doc
   /** Colour temperature profile this white balance setting applies to. */
-  ::android::String16 colourTemperature;
+  ::std::string colourTemperature;
   // @aidl-doc
   /** Red-channel white point values for this colour temperature. */
   ::std::vector<int32_t> r;

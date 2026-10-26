@@ -22,10 +22,14 @@ package com.rdk.hal.panel;
  * @brief Local dimming mode.
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum DimmingMode {
+    /** Invalid or unset mode. */
     DIMMING_MODE_INVALID = -1,
+    /** The backlight is fixed and is not dimmed. */
     DIMMING_MODE_FIXED = 0,
+    /** The backlight is dimmed for the whole panel. */
     DIMMING_MODE_GLOBAL = 1,
+    /** The backlight is dimmed per zone. */
     DIMMING_MODE_LOCAL = 2,
 }

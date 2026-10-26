@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Generated** | 2026-10-23 |
+| **Generated** | 2026-10-26 |
 | **Components** | 32 |
 | 🟢 **GREEN** | 21 |
 | 🟡 **AMBER** | 11 |
@@ -26,33 +26,33 @@
 
 | | Component | Current Version | Description | Reviews | Owners |
 |---|-----------|---------|-------------|---------|--------|
-| 🟢 | audiodecoder | 0.2.0.0 | Audio decoder resource management and codec format support | 4/4 | Architecture + AV_Architecture |
-| 🟢 | audiosink | 0.2.0.0 | Audio output rendering and sink device management | 4/4 | Architecture + AV_Architecture |
-| 🟢 | avbuffer | 0.2.0.0 | AV buffer allocation and secure video path management | 4/4 | Architecture + AV_Architecture |
-| 🟢 | avclock | 0.2.0.1 | Audio/video clock synchronization and timing control | 4/4 | Architecture + AV_Architecture |
-| 🟢 | drm | 0.1.0.0 | DRM plugin and crypto plugin interfaces for content protection | 4/4 | Architecture + AV_Architecture |
-| 🟢 | hdmicec | 0.1.0.0 | HDMI CEC protocol messaging and device control | 4/4 | Architecture + AV_Architecture |
-| 🟢 | hdmiinput | 0.1.0.0 | HDMI input port management and signal detection | 4/4 | Architecture + AV_Architecture |
-| 🟢 | hdmioutput | 0.1.0.0 | HDMI output port configuration and display control | 4/4 | Architecture + AV_Architecture |
-| 🟢 | planecontrol | 0.2.0.0 | Graphics and video plane composition control | 5/5 | Architecture + Graphics_Architecture |
-| 🟢 | videosink | 0.2.0.0 | Video output rendering and display sink management | 4/4 | Architecture + AV_Architecture |
+| 🟢 | audiodecoder | 0.3.0.0 | Audio decoder resource management and codec format support | 4/4 | Architecture + AV_Architecture |
+| 🟢 | audiosink | 0.3.0.0 | Audio output rendering and sink device management | 4/4 | Architecture + AV_Architecture |
+| 🟢 | avbuffer | 0.3.0.0 | AV buffer allocation and secure video path management | 4/4 | Architecture + AV_Architecture |
+| 🟢 | avclock | 0.2.1.0 | Audio/video clock synchronization and timing control | 4/4 | Architecture + AV_Architecture |
+| 🟢 | drm | 0.2.0.0 | DRM plugin and crypto plugin interfaces for content protection | 4/4 | Architecture + AV_Architecture |
+| 🟢 | hdmicec | 0.1.1.0 | HDMI CEC protocol messaging and device control | 4/4 | Architecture + AV_Architecture |
+| 🟢 | hdmiinput | 0.2.0.0 | HDMI input port management and signal detection | 4/4 | Architecture + AV_Architecture |
+| 🟢 | hdmioutput | 0.2.0.0 | HDMI output port configuration and display control | 4/4 | Architecture + AV_Architecture |
+| 🟢 | planecontrol | 0.3.0.0 | Graphics and video plane composition control | 5/5 | Architecture + Graphics_Architecture |
+| 🟢 | videosink | 0.3.0.0 | Video output rendering and display sink management | 4/4 | Architecture + AV_Architecture |
 
 
 ### OEM Components
 
 | | Component | Current Version | Description | Reviews | Owners |
 |---|-----------|---------|-------------|---------|--------|
-| 🟢 | bootreason | 0.1.0.0 | Boot reason tracking and reboot management | 4/4 | Architecture + MW_Team |
+| 🟢 | bootreason | 0.2.0.0 | Boot reason tracking and reboot management | 4/4 | Architecture + MW_Team |
 | 🟢 | broadcast | 0.1.0.0 | Broadcast Frontend, Lnb, Demux interfaces | 2/2 | Broadcast_Team |
-| 🟢 | compositeinput | 0.2.0.0 | Composite video input capture and control | 4/4 | Architecture + AV_Architecture |
-| 🟢 | deepsleep | 0.1.0.0 | Deep sleep and low-power state management | 4/4 | Architecture |
-| 🟢 | deviceinfo | 0.1.0.0 | Device information and platform capability reporting | 4/4 | Architecture + Kernel_Architecture |
-| 🟢 | firmwareupdate | 0.2.0.0 | Update lifecycle for multiple firmware types at multiple locations across the system | 1/4 | Architecture + Kernel_Architecture |
-| 🟢 | indicator | 0.1.0.0 | LED and visual indicator state management | 4/4 | Architecture + Graphics_Architecture |
-| 🟢 | panel | 0.1.0.0 | Front panel display and button control | 2/4 | Architecture + Graphics_Architecture |
+| 🟢 | compositeinput | 0.3.0.0 | Composite video input capture and control | 4/4 | Architecture + AV_Architecture |
+| 🟢 | deepsleep | 0.2.0.0 | Deep sleep and low-power state management | 4/4 | Architecture |
+| 🟢 | deviceinfo | 0.2.0.0 | Device information and platform capability reporting | 4/4 | Architecture + Kernel_Architecture |
+| 🟢 | firmwareupdate | 0.3.0.0 | Update lifecycle for multiple firmware types at multiple locations across the system | 1/4 | Architecture + Kernel_Architecture |
+| 🟢 | indicator | 0.2.0.0 | LED and visual indicator state management | 4/4 | Architecture + Graphics_Architecture |
+| 🟢 | panel | 0.2.0.0 | Front panel display and button control | 2/4 | Architecture + Graphics_Architecture |
 | 🟢 | ringbuffer | 0.1.0.0 | Generic ring buffer interface for opaque data | 2/2 | Broadcast_Team |
-| 🟢 | sensor/motion | 0.2.0.0 | Hardware sensor data acquisition and monitoring | 4/4 | Architecture + Kernel_Architecture |
-| 🟢 | sensor/thermal | 0.2.0.0 | Hardware sensor data acquisition and monitoring | 4/4 | Architecture + Kernel_Architecture |
+| 🟢 | sensor/motion | 0.3.0.0 | Hardware sensor data acquisition and monitoring | 4/4 | Architecture + Kernel_Architecture |
+| 🟢 | sensor/thermal | 0.3.0.0 | Hardware sensor data acquisition and monitoring | 4/4 | Architecture + Kernel_Architecture |
 
 
 ---
@@ -63,8 +63,8 @@
 
 | | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
 |---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
-| 🟡 | audiomixer | 0.3.0.0 | — | AQ parameter API in review | Land AQ processor API (PR #573) + OutputPortType BLUETOOTH→CAPTURE rename (#708) — both batch into one 0.4.0.0 major bump (0.23.0). Flip to GREEN when shipped. | — | — | Architecture + Vendor_Layer_Team + AV_Architecture |
-| 🟡 | videodecoder | 0.2.0.1 | — | Breaking changes awaiting review: OperationalMode removed (7771f2ae), InputBufferMetadata.discontinuity activated then removed (76281243, 694aaf3b) | All four reviewer teams to re-review and sign off; flip to GREEN once reviewed. | — | — | Architecture + AV_Architecture |
+| 🟡 | audiomixer | 0.4.0.0 | — | AQ parameter API in review | Land AQ processor API (PR #573) + OutputPortType BLUETOOTH→CAPTURE rename (#708) — both batch into one 0.4.0.0 major bump (0.23.0). Flip to GREEN when shipped. | — | — | Architecture + Vendor_Layer_Team + AV_Architecture |
+| 🟡 | videodecoder | 0.3.0.0 | — | Breaking changes awaiting review: OperationalMode removed (7771f2ae), InputBufferMetadata.discontinuity activated then removed (76281243, 694aaf3b) | All four reviewer teams to re-review and sign off; flip to GREEN once reviewed. | — | — | Architecture + AV_Architecture |
 | 🟡 | vsi/kernel | 0.0.0.1 | 1 | Strategy required | Not blocking progress - Architecture Strategy | — | — | Architecture |
 | 🟡 | vsi/graphics | 0.0.0.1 | 6 | Docs required | Not blocking progress - Define Versions & write up vision and direction, Planning Out Evolution of the platform, RDK-M | — | — | Architecture + Graphics_Architecture |
 

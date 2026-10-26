@@ -35,7 +35,10 @@ class PQParameterValue : public ::android::Parcelable {
 public:
   enum class Tag : int32_t {
     // @aidl-doc
-    /** Integer value used by all PQ parameters except SDR_GAMMA, COLOR_TEMPERATURE, DIMMING_SETTINGS, DV_CALIBRATION, TWO_POINT_WB, MULTI_POINT_WB, COLOUR_MANAGEMENT_SETTINGS, and TONE_MAPPING_SETTINGS. */
+    /**
+     * Integer value used by all PQ parameters except SDR_GAMMA, COLOR_TEMPERATURE, DIMMING_SETTINGS, DV_CALIBRATION,
+     * TWO_POINT_WB, MULTI_POINT_WB, COLOUR_MANAGEMENT_SETTINGS, and TONE_MAPPING_SETTINGS.
+     */
     intValue = 0,
     // @aidl-doc
     /** SDR gamma value used when pqParameter == PQParameter.SDR_GAMMA. */
@@ -50,10 +53,16 @@ public:
     /** Dolby Vision calibration settings used when pqParameter == PQParameter.DV_CALIBRATION. */
     dvCalibrationSettings = 4,
     // @aidl-doc
-    /** Aggregate 2-point white balance settings used when pqParameter == PQParameter.TWO_POINT_WB; the array contains the full bundle for the resolved selector context. */
+    /**
+     * Aggregate 2-point white balance settings used when pqParameter == PQParameter.TWO_POINT_WB; the array contains
+     * the full bundle for the resolved selector context.
+     */
     twoPointWBSettings = 5,
     // @aidl-doc
-    /** Aggregate multi-point white balance settings used when pqParameter == PQParameter.MULTI_POINT_WB; the array contains the full bundle for the resolved selector context. */
+    /**
+     * Aggregate multi-point white balance settings used when pqParameter == PQParameter.MULTI_POINT_WB; the array
+     * contains the full bundle for the resolved selector context.
+     */
     multiPointWBSettings = 6,
     // @aidl-doc
     /** Grouped colour-management settings used when pqParameter == PQParameter.COLOUR_MANAGEMENT_SETTINGS. */
@@ -64,7 +73,10 @@ public:
   };
   // Expose tag symbols for legacy code
   // @aidl-doc
-  /** Integer value used by all PQ parameters except SDR_GAMMA, COLOR_TEMPERATURE, DIMMING_SETTINGS, DV_CALIBRATION, TWO_POINT_WB, MULTI_POINT_WB, COLOUR_MANAGEMENT_SETTINGS, and TONE_MAPPING_SETTINGS. */
+  /**
+   * Integer value used by all PQ parameters except SDR_GAMMA, COLOR_TEMPERATURE, DIMMING_SETTINGS, DV_CALIBRATION,
+   * TWO_POINT_WB, MULTI_POINT_WB, COLOUR_MANAGEMENT_SETTINGS, and TONE_MAPPING_SETTINGS.
+   */
   static const inline Tag intValue = Tag::intValue;
   // @aidl-doc
   /** SDR gamma value used when pqParameter == PQParameter.SDR_GAMMA. */
@@ -79,10 +91,16 @@ public:
   /** Dolby Vision calibration settings used when pqParameter == PQParameter.DV_CALIBRATION. */
   static const inline Tag dvCalibrationSettings = Tag::dvCalibrationSettings;
   // @aidl-doc
-  /** Aggregate 2-point white balance settings used when pqParameter == PQParameter.TWO_POINT_WB; the array contains the full bundle for the resolved selector context. */
+  /**
+   * Aggregate 2-point white balance settings used when pqParameter == PQParameter.TWO_POINT_WB; the array contains
+   * the full bundle for the resolved selector context.
+   */
   static const inline Tag twoPointWBSettings = Tag::twoPointWBSettings;
   // @aidl-doc
-  /** Aggregate multi-point white balance settings used when pqParameter == PQParameter.MULTI_POINT_WB; the array contains the full bundle for the resolved selector context. */
+  /**
+   * Aggregate multi-point white balance settings used when pqParameter == PQParameter.MULTI_POINT_WB; the array
+   * contains the full bundle for the resolved selector context.
+   */
   static const inline Tag multiPointWBSettings = Tag::multiPointWBSettings;
   // @aidl-doc
   /** Grouped colour-management settings used when pqParameter == PQParameter.COLOUR_MANAGEMENT_SETTINGS. */
@@ -180,7 +198,7 @@ public:
     return os.str();
   }
 private:
-  std::variant<int32_t, ::com::rdk::hal::panel::SDRGamma, ::android::String16, ::com::rdk::hal::panel::DimmingSettings, ::com::rdk::hal::panel::DolbyVisionCalibrationSettings, ::std::vector<::com::rdk::hal::panel::TwoPointWB>, ::std::vector<::com::rdk::hal::panel::WhiteBalanceMultiPointSettings>, ::com::rdk::hal::panel::ColourManagementSettings, ::com::rdk::hal::panel::ToneMappingSettings> _value;
+  std::variant<int32_t, ::com::rdk::hal::panel::SDRGamma, ::std::string, ::com::rdk::hal::panel::DimmingSettings, ::com::rdk::hal::panel::DolbyVisionCalibrationSettings, ::std::vector<::com::rdk::hal::panel::TwoPointWB>, ::std::vector<::com::rdk::hal::panel::WhiteBalanceMultiPointSettings>, ::com::rdk::hal::panel::ColourManagementSettings, ::com::rdk::hal::panel::ToneMappingSettings> _value;
 };  // class PQParameterValue
 }  // namespace panel
 }  // namespace hal

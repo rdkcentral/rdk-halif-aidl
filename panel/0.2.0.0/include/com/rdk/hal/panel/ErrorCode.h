@@ -12,10 +12,20 @@ namespace panel {
 // @aidl-doc
 /** @brief Error codes returned by panel control operations. */
 enum class ErrorCode : int32_t {
+  // @aidl-doc
+  /** The request was applied. */
   SUCCESS = 0,
+  // @aidl-doc
+  /** One or more arguments were invalid. */
   INVALID_ARGUMENT = 1,
+  // @aidl-doc
+  /** The request is not valid in the current state. */
   INVALID_STATE = 2,
+  // @aidl-doc
+  /** The request is not supported by the platform. */
   NOT_SUPPORTED = 3,
+  // @aidl-doc
+  /** The HAL could not apply the request. */
   HARDWARE_FAILURE = 4,
 };
 }  // namespace panel

@@ -4,6 +4,7 @@
 #include <binder/Parcel.h>
 #include <binder/Status.h>
 #include <cstdint>
+#include <string>
 #include <tuple>
 #include <utils/String16.h>
 
@@ -23,7 +24,7 @@ class TwoPointWB : public ::android::Parcelable {
 public:
   // @aidl-doc
   /** Colour temperature profile this white balance entry applies to. */
-  ::android::String16 colourTemperature;
+  ::std::string colourTemperature;
   // @aidl-doc
   /** Red-channel gain value. Valid range is 0 to 2047. */
   int32_t redGain = 0;

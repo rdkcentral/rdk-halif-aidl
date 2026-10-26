@@ -5,6 +5,7 @@
 #include <binder/Status.h>
 #include <com/rdk/hal/panel/PanelSource.h>
 #include <com/rdk/hal/videodecoder/DynamicRange.h>
+#include <string>
 #include <tuple>
 #include <utils/String16.h>
 
@@ -21,7 +22,7 @@ class PictureModeConfiguration : public ::android::Parcelable {
 public:
   // @aidl-doc
   /** The picture mode. */
-  ::android::String16 pictureMode;
+  ::std::string pictureMode;
   // @aidl-doc
   /** The dynamic range. */
   ::com::rdk::hal::videodecoder::DynamicRange dynamicRange = ::com::rdk::hal::videodecoder::DynamicRange(0);

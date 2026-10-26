@@ -23,8 +23,8 @@ class IVideoSinkEventListener : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(VideoSinkEventListener)
   static const int32_t VERSION = 3000;
-  const std::string HASH = "670f95dc021cdc6aa9c40df7fd7ceaf53ec5ca6e";
-  static constexpr char* HASHVALUE = "670f95dc021cdc6aa9c40df7fd7ceaf53ec5ca6e";
+  const std::string HASH = "da350441651184f9632c4dbf59d960ce6767f0bf";
+  static constexpr char* HASHVALUE = "da350441651184f9632c4dbf59d960ce6767f0bf";
   // @aidl-doc
   /**
    * Callback when the first video frame has been rendered.

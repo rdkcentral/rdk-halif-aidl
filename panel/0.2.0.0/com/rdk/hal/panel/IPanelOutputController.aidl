@@ -35,18 +35,17 @@
 package com.rdk.hal.panel;
 
 import com.rdk.hal.panel.ErrorCode;
-import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.PQParameterCapabilities;
 import com.rdk.hal.panel.PQParameterConfiguration;
 import com.rdk.hal.panel.PQParameterSelector;
+import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.panel.PictureModeConfiguration;
 import com.rdk.hal.panel.State;
 import com.rdk.hal.videodecoder.DynamicRange;
 
 @VintfStability
 interface IPanelOutputController {
-
     /**
      * @brief Start the panel output controller.
      *
@@ -83,13 +82,13 @@ interface IPanelOutputController {
      * @see IPanelOutputEventListener.onStateChanged()
      */
     State getState();
-    
+
     /**
      * @brief Stop the panel output controller.
      *
-      * This method can only be called in State.STARTED. On success, it
-      * transitions STARTED -> STOPPING -> STOPPED. A runtime or hardware
-      * failure returns false and transitions the controller to ERROR.
+     * This method can only be called in State.STARTED. On success, it
+     * transitions STARTED -> STOPPING -> STOPPED. A runtime or hardware
+     * failure returns false and transitions the controller to ERROR.
      * IPanelOutputEventListener.onStateChanged() fires for each transition.
      *
      * This is the explicit lifecycle shutdown path. It is distinct from
@@ -98,7 +97,8 @@ interface IPanelOutputController {
      *
      * @returns boolean
      * @retval true The panel output was stopped successfully.
-     * @retval false The HAL accepted the request but could not complete the stop because of a runtime or hardware failure.
+     * @retval false The HAL accepted the request but could not complete the stop because of a runtime or hardware
+     * failure.
      *
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE The panel output is not in STARTED state.
      */
@@ -198,7 +198,8 @@ interface IPanelOutputController {
      *
      * @see setPictureModes()
      */
-    boolean getPictureModes(in PictureModeConfiguration[] requestedConfigurations, out PictureModeConfiguration[] returnedConfigurations);
+    boolean getPictureModes(
+        in PictureModeConfiguration[] requestedConfigurations, out PictureModeConfiguration[] returnedConfigurations);
 
     /**
      * Gets one or more default picture modes for a given AV source and dynamic range.
@@ -223,7 +224,8 @@ interface IPanelOutputController {
      *
      * @see setPictureModes(), getPictureModes()
      */
-    boolean getDefaultPictureModes(in PictureModeConfiguration[] requestedConfigurations, out PictureModeConfiguration[] defaultConfigurations);
+    boolean getDefaultPictureModes(
+        in PictureModeConfiguration[] requestedConfigurations, out PictureModeConfiguration[] defaultConfigurations);
 
     /**
      * Sets the picture quality parameters.
@@ -239,8 +241,8 @@ interface IPanelOutputController {
      * - `TWO_POINT_WB`, `MULTI_POINT_WB`, and `DV_CALIBRATION` requests for the active
      *   permutation are applied immediately so a factory or tuning tool can measure the effect
      *   on screen.
-    * - Other PQ parameter writes, including `SDR_GAMMA`, are persisted but not applied until
-    *   calibration mode is disabled.
+     * - Other PQ parameter writes, including `SDR_GAMMA`, are persisted but not applied until
+     *   calibration mode is disabled.
      * - All writes remain keyed to their own picture-mode, source, dynamic-range, and
      *   colour-temperature permutation.
      *
@@ -261,9 +263,11 @@ interface IPanelOutputController {
      * @retval ErrorCode.HARDWARE_FAILURE  The HAL could not apply the request.
      *
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE The panel output is not in STARTED state.
-     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT The configuration list is empty or contains invalid selectors or value variants.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT The configuration list is empty or contains invalid
+     * selectors or value variants.
      *
-     * @see getPQParameters(), getDefaultPQParameters(), getPQParameterCapabilities(), enableCalibrationMode(), PQParameterConfiguration
+     * @see getPQParameters(), getDefaultPQParameters(), getPQParameterCapabilities(), enableCalibrationMode(),
+     *     PQParameterConfiguration
      */
     ErrorCode setPQParameters(in PQParameterConfiguration[] configurations);
 
@@ -272,25 +276,25 @@ interface IPanelOutputController {
      *
      * This method can only be called in State.STARTED.
      *
-      * Input `requestedConfigurations` specifies one or more PQ parameter selectors to query. Each element's:
-      * - `pqParameter` must be valid.
-      * - `pictureMode` and `source` must be concrete values.
-      * - `dynamicRange` must be a valid selector value for the requested parameter.
-      *
-      * The selector identifies the PQ parameter and its runtime context only.
-      * The selector does not expand across picture modes or AV sources.
-      * White-balance parameters are returned as aggregate bundles for the
-      * resolved context; no additional white-balance selector keys are required
-      * or defined on `PQParameterSelector`.
-      * For aggregate PQ parameters, the returned `value` payload contains the
-      * entire parameter set for the resolved selector context:
-      * - `COLOUR_MANAGEMENT_SETTINGS` returns one grouped CMS payload.
-      * - `TWO_POINT_WB` returns one array containing all 2-point WB entries for the resolved context.
-      * - `MULTI_POINT_WB` returns one array containing all multi-point WB entries for the resolved context.
-      * - `DV_CALIBRATION` returns one Dolby Vision calibration payload.
-      *
-      * Output `returnedConfigurations` mirrors ordering and criteria and populates the `value` field.
-      * Clients shall interpret each returned entry together with the selector context that produced it.
+     * Input `requestedConfigurations` specifies one or more PQ parameter selectors to query. Each element's:
+     * - `pqParameter` must be valid.
+     * - `pictureMode` and `source` must be concrete values.
+     * - `dynamicRange` must be a valid selector value for the requested parameter.
+     *
+     * The selector identifies the PQ parameter and its runtime context only.
+     * The selector does not expand across picture modes or AV sources.
+     * White-balance parameters are returned as aggregate bundles for the
+     * resolved context; no additional white-balance selector keys are required
+     * or defined on `PQParameterSelector`.
+     * For aggregate PQ parameters, the returned `value` payload contains the
+     * entire parameter set for the resolved selector context:
+     * - `COLOUR_MANAGEMENT_SETTINGS` returns one grouped CMS payload.
+     * - `TWO_POINT_WB` returns one array containing all 2-point WB entries for the resolved context.
+     * - `MULTI_POINT_WB` returns one array containing all multi-point WB entries for the resolved context.
+     * - `DV_CALIBRATION` returns one Dolby Vision calibration payload.
+     *
+     * Output `returnedConfigurations` mirrors ordering and criteria and populates the `value` field.
+     * Clients shall interpret each returned entry together with the selector context that produced it.
      *
      * Errors:
      * - Empty input list throws EX_ILLEGAL_ARGUMENT.
@@ -310,21 +314,23 @@ interface IPanelOutputController {
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE    The panel output is not in STARTED state.
      * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
      *
-     * @see setPQParameters(), getDefaultPQParameters(), getPQParameterCapabilities(), PQParameterSelector, PQParameterConfiguration
+     * @see setPQParameters(), getDefaultPQParameters(), getPQParameterCapabilities(), PQParameterSelector,
+     *     PQParameterConfiguration
      */
-    boolean getPQParameters(in PQParameterSelector[] requestedConfigurations, out PQParameterConfiguration[] returnedConfigurations);
+    boolean getPQParameters(
+        in PQParameterSelector[] requestedConfigurations, out PQParameterConfiguration[] returnedConfigurations);
 
     /**
      * Gets the default picture quality (PQ) parameter values.
      *
      * This method can only be called in State.STARTED.
      *
-      * Semantics are identical to `getPQParameters()` except the returned `value` reflects factory/default settings.
-      * As with `getPQParameters()`, the input selector provides the PQ
-      * parameter and runtime context, while aggregate parameters return their
-      * full stored payload in the `value` union variant.
-      * White-balance defaults are returned as the full 2-point or multi-point
-      * bundle for the resolved context.
+     * Semantics are identical to `getPQParameters()` except the returned `value` reflects factory/default settings.
+     * As with `getPQParameters()`, the input selector provides the PQ
+     * parameter and runtime context, while aggregate parameters return their
+     * full stored payload in the `value` union variant.
+     * White-balance defaults are returned as the full 2-point or multi-point
+     * bundle for the resolved context.
      *
      * @param[in] requestedConfigurations   Non-empty list of PQ parameter query selectors.
      * @param[out] defaultConfigurations    Populated default PQ parameter values.
@@ -338,17 +344,20 @@ interface IPanelOutputController {
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE    The panel output is not in STARTED state.
      * @exception binder::Status::Exception::EX_NULL_POINTER     Null out-parameter.
      *
-     * @see setPQParameters(), getPQParameters(), getPQParameterCapabilities(), PQParameterSelector, PQParameterConfiguration
+     * @see setPQParameters(), getPQParameters(), getPQParameterCapabilities(), PQParameterSelector,
+     *     PQParameterConfiguration
      */
-    boolean getDefaultPQParameters(in PQParameterSelector[] requestedConfigurations, out PQParameterConfiguration[] defaultConfigurations);
+    boolean getDefaultPQParameters(
+        in PQParameterSelector[] requestedConfigurations, out PQParameterConfiguration[] defaultConfigurations);
 
     /**
      * Gets the platform capabilities for a PQ parameter.
      *
      * This method can only be called in State.STARTED.
      *
-     * The returned PQParameterCapabilities confirms whether the parameter is supported by the platform and its minimum and maximum allowed values.
-     * It also contains a list of picture modes, dynamic ranges and AV sources that are supported by the PQ parameter.
+     * The returned PQParameterCapabilities confirms whether the parameter is supported by the platform and its minimum
+     * and maximum allowed values. It also contains a list of picture modes, dynamic ranges and AV sources that are
+     * supported by the PQ parameter.
      *
      * @param[in] pqParameter PQParameter
      *
@@ -360,9 +369,9 @@ interface IPanelOutputController {
 
     /**
      * Sets the panel refresh rate.
-      *
-      * This method can only be called in State.STARTED.
-      *
+     *
+     * This method can only be called in State.STARTED.
+     *
      * The `refreshRateHz` value must be listed in Capabilities.supportedRefreshRatesHz[].
      *
      * @param[in] refreshRateHz   The refresh rate in Hz.
@@ -372,26 +381,26 @@ interface IPanelOutputController {
      *
      * @see getRefreshRate()
      */
-    boolean setRefreshRate(in double refreshRateHz);      
+    boolean setRefreshRate(in double refreshRateHz);
 
     /**
      * Gets the current panel refresh rate.
      *
-      * This method can only be called in State.STARTED.
+     * This method can only be called in State.STARTED.
      *
      * @returns double   Refresh rate in Hz.
      *
      * @see setRefreshRate()
      */
-   double getRefreshRate();
+    double getRefreshRate();
 
     /**
      * Enables or disables frame rate matching (FRM).
      *
      * This method can only be called in State.STARTED.
      *
-    * When enabled, the panel refresh rate is synchronized with the video frame rate.
-    * The refresh rate may be a multiple of the video frame rate or a close match.
+     * When enabled, the panel refresh rate is synchronized with the video frame rate.
+     * The refresh rate may be a multiple of the video frame rate or a close match.
      *
      * If no video is playing then the default refresh rate is followed.
      *
@@ -404,8 +413,8 @@ interface IPanelOutputController {
      * @retval true     The new frame rate matching state was set.
      * @retval false    The new frame rate matching state was not set.
      *
-    * @see getFrameRateMatching()
-    */
+     * @see getFrameRateMatching()
+     */
     boolean setFrameRateMatching(in boolean enabled);
 
     /**
@@ -455,20 +464,20 @@ interface IPanelOutputController {
 
     /**
      * Gets the current video source used to apply PQ settings.
-      *
-      * This method can only be called in State.STARTED.
-      *
-      * The returned value has type UNKNOWN if no video is playing.
      *
-      * @returns PanelSource     The AV source.
+     * This method can only be called in State.STARTED.
+     *
+     * The returned value has type UNKNOWN if no video is playing.
+     *
+     * @returns PanelSource     The AV source.
      */
-     PanelSource getVideoSource();
+    PanelSource getVideoSource();
 
     /**
      * Gets the current dynamic range used to apply PQ settings.
-      *
-      * This method can only be called in State.STARTED.
-      *
+     *
+     * This method can only be called in State.STARTED.
+     *
      * The returned value is DynamicRange.UNKNOWN if no video is playing.
      *
      * @returns The current dynamic range.
@@ -477,15 +486,15 @@ interface IPanelOutputController {
 
     /**
      * Gets the current video frame rate used to apply PQ settings.
-      *
-      * This method can only be called in State.STARTED.
-      *
+     *
+     * This method can only be called in State.STARTED.
+     *
      * The returned array is { 0, 0 } if no video is playing.
      *
      * @returns int[2]   Where [0] is the numerator of the frame rate
      *                  and [1] is the denominator of the frame rate.
      */
-      int[2] getVideoFrameRate();
+    int[2] getVideoFrameRate();
 
     /**
      * Gets the current video resolution used to apply PQ settings.
@@ -550,5 +559,4 @@ interface IPanelOutputController {
      * @see enableCalibrationMode()
      */
     boolean getCalibrationMode();
-
 }

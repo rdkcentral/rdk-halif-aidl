@@ -18,43 +18,119 @@ namespace videodecoder {
  *  @author    Gerald Weatherup
  */
 enum class CodecLevel : int32_t {
+  // @aidl-doc
+  /** MPEG-2 Low Level */
   MPEG2_LEVEL_LOW = 1,
+  // @aidl-doc
+  /** MPEG-2 Main Level */
   MPEG2_LEVEL_MAIN = 2,
+  // @aidl-doc
+  /** MPEG-2 High Level */
   MPEG2_LEVEL_HIGH = 3,
+  // @aidl-doc
+  /** Standard for SD and lower HD resolutions */
   H264_LEVEL_3 = 100,
+  // @aidl-doc
+  /** Higher bitrate HD support */
   H264_LEVEL_3_1 = 101,
+  // @aidl-doc
+  /** Supports Full HD (1080p) broadcasting */
   H264_LEVEL_4 = 102,
+  // @aidl-doc
+  /** Used for Blu-ray and digital TV */
   H264_LEVEL_4_1 = 103,
+  // @aidl-doc
+  /** Supports 4K broadcasting */
   H264_LEVEL_5 = 104,
+  // @aidl-doc
+  /** High-bitrate 4K support */
   H264_LEVEL_5_1 = 105,
+  // @aidl-doc
+  /** Advanced 4K applications */
   H264_LEVEL_5_2 = 106,
+  // @aidl-doc
+  /** Standard 4K resolution support */
   H265_LEVEL_4 = 200,
+  // @aidl-doc
+  /** High-bitrate 4K */
   H265_LEVEL_4_1 = 201,
+  // @aidl-doc
+  /** Supports higher frame rates */
   H265_LEVEL_5 = 202,
+  // @aidl-doc
+  /** High-efficiency UHD broadcast */
   H265_LEVEL_5_1 = 203,
+  // @aidl-doc
+  /** Used for high-bitrate 4K HDR */
   H265_LEVEL_5_2 = 204,
+  // @aidl-doc
+  /** 8K resolution support */
   H265_LEVEL_6 = 205,
+  // @aidl-doc
+  /** High-bitrate 8K support */
   H265_LEVEL_6_1 = 206,
+  // @aidl-doc
+  /** Highest efficiency for next-gen broadcasting */
   H265_LEVEL_6_2 = 207,
+  // @aidl-doc
+  /** VP9 level 1 */
   VP9_LEVEL_1 = 300,
+  // @aidl-doc
+  /** VP9 level 1.1 */
   VP9_LEVEL_1_1 = 301,
+  // @aidl-doc
+  /** VP9 level 2 */
   VP9_LEVEL_2 = 302,
+  // @aidl-doc
+  /** VP9 level 2.1 */
   VP9_LEVEL_2_1 = 303,
+  // @aidl-doc
+  /** VP9 level 3 */
   VP9_LEVEL_3 = 304,
+  // @aidl-doc
+  /** VP9 level 3.1 */
   VP9_LEVEL_3_1 = 305,
+  // @aidl-doc
+  /** Standard for 1080p */
   VP9_LEVEL_4 = 306,
+  // @aidl-doc
+  /** VP9 level 4.1 */
   VP9_LEVEL_4_1 = 307,
+  // @aidl-doc
+  /** Standard for 4K UHD */
   VP9_LEVEL_5 = 308,
+  // @aidl-doc
+  /** VP9 level 5.1 */
   VP9_LEVEL_5_1 = 309,
+  // @aidl-doc
+  /** High-bitrate 4K HDR */
   VP9_LEVEL_5_2 = 310,
+  // @aidl-doc
+  /** VP9 level 6 */
   VP9_LEVEL_6 = 311,
+  // @aidl-doc
+  /** VP9 level 6.1 */
   VP9_LEVEL_6_1 = 312,
+  // @aidl-doc
+  /** Advanced HDR and 8K */
   VP9_LEVEL_6_2 = 313,
+  // @aidl-doc
+  /** Standard 4K resolution */
   AV1_LEVEL_4_0 = 400,
+  // @aidl-doc
+  /** AV1 level 4.1 */
   AV1_LEVEL_4_1 = 401,
+  // @aidl-doc
+  /** 4K with high efficiency */
   AV1_LEVEL_5_0 = 402,
+  // @aidl-doc
+  /** High-bitrate 4K HDR */
   AV1_LEVEL_5_1 = 403,
+  // @aidl-doc
+  /** 8K support */
   AV1_LEVEL_6_0 = 404,
+  // @aidl-doc
+  /** High-bitrate 8K HDR */
   AV1_LEVEL_6_1 = 405,
 };
 }  // namespace videodecoder

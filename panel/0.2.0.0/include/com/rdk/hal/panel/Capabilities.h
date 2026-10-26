@@ -8,6 +8,7 @@
 #include <com/rdk/hal/panel/PanelSource.h>
 #include <com/rdk/hal/videodecoder/DynamicRange.h>
 #include <cstdint>
+#include <string>
 #include <tuple>
 #include <utils/String16.h>
 #include <vector>
@@ -80,7 +81,7 @@ public:
     };  // class DynamicRangeCapabilities
     // @aidl-doc
     /** The picture mode. */
-    ::android::String16 pictureMode;
+    ::std::string pictureMode;
     // @aidl-doc
     /** Lists the dynamic range capabilities for a picture mode. */
     ::std::vector<::com::rdk::hal::panel::Capabilities::PictureModeCapabilities::DynamicRangeCapabilities> dynamicRangeCapabilities;
@@ -121,10 +122,18 @@ public:
   };  // class PictureModeCapabilities
   // @aidl-doc
   /** The panel type. */
-  ::android::String16 panelType;
+  ::std::string panelType;
+  // @aidl-doc
+  /** Panel width in pixels. */
   int32_t pixelWidth = 0;
+  // @aidl-doc
+  /** Panel height in pixels. */
   int32_t pixelHeight = 0;
+  // @aidl-doc
+  /** Panel width in centimetres. */
   int32_t widthCm = 0;
+  // @aidl-doc
+  /** Panel height in centimetres. */
   int32_t heightCm = 0;
   // @aidl-doc
   /** Whether frame rate matching is supported by the device. */
@@ -142,7 +151,7 @@ public:
    * These strings are used directly by `PQParameter.COLOR_TEMPERATURE`
    * and by colour-temperature-scoped white balance operations.
    */
-  ::std::vector<::android::String16> supportedColourTemperatures;
+  ::std::vector<::std::string> supportedColourTemperatures;
   // @aidl-doc
   /** All AV sources supported by the panel. */
   ::std::vector<::com::rdk::hal::panel::PanelSource> supportedAVSources;

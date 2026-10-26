@@ -23,10 +23,10 @@ class IPanelOutputControllerListenerDelegator : public BnPanelOutputControllerLi
 public:
   explicit IPanelOutputControllerListenerDelegator(::android::sp<IPanelOutputControllerListener> &impl) : _aidl_delegate(impl) {}
 
-  ::android::binder::Status onPictureModeChanged(const ::android::String16& pictureMode) override {
+  ::android::binder::Status onPictureModeChanged(const ::std::string& pictureMode) override {
     return _aidl_delegate->onPictureModeChanged(pictureMode);
   }
-  ::android::binder::Status onPQParameterChanged(const ::android::String16& pictureMode, const ::com::rdk::hal::panel::PanelSource& avSource, ::com::rdk::hal::videodecoder::DynamicRange dynamicRange, ::com::rdk::hal::panel::PQParameter pictureProperty, const ::com::rdk::hal::panel::PQParameterValue& picturePropertyValue) override {
+  ::android::binder::Status onPQParameterChanged(const ::std::string& pictureMode, const ::com::rdk::hal::panel::PanelSource& avSource, ::com::rdk::hal::videodecoder::DynamicRange dynamicRange, ::com::rdk::hal::panel::PQParameter pictureProperty, const ::com::rdk::hal::panel::PQParameterValue& picturePropertyValue) override {
     return _aidl_delegate->onPQParameterChanged(pictureMode, avSource, dynamicRange, pictureProperty, picturePropertyValue);
   }
   int32_t getInterfaceVersion() override {

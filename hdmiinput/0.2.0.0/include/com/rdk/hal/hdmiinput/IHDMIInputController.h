@@ -21,17 +21,18 @@ namespace hdmiinput {
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 class IHDMIInputController : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(HDMIInputController)
   static const int32_t VERSION = 2000;
-  const std::string HASH = "c5b7dd577bd1ea4008ddd8019c1923942a4924a7";
-  static constexpr char* HASHVALUE = "c5b7dd577bd1ea4008ddd8019c1923942a4924a7";
+  const std::string HASH = "b40c57ae7d1bc106df72be13a813813713acbae8";
+  static constexpr char* HASHVALUE = "b40c57ae7d1bc106df72be13a813813713acbae8";
   // @aidl-doc
   /**
    * Gets the current connection state for a device attached to the HDMI input port.
@@ -104,7 +105,8 @@ public:
    *
    * @param[out] _aidl_return boolean
    *   - true: The EDID was set successfully.
-   *   - false: Indicates an error condition (e.g., resource not available, invalid state, or parameter validation failure).
+   *   - false: Indicates an error condition (e.g., resource not available, invalid state, or parameter
+   *     validation failure).
    * @see getEDID(), getCapabilities()
    *
    * @returns ::android::binder::Status - ::android::binder::Status::EX_NONE on success, or one of the values below.

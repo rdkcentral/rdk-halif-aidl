@@ -18,19 +18,47 @@ namespace videodecoder {
  *  @author    Gerald Weatherup
  */
 enum class CodecProfile : int32_t {
+  // @aidl-doc
+  /** Used in legacy digital broadcasting */
   MPEG2_SIMPLE = 1,
+  // @aidl-doc
+  /** Most common for digital TV broadcasting */
   MPEG2_MAIN = 2,
+  // @aidl-doc
+  /** Low complexity, used in mobile and video conferencing */
   H264_BASELINE = 100,
+  // @aidl-doc
+  /** Standard for digital TV broadcasting (DVB, ATSC) */
   H264_MAIN = 101,
+  // @aidl-doc
+  /** Used in HD and Blu-ray content */
   H264_HIGH = 102,
+  // @aidl-doc
+  /** Used in standard UHD/4K broadcasting */
   H265_MAIN = 200,
+  // @aidl-doc
+  /** Supports 10-bit depth for HDR video */
   H265_MAIN_10 = 201,
+  // @aidl-doc
+  /** HDR10 support in broadcasting */
   H265_MAIN_10_HDR10 = 202,
+  // @aidl-doc
+  /** 8-bit 4:2:0 chroma subsampling */
   VP9_PROFILE_0 = 300,
+  // @aidl-doc
+  /** 8-bit 4:2:2 and 4:4:4 chroma subsampling */
   VP9_PROFILE_1 = 301,
+  // @aidl-doc
+  /** 10-bit 4:2:0 chroma subsampling (HDR support) */
   VP9_PROFILE_2 = 302,
+  // @aidl-doc
+  /** 10-bit 4:2:2 and 4:4:4 chroma subsampling */
   VP9_PROFILE_3 = 303,
+  // @aidl-doc
+  /** 8 or 10-bit color depth with 4:2:0 chroma subsampling */
   AV1_MAIN = 400,
+  // @aidl-doc
+  /** Supports 4:2:2 and 4:4:4 chroma subsampling */
   AV1_HIGH = 401,
 };
 }  // namespace videodecoder

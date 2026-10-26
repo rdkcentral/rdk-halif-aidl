@@ -22,24 +22,24 @@ import com.rdk.hal.panel.IPanelOutputController;
 import com.rdk.hal.panel.IPanelOutputControllerListener;
 import com.rdk.hal.panel.IPanelOutputEventListener;
 
-/** 
+/**
  *  @brief     Display Panel Output HAL interface.
  *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  *  - <b>Boolean / ErrorCode results</b>: A returned boolean `false` or a non-success `ErrorCode`
  *    indicates that the call was accepted and processed but could not complete successfully for the
  *    documented reasons. Input validation and invalid controller state are still reported via Binder
  *    exceptions unless a method explicitly documents otherwise.
  */
 @VintfStability
-interface IPanelOutput
-{
+interface IPanelOutput {
     /** The service name to publish. To be returned by getServiceName() in the derived class. */
     const @utf8InCpp String serviceName = "PanelOutput";
 
@@ -51,15 +51,15 @@ interface IPanelOutput
      * @returns Capabilities parcelable.
      */
     Capabilities getCapabilities();
-    
+
     /**
      * @brief Open this panel output for exclusive control.
      *
-        * On success this returns the exclusive IPanelOutputController for the
-        * panel output. The controller may already be in any retained lifecycle
-        * state, so the client must call `getState()` before deciding whether to
-        * start, wait for an in-progress transition, continue with STARTED-state
-        * operations, or recover from ERROR.
+     * On success this returns the exclusive IPanelOutputController for the
+     * panel output. The controller may already be in any retained lifecycle
+     * state, so the client must call `getState()` before deciding whether to
+     * start, wait for an in-progress transition, continue with STARTED-state
+     * operations, or recover from ERROR.
      *
      * Only one controller may exist at a time. If the owning client crashes,
      * the HAL releases exclusive ownership of the controller but retains the
@@ -68,9 +68,9 @@ interface IPanelOutput
      *
      * @param listener Listener for exclusive controller callbacks.
      *
-        * A client that reopens the panel after the previous controller owner died
-        * must call `getState()` on the returned controller and continue from that
-        * state rather than assuming the panel has been stopped or reset.
+     * A client that reopens the panel after the previous controller owner died
+     * must call `getState()` on the returned controller and continue from that
+     * state rather than assuming the panel has been stopped or reset.
      *
      * @returns IPanelOutputController, or null if the panel output cannot be opened.
      *

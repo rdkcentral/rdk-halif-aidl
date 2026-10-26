@@ -17,7 +17,11 @@ namespace videodecoder {
  *  @author    Douglas Adler
  */
 enum class ScanType : int32_t {
+  // @aidl-doc
+  /** Progressive scan frame. */
   PROGRESSIVE_FRAME = 0,
+  // @aidl-doc
+  /** Interlaced scan frame. */
   INTERLACED_FRAME = 1,
 };
 }  // namespace videodecoder

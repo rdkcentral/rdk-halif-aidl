@@ -12,9 +12,17 @@ namespace panel {
 // @aidl-doc
 /** @brief Local dimming mode. */
 enum class DimmingMode : int32_t {
+  // @aidl-doc
+  /** Invalid or unset mode. */
   DIMMING_MODE_INVALID = -1,
+  // @aidl-doc
+  /** The backlight is fixed and is not dimmed. */
   DIMMING_MODE_FIXED = 0,
+  // @aidl-doc
+  /** The backlight is dimmed for the whole panel. */
   DIMMING_MODE_GLOBAL = 1,
+  // @aidl-doc
+  /** The backlight is dimmed per zone. */
   DIMMING_MODE_LOCAL = 2,
 };
 }  // namespace panel

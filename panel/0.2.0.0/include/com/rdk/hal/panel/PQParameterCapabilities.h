@@ -48,8 +48,12 @@ public:
    */
   class IntBounds : public ::android::Parcelable {
   public:
+    // @aidl-doc
+    /** Spacing between allowed values, for regularly spaced controls. */
     class StepValue : public ::android::Parcelable {
     public:
+      // @aidl-doc
+      /** The step between consecutive allowed values. */
       int32_t value = 0;
       inline bool operator!=(const StepValue& rhs) const {
         return std::tie(value) != std::tie(rhs.value);
@@ -85,8 +89,14 @@ public:
         return os.str();
       }
     };  // class StepValue
+    // @aidl-doc
+    /** Minimum value. */
     int32_t minValue = 0;
+    // @aidl-doc
+    /** Maximum value. */
     int32_t maxValue = 0;
+    // @aidl-doc
+    /** The step value. Null if the allowed values are not regularly spaced. */
     ::std::optional<::com::rdk::hal::panel::PQParameterCapabilities::IntBounds::StepValue> stepValue;
     inline bool operator!=(const IntBounds& rhs) const {
       return std::tie(minValue, maxValue, stepValue) != std::tie(rhs.minValue, rhs.maxValue, rhs.stepValue);
@@ -131,8 +141,14 @@ public:
    */
   class DimmingModeLevelCapability : public ::android::Parcelable {
   public:
+    // @aidl-doc
+    /** The dimming mode. */
     ::com::rdk::hal::panel::DimmingMode dimmingMode = ::com::rdk::hal::panel::DimmingMode(0);
+    // @aidl-doc
+    /** Number of levels supported for the mode, the length of supportedValues. */
     int32_t numSupportedLevels = 0;
+    // @aidl-doc
+    /** The levels supported for the mode. */
     ::std::vector<::com::rdk::hal::panel::DimmingLevel> supportedValues;
     inline bool operator!=(const DimmingModeLevelCapability& rhs) const {
       return std::tie(dimmingMode, numSupportedLevels, supportedValues) != std::tie(rhs.dimmingMode, rhs.numSupportedLevels, rhs.supportedValues);
@@ -174,6 +190,8 @@ public:
   /** Wrapper for the list of per-mode dimming level capabilities. */
   class DimmingModeLevelCapabilities : public ::android::Parcelable {
   public:
+    // @aidl-doc
+    /** One entry for each supported dimming mode. */
     ::std::vector<::com::rdk::hal::panel::PQParameterCapabilities::DimmingModeLevelCapability> entries;
     inline bool operator!=(const DimmingModeLevelCapabilities& rhs) const {
       return std::tie(entries) != std::tie(rhs.entries);
@@ -213,6 +231,8 @@ public:
   /** Capabilities for grouped dimming settings. */
   class DimmingSettingsCapabilities : public ::android::Parcelable {
   public:
+    // @aidl-doc
+    /** The supported dimming levels for each dimming mode. */
     ::com::rdk::hal::panel::PQParameterCapabilities::DimmingModeLevelCapabilities modeLevelCapabilities;
     inline bool operator!=(const DimmingSettingsCapabilities& rhs) const {
       return std::tie(modeLevelCapabilities) != std::tie(rhs.modeLevelCapabilities);
@@ -255,8 +275,14 @@ public:
    */
   class ToneMappingModeLevelCapability : public ::android::Parcelable {
   public:
+    // @aidl-doc
+    /** The tone-mapping mode. */
     ::com::rdk::hal::panel::ToneMappingMode toneMappingMode = ::com::rdk::hal::panel::ToneMappingMode(0);
+    // @aidl-doc
+    /** Number of levels supported for the mode, the length of supportedValues. */
     int32_t numSupportedLevels = 0;
+    // @aidl-doc
+    /** The levels supported for the mode. */
     ::std::vector<::com::rdk::hal::panel::ToneMappingLevel> supportedValues;
     inline bool operator!=(const ToneMappingModeLevelCapability& rhs) const {
       return std::tie(toneMappingMode, numSupportedLevels, supportedValues) != std::tie(rhs.toneMappingMode, rhs.numSupportedLevels, rhs.supportedValues);
@@ -298,6 +324,8 @@ public:
   /** Wrapper for the list of per-mode tone-mapping level capabilities. */
   class ToneMappingModeLevelCapabilities : public ::android::Parcelable {
   public:
+    // @aidl-doc
+    /** One entry for each supported tone-mapping mode. */
     ::std::vector<::com::rdk::hal::panel::PQParameterCapabilities::ToneMappingModeLevelCapability> entries;
     inline bool operator!=(const ToneMappingModeLevelCapabilities& rhs) const {
       return std::tie(entries) != std::tie(rhs.entries);
@@ -337,6 +365,8 @@ public:
   /** Capabilities for grouped tone-mapping settings. */
   class ToneMappingSettingsCapabilities : public ::android::Parcelable {
   public:
+    // @aidl-doc
+    /** The supported tone-mapping levels for each tone-mapping mode. */
     ::com::rdk::hal::panel::PQParameterCapabilities::ToneMappingModeLevelCapabilities modeLevelCapabilities;
     inline bool operator!=(const ToneMappingSettingsCapabilities& rhs) const {
       return std::tie(modeLevelCapabilities) != std::tie(rhs.modeLevelCapabilities);
@@ -376,7 +406,11 @@ public:
   /** Bounds used when pqParameter == PQParameter.DV_CALIBRATION. */
   class DvCalibrationBounds : public ::android::Parcelable {
   public:
+    // @aidl-doc
+    /** The minimum value of each field. */
     ::com::rdk::hal::panel::DolbyVisionCalibrationSettings minBound;
+    // @aidl-doc
+    /** The maximum value of each field. */
     ::com::rdk::hal::panel::DolbyVisionCalibrationSettings maxBound;
     inline bool operator!=(const DvCalibrationBounds& rhs) const {
       return std::tie(minBound, maxBound) != std::tie(rhs.minBound, rhs.maxBound);
@@ -423,11 +457,23 @@ public:
    */
   class TwoPointWBCapabilities : public ::android::Parcelable {
   public:
+    // @aidl-doc
+    /** Bounds for the red gain. */
     ::com::rdk::hal::panel::PQParameterCapabilities::IntBounds redGain;
+    // @aidl-doc
+    /** Bounds for the red offset. */
     ::com::rdk::hal::panel::PQParameterCapabilities::IntBounds redOffset;
+    // @aidl-doc
+    /** Bounds for the green gain. */
     ::com::rdk::hal::panel::PQParameterCapabilities::IntBounds greenGain;
+    // @aidl-doc
+    /** Bounds for the green offset. */
     ::com::rdk::hal::panel::PQParameterCapabilities::IntBounds greenOffset;
+    // @aidl-doc
+    /** Bounds for the blue gain. */
     ::com::rdk::hal::panel::PQParameterCapabilities::IntBounds blueGain;
+    // @aidl-doc
+    /** Bounds for the blue offset. */
     ::com::rdk::hal::panel::PQParameterCapabilities::IntBounds blueOffset;
     inline bool operator!=(const TwoPointWBCapabilities& rhs) const {
       return std::tie(redGain, redOffset, greenGain, greenOffset, blueGain, blueOffset) != std::tie(rhs.redGain, rhs.redOffset, rhs.greenGain, rhs.greenOffset, rhs.blueGain, rhs.blueOffset);
@@ -478,8 +524,14 @@ public:
    */
   class MultiPointWBCapabilities : public ::android::Parcelable {
   public:
+    // @aidl-doc
+    /** Bounds for the red channel values. */
     ::com::rdk::hal::panel::PQParameterCapabilities::IntBounds r;
+    // @aidl-doc
+    /** Bounds for the green channel values. */
     ::com::rdk::hal::panel::PQParameterCapabilities::IntBounds g;
+    // @aidl-doc
+    /** Bounds for the blue channel values. */
     ::com::rdk::hal::panel::PQParameterCapabilities::IntBounds b;
     inline bool operator!=(const MultiPointWBCapabilities& rhs) const {
       return std::tie(r, g, b) != std::tie(rhs.r, rhs.g, rhs.b);
@@ -521,7 +573,11 @@ public:
   /** Bounds used when pqParameter == PQParameter.COLOUR_MANAGEMENT_SETTINGS. */
   class ColourManagementSettingsBounds : public ::android::Parcelable {
   public:
+    // @aidl-doc
+    /** The minimum value of each field. */
     ::com::rdk::hal::panel::ColourManagementSettings minBound;
+    // @aidl-doc
+    /** The maximum value of each field. */
     ::com::rdk::hal::panel::ColourManagementSettings maxBound;
     inline bool operator!=(const ColourManagementSettingsBounds& rhs) const {
       return std::tie(minBound, maxBound) != std::tie(rhs.minBound, rhs.maxBound);
@@ -578,21 +634,49 @@ public:
   class RangeBound : public ::android::Parcelable {
   public:
     enum class Tag : int32_t {
+      // @aidl-doc
+      /** Bounds for simple integer-backed PQ parameters. */
       intBounds = 0,
+      // @aidl-doc
+      /** Used when pqParameter == PQParameter.DIMMING_SETTINGS. */
       dimmingSettingsCapabilities = 1,
+      // @aidl-doc
+      /** Used when pqParameter == PQParameter.TONE_MAPPING_SETTINGS. */
       toneMappingSettingsCapabilities = 2,
+      // @aidl-doc
+      /** Used when pqParameter == PQParameter.DV_CALIBRATION. */
       dvCalibrationBounds = 3,
+      // @aidl-doc
+      /** Used when pqParameter == PQParameter.TWO_POINT_WB. */
       twoPointWBCapabilities = 4,
+      // @aidl-doc
+      /** Used when pqParameter == PQParameter.MULTI_POINT_WB. */
       multiPointWBCapabilities = 5,
+      // @aidl-doc
+      /** Used when pqParameter == PQParameter.COLOUR_MANAGEMENT_SETTINGS. */
       colourManagementSettingsBounds = 6,
     };
     // Expose tag symbols for legacy code
+    // @aidl-doc
+    /** Bounds for simple integer-backed PQ parameters. */
     static const inline Tag intBounds = Tag::intBounds;
+    // @aidl-doc
+    /** Used when pqParameter == PQParameter.DIMMING_SETTINGS. */
     static const inline Tag dimmingSettingsCapabilities = Tag::dimmingSettingsCapabilities;
+    // @aidl-doc
+    /** Used when pqParameter == PQParameter.TONE_MAPPING_SETTINGS. */
     static const inline Tag toneMappingSettingsCapabilities = Tag::toneMappingSettingsCapabilities;
+    // @aidl-doc
+    /** Used when pqParameter == PQParameter.DV_CALIBRATION. */
     static const inline Tag dvCalibrationBounds = Tag::dvCalibrationBounds;
+    // @aidl-doc
+    /** Used when pqParameter == PQParameter.TWO_POINT_WB. */
     static const inline Tag twoPointWBCapabilities = Tag::twoPointWBCapabilities;
+    // @aidl-doc
+    /** Used when pqParameter == PQParameter.MULTI_POINT_WB. */
     static const inline Tag multiPointWBCapabilities = Tag::multiPointWBCapabilities;
+    // @aidl-doc
+    /** Used when pqParameter == PQParameter.COLOUR_MANAGEMENT_SETTINGS. */
     static const inline Tag colourManagementSettingsBounds = Tag::colourManagementSettingsBounds;
 
     template<typename _Tp>
@@ -879,7 +963,7 @@ public:
       return os.str();
     }
   private:
-    std::variant<::std::optional<::std::vector<int32_t>>, ::std::optional<::std::vector<::com::rdk::hal::panel::SDRGamma>>, ::std::optional<::std::vector<::std::optional<::android::String16>>>, ::std::optional<::std::vector<::std::optional<::com::rdk::hal::panel::DimmingSettings>>>, ::std::optional<::std::vector<::std::optional<::com::rdk::hal::panel::DolbyVisionCalibrationSettings>>>, ::std::optional<::std::vector<::std::optional<::android::String16>>>, ::std::optional<::std::vector<::std::optional<::android::String16>>>, ::std::optional<::std::vector<::std::optional<::com::rdk::hal::panel::ColourManagementSettings>>>, ::std::optional<::std::vector<::std::optional<::com::rdk::hal::panel::ToneMappingSettings>>>> _value;
+    std::variant<::std::optional<::std::vector<int32_t>>, ::std::optional<::std::vector<::com::rdk::hal::panel::SDRGamma>>, ::std::optional<::std::vector<::std::optional<::std::string>>>, ::std::optional<::std::vector<::std::optional<::com::rdk::hal::panel::DimmingSettings>>>, ::std::optional<::std::vector<::std::optional<::com::rdk::hal::panel::DolbyVisionCalibrationSettings>>>, ::std::optional<::std::vector<::std::optional<::std::string>>>, ::std::optional<::std::vector<::std::optional<::std::string>>>, ::std::optional<::std::vector<::std::optional<::com::rdk::hal::panel::ColourManagementSettings>>>, ::std::optional<::std::vector<::std::optional<::com::rdk::hal::panel::ToneMappingSettings>>>> _value;
   };  // class SupportedValues
   // @aidl-doc
   /** Nested PQ parameter picture-mode capabilities definition. */
@@ -889,7 +973,11 @@ public:
     /** Nested PQ parameter dynamic-range capabilities definition. */
     class PQParamDynamicRangeCapabilities : public ::android::Parcelable {
     public:
+      // @aidl-doc
+      /** The dynamic range. */
       ::com::rdk::hal::videodecoder::DynamicRange dynamicRange = ::com::rdk::hal::videodecoder::DynamicRange(0);
+      // @aidl-doc
+      /** The AV sources for which the PQ parameter is supported in this picture mode and dynamic range. */
       ::std::vector<::com::rdk::hal::panel::PanelSource> supportedAVSources;
       inline bool operator!=(const PQParamDynamicRangeCapabilities& rhs) const {
         return std::tie(dynamicRange, supportedAVSources) != std::tie(rhs.dynamicRange, rhs.supportedAVSources);
@@ -926,7 +1014,11 @@ public:
         return os.str();
       }
     };  // class PQParamDynamicRangeCapabilities
-    ::android::String16 pictureMode;
+    // @aidl-doc
+    /** The picture mode. */
+    ::std::string pictureMode;
+    // @aidl-doc
+    /** The dynamic ranges, and their AV sources, supported for this picture mode. */
     ::std::vector<::com::rdk::hal::panel::PQParameterCapabilities::PQParamPictureModeCapabilities::PQParamDynamicRangeCapabilities> pqParamDynamicRangeCapabilities;
     inline bool operator!=(const PQParamPictureModeCapabilities& rhs) const {
       return std::tie(pictureMode, pqParamDynamicRangeCapabilities) != std::tie(rhs.pictureMode, rhs.pqParamDynamicRangeCapabilities);
@@ -979,7 +1071,11 @@ public:
    * video.
    */
   bool isGlobal = false;
+  // @aidl-doc
+  /** The bounds for the PQ parameter. Null if the parameter uses supportedValues only. */
   ::std::optional<::com::rdk::hal::panel::PQParameterCapabilities::RangeBound> rangeBound;
+  // @aidl-doc
+  /** The discrete preset values for the PQ parameter. Null if it uses rangeBound only. */
   ::std::optional<::com::rdk::hal::panel::PQParameterCapabilities::SupportedValues> supportedValues;
   // @aidl-doc
   /** Array of PQ parameter capabilities for picture modes. */

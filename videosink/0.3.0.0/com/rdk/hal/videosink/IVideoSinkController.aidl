@@ -17,11 +17,11 @@
  * limitations under the License.
  */
 package com.rdk.hal.videosink;
-import com.rdk.hal.videodecoder.IVideoDecoder;
-import com.rdk.hal.videodecoder.FrameMetadata;
-import com.rdk.hal.videosink.Property;
 import com.rdk.hal.PropertyValue;
 import com.rdk.hal.avclock.IAVClock;
+import com.rdk.hal.videodecoder.FrameMetadata;
+import com.rdk.hal.videodecoder.IVideoDecoder;
+import com.rdk.hal.videosink.Property;
 
 /**
  *  @brief     Video Sink Controller HAL interface.
@@ -83,15 +83,15 @@ import com.rdk.hal.avclock.IAVClock;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 
 @VintfStability
-interface IVideoSinkController
-{
+interface IVideoSinkController {
     /**
      * Sets a property.
      *
@@ -286,7 +286,7 @@ interface IVideoSinkController
     void start();
 
     /**
-	 * Stops the Video Sink.
+     * Stops the Video Sink.
      *
      * The sink enters the `STOPPING` state and then the sink enters the `READY` state.
      *
@@ -356,7 +356,8 @@ interface IVideoSinkController
      *               until space is available.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in `STARTED`, or if a video frame is passed after `signalEndOfStream()`.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in `STARTED`, or if a video frame
+     * is passed after `signalEndOfStream()`.
      * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if the controller is configured for tunnel mode.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT
      *
