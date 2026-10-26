@@ -571,8 +571,7 @@ fi
 # No toolchain involvement, no code generation.
 #######################################################################
 
-# Stage a snapshot's committed include/ tree into out/build/include so that
-# dependents resolve their ${HALIF_INCLUDE_DIR}/<comp>/<ver>/include refs.
+# Stage a snapshot's committed include/ tree into out/build/include.
 # Pure copy — snapshot include/ trees are committed pre-generated C++.
 stage_snapshot_headers() {
     local comp="$1" ver="$2"
@@ -585,16 +584,6 @@ stage_snapshot_headers() {
     cp -RT "$src_inc" "$dst_inc" || return 1
 }
 
-# Extract the "<comp> <ver>" dependency pairs a snapshot declares via its
-# ${HALIF_INCLUDE_DIR}/<comp>/<ver>/include references in CMakeLists.txt.
-snapshot_deps() {
-    local cmake_file="$1"
-    # `|| true`: grep exits 1 when a snapshot declares no HAL deps — that is a
-    # normal "empty list", not an error, so don't let it trip `set -o pipefail`.
-    { grep -oE 'HALIF_INCLUDE_DIR\}/[a-z][a-z0-9_]*/[0-9][0-9.]*/include' "$cmake_file" 2>/dev/null || true; } \
-        | sed -E 's#HALIF_INCLUDE_DIR\}/([^/]+)/([^/]+)/include#\1 \2#' \
-        | sort -u
-}
 
 if [[ "$VERSION" != "current" ]]; then
     if [[ "$MODULE" == "all" ]]; then
@@ -604,7 +593,7 @@ if [[ "$VERSION" != "current" ]]; then
         exit 1
     fi
     SNAPSHOT_DIR="$ROOT_DIR/$MODULE/$VERSION"
-    if [[ ! -f "$SNAPSHOT_DIR/CMakeLists.txt" ]]; then
+    if [[ ! -d "$SNAPSHOT_DIR" ]]; then
         echo "❌ ERROR: snapshot $MODULE/$VERSION not found at $SNAPSHOT_DIR."
         echo "   Snapshots are produced by the cohort-wide './release.sh' run;"
         echo "   verify the version number is one that has been released."
@@ -623,44 +612,24 @@ if [[ "$VERSION" != "current" ]]; then
     echo "    build:  $SNAPSHOT_BUILD_DIR"
     echo ""
 
-    # Resolve and build this snapshot's dependency closure first, so its
-    # dependency headers (out/build/include) and libraries
-    # (out/target/lib/rdk-halif-aidl) are present before we configure. Each dependency
-    # is itself a snapshot build, so transitive deps resolve recursively, and
-    # an already-built dependency is skipped. Without this, a standalone
-    # snapshot build on a fresh checkout fails to find a dependency header
-    # such as com/rdk/hal/PropertyValue.h (#638).
-    while read -r dep dep_ver; do
-        [[ -n "$dep" ]] || continue
-        dep_so="$ROOT_DIR/out/target/lib/rdk-halif-aidl/lib${dep}-v${dep_ver}-cpp.so"
-        dep_inc="$ROOT_DIR/out/build/include/$dep/$dep_ver/include"
-        if [[ -f "$dep_so" && -d "$dep_inc" ]]; then
-            echo "   ✓ dependency ${dep}/${dep_ver} already built"
-            continue
-        fi
-        echo "   ↳ building dependency ${dep}/${dep_ver} ..."
-        "$0" "$dep" --version "$dep_ver" --jobs "$JOBS" --sdk-dir "$SDK_DIR" || {
-            echo "❌ Failed to build dependency ${dep}/${dep_ver} for $MODULE/$VERSION"; exit 1; }
-    done < <(snapshot_deps "$SNAPSHOT_DIR/CMakeLists.txt")
-    echo ""
-
     # The local dev layout splits binder headers (out/build/include/binder_sdk)
     # from libs (out/target/lib/binder); BINDER_SDK_INCLUDE_DIR lets the
     # snapshot CMakeLists find the headers. Yocto stages a flat SDK so
     # BINDER_SDK_DIR alone resolves both.
-    cmake -S "$SNAPSHOT_DIR" -B "$SNAPSHOT_BUILD_DIR" \
+    echo "$SNAPSHOT_DIR -B $SNAPSHOT_BUILD_DIR"
+    cmake -S "$ROOT_DIR" -B "$SNAPSHOT_BUILD_DIR" \
         -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
-        -DBINDER_SDK_DIR="$SDK_DIR" \
-        -DBINDER_SDK_INCLUDE_DIR="$ROOT_DIR/out/build" \
-        -DHALIF_LIB_DIR="$ROOT_DIR/out/target/lib/rdk-halif-aidl" \
-        -DHALIF_INCLUDE_DIR="$ROOT_DIR/out/build/include" \
-        -DCMAKE_INSTALL_PREFIX="$ROOT_DIR/out/target" || {
+        -DINTERFACE_TARGET="$MODULE" \
+        -DINTERFACE_VERSION="$VERSION" \
+        -DCMAKE_INSTALL_PREFIX="$ROOT_DIR/out/target" \
+        -DCMAKE_INSTALL_LIBDIR="lib/rdk-halif-aidl" \
+        -DBUILD_SHARED_LIBS=ON || {
             echo "❌ Snapshot CMake configuration failed"; exit 1; }
 
     cmake --build "$SNAPSHOT_BUILD_DIR" -j"$JOBS" || {
         echo "❌ Snapshot build failed"; exit 1; }
 
-    cmake --install "$SNAPSHOT_BUILD_DIR" >/dev/null || {
+    cmake --install "$SNAPSHOT_BUILD_DIR"  >/dev/null || {
         echo "❌ Snapshot install failed"; exit 1; }
 
     SO_PATH="$ROOT_DIR/out/target/lib/rdk-halif-aidl/lib${MODULE}-v${VERSION}-cpp.so"
@@ -697,12 +666,16 @@ fi
 echo "⚙️  Configuring CMake..."
 echo ""
 
-cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
-    -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
-    -DINTERFACE_TARGET="$MODULE" \
-    -DAIDL_SRC_VERSION="$VERSION" \
-    -DBINDER_SDK_DIR="$SDK_DIR"
-
+if [[ "$MODULE" == "all" ]]; then
+    cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
+        -DBUILD_SHARED_LIBS=ON \
+        -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}"
+else
+    cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
+        -DBUILD_SHARED_LIBS=ON \
+        -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
+        -DINTERFACE_TARGET="$MODULE"
+fi
 if [[ $? -ne 0 ]]; then
     echo ""
     echo "❌ CMake configuration failed"
