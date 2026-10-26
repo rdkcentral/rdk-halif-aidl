@@ -26,6 +26,11 @@ on:
       - "RAG_STATUS_REPORT.md"
       - "scripts/generate_rag_report.sh"
       - "scripts/release.sh"
+  # A release cut commits snapshots and metadata straight onto release/X.Y.Z,
+  # with no pull request to run the check; 0.23.0's first cut went out stale.
+  push:
+    branches:
+      - "release/**"
   workflow_dispatch:
 
 jobs:
