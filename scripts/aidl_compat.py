@@ -42,7 +42,12 @@ Prints one JSON object:
 "bugfix" is never returned on its own: when every check is clean the result is
 "none", and release.sh turns that into bugfix when the AIDL bytes changed.
 
-Usage: aidl_compat.py --repo <repo> --aidl <aidl binary> [--cache <file>] <component> <released version>
+Usage: aidl_compat.py --repo <repo> --aidl <aidl binary> [--cache <file>]
+                      [--old-repo <checkout>] <component> <released version>
+
+--old-repo takes the old side from another checkout, so a pull request's base
+can be compared with its head: `--old-repo <base> <component> current`. Each
+side's imports resolve inside its own tree.
 
 With --cache, a verdict is reused while the content of every directory it
 read (both sides and their transitive imports) and the aidl binary are
@@ -88,12 +93,24 @@ def _imports(comp_dir):
     return out
 
 
+def _root_of(comp_dir):
+    """The checkout holding comp_dir: the nearest parent with build_modules.sh."""
+    d = os.path.abspath(comp_dir)
+    while d != os.path.dirname(d):
+        d = os.path.dirname(d)
+        if os.path.isfile(os.path.join(d, "build_modules.sh")):
+            return d
+    return None
+
+
 def _dep_dirs(repo, comp_dir):
-    """{dep: dir} for the transitive imports of comp_dir; the nearest pin wins."""
+    """{dep: dir} for the transitive imports of comp_dir; the nearest pin wins.
+    Imports resolve in comp_dir's own checkout, falling back to repo."""
+    root = _root_of(comp_dir) or repo
     found, queue = {}, [comp_dir]
     while queue:
         for dep, ver in _imports(queue.pop(0)):
-            d = os.path.join(repo, dep, ver)
+            d = os.path.join(root, dep, ver)
             if dep not in found and os.path.isdir(d):
                 found[dep] = d
                 queue.append(d)
@@ -393,7 +410,8 @@ def _content_key(aidl, repo, old, new):
             for f in sorted(filenames):
                 if f.endswith((".aidl", ".h")) or f == "interface.yaml":
                     path = os.path.join(dirpath, f)
-                    h.update(os.path.relpath(path, repo).encode())
+                    h.update(os.path.relpath(path, _root_of(d) or repo).encode())
+                    h.update(b"old" if d == old else b"")
                     with open(path, "rb") as fh:
                         h.update(hashlib.sha1(fh.read()).digest())
     return h.hexdigest()
@@ -404,10 +422,14 @@ def main(argv):
     ap.add_argument("--repo", required=True)
     ap.add_argument("--aidl", required=True)
     ap.add_argument("--cache")
+    ap.add_argument("--old-repo")
     ap.add_argument("component")
     ap.add_argument("released")
     a = ap.parse_args(argv)
-    old = os.path.join(a.repo, a.component, a.released)
+    # aidl misreads a "./" path prefix as a different package root.
+    a.repo = os.path.abspath(a.repo)
+    a.old_repo = os.path.abspath(a.old_repo) if a.old_repo else None
+    old = os.path.join(a.old_repo or a.repo, a.component, a.released)
     new = os.path.join(a.repo, a.component, "current")
     key = cache = None
     if a.cache:
