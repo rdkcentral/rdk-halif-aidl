@@ -17,27 +17,26 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmiinput;
- 
-/** 
+
+/**
  *  @brief     HDMI Video ID Code (VIC) enum.
  *
  *  Reference: HDMI 2.1 Specification, Section 6.x for Video ID Codes.
- * 
+ *
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Amit Patel
  */
- 
+
 @VintfStability
 @Backing(type = "int")
-enum VIC
-{
+enum VIC {
     /**
      * Unspecified VIC.
      */
     VIC0_UNAVAILABLE = 0,
 
-    /** 
+    /**
      * |Format                 |Field Rate     |Picture|Pixel Aspect Ratio
      *                                          (H:V)   (H:V)
      */

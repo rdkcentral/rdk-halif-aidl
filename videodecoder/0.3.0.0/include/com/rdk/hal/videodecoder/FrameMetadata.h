@@ -37,6 +37,8 @@ public:
    * @see Rec.601 and https://en.wikipedia.org/wiki/Pixel_aspect_ratio
    */
   int32_t parX = 0;
+  // @aidl-doc
+  /** Pixel aspect ratio Y component. See `parX`. */
   int32_t parY = 0;
   // @aidl-doc
   /**
@@ -44,6 +46,8 @@ public:
    * e.g. 720:480, 3840:2160
    */
   int32_t sarX = 0;
+  // @aidl-doc
+  /** Source aspect ratio Y component. See `sarX`. */
   int32_t sarY = 0;
   // @aidl-doc
   /**
@@ -51,6 +55,8 @@ public:
    * Decoded video frame buffers hold the video frame in coded dimensions.
    */
   int32_t codedWidth = 0;
+  // @aidl-doc
+  /** The coded height of the video frame in pixels. See `codedWidth`. */
   int32_t codedHeight = 0;
   // @aidl-doc
   /**
@@ -60,8 +66,14 @@ public:
    * The active dimensions should reflect any display frame or bar data from the stream.
    */
   int32_t activeX = 0;
+  // @aidl-doc
+  /** The Y position of the active display region within the coded frame, in pixels. See `activeX`. */
   int32_t activeY = 0;
+  // @aidl-doc
+  /** The width of the active display region in pixels. See `activeX`. */
   int32_t activeWidth = 0;
+  // @aidl-doc
+  /** The height of the active display region in pixels. See `activeX`. */
   int32_t activeHeight = 0;
   // @aidl-doc
   /**
@@ -91,6 +103,8 @@ public:
    * e.g. 24fps = 24/1, 59.94fps = 60000/1001
    */
   int32_t frameRateNumerator = 0;
+  // @aidl-doc
+  /** The frame rate denominator. See `frameRateNumerator`. */
   int32_t frameRateDenominator = 0;
   // @aidl-doc
   /**

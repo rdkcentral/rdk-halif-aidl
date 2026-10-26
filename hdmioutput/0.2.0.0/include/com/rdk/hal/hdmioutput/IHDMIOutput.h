@@ -37,17 +37,18 @@ namespace hdmioutput {
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 class IHDMIOutput : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(HDMIOutput)
   static const int32_t VERSION = 2000;
-  const std::string HASH = "da2bdb87e132357fe6f9e19ac44749eb9339f1b5";
-  static constexpr char* HASHVALUE = "da2bdb87e132357fe6f9e19ac44749eb9339f1b5";
+  const std::string HASH = "1ca5bda96fbbe2b88aac65291c41d4b17179a64b";
+  static constexpr char* HASHVALUE = "1ca5bda96fbbe2b88aac65291c41d4b17179a64b";
   // @aidl-doc
   /** HDMI Output resource ID type */
   class Id : public ::android::Parcelable {

@@ -37,17 +37,18 @@ namespace hdmiinput {
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 class IHDMIInput : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(HDMIInput)
   static const int32_t VERSION = 2000;
-  const std::string HASH = "c5b7dd577bd1ea4008ddd8019c1923942a4924a7";
-  static constexpr char* HASHVALUE = "c5b7dd577bd1ea4008ddd8019c1923942a4924a7";
+  const std::string HASH = "b40c57ae7d1bc106df72be13a813813713acbae8";
+  static constexpr char* HASHVALUE = "b40c57ae7d1bc106df72be13a813813713acbae8";
   // @aidl-doc
   /** HDMI input resource ID type */
   class Id : public ::android::Parcelable {
@@ -146,7 +147,8 @@ public:
    *
    * @param[out] _aidl_return boolean
    *   - true: The EDID was retrieved successfully.
-   *   - false: Indicates an error condition (e.g., resource not available, invalid state, or parameter validation failure).
+   *   - false: Indicates an error condition (e.g., resource not available, invalid state, or parameter
+   *     validation failure).
    * @see setEDID(), getDefaultEDID()
    *
    * @returns ::android::binder::Status - ::android::binder::Status::EX_NONE on success.
@@ -195,7 +197,8 @@ public:
    *
    * If HDCP is not in use, then `HDCPStatus.UNKNOWN` is returned.
    *
-   * In case of persistent error (e.g., repeated authentication failure), client should close and re-open the session to reset the state.
+   * In case of persistent error (e.g., repeated authentication failure), client should close and re-open the session
+   * to reset the state.
    *
    * @param[out] _aidl_return HDCPStatus
    *
@@ -211,7 +214,8 @@ public:
    *
    * For InfoFrame payload, starting with the InfoFrame type code. See HDMI Specification 2.0, Section 8.x for layout.
    *
-   * @param[out] _aidl_return InfoFrame data byte array, or empty array if no InfoFrame has been received since last device connection or start.
+   * @param[out] _aidl_return InfoFrame data byte array, or empty array if no InfoFrame has been received since last device connection
+   *                     or start.
    *
    *
    * @see IHDMIInputControllerListener.onSPDInfoFrame()
@@ -281,7 +285,8 @@ public:
   /**
    * Registers a HDMI input event listener.
    *
-   * Only one event listener may be registered per port at a time. Attempting to register a second listener will return false.
+   * Only one event listener may be registered per port at a time. Attempting to register a second listener will
+   * return false.
    *
    * Registration delivers an initial `onStateChanged()` carrying the port's current
    * state in both `oldState` and `newState`. Before `open()` that state is `CLOSED`.

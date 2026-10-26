@@ -24,11 +24,16 @@
 package com.rdk.hal.panel;
 
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum State {
+    /** The controller is stopped; start() may be called. */
     STOPPED = 0,
+    /** A start() is in progress. */
     STARTING = 1,
+    /** The panel output is running; control operations are valid. */
     STARTED = 2,
+    /** A stop() is in progress. */
     STOPPING = 3,
+    /** A state transition failed; release the controller with close(). */
     ERROR = 4,
 }

@@ -18,11 +18,11 @@
  */
 package com.rdk.hal.videodecoder;
 
-import com.rdk.hal.videodecoder.Fraction;
 import com.rdk.hal.videodecoder.Colorimetry;
-import com.rdk.hal.videodecoder.MasteringDisplayInfo;
 import com.rdk.hal.videodecoder.ContentLightLevel;
 import com.rdk.hal.videodecoder.DolbyVisionLayerFlags;
+import com.rdk.hal.videodecoder.Fraction;
+import com.rdk.hal.videodecoder.MasteringDisplayInfo;
 
 /**
  *  @brief     Per-buffer metadata carried with input buffers submitted via
@@ -84,7 +84,6 @@ import com.rdk.hal.videodecoder.DolbyVisionLayerFlags;
 
 @VintfStability
 parcelable InputBufferMetadata {
-
     /**
      * Presentation time of the encoded frame in nanoseconds.
      */

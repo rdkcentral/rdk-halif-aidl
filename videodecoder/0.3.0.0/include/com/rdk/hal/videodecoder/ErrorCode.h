@@ -17,6 +17,8 @@ namespace videodecoder {
  *  @author    Douglas Adler
  */
 enum class ErrorCode : int32_t {
+  // @aidl-doc
+  /** Placeholder. No video decoder error codes are defined yet. */
   xxxx = 1,
 };
 }  // namespace videodecoder

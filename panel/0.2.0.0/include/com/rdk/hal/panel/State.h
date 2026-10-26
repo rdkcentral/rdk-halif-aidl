@@ -15,10 +15,20 @@ namespace rdk {
 namespace hal {
 namespace panel {
 enum class State : int32_t {
+  // @aidl-doc
+  /** The controller is stopped; start() may be called. */
   STOPPED = 0,
+  // @aidl-doc
+  /** A start() is in progress. */
   STARTING = 1,
+  // @aidl-doc
+  /** The panel output is running; control operations are valid. */
   STARTED = 2,
+  // @aidl-doc
+  /** A stop() is in progress. */
   STOPPING = 3,
+  // @aidl-doc
+  /** A state transition failed; release the controller with close(). */
   ERROR = 4,
 };
 }  // namespace panel

@@ -14,8 +14,8 @@ class BpPanelOutputControllerListener : public ::android::BpInterface<IPanelOutp
 public:
   explicit BpPanelOutputControllerListener(const ::android::sp<::android::IBinder>& _aidl_impl);
   virtual ~BpPanelOutputControllerListener() = default;
-  ::android::binder::Status onPictureModeChanged(const ::android::String16& pictureMode) override;
-  ::android::binder::Status onPQParameterChanged(const ::android::String16& pictureMode, const ::com::rdk::hal::panel::PanelSource& avSource, ::com::rdk::hal::videodecoder::DynamicRange dynamicRange, ::com::rdk::hal::panel::PQParameter pictureProperty, const ::com::rdk::hal::panel::PQParameterValue& picturePropertyValue) override;
+  ::android::binder::Status onPictureModeChanged(const ::std::string& pictureMode) override;
+  ::android::binder::Status onPQParameterChanged(const ::std::string& pictureMode, const ::com::rdk::hal::panel::PanelSource& avSource, ::com::rdk::hal::videodecoder::DynamicRange dynamicRange, ::com::rdk::hal::panel::PQParameter pictureProperty, const ::com::rdk::hal::panel::PQParameterValue& picturePropertyValue) override;
   int32_t getInterfaceVersion() override;
   std::string getInterfaceHash() override;
 private:

@@ -26,17 +26,18 @@ namespace videodecoder {
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 class IVideoDecoderController : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(VideoDecoderController)
   static const int32_t VERSION = 3000;
-  const std::string HASH = "922cc8ec92962ec7843061aae427af80fb4c37a1";
-  static constexpr char* HASHVALUE = "922cc8ec92962ec7843061aae427af80fb4c37a1";
+  const std::string HASH = "ff9b64beb2c3c9a1fe1277a0c2d0e8080dfc4d0d";
+  static constexpr char* HASHVALUE = "ff9b64beb2c3c9a1fe1277a0c2d0e8080dfc4d0d";
   // @aidl-doc
   /**
    * Starts the Video Decoder.
@@ -262,7 +263,8 @@ public:
    * See https://aomediacodec.github.io/av1-isobmff/#av1codecconfigurationbox-section
    * for more details.
    *
-   * @param[in] csdVideoFormat The codec specific data format. This must match the codec specified in the `open()` call.
+   * @param[in] csdVideoFormat The codec specific data format. This must match the codec specified in the `open()`
+   * call.
    * @param[in] codecData      The byte array of codec data. This must not be empty.
    *
    * @param[out] _aidl_return boolean

@@ -18,8 +18,8 @@
  */
 package com.rdk.hal.videodecoder;
 
-import com.rdk.hal.videodecoder.CodecProfile;
 import com.rdk.hal.videodecoder.CodecLevel;
+import com.rdk.hal.videodecoder.CodecProfile;
 
 /**
  *  @brief     Per-profile capability descriptor for a codec — pairs a
@@ -47,7 +47,6 @@ import com.rdk.hal.videodecoder.CodecLevel;
  */
 @VintfStability
 parcelable Profile {
-
     /**
      * The codec profile this descriptor applies to (e.g. `H265_MAIN`,
      * `H265_MAIN_10`, `AV1_MAIN`).

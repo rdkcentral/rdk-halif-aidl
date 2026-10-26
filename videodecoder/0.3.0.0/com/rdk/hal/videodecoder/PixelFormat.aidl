@@ -26,12 +26,11 @@ package com.rdk.hal.videodecoder;
  */
 
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 /**
  * Enumeration defining the supported pixel formats.
  */
-enum PixelFormat
-{
+enum PixelFormat {
     /**< YCbCr 4:2:2 pixel format. */
     YCBCR422 = 1,
     /**< YCbCr 4:4:4 pixel format. */

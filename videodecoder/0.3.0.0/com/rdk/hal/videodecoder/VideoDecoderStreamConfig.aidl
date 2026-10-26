@@ -18,12 +18,12 @@
  */
 package com.rdk.hal.videodecoder;
 
-import com.rdk.hal.videodecoder.Resolution;
-import com.rdk.hal.videodecoder.Fraction;
 import com.rdk.hal.videodecoder.Colorimetry;
-import com.rdk.hal.videodecoder.MasteringDisplayInfo;
 import com.rdk.hal.videodecoder.ContentLightLevel;
 import com.rdk.hal.videodecoder.DolbyVisionLayerFlags;
+import com.rdk.hal.videodecoder.Fraction;
+import com.rdk.hal.videodecoder.MasteringDisplayInfo;
+import com.rdk.hal.videodecoder.Resolution;
 
 /**
  *  @brief     Atomic stream-configuration batch for the video decoder.
@@ -68,7 +68,6 @@ import com.rdk.hal.videodecoder.DolbyVisionLayerFlags;
  */
 @VintfStability
 parcelable VideoDecoderStreamConfig {
-
     /**
      * Coded frame dimensions.
      * null = leave existing resolution hint unchanged.

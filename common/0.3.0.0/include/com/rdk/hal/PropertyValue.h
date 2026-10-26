@@ -184,7 +184,7 @@ public:
       return os.str();
     }
   private:
-    std::variant<bool, int8_t, char16_t, int32_t, int64_t, float, double, ::android::String16, ::std::vector<int32_t>> _value;
+    std::variant<bool, int8_t, char16_t, int32_t, int64_t, float, double, ::std::string, ::std::vector<int32_t>> _value;
   };  // class Value
   // @aidl-doc
   /** Value of property or null if not defined. */

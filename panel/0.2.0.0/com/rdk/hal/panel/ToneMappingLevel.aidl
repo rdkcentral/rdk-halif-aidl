@@ -22,11 +22,16 @@ package com.rdk.hal.panel;
  * @brief HDR tone-mapping level.
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum ToneMappingLevel {
+    /** Invalid or unset level. */
     TONE_MAPPING_LEVEL_INVALID = -1,
+    /** The tone-mapping mode has no selectable levels. */
     TONE_MAPPING_LEVEL_NOT_APPLICABLE = 0,
+    /** Low tone-mapping level. */
     TONE_MAPPING_LEVEL_LOW = 1,
+    /** Medium tone-mapping level. */
     TONE_MAPPING_LEVEL_MEDIUM = 2,
+    /** High tone-mapping level. */
     TONE_MAPPING_LEVEL_HIGH = 3,
 }

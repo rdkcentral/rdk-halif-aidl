@@ -19,7 +19,7 @@ namespace panel {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = _aidl_parcel->readString16(&type);
+  _aidl_ret_status = _aidl_parcel->readUtf8FromUtf16(&type);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }
@@ -27,7 +27,7 @@ namespace panel {
     _aidl_parcel->setDataPosition(_aidl_start_pos + _aidl_parcelable_size);
     return _aidl_ret_status;
   }
-  _aidl_ret_status = _aidl_parcel->readString16(&instance);
+  _aidl_ret_status = _aidl_parcel->readUtf8FromUtf16(&instance);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }
@@ -38,11 +38,11 @@ namespace panel {
   ::android::status_t _aidl_ret_status = ::android::OK;
   auto _aidl_start_pos = _aidl_parcel->dataPosition();
   _aidl_parcel->writeInt32(0);
-  _aidl_ret_status = _aidl_parcel->writeString16(type);
+  _aidl_ret_status = _aidl_parcel->writeUtf8AsUtf16(type);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }
-  _aidl_ret_status = _aidl_parcel->writeString16(instance);
+  _aidl_ret_status = _aidl_parcel->writeUtf8AsUtf16(instance);
   if (((_aidl_ret_status) != (::android::OK))) {
     return _aidl_ret_status;
   }

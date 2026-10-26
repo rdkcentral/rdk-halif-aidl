@@ -26,17 +26,18 @@ namespace hdmiinput {
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 class IHDMIInputManager : public ::android::IInterface {
 public:
   DECLARE_META_INTERFACE(HDMIInputManager)
   static const int32_t VERSION = 2000;
-  const std::string HASH = "c5b7dd577bd1ea4008ddd8019c1923942a4924a7";
-  static constexpr char* HASHVALUE = "c5b7dd577bd1ea4008ddd8019c1923942a4924a7";
+  const std::string HASH = "b40c57ae7d1bc106df72be13a813813713acbae8";
+  static constexpr char* HASHVALUE = "b40c57ae7d1bc106df72be13a813813713acbae8";
   // @aidl-doc
   /** The service name to publish. To be returned by getServiceName() in the derived class. */
   static const ::std::string& serviceName();

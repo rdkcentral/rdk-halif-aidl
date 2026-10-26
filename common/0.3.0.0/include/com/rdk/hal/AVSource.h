@@ -37,16 +37,32 @@ enum class AVSource : int32_t {
   // @aidl-doc
   /** Source is from a HDMI input port. */
   HDMI_1 = 101,
+  // @aidl-doc
+  /** Source is from HDMI input port 2. */
   HDMI_2 = 102,
+  // @aidl-doc
+  /** Source is from HDMI input port 3. */
   HDMI_3 = 103,
+  // @aidl-doc
+  /** Source is from HDMI input port 4. */
   HDMI_4 = 104,
+  // @aidl-doc
+  /** Source is from HDMI input port 5. */
   HDMI_5 = 105,
   // @aidl-doc
   /** Source is from a composite input port. */
   COMPOSITE_1 = 201,
+  // @aidl-doc
+  /** Source is from composite input port 2. */
   COMPOSITE_2 = 202,
+  // @aidl-doc
+  /** Source is from composite input port 3. */
   COMPOSITE_3 = 203,
+  // @aidl-doc
+  /** Source is from composite input port 4. */
   COMPOSITE_4 = 204,
+  // @aidl-doc
+  /** Source is from composite input port 5. */
   COMPOSITE_5 = 205,
 };
 }  // namespace hal

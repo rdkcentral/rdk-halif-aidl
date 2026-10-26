@@ -31,8 +31,7 @@ package com.rdk.hal.videosink;
  *  for the lifetime of the Video Sink instance.
  */
 @VintfStability
-parcelable Capabilities
-{
+parcelable Capabilities {
     /**
      * Indicates whether this Video Sink instance can synchronise frame
      * presentation against an AV Clock. When `false`, the sink presents

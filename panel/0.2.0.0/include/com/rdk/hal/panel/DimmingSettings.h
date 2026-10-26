@@ -16,7 +16,11 @@ namespace panel {
 /** @brief Grouped dimming settings. */
 class DimmingSettings : public ::android::Parcelable {
 public:
+  // @aidl-doc
+  /** The dimming mode. */
   ::com::rdk::hal::panel::DimmingMode mode = ::com::rdk::hal::panel::DimmingMode(0);
+  // @aidl-doc
+  /** The dimming level, one of the levels supported for the mode. */
   ::com::rdk::hal::panel::DimmingLevel level = ::com::rdk::hal::panel::DimmingLevel(0);
   inline bool operator!=(const DimmingSettings& rhs) const {
     return std::tie(mode, level) != std::tie(rhs.mode, rhs.level);
