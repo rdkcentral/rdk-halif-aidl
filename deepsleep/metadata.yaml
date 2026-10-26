@@ -23,7 +23,7 @@
 # description - One-line human-readable summary                          [manual]
 # type        - Responsibility: SOC or OEM                                [manual]
 component: deepsleep
-version: 0.2.0.0
+version: 0.1.1.0
 status: GREEN
 description: "Deep sleep and low-power state management"
 type: OEM

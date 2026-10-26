@@ -116,7 +116,7 @@ if (DEFINED HALIF_INCLUDE_DIR)
     target_include_directories(${LIB_NAME} PRIVATE
     "${HALIF_INCLUDE_DIR}/audiodecoder/0.3.0.0/include"
     "${HALIF_INCLUDE_DIR}/common/0.3.0.0/include"
-    "${HALIF_INCLUDE_DIR}/avclock/0.2.1.0/include")
+    "${HALIF_INCLUDE_DIR}/avclock/0.3.0.0/include")
 endif()
 
 target_link_directories(${LIB_NAME} PRIVATE
@@ -130,7 +130,7 @@ if (DEFINED HALIF_LIB_DIR)
     target_link_directories(${LIB_NAME} PRIVATE "${HALIF_LIB_DIR}")
 endif()
 
-target_link_libraries(${LIB_NAME} PRIVATE binder utils audiodecoder-v0.3.0.0-cpp avclock-v0.2.1.0-cpp common-v0.3.0.0-cpp)
+target_link_libraries(${LIB_NAME} PRIVATE binder utils audiodecoder-v0.3.0.0-cpp avclock-v0.3.0.0-cpp common-v0.3.0.0-cpp)
 
 # The target_link_directories() above are BUILD-time search paths. By default
 # CMake bakes them into the library as RPATH/RUNPATH, which ships absolute build

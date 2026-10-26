@@ -1818,6 +1818,7 @@ fi
 declare -A PR_LABEL_CACHE=()
 declare -A PR_TYPE_CACHE=()
 declare -A PR_REFS_CACHE=()
+declare -A PR_EFFECT_CACHE=()   # PR -> Interface Effect (project field), PR first then its issue
 declare -A COMMIT_PR_CACHE=()
 declare -A COMP_TOUCHED=()
 declare -A COMP_BREAKING=()
@@ -1838,6 +1839,7 @@ declare -A COMP_LABEL_PRS=()   # "comp:level" -> " PR PR ..." that set it
 #   m<TAB>SHA<TAB>PR_NUMBER          (resolved through GitHub, merged PRs only)
 #   l<TAB>PR_NUMBER<TAB>LABEL1|LABEL2|LABEL3
 #   n<TAB>PR_NUMBER<TAB>ISSUE1,ISSUE2<US>TITLE   (US = \x1f; non-empty only)
+#   e<TAB>PR_NUMBER<TAB>INTERFACE_EFFECT         (non-empty only)
 # Labels are joined with `|` (which can't appear in label names).
 GH_CACHE_FILE="${REPO_ROOT}/out/.gh-cache"
 
@@ -1857,6 +1859,7 @@ gh_cache_load() {
             # `r` entries used a tab separator that the reader mangled;
             # they are ignored so the PR is re-asked.
             n)  [[ "${value}" =~ ^[0-9,]*$'\x1f'. ]] && PR_REFS_CACHE[$key]="${value}" ;;
+            e)  PR_EFFECT_CACHE[$key]="${value}" ;;
         esac
     done < "${GH_CACHE_FILE}"
 }
@@ -1980,6 +1983,29 @@ load_pr_refs() {
 # " — "TITLE"; issues #A, #B; files: F1, F2 +N more" for a derivation line.
 # Issues are the PR's closing issues plus any other #N the subject cites
 # (e.g. "gh #836", or "(#846)" when the subject names the issue).
+# The Interface Effect project field for a PR (#875): the PR's own value, or
+# its closing issue's when the PR has none. A hint, like the labels; the
+# compiler check decides. Empty when unset, offline or without project scope.
+# Fills PR_EFFECT_CACHE in the calling shell; never call it inside $(...).
+load_pr_effect() {
+    local pr="$1" effect=""
+    [[ -n "${pr}" ]] || return 0
+    if [[ -z "${PR_EFFECT_CACHE[$pr]+x}" ]]; then
+        if [[ "${ENABLE_GH_LABELS}" -eq 1 ]]; then
+            effect="$(gh api graphql \
+                -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){pullRequest(number:$n){projectItems(first:5){nodes{fieldValues(first:40){nodes{... on ProjectV2ItemFieldSingleSelectValue{name field{... on ProjectV2SingleSelectField{name}}}}}}} closingIssuesReferences(first:5){nodes{projectItems(first:5){nodes{fieldValues(first:40){nodes{... on ProjectV2ItemFieldSingleSelectValue{name field{... on ProjectV2SingleSelectField{name}}}}}}}}}}}}' \
+                -f o="${GH_REPO%%/*}" -f r="${GH_REPO##*/}" -F n="${pr}" \
+                --jq 'def eff: [.projectItems.nodes[].fieldValues.nodes[] | select(.field.name? and ((.field.name | ascii_downcase) == "interface effect")) | .name][0] // empty;
+                      .data.repository.pullRequest | (eff // ([.closingIssuesReferences.nodes[] | eff][0]) // empty)' \
+                2>/dev/null)" || effect=""
+            [[ "${effect}" =~ ^[A-Za-z][A-Za-z\ -]*$ ]] || effect=""
+        fi
+        PR_EFFECT_CACHE[$pr]="${effect}"
+        [[ -n "${effect}" ]] && gh_cache_append "e" "${pr}" "${effect}"
+    fi
+    return 0
+}
+
 pr_ref_suffix() {
     local pr="$1" subject="$2" files="$3"
     local refs="" title="" issues="" n out=""
@@ -2322,6 +2348,43 @@ compute_aidl_hash_for_dir() {
         | sha256sum 2>/dev/null | awk '{print $1}')"
     [[ "${h}" == "$(echo -n "" | sha256sum | awk '{print $1}')" ]] && h=""
     echo "${h}"
+}
+
+# The compiler's verdict on a component (scripts/aidl_compat.py, #875):
+# aidl --checkapi for the wire, and the C++ headers regenerated for both
+# sides - its own, plus the types it uses from other components - for the
+# source. Sets COMP_RECOMMENDED[comp] to a bump token (generation, minor,
+# patch, none; empty when it could not check) and COMP_COMPAT_EVIDENCE[comp].
+# The labels and the Interface Effect are hints checked against it.
+declare -A COMP_RECOMMENDED=() COMP_COMPAT_EVIDENCE=() COMP_COMPAT_SPLIT=()
+compat_check() {
+    local comp="$1" prev="$2"
+    [[ -n "${COMP_RECOMMENDED[$comp]+x}" ]] && return 0
+    local tc="${BINDER_TOOLCHAIN_ROOT:-${REPO_ROOT}/build-tools/linux_binder_idl}"
+    local aidl="${tc}/out/host/bin/aidl" out rec
+    COMP_RECOMMENDED[$comp]=""
+    if [[ ! -x "${aidl}" || ! -d "${REPO_ROOT}/${comp}/${prev}" ]]; then
+        COMP_COMPAT_EVIDENCE[$comp]="compiler: not run (aidl not built — ./build_binder.sh)"
+        return 0
+    fi
+    out="$(python3 "${REPO_ROOT}/scripts/aidl_compat.py" --repo "${REPO_ROOT}" --aidl "${aidl}" \
+            --cache "${REPO_ROOT}/out/.compat-cache.json" "${comp}" "${prev}" 2>/dev/null \
+        | python3 -c 'import json, sys
+r = json.load(sys.stdin)
+print(r["recommended"]); print(r["wire"], r["source"], r["inherited"])
+for e in r["evidence"]: print(e)' 2>/dev/null)" || out=""
+    rec="$(head -1 <<<"${out}")"
+    COMP_COMPAT_SPLIT[$comp]="$(sed -n 2p <<<"${out}")"
+    COMP_COMPAT_EVIDENCE[$comp]="$(tail -n +3 <<<"${out}")"
+    case "${rec}" in
+        major)  COMP_RECOMMENDED[$comp]="generation" ;;
+        minor)  COMP_RECOMMENDED[$comp]="minor" ;;
+        bugfix) COMP_RECOMMENDED[$comp]="patch" ;;
+        none)   [[ "$(aidl_hash_status "${comp}")" == "unchanged" ]] \
+                    && COMP_RECOMMENDED[$comp]="none" || COMP_RECOMMENDED[$comp]="patch" ;;
+        *)      COMP_COMPAT_EVIDENCE[$comp]="compiler: could not check${COMP_COMPAT_EVIDENCE[$comp]:+ — $(head -1 <<<"${COMP_COMPAT_EVIDENCE[$comp]}")}" ;;
+    esac
+    return 0
 }
 
 # Compare a module's current/ AIDL hash against the highest tracked
@@ -3674,20 +3737,48 @@ audit_version_refs() {
 
     [[ ${#found[@]} -eq 0 ]] && return 0
 
+    # One row per hit: where, which version(s), a short excerpt around the
+    # first, and the likely kind - a changelog row is history, 0.0.0.0 is a
+    # CEC physical address - so only the "check" rows need reading.
     log ""
-    log "ℹ️  Version-ref audit (review only — not auto-rewritten):"
-    log "    These files mention version-shaped strings (0.X.Y.Z). Most are intentional"
-    log "    (changelog tables, migration notes, CEC physical addresses). Skim before"
-    log "    --apply to confirm none need a manual update."
-    log ""
+    local _rows=() _f _rest _line _n _txt
     for entry in "${found[@]}"; do
-        local f="${entry%%|*}"
-        local rest="${entry#*|}"
-        log "    ${f#${REPO_ROOT}/}:"
-        while IFS= read -r line; do
-            [[ -n "${line}" ]] && log "        ${line}"
-        done <<< "${rest}"
+        _f="${entry%%|*}"; _f="${_f#${REPO_ROOT}/}"
+        _rest="${entry#*|}"
+        while IFS= read -r _line; do
+            [[ -n "${_line}" ]] || continue
+            _n="${_line%%:*}"; _txt="${_line#*:}"
+            _rows+=("${_f}"$'\t'"${_n}"$'\t'"${_txt}")
+        done <<< "${_rest}"
     done
+    printf '%s\n' "${_rows[@]}" | python3 -c '
+import re, sys
+ver = re.compile(r"\b0\.[0-9]+\.[0-9]+\.[0-9]+\b")
+rows = []
+for raw in sys.stdin.read().splitlines():
+    f, n, txt = raw.split("\t", 2)
+    vs = list(dict.fromkeys(ver.findall(txt)))
+    if vs == ["0.0.0.0"]:
+        kind = "address"
+    elif txt.lstrip().startswith("|"):
+        kind = "history"
+    else:
+        kind = "check"
+    m = ver.search(txt)
+    a = max(0, m.start() - 30)
+    ex = re.sub(r"\s+", " ", txt[a:a + 80]).strip()
+    ex = ("…" if a else "") + ex + ("…" if a + 80 < len(txt) else "")
+    rows.append((f, n, ", ".join(vs), kind, ex))
+checks = sum(1 for r in rows if r[3] == "check")
+print("ℹ️  Version strings in current/ docs and build files: %d hit(s), %d to check (review only, not rewritten)" % (len(rows), checks))
+print()
+w = [max(len(r[i]) for r in rows + [("File", "Line", "Version", "Kind", "")]) for i in range(4)]
+fmt = "  %%-%ds  %%%ds  %%-%ds  %%-%ds  %%s" % tuple(w)
+print(fmt % ("File", "Line", "Version", "Kind", "Excerpt"))
+print(fmt % ("-" * 4, "-" * 4, "-" * 7, "-" * 4, "-" * 7))
+for r in sorted(rows, key=lambda r: (r[3] != "check", r[0], int(r[1]))):
+    print(fmt % r)
+' | while IFS= read -r _line; do log "${_line}"; done
 }
 
 MODE="PLAN (read-only — what the staged plan would do)"
@@ -3820,26 +3911,24 @@ run_structural_audit() {
         set_by="$(_pr_links "${COMP_LABEL_PRS[${comp}:${label}]:-}")"
         defaulted="$(_pr_links "${COMP_LABEL_PRS[${comp}:default]:-}")"
         inherited="$(grep -oE '^subsume: [^ ]+' <<<"${COMP_REASONS[$comp]:-}" | awk '{print $2}' | sort -u | paste -sd, - | sed 's/,/, /g')"
+        local lc cc
+        lc="$(_audit_class_display "${label}")"; cc="$(_audit_class_display "${code}")"
         if (( rank[$label] > rank[$code] )); then
-            local lc cc
-            lc="$(_audit_class_display "${label}")"; cc="$(_audit_class_display "${code}")"
-            echo "The label is higher than the code. Confirm which is right, and why:"
-            echo "  • ${cc}, if the label over-states the change:"
-            echo "      ./release.sh stage all ${comp} --confirm ${cc} \"<why it is ${cc}>\""
-            echo "  • ${lc}, if the change breaks behaviour the surface does not show:"
+            echo "The hints say ${lc}; the compiler says ${cc}, and ${cc} (${code_next}) is what is released."
+            echo "  • if behaviour changed behind the static API, confirm it, saying what changed:"
             echo "      ./release.sh stage all ${comp} --confirm ${lc} \"<what behaviour changed>\""
-            [[ -n "${set_by}" ]] && echo "  • or correct the '${name[$label]}' label on ${set_by}, then ./release.sh clean"
-            [[ -z "${set_by}" && -n "${defaulted}" ]] \
-                && echo "  • or add the '${name[$code]}' label to ${defaulted} (no change-class label, so it defaulted to minor), then ./release.sh clean"
-            [[ -n "${inherited}" ]] && echo "  • the level is also inherited from ${inherited}, which it imports; settling that first may settle this"
-            echo "  (an exact version also works: ./release.sh stage all ${comp} --version ${code_next})"
+            [[ -n "${set_by}" ]] && echo "  • otherwise the '${name[$label]}' label on ${set_by} over-states it; correct it (and the Interface Effect)"
+            [[ -n "${inherited}" ]] && echo "  • the level is also inherited from ${inherited}, which it imports"
         else
             local touched
             touched="$(_pr_links "${COMP_LABEL_PRS[${comp}:patch]:-} ${COMP_LABEL_PRS[${comp}:minor]:-} ${COMP_LABEL_PRS[${comp}:generation]:-} ${COMP_LABEL_PRS[${comp}:default]:-}")"
-            echo "The code is higher than the label. Label the PR that made the change '${name[$code]}'${touched:+ (one of ${touched})}:"
-            echo "  gh pr edit <N> --repo ${repo} --add-label '${name[$code]}'"
-            echo "  then ./release.sh clean, so the cached labels are re-read"
+            echo "The compiler says ${cc} (${code_next}), which is released; the hints say ${lc}."
+            echo "  Correct the hint on the PR that made the change${touched:+ (one of ${touched})}: label '${name[$code]}', Interface Effect ${cc}."
         fi
+    }
+
+    _bump_rank() {
+        case "$1" in generation) echo 3 ;; minor) echo 2 ;; patch) echo 1 ;; *) echo 0 ;; esac
     }
 
     _audit_class_display() {
@@ -3854,9 +3943,9 @@ run_structural_audit() {
 
     AUDIT_ROWS=()
     AUDIT_ROWS+=("$(printf "%-24s %-10s %-11s %-11s %-10s %-10s %s" \
-        "Component" "Frozen" "Structural" "Label" "Expected" "Declared" "Status")")
+        "Component" "Frozen" "Compiler" "Label" "Expected" "Declared" "Status")")
     AUDIT_ROWS+=("$(printf "%-24s %-10s %-11s %-11s %-10s %-10s %s" \
-        "---------" "------" "----------" "-----" "--------" "--------" "------")")
+        "---------" "------" "--------" "-----" "--------" "--------" "------")")
     AUDIT_DETAIL=()          # buffered per-component diff detail blocks
     DOUBT_ROWS=()            # label/code disagreements, settled or not
 
@@ -3927,116 +4016,105 @@ run_structural_audit() {
         }
 
         # Label-implied bump from the same detector state the release run
-        # uses (highest severity wins).
+        # uses (highest severity wins). A hint, like the Interface Effect.
         _label="none"
         [[ "${COMP_DOC[$comp]:-0}"      -eq 1 ]] && _label="patch"
         [[ "${COMP_NON_DOC[$comp]:-0}"  -eq 1 ]] && _label="minor"
         [[ "${COMP_BREAKING[$comp]:-0}" -eq 1 ]] && _label="generation"
 
-        # Expected next version from the STRUCTURAL truth — except a
-        # behaviour-only breaking change (surface unchanged, source changed,
-        # Major label), which only the label can declare and which the
-        # release run bumps by that label.
+        # The compiler decides the class (#875): aidl --checkapi for the
+        # wire, the regenerated C++ headers for the source, including the
+        # types used from other components. The parser's class stays as
+        # evidence and stands in only when the compiler could not check.
+        compat_check "${comp}" "${_prev}"
+        _code="${COMP_RECOMMENDED[$comp]:-${_structural}}"
         _era="${_prev%%.*}"
         _expected="-"
-        _effective="${_structural}"
-        [[ "${_label}" == "generation" && "${_structural}" == "patch" ]] && _effective="generation"
         _code_next="-"
         if [[ "${_prev}" =~ ^0\. ]]; then
-            compute_next_versions "${_prev}" "${_structural}"
+            compute_next_versions "${_prev}" "${_code}"
             _code_next="${NEXT_VERSION}"
-            compute_next_versions "${_prev}" "${_effective}"
-            _expected="${NEXT_VERSION}"
+            _expected="${_code_next}"
         fi
 
         _flags=()
         _notes=()
         _hints=()
-        _label_flag=""
-        if [[ "${_era}" =~ ^[0-9]+$ ]] && (( _era >= 1 )) && [[ "${_effective}" == "generation" ]]; then
+        [[ -n "${COMP_RECOMMENDED[$comp]}" ]] || _notes+=("${COMP_COMPAT_EVIDENCE[$comp]:-compiler: could not check} — parser class used")
+        if [[ "${_era}" =~ ^[0-9]+$ ]] && (( _era >= 1 )) && [[ "${_code}" == "generation" ]]; then
             _flags+=("era ${_era} forbids breaking changes — new component required")
         fi
-        if [[ "${_structural}" != "${_label}" ]]; then
-            if [[ "${_structural}" == "none" && "${_hash_state}" == "unchanged" && "${_label}" != "none" ]]; then
-                # The release run auto-suppresses label-derived bumps when
-                # the .aidl bytes are identical to the frozen snapshot (the
-                # AIDL-hash gate) — the audit mirrors that, or repo-wide
-                # docs/chore commits would flag every component.
-                _notes+=("label bump auto-suppressed (AIDL unchanged)")
-            elif [[ "${_label}" == "generation" && "${_structural}" == "patch" ]]; then
-                # The surface is unchanged but the AIDL source changed: a
-                # behaviour change with the signature intact is breaking, and
-                # only the label can declare it (versioning-sop.md).
-                _notes+=("behaviour-only breaking change declared by label (AIDL surface unchanged)")
-            elif [[ "${_label}" == "none" && "${_structural}" != "none" ]]; then
-                _label_flag="code is $(_audit_class_display "${_structural}") but no PR label in window"
-            else
-                _label_flag="label says $(_audit_class_display "${_label}"), code is $(_audit_class_display "${_structural}")"
-            fi
+        # A label that disagrees with the compiler is a doubt, not a failure:
+        # the release takes the compiler's class unless the operator confirms
+        # a higher one for a behaviour change the static API does not show.
+        # Nothing to release (AIDL bytes unchanged) is no doubt at all.
+        _doubt=""
+        if [[ "${_code}" != "${_label}" && ! ( "${_code}" == "none" && "${_hash_state}" == "unchanged" ) ]]; then
+            _doubt="label says $(_audit_class_display "${_label}"), compiler says $(_audit_class_display "${_code}")"
         fi
 
-        _doubt="${_label_flag}"
-        # Operator pin (`stage all <comp> --version X`, or a confirmed class
-        # `--confirm minor "<reason>"` resolved against the released version):
-        # accepted at or above the code's own level — it can lower an
-        # over-stated label, never hide a change the code makes.
+        # Operator pin (`stage all <comp> --version X`) or confirmed class
+        # (`--confirm major "<reason>"`): accepted at or above the compiler's
+        # class, never below it.
         _pin="${PIN_VERSIONS[$comp]:-}"
         _pin_note="pinned to ${_pin} by stage --version"
+        _pin_recovered=0
         if [[ -z "${_pin}" && -n "${PIN_CLASS[$comp]:-}" && "${_prev}" =~ ^0\. ]]; then
             compute_next_versions "${_prev}" "${PIN_CLASS[$comp]}"
             _pin="${NEXT_VERSION}"
             _pin_note="confirmed $(_bump_class "${PIN_CLASS[$comp]}") (${_pin}): ${PIN_REASON[$comp]:-}"
         fi
-        # A pin from an earlier `stage` run lives on as the version stage
-        # wrote: metadata.yaml moved off the released version, with a
-        # <comp>/<version>/ snapshot beside it that the last release tag does
-        # not hold. stage git-adds the snapshot, so test against the tag, not
-        # the index. Kept in PIN_VERSIONS so the next-version step honours it.
+        # A version an earlier `stage` run wrote: metadata.yaml moved off the
+        # released version, with a <comp>/<version>/ snapshot beside it that
+        # the last release tag does not hold (stage git-adds it, so test the
+        # tag, not the index). It stands when it is the compiler's version, or
+        # when the release notes record a confirmation and its reason.
         if [[ -z "${_pin}" && -n "${_meta_ver}" && "${_meta_ver}" != "${_prev}" \
               && -d "${REPO_ROOT}/${comp}/${_meta_ver}" \
               && ( -z "${_pin_baseline}" \
                    || -z "$(git -C "${REPO_ROOT}" ls-tree -d --name-only "${_pin_baseline}" -- "${comp}/${_meta_ver}")" ) ]]; then
             _pin="${_meta_ver}"
+            _pin_recovered=1
             _pin_note="staged at ${_pin} by an earlier stage run"
-            # The pins file is local and lapses; the release notes keep the
-            # confirmation and its reason, so read them back from there.
             local _confirmed
             _confirmed="$(grep -hoE "^- \`${comp}\` → ${_pin//./\\.} \(confirmed (major|minor|bugfix): .*\)$" \
                 "${REPO_ROOT}"/docs/releases/*.md 2>/dev/null | head -1 | sed -E 's/^[^(]*\((.*)\)$/\1/' || true)"
-            [[ -n "${_confirmed}" ]] && _pin_note="${_confirmed/:/ (${_pin}):}"
+            if [[ -n "${_confirmed}" ]]; then
+                _pin_note="${_confirmed/:/ (${_pin}):}"
+                _pin_recovered=2
+            fi
         fi
+        _code_class="$(_audit_class_display "${_code}")"
         if [[ -n "${_pin}" && "${_code_next}" != "-" ]]; then
-            if [[ "$(printf '%s\n%s\n' "${_pin}" "${_code_next}" | sort -V | head -1)" == "${_code_next}" ]]; then
-                _notes+=("${_pin_note}${_label_flag:+ (${_label_flag})}")
+            if [[ "${_pin_recovered}" -eq 1 && "${_pin}" != "${_code_next}" ]]; then
+                _flags+=("staged at ${_pin} by an earlier run; the compiler says ${_code_class} (${_code_next})")
+                _hints+=("Re-stage at the compiler's version: ./release.sh drop ${comp} && ./release.sh stage ${comp}")
+                _hints+=("or, if behaviour changed behind the static API: ./release.sh drop ${comp} && ./release.sh stage ${comp} --confirm <class> \"<what behaviour changed>\"")
+            elif [[ "$(printf '%s\n%s\n' "${_pin}" "${_code_next}" | sort -V | head -1)" == "${_code_next}" ]]; then
+                _notes+=("${_pin_note}")
                 _expected="${_pin}"
-                _label_flag=""
                 PIN_VERSIONS[$comp]="${_pin}"
             else
                 if [[ -n "${PIN_CLASS[$comp]:-}" && -z "${PIN_VERSIONS[$comp]:-}" ]]; then
-                    _flags+=("confirmed $(_bump_class "${PIN_CLASS[$comp]}") is below the code's level ($(_audit_class_display "${_structural}"))")
+                    _flags+=("confirmed $(_bump_class "${PIN_CLASS[$comp]}") is below the compiler's ${_code_class}")
                 else
-                    _flags+=("pin ${_pin} is below the code's level ${_code_next}")
+                    _flags+=("pin ${_pin} is below the compiler's ${_code_class} (${_code_next})")
                 fi
-                # Once staged, metadata.yaml holds the old pin and the audit
-                # rejects a re-pin as a hand edit, so unstage first.
-                _code_class="$(_audit_class_display "${_structural}")"
                 if [[ -n "${PIN_VERSIONS[$comp]:-}${PIN_CLASS[$comp]:-}" && "${_meta_ver}" == "${_prev}" ]]; then
-                    _hints+=("Confirm at or above the code's level: ./release.sh stage all ${comp} --confirm ${_code_class} \"<reason>\"  (or ./release.sh unpin ${comp})")
+                    _hints+=("Drop the pin, the compiler's class stands: ./release.sh unpin ${comp}")
                 else
-                    _hints+=("Re-stage at or above the code's level: ./release.sh drop ${comp} && ./release.sh stage ${comp} --confirm ${_code_class} \"<reason>\"")
+                    _hints+=("Re-stage at the compiler's version: ./release.sh drop ${comp} && ./release.sh unpin ${comp} && ./release.sh stage ${comp}")
                 fi
             fi
         fi
-        if [[ -n "${_label_flag}" ]]; then
-            _flags+=("${_label_flag}")
-            _hints+=("$(_audit_label_hints "${comp}" "${_label}" "${_structural}" "${_code_next}")")
-        fi
+        [[ -n "${_doubt}" && ${#_flags[@]} -eq 0 && "${_expected}" == "${_code_next}" ]] \
+            && _hints+=("$(_audit_label_hints "${comp}" "${_label}" "${_code}" "${_code_next}")")
         # metadata.yaml version is written by release.sh at the cut (#872):
         # before the cut it holds the last released version, after the cut
         # the computed next one. Either is valid; anything else is a hand edit.
-        if [[ "${_expected}" != "-" && -n "${_meta_ver}" && "${_meta_ver}" != "${_expected}" ]]; then
+        if [[ "${_expected}" != "-" && -n "${_meta_ver}" && "${_meta_ver}" != "${_expected}" && "${_pin_recovered}" -ne 1 ]]; then
             if [[ "${_meta_ver}" == "${_prev}" ]]; then
-                [[ "${_structural}" != "none" ]] && _notes+=("release.sh writes ${_expected} at the cut")
+                [[ "${_code}" != "none" ]] && _notes+=("release.sh writes ${_expected} at the cut")
             else
                 _flags+=("metadata.yaml says ${_meta_ver}: neither released ${_prev} nor next ${_expected} — hand edit")
                 _hints+=("Set version: ${_prev} in ${comp}/metadata.yaml — release.sh writes ${_expected} at the cut.")
@@ -4052,34 +4130,48 @@ run_structural_audit() {
         fi
 
         AUDIT_ROWS+=("$(printf "%-24s %-10s %-11s %-11s %-10s %-10s %s" \
-            "${comp}" "${_prev}" "$(_audit_class_display "${_structural}")" \
+            "${comp}" "${_prev}" "${_code_class}" \
             "$(_audit_class_display "${_label}")" "${_expected}" "${_meta_ver:--}" "${_status}")")
 
-        # A doubt stays visible after it is settled: its row says what each
-        # side claims, the PRs behind the label, what the code changed, and
-        # the decision (or the command that makes one).
+        # A doubt stays visible after it is settled: its row says what the
+        # hints claim (labels, Interface Effect), the PRs behind them, what
+        # the compiler found, and the decision.
         if [[ -n "${_doubt}" ]]; then
-            local _lc _cc _by _changes _decision
-            _lc="$(_audit_class_display "${_label}")"; _cc="$(_audit_class_display "${_structural}")"
+            local _lc _by _prs _effects _pr _changes _decision
+            _lc="$(_audit_class_display "${_label}")"
             if [[ "${_label}" == "none" ]]; then
-                _by="$(_doubt_prs "${COMP_LABEL_PRS[${comp}:default]:-}")"
+                _prs="${COMP_LABEL_PRS[${comp}:default]:-}"
             else
-                _by="$(_doubt_prs "${COMP_LABEL_PRS[${comp}:${_label}]:-}")"
+                _prs="${COMP_LABEL_PRS[${comp}:${_label}]:-}"
             fi
-            _changes="$(awk 'NF { n[$1]++ } END { for (k in n) { s = k; gsub(/_/, " ", s); printf "%s%d %s", sep, n[k], s; sep = ", " } }' <<<"${_detail}")"
-            if [[ -z "${_label_flag}" ]]; then
+            _by="$(_doubt_prs "${_prs}")"
+            _effects=""
+            for _pr in $(tr ' ' '\n' <<<"${_prs}" | grep . | sort -un); do
+                load_pr_effect "${_pr}"
+                [[ -n "${PR_EFFECT_CACHE[$_pr]:-}" ]] && _effects+="${PR_EFFECT_CACHE[$_pr]}"$'\n'
+            done
+            _effects="$(grep . <<<"${_effects}" | sort -u | paste -sd/ - || true)"
+            _changes="$(grep -m1 . <<<"${COMP_COMPAT_EVIDENCE[$comp]:-}" | sed -E 's/^(wire|source [^:]*|inherited via [^:]*): //' | cut -c1-60 || true)"
+            [[ -n "${_changes}" ]] || _changes="$(awk 'NF { n[$1]++ } END { for (k in n) { s = k; gsub(/_/, " ", s); printf "%s%d %s", sep, n[k], s; sep = ", " } }' <<<"${_detail}")"
+            if [[ ${#_flags[@]} -gt 0 ]]; then
+                _decision="blocked: see to resolve"
+            elif [[ "${_expected}" != "${_code_next}" ]]; then
                 _decision="${_pin_note}"
-            elif [[ "${_label}" == "none" ]] || [[ "${_cc}" == "major" && "${_lc}" != "major" ]] || [[ "${_cc}" == "minor" && "${_lc}" == "bugfix" ]]; then
-                _decision="open: label a PR '${_cc}'"
+            elif [[ "$(_bump_rank "${_label}")" -gt "$(_bump_rank "${_code}")" ]]; then
+                _decision="released at ${_code_class}; --confirm ${_lc} \"<why>\" if behaviour changed"
             else
-                _decision="open: --confirm ${_cc} or --confirm ${_lc}, with a reason"
+                _decision="released at ${_code_class}; the label under-states it"
             fi
-            DOUBT_ROWS+=("${comp}"$'\t'"${_cc}"$'\t'"${_lc}"$'\t'"${_by}"$'\t'"${_changes:-surface unchanged}"$'\t'"${_decision}")
+            DOUBT_ROWS+=("${comp}"$'\t'"${_code_class}"$'\t'"${_lc}"$'\t'"${_effects:--}"$'\t'"${_by}"$'\t'"${_changes:-AIDL source changed}"$'\t'"${_decision}")
         fi
 
         # Buffer diff detail for flagged and doubted rows (all rows under --verbose).
+        if [[ -n "${COMP_COMPAT_EVIDENCE[$comp]:-}" && ( ${#_flags[@]} -gt 0 || -n "${_doubt}" || "${VERBOSE}" -eq 1 ) ]]; then
+            read -r _w _s _i <<<"${COMP_COMPAT_SPLIT[$comp]:-? ? ?}"
+            AUDIT_DETAIL+=("${comp} — compiler: wire ${_w}, source ${_s}, inherited ${_i}:"$'\n'"$(sed 's/^/  /' <<<"${COMP_COMPAT_EVIDENCE[$comp]}")")
+        fi
         if [[ -n "${_detail}" && ( ${#_flags[@]} -gt 0 || -n "${_doubt}" || "${VERBOSE}" -eq 1 ) ]]; then
-            AUDIT_DETAIL+=("${comp} — $(_audit_class_display "${_structural}") change:"$'\n'"${_detail}")
+            AUDIT_DETAIL+=("${comp} — parser ($(_audit_class_display "${_structural}")):"$'\n'"${_detail}")
         fi
         if [[ ( ${#_flags[@]} -gt 0 || -n "${_doubt}" ) && -n "${COMP_REASONS[$comp]:-}" ]]; then
             AUDIT_DETAIL+=("${comp} — label derivation:"$'\n'"$(sed 's/^/  /' <<<"${COMP_REASONS[$comp]%$'\n'}")")
@@ -4094,27 +4186,30 @@ run_structural_audit() {
     done
     if [[ ${#DOUBT_ROWS[@]} -gt 0 ]]; then
         log ""
-        phase "Doubts — the labels and the code disagree (${#DOUBT_ROWS[@]})"
+        phase "Doubts — the hints and the compiler disagree (${#DOUBT_ROWS[@]})"
         log ""
         # Width from the plain text; the link escapes print no characters.
-        local _w=(9 4 5 11 12) _r _f
+        # Fields: comp, compiler, label, effect, PRs (plain), PRs (linked),
+        # what the compiler found, decision.
+        local _w=(9 8 5 6 11 13) _r _f
         for _r in "${DOUBT_ROWS[@]}"; do
             IFS=$'\t' read -r -a _f <<<"${_r}"
             (( ${#_f[0]} > _w[0] )) && _w[0]=${#_f[0]}
             (( ${#_f[1]} > _w[1] )) && _w[1]=${#_f[1]}
             (( ${#_f[2]} > _w[2] )) && _w[2]=${#_f[2]}
             (( ${#_f[3]} > _w[3] )) && _w[3]=${#_f[3]}
-            (( ${#_f[5]} > _w[4] )) && _w[4]=${#_f[5]}
+            (( ${#_f[4]} > _w[4] )) && _w[4]=${#_f[4]}
+            (( ${#_f[6]} > _w[5] )) && _w[5]=${#_f[6]}
         done
-        _doubt_line() {   # comp code label by-plain by-shown changes decision
-            local pad=$(( _w[3] - ${#4} ))
-            log "$(printf "  %-${_w[0]}s  %-${_w[1]}s  %-${_w[2]}s  %s%*s  %-${_w[4]}s  %s" "$1" "$2" "$3" "$5" "${pad}" "" "$6" "$7")"
+        _doubt_line() {
+            local pad=$(( _w[4] - ${#5} ))
+            log "$(printf "  %-${_w[0]}s  %-${_w[1]}s  %-${_w[2]}s  %-${_w[3]}s  %s%*s  %-${_w[5]}s  %s" "$1" "$2" "$3" "$4" "$6" "${pad}" "" "$7" "$8")"
         }
-        _doubt_line "Component" "Code" "Label" "Labelled by" "Labelled by" "Code changes" "Decision"
-        _doubt_line "---------" "----" "-----" "-----------" "-----------" "------------" "--------"
+        _doubt_line "Component" "Compiler" "Label" "Effect" "Labelled by" "Labelled by" "Compiler found" "Decision"
+        _doubt_line "---------" "--------" "-----" "------" "-----------" "-----------" "--------------" "--------"
         for _r in "${DOUBT_ROWS[@]}"; do
             IFS=$'\t' read -r -a _f <<<"${_r}"
-            _doubt_line "${_f[0]}" "${_f[1]}" "${_f[2]}" "${_f[3]}" "${_f[4]}" "${_f[5]}" "${_f[6]}"
+            _doubt_line "${_f[0]}" "${_f[1]}" "${_f[2]}" "${_f[3]}" "${_f[4]}" "${_f[5]}" "${_f[6]}" "${_f[7]}"
         done
     fi
     if [[ ${#AUDIT_DETAIL[@]} -gt 0 ]]; then
@@ -4129,7 +4224,7 @@ run_structural_audit() {
     log ""
     _audit_total=$((_audit_flagged + _audit_errors))
     if [[ "${_audit_total}" -eq 0 ]]; then
-        log "✅ Audit clean — every component's structural class, PR labels and metadata.yaml agree."
+        log "✅ Audit clean — every version is the compiler's class, or a confirmation above it, and metadata.yaml agrees."
     else
         log "⚠️  Audit flagged ${_audit_flagged} mismatch(es) + ${_audit_errors} error(s) — see rows above."
     fi
@@ -4246,6 +4341,20 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
         # Drop the label flags so the transitive subsume pass doesn't
         # use them to re-promote downstream importers.
         unset 'COMP_BREAKING[$comp]' 'COMP_NON_DOC[$comp]' 'COMP_DOC[$comp]' 2>/dev/null || true
+    fi
+
+    # The compiler decides the class (#875); the labels above are hints. A
+    # pin or a confirmed class below may only raise it, and the audit gate
+    # rejects one below it.
+    if [[ "${is_initial}" -ne 1 ]]; then
+        compat_check "${comp}" "${current_version}"
+        if [[ -n "${COMP_RECOMMENDED[$comp]}" ]]; then
+            [[ "${COMP_RECOMMENDED[$comp]}" != "${bump}" ]] \
+                && COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}compiler: $(bump_label "${COMP_RECOMMENDED[$comp]}") (labels said $(bump_label "${bump}"))"$'\n'
+            bump="${COMP_RECOMMENDED[$comp]}"
+        else
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${COMP_COMPAT_EVIDENCE[$comp]} — the label-derived bump stands"$'\n'
+        fi
     fi
 
     compute_next_versions "${current_version}" "${bump}"
