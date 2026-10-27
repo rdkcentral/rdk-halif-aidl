@@ -34,6 +34,10 @@
 #
 # build module in release version
 # cmake --build build -DINTERFACE_TARGET=boot -DINTERFACE_VERSION=0.1.0.0
+#
+# build all released version from specific yaml file
+# cmake --build build -DINTERFACE_VERSION=release -DINTERFACE_RELEASE_FILE=/path/to/versions_current.yaml
+#
 
 cmake_minimum_required(VERSION 3.22)
 project(RDK_HAL_AIDL_Modules LANGUAGES CXX C VERSION 0.23.0)
@@ -53,7 +57,13 @@ add_subdirectory("CMakeModules")
 if(NOT INTERFACE_VERSION)
     parse_versions_yaml("${CMAKE_CURRENT_SOURCE_DIR}/versions_current.yaml" COMPONENTS)
 else()
-    parse_versions_yaml("${CMAKE_CURRENT_SOURCE_DIR}/versions_released.yaml" COMPONENTS)
+    if(NOT INTERFACE_RELEASE_FILE)
+        message(STATUS "Using default versions_released.yaml")
+        parse_versions_yaml("${CMAKE_CURRENT_SOURCE_DIR}/versions_released.yaml" COMPONENTS)
+    else()
+        message(STATUS "Using ${INTERFACE_RELEASE_FILE} versions_released.yaml")
+        parse_versions_yaml("${INTERFACE_RELEASE_FILE}" COMPONENTS)
+    endif()
 endif()
 
 # Build all current or release versions
