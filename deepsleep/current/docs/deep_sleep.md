@@ -137,7 +137,11 @@ sequenceDiagram
 
 * The HAL is single-client controlled.
 * Only one call to `enterDeepSleep()` is active at a time.
-* On client crash or termination, HAL must abort sleep entry and return control to the system.
+* `enterDeepSleep()` accepts no client-owned Binder token, so the HAL cannot use
+	`linkToDeath()` to observe the caller's lifetime. Once accepted, sleep entry is a
+	system-owned operation and continues independently if the caller dies.
+* See the common
+	[client-death design criteria](../../../docs/key_concepts/hal/hal_resource_lifecycle.md#interfaces-without-open).
 
 ---
 
