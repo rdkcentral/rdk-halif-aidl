@@ -129,7 +129,7 @@ discipline the interface is additive-only, and the vendor can hold a major while
 the middleware versions independently.
 
 Compatibility is checked at runtime rather than assumed.
-[`halcompat::isCompatible()`](../../../common/current/halcompat.h)
+[`halcompat::isCompatible()`](../../../halcompat/current/halcompat.h)
 applies the era rule for you — major equality while in era `0`, plain ordering
 once frozen — so a client never handles the encoding itself. The helper and the
 rules it applies are documented in

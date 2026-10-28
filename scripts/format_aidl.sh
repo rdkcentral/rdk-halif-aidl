@@ -20,7 +20,6 @@ ALL_DIRS=(
     "avclock"
     "bootreason"
     "broadcast"
-    "common"
     "compositeinput"
     "deepsleep"
     "deviceinfo"
