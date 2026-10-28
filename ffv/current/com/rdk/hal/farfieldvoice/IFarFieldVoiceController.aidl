@@ -73,9 +73,9 @@ interface IFarFieldVoiceController {
      *                                                              or the channel type is mutually exclusive
      *                                                              with another open channel.
      * @exception binder::Status::Exception::EX_NULL_POINTER        Pipe create failed.
-     * 
+     *
      * @returns ParcelFileDescriptor or null if an exception occurs.
-     * 
+     *
      * @see closeChannel()
      */
     @nullable ParcelFileDescriptor openChannel(in @utf8InCpp String channelType);
@@ -93,7 +93,7 @@ interface IFarFieldVoiceController {
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT   Invalid channel type.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE      Channel type is not open.
-     * 
+     *
      * @see openChannel()
      */
     void closeChannel(in @utf8InCpp String channelType);

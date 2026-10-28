@@ -61,20 +61,20 @@ interface IFarFieldVoice
      */
     Capabilities getCapabilities();
 
-	/**
-	 * Gets the current state of the Far Field Voice service.
-	 *
+    /**
+     * Gets the current state of the Far Field Voice service.
+     *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns State enum value.
-	 *
+     *
      * @see IFarFieldVoiceEventListener.onStateChanged().
      */
     State getState();
 
     /**
      * Get the current status of the Far Field Voice service.
-	 *
+     *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
      * @returns Status parcelable.
@@ -83,7 +83,7 @@ interface IFarFieldVoice
 
     /**
      * Get the current status of a Far Field Voice channel.
-	 *
+     *
      * @param[in] channelType       Selected channel type.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
@@ -100,7 +100,7 @@ interface IFarFieldVoice
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
-     * 
+     *
      * @return boolean
      * @retval true     The keyword was detected and meta data is returned.
      * @retval false    The keyword was not detected and meta data is empty.
@@ -113,7 +113,7 @@ interface IFarFieldVoice
      * @param[in] configuration     Vendor defined configuration.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
-     * 
+     *
      * @return boolean
      * @retval true     The configuration was successfully set.
      * @retval false    The configuration is invalid or empty.
@@ -122,7 +122,7 @@ interface IFarFieldVoice
 
     /**
      * Register a Far Field Voice event listener.
-     * 
+     *
      * An `IFarFieldVoiceEventListener` can only be registered once and will fail on subsequent
      * registration attempts.
      *
@@ -158,7 +158,7 @@ interface IFarFieldVoice
     boolean unregisterEventListener(in IFarFieldVoiceEventListener farFieldVoiceEventListener);
 
     /**
-	 * Open the Far Field Voice service.
+     * Open the Far Field Voice service.
      *
      * If successful, the Far Field Voice service transitions to an `OPENING`
      * state and then a `READY` state which is notified to any registered
@@ -173,7 +173,7 @@ interface IFarFieldVoice
      *
      * If the client that opened the `IFarFieldVoiceController` crashes,
      * then `close()` is implicitly called to perform clean up.
-     * 
+     *
      * @pre The resource must be in State::CLOSED.
      *
      * @param[in] farFieldVoiceControllerListener   Listener object for controller callbacks.
@@ -181,9 +181,9 @@ interface IFarFieldVoice
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE if instance is not in State::CLOSED state.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
-     * 
+     *
      * @returns IFarFieldVoiceController or null if not in the State::CLOSED state.
-     * 
+     *
      * @see IFarFieldVoiceController, close(), registerEventListener()
      */
     @nullable IFarFieldVoiceController open(in IFarFieldVoiceControllerListener farFieldVoiceControllerListener);

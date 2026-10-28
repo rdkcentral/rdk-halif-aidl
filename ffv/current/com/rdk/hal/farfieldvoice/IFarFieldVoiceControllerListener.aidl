@@ -28,12 +28,12 @@ package com.rdk.hal.farfieldvoice;
 oneway interface IFarFieldVoiceControllerListener {
 
     /**
-	 * Callback when a keyword is detected on the Keyword channel.
+     * Callback when a keyword is detected on the Keyword channel.
      */
     void onKeywordDetected();
 
     /**
-	 * Callback when an End of voice command is detected on the Keyword channel following the keyword.
+     * Callback when an End of voice command is detected on the Keyword channel following the keyword.
      *
      * @param[in] sampleOffset      Keyword channel sample offset to the end of voice command.
      * @param[in] timedOut          Indicates if timed out detecting end of command.

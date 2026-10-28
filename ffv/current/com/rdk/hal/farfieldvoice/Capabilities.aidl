@@ -33,9 +33,9 @@ parcelable Capabilities
      */
     @utf8InCpp String[] channelTypes;
 
-	/**
+    /**
      * Number of microphone inputs.
-	 */
+     */
     int microphoneChannelCount;
 
     /**

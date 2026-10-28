@@ -31,15 +31,15 @@ import com.rdk.hal.farfieldvoice.FailureCode;
 oneway interface IFarFieldVoiceEventListener {
 
     /**
-	 * Callback when Far Field Voice has transitioned to a new state.
+     * Callback when Far Field Voice has transitioned to a new state.
      *
-     * @param[in] oldState	    The state that the Far Field Voice has transitioned from.
+     * @param[in] oldState        The state that the Far Field Voice has transitioned from.
      * @param[in] newState      The new state that the Far Field Voice has transitioned to.
      */
     void onStateChanged(in State oldState, in State newState);
 
     /**
-	 * Callback when Far Field Voice has transitioned to a new listening mode.
+     * Callback when Far Field Voice has transitioned to a new listening mode.
      *
      * @param[in] listeningMode     The listening mode now in effect.
      *
@@ -48,14 +48,14 @@ oneway interface IFarFieldVoiceEventListener {
     void onEnteredListeningMode(in ListeningMode listeningMode);
 
     /**
-	 * Callback when the Far Field Voice system or one of its sub-systems has failed
+     * Callback when the Far Field Voice system or one of its sub-systems has failed
      * and the service can no longer capture or process audio.
      *
      * The failure may be transient. The client recovers by closing and reopening the
      * Far Field Voice service. A failure that repeats after reopening indicates a
      * permanent fault. The client logs each occurrence with its FailureCode.
      *
-     * @param[in] failureCode	The reason for the failure.
+     * @param[in] failureCode    The reason for the failure.
      */
     void onSystemFailure(in FailureCode failureCode);
 }
