@@ -23,6 +23,10 @@ import com.rdk.hal.farfieldvoice.FailureCode;
 
 /**
  *  @brief     Events callbacks listener interface from Far Field Voice.
+ *
+ *  Registered by any client through IFarFieldVoice.registerEventListener(). Reports service
+ *  state changes, listening mode changes and system failures.
+ *
  *  @author    Philip Stick
  *  @author    Gary Skrabutenas
  */

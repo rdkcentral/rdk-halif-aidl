@@ -15,6 +15,7 @@ Any number of clients can read the capabilities, state and status of the service
     | ---------------------------- | ----------------------------------------------------------------------------------------------------- |
     | **Interface Definition**     | [ffv/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/ffv/current)                     |
     | **Interface Version**        | `current`                                                                                             |
+    | **Service Name**             | `FarFieldVoice` (`IFarFieldVoice.serviceName`)                                                        |
     | **API Documentation**        | TBD                                                                                                   |
     | **HAL Interface Type**       | [AIDL and Binder](../introduction/aidl_and_binder.md)                                                 |
     | **Initialization Unit**      | [systemd service](../vsi/systemd/current/systemd.md)                                                  |
@@ -87,9 +88,11 @@ A channel is one stream of audio from the service to the controlling client. `IF
 | `KEYWORD`    | Keyword Audio channel | Audio written from keyword detection onward, starting with the audio the service has buffered |
 | Other        | Platform defined      | Audio written at the platform's sampling rate                                                   |
 
-On the Keyword Audio channel, keyword detection starts when the channel is opened. Once the keyword is detected, the service writes the audio it has buffered to the pipe as fast as possible, then writes audio in real time. `onEndOfCommand()` reports the end of the voice command as a sample offset; offset `0` is the first sample written to the pipe after the channel was opened.
+Every multi-byte sample is written in little-endian byte order, whatever the byte order of the host processor.
 
-A channel type that cannot be served in the current listening mode, or that is mutually exclusive with a channel already open, fails `openChannel()` with `EX_ILLEGAL_STATE`.
+On the Keyword Audio channel, keyword detection starts when the channel is opened. Once the keyword is detected, the service writes the audio it has buffered to the pipe as fast as possible, then writes audio in real time. `onEndOfCommand()` reports the end of the voice command as a 64-bit sample offset; offset `0` is the first sample written to the pipe after the channel was opened. `Status.keywordDetected` is set when `onKeywordDetected()` is sent and cleared when the Keyword Audio channel is opened or closed.
+
+A channel type that cannot be served in the current listening mode, or that is mutually exclusive with a channel already open, fails `openChannel()` with `EX_ILLEGAL_STATE`. A pipe that cannot be created fails it with `EX_SERVICE_SPECIFIC`.
 
 ---
 

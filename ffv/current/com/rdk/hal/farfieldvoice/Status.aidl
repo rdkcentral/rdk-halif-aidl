@@ -21,6 +21,9 @@ import com.rdk.hal.farfieldvoice.ListeningMode;
 
 /**
  *  @brief     Far Field Voice service status.
+ *
+ *  Returned by IFarFieldVoice.getStatus(). Unlike Capabilities, these values change at run time.
+ *
  *  @author    Philip Stick
  *  @author    Gary Skrabutenas
  */
@@ -35,7 +38,10 @@ parcelable Status
     ListeningMode listeningMode;
 
     /**
-     * Indicates if a keyword was detected on the Keyword channel.
+     * Indicates if a keyword was detected on the Keyword Audio channel since it was opened.
+     *
+     * Set when IFarFieldVoiceControllerListener.onKeywordDetected() is sent. Cleared when the
+     * Keyword Audio channel is opened or closed, so true always refers to the current session.
      */
     boolean keywordDetected;
 

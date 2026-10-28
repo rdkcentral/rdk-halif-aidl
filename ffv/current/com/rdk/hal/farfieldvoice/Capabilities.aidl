@@ -21,6 +21,10 @@ import com.rdk.hal.farfieldvoice.ListeningMode;
 
 /**
  *  @brief     Far Field Voice service capabilities.
+ *
+ *  Returned by IFarFieldVoice.getCapabilities(). The values are static for the platform
+ *  and match the platform's HAL Feature Profile (hfp-ffv.yaml) field by field.
+ *
  *  @author    Philip Stick
  *  @author    Gary Skrabutenas
  */
@@ -29,7 +33,7 @@ import com.rdk.hal.farfieldvoice.ListeningMode;
 parcelable Capabilities
 {
     /**
-     * Array of vendor/product defined channel types supported (e.g. "KEYWORD" = Keyword channel).
+     * Array of vendor/product defined channel types supported (e.g. "KEYWORD" = Keyword Audio channel).
      */
     @utf8InCpp String[] channelTypes;
 

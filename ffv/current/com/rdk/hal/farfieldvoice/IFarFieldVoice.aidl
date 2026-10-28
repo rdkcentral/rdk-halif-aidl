@@ -39,7 +39,7 @@ import com.rdk.hal.farfieldvoice.IFarFieldVoiceControllerListener;
  *  The Far Field Voice HAL provides a stream of far field audio input to the client
  *  upon detection of a keyword in the audio stream. Following detection of the keyword,
  *  the HAL detects a voice command in the stream and reports its occurrence to the client.
- *  This stream is referred to as the Keyword channel. This stream is typically forwarded to
+ *  This stream is referred to as the Keyword Audio channel. This stream is typically forwarded to
  *  a voice recognition server for interpretation of user intent.
  *
  *  The Far Field Voice HAL may also provide other vendor/product specific streams of audio
@@ -52,12 +52,15 @@ import com.rdk.hal.farfieldvoice.IFarFieldVoiceControllerListener;
 @VintfStability
 interface IFarFieldVoice
 {
+    /** The service name to publish. To be returned by getServiceName() in the derived class. */
+    const @utf8InCpp String serviceName = "FarFieldVoice";
+
     /**
      * Get the capabilities of the Far Field Voice service.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
-     * @returns Capabilities parcelable.
+     * @returns The platform's static capabilities; constant for the life of the service.
      */
     Capabilities getCapabilities();
 
@@ -66,7 +69,7 @@ interface IFarFieldVoice
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
-     * @returns State enum value.
+     * @returns The current service state.
      *
      * @see IFarFieldVoiceEventListener.onStateChanged().
      */
@@ -77,7 +80,7 @@ interface IFarFieldVoice
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
-     * @returns Status parcelable.
+     * @returns The current listening mode, keyword detected flag and privacy state.
      */
     Status getStatus();
 
@@ -89,23 +92,23 @@ interface IFarFieldVoice
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT    Invalid channel type.
      *
-     * @returns ChannelStatus parcelable.
+     * @returns Whether the channel is open and the samples it has lost to buffer overflow.
      */
     ChannelStatus getChannelStatus(in @utf8InCpp String channelType);
 
     /**
-     * Get keyword detect meta data.
+     * Get keyword detect metadata.
      *
-     * @param[out] metaData     Keyword detect meta data or empty array if the keyword wasn't detected.
+     * @param[out] metadata     Keyword detect metadata or empty array if the keyword wasn't detected.
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
-     * @return boolean
-     * @retval true     The keyword was detected and meta data is returned.
-     * @retval false    The keyword was not detected and meta data is empty.
+     * @returns Whether keyword detect metadata is available.
+     * @retval true     The keyword was detected and metadata is returned.
+     * @retval false    The keyword was not detected and metadata is empty.
      */
-    boolean getKeywordMetaData(out byte[] metaData);
+    boolean getKeywordMetadata(out byte[] metadata);
 
     /**
      * Set vendor defined configuration.
@@ -114,7 +117,7 @@ interface IFarFieldVoice
      *
      * @exception binder::Status::Exception::EX_NONE for success.
      *
-     * @return boolean
+     * @returns Whether the configuration was applied.
      * @retval true     The configuration was successfully set.
      * @retval false    The configuration is invalid or empty.
      */
@@ -133,7 +136,7 @@ interface IFarFieldVoice
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
-     * @return boolean
+     * @returns Whether the listener was added.
      * @retval true     The event listener was registered.
      * @retval false    The event listener is already registered.
      *
@@ -149,7 +152,7 @@ interface IFarFieldVoice
      * @exception binder::Status::Exception::EX_NONE for success.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
-     * @return boolean
+     * @returns Whether the listener was removed.
      * @retval true     The event listener was unregistered.
      * @retval false    The event listener was not found registered.
      *
@@ -161,8 +164,9 @@ interface IFarFieldVoice
      * Open the Far Field Voice service.
      *
      * If successful, the Far Field Voice service transitions to an `OPENING`
-     * state and then a `READY` state which is notified to any registered
-     * `IFarFieldVoiceEventListener` interface.
+     * state and then a `READY` state. `onStateChanged(CLOSED, OPENING)` and then
+     * `onStateChanged(OPENING, READY)` are notified on every registered
+     * `IFarFieldVoiceEventListener`.
      *
      * Controller related callbacks are made through the `IFarFieldVoiceControllerListener`
      * passed into the call.
@@ -194,8 +198,8 @@ interface IFarFieldVoice
      * The Far Field Voice service must be in a `READY` state before it can be
      * closed. If successful the Far Field Voice service transitions to a
      * `CLOSING` state and then a `CLOSED` state.
-     * `onStateChanged(CLOSING, CLOSED)` will be notified on any registered
-     * listener interface.
+     * `onStateChanged(READY, CLOSING)` and then `onStateChanged(CLOSING, CLOSED)`
+     * are notified on every registered `IFarFieldVoiceEventListener`.
      *
      * @pre The resource must be in State::READY.
      *
@@ -205,7 +209,7 @@ interface IFarFieldVoice
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE if instance is not in State::READY state.
      * @exception binder::Status::Exception::EX_NULL_POINTER for Null object.
      *
-     * @return boolean
+     * @returns Whether the service was closed.
      * @retval true     Successfully closed.
      * @retval false    Invalid state or unrecognised parameter.
      *

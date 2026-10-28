@@ -20,6 +20,9 @@ package com.rdk.hal.farfieldvoice;
 
 /**
  *  @brief     Far Field Voice channel status.
+ *
+ *  Returned by IFarFieldVoice.getChannelStatus() for one channel type.
+ *
  *  @author    Philip Stick
  */
 
@@ -37,5 +40,5 @@ parcelable ChannelStatus
      * This is for information only and useful to log at the end of a session.
      * Non zero values may indicate inadequate CPU time or buffer space.
      */
-    int samplesLost;
+    long samplesLost;
 }

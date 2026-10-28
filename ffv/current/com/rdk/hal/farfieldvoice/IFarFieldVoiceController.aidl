@@ -21,6 +21,10 @@ import com.rdk.hal.farfieldvoice.ListeningMode;
 
 /**
  *  @brief     Far Field Voice Controller interface.
+ *
+ *  Returned by IFarFieldVoice.open() to the one controlling client. It opens and closes
+ *  the audio channels, sets the listening mode and sets the privacy state.
+ *
  *  @author    Philip Stick
  *  @author    Gary Skrabutenas
  */
@@ -34,33 +38,33 @@ interface IFarFieldVoiceController {
      * If successful, creates and returns a pipe for passing the specified channel type audio to the
      * client and the specified channel type is in the open state.
      *
-     * If the channelType specifies the vendor's Keyword channel type;
+     * If the channelType specifies the vendor's Keyword Audio channel type;
      *
-     *  Keyword channel audio processing is initialized and keyword detection is started. Upon keyword
+     *  Keyword Audio channel processing is initialized and keyword detection is started. Upon keyword
      *  detection, audio samples are written to the channel's pipe.
      *
-     *  The audio data format is vendor/product specific. The endian order of each sample value is that
-     *  of the host processor's native endian order.
+     *  The audio data format is vendor/product specific. Each multi-byte sample value is written in
+     *  little-endian byte order, whatever the byte order of the host processor.
      *
      *  Once a keyword is detected, the Far Field Voice HAL begins writing audio samples to the Keyword
-     *  channel's pipe whenever audio samples are available. Initially, samples may be written to the pipe
+     *  Audio channel's pipe whenever audio samples are available. Initially, samples may be written to the pipe
      *  faster than real time as audio buffered within the HAL is provided as fast as possible. Once all
      *  buffered audio is written to the pipe, audio will be written at a rate based on the sampling rate
      *  (real time).
      *
-     *  The following controller callbacks can occur after the Keyword channel is opened.
+     *  The following controller callbacks can occur after the Keyword Audio channel is opened.
      *   onKeywordDetected()
      *   onEndOfCommand()
      *
-     *  The sample offset values provided in 'onEndOfCommand' are the relative sample number with respect
+     *  The sample offset values provided in onEndOfCommand() are the relative sample number with respect
      *  to the audio samples written to the channel's pipe. A sample offset value of zero corresponds to
      *  the first sample written after opening the channel.
      *
      * If channelType specifies another vendor channel type
      *
      *  Audio data is written to the channel's pipe at the vendor/product specific sampling rate. The audio data
-     *  format is vendor/product specific. The endian order of each sample value is that of the host processor's
-     *  native endian order.
+     *  format is vendor/product specific. Each multi-byte sample value is written in little-endian byte order,
+     *  whatever the byte order of the host processor.
      *
      * @pre The channel type must be in the closed state.
      *
@@ -72,7 +76,7 @@ interface IFarFieldVoiceController {
      *                                                              listening mode is invalid for the channel type,
      *                                                              or the channel type is mutually exclusive
      *                                                              with another open channel.
-     * @exception binder::Status::Exception::EX_NULL_POINTER        Pipe create failed.
+     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC    Pipe create failed.
      *
      * @returns ParcelFileDescriptor or null if an exception occurs.
      *
@@ -123,7 +127,7 @@ interface IFarFieldVoiceController {
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT    Listening mode is ListeningMode::NONE or not in
      *                                                              Capabilities.supportedListeningModes.
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE       All audio channels must be in the closed state.
-     * @exception binder::Status::Exception::EX_NULL_POINTER        Listening mode initialization failed.
+     * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC    Listening mode initialization failed.
      *
      * @see IFarFieldVoiceEventListener.onEnteredListeningMode(), IFarFieldVoiceEventListener.onSystemFailure()
      */

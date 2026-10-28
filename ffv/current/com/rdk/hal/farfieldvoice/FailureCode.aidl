@@ -20,6 +20,9 @@ package com.rdk.hal.farfieldvoice;
 
 /**
  *  @brief     Far Field Voice failure code definitions.
+ *
+ *  Reported with IFarFieldVoiceEventListener.onSystemFailure().
+ *
  *  @author    Philip Stick
  *  @author    Gary Skrabutenas
  */

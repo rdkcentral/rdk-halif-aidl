@@ -56,7 +56,7 @@ enum ListeningMode
      *
      * The module listens for the keyword with reduced processing, so that a keyword
      * can be detected while the rest of the platform is in a low power state. Only the
-     * Keyword channel type can be opened.
+     * Keyword Audio channel type can be opened.
      */
     KEYWORD_ALERT = 2,
 
