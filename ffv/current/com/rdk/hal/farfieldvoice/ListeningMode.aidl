@@ -63,7 +63,10 @@ enum ListeningMode
     /**
      * No audio capture or processing.
      *
-     * Keyword detection does not run and no audio channel can be opened.
+     * Keyword detection does not run and no audio channel can be opened. Only the audio
+     * path is stopped: the service stays running and reachable, so it sends
+     * IFarFieldVoiceEventListener.onEnteredListeningMode(POWERED_OFF) once capture has
+     * stopped and accepts setListeningMode() to leave this mode.
      */
     POWERED_OFF = 3,
 }

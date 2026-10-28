@@ -132,4 +132,20 @@ interface IFarFieldVoiceController {
      * @see IFarFieldVoiceEventListener.onEnteredListeningMode(), IFarFieldVoiceEventListener.onSystemFailure()
      */
     void setListeningMode(in ListeningMode listeningMode);
+
+    /**
+     * Set vendor defined configuration.
+     *
+     * Only the controlling client can change the configuration, through the
+     * IFarFieldVoiceController returned by IFarFieldVoice.open().
+     *
+     * @param[in] configuration     Vendor defined configuration.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
+     * @returns Whether the configuration was applied.
+     * @retval true     The configuration was successfully set.
+     * @retval false    The configuration is invalid or empty.
+     */
+    boolean setConfiguration(in byte[] configuration);
 }

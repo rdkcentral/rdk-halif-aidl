@@ -41,7 +41,7 @@ flowchart LR
     Observer["Observing clients"] -- "getCapabilities / getState / getStatus<br/>registerEventListener" --> FFV
     Controller["Controlling client"] -- "open / close" --> FFV
     FFV -- "IFarFieldVoiceController" --> Controller
-    Controller -- "openChannel / closeChannel<br/>setListeningMode / setPrivacyState" --> Ctl["IFarFieldVoiceController"]
+    Controller -- "openChannel / closeChannel<br/>setListeningMode / setPrivacyState<br/>setConfiguration" --> Ctl["IFarFieldVoiceController"]
     Ctl -- "audio pipe per open channel" --> Controller
     Ctl -. "IFarFieldVoiceControllerListener<br/>onKeywordDetected / onEndOfCommand" .-> Controller
     FFV -. "IFarFieldVoiceEventListener<br/>onStateChanged / onEnteredListeningMode / onSystemFailure" .-> Observer
@@ -54,7 +54,7 @@ flowchart LR
 | AIDL File                               | Description                                                                         |
 | --------------------------------------- | ----------------------------------------------------------------------------------- |
 | `IFarFieldVoice.aidl`                   | Service interface: capabilities, state, status, listener registration, open/close  |
-| `IFarFieldVoiceController.aidl`         | Control interface held by one client: audio channels, listening mode, privacy      |
+| `IFarFieldVoiceController.aidl`         | Control interface held by one client: audio channels, listening mode, privacy, configuration |
 | `IFarFieldVoiceControllerListener.aidl` | Controller callbacks: keyword detected, end of voice command                        |
 | `IFarFieldVoiceEventListener.aidl`      | Service callbacks: state change, listening mode entered, system failure             |
 | `Capabilities.aidl`                     | Channel types, microphone channel count, supported listening modes                  |
@@ -104,7 +104,7 @@ A listening mode is the module's own behaviour, not a system power state. The sy
 | --------------- | ----------------------------------------------------------------------------------------- | --------------------------------- |
 | `ACTIVE_LISTEN` | Full far field capture and processing; keyword detection runs                             | Every type in `channelTypes`      |
 | `KEYWORD_ALERT` | Keyword detection only, so the keyword can be detected while the platform is in low power | `KEYWORD`                         |
-| `POWERED_OFF`   | No audio capture or processing                                                            | None                              |
+| `POWERED_OFF`   | No audio capture or processing; the service stays running and reachable                  | None                              |
 
 `NONE` is reported in `Status.listeningMode` before a mode has been set and while a mode change is in progress. A platform lists the modes it supports in `Capabilities.supportedListeningModes` and in `supportedListeningModes` of its HFP.
 

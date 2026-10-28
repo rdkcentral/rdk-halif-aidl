@@ -111,19 +111,6 @@ interface IFarFieldVoice
     boolean getKeywordMetadata(out byte[] metadata);
 
     /**
-     * Set vendor defined configuration.
-     *
-     * @param[in] configuration     Vendor defined configuration.
-     *
-     * @exception binder::Status::Exception::EX_NONE for success.
-     *
-     * @returns Whether the configuration was applied.
-     * @retval true     The configuration was successfully set.
-     * @retval false    The configuration is invalid or empty.
-     */
-    boolean setConfiguration(in byte[] configuration);
-
-    /**
      * Register a Far Field Voice event listener.
      *
      * An `IFarFieldVoiceEventListener` can only be registered once and will fail on subsequent
