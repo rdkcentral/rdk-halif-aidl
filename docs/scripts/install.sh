@@ -157,6 +157,8 @@ function setup_and_enable_venv()
                 return 1
             fi
         fi
+        # Kept only for the failure paths above, which point the user at it
+        rm -f venv_error.log
 
         ECHO "Virtual environment created."
     fi
