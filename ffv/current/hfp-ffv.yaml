@@ -29,7 +29,7 @@ ffv:                            # Component object begins (matches directory nam
   interfaceVersion: current
 
   # Capabilities.microphoneChannelCount - number of microphone inputs.
-  microphoneChannelCount: 1     # channels
+  microphoneChannelCount: 8     # channels; the largest array in ffv/metadata.yaml scope
 
   # Capabilities.channelTypes - audio channel types IFarFieldVoiceController.openChannel() accepts.
   channelTypes:
