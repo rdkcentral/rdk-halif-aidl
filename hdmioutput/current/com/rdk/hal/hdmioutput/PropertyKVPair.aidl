@@ -18,8 +18,8 @@
  */
 package com.rdk.hal.hdmioutput;
 
-import com.rdk.hal.hdmioutput.PropertyValue;
 import com.rdk.hal.hdmioutput.Property;
+import com.rdk.hal.hdmioutput.PropertyValue;
 
 /**
  *  @brief     Key-value pair for HDMI output properties.

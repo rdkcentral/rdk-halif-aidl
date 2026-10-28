@@ -18,13 +18,13 @@
  */
 package com.rdk.hal.hdmioutput;
 
-import com.rdk.hal.hdmioutput.PropertyValue;
 import com.rdk.hal.hdmioutput.Capabilities;
 import com.rdk.hal.hdmioutput.IHDMIOutputController;
 import com.rdk.hal.hdmioutput.IHDMIOutputControllerListener;
 import com.rdk.hal.hdmioutput.IHDMIOutputEventListener;
 import com.rdk.hal.hdmioutput.Property;
 import com.rdk.hal.hdmioutput.PropertyKVPair;
+import com.rdk.hal.hdmioutput.PropertyValue;
 import com.rdk.hal.hdmioutput.State;
 
 /**

@@ -18,11 +18,11 @@
  */
 package com.rdk.hal.hdmioutput;
 
-import com.rdk.hal.hdmioutput.PropertyValue;
 import com.rdk.hal.hdmioutput.HDCPProtocolVersion;
 import com.rdk.hal.hdmioutput.HDCPStatus;
 import com.rdk.hal.hdmioutput.Property;
 import com.rdk.hal.hdmioutput.PropertyKVPair;
+import com.rdk.hal.hdmioutput.PropertyValue;
 import com.rdk.hal.hdmioutput.SPDInfoFrame;
 
 /**

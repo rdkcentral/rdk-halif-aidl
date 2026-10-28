@@ -17,15 +17,15 @@
  * limitations under the License.
  */
 package com.rdk.hal.videodecoder;
-import com.rdk.hal.videodecoder.OperationalMode;
-import com.rdk.hal.videodecoder.PropertyValue;
 import com.rdk.hal.videodecoder.Capabilities;
 import com.rdk.hal.videodecoder.Codec;
 import com.rdk.hal.videodecoder.IVideoDecoderController;
 import com.rdk.hal.videodecoder.IVideoDecoderControllerListener;
 import com.rdk.hal.videodecoder.IVideoDecoderEventListener;
+import com.rdk.hal.videodecoder.OperationalMode;
 import com.rdk.hal.videodecoder.Property;
 import com.rdk.hal.videodecoder.PropertyKVPair;
+import com.rdk.hal.videodecoder.PropertyValue;
 import com.rdk.hal.videodecoder.State;
 
 /**

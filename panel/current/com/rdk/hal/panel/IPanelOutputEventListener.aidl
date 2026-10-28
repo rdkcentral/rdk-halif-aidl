@@ -17,9 +17,9 @@
  * limitations under the License.
  */
 package com.rdk.hal.panel;
+import com.rdk.hal.panel.DynamicRange;
 import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.panel.State;
-import com.rdk.hal.panel.DynamicRange;
 
 /**
  *  @brief     Display Panel Output Event Listener interface.

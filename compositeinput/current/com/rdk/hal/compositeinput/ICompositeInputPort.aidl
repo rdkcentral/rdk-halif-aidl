@@ -19,7 +19,6 @@
 
 package com.rdk.hal.compositeinput;
 
-import com.rdk.hal.compositeinput.PropertyValue;
 import com.rdk.hal.compositeinput.ICompositeInputController;
 import com.rdk.hal.compositeinput.ICompositeInputControllerListener;
 import com.rdk.hal.compositeinput.ICompositeInputEventListener;
@@ -28,6 +27,7 @@ import com.rdk.hal.compositeinput.PortCapabilities;
 import com.rdk.hal.compositeinput.PortProperty;
 import com.rdk.hal.compositeinput.PortStatus;
 import com.rdk.hal.compositeinput.PropertyKVPair;
+import com.rdk.hal.compositeinput.PropertyValue;
 import com.rdk.hal.compositeinput.State;
 
 /**

@@ -17,10 +17,10 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmicec;
-import com.rdk.hal.hdmicec.PropertyValue;
 import com.rdk.hal.hdmicec.IHdmiCecController;
 import com.rdk.hal.hdmicec.IHdmiCecEventListener;
 import com.rdk.hal.hdmicec.Property;
+import com.rdk.hal.hdmicec.PropertyValue;
 import com.rdk.hal.hdmicec.State;
 
 /**
