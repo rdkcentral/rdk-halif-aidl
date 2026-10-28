@@ -35,8 +35,7 @@ import com.rdk.hal.hdmioutput.State;
  *  @author    Gerald Weatherup
  */
 @VintfStability
-oneway interface IHDMIOutputEventListener
-{
+oneway interface IHDMIOutputEventListener {
     /**
      * Callback triggered when the HDMI output changes state.
      *

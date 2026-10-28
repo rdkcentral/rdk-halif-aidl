@@ -17,118 +17,117 @@
  * limitations under the License.
  */
 package com.rdk.hal.planecontrol;
-  
-/** 
+
+/**
  *  @brief     Plane properties definition.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
  *  @author    Douglas Adler
  */
- 
+
 @VintfStability
 @Backing(type = "int")
-enum Property
-{
-	/**
-	 * Unique 0 based index per plane resource instance.
-	 *
-	 * Type: Integer
-	 * Access: Read-only.
-	 *
-	 * @exception binder::Status::Exception::EX_NONE for success
-	 * @exception binder::Status EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
-	 *
-	 */
-	RESOURCE_ID = 0,
+enum Property {
+    /**
+     * Unique 0 based index per plane resource instance.
+     *
+     * Type: Integer
+     * Access: Read-only.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success
+     * @exception binder::Status EX_UNSUPPORTED_OPERATION if try to modify Read-only property.
+     *
+     */
+    RESOURCE_ID = 0,
 
     /**
-	 * Left coordinate of the plane inside its frame coordinates. 
-	 *
-	 * Type: Integer
-	 * Default is 0.
-	 * Access: Read-write.
-	 */
+     * Left coordinate of the plane inside its frame coordinates.
+     *
+     * Type: Integer
+     * Default is 0.
+     * Access: Read-write.
+     */
     X = 1,
- 
+
     /**
-	 * Top coordinate of the plane inside its frame coordinates. 
-	 *
-	 * Type: Integer
-	 * Default is 0.
-	 * Access: Read-write.
-	 */
+     * Top coordinate of the plane inside its frame coordinates.
+     *
+     * Type: Integer
+     * Default is 0.
+     * Access: Read-write.
+     */
     Y = 2,
- 
+
     /**
-	 * Width of the plane inside its reference frame coordinates. 
-	 *
-	 * Type: Integer
-	 * Default is Capabilities.maxWidth.
-	 * Access: Read-write.
-	 */
+     * Width of the plane inside its reference frame coordinates.
+     *
+     * Type: Integer
+     * Default is Capabilities.maxWidth.
+     * Access: Read-write.
+     */
     WIDTH = 3,
- 
+
     /**
-	 * Height of the plane inside its reference frame coordinates. 
-	 *
-	 * Type: Integer
-	 * Default is Capabilities.maxHeight.
-	 * Access: Read-write.
-	 */
+     * Height of the plane inside its reference frame coordinates.
+     *
+     * Type: Integer
+     * Default is Capabilities.maxHeight.
+     * Access: Read-write.
+     */
     HEIGHT = 4,
- 
+
     /**
-	 * Alpha blending value for the whole plane. 0=transparent, 255=opaque. 
-	 *
-	 * Type: Integer
-	 * Default is 255.
-	 * Access: Read-write.
-	 * @pre Capabilities.supportsAlpha must be true to support this property.
-	 */
+     * Alpha blending value for the whole plane. 0=transparent, 255=opaque.
+     *
+     * Type: Integer
+     * Default is 255.
+     * Access: Read-write.
+     * @pre Capabilities.supportsAlpha must be true to support this property.
+     */
     ALPHA = 5,
- 
+
     /**
-	 * Z-order position of the plane. Higher z-order planes are composited above lower z-order planes. 
-	 *
-	 * Type: Integer
-	 * Default is RESOURCE_ID property index.
-	 * Access: Read-write.
-	 */
+     * Z-order position of the plane. Higher z-order planes are composited above lower z-order planes.
+     *
+     * Type: Integer
+     * Default is RESOURCE_ID property index.
+     * Access: Read-write.
+     */
     ZORDER = 6,
- 
+
     /**
-	 * Visibility of the plane.
-	 *
-	 * Type: Integer
-	 *  0 - invisible (default)
-	 *  1 - visible
-	 * Access: Read-write.
-	 */
+     * Visibility of the plane.
+     *
+     * Type: Integer
+     *  0 - invisible (default)
+     *  1 - visible
+     * Access: Read-write.
+     */
     VISIBLE = 7,
-  
+
     /**
-	 * Overscan applied to a video frames presented on the video plane. 
-	 * Overscan is specified in percentage and applied equally to all edges.
+     * Overscan applied to a video frames presented on the video plane.
+     * Overscan is specified in percentage and applied equally to all edges.
      * Overscan only applied to `VIDEO` planes.
-	 *
-	 * Type: Integer
-	 *  0 - full image (no overscan).
-	 * Access: Read-write.
-	 */
+     *
+     * Type: Integer
+     *  0 - full image (no overscan).
+     * Access: Read-write.
+     */
     OVERSCAN = 8,
- 
+
     /**
-	 * Aspect ratio applied to a video plane.
+     * Aspect ratio applied to a video plane.
      * Values are enumerated in AspectRatio.
-	 *
-	 * Type: Integer - enum AspectRatio
-	 *  0 - AspectRatio::FULL_WITH_ASPECT
-	 * Access: Read-write.
-	 */
+     *
+     * Type: Integer - enum AspectRatio
+     *  0 - AspectRatio::FULL_WITH_ASPECT
+     * Access: Read-write.
+     */
     ASPECT_RATIO = 9,
- 
+
     /**
-	 * Metrics 
-	 */
-    
+     * Metrics
+     */
+
 }

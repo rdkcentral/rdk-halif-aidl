@@ -33,9 +33,8 @@ package com.rdk.hal.audiodecoder;
  * used in DVB, ISDB, HLS, and DASH applications in STB/TV systems.
  */
 @VintfStability
-@Backing(type="int")
-enum CSDAudioFormat
-{
+@Backing(type = "int")
+enum CSDAudioFormat {
     /**
      * AAC AudioSpecificConfig (ASC) per ISO/IEC 14496-3.
      * Used for AAC-LC, HE-AAC, HE-AAC v2 in MP4/fMP4.

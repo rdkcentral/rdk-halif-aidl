@@ -35,7 +35,7 @@ package com.rdk.hal.drm;
  *   "HDCP 2.3 on HDMI Specification"
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum HdcpLevel {
     /**
      * Unable to determine the HDCP level

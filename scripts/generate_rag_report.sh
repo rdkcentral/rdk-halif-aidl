@@ -64,12 +64,16 @@ yaml_nested() {
 # Parse reviewer map (Team: status) and return "reviewed/total" count
 yaml_review_progress() {
     local file="$1"
+    # Indentation-agnostic: yaml_reviewer_status below matches any depth, so a
+    # depth-specific pattern here silently reported 0/0 for a component whose
+    # reviewers block was indented differently, while its per-team columns
+    # still rendered correctly.
     awk '
         /^reviewers:/ {found=1; next}
         found && /^[^ #]/ {found=0}
-        found && /^    [A-Za-z]/ {
+        found && /^[ \t]+[A-Za-z]/ {
             split($0, a, ": ")
-            gsub(/^ +/, "", a[1])
+            gsub(/^[ \t]+/, "", a[1])
             total++
             if (a[2] == "reviewed") reviewed++
             else if (a[2] == "abstained") abstained++
@@ -463,7 +467,7 @@ Pre-baseline versions use the format `0.<generation>.<minor>.<patch>`:
 | Field | Meaning | Bumped when |
 |-------|---------|-------------|
 | `0` | Pre-baseline prefix | Changes to AIDL integer at freeze |
-| `generation` | Architectural era (0 = initial, 1+ = full design cycle) | Breaking interface change |
+| `generation` | ABI generation — incremented on any ABI-breaking change, however small | A change that breaks a client built against the previous release |
 | `minor` | ABI-compatible enhancement counter | Non-breaking feature added |
 | `patch` | Documentation or trivial fix counter | No interface change |
 

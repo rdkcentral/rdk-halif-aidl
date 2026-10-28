@@ -1,0 +1,8 @@
+aidl_interface:
+  name: ringbuffer
+  version: 1000
+  srcs:
+    - com/rdk/hal/ringbuffer/*.aidl
+  imports: []
+  stability: vintf
+  layout: module-local

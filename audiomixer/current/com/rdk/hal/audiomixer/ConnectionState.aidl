@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiomixer;
- 
-/** 
+
+/**
  * @brief     HAL component states.
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
@@ -31,7 +31,7 @@ package com.rdk.hal.audiomixer;
  *          Used in output port properties to describe physical or logical connection status.
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum ConnectionState {
     UNKNOWN = 0,      /**< Connection state cannot be determined (e.g., not supported by hardware) */
     DISCONNECTED = 1, /**< Explicitly disconnected */

@@ -1,0 +1,9 @@
+aidl_interface:
+  name: hdmicec
+  version: 2000
+  srcs:
+    - com/rdk/hal/hdmicec/*.aidl
+  imports:
+    - common@0.3.0.0
+  stability: vintf
+  layout: module-local

@@ -16,16 +16,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package com.rdk.hal.audiomixer;
+package com.rdk.hal.audiomixer;
 
+import com.rdk.hal.PropertyValue;
+import com.rdk.hal.audiodecoder.Codec;
 import com.rdk.hal.audiomixer.Capabilities;
 import com.rdk.hal.audiomixer.IAudioMixerController;
 import com.rdk.hal.audiomixer.IAudioMixerEventListener;
 import com.rdk.hal.audiomixer.IAudioOutputPort;
-import com.rdk.hal.audiomixer.Property;
 import com.rdk.hal.audiomixer.InputRouting;
-import com.rdk.hal.PropertyValue;
-import com.rdk.hal.audiodecoder.Codec;
+import com.rdk.hal.audiomixer.Property;
 
 /**
  * @brief Audio Mixer HAL interface.
@@ -47,41 +47,47 @@ interface IAudioMixer {
      *
      * MIXER_SYSTEM is always present; additional IDs are vendor/platform defined.
      */
-    @Backing(type="int")
+    @Backing(type = "int")
     enum Id {
+        /** The system mixer. Always present. */
         MIXER_SYSTEM = 0,
+        /** Mixer 1. Vendor/platform defined. */
         MIX1 = 1,
+        /** Mixer 2. Vendor/platform defined. */
         MIX2 = 2,
+        /** Mixer 3. Vendor/platform defined. */
         MIX3 = 3,
+        /** Mixer 4. Vendor/platform defined. */
         MIX4 = 4,
+        /** Mixer 5. Vendor/platform defined. */
         MIX5 = 5
     }
 
     /**
-    * @brief Returns the list of audio output port IDs on this mixer.
-    *
-    * @returns Array of int values representing port IDs.
-    */
+     * @brief Returns the list of audio output port IDs on this mixer.
+     *
+     * @returns Array of int values representing port IDs.
+     */
     int[] getAudioOutputPortIds();
 
     /**
-    * @brief Gets an audio output port interface by ID.
-    *
-    * Callers should discover valid port identifiers via
-    * `getAudioOutputPortIds()` rather than probe-by-ID. Negative or
-    * otherwise structurally invalid identifiers raise
-    * `EX_ILLEGAL_ARGUMENT`; an identifier that is plausible but not
-    * currently mounted on this mixer instance returns `null`.
-    *
-    * @param[in] id Output port identifier (as int).
-    * @returns      IAudioOutputPort interface, or null if no port with the
-    *               given ID is mounted on this mixer instance.
-    *
-    * @exception binder::Status EX_ILLEGAL_ARGUMENT if @c id is negative or
-    *            structurally invalid for this platform.
-    *
-    * @see getAudioOutputPortIds()
-    */
+     * @brief Gets an audio output port interface by ID.
+     *
+     * Callers should discover valid port identifiers via
+     * `getAudioOutputPortIds()` rather than probe-by-ID. Negative or
+     * otherwise structurally invalid identifiers raise
+     * `EX_ILLEGAL_ARGUMENT`; an identifier that is plausible but not
+     * currently mounted on this mixer instance returns `null`.
+     *
+     * @param[in] id Output port identifier (as int).
+     * @returns      IAudioOutputPort interface, or null if no port with the
+     *               given ID is mounted on this mixer instance.
+     *
+     * @exception binder::Status EX_ILLEGAL_ARGUMENT if @c id is negative or
+     *            structurally invalid for this platform.
+     *
+     * @see getAudioOutputPortIds()
+     */
     @nullable IAudioOutputPort getAudioOutputPort(in int id);
 
     /**
@@ -177,26 +183,26 @@ interface IAudioMixer {
     boolean unregisterEventListener(in IAudioMixerEventListener audioMixerEventListener);
 
     /**
-    * @brief Gets the list of currently active source codecs being mixed.
-    *
-    * Useful for clients to discover what input formats are currently processed
-    * by the mixer for debugging, display, or selection logic.
-    *
-    * The length and order of the returned array correspond to the current
-    * active mixer inputs; each entry matches the input at the same index
-    * as returned by capability or enumeration APIs.
-    *
-    * Callable independent of open()/close(), like `getCapabilities()` —
-    * does not require holding the IAudioMixerController and does not gate
-    * on the mixer lifecycle state.
-    *
-    * @returns List of codecs for active sources.
-    *
-    * @exception binder::Status::Exception::EX_NONE for success.
-    *
-    * @see IAudioMixer.getCapabilities()
-    * @see Codec
-    */
+     * @brief Gets the list of currently active source codecs being mixed.
+     *
+     * Useful for clients to discover what input formats are currently processed
+     * by the mixer for debugging, display, or selection logic.
+     *
+     * The length and order of the returned array correspond to the current
+     * active mixer inputs; each entry matches the input at the same index
+     * as returned by capability or enumeration APIs.
+     *
+     * Callable independent of open()/close(), like `getCapabilities()` —
+     * does not require holding the IAudioMixerController and does not gate
+     * on the mixer lifecycle state.
+     *
+     * @returns List of codecs for active sources.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     *
+     * @see IAudioMixer.getCapabilities()
+     * @see Codec
+     */
     Codec[] getCurrentSourceCodecs();
 
     /**

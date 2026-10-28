@@ -17,29 +17,28 @@
  * limitations under the License.
  */
 package com.rdk.hal.panel;
+import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.videodecoder.DynamicRange;
-import com.rdk.hal.AVSource;
 
-/** 
+/**
  *  @brief     Picture mode configuration.
  *  @authors   Luc Kennedy-Lamb, Peter Stieglitz, Douglas Adler, Ramkumar Pattabiraman
  */
- 
+
 @VintfStability
-parcelable PictureModeConfiguration
-{
-	/**
-	 * The picture mode.
-	 */
-	String pictureMode;
+parcelable PictureModeConfiguration {
+    /**
+     * The picture mode.
+     */
+    @utf8InCpp String pictureMode;
 
-	/**
-	 * The video format dynamic range.
-	 */
-	DynamicRange format;
+    /**
+     * The dynamic range.
+     */
+    DynamicRange dynamicRange;
 
-	/**
-	 * The AV source.
-	 */
-	AVSource source;
+    /**
+     * The AV source.
+     */
+    PanelSource source;
 }

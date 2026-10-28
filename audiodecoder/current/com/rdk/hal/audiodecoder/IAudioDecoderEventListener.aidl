@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiodecoder;
-import com.rdk.hal.audiodecoder.FrameMetadata;
 import com.rdk.hal.audiodecoder.ErrorCode;
+import com.rdk.hal.audiodecoder.FrameMetadata;
 import com.rdk.hal.audiodecoder.State;
 
 /**
@@ -30,9 +30,8 @@ import com.rdk.hal.audiodecoder.State;
 
 @VintfStability
 oneway interface IAudioDecoderEventListener {
-
     /**
-	 * Callback when the decoder has raised an error.
+     * Callback when the decoder has raised an error.
      *
      * @param[in] errorCode 		    An ErrorCode enum value.
      * @param[in] vendorErrorCode  	    A vendor specific error code.
@@ -40,7 +39,7 @@ oneway interface IAudioDecoderEventListener {
     void onDecodeError(in ErrorCode errorCode, in int vendorErrorCode);
 
     /**
-	 * Callback when the decoder has transitioned to a new state.
+     * Callback when the decoder has transitioned to a new state.
      *
      * @param[in] oldState	            The state that the decoder has transitioned from.
      * @param[in] newState              The new state that the decoder has transitioned to.
@@ -48,5 +47,4 @@ oneway interface IAudioDecoderEventListener {
      * @see getState()
      */
     void onStateChanged(in State oldState, in State newState);
- }
-
+}

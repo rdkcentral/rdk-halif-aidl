@@ -1,0 +1,51 @@
+name: "Metadata — RAG report freshness"
+
+# RAG_STATUS_REPORT.md is generated FROM every component's metadata.yaml, but
+# release.sh only regenerated it on a write path with something staged. A PR
+# that edits metadata.yaml alone - flipping reviewers to `recheck` after a
+# breaking change, say - therefore left the committed report stale until the
+# next release. That is how videodecoder advertised "4/4 reviewed" for seven
+# weeks while its own metadata said `recheck`.
+#
+# `./release.sh --check-metadata` is the read-only form of the refresh: it
+# re-derives the report and compares, and separately checks each component's
+# `version:` against the highest frozen snapshot tracked in git. The report
+# embeds today's date, so the Generated row is excluded from the comparison.
+#
+# Safe on `pull_request`: the check needs no secrets, no network and no Binder
+# SDK (the toolchain preflight in release.sh deliberately does not gate
+# read-only modes), so it never hands a token to unreviewed code.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - "*/metadata.yaml"
+      - "RAG_STATUS_REPORT.md"
+      - "scripts/generate_rag_report.sh"
+      - "scripts/release.sh"
+  # A release cut commits snapshots and metadata straight onto release/X.Y.Z,
+  # with no pull request to run the check; 0.23.0's first cut went out stale.
+  push:
+    branches:
+      - "release/**"
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: "metadata.yaml + RAG_STATUS_REPORT.md are in sync"
+    runs-on: ubuntu-latest
+    steps:
+      # `version:` is compared against frozen <component>/<version>/ directories
+      # read via `git ls-tree HEAD`, which only needs the checked-out commit -
+      # so the default shallow fetch is enough.
+      - uses: actions/checkout@v4
+
+      - name: "Check the report is up to date"
+        run: |
+          if ! ./release.sh --check-metadata; then
+            echo "::error::RAG_STATUS_REPORT.md is out of date with respect to metadata.yaml. Run './release.sh --refresh-metadata' and commit the result."
+            exit 1
+          fi

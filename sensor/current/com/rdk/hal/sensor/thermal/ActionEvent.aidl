@@ -34,7 +34,7 @@ import com.rdk.hal.sensor.thermal.TemperatureReading;
  */
 @VintfStability
 parcelable ActionEvent {
-    /** @brief The new thermal state. */
+    /** @brief The sensor's new thermal state. */
     State state;
 
     /**
@@ -44,8 +44,14 @@ parcelable ActionEvent {
     long timestampMonotonicMs;
 
     /**
-     * @brief Temperature reading captured at the time of the state change.
-     * @details May be null if not associated with a specific sensor.
+     * @brief Temperature reading of the sensor whose state changed.
+     * @details Set on every event; identifies the sensor. For a sensor that
+     * reports no temperature, temperatureCelsius is the sensor's HFP threshold
+     * for the state entered: critical_temperature_recovered_celsius for NORMAL,
+     * critical_temperature_exceeded_celsius for CRITICAL_TEMPERATURE_EXCEEDED,
+     * entering_critical_shutdown_celsius for CRITICAL_SHUTDOWN_IMMINENT.
+     * The HAL never passes null; the annotation remains because the field is
+     * in the frozen 0.1.0.0 and 0.2.0.0 interfaces.
      */
     @nullable TemperatureReading temperatureReading;
 }

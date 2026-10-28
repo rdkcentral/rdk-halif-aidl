@@ -38,8 +38,7 @@ import com.rdk.hal.hdmioutput.SPDSource;
  *  @author    Gerald Weatherup
  */
 @VintfStability
-parcelable SPDInfoFrame
-{
+parcelable SPDInfoFrame {
     /**
      * 8-character vendor name string.
      *

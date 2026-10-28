@@ -1,0 +1,122 @@
+/*
+ * If not stated otherwise in this file or this component's LICENSE file the following copyright and licenses apply:
+ *
+ * Copyright 2026 RDK Management
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+package com.rdk.hal.broadcast.frontend;
+
+import com.rdk.hal.broadcast.frontend.Bandwidth;
+import com.rdk.hal.broadcast.frontend.Ber;
+import com.rdk.hal.broadcast.frontend.Cnr;
+import com.rdk.hal.broadcast.frontend.CodeRate;
+import com.rdk.hal.broadcast.frontend.DemodLockState;
+import com.rdk.hal.broadcast.frontend.DvbCAnnex;
+import com.rdk.hal.broadcast.frontend.DvbSInputStreamId;
+import com.rdk.hal.broadcast.frontend.DvbSPilot;
+import com.rdk.hal.broadcast.frontend.DvbSPlsCode;
+import com.rdk.hal.broadcast.frontend.DvbSPlsMode;
+import com.rdk.hal.broadcast.frontend.DvbSStandard;
+import com.rdk.hal.broadcast.frontend.DvbT2SystemId;
+import com.rdk.hal.broadcast.frontend.DvbTHierarchy;
+import com.rdk.hal.broadcast.frontend.DvbTMiso;
+import com.rdk.hal.broadcast.frontend.DvbTPlpId;
+import com.rdk.hal.broadcast.frontend.DvbTStandard;
+import com.rdk.hal.broadcast.frontend.Frequency;
+import com.rdk.hal.broadcast.frontend.FrontendType;
+import com.rdk.hal.broadcast.frontend.GuardInterval;
+import com.rdk.hal.broadcast.frontend.Modulation;
+import com.rdk.hal.broadcast.frontend.RfLevel;
+import com.rdk.hal.broadcast.frontend.RfLockState;
+import com.rdk.hal.broadcast.frontend.RollOff;
+import com.rdk.hal.broadcast.frontend.SignalQualityIndicator;
+import com.rdk.hal.broadcast.frontend.SignalStrengthIndicator;
+import com.rdk.hal.broadcast.frontend.SpectralInversion;
+import com.rdk.hal.broadcast.frontend.SymbolRate;
+import com.rdk.hal.broadcast.frontend.TransmissionMode;
+import com.rdk.hal.broadcast.frontend.UncorrectedErrorCount;
+
+/**
+ * @brief SignalInfo values.
+ *
+ * These are the values that can be returned on status requests. The members correspond one-to-one, and in the same
+ * order, with the entries of @ref SignalInfoProperty following its UNDEFINED entry. When adding a value here, add the
+ * matching property there in the same position.
+ *
+ * @author Jan Pedersen
+ * @author Christian George
+ * @author Philipp Trommler
+ */
+@VintfStability
+union SignalInfoValue {
+    /** The current frontend type used for tuning. */
+    FrontendType frontendType = FrontendType.UNDEFINED;
+    /** The actual frequency that the tuner is locked on. */
+    Frequency actualFrequency;
+    /** Demodulator lock state. */
+    DemodLockState demodLockState;
+    /** RF lock state. */
+    RfLockState rfLockState;
+    /** RF signal level. */
+    RfLevel rfLevel;
+    /** Carrier to noise ratio. */
+    Cnr cnr;
+    /** Bit error rate. */
+    Ber ber;
+    /** Pre Viterbi BER - the bit error rate before correction. */
+    Ber preBer;
+    /** Uncorrected Error count. */
+    UncorrectedErrorCount uncorrectedErrors;
+    /** Signal Strength Indicator as defined in NorDig. */
+    SignalStrengthIndicator ssi;
+    /** Signal Quality Indicator as defined in NorDig. */
+    SignalQualityIndicator sqi;
+    /** Physical Layer Pipe ID. */
+    DvbTPlpId plpId;
+    /** Physical Layer Pipe IDs. */
+    DvbTPlpId[] plpIds;
+    /** DVB-T2 System ID. */
+    DvbT2SystemId t2SystemId;
+    /** The used modulation/sub-modulation. */
+    Modulation modulation;
+    /** The used guard interval. */
+    GuardInterval guardInterval;
+    /** The used transmission mode. */
+    TransmissionMode transmissionMode;
+    /** Bandwidth. */
+    Bandwidth bandwidth;
+    /** The symbol rate. */
+    SymbolRate symbolRate;
+    /** DVB-T Standard. */
+    DvbTStandard dvbTStandard;
+    /** DVB-S Standard. */
+    DvbSStandard dvbSStandard;
+    /** Standard-specific code rate; CodeRate.dvbS contains DVB-S/S2/S2X inner FEC. */
+    CodeRate codeRate;
+    /** DVB-C Annex. */
+    DvbCAnnex dvbCAnnex;
+    /** Spectral inversion mode. */
+    SpectralInversion inversion;
+    /** Roll-off factor. */
+    RollOff rollOff;
+    /** DVB-T hierarchical transmission mode. */
+    DvbTHierarchy dvbTHierarchy;
+    /** DVB-T MISO mode. */
+    DvbTMiso dvbTMiso;
+    /** DVB-S2/S2X pilot mode. */
+    DvbSPilot dvbSPilot;
+    /** DVB-S2/S2X physical-layer scrambling mode. */
+    DvbSPlsMode dvbSPlsMode;
+    /** DVB-S2/S2X physical-layer scrambling code. */
+    DvbSPlsCode dvbSPlsCode;
+    /** DVB-S2/S2X input stream identifier. */
+    DvbSInputStreamId dvbSInputStreamId;
+}

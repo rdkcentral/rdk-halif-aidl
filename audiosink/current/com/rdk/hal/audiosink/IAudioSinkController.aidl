@@ -17,11 +17,13 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiosink;
+import com.rdk.hal.audiodecoder.FrameMetadata;
+import com.rdk.hal.audiodecoder.IAudioDecoder;
 import com.rdk.hal.audiosink.Volume;
 import com.rdk.hal.audiosink.VolumeRamp;
-import com.rdk.hal.audiodecoder.IAudioDecoder;
-import com.rdk.hal.audiodecoder.FrameMetadata;
 import com.rdk.hal.avclock.IAVClock;
+import com.rdk.hal.audiosink.Property;
+import com.rdk.hal.PropertyValue;
 
 /**
  *  @brief     Audio Sink Controller HAL interface.
@@ -72,15 +74,15 @@ import com.rdk.hal.avclock.IAVClock;
  *
  *  <h3>Exception Handling</h3>
  *  Unless otherwise specified, this interface follows standard Android Binder semantics:
- *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values are valid.
- *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`, `EX_ILLEGAL_ARGUMENT`).
- *    In this case, output parameters and return values contain undefined (garbage) memory and must not be used.
- *    The caller must ignore any output variables.
+ *  - <b>Success</b>: The method returns `binder::Status::Exception::EX_NONE` and all output parameters/return values
+ * are valid.
+ *  - <b>Failure (Exception)</b>: The method returns a service-specific exception (e.g., `EX_SERVICE_SPECIFIC`,
+ * `EX_ILLEGAL_ARGUMENT`). In this case, output parameters and return values contain undefined (garbage) memory and must
+ * not be used. The caller must ignore any output variables.
  */
 
 @VintfStability
 interface IAudioSinkController {
-
     /**
      * Sets the audio decoder ID linked to this audio sink.
      *
@@ -144,6 +146,21 @@ interface IAudioSinkController {
      * @see setAudioDecoder()
      */
     IAudioDecoder.Id getAudioDecoder();
+
+    /**
+     * Sets a property.
+     *
+     * @param[in] property              The key of a property from the Property enum.
+     * @param[in] propertyValue         Holds the value to set.
+     *
+     * @returns true if the property was successfully set, otherwise false on error.
+     *
+     * @exception binder::Status::Exception::EX_NONE for success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT for invalid parameters.
+     *
+     * @see IAudioSink.getProperty()
+     */
+    boolean setProperty(in Property property, in PropertyValue propertyValue);
 
     /**
      * Attaches an AVClock to this audio sink for AV synchronisation.
@@ -255,7 +272,7 @@ interface IAudioSinkController {
     void start();
 
     /**
-	 * Stops the audio sink.
+     * Stops the audio sink.
      *
      * The sink enters the `STOPPING` state and then the `READY` state.
      *
@@ -284,7 +301,8 @@ interface IAudioSinkController {
      * queue but the sink does NOT consume them; once the queue fills, the
      * method returns `false` until queue space becomes available again.
      *
-     * The audio sink may also refuse the buffer if its internal resource usage prevents it from accepting it at that time.
+     * The audio sink may also refuse the buffer if its internal resource usage prevents it from accepting it at that
+     * time.
      *
      * Buffer Ownership: Ownership of the buffer transfers to the Audio Sink HAL only
      * when `queueAudioFrame()` accepts the buffer (returns true). Once accepted, the HAL is
@@ -319,7 +337,8 @@ interface IAudioSinkController {
      *               until space is available.
      *
      * @exception binder::Status::Exception::EX_NONE for success
-     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the `STARTED` state, or if an audio frame is passed after `signalEndOfStream()`.
+     * @exception binder::Status::Exception::EX_ILLEGAL_STATE if the resource is not in the `STARTED` state, or if an
+     * audio frame is passed after `signalEndOfStream()`.
      * @exception binder::Status::Exception::EX_UNSUPPORTED_OPERATION if the controller is configured for tunnel mode.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT If an invalid argument is provided.
      *
@@ -368,7 +387,7 @@ interface IAudioSinkController {
     void signalEndOfStream();
 
     /**
-	 * Starts a flush operation on the sink.
+     * Starts a flush operation on the sink.
      *
      * The audio sink must be in a state of STARTED.
      * Any data buffers that have been passed for mixing but have
@@ -381,7 +400,7 @@ interface IAudioSinkController {
      *
      * @see IAudioSinkControllerListener.onFlushComplete()
      */
-	void flush();
+    void flush();
 
     /**
      * Gets the current volume for this audio sink.
@@ -412,14 +431,14 @@ interface IAudioSinkController {
     /**
      * Set a volume ramp.
      *
-	 * The volume ramp operation is set to run over a period of time starting now from the current volume level
+     * The volume ramp operation is set to run over a period of time starting now from the current volume level
      * to the target volume level.  The muted state is unaffected, which means the volume ramp operation
      * continues while muted and can by unmuted at any time.
      *
-	 * The VolumeRamp type describes the curve to follow during the ramp.
+     * The VolumeRamp type describes the curve to follow during the ramp.
      *
-	 * If any volume ramp is in progress then it is stopped and replaced with this new volume ramp request
-	 * and the ramp starts from the interrupted ramp last volume level.
+     * If any volume ramp is in progress then it is stopped and replaced with this new volume ramp request
+     * and the ramp starts from the interrupted ramp last volume level.
      * When stop() is called, any volume ramp in progress is stopped and the volume is set to targetVolume.
      *
      * @param[in] targetVolume    	    Target volume level at end of ramp.
@@ -434,5 +453,4 @@ interface IAudioSinkController {
      * @pre The resource must be in State::STARTED.
      */
     boolean setVolumeRamp(in double targetVolume, in int overMs, in VolumeRamp volumeRamp);
-
 }

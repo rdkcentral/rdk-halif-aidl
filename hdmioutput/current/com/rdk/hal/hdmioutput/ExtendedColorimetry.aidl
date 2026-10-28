@@ -18,7 +18,7 @@
  */
 package com.rdk.hal.hdmioutput;
 
-/** 
+/**
  *  @brief     HDMI extended colorimetry enum.
  *
  *  Defines the extended colorimetry values used in the HDMI AVI InfoFrame when
@@ -34,8 +34,7 @@ package com.rdk.hal.hdmioutput;
  */
 @VintfStability
 @Backing(type = "int")
-enum ExtendedColorimetry 
-{
+enum ExtendedColorimetry {
     /**
      * xvYCC601 – AVI InfoFrame C=3, EC=0
      */

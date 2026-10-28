@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.bootreason;
- 
-/** 
+
+/**
  *  @brief     Power source types.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -26,11 +26,11 @@ package com.rdk.hal.bootreason;
  *  @author    Gerald Weatherup
  */
 
-@VintfStability 
+@VintfStability
 @Backing(type = "int")
 enum PowerSource {
 
-    /** 
+    /**
      * The device power source cannot be determined.
      */
     UNKNOWN = 0,

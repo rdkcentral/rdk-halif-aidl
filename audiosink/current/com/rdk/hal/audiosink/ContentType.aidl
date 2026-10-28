@@ -35,7 +35,7 @@ package com.rdk.hal.audiosink;
 /**
  * Specifies the underlying integer type for this enum.
  */
-@Backing(type="int")
+@Backing(type = "int")
 enum ContentType {
     /**
      * Unknown or undefined audio content type.

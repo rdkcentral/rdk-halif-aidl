@@ -33,8 +33,7 @@ package com.rdk.hal.hdmioutput;
  */
 @VintfStability
 @Backing(type = "int")
-enum ScanInformation
-{
+enum ScanInformation {
     /**
      * No scan information is provided to the sink.
      * The receiver may infer default scan behaviour.

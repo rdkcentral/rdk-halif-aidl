@@ -33,7 +33,7 @@ package com.rdk.hal.drm;
  * EventType enumerates the events that can be delivered by sendEvent
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum EventType {
     /**
      * This event type indicates that the app needs to request a certificate

@@ -28,21 +28,21 @@ package com.rdk.hal.planecontrol;
 
 @VintfStability
 parcelable GraphicsFbInfo {
- 
-    /* Uniquely identifies this Graphics Frame Buffer */
+    /** Uniquely identifies this Graphics Frame Buffer. */
     int graphicsFbId;
- 
-    /* width of the created gfx frame in pixels */
+
+    /** Width of the created gfx frame in pixels. */
     int pixelWidth;
 
-    /* height of the created gfx frame in pixels */
+    /** Height of the created gfx frame in pixels. */
     int pixelHeight;
 
-    /* Stride - The number of bytes from the start of one row of pixels to the start of the next row. */
+    /** Stride - The number of bytes from the start of one row of pixels to the start of the next row. */
     int stride;
 
-    /* Offset - The number of bytes from the very beginning of the DMA-BUF file descriptor's memory to the actual start of the pixel data.*/
+    /**
+     * Offset - The number of bytes from the very beginning of the DMA-BUF file descriptor's memory to the actual start
+     * of the pixel data.
+     */
     int offset;
 }
-
-

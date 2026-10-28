@@ -26,7 +26,7 @@ package com.rdk.hal.compositeinput;
  * @author    Gerald Weatherup
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum State {
 
     /**

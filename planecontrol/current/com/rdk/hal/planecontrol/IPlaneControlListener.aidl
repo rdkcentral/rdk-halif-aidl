@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.planecontrol;
-  
-/** 
+
+/**
  *  @brief     Callbacks listener interface from Plane Control.
  *  @author    Luc Kennedy-Lamb
  *  @author    Peter Stieglitz
@@ -26,7 +26,6 @@ package com.rdk.hal.planecontrol;
  */
 
 @VintfStability
-oneway interface IPlaneControlListener 
-{
+oneway interface IPlaneControlListener {
     /* Add callbacks. If none - delete */
 }

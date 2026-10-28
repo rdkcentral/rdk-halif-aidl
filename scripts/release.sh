@@ -13,6 +13,45 @@
 
 set -euo pipefail
 
+# ----------------------------------------------------------------------------
+# Platform guard — GNU userland + bash 4+ required.
+# ----------------------------------------------------------------------------
+# This script leans on GNU/bash-4 behaviour throughout: associative arrays
+# (declare -A), mapfile, find -printf, and GNU sed's `-i -E`.
+#
+# The dangerous one is `sed -i -E`. BSD/macOS sed reads -i's argument as a
+# BACKUP SUFFIX, so `sed -i -E 's/.../.../' file` silently treats "-E" as the
+# suffix and writes a stray `file-E` instead of editing in place — no error,
+# no diagnostic, and a release that looks like it worked but changed nothing.
+#
+# Fail loudly and early instead. Deliberately written to run under bash 3.2
+# (no associative arrays, no mapfile) so macOS reaches this message rather
+# than dying on a cryptic `declare: -A: invalid option`.
+_platform_problems=""
+if [ -z "${BASH_VERSINFO:-}" ] || [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
+    _platform_problems="${_platform_problems}
+  - bash 4+ required (found ${BASH_VERSION:-unknown}); needs declare -A and mapfile."
+fi
+if ! sed --version 2>/dev/null | grep -q 'GNU sed'; then
+    _platform_problems="${_platform_problems}
+  - GNU sed required; BSD sed misreads 'sed -i -E' and writes stray *-E files."
+fi
+if ! find --version 2>/dev/null | grep -q 'GNU findutils'; then
+    _platform_problems="${_platform_problems}
+  - GNU findutils required; BSD find has no -printf."
+fi
+if [ -n "${_platform_problems}" ]; then
+    printf 'ERROR: release.sh requires a GNU userland (Linux).%s\n' "${_platform_problems}" >&2
+    printf '\nOn macOS: run this on a Linux host, or install GNU tools and put them\n' >&2
+    printf 'first on PATH:\n' >&2
+    printf '    brew install bash gnu-sed findutils\n' >&2
+    printf '    PATH="$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$(brew --prefix)/opt/findutils/libexec/gnubin:$PATH"\n' >&2
+    printf '\nOverride at your own risk with SKIP_PLATFORM_CHECK=1.\n' >&2
+    [ "${SKIP_PLATFORM_CHECK:-0}" = "1" ] || exit 1
+    printf 'SKIP_PLATFORM_CHECK=1 set — continuing anyway.\n' >&2
+fi
+unset _platform_problems
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${REPO_ROOT}"
@@ -30,9 +69,58 @@ if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
     _C_YELLOW=$'\033[33m'
     _C_BLUE=$'\033[34m'
     _C_CYAN=$'\033[36m'
+    _C_MAGENTA=$'\033[35m'
+    _C_LINK=1
 else
-    _C_RESET= _C_BOLD= _C_DIM= _C_RED= _C_GREEN= _C_YELLOW= _C_BLUE= _C_CYAN=
+    _C_RESET= _C_BOLD= _C_DIM= _C_RED= _C_GREEN= _C_YELLOW= _C_BLUE= _C_CYAN= _C_MAGENTA=
+    _C_LINK=
 fi
+
+# TEXT as an OSC 8 hyperlink to URL on a TTY (terminals without OSC 8 show
+# TEXT alone); plain TEXT otherwise, so logs carry no escape codes.
+_link() {
+    if [[ -n "${_C_LINK}" ]]; then
+        printf '\033]8;;%s\033\\%s\033]8;;\033\\' "$1" "$2"
+    else
+        printf '%s' "$2"
+    fi
+}
+
+# TEXT left-aligned in WIDTH columns, then wrapped in COLOR, so escape
+# codes never upset the column widths. WIDTH 0 means no padding.
+_cell() {
+    local w="$1" c="$2" s="$3"
+    [[ "${w}" -gt 0 ]] && s="$(printf "%-${w}s" "${s}")"
+    if [[ -n "${c}" && -n "${_C_RESET}" ]]; then
+        printf '%s%s%s' "${c}" "${s}" "${_C_RESET}"
+    else
+        printf '%s' "${s}"
+    fi
+}
+
+# Colour for a change class however it is spelt: major is a rebuild (red),
+# minor additive (yellow), bugfix docs-only (cyan), a confirm or pin is a
+# human override worth a second look (magenta), no change recedes (dim).
+_class_color() {
+    case "${1,,}" in
+        major*|generation|breaking*) printf '%s' "${_C_RED}${_C_BOLD}" ;;
+        minor*)                      printf '%s' "${_C_YELLOW}" ;;
+        bugfix*|patch*)              printf '%s' "${_C_CYAN}" ;;
+        confirmed*|pinned*)          printf '%s' "${_C_MAGENTA}${_C_BOLD}" ;;
+        initial*)                    printf '%s' "${_C_GREEN}" ;;
+        none|-|"")                   printf '%s' "${_C_DIM}" ;;
+    esac
+}
+
+# Colour for a status cell: ok is green, a warning red, a note yellow.
+_status_color() {
+    case "$1" in
+        ok)          printf '%s' "${_C_GREEN}" ;;
+        ok\ *)       printf '%s' "${_C_GREEN}" ;;
+        ⚠️*|blocked*) printf '%s' "${_C_RED}${_C_BOLD}" ;;
+        *)           printf '%s' "${_C_YELLOW}" ;;
+    esac
+}
 
 log() {
     # Highlight a few common idioms so the right thing draws the eye.
@@ -53,6 +141,16 @@ log() {
 phase() { echo "${_C_CYAN}==>${_C_RESET} ${_C_BOLD}$*${_C_RESET}" >&2; }
 warn()  { echo "${_C_YELLOW}WARN:${_C_RESET} $*" >&2; }
 die()   { echo "${_C_RED}${_C_BOLD}ERROR:${_C_RESET} ${_C_RED}$*${_C_RESET}" >&2; exit 1; }
+
+# Rewrite a component's metadata.yaml `version:` field. Defined here with the
+# other primitives because --refresh-metadata (early in the flow) and the
+# release write loop (late) both call it.
+update_metadata() {
+    local file="$1"
+    local new_version="$2"
+
+    sed -i -E "s/^version:.*/version: ${new_version}/" "${file}"
+}
 
 # ----------------------------------------------------------------------------
 # Markdown link validation (#626)
@@ -209,39 +307,27 @@ ${files}"
     } | sha256sum | awk '{print $1}'
 }
 
-# Deploy the versioned mkdocs site to gh-pages via the project's
-# build_docs.sh wrapper (uses `mike`). Two steps:
-#   1. `mike deploy <X.Y.Z> --push`        — publishes this version
-#   2. `mike set-default <X.Y.Z> --push`   — marks it as the "latest"
-# Both are synchronous (blocking) and push to origin/gh-pages directly.
-# Caller passes the release version. Bails (warns, doesn't die) on
-# failure — the release artefact commit + tag is already made, so docs
-# deploy is recoverable later (operator can rerun by hand).
+# Publish the release's docs to GitHub Pages: `build_docs.sh release <X.Y.Z>
+# --publish` deploys the version with mike, makes it the default, and waits
+# for the GitHub Pages build. Warns with the retry command and returns 1 on
+# failure; the caller fails the run, because the release artefact commit is
+# already pushed and only the docs step needs a rerun.
 deploy_versioned_docs() {
     local ver="$1"
     local docs_script="${REPO_ROOT}/docs/build_docs.sh"
     if [[ ! -x "${docs_script}" ]]; then
-        warn "Versioned docs deploy: ${docs_script} not found/executable — skipping."
-        return 0
-    fi
-    phase "Deploying versioned docs for ${ver} → gh-pages (mike deploy)"
-    log ""
-    log "Deploying ${ver} via ./docs/build_docs.sh deploy ${ver}"
-    if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh deploy "${ver}"); then
-        warn "mike deploy ${ver} failed."
-        warn "  Release commit + tag are already made; you can retry later:"
-        warn "    ./docs/build_docs.sh deploy ${ver}"
-        warn "    ./docs/build_docs.sh set-default ${ver}"
+        warn "Versioned docs deploy: ${docs_script} not found/executable."
         return 1
     fi
-    phase "Setting ${ver} as default version (mike set-default)"
+    phase "Publishing docs for ${ver} → GitHub Pages"
     log ""
-    if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh set-default "${ver}"); then
-        warn "mike set-default ${ver} failed — version is deployed but not marked as latest."
-        warn "  Retry with: ./docs/build_docs.sh set-default ${ver}"
+    if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh release "${ver}" --publish); then
+        warn "Publishing the ${ver} docs failed."
+        warn "  Release commit + tag are already made; retry with:"
+        warn "    ./docs/build_docs.sh release ${ver} --publish"
         return 1
     fi
-    log "✓ Versioned docs deployed and ${ver} set as latest."
+    log "✓ Docs for ${ver} published as the default version."
     return 0
 }
 
@@ -325,8 +411,9 @@ run_verification_build() {
 # there; `drop <module>` reverts them. No separate YAML file.
 #
 # Subcommands:
-#   ./release.sh stage <module> [--version X.Y.Z.W]     write snapshot + metadata
-#   ./release.sh stage all                              same, for every qualifying module
+#   ./release.sh stage <module>... [--version X.Y.Z.W]  write snapshot + metadata
+#   ./release.sh stage all [<module> --version X]...    same, for every qualifying module
+#   ./release.sh unpin <module>|all                     forget a remembered --version pin
 #   ./release.sh drop  <module>                         revert the writes
 #   ./release.sh plan                                   read-only table view
 #   ./release.sh check [<module>]                       preview without staging
@@ -416,7 +503,13 @@ plan_clean() {
     done < <(find "${REPO_ROOT}/docs/releases" -maxdepth 1 -type f -name '[0-9]*.md' -print0 2>/dev/null)
     [[ ${removed_notes} -gt 0 ]] && log "  Removed ${removed_notes} untracked docs/releases/X.Y.Z.md file(s)."
 
-    # 4. Wipe the gh API cache so a fresh run re-pulls PR labels in case
+    # 4. Forget remembered --version pins (out/.release-pins).
+    if [[ -f "${REPO_ROOT}/out/.release-pins" ]]; then
+        rm -f "${REPO_ROOT}/out/.release-pins"
+        log "  Cleared remembered version pins (out/.release-pins)."
+    fi
+
+    # 5. Wipe the gh API cache so a fresh run re-pulls PR labels in case
     # any were changed since the last run. (commit→PR mappings are
     # immutable, but labels can be re-applied.)
     if [[ -f "${REPO_ROOT}/out/.gh-cache" ]]; then
@@ -521,6 +614,101 @@ plan_load() {
 # subcommand parser assigns into it (assoc assignment before declare -A
 # degrades to arithmetic subscript evaluation).
 declare -A PIN_VERSIONS=()
+# Confirmed change classes from `stage <module> --confirm major|minor|bugfix
+# "<reason>"` (#875): the operator settles the class, the version follows
+# from the released one. Stored as the internal bump name (generation,
+# minor, patch) and resolved where the released version is known.
+declare -A PIN_CLASS=()
+declare -A PIN_REASON=()
+# A version an earlier `stage` run already wrote, which the audit accepted:
+# 1 = the compiler's version, 2 = a confirmation the release notes record.
+# It is reused like a pin but is not one, so the plan shows its class.
+declare -A PIN_STAGED=()
+
+# Pins are remembered in out/.release-pins (gitignored) so the operator sets
+# the odd version once — `stage all avclock --version 0.2.1.0` — and later
+# `stage all` / --apply runs keep it. Each line is tied to the last release
+# tag, so a pin lapses once that release is tagged. Format, tab-delimited:
+#   <module><TAB><X.Y.Z.W | major | minor | bugfix><TAB><last tag when pinned>[<TAB><reason>]
+PIN_FILE="${REPO_ROOT}/out/.release-pins"
+_pin_baseline="$(git -C "${REPO_ROOT}" describe --tags --abbrev=0 2>/dev/null || true)"
+_class_bump() {   # major|minor|bugfix -> internal bump name
+    case "$1" in
+        major)  echo "generation" ;;
+        minor)  echo "minor" ;;
+        bugfix) echo "patch" ;;
+        *)      return 1 ;;
+    esac
+}
+_version_bump() {   # 0.g.m.p old, new -> internal bump name
+    local -a a b
+    IFS=. read -r -a a <<<"$1"; IFS=. read -r -a b <<<"$2"
+    if   [[ "${a[1]:-}" != "${b[1]:-}" ]]; then echo "generation"
+    elif [[ "${a[2]:-}" != "${b[2]:-}" ]]; then echo "minor"
+    elif [[ "${a[3]:-}" != "${b[3]:-}" ]]; then echo "patch"
+    else echo "none"
+    fi
+}
+_bump_class() {   # internal bump name -> major|minor|bugfix
+    case "$1" in
+        generation) echo "major" ;;
+        patch)      echo "bugfix" ;;
+        *)          echo "$1" ;;
+    esac
+}
+pins_load() {
+    [[ -f "${PIN_FILE}" ]] || return 0
+    local comp val base reason
+    while IFS=$'\t' read -r comp val base reason; do
+        [[ -n "${comp}" && "${base}" == "${_pin_baseline}" ]] || continue
+        if [[ "${val}" =~ ^[0-9]+(\.[0-9]+){3}$ ]]; then
+            PIN_VERSIONS[$comp]="${val}"
+        elif _class_bump "${val}" >/dev/null; then
+            PIN_CLASS[$comp]="$(_class_bump "${val}")"
+        fi
+        [[ -n "${reason}" ]] && PIN_REASON[$comp]="${reason}"
+    done < "${PIN_FILE}"
+    return 0
+}
+pins_save() {
+    mkdir -p "$(dirname "${PIN_FILE}")"
+    local comp val
+    : > "${PIN_FILE}"
+    for comp in $(printf '%s\n' "${!PIN_VERSIONS[@]}" "${!PIN_CLASS[@]}" | sort -u); do
+        val="${PIN_VERSIONS[$comp]:-$(_bump_class "${PIN_CLASS[$comp]:-}")}"
+        printf '%s\t%s\t%s\t%s\n' "${comp}" "${val}" "${_pin_baseline}" "${PIN_REASON[$comp]:-}" >> "${PIN_FILE}"
+    done
+    [[ ${#PIN_VERSIONS[@]} -gt 0 || ${#PIN_CLASS[@]} -gt 0 ]] || rm -f "${PIN_FILE}"
+}
+pin_set() {
+    [[ "$2" =~ ^[0-9]+(\.[0-9]+){3}$ ]] || die "pin: '$2' is not a version (X.Y.Z.W)."
+    [[ -f "${REPO_ROOT}/$1/metadata.yaml" ]] || die "pin: $1/metadata.yaml not found — no such component."
+    PIN_VERSIONS[$1]="$2"
+    unset 'PIN_CLASS[$1]' 'PIN_REASON[$1]'
+}
+pin_confirm() {   # <module> <major|minor|bugfix> <reason>
+    [[ -f "${REPO_ROOT}/$1/metadata.yaml" ]] || die "confirm: $1/metadata.yaml not found — no such component."
+    _class_bump "$2" >/dev/null || die "confirm: '$2' is not a change class (major, minor or bugfix)."
+    [[ -n "${3// /}" && "$3" != -* ]] \
+        || die "confirm: say why — ./release.sh stage all $1 --confirm $2 \"<reason>\""
+    PIN_CLASS[$1]="$(_class_bump "$2")"
+    PIN_REASON[$1]="${3//$'\t'/ }"
+    unset 'PIN_VERSIONS[$1]'
+}
+# One `stage all` pin: `<module> --version X.Y.Z.W` or
+# `<module> --confirm <class> "<reason>"`.
+_stage_pin_args() {
+    case "${2:-}" in
+        --version)
+            [[ -n "${3:-}" ]] || die "--version requires a value"
+            pin_set "$1" "$3" ;;
+        --confirm)
+            pin_confirm "$1" "${3:-}" "${4:-}" ;;
+        *)  die "stage all: pin a module as '<module> --version X.Y.Z.W' or '<module> --confirm major|minor|bugfix \"<reason>\"'" ;;
+    esac
+}
+pins_load
+
 case "${1:-}" in
     stage)
         shift
@@ -537,31 +725,84 @@ case "${1:-}" in
             # loop; without STAGE_AND_WRITE=1, DO_WRITES stays 0 and the
             # snapshot/metadata pipeline never fires.
             STAGE_AND_WRITE=1
-            # No more positional args expected; any --flags fall through.
+            # Optional pins: `stage all <module> --version X.Y.Z.W ...` or
+            # `stage all <module> --confirm <class> "<reason>" ...` override
+            # the label-derived bump for that module; the audit accepts one
+            # at or above the code's level. Any --flags after them fall
+            # through to the main parser.
+            while [[ $# -gt 0 && "$1" != -* ]]; do
+                _stage_pin_args "$@"
+                [[ "$2" == "--confirm" ]] && shift 4 || shift 3
+            done
+            pins_save
         else
             _add_ver=""
-            shift || true
+            _last_comp=""
+            _staged_any=0
             while [[ $# -gt 0 ]]; do
                 case "$1" in
-                    --version) [[ $# -ge 2 ]] || die "--version requires a value"
-                               _add_ver="$2"; shift 2 ;;
-                    *) die "stage: unknown option $1" ;;
+                    --version)
+                        [[ $# -ge 2 ]] || die "--version requires a value"
+                        [[ -n "${_last_comp}" ]] \
+                            || die "stage: --version must follow a <module> name."
+                        pin_set "${_last_comp}" "$2"
+                        shift 2
+                        ;;
+                    --confirm)
+                        [[ -n "${_last_comp}" ]] \
+                            || die "stage: --confirm must follow a <module> name."
+                        pin_confirm "${_last_comp}" "${2:-}" "${3:-}"
+                        shift 3
+                        ;;
+                    # Not a stage option — hand the rest to the main parser so
+                    # `stage <module> --no-build` works like `stage all` does.
+                    -*) break ;;
+                    *)
+                        [[ -f "${REPO_ROOT}/${1}/metadata.yaml" ]] \
+                            || die "stage: ${1}/metadata.yaml not found — no such component."
+                        STAGE_AND_WRITE_MODULES+=("${1}")
+                        _last_comp="${1}"
+                        _staged_any=1
+                        shift
+                        ;;
                 esac
             done
-            # Validate the module exists.
-            [[ -n "${_add_comp}" ]] || die "stage: missing <module> argument. Usage: ./release.sh stage <module> [--version X.Y.Z.W]"
-            [[ -f "${REPO_ROOT}/${_add_comp}/metadata.yaml" ]] \
-                || die "stage: ${_add_comp}/metadata.yaml not found — no such component."
-            # Push onto the write-pipeline queue + record any version pin.
-            STAGE_AND_WRITE_MODULES+=("${_add_comp}")
+            [[ "${_staged_any}" -eq 1 ]] \
+                || die "stage: missing <module> argument. Usage: ./release.sh stage <module>... [--version X.Y.Z.W | --confirm major|minor|bugfix \"<reason>\"]"
             STAGE_AND_WRITE=1
-            [[ -n "${_add_ver}" ]] && PIN_VERSIONS[${_add_comp}]="${_add_ver}"
+            pins_save
             # Fall through to the standard pipeline; it processes the queue.
         fi
         ;;
     drop)
         shift
         plan_remove "${1:-}"
+        exit 0
+        ;;
+    unpin)
+        shift
+        [[ -n "${1:-}" ]] || die "unpin: name a module, or 'all'."
+        if [[ "$1" == "all" ]]; then
+            mapfile -t _unpin < <(printf '%s\n' "${!PIN_VERSIONS[@]}" "${!PIN_CLASS[@]}" | grep . | sort -u)
+        else
+            [[ -n "${PIN_VERSIONS[$1]+x}" || -n "${PIN_CLASS[$1]+x}" ]] || die "unpin: $1 is not pinned."
+            _unpin=("$1")
+        fi
+        # A module already staged at its pinned version keeps that version in
+        # metadata.yaml + its snapshot, and the audit recovers it as a pin.
+        # Unstage it first, or the unpin would be silently undone.
+        for _c in "${_unpin[@]}"; do
+            for _vd in "${REPO_ROOT}/${_c}"/*/; do
+                _v="${_vd%/}"; _v="${_v##*/}"
+                [[ "${_v}" =~ ^[0-9]+(\.[0-9]+){3}$ ]] || continue
+                [[ -n "${_pin_baseline}" \
+                   && -n "$(git -C "${REPO_ROOT}" ls-tree -d --name-only "${_pin_baseline}" -- "${_c}/${_v}")" ]] && continue
+                die "unpin: ${_c} is staged at ${_v}. Unstage it first: ./release.sh drop ${_c}"
+            done
+        done
+        for _c in "${_unpin[@]}"; do unset 'PIN_VERSIONS[$_c]' 'PIN_CLASS[$_c]' 'PIN_REASON[$_c]'; done
+        pins_save
+        log "✓ Unpinned $1. It is staged by its labels on the next stage run."
         exit 0
         ;;
     plan)
@@ -623,6 +864,15 @@ case "${1:-}" in
         ;;
 esac
 
+if [[ ${#PIN_VERSIONS[@]} -gt 0 || ${#PIN_CLASS[@]} -gt 0 ]]; then
+    _pin_list=""
+    for _c in $(printf '%s\n' "${!PIN_VERSIONS[@]}" "${!PIN_CLASS[@]}" | sort -u); do
+        _pin_list="${_pin_list:+${_pin_list}, }${_c} ${PIN_VERSIONS[$_c]:-$(_bump_class "${PIN_CLASS[$_c]:-}")}"
+        [[ -n "${PIN_REASON[$_c]:-}" ]] && _pin_list="${_pin_list} (${PIN_REASON[$_c]})"
+    done
+    log "📌 Pinned versions: ${_pin_list}  (./release.sh unpin <module>|all to drop)"
+fi
+
 # Defaults for arg parser. Use ${VAR:-0} so the subcommand fall-throughs
 # above can pre-set flags without us stomping them here.
 CHECK_MODE="${CHECK_MODE:-0}"
@@ -632,6 +882,8 @@ STAGE_AND_WRITE="${STAGE_AND_WRITE:-0}"
 APPLY="${APPLY:-0}"
 COMMIT="${COMMIT:-0}"
 COMPLETE="${COMPLETE:-0}"
+REFRESH_METADATA="${REFRESH_METADATA:-0}"
+REFRESH_CHECK_ONLY="${REFRESH_CHECK_ONLY:-0}"
 DRY_RUN="${DRY_RUN:-0}"
 SINCE_REF="${SINCE_REF:-}"
 NO_GH="${NO_GH:-0}"
@@ -643,7 +895,17 @@ usage() {
 Release Version Bump Tool
 
 Subcommands (manage what's staged for the next release):
-  ./release.sh stage <module> [--version X.Y.Z.W]     stage module (auto-bump unless --version pinned)
+  ./release.sh stage <module>... [--version X.Y.Z.W]   stage module(s) (auto-bump unless --version pinned)
+  ./release.sh stage all [<module> --version X.Y.Z.W]...
+                                                       stage every qualifying module, pinning the
+                                                       ones named. Pins are remembered (out/.release-pins)
+                                                       for later stage/--apply runs until the next tag.
+  ./release.sh stage all <module> --confirm major|minor|bugfix "<reason>"
+                                                       settle a label/code disagreement by class: the
+                                                       version follows from the released one, the reason
+                                                       goes into the derivation and the release notes.
+                                                       Also works after `stage <module>`; remembered like a pin.
+  ./release.sh unpin  <module>|all                     forget a remembered pin
   ./release.sh drop   <module>                         unstage module
   ./release.sh plan                                    show current plan
   ./release.sh check  [<module>]                       preview detected changes for ALL touched
@@ -655,6 +917,13 @@ Subcommands (manage what's staged for the next release):
                                                        <comp>/<version>/ snapshot dirs and
                                                        docs/releases/X.Y.Z.md, and wipe the plan.
                                                        Use after --apply or to abort a half-done run.
+
+Metadata + RAG report refresh:
+  ./release.sh --refresh-metadata                      sync metadata.yaml version: to the tracked
+                                                       snapshot, regenerate RAG_STATUS_REPORT.md,
+                                                       git add both, stop. Operator commits.
+  ./release.sh --check-metadata                        same comparison, read-only, non-zero exit
+                                                       if either is stale. Suitable for CI.
 
 Release run (no subcommand):
   ./scripts/release.sh [--dry-run] [--apply] [--since <ref>]
@@ -695,11 +964,12 @@ Modes:
                 versions_released.yaml, mkdocs.yml, generate
                 docs/releases/X.Y.Z.md skeleton, prepend the CHANGELOG.md
                 section, run both verification builds, then create the
-                release/X.Y.Z branch + X.Y.Z tag. Operator pushes
-                manually after review.
+                release/X.Y.Z branch. With --commit it also commits and
+                pushes that branch. No tag is created here — `git flow
+                release finish X.Y.Z` makes the tag on main.
 
-  --dry-run     Alias of the default — same read-only view. Kept for
-                operators who reach for the explicit flag out of habit.
+  --dry-run     Read-only like the default, plus a step-by-step preview of
+                the pipeline the default run would execute.
 
   --complete    Ship the release end-to-end from an already-committed
                 release/X.Y.Z branch. Must be run AFTER --apply --commit
@@ -708,7 +978,7 @@ Modes:
                   1. git flow release finish X.Y.Z (merges → main, tags,
                      back-merges to develop)
                   2. git push --follow-tags --atomic origin main develop
-                  3. ./docs/build_docs.sh release X.Y.Z (deploy + wait
+                  3. ./docs/build_docs.sh release X.Y.Z --publish (deploy + wait
                      for GitHub Pages publish + set-default — all gated
                      inside the docs script)
                   4. gh release create X.Y.Z from docs/releases/X.Y.Z.md
@@ -716,6 +986,17 @@ Modes:
                 from the first incomplete step.
 
 Options:
+  --commit               On --apply, also commit the release artefacts and
+                         push the release/X.Y.Z branch, then deploy the
+                         versioned docs. Without it --apply stages only and
+                         stops for review via `git diff --cached`.
+  --refresh-metadata     Sync metadata.yaml version: to the highest tracked
+                         snapshot, regenerate RAG_STATUS_REPORT.md, git add
+                         both, and exit. Runs nothing else — no detector, no
+                         snapshot, no build, no branch.
+  --check-metadata       Read-only form of the above. Exits non-zero if
+                         metadata.yaml or the report is stale. The report's
+                         Generated date is ignored in the comparison.
   --since <ref>          Base reference to diff from (default: nearest
                          reachable tag).
   --release-version X.Y.Z
@@ -728,15 +1009,43 @@ Options:
   --no-snapshot          Skip creating <module>/<version>/ frozen snapshots
                          (regenerate-then-copy step). Testing only — a
                          real release MUST snapshot.
-  --no-mkdocs            Skip updating mkdocs.yml.
-  --no-build             Skip the verification build (./build_modules.sh
-                         all). Testing only — a real release MUST build.
+  --no-mkdocs            Skip updating mkdocs.yml and the documentation
+                         build.
+  --no-build             Skip the verification builds (./build_modules.sh
+                         all, ./docs/build_docs.sh build). Testing only —
+                         a real release MUST build.
+  --sync-labels [--write]
+                         Record the release's decision on each PR (#875):
+                         set its change-class label to the class its
+                         components were released at, with a comment
+                         saying why (and the --confirm reason). Previews;
+                         --write applies. --complete runs it before the tag.
   --audit                Structural change-class audit (see above). Read-only,
                          always strict.
   --no-audit             Skip the automatic write-path audit gate. Testing
                          only — a real release MUST audit.
   --verbose              Print extra diagnostics.
   --help                 Show this help.
+
+Environment:
+  Prerequisites are bootstrapped automatically. build-tools/ is untracked
+  and out/ is a build artefact, so on a CLEAN CLONE any mutating run
+  (staged writes, --apply, --audit) stages the pinned AIDL toolchain and
+  the Binder SDK via ./build_binder.sh before the detector runs. Read-only
+  runs (bare scan, --dry-run, --check-metadata) never trigger it.
+
+  BINDER_SDK_DIR         Pre-staged Binder SDK (Yocto / cross-compile).
+  BINDER_TOOLCHAIN_ROOT  Pre-staged AIDL toolchain location.
+  BINDER_SOURCE_DIR      Alias for the above.
+                         Setting any of these disables auto-bootstrap: a
+                         missing artefact is then a recipe error, and
+                         building a host SDK over a cross-compiled one
+                         would be wrong.
+  SKIP_SDK_BOOTSTRAP=1   Skip the toolchain/SDK preflight entirely.
+  SKIP_LINK_CHECK=1      Skip the repo-root markdown link validation.
+  SKIP_PLATFORM_CHECK=1  Skip the GNU-userland / bash-4 guard. Risky: BSD sed
+                         misreads `sed -i -E` as a backup suffix and silently
+                         writes stray *-E files instead of editing in place.
 
 Behavior (#712 change-class labels — label names mean what the fields mean):
   - "Major Change"    label   => major bump (0.g.m.p -> 0.(g+1).0.0) — breaking
@@ -756,8 +1065,10 @@ Per bumped component the script:
 Once per release the script:
   5. Update versions_released.yaml components: map entries
   6. Insert mkdocs.yml nav entries for each <component>/<version>/
-  7. Generate docs/releases/<release>.md skeleton (if absent)
-  8. Prepend CHANGELOG.md section for <release>
+  7. Generate docs/releases/<release>.md skeleton (if absent) and list it
+     under Release Notes in mkdocs.yml
+  8. Prepend CHANGELOG.md section for <release>, then
+     ./docs/build_docs.sh build     # site builds; nav covers every doc set
   9. Audit docs + build configs for version-shaped strings (review only)
  10. ./build_modules.sh all                # build current cohort
  11. ./build_modules.sh manifest           # build released cohort via
@@ -792,6 +1103,8 @@ NO_MKDOCS="${NO_MKDOCS:-0}"
 NO_BUILD="${NO_BUILD:-0}"
 AUDIT=0
 NO_AUDIT="${NO_AUDIT:-0}"
+SYNC_LABELS=0
+SYNC_WRITE=0
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -810,6 +1123,15 @@ while [[ $# -gt 0 ]]; do
             ;;
         --complete)
             COMPLETE=1
+            shift
+            ;;
+        --refresh-metadata)
+            REFRESH_METADATA=1
+            shift
+            ;;
+        --check-metadata)
+            REFRESH_METADATA=1
+            REFRESH_CHECK_ONLY=1
             shift
             ;;
         --dry-run)
@@ -841,6 +1163,14 @@ while [[ $# -gt 0 ]]; do
             AUDIT=1
             shift
             ;;
+        --sync-labels)
+            SYNC_LABELS=1
+            shift
+            ;;
+        --write)
+            SYNC_WRITE=1
+            shift
+            ;;
         --strict)
             warn "--strict is deprecated: the audit is always strict (#714)."
             shift
@@ -866,6 +1196,149 @@ done
 [[ "${DRY_RUN}" -eq 1 && "${APPLY}" -eq 1 ]] && die "--dry-run and --apply are mutually exclusive"
 
 # ----------------------------------------------------------------------------
+# --refresh-metadata / --check-metadata
+# ----------------------------------------------------------------------------
+#
+# metadata.yaml is the SOURCE OF TRUTH, not a generated file: `status`,
+# `reviewers`, `description`, `scope` and `notes` are human judgements that no
+# script can derive. Only two things about it are machine-owned:
+#
+#   1. `version:` — must equal the highest frozen <comp>/<version>/ snapshot
+#      actually tracked in git (the field header says "[release.sh] ... Do not
+#      edit by hand").
+#   2. RAG_STATUS_REPORT.md — generated FROM every metadata.yaml.
+#
+# release.sh already maintains both, but only on a write path with something
+# staged. A PR that edits metadata.yaml alone (say, flipping reviewers to
+# `recheck` after a breaking change) therefore leaves the committed report
+# stale until the next release — which is exactly how videodecoder advertised
+# "4/4 reviewed" for seven weeks while its metadata said `recheck`.
+#
+# This mode closes that gap without touching the release pipeline:
+#   --refresh-metadata   sync version:, regenerate the report, git add both,
+#                        and stop. The operator reviews and commits.
+#   --check-metadata     same comparison, writes nothing, non-zero exit if
+#                        anything is out of date. Suitable for CI.
+#
+# The report embeds today's date, so the comparison deliberately ignores the
+# `Generated` row — otherwise a check would fail every day regardless of
+# content.
+if [[ "${REFRESH_METADATA}" -eq 1 ]]; then
+    if [[ "${REFRESH_CHECK_ONLY}" -eq 1 ]]; then
+        phase "Checking metadata.yaml + RAG_STATUS_REPORT.md are up to date (read-only)"
+    else
+        phase "Refreshing metadata.yaml + RAG_STATUS_REPORT.md"
+    fi
+    log ""
+
+    _refresh_stale=0
+
+    # 1. version: must match the highest tracked snapshot dir.
+    _version_fixed=()
+    _version_unreleased=()
+    for _meta in "${REPO_ROOT}"/*/metadata.yaml; do
+        [[ -f "${_meta}" ]] || continue
+        _comp="${_meta%/metadata.yaml}"
+        _comp="${_comp#${REPO_ROOT}/}"
+        _meta_ver="$(awk -F': *' '$1=="version"{print $2; exit}' "${_meta}")"
+        # Highest frozen snapshot tracked in git for this component.
+        # `|| true`: grep exits 1 when a component has no frozen snapshot yet,
+        # which under `set -o pipefail` would abort the whole run.
+        _tracked_ver="$(git -C "${REPO_ROOT}" ls-tree -d --name-only HEAD "${_comp}/" 2>/dev/null \
+            | awk -F/ '{print $NF}' \
+            | grep -E '^[0-9]+(\.[0-9]+){2,3}$' \
+            | sort -V | tail -1 || true)"
+        if [[ -z "${_tracked_ver}" ]]; then
+            # Never released — nothing to derive from, so metadata.yaml's
+            # value is the only statement of intent. Report, never rewrite.
+            _version_unreleased+=("${_comp} (metadata.yaml=${_meta_ver:-unset})")
+            continue
+        fi
+        [[ "${_meta_ver}" == "${_tracked_ver}" ]] && continue
+        _refresh_stale=1
+        _version_fixed+=("${_comp}: ${_meta_ver:-unset} -> ${_tracked_ver}")
+        if [[ "${REFRESH_CHECK_ONLY}" -ne 1 ]]; then
+            update_metadata "${_meta}" "${_tracked_ver}"
+            (cd "${REPO_ROOT}" && git add -- "${_comp}/metadata.yaml") || \
+                warn "git add ${_comp}/metadata.yaml failed"
+        fi
+    done
+
+    if [[ ${#_version_fixed[@]} -gt 0 ]]; then
+        if [[ "${REFRESH_CHECK_ONLY}" -eq 1 ]]; then
+            warn "metadata.yaml version: disagrees with the tracked snapshot:"
+        else
+            log "  version: synced to the highest tracked snapshot:"
+        fi
+        for _f in "${_version_fixed[@]}"; do log "      ${_f}"; done
+    else
+        log "  ✓ every released component's version: matches its tracked snapshot"
+    fi
+    if [[ ${#_version_unreleased[@]} -gt 0 ]]; then
+        log ""
+        log "  ℹ️  No released snapshot yet (version: left as declared):"
+        for _f in "${_version_unreleased[@]}"; do log "      ${_f}"; done
+    fi
+
+    # 2. RAG_STATUS_REPORT.md — regenerate and compare ignoring the date row.
+    log ""
+    _rag_script="${REPO_ROOT}/scripts/generate_rag_report.sh"
+    _rag_report="${REPO_ROOT}/RAG_STATUS_REPORT.md"
+    if [[ ! -x "${_rag_script}" ]]; then
+        warn "scripts/generate_rag_report.sh not executable — skipping report refresh."
+    else
+        _rag_before="$(mktemp)"
+        cp "${_rag_report}" "${_rag_before}" 2>/dev/null || : >"${_rag_before}"
+        if ! "${_rag_script}" >/dev/null; then
+            rm -f "${_rag_before}"
+            die "generate_rag_report.sh failed."
+        fi
+        # `Generated` carries today's date; comparing it would make the check
+        # fail every day regardless of content.
+        if diff -q <(grep -v '^| \*\*Generated\*\*' "${_rag_before}") \
+                   <(grep -v '^| \*\*Generated\*\*' "${_rag_report}") >/dev/null 2>&1; then
+            log "  ✓ RAG_STATUS_REPORT.md already up to date"
+            # Restore the original so a no-op refresh doesn't dirty the
+            # worktree with nothing but a date change.
+            cp "${_rag_before}" "${_rag_report}"
+        else
+            _refresh_stale=1
+            if [[ "${REFRESH_CHECK_ONLY}" -eq 1 ]]; then
+                warn "RAG_STATUS_REPORT.md is out of date with respect to metadata.yaml:"
+                diff <(grep -v '^| \*\*Generated\*\*' "${_rag_before}") \
+                     <(grep -v '^| \*\*Generated\*\*' "${_rag_report}") \
+                    | head -40 >&2 || true
+                cp "${_rag_before}" "${_rag_report}"
+            else
+                log "  ✓ RAG_STATUS_REPORT.md regenerated"
+                (cd "${REPO_ROOT}" && git add -- RAG_STATUS_REPORT.md) || \
+                    warn "git add RAG_STATUS_REPORT.md failed"
+            fi
+        fi
+        rm -f "${_rag_before}"
+    fi
+
+    log ""
+    if [[ "${REFRESH_CHECK_ONLY}" -eq 1 ]]; then
+        if [[ "${_refresh_stale}" -eq 1 ]]; then
+            warn "Out of date. Regenerate and commit with:"
+            warn "    ./release.sh --refresh-metadata"
+            exit 1
+        fi
+        log "✓ metadata.yaml and RAG_STATUS_REPORT.md are up to date."
+        exit 0
+    fi
+    if [[ "${_refresh_stale}" -eq 1 ]]; then
+        log "Staged for commit. Review and commit with:"
+        log "    git diff --cached"
+        log "    git commit -m 'chore(metadata): refresh metadata.yaml + RAG status report'"
+    else
+        log "Nothing to do — already up to date."
+    fi
+    exit 0
+fi
+
+# ----------------------------------------------------------------------------
 # --complete: ship the release end-to-end (#TBD follow-up)
 # ----------------------------------------------------------------------------
 #
@@ -881,7 +1354,7 @@ done
 #      annotated tag on main + back-merges to develop.
 #   4. git push --follow-tags --atomic origin main develop — pushes
 #      branches AND the new tag in one operation.
-#   5. ./docs/build_docs.sh release X.Y.Z — deploys versioned docs,
+#   5. ./docs/build_docs.sh release X.Y.Z --publish — deploys versioned docs,
 #      waits for GitHub Pages to publish, sets X.Y.Z as default
 #      (all gated inside the docs script).
 #   6. gh release create X.Y.Z — publishes the GitHub release from
@@ -1008,6 +1481,11 @@ if [[ "${COMPLETE}" -eq 1 ]]; then
     if git -C "${REPO_ROOT}" rev-parse --verify "refs/tags/${RELEASE_VERSION}" >/dev/null 2>&1; then
         log "  ✓ tag ${RELEASE_VERSION} already exists locally — skipping git flow release finish."
     else
+        # Labels record the release's decision; after the tag the baseline
+        # moves on and the pins lapse, so this is the last point to write it.
+        log "Recording the released change classes on the PRs..."
+        "${SCRIPT_DIR}/release.sh" --sync-labels --write --release-version "${RELEASE_VERSION}" \
+            || warn "--sync-labels failed; labels are hints, so the release continues. Re-run it from a checkout of ${RELEASE_VERSION}^ if wanted."
         log "Running git flow release finish ${RELEASE_VERSION}..."
         if ! (cd "${REPO_ROOT}" && \
                 GIT_MERGE_AUTOEDIT=no \
@@ -1082,17 +1560,19 @@ if [[ "${COMPLETE}" -eq 1 ]]; then
 
     # 5. Versioned docs deploy (deploy + wait for GH Pages + set-default,
     #    all gated inside build_docs.sh).
-    phase "Releasing versioned docs (./docs/build_docs.sh release ${RELEASE_VERSION})"
+    phase "Releasing versioned docs (./docs/build_docs.sh release ${RELEASE_VERSION} --publish)"
     log ""
+    _docs_ok=0
     if [[ ! -x "${REPO_ROOT}/docs/build_docs.sh" ]]; then
         warn "docs/build_docs.sh not found/executable — skipping versioned docs release."
-        warn "  Run manually when ready: ./docs/build_docs.sh release ${RELEASE_VERSION}"
+        warn "  Run manually when ready: ./docs/build_docs.sh release ${RELEASE_VERSION} --publish"
     else
-        if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh release "${RELEASE_VERSION}"); then
+        if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh release "${RELEASE_VERSION}" --publish); then
             warn "./docs/build_docs.sh release ${RELEASE_VERSION} failed."
             warn "  Tag + branches are pushed; retry the docs release later:"
-            warn "    ./docs/build_docs.sh release ${RELEASE_VERSION}"
+            warn "    ./docs/build_docs.sh release ${RELEASE_VERSION} --publish"
         else
+            _docs_ok=1
             log "  ✓ versioned docs released and set as default."
         fi
     fi
@@ -1134,6 +1614,16 @@ if [[ "${COMPLETE}" -eq 1 ]]; then
         fi
     fi
 
+    # The GitHub release above is independent of the docs, so it is created
+    # either way; an undeployed site still fails the run.
+    if [[ "${_docs_ok}" -ne 1 ]]; then
+        log ""
+        log "  Tag:      ${RELEASE_VERSION} (on main)"
+        log "  Branches: main + develop updated"
+        log "  Docs:     NOT deployed — retry with ./docs/build_docs.sh release ${RELEASE_VERSION} --publish"
+        die "Release ${RELEASE_VERSION} is incomplete: its documentation is not published."
+    fi
+
     log ""
     log "🎉 Release ${RELEASE_VERSION} complete."
     log ""
@@ -1151,9 +1641,11 @@ fi
 # Mapping:
 #   bare ./release.sh              read-only plan/check view (DO_WRITES=0, DO_BRANCH=0)
 #   ./release.sh <module>...       writes for staged modules (DO_WRITES=1, DO_BRANCH=0)
-#   ./release.sh --apply           branch + commit + tag only (DO_WRITES=0, DO_BRANCH=1).
+#   ./release.sh --apply           branch (+ commit/push with --commit) only
+#                                  (DO_WRITES=0, DO_BRANCH=1). No tag — git
+#                                  flow release finish makes that on main.
 #                                  Writes are expected to be done already by
-#                                  prior `./release.sh <module>` invocations.
+#                                  prior `./release.sh stage <module>` runs.
 DO_WRITES=0
 DO_BRANCH=0
 if [[ "${STAGE_AND_WRITE}" -eq 1 ]]; then
@@ -1180,6 +1672,51 @@ if [[ "${SKIP_LINK_CHECK:-0}" -ne 1 ]]; then
     else
         warn "Broken relative links in repo-root markdown (non-fatal in read-only mode):"
         printf '%s\n' "${_link_errs}" >&2
+    fi
+fi
+
+# Preflight: Binder SDK + AIDL toolchain (clean-clone bootstrap).
+#
+# build-tools/ is gitignored and untracked and out/ is a build artefact, so a
+# CLEAN CLONE has neither the pinned AIDL toolchain nor the Binder SDK.
+# Every mutating path needs both: snapshots regenerate bindings through
+# build_modules.sh, and the change-class audit shells out to aidl_ops.py.
+#
+# Done HERE, before the detector, deliberately. Without it the first demand
+# for the toolchain comes minutes later during snapshot creation — after
+# commit-walking, GitHub label lookups and planning — and aborts the run
+# mid-pipeline. Bootstrapping up front costs the same build but leaves the
+# pipeline intact.
+#
+# Read-only runs (bare scan, --dry-run, --check-metadata) are NOT gated: they
+# never invoke the toolchain, and forcing a multi-minute SDK build on someone
+# just previewing the plan would be hostile.
+#
+# Skipped when the caller pinned a toolchain/SDK explicitly (Yocto and
+# cross-compile set BINDER_SDK_DIR / BINDER_TOOLCHAIN_ROOT / BINDER_SOURCE_DIR)
+# — there a missing artefact is a recipe error, not something to paper over by
+# building a host SDK. Escape hatch: SKIP_SDK_BOOTSTRAP=1.
+if [[ ( "${DO_WRITES}" -eq 1 || "${DO_BRANCH}" -eq 1 || "${AUDIT}" -eq 1 ) \
+      && "${SKIP_SDK_BOOTSTRAP:-0}" -ne 1 \
+      && -z "${BINDER_SDK_DIR:-}${BINDER_TOOLCHAIN_ROOT:-}${BINDER_SOURCE_DIR:-}" ]]; then
+    phase "Validating Binder SDK + AIDL toolchain..."
+    _tc="${REPO_ROOT}/build-tools/linux_binder_idl/host/aidl_ops.py"
+    _sdk_marker="${REPO_ROOT}/out/target/.sdk_ready"
+    if [[ -f "${_tc}" && -f "${_sdk_marker}" ]]; then
+        log "    ✓ toolchain and Binder SDK present"
+    else
+        [[ -f "${_tc}" ]]         || log "    • AIDL toolchain missing (${_tc#"${REPO_ROOT}/"})"
+        [[ -f "${_sdk_marker}" ]] || log "    • Binder SDK missing (${_sdk_marker#"${REPO_ROOT}/"})"
+        [[ -x "${REPO_ROOT}/build_binder.sh" ]] \
+            || die "build_binder.sh not found or not executable — cannot bootstrap the Binder SDK."
+        log "    Bootstrapping via ./build_binder.sh (one-time; several minutes)..."
+        log ""
+        (cd "${REPO_ROOT}" && ./build_binder.sh) \
+            || die "build_binder.sh failed — cannot continue the release."
+        log ""
+        [[ -f "${_sdk_marker}" ]] \
+            || die "build_binder.sh completed but ${_sdk_marker#"${REPO_ROOT}/"} is still absent."
+        log "    ✓ Binder SDK bootstrapped"
     fi
 fi
 
@@ -1252,8 +1789,15 @@ if [[ "${COMMIT}" -eq 1 && "${APPLY}" -ne 1 ]]; then
     # Versioned docs deploy. deploy_versioned_docs runs mike deploy and
     # then (only on success) mike set-default — sequential, blocking,
     # so set-default sees the just-deployed version. mike treats the
-    # version as a string; no git tag required.
-    deploy_versioned_docs "${RELEASE_VERSION}"
+    # version as a string; no git tag required. A failed deploy exits
+    # non-zero: the release branch is pushed, but the release is not done
+    # until its documentation is published.
+    if ! deploy_versioned_docs "${RELEASE_VERSION}"; then
+        log ""
+        log "Release branch ${branch} is committed and pushed; its documentation is NOT deployed."
+        log "Retry the deploy with the commands above, then: git flow release finish ${RELEASE_VERSION}"
+        die "Documentation deploy for ${RELEASE_VERSION} failed."
+    fi
     log ""
     log "Next step (git-flow):"
     log "    git flow release finish ${RELEASE_VERSION}"
@@ -1344,6 +1888,8 @@ fi
 
 declare -A PR_LABEL_CACHE=()
 declare -A PR_TYPE_CACHE=()
+declare -A PR_REFS_CACHE=()
+declare -A PR_EFFECT_CACHE=()   # PR -> Interface Effect (project field), PR first then its issue
 declare -A COMMIT_PR_CACHE=()
 declare -A COMP_TOUCHED=()
 declare -A COMP_BREAKING=()
@@ -1351,17 +1897,19 @@ declare -A COMP_NON_DOC=()
 declare -A COMP_DOC=()
 declare -A COMP_REASONS=()
 declare -A COMP_FILES=()
+declare -A COMP_LABEL_PRS=()   # "comp:level" -> " PR PR ..." that set it
 
-# Persistent gh-API cache: commit→PR and PR→labels lookups survive
-# across invocations. SHAs and PR numbers are immutable so the cache
-# never goes stale. Labels CAN change (re-labelled PRs), so we treat
-# label entries as soft cache and refresh ad hoc — but commit-to-PR
-# pairs are forever once recorded.
+# Persistent gh-API cache. Commit→PR pairs and PR titles never change, so
+# they are kept. Labels, issue types and the Interface Effect can change
+# at any time: an online run re-reads them once per run, and the cached
+# copy serves only offline (--no-gh) runs.
 #
 # File: out/.gh-cache  (gitignored — out/ already is)
 # Format, tab-delimited:
-#   c<TAB>SHA<TAB>PR_NUMBER          (PR_NUMBER may be empty)
+#   m<TAB>SHA<TAB>PR_NUMBER          (resolved through GitHub, merged PRs only)
 #   l<TAB>PR_NUMBER<TAB>LABEL1|LABEL2|LABEL3
+#   n<TAB>PR_NUMBER<TAB>ISSUE1,ISSUE2<US>TITLE   (US = \x1f; non-empty only)
+#   e<TAB>PR_NUMBER<TAB>INTERFACE_EFFECT         (non-empty only)
 # Labels are joined with `|` (which can't appear in label names).
 GH_CACHE_FILE="${REPO_ROOT}/out/.gh-cache"
 
@@ -1370,13 +1918,31 @@ gh_cache_load() {
     local kind key value
     while IFS=$'\t' read -r kind key value; do
         case "${kind}" in
-            c)  COMMIT_PR_CACHE[$key]="${value}" ;;
-            l)  # Restore newlines from |-encoded labels
+            # `c` entries came from the subject-first lookup and may name
+            # an issue (#920); `p` entries may name an open PR whose branch
+            # merely contains the commit. Both are ignored so it is re-asked.
+            m)  COMMIT_PR_CACHE[$key]="${value}" ;;
+            # Labels, issue types and the Interface Effect can be edited at
+            # any time, so an online run asks again; the cached value is the
+            # offline (--no-gh) fallback only. A relabel was invisible before.
+            l)  [[ "${ENABLE_GH_LABELS}" -eq 1 ]] && continue
+                # Restore newlines from |-encoded labels
                 PR_LABEL_CACHE[$key]="${value//|/$'\n'}"
                 ;;
-            t)  PR_TYPE_CACHE[$key]="${value}" ;;
+            t)  [[ "${ENABLE_GH_LABELS}" -eq 1 ]] || PR_TYPE_CACHE[$key]="${value}" ;;
+            # `r` entries used a tab separator that the reader mangled;
+            # they are ignored so the PR is re-asked.
+            n)  [[ "${value}" =~ ^[0-9,]*$'\x1f'. ]] && PR_REFS_CACHE[$key]="${value}" ;;
+            e)  [[ "${ENABLE_GH_LABELS}" -eq 1 ]] || PR_EFFECT_CACHE[$key]="${value}" ;;
         esac
     done < "${GH_CACHE_FILE}"
+    # Online, drop the soft entries from the file too, so it holds one
+    # current copy of each instead of growing by a copy per run.
+    if [[ "${ENABLE_GH_LABELS}" -eq 1 ]]; then
+        grep -vE $'^(l|t|e)\t' "${GH_CACHE_FILE}" > "${GH_CACHE_FILE}.tmp" || true
+        mv "${GH_CACHE_FILE}.tmp" "${GH_CACHE_FILE}"
+    fi
+    return 0
 }
 
 gh_cache_append() {
@@ -1396,20 +1962,33 @@ get_pr_for_commit() {
         return 0
     fi
 
+    # GitHub's commit -> PR association is authoritative. A trailing "(#N)"
+    # in the subject is only a fallback (local or cherry-picked commits):
+    # squash merges often carry the ISSUE number there, not the PR (#920).
+    # Only a resolved mapping is persisted: a subject guess or an empty
+    # result (offline, --no-gh, API failure) is returned uncached so a
+    # later online run asks GitHub again.
     local pr=""
     if [[ "${subject}" =~ ^Merge\ pull\ request\ \#([0-9]+) ]]; then
         pr="${BASH_REMATCH[1]}"
-    elif [[ "${subject}" =~ \(#([0-9]+)\)$ ]]; then
-        pr="${BASH_REMATCH[1]}"
     elif [[ "${ENABLE_GH_LABELS}" -eq 1 ]]; then
-        pr="$(gh api "repos/${GH_REPO}/commits/${sha}/pulls" --jq '.[0].number' 2>/dev/null || true)"
+        # The list names every PR whose branch contains the commit, open
+        # ones included: a release branch merged into a feature branch makes
+        # that PR claim every release commit. Only the earliest merged PR
+        # brought the commit in.
+        pr="$(gh api "repos/${GH_REPO}/commits/${sha}/pulls" \
+            --jq '[.[] | select(.merged_at != null)] | sort_by(.merged_at) | .[0].number // empty' \
+            2>/dev/null || true)"
         if ! [[ "${pr}" =~ ^[0-9]+$ ]]; then
             pr=""
         fi
     fi
-
-    COMMIT_PR_CACHE[$sha]="${pr}"
-    gh_cache_append "c" "${sha}" "${pr}"
+    if [[ -n "${pr}" ]]; then
+        COMMIT_PR_CACHE[$sha]="${pr}"
+        gh_cache_append "m" "${sha}" "${pr}"
+    elif [[ "${subject}" =~ \(#([0-9]+)\)$ ]]; then
+        pr="${BASH_REMATCH[1]}"
+    fi
     printf '%s\n' "${pr}"
 }
 
@@ -1453,6 +2032,91 @@ get_pr_issue_type() {
     PR_TYPE_CACHE[$pr]="${t}"
     gh_cache_append "t" "${pr}" "${t}"
     printf '%s\n' "${t}"
+}
+
+# Title and closing-issue numbers of a PR, cached as "ISSUES<US>TITLE"
+# (ISSUES comma-separated, US = \x1f — not a tab, which the cache reader
+# collapses when ISSUES is empty). Only feeds the derivation text, so a
+# reviewer can look up what each label came from (#923).
+#
+# Called directly, never in $(...), so the in-memory cache survives for
+# every component the PR touched. An empty result (offline, --no-gh, API
+# failure) is reused for this run but not persisted, so a later online
+# run retries; a real response always carries the title.
+load_pr_refs() {
+    local pr="$1" refs=""
+    [[ -n "${pr}" && -z "${PR_REFS_CACHE[$pr]+x}" ]] || return 0
+    if [[ "${ENABLE_GH_LABELS}" -eq 1 ]]; then
+        # A failed query (e.g. #N is an issue, not a PR) prints its error
+        # body on stdout; keep only a well-formed "ISSUES<US>TITLE".
+        refs="$(gh api graphql \
+            -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){pullRequest(number:$n){title closingIssuesReferences(first:10){nodes{number}}}}}' \
+            -f o="${GH_REPO%%/*}" -f r="${GH_REPO##*/}" -F n="${pr}" \
+            --jq '.data.repository.pullRequest | select(.title) | ([.closingIssuesReferences.nodes[].number | tostring] | join(",")) + "\u001f" + .title' \
+            2>/dev/null)" || refs=""
+        [[ "${refs}" =~ ^[0-9,]*$'\x1f'. ]] || refs=""
+    fi
+    PR_REFS_CACHE[$pr]="${refs}"
+    [[ -n "${refs}" ]] && gh_cache_append "n" "${pr}" "${refs}"
+    return 0
+}
+
+# " — "TITLE"; issues #A, #B; files: F1, F2 +N more" for a derivation line.
+# Issues are the PR's closing issues plus any other #N the subject cites
+# (e.g. "gh #836", or "(#846)" when the subject names the issue).
+# The Interface Effect project field for a PR (#875): the PR's own value, or
+# its closing issue's when the PR has none. A hint, like the labels; the
+# compiler check decides. Empty when unset, offline or without project scope.
+# Fills PR_EFFECT_CACHE in the calling shell; never call it inside $(...).
+load_pr_effect() {
+    local pr="$1" effect=""
+    [[ -n "${pr}" ]] || return 0
+    if [[ -z "${PR_EFFECT_CACHE[$pr]+x}" ]]; then
+        if [[ "${ENABLE_GH_LABELS}" -eq 1 ]]; then
+            effect="$(gh api graphql \
+                -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){pullRequest(number:$n){projectItems(first:5){nodes{fieldValues(first:40){nodes{... on ProjectV2ItemFieldSingleSelectValue{name field{... on ProjectV2SingleSelectField{name}}}}}}} closingIssuesReferences(first:5){nodes{projectItems(first:5){nodes{fieldValues(first:40){nodes{... on ProjectV2ItemFieldSingleSelectValue{name field{... on ProjectV2SingleSelectField{name}}}}}}}}}}}}' \
+                -f o="${GH_REPO%%/*}" -f r="${GH_REPO##*/}" -F n="${pr}" \
+                --jq 'def eff: [.projectItems.nodes[].fieldValues.nodes[] | select(.field.name? and ((.field.name | ascii_downcase) == "interface effect")) | .name][0] // empty;
+                      .data.repository.pullRequest | (eff // ([.closingIssuesReferences.nodes[] | eff][0]) // empty)' \
+                2>/dev/null)" || effect=""
+            [[ "${effect}" =~ ^[A-Za-z][A-Za-z\ -]*$ ]] || effect=""
+        fi
+        PR_EFFECT_CACHE[$pr]="${effect}"
+        [[ -n "${effect}" ]] && gh_cache_append "e" "${pr}" "${effect}"
+    fi
+    return 0
+}
+
+pr_ref_suffix() {
+    local pr="$1" subject="$2" files="$3"
+    local refs="" title="" issues="" n out=""
+    [[ -n "${pr}" ]] && refs="${PR_REFS_CACHE[$pr]:-}"
+    if [[ -n "${refs}" ]]; then
+        issues="${refs%%$'\x1f'*}"
+        title="${refs#*$'\x1f'}"
+    fi
+    while read -r n; do
+        [[ -n "${n}" && "${n}" != "${pr}" && ",${issues}," != *",${n},"* ]] \
+            && issues="${issues:+${issues},}${n}"
+    done < <(grep -oE '#[0-9]+' <<<"${subject}" | tr -d '#')
+    [[ -n "${title}" ]] && out=" — \"${title}\""
+    if [[ -n "${issues}" ]]; then
+        local -a nums
+        local linked=""
+        IFS=, read -ra nums <<<"${issues}"
+        for n in "${nums[@]}"; do
+            linked="${linked:+${linked}, }$(_link "https://github.com/${GH_REPO:-rdkcentral/rdk-halif-aidl}/issues/${n}" "#${n}")"
+        done
+        out="${out}; issues ${linked}"
+    fi
+    if [[ -n "${files}" ]]; then
+        local -a f
+        mapfile -t f < <(printf '%s' "${files}" | grep .)
+        local shown="${f[*]:0:6}"
+        out="${out}; files: ${shown// /, }"
+        (( ${#f[@]} > 6 )) && out="${out} +$(( ${#f[@]} - 6 )) more"
+    fi
+    printf '%s' "${out}"
 }
 
 phase "Analyzing ${#FP_COMMITS[@]} commit(s) for component impact..."
@@ -1505,6 +2169,7 @@ for sha in "${FP_COMMITS[@]}"; do
 
     declare -A COMMIT_COMP_TOUCHED=()
     declare -A COMMIT_COMP_DOCS_ONLY=()
+    declare -A COMMIT_COMP_FILES=()
 
     for file in "${changed_files[@]}"; do
         comp="$(component_from_path "${file}" || true)"
@@ -1513,6 +2178,9 @@ for sha in "${FP_COMMITS[@]}"; do
         COMP_TOUCHED[$comp]=1
         COMMIT_COMP_TOUCHED[$comp]=1
         COMP_FILES[$comp]="${COMP_FILES[$comp]:-}${file}"$'\n'
+        # Component-relative, so current/ and a released snapshot's copy of
+        # the same file stay distinguishable in the derivation.
+        COMMIT_COMP_FILES[$comp]="${COMMIT_COMP_FILES[$comp]:-}${file#"${comp}"/}"$'\n'
 
         if [[ -z "${COMMIT_COMP_DOCS_ONLY[$comp]+x}" ]]; then
             COMMIT_COMP_DOCS_ONLY[$comp]=1
@@ -1522,31 +2190,39 @@ for sha in "${FP_COMMITS[@]}"; do
         fi
     done
 
+    load_pr_refs "${pr_number}"
     for comp in "${!COMMIT_COMP_TOUCHED[@]}"; do
-        reason_prefix="commit ${sha:0:8}"
-        [[ -n "${pr_number}" ]] && reason_prefix="PR #${pr_number} (${sha:0:8})"
+        # Colour on a TTY only (the _C_* are empty otherwise): PR bold, the
+        # label by severity, the references dim.
+        reason_prefix="${_C_BOLD}commit ${sha:0:8}${_C_RESET}"
+        [[ -n "${pr_number}" ]] && reason_prefix="${_C_BOLD}PR $(_link "https://github.com/${GH_REPO:-rdkcentral/rdk-halif-aidl}/pull/${pr_number}" "#${pr_number}")${_C_RESET} (${sha:0:8})"
+        reason_refs="${_C_DIM}$(pr_ref_suffix "${pr_number}" "${subject}" "${COMMIT_COMP_FILES[$comp]:-}")${_C_RESET}"
 
         # Order matters: highest severity wins if multiple change-class
         # labels are (accidentally) present on a single PR. Major >
         # Minor > documentation (a Minor+doc combo resolves to Minor).
         if [[ "${has_major_label}" -eq 1 ]]; then
             COMP_BREAKING[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: Major Change label (breaking)"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: ${_C_RED}Major Change label (breaking)${_C_RESET}${reason_refs}"$'\n'
+            [[ -n "${pr_number}" ]] && COMP_LABEL_PRS["${comp}:generation"]+=" ${pr_number}"
         elif [[ "${has_minor_label}" -eq 1 ]]; then
             COMP_NON_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: Minor Change label (additive)"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: ${_C_YELLOW}Minor Change label (additive)${_C_RESET}${reason_refs}"$'\n'
+            [[ -n "${pr_number}" ]] && COMP_LABEL_PRS["${comp}:minor"]+=" ${pr_number}"
         elif [[ "${has_bugfix_label}" -eq 1 ]]; then
             COMP_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: documentation label (bugfix)"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: ${_C_GREEN}documentation label (bugfix)${_C_RESET}${reason_refs}"$'\n'
+            [[ -n "${pr_number}" ]] && COMP_LABEL_PRS["${comp}:patch"]+=" ${pr_number}"
         elif [[ -n "${pr_number}" ]] && [[ "$(get_pr_issue_type "${pr_number}")" == "Bug" ]]; then
             COMP_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: linked issue type Bug (bugfix)"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: ${_C_GREEN}linked issue type Bug (bugfix)${_C_RESET}${reason_refs}"$'\n'
         elif [[ "${COMMIT_COMP_DOCS_ONLY[$comp]}" -eq 1 ]]; then
             COMP_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: docs-only heuristic"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: ${_C_GREEN}docs-only heuristic${_C_RESET}${reason_refs}"$'\n'
         else
             COMP_NON_DOC[$comp]=1
-            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: default minor (no relevant label)"$'\n'
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${reason_prefix}: ${_C_YELLOW}default minor (no relevant label)${_C_RESET}${reason_refs}"$'\n'
+            [[ -n "${pr_number}" ]] && COMP_LABEL_PRS["${comp}:default"]+=" ${pr_number}"
         fi
     done
 done
@@ -1755,6 +2431,43 @@ compute_aidl_hash_for_dir() {
     echo "${h}"
 }
 
+# The compiler's verdict on a component (scripts/aidl_compat.py, #875):
+# aidl --checkapi for the wire, and the C++ headers regenerated for both
+# sides - its own, plus the types it uses from other components - for the
+# source. Sets COMP_RECOMMENDED[comp] to a bump token (generation, minor,
+# patch, none; empty when it could not check) and COMP_COMPAT_EVIDENCE[comp].
+# The labels and the Interface Effect are hints checked against it.
+declare -A COMP_RECOMMENDED=() COMP_COMPAT_EVIDENCE=() COMP_COMPAT_SPLIT=()
+compat_check() {
+    local comp="$1" prev="$2"
+    [[ -n "${COMP_RECOMMENDED[$comp]+x}" ]] && return 0
+    local tc="${BINDER_TOOLCHAIN_ROOT:-${REPO_ROOT}/build-tools/linux_binder_idl}"
+    local aidl="${tc}/out/host/bin/aidl" out rec
+    COMP_RECOMMENDED[$comp]=""
+    if [[ ! -x "${aidl}" || ! -d "${REPO_ROOT}/${comp}/${prev}" ]]; then
+        COMP_COMPAT_EVIDENCE[$comp]="compiler: not run (aidl not built — ./build_binder.sh)"
+        return 0
+    fi
+    out="$(python3 "${REPO_ROOT}/scripts/aidl_compat.py" --repo "${REPO_ROOT}" --aidl "${aidl}" \
+            --cache "${REPO_ROOT}/out/.compat-cache.json" "${comp}" "${prev}" 2>/dev/null \
+        | python3 -c 'import json, sys
+r = json.load(sys.stdin)
+print(r["recommended"]); print(r["wire"], r["source"], r["inherited"])
+for e in r["evidence"]: print(e)' 2>/dev/null)" || out=""
+    rec="$(head -1 <<<"${out}")"
+    COMP_COMPAT_SPLIT[$comp]="$(sed -n 2p <<<"${out}")"
+    COMP_COMPAT_EVIDENCE[$comp]="$(tail -n +3 <<<"${out}")"
+    case "${rec}" in
+        major)  COMP_RECOMMENDED[$comp]="generation" ;;
+        minor)  COMP_RECOMMENDED[$comp]="minor" ;;
+        bugfix) COMP_RECOMMENDED[$comp]="patch" ;;
+        none)   [[ "$(aidl_hash_status "${comp}")" == "unchanged" ]] \
+                    && COMP_RECOMMENDED[$comp]="none" || COMP_RECOMMENDED[$comp]="patch" ;;
+        *)      COMP_COMPAT_EVIDENCE[$comp]="compiler: could not check${COMP_COMPAT_EVIDENCE[$comp]:+ — $(head -1 <<<"${COMP_COMPAT_EVIDENCE[$comp]}")}" ;;
+    esac
+    return 0
+}
+
 # Compare a module's current/ AIDL hash against the highest tracked
 # snapshot. Echoes one of: "unchanged" / "CHANGED" / "new" / "missing".
 aidl_hash_status() {
@@ -1808,6 +2521,40 @@ for _gc in "${!COMP_TOUCHED[@]}"; do
         COMP_REASONS[$_gc]="${COMP_REASONS[$_gc]:-}gate: AIDL surface unchanged — not a propagation source (#722)"$'\n'
     fi
 done
+
+# Resolve the cohort version a dependency should be pinned to.
+#
+# Checks the in-flight release plan FIRST, then falls back to the manifest on
+# disk. Ordering matters: create_snapshot runs BEFORE update_versions_released
+# rewrites versions_released.yaml, so a dependency being released for the first
+# time in this same cycle is not yet in the file. Reading only the file left
+# such a dep unresolved and the snapshot pinned to `current`.
+#
+# Echoes the version and returns 0, or returns 1 when the dep is unknown.
+# BUMPED_COMPONENTS is populated later in the script, so the expansion is
+# guarded — early callers (the dependency-closure pass) see an empty plan and
+# fall through to the manifest, which is exactly what they want.
+cohort_version_of() {
+    local dep="$1"
+    local entry
+    for entry in "${BUMPED_COMPONENTS[@]:-}"; do
+        [[ -z "${entry}" ]] && continue
+        if [[ "${entry%%:*}" == "${dep}" ]]; then
+            printf '%s\n' "${entry##*:}"
+            return 0
+        fi
+    done
+    local versions_yaml="${REPO_ROOT}/versions_released.yaml"
+    if [[ -f "${versions_yaml}" ]]; then
+        local dep_ver
+        dep_ver="$(awk -v k="${dep}:" '$1==k{print $2; exit}' "${versions_yaml}")"
+        if [[ -n "${dep_ver}" ]]; then
+            printf '%s\n' "${dep_ver}"
+            return 0
+        fi
+    fi
+    return 1
+}
 
 phase "Propagating transitive bumps via interface.yaml imports..."
 
@@ -1872,6 +2619,93 @@ while [[ "${_changed}" -eq 1 ]]; do
     [[ "${_iter}" -gt 20 ]] && break  # safety net; real graphs are shallow
 done
 
+# ----------------------------------------------------------------------------
+# Reverse dependency closure — pull unreleased deps INTO the cohort.
+#
+# The subsume pass above walks forwards (dep bumps -> dependents inherit). It
+# cannot pull a component in, because it is gated on COMP_TOUCHED. That left a
+# gap: releasing a component whose dependency has never been released at all
+# (e.g. broadcast imports ringbuffer@current, and ringbuffer is absent from
+# versions_released.yaml) produced a frozen snapshot pinned to a dependency
+# with no released version. The manifest build then dropped the edge, sorted
+# the importer first, and failed.
+#
+# So: for every component being released, walk its interface.yaml imports and
+# pull in any sibling dep that has no released version yet. Such a dep must be
+# cut in the same cohort or the importer's snapshot cannot be pinned.
+#
+# Deps that ARE already released are left alone — they only join the cohort if
+# they changed, which the subsume pass handles.
+phase "Closing over unreleased dependencies..."
+
+declare -A COMP_DEP_CLOSURE=()   # comp -> 1 (pulled in purely as a dependency)
+declare -A COMP_DEP_UNRELEASABLE=()  # comp -> importer (unreleased AND not buildable)
+
+_iter=0
+_changed=1
+while [[ "${_changed}" -eq 1 ]]; do
+    _changed=0
+    _iter=$((_iter + 1))
+    for comp in "${!COMP_IMPORTS[@]}"; do
+        [[ -n "${COMP_TOUCHED[$comp]:-}" ]] || continue
+        for dep in ${COMP_IMPORTS[$comp]}; do
+            # Already in the cohort — nothing to do.
+            [[ -n "${COMP_TOUCHED[$dep]:-}" ]] && continue
+            # Not a component in this repo (external ref) — skip.
+            [[ -d "${REPO_ROOT}/${dep}" ]] || continue
+            # Already has a released version — it does not need to be re-cut
+            # just to be pinnable.
+            if cohort_version_of "${dep}" >/dev/null 2>&1; then
+                continue
+            fi
+            # Unreleased AND not buildable (no current/interface.yaml) — it
+            # cannot be cut, so the importer cannot be released either.
+            # Record it; the gate below turns this into a hard error.
+            if [[ ! -f "${REPO_ROOT}/${dep}/current/interface.yaml" ]]; then
+                COMP_DEP_UNRELEASABLE[$dep]="${comp}"
+                continue
+            fi
+            # Unreleased dependency of a released component: pull it in at the
+            # lowest bump level, since nothing about it necessarily changed —
+            # it simply needs a first released version to be pinnable.
+            COMP_DOC[$dep]=1
+            COMP_TOUCHED[$dep]=1
+            COMP_DEP_CLOSURE[$dep]=1
+            COMP_REASONS[$dep]="${COMP_REASONS[$dep]:-}dependency closure: ${comp} imports ${dep}, which has no released version"$'\n'
+            _changed=1
+        done
+    done
+    [[ "${_iter}" -gt 20 ]] && break  # safety net; real graphs are shallow
+done
+
+if [[ ${#COMP_DEP_UNRELEASABLE[@]} -gt 0 ]]; then
+    warn "Components staged for release depend on unreleasable components:"
+    for _dep in $(printf '%s\n' "${!COMP_DEP_UNRELEASABLE[@]}" | sort); do
+        warn "    ${COMP_DEP_UNRELEASABLE[$_dep]} imports ${_dep}, which has no released"
+        warn "      version and no ${_dep}/current/interface.yaml (so it cannot be cut)."
+    done
+    warn "  Either add the missing current/interface.yaml so the dependency can be"
+    warn "  released, or drop the importing component from this release."
+    # Mirrors the root-markdown link check: fatal for any mutating run so a
+    # broken cohort can never be cut, advisory in read-only plan mode so the
+    # operator still gets the full table.
+    if [[ "${DO_WRITES}" -eq 1 || "${DO_BRANCH}" -eq 1 || "${COMMIT}" -eq 1 ]]; then
+        die "Aborting release: unreleasable dependency in the cohort."
+    fi
+fi
+
+if [[ ${#COMP_DEP_CLOSURE[@]} -gt 0 ]]; then
+    log ""
+    log "ℹ️  Pulled into the release as unreleased dependencies:"
+    for comp in $(printf '%s\n' "${!COMP_DEP_CLOSURE[@]}" | sort); do
+        log "      - ${comp}"
+    done
+    log "    These have no released version, so importers cannot pin them."
+    log "    They are cut at the lowest bump level alongside their importers."
+else
+    log "    ✓ every dependency of a released component already has a released version"
+fi
+
 # Diagnostic block: list every component that bumped purely transitively
 # so the operator sees WHY a "quiet" component is suddenly on the list.
 if [[ ${#COMP_TRANSITIVE[@]} -gt 0 ]]; then
@@ -1924,13 +2758,6 @@ compute_next_versions() {
     fi
 
     NEXT_NOTE="unsupported version format"
-}
-
-update_metadata() {
-    local file="$1"
-    local new_version="$2"
-
-    sed -i -E "s/^version:.*/version: ${new_version}/" "${file}"
 }
 
 # ----------------------------------------------------------------------------
@@ -2038,6 +2865,47 @@ else:
     s = re.sub(r'(\n\s*name:[^\n]*\n)', r'\1  version: ' + n + '\n', s, count=1)
 open(path, 'w').write(s)
 PYEOF
+}
+
+# freeze_snapshot_docs <comp> <version> <tag> : Rewrite <comp>/<version>/docs/
+# so the frozen page documents <version>, not current/ (#796).
+#
+#   tree/main/<comp>/current  ->  tree/<tag>/<comp>/<version>
+#   <comp>/current            ->  <comp>/<version>
+#   Interface Version `current` -> `<version>`
+#
+# <tag> is the release that ships the snapshot; a tag-pinned link cannot move
+# as main does. Safe to repeat: a rewritten page no longer matches.
+freeze_snapshot_docs() {
+    local comp="$1" version="$2" tag="$3"
+    local docs_dir="${REPO_ROOT}/${comp}/${version}/docs"
+    local doc
+
+    [[ -d "${docs_dir}" ]] || return 0
+    [[ -n "${tag}" ]] || { warn "  [${comp}/${version}] no release tag to pin the docs links to."; return 1; }
+    while IFS= read -r -d '' doc; do
+        # -i.bak + rm: the in-place form GNU and BSD sed both accept.
+        sed -i.bak \
+            -e "s#/tree/main/${comp}/current#/tree/${tag}/${comp}/${version}#g" \
+            -e "s#${comp}/current#${comp}/${version}#g" \
+            -e "s#|\*\*Interface Version\*\*|\`current\`|#|**Interface Version**|\`${version}\`|#" \
+            "${doc}" && rm -f "${doc}.bak" || return 1
+    done < <(find "${docs_dir}" -name '*.md' -type f -print0)
+}
+
+# check_snapshot_docs : Fail, naming each line, when a snapshot doc's
+# Interface Definition or Interface Version still refers to current/ (#796).
+check_snapshot_docs() {
+    local hits
+    hits="$(cd "${REPO_ROOT}" && find . -path '*/[0-9]*.[0-9]*.[0-9]*.[0-9]*/docs/*' -name '*.md' -type f \
+              -not -path './docs/*' -not -path './build/*' -not -path './out/*' -print0 \
+            | xargs -0 grep -nE '\*\*Interface (Version\*\*\|`current`|Definition\*\*\|.*/current[/)])' 2>/dev/null)"
+    if [[ -n "${hits}" ]]; then
+        warn "  Snapshot docs still reference current/:"
+        while IFS= read -r _hit; do warn "    ${_hit#./}"; done <<< "${hits}"
+        return 1
+    fi
+    return 0
 }
 
 create_snapshot() {
@@ -2157,24 +3025,60 @@ create_snapshot() {
         }
         # Dep names + include paths — read each <dep>-vcurrent-cpp occurrence
         # (own module already replaced above) and resolve to its cohort version
-        # in versions_released.yaml. Then do the same for include paths.
-        local versions_yaml="${REPO_ROOT}/versions_released.yaml"
-        if [[ -f "${versions_yaml}" ]]; then
-            local dep dep_ver
-            while read -r dep; do
-                [[ -z "${dep}" ]] && continue
-                dep_ver="$(awk -v k="${dep}:" '$1==k{print $2; exit}' "${versions_yaml}")"
-                if [[ -n "${dep_ver}" ]]; then
-                    sed -i "s/${dep}-vcurrent-cpp/${dep}-v${dep_ver}-cpp/g" "${snapshot_cmake}"
-                    sed -i "s|HALIF_INCLUDE_DIR}/${dep}/current/|HALIF_INCLUDE_DIR}/${dep}/${dep_ver}/|g" "${snapshot_cmake}"
-                else
-                    warn "  [${comp}/${version}] dep '${dep}' not in versions_released.yaml; left as -vcurrent-cpp (build will fail at verification)."
-                fi
-            done < <(grep -oE '[a-z][a-z0-9_]*-vcurrent-cpp' "${snapshot_cmake}" | grep -oE '^[a-z][a-z0-9_]*' | sort -u)
+        # via cohort_version_of (in-flight plan, then versions_released.yaml).
+        #
+        # An unresolvable dep is fatal. Leaving the ref as `-vcurrent-cpp`
+        # produces a frozen snapshot that points at a moving target and that
+        # cannot link, and the failure only surfaced minutes later in the
+        # verification build with no pointer back to the real cause.
+        local dep dep_ver
+        while read -r dep; do
+            [[ -z "${dep}" ]] && continue
+            if ! dep_ver="$(cohort_version_of "${dep}")"; then
+                warn "  [${comp}/${version}] dependency '${dep}' has no released version."
+                warn "    '${comp}' imports '${dep}', but '${dep}' is neither staged in this"
+                warn "    release nor present in versions_released.yaml, so the frozen"
+                warn "    snapshot cannot pin it. Stage '${dep}' in the same release:"
+                warn "        ./release.sh stage ${dep} ${comp}"
+                warn "    (or mark '${comp}' incubating by removing ${comp}/current/interface.yaml)."
+                return 1
+            fi
+            if [[ "${dep_ver}" == "current" ]]; then
+                warn "  [${comp}/${version}] dependency '${dep}' resolves to 'current'."
+                warn "    A frozen snapshot must not import @current — it is non-deterministic."
+                warn "    Stage '${dep}' so it gets a real released version."
+                return 1
+            fi
+            sed -i "s/${dep}-vcurrent-cpp/${dep}-v${dep_ver}-cpp/g" "${snapshot_cmake}"
+            sed -i "s|HALIF_INCLUDE_DIR}/${dep}/current/|HALIF_INCLUDE_DIR}/${dep}/${dep_ver}/|g" "${snapshot_cmake}"
+        done < <(grep -oE '[a-z][a-z0-9_]*-vcurrent-cpp' "${snapshot_cmake}" | grep -oE '^[a-z][a-z0-9_]*' | sort -u)
+    fi
+
+    # Give the snapshot's mkdocs.yml its own site_name (#604). The copy above
+    # brings `site_name: <comp>` across verbatim from current/, so once the
+    # top-level nav registers current/ and the snapshot together the
+    # mkdocs-monorepo plugin aborts the whole build on the duplicate:
+    #   [mkdocs-monorepo] You cannot have duplicated site names.
+    # current/ keeps the bare component name; the snapshot takes
+    # <comp>-<version>, matching what the docs nav already expects.
+    local snapshot_mkdocs="${snapshot_dir}/mkdocs.yml"
+    if [[ -f "${snapshot_mkdocs}" ]]; then
+        if grep -qE '^site_name:' "${snapshot_mkdocs}"; then
+            sed -i "s|^site_name:.*|site_name: ${comp}-${version}|" "${snapshot_mkdocs}" || {
+                warn "Failed to set site_name in ${comp}/${version}/mkdocs.yml."
+                return 1
+            }
         else
-            warn "  [${comp}/${version}] versions_released.yaml missing; dep links left as -vcurrent-cpp."
+            warn "  [${comp}/${version}] mkdocs.yml has no site_name; docs build will treat it as a duplicate."
         fi
     fi
+
+    # Freeze the copied docs to this version (#796): the References table and
+    # any other self-reference still name current/.
+    freeze_snapshot_docs "${comp}" "${version}" "${RELEASE_VERSION}" || {
+        warn "Failed to freeze the docs of ${comp}/${version}."
+        return 1
+    }
 
     # Stage hand-authored module-root headers (e.g. avbufferhelper.h) into the
     # snapshot's include/ tree (#623). These are public, versioned contract
@@ -2262,9 +3166,9 @@ for comp, ver in sorted(cohort.items()):
         for dep, dep_ver in cohort.items():
             if dep == comp or dep_ver == "current":
                 continue
-            text = re.sub(rf"(?<![A-Za-z0-9_]){re.escape(dep)}-v[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+-cpp",
+            text = re.sub(rf"(?<![A-Za-z0-9_]){re.escape(dep)}-v(?:current|[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)-cpp",
                           f"{dep}-v{dep_ver}-cpp", text)
-            text = re.sub(rf"(HALIF_INCLUDE_DIR}}/{re.escape(dep)}/)[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/",
+            text = re.sub(rf"(HALIF_INCLUDE_DIR}}/{re.escape(dep)}/)(?:current|[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/",
                           rf"\g<1>{dep_ver}/", text)
         if text != orig:
             open(cmake, "w").write(text)
@@ -2407,6 +3311,76 @@ PYEOF
 }
 
 # ----------------------------------------------------------------------------
+# Release notes nav entry (#848)
+# ----------------------------------------------------------------------------
+#
+# Add docs/releases/<release>.md as the first (newest) child of the
+# "Release Notes:" nav section:
+#
+#   - Release Notes:
+#     - 0.23.0: releases/0.23.0.md     <- inserted
+#     - 0.22.0: releases/0.22.0.md
+#
+# Idempotent — skips when the entry already exists.
+
+update_mkdocs_release_notes() {
+    local release_version="$1"
+    local mkdocs="${REPO_ROOT}/mkdocs.yml"
+    local entry="releases/${release_version}.md"
+
+    if [[ ! -f "${mkdocs}" ]]; then
+        warn "mkdocs.yml not found — skipping Release Notes nav update."
+        return 1
+    fi
+    if grep -qE "^[[:space:]]*-[[:space:]]+[^:]+:[[:space:]]+${entry//./\\.}[[:space:]]*$" "${mkdocs}"; then
+        log "  mkdocs.yml Release Notes already lists ${release_version}"
+        return 0
+    fi
+
+    if ! python3 - "${mkdocs}" "${release_version}" <<'PYEOF'; then
+import re, sys
+mkdocs_path, version = sys.argv[1:3]
+lines = open(mkdocs_path).read().splitlines(keepends=True)
+
+parent = next((i for i, l in enumerate(lines)
+               if re.match(r"^\s*-\s+Release Notes:\s*$", l)), None)
+if parent is None:
+    sys.stderr.write("'Release Notes:' nav section not found\n")
+    sys.exit(1)
+indent = re.match(r"^(\s*)", lines[parent]).group(1) + "  "
+lines.insert(parent + 1, f"{indent}- {version}: releases/{version}.md\n")
+open(mkdocs_path, "w").write("".join(lines))
+sys.exit(0)
+PYEOF
+        warn "  python mkdocs edit failed; add '${entry}' under Release Notes by hand"
+        return 1
+    fi
+    log "  added Release Notes nav entry: ${release_version}"
+    return 0
+}
+
+# ----------------------------------------------------------------------------
+# Documentation build check (#848)
+# ----------------------------------------------------------------------------
+#
+# Build the site with ./docs/build_docs.sh build, which also fails when a
+# snapshot or release notes page has no nav entry. Output goes to
+# out/release-docs-build.log; the tail is printed on failure.
+
+run_docs_build() {
+    local log_file="${REPO_ROOT}/out/release-docs-build.log"
+    mkdir -p "$(dirname "${log_file}")"
+    phase "Building the documentation site (./docs/build_docs.sh build)..."
+    log "  log: ${log_file#"${REPO_ROOT}"/}"
+    if ! (cd "${REPO_ROOT}" && ./docs/build_docs.sh build) >"${log_file}" 2>&1; then
+        tail -n 30 "${log_file}" >&2
+        return 1
+    fi
+    log "  ✓ documentation built."
+    return 0
+}
+
+# ----------------------------------------------------------------------------
 # Release branch (#513)
 #
 # Creates / reuses release/<version> and stages all generated artefacts.
@@ -2528,7 +3502,12 @@ create_release_branch() {
 
         # mike deploy + set-default (sequential, blocking). mike treats
         # the version as a string; no git tag required.
-        deploy_versioned_docs "${release_version}"
+        if ! deploy_versioned_docs "${release_version}"; then
+            log ""
+            log "Release branch ${branch} is committed and pushed; its documentation is NOT deployed."
+            log "Retry the deploy with the commands above, then: git flow release finish ${release_version}"
+            die "Documentation deploy for ${release_version} failed."
+        fi
         log ""
         log "Next step (git-flow):"
         log "    git flow release finish ${release_version}"
@@ -2714,7 +3693,7 @@ generate_release_notes_skeleton() {
         for entry in "${BUMPED_COMPONENTS[@]}"; do
             local comp="${entry%%:*}"
             local version="${entry##*:}"
-            echo "- \`${comp}\` → ${version}"
+            echo "- \`${comp}\` → ${version}${PIN_CLASS[$comp]:+ (confirmed $(_bump_class "${PIN_CLASS[$comp]}"): ${PIN_REASON[$comp]:-})}"
         done
         echo ""
         echo "## Highlights"
@@ -2839,20 +3818,48 @@ audit_version_refs() {
 
     [[ ${#found[@]} -eq 0 ]] && return 0
 
+    # One row per hit: where, which version(s), a short excerpt around the
+    # first, and the likely kind - a changelog row is history, 0.0.0.0 is a
+    # CEC physical address - so only the "check" rows need reading.
     log ""
-    log "ℹ️  Version-ref audit (review only — not auto-rewritten):"
-    log "    These files mention version-shaped strings (0.X.Y.Z). Most are intentional"
-    log "    (changelog tables, migration notes, CEC physical addresses). Skim before"
-    log "    --apply to confirm none need a manual update."
-    log ""
+    local _rows=() _f _rest _line _n _txt
     for entry in "${found[@]}"; do
-        local f="${entry%%|*}"
-        local rest="${entry#*|}"
-        log "    ${f#${REPO_ROOT}/}:"
-        while IFS= read -r line; do
-            [[ -n "${line}" ]] && log "        ${line}"
-        done <<< "${rest}"
+        _f="${entry%%|*}"; _f="${_f#${REPO_ROOT}/}"
+        _rest="${entry#*|}"
+        while IFS= read -r _line; do
+            [[ -n "${_line}" ]] || continue
+            _n="${_line%%:*}"; _txt="${_line#*:}"
+            _rows+=("${_f}"$'\t'"${_n}"$'\t'"${_txt}")
+        done <<< "${_rest}"
     done
+    printf '%s\n' "${_rows[@]}" | python3 -c '
+import re, sys
+ver = re.compile(r"\b0\.[0-9]+\.[0-9]+\.[0-9]+\b")
+rows = []
+for raw in sys.stdin.read().splitlines():
+    f, n, txt = raw.split("\t", 2)
+    vs = list(dict.fromkeys(ver.findall(txt)))
+    if vs == ["0.0.0.0"]:
+        kind = "address"
+    elif txt.lstrip().startswith("|"):
+        kind = "history"
+    else:
+        kind = "check"
+    m = ver.search(txt)
+    a = max(0, m.start() - 30)
+    ex = re.sub(r"\s+", " ", txt[a:a + 80]).strip()
+    ex = ("…" if a else "") + ex + ("…" if a + 80 < len(txt) else "")
+    rows.append((f, n, ", ".join(vs), kind, ex))
+checks = sum(1 for r in rows if r[3] == "check")
+print("ℹ️  Version strings in current/ docs and build files: %d hit(s), %d to check (review only, not rewritten)" % (len(rows), checks))
+print()
+w = [max(len(r[i]) for r in rows + [("File", "Line", "Version", "Kind", "")]) for i in range(4)]
+fmt = "  %%-%ds  %%%ds  %%-%ds  %%-%ds  %%s" % tuple(w)
+print(fmt % ("File", "Line", "Version", "Kind", "Excerpt"))
+print(fmt % ("-" * 4, "-" * 4, "-" * 7, "-" * 4, "-" * 7))
+for r in sorted(rows, key=lambda r: (r[3] != "check", r[0], int(r[1]))):
+    print(fmt % r)
+' | while IFS= read -r _line; do log "${_line}"; done
 }
 
 MODE="PLAN (read-only — what the staged plan would do)"
@@ -2884,10 +3891,11 @@ log ""
 # Map internal bump tokens to operator-readable change classes.
 bump_label() {
     case "$1" in
-        generation) echo "Major (breaking)" ;;
+        generation) echo "Major" ;;
         minor)      echo "Minor" ;;
         patch)      echo "Bugfix" ;;
         pinned)     echo "Pinned" ;;
+        confirmed)  echo "Confirmed" ;;
         none)       echo "-" ;;
         *)          echo "$1" ;;
     esac
@@ -2897,8 +3905,8 @@ bump_label() {
 # diagnostic blocks) so the final-decision table is the last thing
 # the operator sees.
 TABLE_ROWS=()
-TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-16s %-8s %s" "Module" "Current" "Next" "Bump" "Planned" "Status")")
-TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-16s %-8s %s" "------" "-------" "----" "----" "-------" "------")")
+TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-18s %-8s %s" "Module" "Current" "Next" "Bump" "Planned" "Status")")
+TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-18s %-8s %s" "------" "-------" "----" "----" "-------" "------")")
 
 changed_count=0
 error_count=0
@@ -2922,7 +3930,7 @@ declare -A METADATA_DRIFT=()  # comp -> "metadata_says|discovered_truth"
 #               is doc-only (comment/doc edits are stripped from dumps).
 #   label       the change class the PR labels imply (same detector the
 #               release run uses; none when untouched in the window).
-#   declared    metadata.yaml's version field (authors pre-bump it).
+#   declared    metadata.yaml's version field (written by release.sh at the cut).
 #
 # Gate table (era 0): structural breaking => major bump, additive =>
 # minor, surface-identical respin => bugfix, identical => none. Era >= 1
@@ -2966,6 +3974,45 @@ run_structural_audit() {
     # Human-readable class for the table — field words, matching the
     # label scheme (#712): major = breaking, minor = additive,
     # bugfix = surface-identical respin.
+    # "To resolve" commands for a label/code disagreement: each fix the
+    # operator can pick, with the PRs and versions filled in.
+    _audit_label_hints() {
+        local comp="$1" label="$2" code="$3" code_next="$4"
+        local -A rank=([none]=0 [patch]=1 [minor]=2 [generation]=3)
+        local -A name=([none]="documentation" [patch]="documentation" [minor]="Minor Change" [generation]="Major Change")
+        local repo="${GH_REPO:-rdkcentral/rdk-halif-aidl}"
+        _pr_links() {   # " 1 2 2" -> "#1, #2" as links
+            local pr out=""
+            for pr in $(tr ' ' '\n' <<<"$1" | grep . | sort -un); do
+                out="${out:+${out}, }$(_link "https://github.com/${repo}/pull/${pr}" "#${pr}")"
+            done
+            printf '%s' "${out}"
+        }
+        local set_by defaulted inherited
+        set_by="$(_pr_links "${COMP_LABEL_PRS[${comp}:${label}]:-}")"
+        defaulted="$(_pr_links "${COMP_LABEL_PRS[${comp}:default]:-}")"
+        inherited="$(grep -oE '^subsume: [^ ]+' <<<"${COMP_REASONS[$comp]:-}" | awk '{print $2}' | sort -u | paste -sd, - | sed 's/,/, /g')"
+        local lc cc
+        lc="$(_audit_class_display "${label}")"; cc="$(_audit_class_display "${code}")"
+        if (( rank[$label] > rank[$code] )); then
+            echo "The hints say ${lc}; the compiler says ${cc}, and ${cc} (${code_next}) is what is released."
+            echo "  • if behaviour changed behind the static API, confirm it, saying what changed:"
+            echo "      ./release.sh stage all ${comp} --confirm ${lc} \"<what behaviour changed>\""
+            [[ -n "${set_by}" ]] && echo "  • otherwise the '${name[$label]}' label on ${set_by} over-states it; correct it (and the Interface Effect)"
+            [[ -n "${inherited}" ]] && echo "  • the level is also inherited from ${inherited}, which it imports"
+        else
+            local touched
+            touched="$(_pr_links "${COMP_LABEL_PRS[${comp}:patch]:-} ${COMP_LABEL_PRS[${comp}:minor]:-} ${COMP_LABEL_PRS[${comp}:generation]:-} ${COMP_LABEL_PRS[${comp}:default]:-}")"
+            echo "The compiler says ${cc} (${code_next}), which is released; the hints say ${lc}."
+            echo "  Correct the hint on the PR that made the change${touched:+ (one of ${touched})}: label '${name[$code]}', Interface Effect ${cc}."
+        fi
+        return 0   # a trailing false [[ ]] above would fail the caller under set -e
+    }
+
+    _bump_rank() {
+        case "$1" in generation) echo 3 ;; minor) echo 2 ;; patch) echo 1 ;; *) echo 0 ;; esac
+    }
+
     _audit_class_display() {
         case "$1" in
             generation) echo "major" ;;
@@ -2978,10 +4025,22 @@ run_structural_audit() {
 
     AUDIT_ROWS=()
     AUDIT_ROWS+=("$(printf "%-24s %-10s %-11s %-11s %-10s %-10s %s" \
-        "Component" "Frozen" "Structural" "Label" "Expected" "Declared" "Status")")
+        "Component" "Frozen" "Compiler" "Label" "Expected" "Declared" "Status")")
     AUDIT_ROWS+=("$(printf "%-24s %-10s %-11s %-11s %-10s %-10s %s" \
-        "---------" "------" "----------" "-----" "--------" "--------" "------")")
+        "---------" "------" "--------" "-----" "--------" "--------" "------")")
     AUDIT_DETAIL=()          # buffered per-component diff detail blocks
+    DOUBT_ROWS=()            # label/code disagreements, settled or not
+
+    # PR numbers -> "#1, #2": the plain text (for column width) and the
+    # same text with each number a clickable link.
+    _doubt_prs() {
+        local repo="${GH_REPO:-rdkcentral/rdk-halif-aidl}" pr plain="" linked=""
+        for pr in $(tr ' ' '\n' <<<"$1" | grep . | sort -un); do
+            plain="${plain:+${plain}, }#${pr}"
+            linked="${linked:+${linked}, }$(_link "https://github.com/${repo}/pull/${pr}" "#${pr}")"
+        done
+        printf '%s\t%s' "${plain:--}" "${linked:--}"
+    }
     _audit_flagged=0
     _audit_errors=0
 
@@ -3039,43 +4098,109 @@ run_structural_audit() {
         }
 
         # Label-implied bump from the same detector state the release run
-        # uses (highest severity wins).
+        # uses (highest severity wins). A hint, like the Interface Effect.
         _label="none"
         [[ "${COMP_DOC[$comp]:-0}"      -eq 1 ]] && _label="patch"
         [[ "${COMP_NON_DOC[$comp]:-0}"  -eq 1 ]] && _label="minor"
         [[ "${COMP_BREAKING[$comp]:-0}" -eq 1 ]] && _label="generation"
 
-        # Expected next version from the STRUCTURAL truth.
+        # The compiler decides the class (#875): aidl --checkapi for the
+        # wire, the regenerated C++ headers for the source, including the
+        # types used from other components. The parser's class stays as
+        # evidence and stands in only when the compiler could not check.
+        compat_check "${comp}" "${_prev}"
+        _code="${COMP_RECOMMENDED[$comp]:-${_structural}}"
         _era="${_prev%%.*}"
         _expected="-"
+        _code_next="-"
         if [[ "${_prev}" =~ ^0\. ]]; then
-            compute_next_versions "${_prev}" "${_structural}"
-            _expected="${NEXT_VERSION}"
+            compute_next_versions "${_prev}" "${_code}"
+            _code_next="${NEXT_VERSION}"
+            _expected="${_code_next}"
         fi
 
         _flags=()
         _notes=()
-        if [[ "${_era}" =~ ^[0-9]+$ ]] && (( _era >= 1 )) && [[ "${_structural}" == "generation" ]]; then
+        _hints=()
+        [[ -n "${COMP_RECOMMENDED[$comp]}" ]] || _notes+=("${COMP_COMPAT_EVIDENCE[$comp]:-compiler: could not check} — parser class used")
+        if [[ "${_era}" =~ ^[0-9]+$ ]] && (( _era >= 1 )) && [[ "${_code}" == "generation" ]]; then
             _flags+=("era ${_era} forbids breaking changes — new component required")
         fi
-        if [[ "${_structural}" != "${_label}" ]]; then
-            if [[ "${_structural}" == "none" && "${_hash_state}" == "unchanged" && "${_label}" != "none" ]]; then
-                # The release run auto-suppresses label-derived bumps when
-                # the .aidl bytes are identical to the frozen snapshot (the
-                # AIDL-hash gate) — the audit mirrors that, or repo-wide
-                # docs/chore commits would flag every component.
-                _notes+=("label bump auto-suppressed (AIDL unchanged)")
-            elif [[ "${_label}" == "none" && "${_structural}" != "none" ]]; then
-                _flags+=("code is $(_audit_class_display "${_structural}") but no PR label in window")
-            else
-                _flags+=("label says $(_audit_class_display "${_label}"), code is $(_audit_class_display "${_structural}")")
+        # A label that disagrees with the compiler is a doubt, not a failure:
+        # the release takes the compiler's class unless the operator confirms
+        # a higher one for a behaviour change the static API does not show.
+        # Nothing to release (AIDL bytes unchanged) is no doubt at all.
+        _doubt=""
+        if [[ "${_code}" != "${_label}" && ! ( "${_code}" == "none" && "${_hash_state}" == "unchanged" ) ]]; then
+            _doubt="label says $(_audit_class_display "${_label}"), compiler says $(_audit_class_display "${_code}")"
+        fi
+
+        # Operator pin (`stage all <comp> --version X`) or confirmed class
+        # (`--confirm major "<reason>"`): accepted at or above the compiler's
+        # class, never below it.
+        _pin="${PIN_VERSIONS[$comp]:-}"
+        _pin_note="pinned to ${_pin} by stage --version"
+        _pin_recovered=0
+        if [[ -z "${_pin}" && -n "${PIN_CLASS[$comp]:-}" && "${_prev}" =~ ^0\. ]]; then
+            compute_next_versions "${_prev}" "${PIN_CLASS[$comp]}"
+            _pin="${NEXT_VERSION}"
+            _pin_note="confirmed $(_bump_class "${PIN_CLASS[$comp]}") (${_pin}): ${PIN_REASON[$comp]:-}"
+        fi
+        # A version an earlier `stage` run wrote: metadata.yaml moved off the
+        # released version, with a <comp>/<version>/ snapshot beside it that
+        # the last release tag does not hold (stage git-adds it, so test the
+        # tag, not the index). It stands when it is the compiler's version, or
+        # when the release notes record a confirmation and its reason.
+        if [[ -z "${_pin}" && -n "${_meta_ver}" && "${_meta_ver}" != "${_prev}" \
+              && -d "${REPO_ROOT}/${comp}/${_meta_ver}" \
+              && ( -z "${_pin_baseline}" \
+                   || -z "$(git -C "${REPO_ROOT}" ls-tree -d --name-only "${_pin_baseline}" -- "${comp}/${_meta_ver}")" ) ]]; then
+            _pin="${_meta_ver}"
+            _pin_recovered=1
+            _pin_note="staged at ${_pin} by an earlier stage run"
+            local _confirmed
+            _confirmed="$(grep -hoE "^- \`${comp}\` → ${_pin//./\\.} \(confirmed (major|minor|bugfix): .*\)$" \
+                "${REPO_ROOT}"/docs/releases/*.md 2>/dev/null | head -1 | sed -E 's/^[^(]*\((.*)\)$/\1/' || true)"
+            if [[ -n "${_confirmed}" ]]; then
+                _pin_note="${_confirmed/:/ (${_pin}):}"
+                _pin_recovered=2
             fi
         fi
-        if [[ "${_expected}" != "-" && -n "${_meta_ver}" && "${_meta_ver}" != "${_expected}" ]]; then
-            if [[ "${_meta_ver}" == "${_prev}" && "${_structural}" != "none" ]]; then
-                _flags+=("bump pending — metadata.yaml not yet pre-bumped to ${_expected}")
+        _code_class="$(_audit_class_display "${_code}")"
+        if [[ -n "${_pin}" && "${_code_next}" != "-" ]]; then
+            if [[ "${_pin_recovered}" -eq 1 && "${_pin}" != "${_code_next}" ]]; then
+                _flags+=("staged at ${_pin} by an earlier run; the compiler says ${_code_class} (${_code_next})")
+                _hints+=("Re-stage at the compiler's version: ./release.sh drop ${comp} && ./release.sh stage ${comp}")
+                _hints+=("or, if behaviour changed behind the static API: ./release.sh drop ${comp} && ./release.sh stage ${comp} --confirm <class> \"<what behaviour changed>\"")
+            elif [[ "$(printf '%s\n%s\n' "${_pin}" "${_code_next}" | sort -V | head -1)" == "${_code_next}" ]]; then
+                _notes+=("${_pin_note}")
+                _expected="${_pin}"
+                PIN_VERSIONS[$comp]="${_pin}"
+                [[ "${_pin_recovered}" -gt 0 ]] && PIN_STAGED[$comp]="${_pin_recovered}"
             else
-                _flags+=("metadata.yaml says ${_meta_ver}, structural expects ${_expected}")
+                if [[ -n "${PIN_CLASS[$comp]:-}" && -z "${PIN_VERSIONS[$comp]:-}" ]]; then
+                    _flags+=("confirmed $(_bump_class "${PIN_CLASS[$comp]}") is below the compiler's ${_code_class}")
+                else
+                    _flags+=("pin ${_pin} is below the compiler's ${_code_class} (${_code_next})")
+                fi
+                if [[ -n "${PIN_VERSIONS[$comp]:-}${PIN_CLASS[$comp]:-}" && "${_meta_ver}" == "${_prev}" ]]; then
+                    _hints+=("Drop the pin, the compiler's class stands: ./release.sh unpin ${comp}")
+                else
+                    _hints+=("Re-stage at the compiler's version: ./release.sh drop ${comp} && ./release.sh unpin ${comp} && ./release.sh stage ${comp}")
+                fi
+            fi
+        fi
+        [[ -n "${_doubt}" && ${#_flags[@]} -eq 0 && "${_expected}" == "${_code_next}" ]] \
+            && _hints+=("$(_audit_label_hints "${comp}" "${_label}" "${_code}" "${_code_next}")")
+        # metadata.yaml version is written by release.sh at the cut (#872):
+        # before the cut it holds the last released version, after the cut
+        # the computed next one. Either is valid; anything else is a hand edit.
+        if [[ "${_expected}" != "-" && -n "${_meta_ver}" && "${_meta_ver}" != "${_expected}" && "${_pin_recovered}" -ne 1 ]]; then
+            if [[ "${_meta_ver}" == "${_prev}" ]]; then
+                [[ "${_code}" != "none" ]] && _notes+=("release.sh writes ${_expected} at the cut")
+            else
+                _flags+=("metadata.yaml says ${_meta_ver}: neither released ${_prev} nor next ${_expected} — hand edit")
+                _hints+=("Set version: ${_prev} in ${comp}/metadata.yaml — release.sh writes ${_expected} at the cut.")
             fi
         fi
 
@@ -3087,22 +4212,117 @@ run_structural_audit() {
             _status="ok ($(IFS='; '; echo "${_notes[*]}"))"
         fi
 
-        AUDIT_ROWS+=("$(printf "%-24s %-10s %-11s %-11s %-10s %-10s %s" \
-            "${comp}" "${_prev}" "$(_audit_class_display "${_structural}")" \
-            "$(_audit_class_display "${_label}")" "${_expected}" "${_meta_ver:--}" "${_status}")")
+        # Colour carries the review: the compiler's class by severity, the
+        # label yellow where it disagrees, the version bold where it moves.
+        _lbl_disp="$(_audit_class_display "${_label}")"
+        _lbl_color="${_C_DIM}"
+        [[ -n "${_doubt}" ]] && _lbl_color="${_C_YELLOW}${_C_BOLD}"
+        _exp_color=""
+        [[ "${_expected}" != "${_prev}" && "${_expected}" != "-" ]] && _exp_color="${_C_BOLD}"
+        AUDIT_ROWS+=("$(printf "%-24s %-10s %s %s %s %-10s %s" \
+            "${comp}" "${_prev}" \
+            "$(_cell 11 "$(_class_color "${_code_class}")" "${_code_class}")" \
+            "$(_cell 11 "${_lbl_color}" "${_lbl_disp}")" \
+            "$(_cell 10 "${_exp_color}" "${_expected}")" \
+            "${_meta_ver:--}" \
+            "$(_cell 0 "$(_status_color "${_status}")" "${_status}")")")
 
-        # Buffer diff detail for flagged rows (all rows under --verbose).
-        if [[ -n "${_detail}" && ( ${#_flags[@]} -gt 0 || "${VERBOSE}" -eq 1 ) ]]; then
-            AUDIT_DETAIL+=("${comp} — ${_class}:"$'\n'"${_detail}")
+        # A doubt stays visible after it is settled: its row says what the
+        # hints claim (labels, Interface Effect), the PRs behind them, what
+        # the compiler found, and the decision.
+        if [[ -n "${_doubt}" ]]; then
+            local _lc _by _prs _effects _pr _changes _decision
+            _lc="$(_audit_class_display "${_label}")"
+            if [[ "${_label}" == "none" ]]; then
+                _prs="${COMP_LABEL_PRS[${comp}:default]:-}"
+            else
+                _prs="${COMP_LABEL_PRS[${comp}:${_label}]:-}"
+            fi
+            _by="$(_doubt_prs "${_prs}")"
+            _effects=""
+            for _pr in $(tr ' ' '\n' <<<"${_prs}" | grep . | sort -un); do
+                load_pr_effect "${_pr}"
+                [[ -n "${PR_EFFECT_CACHE[$_pr]:-}" ]] && _effects+="${PR_EFFECT_CACHE[$_pr]}"$'\n'
+            done
+            _effects="$(grep . <<<"${_effects}" | sort -u | paste -sd/ - || true)"
+            _changes="$(grep -m1 . <<<"${COMP_COMPAT_EVIDENCE[$comp]:-}" | sed -E 's/^(wire|source [^:]*|inherited via [^:]*): //' | cut -c1-60 || true)"
+            [[ -n "${_changes}" ]] || _changes="$(awk 'NF { n[$1]++ } END { for (k in n) { s = k; gsub(/_/, " ", s); printf "%s%d %s", sep, n[k], s; sep = ", " } }' <<<"${_detail}")"
+            if [[ ${#_flags[@]} -gt 0 ]]; then
+                _decision="blocked: see to resolve"
+            elif [[ "${_expected}" != "${_code_next}" ]]; then
+                _decision="${_pin_note}"
+            elif [[ "$(_bump_rank "${_label}")" -gt "$(_bump_rank "${_code}")" ]]; then
+                _decision="released at ${_code_class}; --confirm ${_lc} \"<why>\" if behaviour changed"
+            else
+                _decision="released at ${_code_class}; the label under-states it"
+            fi
+            DOUBT_ROWS+=("${comp}"$'\t'"${_code_class}"$'\t'"${_lc}"$'\t'"${_effects:--}"$'\t'"${_by}"$'\t'"${_changes:-AIDL source changed}"$'\t'"${_decision}")
         fi
-        if [[ ${#_flags[@]} -gt 0 && -n "${COMP_REASONS[$comp]:-}" ]]; then
+
+        # Buffer diff detail for flagged and doubted rows (all rows under --verbose).
+        if [[ -n "${COMP_COMPAT_EVIDENCE[$comp]:-}" && ( ${#_flags[@]} -gt 0 || -n "${_doubt}" || "${VERBOSE}" -eq 1 ) ]]; then
+            read -r _w _s _i <<<"${COMP_COMPAT_SPLIT[$comp]:-? ? ?}"
+            AUDIT_DETAIL+=("${comp} — compiler: wire ${_w}, source ${_s}, inherited ${_i}:"$'\n'"$(sed 's/^/  /' <<<"${COMP_COMPAT_EVIDENCE[$comp]}")")
+        fi
+        if [[ -n "${_detail}" && ( ${#_flags[@]} -gt 0 || -n "${_doubt}" || "${VERBOSE}" -eq 1 ) ]]; then
+            AUDIT_DETAIL+=("${comp} — parser ($(_audit_class_display "${_structural}")):"$'\n'"${_detail}")
+        fi
+        if [[ ( ${#_flags[@]} -gt 0 || -n "${_doubt}" ) && -n "${COMP_REASONS[$comp]:-}" ]]; then
             AUDIT_DETAIL+=("${comp} — label derivation:"$'\n'"$(sed 's/^/  /' <<<"${COMP_REASONS[$comp]%$'\n'}")")
+        fi
+        if [[ ${#_hints[@]} -gt 0 ]]; then
+            AUDIT_DETAIL+=("${_C_CYAN}${comp} — to resolve:${_C_RESET}"$'\n'"$(printf '%s\n' "${_hints[@]}" | sed 's/^/  /')")
         fi
     done
 
     for row in "${AUDIT_ROWS[@]}"; do
         log "  ${row}"
     done
+    if [[ ${#DOUBT_ROWS[@]} -gt 0 ]]; then
+        log ""
+        phase "Doubts — the hints and the compiler disagree (${#DOUBT_ROWS[@]})"
+        log ""
+        # Width from the plain text; the link escapes print no characters.
+        # Fields: comp, compiler, label, effect, PRs (plain), PRs (linked),
+        # what the compiler found, decision.
+        local _w=(9 8 5 6 11 13) _r _f
+        for _r in "${DOUBT_ROWS[@]}"; do
+            IFS=$'\t' read -r -a _f <<<"${_r}"
+            (( ${#_f[0]} > _w[0] )) && _w[0]=${#_f[0]}
+            (( ${#_f[1]} > _w[1] )) && _w[1]=${#_f[1]}
+            (( ${#_f[2]} > _w[2] )) && _w[2]=${#_f[2]}
+            (( ${#_f[3]} > _w[3] )) && _w[3]=${#_f[3]}
+            (( ${#_f[4]} > _w[4] )) && _w[4]=${#_f[4]}
+            (( ${#_f[6]} > _w[5] )) && _w[5]=${#_f[6]}
+        done
+        # Optional 9th..11th args colour the compiler, label and decision.
+        _doubt_line() {
+            local pad=$(( _w[4] - ${#5} ))
+            log "$(printf "  %-${_w[0]}s  %s  %s  %-${_w[3]}s  %s%*s  %-${_w[5]}s  %s" "$1" \
+                "$(_cell "${_w[1]}" "${9:-}" "$2")" "$(_cell "${_w[2]}" "${10:-}" "$3")" \
+                "$4" "$6" "${pad}" "" "$7" "$(_cell 0 "${11:-}" "$8")")"
+        }
+        # Decision: blocked must be fixed (red), a confirm or label to
+        # correct needs a human call (yellow), a recorded confirm is settled.
+        _decision_color() {
+            case "$1" in
+                blocked*)                      printf '%s' "${_C_RED}${_C_BOLD}" ;;
+                *--confirm*|*under-states*)    printf '%s' "${_C_YELLOW}${_C_BOLD}" ;;
+                *)                             printf '%s' "${_C_GREEN}" ;;
+            esac
+        }
+        _doubt_line "Component" "Compiler" "Label" "Effect" "Labelled by" "Labelled by" "Compiler found" "Decision" \
+            "${_C_BOLD}" "${_C_BOLD}" "${_C_BOLD}"
+        _doubt_line "---------" "--------" "-----" "------" "-----------" "-----------" "--------------" "--------" \
+            "${_C_DIM}" "${_C_DIM}" "${_C_DIM}"
+        for _r in "${DOUBT_ROWS[@]}"; do
+            IFS=$'\t' read -r -a _f <<<"${_r}"
+            _doubt_line "${_f[0]}" "${_f[1]}" "${_f[2]}" "${_f[3]}" "${_f[4]}" "${_f[5]}" "${_f[6]}" "${_f[7]}" \
+                "$(_class_color "${_f[1]}")" "${_C_YELLOW}" "$(_decision_color "${_f[7]}")"
+        done
+        log ""
+        log "  $(_cell 0 "${_C_RED}${_C_BOLD}" blocked): fix before the cut   $(_cell 0 "${_C_YELLOW}${_C_BOLD}" yellow): your call — confirm or correct the label   $(_cell 0 "${_C_GREEN}" green): settled"
+    fi
     if [[ ${#AUDIT_DETAIL[@]} -gt 0 ]]; then
         log ""
         phase "Structural diff detail"
@@ -3115,7 +4335,7 @@ run_structural_audit() {
     log ""
     _audit_total=$((_audit_flagged + _audit_errors))
     if [[ "${_audit_total}" -eq 0 ]]; then
-        log "✅ Audit clean — every component's structural class, PR labels and metadata.yaml agree."
+        log "✅ Audit clean — every version is the compiler's class, or a confirmation above it, and metadata.yaml agrees."
     else
         log "⚠️  Audit flagged ${_audit_flagged} mismatch(es) + ${_audit_errors} error(s) — see rows above."
     fi
@@ -3128,14 +4348,151 @@ if [[ "${AUDIT}" -eq 1 ]]; then
     exit $?
 fi
 
+# ----------------------------------------------------------------------------
+# --sync-labels: write the release's change classes back to the PRs (#875)
+# ----------------------------------------------------------------------------
+#
+# Labels are hints until the release decides; afterwards they should record
+# what was released. A component's released class goes to a PR when that PR
+# is the only one that changed the component's AIDL since the last tag, or
+# when the component's --confirm reason names it (#N). A PR takes the highest
+# class attributed to it. Its label is raised to that, and lowered only when
+# every component it changed is attributed to it — a PR sharing a component
+# with others may own the higher class, so it is never lowered on a guess.
+# The Interface Effect follows the label (project-interface-effect-reconcile).
+# Each changed PR gets one comment listing its components' released classes.
+
+_SYNC_LABEL=([3]="Major Change" [2]="Minor Change" [1]="documentation")
+_sync_rank() {
+    case "$1" in major) echo 3 ;; minor) echo 2 ;; bugfix) echo 1 ;; *) echo 0 ;; esac
+}
+_sync_label_rank() {   # labels (newline-separated) -> rank of the class they carry
+    local labels="$1"
+    if grep -qxE 'Major Change|Breaking Change' <<<"${labels}"; then echo 3
+    elif grep -qx 'Minor Change' <<<"${labels}"; then echo 2
+    elif grep -qx 'documentation' <<<"${labels}"; then echo 1
+    else echo 0
+    fi
+}
+
+run_sync_labels() {
+    local base="${_pin_baseline}" release_version="${RELEASE_VERSION:-}"
+    [[ -n "${base}" ]] || die "--sync-labels: no release tag to compare against."
+    [[ "${ENABLE_GH_LABELS}" -eq 1 ]] || die "--sync-labels needs GitHub access (gh, not --no-gh)."
+    if [[ -z "${release_version}" ]]; then
+        release_version="$(git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD | sed -nE 's#^release/##p')"
+    fi
+    [[ -n "${release_version}" ]] || die "--sync-labels: run on release/X.Y.Z or pass --release-version."
+    local marker="<!-- release.sh sync-labels ${release_version} -->"
+
+    phase "Change-class labels from the ${release_version} cut (since ${base})"
+    local -A PR_TOUCHED=() PR_OWNED=() PR_RANK=() PR_LINES=()
+    local comp prev rel cls note line sha subject pr prs reason
+    for comp in "${COMPONENTS[@]}"; do
+        prev="$(discover_current_version "${comp}")"
+        rel="$(awk -F': *' '$1=="version"{print $2; exit}' "${REPO_ROOT}/${comp}/metadata.yaml" 2>/dev/null)"
+        [[ -n "${prev}" && -n "${rel}" && "${rel}" != "${prev}" ]] || continue
+        cls="$(_bump_class "$(_version_bump "${prev}" "${rel}")")"
+        prs=""
+        while IFS=$'\t' read -r sha subject; do
+            [[ -n "${sha}" ]] || continue
+            pr="$(get_pr_for_commit "${sha}" "${subject}")"
+            [[ -n "${pr}" ]] && prs+="${pr}"$'\n'
+        done < <(git -C "${REPO_ROOT}" log --no-merges --format='%H%x09%s' "${base}..HEAD" \
+                    -- ":(glob)${comp}/current/**/*.aidl")
+        prs="$(grep . <<<"${prs}" | sort -un || true)"
+        for pr in ${prs}; do PR_TOUCHED[$pr]+="${comp} "; done
+        reason="${PIN_REASON[$comp]:-}"
+        if [[ -z "${reason}" ]]; then
+            reason="$(grep -hoE "^- \`${comp}\` → ${rel//./\\.} \(confirmed (major|minor|bugfix): .*\)$" \
+                "${REPO_ROOT}/docs/releases/${release_version}.md" 2>/dev/null | head -1 \
+                | sed -E 's/^[^:]*: (.*)\)$/\1/' || true)"
+        fi
+        local owners=""
+        if [[ -n "${reason}" ]]; then
+            owners="$(grep -oE '#[0-9]+' <<<"${reason}" | tr -d '#' | sort -un || true)"
+            note="${comp} ${prev} → ${rel}: ${cls}, confirmed — ${reason}"
+        else
+            note="${comp} ${prev} → ${rel}: ${cls}, the compiler's class"
+        fi
+        [[ -z "${owners}" && "$(grep -c . <<<"${prs}")" -eq 1 ]] && owners="${prs}"
+        for pr in ${owners}; do
+            PR_OWNED[$pr]+="${comp} "
+            PR_LINES[$pr]+="- ${note}"$'\n'
+            [[ "$(_sync_rank "${cls}")" -gt "${PR_RANK[$pr]:-0}" ]] && PR_RANK[$pr]="$(_sync_rank "${cls}")"
+        done
+    done
+
+    local changed=0 have want labels verb c all
+    log ""
+    log "$(printf "  %-6s %-14s %-14s %s" "PR" "Label now" "Released as" "Action")"
+    log "$(printf "  %-6s %-14s %-14s %s" "--" "---------" "-----------" "------")"
+    for pr in $(printf '%s\n' "${!PR_RANK[@]}" | sort -n); do
+        labels="$(get_pr_labels "${pr}")"
+        have="$(_sync_label_rank "${labels}")"
+        want="${PR_RANK[$pr]}"
+        all=1
+        for c in ${PR_TOUCHED[$pr]}; do
+            [[ " ${PR_OWNED[$pr]} " == *" ${c} "* ]] || all=0
+        done
+        verb="keep"
+        if [[ "${want}" -gt "${have}" ]]; then verb="raise"
+        elif [[ "${want}" -lt "${have}" && "${all}" -eq 1 ]]; then verb="lower"
+        fi
+        log "$(printf "  %-6s %-14s %-14s %s" "$(_link "https://github.com/${GH_REPO}/pull/${pr}" "#${pr}")" \
+            "${_SYNC_LABEL[$have]:-none}" "${_SYNC_LABEL[$want]}" \
+            "$(_cell 0 "$([[ "${verb}" == keep ]] && printf '%s' "${_C_DIM}" || printf '%s' "${_C_YELLOW}${_C_BOLD}")" "${verb}")")"
+        [[ "${verb}" != "keep" ]] || continue
+        changed=$((changed + 1))
+        [[ "${SYNC_WRITE}" -eq 1 ]] || continue
+        local l
+        for l in "Major Change" "Breaking Change" "Minor Change"; do
+            [[ "${l}" != "${_SYNC_LABEL[$want]}" ]] && grep -qx "${l}" <<<"${labels}" \
+                && gh api -X DELETE "repos/${GH_REPO}/issues/${pr}/labels/${l// /%20}" >/dev/null
+        done
+        gh api -X POST "repos/${GH_REPO}/issues/${pr}/labels" -f "labels[]=${_SYNC_LABEL[$want]}" >/dev/null \
+            || { warn "#${pr}: could not set '${_SYNC_LABEL[$want]}'"; continue; }
+        if ! gh api --paginate "repos/${GH_REPO}/issues/${pr}/comments" --jq '.[].body' 2>/dev/null | grep -qF "${marker}"; then
+            gh api "repos/${GH_REPO}/issues/${pr}/comments" -f body="${marker}
+Release ${release_version} labels this pull request **${_SYNC_LABEL[$want]}**, the class its components were released at:
+
+${PR_LINES[$pr]}
+The AIDL compiler classifies each component at the cut (\`release.sh\`); a confirmed class is the release owner's override, with the reason given." >/dev/null \
+                || warn "#${pr}: label set, comment failed"
+        fi
+    done
+    log ""
+    if [[ "${changed}" -eq 0 ]]; then
+        log "✓ Every attributable PR's label already matches the release."
+    elif [[ "${SYNC_WRITE}" -eq 1 ]]; then
+        log "✓ ${changed} PR label(s) updated; the Interface Effect follows within 15 minutes."
+    else
+        log "ℹ️  ${changed} PR label(s) to change. Apply with: ./release.sh --sync-labels --write"
+    fi
+    return 0
+}
+
+if [[ "${SYNC_LABELS}" -eq 1 ]]; then
+    run_sync_labels
+    exit $?
+fi
+
 # Write and branch paths run the audit automatically (#714): the
 # components being staged (DO_WRITES) or released (--apply/DO_BRANCH)
 # must have agreeing structural class, labels and metadata BEFORE
 # anything is written or branched. The full-repo sweep remains the
 # standalone --audit; --no-audit (testing only) bypasses this gate.
 if [[ ( "${DO_WRITES}" -eq 1 || "${DO_BRANCH}" -eq 1 ) && "${NO_AUDIT}" -ne 1 ]]; then
+    # `stage all` picks its modules later, in the per-component loop, so on
+    # a fresh tree PLAN_COMPONENTS is empty here. Audit everything it may
+    # write instead: every touched module and every pinned one.
+    declare -A _gate_set=()
+    for _c in "${!PLAN_COMPONENTS[@]}"; do _gate_set[$_c]=1; done
+    if [[ "${ACCEPT_ALL}" -eq 1 ]]; then
+        for _c in "${!COMP_TOUCHED[@]}" "${!PIN_VERSIONS[@]}"; do _gate_set[$_c]=1; done
+    fi
     _gate_targets=()
-    for _c in "${!PLAN_COMPONENTS[@]}"; do
+    for _c in $(printf '%s\n' "${!_gate_set[@]}" | sort); do
         is_buildable_component "${_c}" && _gate_targets+=("${_c}")
     done
     if [[ ${#_gate_targets[@]} -gt 0 ]] && ! run_structural_audit "${_gate_targets[@]}"; then
@@ -3148,7 +4505,7 @@ declare -A SKIPPED_NOT_BUILDABLE=()
 for comp in "${TOUCHED_COMPONENTS[@]}"; do
     meta="${REPO_ROOT}/${comp}/metadata.yaml"
     if [[ ! -f "${meta}" ]]; then
-        TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-16s %-8s %s" "${comp}" "-" "-" "-" "no" "metadata missing")")
+        TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-18s %-8s %s" "${comp}" "-" "-" "-" "no" "metadata missing")")
         error_count=$((error_count + 1))
         continue
     fi
@@ -3167,7 +4524,7 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
                 gsub(/^"|"$/, "");
                 print; exit
             }' "${meta}" 2>/dev/null)"
-        TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-16s %-8s %s" "${comp}" "-" "-" "skipped" "no" "not buildable")")
+        TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-18s %-8s %s" "${comp}" "-" "-" "skipped" "no" "not buildable")")
         SKIPPED_NOT_BUILDABLE[$comp]="${reason:-no current/interface.yaml}"
         continue
     fi
@@ -3226,25 +4583,57 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
         unset 'COMP_BREAKING[$comp]' 'COMP_NON_DOC[$comp]' 'COMP_DOC[$comp]' 2>/dev/null || true
     fi
 
+    # The compiler decides the class (#875); the labels above are hints. A
+    # pin or a confirmed class below may only raise it, and the audit gate
+    # rejects one below it.
+    if [[ "${is_initial}" -ne 1 ]]; then
+        compat_check "${comp}" "${current_version}"
+        if [[ -n "${COMP_RECOMMENDED[$comp]}" ]]; then
+            [[ "${COMP_RECOMMENDED[$comp]}" != "${bump}" ]] \
+                && COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}compiler: $(bump_label "${COMP_RECOMMENDED[$comp]}") (labels said $(bump_label "${bump}"))"$'\n'
+            bump="${COMP_RECOMMENDED[$comp]}"
+        else
+            COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}${COMP_COMPAT_EVIDENCE[$comp]} — the label-derived bump stands"$'\n'
+        fi
+    fi
+
     compute_next_versions "${current_version}" "${bump}"
 
     # Explicit version pin from `stage <module> --version X.Y.Z.W` wins
     # over the label-derived auto-bump. PIN_VERSIONS lives in-memory
     # only — once the stage call's writes complete, the pinned version
     # is recorded in the snapshot dir + metadata.yaml.
-    if [[ -n "${PIN_VERSIONS[$comp]:-}" ]]; then
+    # The Bump column always shows the class; bump_source says who set it
+    # when it was not the compiler: "confirmed" (stage --confirm, with a
+    # reason) or "pinned" (stage --version). A version an earlier stage run
+    # wrote keeps the class it was staged at.
+    bump_source=""
+    if [[ -n "${PIN_STAGED[$comp]:-}" ]]; then
         NEXT_VERSION="${PIN_VERSIONS[$comp]}"
-        bump="pinned"
+        bump="$(_version_bump "${current_version}" "${NEXT_VERSION}")"
+        [[ "${PIN_STAGED[$comp]}" -eq 2 ]] && bump_source="confirmed"
+    elif [[ -n "${PIN_VERSIONS[$comp]:-}" && -z "${PIN_CLASS[$comp]:-}" ]]; then
+        NEXT_VERSION="${PIN_VERSIONS[$comp]}"
+        bump="$(_version_bump "${current_version}" "${NEXT_VERSION}")"
+        bump_source="pinned"
         COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}stage: explicit --version ${NEXT_VERSION}"$'\n'
+    elif [[ -n "${PIN_CLASS[$comp]:-}" ]]; then
+        compute_next_versions "${current_version}" "${PIN_CLASS[$comp]}"
+        bump="${PIN_CLASS[$comp]}"
+        bump_source="confirmed"
+        COMP_REASONS[$comp]="${COMP_REASONS[$comp]:-}stage: confirmed $(_bump_class "${PIN_CLASS[$comp]}") — ${PIN_REASON[$comp]:-}"$'\n'
     fi
 
-    # Drift detection: metadata.yaml is *supposed* to be pre-bumped by
-    # PR authors to the planned next version. If it matches the
-    # detector's NEXT_VERSION, no drift — that's the healthy state.
+    # Drift detection: metadata.yaml holds the released version until
+    # release.sh writes the next one. If it matches the detector's
+    # NEXT_VERSION (already written), no drift either.
     # Real drift = metadata.yaml says X but detector computes Y for the
     # next release. Surface that case so the operator sees the
     # mismatch before it's silently healed (overwritten) at apply time.
-    if [[ -n "${metadata_version}" && "${metadata_version}" != "${NEXT_VERSION}" ]]; then
+    # metadata.yaml still holding the released version is the normal state
+    # before the cut (release.sh writes the next one, #872) — not drift.
+    if [[ -n "${metadata_version}" && "${metadata_version}" != "${NEXT_VERSION}" \
+          && "${metadata_version}" != "${current_version}" ]]; then
         METADATA_DRIFT[$comp]="${metadata_version}|${NEXT_VERSION}"
     fi
 
@@ -3282,16 +4671,23 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
 
     # Initial release IS the bump — surface it in the Bump column rather
     # than leaving Bump="-" with Status="initial release" (redundant).
-    _bump_display="$(bump_label "${bump}")"
+    _bump_display="$(bump_label "${bump}")${bump_source:+ (${bump_source})}"
     _status_display="${status}"
     if [[ "${is_initial}" -eq 1 && "${status}" == "initial release" ]]; then
         _bump_display="initial release"
         _status_display="ok"
     fi
 
-    TABLE_ROWS+=("$(printf "%-24s %-10s %-10s %-16s %-8s %s" \
-        "${comp}" "${current_version}" "${NEXT_VERSION}" \
-        "${_bump_display}" "${_planned}" "${_status_display}")")
+    _next_color=""
+    [[ "${NEXT_VERSION}" != "${current_version}" ]] && _next_color="${_C_BOLD}"
+    _planned_color="${_C_DIM}"
+    [[ "${_planned}" == "yes" ]] && _planned_color=""
+    TABLE_ROWS+=("$(printf "%-24s %-10s %s %s %s %s" \
+        "${comp}" "${current_version}" \
+        "$(_cell 10 "${_next_color}" "${NEXT_VERSION}")" \
+        "$(_cell 18 "$(_class_color "${bump_source:-${_bump_display}}")" "${_bump_display}")" \
+        "$(_cell 8 "${_planned_color}" "${_planned}")" \
+        "$(_cell 0 "$(_status_color "${_status_display}")" "${_status_display}")")")
 
     # Verbose detail: enabled only by --verbose. Keeps the default view a
     # compact one-line-per-module table; `--verbose` shows AIDL hash status,
@@ -3487,8 +4883,8 @@ if [[ "${DRY_RUN}" -eq 1 && ${#BUMPED_COMPONENTS[@]} -gt 0 ]]; then
     log "  Then once per release:"
     log "    5. Update versions_released.yaml components: map"
     log "    6. Insert mkdocs.yml nav entries for the ${#BUMPED_COMPONENTS[@]} new <module>/<version>/ doc sets"
-    log "    7. Generate docs/releases/${RELEASE_VERSION}.md release-notes skeleton (if absent)"
-    log "    8. Prepend a new ${RELEASE_VERSION} section to CHANGELOG.md"
+    log "    7. Generate docs/releases/${RELEASE_VERSION}.md release-notes skeleton (if absent) and list it under Release Notes"
+    log "    8. Prepend a new ${RELEASE_VERSION} section to CHANGELOG.md, then ./docs/build_docs.sh build"
     log "    9. Audit docs + build configs for version-shaped strings (review only)"
     log "   10. ./build_modules.sh all                 (build current cohort)"
     log "   11. ./build_modules.sh manifest            (build released cohort via versions_released.yaml)"
@@ -3586,6 +4982,12 @@ if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
         die "Cohort snapshot dependency normalization failed. Aborting release."
     fi
 
+    # 2c. Every snapshot's docs name their own version, never current/ (#796).
+    phase "Checking snapshot docs reference their frozen version..."
+    if ! check_snapshot_docs; then
+        die "Snapshot docs still reference current/. Aborting release."
+    fi
+
     # 3. mkdocs.yml entries.
     if [[ "${NO_MKDOCS}" -eq 1 ]]; then
         log ""
@@ -3620,12 +5022,26 @@ if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
     log ""
     generate_release_notes_skeleton "${RELEASE_VERSION}"
     (cd "${REPO_ROOT}" && git add "docs/releases/${RELEASE_VERSION}.md") 2>/dev/null || true
+    if [[ "${NO_MKDOCS}" -ne 1 ]]; then
+        update_mkdocs_release_notes "${RELEASE_VERSION}" \
+            || die "Release Notes nav update failed. Aborting release (re-run with --no-mkdocs to bypass for testing)."
+    fi
 
     # 5. CHANGELOG.md — prepend a new section for this release (#580).
     phase "Regenerating CHANGELOG.md section for ${RELEASE_VERSION}..."
     log ""
     regenerate_changelog "${RELEASE_VERSION}"
     (cd "${REPO_ROOT}" && git add CHANGELOG.md) 2>/dev/null || true
+
+    # 5b. Documentation build (#848). The nav, snapshots, release notes and
+    # CHANGELOG are all in place, so this is the site --commit will deploy.
+    # A cut whose documentation does not build stops here.
+    if [[ "${NO_MKDOCS}" -eq 1 || "${NO_BUILD}" -eq 1 ]]; then
+        log ""
+        log "Documentation build: SKIPPED (--no-mkdocs / --no-build)"
+    elif ! run_docs_build; then
+        die "Documentation build failed. Aborting release — fix the site before --apply."
+    fi
 
     # 6. Version-ref audit across docs + build configs (#581 / #582).
     # Informational only — surfaces strings that look like versions so
@@ -3694,6 +5110,8 @@ log ""
 for _row in "${TABLE_ROWS[@]}"; do
     log "${_row}"
 done
+log ""
+log "Bump is the compiler's class unless marked: $(_cell 0 "${_C_MAGENTA}${_C_BOLD}" "(confirmed)") = stage --confirm, with a reason; $(_cell 0 "${_C_MAGENTA}${_C_BOLD}" "(pinned)") = stage --version."
 
 # Count modules by Planned state for the summary line below.
 _planned_count=${#ACTUAL_PLAN[@]}
@@ -3722,7 +5140,24 @@ else
     if [[ "${error_count}" -gt 0 ]]; then
         log "⚠️  ${error_count} module(s) need manual action above before applying."
     fi
-    log "Apply: ./release.sh --apply --release-version ${RELEASE_VERSION}    |    Reset: ./release.sh clean"
+    # On release/X.Y.Z with every planned snapshot committed and unmodified,
+    # the cut is done: the next step is --complete, not another --apply.
+    _cut_committed=0
+    if [[ "$(git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD)" == "release/${RELEASE_VERSION}" ]]; then
+        _cut_committed=1
+        for _cv in "${BUMPED_COMPONENTS[@]}"; do
+            if [[ -z "$(git -C "${REPO_ROOT}" ls-tree -d --name-only HEAD -- "${_cv%%:*}/${_cv#*:}")" \
+                  || -n "$(git -C "${REPO_ROOT}" status --porcelain -- "${_cv%%:*}/${_cv#*:}")" ]]; then
+                _cut_committed=0
+                break
+            fi
+        done
+    fi
+    if [[ "${_cut_committed}" -eq 1 ]]; then
+        log "Cut committed on release/${RELEASE_VERSION}. Next: ./release.sh --complete    |    Labels: ./release.sh --sync-labels"
+    else
+        log "Apply: ./release.sh --apply --release-version ${RELEASE_VERSION}    |    Reset: ./release.sh clean"
+    fi
 fi
 
 if [[ "${error_count}" -gt 0 ]]; then

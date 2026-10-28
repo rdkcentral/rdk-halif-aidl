@@ -34,7 +34,7 @@ package com.rdk.hal.avclock;
  *  @author    Gerald Weatherup
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum State {
 
     /** Initial / unknown state. */

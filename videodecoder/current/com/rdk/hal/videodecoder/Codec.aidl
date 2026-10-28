@@ -27,12 +27,12 @@ package com.rdk.hal.videodecoder;
  */
 
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum Codec {
-    MPEG2_VIDEO = 1, // MPEG-2 Video (ISO/IEC 13818-2)
-    H264_AVC = 2, // H.264/AVC (ITU-T H.264 | ISO/IEC 14496-10)
-    H265_HEVC = 3, // H.265/HEVC (ITU-T H.265 | ISO/IEC 23008-2)
-    VP9 = 4, // VP9 (IETF RFC 7741)
-    AV1 = 5, // AV1 (AOMedia Video 1)
+    MPEG2_VIDEO = 1, //!< MPEG-2 Video (ISO/IEC 13818-2)
+    H264_AVC = 2,    //!< H.264/AVC (ITU-T H.264 | ISO/IEC 14496-10)
+    H265_HEVC = 3,   //!< H.265/HEVC (ITU-T H.265 | ISO/IEC 23008-2)
+    VP9 = 4,         //!< VP9 (IETF RFC 7741)
+    AV1 = 5,         //!< AV1 (AOMedia Video 1)
     // ... other codecs
 }

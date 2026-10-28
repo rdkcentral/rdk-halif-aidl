@@ -20,14 +20,15 @@ package com.rdk.hal.audiomixer;
 
 /**
  * @brief    Enumerates extensible property keys for Audio Output Port.
- * Used as the key in setProperty/getProperty and onPropertyChanged for 
- *           forward-compatible and vendor-specific configuration. 
+ * Used as the key in setProperty/getProperty and onPropertyChanged for
+ *           forward-compatible and vendor-specific configuration.
  *           All properties can be read in any state unless otherwise specified.
  *
  * Each property must be documented with:
  *   - Value type (int, boolean, int[], etc.)
  *   - Access (Read-only, Read-write)
- *   - Writeable in states (READY, STARTED, etc.)
+ *   - Writeable in states (output ports are written only in READY,
+ *     through IAudioOutputPortController)
  *   - Value semantics (enum, range, etc.)
  *
  * @author   Luc Kennedy-Lamb
@@ -35,14 +36,14 @@ package com.rdk.hal.audiomixer;
  * @author   Douglas Adler
  */
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum OutputPortProperty {
     /**
      * Output port volume.
      * Type: int
      * Range: 0..100
      * Access: Read-write.
-     * Writeable in states: READY, STARTED
+     * Writeable in states: READY
      */
     VOLUME = 0,
 
@@ -51,7 +52,7 @@ enum OutputPortProperty {
      * Type: int
      * Range: Implementation-dependent.
      * Access: Read-write.
-     * Writeable in states: READY, STARTED
+     * Writeable in states: READY
      */
     DELAY_MS = 1,
 
@@ -59,7 +60,7 @@ enum OutputPortProperty {
      * Output port mute state.
      * Type: boolean
      * Access: Read-write.
-     * Writeable in states: READY, STARTED
+     * Writeable in states: READY
      */
     MUTE = 2,
 
@@ -67,7 +68,7 @@ enum OutputPortProperty {
      * Output port enabled/disabled state.
      * Type: boolean
      * Access: Read-write.
-     * Writeable in states: Any except CLOSED
+     * Writeable in states: READY
      */
     ENABLED = 3,
 
@@ -75,7 +76,7 @@ enum OutputPortProperty {
      * Configured output audio format.
      * Type: int (OutputFormat enum value)
      * Access: Read-write.
-     * Writeable in states: READY, ENABLED
+     * Writeable in states: READY
      */
     OUTPUT_FORMAT = 4,
 
@@ -109,11 +110,11 @@ enum OutputPortProperty {
 
     /**
      * Sets the Dolby MS12 Audio Profile/Preset (e.g. "Music", "Movie", "Sports", etc)
-     * 
-     * Type: String 
+     *
+     * Type: String
      * Access: Read-write.
-     * Writeable in states: READY, STARTED
-     * 
+     * Writeable in states: READY
+     *
      * The value must correspond to a platform-defined AQ profile configuration
      *
      * @see com.rdk.hal.audiomixer.OutputPortCapabilities.dolbyMs12AudioProfiles
@@ -125,9 +126,10 @@ enum OutputPortProperty {
      * Type: int
      * Access: Read-only.
      *
-     * A count of the underflow (starvation) events that the consumer of the output port has experienced since the port was enabled.
-     * A single underflow event is considered to be when the consumer, unexpectedly, has no data to consume until normal data flow resumes.
-     * When the port is disabled, the last count should be held until the port is re-enabled, and the count reset.
+     * A count of the underflow (starvation) events that the consumer of the output port has experienced since the port
+     * was enabled. A single underflow event is considered to be when the consumer, unexpectedly, has no data to consume
+     * until normal data flow resumes. When the port is disabled, the last count should be held until the port is
+     * re-enabled, and the count reset.
      */
     METRIC_UNDERFLOWS = 11,
 
@@ -137,8 +139,9 @@ enum OutputPortProperty {
      * Access: Read-only.
      *
      * A count of the overflow events that the producer has experienced since the port was enabled.
-     * A single overflow event is considered to be when the producer, unexpectedly, has no buffer space available to write the data.
-     * When the port is disabled, the last count should be held until the port is re-enabled, and the count reset.
+     * A single overflow event is considered to be when the producer, unexpectedly, has no buffer space available to
+     * write the data. When the port is disabled, the last count should be held until the port is re-enabled, and the
+     * count reset.
      */
     METRIC_OVERFLOWS = 12,
 
