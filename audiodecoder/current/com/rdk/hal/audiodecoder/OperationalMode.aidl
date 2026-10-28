@@ -23,8 +23,10 @@ package com.rdk.hal.audiodecoder;
  */
 
 @VintfStability
-@Backing(type="int")
+@Backing(type = "int")
 enum OperationalMode {
+    /** Output is consumed by the vendor layer and is not returned to the client. */
     TUNNELLED = 1,
+    /** Output is returned to the client. */
     NON_TUNNELLED = 2
 }

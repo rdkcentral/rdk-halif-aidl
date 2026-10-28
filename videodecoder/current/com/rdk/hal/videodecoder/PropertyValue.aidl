@@ -26,27 +26,25 @@ package com.rdk.hal.videodecoder;
  */
 
 @VintfStability
-parcelable PropertyValue
-{
+parcelable PropertyValue {
     /**
-    * Union Value type.
-    */
+     * Union Value type.
+     */
     @VintfStability
-    union Value
-    {
-        boolean booleanValue; /**< Boolean value. */
-        byte byteValue;       /**< 8-bit integer value. */
-        char charValue;       /**< 16-bit Unicode character value. */
-        int intValue;         /**< 32-bit signed integer value. */
-        long longValue;       /**< 64-bit signed integer value. */
-        float floatValue;     /**< 32-bit floating-point value. */
-        double doubleValue;   /**< 64-bit floating-point value. */
-        String stringValue;   /**< String value. */
-        int[] intArrayValue;  /**< Array of 32-bit signed integer values (for arrays of enums). */
+    union Value {
+        boolean booleanValue;          /**< Boolean value. */
+        byte byteValue;                /**< 8-bit integer value. */
+        char charValue;                /**< 16-bit Unicode character value. */
+        int intValue;                  /**< 32-bit signed integer value. */
+        long longValue;                /**< 64-bit signed integer value. */
+        float floatValue;              /**< 32-bit floating-point value. */
+        double doubleValue;            /**< 64-bit floating-point value. */
+        @utf8InCpp String stringValue; /**< String value. */
+        int[] intArrayValue;           /**< Array of 32-bit signed integer values (for arrays of enums). */
     }
 
     /**
-    * Value of property or null if not defined.
-    */
+     * Value of property or null if not defined.
+     */
     @nullable Value value;
 }
