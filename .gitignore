@@ -52,5 +52,9 @@ Makefile
 # Claude Code
 .claude/
 
+.autotools
+.cproject
+.project
+.settings/
 
 mkdocs.release.yml
