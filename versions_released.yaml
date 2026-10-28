@@ -38,4 +38,3 @@ components:
   bootreason: 0.2.0.0
   broadcast: 0.1.0.0
   ringbuffer: 0.1.0.0
-  ffv: current
