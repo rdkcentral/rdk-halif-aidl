@@ -54,7 +54,8 @@ echo "Loaded ${#TEAM_MAP[@]} team mappings"
 
 # --- Get changed files from the PR ---
 echo "Fetching changed files for PR #${PR_NUMBER}..."
-CHANGED_FILES=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json files --jq '.files[].path')
+# Paged REST list: `gh pr view --json files` stops at 100 files.
+CHANGED_FILES=$(gh api --paginate "repos/${REPO}/pulls/${PR_NUMBER}/files" --jq '.[].filename')
 
 # --- Derive affected components from file paths ---
 declare -A COMPONENTS

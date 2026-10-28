@@ -90,6 +90,17 @@ configure_one_pr() {
     meta=$(gh pr view "$pr" --repo "$REPO" --json number,title,author,labels,assignees,files,isDraft 2>/dev/null) || {
         echo "PR #${pr}: could not read — skipping"; return; }
 
+    # `gh pr view --json files` stops at 100 files; take the full list from
+    # the paged REST endpoint so a large PR keeps every component label.
+    local all_files
+    all_files=$(gh api --paginate "repos/${REPO}/pulls/${pr}/files" --jq '.[].filename' 2>/dev/null) || {
+        echo "PR #${pr}: could not list files — skipping"; return; }
+    meta=$(echo "$meta" | FILES="$all_files" python3 -c '
+import json,os,sys
+m=json.load(sys.stdin)
+m["files"]=[{"path":p} for p in os.environ["FILES"].splitlines() if p]
+print(json.dumps(m))')
+
     local title author
     title=$(echo "$meta" | python3 -c 'import json,sys;print(json.load(sys.stdin)["title"])')
     author=$(echo "$meta" | python3 -c 'import json,sys;print(json.load(sys.stdin)["author"]["login"])')
