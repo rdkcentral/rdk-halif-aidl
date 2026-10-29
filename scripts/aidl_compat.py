@@ -204,8 +204,9 @@ def _strip_block(text, start_re):
 
 def declarations(path):
     """A header's declarations, normalised: comments, preprocessor lines and
-    the boilerplate aidl derives from an enum's value list are dropped, so an
-    added enum value reads as one added declaration, not a rewritten array."""
+    the boilerplate aidl derives from an enum's value list or a parcelable's
+    field list are dropped, so an added enum value or an appended field reads
+    as one added declaration, not a rewritten array or operator."""
     with open(path, errors="replace") as fh:
         text = fh.read()
     text = re.sub(r"/\*.*?\*/", " ", text, flags=re.S)
@@ -214,6 +215,9 @@ def declarations(path):
     text = _strip_block(text, r"static\s+inline\s+std::string\s+toString\s*\(")
     text = _strip_block(text, r"constexpr\s+inline\s+std::array<[^=]*=\s*\{")
     text = re.sub(r"\s+", " ", text)
+    # A parcelable's comparison operators list every field in std::tie(...);
+    # a field appended at the end is already seen as its own declaration.
+    text = re.sub(r"std::tie\([^()]*\)", "std::tie()", text)
     # Commas split too: an enum body and a template argument list are one
     # statement, and a single added value must not read as a rewrite.
     parts = re.split(r"(?<=[;{},])", text)
