@@ -280,7 +280,7 @@ The Audio Decoder makes its own run-time choice about whether audio is tunnelled
 
 Tunnelled audio is required when any audio output ports are in passthrough mode. Tunnelled audio may also be required for some audio codecs that need a vendor integrated decoder/mixer such as Dolby MS12.
 
-When only tunnelled audio is in operation, no audio frame pool buffer handles containing decoded PCM audio are handed back to the controller client and the `frameBufferHandle` value -1 is passed in `onFrameOutput()` callbacks to indicate tunnelled mode.
+When only tunnelled audio is in operation, no audio frame pool buffer handles containing decoded PCM audio are handed back to the controller client and the `frameAVBufferHandle` value -1 is passed in `onFrameOutput()` callbacks to indicate tunnelled mode.
 
 ## Frame Metadata
 
@@ -524,7 +524,7 @@ Decoded audio frame buffers are only passed from the audio decoder to the client
 
 If the input [AV Buffer](../avbuffer/av_buffer.md) that contained the coded audio frame was passed in a secure buffer, then the corresponding decoded audio frame must be output in a secure audio frame buffer.
 
-Audio frame buffers are passed back as handles in the `IAudioDecoderControllerListener.onFrameOutput()` function `frameBufferHandle` parameter. In tunnelled mode, -1 is passed as the handle value to indicate that no frame buffer handle is being provided since the audio is consumed internally by the vendor layer.
+Audio frame buffers are passed back as handles in the `IAudioDecoderControllerListener.onFrameOutput()` function `frameAVBufferHandle` parameter. In tunnelled mode, -1 is passed as the handle value to indicate that no frame buffer handle is being provided since the audio is consumed internally by the vendor layer.
 
 The format of the data in the decoded audio frame buffer is always PCM and described by the `FrameMetadata`.
 
@@ -609,7 +609,7 @@ sequenceDiagram
     Note over Client: Client can now send AV buffers
     Client->>Controller: decodeBufferWithMetadata(bufferHandle=1, {pts, trimStartNs=0, trimEndNs=0, ...})
     Client->>Controller: decodeBufferWithMetadata(bufferHandle=2, {pts, trimStartNs=0, trimEndNs=0, ...})
-    Controller-->>IAudioDecoderControllerListener: onFrameOutput(pts, frameBufferHandle=1000, metadata)
+    Controller-->>IAudioDecoderControllerListener: onFrameOutput(pts, frameAVBufferHandle=1000, metadata)
     Controller->>IAVBuffer: free(bufferHandle=1)
 
     Note over ADC: flush() transitions from STARTED → FLUSHING → STARTED
@@ -621,7 +621,7 @@ sequenceDiagram
 
     Note over Controller: signalEndOfStream() drains the decoder,<br>emits held frames, then fires onEndOfStream() once
     Client->>Controller: signalEndOfStream()
-    Controller-->>IAudioDecoderControllerListener: onFrameOutput(pts, frameBufferHandle=1002, metadata)
+    Controller-->>IAudioDecoderControllerListener: onFrameOutput(pts, frameAVBufferHandle=1002, metadata)
     Controller->>IAVBuffer: free(bufferHandle=3)
     Controller-->>IAudioDecoderControllerListener: onEndOfStream()
 

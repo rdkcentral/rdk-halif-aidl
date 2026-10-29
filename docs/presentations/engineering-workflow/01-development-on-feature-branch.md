@@ -4,7 +4,7 @@
 - Follows the **Git-Flow** branching model, consistent with internal repositories
 - First-time contributors must sign the **Contributor License Agreement (CLA)**
 - Work is isolated - **no direct commits to develop or main**
-- Branch naming enforced by **Git-Flow Branch Rules** ruleset
+- Branch naming enforced by **Git-Flow Branch Rules**
 
 ## Branch Protection - 11 Active Rulesets
 

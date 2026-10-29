@@ -38,7 +38,7 @@ Mixer instances are accessed and controlled via `IAudioMixer`, with additional l
 | HAL.AUDIOMIXER.1 | The service shall expose all available mixers through `IAudioMixerManager`. | |
 | HAL.AUDIOMIXER.2 | Each `IAudioMixer` shall expose at least one `IAudioOutputPort`. | |
 | HAL.AUDIOMIXER.3 | The mixer shall support querying `Capabilities` via `getCapabilities()`. | |
-| HAL.AUDIOMIXER.4 | The controller shall support `start`, `stop`, `flush`, and `signalEOS`. | |
+| HAL.AUDIOMIXER.4 | The controller shall support `start`, `stop`, `flush`, and `signalEndOfStream`. | |
 | HAL.AUDIOMIXER.5 | Output port properties shall be readable via `IAudioOutputPort.getProperty()` and writable via `IAudioOutputPortController.setProperty()` (controller acquired via `IAudioOutputPort.open()`). | |
 | HAL.AUDIOMIXER.6 | Null values for `Capabilities.name` or `OutputPortCapabilities.portName` are allowed but discouraged. | For debugging support. |
 
@@ -491,7 +491,7 @@ stateDiagram-v2
     CLOSING --> CLOSED
 ```
 
-Methods like `start()`, `stop()`, `flush(reset)`, and `signalEOS()` are valid only in specific states. Errors are returned if called out of sequence.
+Methods like `start()`, `stop()`, `flush(reset)`, and `signalEndOfStream()` are valid only in specific states. Calling one out of sequence throws `binder::Status EX_ILLEGAL_STATE`.
 
 ---
 
@@ -549,7 +549,7 @@ Declared in the HFP YAML:
 
 ## End-of-Stream and Error Handling
 
-* `signalEOS()` triggers end-of-stream processing for all inputs.
+* `signalEndOfStream()` triggers end-of-stream processing for all inputs.
 * `onError()` provides error propagation.
 * `flush(reset=true)` resets internal state, `flush(false)` discards buffered data only.
 * `signalDiscontinuity()` informs the HAL of PTS jumps or source switches.

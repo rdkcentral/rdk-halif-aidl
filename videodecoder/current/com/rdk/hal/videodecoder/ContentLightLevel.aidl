@@ -19,7 +19,7 @@
 package com.rdk.hal.videodecoder;
 
 /**
- *  @brief     Content light level metadata (SMPTE ST 2094-10 / CTA-861.3).
+ *  @brief     Content light level metadata (CTA-861.3 MaxCLL / MaxFALL).
  *
  *  Carried in HEVC SEI message type 144 (content_light_level_info).
  *  Both fields are integer cd/m^2 (nits) in the range 0-65535.
