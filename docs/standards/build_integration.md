@@ -175,7 +175,7 @@ configuration sets these to its partition layout.
 ## Non-Yocto build systems
 
 Drive the same per-component CMake invocation shown above, in dependency order
-(`scripts/halif_plan.py` prints the topological order for a set of components),
+(`tests/yocto/meta-rdk-halif-aidl/halif_plan.py` prints the topological order for a set of components),
 staging each component's lib + headers into a shared prefix before building its
 dependents. `build_modules.sh` implements the same ordering for the developer
 tree, and the `rdk-halif-aidl` recipe's `do_compile` does it for BitBake.

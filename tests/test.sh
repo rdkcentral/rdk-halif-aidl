@@ -978,11 +978,11 @@ test_11() {
 }
 
 test_12() {
-    echo "Validating Yocto integration (meta-rdk-halif + vendor/MW roles)..."
+    echo "Validating Yocto integration (meta-rdk-halif-aidl + vendor/MW roles)..."
     echo ""
     echo "==> Test 12.1: component list matches the snapshots (gen_recipes.py --check)"
     if ! ./tests/yocto/meta-rdk-halif-aidl/gen_recipes.py --check; then
-        echo "❌ meta-rdk-halif component list is out of date - run ./tests/yocto/meta-rdk-halif-aidl/gen_recipes.py"
+        echo "❌ meta-rdk-halif-aidl component list is out of date - run ./tests/yocto/meta-rdk-halif-aidl/gen_recipes.py"
         return 1
     fi
     echo "✅ component list in sync"
