@@ -81,6 +81,7 @@ ensure_docs_venv() {
 case "${1:-}" in
     clean|cleanstable|cleanall|--help|-h|"") ;;
     *) source "$SCRIPT_DIR/dev_env_guard.sh"; halif_guard_dev_host_env || exit 1
+       halif_host_compat_flags
        ensure_docs_venv || exit 1 ;;
 esac
 

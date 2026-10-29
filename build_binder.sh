@@ -104,6 +104,7 @@ REPO_URL="https://github.com/rdkcentral/linux_binder_idl"
 # operation and is intentionally NOT exempt from the guard.
 source "${MY_DIR}/dev_env_guard.sh"
 halif_guard_dev_host_env || return 1 2>/dev/null || exit 1
+halif_host_compat_flags
 
 # Pinned toolchain revision. The default is the first non-comment line of
 # binder_sdk.version (committed to the repo so the module-local generated C++

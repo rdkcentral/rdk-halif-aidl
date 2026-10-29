@@ -145,7 +145,8 @@ ROOT_DIR="$SCRIPT_DIR"
 # they stay usable in any environment.
 case "${1:-}" in
     clean|cleanall|--help|-h|--h|"") ;;
-    *) source "$SCRIPT_DIR/dev_env_guard.sh"; halif_guard_dev_host_env || exit 1 ;;
+    *) source "$SCRIPT_DIR/dev_env_guard.sh"; halif_guard_dev_host_env || exit 1
+       halif_host_compat_flags ;;
 esac
 
 # Suppress four classes of unfixable upstream noise so the verification

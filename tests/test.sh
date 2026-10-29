@@ -25,6 +25,11 @@ set -euo pipefail
 # path below is relative to the repo root.
 cd "$(dirname "$0")/.."
 
+# The direct-CMake tests below bypass the wrappers, so apply the native-host
+# compiler compatibility here too (no-op for a cross CXX).
+source ./dev_env_guard.sh
+halif_host_compat_flags
+
 # Color codes for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
