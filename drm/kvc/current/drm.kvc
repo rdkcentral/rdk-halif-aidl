@@ -21,8 +21,9 @@
 # implements against the description on each key; a test suite asserts against
 # it. AFTER EDITING, RUN: scripts/kvcc.py
 #
-# This vocabulary sits BESIDE the interface versions, never inside one, so a
-# revision here moves no frozen interface hash.
+# Its keys are generated into this module's AIDL sources, as members of
+# Metric and its sibling enums, so a new key is an additive interface
+# change. Never edit the generated .aidl: change this file and regenerate.
 #
 # A key absent here is ABSENT at runtime — never 0, never -1. unit and kind are
 # part of a key's identity. A counter is monotonic from resource creation and is

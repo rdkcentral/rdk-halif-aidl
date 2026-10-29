@@ -25,11 +25,9 @@
 # It derives every identifier, writes the AIDL enums and the C key header, and
 # fails if two keys collide or a key has no description.
 #
-# THIS VOCABULARY SITS BESIDE THE INTERFACE VERSIONS, NEVER INSIDE ONE.
-# Publishing a revision creates kvc/<revision>/ and touches no interface
-# directory, so no .aidl changes and no frozen interface hash moves. The
-# interface names a floor it requires, not a pin, because adding a key is
-# compatible by construction.
+# Its keys are generated into this module's AIDL sources, as members of
+# Metric and its sibling enums, so a new key is an additive interface
+# change. Never edit the generated .aidl: change this file and regenerate.
 #
 # WHAT BELONGS HERE
 #   Only what this component produces. A figure the video sink measures is

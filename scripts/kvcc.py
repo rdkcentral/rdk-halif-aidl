@@ -21,7 +21,7 @@
 """kvcc — compile a module's Key Value Contract into constants.
 
 A module owns the keys for the values it produces, and declares them in a
-vocabulary that sits BESIDE its interface versions rather than inside one:
+vocabulary beside its interface versions:
 
     videodecoder/
     |-- kvc/
@@ -29,11 +29,12 @@ vocabulary that sits BESIDE its interface versions rather than inside one:
     |       |-- videodecoder.kvc          the vocabulary
     |       `-- include/                  generated, not committed
     |-- 0.2.0.0/                          frozen interface
-    `-- current/                          interface.yaml names a kvc floor
+    `-- current/                          generated AIDL lands here
 
-That placement is the mechanism, not a convention. Publishing a vocabulary
-revision creates a directory under kvc/ and touches no interface version, so
-the two carry their own version numbers and move on their own cadences.
+The declaration is the single source: the AIDL, the documentation and the
+header all come from it, so a key is defined once and checked the same way
+in every module. A new key is a new member of the module's generated AIDL
+enums, which is an additive interface change.
 
 An identifier is the first 8 bytes of SHA-256 over the composed path and the
 terms that give it meaning, big-endian signed 64-bit with the sign bit cleared.

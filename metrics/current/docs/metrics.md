@@ -101,11 +101,9 @@ void onMetricEvent(in MetricEvent event);
 
 ## The Key Value Contract
 
-A component's keys are declared in `<component>/kvc/<revision>/<component>.kvc`, beside the interface versions and never inside one. Publishing a revision touches no interface directory and moves no frozen hash.
+A component's keys are declared once, in `<component>/kvc/current/<component>.kvc`. It is the single source for everything that names them: `scripts/kvcc.py` derives every identifier, writes the component's AIDL enums and its metrics page, and fails where two keys collide or a key carries no description. `scripts/kvcc.py --check` fails where committed output has drifted from its declaration.
 
-An interface names the vocabulary revision it requires as a floor rather than a pin, because adding a key is compatible by construction. An interface frozen against `1.0` keeps serving when the vocabulary reaches `1.2`, and a caller built from the later revision is answered `NOT_SUPPORTED` for keys this one does not have.
-
-`scripts/kvcc.py` derives every identifier from a contract, writes the AIDL enums, and fails where two keys collide or a key carries no description.
+A new key is a new member of the component's generated `Metric` enum, which is an additive interface change. A caller built against a later vocabulary than a product serves is answered `NOT_SUPPORTED` for keys the product does not have.
 
 ## Error handling
 
