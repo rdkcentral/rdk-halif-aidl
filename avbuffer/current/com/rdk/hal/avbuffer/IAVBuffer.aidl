@@ -17,10 +17,12 @@
  * limitations under the License.
  */
 package com.rdk.hal.avbuffer;
+import com.rdk.hal.avbuffer.AudioDecoderId;
 import com.rdk.hal.avbuffer.HeapMetrics;
 import com.rdk.hal.avbuffer.IAVBufferSpaceListener;
 import com.rdk.hal.avbuffer.Pool;
 import com.rdk.hal.avbuffer.PoolMetrics;
+import com.rdk.hal.avbuffer.VideoDecoderId;
 
 /**
  *  @brief     AV buffer HAL interface definition.
@@ -41,9 +43,6 @@ import com.rdk.hal.avbuffer.PoolMetrics;
 interface IAVBuffer {
     /** The service name to publish. To be returned by getServiceName() in the derived class. */
     const @utf8InCpp String serviceName = "AVBuffer";
-
-    /** `createAudioPool()`: the pool is not for a vendor audio decoder (e.g. system audio PCM). */
-    const int AUDIO_DECODER_ID_UNDEFINED = -1;
 
     /**
      * Gets the number of used/total bytes in a memory heap.
@@ -95,12 +94,12 @@ interface IAVBuffer {
      * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC  if heap is exhausted (out-of-memory)
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE decoder not configured
      *
-     * @pre videoDecoderId is the `value` of an `IVideoDecoder.Id` obtained from
+     * @pre videoDecoderId carries the `value` of an `IVideoDecoder.Id` obtained from
      * IVideoDecoderManager.getVideoDecoderIds()
      *
      * @see destroyPool()
      */
-    Pool createVideoPool(in boolean secureHeap, in int videoDecoderId, in IAVBufferSpaceListener listener);
+    Pool createVideoPool(in boolean secureHeap, in VideoDecoderId videoDecoderId, in IAVBufferSpaceListener listener);
 
     /**
      * Creates an audio memory buffer pool of a secure or non-secure type from which allocations can be made.
@@ -121,7 +120,7 @@ interface IAVBuffer {
      *       handles immediately.
      *
      * If the audio pool is for audio data not destined for a vendor audio decoder
-     * (e.g. system audio PCM) then the ID must be `AUDIO_DECODER_ID_UNDEFINED`.
+     * (e.g. system audio PCM) then the ID must be `AudioDecoderId.UNDEFINED`.
      *
      * If the platform has exhausted all available memory from the requested heap then the exception status
      * `binder::Status::Exception::EX_SERVICE_SPECIFIC` is returned (out-of-memory).
@@ -142,12 +141,12 @@ interface IAVBuffer {
      * @exception binder::Status::Exception::EX_SERVICE_SPECIFIC  if heap is exhausted (out-of-memory)
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE decoder not configured
      *
-     * @pre audioDecoderId is the `value` of an `IAudioDecoder.Id` obtained from
-     *      IAudioDecoderManager.getAudioDecoderIds(), or `AUDIO_DECODER_ID_UNDEFINED`.
+     * @pre audioDecoderId carries the `value` of an `IAudioDecoder.Id` obtained from
+     *      IAudioDecoderManager.getAudioDecoderIds(), or `AudioDecoderId.UNDEFINED`.
      *
      * @see destroyPool()
      */
-    Pool createAudioPool(in boolean secureHeap, in int audioDecoderId, in IAVBufferSpaceListener listener);
+    Pool createAudioPool(in boolean secureHeap, in AudioDecoderId audioDecoderId, in IAVBufferSpaceListener listener);
 
     /**
      * Destroys a memory buffer pool previously created with createVideoPool() or createAudioPool().

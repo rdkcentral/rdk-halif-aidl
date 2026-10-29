@@ -98,7 +98,7 @@ interface IAudioSink {
      * If successful, the audio sink transitions to an OPENING state and then a READY state.
      * The following guarantees are made for an opened audio sink:
      *  - Volume is set to the default of 1.0 and unmuted.
-     *  - The linked Audio Decoder is set to IAudioSinkController.AUDIO_DECODER_ID_UNDEFINED.
+     *  - The linked Audio Decoder is set to `AudioDecoderId.UNDEFINED`.
      *  - All `Property` values are set to their defaults.
      *
      * If the client that opened the `IAudioSinkController` crashes,
