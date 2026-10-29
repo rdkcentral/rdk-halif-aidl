@@ -15,6 +15,7 @@ Audio and video sinks associated with a given AV Clock instance comprise a synch
     |-|-|
     |**Interface Definition**|[avclock/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/avclock/current)|
     |**Interface Version**|`current`|
+    |**Metrics**|[av_clock_metrics.md](av_clock_metrics.md)|
     | **API Documentation** | *TBD - Doxygen* |
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
     |**VTS Tests**| TBC |

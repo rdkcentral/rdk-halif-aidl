@@ -13,6 +13,7 @@ The RDK middleware’s GStreamer pipeline includes a dedicated RDK Video Sink el
     |-|-|
     |**Interface Definition**|[videosink/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/videosink/current)|
     |**Interface Version**|`current`|
+    |**Metrics**|[video_sink_metrics.md](video_sink_metrics.md)|
     | **API Documentation** | *TBD - Doxygen* |
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
     |**VTS Tests**| TBC |
