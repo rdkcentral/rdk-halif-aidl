@@ -36,7 +36,7 @@ import com.rdk.hal.audiomixer.OutputPortType;
 parcelable OutputPortCapabilities {
     /**
      * @brief Human-readable name or role for this output port (e.g., "HDMI", "SPDIF", "Speakers").
-     * @details Required, declared per output port in hfp-audiomixer.yaml under
+     *          Required, declared per output port in hfp-audiomixer.yaml under
      *          outputPorts[].portName. Used for debugging, logging, and
      *          user-facing diagnostics. For programmatic type identification
      *          and policy branching, use `portType` instead.
@@ -45,7 +45,7 @@ parcelable OutputPortCapabilities {
 
     /**
      * @brief Programmatic type of this output port.
-     * @details Declared per output port in hfp-audiomixer.yaml under
+     *          Declared per output port in hfp-audiomixer.yaml under
      *          outputPorts[].portType. Middleware should branch on this enum
      *          (not on the string `portName`) when applying type-specific
      *          policy — e.g. transcode-to-AC3 only on SPDIF, hot-unplug
@@ -83,7 +83,7 @@ parcelable OutputPortCapabilities {
      * @brief   True when this port supports audio capture via
      *          IAudioOutputPortController.getAudioCapture().
      *
-     * @details If true, clients holding the port controller (acquired
+     *          If true, clients holding the port controller (acquired
      *          via IAudioOutputPort.open()) may call
      *          IAudioOutputPortController.getAudioCapture(listener) to
      *          obtain an IAudioCapture interface for streaming audio

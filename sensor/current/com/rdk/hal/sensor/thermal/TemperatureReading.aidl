@@ -21,7 +21,7 @@
  * @file TemperatureReading.aidl
  * @brief Optional temperature telemetry record.
  *
- * @details Implementations may return zero readings if telemetry is unsupported.
+ *          Implementations may return zero readings if telemetry is unsupported.
  */
 package com.rdk.hal.sensor.thermal;
 

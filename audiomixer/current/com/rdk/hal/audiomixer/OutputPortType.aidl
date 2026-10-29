@@ -20,7 +20,7 @@ package com.rdk.hal.audiomixer;
 
 /**
  * @brief    Physical / logical type of an audio output port.
- * @details  Provides a programmatic identification of an output port,
+ *           Provides a programmatic identification of an output port,
  *           independent of the human-readable `OutputPortCapabilities.portName`.
  *           Declared per output port in the HFP YAML and surfaced via
  *           `OutputPortCapabilities.portType`.

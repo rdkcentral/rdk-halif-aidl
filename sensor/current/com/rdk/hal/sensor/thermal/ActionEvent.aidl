@@ -26,7 +26,6 @@ import com.rdk.hal.sensor.thermal.TemperatureReading;
  * @file ActionEvent.aidl
  * @brief Event payload delivered to thermal event listeners.
  *
- * @details
  * Provides context for a thermal state change event, including:
  *  - New thermal state
  *  - Monotonic event timestamp
@@ -39,13 +38,13 @@ parcelable ActionEvent {
 
     /**
      * @brief Monotonic timestamp (ms) when the state change occurred.
-     * @details Use monotonic time for event ordering; not wall-clock time.
+     *          Use monotonic time for event ordering; not wall-clock time.
      */
     long timestampMonotonicMs;
 
     /**
      * @brief Temperature reading of the sensor whose state changed.
-     * @details Set on every event; identifies the sensor. For a sensor that
+     *          Set on every event; identifies the sensor. For a sensor that
      * reports no temperature, temperatureCelsius is the sensor's HFP threshold
      * for the state entered: critical_temperature_recovered_celsius for NORMAL,
      * critical_temperature_exceeded_celsius for CRITICAL_TEMPERATURE_EXCEEDED,

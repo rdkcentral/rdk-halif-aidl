@@ -22,7 +22,7 @@ import com.rdk.hal.audiomixer.State;
 
 /**
  * @brief    Audio Output Port Controller callback listener.
- * @details  Passed into IAudioOutputPort.open(). Delivers lifecycle state
+ *           Passed into IAudioOutputPort.open(). Delivers lifecycle state
  *           transitions to the exclusive controller owner. All callbacks are
  *           oneway (non-blocking, fire-and-forget).
  *

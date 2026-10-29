@@ -21,7 +21,6 @@
  * @file State.aidl
  * @brief High-level current thermal state for quick health checks.
  *
- * @details
  * Each thermal sensor has its own state. Thresholds named below are that
  * sensor's HFP `triggers` values.
  */

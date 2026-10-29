@@ -34,7 +34,7 @@ import com.rdk.hal.audiomixer.PropertyValue;
 oneway interface IAudioOutputPortListener {
     /**
      * @brief     Called when a dynamic property value changes.
-     * @details   Fires for any property whose value changes after the listener
+     *            Fires for any property whose value changes after the listener
      *            was registered. Common change sources:
      *            <ul>
      *              <li><b>CONNECTION_STATE</b> — physical hot-plug / hot-unplug
