@@ -86,7 +86,7 @@ linuxinput:                         # Component object begins
     #     name: "Partner app launch"
     #     devices: [btRcu]
     #   - code: KEY_MACRO1
-    #     name: "Dedicated voice key, no standard equivalent"
+    #     name: "Product-specific scene preset, no standard equivalent"
     #     devices: [btRcu]
 
     # keymapOverrides - whether this platform relies on userspace keymap files
