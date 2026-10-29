@@ -4,7 +4,7 @@
 
 The `metrics` module defines the envelope every measuring HAL serves its figures through. It carries types only — no interface, no controller, no resource — so a component imports it to describe what it measures, never to reach a metrics service.
 
-Every metric is served by the component that produces it. `videodecoder` answers for `av.video_decoder.*`, `videosink` for `av.video_sink.*`, and so on down. A component's Key Value Contract declares the keys it serves; this document states the requirements it serves them under.
+Every metric is served by the component that produces it. `videodecoder` answers for `av.video_decoder.*`, `videosink` for `av.video_sink.*`, and so on down. A component's [Key Value Contract](kvc.md) declares the keys it serves; this document states the requirements it serves them under.
 
 ---
 
