@@ -34,6 +34,7 @@
  */
 package com.rdk.hal.panel;
 
+import com.rdk.hal.panel.DynamicRange;
 import com.rdk.hal.panel.ErrorCode;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.PQParameterCapabilities;
@@ -42,7 +43,6 @@ import com.rdk.hal.panel.PQParameterSelector;
 import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.panel.PictureModeConfiguration;
 import com.rdk.hal.panel.State;
-import com.rdk.hal.videodecoder.DynamicRange;
 
 @VintfStability
 interface IPanelOutputController {

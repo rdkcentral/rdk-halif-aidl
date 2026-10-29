@@ -193,7 +193,7 @@ graph LR
 
 Audio buffers entering the Audio Sink shall be delivered as AV Buffer handles (allocated from either an [AV Buffer](../avbuffer/av_buffer.md) audio pool or the audio frame pool) with a presentation timestamp and metadata describing the audio frame through the `IAudioSinkController.queueAudioFrame()` function.
 
-An [AV Buffer](../avbuffer/av_buffer.md) audio pool would be used for PCM data which has come from system memory (e.g. PCM sound clip) or from a soft audio decoder. In this case the audio pool is created against `IAudioDecoder.Id.UNDEFINED`.
+An [AV Buffer](../avbuffer/av_buffer.md) audio pool would be used for PCM data which has come from system memory (e.g. PCM sound clip) or from a soft audio decoder. In this case the audio pool is created with an `AudioDecoderId` of `AudioDecoderId.UNDEFINED` (`IAVBuffer.createAudioPool()`).
 
 The audio data must use a PCM input sample rate from `PlatformCapabilities.supportedSampleRatesHz` and a format from `PlatformCapabilities.supportedPCMFormats`, as returned by `IAudioSinkManager.getPlatformCapabilities()`. Every advertised rate and format combination is accepted by every audio sink.
 
@@ -215,7 +215,7 @@ If any audio decoder supports SAP in non-tunnelled mode then the Audio Sink HAL 
 
 PCM stream data can originate in the RDK media pipeline from multiple sources; from an application, from the RDK middleware or from a software audio decoder. In these cases the PCM data is passed directly to the Audio Sink HAL.
 
-Clear PCM audio is copied into a non-secure [AV Buffer](../avbuffer/av_buffer.md) and is routed to the `IAudioSinkController` where it is queued for mixing. As this data does not originate from a HAL Audio Decoder, the client constructs an `IAudioDecoder.Id` with its `value` field set to `IAudioDecoder.Id.EXTERNAL` and passes it to `setAudioDecoder()` before `start()`.
+Clear PCM audio is copied into a non-secure [AV Buffer](../avbuffer/av_buffer.md) and is routed to the `IAudioSinkController` where it is queued for mixing. As this data does not originate from a HAL Audio Decoder, the client passes `AudioDecoderId.EXTERNAL` to `setAudioDecoder()` before `start()`.
 
 ## Tunnelled Audio & Passthrough Mode
 
@@ -229,7 +229,7 @@ The Audio Sink HAL is still used to control the audio stream volume, mute and vo
 
 An Audio Sink is routed to a mixer input by the [Audio Mixer](../audiomixer/audio_mixer.md) rather than by the sink itself: `IAudioMixerController` routes `AudioSourceType.AUDIO_SINK` at this sink's resource index to a mixer input, and `AudioSourceType.NONE` clears that routing.
 
-The attached AV Clock gates frame consumption and the mixer routing gates audibility, mirroring the way a [Video Sink](../videosink/video_sink.md) relates to its video plane. `start()` requires either a valid Audio Decoder association or `IAudioDecoder.Id.EXTERNAL` — the latter indicating the sink data source is not a HAL decoder, as used by the [Clear PCM Audio Playback](#clear-pcm-audio-playback) path. Starting while the decoder ID is `IAudioDecoder.Id.UNDEFINED` is an error. Routing may be changed while the sink is `STARTED` without changing the sink's state or flushing its queue; validation and state errors from `IAudioMixerController.setInputRouting()` are reported by the Audio Mixer.
+The attached AV Clock gates frame consumption and the mixer routing gates audibility, mirroring the way a [Video Sink](../videosink/video_sink.md) relates to its video plane. `start()` requires either a valid Audio Decoder association or `AudioDecoderId.EXTERNAL` — the latter indicating the sink data source is not a HAL decoder, as used by the [Clear PCM Audio Playback](#clear-pcm-audio-playback) path. Starting while the decoder ID is `AudioDecoderId.UNDEFINED` is an error. Routing may be changed while the sink is `STARTED` without changing the sink's state or flushing its queue; validation and state errors from `IAudioMixerController.setInputRouting()` are reported by the Audio Mixer.
 
 With no mixer input routed, queued frames are consumed at their presentation times on the attached clock and their buffers freed with `IAVBuffer.free()` at the same points as when a mixer input is routed, and nothing is audible. The queue drains at clock rate, so the sink stays in sync with any Video Sink presenting against the same clock.
 
@@ -239,7 +239,7 @@ This is what makes dual-decode session switching seamless. Two decoder → sink 
 
 EOS is a discrete signal. After queuing its final frame, the RDK middleware client calls `IAudioSinkController.signalEndOfStream()` to assert that no further frames will be queued. `queueAudioFrame()` only submits a frame and carries no EOS information. The sink must be in the `STARTED` state, otherwise the call throws `EX_ILLEGAL_STATE`. A second call is a no-op, and any subsequent `queueAudioFrame()` throws `EX_ILLEGAL_STATE` until the sink is flushed or stopped and restarted.
 
-All audio frame buffers already queued continue to be consumed — and, where a mixer input is routed, audible — in the usual way. Once consumption of the final queued frame completes on the attached clock, the sink fires `IAudioSinkControllerListener.onEndOfStream(nsPresentationTime)` exactly once, carrying the presentation time of that final frame. If no frames were queued when `signalEndOfStream()` was called, `nsPresentationTime` is the undefined-time sentinel (`IAVClock.UNDEFINED_TIME`) so the client sees the same callback in all cases.
+All audio frame buffers already queued continue to be consumed — and, where a mixer input is routed, audible — in the usual way. Once consumption of the final queued frame completes on the attached clock, the sink fires `IAudioSinkControllerListener.onEndOfStream(nsPresentationTime)` exactly once, carrying the presentation time of that final frame. If no frames were queued when `signalEndOfStream()` was called, `nsPresentationTime` is the undefined-time sentinel (`IAudioSinkController.UNDEFINED_TIME`) so the client sees the same callback in all cases.
 
 For audio decoded by the Audio Decoder, the middleware forwards each decoded frame to the Audio Sink via `queueAudioFrame()`; once the decoder has fired its own `onEndOfStream()` and the final frame has been queued, the middleware calls `signalEndOfStream()` on the sink. For PCM audio (no Audio Decoder in the path), the middleware queues its final frame and then calls `signalEndOfStream()` directly.
 

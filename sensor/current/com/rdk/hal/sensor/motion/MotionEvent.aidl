@@ -28,7 +28,6 @@ import com.rdk.hal.sensor.motion.OperationalMode;
 /**
  * @brief Event payload delivered to motion sensor event listeners.
  *
- * @details
  * Provides context for a motion-state change event:
  *  - The active operational mode whose condition was met
  *  - A monotonic timestamp for event ordering and correlation with
@@ -47,7 +46,7 @@ parcelable MotionEvent {
 
     /**
      * @brief Monotonic timestamp (ms) when the event occurred.
-     * @details Use monotonic time for event ordering; not wall-clock time.
+     *          Use monotonic time for event ordering; not wall-clock time.
      *          Sourced from `CLOCK_MONOTONIC` (or equivalent) at the
      *          point the vendor layer detects the state change.
      */

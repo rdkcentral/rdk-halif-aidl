@@ -21,7 +21,6 @@
  * @file IThermalSensor.aidl
  * @brief Thermal policy service interface (singleton).
  *
- * @details
  * Exposes high-level policy decisions via events and a summarized state query.
  * Does not expose raw thresholds to clients.
  */
@@ -54,7 +53,7 @@ interface IThermalSensor {
 
     /**
      * @brief Query the worst current state across all thermal sensors.
-     * @details Each sensor has its own state; this returns the most severe
+     *          Each sensor has its own state; this returns the most severe
      * (NORMAL < CRITICAL_TEMPERATURE_EXCEEDED < CRITICAL_SHUTDOWN_IMMINENT).
      * Use onThermalStateChange() events to see which sensor changed.
      * @return State Worst current sensor state.
@@ -63,7 +62,7 @@ interface IThermalSensor {
 
     /**
      * @brief Optional temperature telemetry snapshot.
-     * @details Implementations may return an empty array if unsupported.
+     *          Implementations may return an empty array if unsupported.
      * @return TemperatureReading[] Zero or more temperature readings.
      */
     TemperatureReading[] getCurrentTemperatures();

@@ -23,13 +23,13 @@ import com.rdk.hal.panel.DimmingLevel;
 import com.rdk.hal.panel.DimmingMode;
 import com.rdk.hal.panel.DimmingSettings;
 import com.rdk.hal.panel.DolbyVisionCalibrationSettings;
+import com.rdk.hal.panel.DynamicRange;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.PanelSource;
 import com.rdk.hal.panel.SDRGamma;
 import com.rdk.hal.panel.ToneMappingLevel;
 import com.rdk.hal.panel.ToneMappingMode;
 import com.rdk.hal.panel.ToneMappingSettings;
-import com.rdk.hal.videodecoder.DynamicRange;
 
 /**
  * @brief Panel PQ parameter capabilities.

@@ -25,6 +25,11 @@ set -euo pipefail
 # path below is relative to the repo root.
 cd "$(dirname "$0")/.."
 
+# The direct-CMake tests below bypass the wrappers, so apply the native-host
+# compiler compatibility here too (no-op for a cross CXX).
+source ./dev_env_guard.sh
+halif_host_compat_flags
+
 # Color codes for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -630,22 +635,22 @@ test_10() {
         return 1
     fi
     
-    # Test 2: Build common module
+    # Test 2: Build hdmicec module (no HAL imports)
     echo ""
-    echo "==> Test 10.2: Build common module (current version)"
-    if cmake -S . -B build/test10-common \
-        -DINTERFACE_TARGET=common \
+    echo "==> Test 10.2: Build hdmicec module (current version)"
+    if cmake -S . -B build/test10-hdmicec \
+        -DINTERFACE_TARGET=hdmicec \
         -DAIDL_SRC_VERSION=current \
         -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
-        >/tmp/cmake_test10_common_config.log 2>&1 && \
-       cmake --build build/test10-common -- -j"$(nproc)" \
-        >/tmp/cmake_test10_common_build.log 2>&1 && \
-       cmake --install build/test10-common \
-        >/tmp/cmake_test10_common_install.log 2>&1; then
-        echo "✅ Common module build successful"
-        verify_module_library common || return 1
+        >/tmp/cmake_test10_hdmicec_config.log 2>&1 && \
+       cmake --build build/test10-hdmicec -- -j"$(nproc)" \
+        >/tmp/cmake_test10_hdmicec_build.log 2>&1 && \
+       cmake --install build/test10-hdmicec \
+        >/tmp/cmake_test10_hdmicec_install.log 2>&1; then
+        echo "✅ HDMI CEC module build successful"
+        verify_module_library hdmicec || return 1
     else
-        echo "❌ Common module build failed!"
+        echo "❌ HDMI CEC module build failed!"
         return 1
     fi
     
@@ -978,11 +983,11 @@ test_11() {
 }
 
 test_12() {
-    echo "Validating Yocto integration (meta-rdk-halif + vendor/MW roles)..."
+    echo "Validating Yocto integration (meta-rdk-halif-aidl + vendor/MW roles)..."
     echo ""
     echo "==> Test 12.1: component list matches the snapshots (gen_recipes.py --check)"
     if ! ./tests/yocto/meta-rdk-halif-aidl/gen_recipes.py --check; then
-        echo "❌ meta-rdk-halif component list is out of date - run ./tests/yocto/meta-rdk-halif-aidl/gen_recipes.py"
+        echo "❌ meta-rdk-halif-aidl component list is out of date - run ./tests/yocto/meta-rdk-halif-aidl/gen_recipes.py"
         return 1
     fi
     echo "✅ component list in sync"

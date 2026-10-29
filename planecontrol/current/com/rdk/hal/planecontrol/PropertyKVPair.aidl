@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 package com.rdk.hal.planecontrol;
-import com.rdk.hal.PropertyValue;
 import com.rdk.hal.planecontrol.Property;
+import com.rdk.hal.planecontrol.PropertyValue;
 
 /**
  *  @brief     Key-value pair for plane properties.

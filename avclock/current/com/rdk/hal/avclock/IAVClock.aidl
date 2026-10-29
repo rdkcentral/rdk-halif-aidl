@@ -17,12 +17,12 @@
  * limitations under the License.
  */
 package com.rdk.hal.avclock;
-import com.rdk.hal.PropertyValue;
 import com.rdk.hal.avclock.Capabilities;
 import com.rdk.hal.avclock.IAVClockController;
 import com.rdk.hal.avclock.IAVClockControllerListener;
 import com.rdk.hal.avclock.IAVClockEventListener;
 import com.rdk.hal.avclock.Property;
+import com.rdk.hal.avclock.PropertyValue;
 import com.rdk.hal.avclock.State;
 
 /**

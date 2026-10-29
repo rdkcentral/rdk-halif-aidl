@@ -18,17 +18,17 @@
  */
 package com.rdk.hal.audiomixer;
 
-import com.rdk.hal.PropertyValue;
 import com.rdk.hal.audiomixer.IAudioOutputPortController;
 import com.rdk.hal.audiomixer.IAudioOutputPortControllerListener;
 import com.rdk.hal.audiomixer.IAudioOutputPortListener;
 import com.rdk.hal.audiomixer.OutputPortCapabilities;
 import com.rdk.hal.audiomixer.OutputPortProperty;
+import com.rdk.hal.audiomixer.PropertyValue;
 import com.rdk.hal.audiomixer.State;
 
 /**
  * @brief    Audio Output Port HAL interface.
- * @details  Per-port interface returned by IAudioMixer.getAudioOutputPort().
+ *           Per-port interface returned by IAudioMixer.getAudioOutputPort().
  *           Provides read access (capabilities, state, property reads) plus
  *           open()/close() to acquire an exclusive IAudioOutputPortController
  *           for property writes.
@@ -64,7 +64,7 @@ interface IAudioOutputPort {
 
     /**
      * @brief    Gets the current lifecycle state of this output port.
-     * @details  Output ports use a subset of the shared State enum:
+     *           Output ports use a subset of the shared State enum:
      *           CLOSED, OPENING, READY, CLOSING. Output ports do NOT enter
      *           STARTING / STARTED / STOPPING / FLUSHING — those values
      *           apply to the mixer instance lifecycle. Audio routing and

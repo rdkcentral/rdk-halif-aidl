@@ -2,7 +2,7 @@
  * If not stated otherwise in this file or this component's LICENSE file the
  * following copyright and licenses apply:
  *
- * Copyright 2024 RDK Management
+ * Copyright 2026 RDK Management
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rdk.hal;
+package com.rdk.hal.videosink;
 
 /**
- * @brief The operational output mode currently selected by the vendor.
+ *  @brief     Names a Video Decoder instance from this interface's side.
+ *
+ *  Same wire layout as `IVideoDecoder.Id`: a client builds one from the `value` that
+ *  `IVideoDecoder.Id` carries, and binaries built against either type interoperate.
  */
-
 @VintfStability
-@Backing(type = "int")
-enum OperationalMode {
-    /** Output is consumed by the vendor layer and is not returned to the client. */
-    TUNNELLED = 1,
-    /** Output is returned to the client. */
-    NON_TUNNELLED = 2
+parcelable VideoDecoderId {
+    /** No Video Decoder is associated. */
+    const int UNDEFINED = -1;
+
+    /** The source is an external non-HAL component rather than a HAL Video Decoder. */
+    const int EXTERNAL = -2;
+
+    /** The Video Decoder resource ID. */
+    int value;
 }

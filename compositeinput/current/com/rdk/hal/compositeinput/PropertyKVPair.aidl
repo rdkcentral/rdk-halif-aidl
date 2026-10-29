@@ -19,8 +19,8 @@
 
 package com.rdk.hal.compositeinput;
 
-import com.rdk.hal.PropertyValue;
 import com.rdk.hal.compositeinput.PortProperty;
+import com.rdk.hal.compositeinput.PropertyValue;
 
 /**
  * @brief Key-value pair for composite input port properties.

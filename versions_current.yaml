@@ -27,12 +27,12 @@ components:
   avclock:        current
   bootreason:     current
   broadcast:      current
-  common:         current
   compositeinput: current
   deepsleep:      current
   deviceinfo:     current
   drm:            current
   firmwareupdate: current
+  halcompat:      current
   hdmicec:        current
   hdmiinput:      current
   hdmioutput:     current

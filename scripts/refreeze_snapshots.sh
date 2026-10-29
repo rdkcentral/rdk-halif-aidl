@@ -218,7 +218,20 @@ if [[ $# -eq 0 || "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     exit 0
 elif [[ "$1" == "all" ]]; then
     while IFS=': ' read -r comp ver; do
-        [[ -n "${comp}" && -n "${ver}" ]] && targets+=("${comp}:${ver}")
+        [[ -n "${comp}" && -n "${ver}" ]] || continue
+        # A component with no current/ survives only as frozen snapshots
+        # (e.g. common): there is nothing to refreeze against.
+        if [[ ! -d "${REPO_ROOT}/${comp}/current" ]]; then
+            log "[${comp}] no current/ — frozen snapshots only, not refrozen."
+            continue
+        fi
+        # A header-only component (e.g. halcompat) has no AIDL, so no
+        # VERSION/HASH to stamp and no bindings to regenerate.
+        if [[ ! -f "${REPO_ROOT}/${comp}/current/interface.yaml" ]]; then
+            log "[${comp}] header-only (no interface.yaml) — nothing to refreeze."
+            continue
+        fi
+        targets+=("${comp}:${ver}")
     done < <(awk '/^components:/{f=1; next} f && /^  [a-z]/{gsub(":",""); print $1": "$2} f && /^[^ ]/{f=0}' "${MANIFEST}")
 else
     for arg in "$@"; do

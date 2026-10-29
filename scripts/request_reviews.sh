@@ -54,7 +54,8 @@ echo "Loaded ${#TEAM_MAP[@]} team mappings"
 
 # --- Get changed files from the PR ---
 echo "Fetching changed files for PR #${PR_NUMBER}..."
-CHANGED_FILES=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json files --jq '.files[].path')
+# Paged REST list: `gh pr view --json files` stops at 100 files.
+CHANGED_FILES=$(gh api --paginate "repos/${REPO}/pulls/${PR_NUMBER}/files" --jq '.[].filename')
 
 # --- Derive affected components from file paths ---
 declare -A COMPONENTS
@@ -112,7 +113,13 @@ for component in "${!COMPONENTS[@]}"; do
                 # Request review from teams that haven't completed review
                 if [ "$status" != "reviewed" ] && [ "$status" != "abstained" ]; then
                     if [ -n "${TEAM_MAP[$team]:-}" ]; then
-                        REVIEW_TEAMS["${TEAM_MAP[$team]}"]="$team ($status) [${component}]"
+                        # One slug can be pending on several components: list each.
+                        slug="${TEAM_MAP[$team]}"
+                        if [ -n "${REVIEW_TEAMS[$slug]:-}" ]; then
+                            REVIEW_TEAMS["$slug"]="${REVIEW_TEAMS[$slug]} [${component}: ${status}]"
+                        else
+                            REVIEW_TEAMS["$slug"]="$team [${component}: ${status}]"
+                        fi
                     else
                         echo "    WARN: No GitHub team mapping for '${team}'"
                     fi

@@ -80,8 +80,8 @@ minor therefore forces a minor bump.
 
 ## Client Compatibility Checks
 
-Clients use the `halcompat` helpers (`common/current/halcompat.h`, installed
-with the common headers) — the same calls in every era, with the encoding
+Clients use the `halcompat` helpers (`halcompat/current/halcompat.h`, installed
+by the `halcompat` component) — the same calls in every era, with the encoding
 and the era rules internal to the helper:
 
 ```cpp
@@ -169,6 +169,29 @@ establishes that the receiver understands the new arm before ever transmitting
 it. Where a component does that, record the negotiated capability in the change
 request; the structural audit cannot observe it and will classify the change as
 breaking.
+
+### Naming another HAL's instance
+
+An interface that takes or returns another HAL's instance ID declares its own
+parcelable for it, in its own package, with the producer's shape:
+`parcelable AudioDecoderId { const int UNDEFINED = -1; int value; }`. It does
+not import the producing HAL's `Id`, and it does not pass a bare `int`.
+
+A bare `int` is not wire-equivalent. A parcelable argument is written as a
+non-null marker, a size header and its fields (12 bytes for `{ int value; }`);
+an `int` is 4 bytes. Changing one to the other breaks the wire silently: a
+receiver reading an `int` where a parcelable was sent gets the marker, `1`, as
+the ID. The module-local parcelable also lets the compiler reject an
+`AVClockId` passed where an `AudioDecoderId` is expected.
+
+### Moving a type to another package
+
+Parcelable, union and enum names are not written to the wire, so moving a type
+to another package with identical declarations leaves every byte unchanged:
+binaries built against either package interoperate. The generated C++ type
+moves namespace, so code rebuilt against the new package must change. The
+structural audit reports the move as a type change, `breaking`; record in the
+change request that it is wire-compatible.
 
 ### Mechanical Classification
 

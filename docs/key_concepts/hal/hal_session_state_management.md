@@ -16,7 +16,7 @@ Not all states may be applicable to all HAL services, so check the relevant HAL 
 
 ## HAL AIDL Definitions
 
-See `State.aidl` in [Common](https://github.com/rdkcentral/rdk-halif-aidl/common/current/com/rdk/hal/State.aidl).
+Each module defines its own `State.aidl` in its own package, for example `com.rdk.hal.videodecoder.State`.
 
 ## Implementation Requirements
 

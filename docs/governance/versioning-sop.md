@@ -312,7 +312,7 @@ cohort — at release time, the script regenerates each module's bindings
 and commits them into the new immutable `<module>/<version>/include/`
 and `<module>/<version>/src/` directories alongside the snapshot's
 AIDL. Frozen `<version>/` snapshots are the consumption artifact;
-consumers pin to them (`common@0.1.0.0`), not to `current/`.
+consumers pin to them (`audiodecoder@0.2.0.0`), not to `current/`.
 
 ##### The rule
 
@@ -364,13 +364,15 @@ build time locally, and PR diffs show only authored content.
   output not covered by the rule) trips the check.
 - **Release:** `./release.sh` is the only entry point that may
   commit generated bindings, and only into frozen `<version>/`
-  directories. Invocation: `./scripts/release.sh --apply --release-version X.Y.Z` runs the full pipeline — per-component `metadata.yaml`
-  bumps, per-bumped-component snapshot creation (regen-during-freeze,
-  then `cp -r current/` to `<version>/`), `mkdocs.yml` nav update,
-  and `release/X.Y.Z` branch with matching `X.Y.Z` tag. No-op when
-  no component is bumped (no branch, no tag, no doc edits). Suppress
-  individual steps for testing with `--no-snapshot`, `--no-mkdocs`,
-  or `--no-git`. Implemented in #513.
+  directories. `./scripts/release.sh stage <module>|all` writes the
+  release: per-component `metadata.yaml` bumps, snapshot creation
+  (regen-during-freeze, then `cp -r current/` to `<version>/`) and the
+  `mkdocs.yml` nav update. `--apply [--commit]` then cuts the
+  `release/X.Y.Z` branch from those artefacts, and `--complete` runs
+  `git flow release finish`, which makes the `X.Y.Z` tag on `main`.
+  No-op when no component is bumped (no branch, no doc edits). Suppress
+  individual steps for testing with `--no-snapshot`, `--no-mkdocs` or
+  `--no-build`.
 
 This separation means a single coherent release contains all of the
 component changes from the release window batched into one set of new
@@ -597,13 +599,12 @@ The repository contains **33 components** across two responsibility types:
 | `vsi/kernel` | Kernel interface strategy and system abstraction |
 | `vsi/keyvault` | HAL lower-layer key vault and encrypted storage requirements |
 
-#### OEM Components (17)
+#### OEM Components (16)
 
 | Component | Description |
 |-----------|-------------|
 | `boot` | Boot reason tracking and reboot management |
 | `broadcast` | Broadcast tuner and RF frontend interface |
-| `common` | Common types, enumerations, and shared interface definitions |
 | `compositeinput` | Composite video input capture and control |
 | `deepsleep` | Deep sleep and low-power state management |
 | `deviceinfo` | Device information and platform capability reporting |
@@ -618,6 +619,12 @@ The repository contains **33 components** across two responsibility types:
 | `vsi/filesystem` | File system layout standards and partition management |
 | `vsi/linuxinput` | Linux input subsystem and event handling |
 | `vsi/wifi` | Wi-Fi driver integration and network management |
+
+#### Client Components (1)
+
+| Component | Description |
+|-----------|-------------|
+| `halcompat` | Client-side C++ helpers for service lookup and version compatibility (header-only, no AIDL) |
 
 Each component is independently tracked through the RED → AMBER → GREEN
 pipeline. The automated [RAG Status Report](https://github.com/rdkcentral/rdk-halif-aidl/blob/develop/RAG_STATUS_REPORT.md) provides

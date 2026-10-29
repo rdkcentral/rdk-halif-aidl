@@ -87,3 +87,19 @@ halif_guard_dev_host_env() {
     } >&2
     return 1
 }
+
+# Adds the host-compatibility forced include to CXXFLAGS for a native build
+# (CXX targets the machine it runs on): the pinned Binder SDK's AOSP sources
+# rely on <cstdint> arriving transitively, which libstdc++ 13+ no longer does.
+# A cross or target toolchain is left untouched. See CMakeModules/halif_host_stdint.h.
+halif_host_compat_flags() {
+    local cxx_machine host_machine hdr
+    cxx_machine="$(${CXX:-c++} -dumpmachine 2>/dev/null || true)"
+    host_machine="$(/usr/bin/gcc -dumpmachine 2>/dev/null || /usr/bin/cc -dumpmachine 2>/dev/null || cc -dumpmachine 2>/dev/null || gcc -dumpmachine 2>/dev/null || true)"
+    [ -n "$cxx_machine" ] && [ "$cxx_machine" = "$host_machine" ] || return 0
+    hdr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/CMakeModules/halif_host_stdint.h"
+    case " ${CXXFLAGS:-} " in
+        *" -include ${hdr} "*) ;;
+        *) export CXXFLAGS="${CXXFLAGS:-} -include ${hdr}" ;;
+    esac
+}

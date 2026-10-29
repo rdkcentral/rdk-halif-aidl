@@ -157,6 +157,8 @@ function setup_and_enable_venv()
                 return 1
             fi
         fi
+        # Kept only for the failure paths above, which point the user at it
+        rm -f venv_error.log
 
         ECHO "Virtual environment created."
     fi
@@ -172,19 +174,28 @@ function setup_and_enable_venv()
         fi
     fi
 
-    # Make sure pip exists in the venv
-    if ! command -v pip >/dev/null 2>&1; then
+    # Make sure pip exists in the venv itself: install_pip_requirements runs
+    # ${VENV_DIR}/bin/pip, and `command -v pip` could find the system one.
+    if [[ ! -x "${VENV_DIR}/bin/pip" ]]; then
         WARNING "pip not found in virtualenv, trying to bootstrap pip..."
-        if ! python -m ensurepip --upgrade >/dev/null 2>&1; then
-            WARNING "ensurepip not available inside venv."
-            if command -v pip3 >/dev/null 2>&1; then
-                WARNING "Using system pip3 to bootstrap pip..."
-                pip3 install --upgrade pip
-            else
-                ERROR "No pip available. On Ubuntu, run: sudo apt install python3-venv python3-pip"
+        if ! "${VENV_DIR}/bin/python" -m ensurepip --upgrade --default-pip >/dev/null 2>&1; then
+            # A --without-pip venv has no ensurepip; get-pip.py installs pip
+            # into whichever interpreter runs it.
+            WARNING "ensurepip not available inside venv, fetching get-pip.py..."
+            local get_pip="${VENV_DIR}/get-pip.py"
+            if command -v curl >/dev/null 2>&1; then
+                curl -fsSL https://bootstrap.pypa.io/get-pip.py -o "${get_pip}"
+            elif command -v wget >/dev/null 2>&1; then
+                wget -q https://bootstrap.pypa.io/get-pip.py -O "${get_pip}"
+            fi
+            if [[ ! -s "${get_pip}" ]] || ! "${VENV_DIR}/bin/python" "${get_pip}" >/dev/null 2>&1; then
+                rm -f "${get_pip}"
+                ERROR "No pip in the venv. On Ubuntu, run: sudo apt install python3-venv python3-pip"
                 return 1
             fi
+            rm -f "${get_pip}"
         fi
+        [[ -x "${VENV_DIR}/bin/pip" ]] || { ERROR "pip bootstrap did not install ${VENV_DIR}/bin/pip"; return 1; }
     fi
 }
 

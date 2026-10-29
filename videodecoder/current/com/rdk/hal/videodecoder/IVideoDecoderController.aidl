@@ -17,13 +17,13 @@
  * limitations under the License.
  */
 package com.rdk.hal.videodecoder;
-import com.rdk.hal.PropertyValue;
 import com.rdk.hal.videodecoder.CSDVideoFormat;
 import com.rdk.hal.videodecoder.Colorimetry;
 import com.rdk.hal.videodecoder.ContentLightLevel;
 import com.rdk.hal.videodecoder.InputBufferMetadata;
 import com.rdk.hal.videodecoder.MasteringDisplayInfo;
 import com.rdk.hal.videodecoder.Property;
+import com.rdk.hal.videodecoder.PropertyValue;
 import com.rdk.hal.videodecoder.VideoDecoderStreamConfig;
 
 /**

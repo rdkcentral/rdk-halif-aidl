@@ -149,8 +149,10 @@ application makes.
 
 Middleware discovers which mode is in force by calling
 `getCurrentOperationalMode()` on the decoder once it has reached the `STARTED`
-state. The same enum (`com.rdk.hal.OperationalMode`) and the same call apply to
-both the audio and the video decoder.
+state. Each decoder defines the enum in its own package
+(`com.rdk.hal.audiodecoder.OperationalMode`,
+`com.rdk.hal.videodecoder.OperationalMode`) with the same values, and the same
+call applies to both.
 
 Control flow is unaffected by the mode: the sink is configured, started,
 flushed and clocked identically in either case.

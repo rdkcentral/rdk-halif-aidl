@@ -34,7 +34,7 @@ package com.rdk.hal.audiomixer;
 enum MixingMode {
     /**
      * Standard mixing behaviour. All streams mix at their configured volumes.
-     * FIXME: Only supported format required today
+     * The only mode an implementation is required to support.
      */
     NORMAL = 0,
 

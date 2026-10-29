@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.audiodecoder;
-import com.rdk.hal.AVSource;
+import com.rdk.hal.audiodecoder.AVSource;
 import com.rdk.hal.audiodecoder.Codec;
 import com.rdk.hal.audiodecoder.FrameType;
 import com.rdk.hal.audiodecoder.PCMMetadata;

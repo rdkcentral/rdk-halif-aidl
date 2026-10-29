@@ -17,11 +17,11 @@
  * limitations under the License.
  */
 package com.rdk.hal.hdmiinput;
-import com.rdk.hal.PropertyValue;
 import com.rdk.hal.hdmiinput.HDCPProtocolVersion;
 import com.rdk.hal.hdmiinput.HDCPStatus;
 import com.rdk.hal.hdmiinput.Property;
 import com.rdk.hal.hdmiinput.PropertyKVPair;
+import com.rdk.hal.hdmiinput.PropertyValue;
 
 /**
  *  @brief     HDMI Input Controller HAL interface.

@@ -131,7 +131,6 @@ nav:
         - 0.2.0.0: '!include hdmioutput/0.2.0.0/mkdocs.yml'
         - 0.1.0.0: '!include hdmioutput/0.1.0.0/mkdocs.yml'
     - Common:
-      - Current: '!include common/current/mkdocs.yml'
       - 0.3.0.0: '!include common/0.3.0.0/mkdocs.yml'
       - 0.2.0.0: '!include common/0.2.0.0/mkdocs.yml'
       - 0.1.0.0: '!include common/0.1.0.0/mkdocs.yml'
@@ -151,6 +150,8 @@ nav:
       - Current: '!include firmwareupdate/current/mkdocs.yml'
       - 0.2.0.1: '!include firmwareupdate/0.2.0.1/mkdocs.yml'
       - 0.2.0.0: '!include firmwareupdate/0.2.0.0/mkdocs.yml'
+    - HAL Compat:
+      - Current: '!include halcompat/current/mkdocs.yml'
     - Indicator:
       - Current: '!include indicator/current/mkdocs.yml'
       - 0.2.0.0: '!include indicator/0.2.0.0/mkdocs.yml'

@@ -17,10 +17,10 @@
  * limitations under the License.
  */
 package com.rdk.hal.avclock;
-import com.rdk.hal.PropertyValue;
 import com.rdk.hal.avclock.ClockMode;
 import com.rdk.hal.avclock.ClockTime;
 import com.rdk.hal.avclock.Property;
+import com.rdk.hal.avclock.PropertyValue;
 
 /**
  *  @brief     AV Clock Controller HAL interface.

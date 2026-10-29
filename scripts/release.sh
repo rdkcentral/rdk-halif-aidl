@@ -289,16 +289,18 @@ build_cache_build_hash() {
     local files
     if [[ "$1" == "manifest" ]]; then
         # versions_released.yaml + every snapshot dir's AIDL
-        files="$(find "${REPO_ROOT}" -maxdepth 3 -path '*/[0-9]*/com' -prune -o \
-                    -name '*.aidl' -path '*/[0-9]*.*.*/com/*' -print 2>/dev/null | sort)"
+        # git ls-files: any depth (AIDL sits at <comp>/<ver>/com/rdk/hal/...),
+        # index included, so snapshots `stage` just added are hashed too.
+        files="$(git -C "${REPO_ROOT}" ls-files --full-name -- '*/[0-9]*.*.*/com/*.aidl' 2>/dev/null \
+                    | sed "s|^|${REPO_ROOT}/|" | sort)"
         if [[ -f "${REPO_ROOT}/versions_released.yaml" ]]; then
             files="${REPO_ROOT}/versions_released.yaml
 ${files}"
         fi
     else
         # `all` or single-comp: hash every current/*.aidl
-        files="$(find "${REPO_ROOT}" -maxdepth 4 -path '*/current/com/*' -name '*.aidl' \
-                    -type f 2>/dev/null | sort)"
+        files="$(git -C "${REPO_ROOT}" ls-files --full-name -- '*/current/com/*.aidl' 2>/dev/null \
+                    | sed "s|^|${REPO_ROOT}/|" | sort)"
     fi
     # Hash the args first, then all file contents.
     {
@@ -468,7 +470,7 @@ plan_clean() {
     done < <(
         git -C "${REPO_ROOT}" status --short \
             | awk '{print $NF}' \
-            | grep -E '^[a-z][a-z0-9_]*/[0-9]+(\.[0-9]+){2,3}/' \
+            | grep -E '^(vsi/)?[a-z][a-z0-9_]*/[0-9]+(\.[0-9]+){2,3}/' \
             || true
     )
     [[ ${restored} -gt 0 ]] && log "  Restored ${restored} modified file(s) inside tracked snapshot dir(s)."
@@ -487,8 +489,8 @@ plan_clean() {
         fi
         rm -rf "${d}"
         removed=$((removed + 1))
-    done < <(find "${REPO_ROOT}" -maxdepth 2 -mindepth 2 -type d \
-                -regex '.*/[a-z][a-z0-9_]*/[0-9][0-9.]*' -print0 2>/dev/null)
+    done < <(find "${REPO_ROOT}" -maxdepth 3 -mindepth 2 -type d -regextype posix-extended \
+                -regex "${REPO_ROOT}/(vsi/)?[a-z][a-z0-9_]*/[0-9][0-9.]*" -print0 2>/dev/null)
     [[ ${removed} -gt 0 ]] && log "  Removed ${removed} untracked snapshot dir(s)."
 
     # 3. Untracked release-notes files (we never overwrite pre-existing
@@ -584,7 +586,8 @@ plan_load() {
     local baseline
     baseline="$(git -C "${REPO_ROOT}" describe --tags --abbrev=0 2>/dev/null || true)"
     local comp_dir comp ver_dir ver
-    for comp_dir in "${REPO_ROOT}"/*/current; do
+    # vsi/<comp>/current as well: the detector stages nested components too.
+    for comp_dir in "${REPO_ROOT}"/*/current "${REPO_ROOT}"/vsi/*/current; do
         [[ -d "${comp_dir}" ]] || continue
         comp="${comp_dir%/current}"
         comp="${comp#${REPO_ROOT}/}"
@@ -959,17 +962,22 @@ Modes:
                 Writes NOTHING. The output ends with the exact --apply
                 command to run when the plan is right.
 
-  --apply       Execute the staged plan: regenerate bindings, create
-                <module>/<version>/ snapshots, update metadata.yaml,
-                versions_released.yaml, mkdocs.yml, generate
-                docs/releases/X.Y.Z.md skeleton, prepend the CHANGELOG.md
-                section, run both verification builds, then create the
-                release/X.Y.Z branch. With --commit it also commits and
+  stage         `stage <module>` (or `stage all`) writes the release
+                artefacts: regenerates bindings, creates <module>/<version>/
+                snapshots, updates metadata.yaml, versions_released.yaml and
+                mkdocs.yml, generates the docs/releases/X.Y.Z.md skeleton,
+                prepends the CHANGELOG.md section and runs both verification
+                builds.
+
+  --apply       Creates (or reuses) the release/X.Y.Z branch from the
+                artefacts `stage` already wrote; writes nothing itself.
+                Re-runs the released-cohort build when nothing was staged in
+                the same invocation. With --commit it also commits and
                 pushes that branch. No tag is created here — `git flow
                 release finish X.Y.Z` makes the tag on main.
 
   --dry-run     Read-only like the default, plus a step-by-step preview of
-                the pipeline the default run would execute.
+                the pipeline `stage` would execute.
 
   --complete    Ship the release end-to-end from an already-committed
                 release/X.Y.Z branch. Must be run AFTER --apply --commit
@@ -1056,13 +1064,13 @@ Behavior (#712 change-class labels — label names mean what the fields mean):
   - no relevant label         => minor bump (default), unless docs-only heuristic
                                  says bugfix
 
-Per bumped component the script:
+Per bumped component, `stage` runs:
   1. ./build_modules.sh <component>        # regenerate current/include + current/src
   2. cp -r <component>/current/ <component>/<NEXT_VERSION>/
   3. git add <component>/<NEXT_VERSION>/
   4. sed -i version: in <component>/metadata.yaml
 
-Once per release the script:
+Once per release, `stage` then runs:
   5. Update versions_released.yaml components: map entries
   6. Insert mkdocs.yml nav entries for each <component>/<version>/
   7. Generate docs/releases/<release>.md skeleton (if absent) and list it
@@ -1074,7 +1082,7 @@ Once per release the script:
  11. ./build_modules.sh manifest           # build released cohort via
                                             # versions_released.yaml
 
-With --apply, additionally:
+--apply then runs:
  12. git checkout -b release/<release>
  13. git commit  (with --commit)
  14. git push origin release/<release>  (with --commit)
@@ -1090,8 +1098,8 @@ No-op when no component changed:
 
 Notes:
   - Script is intended for manual release-time usage (not CI).
-  - Default WRITES files locally (regen + snapshot + metadata + manifests +
-    docs + build). Use --dry-run for a pure preview.
+  - A bare ./release.sh is read-only. `stage <module>` writes the release
+    artefacts; --apply only cuts the release branch from them.
 EOF
 }
 
@@ -1823,7 +1831,7 @@ if [[ ${#FP_COMMITS[@]} -eq 0 ]]; then
     log "No first-parent commits found in ${SINCE_REF}..HEAD. Nothing to release."
     exit 0
 fi
-phase "    ${#FP_COMMITS[@]} commit(s) to analyze"
+phase "    ${#FP_COMMITS[@]} commit(s) to analyse"
 
 phase "Scanning component metadata files..."
 mapfile -t COMPONENTS < <(
@@ -2119,7 +2127,7 @@ pr_ref_suffix() {
     printf '%s' "${out}"
 }
 
-phase "Analyzing ${#FP_COMMITS[@]} commit(s) for component impact..."
+phase "Analysing ${#FP_COMMITS[@]} commit(s) for component impact..."
 _commit_idx=0
 _commit_total=${#FP_COMMITS[@]}
 for sha in "${FP_COMMITS[@]}"; do
@@ -2311,7 +2319,7 @@ elif [[ ${#PLAN_COMPONENTS[@]} -eq 0 && "${STAGE_AND_WRITE}" -ne 1 && "${ACCEPT_
         log "    ./release.sh stage <module>     (or: ./release.sh <module>)"
         log "    ./release.sh stage all          (stage every qualifying module)"
         log "  Then apply:"
-        log "    ./release.sh --apply --release-version ${RELEASE_VERSION}"
+        log "    ./release.sh --apply --release-version ${RELEASE_VERSION:-<X.Y.Z>}"
         exit 1
     fi
     # Fall through to read-only table view (no writes happen).
@@ -2468,8 +2476,34 @@ for e in r["evidence"]: print(e)' 2>/dev/null)" || out=""
     return 0
 }
 
+# Aggregate SHA256 of the *.h files directly in a directory (not recursive),
+# keyed by file name. Used for a header-only component's interface: its
+# current/*.h against the released <version>/include/*.h. Empty when there are
+# no headers.
+compute_header_hash_for_dir() {
+    local dir="$1"
+    [[ -d "${dir}" ]] || { echo ""; return 0; }
+    local h
+    h="$(find "${dir}" -maxdepth 1 -name '*.h' -type f 2>/dev/null \
+        | sort \
+        | while IFS= read -r f; do
+            printf '%s:%s\n' "$(basename "${f}")" "$(sha256sum "${f}" 2>/dev/null | awk '{print $1}')"
+          done \
+        | sha256sum 2>/dev/null | awk '{print $1}')"
+    [[ "${h}" == "$(echo -n "" | sha256sum | awk '{print $1}')" ]] && h=""
+    echo "${h}"
+}
+
+is_header_only_component() {
+    local comp="$1"
+    [[ ! -f "${REPO_ROOT}/${comp}/current/interface.yaml" ]] || return 1
+    compgen -G "${REPO_ROOT}/${comp}/current/*.h" >/dev/null
+}
+
 # Compare a module's current/ AIDL hash against the highest tracked
 # snapshot. Echoes one of: "unchanged" / "CHANGED" / "new" / "missing".
+# A header-only component compares its headers instead (current/*.h against
+# <latest>/include/*.h), since the headers are its whole interface.
 aidl_hash_status() {
     local comp="$1"
     local latest
@@ -2479,8 +2513,13 @@ aidl_hash_status() {
         return 0
     fi
     local cur_hash snap_hash
-    cur_hash="$(compute_aidl_hash_for_dir "${REPO_ROOT}/${comp}/current")"
-    snap_hash="$(compute_aidl_hash_for_dir "${REPO_ROOT}/${comp}/${latest}")"
+    if is_header_only_component "${comp}"; then
+        cur_hash="$(compute_header_hash_for_dir "${REPO_ROOT}/${comp}/current")"
+        snap_hash="$(compute_header_hash_for_dir "${REPO_ROOT}/${comp}/${latest}/include")"
+    else
+        cur_hash="$(compute_aidl_hash_for_dir "${REPO_ROOT}/${comp}/current")"
+        snap_hash="$(compute_aidl_hash_for_dir "${REPO_ROOT}/${comp}/${latest}")"
+    fi
     if [[ -z "${cur_hash}" || -z "${snap_hash}" ]]; then
         echo "missing"  # one side has no .aidl files
         return 0
@@ -2789,6 +2828,11 @@ is_buildable_component() {
     [[ -f "${REPO_ROOT}/${comp}/current/interface.yaml" ]]
 }
 
+# A header-only component (e.g. halcompat) ships hand-authored C++ headers
+# and no AIDL: current/*.h and no current/interface.yaml. It is released and
+# versioned like any other component — bumped by its labels, gated on its
+# header content instead of an AIDL hash — but has no bindings or library,
+# so its snapshot is a copy of current/ with the headers staged in include/.
 # ----------------------------------------------------------------------------
 # Frozen interface VERSION + contract HASH (#633)
 # ----------------------------------------------------------------------------
@@ -2963,10 +3007,13 @@ create_snapshot() {
         fi
     fi
 
-    [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] regenerating bindings via build_modules.sh..."
     local build_log="${REPO_ROOT}/out/release-snapshot-${comp//\//_}.log"
     mkdir -p "$(dirname "${build_log}")"
-    if [[ "${VERBOSE}" -eq 1 ]]; then
+    if is_header_only_component "${comp}"; then
+        # No AIDL, so no bindings to regenerate and no library to build.
+        [[ "${VERBOSE}" -eq 1 ]] && log "  [${comp}] header-only: no bindings to regenerate"
+    elif [[ "${VERBOSE}" -eq 1 ]]; then
+        log "  [${comp}] regenerating bindings via build_modules.sh..."
         if ! (cd "${REPO_ROOT}" && ./build_modules.sh "${comp}" 2>&1 | tee "${build_log}"); then
             warn "Failed to regenerate ${comp} bindings — see ${build_log}."
             _restore_current
@@ -3469,8 +3516,8 @@ create_release_branch() {
         fi
         (cd "${REPO_ROOT}" && git add -- "${_rel}/") || \
             warn "git add ${_rel}/ failed"
-    done < <(find "${REPO_ROOT}" -maxdepth 2 -mindepth 2 -type d \
-                -regex '.*/[a-z][a-z0-9_]*/[0-9][0-9.]*' -print0 2>/dev/null)
+    done < <(find "${REPO_ROOT}" -maxdepth 3 -mindepth 2 -type d -regextype posix-extended \
+                -regex "${REPO_ROOT}/(vsi/)?[a-z][a-z0-9_]*/[0-9][0-9.]*" -print0 2>/dev/null)
 
     if [[ "${COMMIT}" -eq 1 ]]; then
         # Idempotent: if nothing's staged and HEAD already has the
@@ -3645,8 +3692,6 @@ for comp, version in bumps.items():
 # Append new components alphabetically just before the end of the block.
 if new_components:
     indent = "  "
-    for _, (i, _) in existing.items():
-        pass
     for i in range(start, end):
         m = entry_re.match(lines[i])
         if m:
@@ -3809,12 +3854,12 @@ audit_version_refs() {
         local matches
         matches="$(grep -nE '\b0\.[0-9]+\.[0-9]+\.[0-9]+\b' "${file}" 2>/dev/null || true)"
         [[ -z "${matches}" ]] || found+=("${file}|${matches}")
-    done < <(find "${REPO_ROOT}" -maxdepth 4 -type f \
-        \( -path '*/current/docs/*.md' \
-        -o -name CMakeLists.txt -path '*/current/*' \
-        -o -name interface.yaml  -path '*/current/*' \
-        -o -name 'hfp-*.yaml'    -path '*/current/*' \
-        -o -name mkdocs.yml      -path '*/current/*' \) -print0)
+    # Every depth (vsi/<comp>/current/, sensor/current/docs/<sub>/), tracked
+    # or new, but never build/ or out/ (gitignored).
+    done < <(git -C "${REPO_ROOT}" ls-files -z --cached --others --exclude-standard -- \
+        '*/current/docs/*.md' '*/current/*CMakeLists.txt' '*/current/*interface.yaml' \
+        '*/current/*hfp-*.yaml' '*/current/*mkdocs.yml' \
+        | sort -zu | sed -z "s|^|${REPO_ROOT}/|")
 
     [[ ${#found[@]} -eq 0 ]] && return 0
 
@@ -4515,7 +4560,7 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
     # bumping/snapshotting. They re-enter as soon as interface.yaml is
     # added. Reason text is sourced from metadata.yaml notes.status_detail
     # when present, so the operator sees WHY without spelunking.
-    if ! is_buildable_component "${comp}"; then
+    if ! is_buildable_component "${comp}" && ! is_header_only_component "${comp}"; then
         reason="$(awk '
             /^notes:/ {in_notes=1; next}
             in_notes && /^[^ ]/ {in_notes=0}
@@ -4833,8 +4878,7 @@ for comp in "${TOUCHED_COMPONENTS[@]}"; do
             continue
         fi
         # Untracked but matches the about-to-be-created next version: fine,
-        # it'll be created (and the existing-dir check inside
-        # create_snapshot() will catch a stale one with mismatched contents).
+        # create_snapshot() regenerates, deletes and re-copies it.
         if [[ "${NEXT_VERSION_BY_COMP[$comp]:-}" == "${version}" ]]; then
             continue
         fi
@@ -4853,7 +4897,7 @@ if [[ ${#stale_snapshots[@]} -gt 0 ]]; then
     log "    per-component release tool. Remove them before --apply, e.g.:"
     log ""
     for snap in "${stale_snapshots[@]}"; do
-        log "        rm -rf ${snap}/"
+        log "        rm -rf -- \"${snap}/\""
     done
 fi
 
@@ -4862,8 +4906,12 @@ fi
 # ----------------------------------------------------------------------------
 
 if [[ "${DRY_RUN}" -eq 1 && ${#BUMPED_COMPONENTS[@]} -gt 0 ]]; then
+    # A tagless clone has no derivable version; show where it is needed.
+    _rv="${RELEASE_VERSION:-<X.Y.Z>}"
+    _skip() { [[ "$1" -eq 1 ]] && printf '  [SKIPPED: %s]' "$2"; return 0; }
     log ""
-    log "Pipeline preview — what default ./release.sh would do:"
+    log "Pipeline preview — what ./release.sh stage would do:"
+    [[ -z "${RELEASE_VERSION}" ]] && log "  (no release tag to derive a version from — pass --release-version X.Y.Z)"
     log ""
     log "  For each bumped component (in order):"
     for entry in "${BUMPED_COMPONENTS[@]}"; do
@@ -4873,30 +4921,34 @@ if [[ "${DRY_RUN}" -eq 1 && ${#BUMPED_COMPONENTS[@]} -gt 0 ]]; then
             log "    ${comp} ${version}: placeholder component (no current/) — metadata.yaml bump only, no snapshot"
             continue
         fi
+        if is_header_only_component "${comp}"; then
+            log "    ${comp} ${version}: header-only component — cp -r ${comp}/current/ ${comp}/${version}/, stage *.h into ${version}/include/, git add, bump metadata.yaml"
+            continue
+        fi
         log "    ${comp} ${version}:"
-        log "        1. ./build_modules.sh ${comp}     (regenerate current/include + current/src)"
-        log "        2. cp -r ${comp}/current/  ${comp}/${version}/"
-        log "        3. git add ${comp}/${version}/"
+        log "        1. ./build_modules.sh ${comp}     (regenerate current/include + current/src)$(_skip "${NO_SNAPSHOT}" --no-snapshot)"
+        log "        2. cp -r ${comp}/current/  ${comp}/${version}/$(_skip "${NO_SNAPSHOT}" --no-snapshot)"
+        log "        3. git add ${comp}/${version}/$(_skip "${NO_SNAPSHOT}" --no-snapshot)"
         log "        4. sed -i version: in ${comp}/metadata.yaml -> ${version}"
     done
     log ""
     log "  Then once per release:"
     log "    5. Update versions_released.yaml components: map"
-    log "    6. Insert mkdocs.yml nav entries for the ${#BUMPED_COMPONENTS[@]} new <module>/<version>/ doc sets"
-    log "    7. Generate docs/releases/${RELEASE_VERSION}.md release-notes skeleton (if absent) and list it under Release Notes"
-    log "    8. Prepend a new ${RELEASE_VERSION} section to CHANGELOG.md, then ./docs/build_docs.sh build"
+    log "    6. Insert mkdocs.yml nav entries for the ${#BUMPED_COMPONENTS[@]} new <module>/<version>/ doc sets$(_skip "${NO_MKDOCS}" --no-mkdocs)"
+    log "    7. Generate docs/releases/${_rv}.md release-notes skeleton (if absent) and list it under Release Notes"
+    log "    8. Prepend a new ${_rv} section to CHANGELOG.md, then ./docs/build_docs.sh build$(_skip "${NO_MKDOCS}" "--no-mkdocs: build")"
     log "    9. Audit docs + build configs for version-shaped strings (review only)"
-    log "   10. ./build_modules.sh all                 (build current cohort)"
-    log "   11. ./build_modules.sh manifest            (build released cohort via versions_released.yaml)"
+    log "   10. ./build_modules.sh all                 (build current cohort)$(_skip "${NO_BUILD}" --no-build)"
+    log "   11. ./build_modules.sh manifest            (build released cohort via versions_released.yaml)$(_skip "${NO_BUILD}" --no-build)"
     log ""
-    log "  With --apply, additionally:"
-    log "   12. git checkout -b release/${RELEASE_VERSION}"
+    log "  Then ./release.sh --apply:"
+    log "   12. git checkout -b release/${_rv}"
     log "  With --apply --commit, additionally:"
     log "   13. git commit  release artefacts (snapshots + manifests + nav + notes + CHANGELOG)"
-    log "   14. git push origin release/${RELEASE_VERSION}"
-    log "   15. mike deploy ${RELEASE_VERSION} --push  &&  mike set-default ${RELEASE_VERSION} --push"
+    log "   14. git push origin release/${_rv}"
+    log "   15. mike deploy ${_rv} --push  &&  mike set-default ${_rv} --push"
     log ""
-    log "  The tag is created by 'git flow release finish ${RELEASE_VERSION}' on main,"
+    log "  The tag is created by 'git flow release finish ${_rv}' on main,"
     log "  not by this script."
 fi
 
@@ -4904,13 +4956,13 @@ fi
 # Stage pipeline (default + --apply)
 # ----------------------------------------------------------------------------
 #
-# Default mode (DO_WRITES=1, DO_BRANCH=0): regenerate, snapshot, update
+# stage (DO_WRITES=1, DO_BRANCH=0): regenerate, snapshot, update
 # metadata.yaml + versions_released.yaml + mkdocs.yml + release-notes
 # skeleton, run a verification build. Leaves changes in the working tree
 # for review via `git diff --cached`.
 #
-# --apply (DO_WRITES=1, DO_BRANCH=1): all of the above PLUS create
-# release/X.Y.Z branch, commit, tag.
+# --apply (DO_WRITES=0, DO_BRANCH=1): none of the above; creates the
+# release/X.Y.Z branch below, and commits and pushes it with --commit.
 
 if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
     if [[ -x "${REPO_ROOT}/scripts/generate_rag_report.sh" ]]; then
@@ -5080,11 +5132,14 @@ if [[ "${DO_WRITES}" -eq 1 && "${changed_count}" -gt 0 ]]; then
     fi
 fi
 
-# Branch + commit + tag — runs only with --apply.
+# Branch + commit — runs only with --apply. The tag is made by git flow.
 if [[ "${DO_BRANCH}" -eq 1 ]]; then
     if [[ "${changed_count}" -eq 0 ]]; then
         die "--apply requested but nothing is staged for release. Use ./release.sh stage <module> first."
     fi
+    # Checked before the manifest build, so a tagless clone fails in seconds.
+    [[ -n "${RELEASE_VERSION}" ]] \
+        || die "--apply needs a release version: no prior release tag to derive one from. Pass --release-version X.Y.Z"
     # Manifest verification: re-run only if writes didn't happen this
     # invocation (operator ran --apply cold on a pre-staged worktree).
     # When writes happened, stage already ran it at the end. The current
@@ -5099,7 +5154,7 @@ if [[ "${DO_BRANCH}" -eq 1 ]]; then
             "${REPO_ROOT}/out/release-build-released.log" \
             manifest
     fi
-    phase "Creating release branch and tag ${RELEASE_VERSION}..."
+    phase "Creating release branch release/${RELEASE_VERSION}..."
     log ""
     create_release_branch "${RELEASE_VERSION}"
 fi
@@ -5131,7 +5186,7 @@ if [[ "${DO_BRANCH}" -eq 1 ]]; then
         log "Review with \`git diff --cached\`, then: ./release.sh --commit"
     fi
 elif [[ "${CHECK_MODE}" -eq 1 ]]; then
-    log "Stage modules with: ./release.sh <module>     Apply with: ./release.sh --apply --release-version ${RELEASE_VERSION}"
+    log "Stage modules with: ./release.sh <module>     Apply with: ./release.sh --apply --release-version ${RELEASE_VERSION:-<X.Y.Z>}"
 elif [[ "${_planned_count}" -eq 0 ]]; then
     log "Plan: 0 / ${_qualifying_count} qualifying module(s) staged (of ${_total_touched} touched)."
     log "Stage with: ./release.sh stage <module>   or   ./release.sh stage all"
@@ -5156,7 +5211,7 @@ else
     if [[ "${_cut_committed}" -eq 1 ]]; then
         log "Cut committed on release/${RELEASE_VERSION}. Next: ./release.sh --complete    |    Labels: ./release.sh --sync-labels"
     else
-        log "Apply: ./release.sh --apply --release-version ${RELEASE_VERSION}    |    Reset: ./release.sh clean"
+        log "Apply: ./release.sh --apply --release-version ${RELEASE_VERSION:-<X.Y.Z>}    |    Reset: ./release.sh clean"
     fi
 fi
 

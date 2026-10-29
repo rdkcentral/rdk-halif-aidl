@@ -18,8 +18,8 @@
  */
 package com.rdk.hal.audiomixer;
 
-import com.rdk.hal.PropertyValue;
 import com.rdk.hal.audiomixer.OutputPortProperty;
+import com.rdk.hal.audiomixer.PropertyValue;
 
 /**
  * @brief     Listener interface for audio output port events.
@@ -34,7 +34,7 @@ import com.rdk.hal.audiomixer.OutputPortProperty;
 oneway interface IAudioOutputPortListener {
     /**
      * @brief     Called when a dynamic property value changes.
-     * @details   Fires for any property whose value changes after the listener
+     *            Fires for any property whose value changes after the listener
      *            was registered. Common change sources:
      *            <ul>
      *              <li><b>CONNECTION_STATE</b> — physical hot-plug / hot-unplug

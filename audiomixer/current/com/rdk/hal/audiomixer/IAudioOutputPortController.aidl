@@ -18,11 +18,11 @@
  */
 package com.rdk.hal.audiomixer;
 
-import com.rdk.hal.PropertyValue;
 import com.rdk.hal.audiomixer.IAudioCapture;
 import com.rdk.hal.audiomixer.IAudioCaptureListener;
 import com.rdk.hal.audiomixer.IDolbyMs12_2_6_Dap;
 import com.rdk.hal.audiomixer.OutputPortProperty;
+import com.rdk.hal.audiomixer.PropertyValue;
 
 /**
  * @brief    Audio Output Port Controller HAL interface.

@@ -97,21 +97,18 @@ production build needs no Python or AIDL toolchain.
 
 ### Releasing
 
-Releases are a full-cohort sweep — every component is bumped together
-according to its change class and snapshotted under `<module>/<version>/`.
-Per-component releases are not supported by design.
-
-To "release just one component", land a focused PR touching only that
-component and run the cohort release. Components with no changes don't
-bump and don't get a new snapshot, so the effect is the same as a
-single-component release would have been.
+A release `X.Y.Z` carries the components staged for it; each staged
+component is bumped by its change class and snapshotted under
+`<module>/<version>/`. Components not staged keep their released version.
 
 ```bash
-./release.sh                 # dry-run: auto-detects next release version
-                             # from the latest tag, prints the --apply line
-./release.sh --apply         # apply the release (writes metadata.yaml,
-                             # creates snapshots, updates mkdocs nav,
-                             # branch + tag)
+./release.sh                       # read-only plan: next version, bump per module
+./release.sh stage <module>|all    # write the artefacts: snapshots, metadata.yaml,
+                                   # versions_released.yaml, mkdocs nav, CHANGELOG,
+                                   # verification builds
+./release.sh --apply [--commit]    # cut release/X.Y.Z from them (--commit: commit + push)
+./release.sh --complete            # git flow release finish (makes the tag), push,
+                                   # publish docs, create the GitHub release
 ```
 
 ### Consuming the interfaces (build with CMake directly)

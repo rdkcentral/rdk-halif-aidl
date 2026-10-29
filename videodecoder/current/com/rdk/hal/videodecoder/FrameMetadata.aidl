@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 package com.rdk.hal.videodecoder;
-import com.rdk.hal.AVSource;
+import com.rdk.hal.videodecoder.AVSource;
 import com.rdk.hal.videodecoder.Colorimetry;
 import com.rdk.hal.videodecoder.ContentLightLevel;
 import com.rdk.hal.videodecoder.DynamicRange;

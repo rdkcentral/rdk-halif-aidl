@@ -18,10 +18,10 @@
  */
 package com.rdk.hal.panel;
 
+import com.rdk.hal.panel.DynamicRange;
 import com.rdk.hal.panel.PQParameter;
 import com.rdk.hal.panel.PQParameterValue;
 import com.rdk.hal.panel.PanelSource;
-import com.rdk.hal.videodecoder.DynamicRange;
 
 /**
  * @brief Callbacks linked to the exclusive panel output controller.

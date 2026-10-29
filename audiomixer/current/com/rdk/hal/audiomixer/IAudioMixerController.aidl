@@ -18,10 +18,10 @@
  */
 package com.rdk.hal.audiomixer;
 
-import com.rdk.hal.PropertyValue;
 import com.rdk.hal.audiomixer.InputRouting;
 import com.rdk.hal.audiomixer.Property;
-import com.rdk.hal.audiosink.VolumeRamp;
+import com.rdk.hal.audiomixer.PropertyValue;
+import com.rdk.hal.audiomixer.VolumeRamp;
 
 /**
  * @brief     Audio Mixer Controller HAL interface.
@@ -160,7 +160,7 @@ interface IAudioMixerController {
 
     /**
      * @brief     Sets the volume (attenuation) for a specific mixer input.
-     * @details   Per-input attenuation lets clients balance multiple sources
+     *            Per-input attenuation lets clients balance multiple sources
      *            mixed into the same output (e.g., reduce main programme volume
      *            while a system sound plays). Value range is 0..100 where 100
      *            is unity gain (no attenuation) and 0 is silence.
@@ -213,7 +213,7 @@ interface IAudioMixerController {
 
     /**
      * @brief     Smoothly ramps the volume of a specific mixer input.
-     * @details   Walks the input's volume from its current value to
+     *            Walks the input's volume from its current value to
      *            targetVolume over overMs milliseconds, following the chosen
      *            VolumeRamp curve. Use this for any volume change that
      *            happens while audio is flowing — instantaneous changes

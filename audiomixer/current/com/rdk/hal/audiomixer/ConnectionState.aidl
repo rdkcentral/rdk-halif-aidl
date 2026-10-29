@@ -19,16 +19,12 @@
 package com.rdk.hal.audiomixer;
 
 /**
- * @brief     HAL component states.
+ * @brief   HAL component connection states.
+ *          Used in output port properties to describe physical or logical connection status.
  * @author    Luc Kennedy-Lamb
  * @author    Peter Stieglitz
  * @author    Douglas Adler
  * @author    Gerald Weatherup
- */
-
-/**
- * @brief   HAL component connection states.
- *          Used in output port properties to describe physical or logical connection status.
  */
 @VintfStability
 @Backing(type = "int")
