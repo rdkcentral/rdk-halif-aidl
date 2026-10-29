@@ -33,6 +33,10 @@
 #     the same profile are implicitly supported.
 #   - `maxBitrateInBps` is an inclusive ceiling for the profile/level.
 #     Use `0` only if the SoC vendor doesn't publish a real cap.
+#   - `supportedBitstreamFormats[]` (H264_AVC / H265_HEVC only, since
+#     0.3.1.0) lists every accepted (streamFormat, alignment) pair. It
+#     must include BYTE_STREAM/AU, and LENGTH_PREFIXED/AU when the
+#     instance has `supportsSecure: true`. Omit it for other codecs.
 #
 # Colorimetry semantics:
 #   - Each `supportedColorimetries[]` entry mirrors Colorimetry.aidl - the
@@ -73,6 +77,11 @@ videodecoder:                   # Component object begins
             maxFrameHeight: 1080
             supportedOutputPixelFormats:
               - YCBCR420
+            supportedBitstreamFormats:
+              - streamFormat: BYTE_STREAM
+                alignment: AU
+              - streamFormat: LENGTH_PREFIXED
+                alignment: AU
         - H265_HEVC:
             profiles:
               - profile: H265_MAIN
@@ -89,6 +98,11 @@ videodecoder:                   # Component object begins
             maxFrameHeight: 2160
             supportedOutputPixelFormats:
               - YCBCR420
+            supportedBitstreamFormats:
+              - streamFormat: BYTE_STREAM
+                alignment: AU
+              - streamFormat: LENGTH_PREFIXED
+                alignment: AU
         - VP9:
             profiles:
               - profile: VP9_PROFILE_0
@@ -168,6 +182,11 @@ videodecoder:                   # Component object begins
             maxFrameHeight: 1080
             supportedOutputPixelFormats:
               - YCBCR420
+            supportedBitstreamFormats:
+              - streamFormat: BYTE_STREAM
+                alignment: AU
+              - streamFormat: LENGTH_PREFIXED
+                alignment: AU
         - H265_HEVC:
             profiles:
               - profile: H265_MAIN
@@ -181,6 +200,11 @@ videodecoder:                   # Component object begins
             maxFrameHeight: 1080
             supportedOutputPixelFormats:
               - YCBCR420
+            supportedBitstreamFormats:
+              - streamFormat: BYTE_STREAM
+                alignment: AU
+              - streamFormat: LENGTH_PREFIXED
+                alignment: AU
         - VP9:
             profiles:
               - profile: VP9_PROFILE_0
