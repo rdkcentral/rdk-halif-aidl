@@ -113,7 +113,13 @@ for component in "${!COMPONENTS[@]}"; do
                 # Request review from teams that haven't completed review
                 if [ "$status" != "reviewed" ] && [ "$status" != "abstained" ]; then
                     if [ -n "${TEAM_MAP[$team]:-}" ]; then
-                        REVIEW_TEAMS["${TEAM_MAP[$team]}"]="$team ($status) [${component}]"
+                        # One slug can be pending on several components: list each.
+                        slug="${TEAM_MAP[$team]}"
+                        if [ -n "${REVIEW_TEAMS[$slug]:-}" ]; then
+                            REVIEW_TEAMS["$slug"]="${REVIEW_TEAMS[$slug]} [${component}: ${status}]"
+                        else
+                            REVIEW_TEAMS["$slug"]="$team [${component}: ${status}]"
+                        fi
                     else
                         echo "    WARN: No GitHub team mapping for '${team}'"
                     fi

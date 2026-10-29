@@ -201,17 +201,17 @@ for f in $METADATA_FILES; do
 
     # One row per presentation path (one for most components; two for sensor).
     # Each presented capability counts once in the totals.
-    for path in $row_paths; do
+    for row_path in $row_paths; do
         TOTAL=$((TOTAL + 1))
 
         # Build row (AMBER/RED use full detail, with lifecycle dates — no Reviews column)
-        row="| ${icon} | ${path} | ${version} | ${priority:-—} | ${status_detail:-—} | ${action:-—} | ${review_deadline:-—} | ${target_green:-—} | ${owners:-—} |"
+        row="| ${icon} | ${row_path} | ${version} | ${priority:-—} | ${status_detail:-—} | ${action:-—} | ${review_deadline:-—} | ${target_green:-—} | ${owners:-—} |"
 
         # Build GREEN row (per-team detail is in the Review Status section)
-        green_row="| ${icon} | ${path} | ${version} | ${description:-—} | ${review_progress} | ${owners:-—} |"
+        green_row="| ${icon} | ${row_path} | ${version} | ${description:-—} | ${review_progress} | ${owners:-—} |"
 
         # Build review detail row with per-team columns
-        detail_row="| ${icon} | ${path} | ${review_progress}"
+        detail_row="| ${icon} | ${row_path} | ${review_progress}"
         for team in $ALL_TEAMS; do
             team_status=$(yaml_reviewer_status "$f" "$team")
             detail_row="${detail_row} | $(review_icon "$team_status")"
@@ -225,7 +225,7 @@ for f in $METADATA_FILES; do
                 append_review_row GREEN_SOC_REVIEW_ROWS GREEN_OEM_REVIEW_ROWS "$detail_row"
                 # If component has a risk note, also list it in AMBER as a watch item
                 if [ -n "$risk" ]; then
-                    amber_row="| ${RAG_AMBER} | ${path} *(risk)* | ${version} | ${priority:-—} | ${status_detail:-—} | ${risk} | ${review_deadline:-—} | ${target_green:-—} | ${owners:-—} |"
+                    amber_row="| ${RAG_AMBER} | ${row_path} *(risk)* | ${version} | ${priority:-—} | ${status_detail:-—} | ${risk} | ${review_deadline:-—} | ${target_green:-—} | ${owners:-—} |"
                     append_row AMBER_SOC_ROWS AMBER_OEM_ROWS AMBER_SHARED_ROWS "$amber_row"
                 fi
                 ;;
