@@ -364,13 +364,15 @@ build time locally, and PR diffs show only authored content.
   output not covered by the rule) trips the check.
 - **Release:** `./release.sh` is the only entry point that may
   commit generated bindings, and only into frozen `<version>/`
-  directories. Invocation: `./scripts/release.sh --apply --release-version X.Y.Z` runs the full pipeline — per-component `metadata.yaml`
-  bumps, per-bumped-component snapshot creation (regen-during-freeze,
-  then `cp -r current/` to `<version>/`), `mkdocs.yml` nav update,
-  and `release/X.Y.Z` branch with matching `X.Y.Z` tag. No-op when
-  no component is bumped (no branch, no tag, no doc edits). Suppress
-  individual steps for testing with `--no-snapshot`, `--no-mkdocs`,
-  or `--no-git`. Implemented in #513.
+  directories. `./scripts/release.sh stage <module>|all` writes the
+  release: per-component `metadata.yaml` bumps, snapshot creation
+  (regen-during-freeze, then `cp -r current/` to `<version>/`) and the
+  `mkdocs.yml` nav update. `--apply [--commit]` then cuts the
+  `release/X.Y.Z` branch from those artefacts, and `--complete` runs
+  `git flow release finish`, which makes the `X.Y.Z` tag on `main`.
+  No-op when no component is bumped (no branch, no doc edits). Suppress
+  individual steps for testing with `--no-snapshot`, `--no-mkdocs` or
+  `--no-build`.
 
 This separation means a single coherent release contains all of the
 component changes from the release window batched into one set of new

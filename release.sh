@@ -22,17 +22,17 @@
 #
 # release.sh — repo-root entry point.
 #
-# All release logic now lives in scripts/release.sh: version computation,
-# dry-run vs --apply, snapshot creation, mkdocs nav, branch + tag. This
-# top-level file is a thin pass-through so the documented `./release.sh`
-# command keeps working and routes to the single source of truth.
+# All release logic lives in scripts/release.sh. This top-level file is a
+# thin pass-through so the documented `./release.sh` command keeps working
+# and routes to the single source of truth.
 #
 # Usage (forwards to scripts/release.sh):
-#   ./release.sh                 Dry-run — auto-detects next release version
-#                                from the latest tag, prints the exact
-#                                --apply command to run.
-#   ./release.sh --apply         Apply the release.
-#   ./release.sh --help          scripts/release.sh usage.
+#   ./release.sh                     Read-only plan — next version and the
+#                                    bump per module.
+#   ./release.sh stage <module>|all  Write the release artefacts.
+#   ./release.sh --apply [--commit]  Cut release/X.Y.Z from them.
+#   ./release.sh --complete          Finish: tag via git flow, push, publish.
+#   ./release.sh --help              scripts/release.sh usage.
 #
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)"
