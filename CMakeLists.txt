@@ -46,20 +46,29 @@ cmake_minimum_required(VERSION 3.8)
 # For Yocto integration: export CC, CXX, CFLAGS, CXXFLAGS in recipe
 # Example: CC="${CC}" CXX="${CXX}" cmake ...
 
-# Append environment CFLAGS/CXXFLAGS to CMake flags if provided
+# Append environment CFLAGS/CXXFLAGS/LDFLAGS to CMake flags if provided.
+# FORCE writes the cache, so append only what is not already there: a
+# reconfigure of an existing build dir must not add the flags again.
+function(halif_append_env_flags var env_name doc)
+    string(FIND " ${${var}} " " $ENV{${env_name}} " _at)
+    if(_at EQUAL -1)
+        set(${var} "${${var}} $ENV{${env_name}}" CACHE STRING "${doc}" FORCE)
+    endif()
+endfunction()
+
 if(DEFINED ENV{CFLAGS})
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} $ENV{CFLAGS}" CACHE STRING "C compiler flags" FORCE)
+    halif_append_env_flags(CMAKE_C_FLAGS CFLAGS "C compiler flags")
     message(STATUS "Using CFLAGS from environment: $ENV{CFLAGS}")
 endif()
 
 if(DEFINED ENV{CXXFLAGS})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{CXXFLAGS}" CACHE STRING "C++ compiler flags" FORCE)
+    halif_append_env_flags(CMAKE_CXX_FLAGS CXXFLAGS "C++ compiler flags")
     message(STATUS "Using CXXFLAGS from environment: $ENV{CXXFLAGS}")
 endif()
 
 if(DEFINED ENV{LDFLAGS})
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} $ENV{LDFLAGS}" CACHE STRING "Linker flags" FORCE)
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} $ENV{LDFLAGS}" CACHE STRING "Shared linker flags" FORCE)
+    halif_append_env_flags(CMAKE_EXE_LINKER_FLAGS LDFLAGS "Linker flags")
+    halif_append_env_flags(CMAKE_SHARED_LINKER_FLAGS LDFLAGS "Shared linker flags")
     message(STATUS "Using LDFLAGS from environment: $ENV{LDFLAGS}")
 endif()
 

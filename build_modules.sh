@@ -191,12 +191,18 @@ esac
 #   1. Export CXXFLAGS — picked up on first cmake configure of any
 #      build dir (and by build_binder.sh if it's already exported in
 #      this shell).
-#   2. Inject -DCMAKE_CXX_FLAGS_INIT into every cmake invocation below —
-#      defeats stale build/<dir>/CMakeCache.txt where the flags weren't
-#      captured on the original configure (env-CXXFLAGS only seeds the
-#      cache the FIRST time).
+#   2. The top-level CMakeLists.txt re-applies env CXXFLAGS on every
+#      configure. Frozen <module>/<version>/CMakeLists.txt do not, and env
+#      CXXFLAGS (like CMAKE_CXX_FLAGS_INIT) only seeds a build dir's cache on
+#      its FIRST configure, so the snapshot configure below passes
+#      -DCMAKE_CXX_FLAGS to override a stale CMakeCache.txt.
 WARNING_SUPPRESSION_FLAGS="-Wno-write-strings -Wno-attributes -Wno-return-type -Wno-deprecated-declarations"
-export CXXFLAGS="${CXXFLAGS:-} ${WARNING_SUPPRESSION_FLAGS}"
+# Once only: this script re-invokes itself for dependencies with CXXFLAGS
+# already exported.
+case " ${CXXFLAGS:-} " in
+    *" ${WARNING_SUPPRESSION_FLAGS} "*) ;;
+    *) export CXXFLAGS="${CXXFLAGS:-} ${WARNING_SUPPRESSION_FLAGS}" ;;
+esac
 
 #######################################################################
 # Pre-flight checks (#571)
@@ -382,7 +388,7 @@ case "${1:-}" in
         mapfile -t MANIFEST_PAIRS < <(awk -v def="$DEFAULT_VER" '
             /^components:/      { inmap=1; next }
             inmap && /^[^[:space:]#]/ { inmap=0 }
-            inmap && /^[[:space:]]+[A-Za-z0-9_]+:/ {
+            inmap && /^[[:space:]]+[A-Za-z0-9_\/]+:/ {
                 gsub(/:/, " "); print $1, ($2 == "" ? def : $2)
             }' "$MANIFEST")
 
@@ -390,6 +396,14 @@ case "${1:-}" in
             echo "❌ ERROR: no components listed in $MANIFEST"
             exit 1
         fi
+        # Nested components (vsi/<comp>) have no manifest build path yet;
+        # stop rather than build a manifest that silently leaves one out.
+        for _pair in "${MANIFEST_PAIRS[@]}"; do
+            if [[ "${_pair%% *}" == */* ]]; then
+                echo "❌ ERROR: $MANIFEST lists nested component '${_pair%% *}'; the manifest build supports top-level components only"
+                exit 1
+            fi
+        done
 
         echo "📋 Version manifest: $MANIFEST"
         echo "   ${#MANIFEST_PAIRS[@]} component(s), default version '${DEFAULT_VER}'"
@@ -704,7 +718,7 @@ if [[ "$VERSION" != "current" ]]; then
     fi
     if [[ ! -f "$SNAPSHOT_DIR/CMakeLists.txt" ]]; then
         echo "❌ ERROR: snapshot $MODULE/$VERSION not found at $SNAPSHOT_DIR."
-        echo "   Snapshots are produced by the cohort-wide './release.sh' run;"
+        echo "   Snapshots are produced by './release.sh stage <module>' at release time;"
         echo "   verify the version number is one that has been released."
         exit 1
     fi
@@ -748,7 +762,7 @@ if [[ "$VERSION" != "current" ]]; then
     # BINDER_SDK_DIR alone resolves both. HALIF_INCLUDE_DIR is unused by
     # snapshots with no imports, hence --no-warn-unused-cli.
     cmake -S "$SNAPSHOT_DIR" -B "$SNAPSHOT_BUILD_DIR" --no-warn-unused-cli \
-        -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
+        -DCMAKE_CXX_FLAGS="${CXXFLAGS}" \
         -DBINDER_SDK_DIR="$SDK_DIR" \
         -DBINDER_SDK_INCLUDE_DIR="$ROOT_DIR/out/build" \
         -DHALIF_LIB_DIR="$ROOT_DIR/out/target/lib/rdk-halif-aidl" \
@@ -797,7 +811,6 @@ echo "⚙️  Configuring CMake..."
 echo ""
 
 cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
-    -DCMAKE_CXX_FLAGS_INIT="${WARNING_SUPPRESSION_FLAGS}" \
     -DINTERFACE_TARGET="$MODULE" \
     -DAIDL_SRC_VERSION="$VERSION" \
     -DBINDER_SDK_DIR="$SDK_DIR"
