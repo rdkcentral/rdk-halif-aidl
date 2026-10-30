@@ -40,7 +40,6 @@ scope:
   - The fixed envelope a metric is carried in - value, group, snapshot, event
   - The status a figure carries when a product cannot serve it
   - The requirements every measuring component serves its figures under
-  - The rule by which a key's identifier is derived from its composed terms
 
 # notes - Tracking metadata                                              [manual]
 #   priority      - Numeric priority (lower = higher)

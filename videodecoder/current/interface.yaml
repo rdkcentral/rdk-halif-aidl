@@ -7,9 +7,3 @@ aidl_interface:
     - metrics@current
   stability: vintf
   layout: module-local
-
-# The vocabulary scripts/kvcc.py generates this interface's metric enums from.
-# A new key there is a new member here, so it is an additive interface change.
-kvc:
-  vocabulary: videodecoder
-  minimum: "1.0"

@@ -21,7 +21,7 @@ package com.rdk.hal.metrics;
 import com.rdk.hal.metrics.MetricStatus;
 
 /**
- * @brief     One identified metric value.
+ * @brief     One metric value.
  * @author    Gerald Weatherup
  */
 
@@ -35,29 +35,11 @@ import com.rdk.hal.metrics.MetricStatus;
 parcelable MetricValue {
 
     /**
-     * Identifier of the field this value carries.
+     * Which figure this value carries: the value of a member of the serving
+     * component's `Metric` enum, or of its `MetricEventAttribute` enum in an
+     * event's attributes and values.
      *
-     * The first 8 bytes of SHA-256 over the field's composed path together with
-     * the terms that give it meaning:
-     *
-     *   value      "<domain>.<element>.<field>|<unit>|<kind>"
-     *   attribute  "<domain>.<element>.<field>|<unit>"
-     *
-     * Nothing allocates an identifier and there is no registry to consult, so a
-     * layer computes it rather than being told it. Two consequences follow, and
-     * both are the point.
-     *
-     * The unit is part of the identity, so a product that declares a field in
-     * microseconds and populates milliseconds yields a different identifier —
-     * its consumer sees a hard mismatch rather than a figure that is quietly a
-     * thousand times wrong.
-     *
-     * The identifier does not depend on which file declares the field, so
-     * moving a declaration between modules renames nothing.
-     *
-     * The width is a requirement rather than a preference: a 32-bit space puts
-     * a birthday collision at the tens of thousands of keys, and a collision
-     * here is two measurements answering to one identifier.
+     * The number means something only alongside the component it was read from.
      */
     long id;
 
@@ -68,7 +50,7 @@ parcelable MetricValue {
      * otherwise, and in particular never a sentinel standing in for absence.
      *
      * Counters use the positive range. A field is signed because some figures
-     * genuinely are: `av.clock.sync_offset_ms` is positive when audio leads and
+     * genuinely are: `avclock`'s `Metric::SYNC_OFFSET_MS` is positive when audio leads and
      * negative when video leads, and a type that cannot go negative cannot
      * express one of those directions.
      */

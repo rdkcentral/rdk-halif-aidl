@@ -560,20 +560,19 @@ interface IDrmPlugin {
      * Gets the contracted decrypt metrics as one coherent snapshot.
      *
      * Every value is latched at the one instant the snapshot records, so
-     * `decrypt_count` and `decrypt_latency_sum_us` read together always describe
+     * `DECRYPT_COUNT` and `DECRYPT_LATENCY_SUM_US` read together always describe
      * the same moment and their quotient is a mean that existed.
      *
-     * Unlike getMetrics(), what these keys mean is fixed: each is declared in
-     * drm/kvc/current/drm.kvc with a unit and a kind that form part of its
-     * identifier, so a consumer comparing two products is comparing the same
-     * figure. A key this product cannot measure, or an identifier it does not
+     * Unlike getMetrics(), what these figures mean is fixed: each is a member of
+     * `Metric` with a stated unit and kind, so a consumer comparing two products
+     * is comparing the same figure. A key this product cannot measure, or an identifier it does not
      * know, reports `MetricStatus::NOT_SUPPORTED` rather than 0 or -1.
      *
      * Scope is what the driver can observe: work done on keys the session
      * already holds. A licence that was never obtained is a fact about the
      * licence exchange rather than about the decrypt path, and is not here.
      *
-     * @param[in] metricIds           Metric identifiers to query, or null for every served metric.
+     * @param[in] metricIds           The figures to query, or null for every served figure.
      *
      * @return MetricSnapshot containing one value per requested identifier.
      *     Implicit error codes:
@@ -582,5 +581,5 @@ interface IDrmPlugin {
      *
      * @see getMetrics()
      */
-    MetricSnapshot getDeclaredMetrics(in @nullable long[] metricIds);
+    MetricSnapshot getDeclaredMetrics(in @nullable Metric[] metricIds);
 }

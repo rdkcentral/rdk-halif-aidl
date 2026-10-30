@@ -225,25 +225,25 @@ interface IAudioDecoder {
      * instant. Figures the product cannot measure are then simply absent, because
      * nothing named them.
      *
-     * Passing a list asks for those keys by identifier, and the snapshot carries
-     * one value per requested identifier — including one this product cannot
+     * Passing a list asks for those figures, and the snapshot carries one value
+     * per requested figure — including one this product cannot
      * measure, or does not know, which comes back as
      * `MetricStatus::NOT_SUPPORTED` so a caller that named a figure always learns
-     * its fate. An implementation never rejects an identifier it does not
-     * recognise: a caller built against a newer key set than the product is the
-     * ordinary case, not an error. That difference is the reason to name keys
-     * rather than filter the full set client-side.
+     * its fate. An implementation never rejects a value it does not recognise: a
+     * caller built against a newer `Metric` enum than the product is the ordinary
+     * case, not an error. That difference is the reason to name figures rather
+     * than filter the full set client-side.
      *
      * Ordering of values within a group is not significant; a caller matches on
      * `MetricValue.id` rather than on position. A value is never a sentinel: `0`
      * means it measured zero.
      *
-     * @param[in] metricIds           Metric identifiers to query, or null for every served metric.
+     * @param[in] metricIds           The figures to query, or null for every served figure.
      *
      * @returns MetricSnapshot latched at a single monotonic instant.
      *
      * @exception binder::Status::Exception::EX_NONE             Success.
      * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT An empty (but non-null) list.
      */
-    MetricSnapshot getMetrics(in @nullable long[] metricIds);
+    MetricSnapshot getMetrics(in @nullable Metric[] metricIds);
 }

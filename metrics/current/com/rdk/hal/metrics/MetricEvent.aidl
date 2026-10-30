@@ -34,7 +34,7 @@ import com.rdk.hal.metrics.MetricValue;
  *
  * The envelope is the one `MetricGroup` uses, for the same reason: a consumer
  * walks an event kind it has no specific knowledge of, so a new event kind is a
- * declaration change rather than a new callback signature.
+ * new enum member rather than a new callback signature.
  */
 @VintfStability
 parcelable MetricEvent {
@@ -50,21 +50,21 @@ parcelable MetricEvent {
     long timestampNs;
 
     /**
-     * Identifier of the event kind.
-     *
-     * SHA-256 over "<domain>.<element>.<event_kind>", truncated as
-     * `MetricValue.id` is.
+     * The value of a member of the serving component's `MetricEventKind` enum.
      */
     long eventId;
 
     /**
+     * Which instance of the element raised this occurrence, from 0.
+     */
+    int instance;
+
+    /**
      * What locates and classifies this occurrence.
      *
-     * A closed-vocabulary reason, a vendor code, a stream PTS: these say which
+     * A classification such as a reason, a vendor code, a stream PTS: these say which
      * occurrence this was and where, rather than measuring anything, so they
      * carry no aggregation semantics.
-     *
-     * `instance` is carried here, as it is on `MetricGroup`.
      *
      * A field this product never serves is absent from this array. A field the
      * event kind declares that could not be derived at this instant is present
