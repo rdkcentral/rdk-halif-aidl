@@ -4,5 +4,12 @@ aidl_interface:
     - com/rdk/hal/audiodecoder/*.aidl
   imports:
     - common@current
+    - metrics@current
   stability: vintf
   layout: module-local
+
+# The vocabulary scripts/kvcc.py generates this interface's metric enums from.
+# A new key there is a new member here, so it is an additive interface change.
+kvc:
+  vocabulary: audiodecoder
+  minimum: "1.0"

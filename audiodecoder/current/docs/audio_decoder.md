@@ -9,6 +9,7 @@ This document provides an overview of the Audio Decoder Hardware Abstraction Lay
     |-|-|
     |**Interface Definition**|[audiodecoder/current](https://github.com/rdkcentral/rdk-halif-aidl/tree/main/audiodecoder/current)|
     |**Interface Version**|`current`|
+    |**Metrics**|[audio_decoder_metrics.md](audio_decoder_metrics.md)|
     |**API Documentation**| *TBD* |
     |**HAL Interface Type**|[AIDL and Binder](../introduction/aidl_and_binder.md)|
     |**VTS Tests**| TBC |

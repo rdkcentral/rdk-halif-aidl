@@ -42,6 +42,8 @@ import com.rdk.hal.drm.NumberOfSessions;
 import com.rdk.hal.drm.ProvideProvisionResponseResult;
 import com.rdk.hal.drm.ProvisionRequest;
 import com.rdk.hal.drm.SecurityLevel;
+import com.rdk.hal.metrics.MetricSnapshot;
+import com.rdk.hal.drm.Metric;
 
 /**
  * IDrmPlugin is used to interact with a specific drm plugin that was
@@ -547,4 +549,38 @@ interface IDrmPlugin {
      *             verify operation cannot be performed.
      */
     boolean verify(in byte[] sessionId, in byte[] keyId, in byte[] message, in byte[] signature);
+
+    /* ---------------------------------------------------------------------
+     * Metrics. Appended last, and any future addition is appended after
+     * these: a method's transaction ID is its declaration order, so
+     * inserting one above shifts every ID below it and breaks the ABI.
+     * ------------------------------------------------------------------ */
+
+    /**
+     * Gets the contracted decrypt metrics as one coherent snapshot.
+     *
+     * Every value is latched at the one instant the snapshot records, so
+     * `decrypt_count` and `decrypt_latency_sum_us` read together always describe
+     * the same moment and their quotient is a mean that existed.
+     *
+     * Unlike getMetrics(), what these keys mean is fixed: each is declared in
+     * drm/kvc/current/drm.kvc with a unit and a kind that form part of its
+     * identifier, so a consumer comparing two products is comparing the same
+     * figure. A key this product cannot measure, or an identifier it does not
+     * know, reports `MetricStatus::NOT_SUPPORTED` rather than 0 or -1.
+     *
+     * Scope is what the driver can observe: work done on keys the session
+     * already holds. A licence that was never obtained is a fact about the
+     * licence exchange rather than about the decrypt path, and is not here.
+     *
+     * @param[in] metricIds           Metric identifiers to query, or null for every served metric.
+     *
+     * @return MetricSnapshot containing one value per requested identifier.
+     *     Implicit error codes:
+     *       + ERROR_DRM_INVALID_STATE if the metrics are not available to be
+     *             returned.
+     *
+     * @see getMetrics()
+     */
+    MetricSnapshot getDeclaredMetrics(in @nullable long[] metricIds);
 }
