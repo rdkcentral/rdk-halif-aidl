@@ -5,6 +5,7 @@ aidl_interface:
   imports:
     - avclock@current
     - common@current
+    - metrics@current
     - videodecoder@current
   stability: vintf
   layout: module-local

@@ -6,5 +6,6 @@ aidl_interface:
     - audiodecoder@current
     - avclock@current
     - common@current
+    - metrics@current
   stability: vintf
   layout: module-local

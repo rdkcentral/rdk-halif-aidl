@@ -1,0 +1,45 @@
+/*
+ * If not stated otherwise in this file or this component's LICENSE file the
+ * following copyright and licenses apply:
+ *
+ * Copyright 2026 RDK Management
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.rdk.hal.videodecoder;
+
+/**
+ * @brief     The occurrences videodecoder raises.
+ * @author    Gerald Weatherup
+ */
+
+/**
+ * @brief The occurrences videodecoder raises.
+ *
+ * `MetricEvent.eventId` carries one of these, scoped to this component. An occurrence is pushed because
+ * a read cannot carry it: a condition that began and ended between two reads
+ * is invisible to a reader however fast it polls.
+ */
+
+@VintfStability
+@Backing(type="long")
+enum MetricEventKind
+{
+
+    /**
+     * Raised at detection of a decode fault, once per fault. A fault that also
+     * discards a frame raises this and advances FRAMES_DROPPED; a fault that
+     * does not raises this alone. The two are separate axes.
+     */
+    DECODE_ERROR = 0,
+}

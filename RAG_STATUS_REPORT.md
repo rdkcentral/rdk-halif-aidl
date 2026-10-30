@@ -3,9 +3,9 @@
 | | |
 |---|---|
 | **Generated** | 2026-10-26 |
-| **Components** | 32 |
+| **Components** | 33 |
 | 🟢 **GREEN** | 21 |
-| 🟡 **AMBER** | 11 |
+| 🟡 **AMBER** | 12 |
 | 🔴 **RED** | 0 |
 
 ---
@@ -15,7 +15,7 @@
 | Status | Count | Meaning |
 |--------|-------|---------|
 | 🟢 GREEN | **21** | Reviewed & Approved — Interface stable on develop |
-| 🟡 AMBER | **11** | Under Active Ingestion — Will enter sprint review when ready |
+| 🟡 AMBER | **12** | Under Active Ingestion — Will enter sprint review when ready |
 | 🔴 RED | **0** | Not Started / Blocked — Strategy or definition required |
 
 ---
@@ -73,6 +73,7 @@
 
 | | Component | Current Version | Priority | Detail | Action Required | Review Deadline | Target GREEN | Owners |
 |---|-----------|---------|----------|--------|-----------------|-----------------|--------------|--------|
+| 🟡 | metrics | 0.1.0.0 | — | Types only. Imported by every measuring component; imports nothing. | — | — | — | AV_Architecture |
 | 🟡 | r4ce | 0.0.0.1 | 5 | API Definition in progress | Control Manager Team - API Definition started | — | — | Architecture + Control_Manager_Architecture |
 | 🟡 | vsi/bluetooth | 0.0.0.1 | 6 | Docs required | Not blocking progress - Have discussions write up methodology, Discussions with Bluetooth Team | — | — | Architecture + Connectivity_Architecture |
 | 🟡 | vsi/linuxinput | 0.0.0.1 | 6 | Docs required | Not blocking progress - Write up methodology | — | — | Architecture + Kernel_Architecture |
@@ -162,6 +163,7 @@
 | 🟡 | vsi/abstractfilesystem | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |
 | 🟡 | vsi/filesystem | 0/4 | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ | ☐ |
 | 🟡 | ffv | 0/4 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
+| 🟡 | metrics | 0/4 | ☐ | ☐ | ☐ | N/A | N/A | N/A | N/A | N/A | ☐ |
 
 ### OEM — 🔴 RED
 

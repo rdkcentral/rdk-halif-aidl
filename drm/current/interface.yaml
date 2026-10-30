@@ -2,6 +2,7 @@ aidl_interface:
   name: drm
   srcs:
     - com/rdk/hal/drm/*.aidl
-  imports: []
+  imports:
+    - metrics@current
   stability: vintf
   layout: module-local

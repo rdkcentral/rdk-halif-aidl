@@ -25,6 +25,8 @@ import com.rdk.hal.audiosink.IAudioSinkControllerListener;
 import com.rdk.hal.audiosink.IAudioSinkEventListener;
 import com.rdk.hal.audiosink.Property;
 import com.rdk.hal.audiosink.State;
+import com.rdk.hal.metrics.MetricSnapshot;
+import com.rdk.hal.audiosink.Metric;
 
 /**
  *  @brief     Audio Sink HAL interface.
@@ -80,6 +82,9 @@ interface IAudioSink {
      * @see IAudioSinkController.setProperty()
      */
     @nullable PropertyValue getProperty(in Property property);
+
+
+
 
     /**
      * Gets the current audio sink state.
@@ -182,4 +187,45 @@ interface IAudioSink {
      * @see registerEventListener()
      */
     boolean unregisterEventListener(in IAudioSinkEventListener audioSinkEventListener);
+
+    /* ---------------------------------------------------------------------
+     * Metrics. Appended last, and any future addition is appended after
+     * these: a method's transaction ID is its declaration order, so
+     * inserting one above shifts every ID below it and breaks the ABI.
+     * ------------------------------------------------------------------ */
+
+    /**
+     * Gets metrics as one coherent snapshot.
+     *
+     * Every value in the returned snapshot is latched at the one instant the
+     * snapshot records, so paired figures can never be read torn. This is an
+     * obligation on the implementation, not a property to be discovered — an
+     * implementation whose figures span two hardware blocks latches both.
+     *
+     * Passing null asks for everything this resource serves, which is the call a
+     * consumer polling at a cadence should use: one round trip, one sampling
+     * instant. Figures the product cannot measure are then simply absent, because
+     * nothing named them.
+     *
+     * Passing a list asks for those figures, and the snapshot carries one value
+     * per requested figure — including one this product cannot
+     * measure, or does not know, which comes back as
+     * `MetricStatus::NOT_SUPPORTED` so a caller that named a figure always learns
+     * its fate. An implementation never rejects a value it does not recognise: a
+     * caller built against a newer `Metric` enum than the product is the ordinary
+     * case, not an error. That difference is the reason to name figures rather
+     * than filter the full set client-side.
+     *
+     * Ordering of values within a group is not significant; a caller matches on
+     * `MetricValue.id` rather than on position. A value is never a sentinel: `0`
+     * means it measured zero.
+     *
+     * @param[in] metricIds           The figures to query, or null for every served figure.
+     *
+     * @returns MetricSnapshot latched at a single monotonic instant.
+     *
+     * @exception binder::Status::Exception::EX_NONE             Success.
+     * @exception binder::Status::Exception::EX_ILLEGAL_ARGUMENT An empty (but non-null) list.
+     */
+    MetricSnapshot getMetrics(in @nullable Metric[] metricIds);
 }
