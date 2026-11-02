@@ -71,6 +71,11 @@ oneway interface IAudioDecoderControllerListener {
      * It is delivered on this same listener and is ordered in-band - it
      * follows the last frame on the same ordered callback channel.
      *
+     * This callback is still delivered exactly once when a `flush()` interrupts
+     * a pending end-of-stream (a `flush()` after `signalEndOfStream()` but
+     * before this callback): the flushed frames are discarded, but the owed
+     * end-of-stream fires once after the flush completes.
+     *
      * Audio EOS is always client-signalled, so this callback is the sole
      * end-of-stream event for the audio decoder.
      *

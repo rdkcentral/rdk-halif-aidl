@@ -157,12 +157,23 @@ interface IVideoDecoderController {
      * Any pending decoded video frames due for callback are returned to the video frame buffer pool.
      * The internal Video Decoder state is optionally reset.
      *
+     * <b>Flush during a pending end-of-stream:</b> if `flush()` is called after
+     * `signalEndOfStream()` has been invoked but before
+     * `IVideoDecoderControllerListener.onEndOfStream()` has fired, the flush
+     * proceeds normally - input buffers not yet decoded are freed and the held
+     * reorder/DPB tail is discarded rather than drained, so none of those
+     * frames are emitted via `onFrameOutput()`. The requested end-of-stream is
+     * still honoured: the HAL fires `onEndOfStream()` exactly once after the
+     * flush completes and the decoder has returned to `STARTED`.
+     *
      * @param[in] reset - When true, the internal Video Decoder state is fully reset back to its opened `READY` state.
      *
      * @exception binder::Status::Exception::EX_NONE for success
      * @exception binder::Status::Exception::EX_ILLEGAL_STATE
      *
      * @pre The resource must be in State::STARTED.
+     *
+     * @see signalEndOfStream(), IVideoDecoderControllerListener.onEndOfStream()
      */
     void flush(in boolean reset);
 
@@ -213,7 +224,11 @@ interface IVideoDecoderController {
      *
      * A second call is a no-op. After this call any `decodeBufferWithMetadata()`
      * throws `EX_ILLEGAL_STATE`. The decoder remains in `STARTED` (drained)
-     * until `flush()` or `stop()` + `start()`.
+     * until `flush()` or `stop()` + `start()`. If `flush()` arrives after this
+     * call but before `onEndOfStream()` has fired, the held frames are
+     * discarded rather than drained, but the requested end-of-stream is still
+     * honoured - `onEndOfStream()` fires once after the flush completes; see
+     * `flush()`.
      *
      * Behaviour is identical in tunnel and non-tunnel modes - the MW calls this
      * method the same way. In tunnel mode the decoder->sink data flow is
