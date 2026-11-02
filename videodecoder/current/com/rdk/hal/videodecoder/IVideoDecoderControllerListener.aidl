@@ -64,6 +64,11 @@ oneway interface IVideoDecoderControllerListener {
      * It is delivered on this same listener and is ordered in-band - it
      * follows the last frame on the same ordered callback channel.
      *
+     * This callback is still delivered exactly once when a `flush()` interrupts
+     * a pending end-of-stream (a `flush()` after `signalEndOfStream()` but
+     * before this callback): the flushed frames are discarded, but the owed
+     * end-of-stream fires once after the flush completes.
+     *
      * Only the discrete EOS signal fires this callback. The advisory
      * in-bitstream marker (`FrameMetadata.bitstreamEOS`) never does - it may
      * denote a splice boundary rather than authoritative end-of-presentation.
