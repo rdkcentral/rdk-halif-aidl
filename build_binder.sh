@@ -215,7 +215,9 @@ clean_build() {
 # ------------------------------------------------------------------------------
 build_sdk() {
     # Check if SDK already exists
-    if [ -f "$SDK_INSTALL_DIR/.sdk_ready" ] && [ "$CLEAN" != true ]; then
+    if [ -f "$SDK_INSTALL_DIR/.sdk_ready" ] && [ "$CLEAN" != true ] \
+        && [ -x "$BINDER_REPO_DIR/out/host/bin/aidl" ] \
+        && [ -x "$BINDER_REPO_DIR/out/host/bin/aidl-cpp" ]; then
         echo "✓ Binder SDK already built at $SDK_INSTALL_DIR"
         echo ""
         echo "To rebuild, run: ./build_binder.sh clean"
@@ -259,14 +261,16 @@ build_sdk() {
     if ! cmake -S "$BINDER_REPO_DIR" -B "$BINDER_BUILD_DIR" \
         -DCMAKE_INSTALL_PREFIX="$SDK_INSTALL_DIR" \
         -DCMAKE_BUILD_TYPE=Release \
-        -DBUILD_HOST_AIDL=ON; then
+        -DBUILD_HOST_AIDL=ON \
+        -DCMAKE_BUILD_RPATH_USE_ORIGIN=ON; then
         # Stale CMake cache (e.g. repo moved) — clear and retry once
         echo "    Clearing stale CMake cache and retrying..."
         rm -rf "$BINDER_BUILD_DIR"
         cmake -S "$BINDER_REPO_DIR" -B "$BINDER_BUILD_DIR" \
             -DCMAKE_INSTALL_PREFIX="$SDK_INSTALL_DIR" \
             -DCMAKE_BUILD_TYPE=Release \
-            -DBUILD_HOST_AIDL=ON
+            -DBUILD_HOST_AIDL=ON \
+            -DCMAKE_BUILD_RPATH_USE_ORIGIN=ON
         if [ $? -ne 0 ]; then
             echo ""
             echo "❌ ERROR: CMake configuration failed"
@@ -332,9 +336,12 @@ build_sdk() {
     fi
 
     # release.sh and the change-class check run the host compiler from the
-    # toolchain's own output directory.
+    # toolchain's own output directory. It carries its shared libraries, found
+    # through its \$ORIGIN runpath, so it still runs without the build directory
+    # (the change-class workflow caches only build-tools and out/target).
     install -D -m 755 -t "$BINDER_REPO_DIR/out/host/bin" \
-        "$BINDER_BUILD_DIR/aidl" "$BINDER_BUILD_DIR/aidl-cpp" || return 1
+        "$BINDER_BUILD_DIR/aidl" "$BINDER_BUILD_DIR/aidl-cpp" \
+        "$BINDER_BUILD_DIR/libbase.so" "$BINDER_BUILD_DIR/liblog.so" || return 1
 
     # Create halif placeholder directories
     mkdir -p "$SDK_INSTALL_DIR/lib/rdk-halif-aidl"
