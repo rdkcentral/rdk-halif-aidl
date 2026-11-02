@@ -33,9 +33,10 @@ Usage: pr_change_class.py --aidl <aidl> --base <base checkout> --base-ref <sha>
                           --labels <comma-separated> [--summary <file>]
 
 Writes a Markdown table to --summary (e.g. $GITHUB_STEP_SUMMARY) and stdout.
-Exits 1 when the label is below the compiler's class. A component the compiler
-cannot classify (its base does not build, say) is reported, not failed: the
-release audit classifies it again at the cut.
+Exits 1 when the label is below the compiler's class, and 2 when --aidl is not
+an executable, since nothing can be classified without it. A component the
+compiler cannot classify (its base does not build, say) is reported, not failed:
+the release audit classifies it again at the cut.
 """
 
 import argparse
@@ -82,6 +83,9 @@ def main(argv):
     ap.add_argument("--summary")
     a = ap.parse_args(argv)
 
+    if not os.access(a.aidl, os.X_OK):
+        print("error: no aidl compiler at %s" % a.aidl, file=sys.stderr)
+        return 2
     have, explicit = label_class(a.labels)
     rows, need, unknown = [], "none", []
     for comp in touched_components(a.base_ref):
