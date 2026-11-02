@@ -27,7 +27,11 @@ concurrency:
 jobs:
   check:
     name: "Change-class label covers the compiler's class"
-    runs-on: ubuntu-latest
+    # Pinned because of a bug still to fix: Binder SDK 2.7.0 does not compile on
+    # gcc 13 or later, as AOSP's hex.cpp and StrongPointer.h use fixed-width
+    # integer types without including <cstdint> (linux_binder_idl#92). 22.04 has
+    # gcc 11. Return to ubuntu-latest once the SDK pin has that fix (#964).
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
         with:
