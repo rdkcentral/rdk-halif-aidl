@@ -871,8 +871,11 @@ def cmd_sync_item(args):
     if class_of([n["name"] for n in ticket["labels"]["nodes"]]) != before:
         sync_ticket(project, ticket, args.dry_run, report)
 
-    # A linked issue that just changed needs its own item updating too.
-    for number in touched:
+    # Every linked issue gets its own item synced, not only one whose labels
+    # just changed: an issue already carrying the PR's class can still have no
+    # project item or an unset field, and there is no sweep to repair it.
+    linked = [n["number"] for n in ticket.get("closingIssuesReferences", {}).get("nodes", [])]
+    for number in dict.fromkeys(touched + linked):
         follow = gql(
             """
             query($owner:String!,$name:String!,$number:Int!){

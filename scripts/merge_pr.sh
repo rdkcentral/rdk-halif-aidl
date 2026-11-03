@@ -35,6 +35,8 @@
 #   e.g. scripts/merge_pr.sh 974 --admin
 #
 # --dry-run reports what the sync would change and does not merge.
+# Exits 3 when the merge is deferred (--auto, merge queue): the final sync is
+# then left to be run once the PR has merged.
 
 set -euo pipefail
 
@@ -84,6 +86,15 @@ fi
 
 echo "==> Merging #${PR} (${MERGE_ARGS[*]})"
 gh pr merge "$PR" --repo "$REPO" "${MERGE_ARGS[@]}"
+
+# --auto or a merge queue can return before the PR is merged; the final sync
+# must see the merged PR, so it is not run early.
+state=$(gh pr view "$PR" --repo "$REPO" --json state --jq .state)
+if [ "$state" != "MERGED" ]; then
+    echo "#${PR} is ${state}, not merged yet (auto-merge or merge queue)." >&2
+    echo "Once it merges, run: GITHUB_REPOSITORY=${REPO} python3 scripts/project_interface_effect.py sync-item --number ${PR}" >&2
+    exit 3
+fi
 
 echo "==> Interface Effect after merge"
 sync
