@@ -97,6 +97,18 @@ class Render(unittest.TestCase):
         self.assertIn(" [#2](u2)", page)
         self.assertNotIn("## Checks", page)
 
+    def test_change_class_rows(self):
+        def t(n, labels):
+            return rh.classify(issue(n, labels=labels, milestone="0.24.0"), set(), "2026-11-03", None)
+        page = rh.render([t(1, ["Major Change"]), t(2, ["Minor Change"]), t(3, ["documentation"]),
+                          t(4, ["New Interface"]), t(5, [])],
+                         [{"title": "0.24.0", "due": None}], "now")
+        section = page.split("## Change class")[1].split("## Milestones")[0]
+        rows = [l.split(" | ")[0] for l in section.splitlines() if l.startswith("| ") and "---" not in l]
+        self.assertEqual(rows, ["| Change class", "| Major", "| New Interface", "| Minor",
+                                "| Documentation", "| (no change class)"])
+        self.assertIn("| New Interface | 🟨 1<br>[#4](u4) | 1 |", section)
+
     def test_heat(self):
         self.assertEqual([rh.heat(n) for n in (0, 1, 3, 6)], ["·", "🟨", "🟧", "🟥"])
 

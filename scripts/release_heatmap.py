@@ -26,6 +26,8 @@ page:
 
     Heatmap     components (component:* labels) x open milestones, each cell
                 listing the tickets considered for that release
+    Change class  the same tickets by Interface Effect (Major, New Interface,
+                Minor, Documentation, ...) x open milestones
     Milestones  each milestone's tickets, ranked by score
 
 Usage:
@@ -65,6 +67,7 @@ BREAKING = {"Major", "CR-Major"}
 PRIORITY_POINTS = {"P0": 5, "P1": 3, "P2": 1, "P3": 0}
 TIERS = [(7, "Do first"), (4, "Next"), (0, "Later")]
 NO_MILESTONE = "No milestone"
+UNCLASSIFIED = "(no change class)"
 
 
 def gh_json(args):
@@ -222,6 +225,19 @@ def render(tickets, milestones, generated):
             cell([t for t in row if t["milestone"] == c]) for c in cols), len(row)))
     lines.append("| **Tickets** | %s | **%d** |" % (" | ".join(
         "**%d**" % sum(1 for t in tickets if t["milestone"] == c) for c in cols), len(tickets)))
+
+    # Change class: what each release does to the interface.
+    lines += ["", "## Change class", "",
+              "Each open ticket once, by its Interface Effect (labels first, then the "
+              "project field). New Interface is a major version of a new module, not a "
+              "break of an existing one.", "",
+              "| Change class | " + " | ".join(short[c] for c in cols) + " | Total |",
+              "| --- |" + " --- |" * (len(cols) + 1)]
+    for cls in pie.OPTION_ORDER + [UNCLASSIFIED]:
+        row = [t for t in tickets if (t["effect"] or UNCLASSIFIED) == cls]
+        if row:
+            lines.append("| %s | %s | %d |" % (cls, " | ".join(
+                cell([t for t in row if t["milestone"] == c]) for c in cols), len(row)))
 
     # Milestones
     lines += ["", "## Milestones", "",
