@@ -4376,6 +4376,12 @@ _sync_label_rank() {   # labels (newline-separated) -> rank of the class they ca
     fi
 }
 
+# The project's Interface Effect for one PR and its linked issues, from labels.
+_sync_effect() {
+    GH_TOKEN="${GH_TOKEN:-$(gh auth token)}" GITHUB_REPOSITORY="${GH_REPO}" \
+        python3 "${REPO_ROOT}/scripts/project_interface_effect.py" sync-item --number "$1" >/dev/null
+}
+
 run_sync_labels() {
     local base="${_pin_baseline}" release_version="${RELEASE_VERSION:-}"
     [[ -n "${base}" ]] || die "--sync-labels: no release tag to compare against."
@@ -4424,7 +4430,7 @@ run_sync_labels() {
         done
     done
 
-    local changed=0 have want labels verb c all
+    local changed=0 have want labels verb c all sync_failed=""
     log ""
     log "$(printf "  %-6s %-14s %-14s %s" "PR" "Label now" "Released as" "Action")"
     log "$(printf "  %-6s %-14s %-14s %s" "--" "---------" "-----------" "------")"
@@ -4443,7 +4449,12 @@ run_sync_labels() {
         log "$(printf "  %-6s %-14s %-14s %s" "$(_link "https://github.com/${GH_REPO}/pull/${pr}" "#${pr}")" \
             "${_SYNC_LABEL[$have]:-none}" "${_SYNC_LABEL[$want]}" \
             "$(_cell 0 "$([[ "${verb}" == keep ]] && printf '%s' "${_C_DIM}" || printf '%s' "${_C_YELLOW}${_C_BOLD}")" "${verb}")")"
-        [[ "${verb}" != "keep" ]] || continue
+        if [[ "${verb}" == "keep" ]]; then
+            # A label already right may still have a stale field, e.g. from a
+            # sync that failed on an earlier run: syncing is idempotent.
+            [[ "${SYNC_WRITE}" -eq 1 ]] && { _sync_effect "${pr}" || sync_failed+=" ${pr}"; }
+            continue
+        fi
         changed=$((changed + 1))
         [[ "${SYNC_WRITE}" -eq 1 ]] || continue
         local l
@@ -4453,9 +4464,7 @@ run_sync_labels() {
         done
         gh api -X POST "repos/${GH_REPO}/issues/${pr}/labels" -f "labels[]=${_SYNC_LABEL[$want]}" >/dev/null \
             || { warn "#${pr}: could not set '${_SYNC_LABEL[$want]}'"; continue; }
-        GH_TOKEN="${GH_TOKEN:-$(gh auth token)}" GITHUB_REPOSITORY="${GH_REPO}" \
-            python3 "${REPO_ROOT}/scripts/project_interface_effect.py" sync-item --number "${pr}" >/dev/null \
-            || warn "#${pr}: label set, Interface Effect sync failed"
+        _sync_effect "${pr}" || sync_failed+=" ${pr}"
         if ! gh api --paginate "repos/${GH_REPO}/issues/${pr}/comments" --jq '.[].body' 2>/dev/null | grep -qF "${marker}"; then
             gh api "repos/${GH_REPO}/issues/${pr}/comments" -f body="${marker}
 Release ${release_version} labels this pull request **${_SYNC_LABEL[$want]}**, the class its components were released at:
@@ -4469,9 +4478,14 @@ The AIDL compiler classifies each component at the cut (\`release.sh\`); a confi
     if [[ "${changed}" -eq 0 ]]; then
         log "✓ Every attributable PR's label already matches the release."
     elif [[ "${SYNC_WRITE}" -eq 1 ]]; then
-        log "✓ ${changed} PR label(s) updated, with their Interface Effect."
+        log "✓ ${changed} PR label(s) updated."
     else
         log "ℹ️  ${changed} PR label(s) to change. Apply with: ./release.sh --sync-labels --write"
+    fi
+    if [[ -n "${sync_failed}" ]]; then
+        warn "Interface Effect sync failed for:${sync_failed// / #}"
+        warn "Retry each with: GITHUB_REPOSITORY=${GH_REPO} python3 scripts/project_interface_effect.py sync-item --number <PR>"
+        return 1
     fi
     return 0
 }
