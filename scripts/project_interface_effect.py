@@ -36,12 +36,18 @@ can be edited, so the sync has to work out which one moved rather than assuming.
     - Both moved                 -> the labels win; the divergence is reported.
     - PR vs its linked issue     -> the PR wins, because the PR is the change.
                                     A PR with no class inherits the issue's.
-    - CR and New Interface       -> governance markers, not change classes. They
-                                    are written *with* `Major Change`, never
+    - CR                         -> a governance marker, not a change class. It
+                                    is written *with* `Major Change`, never
                                     instead of it: docs/governance/versioning-sop.md
                                     is explicit that `release.sh` reads
                                     `Major Change` for the bump and never reads
                                     `CR`, so replacing it would lose the bump.
+    - New Interface              -> a class of its own, below Major and above
+                                    Minor (#973). Adding a component breaks
+                                    nothing, and a new component releases at
+                                    0.1.0.0 whatever the label, so it carries
+                                    no `Major Change`. A PR that also breaks an
+                                    existing component is Major.
 
   Milestones
     Mirrored between a PR and its linked issues on the same rule, so a release
@@ -83,11 +89,12 @@ STATE_FIELD_NAME = os.environ.get("PROJECT_STATE_FIELD_NAME", "Interface Effect 
 
 # Option -> (colour, labels selecting it), most significant first. A CR is a
 # major change by shape raised at programme level, so it outranks Major and is
-# named CR-Major. A brand-new interface is major by definition.
+# named CR-Major. A brand-new interface adds a component and breaks nothing,
+# so it ranks below Major and above Minor (#973).
 MAPPING = [
     ("CR-Major", "PURPLE", ["CR"]),
-    ("New Interface", "ORANGE", ["New Interface"]),
     ("Major", "RED", ["Major Change", "Breaking Change"]),
+    ("New Interface", "ORANGE", ["New Interface"]),
     ("Minor", "BLUE", ["Minor Change"]),
     ("BugFix", "YELLOW", ["bug"]),
     ("Documentation", "GRAY", ["documentation"]),
@@ -119,10 +126,11 @@ PRECEDENCE = [option for option, _colour, _labels in MAPPING]
 # board - the label is still there, so the next sweep derives the value again.
 KEEP_ALWAYS = {"scope:infrastructure"}
 
-# What a board selection writes back. CR-Major and New Interface carry
-# `Major Change` with them: the version bump is label-driven and `release.sh`
-# only ever reads the change class, so a marker that replaced it would quietly
-# turn a major release into a minor one.
+# What a board selection writes back. CR-Major carries `Major Change` with it:
+# the version bump is label-driven and `release.sh` only ever reads the change
+# class, so a marker that replaced it would quietly turn a major release into a
+# minor one. New Interface writes only itself: a new component releases at
+# 0.1.0.0 whatever the label (docs/governance/versioning-sop.md).
 #
 # BugFix is the exception with no release meaning: it writes `bug`, which the
 # bump logic does not read - a bugfix bump comes from `documentation` or from a
@@ -131,7 +139,7 @@ KEEP_ALWAYS = {"scope:infrastructure"}
 # the labels drive the bump.
 WRITEBACK_LABELS = {
     "CR-Major": ["CR", "Major Change"],
-    "New Interface": ["New Interface", "Major Change"],
+    "New Interface": ["New Interface"],
     "Major": ["Major Change"],
     "Minor": ["Minor Change"],
     "BugFix": ["bug"],

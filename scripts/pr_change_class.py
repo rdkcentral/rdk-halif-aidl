@@ -58,6 +58,10 @@ def label_class(labels):
         return "major", True
     if "Minor Change" in names:
         return "minor", True
+    # New Interface is its own class (#973): the new component releases at
+    # 0.1.0.0, and any existing component the PR also touches reads as minor.
+    if "New Interface" in names:
+        return "minor", True
     if "documentation" in names:
         return "bugfix", True
     return "minor", False
@@ -93,6 +97,7 @@ def main(argv):
               file=sys.stderr)
         return 2
     have, explicit = label_class(a.labels)
+    new_iface = "New Interface" in {l.strip() for l in a.labels.split(",")}
     rows, need, unknown = [], "none", []
     for comp in touched_components(a.base_ref):
         if not os.path.isdir(os.path.join(a.base, comp, "current")):
@@ -115,6 +120,8 @@ def main(argv):
         rows.append((comp, cls, "; ".join(v["evidence"][:3]) or "no interface change"))
 
     shown = LABEL[have] if explicit else "none (release.sh reads it as minor)"
+    if new_iface and have == "minor" and "Minor Change" not in a.labels.split(","):
+        shown = "New Interface"
     lines = ["### Change class: compiler vs label", "",
              "Label: **%s**" % shown, "",
              "| Component | Compiler | Evidence |", "| --- | --- | --- |"]
@@ -128,6 +135,14 @@ def main(argv):
                      "**%s**." % (need, LABEL[need]))
     else:
         lines.append("✅ The label covers what the compiler found.")
+    new_comps = [c for c, k, _e in rows if k == "new"]
+    if new_comps and not new_iface:
+        lines.append("")
+        lines.append("ℹ️ Adds a new component (%s): label this pull request **New Interface**."
+                     % ", ".join("`%s`" % c for c in new_comps))
+    elif new_iface and rows and not new_comps:
+        lines.append("")
+        lines.append("ℹ️ Labelled **New Interface**, but no component here is new.")
     if unknown:
         lines.append("")
         lines.append("⚠️ Not classified: %s. The release audit checks %s at the cut."
