@@ -30,10 +30,10 @@
 # cmake --build build -DINTERFACE_VERSION=release
 #
 # build module in current version
-# cmake --build build -DINTERFACE_TARGET=boot
+# cmake --build build -DINTERFACE_TARGET=bootreason
 #
 # build module in release version
-# cmake --build build -DINTERFACE_TARGET=boot -DINTERFACE_VERSION=0.1.0.0
+# cmake --build build -DINTERFACE_TARGET=bootreason -DINTERFACE_VERSION=0.1.0.0
 #
 # build all released version from specific yaml file
 # cmake --build build -DINTERFACE_VERSION=release -DINTERFACE_RELEASE_FILE=/path/to/versions_current.yaml
@@ -41,9 +41,6 @@
 
 cmake_minimum_required(VERSION 3.22)
 project(RDK_HAL_AIDL_Modules LANGUAGES CXX C VERSION 0.23.0)
-
-# BUILD_SHARED_LIBS is a cmake default option. just adding it to make it more explicit.
-option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
 option(BUILD_MODULES_MODE "Set this when calling CMake from within build_modules.sh" OFF)
 
